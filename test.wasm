@@ -1,0 +1,6 @@
+;; (c) Ben Smith - 2015
+
+(module
+  (func $main
+    (return 42))
+  (export "main" $main))
