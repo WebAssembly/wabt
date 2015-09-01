@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -238,7 +239,6 @@ static void print_tokens(Tokenizer* tokenizer) {
 }
 #endif
 
-#if 0
 static void expect_open(Token t) {
   if (t.type != TOKEN_TYPE_OPEN_PAREN) {
     fprintf(stderr, "%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
@@ -247,7 +247,6 @@ static void expect_open(Token t) {
     exit(1);
   }
 }
-#endif
 
 static void expect_close(Token t) {
   if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
@@ -273,6 +272,123 @@ static int match_atom(Token t, const char* s) {
          0;
 }
 
+static int match_atom_prefix(Token t, const char* s) {
+  int slen = strlen(s);
+  int len = (int)(t.range.end.pos - t.range.start.pos);
+  if (slen < len)
+    len = slen;
+  return strncmp(t.range.start.pos, s, slen) == 0;
+}
+
+static int match_int_type(const char* s) {
+  return s[0] == 'i' &&
+         ((s[1] == '3' && s[2] == '2') || (s[1] == '6' && s[2] == '4'));
+}
+
+static int match_float_type(const char* s) {
+  return s[0] == 'f' &&
+         ((s[1] == '3' && s[2] == '2') || (s[1] == '6' && s[2] == '4'));
+}
+
+static int match_int_float_type(const char* s) {
+  return (s[0] == 'i' || s[0] == 'f') &&
+         ((s[1] == '3' && s[2] == '2') || (s[1] == '6' && s[2] == '4'));
+}
+
+static int match_atom_int_float(Token t, const char* prefix) {
+  int plen = strlen(prefix);
+  const char* p = t.range.start.pos;
+  int len = (int)(t.range.end.pos - p);
+  if (len != plen + 3)
+    return 0;
+  if (strncmp(p, prefix, plen) != 0)
+    return 0;
+  return match_int_float_type(&p[plen]);
+}
+
+static int match_atom_int(Token t, const char* prefix) {
+  int plen = strlen(prefix);
+  const char* p = t.range.start.pos;
+  int len = (int)(t.range.end.pos - p);
+  if (len != plen + 3)
+    return 0;
+  if (strncmp(p, prefix, plen) != 0)
+    return 0;
+  return match_int_type(&p[plen]);
+}
+
+static int match_atom_float(Token t, const char* prefix) {
+  int plen = strlen(prefix);
+  const char* p = t.range.start.pos;
+  int len = (int)(t.range.end.pos - p);
+  if (len != plen + 3)
+    return 0;
+  if (strncmp(p, prefix, plen) != 0)
+    return 0;
+  return match_float_type(&p[plen]);
+}
+
+static int match_unary(Token t) {
+  return match_atom_int_float(t, "neg.") || match_atom_int_float(t, "abs.") ||
+         match_atom_int_float(t, "not.") || match_atom_int(t, "clz.") ||
+         match_atom_int(t, "ctz.") || match_atom_float(t, "ceil.") ||
+         match_atom_float(t, "floor.") || match_atom_float(t, "trunc.") ||
+         match_atom_float(t, "round.");
+}
+
+static int match_binary(Token t) {
+  return match_atom_int_float(t, "add.") || match_atom_int_float(t, "sub.") ||
+         match_atom_int_float(t, "mul.") || match_atom_int(t, "divs.") ||
+         match_atom_int(t, "divu.") || match_atom_int(t, "mods.") ||
+         match_atom_int(t, "modu.") || match_atom_int(t, "and.") ||
+         match_atom_int(t, "or.") || match_atom_int(t, "xor.") ||
+         match_atom_int(t, "shl.") || match_atom_int(t, "shr.") ||
+         match_atom_int(t, "sar.") || match_atom_float(t, "div.") ||
+         match_atom_float(t, "copysign.");
+}
+
+static int match_compare(Token t) {
+  return match_atom_int_float(t, "eq.") || match_atom_int_float(t, "neq.") ||
+         match_atom_int(t, "lts.") || match_atom_int(t, "ltu.") ||
+         match_atom_int(t, "les.") || match_atom_int(t, "leu.") ||
+         match_atom_int(t, "gts.") || match_atom_int(t, "gtu.") ||
+         match_atom_float(t, "lt.") || match_atom_float(t, "le.") ||
+         match_atom_float(t, "gt.") || match_atom_float(t, "ge.");
+}
+
+static int match_convert(Token t) {
+  const char prefix[] = "convert";
+  int plen = strlen(prefix);
+  const char* p = t.range.start.pos;
+  int len = (int)(t.range.end.pos - p);
+  if (len < plen + 1)
+    return 0;
+  if (strncmp(p, prefix, plen) != 0)
+    return 0;
+
+  switch (p[plen]) {
+    case '.':
+      if (len != plen + 8)
+        return 0;
+      p += plen + 1;
+      return match_float_type(p) && match_float_type(p + 4);
+
+    case 's':
+    case 'u':
+      if (len != plen + 9)
+        return 0;
+      if (p[plen + 1] != '.')
+        return 0;
+      p += plen + 2;
+      return (match_int_type(p) && match_int_type(p + 4)) ||
+             (match_int_type(p) && match_float_type(p + 4)) ||
+             (match_float_type(p) && match_int_type(p + 4));
+
+    default:
+      return 0;
+  }
+}
+
 static void unexpected_token(Token t) {
   fprintf(stderr, "%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
           t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
@@ -295,31 +411,130 @@ static void parse_generic(Tokenizer* tokenizer) {
   }
 }
 
+static void parse_var(Tokenizer* tokenizer) {
+  Token t = read_token(tokenizer);
+  if (t.type == TOKEN_TYPE_ATOM) {
+    if (t.range.end.pos - t.range.start.pos >= 1 &&
+        t.range.start.pos[0] == '$') {
+      /* var name */
+    } else {
+      /* var index */
+      char* endptr;
+      errno = 0;
+      int len = (int)(t.range.end.pos - t.range.start.pos);
+      long int value = strtoul(t.range.start.pos, &endptr, 10);
+      if (endptr - t.range.start.pos != len || errno != 0) {
+        fprintf(stderr, "%d:%d: invalid var index\n", t.range.start.line,
+                t.range.start.col);
+        exit(1);
+      }
+      (void)value;
+    }
+  }
+}
+
+static void parse_expr(Tokenizer* tokenizer);
+
+static void parse_block(Tokenizer* tokenizer) {
+  while (1) {
+    parse_expr(tokenizer);
+    Token t = read_token(tokenizer);
+    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+      break;
+    rewind_token(tokenizer, t);
+  }
+}
+
 static void parse_expr(Tokenizer* tokenizer) {
-  parse_generic(tokenizer);
-}
-
-static void parse_param(Tokenizer* tokenizer) {
-  expect_atom(read_token(tokenizer));
+  expect_open(read_token(tokenizer));
   Token t = read_token(tokenizer);
-  if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-    return;
-  expect_atom(t);
-  expect_close(read_token(tokenizer));
-}
-
-static void parse_result(Tokenizer* tokenizer) {
-  expect_atom(read_token(tokenizer));
-  expect_close(read_token(tokenizer));
-}
-
-static void parse_local(Tokenizer* tokenizer) {
-  expect_atom(read_token(tokenizer));
-  Token t = read_token(tokenizer);
-  if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-    return;
-  expect_atom(t);
-  expect_close(read_token(tokenizer));
+  if (t.type == TOKEN_TYPE_ATOM) {
+    if (match_atom(t, "nop")) {
+      expect_close(read_token(tokenizer));
+    } else if (match_atom(t, "block")) {
+      parse_block(tokenizer);
+    } else if (match_atom(t, "if")) {
+      parse_expr(tokenizer); /* condition */
+      parse_expr(tokenizer); /* true */
+      t = read_token(tokenizer);
+      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+        rewind_token(tokenizer, t);
+        parse_expr(tokenizer); /* false */
+        expect_close(read_token(tokenizer));
+      }
+    } else if (match_atom(t, "loop")) {
+      parse_block(tokenizer);
+    } else if (match_atom(t, "label")) {
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_ATOM) {
+        /* label */
+      } else if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+        /* no label */
+        rewind_token(tokenizer, t);
+      } else {
+        unexpected_token(t);
+      }
+      parse_block(tokenizer);
+    } else if (match_atom(t, "break")) {
+      t = read_token(tokenizer);
+      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+        rewind_token(tokenizer, t);
+        parse_var(tokenizer);
+        expect_close(read_token(tokenizer));
+      }
+    } else if (match_atom_prefix(t, "switch")) {
+      /* TODO(binji) */
+    } else if (match_atom(t, "call")) {
+      parse_var(tokenizer);
+      parse_block(tokenizer);
+    } else if (match_atom(t, "dispatch")) {
+      parse_var(tokenizer);
+    } else if (match_atom(t, "return")) {
+      parse_block(tokenizer);
+    } else if (match_atom(t, "destruct")) {
+      parse_var(tokenizer);
+    } else if (match_atom(t, "getparam")) {
+      parse_var(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_atom(t, "getlocal")) {
+      parse_var(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_atom(t, "setlocal")) {
+      parse_var(tokenizer);
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_atom(t, "loadglobal")) {
+      parse_var(tokenizer);
+    } else if (match_atom(t, "storeglobal")) {
+      parse_var(tokenizer);
+    } else if (match_atom(t, "load")) {
+      /* TODO(binji) */
+    } else if (match_atom(t, "store")) {
+      /* TODO(binji) */
+    } else if (match_atom_prefix(t, "const")) {
+      expect_atom(read_token(tokenizer));
+      expect_close(read_token(tokenizer));
+    } else if (match_unary(t)) {
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_binary(t)) {
+      parse_expr(tokenizer);
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_compare(t)) {
+      parse_expr(tokenizer);
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_convert(t)) {
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_atom_prefix(t, "cast")) {
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else {
+      unexpected_token(t);
+    }
+  }
 }
 
 static void parse_func(Tokenizer* tokenizer) {
@@ -331,16 +546,28 @@ static void parse_func(Tokenizer* tokenizer) {
 
   while (1) {
     if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      Token open = t;
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "param")) {
-          parse_param(tokenizer);
+          expect_atom(read_token(tokenizer));
+          Token t = read_token(tokenizer);
+          if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+            expect_atom(t);
+            expect_close(read_token(tokenizer));
+          }
         } else if (match_atom(t, "result")) {
-          parse_result(tokenizer);
+          expect_atom(read_token(tokenizer));
+          expect_close(read_token(tokenizer));
         } else if (match_atom(t, "local")) {
-          parse_local(tokenizer);
+          expect_atom(read_token(tokenizer));
+          Token t = read_token(tokenizer);
+          if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+            expect_atom(t);
+            expect_close(read_token(tokenizer));
+          }
         } else {
-          rewind_token(tokenizer, t);
+          rewind_token(tokenizer, open);
           parse_expr(tokenizer);
         }
       } else {
