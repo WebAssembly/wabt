@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (result)))
+# STDERR:
+1:22: unexpected token ")"

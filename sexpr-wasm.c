@@ -536,13 +536,14 @@ static void parse_type(Tokenizer* tokenizer) {
 static void parse_expr(Tokenizer* tokenizer);
 
 static void parse_type_list(Tokenizer* tokenizer) {
+  Token t = read_token(tokenizer);
   while (1) {
-    Token t = read_token(tokenizer);
-    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-      break;
-    else if (!match_type(t)) {
+    if (!match_type(t)) {
       unexpected_token(t);
     }
+    t = read_token(tokenizer);
+    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+      break;
   }
 }
 
