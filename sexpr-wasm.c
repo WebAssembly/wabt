@@ -4,6 +4,7 @@
 #include <string.h>
 
 #define TABS_TO_SPACES 8
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 typedef enum TokenType {
   TOKEN_TYPE_EOF,
@@ -38,6 +39,49 @@ typedef struct Tokenizer {
   Source source;
   SourceLocation loc;
 } Tokenizer;
+
+static const char* s_unary_ops[] = {
+    "neg.i32",   "neg.i64",   "neg.f32",   "neg.f64",   "abs.i32",
+    "abs.i64",   "abs.f32",   "abs.f64",   "not.i32",   "not.i64",
+    "not.f32",   "not.f64",   "clz.i32",   "clz.i64",   "ctz.i32",
+    "ctz.i64",   "ceil.f32",  "ceil.f64",  "floor.f32", "floor.f64",
+    "trunc.f32", "trunc.f64", "round.f32", "round.f64",
+};
+
+static const char* s_binary_ops[] = {
+    "add.i32",  "add.i64",  "add.f32",      "add.f64",      "sub.i32",
+    "sub.i64",  "sub.f32",  "sub.f64",      "mul.i32",      "mul.i64",
+    "mul.f32",  "mul.f64",  "divs.i32",     "divs.i64",     "divu.i32",
+    "divu.i64", "div.f32",  "div.f64",      "mods.i32",     "mods.i64",
+    "modu.i32", "modu.i64", "or.i32",       "or.i64",       "xor.i32",
+    "xor.i64",  "shl.i32",  "shl.i64",      "shr.i32",      "shr.i64",
+    "sar.i32",  "sar.i64",  "copysign.f32", "copysign.f64",
+};
+
+static const char* s_compare_ops[] = {
+    "eq.i32",  "eq.i64",  "eq.f32",  "eq.f64",  "neq.i32", "neq.i64", "neq.f32",
+    "neq.f64", "lts.i32", "lts.i64", "ltu.i32", "ltu.i64", "lt.f32",  "lt.f64",
+    "les.i32", "les.i64", "leu.i32", "leu.i64", "le.f32",  "le.f64",  "gts.i32",
+    "gts.i64", "gtu.i32", "gtu.i64", "gt.f32",  "gt.f64",  "ges.i32", "ges.i64",
+    "geu.i32", "geu.i64", "ge.f32",  "ge.f64",
+};
+
+static const char* s_convert_ops[] = {
+    "converts.i32.i32", "convertu.i32.i32", "converts.i32.i64",
+    "convertu.i32.i64", "converts.i64.i32", "convertu.i64.i32",
+    "converts.i64.i64", "convertu.i64.i64", "converts.i32.f32",
+    "convertu.i32.f32", "converts.i32.f64", "convertu.i32.f64",
+    "converts.i64.f32", "convertu.i64.f32", "converts.i64.f64",
+    "convertu.i64.f64", "converts.f32.i32", "convertu.f32.i32",
+    "converts.f32.i64", "convertu.f32.i64", "converts.f64.i32",
+    "convertu.f64.i32", "converts.f64.i64", "convertu.f64.i64",
+    "convert.f32.f32",  "convert.f32.f64",  "convert.f64.f32",
+    "convert.f64.f64",
+};
+
+static const char* s_cast_ops[] = {
+    "cast.i32.f32", "cast.f32.i32", "cast.i64.f64", "cast.f64.i64",
+};
 
 static Token read_token(Tokenizer* t) {
   Token result;
@@ -280,113 +324,49 @@ static int match_atom_prefix(Token t, const char* s) {
   return strncmp(t.range.start.pos, s, slen) == 0;
 }
 
-static int match_int_type(const char* s) {
-  return s[0] == 'i' &&
-         ((s[1] == '3' && s[2] == '2') || (s[1] == '6' && s[2] == '4'));
-}
-
-static int match_float_type(const char* s) {
-  return s[0] == 'f' &&
-         ((s[1] == '3' && s[2] == '2') || (s[1] == '6' && s[2] == '4'));
-}
-
-static int match_int_float_type(const char* s) {
-  return (s[0] == 'i' || s[0] == 'f') &&
-         ((s[1] == '3' && s[2] == '2') || (s[1] == '6' && s[2] == '4'));
-}
-
-static int match_atom_int_float(Token t, const char* prefix) {
-  int plen = strlen(prefix);
-  const char* p = t.range.start.pos;
-  int len = (int)(t.range.end.pos - p);
-  if (len != plen + 3)
-    return 0;
-  if (strncmp(p, prefix, plen) != 0)
-    return 0;
-  return match_int_float_type(&p[plen]);
-}
-
-static int match_atom_int(Token t, const char* prefix) {
-  int plen = strlen(prefix);
-  const char* p = t.range.start.pos;
-  int len = (int)(t.range.end.pos - p);
-  if (len != plen + 3)
-    return 0;
-  if (strncmp(p, prefix, plen) != 0)
-    return 0;
-  return match_int_type(&p[plen]);
-}
-
-static int match_atom_float(Token t, const char* prefix) {
-  int plen = strlen(prefix);
-  const char* p = t.range.start.pos;
-  int len = (int)(t.range.end.pos - p);
-  if (len != plen + 3)
-    return 0;
-  if (strncmp(p, prefix, plen) != 0)
-    return 0;
-  return match_float_type(&p[plen]);
-}
-
 static int match_unary(Token t) {
-  return match_atom_int_float(t, "neg.") || match_atom_int_float(t, "abs.") ||
-         match_atom_int_float(t, "not.") || match_atom_int(t, "clz.") ||
-         match_atom_int(t, "ctz.") || match_atom_float(t, "ceil.") ||
-         match_atom_float(t, "floor.") || match_atom_float(t, "trunc.") ||
-         match_atom_float(t, "round.");
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_unary_ops); ++i) {
+    if (match_atom(t, s_unary_ops[i]))
+      return 1;
+  }
+  return 0;
 }
 
 static int match_binary(Token t) {
-  return match_atom_int_float(t, "add.") || match_atom_int_float(t, "sub.") ||
-         match_atom_int_float(t, "mul.") || match_atom_int(t, "divs.") ||
-         match_atom_int(t, "divu.") || match_atom_int(t, "mods.") ||
-         match_atom_int(t, "modu.") || match_atom_int(t, "and.") ||
-         match_atom_int(t, "or.") || match_atom_int(t, "xor.") ||
-         match_atom_int(t, "shl.") || match_atom_int(t, "shr.") ||
-         match_atom_int(t, "sar.") || match_atom_float(t, "div.") ||
-         match_atom_float(t, "copysign.");
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_binary_ops); ++i) {
+    if (match_atom(t, s_binary_ops[i]))
+      return 1;
+  }
+  return 0;
 }
 
 static int match_compare(Token t) {
-  return match_atom_int_float(t, "eq.") || match_atom_int_float(t, "neq.") ||
-         match_atom_int(t, "lts.") || match_atom_int(t, "ltu.") ||
-         match_atom_int(t, "les.") || match_atom_int(t, "leu.") ||
-         match_atom_int(t, "gts.") || match_atom_int(t, "gtu.") ||
-         match_atom_float(t, "lt.") || match_atom_float(t, "le.") ||
-         match_atom_float(t, "gt.") || match_atom_float(t, "ge.");
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_compare_ops); ++i) {
+    if (match_atom(t, s_compare_ops[i]))
+      return 1;
+  }
+  return 0;
 }
 
 static int match_convert(Token t) {
-  const char prefix[] = "convert";
-  int plen = strlen(prefix);
-  const char* p = t.range.start.pos;
-  int len = (int)(t.range.end.pos - p);
-  if (len < plen + 1)
-    return 0;
-  if (strncmp(p, prefix, plen) != 0)
-    return 0;
-
-  switch (p[plen]) {
-    case '.':
-      if (len != plen + 8)
-        return 0;
-      p += plen + 1;
-      return match_float_type(p) && match_float_type(p + 4);
-
-    case 's':
-    case 'u':
-      if (len != plen + 9)
-        return 0;
-      if (p[plen + 1] != '.')
-        return 0;
-      p += plen + 2;
-      return (match_int_type(p) && match_int_type(p + 4)) ||
-             (match_int_type(p) && match_float_type(p + 4)) ||
-             (match_float_type(p) && match_int_type(p + 4));
-
-    default:
-      return 0;
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_convert_ops); ++i) {
+    if (match_atom(t, s_convert_ops[i]))
+      return 1;
   }
+  return 0;
+}
+
+static int match_cast(Token t) {
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_cast_ops); ++i) {
+    if (match_atom(t, s_cast_ops[i]))
+      return 1;
+  }
+  return 0;
 }
 
 static void unexpected_token(Token t) {
@@ -528,7 +508,7 @@ static void parse_expr(Tokenizer* tokenizer) {
     } else if (match_convert(t)) {
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
-    } else if (match_atom_prefix(t, "cast")) {
+    } else if (match_cast(t)) {
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
     } else {
