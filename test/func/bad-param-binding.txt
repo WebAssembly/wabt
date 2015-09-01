@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (param $bar $baz)))
+# STDERR:
+1:27: expected type
