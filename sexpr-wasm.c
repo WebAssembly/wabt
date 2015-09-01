@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TABS_TO_SPACES 8
 
@@ -198,6 +199,222 @@ done_string:
   return result;
 }
 
+static void rewind_token(Tokenizer* tokenizer, Token t) {
+  tokenizer->loc = t.range.start;
+}
+
+#if 0
+static void print_tokens(Tokenizer* tokenizer) {
+  while (1) {
+    Token token = read_token(&tokenizer);
+    fprintf(stderr, "[%d:%d]:[%d:%d]: ", token.range.start.line,
+            token.range.start.col, token.range.end.line, token.range.end.col);
+    switch (token.type) {
+      case TOKEN_TYPE_EOF:
+        fprintf(stderr, "EOF\n");
+        return;
+
+      case TOKEN_TYPE_OPEN_PAREN:
+        fprintf(stderr, "OPEN_PAREN\n");
+        break;
+
+      case TOKEN_TYPE_CLOSE_PAREN:
+        fprintf(stderr, "CLOSE_PAREN\n");
+        break;
+
+      case TOKEN_TYPE_ATOM:
+        fprintf(stderr, "ATOM: %.*s\n",
+                (int)(token.range.end.pos - token.range.start.pos),
+                token.range.start.pos);
+        break;
+
+      case TOKEN_TYPE_STRING:
+        fprintf(stderr, "STRING: %.*s\n",
+                (int)(token.range.end.pos - token.range.start.pos),
+                token.range.start.pos);
+        break;
+    }
+  }
+}
+#endif
+
+#if 0
+static void expect_open(Token t) {
+  if (t.type != TOKEN_TYPE_OPEN_PAREN) {
+    fprintf(stderr, "%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
+            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+            t.range.start.pos);
+    exit(1);
+  }
+}
+#endif
+
+static void expect_close(Token t) {
+  if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+    fprintf(stderr, "%d:%d: expected ')', not \"%.*s\"\n", t.range.start.line,
+            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+            t.range.start.pos);
+    exit(1);
+  }
+}
+
+
+static void expect_atom(Token t) {
+  if (t.type != TOKEN_TYPE_ATOM) {
+    fprintf(stderr, "%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
+            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+            t.range.start.pos);
+    exit(1);
+  }
+}
+
+static int match_atom(Token t, const char* s) {
+  return strncmp(t.range.start.pos, s, t.range.end.pos - t.range.start.pos) ==
+         0;
+}
+
+static void unexpected_token(Token t) {
+  fprintf(stderr, "%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
+  exit(1);
+}
+
+static void parse_generic(Tokenizer* tokenizer) {
+  int nesting = 1;
+  while (nesting > 0) {
+    Token t = read_token(tokenizer);
+    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      nesting++;
+    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+      nesting--;
+    } else if (t.type == TOKEN_TYPE_EOF) {
+      fprintf(stderr, "unexpected eof.\n");
+      exit(1);
+    }
+  }
+}
+
+static void parse_expr(Tokenizer* tokenizer) {
+  parse_generic(tokenizer);
+}
+
+static void parse_param(Tokenizer* tokenizer) {
+  expect_atom(read_token(tokenizer));
+  Token t = read_token(tokenizer);
+  if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+    return;
+  expect_atom(t);
+  expect_close(read_token(tokenizer));
+}
+
+static void parse_result(Tokenizer* tokenizer) {
+  expect_atom(read_token(tokenizer));
+  expect_close(read_token(tokenizer));
+}
+
+static void parse_local(Tokenizer* tokenizer) {
+  expect_atom(read_token(tokenizer));
+  Token t = read_token(tokenizer);
+  if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+    return;
+  expect_atom(t);
+  expect_close(read_token(tokenizer));
+}
+
+static void parse_func(Tokenizer* tokenizer) {
+  Token t = read_token(tokenizer);
+  if (t.type == TOKEN_TYPE_ATOM) {
+    /* named function */
+    t = read_token(tokenizer);
+  }
+
+  while (1) {
+    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_ATOM) {
+        if (match_atom(t, "param")) {
+          parse_param(tokenizer);
+        } else if (match_atom(t, "result")) {
+          parse_result(tokenizer);
+        } else if (match_atom(t, "local")) {
+          parse_local(tokenizer);
+        } else {
+          rewind_token(tokenizer, t);
+          parse_expr(tokenizer);
+        }
+      } else {
+        unexpected_token(t);
+      }
+      t = read_token(tokenizer);
+    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+      break;
+    } else {
+      unexpected_token(t);
+    }
+  }
+}
+
+static void parse_module(Tokenizer* tokenizer) {
+  Token t = read_token(tokenizer);
+  while (1) {
+    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_ATOM) {
+        if (match_atom(t, "func")) {
+          parse_func(tokenizer);
+        } else if (match_atom(t, "global")) {
+          parse_generic(tokenizer);
+        } else if (match_atom(t, "export")) {
+          parse_generic(tokenizer);
+        } else if (match_atom(t, "table")) {
+          parse_generic(tokenizer);
+        } else if (match_atom(t, "memory")) {
+          parse_generic(tokenizer);
+        } else {
+          unexpected_token(t);
+        }
+      } else {
+        unexpected_token(t);
+      }
+      t = read_token(tokenizer);
+    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+      break;
+    } else {
+      unexpected_token(t);
+    }
+  }
+}
+
+static void parse(Tokenizer* tokenizer) {
+  Token t = read_token(tokenizer);
+  while (1) {
+    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_ATOM) {
+        if (match_atom(t, "module")) {
+          parse_module(tokenizer);
+        } else if (match_atom(t, "asserteq")) {
+          parse_generic(tokenizer);
+        } else if (match_atom(t, "invoke")) {
+          parse_generic(tokenizer);
+        } else if (match_atom(t, "assertinvalid")) {
+          parse_generic(tokenizer);
+        } else {
+          unexpected_token(t);
+        }
+      } else {
+        unexpected_token(t);
+      }
+      t = read_token(tokenizer);
+    } else if (t.type == TOKEN_TYPE_EOF) {
+      break;
+    } else {
+      unexpected_token(t);
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   if (argc < 2) {
     fprintf(stderr, "usage: %s [file.wasm]\n", argv[0]);
@@ -235,37 +452,6 @@ int main(int argc, char** argv) {
   tokenizer.loc.line = 1;
   tokenizer.loc.col = 1;
 
-  while (1) {
-    Token token = read_token(&tokenizer);
-    fprintf(stderr, "[%d:%d]:[%d:%d]: ", token.range.start.line,
-            token.range.start.col, token.range.end.line, token.range.end.col);
-    switch (token.type) {
-      case TOKEN_TYPE_EOF:
-        fprintf(stderr, "EOF\n");
-        goto done;
-
-      case TOKEN_TYPE_OPEN_PAREN:
-        fprintf(stderr, "OPEN_PAREN\n");
-        break;
-
-      case TOKEN_TYPE_CLOSE_PAREN:
-        fprintf(stderr, "CLOSE_PAREN\n");
-        break;
-
-      case TOKEN_TYPE_ATOM:
-        fprintf(stderr, "ATOM: %.*s\n",
-                (int)(token.range.end.pos - token.range.start.pos),
-                token.range.start.pos);
-        break;
-
-      case TOKEN_TYPE_STRING:
-        fprintf(stderr, "STRING: %.*s\n",
-                (int)(token.range.end.pos - token.range.start.pos),
-                token.range.start.pos);
-        break;
-    }
-  }
-done:
-
+  parse(&tokenizer);
   return 0;
 }
