@@ -13,6 +13,7 @@ import re
 import shlex
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -59,11 +60,11 @@ def FindTestFiles(directory, ext, filter_pattern_re):
 class TestInfo(object):
   def __init__(self):
     self.name = ''
-    self.header_lines = []
+    self.header = []
+    self.input_ = []
     self.expected_stdout = ''
     self.expected_stderr = ''
     self.exe = None
-    self.pexe = ''
     self.flags = []
     self.args = []
     self.expected_error = 0
@@ -77,17 +78,18 @@ class TestInfo(object):
       state = 'header'
       empty = True
       header_lines = []
+      input_lines = []
       stdout_lines = []
       stderr_lines = []
       for line in f.readlines():
         empty = False
         m = re.match(r'\s*#(.*)$', line)
         if m:
-          if state == 'stdout':
-            raise Error('unexpected directive in STDOUT block: %s' % line)
-
           directive = m.group(1).strip()
-          if directive.lower() == 'stdout:':
+          if directive.lower() == 'stderr:':
+            state = 'stderr'
+            continue
+          elif directive.lower() == 'stdout:':
             state = 'stdout'
             continue
 
@@ -104,8 +106,6 @@ class TestInfo(object):
             self.exe = value
           elif key == 'flags':
             self.flags = shlex.split(value)
-          elif key == 'file':
-            self.pexe = value
           elif key == 'error':
             self.expected_error = int(value)
           elif key == 'args':
@@ -115,10 +115,12 @@ class TestInfo(object):
           else:
             raise Error('Unknown directive: %s' % key)
         elif state == 'header':
-          state = 'stderr'
+          state = 'input'
 
         if state == 'header':
           header_lines.append(line)
+        if state == 'input':
+          input_lines.append(line)
         elif state == 'stderr':
           stderr_lines.append(line)
         elif state == 'stdout':
@@ -127,6 +129,7 @@ class TestInfo(object):
       raise Error('empty test file')
 
     self.header = ''.join(header_lines)
+    self.input_ = ''.join(input_lines)
     self.expected_stdout = ''.join(stdout_lines)
     self.expected_stderr = ''.join(stderr_lines)
 
@@ -140,32 +143,41 @@ class TestInfo(object):
 
     return os.path.relpath(exe, SCRIPT_DIR)
 
-  def GetCommand(self, override_exe=None):
+  def GetCommand(self, filename, override_exe=None):
     cmd = [self.GetExecutable(override_exe)]
     cmd += self.flags
-    cmd += AsList(self.pexe)
+    cmd += [filename]
     cmd += ['--'] + AsList(self.args)
     return cmd
 
   def Run(self, override_exe=None):
     # Pass 'pnacl' as the executable name so the output is consistent
-    cmd = ['pnacl'] + self.GetCommand(override_exe)[1:]
-    exe = self.GetExecutable(override_exe)
+    file_ = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
     try:
-      start_time = time.time()
-      process = subprocess.Popen(cmd, executable=exe, stdout=subprocess.PIPE,
-                                                      stderr=subprocess.PIPE)
-      stdout, stderr = process.communicate()
-      duration = time.time() - start_time
-    except OSError as e:
-      raise Error(str(e))
+      file_.write(self.input_)
+      file_.flush()
+      cmd = ['sexpr-wasm'] + self.GetCommand(file_.name, override_exe)[1:]
+      exe = self.GetExecutable(override_exe)
+      try:
+        start_time = time.time()
+        process = subprocess.Popen(cmd, executable=exe, stdout=subprocess.PIPE,
+                                                        stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        duration = time.time() - start_time
+      except OSError as e:
+        raise Error(str(e))
+    finally:
+      file_.close()
 
     return stdout, stderr, process.returncode, duration
 
   def Rebase(self, stdout, stderr):
     with open(self.name, 'w') as f:
       f.write(self.header)
-      f.write(stderr)
+      f.write(self.input_)
+      if stderr:
+        f.write('# STDERR:\n')
+        f.write(stderr)
       if stdout:
         f.write('# STDOUT:\n')
         f.write(stdout)
@@ -377,14 +389,7 @@ def main(args):
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info in status.failed_tests:
-      name = info.name
-      cmd = info.GetCommand(options.executable)
-      exe = os.path.relpath(info.GetExecutable(options.executable), run_cwd)
-      msg = Indent('cmd = (cd %s && %s)\n' % (
-          os.path.relpath(SCRIPT_DIR, run_cwd), ' '.join(cmd)), 2)
-      msg += Indent('rerun = %s\n' % ' '.join(
-          [sys.executable, sys.argv[0], '-e', exe, name]), 2)
-      sys.stderr.write('- %s\n%s\n' % (name, msg))
+      sys.stderr.write('- %s\n' % info.name)
     ret = 1
 
   status.Print()

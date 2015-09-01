@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (param foo)))
+# STDERR:
+1:22: invalid var index
