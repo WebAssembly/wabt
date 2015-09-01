@@ -8,6 +8,7 @@ typedef enum TokenType {
   TOKEN_TYPE_OPEN_PAREN,
   TOKEN_TYPE_CLOSE_PAREN,
   TOKEN_TYPE_ATOM,
+  TOKEN_TYPE_STRING,
 } TokenType;
 
 typedef struct SourceLocation {
@@ -56,6 +57,39 @@ static Token read_token(Tokenizer* t) {
         t->loc.col = 1;
         t->loc.pos++;
         break;
+
+      case '"':
+        result.type = TOKEN_TYPE_STRING;
+        result.range.start = t->loc;
+        t->loc.col++;
+        t->loc.pos++;
+
+        while (t->loc.pos < t->source.end) {
+          switch (*t->loc.pos) {
+            case '\\':
+              if (t->loc.pos + 1 < t->source.end) {
+                t->loc.col++;
+                t->loc.pos++;
+              }
+              break;
+
+            case '\n':
+              fprintf(stderr, "newline in string\n");
+              exit(1);
+              break;
+
+            case '"':
+              t->loc.col++;
+              t->loc.pos++;
+              goto done_string;
+          }
+
+          t->loc.col++;
+          t->loc.pos++;
+        }
+done_string:
+        result.range.end = t->loc;
+        return result;
 
       case ';':
         if (t->loc.pos + 1 < t->source.end && t->loc.pos[1] == ';') {
@@ -219,7 +253,13 @@ int main(int argc, char** argv) {
         break;
 
       case TOKEN_TYPE_ATOM:
-        fprintf(stderr, "ATOM: \"%.*s\"\n",
+        fprintf(stderr, "ATOM: %.*s\n",
+                (int)(token.range.end.pos - token.range.start.pos),
+                token.range.start.pos);
+        break;
+
+      case TOKEN_TYPE_STRING:
+        fprintf(stderr, "STRING: %.*s\n",
                 (int)(token.range.end.pos - token.range.start.pos),
                 token.range.start.pos);
         break;
