@@ -49,13 +49,14 @@ static const char* s_unary_ops[] = {
 };
 
 static const char* s_binary_ops[] = {
-    "add.i32",  "add.i64",  "add.f32",      "add.f64",      "sub.i32",
-    "sub.i64",  "sub.f32",  "sub.f64",      "mul.i32",      "mul.i64",
-    "mul.f32",  "mul.f64",  "divs.i32",     "divs.i64",     "divu.i32",
-    "divu.i64", "div.f32",  "div.f64",      "mods.i32",     "mods.i64",
-    "modu.i32", "modu.i64", "or.i32",       "or.i64",       "xor.i32",
-    "xor.i64",  "shl.i32",  "shl.i64",      "shr.i32",      "shr.i64",
-    "sar.i32",  "sar.i64",  "copysign.f32", "copysign.f64",
+    "add.i32",      "add.i64",  "add.f32",  "add.f64",  "sub.i32",
+    "sub.i64",      "sub.f32",  "sub.f64",  "mul.i32",  "mul.i64",
+    "mul.f32",      "mul.f64",  "divs.i32", "divs.i64", "divu.i32",
+    "divu.i64",     "div.f32",  "div.f64",  "mods.i32", "mods.i64",
+    "modu.i32",     "modu.i64", "and.i32",  "and.i64",  "or.i32",
+    "or.i64",       "xor.i32",  "xor.i64",  "shl.i32",  "shl.i64",
+    "shr.i32",      "shr.i64",  "sar.i32",  "sar.i64",  "copysign.f32",
+    "copysign.f64",
 };
 
 static const char* s_compare_ops[] = {
