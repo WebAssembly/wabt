@@ -515,7 +515,36 @@ static void parse_var(Tokenizer* tokenizer) {
   }
 }
 
+static int match_type(Token t) {
+  const char* p = t.range.start.pos;
+  size_t len = t.range.end.pos - p;
+  if (len != 3)
+    return 0;
+  return (p[0] == 'i' || p[0] == 'f') &&
+         ((p[1] == '3' && p[2] == '2') || (p[1] == '6' && p[2] == '4'));
+}
+
+static void parse_type(Tokenizer* tokenizer) {
+  Token t = read_token(tokenizer);
+  if (!match_type(t)) {
+    fprintf(stderr, "%d:%d: expected type\n", t.range.start.line,
+            t.range.start.col);
+    exit(1);
+  }
+}
+
 static void parse_expr(Tokenizer* tokenizer);
+
+static void parse_type_list(Tokenizer* tokenizer) {
+  while (1) {
+    Token t = read_token(tokenizer);
+    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+      break;
+    else if (!match_type(t)) {
+      unexpected_token(t);
+    }
+  }
+}
 
 static void parse_block(Tokenizer* tokenizer) {
   while (1) {
@@ -635,20 +664,25 @@ static void parse_func(Tokenizer* tokenizer) {
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "param")) {
-          expect_atom(read_token(tokenizer));
-          Token t = read_token(tokenizer);
-          if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-            expect_atom(t);
+          t = read_token(tokenizer);
+          rewind_token(tokenizer, t);
+          if (match_type(t)) {
+            parse_type_list(tokenizer);
+          } else {
+            parse_var(tokenizer);
+            parse_type(tokenizer);
             expect_close(read_token(tokenizer));
           }
         } else if (match_atom(t, "result")) {
-          expect_atom(read_token(tokenizer));
-          expect_close(read_token(tokenizer));
+          parse_type_list(tokenizer);
         } else if (match_atom(t, "local")) {
-          expect_atom(read_token(tokenizer));
-          Token t = read_token(tokenizer);
-          if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-            expect_atom(t);
+          t = read_token(tokenizer);
+          rewind_token(tokenizer, t);
+          if (match_type(t)) {
+            parse_type_list(tokenizer);
+          } else {
+            parse_var(tokenizer);
+            parse_type(tokenizer);
             expect_close(read_token(tokenizer));
           }
         } else {
