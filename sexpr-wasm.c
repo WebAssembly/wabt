@@ -84,6 +84,14 @@ static const char* s_cast_ops[] = {
     "cast.i32.f32", "cast.f32.i32", "cast.i64.f64", "cast.f64.i64",
 };
 
+static const char* s_mem_int_types[] = {
+    "i8", "i16", "i32", "i64",
+};
+
+static const char* s_mem_float_types[] = {
+    "f32", "f64",
+};
+
 static Token read_token(Tokenizer* t) {
   Token result;
 
@@ -318,8 +326,8 @@ static int match_atom(Token t, const char* s) {
 }
 
 static int match_atom_prefix(Token t, const char* s) {
-  int slen = strlen(s);
-  int len = (int)(t.range.end.pos - t.range.start.pos);
+  size_t slen = strlen(s);
+  size_t len = t.range.end.pos - t.range.start.pos;
   if (slen < len)
     len = slen;
   return strncmp(t.range.start.pos, s, slen) == 0;
@@ -370,6 +378,99 @@ static int match_cast(Token t) {
   return 0;
 }
 
+static int match_load_store(Token t, const char* prefix) {
+  size_t plen = strlen(prefix);
+  const char* p = t.range.start.pos;
+  const char* end = t.range.end.pos;
+  size_t len = end - p;
+  const char** types = NULL;
+  int num_types = 0;
+
+  if (len < plen + 1)
+    return 0;
+  if (strncmp(p, prefix, plen) != 0)
+    return 0;
+  p += plen;
+  switch (*p) {
+    case 's':
+    case 'u':
+      types = s_mem_int_types;
+      num_types = ARRAY_SIZE(s_mem_int_types);
+      p++;
+      if (p >= end || *p != '.')
+        return 0;
+      p++;
+      break;
+
+    case '.':
+      types = s_mem_float_types;
+      num_types = ARRAY_SIZE(s_mem_float_types);
+      p++;
+      break;
+
+    default:
+      return 0;
+  }
+
+  /* try to read alignment */
+  if (p >= end)
+    return 0;
+
+  switch (*p) {
+    case 'i':
+    case 'f':
+      break;
+
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9': {
+      char* endptr;
+      errno = 0;
+      long int value = strtoul(p, &endptr, 10);
+      if (endptr > end || errno != 0) {
+        fprintf(stderr, "%d:%d: invalid alignment\n", t.range.start.line,
+                t.range.start.col);
+        exit(1);
+      }
+      if ((value & (value - 1)) != 0) {
+        fprintf(stderr, "%d:%d: alignment must be power-of-two\n",
+                t.range.start.line, t.range.start.col);
+        exit(1);
+      }
+
+      p = endptr;
+      if (p >= end)
+        return 0;
+      if (*p != '.')
+        return 0;
+      p++;
+      break;
+    }
+
+    default:
+      return 0;
+  }
+
+  /* read mem type suffix */
+  int i;
+  for (i = 0; i < num_types; ++i) {
+    const char* type = types[i];
+    int type_len = strlen(type);
+    if (p + type_len == end) {
+      if (strncmp(p, type, type_len) == 0)
+        return 1;
+    }
+  }
+
+  return 0;
+}
+
 static void unexpected_token(Token t) {
   fprintf(stderr, "%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
           t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
@@ -402,7 +503,7 @@ static void parse_var(Tokenizer* tokenizer) {
       /* var index */
       char* endptr;
       errno = 0;
-      int len = (int)(t.range.end.pos - t.range.start.pos);
+      size_t len = t.range.end.pos - t.range.start.pos;
       long int value = strtoul(t.range.start.pos, &endptr, 10);
       if (endptr - t.range.start.pos != len || errno != 0) {
         fprintf(stderr, "%d:%d: invalid var index\n", t.range.start.line,
@@ -488,10 +589,13 @@ static void parse_expr(Tokenizer* tokenizer) {
       parse_var(tokenizer);
     } else if (match_atom(t, "storeglobal")) {
       parse_var(tokenizer);
-    } else if (match_atom(t, "load")) {
-      /* TODO(binji) */
-    } else if (match_atom(t, "store")) {
-      /* TODO(binji) */
+    } else if (match_load_store(t, "load")) {
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_load_store(t, "store")) {
+      parse_expr(tokenizer);
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
     } else if (match_atom_prefix(t, "const")) {
       expect_atom(read_token(tokenizer));
       expect_close(read_token(tokenizer));
