@@ -1,0 +1,73 @@
+;; (c) 2015 Andreas Rossberg
+
+(module
+  ;; Recursive factorial
+  (func (param i64) (result i64)
+    (if (eq.i64 (getlocal 0) (const.i64 0))
+      (const.i64 1)
+      (mul.i64 (getlocal 0) (call 0 (sub.i64 (getlocal 0) (const.i64 1))))
+    )
+  )
+
+  ;; Recursive factorial named
+  (func $fac-rec (param $n i64) (result i64)
+    (if (eq.i64 (getlocal $n) (const.i64 0))
+      (const.i64 1)
+      (mul.i64
+        (getlocal $n)
+        (call $fac-rec (sub.i64 (getlocal $n) (const.i64 1)))
+      )
+    )
+  )
+
+  ;; Iterative factorial
+  (func (param i64) (result i64)
+    (local i64 i64)
+    (setlocal 1 (getlocal 0))
+    (setlocal 2 (const.i64 1))
+    (label
+      (loop
+        (if
+          (eq.i64 (getlocal 1) (const.i64 0))
+          (break 0)
+          (block
+            (setlocal 2 (mul.i64 (getlocal 1) (getlocal 2)))
+            (setlocal 1 (sub.i64 (getlocal 1) (const.i64 1)))
+          )
+        )
+      )
+    )
+    (return (getlocal 2))
+  )
+
+  ;; Iterative factorial named
+  (func $fac-iter (param $n i64) (result i64)
+    (local $i i64)
+    (local $res i64)
+    (setlocal $i (getlocal $n))
+    (setlocal $res (const.i64 1))
+    (label $done
+      (loop
+        (if
+          (eq.i64 (getlocal $i) (const.i64 0))
+          (break $done)
+          (block
+            (setlocal $res (mul.i64 (getlocal $i) (getlocal $res)))
+            (setlocal $i (sub.i64 (getlocal $i) (const.i64 1)))
+          )
+        )
+      )
+    )
+    (return (getlocal $res))
+  )
+
+  (export "fac-rec" 0)
+  (export "fac-iter" 2)
+  (export "fac-rec-named" $fac-rec)
+  (export "fac-iter-named" $fac-iter)
+)
+
+(asserteq (invoke "fac-rec" (const.i64 25)) (const.i64 7034535277573963776))
+(asserteq (invoke "fac-iter" (const.i64 25)) (const.i64 7034535277573963776))
+(asserteq (invoke "fac-rec-named" (const.i64 25)) (const.i64 7034535277573963776))
+(asserteq (invoke "fac-iter-named" (const.i64 25)) (const.i64 7034535277573963776))
