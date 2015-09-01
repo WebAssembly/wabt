@@ -1,6 +1,0 @@
-;; (c) Ben Smith - 2015
-
-(module
-  (func $main (result i32)
-    (return (const.i32 42)))
-  (export "main" $main))
