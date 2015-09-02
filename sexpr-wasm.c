@@ -472,9 +472,14 @@ static int match_load_store(Token t, const char* prefix) {
 }
 
 static void unexpected_token(Token t) {
-  fprintf(stderr, "%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
+  if (t.type == TOKEN_TYPE_EOF) {
+    fprintf(stderr, "%d:%d: unexpected EOF\n", t.range.start.line,
+            t.range.start.col);
+  } else {
+    fprintf(stderr, "%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
+            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+            t.range.start.pos);
+  }
   exit(1);
 }
 

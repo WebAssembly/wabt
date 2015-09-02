@@ -1,0 +1,4 @@
+# ERROR: 1
+(module
+# STDERR:
+2:1: unexpected EOF
