@@ -52,20 +52,22 @@ typedef struct Tokenizer {
 } Tokenizer;
 
 typedef struct Binding {
-  const char* name;
+  char* name;
   Type type;
 } Binding;
 
 typedef struct Function {
-  const char* name;
-  int num_results;
+  char* name;
   Type* result_types;
-  int num_args;
   Binding* args;
+  Binding* locals;
+  int num_results;
+  int num_args;
+  int num_locals;
 } Function;
 
 typedef struct Export {
-  const char* name;
+  char* name;
   int index;
 } Export;
 
@@ -745,23 +747,11 @@ static void parse_type(Tokenizer* tokenizer, Type* type) {
   }
 }
 
-static void parse_expr(Tokenizer* tokenizer);
+static void parse_expr(Tokenizer* tokenizer, Module* module);
 
-static void parse_type_list(Tokenizer* tokenizer) {
-  Token t = read_token(tokenizer);
+static void parse_block(Tokenizer* tokenizer, Module* module) {
   while (1) {
-    if (!match_type(t, NULL)) {
-      unexpected_token(t);
-    }
-    t = read_token(tokenizer);
-    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-      break;
-  }
-}
-
-static void parse_block(Tokenizer* tokenizer) {
-  while (1) {
-    parse_expr(tokenizer);
+    parse_expr(tokenizer, module);
     Token t = read_token(tokenizer);
     if (t.type == TOKEN_TYPE_CLOSE_PAREN)
       break;
@@ -769,13 +759,13 @@ static void parse_block(Tokenizer* tokenizer) {
   }
 }
 
-static void parse_expr_list(Tokenizer* tokenizer) {
+static void parse_expr_list(Tokenizer* tokenizer, Module* module) {
   while (1) {
     Token t = read_token(tokenizer);
     if (t.type == TOKEN_TYPE_CLOSE_PAREN)
       break;
     rewind_token(tokenizer, t);
-    parse_expr(tokenizer);
+    parse_expr(tokenizer, module);
   }
 }
 
@@ -817,7 +807,7 @@ static void parse_const(Tokenizer* tokenizer, Type type) {
   }
 }
 
-static void parse_expr(Tokenizer* tokenizer) {
+static void parse_expr(Tokenizer* tokenizer, Module* module) {
   Type type;
   Type in_type;
   expect_open(read_token(tokenizer));
@@ -826,18 +816,18 @@ static void parse_expr(Tokenizer* tokenizer) {
     if (match_atom(t, "nop")) {
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "block")) {
-      parse_block(tokenizer);
+      parse_block(tokenizer, module);
     } else if (match_atom(t, "if")) {
-      parse_expr(tokenizer); /* condition */
-      parse_expr(tokenizer); /* true */
+      parse_expr(tokenizer, module); /* condition */
+      parse_expr(tokenizer, module); /* true */
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
-        parse_expr(tokenizer); /* false */
+        parse_expr(tokenizer, module); /* false */
         expect_close(read_token(tokenizer));
       }
     } else if (match_atom(t, "loop")) {
-      parse_block(tokenizer);
+      parse_block(tokenizer, module);
     } else if (match_atom(t, "label")) {
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
@@ -849,7 +839,7 @@ static void parse_expr(Tokenizer* tokenizer) {
       } else {
         unexpected_token(t);
       }
-      parse_block(tokenizer);
+      parse_block(tokenizer, module);
     } else if (match_atom(t, "break")) {
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
@@ -861,11 +851,11 @@ static void parse_expr(Tokenizer* tokenizer) {
       /* TODO(binji) */
     } else if (match_atom(t, "call")) {
       parse_var(tokenizer);
-      parse_expr_list(tokenizer);
+      parse_expr_list(tokenizer, module);
     } else if (match_atom(t, "dispatch")) {
       parse_var(tokenizer);
     } else if (match_atom(t, "return")) {
-      parse_expr_list(tokenizer);
+      parse_expr_list(tokenizer, module);
     } else if (match_atom(t, "destruct")) {
       parse_var(tokenizer);
     } else if (match_atom(t, "getparam")) {
@@ -876,41 +866,41 @@ static void parse_expr(Tokenizer* tokenizer) {
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "setlocal")) {
       parse_var(tokenizer);
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "load_global")) {
       parse_var(tokenizer);
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "store_global")) {
       parse_var(tokenizer);
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_load_store(t, "load")) {
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_load_store(t, "store")) {
-      parse_expr(tokenizer);
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type)) {
       parse_const(tokenizer, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type)) {
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_binary(t, &type)) {
-      parse_expr(tokenizer);
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_compare(t, &in_type, &type)) {
-      parse_expr(tokenizer);
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_convert(t, &in_type, &type)) {
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else if (match_cast(t, &in_type, &type)) {
-      parse_expr(tokenizer);
+      parse_expr(tokenizer, module);
       expect_close(read_token(tokenizer));
     } else {
       unexpected_token(t);
@@ -918,7 +908,7 @@ static void parse_expr(Tokenizer* tokenizer) {
   }
 }
 
-static void parse_func(Tokenizer* tokenizer) {
+static void parse_func(Tokenizer* tokenizer, Module* module) {
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     /* named function */
@@ -930,31 +920,13 @@ static void parse_func(Tokenizer* tokenizer) {
       Token open = t;
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
-        if (match_atom(t, "param")) {
-          t = read_token(tokenizer);
-          rewind_token(tokenizer, t);
-          if (match_type(t, NULL)) {
-            parse_type_list(tokenizer);
-          } else {
-            expect_var_name(read_token(tokenizer));
-            parse_type(tokenizer, NULL);
-            expect_close(read_token(tokenizer));
-          }
-        } else if (match_atom(t, "result")) {
-          parse_type_list(tokenizer);
-        } else if (match_atom(t, "local")) {
-          t = read_token(tokenizer);
-          rewind_token(tokenizer, t);
-          if (match_type(t, NULL)) {
-            parse_type_list(tokenizer);
-          } else {
-            expect_var_name(read_token(tokenizer));
-            parse_type(tokenizer, NULL);
-            expect_close(read_token(tokenizer));
-          }
+        if (match_atom(t, "param") || match_atom(t, "result") ||
+            match_atom(t, "local")) {
+          /* Skip, this has already been pre-parsed */
+          parse_generic(tokenizer);
         } else {
           rewind_token(tokenizer, open);
-          parse_expr(tokenizer);
+          parse_expr(tokenizer, module);
         }
       } else {
         unexpected_token(t);
@@ -992,7 +964,7 @@ static void preparse_binding_list(Tokenizer* tokenizer,
     parse_type(tokenizer, &type);
     expect_close(read_token(tokenizer));
 
-    const char* name =
+    char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
     if (get_binding_by_name(*bindings, *num_bindings, name) != -1) {
       FATAL("%d:%d: redefinition of %s \"%s\"\n", t.range.start.line,
@@ -1015,7 +987,7 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     /* named function */
-    const char* name =
+    char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
     if (get_function_by_name(module, name) != -1) {
       FATAL("%d:%d: redefinition of function \"%s\"\n", t.range.start.line,
@@ -1048,7 +1020,12 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
               else if (!match_type(t, &type))
                 unexpected_token(t);
             }
+          } else {
+            unexpected_token(t);
           }
+        } else if (match_atom(t, "local")) {
+          preparse_binding_list(tokenizer, &function->locals,
+                                &function->num_locals, "local");
         } else {
           rewind_token(tokenizer, t);
           parse_generic(tokenizer);
@@ -1093,6 +1070,23 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
   rewind_token(tokenizer, first);
 }
 
+static void destroy_module(Module* module) {
+  int i;
+  int j;
+  for (i = 0; i < module->num_functions; ++i) {
+    Function* function = &module->functions[i];
+    free(function->name);
+    free(function->result_types);
+    for (j = 0; j < function->num_args; ++j)
+      free(function->args[j].name);
+    free(function->args);
+  }
+  for (i = 0; i < module->num_globals; ++i)
+    free(module->globals[j].name);
+  free(module->globals);
+  free(module->exports);
+}
+
 static void parse_module(Tokenizer* tokenizer) {
   Module module = {};
   preparse_module(tokenizer, &module);
@@ -1103,17 +1097,9 @@ static void parse_module(Tokenizer* tokenizer) {
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "func")) {
-          parse_func(tokenizer);
+          parse_func(tokenizer, &module);
         } else if (match_atom(t, "global")) {
-          t = read_token(tokenizer);
-          if (match_type(t, NULL)) {
-            rewind_token(tokenizer, t);
-            parse_type_list(tokenizer);
-          } else {
-            expect_var_name(t);
-            parse_type(tokenizer, NULL);
-            expect_close(read_token(tokenizer));
-          }
+          parse_generic(tokenizer);
         } else if (match_atom(t, "export")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "table")) {
@@ -1133,6 +1119,7 @@ static void parse_module(Tokenizer* tokenizer) {
       unexpected_token(t);
     }
   }
+  destroy_module(&module);
 }
 
 static void parse(Tokenizer* tokenizer) {
