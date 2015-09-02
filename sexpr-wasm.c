@@ -703,6 +703,44 @@ static void parse_expr_list(Tokenizer* tokenizer) {
   }
 }
 
+static void parse_const(Tokenizer* tokenizer, Type type) {
+  Token t = read_token(tokenizer);
+  expect_atom(t);
+  const char* p = t.range.start.pos;
+  const char* end = t.range.end.pos;
+  switch (type) {
+    case TYPE_I32: {
+      uint32_t value;
+      if (!read_uint32(&p, end, &value)) {
+        FATAL("%d:%d: invalid unsigned 32-bit int\n", t.range.start.line,
+              t.range.start.col);
+      }
+      break;
+    }
+
+    case TYPE_I64: {
+      uint64_t value;
+      if (!read_uint64(&p, end, &value)) {
+        FATAL("%d:%d: invalid unsigned 64-bit int\n", t.range.start.line,
+              t.range.start.col);
+      }
+      break;
+    }
+
+    case TYPE_F32:
+    case TYPE_F64: {
+      double value;
+      if (!read_double(&p, end, &value)) {
+        FATAL("%d:%d: invalid double\n", t.range.start.line, t.range.start.col);
+      }
+      break;
+    }
+
+    default:
+      assert(0);
+  }
+}
+
 static void parse_expr(Tokenizer* tokenizer) {
   Type type;
   Type in_type;
@@ -779,41 +817,7 @@ static void parse_expr(Tokenizer* tokenizer) {
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type)) {
-      t = read_token(tokenizer);
-      expect_atom(t);
-      const char* p = t.range.start.pos;
-      const char* end = t.range.end.pos;
-      switch (type) {
-        case TYPE_I32: {
-          uint32_t value;
-          if (!read_uint32(&p, end, &value)) {
-            FATAL("%d:%d: invalid unsigned 32-bit int\n", t.range.start.line,
-                  t.range.start.col);
-          }
-          break;
-        }
-
-        case TYPE_I64: {
-          uint64_t value;
-          if (!read_uint64(&p, end, &value)) {
-            FATAL("%d:%d: invalid unsigned 64-bit int\n", t.range.start.line,
-                  t.range.start.col);
-          }
-          break;
-        }
-
-        case TYPE_F32:
-        case TYPE_F64: {
-          double value;
-          if (!read_double(&p, end, &value)) {
-            FATAL("%d:%d: invalid double\n", t.range.start.line,
-                  t.range.start.col);
-          }
-          break;
-        }
-
-        default: assert(0);
-      }
+      parse_const(tokenizer, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type)) {
       parse_expr(tokenizer);

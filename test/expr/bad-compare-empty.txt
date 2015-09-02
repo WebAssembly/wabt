@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (eq.i32)))
+# STDERR:
+1:22: expected '(', not ")"

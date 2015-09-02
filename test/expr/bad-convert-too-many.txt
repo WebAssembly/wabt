@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (converts.f32.i32 (const.f32 0) (nop))))
+# STDERR:
+1:47: expected ')', not "("

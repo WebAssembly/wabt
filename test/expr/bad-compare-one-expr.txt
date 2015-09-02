@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (lts.i32 (const.i32 0))))
+# STDERR:
+1:37: expected '(', not ")"

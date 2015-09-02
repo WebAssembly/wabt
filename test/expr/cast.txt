@@ -1,0 +1,6 @@
+(module
+  (func
+    (cast.i32.f32 (const.i32 0))
+    (cast.f32.i32 (const.f32 0))
+    (cast.i64.f64 (const.i64 0))
+    (cast.f64.i64 (const.f64 0))))

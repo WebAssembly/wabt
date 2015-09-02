@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (neg.i32 (const.i32 0) (const.i32 0))))
+# STDERR:
+1:38: expected ')', not "("
