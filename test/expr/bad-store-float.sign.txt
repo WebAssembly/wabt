@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (storeu.f32 (const.i32 0) (const.f32 0))))
+# STDERR:
+1:16: unexpected token "storeu.f32"

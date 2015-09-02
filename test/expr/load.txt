@@ -1,0 +1,12 @@
+(module
+  (func
+    (loads.i8 (const.i32 0))
+    (loads.i16 (const.i32 0))
+    (loads.i32 (const.i32 0))
+    (loads.i64 (const.i32 0))
+    (loadu.i8 (const.i32 0))
+    (loadu.i16 (const.i32 0))
+    (loadu.i32 (const.i32 0))
+    (loadu.i64 (const.i32 0))
+    (load.f32 (const.i32 0))
+    (load.f64 (const.i32 0))))

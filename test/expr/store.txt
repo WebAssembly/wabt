@@ -1,0 +1,12 @@
+(module
+  (func
+    (stores.i8 (const.i32 0) (const.i32 0))
+    (stores.i16 (const.i32 0) (const.i32 0))
+    (stores.i32 (const.i32 0) (const.i32 0))
+    (stores.i64 (const.i32 0) (const.i64 0))
+    (storeu.i8 (const.i32 0) (const.i32 0))
+    (storeu.i16 (const.i32 0) (const.i32 0))
+    (storeu.i32 (const.i32 0) (const.i32 0))
+    (storeu.i64 (const.i32 0) (const.i64 0))
+    (store.f32 (const.i32 0) (const.f32 0))
+    (store.f64 (const.i32 0) (const.f64 0))))
