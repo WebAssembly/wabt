@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (local)))
+# STDERR:
+1:22: expected type
