@@ -1,0 +1,3 @@
+(module
+  (func $foo (param f32)
+    (call $foo (const.f32 0.0))))

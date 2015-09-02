@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (label $foo (break foo))))
+# STDERR:
+1:34: invalid var index

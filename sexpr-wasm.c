@@ -577,6 +577,16 @@ static void parse_block(Tokenizer* tokenizer) {
   }
 }
 
+static void parse_expr_list(Tokenizer* tokenizer) {
+  while (1) {
+    Token t = read_token(tokenizer);
+    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+      break;
+    rewind_token(tokenizer, t);
+    parse_expr(tokenizer);
+  }
+}
+
 static void parse_expr(Tokenizer* tokenizer) {
   expect_open(read_token(tokenizer));
   Token t = read_token(tokenizer);
@@ -619,11 +629,11 @@ static void parse_expr(Tokenizer* tokenizer) {
       /* TODO(binji) */
     } else if (match_atom(t, "call")) {
       parse_var(tokenizer);
-      parse_block(tokenizer);
+      parse_expr_list(tokenizer);
     } else if (match_atom(t, "dispatch")) {
       parse_var(tokenizer);
     } else if (match_atom(t, "return")) {
-      parse_block(tokenizer);
+      parse_expr_list(tokenizer);
     } else if (match_atom(t, "destruct")) {
       parse_var(tokenizer);
     } else if (match_atom(t, "getparam")) {
