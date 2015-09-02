@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (const.i32 one-hundred)))
+# STDERR:
+1:26: invalid unsigned 32-bit int

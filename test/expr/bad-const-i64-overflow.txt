@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (const.i64 18446744073709551616)))
+# STDERR:
+1:26: invalid unsigned 64-bit int

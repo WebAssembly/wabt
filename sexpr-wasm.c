@@ -1,4 +1,6 @@
+#include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +8,13 @@
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
+
+typedef enum Type {
+  TYPE_I32,
+  TYPE_I64,
+  TYPE_F32,
+  TYPE_F64,
+} Type;
 
 typedef enum TokenType {
   TOKEN_TYPE_EOF,
@@ -41,48 +50,111 @@ typedef struct Tokenizer {
   SourceLocation loc;
 } Tokenizer;
 
-static const char* s_unary_ops[] = {
-    "neg.i32",   "neg.i64",   "neg.f32",   "neg.f64",   "abs.i32",
-    "abs.i64",   "abs.f32",   "abs.f64",   "not.i32",   "not.i64",
-    "not.f32",   "not.f64",   "clz.i32",   "clz.i64",   "ctz.i32",
-    "ctz.i64",   "ceil.f32",  "ceil.f64",  "floor.f32", "floor.f64",
-    "trunc.f32", "trunc.f64", "round.f32", "round.f64",
+typedef struct OpNameTypePair {
+  const char* op;
+  Type type;
+} OpNameTypePair;
+
+typedef struct OpNameType2Pair {
+  const char* op;
+  Type in_type;
+  Type out_type;
+} OpNameType2Pair;
+
+static OpNameTypePair s_unary_ops[] = {
+    {"neg.i32", TYPE_I32},   {"neg.i64", TYPE_I64},   {"neg.f32", TYPE_F32},
+    {"neg.f64", TYPE_F64},   {"abs.i32", TYPE_I32},   {"abs.i64", TYPE_I64},
+    {"abs.f32", TYPE_F32},   {"abs.f64", TYPE_F64},   {"not.i32", TYPE_I32},
+    {"not.i64", TYPE_I64},   {"not.f32", TYPE_F32},   {"not.f64", TYPE_F64},
+    {"clz.i32", TYPE_I32},   {"clz.i64", TYPE_I64},   {"ctz.i32", TYPE_I32},
+    {"ctz.i64", TYPE_I64},   {"ceil.f32", TYPE_F32},  {"ceil.f64", TYPE_F64},
+    {"floor.f32", TYPE_F32}, {"floor.f64", TYPE_F64}, {"trunc.f32", TYPE_F32},
+    {"trunc.f64", TYPE_F64}, {"round.f32", TYPE_F32}, {"round.f64", TYPE_F64},
 };
 
-static const char* s_binary_ops[] = {
-    "add.i32",      "add.i64",  "add.f32",  "add.f64",  "sub.i32",
-    "sub.i64",      "sub.f32",  "sub.f64",  "mul.i32",  "mul.i64",
-    "mul.f32",      "mul.f64",  "divs.i32", "divs.i64", "divu.i32",
-    "divu.i64",     "div.f32",  "div.f64",  "mods.i32", "mods.i64",
-    "modu.i32",     "modu.i64", "and.i32",  "and.i64",  "or.i32",
-    "or.i64",       "xor.i32",  "xor.i64",  "shl.i32",  "shl.i64",
-    "shr.i32",      "shr.i64",  "sar.i32",  "sar.i64",  "copysign.f32",
-    "copysign.f64",
+static OpNameTypePair s_binary_ops[] = {
+    {"add.i32", TYPE_I32},      {"add.i64", TYPE_I64},
+    {"add.f32", TYPE_F32},      {"add.f64", TYPE_F64},
+    {"sub.i32", TYPE_I32},      {"sub.i64", TYPE_I64},
+    {"sub.f32", TYPE_F32},      {"sub.f64", TYPE_F64},
+    {"mul.i32", TYPE_I32},      {"mul.i64", TYPE_I64},
+    {"mul.f32", TYPE_F32},      {"mul.f64", TYPE_F64},
+    {"divs.i32", TYPE_I32},     {"divs.i64", TYPE_I64},
+    {"divu.i32", TYPE_I32},     {"divu.i64", TYPE_I64},
+    {"div.f32", TYPE_F32},      {"div.f64", TYPE_F64},
+    {"mods.i32", TYPE_I32},     {"mods.i64", TYPE_I64},
+    {"modu.i32", TYPE_I32},     {"modu.i64", TYPE_I64},
+    {"and.i32", TYPE_I32},      {"and.i64", TYPE_I64},
+    {"or.i32", TYPE_I32},       {"or.i64", TYPE_I64},
+    {"xor.i32", TYPE_I32},      {"xor.i64", TYPE_I64},
+    {"shl.i32", TYPE_I32},      {"shl.i64", TYPE_I64},
+    {"shr.i32", TYPE_I32},      {"shr.i64", TYPE_I64},
+    {"sar.i32", TYPE_I32},      {"sar.i64", TYPE_I64},
+    {"copysign.f32", TYPE_F32}, {"copysign.f64", TYPE_F64},
 };
 
-static const char* s_compare_ops[] = {
-    "eq.i32",  "eq.i64",  "eq.f32",  "eq.f64",  "neq.i32", "neq.i64", "neq.f32",
-    "neq.f64", "lts.i32", "lts.i64", "ltu.i32", "ltu.i64", "lt.f32",  "lt.f64",
-    "les.i32", "les.i64", "leu.i32", "leu.i64", "le.f32",  "le.f64",  "gts.i32",
-    "gts.i64", "gtu.i32", "gtu.i64", "gt.f32",  "gt.f64",  "ges.i32", "ges.i64",
-    "geu.i32", "geu.i64", "ge.f32",  "ge.f64",
+static OpNameType2Pair s_compare_ops[] = {
+    {"eq.i32", TYPE_I32, TYPE_I32},  {"eq.i64", TYPE_I64, TYPE_I32},
+    {"eq.f32", TYPE_F32, TYPE_I32},  {"eq.f64", TYPE_F64, TYPE_I32},
+    {"neq.i32", TYPE_I32, TYPE_I32}, {"neq.i64", TYPE_I64, TYPE_I32},
+    {"neq.f32", TYPE_F32, TYPE_I32}, {"neq.f64", TYPE_F64, TYPE_I32},
+    {"lts.i32", TYPE_I32, TYPE_I32}, {"lts.i64", TYPE_I64, TYPE_I32},
+    {"ltu.i32", TYPE_I32, TYPE_I32}, {"ltu.i64", TYPE_I64, TYPE_I32},
+    {"lt.f32", TYPE_F32, TYPE_I32},  {"lt.f64", TYPE_F64, TYPE_I32},
+    {"les.i32", TYPE_I32, TYPE_I32}, {"les.i64", TYPE_I64, TYPE_I32},
+    {"leu.i32", TYPE_I32, TYPE_I32}, {"leu.i64", TYPE_I64, TYPE_I32},
+    {"le.f32", TYPE_F32, TYPE_I32},  {"le.f64", TYPE_F64, TYPE_I32},
+    {"gts.i32", TYPE_I32, TYPE_I32}, {"gts.i64", TYPE_I64, TYPE_I32},
+    {"gtu.i32", TYPE_I32, TYPE_I32}, {"gtu.i64", TYPE_I64, TYPE_I32},
+    {"gt.f32", TYPE_F32, TYPE_I32},  {"gt.f64", TYPE_F64, TYPE_I32},
+    {"ges.i32", TYPE_I32, TYPE_I32}, {"ges.i64", TYPE_I64, TYPE_I32},
+    {"geu.i32", TYPE_I32, TYPE_I32}, {"geu.i64", TYPE_I64, TYPE_I32},
+    {"ge.f32", TYPE_F32, TYPE_I32},  {"ge.f64", TYPE_F64, TYPE_I32},
 };
 
-static const char* s_convert_ops[] = {
-    "converts.i32.i32", "convertu.i32.i32", "converts.i32.i64",
-    "convertu.i32.i64", "converts.i64.i32", "convertu.i64.i32",
-    "converts.i64.i64", "convertu.i64.i64", "converts.i32.f32",
-    "convertu.i32.f32", "converts.i32.f64", "convertu.i32.f64",
-    "converts.i64.f32", "convertu.i64.f32", "converts.i64.f64",
-    "convertu.i64.f64", "converts.f32.i32", "convertu.f32.i32",
-    "converts.f32.i64", "convertu.f32.i64", "converts.f64.i32",
-    "convertu.f64.i32", "converts.f64.i64", "convertu.f64.i64",
-    "convert.f32.f32",  "convert.f32.f64",  "convert.f64.f32",
-    "convert.f64.f64",
+static OpNameType2Pair s_convert_ops[] = {
+    {"converts.i32.i32", TYPE_I32, TYPE_I32},
+    {"convertu.i32.i32", TYPE_I32, TYPE_I32},
+    {"converts.i32.i64", TYPE_I32, TYPE_I64},
+    {"convertu.i32.i64", TYPE_I32, TYPE_I64},
+    {"converts.i64.i32", TYPE_I64, TYPE_I32},
+    {"convertu.i64.i32", TYPE_I64, TYPE_I32},
+    {"converts.i64.i64", TYPE_I64, TYPE_I64},
+    {"convertu.i64.i64", TYPE_I64, TYPE_I64},
+    {"converts.i32.f32", TYPE_I32, TYPE_F32},
+    {"convertu.i32.f32", TYPE_I32, TYPE_F32},
+    {"converts.i32.f64", TYPE_I32, TYPE_F64},
+    {"convertu.i32.f64", TYPE_I32, TYPE_F64},
+    {"converts.i64.f32", TYPE_I64, TYPE_F32},
+    {"convertu.i64.f32", TYPE_I64, TYPE_F32},
+    {"converts.i64.f64", TYPE_I64, TYPE_F64},
+    {"convertu.i64.f64", TYPE_I64, TYPE_F64},
+    {"converts.f32.i32", TYPE_F32, TYPE_I32},
+    {"convertu.f32.i32", TYPE_F32, TYPE_I32},
+    {"converts.f32.i64", TYPE_F32, TYPE_I64},
+    {"convertu.f32.i64", TYPE_F32, TYPE_I64},
+    {"converts.f64.i32", TYPE_F64, TYPE_I32},
+    {"convertu.f64.i32", TYPE_F64, TYPE_I32},
+    {"converts.f64.i64", TYPE_F64, TYPE_I64},
+    {"convertu.f64.i64", TYPE_F64, TYPE_I64},
+    {"convert.f32.f32", TYPE_F32, TYPE_F32},
+    {"convert.f32.f64", TYPE_F32, TYPE_F64},
+    {"convert.f64.f32", TYPE_F64, TYPE_F32},
+    {"convert.f64.f64", TYPE_F64, TYPE_F64},
 };
 
-static const char* s_cast_ops[] = {
-    "cast.i32.f32", "cast.f32.i32", "cast.i64.f64", "cast.f64.i64",
+static OpNameType2Pair s_cast_ops[] = {
+    {"cast.i32.f32", TYPE_I32, TYPE_F32},
+    {"cast.f32.i32", TYPE_F32, TYPE_I32},
+    {"cast.i64.f64", TYPE_I64, TYPE_F64},
+    {"cast.f64.i64", TYPE_F64, TYPE_I64},
+};
+
+static OpNameTypePair s_const_ops[] = {
+    {"const.i32", TYPE_I32},
+    {"const.i64", TYPE_I64},
+    {"const.f32", TYPE_F32},
+    {"const.f64", TYPE_F64},
 };
 
 static const char* s_mem_int_types[] = {
@@ -92,6 +164,37 @@ static const char* s_mem_int_types[] = {
 static const char* s_mem_float_types[] = {
     "f32", "f64",
 };
+
+static int read_uint32(const char** s, const char* end, uint32_t* out) {
+  errno = 0;
+  char* endptr;
+  uint64_t value = strtoul(*s, &endptr, 10);
+  if (endptr != end || errno != 0 || value >= (uint64_t)UINT32_MAX + 1)
+    return 0;
+  *out = value;
+  *s = endptr;
+  return 1;
+}
+
+static int read_uint64(const char** s, const char* end, uint64_t* out) {
+  errno = 0;
+  char* endptr;
+  *out = strtoull(*s, &endptr, 10);
+  if (endptr != end || errno != 0)
+    return 0;
+  *s = endptr;
+  return 1;
+}
+
+static int read_double(const char** s, const char* end, double* out) {
+  errno = 0;
+  char* endptr;
+  *out = strtod(*s, &endptr);
+  if (endptr != end || errno != 0)
+    return 0;
+  *s = endptr;
+  return 1;
+}
 
 static Token read_token(Tokenizer* t) {
   Token result;
@@ -343,47 +446,71 @@ static int match_atom_prefix(Token t, const char* s) {
   return strncmp(t.range.start.pos, s, slen) == 0;
 }
 
-static int match_unary(Token t) {
+static int match_unary(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_unary_ops); ++i) {
-    if (match_atom(t, s_unary_ops[i]))
+    if (match_atom(t, s_unary_ops[i].op)) {
+      *type = s_unary_ops[i].type;
       return 1;
+    }
   }
   return 0;
 }
 
-static int match_binary(Token t) {
+static int match_binary(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_binary_ops); ++i) {
-    if (match_atom(t, s_binary_ops[i]))
+    if (match_atom(t, s_binary_ops[i].op)) {
+      *type = s_binary_ops[i].type;
       return 1;
+    }
   }
   return 0;
 }
 
-static int match_compare(Token t) {
+static int match_compare(Token t, Type* in_type, Type* out_type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_compare_ops); ++i) {
-    if (match_atom(t, s_compare_ops[i]))
+    if (match_atom(t, s_compare_ops[i].op)) {
+      *in_type = s_compare_ops[i].in_type;
+      *out_type = s_compare_ops[i].out_type;
       return 1;
+    }
   }
   return 0;
 }
 
-static int match_convert(Token t) {
+static int match_convert(Token t, Type* in_type, Type* out_type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_convert_ops); ++i) {
-    if (match_atom(t, s_convert_ops[i]))
+    if (match_atom(t, s_convert_ops[i].op)) {
+      *in_type = s_convert_ops[i].in_type;
+      *out_type = s_convert_ops[i].out_type;
       return 1;
+    }
   }
   return 0;
 }
 
-static int match_cast(Token t) {
+static int match_cast(Token t, Type* in_type, Type* out_type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_cast_ops); ++i) {
-    if (match_atom(t, s_cast_ops[i]))
+    if (match_atom(t, s_cast_ops[i].op)) {
+      *in_type = s_cast_ops[i].in_type;
+      *out_type = s_cast_ops[i].out_type;
       return 1;
+    }
+  }
+  return 0;
+}
+
+static int match_const(Token t, Type* type) {
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_const_ops); ++i) {
+    if (match_atom(t, s_const_ops[i].op)) {
+      *type = s_const_ops[i].type;
+      return 1;
+    }
   }
   return 0;
 }
@@ -440,10 +567,13 @@ static int match_load_store(Token t, const char* prefix) {
     case '7':
     case '8':
     case '9': {
-      char* endptr;
-      errno = 0;
-      long int value = strtoul(p, &endptr, 10);
-      if (endptr > end || errno != 0) {
+      /* find first non-digit */
+      const char* align_end = p;
+      while (align_end < end && *align_end >= '0' && *align_end <= '9')
+        align_end++;
+
+      uint32_t value;
+      if (!read_uint32(&p, align_end, &value)) {
         FATAL("%d:%d: invalid alignment\n", t.range.start.line,
               t.range.start.col);
       }
@@ -452,7 +582,6 @@ static int match_load_store(Token t, const char* prefix) {
               t.range.start.col);
       }
 
-      p = endptr;
       if (p >= end)
         return 0;
       if (*p != '.')
@@ -511,11 +640,9 @@ static void parse_var(Tokenizer* tokenizer) {
       /* var name */
     } else {
       /* var index */
-      char* endptr;
-      errno = 0;
-      size_t len = t.range.end.pos - t.range.start.pos;
-      long int value = strtoul(t.range.start.pos, &endptr, 10);
-      if (endptr - t.range.start.pos != len || errno != 0) {
+      uint32_t value;
+      const char* p = t.range.start.pos;
+      if (!read_uint32(&p, t.range.end.pos, &value) || p != t.range.end.pos) {
         FATAL("%d:%d: invalid var index\n", t.range.start.line,
               t.range.start.col);
       }
@@ -577,6 +704,8 @@ static void parse_expr_list(Tokenizer* tokenizer) {
 }
 
 static void parse_expr(Tokenizer* tokenizer) {
+  Type type;
+  Type in_type;
   expect_open(read_token(tokenizer));
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
@@ -649,24 +778,58 @@ static void parse_expr(Tokenizer* tokenizer) {
       parse_expr(tokenizer);
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
-    } else if (match_atom_prefix(t, "const")) {
-      expect_atom(read_token(tokenizer));
+    } else if (match_const(t, &type)) {
+      t = read_token(tokenizer);
+      expect_atom(t);
+      const char* p = t.range.start.pos;
+      const char* end = t.range.end.pos;
+      switch (type) {
+        case TYPE_I32: {
+          uint32_t value;
+          if (!read_uint32(&p, end, &value)) {
+            FATAL("%d:%d: invalid unsigned 32-bit int\n", t.range.start.line,
+                  t.range.start.col);
+          }
+          break;
+        }
+
+        case TYPE_I64: {
+          uint64_t value;
+          if (!read_uint64(&p, end, &value)) {
+            FATAL("%d:%d: invalid unsigned 64-bit int\n", t.range.start.line,
+                  t.range.start.col);
+          }
+          break;
+        }
+
+        case TYPE_F32:
+        case TYPE_F64: {
+          double value;
+          if (!read_double(&p, end, &value)) {
+            FATAL("%d:%d: invalid double\n", t.range.start.line,
+                  t.range.start.col);
+          }
+          break;
+        }
+
+        default: assert(0);
+      }
       expect_close(read_token(tokenizer));
-    } else if (match_unary(t)) {
+    } else if (match_unary(t, &type)) {
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
-    } else if (match_binary(t)) {
-      parse_expr(tokenizer);
-      parse_expr(tokenizer);
-      expect_close(read_token(tokenizer));
-    } else if (match_compare(t)) {
+    } else if (match_binary(t, &type)) {
       parse_expr(tokenizer);
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
-    } else if (match_convert(t)) {
+    } else if (match_compare(t, &in_type, &type)) {
+      parse_expr(tokenizer);
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
-    } else if (match_cast(t)) {
+    } else if (match_convert(t, &in_type, &type)) {
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
+    } else if (match_cast(t, &in_type, &type)) {
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
     } else {
