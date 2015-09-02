@@ -276,6 +276,8 @@ def main(args):
                       action='store_true')
   parser.add_argument('-s', '--slow', help='run slow tests.',
                       action='store_true')
+  parser.add_argument('-j', '--jobs', help='number of jobs to use to run tests',
+                      type=int, default=multiprocessing.cpu_count())
   parser.add_argument('patterns', metavar='pattern', nargs='*',
                       help='test patterns.')
   options = parser.parse_args(args)
@@ -323,7 +325,7 @@ def main(args):
     test_count += 1
 
   outq = multiprocessing.Queue()
-  num_proc = multiprocessing.cpu_count()
+  num_proc = options.jobs
   processes = []
   status.Start(test_count)
 
