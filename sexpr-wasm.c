@@ -5,6 +5,7 @@
 
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 
 typedef enum TokenType {
   TOKEN_TYPE_EOF,
@@ -129,8 +130,7 @@ static Token read_token(Tokenizer* t) {
               break;
 
             case '\n':
-              fprintf(stderr, "newline in string\n");
-              exit(1);
+              FATAL("newline in string\n");
               break;
 
             case '"':
@@ -294,44 +294,39 @@ static void print_tokens(Tokenizer* tokenizer) {
 
 static void expect_open(Token t) {
   if (t.type != TOKEN_TYPE_OPEN_PAREN) {
-    fprintf(stderr, "%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
-            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-            t.range.start.pos);
-    exit(1);
+    FATAL("%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
   }
 }
 
 static void expect_close(Token t) {
   if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-    fprintf(stderr, "%d:%d: expected ')', not \"%.*s\"\n", t.range.start.line,
-            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-            t.range.start.pos);
-    exit(1);
+    FATAL("%d:%d: expected ')', not \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
   }
 }
 
 static void expect_atom(Token t) {
   if (t.type != TOKEN_TYPE_ATOM) {
-    fprintf(stderr, "%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
-            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-            t.range.start.pos);
-    exit(1);
+    FATAL("%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
   }
 }
 
 static void expect_var_name(Token t) {
   if (t.type != TOKEN_TYPE_ATOM) {
-    fprintf(stderr, "%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
-            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-            t.range.start.pos);
-    exit(1);
+    FATAL("%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
   }
 
   if (t.range.end.pos - t.range.start.pos < 1 ||
       t.range.start.pos[0] != '$') {
-    fprintf(stderr, "%d:%d: expected name to begin with $\n",
-            t.range.start.line, t.range.start.col);
-    exit(1);
+    FATAL("%d:%d: expected name to begin with $\n", t.range.start.line,
+          t.range.start.col);
   }
 }
 
@@ -449,14 +444,12 @@ static int match_load_store(Token t, const char* prefix) {
       errno = 0;
       long int value = strtoul(p, &endptr, 10);
       if (endptr > end || errno != 0) {
-        fprintf(stderr, "%d:%d: invalid alignment\n", t.range.start.line,
-                t.range.start.col);
-        exit(1);
+        FATAL("%d:%d: invalid alignment\n", t.range.start.line,
+              t.range.start.col);
       }
       if ((value & (value - 1)) != 0) {
-        fprintf(stderr, "%d:%d: alignment must be power-of-two\n",
-                t.range.start.line, t.range.start.col);
-        exit(1);
+        FATAL("%d:%d: alignment must be power-of-two\n", t.range.start.line,
+              t.range.start.col);
       }
 
       p = endptr;
@@ -488,14 +481,12 @@ static int match_load_store(Token t, const char* prefix) {
 
 static void unexpected_token(Token t) {
   if (t.type == TOKEN_TYPE_EOF) {
-    fprintf(stderr, "%d:%d: unexpected EOF\n", t.range.start.line,
-            t.range.start.col);
+    FATAL("%d:%d: unexpected EOF\n", t.range.start.line, t.range.start.col);
   } else {
-    fprintf(stderr, "%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
-            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-            t.range.start.pos);
+    FATAL("%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
   }
-  exit(1);
 }
 
 static void parse_generic(Tokenizer* tokenizer) {
@@ -507,8 +498,7 @@ static void parse_generic(Tokenizer* tokenizer) {
     } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
       nesting--;
     } else if (t.type == TOKEN_TYPE_EOF) {
-      fprintf(stderr, "unexpected eof.\n");
-      exit(1);
+      FATAL("unexpected eof.\n");
     }
   }
 }
@@ -526,9 +516,8 @@ static void parse_var(Tokenizer* tokenizer) {
       size_t len = t.range.end.pos - t.range.start.pos;
       long int value = strtoul(t.range.start.pos, &endptr, 10);
       if (endptr - t.range.start.pos != len || errno != 0) {
-        fprintf(stderr, "%d:%d: invalid var index\n", t.range.start.line,
-                t.range.start.col);
-        exit(1);
+        FATAL("%d:%d: invalid var index\n", t.range.start.line,
+              t.range.start.col);
       }
       (void)value;
     }
@@ -547,9 +536,7 @@ static int match_type(Token t) {
 static void parse_type(Tokenizer* tokenizer) {
   Token t = read_token(tokenizer);
   if (!match_type(t)) {
-    fprintf(stderr, "%d:%d: expected type\n", t.range.start.line,
-            t.range.start.col);
-    exit(1);
+    FATAL("%d:%d: expected type\n", t.range.start.line, t.range.start.col);
   }
 }
 
@@ -802,8 +789,7 @@ int main(int argc, char** argv) {
   const char* filename = argv[1];
   FILE* f = fopen(filename, "rb");
   if (!f) {
-    fprintf(stderr, "unable to read %s\n", filename);
-    return 1;
+    FATAL("unable to read %s\n", filename);
   }
 
   fseek(f, 0, SEEK_END);
@@ -811,12 +797,10 @@ int main(int argc, char** argv) {
   fseek(f, 0, SEEK_SET);
   void* data = malloc(fsize);
   if (!data) {
-    fprintf(stderr, "unable to alloc %zd bytes\n", fsize);
-    return 1;
+    FATAL("unable to alloc %zd bytes\n", fsize);
   }
   if (fread(data, 1, fsize, f) != fsize) {
-    fprintf(stderr, "unable to read %zd bytes from %s\n", fsize, filename);
-    return 1;
+    FATAL("unable to read %zd bytes from %s\n", fsize, filename);
   }
   fclose(f);
 
