@@ -521,6 +521,8 @@ static void parse_var(Tokenizer* tokenizer) {
       }
       (void)value;
     }
+  } else {
+    unexpected_token(t);
   }
 }
 

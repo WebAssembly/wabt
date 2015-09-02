@@ -1,0 +1,5 @@
+# ERROR: 1
+(module (func (local $foo f64)
+  (getlocal $foo (nop))))
+# STDERR:
+2:18: expected ')', not "("

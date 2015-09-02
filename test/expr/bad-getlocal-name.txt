@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (local $f f32) (getlocal f)))
+# STDERR:
+1:40: invalid var index

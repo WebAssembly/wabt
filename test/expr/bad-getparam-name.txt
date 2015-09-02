@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (param $n i32) (getparam n)))
+# STDERR:
+1:40: invalid var index

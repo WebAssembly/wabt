@@ -1,0 +1,6 @@
+# ERROR: 1
+(module (func
+  (local $n i32)
+  (setlocal n (const.i32 0))))
+# STDERR:
+3:13: invalid var index

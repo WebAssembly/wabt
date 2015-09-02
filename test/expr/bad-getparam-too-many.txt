@@ -1,0 +1,5 @@
+# ERROR: 1
+(module (func (param $foo f64)
+  (getparam $foo (nop))))
+# STDERR:
+2:18: expected ')', not "("

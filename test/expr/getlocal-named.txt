@@ -1,0 +1,1 @@
+(module (func (local $foo i32) (getlocal $foo)))

@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (local i32) (getlocal)))
+# STDERR:
+1:36: unexpected token ")"

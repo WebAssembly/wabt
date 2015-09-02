@@ -1,0 +1,6 @@
+# ERROR: 1
+(module (func
+  (local i32 i32)
+  (setlocal 0 (nop) (nop))))
+# STDERR:
+3:21: expected ')', not "("
