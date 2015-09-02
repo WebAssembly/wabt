@@ -1,0 +1,2 @@
+(module (global i32)
+  (func (load_global 0)))

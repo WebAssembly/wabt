@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (global i32 i32 foo))
+# STDERR:
+1:25: unexpected token "foo"

@@ -1,0 +1,5 @@
+# ERROR: 1
+(module (global $n i32)
+  (func (load_global)))
+# STDERR:
+2:21: unexpected token ")"

@@ -635,10 +635,13 @@ static void parse_expr(Tokenizer* tokenizer) {
       parse_var(tokenizer);
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "loadglobal")) {
+    } else if (match_atom(t, "load_global")) {
       parse_var(tokenizer);
-    } else if (match_atom(t, "storeglobal")) {
+      expect_close(read_token(tokenizer));
+    } else if (match_atom(t, "store_global")) {
       parse_var(tokenizer);
+      parse_expr(tokenizer);
+      expect_close(read_token(tokenizer));
     } else if (match_load_store(t, "load")) {
       parse_expr(tokenizer);
       expect_close(read_token(tokenizer));
@@ -731,7 +734,15 @@ static void parse_module(Tokenizer* tokenizer) {
         if (match_atom(t, "func")) {
           parse_func(tokenizer);
         } else if (match_atom(t, "global")) {
-          parse_generic(tokenizer);
+          t = read_token(tokenizer);
+          if (match_type(t)) {
+            rewind_token(tokenizer, t);
+            parse_type_list(tokenizer);
+          } else {
+            expect_var_name(t);
+            parse_type(tokenizer);
+            expect_close(read_token(tokenizer));
+          }
         } else if (match_atom(t, "export")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "table")) {

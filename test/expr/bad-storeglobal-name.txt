@@ -1,0 +1,5 @@
+# ERROR: 1
+(module (global $n i32)
+  (func (store_global n (const.i32 0))))
+# STDERR:
+2:23: invalid var index

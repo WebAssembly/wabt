@@ -1,0 +1,5 @@
+# ERROR: 1
+(module (global i32)
+  (func (store_global 0)))
+# STDERR:
+2:24: expected '(', not ")"

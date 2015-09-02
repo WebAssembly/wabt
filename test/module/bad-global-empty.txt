@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (global))
+# STDERR:
+1:16: expected ATOM, not ")"

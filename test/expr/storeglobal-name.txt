@@ -1,0 +1,2 @@
+(module (global $n i32)
+  (func (store_global $n (const.i32 42))))

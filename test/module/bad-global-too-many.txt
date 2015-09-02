@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (global $n i32 i32))
+# STDERR:
+1:24: expected ')', not "i32"

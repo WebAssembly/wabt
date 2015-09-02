@@ -1,0 +1,2 @@
+(module (global $n i32)
+  (func (load_global $n)))

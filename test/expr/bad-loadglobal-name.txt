@@ -1,0 +1,5 @@
+# ERROR: 1
+(module (global $n f32)
+  (func (load_global n)))
+# STDERR:
+2:22: invalid var index

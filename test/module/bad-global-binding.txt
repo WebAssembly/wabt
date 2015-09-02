@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (global $n $foo))
+# STDERR:
+1:20: expected type

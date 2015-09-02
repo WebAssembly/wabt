@@ -1,0 +1,2 @@
+(module (global i32)
+  (func (store_global 0 (const.i32 12))))
