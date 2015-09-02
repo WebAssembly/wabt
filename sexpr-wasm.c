@@ -319,6 +319,22 @@ static void expect_atom(Token t) {
   }
 }
 
+static void expect_var_name(Token t) {
+  if (t.type != TOKEN_TYPE_ATOM) {
+    fprintf(stderr, "%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
+            t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+            t.range.start.pos);
+    exit(1);
+  }
+
+  if (t.range.end.pos - t.range.start.pos < 1 ||
+      t.range.start.pos[0] != '$') {
+    fprintf(stderr, "%d:%d: expected name to begin with $\n",
+            t.range.start.line, t.range.start.col);
+    exit(1);
+  }
+}
+
 static int match_atom(Token t, const char* s) {
   return strncmp(t.range.start.pos, s, t.range.end.pos - t.range.start.pos) ==
          0;
@@ -584,6 +600,7 @@ static void parse_expr(Tokenizer* tokenizer) {
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
         /* label */
+        expect_var_name(t);
       } else if (t.type == TOKEN_TYPE_OPEN_PAREN) {
         /* no label */
         rewind_token(tokenizer, t);

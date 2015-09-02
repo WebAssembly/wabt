@@ -1,0 +1,1 @@
+(module (func (if (const.f32 0) (nop) (nop))))

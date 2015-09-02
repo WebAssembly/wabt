@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (if (nop) (nop) (nop) (nop))))
+# STDERR:
+1:37: expected ')', not "("

@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (label $foo)))
+# STDERR:
+1:26: expected '(', not ")"

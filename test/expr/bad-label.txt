@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (label)))
+# STDERR:
+1:21: unexpected token ")"
