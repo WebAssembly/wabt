@@ -690,7 +690,7 @@ static void parse_func(Tokenizer* tokenizer) {
           if (match_type(t)) {
             parse_type_list(tokenizer);
           } else {
-            parse_var(tokenizer);
+            expect_var_name(read_token(tokenizer));
             parse_type(tokenizer);
             expect_close(read_token(tokenizer));
           }
@@ -702,7 +702,7 @@ static void parse_func(Tokenizer* tokenizer) {
           if (match_type(t)) {
             parse_type_list(tokenizer);
           } else {
-            parse_var(tokenizer);
+            expect_var_name(read_token(tokenizer));
             parse_type(tokenizer);
             expect_close(read_token(tokenizer));
           }

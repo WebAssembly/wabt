@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (local)))
 # STDERR:
-1:21: unexpected token ")"
+1:21: expected ATOM, not ")"
