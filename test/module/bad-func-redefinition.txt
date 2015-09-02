@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (func $n (nop))
+  (func $n (nop)))
+# STDERR:
+3:9: redefinition of function "$n"

@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_FUNCTION_ARGS 10
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
@@ -52,17 +51,18 @@ typedef struct Tokenizer {
   SourceLocation loc;
 } Tokenizer;
 
-typedef struct Function {
-  const char* name;
-  Type result_type;
-  int num_args;
-  Type arg_types[MAX_FUNCTION_ARGS];
-} Function;
-
-typedef struct Global {
+typedef struct Binding {
   const char* name;
   Type type;
-} Global;
+} Binding;
+
+typedef struct Function {
+  const char* name;
+  int num_results;
+  Type* result_types;
+  int num_args;
+  Binding* args;
+} Function;
 
 typedef struct Export {
   const char* name;
@@ -71,7 +71,7 @@ typedef struct Export {
 
 typedef struct Module {
   Function* functions;
-  Global* globals;
+  Binding* globals;
   Export* exports;
   int num_functions;
   int num_globals;
@@ -209,11 +209,29 @@ static void realloc_list(void** elts, int* num_elts, int elt_size) {
   }
 }
 
-static int get_global_by_name(Module* module, const char* name) {
+static int get_binding_by_name(Binding* bindings,
+                               int num_bindings,
+                               const char* name) {
   int i;
-  for (i = 0; i < module->num_globals; ++i) {
-    Global* global = &module->globals[i];
-    if (global->name && strcmp(name, global->name) == 0)
+  for (i = 0; i < num_bindings; ++i) {
+    Binding* binding = &bindings[i];
+    if (binding->name && strcmp(name, binding->name) == 0)
+      return i;
+  }
+  return -1;
+}
+
+#if 0
+static int get_global_by_name(Module* module, const char* name) {
+  return get_binding_by_name(module->globals, module->num_globals, name);
+}
+#endif
+
+static int get_function_by_name(Module* module, const char* name) {
+  int i;
+  for (i = 0; i < module->num_functions; ++i) {
+    Function* function = &module->functions[i];
+    if (function->name && strcmp(name, function->name) == 0)
       return i;
   }
   return -1;
@@ -950,20 +968,18 @@ static void parse_func(Tokenizer* tokenizer) {
   }
 }
 
-static void preparse_func(Tokenizer* tokenizer, Module* module) {
-  parse_generic(tokenizer);
-}
-
-static void preparse_global(Tokenizer* tokenizer, Module* module) {
+static void preparse_binding_list(Tokenizer* tokenizer,
+                                  Binding** bindings,
+                                  int* num_bindings,
+                                  const char* desc) {
   Token t = read_token(tokenizer);
   Type type;
   if (match_type(t, &type)) {
     while (1) {
-      realloc_list((void**)&module->globals, &module->num_globals,
-                   sizeof(Global));
-      Global* global = &module->globals[module->num_globals - 1];
-      global->name = NULL;
-      global->type = type;
+      realloc_list((void**)bindings, num_bindings, sizeof(Binding));
+      Binding* binding = &(*bindings)[*num_bindings - 1];
+      binding->name = NULL;
+      binding->type = type;
 
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_CLOSE_PAREN)
@@ -978,16 +994,74 @@ static void preparse_global(Tokenizer* tokenizer, Module* module) {
 
     const char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_global_by_name(module, name) != -1) {
-      FATAL("%d:%d: redefinition of global \"%s\"\n", t.range.start.line,
+    if (get_binding_by_name(*bindings, *num_bindings, name) != -1) {
+      FATAL("%d:%d: redefinition of %s \"%s\"\n", t.range.start.line,
+            t.range.start.col, desc, name);
+    }
+
+    realloc_list((void**)bindings, num_bindings, sizeof(Binding));
+    Binding* binding = &(*bindings)[*num_bindings - 1];
+    binding->name = name;
+    binding->type = type;
+  }
+}
+
+static void preparse_func(Tokenizer* tokenizer, Module* module) {
+  realloc_list((void**)&module->functions, &module->num_functions,
+               sizeof(Function));
+  Function* function = &module->functions[module->num_functions - 1];
+  memset(function, 0, sizeof(Function));
+
+  Token t = read_token(tokenizer);
+  if (t.type == TOKEN_TYPE_ATOM) {
+    /* named function */
+    const char* name =
+        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+    if (get_function_by_name(module, name) != -1) {
+      FATAL("%d:%d: redefinition of function \"%s\"\n", t.range.start.line,
             t.range.start.col, name);
     }
 
-    realloc_list((void**)&module->globals, &module->num_globals,
-                 sizeof(Global));
-    Global* global = &module->globals[module->num_globals - 1];
-    global->name = name;
-    global->type = type;
+    function->name = name;
+    t = read_token(tokenizer);
+  }
+
+  while (1) {
+    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      Type type;
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_ATOM) {
+        if (match_atom(t, "param")) {
+          preparse_binding_list(tokenizer, &function->args, &function->num_args,
+                                "function argument");
+        } else if (match_atom(t, "result")) {
+          t = read_token(tokenizer);
+          if (match_type(t, &type)) {
+            while (1) {
+              realloc_list((void**)&function->result_types,
+                           &function->num_results, sizeof(Type));
+              function->result_types[function->num_results - 1] = type;
+
+              t = read_token(tokenizer);
+              if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+                break;
+              else if (!match_type(t, &type))
+                unexpected_token(t);
+            }
+          }
+        } else {
+          rewind_token(tokenizer, t);
+          parse_generic(tokenizer);
+        }
+      } else {
+        unexpected_token(t);
+      }
+      t = read_token(tokenizer);
+    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+      break;
+    } else {
+      unexpected_token(t);
+    }
   }
 }
 
@@ -1001,7 +1075,8 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
         if (match_atom(t, "func")) {
           preparse_func(tokenizer, module);
         } else if (match_atom(t, "global")) {
-          preparse_global(tokenizer, module);
+          preparse_binding_list(tokenizer, &module->globals,
+                                &module->num_globals, "global");
         } else {
           parse_generic(tokenizer);
         }
