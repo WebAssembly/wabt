@@ -142,7 +142,7 @@ static Token read_token(Tokenizer* t) {
           t->loc.col++;
           t->loc.pos++;
         }
-done_string:
+      done_string:
         result.range.end = t->loc;
         return result;
 
@@ -309,7 +309,6 @@ static void expect_close(Token t) {
     exit(1);
   }
 }
-
 
 static void expect_atom(Token t) {
   if (t.type != TOKEN_TYPE_ATOM) {
