@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (global $n i32) (global $n f32))
+# STDERR:
+1:33: redefinition of global "$n"

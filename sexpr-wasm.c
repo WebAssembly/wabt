@@ -5,11 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_FUNCTION_ARGS 10
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 
 typedef enum Type {
+  TYPE_VOID,
   TYPE_I32,
   TYPE_I64,
   TYPE_F32,
@@ -50,18 +52,44 @@ typedef struct Tokenizer {
   SourceLocation loc;
 } Tokenizer;
 
-typedef struct OpNameTypePair {
-  const char* op;
-  Type type;
-} OpNameTypePair;
+typedef struct Function {
+  const char* name;
+  Type result_type;
+  int num_args;
+  Type arg_types[MAX_FUNCTION_ARGS];
+} Function;
 
-typedef struct OpNameType2Pair {
-  const char* op;
+typedef struct Global {
+  const char* name;
+  Type type;
+} Global;
+
+typedef struct Export {
+  const char* name;
+  int index;
+} Export;
+
+typedef struct Module {
+  Function* functions;
+  Global* globals;
+  Export* exports;
+  int num_functions;
+  int num_globals;
+  int num_exports;
+} Module;
+
+typedef struct NameTypePair {
+  const char* name;
+  Type type;
+} NameTypePair;
+
+typedef struct NameType2Pair {
+  const char* name;
   Type in_type;
   Type out_type;
-} OpNameType2Pair;
+} NameType2Pair;
 
-static OpNameTypePair s_unary_ops[] = {
+static NameTypePair s_unary_ops[] = {
     {"neg.i32", TYPE_I32},   {"neg.i64", TYPE_I64},   {"neg.f32", TYPE_F32},
     {"neg.f64", TYPE_F64},   {"abs.i32", TYPE_I32},   {"abs.i64", TYPE_I64},
     {"abs.f32", TYPE_F32},   {"abs.f64", TYPE_F64},   {"not.i32", TYPE_I32},
@@ -72,7 +100,7 @@ static OpNameTypePair s_unary_ops[] = {
     {"trunc.f64", TYPE_F64}, {"round.f32", TYPE_F32}, {"round.f64", TYPE_F64},
 };
 
-static OpNameTypePair s_binary_ops[] = {
+static NameTypePair s_binary_ops[] = {
     {"add.i32", TYPE_I32},      {"add.i64", TYPE_I64},
     {"add.f32", TYPE_F32},      {"add.f64", TYPE_F64},
     {"sub.i32", TYPE_I32},      {"sub.i64", TYPE_I64},
@@ -93,7 +121,7 @@ static OpNameTypePair s_binary_ops[] = {
     {"copysign.f32", TYPE_F32}, {"copysign.f64", TYPE_F64},
 };
 
-static OpNameType2Pair s_compare_ops[] = {
+static NameType2Pair s_compare_ops[] = {
     {"eq.i32", TYPE_I32, TYPE_I32},  {"eq.i64", TYPE_I64, TYPE_I32},
     {"eq.f32", TYPE_F32, TYPE_I32},  {"eq.f64", TYPE_F64, TYPE_I32},
     {"neq.i32", TYPE_I32, TYPE_I32}, {"neq.i64", TYPE_I64, TYPE_I32},
@@ -112,7 +140,7 @@ static OpNameType2Pair s_compare_ops[] = {
     {"ge.f32", TYPE_F32, TYPE_I32},  {"ge.f64", TYPE_F64, TYPE_I32},
 };
 
-static OpNameType2Pair s_convert_ops[] = {
+static NameType2Pair s_convert_ops[] = {
     {"converts.i32.i32", TYPE_I32, TYPE_I32},
     {"convertu.i32.i32", TYPE_I32, TYPE_I32},
     {"converts.i32.i64", TYPE_I32, TYPE_I64},
@@ -143,18 +171,25 @@ static OpNameType2Pair s_convert_ops[] = {
     {"convert.f64.f64", TYPE_F64, TYPE_F64},
 };
 
-static OpNameType2Pair s_cast_ops[] = {
+static NameType2Pair s_cast_ops[] = {
     {"cast.i32.f32", TYPE_I32, TYPE_F32},
     {"cast.f32.i32", TYPE_F32, TYPE_I32},
     {"cast.i64.f64", TYPE_I64, TYPE_F64},
     {"cast.f64.i64", TYPE_F64, TYPE_I64},
 };
 
-static OpNameTypePair s_const_ops[] = {
+static NameTypePair s_const_ops[] = {
     {"const.i32", TYPE_I32},
     {"const.i64", TYPE_I64},
     {"const.f32", TYPE_F32},
     {"const.f64", TYPE_F64},
+};
+
+static NameTypePair s_types[] = {
+    {"i32", TYPE_I32},
+    {"i64", TYPE_I64},
+    {"f32", TYPE_F32},
+    {"f64", TYPE_F64},
 };
 
 static const char* s_mem_int_types[] = {
@@ -164,6 +199,25 @@ static const char* s_mem_int_types[] = {
 static const char* s_mem_float_types[] = {
     "f32", "f64",
 };
+
+static void realloc_list(void** elts, int* num_elts, int elt_size) {
+  (*num_elts)++;
+  int new_size = *num_elts * elt_size;
+  *elts = realloc(*elts, new_size);
+  if (*elts == NULL) {
+    FATAL("unable to alloc %d bytes", new_size);
+  }
+}
+
+static int get_global_by_name(Module* module, const char* name) {
+  int i;
+  for (i = 0; i < module->num_globals; ++i) {
+    Global* global = &module->globals[i];
+    if (global->name && strcmp(name, global->name) == 0)
+      return i;
+  }
+  return -1;
+}
 
 static int read_uint32(const char** s, const char* end, uint32_t* out) {
   errno = 0;
@@ -449,7 +503,7 @@ static int match_atom_prefix(Token t, const char* s) {
 static int match_unary(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_unary_ops); ++i) {
-    if (match_atom(t, s_unary_ops[i].op)) {
+    if (match_atom(t, s_unary_ops[i].name)) {
       *type = s_unary_ops[i].type;
       return 1;
     }
@@ -460,7 +514,7 @@ static int match_unary(Token t, Type* type) {
 static int match_binary(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_binary_ops); ++i) {
-    if (match_atom(t, s_binary_ops[i].op)) {
+    if (match_atom(t, s_binary_ops[i].name)) {
       *type = s_binary_ops[i].type;
       return 1;
     }
@@ -471,7 +525,7 @@ static int match_binary(Token t, Type* type) {
 static int match_compare(Token t, Type* in_type, Type* out_type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_compare_ops); ++i) {
-    if (match_atom(t, s_compare_ops[i].op)) {
+    if (match_atom(t, s_compare_ops[i].name)) {
       *in_type = s_compare_ops[i].in_type;
       *out_type = s_compare_ops[i].out_type;
       return 1;
@@ -483,7 +537,7 @@ static int match_compare(Token t, Type* in_type, Type* out_type) {
 static int match_convert(Token t, Type* in_type, Type* out_type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_convert_ops); ++i) {
-    if (match_atom(t, s_convert_ops[i].op)) {
+    if (match_atom(t, s_convert_ops[i].name)) {
       *in_type = s_convert_ops[i].in_type;
       *out_type = s_convert_ops[i].out_type;
       return 1;
@@ -495,7 +549,7 @@ static int match_convert(Token t, Type* in_type, Type* out_type) {
 static int match_cast(Token t, Type* in_type, Type* out_type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_cast_ops); ++i) {
-    if (match_atom(t, s_cast_ops[i].op)) {
+    if (match_atom(t, s_cast_ops[i].name)) {
       *in_type = s_cast_ops[i].in_type;
       *out_type = s_cast_ops[i].out_type;
       return 1;
@@ -507,8 +561,21 @@ static int match_cast(Token t, Type* in_type, Type* out_type) {
 static int match_const(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_const_ops); ++i) {
-    if (match_atom(t, s_const_ops[i].op)) {
+    if (match_atom(t, s_const_ops[i].name)) {
       *type = s_const_ops[i].type;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int match_type(Token t, Type* type) {
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_types); ++i) {
+    if (match_atom(t, s_types[i].name)) {
+      if (type) {
+        *type = s_types[i].type;
+      }
       return 1;
     }
   }
@@ -653,18 +720,9 @@ static void parse_var(Tokenizer* tokenizer) {
   }
 }
 
-static int match_type(Token t) {
-  const char* p = t.range.start.pos;
-  size_t len = t.range.end.pos - p;
-  if (len != 3)
-    return 0;
-  return (p[0] == 'i' || p[0] == 'f') &&
-         ((p[1] == '3' && p[2] == '2') || (p[1] == '6' && p[2] == '4'));
-}
-
-static void parse_type(Tokenizer* tokenizer) {
+static void parse_type(Tokenizer* tokenizer, Type* type) {
   Token t = read_token(tokenizer);
-  if (!match_type(t)) {
+  if (!match_type(t, type)) {
     FATAL("%d:%d: expected type\n", t.range.start.line, t.range.start.col);
   }
 }
@@ -674,7 +732,7 @@ static void parse_expr(Tokenizer* tokenizer);
 static void parse_type_list(Tokenizer* tokenizer) {
   Token t = read_token(tokenizer);
   while (1) {
-    if (!match_type(t)) {
+    if (!match_type(t, NULL)) {
       unexpected_token(t);
     }
     t = read_token(tokenizer);
@@ -857,11 +915,11 @@ static void parse_func(Tokenizer* tokenizer) {
         if (match_atom(t, "param")) {
           t = read_token(tokenizer);
           rewind_token(tokenizer, t);
-          if (match_type(t)) {
+          if (match_type(t, NULL)) {
             parse_type_list(tokenizer);
           } else {
             expect_var_name(read_token(tokenizer));
-            parse_type(tokenizer);
+            parse_type(tokenizer, NULL);
             expect_close(read_token(tokenizer));
           }
         } else if (match_atom(t, "result")) {
@@ -869,11 +927,11 @@ static void parse_func(Tokenizer* tokenizer) {
         } else if (match_atom(t, "local")) {
           t = read_token(tokenizer);
           rewind_token(tokenizer, t);
-          if (match_type(t)) {
+          if (match_type(t, NULL)) {
             parse_type_list(tokenizer);
           } else {
             expect_var_name(read_token(tokenizer));
-            parse_type(tokenizer);
+            parse_type(tokenizer, NULL);
             expect_close(read_token(tokenizer));
           }
         } else {
@@ -892,7 +950,78 @@ static void parse_func(Tokenizer* tokenizer) {
   }
 }
 
+static void preparse_func(Tokenizer* tokenizer, Module* module) {
+  parse_generic(tokenizer);
+}
+
+static void preparse_global(Tokenizer* tokenizer, Module* module) {
+  Token t = read_token(tokenizer);
+  Type type;
+  if (match_type(t, &type)) {
+    while (1) {
+      realloc_list((void**)&module->globals, &module->num_globals,
+                   sizeof(Global));
+      Global* global = &module->globals[module->num_globals - 1];
+      global->name = NULL;
+      global->type = type;
+
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+        break;
+      else if (!match_type(t, &type))
+        unexpected_token(t);
+    }
+  } else {
+    expect_var_name(t);
+    parse_type(tokenizer, &type);
+    expect_close(read_token(tokenizer));
+
+    const char* name =
+        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+    if (get_global_by_name(module, name) != -1) {
+      FATAL("%d:%d: redefinition of global \"%s\"\n", t.range.start.line,
+            t.range.start.col, name);
+    }
+
+    realloc_list((void**)&module->globals, &module->num_globals,
+                 sizeof(Global));
+    Global* global = &module->globals[module->num_globals - 1];
+    global->name = name;
+    global->type = type;
+  }
+}
+
+static void preparse_module(Tokenizer* tokenizer, Module* module) {
+  Token t = read_token(tokenizer);
+  Token first = t;
+  while (1) {
+    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+      t = read_token(tokenizer);
+      if (t.type == TOKEN_TYPE_ATOM) {
+        if (match_atom(t, "func")) {
+          preparse_func(tokenizer, module);
+        } else if (match_atom(t, "global")) {
+          preparse_global(tokenizer, module);
+        } else {
+          parse_generic(tokenizer);
+        }
+      } else {
+        unexpected_token(t);
+      }
+      t = read_token(tokenizer);
+    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+      break;
+    } else {
+      unexpected_token(t);
+    }
+  }
+  rewind_token(tokenizer, first);
+}
+
 static void parse_module(Tokenizer* tokenizer) {
+  Module module = {};
+  preparse_module(tokenizer, &module);
+
   Token t = read_token(tokenizer);
   while (1) {
     if (t.type == TOKEN_TYPE_OPEN_PAREN) {
@@ -902,12 +1031,12 @@ static void parse_module(Tokenizer* tokenizer) {
           parse_func(tokenizer);
         } else if (match_atom(t, "global")) {
           t = read_token(tokenizer);
-          if (match_type(t)) {
+          if (match_type(t, NULL)) {
             rewind_token(tokenizer, t);
             parse_type_list(tokenizer);
           } else {
             expect_var_name(t);
-            parse_type(tokenizer);
+            parse_type(tokenizer, NULL);
             expect_close(read_token(tokenizer));
           }
         } else if (match_atom(t, "export")) {
