@@ -205,6 +205,10 @@ static const char* s_mem_float_types[] = {
     "f32", "f64",
 };
 
+static const char* s_type_names[] = {
+    "void", "i32", "i64", "f32", "f64",
+};
+
 static void realloc_list(void** elts, int* num_elts, int elt_size) {
   (*num_elts)++;
   int new_size = *num_elts * elt_size;
@@ -915,8 +919,36 @@ static Type parse_expr(Tokenizer* tokenizer,
     } else if (match_atom_prefix(t, "switch")) {
       /* TODO(binji) */
     } else if (match_atom(t, "call")) {
-      parse_function_var(tokenizer, module);
-      parse_expr_list(tokenizer, module, function);
+      int index = parse_function_var(tokenizer, module);
+      Function* callee = &module->functions[index];
+
+      int num_args = 0;
+      while (1) {
+        Token t = read_token(tokenizer);
+        if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+          break;
+        rewind_token(tokenizer, t);
+        if (++num_args > callee->num_args) {
+          FATAL("%d:%d: too many arguments to function. got %d, expected %d\n",
+                t.range.start.line, t.range.start.col, num_args,
+                callee->num_args);
+        }
+        Type arg_type = parse_expr(tokenizer, module, function);
+        Type expected = callee->locals[num_args - 1].type;
+        if (arg_type != expected) {
+          FATAL(
+              "%d:%d: type mismatch for argument %d of call. got %s, expected "
+              "%s\n",
+              t.range.start.line, t.range.start.col, num_args - 1,
+              s_type_names[arg_type], s_type_names[expected]);
+        }
+      }
+
+      if (num_args < callee->num_args) {
+        FATAL("%d:%d: too few arguments to function. got %d, expected %d\n",
+              t.range.start.line, t.range.start.col, num_args,
+              callee->num_args);
+      }
     } else if (match_atom(t, "dispatch")) {
       /* TODO(binji) */
     } else if (match_atom(t, "return")) {

@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (func (param i32 i64)
+    (call 0 (const.i32 0) (const.i64 0) (const.f32 0))))
+# STDERR:
+3:41: too many arguments to function. got 3, expected 2
