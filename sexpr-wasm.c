@@ -57,12 +57,11 @@ typedef struct Binding {
     Type type;
     struct {
       Type* result_types;
-      struct Binding* args;
-      struct Binding* locals;
+      struct Binding* locals; /* Includes args, they're at the start */
       struct Binding* labels; /* TODO(binji): hack, shouldn't be Binding */
       int num_results;
       int num_args;
-      int num_locals;
+      int num_locals; /* Total size of the locals array above, including args */
       int num_labels;
     };
   };
@@ -732,7 +731,7 @@ static int parse_var(Tokenizer* tokenizer,
       int i;
       for (i = 0; i < num_bindings; ++i) {
         const char* name = bindings[i].name;
-        if (strncmp(name, p, end - p) == 0)
+        if (name && strncmp(name, p, end - p) == 0)
           return i;
       }
       FATAL("%d:%d: undefined %s variable \"%.*s\"\n", t.range.start.line,
@@ -768,7 +767,7 @@ static int parse_global_var(Tokenizer* tokenizer, Module* module) {
 }
 
 static int parse_arg_var(Tokenizer* tokenizer, Function* function) {
-  return parse_var(tokenizer, function->args, function->num_args,
+  return parse_var(tokenizer, function->locals, function->num_args,
                    "function argument");
 }
 
@@ -1073,8 +1072,14 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "param")) {
-          preparse_binding_list(tokenizer, &function->args, &function->num_args,
-                                "function argument");
+          /* Don't allow adding params after locals */
+          if (function->num_args != function->num_locals) {
+            FATAL("%d:%d: parameters must come before locals\n",
+                  t.range.start.line, t.range.start.col);
+          }
+          preparse_binding_list(tokenizer, &function->locals,
+                                &function->num_args, "function argument");
+          function->num_locals = function->num_args;
         } else if (match_atom(t, "result")) {
           t = read_token(tokenizer);
           if (match_type(t, &type)) {
@@ -1152,7 +1157,6 @@ static void destroy_module(Module* module) {
     Function* function = &module->functions[i];
     free(function->name);
     free(function->result_types);
-    destroy_binding_list(function->args, function->num_args);
     destroy_binding_list(function->locals, function->num_locals);
     destroy_binding_list(function->labels, function->num_labels);
   }
