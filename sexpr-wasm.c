@@ -998,21 +998,36 @@ static Type parse_expr(Tokenizer* tokenizer,
     } else if (match_atom(t, "destruct")) {
       /* TODO(binji) */
     } else if (match_atom(t, "getparam")) {
-      parse_arg_var(tokenizer, function);
+      int index = parse_arg_var(tokenizer, function);
+      type = function->locals[index].type;
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "getlocal")) {
-      parse_local_var(tokenizer, function);
+      int index = parse_local_var(tokenizer, function);
+      type = function->locals[index].type;
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "setlocal")) {
-      parse_local_var(tokenizer, function);
-      parse_expr(tokenizer, module, function);
+      int index = parse_local_var(tokenizer, function);
+      Binding* binding = &function->locals[index];
+      type = parse_expr(tokenizer, module, function);
+      if (binding->type != type) {
+        FATAL("%d:%d: type mismatch. got %s, expected %s\n", t.range.start.line,
+              t.range.start.col, s_type_names[type],
+              s_type_names[binding->type]);
+      }
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "load_global")) {
-      parse_global_var(tokenizer, module);
+      int index = parse_global_var(tokenizer, module);
+      type = module->globals[index].type;
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "store_global")) {
-      parse_global_var(tokenizer, module);
-      parse_expr(tokenizer, module, function);
+      int index = parse_global_var(tokenizer, module);
+      Binding* binding = &module->globals[index];
+      type = parse_expr(tokenizer, module, function);
+      if (binding->type != type) {
+        FATAL("%d:%d: type mismatch. got %s, expected %s\n", t.range.start.line,
+              t.range.start.col, s_type_names[type],
+              s_type_names[binding->type]);
+      }
       expect_close(read_token(tokenizer));
     } else if (match_load_store(t, "load")) {
       parse_expr(tokenizer, module, function);

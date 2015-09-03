@@ -1,6 +1,6 @@
 # ERROR: 1
 (module (func
   (local i32 i32)
-  (setlocal 0 (nop) (nop))))
+  (setlocal 0 (const.i32 0) (nop))))
 # STDERR:
-3:21: expected ')', not "("
+3:29: expected ')', not "("

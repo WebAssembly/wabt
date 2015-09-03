@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (func (local i32)
+    (setlocal 0 (const.f32 0))))
+# STDERR:
+3:6: type mismatch. got f32, expected i32

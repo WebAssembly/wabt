@@ -1,0 +1,7 @@
+# ERROR: 1
+(module
+  (global i32)
+  (func
+    (store_global 0 (const.f32 0))))
+# STDERR:
+4:6: type mismatch. got f32, expected i32

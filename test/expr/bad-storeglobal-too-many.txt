@@ -1,5 +1,5 @@
 # ERROR: 1
 (module (global i32)
-  (func (store_global 0 (nop) (nop))))
+  (func (store_global 0 (const.i32 0) (nop))))
 # STDERR:
-2:31: expected ')', not "("
+2:39: expected ')', not "("
