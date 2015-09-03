@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (func
+    (converts.f32.i32 (const.i32 0))))
+# STDERR:
+3:6: type mismatch of convert op. got i32, expected f32

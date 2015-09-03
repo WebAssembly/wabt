@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (func
+    (add.i32 (const.i32 0) (const.f32 0))))
+# STDERR:
+3:6: type mismatch for argument 1 of binary op. got f32, expected i32

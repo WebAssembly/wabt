@@ -140,23 +140,18 @@ static NameTypePair s_binary_ops[] = {
     {"copysign.f32", TYPE_F32}, {"copysign.f64", TYPE_F64},
 };
 
-static NameType2Pair s_compare_ops[] = {
-    {"eq.i32", TYPE_I32, TYPE_I32},  {"eq.i64", TYPE_I64, TYPE_I32},
-    {"eq.f32", TYPE_F32, TYPE_I32},  {"eq.f64", TYPE_F64, TYPE_I32},
-    {"neq.i32", TYPE_I32, TYPE_I32}, {"neq.i64", TYPE_I64, TYPE_I32},
-    {"neq.f32", TYPE_F32, TYPE_I32}, {"neq.f64", TYPE_F64, TYPE_I32},
-    {"lts.i32", TYPE_I32, TYPE_I32}, {"lts.i64", TYPE_I64, TYPE_I32},
-    {"ltu.i32", TYPE_I32, TYPE_I32}, {"ltu.i64", TYPE_I64, TYPE_I32},
-    {"lt.f32", TYPE_F32, TYPE_I32},  {"lt.f64", TYPE_F64, TYPE_I32},
-    {"les.i32", TYPE_I32, TYPE_I32}, {"les.i64", TYPE_I64, TYPE_I32},
-    {"leu.i32", TYPE_I32, TYPE_I32}, {"leu.i64", TYPE_I64, TYPE_I32},
-    {"le.f32", TYPE_F32, TYPE_I32},  {"le.f64", TYPE_F64, TYPE_I32},
-    {"gts.i32", TYPE_I32, TYPE_I32}, {"gts.i64", TYPE_I64, TYPE_I32},
-    {"gtu.i32", TYPE_I32, TYPE_I32}, {"gtu.i64", TYPE_I64, TYPE_I32},
-    {"gt.f32", TYPE_F32, TYPE_I32},  {"gt.f64", TYPE_F64, TYPE_I32},
-    {"ges.i32", TYPE_I32, TYPE_I32}, {"ges.i64", TYPE_I64, TYPE_I32},
-    {"geu.i32", TYPE_I32, TYPE_I32}, {"geu.i64", TYPE_I64, TYPE_I32},
-    {"ge.f32", TYPE_F32, TYPE_I32},  {"ge.f64", TYPE_F64, TYPE_I32},
+static NameTypePair s_compare_ops[] = {
+    {"eq.i32", TYPE_I32},  {"eq.i64", TYPE_I64},  {"eq.f32", TYPE_F32},
+    {"eq.f64", TYPE_F64},  {"neq.i32", TYPE_I32}, {"neq.i64", TYPE_I64},
+    {"neq.f32", TYPE_F32}, {"neq.f64", TYPE_F64}, {"lts.i32", TYPE_I32},
+    {"lts.i64", TYPE_I64}, {"ltu.i32", TYPE_I32}, {"ltu.i64", TYPE_I64},
+    {"lt.f32", TYPE_F32},  {"lt.f64", TYPE_F64},  {"les.i32", TYPE_I32},
+    {"les.i64", TYPE_I64}, {"leu.i32", TYPE_I32}, {"leu.i64", TYPE_I64},
+    {"le.f32", TYPE_F32},  {"le.f64", TYPE_F64},  {"gts.i32", TYPE_I32},
+    {"gts.i64", TYPE_I64}, {"gtu.i32", TYPE_I32}, {"gtu.i64", TYPE_I64},
+    {"gt.f32", TYPE_F32},  {"gt.f64", TYPE_F64},  {"ges.i32", TYPE_I32},
+    {"ges.i64", TYPE_I64}, {"geu.i32", TYPE_I32}, {"geu.i64", TYPE_I64},
+    {"ge.f32", TYPE_F32},  {"ge.f64", TYPE_F64},
 };
 
 static NameType2Pair s_convert_ops[] = {
@@ -589,12 +584,11 @@ static int match_binary(Token t, Type* type) {
   return 0;
 }
 
-static int match_compare(Token t, Type* in_type, Type* out_type) {
+static int match_compare(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_compare_ops); ++i) {
     if (match_atom(t, s_compare_ops[i].name)) {
-      *in_type = s_compare_ops[i].in_type;
-      *out_type = s_compare_ops[i].out_type;
+      *type = s_compare_ops[i].type;
       return 1;
     }
   }
@@ -1094,21 +1088,32 @@ static Type parse_expr(Tokenizer* tokenizer,
       parse_const(tokenizer, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type)) {
-      parse_expr(tokenizer, module, function);
+      Type value_type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, value_type, type, " of unary op");
+      type = value_type;
       expect_close(read_token(tokenizer));
     } else if (match_binary(t, &type)) {
-      parse_expr(tokenizer, module, function);
-      parse_expr(tokenizer, module, function);
+      Type value0_type = parse_expr(tokenizer, module, function);
+      check_type_arg(t.range.start, value0_type, type, "binary op", 0);
+      Type value1_type = parse_expr(tokenizer, module, function);
+      check_type_arg(t.range.start, value1_type, type, "binary op", 1);
+      assert(value0_type == value1_type);
+      type = value0_type;
       expect_close(read_token(tokenizer));
-    } else if (match_compare(t, &in_type, &type)) {
-      parse_expr(tokenizer, module, function);
-      parse_expr(tokenizer, module, function);
+    } else if (match_compare(t, &in_type)) {
+      Type value0_type = parse_expr(tokenizer, module, function);
+      check_type_arg(t.range.start, value0_type, in_type, "compare op", 0);
+      Type value1_type = parse_expr(tokenizer, module, function);
+      check_type_arg(t.range.start, value1_type, in_type, "compare op", 1);
+      type = TYPE_I32;
       expect_close(read_token(tokenizer));
     } else if (match_convert(t, &in_type, &type)) {
-      parse_expr(tokenizer, module, function);
+      Type value_type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, value_type, in_type, " of convert op");
       expect_close(read_token(tokenizer));
     } else if (match_cast(t, &in_type, &type)) {
-      parse_expr(tokenizer, module, function);
+      Type value_type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, value_type, in_type, " of cast op");
       expect_close(read_token(tokenizer));
     } else {
       unexpected_token(t);
