@@ -808,20 +808,6 @@ static Type parse_block(Tokenizer* tokenizer,
   return type;
 }
 
-static Type parse_expr_list(Tokenizer* tokenizer,
-                            Module* module,
-                            Function* function) {
-  Type type = TYPE_VOID;
-  while (1) {
-    Token t = read_token(tokenizer);
-    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-      break;
-    rewind_token(tokenizer, t);
-    type = parse_expr(tokenizer, module, function);
-  }
-  return type;
-}
-
 static void parse_const(Tokenizer* tokenizer, Type type) {
   Token t = read_token(tokenizer);
   expect_atom(t);
@@ -886,7 +872,7 @@ static Type parse_expr(Tokenizer* tokenizer,
         FATAL("%d:%d: type mismatch between true and false branches\n",
               tokenizer->loc.line, tokenizer->loc.col);
       }
-      return true_type;
+      type = true_type;
     } else if (match_atom(t, "loop")) {
       type = parse_block(tokenizer, module, function);
     } else if (match_atom(t, "label")) {
@@ -949,10 +935,66 @@ static Type parse_expr(Tokenizer* tokenizer,
               t.range.start.line, t.range.start.col, num_args,
               callee->num_args);
       }
+
+      switch (callee->num_results) {
+        case 0:
+          type = TYPE_VOID;
+          break;
+
+        case 1:
+          type = callee->result_types[0];
+          break;
+
+        default:
+          FATAL("%d:%d: multiple return values currently unsupported\n",
+                t.range.start.line, t.range.start.col);
+          break;
+      }
     } else if (match_atom(t, "dispatch")) {
       /* TODO(binji) */
     } else if (match_atom(t, "return")) {
-      parse_expr_list(tokenizer, module, function);
+      int num_results = 0;
+      while (1) {
+        t = read_token(tokenizer);
+        if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+          break;
+        if (++num_results > function->num_results) {
+          FATAL("%d:%d: too many return values. got %d, expected %d\n",
+                t.range.start.line, t.range.start.col, num_results,
+                function->num_results);
+        }
+        rewind_token(tokenizer, t);
+        Type result_type = parse_expr(tokenizer, module, function);
+        Type expected = function->result_types[num_results - 1];
+        if (result_type != expected) {
+          FATAL(
+              "%d:%d: type mismatch for argument %d of return. got %s, "
+              "expected %s\n",
+              t.range.start.line, t.range.start.col, num_results - 1,
+              s_type_names[result_type], s_type_names[expected]);
+        }
+      }
+
+      if (num_results < function->num_results) {
+        FATAL("%d:%d: too few return values. got %d, expected %d\n",
+              t.range.start.line, t.range.start.col, num_results,
+              function->num_results);
+      }
+
+      switch (function->num_results) {
+        case 0:
+          type = TYPE_VOID;
+          break;
+
+        case 1:
+          type = function->result_types[0];
+          break;
+
+        default:
+          FATAL("%d:%d: multiple return values currently unsupported\n",
+                t.range.start.line, t.range.start.col);
+          break;
+      }
     } else if (match_atom(t, "destruct")) {
       /* TODO(binji) */
     } else if (match_atom(t, "getparam")) {

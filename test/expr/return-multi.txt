@@ -1,2 +1,0 @@
-(module (func (result f32)
-  (return (nop) (const.f32 3.14))))

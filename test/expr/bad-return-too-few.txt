@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (func (result i32)
+    (return)))
+# STDERR:
+3:12: too few return values. got 0, expected 1
