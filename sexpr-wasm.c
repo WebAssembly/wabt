@@ -928,13 +928,14 @@ static Type parse_expr(Tokenizer* tokenizer,
     } else if (match_atom(t, "block")) {
       type = parse_block(tokenizer, module, function);
     } else if (match_atom(t, "if")) {
-      parse_expr(tokenizer, module, function); /* condition */
-      Type true_type = parse_expr(tokenizer, module, function); /* true */
+      Type cond_type = parse_expr(tokenizer, module, function);
+      check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
+      Type true_type = parse_expr(tokenizer, module, function);
       Type false_type = true_type;
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
-        false_type = parse_expr(tokenizer, module, function); /* false */
+        false_type = parse_expr(tokenizer, module, function);
         expect_close(read_token(tokenizer));
       }
       check_type(tokenizer->loc, false_type, true_type,
