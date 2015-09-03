@@ -17,6 +17,15 @@ typedef enum Type {
   TYPE_F64,
 } Type;
 
+typedef enum MemType {
+  MEM_TYPE_I8,
+  MEM_TYPE_I16,
+  MEM_TYPE_I32,
+  MEM_TYPE_I64,
+  MEM_TYPE_F32,
+  MEM_TYPE_F64,
+} MemType;
+
 typedef enum TokenType {
   TOKEN_TYPE_EOF,
   TOKEN_TYPE_OPEN_PAREN,
@@ -93,6 +102,11 @@ typedef struct NameType2Pair {
   Type in_type;
   Type out_type;
 } NameType2Pair;
+
+typedef struct NameMemTypePair {
+  const char* name;
+  MemType type;
+} NameMemTypePair;
 
 static NameTypePair s_unary_ops[] = {
     {"neg.i32", TYPE_I32},   {"neg.i64", TYPE_I64},   {"neg.f32", TYPE_F32},
@@ -197,17 +211,47 @@ static NameTypePair s_types[] = {
     {"f64", TYPE_F64},
 };
 
-static const char* s_mem_int_types[] = {
-    "i8", "i16", "i32", "i64",
+static NameMemTypePair s_mem_int_types[] = {
+    {"i8", MEM_TYPE_I8},
+    {"i16", MEM_TYPE_I16},
+    {"i32", MEM_TYPE_I32},
+    {"i64", MEM_TYPE_I64},
 };
 
-static const char* s_mem_float_types[] = {
-    "f32", "f64",
+static NameMemTypePair s_mem_float_types[] = {
+    {"f32", MEM_TYPE_F32},
+    {"f64", MEM_TYPE_F64},
 };
 
 static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
+
+static Type mem_type_to_type(MemType type) {
+  switch (type) {
+    case MEM_TYPE_I8:
+      return TYPE_I32;
+
+    case MEM_TYPE_I16:
+      return TYPE_I32;
+
+    case MEM_TYPE_I32:
+      return TYPE_I32;
+
+    case MEM_TYPE_I64:
+      return TYPE_I64;
+
+    case MEM_TYPE_F32:
+      return TYPE_F32;
+
+    case MEM_TYPE_F64:
+      return TYPE_F64;
+
+    default:
+      assert(0);
+      return TYPE_VOID;
+  }
+}
 
 static void realloc_list(void** elts, int* num_elts, int elt_size) {
   (*num_elts)++;
@@ -605,12 +649,12 @@ static int match_type(Token t, Type* type) {
   return 0;
 }
 
-static int match_load_store(Token t, const char* prefix) {
+static int match_load_store(Token t, const char* prefix, MemType* type) {
   size_t plen = strlen(prefix);
   const char* p = t.range.start.pos;
   const char* end = t.range.end.pos;
   size_t len = end - p;
-  const char** types = NULL;
+  NameMemTypePair* types = NULL;
   int num_types = 0;
 
   if (len < plen + 1)
@@ -687,11 +731,13 @@ static int match_load_store(Token t, const char* prefix) {
   /* read mem type suffix */
   int i;
   for (i = 0; i < num_types; ++i) {
-    const char* type = types[i];
-    int type_len = strlen(type);
-    if (p + type_len == end) {
-      if (strncmp(p, type, type_len) == 0)
+    const char* name = types[i].name;
+    int name_len = strlen(name);
+    if (p + name_len == end) {
+      if (strncmp(p, name, name_len) == 0) {
+        *type = types[i].type;
         return 1;
+      }
     }
   }
 
@@ -705,6 +751,28 @@ static void unexpected_token(Token t) {
     FATAL("%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
           t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
           t.range.start.pos);
+  }
+}
+
+static void check_type(SourceLocation loc,
+                       Type actual,
+                       Type expected,
+                       const char* desc) {
+  if (actual != expected) {
+    FATAL("%d:%d: type mismatch%s. got %s, expected %s\n", loc.line, loc.col,
+          desc, s_type_names[actual], s_type_names[expected]);
+  }
+}
+
+static void check_type_arg(SourceLocation loc,
+                           Type actual,
+                           Type expected,
+                           const char* desc,
+                           int arg_index) {
+  if (actual != expected) {
+    FATAL("%d:%d: type mismatch for argument %d of %s. got %s, expected %s\n",
+          loc.line, loc.col, arg_index, desc, s_type_names[actual],
+          s_type_names[expected]);
   }
 }
 
@@ -854,6 +922,7 @@ static Type parse_expr(Tokenizer* tokenizer,
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     Type in_type;
+    MemType mem_type;
     if (match_atom(t, "nop")) {
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "block")) {
@@ -868,10 +937,8 @@ static Type parse_expr(Tokenizer* tokenizer,
         false_type = parse_expr(tokenizer, module, function); /* false */
         expect_close(read_token(tokenizer));
       }
-      if (true_type != false_type) {
-        FATAL("%d:%d: type mismatch between true and false branches\n",
-              tokenizer->loc.line, tokenizer->loc.col);
-      }
+      check_type(tokenizer->loc, false_type, true_type,
+                 " between true and false branches");
       type = true_type;
     } else if (match_atom(t, "loop")) {
       type = parse_block(tokenizer, module, function);
@@ -921,13 +988,7 @@ static Type parse_expr(Tokenizer* tokenizer,
         }
         Type arg_type = parse_expr(tokenizer, module, function);
         Type expected = callee->locals[num_args - 1].type;
-        if (arg_type != expected) {
-          FATAL(
-              "%d:%d: type mismatch for argument %d of call. got %s, expected "
-              "%s\n",
-              t.range.start.line, t.range.start.col, num_args - 1,
-              s_type_names[arg_type], s_type_names[expected]);
-        }
+        check_type_arg(t.range.start, arg_type, expected, "call", num_args - 1);
       }
 
       if (num_args < callee->num_args) {
@@ -966,13 +1027,8 @@ static Type parse_expr(Tokenizer* tokenizer,
         rewind_token(tokenizer, t);
         Type result_type = parse_expr(tokenizer, module, function);
         Type expected = function->result_types[num_results - 1];
-        if (result_type != expected) {
-          FATAL(
-              "%d:%d: type mismatch for argument %d of return. got %s, "
-              "expected %s\n",
-              t.range.start.line, t.range.start.col, num_results - 1,
-              s_type_names[result_type], s_type_names[expected]);
-        }
+        check_type_arg(t.range.start, result_type, expected, "return",
+                       num_results - 1);
       }
 
       if (num_results < function->num_results) {
@@ -1009,11 +1065,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       int index = parse_local_var(tokenizer, function);
       Binding* binding = &function->locals[index];
       type = parse_expr(tokenizer, module, function);
-      if (binding->type != type) {
-        FATAL("%d:%d: type mismatch. got %s, expected %s\n", t.range.start.line,
-              t.range.start.col, s_type_names[type],
-              s_type_names[binding->type]);
-      }
+      check_type(t.range.start, type, binding->type, "");
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "load_global")) {
       int index = parse_global_var(tokenizer, module);
@@ -1023,18 +1075,19 @@ static Type parse_expr(Tokenizer* tokenizer,
       int index = parse_global_var(tokenizer, module);
       Binding* binding = &module->globals[index];
       type = parse_expr(tokenizer, module, function);
-      if (binding->type != type) {
-        FATAL("%d:%d: type mismatch. got %s, expected %s\n", t.range.start.line,
-              t.range.start.col, s_type_names[type],
-              s_type_names[binding->type]);
-      }
+      check_type(t.range.start, type, binding->type, "");
       expect_close(read_token(tokenizer));
-    } else if (match_load_store(t, "load")) {
-      parse_expr(tokenizer, module, function);
+    } else if (match_load_store(t, "load", &mem_type)) {
+      Type index_type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, index_type, TYPE_I32, " of load index");
+      type = mem_type_to_type(mem_type);
       expect_close(read_token(tokenizer));
-    } else if (match_load_store(t, "store")) {
-      parse_expr(tokenizer, module, function);
-      parse_expr(tokenizer, module, function);
+    } else if (match_load_store(t, "store", &mem_type)) {
+      Type index_type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, index_type, TYPE_I32, " of store index");
+      type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, type, mem_type_to_type(mem_type),
+                 " of store value");
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type)) {
       parse_const(tokenizer, type);
