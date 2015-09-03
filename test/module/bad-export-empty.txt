@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (export))
+# STDERR:
+1:16: expected STRING, not ")"

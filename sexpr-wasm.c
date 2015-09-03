@@ -485,6 +485,14 @@ static void expect_atom(Token t) {
   }
 }
 
+static void expect_string(Token t) {
+  if (t.type != TOKEN_TYPE_STRING) {
+    FATAL("%d:%d: expected STRING, not \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
+  }
+}
+
 static void expect_var_name(Token t) {
   if (t.type != TOKEN_TYPE_ATOM) {
     FATAL("%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
@@ -1168,7 +1176,9 @@ static void parse_module(Tokenizer* tokenizer) {
         } else if (match_atom(t, "global")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "export")) {
-          parse_generic(tokenizer);
+          expect_string(read_token(tokenizer));
+          parse_function_var(tokenizer, &module);
+          expect_close(read_token(tokenizer));
         } else if (match_atom(t, "table")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "memory")) {

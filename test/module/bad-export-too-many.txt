@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (nop)) (export "nop" 0 foo))
+# STDERR:
+1:38: expected ')', not "foo"
