@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (param $m i32) (getparam $n)))
+# STDERR:
+1:40: undefined function argument variable "$n"

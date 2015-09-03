@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (getlocal $n)))
+# STDERR:
+1:25: undefined local variable "$n"

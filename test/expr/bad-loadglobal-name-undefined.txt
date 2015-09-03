@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (load_global $n)))
+# STDERR:
+1:28: undefined global variable "$n"

@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (getparam 0)))
+# STDERR:
+1:25: function argument variable out of range (max 0)

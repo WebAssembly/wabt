@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (load_global 0)))
+# STDERR:
+1:28: global variable out of range (max 0)

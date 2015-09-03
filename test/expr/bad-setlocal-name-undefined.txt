@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (setlocal $n (const.i32 0))))
+# STDERR:
+1:25: undefined local variable "$n"

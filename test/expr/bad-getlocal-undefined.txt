@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (getlocal 0)))
+# STDERR:
+1:25: local variable out of range (max 0)
