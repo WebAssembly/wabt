@@ -1,0 +1,7 @@
+(module
+  (func
+    (label
+      (if
+        (const.i32 0)
+        (break)
+        (const.i32 10)))))

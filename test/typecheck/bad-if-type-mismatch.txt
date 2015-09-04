@@ -2,4 +2,4 @@
 (module
   (func (if (const.i32 0) (const.f32 0) (const.i32 0))))
 # STDERR:
-2:55: type mismatch between true and false branches. got i32, expected f32
+2:54: type mismatch between true and false branches. got i32, expected f32

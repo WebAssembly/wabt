@@ -1,0 +1,10 @@
+# ERROR: 1
+(module
+  (func (local f32)
+    (setlocal 0
+      (label
+        (if (const.i32 0)
+          (break)
+          (const.f32 0.0))))))
+# STDERR:
+3:6: type mismatch. got void, expected f32
