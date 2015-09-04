@@ -8,6 +8,9 @@
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
+#define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
+#define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
+#define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
 typedef enum Type {
   TYPE_VOID,
@@ -15,6 +18,7 @@ typedef enum Type {
   TYPE_I64,
   TYPE_F32,
   TYPE_F64,
+  NUM_TYPES,
 } Type;
 
 typedef enum MemType {
@@ -221,6 +225,7 @@ static NameMemTypePair s_mem_float_types[] = {
 static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
+STATIC_ASSERT(ARRAY_SIZE(s_type_names) == NUM_TYPES);
 
 static Type mem_type_to_type(MemType type) {
   switch (type) {
