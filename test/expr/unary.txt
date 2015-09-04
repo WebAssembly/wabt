@@ -1,11 +1,7 @@
 (module
   (func
-    (neg.i32 (const.i32 0))
-    (neg.i64 (const.i64 0))
     (neg.f32 (const.f32 0))
     (neg.f64 (const.f64 0))
-    (abs.i32 (const.i32 0))
-    (abs.i64 (const.i64 0))
     (abs.f32 (const.f32 0))
     (abs.f64 (const.f64 0))
     (not.i32 (const.i32 0))

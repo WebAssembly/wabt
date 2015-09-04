@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (neg.i32)))
+(module (func (neg.f32)))
 # STDERR:
 1:23: expected '(', not ")"
