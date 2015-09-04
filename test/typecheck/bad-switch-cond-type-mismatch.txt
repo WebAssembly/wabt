@@ -1,7 +1,7 @@
 # ERROR: 1
 (module
   (func
-    (switch.i32 (const.f32 0)
-      (const.i32 0))))
+    (i32.switch (f32.const 0)
+      (i32.const 0))))
 # STDERR:
 3:30: type mismatch in switch condition. got f32, expected i32

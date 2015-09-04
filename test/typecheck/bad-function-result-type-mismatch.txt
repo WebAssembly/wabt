@@ -1,6 +1,6 @@
 # ERROR: 1
 (module
   (func (result i32)
-    (const.f32 0)))
+    (f32.const 0)))
 # STDERR:
 3:6: type mismatch in function result. got f32, expected i32

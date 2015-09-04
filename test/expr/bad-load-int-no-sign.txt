@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (load.i32 (const.i32 0))))
+(module (func (i32.load (i32.const 0))))
 # STDERR:
-1:16: unexpected token "load.i32"
+1:16: unexpected token "i32.load"

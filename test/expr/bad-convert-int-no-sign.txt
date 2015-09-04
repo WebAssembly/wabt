@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (convert.i32.i32 (const.i32))))
+(module (func (i32.convert.i32 (i32.const))))
 # STDERR:
-1:16: unexpected token "convert.i32.i32"
+1:16: unexpected token "i32.convert.i32"

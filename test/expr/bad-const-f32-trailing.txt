@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (const.f32 1234.5678foo)))
+(module (func (f32.const 1234.5678foo)))
 # STDERR:
 1:26: invalid double

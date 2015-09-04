@@ -1,6 +1,6 @@
 # ERROR: 1
 (module
   (func
-    (if (const.f32 0) (const.i32 0) (const.i32 0))))
+    (if (f32.const 0) (i32.const 0) (i32.const 0))))
 # STDERR:
 3:22: type mismatch of condition. got f32, expected i32

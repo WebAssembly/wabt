@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (local $f f32) (getlocal f)))
+(module (func (local $f f32) (get_local f)))
 # STDERR:
-1:40: invalid var index
+1:41: invalid var index

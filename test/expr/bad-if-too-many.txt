@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (if (const.i32 0) (nop) (nop) (nop))))
+(module (func (if (i32.const 0) (nop) (nop) (nop))))
 # STDERR:
 1:45: expected ')', not "("

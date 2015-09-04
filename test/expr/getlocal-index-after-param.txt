@@ -1,1 +1,1 @@
-(module (func (param i32) (local i32) (getlocal 1)))
+(module (func (param i32) (local i32) (get_local 1)))

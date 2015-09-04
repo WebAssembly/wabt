@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (converts.i32.i32)))
+(module (func (f32.convert_s/i32)))
 # STDERR:
-1:32: expected '(', not ")"
+1:33: expected '(', not ")"

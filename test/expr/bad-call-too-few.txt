@@ -1,6 +1,6 @@
 # ERROR: 1
 (module
   (func (param i32) (param f32)
-    (call 0 (const.i32 0))))
+    (call 0 (i32.const 0))))
 # STDERR:
 3:6: too few arguments to function. got 1, expected 2

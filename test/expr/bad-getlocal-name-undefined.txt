@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (getlocal $n)))
+(module (func (get_local $n)))
 # STDERR:
-1:25: undefined local variable "$n"
+1:26: undefined local variable "$n"

@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (setlocal 0 (const.i32 0))))
+(module (func (set_local 0 (i32.const 0))))
 # STDERR:
-1:25: local variable out of range (max 0)
+1:26: local variable out of range (max 0)

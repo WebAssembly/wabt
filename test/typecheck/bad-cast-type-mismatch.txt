@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (cast.i32.f32 (const.f32 0))))
+(module (func (f32.reinterpret/i32 (f32.const 0))))
 # STDERR:
 1:16: type mismatch of cast op. got f32, expected i32

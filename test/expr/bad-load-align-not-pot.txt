@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (loadu.3.i32 (const.i32 0))))
+(module (func (i32.load_u/i32/3 (i32.const 0))))
 # STDERR:
 1:16: alignment must be power-of-two

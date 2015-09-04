@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (local i32) (getlocal)))
+(module (func (local i32) (get_local)))
 # STDERR:
-1:36: unexpected token ")"
+1:37: unexpected token ")"

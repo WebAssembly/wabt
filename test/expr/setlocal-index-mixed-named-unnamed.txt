@@ -2,10 +2,10 @@
   (func (param i32) (param $n f32)
     (local i32 i64)
     (local $m f64)
-    (setlocal 0 (const.i32 0))
-    (setlocal 1 (const.f32 0))
-    (setlocal $n (const.f32 0)) ;; 1
-    (setlocal 2 (const.i32 0))
-    (setlocal 3 (const.i64 0))
-    (setlocal $m (const.f64 0)) ;; 4
-    (setlocal 4 (const.f64 0))))
+    (set_local 0 (i32.const 0))
+    (set_local 1 (f32.const 0))
+    (set_local $n (f32.const 0)) ;; 1
+    (set_local 2 (i32.const 0))
+    (set_local 3 (i64.const 0))
+    (set_local $m (f64.const 0)) ;; 4
+    (set_local 4 (f64.const 0))))

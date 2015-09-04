@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (converts.f32.i32 (const.f32 0) (nop))))
+(module (func (i32.trunc_s/f32 (f32.const 0) (nop))))
 # STDERR:
-1:47: expected ')', not "("
+1:46: expected ')', not "("

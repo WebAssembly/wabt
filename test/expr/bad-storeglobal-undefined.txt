@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (store_global 0 (const.i32 0))))
+(module (func (store_global 0 (i32.const 0))))
 # STDERR:
 1:29: global variable out of range (max 0)

@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (add.i32 (const.i32 0))))
+(module (func (i32.add (i32.const 0))))
 # STDERR:
 1:37: expected '(', not ")"

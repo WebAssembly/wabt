@@ -1,6 +1,6 @@
 # ERROR: 1
 (module
   (func
-    (neg.f32 (const.f64 0))))
+    (f32.neg (f64.const 0))))
 # STDERR:
 3:6: type mismatch of unary op. got f64, expected f32

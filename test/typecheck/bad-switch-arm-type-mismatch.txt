@@ -1,8 +1,8 @@
 # ERROR: 1
 (module
   (func
-    (switch.i64 (const.i64 0)
-      (case 1 (const.i32 0))
-      (case 2 (const.f32 0)))))
+    (i64.switch (i64.const 0)
+      (case 1 (i32.const 0))
+      (case 2 (f32.const 0)))))
 # STDERR:
 5:28: type mismatch in switch case. got f32, expected i32

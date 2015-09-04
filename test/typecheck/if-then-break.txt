@@ -2,5 +2,5 @@
   (func
     (label
       (if
-        (const.i32 0)
+        (i32.const 0)
         (break)))))

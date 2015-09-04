@@ -1,6 +1,6 @@
 # ERROR: 1
 (module (func
   (local i32)
-  (setlocal 0)))
+  (set_local 0)))
 # STDERR:
-3:14: expected '(', not ")"
+3:15: expected '(', not ")"

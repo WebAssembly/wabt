@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (const.i32 100x)))
+(module (func (i32.const 100x)))
 # STDERR:
 1:26: invalid unsigned 32-bit int

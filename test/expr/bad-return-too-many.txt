@@ -1,6 +1,6 @@
 # ERROR: 1
 (module
   (func (result i32 i32)
-    (return (const.i32 0) (const.i32 0) (const.i32 0))))
+    (return (i32.const 0) (i32.const 0) (i32.const 0))))
 # STDERR:
 3:41: too many return values. got 3, expected 2

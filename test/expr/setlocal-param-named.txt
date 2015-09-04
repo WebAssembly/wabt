@@ -1,1 +1,1 @@
-(module (func (param $n i32) (setlocal $n (const.i32 0))))
+(module (func (param $n i32) (set_local $n (i32.const 0))))

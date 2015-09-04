@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (add.i32)))
+(module (func (i32.add)))
 # STDERR:
 1:23: expected '(', not ")"

@@ -112,102 +112,155 @@ typedef struct NameMemTypePair {
   MemType type;
 } NameMemTypePair;
 
+typedef struct NameMemType2Pair {
+  const char* name;
+  MemType mem_type;
+  Type type;
+} NameMemType2Pair;
+
 static NameTypePair s_unary_ops[] = {
-    {"neg.f32", TYPE_F32},   {"neg.f64", TYPE_F64},   {"abs.f32", TYPE_F32},
-    {"abs.f64", TYPE_F64},   {"sqrt.f32", TYPE_F32},  {"sqrt.f64", TYPE_F64},
-    {"not.i32", TYPE_I32},   {"not.i64", TYPE_I64},   {"not.f32", TYPE_F32},
-    {"not.f64", TYPE_F64},   {"clz.i32", TYPE_I32},   {"clz.i64", TYPE_I64},
-    {"ctz.i32", TYPE_I32},   {"ctz.i64", TYPE_I64},   {"ceil.f32", TYPE_F32},
-    {"ceil.f64", TYPE_F64},  {"floor.f32", TYPE_F32}, {"floor.f64", TYPE_F64},
-    {"trunc.f32", TYPE_F32}, {"trunc.f64", TYPE_F64}, {"round.f32", TYPE_F32},
-    {"round.f64", TYPE_F64},
+    {"f32.neg", TYPE_F32},   {"f64.neg", TYPE_F64},   {"f32.abs", TYPE_F32},
+    {"f64.abs", TYPE_F64},   {"f32.sqrt", TYPE_F32},  {"f64.sqrt", TYPE_F64},
+    {"i32.not", TYPE_I32},   {"i64.not", TYPE_I64},   {"f32.not", TYPE_F32},
+    {"f64.not", TYPE_F64},   {"i32.clz", TYPE_I32},   {"i64.clz", TYPE_I64},
+    {"i32.ctz", TYPE_I32},   {"i64.ctz", TYPE_I64},   {"f32.ceil", TYPE_F32},
+    {"f64.ceil", TYPE_F64},  {"f32.floor", TYPE_F32}, {"f64.floor", TYPE_F64},
+    {"f32.trunc", TYPE_F32}, {"f64.trunc", TYPE_F64}, {"f32.nearest", TYPE_F32},
+    {"f64.nearest", TYPE_F64},
 };
 
 static NameTypePair s_binary_ops[] = {
-    {"add.i32", TYPE_I32},      {"add.i64", TYPE_I64},
-    {"add.f32", TYPE_F32},      {"add.f64", TYPE_F64},
-    {"sub.i32", TYPE_I32},      {"sub.i64", TYPE_I64},
-    {"sub.f32", TYPE_F32},      {"sub.f64", TYPE_F64},
-    {"mul.i32", TYPE_I32},      {"mul.i64", TYPE_I64},
-    {"mul.f32", TYPE_F32},      {"mul.f64", TYPE_F64},
-    {"divs.i32", TYPE_I32},     {"divs.i64", TYPE_I64},
-    {"divu.i32", TYPE_I32},     {"divu.i64", TYPE_I64},
-    {"div.f32", TYPE_F32},      {"div.f64", TYPE_F64},
-    {"mods.i32", TYPE_I32},     {"mods.i64", TYPE_I64},
-    {"modu.i32", TYPE_I32},     {"modu.i64", TYPE_I64},
-    {"and.i32", TYPE_I32},      {"and.i64", TYPE_I64},
-    {"or.i32", TYPE_I32},       {"or.i64", TYPE_I64},
-    {"xor.i32", TYPE_I32},      {"xor.i64", TYPE_I64},
-    {"shl.i32", TYPE_I32},      {"shl.i64", TYPE_I64},
-    {"shr.i32", TYPE_I32},      {"shr.i64", TYPE_I64},
-    {"sar.i32", TYPE_I32},      {"sar.i64", TYPE_I64},
-    {"copysign.f32", TYPE_F32}, {"copysign.f64", TYPE_F64},
+    {"i32.add", TYPE_I32},      {"i64.add", TYPE_I64},
+    {"f32.add", TYPE_F32},      {"f64.add", TYPE_F64},
+    {"i32.sub", TYPE_I32},      {"i64.sub", TYPE_I64},
+    {"f32.sub", TYPE_F32},      {"f64.sub", TYPE_F64},
+    {"i32.mul", TYPE_I32},      {"i64.mul", TYPE_I64},
+    {"f32.mul", TYPE_F32},      {"f64.mul", TYPE_F64},
+    {"i32.div_s", TYPE_I32},    {"i64.div_s", TYPE_I64},
+    {"i32.div_u", TYPE_I32},    {"i64.div_u", TYPE_I64},
+    {"f32.div", TYPE_F32},      {"f64.div", TYPE_F64},
+    {"i32.rem_s", TYPE_I32},    {"i64.rem_s", TYPE_I64},
+    {"i32.rem_u", TYPE_I32},    {"i64.rem_u", TYPE_I64},
+    {"i32.and", TYPE_I32},      {"i64.and", TYPE_I64},
+    {"i32.or", TYPE_I32},       {"i64.or", TYPE_I64},
+    {"i32.xor", TYPE_I32},      {"i64.xor", TYPE_I64},
+    {"i32.shl", TYPE_I32},      {"i64.shl", TYPE_I64},
+    {"i32.shr", TYPE_I32},      {"i64.shr", TYPE_I64},
+    {"i32.sar", TYPE_I32},      {"i64.sar", TYPE_I64},
+    {"f32.copysign", TYPE_F32}, {"f64.copysign", TYPE_F64},
 };
 
 static NameTypePair s_compare_ops[] = {
-    {"eq.i32", TYPE_I32},  {"eq.i64", TYPE_I64},  {"eq.f32", TYPE_F32},
-    {"eq.f64", TYPE_F64},  {"neq.i32", TYPE_I32}, {"neq.i64", TYPE_I64},
-    {"neq.f32", TYPE_F32}, {"neq.f64", TYPE_F64}, {"lts.i32", TYPE_I32},
-    {"lts.i64", TYPE_I64}, {"ltu.i32", TYPE_I32}, {"ltu.i64", TYPE_I64},
-    {"lt.f32", TYPE_F32},  {"lt.f64", TYPE_F64},  {"les.i32", TYPE_I32},
-    {"les.i64", TYPE_I64}, {"leu.i32", TYPE_I32}, {"leu.i64", TYPE_I64},
-    {"le.f32", TYPE_F32},  {"le.f64", TYPE_F64},  {"gts.i32", TYPE_I32},
-    {"gts.i64", TYPE_I64}, {"gtu.i32", TYPE_I32}, {"gtu.i64", TYPE_I64},
-    {"gt.f32", TYPE_F32},  {"gt.f64", TYPE_F64},  {"ges.i32", TYPE_I32},
-    {"ges.i64", TYPE_I64}, {"geu.i32", TYPE_I32}, {"geu.i64", TYPE_I64},
-    {"ge.f32", TYPE_F32},  {"ge.f64", TYPE_F64},
+    {"i32.eq", TYPE_I32},   {"i64.eq", TYPE_I64},   {"f32.eq", TYPE_F32},
+    {"f64.eq", TYPE_F64},   {"i32.neq", TYPE_I32},  {"i64.neq", TYPE_I64},
+    {"f32.neq", TYPE_F32},  {"f64.neq", TYPE_F64},  {"i32.lt_s", TYPE_I32},
+    {"i64.lt_s", TYPE_I64}, {"i32.lt_u", TYPE_I32}, {"i64.lt_u", TYPE_I64},
+    {"f32.lt", TYPE_F32},   {"f64.lt", TYPE_F64},   {"i32.le_s", TYPE_I32},
+    {"i64.le_s", TYPE_I64}, {"i32.le_u", TYPE_I32}, {"i64.le_u", TYPE_I64},
+    {"f32.le", TYPE_F32},   {"f64.le", TYPE_F64},   {"i32.gt_s", TYPE_I32},
+    {"i64.gt_s", TYPE_I64}, {"i32.gt_u", TYPE_I32}, {"i64.gt_u", TYPE_I64},
+    {"f32.gt", TYPE_F32},   {"f64.gt", TYPE_F64},   {"i32.ge_s", TYPE_I32},
+    {"i64.ge_s", TYPE_I64}, {"i32.ge_u", TYPE_I32}, {"i64.ge_u", TYPE_I64},
+    {"f32.ge", TYPE_F32},   {"f64.ge", TYPE_F64},
 };
 
 static NameType2Pair s_convert_ops[] = {
-    {"converts.i32.i32", TYPE_I32, TYPE_I32},
-    {"convertu.i32.i32", TYPE_I32, TYPE_I32},
-    {"converts.i32.i64", TYPE_I32, TYPE_I64},
-    {"convertu.i32.i64", TYPE_I32, TYPE_I64},
-    {"converts.i64.i32", TYPE_I64, TYPE_I32},
-    {"convertu.i64.i32", TYPE_I64, TYPE_I32},
-    {"converts.i64.i64", TYPE_I64, TYPE_I64},
-    {"convertu.i64.i64", TYPE_I64, TYPE_I64},
-    {"converts.i32.f32", TYPE_I32, TYPE_F32},
-    {"convertu.i32.f32", TYPE_I32, TYPE_F32},
-    {"converts.i32.f64", TYPE_I32, TYPE_F64},
-    {"convertu.i32.f64", TYPE_I32, TYPE_F64},
-    {"converts.i64.f32", TYPE_I64, TYPE_F32},
-    {"convertu.i64.f32", TYPE_I64, TYPE_F32},
-    {"converts.i64.f64", TYPE_I64, TYPE_F64},
-    {"convertu.i64.f64", TYPE_I64, TYPE_F64},
-    {"converts.f32.i32", TYPE_F32, TYPE_I32},
-    {"convertu.f32.i32", TYPE_F32, TYPE_I32},
-    {"converts.f32.i64", TYPE_F32, TYPE_I64},
-    {"convertu.f32.i64", TYPE_F32, TYPE_I64},
-    {"converts.f64.i32", TYPE_F64, TYPE_I32},
-    {"convertu.f64.i32", TYPE_F64, TYPE_I32},
-    {"converts.f64.i64", TYPE_F64, TYPE_I64},
-    {"convertu.f64.i64", TYPE_F64, TYPE_I64},
-    {"convert.f32.f32", TYPE_F32, TYPE_F32},
-    {"convert.f32.f64", TYPE_F32, TYPE_F64},
-    {"convert.f64.f32", TYPE_F64, TYPE_F32},
-    {"convert.f64.f64", TYPE_F64, TYPE_F64},
+    {"i64.extend_s/i32", TYPE_I32, TYPE_I64},
+    {"i64.extend_u/i32", TYPE_I32, TYPE_I64},
+    {"i32.wrap/i64", TYPE_I64, TYPE_I32},
+    {"f32.convert_s/i32", TYPE_I32, TYPE_F32},
+    {"f32.convert_u/i32", TYPE_I32, TYPE_F32},
+    {"f64.convert_s/i32", TYPE_I32, TYPE_F64},
+    {"f64.convert_u/i32", TYPE_I32, TYPE_F64},
+    {"f32.convert_s/i64", TYPE_I64, TYPE_F32},
+    {"f32.convert_u/i64", TYPE_I64, TYPE_F32},
+    {"f64.convert_s/i64", TYPE_I64, TYPE_F64},
+    {"f64.convert_u/i64", TYPE_I64, TYPE_F64},
+    {"i32.trunc_s/f32", TYPE_F32, TYPE_I32},
+    {"i32.trunc_u/f32", TYPE_F32, TYPE_I32},
+    {"i64.trunc_s/f32", TYPE_F32, TYPE_I64},
+    {"i64.trunc_u/f32", TYPE_F32, TYPE_I64},
+    {"i32.trunc_s/f64", TYPE_F64, TYPE_I32},
+    {"i32.trunc_u/f64", TYPE_F64, TYPE_I32},
+    {"i64.trunc_s/f64", TYPE_F64, TYPE_I64},
+    {"i64.trunc_u/f64", TYPE_F64, TYPE_I64},
+    {"f64.promote/f32", TYPE_F32, TYPE_F64},
+    {"f32.demote/f64", TYPE_F64, TYPE_F32},
 };
 
 static NameType2Pair s_cast_ops[] = {
-    {"cast.i32.f32", TYPE_I32, TYPE_F32},
-    {"cast.f32.i32", TYPE_F32, TYPE_I32},
-    {"cast.i64.f64", TYPE_I64, TYPE_F64},
-    {"cast.f64.i64", TYPE_F64, TYPE_I64},
+    {"f32.reinterpret/i32", TYPE_I32, TYPE_F32},
+    {"i32.reinterpret/f32", TYPE_F32, TYPE_I32},
+    {"f64.reinterpret/i64", TYPE_I64, TYPE_F64},
+    {"i64.reinterpret/f64", TYPE_F64, TYPE_I64},
 };
 
 static NameTypePair s_const_ops[] = {
-    {"const.i32", TYPE_I32},
-    {"const.i64", TYPE_I64},
-    {"const.f32", TYPE_F32},
-    {"const.f64", TYPE_F64},
+    {"i32.const", TYPE_I32},
+    {"i64.const", TYPE_I64},
+    {"f32.const", TYPE_F32},
+    {"f64.const", TYPE_F64},
 };
 
 static NameTypePair s_switch_ops[] = {
-    {"switch.i32", TYPE_I32},
-    {"switch.i64", TYPE_I64},
-    {"switch.f32", TYPE_F32},
-    {"switch.f64", TYPE_F64},
+    {"i32.switch", TYPE_I32},
+    {"i64.switch", TYPE_I64},
+    {"f32.switch", TYPE_F32},
+    {"f64.switch", TYPE_F64},
+};
+
+static NameMemType2Pair s_load_ops[] = {
+    {"i32.load_s/i8", MEM_TYPE_I8, TYPE_I32},
+    {"i32.load_u/i8", MEM_TYPE_I8, TYPE_I32},
+    {"i32.load_s/i16", MEM_TYPE_I16, TYPE_I32},
+    {"i32.load_u/i16", MEM_TYPE_I16, TYPE_I32},
+    {"i32.load_s/i32", MEM_TYPE_I32, TYPE_I32},
+    {"i32.load_u/i32", MEM_TYPE_I32, TYPE_I32},
+    {"i64.load_s/i8", MEM_TYPE_I8, TYPE_I64},
+    {"i64.load_u/i8", MEM_TYPE_I8, TYPE_I64},
+    {"i64.load_s/i16", MEM_TYPE_I16, TYPE_I64},
+    {"i64.load_u/i16", MEM_TYPE_I16, TYPE_I64},
+    {"i64.load_s/i32", MEM_TYPE_I32, TYPE_I64},
+    {"i64.load_u/i32", MEM_TYPE_I32, TYPE_I64},
+    {"i64.load_s/i64", MEM_TYPE_I64, TYPE_I64},
+    {"i64.load_u/i64", MEM_TYPE_I64, TYPE_I64},
+    {"i32.load/i8", MEM_TYPE_I8, TYPE_I32},
+    {"i32.load/i16", MEM_TYPE_I16, TYPE_I32},
+    {"i32.load/i32", MEM_TYPE_I32, TYPE_I32},
+    {"i64.load/i8", MEM_TYPE_I8, TYPE_I64},
+    {"i64.load/i16", MEM_TYPE_I16, TYPE_I64},
+    {"i64.load/i32", MEM_TYPE_I32, TYPE_I64},
+    {"i64.load/i64", MEM_TYPE_I64, TYPE_I64},
+    {"f32.load/f32", MEM_TYPE_F32, TYPE_F32},
+    {"f64.load/f32", MEM_TYPE_F32, TYPE_F64},
+    {"f64.load/f64", MEM_TYPE_F64, TYPE_F64},
+};
+
+static NameMemType2Pair s_store_ops[] = {
+    {"i32.store_s/i8", MEM_TYPE_I8, TYPE_I32},
+    {"i32.store_u/i8", MEM_TYPE_I8, TYPE_I32},
+    {"i32.store_s/i16", MEM_TYPE_I16, TYPE_I32},
+    {"i32.store_u/i16", MEM_TYPE_I16, TYPE_I32},
+    {"i32.store_s/i32", MEM_TYPE_I32, TYPE_I32},
+    {"i32.store_u/i32", MEM_TYPE_I32, TYPE_I32},
+    {"i64.store_s/i8", MEM_TYPE_I8, TYPE_I64},
+    {"i64.store_u/i8", MEM_TYPE_I8, TYPE_I64},
+    {"i64.store_s/i16", MEM_TYPE_I16, TYPE_I64},
+    {"i64.store_u/i16", MEM_TYPE_I16, TYPE_I64},
+    {"i64.store_s/i32", MEM_TYPE_I32, TYPE_I64},
+    {"i64.store_u/i32", MEM_TYPE_I32, TYPE_I64},
+    {"i64.store_s/i64", MEM_TYPE_I64, TYPE_I64},
+    {"i64.store_u/i64", MEM_TYPE_I64, TYPE_I64},
+    {"i32.store/i8", MEM_TYPE_I8, TYPE_I32},
+    {"i32.store/i16", MEM_TYPE_I16, TYPE_I32},
+    {"i32.store/i32", MEM_TYPE_I32, TYPE_I32},
+    {"i64.store/i8", MEM_TYPE_I8, TYPE_I64},
+    {"i64.store/i16", MEM_TYPE_I16, TYPE_I64},
+    {"i64.store/i32", MEM_TYPE_I32, TYPE_I64},
+    {"i64.store/i64", MEM_TYPE_I64, TYPE_I64},
+    {"f32.store/f32", MEM_TYPE_F32, TYPE_F32},
+    {"f64.store/f32", MEM_TYPE_F32, TYPE_F64},
+    {"f64.store/f64", MEM_TYPE_F64, TYPE_F64},
 };
 
 static NameTypePair s_types[] = {
@@ -217,48 +270,10 @@ static NameTypePair s_types[] = {
     {"f64", TYPE_F64},
 };
 
-static NameMemTypePair s_mem_int_types[] = {
-    {"i8", MEM_TYPE_I8},
-    {"i16", MEM_TYPE_I16},
-    {"i32", MEM_TYPE_I32},
-    {"i64", MEM_TYPE_I64},
-};
-
-static NameMemTypePair s_mem_float_types[] = {
-    {"f32", MEM_TYPE_F32},
-    {"f64", MEM_TYPE_F64},
-};
-
 static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == NUM_TYPES);
-
-static Type mem_type_to_type(MemType type) {
-  switch (type) {
-    case MEM_TYPE_I8:
-      return TYPE_I32;
-
-    case MEM_TYPE_I16:
-      return TYPE_I32;
-
-    case MEM_TYPE_I32:
-      return TYPE_I32;
-
-    case MEM_TYPE_I64:
-      return TYPE_I64;
-
-    case MEM_TYPE_F32:
-      return TYPE_F32;
-
-    case MEM_TYPE_F64:
-      return TYPE_F64;
-
-    default:
-      assert(0);
-      return TYPE_VOID;
-  }
-}
 
 static void realloc_list(void** elts, int* num_elts, int elt_size) {
   (*num_elts)++;
@@ -566,6 +581,13 @@ static int match_atom(Token t, const char* s) {
          0;
 }
 
+static int match_atom_prefix(Token t, const char* s, size_t slen) {
+  size_t len = t.range.end.pos - t.range.start.pos;
+  if (len > slen)
+    len = slen;
+  return strncmp(t.range.start.pos, s, slen) == 0;
+}
+
 static int match_unary(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_unary_ops); ++i) {
@@ -658,99 +680,48 @@ static int match_type(Token t, Type* type) {
   return 0;
 }
 
-static int match_load_store(Token t, const char* prefix, MemType* type) {
-  size_t plen = strlen(prefix);
-  const char* p = t.range.start.pos;
-  const char* end = t.range.end.pos;
-  size_t len = end - p;
-  NameMemTypePair* types = NULL;
-  int num_types = 0;
-
-  if (len < plen + 1)
-    return 0;
-  if (strncmp(p, prefix, plen) != 0)
-    return 0;
-  p += plen;
-  switch (*p) {
-    case 's':
-    case 'u':
-      types = s_mem_int_types;
-      num_types = ARRAY_SIZE(s_mem_int_types);
-      p++;
-      if (p >= end || *p != '.')
-        return 0;
-      p++;
-      break;
-
-    case '.':
-      types = s_mem_float_types;
-      num_types = ARRAY_SIZE(s_mem_float_types);
-      p++;
-      break;
-
-    default:
-      return 0;
-  }
-
-  /* try to read alignment */
-  if (p >= end)
-    return 0;
-
-  switch (*p) {
-    case 'i':
-    case 'f':
-      break;
-
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9': {
-      /* find first non-digit */
-      const char* align_end = p;
-      while (align_end < end && *align_end >= '0' && *align_end <= '9')
-        align_end++;
-
-      uint32_t value;
-      if (!read_uint32(&p, align_end, &value)) {
-        FATAL("%d:%d: invalid alignment\n", t.range.start.line,
-              t.range.start.col);
-      }
-      if ((value & (value - 1)) != 0) {
-        FATAL("%d:%d: alignment must be power-of-two\n", t.range.start.line,
-              t.range.start.col);
-      }
-
-      if (p >= end)
-        return 0;
-      if (*p != '.')
-        return 0;
-      p++;
-      break;
-    }
-
-    default:
-      return 0;
-  }
-
-  /* read mem type suffix */
+static int match_load_store(Token t,
+                            MemType* mem_type,
+                            Type* type,
+                            NameMemType2Pair* ops,
+                            size_t num_ops) {
   int i;
-  for (i = 0; i < num_types; ++i) {
-    const char* name = types[i].name;
-    int name_len = strlen(name);
-    if (p + name_len == end) {
-      if (strncmp(p, name, name_len) == 0) {
-        *type = types[i].type;
-        return 1;
+  for (i = 0; i < num_ops; ++i) {
+    size_t len = t.range.end.pos - t.range.start.pos;
+    size_t name_len = strlen(ops[i].name);
+    if (match_atom_prefix(t, ops[i].name, name_len)) {
+      if (len >= name_len + 1 && t.range.start.pos[name_len] == '/') {
+        /* might have an alignment */
+        const char* p = &t.range.start.pos[name_len + 1];
+        uint32_t alignment;
+        if (!read_uint32(&p, t.range.end.pos, &alignment))
+          return 0;
+        /* check that alignment is power-of-two */
+        if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
+          FATAL("%d:%d: alignment must be power-of-two\n", t.range.start.line,
+                t.range.start.col);
+        }
+      } else if (len != name_len) {
+        /* bad suffix */
+        return 0;
       }
+
+      *mem_type = ops[i].mem_type;
+      *type = ops[i].type;
+      return 1;
     }
   }
-
   return 0;
+}
+
+static int match_load(Token t, MemType* mem_type, Type* type) {
+  return match_load_store(t, mem_type, type, s_load_ops,
+                          ARRAY_SIZE(s_load_ops));
+}
+
+static int match_store(Token t, MemType* mem_type, Type* type) {
+  return match_load_store(t, mem_type, type, s_store_ops,
+                          ARRAY_SIZE(s_store_ops));
 }
 
 static void unexpected_token(Token t) {
@@ -1087,7 +1058,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       }
 
       type = get_result_type(t.range.start, callee);
-    } else if (match_atom(t, "dispatch")) {
+    } else if (match_atom(t, "call_indirect")) {
       /* TODO(binji) */
     } else if (match_atom(t, "return")) {
       int num_results = 0;
@@ -1120,11 +1091,11 @@ static Type parse_expr(Tokenizer* tokenizer,
       int index = parse_arg_var(tokenizer, function);
       type = function->locals[index].type;
       expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "getlocal")) {
+    } else if (match_atom(t, "get_local")) {
       int index = parse_local_var(tokenizer, function);
       type = function->locals[index].type;
       expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "setlocal")) {
+    } else if (match_atom(t, "set_local")) {
       int index = parse_local_var(tokenizer, function);
       Binding* binding = &function->locals[index];
       type = parse_expr(tokenizer, module, function);
@@ -1140,17 +1111,15 @@ static Type parse_expr(Tokenizer* tokenizer,
       type = parse_expr(tokenizer, module, function);
       check_type(t.range.start, type, binding->type, "");
       expect_close(read_token(tokenizer));
-    } else if (match_load_store(t, "load", &mem_type)) {
+    } else if (match_load(t, &mem_type, &type)) {
       Type index_type = parse_expr(tokenizer, module, function);
       check_type(t.range.start, index_type, TYPE_I32, " of load index");
-      type = mem_type_to_type(mem_type);
       expect_close(read_token(tokenizer));
-    } else if (match_load_store(t, "store", &mem_type)) {
+    } else if (match_store(t, &mem_type, &type)) {
       Type index_type = parse_expr(tokenizer, module, function);
       check_type(t.range.start, index_type, TYPE_I32, " of store index");
-      type = parse_expr(tokenizer, module, function);
-      check_type(t.range.start, type, mem_type_to_type(mem_type),
-                 " of store value");
+      Type value_type = parse_expr(tokenizer, module, function);
+      check_type(t.range.start, value_type, type, " of store value");
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type)) {
       parse_literal(tokenizer, type);

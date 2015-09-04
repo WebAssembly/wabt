@@ -1,5 +1,5 @@
 # ERROR: 1
 (module
-  (func (if (const.i32 0) (const.f32 0) (const.i32 0))))
+  (func (if (i32.const 0) (f32.const 0) (i32.const 0))))
 # STDERR:
 2:54: type mismatch between true and false branches. got i32, expected f32

@@ -1,5 +1,5 @@
 # ERROR: 1
 (module (func (local $foo f64)
-  (getlocal $foo (nop))))
+  (get_local $foo (nop))))
 # STDERR:
-2:18: expected ')', not "("
+2:19: expected ')', not "("

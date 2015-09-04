@@ -1,7 +1,7 @@
 # ERROR: 1
 (module
   (func
-    (switch.i32 (const.i32 0)
+    (i32.switch (i32.const 0)
       (case 0 fallthrough))))
 # STDERR:
 4:15: expected '(', not "fallthrough"
