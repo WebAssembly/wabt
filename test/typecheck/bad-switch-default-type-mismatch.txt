@@ -1,0 +1,8 @@
+# ERROR: 1
+(module
+  (func
+    (switch.i32 (const.i32 0)
+      (case 0 (const.f32 0.0))
+      (const.i32 0))))
+# STDERR:
+5:8: type mismatch in switch default case. got i32, expected f32

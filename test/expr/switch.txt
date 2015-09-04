@@ -1,0 +1,15 @@
+(module
+  (func
+    (local i32 i64 f32 f64)
+    (switch.i32 (getlocal 0)
+      (case 0 (const.i32 0) fallthrough)
+      (case 1 (const.i32 1))
+      (case 2))
+    (switch.i64 (getlocal 1)
+      (case 0 (const.f32 0))
+      (case 15 (const.f32 15)))
+    (switch.f32 (getlocal 2)
+      (case 1.25 (const.i32 1)))
+    (switch.f64 (getlocal 3)
+      (case 1e4 (const.i32 1000))
+      (case 1e5 (const.i32 10000)))))

@@ -203,6 +203,13 @@ static NameTypePair s_const_ops[] = {
     {"const.f64", TYPE_F64},
 };
 
+static NameTypePair s_switch_ops[] = {
+    {"switch.i32", TYPE_I32},
+    {"switch.i64", TYPE_I64},
+    {"switch.f32", TYPE_F32},
+    {"switch.f64", TYPE_F64},
+};
+
 static NameTypePair s_types[] = {
     {"i32", TYPE_I32},
     {"i64", TYPE_I64},
@@ -559,14 +566,6 @@ static int match_atom(Token t, const char* s) {
          0;
 }
 
-static int match_atom_prefix(Token t, const char* s) {
-  size_t slen = strlen(s);
-  size_t len = t.range.end.pos - t.range.start.pos;
-  if (slen < len)
-    len = slen;
-  return strncmp(t.range.start.pos, s, slen) == 0;
-}
-
 static int match_unary(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_unary_ops); ++i) {
@@ -629,6 +628,17 @@ static int match_const(Token t, Type* type) {
   for (i = 0; i < ARRAY_SIZE(s_const_ops); ++i) {
     if (match_atom(t, s_const_ops[i].name)) {
       *type = s_const_ops[i].type;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int match_switch(Token t, Type* type) {
+  int i;
+  for (i = 0; i < ARRAY_SIZE(s_switch_ops); ++i) {
+    if (match_atom(t, s_switch_ops[i].name)) {
+      *type = s_switch_ops[i].type;
       return 1;
     }
   }
@@ -875,7 +885,7 @@ static Type parse_block(Tokenizer* tokenizer,
   return type;
 }
 
-static void parse_const(Tokenizer* tokenizer, Type type) {
+static void parse_literal(Tokenizer* tokenizer, Type type) {
   Token t = read_token(tokenizer);
   expect_atom(t);
   const char* p = t.range.start.pos;
@@ -911,6 +921,66 @@ static void parse_const(Tokenizer* tokenizer, Type type) {
     default:
       assert(0);
   }
+}
+
+static Type parse_switch(Tokenizer* tokenizer,
+                         Module* module,
+                         Function* function,
+                         Type in_type) {
+  int num_cases = 0;
+  Type cond_type = parse_expr(tokenizer, module, function);
+  check_type(tokenizer->loc, cond_type, in_type, " in switch condition");
+  Type type = TYPE_VOID;
+  Token t = read_token(tokenizer);
+  while (1) {
+    expect_open(t);
+    Token open = t;
+    t = read_token(tokenizer);
+    expect_atom(t);
+    if (match_atom(t, "case")) {
+      parse_literal(tokenizer, in_type);
+      t = read_token(tokenizer);
+      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+        rewind_token(tokenizer, t);
+        Type value_type;
+        while (1) {
+          value_type = parse_expr(tokenizer, module, function);
+          t = read_token(tokenizer);
+          if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+            break;
+          } else if (t.type == TOKEN_TYPE_ATOM &&
+                     match_atom(t, "fallthrough")) {
+            expect_close(read_token(tokenizer));
+            break;
+          }
+          rewind_token(tokenizer, t);
+        }
+
+        if (++num_cases == 1) {
+          type = value_type;
+        } else if (value_type == TYPE_VOID) {
+          type = TYPE_VOID;
+        } else {
+          check_type(t.range.start, value_type, type, " in switch case");
+        }
+      }
+    } else {
+      /* default case */
+      rewind_token(tokenizer, open);
+      Type value_type = parse_expr(tokenizer, module, function);
+      if (value_type == TYPE_VOID) {
+        type = TYPE_VOID;
+      } else {
+        check_type(t.range.start, value_type, type, " in switch default case");
+      }
+      expect_close(read_token(tokenizer));
+      break;
+    }
+    t = read_token(tokenizer);
+    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+      break;
+  }
+  return type;
 }
 
 static Type parse_expr(Tokenizer* tokenizer,
@@ -973,8 +1043,8 @@ static Type parse_expr(Tokenizer* tokenizer,
         parse_label_var(tokenizer, function);
         expect_close(read_token(tokenizer));
       }
-    } else if (match_atom_prefix(t, "switch")) {
-      /* TODO(binji) */
+    } else if (match_switch(t, &in_type)) {
+      type = parse_switch(tokenizer, module, function, in_type);
     } else if (match_atom(t, "call")) {
       int index = parse_function_var(tokenizer, module);
       Function* callee = &module->functions[index];
@@ -1094,7 +1164,7 @@ static Type parse_expr(Tokenizer* tokenizer,
                  " of store value");
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type)) {
-      parse_const(tokenizer, type);
+      parse_literal(tokenizer, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type)) {
       Type value_type = parse_expr(tokenizer, module, function);

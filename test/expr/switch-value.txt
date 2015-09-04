@@ -1,0 +1,7 @@
+(module
+  (global i32)
+  (func (param i32)
+    (store_global 0
+      (switch (getparam 0)
+        (case 0 (const.i32 0))
+        (const.i32 1)))))

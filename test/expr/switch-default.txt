@@ -1,0 +1,5 @@
+(module
+  (func
+    (switch.i32 (const.i32 0)
+      (case 0 (const.i32 0))
+      (const.i32 100))))
