@@ -14,6 +14,8 @@
     (i64.clz (i64.const 0))
     (i32.ctz (i32.const 0))
     (i64.ctz (i64.const 0))
+    (i32.popcnt (i32.const 0))
+    (i64.popcnt (i64.const 0))
     (f32.ceil (f32.const 0))
     (f64.ceil (f64.const 0))
     (f32.floor (f32.const 0))

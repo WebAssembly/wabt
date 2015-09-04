@@ -286,14 +286,18 @@ static int g_verbose;
 static const char* g_filename;
 
 static NameTypePair s_unary_ops[] = {
-    {"f32.neg", TYPE_F32},   {"f64.neg", TYPE_F64},   {"f32.abs", TYPE_F32},
-    {"f64.abs", TYPE_F64},   {"f32.sqrt", TYPE_F32},  {"f64.sqrt", TYPE_F64},
-    {"i32.not", TYPE_I32},   {"i64.not", TYPE_I64},   {"f32.not", TYPE_F32},
-    {"f64.not", TYPE_F64},   {"i32.clz", TYPE_I32},   {"i64.clz", TYPE_I64},
-    {"i32.ctz", TYPE_I32},   {"i64.ctz", TYPE_I64},   {"f32.ceil", TYPE_F32},
-    {"f64.ceil", TYPE_F64},  {"f32.floor", TYPE_F32}, {"f64.floor", TYPE_F64},
-    {"f32.trunc", TYPE_F32}, {"f64.trunc", TYPE_F64}, {"f32.nearest", TYPE_F32},
-    {"f64.nearest", TYPE_F64},
+    {"f32.neg", TYPE_F32},     {"f64.neg", TYPE_F64},
+    {"f32.abs", TYPE_F32},     {"f64.abs", TYPE_F64},
+    {"f32.sqrt", TYPE_F32},    {"f64.sqrt", TYPE_F64},
+    {"i32.not", TYPE_I32},     {"i64.not", TYPE_I64},
+    {"f32.not", TYPE_F32},     {"f64.not", TYPE_F64},
+    {"i32.clz", TYPE_I32},     {"i64.clz", TYPE_I64},
+    {"i32.ctz", TYPE_I32},     {"i64.ctz", TYPE_I64},
+    {"i32.popcnt", TYPE_I32},  {"i64.popcnt", TYPE_I64},
+    {"f32.ceil", TYPE_F32},    {"f64.ceil", TYPE_F64},
+    {"f32.floor", TYPE_F32},   {"f64.floor", TYPE_F64},
+    {"f32.trunc", TYPE_F32},   {"f64.trunc", TYPE_F64},
+    {"f32.nearest", TYPE_F32}, {"f64.nearest", TYPE_F64},
 };
 
 static NameTypePair s_binary_ops[] = {
@@ -308,6 +312,8 @@ static NameTypePair s_binary_ops[] = {
     {"f32.div", TYPE_F32},      {"f64.div", TYPE_F64},
     {"i32.rem_s", TYPE_I32},    {"i64.rem_s", TYPE_I64},
     {"i32.rem_u", TYPE_I32},    {"i64.rem_u", TYPE_I64},
+    {"f32.min", TYPE_F32},      {"f64.min", TYPE_F64},
+    {"f32.max", TYPE_F32},      {"f64.max", TYPE_F64},
     {"i32.and", TYPE_I32},      {"i64.and", TYPE_I64},
     {"i32.or", TYPE_I32},       {"i64.or", TYPE_I64},
     {"i32.xor", TYPE_I32},      {"i64.xor", TYPE_I64},
