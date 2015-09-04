@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stdint.h>
@@ -12,6 +13,14 @@
 #define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
 #define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
+
+#define INITIAL_OUTPUT_BUFFER_CAPACITY (64 * 1024)
+/* TODO(binji): read these from the file? use flags? */
+#define DEFAULT_MEMORY_SIZE_LOG2 20
+#define DEFAULT_MEMORY_EXPORT 1
+
+#define DUMP_OCTETS_PER_LINE 16
+#define DUMP_OCTETS_PER_GROUP 2
 
 typedef enum Type {
   TYPE_VOID,
@@ -260,6 +269,12 @@ typedef struct Module {
   int num_exports;
 } Module;
 
+typedef struct OutputBuffer {
+  void* start;
+  size_t size;
+  size_t capacity;
+} OutputBuffer;
+
 typedef struct NameTypePair {
   const char* name;
   Type type;
@@ -284,6 +299,7 @@ typedef struct NameMemType2Pair {
 
 static int g_verbose;
 static const char* g_filename;
+static int g_dump_module;
 
 static NameTypePair s_unary_ops[] = {
     {"f32.neg", TYPE_F32},     {"f64.neg", TYPE_F64},
@@ -455,6 +471,82 @@ static void realloc_list(void** elts, int* num_elts, int elt_size) {
   if (*elts == NULL) {
     FATAL("unable to alloc %d bytes", new_size);
   }
+}
+
+static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
+  buf->start = malloc(initial_capacity);
+  if (!buf->start)
+    FATAL("unable to allocate %zd bytes\n", initial_capacity);
+  buf->size = 0;
+  buf->capacity = initial_capacity;
+}
+
+static size_t out_data(OutputBuffer* buf,
+                       size_t offset,
+                       const void* src,
+                       size_t size) {
+  assert(offset <= buf->size);
+  if (offset + size > buf->capacity) {
+    size_t new_capacity = buf->capacity * 2;
+    buf->start = realloc(buf->start, new_capacity);
+    if (!buf->start)
+      FATAL("unable to allocate %zd bytes\n", new_capacity);
+    buf->capacity = new_capacity;
+  }
+  memcpy(buf->start + offset, src, size);
+  return offset + size;
+}
+
+static void out_u8(OutputBuffer* buf, uint8_t value) {
+  buf->size = out_data(buf, buf->size, &value, sizeof(value));
+}
+
+static void out_u16(OutputBuffer* buf, uint16_t value) {
+  /* TODO(binji): endianness */
+  buf->size = out_data(buf, buf->size, &value, sizeof(value));
+}
+
+static void out_u32(OutputBuffer* buf, uint32_t value) {
+  /* TODO(binji): endianness */
+  buf->size = out_data(buf, buf->size, &value, sizeof(value));
+}
+
+static void out_cstr(OutputBuffer* buf, const char* s) {
+  buf->size = out_data(buf, buf->size, s, strlen(s) + 1);
+}
+
+static void dump_output_buffer(OutputBuffer* buf) {
+  /* mimic xxd output */
+  uint8_t* p = buf->start;
+  uint8_t* end = p + buf->size;
+  while (p < end) {
+    uint8_t* line = p;
+    uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    printf("%07x: ", (int)((void*)p - buf->start));
+    while (p < line_end) {
+      int i;
+      for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
+        if (p < end) {
+          printf("%02x", *p);
+        } else {
+          putchar(' ');
+          putchar(' ');
+        }
+      }
+      putchar(' ');
+    }
+
+    putchar(' ');
+    p = line;
+    int i;
+    for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
+      printf("%c", isprint(*p) ? *p : '.');
+    putchar('\n');
+  }
+}
+
+static void destroy_output_buffer(OutputBuffer* buf) {
+  free(buf->start);
 }
 
 static int get_binding_by_name(Binding* bindings,
@@ -1495,6 +1587,42 @@ static void parse_module(Tokenizer* tokenizer) {
   Module module = {};
   preparse_module(tokenizer, &module);
 
+  OutputBuffer output = {};
+  init_output_buffer(&output, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  out_u8(&output, DEFAULT_MEMORY_SIZE_LOG2);
+  out_u8(&output, DEFAULT_MEMORY_EXPORT);
+  out_u16(&output, module.num_globals);
+  out_u16(&output, module.num_functions);
+  out_u16(&output, 0); /* TODO(binji): num data segments */
+
+  int i;
+  for (i = 0; i < module.num_globals; ++i) {
+    /* TODO(binji): set these */
+    out_u32(&output, 0); /* name offset */
+    out_u8(&output, 0); /* mem type */
+    out_u32(&output, 0); /* offset */
+    out_u8(&output, 0); /* exported */
+  }
+
+  for (i = 0; i < module.num_functions; ++i) {
+    Function* function = &module.functions[i];
+    /* TODO(binji): set these */
+    out_u8(&output, function->num_args);
+    out_u8(&output, 0); /* result type */
+    int j;
+    for (j = 0; j < function->num_args; ++j)
+      out_u8(&output, 0); /* arg type */
+    out_u32(&output, 0); /* name offset */
+    out_u32(&output, 0); /* code start offset */
+    out_u32(&output, 0); /* code end offset */
+    out_u16(&output, 0); /* num local i32 */
+    out_u16(&output, 0); /* num local i64 */
+    out_u16(&output, 0); /* num local f32 */
+    out_u16(&output, 0); /* num local f64 */
+    out_u8(&output, 0); /* exported */
+    out_u8(&output, 0); /* external */
+  }
+
   int function_index = 0;
   Token t = read_token(tokenizer);
   while (1) {
@@ -1527,6 +1655,24 @@ static void parse_module(Tokenizer* tokenizer) {
       unexpected_token(t);
     }
   }
+
+  /* TODO(binji): output data segment */
+
+  /* output name table */
+  /* TODO(binji): uniquify names */
+  for (i = 0; i < module.num_globals; ++i) {
+    if (module.globals[i].name)
+      out_cstr(&output, module.globals[i].name);
+  }
+  for (i = 0; i < module.num_functions; ++i) {
+    if (module.functions[i].name)
+      out_cstr(&output, module.functions[i].name);
+  }
+
+  if (g_dump_module)
+    dump_output_buffer(&output);
+
+  destroy_output_buffer(&output);
   destroy_module(&module);
 }
 
@@ -1562,12 +1708,14 @@ static void parse(Tokenizer* tokenizer) {
 enum {
   FLAG_VERBOSE,
   FLAG_HELP,
+  FLAG_DUMP_MODULE,
   NUM_FLAGS
 };
 
 static struct option g_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
+    {"dump-module", no_argument, NULL, 'd'},
     {NULL, 0, NULL, 0},
 };
 STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(g_long_options));
@@ -1580,6 +1728,7 @@ typedef struct OptionHelp {
 
 static OptionHelp g_option_help[] = {
     {FLAG_VERBOSE, NULL, "use multiple times for more info"},
+    {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
     {NUM_FLAGS, NULL},
 };
 
@@ -1628,7 +1777,7 @@ static void parse_options(int argc, char** argv) {
   int option_index;
 
   while (1) {
-    c = getopt_long(argc, argv, "vh", g_long_options, &option_index);
+    c = getopt_long(argc, argv, "vhd", g_long_options, &option_index);
     if (c == -1) {
       break;
     }
@@ -1644,6 +1793,7 @@ static void parse_options(int argc, char** argv) {
         switch (option_index) {
           case FLAG_VERBOSE:
           case FLAG_HELP:
+          case FLAG_DUMP_MODULE:
             /* Handled above by goto */
             assert(0);
         }
@@ -1655,6 +1805,10 @@ static void parse_options(int argc, char** argv) {
 
       case 'h':
         usage(argv[0]);
+
+      case 'd':
+        g_dump_module = 1;
+        break;
 
       case '?':
         break;
