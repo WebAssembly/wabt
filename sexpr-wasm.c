@@ -499,41 +499,6 @@ static void rewind_token(Tokenizer* tokenizer, Token t) {
   tokenizer->loc = t.range.start;
 }
 
-#if 0
-static void print_tokens(Tokenizer* tokenizer) {
-  while (1) {
-    Token token = read_token(&tokenizer);
-    fprintf(stderr, "[%d:%d]:[%d:%d]: ", token.range.start.line,
-            token.range.start.col, token.range.end.line, token.range.end.col);
-    switch (token.type) {
-      case TOKEN_TYPE_EOF:
-        fprintf(stderr, "EOF\n");
-        return;
-
-      case TOKEN_TYPE_OPEN_PAREN:
-        fprintf(stderr, "OPEN_PAREN\n");
-        break;
-
-      case TOKEN_TYPE_CLOSE_PAREN:
-        fprintf(stderr, "CLOSE_PAREN\n");
-        break;
-
-      case TOKEN_TYPE_ATOM:
-        fprintf(stderr, "ATOM: %.*s\n",
-                (int)(token.range.end.pos - token.range.start.pos),
-                token.range.start.pos);
-        break;
-
-      case TOKEN_TYPE_STRING:
-        fprintf(stderr, "STRING: %.*s\n",
-                (int)(token.range.end.pos - token.range.start.pos),
-                token.range.start.pos);
-        break;
-    }
-  }
-}
-#endif
-
 static void expect_open(Token t) {
   if (t.type != TOKEN_TYPE_OPEN_PAREN) {
     FATAL("%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
