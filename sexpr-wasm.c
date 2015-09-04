@@ -785,6 +785,21 @@ static void check_type_arg(SourceLocation loc,
   }
 }
 
+static Type get_result_type(SourceLocation loc, Function* function) {
+  switch (function->num_results) {
+    case 0:
+      return TYPE_VOID;
+
+    case 1:
+      return function->result_types[0];
+
+    default:
+      FATAL("%d:%d: multiple return values currently unsupported\n", loc.line,
+            loc.col);
+      return TYPE_VOID;
+  }
+}
+
 static void parse_generic(Tokenizer* tokenizer) {
   int nesting = 1;
   while (nesting > 0) {
@@ -1071,20 +1086,7 @@ static Type parse_expr(Tokenizer* tokenizer,
               callee->num_args);
       }
 
-      switch (callee->num_results) {
-        case 0:
-          type = TYPE_VOID;
-          break;
-
-        case 1:
-          type = callee->result_types[0];
-          break;
-
-        default:
-          FATAL("%d:%d: multiple return values currently unsupported\n",
-                t.range.start.line, t.range.start.col);
-          break;
-      }
+      type = get_result_type(t.range.start, callee);
     } else if (match_atom(t, "dispatch")) {
       /* TODO(binji) */
     } else if (match_atom(t, "return")) {
@@ -1111,20 +1113,7 @@ static Type parse_expr(Tokenizer* tokenizer,
               function->num_results);
       }
 
-      switch (function->num_results) {
-        case 0:
-          type = TYPE_VOID;
-          break;
-
-        case 1:
-          type = function->result_types[0];
-          break;
-
-        default:
-          FATAL("%d:%d: multiple return values currently unsupported\n",
-                t.range.start.line, t.range.start.col);
-          break;
-      }
+      type = get_result_type(t.range.start, function);
     } else if (match_atom(t, "destruct")) {
       /* TODO(binji) */
     } else if (match_atom(t, "getparam")) {
@@ -1221,7 +1210,11 @@ static void parse_func(Tokenizer* tokenizer,
           parse_generic(tokenizer);
         } else {
           rewind_token(tokenizer, open);
-          parse_expr(tokenizer, module, function);
+          Type type = parse_expr(tokenizer, module, function);
+          Type result_type = get_result_type(t.range.start, function);
+          if (result_type != TYPE_VOID) {
+            check_type(t.range.start, type, result_type, " in function result");
+          }
         }
       } else {
         unexpected_token(t);
