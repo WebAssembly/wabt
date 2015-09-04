@@ -114,12 +114,13 @@ typedef struct NameMemTypePair {
 
 static NameTypePair s_unary_ops[] = {
     {"neg.f32", TYPE_F32},   {"neg.f64", TYPE_F64},   {"abs.f32", TYPE_F32},
-    {"abs.f64", TYPE_F64},   {"not.i32", TYPE_I32},   {"not.i64", TYPE_I64},
-    {"not.f32", TYPE_F32},   {"not.f64", TYPE_F64},   {"clz.i32", TYPE_I32},
-    {"clz.i64", TYPE_I64},   {"ctz.i32", TYPE_I32},   {"ctz.i64", TYPE_I64},
-    {"ceil.f32", TYPE_F32},  {"ceil.f64", TYPE_F64},  {"floor.f32", TYPE_F32},
-    {"floor.f64", TYPE_F64}, {"trunc.f32", TYPE_F32}, {"trunc.f64", TYPE_F64},
-    {"round.f32", TYPE_F32}, {"round.f64", TYPE_F64},
+    {"abs.f64", TYPE_F64},   {"sqrt.f32", TYPE_F32},  {"sqrt.f64", TYPE_F64},
+    {"not.i32", TYPE_I32},   {"not.i64", TYPE_I64},   {"not.f32", TYPE_F32},
+    {"not.f64", TYPE_F64},   {"clz.i32", TYPE_I32},   {"clz.i64", TYPE_I64},
+    {"ctz.i32", TYPE_I32},   {"ctz.i64", TYPE_I64},   {"ceil.f32", TYPE_F32},
+    {"ceil.f64", TYPE_F64},  {"floor.f32", TYPE_F32}, {"floor.f64", TYPE_F64},
+    {"trunc.f32", TYPE_F32}, {"trunc.f64", TYPE_F64}, {"round.f32", TYPE_F32},
+    {"round.f64", TYPE_F64},
 };
 
 static NameTypePair s_binary_ops[] = {

@@ -4,6 +4,8 @@
     (neg.f64 (const.f64 0))
     (abs.f32 (const.f32 0))
     (abs.f64 (const.f64 0))
+    (sqrt.f32 (const.f32 0))
+    (sqrt.f64 (const.f64 0))
     (not.i32 (const.i32 0))
     (not.i64 (const.i64 0))
     (not.f32 (const.f32 0))
