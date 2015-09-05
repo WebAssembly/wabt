@@ -1399,6 +1399,7 @@ static Type parse_expr(Tokenizer* tokenizer,
         } else {
           check_type(tokenizer->loc, false_type, true_type,
                      " between true and false branches");
+          type = true_type;
         }
         expect_close(read_token(tokenizer));
       } else {
@@ -1605,9 +1606,8 @@ static void parse_func(Tokenizer* tokenizer,
   }
 
   Type result_type = get_result_type(t.range.start, function);
-  if (result_type != TYPE_VOID) {
+  if (result_type != TYPE_VOID)
     check_type(t.range.start, type, result_type, " in function result");
-  }
 }
 
 static void preparse_binding_list(Tokenizer* tokenizer,
