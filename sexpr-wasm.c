@@ -552,24 +552,31 @@ static size_t out_data(OutputBuffer* buf,
   return offset + size;
 }
 
-static void out_u8(OutputBuffer* buf, uint8_t value) {
-  buf->size = out_data(buf, buf->size, &value, sizeof(value));
-}
+/* TODO(binji): endianness */
+#define OUT_TYPE(name, ctype)                                    \
+  static void out_##name(OutputBuffer* buf, ctype value) {       \
+    buf->size = out_data(buf, buf->size, &value, sizeof(value)); \
+  }
 
-static void out_u16(OutputBuffer* buf, uint16_t value) {
-  /* TODO(binji): endianness */
-  buf->size = out_data(buf, buf->size, &value, sizeof(value));
-}
+OUT_TYPE(u8, uint8_t)
+OUT_TYPE(u16, uint16_t)
+OUT_TYPE(u32, uint32_t)
+OUT_TYPE(u64, uint64_t)
+OUT_TYPE(f32, float)
+OUT_TYPE(f64, double)
 
-static void out_u32(OutputBuffer* buf, uint32_t value) {
-  /* TODO(binji): endianness */
-  buf->size = out_data(buf, buf->size, &value, sizeof(value));
-}
+#undef OUT_TYPE
 
-static void out_u32_at(OutputBuffer* buf, uint32_t offset, uint32_t value) {
-  /* TODO(binji): endianness */
-  out_data(buf, offset, &value, sizeof(value));
-}
+#define OUT_AT_TYPE(name, ctype)                                  \
+  static void out_##name##_at(OutputBuffer* buf, uint32_t offset, \
+                              ctype value) {                      \
+    out_data(buf, offset, &value, sizeof(value));                 \
+  }
+
+OUT_AT_TYPE(u8, uint8_t)
+OUT_AT_TYPE(u32, uint32_t)
+
+#undef OUT_AT_TYPE
 
 static void out_cstr(OutputBuffer* buf, const char* s) {
   buf->size = out_data(buf, buf->size, s, strlen(s) + 1);
@@ -1240,18 +1247,23 @@ static Type parse_block(Tokenizer* tokenizer,
                         Module* module,
                         Function* function,
                         OutputBuffer* buf) {
+  size_t offset = buf->size;
+  out_u8(buf, 0); /* number of expressions, fixup later */
+  int num_exprs = 0;
   Type type;
   while (1) {
     type = parse_expr(tokenizer, module, function, buf);
+    ++num_exprs;
     Token t = read_token(tokenizer);
     if (t.type == TOKEN_TYPE_CLOSE_PAREN)
       break;
     rewind_token(tokenizer, t);
   }
+  out_u8_at(buf, offset, num_exprs);
   return type;
 }
 
-static void parse_literal(Tokenizer* tokenizer, Type type) {
+static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
   Token t = read_token(tokenizer);
   expect_atom(t);
   const char* p = t.range.start.pos;
@@ -1263,6 +1275,7 @@ static void parse_literal(Tokenizer* tokenizer, Type type) {
         FATAL("%d:%d: invalid unsigned 32-bit int\n", t.range.start.line,
               t.range.start.col);
       }
+      out_u32(buf, value);
       break;
     }
 
@@ -1272,6 +1285,7 @@ static void parse_literal(Tokenizer* tokenizer, Type type) {
         FATAL("%d:%d: invalid unsigned 64-bit int\n", t.range.start.line,
               t.range.start.col);
       }
+      out_u64(buf, value);
       break;
     }
 
@@ -1281,6 +1295,10 @@ static void parse_literal(Tokenizer* tokenizer, Type type) {
       if (!read_double(&p, end, &value)) {
         FATAL("%d:%d: invalid double\n", t.range.start.line, t.range.start.col);
       }
+      if (type == TYPE_F32)
+        out_f32(buf, (float)value);
+      else
+        out_f64(buf, value);
       break;
     }
 
@@ -1305,7 +1323,7 @@ static Type parse_switch(Tokenizer* tokenizer,
     t = read_token(tokenizer);
     expect_atom(t);
     if (match_atom(t, "case")) {
-      parse_literal(tokenizer, in_type);
+      parse_literal(tokenizer, buf, in_type);
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
@@ -1365,7 +1383,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       out_u8(buf, OPCODE_NOP);
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "block")) {
-      opcode = OPCODE_BLOCK;
+      out_u8(buf, OPCODE_BLOCK);
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "if")) {
       Type cond_type = parse_expr(tokenizer, module, function, buf);
@@ -1388,7 +1406,7 @@ static Type parse_expr(Tokenizer* tokenizer,
         type = true_type;
       }
     } else if (match_atom(t, "loop")) {
-      opcode = OPCODE_LOOP;
+      out_u8(buf, OPCODE_LOOP);
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "label")) {
       t = read_token(tokenizer);
@@ -1513,7 +1531,8 @@ static Type parse_expr(Tokenizer* tokenizer,
       check_type(t.range.start, value_type, type, " of store value");
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type, &opcode)) {
-      parse_literal(tokenizer, type);
+      out_u8(buf, opcode);
+      parse_literal(tokenizer, buf, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type, &opcode)) {
       Type value_type = parse_expr(tokenizer, module, function, buf);
