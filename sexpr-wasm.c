@@ -22,6 +22,7 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
+/* These values match the v8-native-prototype's type's values */
 typedef enum Type {
   TYPE_VOID,
   TYPE_I32,
@@ -239,6 +240,8 @@ typedef struct Tokenizer {
 
 typedef struct Binding {
   char* name;
+  size_t offset; /* offset in the output buffer (function bindings skip the
+                    signature */
   union {
     Type type;
     struct {
@@ -509,6 +512,11 @@ static void out_u16(OutputBuffer* buf, uint16_t value) {
 static void out_u32(OutputBuffer* buf, uint32_t value) {
   /* TODO(binji): endianness */
   buf->size = out_data(buf, buf->size, &value, sizeof(value));
+}
+
+static void out_u32_at(OutputBuffer* buf, uint32_t offset, uint32_t value) {
+  /* TODO(binji): endianness */
+  out_data(buf, offset, &value, sizeof(value));
 }
 
 static void out_cstr(OutputBuffer* buf, const char* s) {
@@ -1583,45 +1591,89 @@ static void destroy_module(Module* module) {
   free(module->exports);
 }
 
+static void out_module_header(OutputBuffer* buf, Module* module) {
+  out_u8(buf, DEFAULT_MEMORY_SIZE_LOG2);
+  out_u8(buf, DEFAULT_MEMORY_EXPORT);
+  out_u16(buf, module->num_globals);
+  out_u16(buf, module->num_functions);
+  out_u16(buf, 0); /* TODO(binji): num data segments */
+
+  int i;
+  for (i = 0; i < module->num_globals; ++i) {
+    Binding* global = &module->globals[i];
+    global->offset = buf->size;
+    /* TODO(binji): v8-native-prototype globals use mem types, not local types.
+       The spec currently specifies local types, and uses an anonymous memory
+       space for storage. Resolve this discrepancy. */
+    const uint8_t global_type_codes[NUM_TYPES] = {-1, 4, 6, 8, 9};
+    out_u32(buf, 0); /* name offset, fixed later */
+    out_u8(buf, global_type_codes[global->type]); /* mem type */
+    out_u32(buf, 0); /* offset */
+    out_u8(buf, 0); /* exported */
+  }
+
+  for (i = 0; i < module->num_functions; ++i) {
+    Function* function = &module->functions[i];
+
+    out_u8(buf, function->num_args);
+    out_u8(buf, function->num_results ? function->result_types[0]
+                                      : 0); /* result type */
+    int j;
+    for (j = 0; j < function->num_args; ++j)
+      out_u8(buf, function->locals[j].type); /* arg type */
+#define CODE_START_OFFSET 4
+#define CODE_END_OFFSET 8
+#define FUNCTION_EXPORTED_OFFSET 20
+    /* function offset skips the signature; it is variable size, and everything
+     * we need to fix up is afterward */
+    function->offset = buf->size;
+    out_u32(buf, 0); /* name offset, fixed later */
+    out_u32(buf, 0); /* code start offset */
+    out_u32(buf, 0); /* code end offset */
+
+    int num_locals[NUM_TYPES] = {};
+    for (j = function->num_args; j < function->num_locals; ++j)
+      num_locals[function->locals[j].type]++;
+
+    out_u16(buf, num_locals[TYPE_I32]); /* num local i32 */
+    out_u16(buf, num_locals[TYPE_I64]); /* num local i64 */
+    out_u16(buf, num_locals[TYPE_F32]); /* num local f32 */
+    out_u16(buf, num_locals[TYPE_F64]); /* num local f64 */
+    out_u8(buf, 0); /* exported */
+    out_u8(buf, 0); /* external */
+  }
+}
+
+static void out_module_footer(OutputBuffer* buf, Module* module) {
+  /* TODO(binji): output data segment */
+
+  /* output name table */
+  /* TODO(binji): uniquify names */
+  int i;
+  for (i = 0; i < module->num_globals; ++i) {
+    Binding* global = &module->globals[i];
+    if (global->name) {
+      /* fixup name offset in global table */
+      out_u32_at(buf, global->offset, buf->size);
+      out_cstr(buf, global->name);
+    }
+  }
+  for (i = 0; i < module->num_functions; ++i) {
+    Function* function = &module->functions[i];
+    if (function->name) {
+      out_u32_at(buf, function->offset, buf->size);
+      out_cstr(buf, function->name);
+    }
+  }
+}
+
 static void parse_module(Tokenizer* tokenizer) {
   Module module = {};
   preparse_module(tokenizer, &module);
 
   OutputBuffer output = {};
   init_output_buffer(&output, INITIAL_OUTPUT_BUFFER_CAPACITY);
-  out_u8(&output, DEFAULT_MEMORY_SIZE_LOG2);
-  out_u8(&output, DEFAULT_MEMORY_EXPORT);
-  out_u16(&output, module.num_globals);
-  out_u16(&output, module.num_functions);
-  out_u16(&output, 0); /* TODO(binji): num data segments */
-
-  int i;
-  for (i = 0; i < module.num_globals; ++i) {
-    /* TODO(binji): set these */
-    out_u32(&output, 0); /* name offset */
-    out_u8(&output, 0); /* mem type */
-    out_u32(&output, 0); /* offset */
-    out_u8(&output, 0); /* exported */
-  }
-
-  for (i = 0; i < module.num_functions; ++i) {
-    Function* function = &module.functions[i];
-    /* TODO(binji): set these */
-    out_u8(&output, function->num_args);
-    out_u8(&output, 0); /* result type */
-    int j;
-    for (j = 0; j < function->num_args; ++j)
-      out_u8(&output, 0); /* arg type */
-    out_u32(&output, 0); /* name offset */
-    out_u32(&output, 0); /* code start offset */
-    out_u32(&output, 0); /* code end offset */
-    out_u16(&output, 0); /* num local i32 */
-    out_u16(&output, 0); /* num local i64 */
-    out_u16(&output, 0); /* num local f32 */
-    out_u16(&output, 0); /* num local f64 */
-    out_u8(&output, 0); /* exported */
-    out_u8(&output, 0); /* external */
-  }
+  out_module_header(&output, &module);
 
   int function_index = 0;
   Token t = read_token(tokenizer);
@@ -1631,12 +1683,17 @@ static void parse_module(Tokenizer* tokenizer) {
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "func")) {
           Function* function = &module.functions[function_index++];
+          out_u32_at(&output, function->offset + CODE_START_OFFSET,
+                     output.size);
           parse_func(tokenizer, &module, function);
+          out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size);
         } else if (match_atom(t, "global")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "export")) {
           expect_string(read_token(tokenizer));
-          parse_function_var(tokenizer, &module);
+          int index = parse_function_var(tokenizer, &module);
+          Function* exported = &module.functions[index];
+          out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1);
           expect_close(read_token(tokenizer));
         } else if (match_atom(t, "table")) {
           parse_generic(tokenizer);
@@ -1656,18 +1713,7 @@ static void parse_module(Tokenizer* tokenizer) {
     }
   }
 
-  /* TODO(binji): output data segment */
-
-  /* output name table */
-  /* TODO(binji): uniquify names */
-  for (i = 0; i < module.num_globals; ++i) {
-    if (module.globals[i].name)
-      out_cstr(&output, module.globals[i].name);
-  }
-  for (i = 0; i < module.num_functions; ++i) {
-    if (module.functions[i].name)
-      out_cstr(&output, module.functions[i].name);
-  }
+  out_module_footer(&output, &module);
 
   if (g_dump_module)
     dump_output_buffer(&output);
