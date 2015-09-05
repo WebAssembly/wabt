@@ -689,11 +689,35 @@ static Token read_token(Tokenizer* t) {
               if (t->loc.pos + 1 < t->source.end) {
                 t->loc.col++;
                 t->loc.pos++;
+                if (*t->loc.pos == 'n' || *t->loc.pos == 't' ||
+                    *t->loc.pos == '\\' || *t->loc.pos == '\'' ||
+                    *t->loc.pos == '"') {
+                  /* newline or tab */
+                } else if (isxdigit(*t->loc.pos)) {
+                  /* \xx for arbitrary value */
+                  if (t->loc.pos + 1 < t->source.end) {
+                    t->loc.col++;
+                    t->loc.pos++;
+                    if (!isxdigit(*t->loc.pos)) {
+                      FATAL("%d:%d: bad \\xx escape sequence\n", t->loc.line,
+                            t->loc.col);
+                    }
+                  } else {
+                    FATAL("%d:%d: eof in \\xx escape sequence\n", t->loc.line,
+                          t->loc.col);
+                  }
+                } else {
+                  FATAL("%d:%d: bad escape sequence\n", t->loc.line,
+                        t->loc.col);
+                }
+              } else {
+                FATAL("%d:%d: eof in escape sequence\n", t->loc.line,
+                      t->loc.col);
               }
               break;
 
             case '\n':
-              FATAL("newline in string\n");
+              FATAL("%d:%d: newline in string\n", t->loc.line, t->loc.col);
               break;
 
             case '"':
