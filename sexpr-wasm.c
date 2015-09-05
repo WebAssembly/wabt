@@ -1907,11 +1907,11 @@ static void parse(Tokenizer* tokenizer) {
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "module")) {
           parse_module(tokenizer);
-        } else if (match_atom(t, "asserteq")) {
+        } else if (match_atom(t, "assert_eq")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "invoke")) {
           parse_generic(tokenizer);
-        } else if (match_atom(t, "assertinvalid")) {
+        } else if (match_atom(t, "assert_invalid")) {
           parse_generic(tokenizer);
         } else {
           unexpected_token(t);
