@@ -844,6 +844,64 @@ static void rewind_token(Tokenizer* tokenizer, Token t) {
   tokenizer->loc = t.range.start;
 }
 
+static int hexdigit(char c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  } else if (c >= 'a' && c <= 'f') {
+    return c - 'a';
+  } else {
+    assert(c >= 'A' && c <= 'F');
+    return c - 'A';
+  }
+}
+
+static char* dup_string_contents(Token t) {
+  assert(t.type == TOKEN_TYPE_STRING);
+  const char* src = t.range.start.pos;
+  const char* end = t.range.end.pos;
+  assert(*src == '"' && end[-1] == '"');
+  src++;
+  end--;
+  /* Always allocate enough space for the entire string including the escape
+   * characters. It will only get shorter, and this way we only have to iterate
+   * through the string once. */
+  char* result = malloc(end - src + 1); /* +1 for \0 */
+  char* dest = result;
+  while (src < end) {
+    if (*src == '\\') {
+      src++;
+      switch (*src) {
+        case 'n':
+          *dest++ = '\n';
+          break;
+        case 't':
+          *dest++ = '\t';
+          break;
+        case '\\':
+          *dest++ = '\\';
+          break;
+        case '\'':
+          *dest++ = '\'';
+          break;
+        case '\"':
+          *dest++ = '\"';
+          break;
+        default:
+          /* The string should be validated already, so we know this is a hex
+           * sequence */
+          *dest++ = (hexdigit(src[0]) << 4) | hexdigit(src[1]);
+          src++;
+          break;
+      }
+      src++;
+    } else {
+      *dest++ = *src++;
+    }
+  }
+  *dest++ = '\0';
+  return result;
+}
+
 static void expect_open(Token t) {
   if (t.type != TOKEN_TYPE_OPEN_PAREN) {
     FATAL("%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
@@ -1684,6 +1742,8 @@ static void destroy_module(Module* module) {
     destroy_binding_list(function->labels, function->num_labels);
   }
   destroy_binding_list(module->globals, module->num_globals);
+  for (i = 0; i < module->num_exports; ++i)
+    free(module->exports[i].name);
   free(module->exports);
 }
 
@@ -1746,20 +1806,12 @@ static void out_module_footer(OutputBuffer* buf, Module* module) {
   /* output name table */
   /* TODO(binji): uniquify names */
   int i;
-  for (i = 0; i < module->num_globals; ++i) {
-    Binding* global = &module->globals[i];
-    if (global->name) {
-      /* fixup name offset in global table */
-      out_u32_at(buf, global->offset, buf->size);
-      out_cstr(buf, global->name);
-    }
-  }
-  for (i = 0; i < module->num_functions; ++i) {
-    Function* function = &module->functions[i];
-    if (function->name) {
-      out_u32_at(buf, function->offset, buf->size);
-      out_cstr(buf, function->name);
-    }
+  for (i = 0; i < module->num_exports; ++i) {
+    Export* export = &module->exports[i];
+    Function* function = &module->functions[export->index];
+    /* fixup name offset in global table */
+    out_u32_at(buf, function->offset, buf->size);
+    out_cstr(buf, export->name);
   }
 }
 
@@ -1786,8 +1838,16 @@ static void parse_module(Tokenizer* tokenizer) {
         } else if (match_atom(t, "global")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "export")) {
-          expect_string(read_token(tokenizer));
+          t = read_token(tokenizer);
+          expect_string(t);
           int index = parse_function_var(tokenizer, &module);
+
+          realloc_list((void**)&module.exports, &module.num_exports,
+                       sizeof(Export));
+          Export* export = &module.exports[module.num_exports - 1];
+          export->name = dup_string_contents(t);
+          export->index = index;
+
           Function* exported = &module.functions[index];
           out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1);
           expect_close(read_token(tokenizer));
