@@ -1560,6 +1560,7 @@ static void parse_func(Tokenizer* tokenizer,
     t = read_token(tokenizer);
   }
 
+  Type type = TYPE_VOID;
   while (1) {
     if (t.type == TOKEN_TYPE_OPEN_PAREN) {
       Token open = t;
@@ -1571,11 +1572,7 @@ static void parse_func(Tokenizer* tokenizer,
           parse_generic(tokenizer);
         } else {
           rewind_token(tokenizer, open);
-          Type type = parse_expr(tokenizer, module, function, buf);
-          Type result_type = get_result_type(t.range.start, function);
-          if (result_type != TYPE_VOID) {
-            check_type(t.range.start, type, result_type, " in function result");
-          }
+          type = parse_expr(tokenizer, module, function, buf);
         }
       } else {
         unexpected_token(t);
@@ -1586,6 +1583,11 @@ static void parse_func(Tokenizer* tokenizer,
     } else {
       unexpected_token(t);
     }
+  }
+
+  Type result_type = get_result_type(t.range.start, function);
+  if (result_type != TYPE_VOID) {
+    check_type(t.range.start, type, result_type, " in function result");
   }
 }
 
