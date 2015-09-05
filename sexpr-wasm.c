@@ -1071,11 +1071,6 @@ static int parse_global_var(Tokenizer* tokenizer, Module* module) {
   return parse_var(tokenizer, module->globals, module->num_globals, "global");
 }
 
-static int parse_arg_var(Tokenizer* tokenizer, Function* function) {
-  return parse_var(tokenizer, function->locals, function->num_args,
-                   "function argument");
-}
-
 static int parse_local_var(Tokenizer* tokenizer, Function* function) {
   return parse_var(tokenizer, function->locals, function->num_locals, "local");
 }
@@ -1325,10 +1320,6 @@ static Type parse_expr(Tokenizer* tokenizer,
       type = get_result_type(t.range.start, function);
     } else if (match_atom(t, "destruct")) {
       /* TODO(binji) */
-    } else if (match_atom(t, "getparam")) {
-      int index = parse_arg_var(tokenizer, function);
-      type = function->locals[index].type;
-      expect_close(read_token(tokenizer));
     } else if (match_atom(t, "get_local")) {
       int index = parse_local_var(tokenizer, function);
       type = function->locals[index].type;

@@ -1,4 +1,0 @@
-# ERROR: 1
-(module (func (param i32) (getparam)))
-# STDERR:
-1:36: unexpected token ")"
