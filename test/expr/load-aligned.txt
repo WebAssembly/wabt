@@ -1,3 +1,4 @@
+;; f64.load/f32 seems to be missing
 (module
   (func
     (i32.load/i8/1 (i32.const 0))
@@ -22,5 +23,5 @@
     (i64.load_u/i32/8 (i32.const 0))
     (i64.load_u/i64/1 (i32.const 0))
     (f32.load/f32/2 (i32.const 0))
-    (f64.load/f32/4 (i32.const 0))
+;;    (f64.load/f32/4 (i32.const 0))
     (f64.load/f64/8 (i32.const 0))))

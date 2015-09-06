@@ -205,6 +205,8 @@ typedef enum Opcode {
 #undef OPCODE
 } Opcode;
 
+typedef uint8_t MemAccess;
+
 typedef enum TokenType {
   TOKEN_TYPE_EOF,
   TOKEN_TYPE_OPEN_PAREN,
@@ -297,6 +299,15 @@ typedef struct OpcodeMemInfo {
   MemType mem_type;
   Type type;
   Opcode opcode;
+  /* memory access byte, as specified in wasm-opcodes.h:
+    0000AAasww
+
+    A: Atomicity (0: none, 1: seq. cst. 2: acquire, 3: release)
+    a: alignment (0: aligned, 1: not aligned)
+    s: sign-extend (0: no, 1: yes)
+    w: integer width: (0: u8, 1: u16, 2: u32, 3: u64)
+   */
+  MemAccess access;
 } OpcodeMemInfo;
 
 static int g_verbose;
@@ -457,57 +468,57 @@ static OpcodeInfo s_switch_ops[] = {
 };
 
 static OpcodeMemInfo s_load_ops[] = {
-    {"i32.load_s/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load_u/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load_s/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load_u/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load_s/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load_u/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i64.load_s/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_u/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_s/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_u/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_s/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_u/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_s/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load_u/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i32.load/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i32.load/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32},
-    {"i64.load/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"i64.load/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32},
-    {"f32.load/f32", MEM_TYPE_F32, TYPE_F32, OPCODE_F32_LOAD_I32},
+    {"i32.load_s/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32, 4},
+    {"i32.load_u/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32, 0},
+    {"i32.load_s/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32, 5},
+    {"i32.load_u/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32, 1},
+    {"i32.load_s/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32, 6},
+    {"i32.load_u/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32, 2},
+    {"i64.load_s/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32, 4},
+    {"i64.load_u/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32, 0},
+    {"i64.load_s/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32, 5},
+    {"i64.load_u/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32, 1},
+    {"i64.load_s/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32, 6},
+    {"i64.load_u/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32, 2},
+    {"i64.load_s/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32, 7},
+    {"i64.load_u/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32, 3},
+    {"i32.load/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32, 4},
+    {"i32.load/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32, 5},
+    {"i32.load/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32, 6},
+    {"i64.load/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32, 4},
+    {"i64.load/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32, 5},
+    {"i64.load/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32, 6},
+    {"i64.load/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32, 7},
+    {"f32.load/f32", MEM_TYPE_F32, TYPE_F32, OPCODE_F32_LOAD_I32, 0},
     {"f64.load/f32", MEM_TYPE_F32, TYPE_F64, OPCODE_INVALID}, /* missing? */
-    {"f64.load/f64", MEM_TYPE_F64, TYPE_F64, OPCODE_F64_LOAD_I32},
+    {"f64.load/f64", MEM_TYPE_F64, TYPE_F64, OPCODE_F64_LOAD_I32, 0},
 };
 
 static OpcodeMemInfo s_store_ops[] = {
-    {"i32.store_s/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store_u/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store_s/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store_u/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store_s/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store_u/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i64.store_s/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_u/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_s/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_u/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_s/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_u/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_s/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store_u/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i32.store/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i32.store/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32},
-    {"i64.store/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"i64.store/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32},
-    {"f32.store/f32", MEM_TYPE_F32, TYPE_F32, OPCODE_F32_STORE_I32},
+    {"i32.store_s/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32, 4},
+    {"i32.store_u/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32, 0},
+    {"i32.store_s/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32, 5},
+    {"i32.store_u/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32, 1},
+    {"i32.store_s/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32, 6},
+    {"i32.store_u/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32, 2},
+    {"i64.store_s/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32, 4},
+    {"i64.store_u/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32, 0},
+    {"i64.store_s/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32, 5},
+    {"i64.store_u/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32, 1},
+    {"i64.store_s/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32, 6},
+    {"i64.store_u/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32, 2},
+    {"i64.store_s/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32, 7},
+    {"i64.store_u/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32, 3},
+    {"i32.store/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32, 4},
+    {"i32.store/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32, 5},
+    {"i32.store/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32, 6},
+    {"i64.store/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32, 4},
+    {"i64.store/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32, 5},
+    {"i64.store/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32, 6},
+    {"i64.store/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32, 7},
+    {"f32.store/f32", MEM_TYPE_F32, TYPE_F32, OPCODE_F32_STORE_I32, 0},
     {"f64.store/f32", MEM_TYPE_F32, TYPE_F64, OPCODE_INVALID}, /* missing? */
-    {"f64.store/f64", MEM_TYPE_F64, TYPE_F64, OPCODE_F64_STORE_I32},
+    {"f64.store/f64", MEM_TYPE_F64, TYPE_F64, OPCODE_F64_STORE_I32, 0},
 };
 
 static OpcodeInfo s_types[] = {
@@ -1118,17 +1129,27 @@ static int match_load_store(Token t,
                             MemType* mem_type,
                             Type* type,
                             Opcode* opcode,
+                            MemAccess* access,
                             OpcodeMemInfo* ops,
                             size_t num_ops) {
+  int native_mem_type_alignment[] = {
+      1, /* MEM_TYPE_I8 */
+      2, /* MEM_TYPE_I16 */
+      4, /* MEM_TYPE_I32 */
+      8, /* MEM_TYPE_I64 */
+      4, /* MEM_TYPE_F32 */
+      8, /* MEM_TYPE_F64 */
+  };
+
   int i;
   for (i = 0; i < num_ops; ++i) {
     size_t len = t.range.end.pos - t.range.start.pos;
     size_t name_len = strlen(ops[i].name);
     if (match_atom_prefix(t, ops[i].name, name_len)) {
+      uint32_t alignment = 0;
       if (len >= name_len + 1 && t.range.start.pos[name_len] == '/') {
         /* might have an alignment */
         const char* p = &t.range.start.pos[name_len + 1];
-        uint32_t alignment;
         if (!read_uint32(&p, t.range.end.pos, &alignment))
           return 0;
         /* check that alignment is power-of-two */
@@ -1144,19 +1165,31 @@ static int match_load_store(Token t,
       *mem_type = ops[i].mem_type;
       *type = ops[i].type;
       *opcode = ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
+      *access = ops[i].access;
+      if (alignment && alignment < native_mem_type_alignment[*mem_type])
+        *access |= 0x8; /* unaligned access */
       return 1;
     }
   }
   return 0;
 }
 
-static int match_load(Token t, MemType* mem_type, Type* type, Opcode* opcode) {
-  return match_load_store(t, mem_type, type, opcode, s_load_ops,
+static int match_load(Token t,
+                      MemType* mem_type,
+                      Type* type,
+                      Opcode* opcode,
+                      MemAccess* access) {
+  return match_load_store(t, mem_type, type, opcode, access, s_load_ops,
                           ARRAY_SIZE(s_load_ops));
 }
 
-static int match_store(Token t, MemType* mem_type, Type* type, Opcode* opcode) {
-  return match_load_store(t, mem_type, type, opcode, s_store_ops,
+static int match_store(Token t,
+                       MemType* mem_type,
+                       Type* type,
+                       Opcode* opcode,
+                       MemAccess* access) {
+  return match_load_store(t, mem_type, type, opcode, access, s_store_ops,
                           ARRAY_SIZE(s_store_ops));
 }
 
@@ -1425,6 +1458,7 @@ static Type parse_expr(Tokenizer* tokenizer,
     Type in_type;
     MemType mem_type;
     Opcode opcode;
+    MemAccess access;
     if (match_atom(t, "nop")) {
       out_opcode(buf, OPCODE_NOP);
       expect_close(read_token(tokenizer));
@@ -1568,11 +1602,15 @@ static Type parse_expr(Tokenizer* tokenizer,
       type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, type, binding->type, "");
       expect_close(read_token(tokenizer));
-    } else if (match_load(t, &mem_type, &type, &opcode)) {
+    } else if (match_load(t, &mem_type, &type, &opcode, &access)) {
+      out_opcode(buf, opcode);
+      out_u8(buf, access, "load access byte");
       Type index_type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, index_type, TYPE_I32, " of load index");
       expect_close(read_token(tokenizer));
-    } else if (match_store(t, &mem_type, &type, &opcode)) {
+    } else if (match_store(t, &mem_type, &type, &opcode, &access)) {
+      out_opcode(buf, opcode);
+      out_u8(buf, access, "store access byte");
       Type index_type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, index_type, TYPE_I32, " of store index");
       Type value_type = parse_expr(tokenizer, module, function, buf);
