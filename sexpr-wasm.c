@@ -1466,12 +1466,14 @@ static Type parse_expr(Tokenizer* tokenizer,
       out_opcode(buf, OPCODE_BLOCK);
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "if")) {
+      uint32_t opcode_offset = buf->size;
+      out_opcode(buf, OPCODE_IF);
       Type cond_type = parse_expr(tokenizer, module, function, buf);
       check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
       Type true_type = parse_expr(tokenizer, module, function, buf);
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-        opcode = OPCODE_IF_THEN;
+        out_u8_at(buf, opcode_offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
         rewind_token(tokenizer, t);
         Type false_type = parse_expr(tokenizer, module, function, buf);
         if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
@@ -1483,7 +1485,6 @@ static Type parse_expr(Tokenizer* tokenizer,
         }
         expect_close(read_token(tokenizer));
       } else {
-        opcode = OPCODE_IF;
         type = true_type;
       }
     } else if (match_atom(t, "loop")) {
