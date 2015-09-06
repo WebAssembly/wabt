@@ -978,6 +978,11 @@ static void expect_var_name(Token t) {
   }
 }
 
+static void check_opcode(SourceLocation loc, Opcode opcode) {
+  if (opcode == OPCODE_INVALID)
+    FATAL("%d:%d: no opcode for instruction\n", loc.line, loc.col);
+}
+
 static int match_atom(Token t, const char* s) {
   return strncmp(t.range.start.pos, s, t.range.end.pos - t.range.start.pos) ==
          0;
@@ -996,6 +1001,7 @@ static int match_unary(Token t, Type* type, Opcode* opcode) {
     if (match_atom(t, s_unary_ops[i].name)) {
       *type = s_unary_ops[i].type;
       *opcode = s_unary_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1007,7 +1013,8 @@ static int match_binary(Token t, Type* type, Opcode* opcode) {
   for (i = 0; i < ARRAY_SIZE(s_binary_ops); ++i) {
     if (match_atom(t, s_binary_ops[i].name)) {
       *type = s_binary_ops[i].type;
-      *opcode = s_unary_ops[i].opcode;
+      *opcode = s_binary_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1020,6 +1027,7 @@ static int match_compare(Token t, Type* type, Opcode* opcode) {
     if (match_atom(t, s_compare_ops[i].name)) {
       *type = s_compare_ops[i].type;
       *opcode = s_compare_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1036,6 +1044,7 @@ static int match_convert(Token t,
       *in_type = s_convert_ops[i].in_type;
       *out_type = s_convert_ops[i].out_type;
       *opcode = s_convert_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1049,6 +1058,7 @@ static int match_cast(Token t, Type* in_type, Type* out_type, Opcode* opcode) {
       *in_type = s_cast_ops[i].in_type;
       *out_type = s_cast_ops[i].out_type;
       *opcode = s_cast_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1061,6 +1071,7 @@ static int match_const(Token t, Type* type, Opcode* opcode) {
     if (match_atom(t, s_const_ops[i].name)) {
       *type = s_const_ops[i].type;
       *opcode = s_const_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1073,6 +1084,7 @@ static int match_switch(Token t, Type* type, Opcode* opcode) {
     if (match_atom(t, s_switch_ops[i].name)) {
       *type = s_switch_ops[i].type;
       *opcode = s_switch_ops[i].opcode;
+      check_opcode(t.range.start, *opcode);
       return 1;
     }
   }
@@ -1083,9 +1095,8 @@ static int match_type(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_types); ++i) {
     if (match_atom(t, s_types[i].name)) {
-      if (type) {
+      if (type)
         *type = s_types[i].type;
-      }
       return 1;
     }
   }

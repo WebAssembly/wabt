@@ -1,4 +1,4 @@
 (module
   (func
-    (f32.switch (f32.const 0.0)
-      (case 1.0 (nop) (nop) (nop)))))
+    (i32.switch (i32.const 0)
+      (case 1 (nop) (nop) (nop)))))

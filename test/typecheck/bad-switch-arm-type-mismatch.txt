@@ -1,7 +1,7 @@
 # ERROR: 1
 (module
   (func
-    (i64.switch (i64.const 0)
+    (i32.switch (i32.const 0)
       (case 1 (i32.const 0))
       (case 2 (f32.const 0)))))
 # STDERR:
