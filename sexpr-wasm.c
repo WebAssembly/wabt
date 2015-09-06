@@ -628,6 +628,20 @@ static void out_opcode(OutputBuffer* buf, Opcode opcode) {
   out_u8(buf, (uint8_t)opcode, s_opcode_names[opcode]);
 }
 
+static void out_leb128(OutputBuffer* buf, uint32_t value, const char* desc) {
+  uint8_t data[5]; /* max 5 bytes */
+  int i = 0;
+  do {
+    assert(i < 5);
+    data[i] = value & 0x7f;
+    value >>= 7;
+    if (value)
+      data[i] |= 0x80;
+    ++i;
+  } while (value);
+  buf->size = out_data(buf, buf->size, data, i, desc);
+}
+
 static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
   buf->size = out_data(buf, buf->size, s, strlen(s) + 1, desc);
 }
@@ -1475,8 +1489,9 @@ static Type parse_expr(Tokenizer* tokenizer,
     } else if (match_switch(t, &in_type, &opcode)) {
       type = parse_switch(tokenizer, module, function, buf, in_type);
     } else if (match_atom(t, "call")) {
-      opcode = OPCODE_CALL;
+      out_opcode(buf, OPCODE_CALL);
       int index = parse_function_var(tokenizer, module);
+      out_leb128(buf, index, "func index");
       Function* callee = &module->functions[index];
 
       int num_args = 0;
@@ -1505,7 +1520,7 @@ static Type parse_expr(Tokenizer* tokenizer,
     } else if (match_atom(t, "call_indirect")) {
       /* TODO(binji) */
     } else if (match_atom(t, "return")) {
-      opcode = OPCODE_RETURN;
+      out_opcode(buf, OPCODE_RETURN);
       int num_results = 0;
       while (1) {
         t = read_token(tokenizer);
@@ -1571,11 +1586,13 @@ static Type parse_expr(Tokenizer* tokenizer,
       parse_literal(tokenizer, buf, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type, &opcode)) {
+      out_opcode(buf, opcode);
       Type value_type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, value_type, type, " of unary op");
       type = value_type;
       expect_close(read_token(tokenizer));
     } else if (match_binary(t, &type, &opcode)) {
+      out_opcode(buf, opcode);
       Type value0_type = parse_expr(tokenizer, module, function, buf);
       check_type_arg(t.range.start, value0_type, type, "binary op", 0);
       Type value1_type = parse_expr(tokenizer, module, function, buf);
@@ -1584,6 +1601,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       type = value0_type;
       expect_close(read_token(tokenizer));
     } else if (match_compare(t, &in_type, &opcode)) {
+      out_opcode(buf, opcode);
       Type value0_type = parse_expr(tokenizer, module, function, buf);
       check_type_arg(t.range.start, value0_type, in_type, "compare op", 0);
       Type value1_type = parse_expr(tokenizer, module, function, buf);
@@ -1591,10 +1609,12 @@ static Type parse_expr(Tokenizer* tokenizer,
       type = TYPE_I32;
       expect_close(read_token(tokenizer));
     } else if (match_convert(t, &in_type, &type, &opcode)) {
+      out_opcode(buf, opcode);
       Type value_type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, value_type, in_type, " of convert op");
       expect_close(read_token(tokenizer));
     } else if (match_cast(t, &in_type, &type, &opcode)) {
+      out_opcode(buf, opcode);
       Type value_type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, value_type, in_type, " of cast op");
       expect_close(read_token(tokenizer));

@@ -1,0 +1,88 @@
+# FLAGS: -dv
+;; only i32.not supported currently
+(module
+  (func
+    (i32.not
+      (i32.clz
+        (i32.ctz
+          (i32.popcnt (i32.const 0)))))
+
+    (i64.clz
+      (i64.ctz
+        (i64.popcnt (i64.const 0))))
+
+    (f32.neg
+      (f32.abs
+        (f32.sqrt
+          (f32.ceil
+            (f32.floor
+              (f32.trunc
+                (f32.nearest (f32.const 0))))))))
+
+    (f64.neg
+      (f64.abs
+        (f64.sqrt
+          (f64.ceil
+            (f64.floor
+              (f64.trunc
+                (f64.nearest (f64.const 0))))))))
+
+;;    (i64.not (i64.const 0))
+;;    (f32.not (f32.const 0))
+;;    (f64.not (f64.const 0))
+
+))
+# STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0000                                       ; num local i32
+0000018: 0000                                       ; num local i64
+000001a: 0000                                       ; num local f32
+000001c: 0000                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+000000e: 2000 0000                                  ; FIXUP func code start offset
+0000020: 5a                                         ; OPCODE_I32_NOT
+0000021: 57                                         ; OPCODE_I32_CLZ
+0000022: 58                                         ; OPCODE_I32_CTZ
+0000023: 59                                         ; OPCODE_I32_POPCNT
+0000024: 11                                         ; OPCODE_I32_CONST
+0000025: 0000 0000                                  ; u32 literal
+0000029: 72                                         ; OPCODE_I64_CLZ
+000002a: 73                                         ; OPCODE_I64_CTZ
+000002b: 74                                         ; OPCODE_I64_POPCNT
+000002c: 12                                         ; OPCODE_I64_CONST
+000002d: 0000 0000 0000 0000                        ; u64 literal
+0000035: 7c                                         ; OPCODE_F32_NEG
+0000036: 7b                                         ; OPCODE_F32_ABS
+0000037: 82                                         ; OPCODE_F32_SQRT
+0000038: 7e                                         ; OPCODE_F32_CEIL
+0000039: 7f                                         ; OPCODE_F32_FLOOR
+000003a: 80                                         ; OPCODE_F32_TRUNC
+000003b: 81                                         ; OPCODE_F32_NEAREST
+000003c: 14                                         ; OPCODE_F32_CONST
+000003d: 0000 0000                                  ; f32 literal
+0000041: 90                                         ; OPCODE_F64_NEG
+0000042: 8f                                         ; OPCODE_F64_ABS
+0000043: 96                                         ; OPCODE_F64_SQRT
+0000044: 92                                         ; OPCODE_F64_CEIL
+0000045: 93                                         ; OPCODE_F64_FLOOR
+0000046: 94                                         ; OPCODE_F64_TRUNC
+0000047: 95                                         ; OPCODE_F64_NEAREST
+0000048: 13                                         ; OPCODE_F64_CONST
+0000049: 0000 0000 0000 0000                        ; f64 literal
+0000012: 5100 0000                                  ; FIXUP func code end offset
+0000000: 1401 0000 0100 0000 0000 0000 0000 2000  .............. .
+0000010: 0000 5100 0000 0000 0000 0000 0000 0000  ..Q.............
+0000020: 5a57 5859 1100 0000 0072 7374 1200 0000  ZWXY.....rst....
+0000030: 0000 0000 007c 7b82 7e7f 8081 1400 0000  .....|{.~.......
+0000040: 0090 8f96 9293 9495 1300 0000 0000 0000  ................
+0000050: 00                                       .
