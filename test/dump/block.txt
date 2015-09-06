@@ -23,11 +23,11 @@
 000001e: 00                                         ; export func
 000001f: 00                                         ; func external
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; block
+0000020: 03                                         ; OPCODE_BLOCK
 0000021: 00                                         ; num expressions
-0000022: 00                                         ; nop
-0000023: 00                                         ; nop
-0000024: 00                                         ; nop
+0000022: 00                                         ; OPCODE_NOP
+0000023: 00                                         ; OPCODE_NOP
+0000024: 00                                         ; OPCODE_NOP
 0000021: 03                                         ; FIXUP num expressions
 0000012: 2500 0000                                  ; FIXUP func code end offset
 0000000: 1401 0000 0100 0000 0000 0000 0000 2000  .............. .

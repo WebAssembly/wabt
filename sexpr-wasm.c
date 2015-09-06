@@ -303,6 +303,12 @@ static int g_verbose;
 static const char* g_filename;
 static int g_dump_module;
 
+static const char* s_opcode_names[] = {
+#define OPCODE(name, code) [code] = "OPCODE_" #name,
+  OPCODES(OPCODE)
+#undef OPCODE
+};
+
 static OpcodeInfo s_unary_ops[] = {
     {"f32.neg", TYPE_F32, OPCODE_F32_NEG},
     {"f64.neg", TYPE_F64, OPCODE_F64_NEG},
@@ -617,6 +623,10 @@ OUT_AT_TYPE(u8, uint8_t)
 OUT_AT_TYPE(u32, uint32_t)
 
 #undef OUT_AT_TYPE
+
+static void out_opcode(OutputBuffer* buf, Opcode opcode) {
+  out_u8(buf, (uint8_t)opcode, s_opcode_names[opcode]);
+}
 
 static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
   buf->size = out_data(buf, buf->size, s, strlen(s) + 1, desc);
@@ -1394,10 +1404,10 @@ static Type parse_expr(Tokenizer* tokenizer,
     MemType mem_type;
     Opcode opcode;
     if (match_atom(t, "nop")) {
-      out_u8(buf, OPCODE_NOP, "nop");
+      out_opcode(buf, OPCODE_NOP);
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "block")) {
-      out_u8(buf, OPCODE_BLOCK, "block");
+      out_opcode(buf, OPCODE_BLOCK);
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "if")) {
       Type cond_type = parse_expr(tokenizer, module, function, buf);
@@ -1421,7 +1431,7 @@ static Type parse_expr(Tokenizer* tokenizer,
         type = true_type;
       }
     } else if (match_atom(t, "loop")) {
-      out_u8(buf, OPCODE_LOOP, "loop");
+      out_opcode(buf, OPCODE_LOOP);
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "label")) {
       t = read_token(tokenizer);
@@ -1546,7 +1556,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       check_type(t.range.start, value_type, type, " of store value");
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type, &opcode)) {
-      out_u8(buf, opcode, "const");
+      out_opcode(buf, opcode);
       parse_literal(tokenizer, buf, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type, &opcode)) {

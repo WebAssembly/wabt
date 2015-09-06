@@ -29,7 +29,7 @@
 000002a: 00                                         ; export func
 000002b: 00                                         ; func external
 000001a: 2c00 0000                                  ; FIXUP func code start offset
-000002c: 11                                         ; const
+000002c: 11                                         ; OPCODE_I32_CONST
 000002d: 0100 0000                                  ; u32 literal
 000001e: 3100 0000                                  ; FIXUP func code end offset
 000002a: 0100 0000                                  ; FIXUP func exported
