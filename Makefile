@@ -10,8 +10,11 @@ all: $(addprefix out/,$(ALL))
 out/:
 	mkdir $@
 
-out/sexpr-wasm: sexpr-wasm.c | out
+out/sexpr-wasm: sexpr-wasm.c hash.h | out
 	$(CC) $(CFLAGS) -o $@ $<
+
+hash.h: hash.txt
+	gperf --compare-strncmp --readonly-tables --struct-type $< --output-file $@
 
 #### TESTS ####
 TEST_EXES=$(shell python test/run-tests.py --list-exes)

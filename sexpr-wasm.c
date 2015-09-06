@@ -41,6 +41,31 @@ typedef enum MemType {
   MEM_TYPE_F64,
 } MemType;
 
+typedef enum OpType {
+  OP_BINARY,
+  OP_BLOCK,
+  OP_BREAK,
+  OP_CALL,
+  OP_CALL_INDIRECT,
+  OP_COMPARE,
+  OP_CONST,
+  OP_CONVERT,
+  OP_DESTRUCT,
+  OP_GET_LOCAL,
+  OP_IF,
+  OP_LABEL,
+  OP_LOAD,
+  OP_LOAD_GLOBAL,
+  OP_LOOP,
+  OP_NOP,
+  OP_RETURN,
+  OP_SET_LOCAL,
+  OP_STORE,
+  OP_STORE_GLOBAL,
+  OP_SWITCH,
+  OP_UNARY,
+} OpType;
+
 #define OPCODES(V)             \
   V(NOP, 0x00)                 \
   V(IF, 0x01)                  \
@@ -205,6 +230,10 @@ typedef enum Opcode {
 #undef OPCODE
 } Opcode;
 
+#include "hash.h"
+
+typedef struct OpInfo OpInfo;
+
 typedef uint8_t MemAccess;
 
 typedef enum TokenType {
@@ -281,34 +310,10 @@ typedef struct OutputBuffer {
   size_t capacity;
 } OutputBuffer;
 
-typedef struct OpcodeInfo {
+typedef struct NameTypePair {
   const char* name;
   Type type;
-  Opcode opcode;
-} OpcodeInfo;
-
-typedef struct Opcode2Info {
-  const char* name;
-  Type in_type;
-  Type out_type;
-  Opcode opcode;
-} Opcode2Info;
-
-typedef struct OpcodeMemInfo {
-  const char* name;
-  MemType mem_type;
-  Type type;
-  Opcode opcode;
-  /* memory access byte, as specified in wasm-opcodes.h:
-    0000AAasww
-
-    A: Atomicity (0: none, 1: seq. cst. 2: acquire, 3: release)
-    a: alignment (0: aligned, 1: not aligned)
-    s: sign-extend (0: no, 1: yes)
-    w: integer width: (0: u8, 1: u16, 2: u32, 3: u64)
-   */
-  MemAccess access;
-} OpcodeMemInfo;
+} NameTypePair;
 
 static int g_verbose;
 static const char* g_filename;
@@ -320,208 +325,7 @@ static const char* s_opcode_names[] = {
 #undef OPCODE
 };
 
-static OpcodeInfo s_unary_ops[] = {
-    {"f32.neg", TYPE_F32, OPCODE_F32_NEG},
-    {"f64.neg", TYPE_F64, OPCODE_F64_NEG},
-    {"f32.abs", TYPE_F32, OPCODE_F32_ABS},
-    {"f64.abs", TYPE_F64, OPCODE_F64_ABS},
-    {"f32.sqrt", TYPE_F32, OPCODE_F32_SQRT},
-    {"f64.sqrt", TYPE_F64, OPCODE_F64_SQRT},
-    {"i32.not", TYPE_I32, OPCODE_I32_NOT},
-    {"i32.clz", TYPE_I32, OPCODE_I32_CLZ},
-    {"i64.clz", TYPE_I64, OPCODE_I64_CLZ},
-    {"i32.ctz", TYPE_I32, OPCODE_I32_CTZ},
-    {"i64.ctz", TYPE_I64, OPCODE_I64_CTZ},
-    {"i32.popcnt", TYPE_I32, OPCODE_I32_POPCNT},
-    {"i64.popcnt", TYPE_I64, OPCODE_I64_POPCNT},
-    {"f32.ceil", TYPE_F32, OPCODE_F32_CEIL},
-    {"f64.ceil", TYPE_F64, OPCODE_F64_CEIL},
-    {"f32.floor", TYPE_F32, OPCODE_F32_FLOOR},
-    {"f64.floor", TYPE_F64, OPCODE_F64_FLOOR},
-    {"f32.trunc", TYPE_F32, OPCODE_F32_TRUNC},
-    {"f64.trunc", TYPE_F64, OPCODE_F64_TRUNC},
-    {"f32.nearest", TYPE_F32, OPCODE_F32_NEAREST},
-    {"f64.nearest", TYPE_F64, OPCODE_F64_NEAREST},
-};
-
-static OpcodeInfo s_binary_ops[] = {
-    {"i32.add", TYPE_I32, OPCODE_I32_ADD},
-    {"i64.add", TYPE_I64, OPCODE_I64_ADD},
-    {"f32.add", TYPE_F32, OPCODE_F32_ADD},
-    {"f64.add", TYPE_F64, OPCODE_F64_ADD},
-    {"i32.sub", TYPE_I32, OPCODE_I32_SUB},
-    {"i64.sub", TYPE_I64, OPCODE_I64_SUB},
-    {"f32.sub", TYPE_F32, OPCODE_F32_SUB},
-    {"f64.sub", TYPE_F64, OPCODE_F64_SUB},
-    {"i32.mul", TYPE_I32, OPCODE_I32_MUL},
-    {"i64.mul", TYPE_I64, OPCODE_I64_MUL},
-    {"f32.mul", TYPE_F32, OPCODE_F32_MUL},
-    {"f64.mul", TYPE_F64, OPCODE_F64_MUL},
-    {"i32.div_s", TYPE_I32, OPCODE_I32_SDIV},
-    {"i64.div_s", TYPE_I64, OPCODE_I64_SDIV},
-    {"i32.div_u", TYPE_I32, OPCODE_I32_UDIV},
-    {"i64.div_u", TYPE_I64, OPCODE_I64_UDIV},
-    {"f32.div", TYPE_F32, OPCODE_F32_DIV},
-    {"f64.div", TYPE_F64, OPCODE_F64_DIV},
-    {"i32.rem_s", TYPE_I32, OPCODE_I32_SREM},
-    {"i64.rem_s", TYPE_I64, OPCODE_I64_SREM},
-    {"i32.rem_u", TYPE_I32, OPCODE_I32_UREM},
-    {"i64.rem_u", TYPE_I64, OPCODE_I64_UREM},
-    {"f32.min", TYPE_F32, OPCODE_F32_MIN},
-    {"f64.min", TYPE_F64, OPCODE_F64_MIN},
-    {"f32.max", TYPE_F32, OPCODE_F32_MAX},
-    {"f64.max", TYPE_F64, OPCODE_F64_MAX},
-    {"i32.and", TYPE_I32, OPCODE_I32_AND},
-    {"i64.and", TYPE_I64, OPCODE_I64_AND},
-    {"i32.or", TYPE_I32, OPCODE_I32_OR},
-    {"i64.or", TYPE_I64, OPCODE_I64_OR},
-    {"i32.xor", TYPE_I32, OPCODE_I32_XOR},
-    {"i64.xor", TYPE_I64, OPCODE_I64_XOR},
-    {"i32.shl", TYPE_I32, OPCODE_I32_SHL},
-    {"i64.shl", TYPE_I64, OPCODE_I64_SHL},
-    {"i32.shr", TYPE_I32, OPCODE_I32_SHR},
-    {"i64.shr", TYPE_I64, OPCODE_I64_SHR},
-    {"i32.sar", TYPE_I32, OPCODE_I32_SAR},
-    {"i64.sar", TYPE_I64, OPCODE_I64_SAR},
-    {"f32.copysign", TYPE_F32, OPCODE_F32_COPYSIGN},
-    {"f64.copysign", TYPE_F64, OPCODE_F64_COPYSIGN},
-};
-
-static OpcodeInfo s_compare_ops[] = {
-    {"i32.eq", TYPE_I32, OPCODE_I32_EQ},
-    {"i64.eq", TYPE_I64, OPCODE_I64_EQ},
-    {"f32.eq", TYPE_F32, OPCODE_I32_EQ},
-    {"f64.eq", TYPE_F64, OPCODE_I64_EQ},
-    {"i32.neq", TYPE_I32, OPCODE_I32_NE},
-    {"i64.neq", TYPE_I64, OPCODE_I64_NE},
-    {"f32.neq", TYPE_F32, OPCODE_F32_NE},
-    {"f64.neq", TYPE_F64, OPCODE_F64_NE},
-    {"i32.lt_s", TYPE_I32, OPCODE_I32_SLT},
-    {"i64.lt_s", TYPE_I64, OPCODE_I64_SLT},
-    {"i32.lt_u", TYPE_I32, OPCODE_I32_ULT},
-    {"i64.lt_u", TYPE_I64, OPCODE_I64_ULT},
-    {"f32.lt", TYPE_F32, OPCODE_F32_LT},
-    {"f64.lt", TYPE_F64, OPCODE_F64_LT},
-    {"i32.le_s", TYPE_I32, OPCODE_I32_SLE},
-    {"i64.le_s", TYPE_I64, OPCODE_I64_SLE},
-    {"i32.le_u", TYPE_I32, OPCODE_I32_ULE},
-    {"i64.le_u", TYPE_I64, OPCODE_I64_ULE},
-    {"f32.le", TYPE_F32, OPCODE_F32_LE},
-    {"f64.le", TYPE_F64, OPCODE_F64_LE},
-    {"i32.gt_s", TYPE_I32, OPCODE_I32_SGT},
-    {"i64.gt_s", TYPE_I64, OPCODE_I64_SGT},
-    {"i32.gt_u", TYPE_I32, OPCODE_I32_UGT},
-    {"i64.gt_u", TYPE_I64, OPCODE_I64_UGT},
-    {"f32.gt", TYPE_F32, OPCODE_F32_GT},
-    {"f64.gt", TYPE_F64, OPCODE_F64_GT},
-    {"i32.ge_s", TYPE_I32, OPCODE_I32_SGE},
-    {"i64.ge_s", TYPE_I64, OPCODE_I64_SGE},
-    {"i32.ge_u", TYPE_I32, OPCODE_I32_UGE},
-    {"i64.ge_u", TYPE_I64, OPCODE_I64_UGE},
-    {"f32.ge", TYPE_F32, OPCODE_F32_GE},
-    {"f64.ge", TYPE_F64, OPCODE_F64_GE},
-};
-
-static Opcode2Info s_convert_ops[] = {
-    {"i64.extend_s/i32", TYPE_I32, TYPE_I64, OPCODE_I64_SCONVERT_I32},
-    {"i64.extend_u/i32", TYPE_I32, TYPE_I64, OPCODE_I64_UCONVERT_I32},
-    {"i32.wrap/i64", TYPE_I64, TYPE_I32, OPCODE_I32_CONVERT_I64},
-    {"f32.convert_s/i32", TYPE_I32, TYPE_F32, OPCODE_F32_SCONVERT_I32},
-    {"f32.convert_u/i32", TYPE_I32, TYPE_F32, OPCODE_F32_UCONVERT_I32},
-    {"f64.convert_s/i32", TYPE_I32, TYPE_F64, OPCODE_F64_SCONVERT_I32},
-    {"f64.convert_u/i32", TYPE_I32, TYPE_F64, OPCODE_F64_UCONVERT_I32},
-    {"f32.convert_s/i64", TYPE_I64, TYPE_F32, OPCODE_F32_SCONVERT_I64},
-    {"f32.convert_u/i64", TYPE_I64, TYPE_F32, OPCODE_F32_UCONVERT_I64},
-    {"f64.convert_s/i64", TYPE_I64, TYPE_F64, OPCODE_F64_SCONVERT_I64},
-    {"f64.convert_u/i64", TYPE_I64, TYPE_F64, OPCODE_F64_UCONVERT_I64},
-    {"i32.trunc_s/f32", TYPE_F32, TYPE_I32, OPCODE_I32_SCONVERT_F32},
-    {"i32.trunc_u/f32", TYPE_F32, TYPE_I32, OPCODE_I32_UCONVERT_F32},
-    {"i64.trunc_s/f32", TYPE_F32, TYPE_I64, OPCODE_I64_SCONVERT_F32},
-    {"i64.trunc_u/f32", TYPE_F32, TYPE_I64, OPCODE_I64_UCONVERT_F32},
-    {"i32.trunc_s/f64", TYPE_F64, TYPE_I32, OPCODE_I32_SCONVERT_F64},
-    {"i32.trunc_u/f64", TYPE_F64, TYPE_I32, OPCODE_I32_UCONVERT_F64},
-    {"i64.trunc_s/f64", TYPE_F64, TYPE_I64, OPCODE_I64_SCONVERT_F64},
-    {"i64.trunc_u/f64", TYPE_F64, TYPE_I64, OPCODE_I64_UCONVERT_F64},
-    {"f64.promote/f32", TYPE_F32, TYPE_F64, OPCODE_F64_CONVERT_F32},
-    {"f32.demote/f64", TYPE_F64, TYPE_F32, OPCODE_F32_CONVERT_F64},
-};
-
-static Opcode2Info s_cast_ops[] = {
-    {"f32.reinterpret/i32", TYPE_I32, TYPE_F32, OPCODE_F32_REINTERPRET_I32},
-    {"i32.reinterpret/f32", TYPE_F32, TYPE_I32, OPCODE_INVALID}, /* missing */
-    {"f64.reinterpret/i64", TYPE_I64, TYPE_F64, OPCODE_F64_REINTERPRET_I64},
-    {"i64.reinterpret/f64", TYPE_F64, TYPE_I64, OPCODE_INVALID}, /* missing */
-};
-
-static OpcodeInfo s_const_ops[] = {
-    {"i32.const", TYPE_I32, OPCODE_I32_CONST},
-    {"i64.const", TYPE_I64, OPCODE_I64_CONST},
-    {"f32.const", TYPE_F32, OPCODE_F32_CONST},
-    {"f64.const", TYPE_F64, OPCODE_F64_CONST},
-};
-
-static OpcodeInfo s_switch_ops[] = {
-    {"i32.switch", TYPE_I32, OPCODE_SWITCH},
-    {"i64.switch", TYPE_I64, OPCODE_INVALID}, /* missing */
-    {"f32.switch", TYPE_F32, OPCODE_INVALID}, /* missing */
-    {"f64.switch", TYPE_F64, OPCODE_INVALID}, /* missing */
-};
-
-static OpcodeMemInfo s_load_ops[] = {
-    {"i32.load_s/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32, 4},
-    {"i32.load_u/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32, 0},
-    {"i32.load_s/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32, 5},
-    {"i32.load_u/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32, 1},
-    {"i32.load_s/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32, 6},
-    {"i32.load_u/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32, 2},
-    {"i64.load_s/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32, 4},
-    {"i64.load_u/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32, 0},
-    {"i64.load_s/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32, 5},
-    {"i64.load_u/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32, 1},
-    {"i64.load_s/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32, 6},
-    {"i64.load_u/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32, 2},
-    {"i64.load_s/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32, 7},
-    {"i64.load_u/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32, 3},
-    {"i32.load/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_LOAD_I32, 4},
-    {"i32.load/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_LOAD_I32, 5},
-    {"i32.load/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_LOAD_I32, 6},
-    {"i64.load/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_LOAD_I32, 4},
-    {"i64.load/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_LOAD_I32, 5},
-    {"i64.load/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_LOAD_I32, 6},
-    {"i64.load/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_LOAD_I32, 7},
-    {"f32.load/f32", MEM_TYPE_F32, TYPE_F32, OPCODE_F32_LOAD_I32, 0},
-    {"f64.load/f32", MEM_TYPE_F32, TYPE_F64, OPCODE_INVALID}, /* missing? */
-    {"f64.load/f64", MEM_TYPE_F64, TYPE_F64, OPCODE_F64_LOAD_I32, 0},
-};
-
-static OpcodeMemInfo s_store_ops[] = {
-    {"i32.store_s/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32, 4},
-    {"i32.store_u/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32, 0},
-    {"i32.store_s/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32, 5},
-    {"i32.store_u/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32, 1},
-    {"i32.store_s/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32, 6},
-    {"i32.store_u/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32, 2},
-    {"i64.store_s/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32, 4},
-    {"i64.store_u/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32, 0},
-    {"i64.store_s/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32, 5},
-    {"i64.store_u/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32, 1},
-    {"i64.store_s/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32, 6},
-    {"i64.store_u/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32, 2},
-    {"i64.store_s/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32, 7},
-    {"i64.store_u/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32, 3},
-    {"i32.store/i8", MEM_TYPE_I8, TYPE_I32, OPCODE_I32_STORE_I32, 4},
-    {"i32.store/i16", MEM_TYPE_I16, TYPE_I32, OPCODE_I32_STORE_I32, 5},
-    {"i32.store/i32", MEM_TYPE_I32, TYPE_I32, OPCODE_I32_STORE_I32, 6},
-    {"i64.store/i8", MEM_TYPE_I8, TYPE_I64, OPCODE_I64_STORE_I32, 4},
-    {"i64.store/i16", MEM_TYPE_I16, TYPE_I64, OPCODE_I64_STORE_I32, 5},
-    {"i64.store/i32", MEM_TYPE_I32, TYPE_I64, OPCODE_I64_STORE_I32, 6},
-    {"i64.store/i64", MEM_TYPE_I64, TYPE_I64, OPCODE_I64_STORE_I32, 7},
-    {"f32.store/f32", MEM_TYPE_F32, TYPE_F32, OPCODE_F32_STORE_I32, 0},
-    {"f64.store/f32", MEM_TYPE_F32, TYPE_F64, OPCODE_INVALID}, /* missing? */
-    {"f64.store/f64", MEM_TYPE_F64, TYPE_F64, OPCODE_F64_STORE_I32, 0},
-};
-
-static OpcodeInfo s_types[] = {
+static NameTypePair s_types[] = {
     {"i32", TYPE_I32},
     {"i64", TYPE_I64},
     {"f32", TYPE_F32},
@@ -1010,109 +814,6 @@ static int match_atom(Token t, const char* s) {
          0;
 }
 
-static int match_atom_prefix(Token t, const char* s, size_t slen) {
-  size_t len = t.range.end.pos - t.range.start.pos;
-  if (len > slen)
-    len = slen;
-  return strncmp(t.range.start.pos, s, slen) == 0;
-}
-
-static int match_unary(Token t, Type* type, Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_unary_ops); ++i) {
-    if (match_atom(t, s_unary_ops[i].name)) {
-      *type = s_unary_ops[i].type;
-      *opcode = s_unary_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int match_binary(Token t, Type* type, Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_binary_ops); ++i) {
-    if (match_atom(t, s_binary_ops[i].name)) {
-      *type = s_binary_ops[i].type;
-      *opcode = s_binary_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int match_compare(Token t, Type* type, Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_compare_ops); ++i) {
-    if (match_atom(t, s_compare_ops[i].name)) {
-      *type = s_compare_ops[i].type;
-      *opcode = s_compare_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int match_convert(Token t,
-                         Type* in_type,
-                         Type* out_type,
-                         Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_convert_ops); ++i) {
-    if (match_atom(t, s_convert_ops[i].name)) {
-      *in_type = s_convert_ops[i].in_type;
-      *out_type = s_convert_ops[i].out_type;
-      *opcode = s_convert_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int match_cast(Token t, Type* in_type, Type* out_type, Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_cast_ops); ++i) {
-    if (match_atom(t, s_cast_ops[i].name)) {
-      *in_type = s_cast_ops[i].in_type;
-      *out_type = s_cast_ops[i].out_type;
-      *opcode = s_cast_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int match_const(Token t, Type* type, Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_const_ops); ++i) {
-    if (match_atom(t, s_const_ops[i].name)) {
-      *type = s_const_ops[i].type;
-      *opcode = s_const_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int match_switch(Token t, Type* type, Opcode* opcode) {
-  int i;
-  for (i = 0; i < ARRAY_SIZE(s_switch_ops); ++i) {
-    if (match_atom(t, s_switch_ops[i].name)) {
-      *type = s_switch_ops[i].type;
-      *opcode = s_switch_ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      return 1;
-    }
-  }
-  return 0;
-}
-
 static int match_type(Token t, Type* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_types); ++i) {
@@ -1125,72 +826,44 @@ static int match_type(Token t, Type* type) {
   return 0;
 }
 
-static int match_load_store(Token t,
-                            MemType* mem_type,
-                            Type* type,
-                            Opcode* opcode,
-                            MemAccess* access,
-                            OpcodeMemInfo* ops,
-                            size_t num_ops) {
-  int native_mem_type_alignment[] = {
-      1, /* MEM_TYPE_I8 */
-      2, /* MEM_TYPE_I16 */
-      4, /* MEM_TYPE_I32 */
-      8, /* MEM_TYPE_I64 */
-      4, /* MEM_TYPE_F32 */
-      8, /* MEM_TYPE_F64 */
-  };
-
-  int i;
-  for (i = 0; i < num_ops; ++i) {
-    size_t len = t.range.end.pos - t.range.start.pos;
-    size_t name_len = strlen(ops[i].name);
-    if (match_atom_prefix(t, ops[i].name, name_len)) {
-      uint32_t alignment = 0;
-      if (len >= name_len + 1 && t.range.start.pos[name_len] == '/') {
-        /* might have an alignment */
-        const char* p = &t.range.start.pos[name_len + 1];
-        if (!read_uint32(&p, t.range.end.pos, &alignment))
-          return 0;
-        /* check that alignment is power-of-two */
-        if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
-          FATAL("%d:%d: alignment must be power-of-two\n", t.range.start.line,
-                t.range.start.col);
-        }
-      } else if (len != name_len) {
-        /* bad suffix */
+static int match_load_store_aligned(Token t, OpInfo* op_info) {
+  /* look for a slash near the end of the string */
+  const char* p = t.range.start.pos;
+  const char* end = t.range.end.pos - 1;
+  while (end > p) {
+    if (*end == '/') {
+      const OpInfo* found = in_word_set(p, (int)(end - p));
+      if (!(found && (found->op_type == OP_LOAD || found->op_type == OP_STORE)))
         return 0;
+
+      ++end;
+      uint32_t alignment;
+      if (!read_uint32(&end, t.range.end.pos, &alignment))
+        return 0;
+
+      /* check that alignment is power-of-two */
+      if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
+        FATAL("%d:%d: alignment must be power-of-two\n", t.range.start.line,
+              t.range.start.col);
       }
 
-      *mem_type = ops[i].mem_type;
-      *type = ops[i].type;
-      *opcode = ops[i].opcode;
-      check_opcode(t.range.start, *opcode);
-      *access = ops[i].access;
-      if (alignment && alignment < native_mem_type_alignment[*mem_type])
-        *access |= 0x8; /* unaligned access */
+      int native_mem_type_alignment[] = {
+          1, /* MEM_TYPE_I8 */
+          2, /* MEM_TYPE_I16 */
+          4, /* MEM_TYPE_I32 */
+          8, /* MEM_TYPE_I64 */
+          4, /* MEM_TYPE_F32 */
+          8, /* MEM_TYPE_F64 */
+      };
+
+      *op_info = *found;
+      if (alignment && alignment < native_mem_type_alignment[op_info->type2])
+        op_info->access |= 0x8; /* unaligned access */
       return 1;
     }
+    end--;
   }
   return 0;
-}
-
-static int match_load(Token t,
-                      MemType* mem_type,
-                      Type* type,
-                      Opcode* opcode,
-                      MemAccess* access) {
-  return match_load_store(t, mem_type, type, opcode, access, s_load_ops,
-                          ARRAY_SIZE(s_load_ops));
-}
-
-static int match_store(Token t,
-                       MemType* mem_type,
-                       Type* type,
-                       Opcode* opcode,
-                       MemAccess* access) {
-  return match_load_store(t, mem_type, type, opcode, access, s_store_ops,
-                          ARRAY_SIZE(s_store_ops));
 }
 
 static void unexpected_token(Token t) {
@@ -1455,209 +1128,286 @@ static Type parse_expr(Tokenizer* tokenizer,
   expect_open(read_token(tokenizer));
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
-    Type in_type;
-    MemType mem_type;
-    Opcode opcode;
-    MemAccess access;
-    if (match_atom(t, "nop")) {
-      out_opcode(buf, OPCODE_NOP);
-      expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "block")) {
-      out_opcode(buf, OPCODE_BLOCK);
-      type = parse_block(tokenizer, module, function, buf);
-    } else if (match_atom(t, "if")) {
-      uint32_t opcode_offset = buf->size;
-      out_opcode(buf, OPCODE_IF);
-      Type cond_type = parse_expr(tokenizer, module, function, buf);
-      check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
-      Type true_type = parse_expr(tokenizer, module, function, buf);
-      t = read_token(tokenizer);
-      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-        out_u8_at(buf, opcode_offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
-        rewind_token(tokenizer, t);
-        Type false_type = parse_expr(tokenizer, module, function, buf);
-        if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
-          type = TYPE_VOID;
-        } else {
-          check_type(tokenizer->loc, false_type, true_type,
-                     " between true and false branches");
-          type = true_type;
-        }
-        expect_close(read_token(tokenizer));
-      } else {
-        type = true_type;
-      }
-    } else if (match_atom(t, "loop")) {
-      out_opcode(buf, OPCODE_LOOP);
-      type = parse_block(tokenizer, module, function, buf);
-    } else if (match_atom(t, "label")) {
-      t = read_token(tokenizer);
-      realloc_list((void**)&function->labels, &function->num_labels,
-                   sizeof(Binding));
-      Binding* binding = &function->labels[function->num_labels - 1];
-      binding->name = NULL;
-
-      if (t.type == TOKEN_TYPE_ATOM) {
-        /* label */
-        expect_var_name(t);
-        binding->name =
-            strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-      } else if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-        /* no label */
-        rewind_token(tokenizer, t);
-      } else {
+    OpInfo op_info_aligned;
+    const OpInfo* op_info = in_word_set(
+        t.range.start.pos, (int)(t.range.end.pos - t.range.start.pos));
+    if (!op_info) {
+      if (!match_load_store_aligned(t, &op_info_aligned))
         unexpected_token(t);
-      }
-      type = parse_block(tokenizer, module, function, buf);
-    } else if (match_atom(t, "break")) {
-      opcode = OPCODE_BREAK;
-      t = read_token(tokenizer);
-      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-        rewind_token(tokenizer, t);
-        /* TODO(binji): how to check that the given label is a parent? */
-        parse_label_var(tokenizer, function);
+      op_info = &op_info_aligned;
+    }
+    switch (op_info->op_type) {
+      case OP_BINARY: {
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        Type value0_type = parse_expr(tokenizer, module, function, buf);
+        check_type_arg(t.range.start, value0_type, op_info->type, "binary op",
+                       0);
+        Type value1_type = parse_expr(tokenizer, module, function, buf);
+        check_type_arg(t.range.start, value1_type, op_info->type, "binary op",
+                       1);
+        assert(value0_type == value1_type);
+        type = value0_type;
         expect_close(read_token(tokenizer));
+        break;
       }
-    } else if (match_switch(t, &in_type, &opcode)) {
-      type = parse_switch(tokenizer, module, function, buf, in_type);
-    } else if (match_atom(t, "call")) {
-      out_opcode(buf, OPCODE_CALL);
-      int index = parse_function_var(tokenizer, module);
-      out_leb128(buf, index, "func index");
-      Function* callee = &module->functions[index];
 
-      int num_args = 0;
-      while (1) {
-        Token t = read_token(tokenizer);
-        if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-          break;
-        rewind_token(tokenizer, t);
-        if (++num_args > callee->num_args) {
-          FATAL("%d:%d: too many arguments to function. got %d, expected %d\n",
+      case OP_BLOCK:
+        out_opcode(buf, OPCODE_BLOCK);
+        type = parse_block(tokenizer, module, function, buf);
+        break;
+
+      case OP_BREAK:
+        /* opcode = OPCODE_BREAK; */
+        t = read_token(tokenizer);
+        if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+          rewind_token(tokenizer, t);
+          /* TODO(binji): how to check that the given label is a parent? */
+          parse_label_var(tokenizer, function);
+          expect_close(read_token(tokenizer));
+        }
+        break;
+
+      case OP_CALL: {
+        out_opcode(buf, OPCODE_CALL);
+        int index = parse_function_var(tokenizer, module);
+        out_leb128(buf, index, "func index");
+        Function* callee = &module->functions[index];
+
+        int num_args = 0;
+        while (1) {
+          Token t = read_token(tokenizer);
+          if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+            break;
+          rewind_token(tokenizer, t);
+          if (++num_args > callee->num_args) {
+            FATAL(
+                "%d:%d: too many arguments to function. got %d, expected %d\n",
+                t.range.start.line, t.range.start.col, num_args,
+                callee->num_args);
+          }
+          Type arg_type = parse_expr(tokenizer, module, function, buf);
+          Type expected = callee->locals[num_args - 1].type;
+          check_type_arg(t.range.start, arg_type, expected, "call",
+                         num_args - 1);
+        }
+
+        if (num_args < callee->num_args) {
+          FATAL("%d:%d: too few arguments to function. got %d, expected %d\n",
                 t.range.start.line, t.range.start.col, num_args,
                 callee->num_args);
         }
-        Type arg_type = parse_expr(tokenizer, module, function, buf);
-        Type expected = callee->locals[num_args - 1].type;
-        check_type_arg(t.range.start, arg_type, expected, "call", num_args - 1);
+
+        type = get_result_type(t.range.start, callee);
+        break;
       }
 
-      if (num_args < callee->num_args) {
-        FATAL("%d:%d: too few arguments to function. got %d, expected %d\n",
-              t.range.start.line, t.range.start.col, num_args,
-              callee->num_args);
+      case OP_CALL_INDIRECT:
+        /* TODO(binji) */
+        break;
+
+      case OP_COMPARE: {
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        Type value0_type = parse_expr(tokenizer, module, function, buf);
+        check_type_arg(t.range.start, value0_type, op_info->type, "compare op",
+                       0);
+        Type value1_type = parse_expr(tokenizer, module, function, buf);
+        check_type_arg(t.range.start, value1_type, op_info->type, "compare op",
+                       1);
+        type = TYPE_I32;
+        expect_close(read_token(tokenizer));
+        break;
       }
 
-      type = get_result_type(t.range.start, callee);
-    } else if (match_atom(t, "call_indirect")) {
-      /* TODO(binji) */
-    } else if (match_atom(t, "return")) {
-      out_opcode(buf, OPCODE_RETURN);
-      int num_results = 0;
-      while (1) {
+      case OP_CONST:
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        parse_literal(tokenizer, buf, op_info->type);
+        expect_close(read_token(tokenizer));
+        type = op_info->type;
+        break;
+
+      case OP_CONVERT: {
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        Type value_type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, value_type, op_info->type2, " of convert op");
+        expect_close(read_token(tokenizer));
+        type = op_info->type;
+        break;
+      }
+
+      case OP_DESTRUCT:
+        /* TODO(binji) */
+        break;
+
+      case OP_GET_LOCAL: {
+        /* opcode = OPCODE_GET_LOCAL; */
+        int index = parse_local_var(tokenizer, function);
+        type = function->locals[index].type;
+        expect_close(read_token(tokenizer));
+        break;
+      }
+
+      case OP_IF: {
+        uint32_t opcode_offset = buf->size;
+        out_opcode(buf, OPCODE_IF);
+        Type cond_type = parse_expr(tokenizer, module, function, buf);
+        check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
+        Type true_type = parse_expr(tokenizer, module, function, buf);
         t = read_token(tokenizer);
-        if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-          break;
-        if (++num_results > function->num_results) {
-          FATAL("%d:%d: too many return values. got %d, expected %d\n",
+        if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+          out_u8_at(buf, opcode_offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
+          rewind_token(tokenizer, t);
+          Type false_type = parse_expr(tokenizer, module, function, buf);
+          if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
+            type = TYPE_VOID;
+          } else {
+            check_type(tokenizer->loc, false_type, true_type,
+                       " between true and false branches");
+            type = true_type;
+          }
+          expect_close(read_token(tokenizer));
+        } else {
+          type = true_type;
+        }
+        break;
+      }
+
+      case OP_LABEL: {
+        t = read_token(tokenizer);
+        realloc_list((void**)&function->labels, &function->num_labels,
+                     sizeof(Binding));
+        Binding* binding = &function->labels[function->num_labels - 1];
+        binding->name = NULL;
+
+        if (t.type == TOKEN_TYPE_ATOM) {
+          /* label */
+          expect_var_name(t);
+          binding->name =
+              strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+        } else if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+          /* no label */
+          rewind_token(tokenizer, t);
+        } else {
+          unexpected_token(t);
+        }
+        type = parse_block(tokenizer, module, function, buf);
+        break;
+      }
+
+      case OP_LOAD: {
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        out_u8(buf, op_info->access, "load access byte");
+        Type index_type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, index_type, TYPE_I32, " of load index");
+        expect_close(read_token(tokenizer));
+        type = op_info->type;
+        break;
+      }
+
+      case OP_LOAD_GLOBAL: {
+        out_opcode(buf, OPCODE_GET_GLOBAL);
+        int index = parse_global_var(tokenizer, module);
+        out_leb128(buf, index, "global index");
+        type = module->globals[index].type;
+        expect_close(read_token(tokenizer));
+        break;
+      }
+
+      case OP_LOOP:
+        out_opcode(buf, OPCODE_LOOP);
+        type = parse_block(tokenizer, module, function, buf);
+        break;
+
+      case OP_NOP:
+        out_opcode(buf, OPCODE_NOP);
+        expect_close(read_token(tokenizer));
+        break;
+
+      case OP_RETURN: {
+        out_opcode(buf, OPCODE_RETURN);
+        int num_results = 0;
+        while (1) {
+          t = read_token(tokenizer);
+          if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+            break;
+          if (++num_results > function->num_results) {
+            FATAL("%d:%d: too many return values. got %d, expected %d\n",
+                  t.range.start.line, t.range.start.col, num_results,
+                  function->num_results);
+          }
+          rewind_token(tokenizer, t);
+          Type result_type = parse_expr(tokenizer, module, function, buf);
+          Type expected = function->result_types[num_results - 1];
+          check_type_arg(t.range.start, result_type, expected, "return",
+                         num_results - 1);
+        }
+
+        if (num_results < function->num_results) {
+          FATAL("%d:%d: too few return values. got %d, expected %d\n",
                 t.range.start.line, t.range.start.col, num_results,
                 function->num_results);
         }
-        rewind_token(tokenizer, t);
-        Type result_type = parse_expr(tokenizer, module, function, buf);
-        Type expected = function->result_types[num_results - 1];
-        check_type_arg(t.range.start, result_type, expected, "return",
-                       num_results - 1);
+
+        type = get_result_type(t.range.start, function);
+        break;
       }
 
-      if (num_results < function->num_results) {
-        FATAL("%d:%d: too few return values. got %d, expected %d\n",
-              t.range.start.line, t.range.start.col, num_results,
-              function->num_results);
+      case OP_SET_LOCAL: {
+        /* opcode = OPCODE_SET_LOCAL; */
+        int index = parse_local_var(tokenizer, function);
+        Binding* binding = &function->locals[index];
+        type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, type, binding->type, "");
+        expect_close(read_token(tokenizer));
+        break;
       }
 
-      type = get_result_type(t.range.start, function);
-    } else if (match_atom(t, "destruct")) {
-      /* TODO(binji) */
-    } else if (match_atom(t, "get_local")) {
-      opcode = OPCODE_GET_LOCAL;
-      int index = parse_local_var(tokenizer, function);
-      type = function->locals[index].type;
-      expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "set_local")) {
-      opcode = OPCODE_SET_LOCAL;
-      int index = parse_local_var(tokenizer, function);
-      Binding* binding = &function->locals[index];
-      type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, type, binding->type, "");
-      expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "load_global")) {
-      out_opcode(buf, OPCODE_GET_GLOBAL);
-      int index = parse_global_var(tokenizer, module);
-      out_leb128(buf, index, "global index");
-      type = module->globals[index].type;
-      expect_close(read_token(tokenizer));
-    } else if (match_atom(t, "store_global")) {
-      out_opcode(buf, OPCODE_SET_GLOBAL);
-      int index = parse_global_var(tokenizer, module);
-      out_leb128(buf, index, "global index");
-      Binding* binding = &module->globals[index];
-      type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, type, binding->type, "");
-      expect_close(read_token(tokenizer));
-    } else if (match_load(t, &mem_type, &type, &opcode, &access)) {
-      out_opcode(buf, opcode);
-      out_u8(buf, access, "load access byte");
-      Type index_type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, index_type, TYPE_I32, " of load index");
-      expect_close(read_token(tokenizer));
-    } else if (match_store(t, &mem_type, &type, &opcode, &access)) {
-      out_opcode(buf, opcode);
-      out_u8(buf, access, "store access byte");
-      Type index_type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, index_type, TYPE_I32, " of store index");
-      Type value_type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, value_type, type, " of store value");
-      expect_close(read_token(tokenizer));
-    } else if (match_const(t, &type, &opcode)) {
-      out_opcode(buf, opcode);
-      parse_literal(tokenizer, buf, type);
-      expect_close(read_token(tokenizer));
-    } else if (match_unary(t, &type, &opcode)) {
-      out_opcode(buf, opcode);
-      Type value_type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, value_type, type, " of unary op");
-      type = value_type;
-      expect_close(read_token(tokenizer));
-    } else if (match_binary(t, &type, &opcode)) {
-      out_opcode(buf, opcode);
-      Type value0_type = parse_expr(tokenizer, module, function, buf);
-      check_type_arg(t.range.start, value0_type, type, "binary op", 0);
-      Type value1_type = parse_expr(tokenizer, module, function, buf);
-      check_type_arg(t.range.start, value1_type, type, "binary op", 1);
-      assert(value0_type == value1_type);
-      type = value0_type;
-      expect_close(read_token(tokenizer));
-    } else if (match_compare(t, &in_type, &opcode)) {
-      out_opcode(buf, opcode);
-      Type value0_type = parse_expr(tokenizer, module, function, buf);
-      check_type_arg(t.range.start, value0_type, in_type, "compare op", 0);
-      Type value1_type = parse_expr(tokenizer, module, function, buf);
-      check_type_arg(t.range.start, value1_type, in_type, "compare op", 1);
-      type = TYPE_I32;
-      expect_close(read_token(tokenizer));
-    } else if (match_convert(t, &in_type, &type, &opcode)) {
-      out_opcode(buf, opcode);
-      Type value_type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, value_type, in_type, " of convert op");
-      expect_close(read_token(tokenizer));
-    } else if (match_cast(t, &in_type, &type, &opcode)) {
-      out_opcode(buf, opcode);
-      Type value_type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, value_type, in_type, " of cast op");
-      expect_close(read_token(tokenizer));
-    } else {
-      unexpected_token(t);
+      case OP_STORE: {
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        out_u8(buf, op_info->access, "store access byte");
+        Type index_type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, index_type, TYPE_I32, " of store index");
+        Type value_type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, value_type, op_info->type, " of store value");
+        expect_close(read_token(tokenizer));
+        type = op_info->type;
+        break;
+      }
+
+      case OP_STORE_GLOBAL: {
+        out_opcode(buf, OPCODE_SET_GLOBAL);
+        int index = parse_global_var(tokenizer, module);
+        out_leb128(buf, index, "global index");
+        Binding* binding = &module->globals[index];
+        type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, type, binding->type, "");
+        expect_close(read_token(tokenizer));
+        break;
+      }
+
+      case OP_SWITCH:
+        check_opcode(t.range.start, op_info->opcode);
+        type = parse_switch(tokenizer, module, function, buf, op_info->type);
+        break;
+
+      case OP_UNARY: {
+        check_opcode(t.range.start, op_info->opcode);
+        out_opcode(buf, op_info->opcode);
+        Type value_type = parse_expr(tokenizer, module, function, buf);
+        check_type(t.range.start, value_type, op_info->type, " of unary op");
+        type = value_type;
+        expect_close(read_token(tokenizer));
+        break;
+      }
+
+      default:
+        assert(0);
+        break;
     }
   }
   return type;
