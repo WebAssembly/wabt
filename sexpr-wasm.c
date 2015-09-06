@@ -1592,13 +1592,15 @@ static Type parse_expr(Tokenizer* tokenizer,
       check_type(t.range.start, type, binding->type, "");
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "load_global")) {
-      opcode = OPCODE_GET_GLOBAL;
+      out_opcode(buf, OPCODE_GET_GLOBAL);
       int index = parse_global_var(tokenizer, module);
+      out_leb128(buf, index, "global index");
       type = module->globals[index].type;
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "store_global")) {
-      opcode = OPCODE_SET_GLOBAL;
+      out_opcode(buf, OPCODE_SET_GLOBAL);
       int index = parse_global_var(tokenizer, module);
+      out_leb128(buf, index, "global index");
       Binding* binding = &module->globals[index];
       type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, type, binding->type, "");

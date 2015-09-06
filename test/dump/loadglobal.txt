@@ -1,0 +1,56 @@
+# FLAGS: -dv
+(module
+  (global i32 i64 f32 f64)
+  (func
+    (load_global 0)
+    (load_global 1)
+    (load_global 2)
+    (load_global 3)))
+# STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0400                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+0000008: 0000 0000                                  ; global name offset
+000000c: 04                                         ; global mem type
+000000d: 0000 0000                                  ; global offset
+0000011: 00                                         ; export global
+0000012: 0000 0000                                  ; global name offset
+0000016: 06                                         ; global mem type
+0000017: 0000 0000                                  ; global offset
+000001b: 00                                         ; export global
+000001c: 0000 0000                                  ; global name offset
+0000020: 08                                         ; global mem type
+0000021: 0000 0000                                  ; global offset
+0000025: 00                                         ; export global
+0000026: 0000 0000                                  ; global name offset
+000002a: 09                                         ; global mem type
+000002b: 0000 0000                                  ; global offset
+000002f: 00                                         ; export global
+0000030: 00                                         ; func num args
+0000031: 00                                         ; func result type
+0000032: 0000 0000                                  ; func name offset
+0000036: 0000 0000                                  ; func code start offset
+000003a: 0000 0000                                  ; func code end offset
+000003e: 0000                                       ; num local i32
+0000040: 0000                                       ; num local i64
+0000042: 0000                                       ; num local f32
+0000044: 0000                                       ; num local f64
+0000046: 00                                         ; export func
+0000047: 00                                         ; func external
+0000036: 4800 0000                                  ; FIXUP func code start offset
+0000048: 17                                         ; OPCODE_GET_GLOBAL
+0000049: 00                                         ; global index
+000004a: 17                                         ; OPCODE_GET_GLOBAL
+000004b: 01                                         ; global index
+000004c: 17                                         ; OPCODE_GET_GLOBAL
+000004d: 02                                         ; global index
+000004e: 17                                         ; OPCODE_GET_GLOBAL
+000004f: 03                                         ; global index
+000003a: 5000 0000                                  ; FIXUP func code end offset
+0000000: 1401 0400 0100 0000 0000 0000 0400 0000  ................
+0000010: 0000 0000 0000 0600 0000 0000 0000 0000  ................
+0000020: 0800 0000 0000 0000 0000 0900 0000 0000  ................
+0000030: 0000 0000 0000 4800 0000 5000 0000 0000  ......H...P.....
+0000040: 0000 0000 0000 0000 1700 1701 1702 1703  ................
