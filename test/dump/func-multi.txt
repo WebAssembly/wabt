@@ -1,9 +1,53 @@
-# FLAGS: -d
+# FLAGS: -dv
 (module
   (func)
   (func)
   (func))
 # STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0300                                       ; num funcs
+0000006: 0000                                       ; num data segments
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0000                                       ; num local i32
+0000018: 0000                                       ; num local i64
+000001a: 0000                                       ; num local f32
+000001c: 0000                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+0000020: 00                                         ; func num args
+0000021: 00                                         ; func result type
+0000022: 0000 0000                                  ; func name offset
+0000026: 0000 0000                                  ; func code start offset
+000002a: 0000 0000                                  ; func code end offset
+000002e: 0000                                       ; num local i32
+0000030: 0000                                       ; num local i64
+0000032: 0000                                       ; num local f32
+0000034: 0000                                       ; num local f64
+0000036: 00                                         ; export func
+0000037: 00                                         ; func external
+0000038: 00                                         ; func num args
+0000039: 00                                         ; func result type
+000003a: 0000 0000                                  ; func name offset
+000003e: 0000 0000                                  ; func code start offset
+0000042: 0000 0000                                  ; func code end offset
+0000046: 0000                                       ; num local i32
+0000048: 0000                                       ; num local i64
+000004a: 0000                                       ; num local f32
+000004c: 0000                                       ; num local f64
+000004e: 00                                         ; export func
+000004f: 00                                         ; func external
+000000e: 5000 0000                                  ; FIXUP func code start offset
+0000012: 5000 0000                                  ; FIXUP func code end offset
+0000026: 5000 0000                                  ; FIXUP func code start offset
+000002a: 5000 0000                                  ; FIXUP func code end offset
+000003e: 5000 0000                                  ; FIXUP func code start offset
+0000042: 5000 0000                                  ; FIXUP func code end offset
 0000000: 1401 0000 0300 0000 0000 0000 0000 5000  ..............P.
 0000010: 0000 5000 0000 0000 0000 0000 0000 0000  ..P.............
 0000020: 0000 0000 0000 5000 0000 5000 0000 0000  ......P...P.....

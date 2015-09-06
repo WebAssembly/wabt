@@ -528,68 +528,18 @@ static void realloc_list(void** elts, int* num_elts, int elt_size) {
   }
 }
 
-static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
-  buf->start = malloc(initial_capacity);
-  if (!buf->start)
-    FATAL("unable to allocate %zd bytes\n", initial_capacity);
-  buf->size = 0;
-  buf->capacity = initial_capacity;
-}
-
-static size_t out_data(OutputBuffer* buf,
-                       size_t offset,
-                       const void* src,
-                       size_t size) {
-  assert(offset <= buf->size);
-  if (offset + size > buf->capacity) {
-    size_t new_capacity = buf->capacity * 2;
-    buf->start = realloc(buf->start, new_capacity);
-    if (!buf->start)
-      FATAL("unable to allocate %zd bytes\n", new_capacity);
-    buf->capacity = new_capacity;
-  }
-  memcpy(buf->start + offset, src, size);
-  return offset + size;
-}
-
-/* TODO(binji): endianness */
-#define OUT_TYPE(name, ctype)                                    \
-  static void out_##name(OutputBuffer* buf, ctype value) {       \
-    buf->size = out_data(buf, buf->size, &value, sizeof(value)); \
-  }
-
-OUT_TYPE(u8, uint8_t)
-OUT_TYPE(u16, uint16_t)
-OUT_TYPE(u32, uint32_t)
-OUT_TYPE(u64, uint64_t)
-OUT_TYPE(f32, float)
-OUT_TYPE(f64, double)
-
-#undef OUT_TYPE
-
-#define OUT_AT_TYPE(name, ctype)                                  \
-  static void out_##name##_at(OutputBuffer* buf, uint32_t offset, \
-                              ctype value) {                      \
-    out_data(buf, offset, &value, sizeof(value));                 \
-  }
-
-OUT_AT_TYPE(u8, uint8_t)
-OUT_AT_TYPE(u32, uint32_t)
-
-#undef OUT_AT_TYPE
-
-static void out_cstr(OutputBuffer* buf, const char* s) {
-  buf->size = out_data(buf, buf->size, s, strlen(s) + 1);
-}
-
-static void dump_output_buffer(OutputBuffer* buf) {
+static void dump_memory(const void* start,
+                        size_t size,
+                        size_t offset,
+                        int print_chars,
+                        const char* desc) {
   /* mimic xxd output */
-  uint8_t* p = buf->start;
-  uint8_t* end = p + buf->size;
+  const uint8_t* p = start;
+  const uint8_t* end = p + size;
   while (p < end) {
-    uint8_t* line = p;
-    uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07x: ", (int)((void*)p - buf->start));
+    const uint8_t* line = p;
+    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    printf("%07x: ", (int)((void*)p - start + offset));
     while (p < line_end) {
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
@@ -607,9 +557,73 @@ static void dump_output_buffer(OutputBuffer* buf) {
     p = line;
     int i;
     for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
-      printf("%c", isprint(*p) ? *p : '.');
+      if (print_chars)
+        printf("%c", isprint(*p) ? *p : '.');
+    if (desc)
+      printf("  ; %s", desc);
     putchar('\n');
   }
+}
+
+static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
+  buf->start = malloc(initial_capacity);
+  if (!buf->start)
+    FATAL("unable to allocate %zd bytes\n", initial_capacity);
+  buf->size = 0;
+  buf->capacity = initial_capacity;
+}
+
+static size_t out_data(OutputBuffer* buf,
+                       size_t offset,
+                       const void* src,
+                       size_t size,
+                       const char* desc) {
+  assert(offset <= buf->size);
+  if (offset + size > buf->capacity) {
+    size_t new_capacity = buf->capacity * 2;
+    buf->start = realloc(buf->start, new_capacity);
+    if (!buf->start)
+      FATAL("unable to allocate %zd bytes\n", new_capacity);
+    buf->capacity = new_capacity;
+  }
+  memcpy(buf->start + offset, src, size);
+  if (g_verbose)
+    dump_memory(buf->start + offset, size, offset, 0, desc);
+  return offset + size;
+}
+
+/* TODO(binji): endianness */
+#define OUT_TYPE(name, ctype)                                                \
+  static void out_##name(OutputBuffer* buf, ctype value, const char* desc) { \
+    buf->size = out_data(buf, buf->size, &value, sizeof(value), desc);       \
+  }
+
+OUT_TYPE(u8, uint8_t)
+OUT_TYPE(u16, uint16_t)
+OUT_TYPE(u32, uint32_t)
+OUT_TYPE(u64, uint64_t)
+OUT_TYPE(f32, float)
+OUT_TYPE(f64, double)
+
+#undef OUT_TYPE
+
+#define OUT_AT_TYPE(name, ctype)                                               \
+  static void out_##name##_at(OutputBuffer* buf, uint32_t offset, ctype value, \
+                              const char* desc) {                              \
+    out_data(buf, offset, &value, sizeof(value), desc);                        \
+  }
+
+OUT_AT_TYPE(u8, uint8_t)
+OUT_AT_TYPE(u32, uint32_t)
+
+#undef OUT_AT_TYPE
+
+static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
+  buf->size = out_data(buf, buf->size, s, strlen(s) + 1, desc);
+}
+
+static void dump_output_buffer(OutputBuffer* buf) {
+  dump_memory(buf->start, buf->size, 0, 1, NULL);
 }
 
 static void destroy_output_buffer(OutputBuffer* buf) {
@@ -948,8 +962,7 @@ static void expect_var_name(Token t) {
           t.range.start.pos);
   }
 
-  if (t.range.end.pos - t.range.start.pos < 1 ||
-      t.range.start.pos[0] != '$') {
+  if (t.range.end.pos - t.range.start.pos < 1 || t.range.start.pos[0] != '$') {
     FATAL("%d:%d: expected name to begin with $\n", t.range.start.line,
           t.range.start.col);
   }
@@ -1241,14 +1254,15 @@ static void parse_type(Tokenizer* tokenizer, Type* type) {
 
 static Type parse_expr(Tokenizer* tokenizer,
                        Module* module,
-                       Function* function, OutputBuffer* buf);
+                       Function* function,
+                       OutputBuffer* buf);
 
 static Type parse_block(Tokenizer* tokenizer,
                         Module* module,
                         Function* function,
                         OutputBuffer* buf) {
   size_t offset = buf->size;
-  out_u8(buf, 0); /* number of expressions, fixup later */
+  out_u8(buf, 0, "num expressions");
   int num_exprs = 0;
   Type type;
   while (1) {
@@ -1259,7 +1273,7 @@ static Type parse_block(Tokenizer* tokenizer,
       break;
     rewind_token(tokenizer, t);
   }
-  out_u8_at(buf, offset, num_exprs);
+  out_u8_at(buf, offset, num_exprs, "FIXUP num expressions");
   return type;
 }
 
@@ -1275,7 +1289,7 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
         FATAL("%d:%d: invalid unsigned 32-bit int\n", t.range.start.line,
               t.range.start.col);
       }
-      out_u32(buf, value);
+      out_u32(buf, value, "u32 literal");
       break;
     }
 
@@ -1285,7 +1299,7 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
         FATAL("%d:%d: invalid unsigned 64-bit int\n", t.range.start.line,
               t.range.start.col);
       }
-      out_u64(buf, value);
+      out_u64(buf, value, "u64 literal");
       break;
     }
 
@@ -1296,9 +1310,9 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
         FATAL("%d:%d: invalid double\n", t.range.start.line, t.range.start.col);
       }
       if (type == TYPE_F32)
-        out_f32(buf, (float)value);
+        out_f32(buf, (float)value, "f32 literal");
       else
-        out_f64(buf, value);
+        out_f64(buf, value, "f64 literal");
       break;
     }
 
@@ -1380,10 +1394,10 @@ static Type parse_expr(Tokenizer* tokenizer,
     MemType mem_type;
     Opcode opcode;
     if (match_atom(t, "nop")) {
-      out_u8(buf, OPCODE_NOP);
+      out_u8(buf, OPCODE_NOP, "nop");
       expect_close(read_token(tokenizer));
     } else if (match_atom(t, "block")) {
-      out_u8(buf, OPCODE_BLOCK);
+      out_u8(buf, OPCODE_BLOCK, "block");
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "if")) {
       Type cond_type = parse_expr(tokenizer, module, function, buf);
@@ -1407,7 +1421,7 @@ static Type parse_expr(Tokenizer* tokenizer,
         type = true_type;
       }
     } else if (match_atom(t, "loop")) {
-      out_u8(buf, OPCODE_LOOP);
+      out_u8(buf, OPCODE_LOOP, "loop");
       type = parse_block(tokenizer, module, function, buf);
     } else if (match_atom(t, "label")) {
       t = read_token(tokenizer);
@@ -1532,7 +1546,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       check_type(t.range.start, value_type, type, " of store value");
       expect_close(read_token(tokenizer));
     } else if (match_const(t, &type, &opcode)) {
-      out_u8(buf, opcode);
+      out_u8(buf, opcode, "const");
       parse_literal(tokenizer, buf, type);
       expect_close(read_token(tokenizer));
     } else if (match_unary(t, &type, &opcode)) {
@@ -1769,11 +1783,11 @@ static void destroy_module(Module* module) {
 }
 
 static void out_module_header(OutputBuffer* buf, Module* module) {
-  out_u8(buf, DEFAULT_MEMORY_SIZE_LOG2);
-  out_u8(buf, DEFAULT_MEMORY_EXPORT);
-  out_u16(buf, module->num_globals);
-  out_u16(buf, module->num_functions);
-  out_u16(buf, 0); /* TODO(binji): num data segments */
+  out_u8(buf, DEFAULT_MEMORY_SIZE_LOG2, "mem size log 2");
+  out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
+  out_u16(buf, module->num_globals, "num globals");
+  out_u16(buf, module->num_functions, "num funcs");
+  out_u16(buf, 0, "num data segments");
 
   int i;
   for (i = 0; i < module->num_globals; ++i) {
@@ -1783,41 +1797,41 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
        The spec currently specifies local types, and uses an anonymous memory
        space for storage. Resolve this discrepancy. */
     const uint8_t global_type_codes[NUM_TYPES] = {-1, 4, 6, 8, 9};
-    out_u32(buf, 0); /* name offset, fixed later */
-    out_u8(buf, global_type_codes[global->type]); /* mem type */
-    out_u32(buf, 0); /* offset */
-    out_u8(buf, 0); /* exported */
+    out_u32(buf, 0, "global name offset");
+    out_u8(buf, global_type_codes[global->type], "global mem type");
+    out_u32(buf, 0, "global offset");
+    out_u8(buf, 0, "export global");
   }
 
   for (i = 0; i < module->num_functions; ++i) {
     Function* function = &module->functions[i];
 
-    out_u8(buf, function->num_args);
-    out_u8(buf, function->num_results ? function->result_types[0]
-                                      : 0); /* result type */
+    out_u8(buf, function->num_args, "func num args");
+    out_u8(buf, function->num_results ? function->result_types[0] : 0,
+           "func result type");
     int j;
     for (j = 0; j < function->num_args; ++j)
-      out_u8(buf, function->locals[j].type); /* arg type */
+      out_u8(buf, function->locals[j].type, "func arg type");
 #define CODE_START_OFFSET 4
 #define CODE_END_OFFSET 8
 #define FUNCTION_EXPORTED_OFFSET 20
     /* function offset skips the signature; it is variable size, and everything
      * we need to fix up is afterward */
     function->offset = buf->size;
-    out_u32(buf, 0); /* name offset, fixed later */
-    out_u32(buf, 0); /* code start offset */
-    out_u32(buf, 0); /* code end offset */
+    out_u32(buf, 0, "func name offset");
+    out_u32(buf, 0, "func code start offset");
+    out_u32(buf, 0, "func code end offset");
 
     int num_locals[NUM_TYPES] = {};
     for (j = function->num_args; j < function->num_locals; ++j)
       num_locals[function->locals[j].type]++;
 
-    out_u16(buf, num_locals[TYPE_I32]); /* num local i32 */
-    out_u16(buf, num_locals[TYPE_I64]); /* num local i64 */
-    out_u16(buf, num_locals[TYPE_F32]); /* num local f32 */
-    out_u16(buf, num_locals[TYPE_F64]); /* num local f64 */
-    out_u8(buf, 0); /* exported */
-    out_u8(buf, 0); /* external */
+    out_u16(buf, num_locals[TYPE_I32], "num local i32");
+    out_u16(buf, num_locals[TYPE_I64], "num local i64");
+    out_u16(buf, num_locals[TYPE_F32], "num local f32");
+    out_u16(buf, num_locals[TYPE_F64], "num local f64");
+    out_u8(buf, 0, "export func");
+    out_u8(buf, 0, "func external");
   }
 }
 
@@ -1830,9 +1844,8 @@ static void out_module_footer(OutputBuffer* buf, Module* module) {
   for (i = 0; i < module->num_exports; ++i) {
     Export* export = &module->exports[i];
     Function* function = &module->functions[export->index];
-    /* fixup name offset in global table */
-    out_u32_at(buf, function->offset, buf->size);
-    out_cstr(buf, export->name);
+    out_u32_at(buf, function->offset, buf->size, "FIXUP func name offset");
+    out_cstr(buf, export->name, "export name");
   }
 }
 
@@ -1852,10 +1865,11 @@ static void parse_module(Tokenizer* tokenizer) {
       if (t.type == TOKEN_TYPE_ATOM) {
         if (match_atom(t, "func")) {
           Function* function = &module.functions[function_index++];
-          out_u32_at(&output, function->offset + CODE_START_OFFSET,
-                     output.size);
+          out_u32_at(&output, function->offset + CODE_START_OFFSET, output.size,
+                     "FIXUP func code start offset");
           parse_func(tokenizer, &module, function, &output);
-          out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size);
+          out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size,
+                     "FIXUP func code end offset");
         } else if (match_atom(t, "global")) {
           parse_generic(tokenizer);
         } else if (match_atom(t, "export")) {
@@ -1870,7 +1884,8 @@ static void parse_module(Tokenizer* tokenizer) {
           export->index = index;
 
           Function* exported = &module.functions[index];
-          out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1);
+          out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
+                     "FIXUP func exported");
           expect_close(read_token(tokenizer));
         } else if (match_atom(t, "table")) {
           parse_generic(tokenizer);

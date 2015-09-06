@@ -1,4 +1,4 @@
-# FLAGS: -d
+# FLAGS: -dv
 (module
   (func
     (i32.const 1)
@@ -6,6 +6,32 @@
     (f32.const 3)
     (f64.const 4)))
 # STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0000                                       ; num local i32
+0000018: 0000                                       ; num local i64
+000001a: 0000                                       ; num local f32
+000001c: 0000                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+000000e: 2000 0000                                  ; FIXUP func code start offset
+0000020: 11                                         ; const
+0000021: 0100 0000                                  ; u32 literal
+0000025: 12                                         ; const
+0000026: 0200 0000 0000 0000                        ; u64 literal
+000002e: 14                                         ; const
+000002f: 0000 4040                                  ; f32 literal
+0000033: 13                                         ; const
+0000034: 0000 0000 0000 1040                        ; f64 literal
+0000012: 3c00 0000                                  ; FIXUP func code end offset
 0000000: 1401 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 3c00 0000 0000 0000 0000 0000 0000  ..<.............
 0000020: 1101 0000 0012 0200 0000 0000 0000 1400  ................
