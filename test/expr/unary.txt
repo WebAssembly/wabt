@@ -1,4 +1,3 @@
-;; only i32.not supported currently
 (module
   (func
     (f32.neg (f32.const 0))
@@ -8,9 +7,6 @@
     (f32.sqrt (f32.const 0))
     (f64.sqrt (f64.const 0))
     (i32.not (i32.const 0))
-;;    (i64.not (i64.const 0))
-;;    (f32.not (f32.const 0))
-;;    (f64.not (f64.const 0))
     (i32.clz (i32.const 0))
     (i64.clz (i64.const 0))
     (i32.ctz (i32.const 0))

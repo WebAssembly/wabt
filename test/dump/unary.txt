@@ -1,5 +1,4 @@
 # FLAGS: -dv
-;; only i32.not supported currently
 (module
   (func
     (i32.not
@@ -25,13 +24,7 @@
           (f64.ceil
             (f64.floor
               (f64.trunc
-                (f64.nearest (f64.const 0))))))))
-
-;;    (i64.not (i64.const 0))
-;;    (f32.not (f32.const 0))
-;;    (f64.not (f64.const 0))
-
-))
+                (f64.nearest (f64.const 0))))))))))
 # STDOUT:
 0000000: 14                                         ; mem size log 2
 0000001: 01                                         ; export mem

@@ -317,9 +317,6 @@ static OpcodeInfo s_unary_ops[] = {
     {"f32.sqrt", TYPE_F32, OPCODE_F32_SQRT},
     {"f64.sqrt", TYPE_F64, OPCODE_F64_SQRT},
     {"i32.not", TYPE_I32, OPCODE_I32_NOT},
-    {"i64.not", TYPE_I64, OPCODE_INVALID}, /* TODO(binji): remove */
-    {"f32.not", TYPE_F32, OPCODE_INVALID}, /* TODO(binji): remove */
-    {"f64.not", TYPE_F64, OPCODE_INVALID}, /* TODO(binji): remove */
     {"i32.clz", TYPE_I32, OPCODE_I32_CLZ},
     {"i64.clz", TYPE_I64, OPCODE_I64_CLZ},
     {"i32.ctz", TYPE_I32, OPCODE_I32_CTZ},
