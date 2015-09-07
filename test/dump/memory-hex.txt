@@ -1,0 +1,18 @@
+# FLAGS: -dv
+(module
+  (memory 100
+    (segment 0 "\00\01\02\03\04\05\06\07\08\09\0a")))
+# STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0000                                       ; num funcs
+0000006: 0100                                       ; num data segments
+0000008: 0000 0000                                  ; segment address
+000000c: 0000 0000                                  ; segment data offset
+0000010: 0b00 0000                                  ; segment size
+0000014: 01                                         ; segment init
+000000c: 1500 0000                                  ; FIXUP segment data offset
+0000015: 0001 0203 0405 0607 0809 0a              ...........  ; segment data
+0000000: 1401 0000 0000 0100 0000 0000 1500 0000  ................
+0000010: 0b00 0000 0100 0102 0304 0506 0708 090a  ................
