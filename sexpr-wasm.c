@@ -285,23 +285,28 @@ typedef struct Tokenizer {
 
 typedef struct Binding {
   char* name;
-  size_t offset; /* offset in the output buffer (function bindings skip the
-                    signature */
-  union {
-    Type type;
-    struct {
-      Type* result_types;
-      struct Binding* locals; /* Includes args, they're at the start */
-      struct Binding* labels; /* TODO(binji): hack, shouldn't be Binding */
-      int num_results;
-      int num_args;
-      int num_locals; /* Total size of the locals array above, including args */
-      int num_labels;
-    };
-  };
+  int index;
 } Binding;
 
-typedef Binding Function;
+typedef struct Variable {
+  size_t offset;
+  Type type;
+} Variable;
+
+typedef struct Function {
+  Type* result_types;
+  Variable* locals; /* Includes args, they're at the start */
+  Binding* local_bindings;
+  Binding* label_bindings;
+  size_t offset; /* offset in the output buffer (function bindings skip the
+                    signature */
+  int num_results;
+  int num_args;
+  int num_locals; /* Total size of the locals array above, including args */
+  int num_local_bindings;
+  int num_labels;
+  int num_label_bindings;
+} Function;
 
 typedef struct Export {
   char* name;
@@ -310,10 +315,14 @@ typedef struct Export {
 
 typedef struct Module {
   Function* functions;
-  Binding* globals;
+  Variable* globals;
+  Binding* function_bindings;
+  Binding* global_bindings;
   Export* exports;
   int num_functions;
+  int num_function_bindings;
   int num_globals;
+  int num_global_bindings;
   int num_exports;
 } Module;
 
@@ -350,14 +359,27 @@ static const char* s_type_names[] = {
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == NUM_TYPES);
 
-static void realloc_list(void** elts, int* num_elts, int elt_size) {
+static void* add_element(void** elts, int* num_elts, int elt_size) {
   (*num_elts)++;
   int new_size = *num_elts * elt_size;
   *elts = realloc(*elts, new_size);
-  if (*elts == NULL) {
+  if (*elts == NULL)
     FATAL("unable to alloc %d bytes", new_size);
-  }
+  return *elts + new_size - elt_size;
 }
+
+#define ADD_TYPE(name, type)                             \
+  static type* add_##name(type** list, int* num) {       \
+    return add_element((void**)list, num, sizeof(type)); \
+  }
+
+ADD_TYPE(binding, Binding)
+ADD_TYPE(variable, Variable)
+ADD_TYPE(function, Function)
+ADD_TYPE(result_type, Type)
+ADD_TYPE(export, Export)
+
+#undef ADD_TYPE
 
 static void dump_memory(const void* start,
                         size_t size,
@@ -489,10 +511,6 @@ static int get_binding_by_name(Binding* bindings,
       return i;
   }
   return -1;
-}
-
-static int get_function_by_name(Module* module, const char* name) {
-  return get_binding_by_name(module->functions, module->num_functions, name);
 }
 
 static const OpInfo* get_op_info(Token t) {
@@ -937,6 +955,7 @@ static void parse_generic(Tokenizer* tokenizer) {
 static int parse_var(Tokenizer* tokenizer,
                      Binding* bindings,
                      int num_bindings,
+                     int num_vars,
                      const char* desc) {
   Token t = read_token(tokenizer);
   expect_atom(t);
@@ -949,7 +968,7 @@ static int parse_var(Tokenizer* tokenizer,
     for (i = 0; i < num_bindings; ++i) {
       const char* name = bindings[i].name;
       if (name && strncmp(name, p, end - p) == 0)
-        return i;
+        return bindings[i].index;
     }
     FATAL("%d:%d: undefined %s variable \"%.*s\"\n", t.range.start.line,
           t.range.start.col, desc, (int)(end - p), p);
@@ -961,9 +980,9 @@ static int parse_var(Tokenizer* tokenizer,
             t.range.start.col);
     }
 
-    if (index >= num_bindings) {
+    if (index >= num_vars) {
       FATAL("%d:%d: %s variable out of range (max %d)\n", t.range.start.line,
-            t.range.start.col, desc, num_bindings);
+            t.range.start.col, desc, num_vars);
     }
 
     return index;
@@ -971,20 +990,25 @@ static int parse_var(Tokenizer* tokenizer,
 }
 
 static int parse_function_var(Tokenizer* tokenizer, Module* module) {
-  return parse_var(tokenizer, module->functions, module->num_functions,
+  return parse_var(tokenizer, module->function_bindings,
+                   module->num_function_bindings, module->num_functions,
                    "function");
 }
 
 static int parse_global_var(Tokenizer* tokenizer, Module* module) {
-  return parse_var(tokenizer, module->globals, module->num_globals, "global");
+  return parse_var(tokenizer, module->global_bindings,
+                   module->num_global_bindings, module->num_globals, "global");
 }
 
 static int parse_local_var(Tokenizer* tokenizer, Function* function) {
-  return parse_var(tokenizer, function->locals, function->num_locals, "local");
+  return parse_var(tokenizer, function->local_bindings,
+                   function->num_local_bindings, function->num_locals, "local");
 }
 
 static int parse_label_var(Tokenizer* tokenizer, Function* function) {
-  return parse_var(tokenizer, function->labels, function->num_labels, "label");
+  return parse_var(tokenizer, function->label_bindings,
+                   function->num_label_bindings, function->num_label_bindings,
+                   "label");
 }
 
 static void parse_type(Tokenizer* tokenizer, Type* type) {
@@ -1145,11 +1169,9 @@ static Type parse_expr(Tokenizer* tokenizer,
       check_opcode(t.range.start, op_info->opcode);
       out_opcode(buf, op_info->opcode);
       Type value0_type = parse_expr(tokenizer, module, function, buf);
-      check_type_arg(t.range.start, value0_type, op_info->type, "binary op",
-                     0);
+      check_type_arg(t.range.start, value0_type, op_info->type, "binary op", 0);
       Type value1_type = parse_expr(tokenizer, module, function, buf);
-      check_type_arg(t.range.start, value1_type, op_info->type, "binary op",
-                     1);
+      check_type_arg(t.range.start, value1_type, op_info->type, "binary op", 1);
       assert(value0_type == value1_type);
       type = value0_type;
       expect_close(read_token(tokenizer));
@@ -1185,15 +1207,13 @@ static Type parse_expr(Tokenizer* tokenizer,
           break;
         rewind_token(tokenizer, t);
         if (++num_args > callee->num_args) {
-          FATAL(
-              "%d:%d: too many arguments to function. got %d, expected %d\n",
-              t.range.start.line, t.range.start.col, num_args,
-              callee->num_args);
+          FATAL("%d:%d: too many arguments to function. got %d, expected %d\n",
+                t.range.start.line, t.range.start.col, num_args,
+                callee->num_args);
         }
         Type arg_type = parse_expr(tokenizer, module, function, buf);
         Type expected = callee->locals[num_args - 1].type;
-        check_type_arg(t.range.start, arg_type, expected, "call",
-                       num_args - 1);
+        check_type_arg(t.range.start, arg_type, expected, "call", num_args - 1);
       }
 
       if (num_args < callee->num_args) {
@@ -1281,9 +1301,8 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_LABEL: {
       t = read_token(tokenizer);
-      realloc_list((void**)&function->labels, &function->num_labels,
-                   sizeof(Binding));
-      Binding* binding = &function->labels[function->num_labels - 1];
+      Binding* binding =
+          add_binding(&function->label_bindings, &function->num_label_bindings);
       binding->name = NULL;
 
       if (t.type == TOKEN_TYPE_ATOM) {
@@ -1363,9 +1382,9 @@ static Type parse_expr(Tokenizer* tokenizer,
     case OP_SET_LOCAL: {
       /* opcode = OPCODE_SET_LOCAL; */
       int index = parse_local_var(tokenizer, function);
-      Binding* binding = &function->locals[index];
+      Variable* variable = &function->locals[index];
       type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, type, binding->type, "");
+      check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
       break;
     }
@@ -1387,9 +1406,9 @@ static Type parse_expr(Tokenizer* tokenizer,
       out_opcode(buf, OPCODE_SET_GLOBAL);
       int index = parse_global_var(tokenizer, module);
       out_leb128(buf, index, "global index");
-      Binding* binding = &module->globals[index];
+      Variable* variable = &module->globals[index];
       type = parse_expr(tokenizer, module, function, buf);
-      check_type(t.range.start, type, binding->type, "");
+      check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
       break;
     }
@@ -1456,6 +1475,8 @@ static void parse_func(Tokenizer* tokenizer,
 }
 
 static void preparse_binding_list(Tokenizer* tokenizer,
+                                  Variable** variables,
+                                  int* num_variables,
                                   Binding** bindings,
                                   int* num_bindings,
                                   const char* desc) {
@@ -1463,10 +1484,9 @@ static void preparse_binding_list(Tokenizer* tokenizer,
   Type type;
   if (match_type(t, &type)) {
     while (1) {
-      realloc_list((void**)bindings, num_bindings, sizeof(Binding));
-      Binding* binding = &(*bindings)[*num_bindings - 1];
-      binding->name = NULL;
-      binding->type = type;
+      Variable* variable = add_variable(variables, num_variables);
+      variable->type = type;
+      variable->offset = 0;
 
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_CLOSE_PAREN)
@@ -1486,17 +1506,18 @@ static void preparse_binding_list(Tokenizer* tokenizer,
             t.range.start.col, desc, name);
     }
 
-    realloc_list((void**)bindings, num_bindings, sizeof(Binding));
-    Binding* binding = &(*bindings)[*num_bindings - 1];
+    Variable* variable = add_variable(variables, num_variables);
+    variable->type = type;
+    variable->offset = 0;
+
+    Binding* binding = add_binding(bindings, num_bindings);
     binding->name = name;
-    binding->type = type;
+    binding->index = *num_variables - 1;
   }
 }
 
 static void preparse_func(Tokenizer* tokenizer, Module* module) {
-  realloc_list((void**)&module->functions, &module->num_functions,
-               sizeof(Function));
-  Function* function = &module->functions[module->num_functions - 1];
+  Function* function = add_function(&module->functions, &module->num_functions);
   memset(function, 0, sizeof(Function));
 
   Token t = read_token(tokenizer);
@@ -1504,12 +1525,16 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
     /* named function */
     char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_function_by_name(module, name) != -1) {
+    if (get_binding_by_name(module->function_bindings,
+                            module->num_function_bindings, name) != -1) {
       FATAL("%d:%d: redefinition of function \"%s\"\n", t.range.start.line,
             t.range.start.col, name);
     }
 
-    function->name = name;
+    Binding* binding =
+        add_binding(&module->function_bindings, &module->num_function_bindings);
+    binding->name = name;
+    binding->index = module->num_functions - 1;
     t = read_token(tokenizer);
   }
 
@@ -1527,6 +1552,8 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
                 t.range.start.line, t.range.start.col);
         }
         preparse_binding_list(tokenizer, &function->locals, &function->num_args,
+                              &function->local_bindings,
+                              &function->num_local_bindings,
                               "function argument");
         function->num_locals = function->num_args;
         break;
@@ -1537,8 +1564,7 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
           Type type;
           if (!match_type(t, &type))
             unexpected_token(t);
-          realloc_list((void**)&function->result_types, &function->num_results,
-                       sizeof(Type));
+          add_result_type(&function->result_types, &function->num_results);
           function->result_types[function->num_results - 1] = type;
 
           t = read_token(tokenizer);
@@ -1550,7 +1576,8 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
 
       case OP_LOCAL:
         preparse_binding_list(tokenizer, &function->locals,
-                              &function->num_locals, "local");
+                              &function->num_locals, &function->local_bindings,
+                              &function->num_local_bindings, "local");
         break;
 
       default:
@@ -1578,7 +1605,8 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
 
       case OP_GLOBAL:
         preparse_binding_list(tokenizer, &module->globals, &module->num_globals,
-                              "global");
+                              &module->global_bindings,
+                              &module->num_global_bindings, "global");
         break;
 
       default:
@@ -1601,12 +1629,18 @@ static void destroy_module(Module* module) {
   int i;
   for (i = 0; i < module->num_functions; ++i) {
     Function* function = &module->functions[i];
-    free(function->name);
     free(function->result_types);
-    destroy_binding_list(function->locals, function->num_locals);
-    destroy_binding_list(function->labels, function->num_labels);
+    free(function->locals);
+    destroy_binding_list(function->local_bindings,
+                         function->num_local_bindings);
+    destroy_binding_list(function->label_bindings,
+                         function->num_label_bindings);
   }
-  destroy_binding_list(module->globals, module->num_globals);
+  destroy_binding_list(module->function_bindings,
+                       module->num_function_bindings);
+  destroy_binding_list(module->global_bindings, module->num_global_bindings);
+  free(module->functions);
+  free(module->globals);
   for (i = 0; i < module->num_exports; ++i)
     free(module->exports[i].name);
   free(module->exports);
@@ -1621,7 +1655,7 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
 
   int i;
   for (i = 0; i < module->num_globals; ++i) {
-    Binding* global = &module->globals[i];
+    Variable* global = &module->globals[i];
     global->offset = buf->size;
     /* TODO(binji): v8-native-prototype globals use mem types, not local types.
        The spec currently specifies local types, and uses an anonymous memory
@@ -1715,8 +1749,7 @@ static void parse_module(Tokenizer* tokenizer) {
         expect_string(t);
         int index = parse_function_var(tokenizer, &module);
 
-        realloc_list((void**)&module.exports, &module.num_exports,
-                     sizeof(Export));
+        add_export(&module.exports, &module.num_exports);
         Export* export = &module.exports[module.num_exports - 1];
         export->name = dup_string_contents(t);
         export->index = index;
