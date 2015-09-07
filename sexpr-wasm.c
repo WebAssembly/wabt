@@ -18,8 +18,6 @@
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
 #define INITIAL_OUTPUT_BUFFER_CAPACITY (64 * 1024)
-/* TODO(binji): read these from the file? use flags? */
-#define DEFAULT_MEMORY_SIZE_LOG2 20
 #define DEFAULT_MEMORY_EXPORT 1
 
 #define DUMP_OCTETS_PER_LINE 16
@@ -376,6 +374,12 @@ static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == NUM_TYPES);
+
+static uint32_t log_two_u32(uint32_t x) {
+  if (!x)
+    return 0;
+  return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
+}
 
 static void* add_element(void** elts, int* num_elts, int elt_size) {
   (*num_elts)++;
@@ -1724,6 +1728,8 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
           }
 
           t = read_token(tokenizer);
+        } else {
+          module->max_memory_size = module->initial_memory_size;
         }
 
         uint32_t last_segment_end = 0;
@@ -1811,7 +1817,7 @@ static void destroy_module(Module* module) {
 }
 
 static void out_module_header(OutputBuffer* buf, Module* module) {
-  out_u8(buf, DEFAULT_MEMORY_SIZE_LOG2, "mem size log 2");
+  out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
   out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
   out_u16(buf, module->num_globals, "num globals");
   out_u16(buf, module->num_functions, "num funcs");
