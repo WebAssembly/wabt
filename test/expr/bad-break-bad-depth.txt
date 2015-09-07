@@ -1,0 +1,8 @@
+# ERROR: 1
+(module
+  (func
+    (label   ;; 1
+      (label ;; 0
+        (break 2)))))
+# STDERR:
+5:16: label variable out of range (max 2)

@@ -324,10 +324,11 @@ typedef struct Function {
   TypeVector result_types;
   VariableVector locals; /* Includes args, they're at the start */
   BindingVector local_bindings;
-  BindingVector label_bindings;
+  BindingVector labels;
   size_t offset; /* offset in the output buffer (function bindings skip the
                     signature */
   int num_args;
+  int depth;
 } Function;
 DEFINE_VECTOR(function, Function)
 
@@ -408,6 +409,12 @@ static void* append_element(void** data,
     *capacity = new_capacity;
   }
   return *data + (*size)++ * elt_size;
+}
+
+static void pop_binding(BindingVector* vec) {
+  assert(vec->size > 0);
+  free(vec->data[vec->size - 1].name);
+  vec->size--;
 }
 
 static void dump_memory(const void* start,
@@ -1085,9 +1092,43 @@ static int parse_local_var(Tokenizer* tokenizer, Function* function) {
                    function->locals.size, "local");
 }
 
+/* Labels are indexed in reverse order (0 is the most recent, etc.), so handle
+ * them separately */
 static int parse_label_var(Tokenizer* tokenizer, Function* function) {
-  return parse_var(tokenizer, &function->label_bindings,
-                   function->label_bindings.size, "label");
+  Token t = read_token(tokenizer);
+  expect_atom(t);
+
+  const char* p = t.range.start.pos;
+  const char* end = t.range.end.pos;
+  if (end - p >= 1 && p[0] == '$') {
+    /* var name */
+    int i;
+    for (i = 0; i < function->labels.size; ++i) {
+      Binding* binding = &function->labels.data[i];
+      const char* name = binding->name;
+      if (name && strncmp(name, p, end - p) == 0)
+        /* index is actually the current block depth */
+        return binding->index;
+    }
+    FATAL_AT(t.range.start, "undefined label variable \"%.*s\"\n",
+             (int)(end - p), p);
+  } else {
+    /* var index */
+    uint32_t index;
+    if (!read_uint32(&p, t.range.end.pos, &index) || p != t.range.end.pos) {
+      FATAL_AT(t.range.start, "invalid var index\n");
+    }
+
+    if (index >= function->labels.size) {
+      FATAL_AT(t.range.start, "label variable out of range (max %zd)\n",
+               function->labels.size);
+    }
+
+    /* Index in reverse, so 0 is the most recent label. The stored "index" is
+     * actually the block depth, so return that instead */
+    index = (function->labels.size - 1) - index;
+    return function->labels.data[index].index;
+  }
 }
 
 static void parse_type(Tokenizer* tokenizer, Type* type) {
@@ -1253,19 +1294,28 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_BLOCK:
       out_opcode(buf, OPCODE_BLOCK);
+      function->depth++;
       type = parse_block(tokenizer, module, function, buf);
+      function->depth--;
       break;
 
-    case OP_BREAK:
-      /* opcode = OPCODE_BREAK; */
+    case OP_BREAK: {
+      out_opcode(buf, OPCODE_BREAK);
       t = read_token(tokenizer);
+      int depth = 0;
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
-        /* TODO(binji): how to check that the given label is a parent? */
-        parse_label_var(tokenizer, function);
+        /* parse_label_var returns the depth counting up (so 0 is the topmost
+         block of this function). We want the depth counting down (so 0 is the
+         most recent block). */
+        depth = (function->depth - 1) - parse_label_var(tokenizer, function);
         expect_close(read_token(tokenizer));
+      } else if (function->labels.size == 0) {
+        FATAL_AT(t.range.start, "label variable out of range (max 0)\n");
       }
+      out_u8(buf, depth, "break depth");
       break;
+    }
 
     case OP_CALL: {
       out_opcode(buf, OPCODE_CALL);
@@ -1375,10 +1425,12 @@ static Type parse_expr(Tokenizer* tokenizer,
     }
 
     case OP_LABEL: {
+      out_opcode(buf, OPCODE_BLOCK);
+
       t = read_token(tokenizer);
-      Binding* binding = append_binding(&function->label_bindings);
+      Binding* binding = append_binding(&function->labels);
       binding->name = NULL;
-      binding->index = 0;
+      binding->index = function->depth++;
 
       if (t.type == TOKEN_TYPE_ATOM) {
         /* label */
@@ -1391,7 +1443,10 @@ static Type parse_expr(Tokenizer* tokenizer,
       } else {
         unexpected_token(t);
       }
+
       type = parse_block(tokenizer, module, function, buf);
+      pop_binding(&function->labels);
+      function->depth--;
       break;
     }
 
@@ -1417,7 +1472,9 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_LOOP:
       out_opcode(buf, OPCODE_LOOP);
+      function->depth++;
       type = parse_block(tokenizer, module, function, buf);
+      function->depth--;
       break;
 
     case OP_NOP:
@@ -1794,7 +1851,7 @@ static void destroy_module(Module* module) {
     destroy_type_vector(&function->result_types);
     destroy_variable_vector(&function->locals);
     destroy_binding_list(&function->local_bindings);
-    destroy_binding_list(&function->label_bindings);
+    destroy_binding_list(&function->labels);
   }
   destroy_binding_list(&module->function_bindings);
   destroy_binding_list(&module->global_bindings);

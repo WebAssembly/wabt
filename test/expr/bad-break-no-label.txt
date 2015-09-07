@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (break)))
+# STDERR:
+1:21: label variable out of range (max 0)
