@@ -1,0 +1,54 @@
+# FLAGS: -dv
+(module
+  (func
+    ;; i32               0   1
+    ;; i64           2                   3
+    ;; f32       4               5
+    ;; f64   6                       7
+    (local f64 f32 i64 i32 i32 f32 f64 i64)
+    (get_local 0)
+    (get_local 1)
+    (get_local 2)
+    (get_local 3)
+    (get_local 4)
+    (get_local 5)
+    (get_local 6)
+    (get_local 7)))
+# STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0200                                       ; num local i32
+0000018: 0200                                       ; num local i64
+000001a: 0200                                       ; num local f32
+000001c: 0200                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+000000e: 2000 0000                                  ; FIXUP func code start offset
+0000020: 15                                         ; OPCODE_GET_LOCAL
+0000021: 06                                         ; remapped local index
+0000022: 15                                         ; OPCODE_GET_LOCAL
+0000023: 04                                         ; remapped local index
+0000024: 15                                         ; OPCODE_GET_LOCAL
+0000025: 02                                         ; remapped local index
+0000026: 15                                         ; OPCODE_GET_LOCAL
+0000027: 00                                         ; remapped local index
+0000028: 15                                         ; OPCODE_GET_LOCAL
+0000029: 01                                         ; remapped local index
+000002a: 15                                         ; OPCODE_GET_LOCAL
+000002b: 05                                         ; remapped local index
+000002c: 15                                         ; OPCODE_GET_LOCAL
+000002d: 07                                         ; remapped local index
+000002e: 15                                         ; OPCODE_GET_LOCAL
+000002f: 03                                         ; remapped local index
+0000012: 3000 0000                                  ; FIXUP func code end offset
+0000000: 1401 0000 0100 0000 0000 0000 0000 2000  .............. .
+0000010: 0000 3000 0000 0200 0200 0200 0200 0000  ..0.............
+0000020: 1506 1504 1502 1500 1501 1505 1507 1503  ................

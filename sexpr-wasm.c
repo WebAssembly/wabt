@@ -294,6 +294,10 @@ typedef struct Binding {
 typedef struct Variable {
   size_t offset;
   Type type;
+  /* The v8-native-prototype stores locals in i32/i64/f32/f64 order, where all
+   * variables of one type are grouped. index maps to this variable to its
+   * correct location in that order */
+  int index;
 } Variable;
 
 typedef struct Function {
@@ -1250,9 +1254,10 @@ static Type parse_expr(Tokenizer* tokenizer,
       break;
 
     case OP_GET_LOCAL: {
-      /* opcode = OPCODE_GET_LOCAL; */
+      out_opcode(buf, OPCODE_GET_LOCAL);
       int index = parse_local_var(tokenizer, function);
       type = function->locals[index].type;
+      out_leb128(buf, function->locals[index].index, "remapped local index");
       expect_close(read_token(tokenizer));
       break;
     }
@@ -1287,6 +1292,7 @@ static Type parse_expr(Tokenizer* tokenizer,
       Binding* binding =
           add_binding(&function->label_bindings, &function->num_label_bindings);
       binding->name = NULL;
+      binding->index = 0;
 
       if (t.type == TOKEN_TYPE_ATOM) {
         /* label */
@@ -1362,9 +1368,10 @@ static Type parse_expr(Tokenizer* tokenizer,
     }
 
     case OP_SET_LOCAL: {
-      /* opcode = OPCODE_SET_LOCAL; */
+      out_opcode(buf, OPCODE_SET_LOCAL);
       int index = parse_local_var(tokenizer, function);
       Variable* variable = &function->locals[index];
+      out_leb128(buf, variable->index, "remapped local index");
       type = parse_expr(tokenizer, module, function, buf);
       check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
@@ -1469,6 +1476,7 @@ static void preparse_binding_list(Tokenizer* tokenizer,
       Variable* variable = add_variable(variables, num_variables);
       variable->type = type;
       variable->offset = 0;
+      variable->index = 0;
 
       t = read_token(tokenizer);
       if (t.type == TOKEN_TYPE_CLOSE_PAREN)
@@ -1489,10 +1497,36 @@ static void preparse_binding_list(Tokenizer* tokenizer,
     Variable* variable = add_variable(variables, num_variables);
     variable->type = type;
     variable->offset = 0;
+    variable->index = 0;
 
     Binding* binding = add_binding(bindings, num_bindings);
     binding->name = name;
     binding->index = *num_variables - 1;
+  }
+}
+
+static void remap_locals(Function* function) {
+  int max[NUM_TYPES] = {};
+  int i;
+  for (i = function->num_args; i < function->num_locals; ++i) {
+    Variable* variable = &function->locals[i];
+    max[variable->type]++;
+  }
+
+  /* Args don't need remapping */
+  for (i = 0; i < function->num_args; ++i)
+    function->locals[i].index = i;
+
+  int start[NUM_TYPES];
+  start[TYPE_I32] = function->num_args;
+  start[TYPE_I64] = start[TYPE_I32] + max[TYPE_I32];
+  start[TYPE_F32] = start[TYPE_I64] + max[TYPE_I64];
+  start[TYPE_F64] = start[TYPE_F32] + max[TYPE_F32];
+
+  int seen[NUM_TYPES] = {};
+  for (i = function->num_args; i < function->num_locals; ++i) {
+    Variable* variable = &function->locals[i];
+    variable->index = start[variable->type] + seen[variable->type]++;
   }
 }
 
@@ -1563,6 +1597,8 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
     }
     t = read_token(tokenizer);
   }
+
+  remap_locals(function);
 }
 
 static void preparse_module(Tokenizer* tokenizer, Module* module) {
@@ -1725,8 +1761,7 @@ static void parse_module(Tokenizer* tokenizer) {
         expect_string(t);
         int index = parse_function_var(tokenizer, &module);
 
-        add_export(&module.exports, &module.num_exports);
-        Export* export = &module.exports[module.num_exports - 1];
+        Export* export = add_export(&module.exports, &module.num_exports);
         export->name = dup_string_contents(t);
         export->index = index;
 

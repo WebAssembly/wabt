@@ -1,0 +1,74 @@
+# FLAGS: -dv
+(module
+  (func
+    ;; i32               0   1
+    ;; i64           2                   3
+    ;; f32       4               5
+    ;; f64   6                       7
+    (local f64 f32 i64 i32 i32 f32 f64 i64)
+    (set_local 0 (f64.const 0))
+    (set_local 1 (f32.const 0))
+    (set_local 2 (i64.const 0))
+    (set_local 3 (i32.const 0))
+    (set_local 4 (i32.const 0))
+    (set_local 5 (f32.const 0))
+    (set_local 6 (f64.const 0))
+    (set_local 7 (i64.const 0))))
+# STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0200                                       ; num local i32
+0000018: 0200                                       ; num local i64
+000001a: 0200                                       ; num local f32
+000001c: 0200                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+000000e: 2000 0000                                  ; FIXUP func code start offset
+0000020: 16                                         ; OPCODE_SET_LOCAL
+0000021: 06                                         ; remapped local index
+0000022: 13                                         ; OPCODE_F64_CONST
+0000023: 0000 0000 0000 0000                        ; f64 literal
+000002b: 16                                         ; OPCODE_SET_LOCAL
+000002c: 04                                         ; remapped local index
+000002d: 14                                         ; OPCODE_F32_CONST
+000002e: 0000 0000                                  ; f32 literal
+0000032: 16                                         ; OPCODE_SET_LOCAL
+0000033: 02                                         ; remapped local index
+0000034: 12                                         ; OPCODE_I64_CONST
+0000035: 0000 0000 0000 0000                        ; u64 literal
+000003d: 16                                         ; OPCODE_SET_LOCAL
+000003e: 00                                         ; remapped local index
+000003f: 11                                         ; OPCODE_I32_CONST
+0000040: 0000 0000                                  ; u32 literal
+0000044: 16                                         ; OPCODE_SET_LOCAL
+0000045: 01                                         ; remapped local index
+0000046: 11                                         ; OPCODE_I32_CONST
+0000047: 0000 0000                                  ; u32 literal
+000004b: 16                                         ; OPCODE_SET_LOCAL
+000004c: 05                                         ; remapped local index
+000004d: 14                                         ; OPCODE_F32_CONST
+000004e: 0000 0000                                  ; f32 literal
+0000052: 16                                         ; OPCODE_SET_LOCAL
+0000053: 07                                         ; remapped local index
+0000054: 13                                         ; OPCODE_F64_CONST
+0000055: 0000 0000 0000 0000                        ; f64 literal
+000005d: 16                                         ; OPCODE_SET_LOCAL
+000005e: 03                                         ; remapped local index
+000005f: 12                                         ; OPCODE_I64_CONST
+0000060: 0000 0000 0000 0000                        ; u64 literal
+0000012: 6800 0000                                  ; FIXUP func code end offset
+0000000: 1401 0000 0100 0000 0000 0000 0000 2000  .............. .
+0000010: 0000 6800 0000 0200 0200 0200 0200 0000  ..h.............
+0000020: 1606 1300 0000 0000 0000 0016 0414 0000  ................
+0000030: 0000 1602 1200 0000 0000 0000 0016 0011  ................
+0000040: 0000 0000 1601 1100 0000 0016 0514 0000  ................
+0000050: 0000 1607 1300 0000 0000 0000 0016 0312  ................
+0000060: 0000 0000 0000 0000                      ........
