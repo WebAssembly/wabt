@@ -1,0 +1,6 @@
+(module
+  (memory 100
+    (segment 0 "hi")
+    (segment 4 "hello")
+    (segment 10 "goodbye")
+    (segment 20 "adios")))

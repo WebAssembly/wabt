@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (memory 100 (segment 200 "hi")))
+# STDERR:
+1:30: address (200) greater than initial memory size (100)

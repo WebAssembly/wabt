@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (memory foo))
+# STDERR:
+1:17: invalid initial memory size

@@ -320,17 +320,28 @@ typedef struct Export {
   int index;
 } Export;
 
+typedef struct Segment {
+  size_t offset;
+  size_t size;
+  uint32_t address;
+  Token data;
+} Segment;
+
 typedef struct Module {
   Function* functions;
   Variable* globals;
   Binding* function_bindings;
   Binding* global_bindings;
   Export* exports;
+  Segment* segments;
   int num_functions;
   int num_function_bindings;
   int num_globals;
   int num_global_bindings;
   int num_exports;
+  int num_segments;
+  uint32_t initial_memory_size;
+  uint32_t max_memory_size;
 } Module;
 
 typedef struct OutputBuffer {
@@ -385,6 +396,7 @@ ADD_TYPE(variable, Variable)
 ADD_TYPE(function, Function)
 ADD_TYPE(result_type, Type)
 ADD_TYPE(export, Export)
+ADD_TYPE(segment, Segment)
 
 #undef ADD_TYPE
 
@@ -419,7 +431,8 @@ static void dump_memory(const void* start,
     for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
       if (print_chars)
         printf("%c", isprint(*p) ? *p : '.');
-    if (desc)
+    /* if there are multiple lines, only print the desc on the last one */
+    if (p >= end && desc)
       printf("  ; %s", desc);
     putchar('\n');
   }
@@ -433,19 +446,26 @@ static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
   buf->capacity = initial_capacity;
 }
 
+static void ensure_output_buffer_capacity(OutputBuffer* buf,
+                                          size_t ensure_capacity) {
+  if (ensure_capacity > buf->capacity) {
+    size_t new_capacity = buf->capacity * 2;
+    while (new_capacity < ensure_capacity)
+      new_capacity *= 2;
+    buf->start = realloc(buf->start, new_capacity);
+    if (!buf->start)
+      FATAL("unable to allocate %zd bytes\n", new_capacity);
+    buf->capacity = new_capacity;
+  }
+}
+
 static size_t out_data(OutputBuffer* buf,
                        size_t offset,
                        const void* src,
                        size_t size,
                        const char* desc) {
   assert(offset <= buf->size);
-  if (offset + size > buf->capacity) {
-    size_t new_capacity = buf->capacity * 2;
-    buf->start = realloc(buf->start, new_capacity);
-    if (!buf->start)
-      FATAL("unable to allocate %zd bytes\n", new_capacity);
-    buf->capacity = new_capacity;
-  }
+  ensure_output_buffer_capacity(buf, offset + size);
   memcpy(buf->start + offset, src, size);
   if (g_verbose)
     dump_memory(buf->start + offset, size, offset, 0, desc);
@@ -498,6 +518,20 @@ static void out_leb128(OutputBuffer* buf, uint32_t value, const char* desc) {
 
 static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
   buf->size = out_data(buf, buf->size, s, strlen(s) + 1, desc);
+}
+
+static size_t copy_string_contents(Token t, char* dest, size_t size);
+
+static void out_string_token(OutputBuffer* buf, Token t, const char* desc) {
+  assert(t.type == TOKEN_TYPE_STRING);
+  size_t max_size = t.range.end.pos - t.range.start.pos;
+  size_t offset = buf->size;
+  ensure_output_buffer_capacity(buf, offset + max_size);
+  void* dest = buf->start + offset;
+  int actual_size = copy_string_contents(t, dest, max_size);
+  if (g_verbose)
+    dump_memory(buf->start + offset, actual_size, offset, 1, desc);
+  buf->size += actual_size;
 }
 
 static void dump_output_buffer(OutputBuffer* buf) {
@@ -554,6 +588,11 @@ static int read_double(const char** s, const char* end, double* out) {
     return 0;
   *s = endptr;
   return 1;
+}
+
+static int read_uint32_token(Token t, uint32_t* out) {
+  const char* p = t.range.start.pos;
+  return read_uint32(&p, t.range.end.pos, out);
 }
 
 static Token read_token(Tokenizer* t) {
@@ -750,18 +789,45 @@ static int hexdigit(char c) {
   }
 }
 
-static char* dup_string_contents(Token t) {
+static size_t string_contents_length(Token t) {
   assert(t.type == TOKEN_TYPE_STRING);
-  const char* src = t.range.start.pos;
-  const char* end = t.range.end.pos;
-  assert(*src == '"' && end[-1] == '"');
-  src++;
-  end--;
-  /* Always allocate enough space for the entire string including the escape
-   * characters. It will only get shorter, and this way we only have to iterate
-   * through the string once. */
-  char* result = malloc(end - src + 1); /* +1 for \0 */
-  char* dest = result;
+  const char* src = t.range.start.pos + 1;
+  const char* end = t.range.end.pos - 1;
+  size_t length = 0;
+  while (src < end) {
+    if (*src == '\\') {
+      src++;
+      switch (*src) {
+        case 'n':
+        case 't':
+        case '\\':
+        case '\'':
+        case '\"':
+          src++;
+          length++;
+          break;
+
+        default:
+          /* must be a hex sequence */
+          src += 2;
+          length++;
+          break;
+      }
+    } else {
+      src++;
+      length++;
+    }
+  }
+  return length;
+}
+
+static size_t copy_string_contents(Token t, char* dest, size_t size) {
+  assert(t.type == TOKEN_TYPE_STRING);
+  const char* src = t.range.start.pos + 1;
+  const char* end = t.range.end.pos - 1;
+
+  char* dest_start = dest;
+
   while (src < end) {
     if (*src == '\\') {
       src++;
@@ -793,7 +859,21 @@ static char* dup_string_contents(Token t) {
       *dest++ = *src++;
     }
   }
-  *dest++ = '\0';
+  /* return the data length */
+  return dest - dest_start;
+}
+
+static char* dup_string_contents(Token t) {
+  assert(t.type == TOKEN_TYPE_STRING);
+  const char* src = t.range.start.pos + 1;
+  const char* end = t.range.end.pos - 1;
+  /* Always allocate enough space for the entire string including the escape
+   * characters. It will only get shorter, and this way we only have to iterate
+   * through the string once. */
+  size_t size = end - src + 1; /* +1 for \0 */
+  char* result = malloc(size);
+  size_t actual_size = copy_string_contents(t, result, size);
+  result[actual_size] = '\0';
   return result;
 }
 
@@ -1602,6 +1682,7 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
 }
 
 static void preparse_module(Tokenizer* tokenizer, Module* module) {
+  int seen_memory = 0;
   Token t = read_token(tokenizer);
   Token first = t;
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
@@ -1620,6 +1701,77 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
                               &module->global_bindings,
                               &module->num_global_bindings, "global");
         break;
+
+      case OP_MEMORY: {
+        if (seen_memory)
+          FATAL_AT(t.range.start, "only one memory block allowed\n");
+        seen_memory = 1;
+        t = read_token(tokenizer);
+        expect_atom(t);
+        if (!read_uint32_token(t, &module->initial_memory_size))
+          FATAL_AT(t.range.start, "invalid initial memory size\n");
+
+        t = read_token(tokenizer);
+        if (t.type == TOKEN_TYPE_ATOM) {
+          if (!read_uint32_token(t, &module->max_memory_size))
+            FATAL_AT(t.range.start, "invalid max memory size\n");
+
+          if (module->max_memory_size < module->initial_memory_size) {
+            FATAL_AT(t.range.start,
+                     "max size (%u) must be greater than or equal to initial "
+                     "size (%u)\n",
+                     module->max_memory_size, module->initial_memory_size);
+          }
+
+          t = read_token(tokenizer);
+        }
+
+        uint32_t last_segment_end = 0;
+        while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+          expect_open(t);
+          t = read_token(tokenizer);
+          if (!match_atom(t, "segment"))
+            unexpected_token(t);
+          t = read_token(tokenizer);
+          expect_atom(t);
+
+          Segment* segment =
+              add_segment(&module->segments, &module->num_segments);
+
+          if (!read_uint32_token(t, &segment->address))
+            FATAL_AT(t.range.start, "invalid memory segment address\n");
+
+          if (segment->address < last_segment_end) {
+            FATAL_AT(t.range.start,
+                     "address (%u) less than end of previous segment (%u)\n",
+                     segment->address, last_segment_end);
+          }
+
+          if (segment->address >= module->initial_memory_size) {
+            FATAL_AT(t.range.start,
+                     "address (%u) greater than initial memory size (%u)\n",
+                     segment->address, module->initial_memory_size);
+          }
+
+          t = read_token(tokenizer);
+          expect_string(t);
+          segment->data = t;
+          segment->size = string_contents_length(t);
+
+          last_segment_end = segment->address + segment->size;
+
+          if (last_segment_end > module->initial_memory_size) {
+            FATAL_AT(
+                t.range.start,
+                "segment ends past the end of the initial memory size (%u)\n",
+                module->initial_memory_size);
+          }
+
+          expect_close(read_token(tokenizer));
+          t = read_token(tokenizer);
+        }
+        break;
+      }
 
       default:
         parse_generic(tokenizer);
@@ -1663,7 +1815,7 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
   out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
   out_u16(buf, module->num_globals, "num globals");
   out_u16(buf, module->num_functions, "num funcs");
-  out_u16(buf, 0, "num data segments");
+  out_u16(buf, module->num_segments, "num data segments");
 
   int i;
   for (i = 0; i < module->num_globals; ++i) {
@@ -1709,14 +1861,28 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
     out_u8(buf, 0, "export func");
     out_u8(buf, 0, "func external");
   }
+
+  for (i = 0; i < module->num_segments; ++i) {
+    Segment* segment = &module->segments[i];
+#define SEGMENT_DATA_OFFSET 4
+    segment->offset = buf->size;
+    out_u32(buf, segment->address, "segment address");
+    out_u32(buf, 0, "segment data offset");
+    out_u32(buf, segment->size, "segment size");
+    out_u8(buf, 1, "segment init");
+  }
 }
 
 static void out_module_footer(OutputBuffer* buf, Module* module) {
-  /* TODO(binji): output data segment */
+  int i;
+  for (i = 0; i < module->num_segments; ++i) {
+    Segment* segment = &module->segments[i];
+    out_u32_at(buf, segment->offset + SEGMENT_DATA_OFFSET, buf->size,
+               "FIXUP segment data offset");
+    out_string_token(buf, segment->data, "segment data");
+  }
 
   /* output name table */
-  /* TODO(binji): uniquify names */
-  int i;
   for (i = 0; i < module->num_exports; ++i) {
     Export* export = &module->exports[i];
     Function* function = &module->functions[export->index];
@@ -1744,17 +1910,13 @@ static void parse_module(Tokenizer* tokenizer) {
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_FUNC: {
         Function* function = &module.functions[function_index++];
-        out_u32_at(&output, function->offset + CODE_START_OFFSET, output.size,
-                   "FIXUP func code start offset");
+        out_u32_at(&output, function->offset + CODE_START_OFFSET,
+                   output.size, "FIXUP func code start offset");
         parse_func(tokenizer, &module, function, &output);
-        out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size,
-                   "FIXUP func code end offset");
+        out_u32_at(&output, function->offset + CODE_END_OFFSET,
+                   output.size, "FIXUP func code end offset");
         break;
       }
-
-      case OP_GLOBAL:
-        parse_generic(tokenizer);
-        break;
 
       case OP_EXPORT: {
         t = read_token(tokenizer);
@@ -1776,7 +1938,9 @@ static void parse_module(Tokenizer* tokenizer) {
         parse_generic(tokenizer);
         break;
 
+      case OP_GLOBAL:
       case OP_MEMORY:
+        /* Skip, this has already been pre-parsed */
         parse_generic(tokenizer);
         break;
 

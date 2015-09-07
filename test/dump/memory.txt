@@ -1,0 +1,24 @@
+# FLAGS: -dv
+(module
+  (memory 100 (segment 10 "hello") (segment 20 "goodbye")))
+# STDOUT:
+0000000: 14                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0000                                       ; num funcs
+0000006: 0200                                       ; num data segments
+0000008: 0a00 0000                                  ; segment address
+000000c: 0000 0000                                  ; segment data offset
+0000010: 0500 0000                                  ; segment size
+0000014: 01                                         ; segment init
+0000015: 1400 0000                                  ; segment address
+0000019: 0000 0000                                  ; segment data offset
+000001d: 0700 0000                                  ; segment size
+0000021: 01                                         ; segment init
+000000c: 2200 0000                                  ; FIXUP segment data offset
+0000022: 6865 6c6c 6f                             hello  ; segment data
+0000019: 2700 0000                                  ; FIXUP segment data offset
+0000027: 676f 6f64 6279 65                        goodbye  ; segment data
+0000000: 1401 0000 0000 0200 0a00 0000 2200 0000  ............"...
+0000010: 0500 0000 0114 0000 0027 0000 0007 0000  .........'......
+0000020: 0001 6865 6c6c 6f67 6f6f 6462 7965       ..hellogoodbye

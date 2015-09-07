@@ -1,0 +1,1 @@
+(module (memory 100 (segment 0 "hello, world!")))

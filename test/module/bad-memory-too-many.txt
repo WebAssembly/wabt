@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (memory 100)
+  (memory 1000))
+# STDERR:
+3:4: only one memory block allowed
