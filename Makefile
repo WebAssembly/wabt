@@ -1,7 +1,6 @@
 .SUFFIXES:
 
 ALL = sexpr-wasm
-CC = gcc
 CFLAGS = -Wall -Werror -g
 
 .PHONY: all

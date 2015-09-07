@@ -1,0 +1,10 @@
+language: c
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y gperf
+script:
+  - make
+  - test/run-tests.py -v
+compiler:
+  - clang
+  - gcc
