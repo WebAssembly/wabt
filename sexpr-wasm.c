@@ -10,6 +10,9 @@
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
+#define FATAL_AT(loc, ...)                           \
+  fprintf(stderr, "%d:%d: ", (loc).line, (loc).col), \
+      fprintf(stderr, __VA_ARGS__), exit(1)
 #define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
 #define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
@@ -591,26 +594,21 @@ static Token read_token(Tokenizer* t) {
                   if (t->loc.pos + 1 < t->source.end) {
                     t->loc.col++;
                     t->loc.pos++;
-                    if (!isxdigit(*t->loc.pos)) {
-                      FATAL("%d:%d: bad \\xx escape sequence\n", t->loc.line,
-                            t->loc.col);
-                    }
+                    if (!isxdigit(*t->loc.pos))
+                      FATAL_AT(t->loc, "bad \\xx escape sequence\n");
                   } else {
-                    FATAL("%d:%d: eof in \\xx escape sequence\n", t->loc.line,
-                          t->loc.col);
+                    FATAL_AT(t->loc, "eof in \\xx escape sequence\n");
                   }
                 } else {
-                  FATAL("%d:%d: bad escape sequence\n", t->loc.line,
-                        t->loc.col);
+                  FATAL_AT(t->loc, "bad escape sequence\n");
                 }
               } else {
-                FATAL("%d:%d: eof in escape sequence\n", t->loc.line,
-                      t->loc.col);
+                FATAL_AT(t->loc, "eof in escape sequence\n");
               }
               break;
 
             case '\n':
-              FATAL("%d:%d: newline in string\n", t->loc.line, t->loc.col);
+              FATAL_AT(t->loc, "newline in string\n");
               break;
 
             case '"':
@@ -797,21 +795,19 @@ static char* dup_string_contents(Token t) {
 
 static void expect(Token t, TokenType token_type, const char* desc) {
   if (t.type == TOKEN_TYPE_EOF) {
-    FATAL("%d:%d: unexpected EOF\n", t.range.start.line, t.range.start.col);
+    FATAL_AT(t.range.start, "unexpected EOF\n");
   } else if (t.type != token_type) {
-    FATAL("%d:%d: expected %s, not \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, desc, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
+    FATAL_AT(t.range.start, "expected %s, not \"%.*s\"\n", desc,
+             (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
   }
 }
 
 static void unexpected_token(Token t) {
   if (t.type == TOKEN_TYPE_EOF) {
-    FATAL("%d:%d: unexpected EOF\n", t.range.start.line, t.range.start.col);
+    FATAL_AT(t.range.start, " unexpected EOF\n");
   } else {
-    FATAL("%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
+    FATAL_AT(t.range.start, "unexpected token \"%.*s\"\n",
+             (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
   }
 }
 
@@ -833,15 +829,13 @@ static void expect_string(Token t) {
 
 static void expect_var_name(Token t) {
   expect_atom(t);
-  if (t.range.end.pos - t.range.start.pos < 1 || t.range.start.pos[0] != '$') {
-    FATAL("%d:%d: expected name to begin with $\n", t.range.start.line,
-          t.range.start.col);
-  }
+  if (t.range.end.pos - t.range.start.pos < 1 || t.range.start.pos[0] != '$')
+    FATAL_AT(t.range.start, "expected name to begin with $\n");
 }
 
 static void check_opcode(SourceLocation loc, Opcode opcode) {
   if (opcode == OPCODE_INVALID)
-    FATAL("%d:%d: no opcode for instruction\n", loc.line, loc.col);
+    FATAL_AT(loc, "no opcode for instruction\n");
 }
 
 static int match_atom(Token t, const char* s) {
@@ -877,10 +871,8 @@ static int match_load_store_aligned(Token t, OpInfo* op_info) {
         return 0;
 
       /* check that alignment is power-of-two */
-      if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
-        FATAL("%d:%d: alignment must be power-of-two\n", t.range.start.line,
-              t.range.start.col);
-      }
+      if (alignment == 0 || (alignment & (alignment - 1)) != 0)
+        FATAL_AT(t.range.start, "alignment must be power-of-two\n");
 
       int native_mem_type_alignment[] = {
           1, /* MEM_TYPE_I8 */
@@ -906,8 +898,8 @@ static void check_type(SourceLocation loc,
                        Type expected,
                        const char* desc) {
   if (actual != expected) {
-    FATAL("%d:%d: type mismatch%s. got %s, expected %s\n", loc.line, loc.col,
-          desc, s_type_names[actual], s_type_names[expected]);
+    FATAL_AT(loc, "type mismatch%s. got %s, expected %s\n", desc,
+             s_type_names[actual], s_type_names[expected]);
   }
 }
 
@@ -917,9 +909,8 @@ static void check_type_arg(SourceLocation loc,
                            const char* desc,
                            int arg_index) {
   if (actual != expected) {
-    FATAL("%d:%d: type mismatch for argument %d of %s. got %s, expected %s\n",
-          loc.line, loc.col, arg_index, desc, s_type_names[actual],
-          s_type_names[expected]);
+    FATAL_AT(loc, "type mismatch for argument %d of %s. got %s, expected %s\n",
+             arg_index, desc, s_type_names[actual], s_type_names[expected]);
   }
 }
 
@@ -932,8 +923,7 @@ static Type get_result_type(SourceLocation loc, Function* function) {
       return function->result_types[0];
 
     default:
-      FATAL("%d:%d: multiple return values currently unsupported\n", loc.line,
-            loc.col);
+      FATAL_AT(loc, "multiple return values currently unsupported\n");
       return TYPE_VOID;
   }
 }
@@ -947,7 +937,7 @@ static void parse_generic(Tokenizer* tokenizer) {
     } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
       nesting--;
     } else if (t.type == TOKEN_TYPE_EOF) {
-      FATAL("unexpected eof.\n");
+      FATAL_AT(t.range.start, "unexpected eof\n");
     }
   }
 }
@@ -970,19 +960,18 @@ static int parse_var(Tokenizer* tokenizer,
       if (name && strncmp(name, p, end - p) == 0)
         return bindings[i].index;
     }
-    FATAL("%d:%d: undefined %s variable \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, desc, (int)(end - p), p);
+    FATAL_AT(t.range.start, "undefined %s variable \"%.*s\"\n", desc,
+             (int)(end - p), p);
   } else {
     /* var index */
     uint32_t index;
     if (!read_uint32(&p, t.range.end.pos, &index) || p != t.range.end.pos) {
-      FATAL("%d:%d: invalid var index\n", t.range.start.line,
-            t.range.start.col);
+      FATAL_AT(t.range.start, "invalid var index\n");
     }
 
     if (index >= num_vars) {
-      FATAL("%d:%d: %s variable out of range (max %d)\n", t.range.start.line,
-            t.range.start.col, desc, num_vars);
+      FATAL_AT(t.range.start, "%s variable out of range (max %d)\n", desc,
+               num_vars);
     }
 
     return index;
@@ -1013,9 +1002,8 @@ static int parse_label_var(Tokenizer* tokenizer, Function* function) {
 
 static void parse_type(Tokenizer* tokenizer, Type* type) {
   Token t = read_token(tokenizer);
-  if (!match_type(t, type)) {
-    FATAL("%d:%d: expected type\n", t.range.start.line, t.range.start.col);
-  }
+  if (!match_type(t, type))
+    FATAL_AT(t.range.start, "expected type\n");
 }
 
 static Type parse_expr(Tokenizer* tokenizer,
@@ -1051,20 +1039,16 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
   switch (type) {
     case TYPE_I32: {
       uint32_t value;
-      if (!read_uint32(&p, end, &value)) {
-        FATAL("%d:%d: invalid unsigned 32-bit int\n", t.range.start.line,
-              t.range.start.col);
-      }
+      if (!read_uint32(&p, end, &value))
+        FATAL_AT(t.range.start, "invalid unsigned 32-bit int\n");
       out_u32(buf, value, "u32 literal");
       break;
     }
 
     case TYPE_I64: {
       uint64_t value;
-      if (!read_uint64(&p, end, &value)) {
-        FATAL("%d:%d: invalid unsigned 64-bit int\n", t.range.start.line,
-              t.range.start.col);
-      }
+      if (!read_uint64(&p, end, &value))
+        FATAL_AT(t.range.start, "invalid unsigned 64-bit int\n");
       out_u64(buf, value, "u64 literal");
       break;
     }
@@ -1072,9 +1056,8 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
     case TYPE_F32:
     case TYPE_F64: {
       double value;
-      if (!read_double(&p, end, &value)) {
-        FATAL("%d:%d: invalid double\n", t.range.start.line, t.range.start.col);
-      }
+      if (!read_double(&p, end, &value))
+        FATAL_AT(t.range.start, "invalid double\n");
       if (type == TYPE_F32)
         out_f32(buf, (float)value, "f32 literal");
       else
@@ -1207,9 +1190,9 @@ static Type parse_expr(Tokenizer* tokenizer,
           break;
         rewind_token(tokenizer, t);
         if (++num_args > callee->num_args) {
-          FATAL("%d:%d: too many arguments to function. got %d, expected %d\n",
-                t.range.start.line, t.range.start.col, num_args,
-                callee->num_args);
+          FATAL_AT(t.range.start,
+                   "too many arguments to function. got %d, expected %d\n",
+                   num_args, callee->num_args);
         }
         Type arg_type = parse_expr(tokenizer, module, function, buf);
         Type expected = callee->locals[num_args - 1].type;
@@ -1217,9 +1200,9 @@ static Type parse_expr(Tokenizer* tokenizer,
       }
 
       if (num_args < callee->num_args) {
-        FATAL("%d:%d: too few arguments to function. got %d, expected %d\n",
-              t.range.start.line, t.range.start.col, num_args,
-              callee->num_args);
+        FATAL_AT(t.range.start,
+                 "too few arguments to function. got %d, expected %d\n",
+                 num_args, callee->num_args);
       }
 
       type = get_result_type(t.range.start, callee);
@@ -1358,9 +1341,9 @@ static Type parse_expr(Tokenizer* tokenizer,
         if (t.type == TOKEN_TYPE_CLOSE_PAREN)
           break;
         if (++num_results > function->num_results) {
-          FATAL("%d:%d: too many return values. got %d, expected %d\n",
-                t.range.start.line, t.range.start.col, num_results,
-                function->num_results);
+          FATAL_AT(t.range.start,
+                   "too many return values. got %d, expected %d\n", num_results,
+                   function->num_results);
         }
         rewind_token(tokenizer, t);
         Type result_type = parse_expr(tokenizer, module, function, buf);
@@ -1370,9 +1353,8 @@ static Type parse_expr(Tokenizer* tokenizer,
       }
 
       if (num_results < function->num_results) {
-        FATAL("%d:%d: too few return values. got %d, expected %d\n",
-              t.range.start.line, t.range.start.col, num_results,
-              function->num_results);
+        FATAL_AT(t.range.start, "too few return values. got %d, expected %d\n",
+                 num_results, function->num_results);
       }
 
       type = get_result_type(t.range.start, function);
@@ -1501,10 +1483,8 @@ static void preparse_binding_list(Tokenizer* tokenizer,
 
     char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_binding_by_name(*bindings, *num_bindings, name) != -1) {
-      FATAL("%d:%d: redefinition of %s \"%s\"\n", t.range.start.line,
-            t.range.start.col, desc, name);
-    }
+    if (get_binding_by_name(*bindings, *num_bindings, name) != -1)
+      FATAL_AT(t.range.start, "redefinition of %s \"%s\"\n", desc, name);
 
     Variable* variable = add_variable(variables, num_variables);
     variable->type = type;
@@ -1526,10 +1506,8 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
     char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
     if (get_binding_by_name(module->function_bindings,
-                            module->num_function_bindings, name) != -1) {
-      FATAL("%d:%d: redefinition of function \"%s\"\n", t.range.start.line,
-            t.range.start.col, name);
-    }
+                            module->num_function_bindings, name) != -1)
+      FATAL_AT(t.range.start, "redefinition of function \"%s\"\n", name);
 
     Binding* binding =
         add_binding(&module->function_bindings, &module->num_function_bindings);
@@ -1547,10 +1525,8 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_PARAM:
         /* Don't allow adding params after locals */
-        if (function->num_args != function->num_locals) {
-          FATAL("%d:%d: parameters must come before locals\n",
-                t.range.start.line, t.range.start.col);
-        }
+        if (function->num_args != function->num_locals)
+          FATAL_AT(t.range.start, "parameters must come before locals\n");
         preparse_binding_list(tokenizer, &function->locals, &function->num_args,
                               &function->local_bindings,
                               &function->num_local_bindings,
