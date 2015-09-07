@@ -42,6 +42,9 @@ typedef enum MemType {
 } MemType;
 
 typedef enum OpType {
+  OP_NONE,
+  OP_ASSERT_EQ,
+  OP_ASSERT_INVALID,
   OP_BINARY,
   OP_BLOCK,
   OP_BREAK,
@@ -51,18 +54,28 @@ typedef enum OpType {
   OP_CONST,
   OP_CONVERT,
   OP_DESTRUCT,
+  OP_EXPORT,
+  OP_FUNC,
   OP_GET_LOCAL,
+  OP_GLOBAL,
   OP_IF,
+  OP_INVOKE,
   OP_LABEL,
   OP_LOAD,
   OP_LOAD_GLOBAL,
+  OP_LOCAL,
   OP_LOOP,
+  OP_MEMORY,
+  OP_MODULE,
   OP_NOP,
+  OP_PARAM,
+  OP_RESULT,
   OP_RETURN,
   OP_SET_LOCAL,
   OP_STORE,
   OP_STORE_GLOBAL,
   OP_SWITCH,
+  OP_TABLE,
   OP_UNARY,
 } OpType;
 
@@ -321,7 +334,7 @@ static int g_dump_module;
 
 static const char* s_opcode_names[] = {
 #define OPCODE(name, code) [code] = "OPCODE_" #name,
-  OPCODES(OPCODE)
+    OPCODES(OPCODE)
 #undef OPCODE
 };
 
@@ -480,6 +493,11 @@ static int get_binding_by_name(Binding* bindings,
 
 static int get_function_by_name(Module* module, const char* name) {
   return get_binding_by_name(module->functions, module->num_functions, name);
+}
+
+static const OpInfo* get_op_info(Token t) {
+  return in_word_set(t.range.start.pos,
+                     (int)(t.range.end.pos - t.range.start.pos));
 }
 
 static int read_uint32(const char** s, const char* end, uint32_t* out) {
@@ -1129,8 +1147,7 @@ static Type parse_expr(Tokenizer* tokenizer,
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     OpInfo op_info_aligned;
-    const OpInfo* op_info = in_word_set(
-        t.range.start.pos, (int)(t.range.end.pos - t.range.start.pos));
+    const OpInfo* op_info = get_op_info(t);
     if (!op_info) {
       if (!match_load_store_aligned(t, &op_info_aligned))
         unexpected_token(t);
@@ -1425,27 +1442,31 @@ static void parse_func(Tokenizer* tokenizer,
 
   Type type = TYPE_VOID;
   while (1) {
-    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-      Token open = t;
-      t = read_token(tokenizer);
-      if (t.type == TOKEN_TYPE_ATOM) {
-        if (match_atom(t, "param") || match_atom(t, "result") ||
-            match_atom(t, "local")) {
-          /* Skip, this has already been pre-parsed */
-          parse_generic(tokenizer);
-        } else {
-          rewind_token(tokenizer, open);
-          type = parse_expr(tokenizer, module, function, buf);
-        }
-      } else {
-        unexpected_token(t);
-      }
-      t = read_token(tokenizer);
-    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
+    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
       break;
-    } else {
+    if (t.type != TOKEN_TYPE_OPEN_PAREN)
       unexpected_token(t);
+
+    Token open = t;
+    t = read_token(tokenizer);
+    if (t.type != TOKEN_TYPE_ATOM)
+      unexpected_token(t);
+
+    const OpInfo* op_info = get_op_info(t);
+    switch (op_info ? op_info->op_type : OP_NONE) {
+      case OP_PARAM:
+      case OP_RESULT:
+      case OP_LOCAL:
+        /* Skip, this has already been pre-parsed */
+        parse_generic(tokenizer);
+        break;
+
+      default:
+        rewind_token(tokenizer, open);
+        type = parse_expr(tokenizer, module, function, buf);
+        break;
     }
+    t = read_token(tokenizer);
   }
 
   Type result_type = get_result_type(t.range.start, function);
@@ -1511,80 +1532,85 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
     t = read_token(tokenizer);
   }
 
-  while (1) {
-    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-      Type type;
-      t = read_token(tokenizer);
-      if (t.type == TOKEN_TYPE_ATOM) {
-        if (match_atom(t, "param")) {
-          /* Don't allow adding params after locals */
-          if (function->num_args != function->num_locals) {
-            FATAL("%d:%d: parameters must come before locals\n",
-                  t.range.start.line, t.range.start.col);
-          }
-          preparse_binding_list(tokenizer, &function->locals,
-                                &function->num_args, "function argument");
-          function->num_locals = function->num_args;
-        } else if (match_atom(t, "result")) {
-          t = read_token(tokenizer);
-          if (match_type(t, &type)) {
-            while (1) {
-              realloc_list((void**)&function->result_types,
-                           &function->num_results, sizeof(Type));
-              function->result_types[function->num_results - 1] = type;
-
-              t = read_token(tokenizer);
-              if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-                break;
-              else if (!match_type(t, &type))
-                unexpected_token(t);
-            }
-          } else {
-            unexpected_token(t);
-          }
-        } else if (match_atom(t, "local")) {
-          preparse_binding_list(tokenizer, &function->locals,
-                                &function->num_locals, "local");
-        } else {
-          rewind_token(tokenizer, t);
-          parse_generic(tokenizer);
-        }
-      } else {
-        unexpected_token(t);
-      }
-      t = read_token(tokenizer);
-    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
-      break;
-    } else {
+  while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+    if (t.type != TOKEN_TYPE_OPEN_PAREN)
       unexpected_token(t);
+
+    t = read_token(tokenizer);
+    if (t.type != TOKEN_TYPE_ATOM)
+      unexpected_token(t);
+
+    const OpInfo* op_info = get_op_info(t);
+    switch (op_info ? op_info->op_type : OP_NONE) {
+      case OP_PARAM:
+        /* Don't allow adding params after locals */
+        if (function->num_args != function->num_locals) {
+          FATAL("%d:%d: parameters must come before locals\n",
+                t.range.start.line, t.range.start.col);
+        }
+        preparse_binding_list(tokenizer, &function->locals, &function->num_args,
+                              "function argument");
+        function->num_locals = function->num_args;
+        break;
+
+      case OP_RESULT: {
+        t = read_token(tokenizer);
+        while (1) {
+          Type type;
+          if (!match_type(t, &type))
+            unexpected_token(t);
+          realloc_list((void**)&function->result_types, &function->num_results,
+                       sizeof(Type));
+          function->result_types[function->num_results - 1] = type;
+
+          t = read_token(tokenizer);
+          if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+            break;
+        }
+        break;
+      }
+
+      case OP_LOCAL:
+        preparse_binding_list(tokenizer, &function->locals,
+                              &function->num_locals, "local");
+        break;
+
+      default:
+        rewind_token(tokenizer, t);
+        parse_generic(tokenizer);
+        break;
     }
+    t = read_token(tokenizer);
   }
 }
 
 static void preparse_module(Tokenizer* tokenizer, Module* module) {
   Token t = read_token(tokenizer);
   Token first = t;
-  while (1) {
-    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-      t = read_token(tokenizer);
-      if (t.type == TOKEN_TYPE_ATOM) {
-        if (match_atom(t, "func")) {
-          preparse_func(tokenizer, module);
-        } else if (match_atom(t, "global")) {
-          preparse_binding_list(tokenizer, &module->globals,
-                                &module->num_globals, "global");
-        } else {
-          parse_generic(tokenizer);
-        }
-      } else {
-        unexpected_token(t);
-      }
-      t = read_token(tokenizer);
-    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
-      break;
-    } else {
+  while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+    if (t.type != TOKEN_TYPE_OPEN_PAREN)
       unexpected_token(t);
+
+    t = read_token(tokenizer);
+    if (t.type != TOKEN_TYPE_ATOM)
+      unexpected_token(t);
+
+    const OpInfo* op_info = get_op_info(t);
+    switch (op_info ? op_info->op_type : OP_NONE) {
+      case OP_FUNC:
+        preparse_func(tokenizer, module);
+        break;
+
+      case OP_GLOBAL:
+        preparse_binding_list(tokenizer, &module->globals, &module->num_globals,
+                              "global");
+        break;
+
+      default:
+        parse_generic(tokenizer);
+        break;
     }
+    t = read_token(tokenizer);
   }
   rewind_token(tokenizer, first);
 }
@@ -1688,50 +1714,61 @@ static void parse_module(Tokenizer* tokenizer) {
 
   int function_index = 0;
   Token t = read_token(tokenizer);
-  while (1) {
-    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-      t = read_token(tokenizer);
-      if (t.type == TOKEN_TYPE_ATOM) {
-        if (match_atom(t, "func")) {
-          Function* function = &module.functions[function_index++];
-          out_u32_at(&output, function->offset + CODE_START_OFFSET, output.size,
-                     "FIXUP func code start offset");
-          parse_func(tokenizer, &module, function, &output);
-          out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size,
-                     "FIXUP func code end offset");
-        } else if (match_atom(t, "global")) {
-          parse_generic(tokenizer);
-        } else if (match_atom(t, "export")) {
-          t = read_token(tokenizer);
-          expect_string(t);
-          int index = parse_function_var(tokenizer, &module);
-
-          realloc_list((void**)&module.exports, &module.num_exports,
-                       sizeof(Export));
-          Export* export = &module.exports[module.num_exports - 1];
-          export->name = dup_string_contents(t);
-          export->index = index;
-
-          Function* exported = &module.functions[index];
-          out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
-                     "FIXUP func exported");
-          expect_close(read_token(tokenizer));
-        } else if (match_atom(t, "table")) {
-          parse_generic(tokenizer);
-        } else if (match_atom(t, "memory")) {
-          parse_generic(tokenizer);
-        } else {
-          unexpected_token(t);
-        }
-      } else {
-        unexpected_token(t);
-      }
-      t = read_token(tokenizer);
-    } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
-      break;
-    } else {
+  while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+    if (t.type != TOKEN_TYPE_OPEN_PAREN)
       unexpected_token(t);
+
+    t = read_token(tokenizer);
+    if (t.type != TOKEN_TYPE_ATOM)
+      unexpected_token(t);
+
+    const OpInfo* op_info = get_op_info(t);
+    switch (op_info ? op_info->op_type : OP_NONE) {
+      case OP_FUNC: {
+        Function* function = &module.functions[function_index++];
+        out_u32_at(&output, function->offset + CODE_START_OFFSET, output.size,
+                   "FIXUP func code start offset");
+        parse_func(tokenizer, &module, function, &output);
+        out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size,
+                   "FIXUP func code end offset");
+        break;
+      }
+
+      case OP_GLOBAL:
+        parse_generic(tokenizer);
+        break;
+
+      case OP_EXPORT: {
+        t = read_token(tokenizer);
+        expect_string(t);
+        int index = parse_function_var(tokenizer, &module);
+
+        realloc_list((void**)&module.exports, &module.num_exports,
+                     sizeof(Export));
+        Export* export = &module.exports[module.num_exports - 1];
+        export->name = dup_string_contents(t);
+        export->index = index;
+
+        Function* exported = &module.functions[index];
+        out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
+                   "FIXUP func exported");
+        expect_close(read_token(tokenizer));
+        break;
+      }
+
+      case OP_TABLE:
+        parse_generic(tokenizer);
+        break;
+
+      case OP_MEMORY:
+        parse_generic(tokenizer);
+        break;
+
+      default:
+        unexpected_token(t);
+        break;
     }
+    t = read_token(tokenizer);
   }
 
   out_module_footer(&output, &module);
@@ -1745,30 +1782,31 @@ static void parse_module(Tokenizer* tokenizer) {
 
 static void parse(Tokenizer* tokenizer) {
   Token t = read_token(tokenizer);
-  while (1) {
-    if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-      t = read_token(tokenizer);
-      if (t.type == TOKEN_TYPE_ATOM) {
-        if (match_atom(t, "module")) {
-          parse_module(tokenizer);
-        } else if (match_atom(t, "assert_eq")) {
-          parse_generic(tokenizer);
-        } else if (match_atom(t, "invoke")) {
-          parse_generic(tokenizer);
-        } else if (match_atom(t, "assert_invalid")) {
-          parse_generic(tokenizer);
-        } else {
-          unexpected_token(t);
-        }
-      } else {
-        unexpected_token(t);
-      }
-      t = read_token(tokenizer);
-    } else if (t.type == TOKEN_TYPE_EOF) {
-      break;
-    } else {
+  while (t.type != TOKEN_TYPE_EOF) {
+    if (t.type != TOKEN_TYPE_OPEN_PAREN)
       unexpected_token(t);
+
+    t = read_token(tokenizer);
+    if (t.type != TOKEN_TYPE_ATOM)
+      unexpected_token(t);
+
+    const OpInfo* op_info = get_op_info(t);
+    switch (op_info ? op_info->op_type : OP_NONE) {
+      case OP_MODULE:
+        parse_module(tokenizer);
+        break;
+
+      case OP_ASSERT_EQ:
+      case OP_ASSERT_INVALID:
+      case OP_INVOKE:
+        parse_generic(tokenizer);
+        break;
+
+      default:
+        unexpected_token(t);
+        break;
     }
+    t = read_token(tokenizer);
   }
 }
 
