@@ -20,6 +20,7 @@
 0000002: 0000                                       ; num globals
 0000004: 0100                                       ; num funcs
 0000006: 0000                                       ; num data segments
+; function header 0
 0000008: 00                                         ; func num args
 0000009: 00                                         ; func result type
 000000a: 0000 0000                                  ; func name offset
@@ -31,6 +32,7 @@
 000001c: 0200                                       ; num local f64
 000001e: 00                                         ; export func
 000001f: 00                                         ; func external
+; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 16                                         ; OPCODE_SET_LOCAL
 0000021: 06                                         ; remapped local index
@@ -65,6 +67,7 @@
 000005f: 12                                         ; OPCODE_I64_CONST
 0000060: 0000 0000 0000 0000                        ; u64 literal
 0000012: 6800 0000                                  ; FIXUP func code end offset
+; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 6800 0000 0200 0200 0200 0200 0000  ..h.............
 0000020: 1606 1300 0000 0000 0000 0016 0414 0000  ................

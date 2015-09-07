@@ -31,6 +31,7 @@
 0000002: 0000                                       ; num globals
 0000004: 0100                                       ; num funcs
 0000006: 0000                                       ; num data segments
+; function header 0
 0000008: 00                                         ; func num args
 0000009: 00                                         ; func result type
 000000a: 0000 0000                                  ; func name offset
@@ -42,6 +43,7 @@
 000001c: 0000                                       ; num local f64
 000001e: 00                                         ; export func
 000001f: 00                                         ; func external
+; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 5a                                         ; OPCODE_I32_NOT
 0000021: 57                                         ; OPCODE_I32_CLZ
@@ -73,6 +75,7 @@
 0000048: 13                                         ; OPCODE_F64_CONST
 0000049: 0000 0000 0000 0000                        ; f64 literal
 0000012: 5100 0000                                  ; FIXUP func code end offset
+; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 5100 0000 0000 0000 0000 0000 0000  ..Q.............
 0000020: 5a57 5859 1100 0000 0072 7374 1200 0000  ZWXY.....rst....

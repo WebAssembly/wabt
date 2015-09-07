@@ -8,11 +8,14 @@
 0000002: 0000                                       ; num globals
 0000004: 0000                                       ; num funcs
 0000006: 0100                                       ; num data segments
+; segment header 0
 0000008: 0000 0000                                  ; segment address
 000000c: 0000 0000                                  ; segment data offset
 0000010: 0b00 0000                                  ; segment size
 0000014: 01                                         ; segment init
+; segment data 0
 000000c: 1500 0000                                  ; FIXUP segment data offset
 0000015: 0001 0203 0405 0607 0809 0a              ...........  ; segment data
+; names
 0000000: 0701 0000 0000 0100 0000 0000 1500 0000  ................
 0000010: 0b00 0000 0100 0102 0304 0506 0708 090a  ................

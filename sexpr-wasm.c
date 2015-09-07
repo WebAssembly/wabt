@@ -1873,6 +1873,8 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
   int i;
   for (i = 0; i < module->globals.size; ++i) {
     Variable* global = &module->globals.data[i];
+    if (g_verbose)
+      printf("; global header %d\n", i);
     global->offset = buf->size;
     /* TODO(binji): v8-native-prototype globals use mem types, not local types.
        The spec currently specifies local types, and uses an anonymous memory
@@ -1886,6 +1888,8 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
 
   for (i = 0; i < module->functions.size; ++i) {
     Function* function = &module->functions.data[i];
+    if (g_verbose)
+      printf("; function header %d\n", i);
 
     out_u8(buf, function->num_args, "func num args");
     out_u8(buf,
@@ -1918,6 +1922,8 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
 
   for (i = 0; i < module->segments.size; ++i) {
     Segment* segment = &module->segments.data[i];
+    if (g_verbose)
+      printf("; segment header %d\n", i);
 #define SEGMENT_DATA_OFFSET 4
     segment->offset = buf->size;
     out_u32(buf, segment->address, "segment address");
@@ -1930,6 +1936,8 @@ static void out_module_header(OutputBuffer* buf, Module* module) {
 static void out_module_footer(OutputBuffer* buf, Module* module) {
   int i;
   for (i = 0; i < module->segments.size; ++i) {
+    if (g_verbose)
+      printf("; segment data %d\n", i);
     Segment* segment = &module->segments.data[i];
     out_u32_at(buf, segment->offset + SEGMENT_DATA_OFFSET, buf->size,
                "FIXUP segment data offset");
@@ -1937,6 +1945,8 @@ static void out_module_footer(OutputBuffer* buf, Module* module) {
   }
 
   /* output name table */
+  if (g_verbose)
+    printf("; names\n");
   for (i = 0; i < module->exports.size; ++i) {
     Export* export = &module->exports.data[i];
     Function* function = &module->functions.data[export->index];
@@ -1964,6 +1974,8 @@ static void parse_module(Tokenizer* tokenizer) {
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_FUNC: {
         Function* function = &module.functions.data[function_index++];
+        if (g_verbose)
+          printf("; function data %d\n", function_index - 1);
         out_u32_at(&output, function->offset + CODE_START_OFFSET,
                    output.size, "FIXUP func code start offset");
         parse_func(tokenizer, &module, function, &output);

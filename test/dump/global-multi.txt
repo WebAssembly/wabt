@@ -7,22 +7,27 @@
 0000002: 0400                                       ; num globals
 0000004: 0000                                       ; num funcs
 0000006: 0000                                       ; num data segments
+; global header 0
 0000008: 0000 0000                                  ; global name offset
 000000c: 04                                         ; global mem type
 000000d: 0000 0000                                  ; global offset
 0000011: 00                                         ; export global
+; global header 1
 0000012: 0000 0000                                  ; global name offset
 0000016: 06                                         ; global mem type
 0000017: 0000 0000                                  ; global offset
 000001b: 00                                         ; export global
+; global header 2
 000001c: 0000 0000                                  ; global name offset
 0000020: 08                                         ; global mem type
 0000021: 0000 0000                                  ; global offset
 0000025: 00                                         ; export global
+; global header 3
 0000026: 0000 0000                                  ; global name offset
 000002a: 09                                         ; global mem type
 000002b: 0000 0000                                  ; global offset
 000002f: 00                                         ; export global
+; names
 0000000: 0001 0400 0000 0000 0000 0000 0400 0000  ................
 0000010: 0000 0000 0000 0600 0000 0000 0000 0000  ................
 0000020: 0800 0000 0000 0000 0000 0900 0000 0000  ................

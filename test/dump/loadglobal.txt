@@ -12,22 +12,27 @@
 0000002: 0400                                       ; num globals
 0000004: 0100                                       ; num funcs
 0000006: 0000                                       ; num data segments
+; global header 0
 0000008: 0000 0000                                  ; global name offset
 000000c: 04                                         ; global mem type
 000000d: 0000 0000                                  ; global offset
 0000011: 00                                         ; export global
+; global header 1
 0000012: 0000 0000                                  ; global name offset
 0000016: 06                                         ; global mem type
 0000017: 0000 0000                                  ; global offset
 000001b: 00                                         ; export global
+; global header 2
 000001c: 0000 0000                                  ; global name offset
 0000020: 08                                         ; global mem type
 0000021: 0000 0000                                  ; global offset
 0000025: 00                                         ; export global
+; global header 3
 0000026: 0000 0000                                  ; global name offset
 000002a: 09                                         ; global mem type
 000002b: 0000 0000                                  ; global offset
 000002f: 00                                         ; export global
+; function header 0
 0000030: 00                                         ; func num args
 0000031: 00                                         ; func result type
 0000032: 0000 0000                                  ; func name offset
@@ -39,6 +44,7 @@
 0000044: 0000                                       ; num local f64
 0000046: 00                                         ; export func
 0000047: 00                                         ; func external
+; function data 0
 0000036: 4800 0000                                  ; FIXUP func code start offset
 0000048: 17                                         ; OPCODE_GET_GLOBAL
 0000049: 00                                         ; global index
@@ -49,6 +55,7 @@
 000004e: 17                                         ; OPCODE_GET_GLOBAL
 000004f: 03                                         ; global index
 000003a: 5000 0000                                  ; FIXUP func code end offset
+; names
 0000000: 0001 0400 0100 0000 0000 0000 0400 0000  ................
 0000010: 0000 0000 0000 0600 0000 0000 0000 0000  ................
 0000020: 0800 0000 0000 0000 0000 0900 0000 0000  ................

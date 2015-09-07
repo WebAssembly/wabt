@@ -11,10 +11,12 @@
 0000002: 0100                                       ; num globals
 0000004: 0100                                       ; num funcs
 0000006: 0000                                       ; num data segments
+; global header 0
 0000008: 0000 0000                                  ; global name offset
 000000c: 04                                         ; global mem type
 000000d: 0000 0000                                  ; global offset
 0000011: 00                                         ; export global
+; function header 0
 0000012: 02                                         ; func num args
 0000013: 01                                         ; func result type
 0000014: 01                                         ; func arg type
@@ -28,6 +30,7 @@
 0000028: 0000                                       ; num local f64
 000002a: 00                                         ; export func
 000002b: 00                                         ; func external
+; function data 0
 000001a: 2c00 0000                                  ; FIXUP func code start offset
 000002c: 18                                         ; OPCODE_SET_GLOBAL
 000002d: 00                                         ; global index
@@ -43,6 +46,7 @@
 000003a: 01                                         ; remapped local index
 000001e: 3b00 0000                                  ; FIXUP func code end offset
 000002a: 0100 0000                                  ; FIXUP func exported
+; names
 0000016: 3b00 0000                                  ; FIXUP func name offset
 000003b: 6600                                       ; export name
 0000000: 0001 0100 0100 0000 0000 0000 0400 0000  ................
