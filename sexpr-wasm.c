@@ -777,45 +777,44 @@ static char* dup_string_contents(Token t) {
   return result;
 }
 
-static void expect_open(Token t) {
-  if (t.type != TOKEN_TYPE_OPEN_PAREN) {
-    FATAL("%d:%d: expected '(', not \"%.*s\"\n", t.range.start.line,
+static void expect(Token t, TokenType token_type, const char* desc) {
+  if (t.type == TOKEN_TYPE_EOF) {
+    FATAL("%d:%d: unexpected EOF\n", t.range.start.line, t.range.start.col);
+  } else if (t.type != token_type) {
+    FATAL("%d:%d: expected %s, not \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, desc, (int)(t.range.end.pos - t.range.start.pos),
+          t.range.start.pos);
+  }
+}
+
+static void unexpected_token(Token t) {
+  if (t.type == TOKEN_TYPE_EOF) {
+    FATAL("%d:%d: unexpected EOF\n", t.range.start.line, t.range.start.col);
+  } else {
+    FATAL("%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
           t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
           t.range.start.pos);
   }
+}
+
+static void expect_open(Token t) {
+  expect(t, TOKEN_TYPE_OPEN_PAREN, "'('");
 }
 
 static void expect_close(Token t) {
-  if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-    FATAL("%d:%d: expected ')', not \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
-  }
+  expect(t, TOKEN_TYPE_CLOSE_PAREN, "')'");
 }
 
 static void expect_atom(Token t) {
-  if (t.type != TOKEN_TYPE_ATOM) {
-    FATAL("%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
-  }
+  expect(t, TOKEN_TYPE_ATOM, "ATOM");
 }
 
 static void expect_string(Token t) {
-  if (t.type != TOKEN_TYPE_STRING) {
-    FATAL("%d:%d: expected STRING, not \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
-  }
+  expect(t, TOKEN_TYPE_STRING, "STRING");
 }
 
 static void expect_var_name(Token t) {
-  if (t.type != TOKEN_TYPE_ATOM) {
-    FATAL("%d:%d: expected ATOM, not \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
-  }
-
+  expect_atom(t);
   if (t.range.end.pos - t.range.start.pos < 1 || t.range.start.pos[0] != '$') {
     FATAL("%d:%d: expected name to begin with $\n", t.range.start.line,
           t.range.start.col);
@@ -884,16 +883,6 @@ static int match_load_store_aligned(Token t, OpInfo* op_info) {
   return 0;
 }
 
-static void unexpected_token(Token t) {
-  if (t.type == TOKEN_TYPE_EOF) {
-    FATAL("%d:%d: unexpected EOF\n", t.range.start.line, t.range.start.col);
-  } else {
-    FATAL("%d:%d: unexpected token \"%.*s\"\n", t.range.start.line,
-          t.range.start.col, (int)(t.range.end.pos - t.range.start.pos),
-          t.range.start.pos);
-  }
-}
-
 static void check_type(SourceLocation loc,
                        Type actual,
                        Type expected,
@@ -950,37 +939,34 @@ static int parse_var(Tokenizer* tokenizer,
                      int num_bindings,
                      const char* desc) {
   Token t = read_token(tokenizer);
-  if (t.type == TOKEN_TYPE_ATOM) {
-    const char* p = t.range.start.pos;
-    const char* end = t.range.end.pos;
-    if (end - p >= 1 && p[0] == '$') {
-      /* var name */
-      int i;
-      for (i = 0; i < num_bindings; ++i) {
-        const char* name = bindings[i].name;
-        if (name && strncmp(name, p, end - p) == 0)
-          return i;
-      }
-      FATAL("%d:%d: undefined %s variable \"%.*s\"\n", t.range.start.line,
-            t.range.start.col, desc, (int)(end - p), p);
-    } else {
-      /* var index */
-      uint32_t index;
-      if (!read_uint32(&p, t.range.end.pos, &index) || p != t.range.end.pos) {
-        FATAL("%d:%d: invalid var index\n", t.range.start.line,
-              t.range.start.col);
-      }
+  expect_atom(t);
 
-      if (index >= num_bindings) {
-        FATAL("%d:%d: %s variable out of range (max %d)\n", t.range.start.line,
-              t.range.start.col, desc, num_bindings);
-      }
-
-      return index;
+  const char* p = t.range.start.pos;
+  const char* end = t.range.end.pos;
+  if (end - p >= 1 && p[0] == '$') {
+    /* var name */
+    int i;
+    for (i = 0; i < num_bindings; ++i) {
+      const char* name = bindings[i].name;
+      if (name && strncmp(name, p, end - p) == 0)
+        return i;
     }
+    FATAL("%d:%d: undefined %s variable \"%.*s\"\n", t.range.start.line,
+          t.range.start.col, desc, (int)(end - p), p);
   } else {
-    unexpected_token(t);
-    return -1;
+    /* var index */
+    uint32_t index;
+    if (!read_uint32(&p, t.range.end.pos, &index) || p != t.range.end.pos) {
+      FATAL("%d:%d: invalid var index\n", t.range.start.line,
+            t.range.start.col);
+    }
+
+    if (index >= num_bindings) {
+      FATAL("%d:%d: %s variable out of range (max %d)\n", t.range.start.line,
+            t.range.start.col, desc, num_bindings);
+    }
+
+    return index;
   }
 }
 
@@ -1145,287 +1131,287 @@ static Type parse_expr(Tokenizer* tokenizer,
   Type type = TYPE_VOID;
   expect_open(read_token(tokenizer));
   Token t = read_token(tokenizer);
-  if (t.type == TOKEN_TYPE_ATOM) {
-    OpInfo op_info_aligned;
-    const OpInfo* op_info = get_op_info(t);
-    if (!op_info) {
-      if (!match_load_store_aligned(t, &op_info_aligned))
-        unexpected_token(t);
-      op_info = &op_info_aligned;
+  expect_atom(t);
+
+  OpInfo op_info_aligned;
+  const OpInfo* op_info = get_op_info(t);
+  if (!op_info) {
+    if (!match_load_store_aligned(t, &op_info_aligned))
+      unexpected_token(t);
+    op_info = &op_info_aligned;
+  }
+  switch (op_info->op_type) {
+    case OP_BINARY: {
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      Type value0_type = parse_expr(tokenizer, module, function, buf);
+      check_type_arg(t.range.start, value0_type, op_info->type, "binary op",
+                     0);
+      Type value1_type = parse_expr(tokenizer, module, function, buf);
+      check_type_arg(t.range.start, value1_type, op_info->type, "binary op",
+                     1);
+      assert(value0_type == value1_type);
+      type = value0_type;
+      expect_close(read_token(tokenizer));
+      break;
     }
-    switch (op_info->op_type) {
-      case OP_BINARY: {
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        Type value0_type = parse_expr(tokenizer, module, function, buf);
-        check_type_arg(t.range.start, value0_type, op_info->type, "binary op",
-                       0);
-        Type value1_type = parse_expr(tokenizer, module, function, buf);
-        check_type_arg(t.range.start, value1_type, op_info->type, "binary op",
-                       1);
-        assert(value0_type == value1_type);
-        type = value0_type;
+
+    case OP_BLOCK:
+      out_opcode(buf, OPCODE_BLOCK);
+      type = parse_block(tokenizer, module, function, buf);
+      break;
+
+    case OP_BREAK:
+      /* opcode = OPCODE_BREAK; */
+      t = read_token(tokenizer);
+      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+        rewind_token(tokenizer, t);
+        /* TODO(binji): how to check that the given label is a parent? */
+        parse_label_var(tokenizer, function);
         expect_close(read_token(tokenizer));
-        break;
       }
+      break;
 
-      case OP_BLOCK:
-        out_opcode(buf, OPCODE_BLOCK);
-        type = parse_block(tokenizer, module, function, buf);
-        break;
+    case OP_CALL: {
+      out_opcode(buf, OPCODE_CALL);
+      int index = parse_function_var(tokenizer, module);
+      out_leb128(buf, index, "func index");
+      Function* callee = &module->functions[index];
 
-      case OP_BREAK:
-        /* opcode = OPCODE_BREAK; */
-        t = read_token(tokenizer);
-        if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-          rewind_token(tokenizer, t);
-          /* TODO(binji): how to check that the given label is a parent? */
-          parse_label_var(tokenizer, function);
-          expect_close(read_token(tokenizer));
+      int num_args = 0;
+      while (1) {
+        Token t = read_token(tokenizer);
+        if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+          break;
+        rewind_token(tokenizer, t);
+        if (++num_args > callee->num_args) {
+          FATAL(
+              "%d:%d: too many arguments to function. got %d, expected %d\n",
+              t.range.start.line, t.range.start.col, num_args,
+              callee->num_args);
         }
-        break;
-
-      case OP_CALL: {
-        out_opcode(buf, OPCODE_CALL);
-        int index = parse_function_var(tokenizer, module);
-        out_leb128(buf, index, "func index");
-        Function* callee = &module->functions[index];
-
-        int num_args = 0;
-        while (1) {
-          Token t = read_token(tokenizer);
-          if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-            break;
-          rewind_token(tokenizer, t);
-          if (++num_args > callee->num_args) {
-            FATAL(
-                "%d:%d: too many arguments to function. got %d, expected %d\n",
-                t.range.start.line, t.range.start.col, num_args,
-                callee->num_args);
-          }
-          Type arg_type = parse_expr(tokenizer, module, function, buf);
-          Type expected = callee->locals[num_args - 1].type;
-          check_type_arg(t.range.start, arg_type, expected, "call",
-                         num_args - 1);
-        }
-
-        if (num_args < callee->num_args) {
-          FATAL("%d:%d: too few arguments to function. got %d, expected %d\n",
-                t.range.start.line, t.range.start.col, num_args,
-                callee->num_args);
-        }
-
-        type = get_result_type(t.range.start, callee);
-        break;
+        Type arg_type = parse_expr(tokenizer, module, function, buf);
+        Type expected = callee->locals[num_args - 1].type;
+        check_type_arg(t.range.start, arg_type, expected, "call",
+                       num_args - 1);
       }
 
-      case OP_CALL_INDIRECT:
-        /* TODO(binji) */
-        break;
-
-      case OP_COMPARE: {
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        Type value0_type = parse_expr(tokenizer, module, function, buf);
-        check_type_arg(t.range.start, value0_type, op_info->type, "compare op",
-                       0);
-        Type value1_type = parse_expr(tokenizer, module, function, buf);
-        check_type_arg(t.range.start, value1_type, op_info->type, "compare op",
-                       1);
-        type = TYPE_I32;
-        expect_close(read_token(tokenizer));
-        break;
+      if (num_args < callee->num_args) {
+        FATAL("%d:%d: too few arguments to function. got %d, expected %d\n",
+              t.range.start.line, t.range.start.col, num_args,
+              callee->num_args);
       }
 
-      case OP_CONST:
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        parse_literal(tokenizer, buf, op_info->type);
-        expect_close(read_token(tokenizer));
-        type = op_info->type;
-        break;
+      type = get_result_type(t.range.start, callee);
+      break;
+    }
 
-      case OP_CONVERT: {
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        Type value_type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, value_type, op_info->type2, " of convert op");
-        expect_close(read_token(tokenizer));
-        type = op_info->type;
-        break;
-      }
+    case OP_CALL_INDIRECT:
+      /* TODO(binji) */
+      break;
 
-      case OP_DESTRUCT:
-        /* TODO(binji) */
-        break;
+    case OP_COMPARE: {
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      Type value0_type = parse_expr(tokenizer, module, function, buf);
+      check_type_arg(t.range.start, value0_type, op_info->type, "compare op",
+                     0);
+      Type value1_type = parse_expr(tokenizer, module, function, buf);
+      check_type_arg(t.range.start, value1_type, op_info->type, "compare op",
+                     1);
+      type = TYPE_I32;
+      expect_close(read_token(tokenizer));
+      break;
+    }
 
-      case OP_GET_LOCAL: {
-        /* opcode = OPCODE_GET_LOCAL; */
-        int index = parse_local_var(tokenizer, function);
-        type = function->locals[index].type;
-        expect_close(read_token(tokenizer));
-        break;
-      }
+    case OP_CONST:
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      parse_literal(tokenizer, buf, op_info->type);
+      expect_close(read_token(tokenizer));
+      type = op_info->type;
+      break;
 
-      case OP_IF: {
-        uint32_t opcode_offset = buf->size;
-        out_opcode(buf, OPCODE_IF);
-        Type cond_type = parse_expr(tokenizer, module, function, buf);
-        check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
-        Type true_type = parse_expr(tokenizer, module, function, buf);
-        t = read_token(tokenizer);
-        if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-          out_u8_at(buf, opcode_offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
-          rewind_token(tokenizer, t);
-          Type false_type = parse_expr(tokenizer, module, function, buf);
-          if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
-            type = TYPE_VOID;
-          } else {
-            check_type(tokenizer->loc, false_type, true_type,
-                       " between true and false branches");
-            type = true_type;
-          }
-          expect_close(read_token(tokenizer));
+    case OP_CONVERT: {
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      Type value_type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, value_type, op_info->type2, " of convert op");
+      expect_close(read_token(tokenizer));
+      type = op_info->type;
+      break;
+    }
+
+    case OP_DESTRUCT:
+      /* TODO(binji) */
+      break;
+
+    case OP_GET_LOCAL: {
+      /* opcode = OPCODE_GET_LOCAL; */
+      int index = parse_local_var(tokenizer, function);
+      type = function->locals[index].type;
+      expect_close(read_token(tokenizer));
+      break;
+    }
+
+    case OP_IF: {
+      uint32_t opcode_offset = buf->size;
+      out_opcode(buf, OPCODE_IF);
+      Type cond_type = parse_expr(tokenizer, module, function, buf);
+      check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
+      Type true_type = parse_expr(tokenizer, module, function, buf);
+      t = read_token(tokenizer);
+      if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+        out_u8_at(buf, opcode_offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
+        rewind_token(tokenizer, t);
+        Type false_type = parse_expr(tokenizer, module, function, buf);
+        if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
+          type = TYPE_VOID;
         } else {
+          check_type(tokenizer->loc, false_type, true_type,
+                     " between true and false branches");
           type = true_type;
         }
-        break;
+        expect_close(read_token(tokenizer));
+      } else {
+        type = true_type;
       }
+      break;
+    }
 
-      case OP_LABEL: {
+    case OP_LABEL: {
+      t = read_token(tokenizer);
+      realloc_list((void**)&function->labels, &function->num_labels,
+                   sizeof(Binding));
+      Binding* binding = &function->labels[function->num_labels - 1];
+      binding->name = NULL;
+
+      if (t.type == TOKEN_TYPE_ATOM) {
+        /* label */
+        expect_var_name(t);
+        binding->name =
+            strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+      } else if (t.type == TOKEN_TYPE_OPEN_PAREN) {
+        /* no label */
+        rewind_token(tokenizer, t);
+      } else {
+        unexpected_token(t);
+      }
+      type = parse_block(tokenizer, module, function, buf);
+      break;
+    }
+
+    case OP_LOAD: {
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      out_u8(buf, op_info->access, "load access byte");
+      Type index_type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, index_type, TYPE_I32, " of load index");
+      expect_close(read_token(tokenizer));
+      type = op_info->type;
+      break;
+    }
+
+    case OP_LOAD_GLOBAL: {
+      out_opcode(buf, OPCODE_GET_GLOBAL);
+      int index = parse_global_var(tokenizer, module);
+      out_leb128(buf, index, "global index");
+      type = module->globals[index].type;
+      expect_close(read_token(tokenizer));
+      break;
+    }
+
+    case OP_LOOP:
+      out_opcode(buf, OPCODE_LOOP);
+      type = parse_block(tokenizer, module, function, buf);
+      break;
+
+    case OP_NOP:
+      out_opcode(buf, OPCODE_NOP);
+      expect_close(read_token(tokenizer));
+      break;
+
+    case OP_RETURN: {
+      out_opcode(buf, OPCODE_RETURN);
+      int num_results = 0;
+      while (1) {
         t = read_token(tokenizer);
-        realloc_list((void**)&function->labels, &function->num_labels,
-                     sizeof(Binding));
-        Binding* binding = &function->labels[function->num_labels - 1];
-        binding->name = NULL;
-
-        if (t.type == TOKEN_TYPE_ATOM) {
-          /* label */
-          expect_var_name(t);
-          binding->name =
-              strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-        } else if (t.type == TOKEN_TYPE_OPEN_PAREN) {
-          /* no label */
-          rewind_token(tokenizer, t);
-        } else {
-          unexpected_token(t);
-        }
-        type = parse_block(tokenizer, module, function, buf);
-        break;
-      }
-
-      case OP_LOAD: {
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        out_u8(buf, op_info->access, "load access byte");
-        Type index_type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, index_type, TYPE_I32, " of load index");
-        expect_close(read_token(tokenizer));
-        type = op_info->type;
-        break;
-      }
-
-      case OP_LOAD_GLOBAL: {
-        out_opcode(buf, OPCODE_GET_GLOBAL);
-        int index = parse_global_var(tokenizer, module);
-        out_leb128(buf, index, "global index");
-        type = module->globals[index].type;
-        expect_close(read_token(tokenizer));
-        break;
-      }
-
-      case OP_LOOP:
-        out_opcode(buf, OPCODE_LOOP);
-        type = parse_block(tokenizer, module, function, buf);
-        break;
-
-      case OP_NOP:
-        out_opcode(buf, OPCODE_NOP);
-        expect_close(read_token(tokenizer));
-        break;
-
-      case OP_RETURN: {
-        out_opcode(buf, OPCODE_RETURN);
-        int num_results = 0;
-        while (1) {
-          t = read_token(tokenizer);
-          if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-            break;
-          if (++num_results > function->num_results) {
-            FATAL("%d:%d: too many return values. got %d, expected %d\n",
-                  t.range.start.line, t.range.start.col, num_results,
-                  function->num_results);
-          }
-          rewind_token(tokenizer, t);
-          Type result_type = parse_expr(tokenizer, module, function, buf);
-          Type expected = function->result_types[num_results - 1];
-          check_type_arg(t.range.start, result_type, expected, "return",
-                         num_results - 1);
-        }
-
-        if (num_results < function->num_results) {
-          FATAL("%d:%d: too few return values. got %d, expected %d\n",
+        if (t.type == TOKEN_TYPE_CLOSE_PAREN)
+          break;
+        if (++num_results > function->num_results) {
+          FATAL("%d:%d: too many return values. got %d, expected %d\n",
                 t.range.start.line, t.range.start.col, num_results,
                 function->num_results);
         }
-
-        type = get_result_type(t.range.start, function);
-        break;
+        rewind_token(tokenizer, t);
+        Type result_type = parse_expr(tokenizer, module, function, buf);
+        Type expected = function->result_types[num_results - 1];
+        check_type_arg(t.range.start, result_type, expected, "return",
+                       num_results - 1);
       }
 
-      case OP_SET_LOCAL: {
-        /* opcode = OPCODE_SET_LOCAL; */
-        int index = parse_local_var(tokenizer, function);
-        Binding* binding = &function->locals[index];
-        type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, type, binding->type, "");
-        expect_close(read_token(tokenizer));
-        break;
+      if (num_results < function->num_results) {
+        FATAL("%d:%d: too few return values. got %d, expected %d\n",
+              t.range.start.line, t.range.start.col, num_results,
+              function->num_results);
       }
 
-      case OP_STORE: {
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        out_u8(buf, op_info->access, "store access byte");
-        Type index_type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, index_type, TYPE_I32, " of store index");
-        Type value_type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, value_type, op_info->type, " of store value");
-        expect_close(read_token(tokenizer));
-        type = op_info->type;
-        break;
-      }
-
-      case OP_STORE_GLOBAL: {
-        out_opcode(buf, OPCODE_SET_GLOBAL);
-        int index = parse_global_var(tokenizer, module);
-        out_leb128(buf, index, "global index");
-        Binding* binding = &module->globals[index];
-        type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, type, binding->type, "");
-        expect_close(read_token(tokenizer));
-        break;
-      }
-
-      case OP_SWITCH:
-        check_opcode(t.range.start, op_info->opcode);
-        type = parse_switch(tokenizer, module, function, buf, op_info->type);
-        break;
-
-      case OP_UNARY: {
-        check_opcode(t.range.start, op_info->opcode);
-        out_opcode(buf, op_info->opcode);
-        Type value_type = parse_expr(tokenizer, module, function, buf);
-        check_type(t.range.start, value_type, op_info->type, " of unary op");
-        type = value_type;
-        expect_close(read_token(tokenizer));
-        break;
-      }
-
-      default:
-        assert(0);
-        break;
+      type = get_result_type(t.range.start, function);
+      break;
     }
+
+    case OP_SET_LOCAL: {
+      /* opcode = OPCODE_SET_LOCAL; */
+      int index = parse_local_var(tokenizer, function);
+      Binding* binding = &function->locals[index];
+      type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, type, binding->type, "");
+      expect_close(read_token(tokenizer));
+      break;
+    }
+
+    case OP_STORE: {
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      out_u8(buf, op_info->access, "store access byte");
+      Type index_type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, index_type, TYPE_I32, " of store index");
+      Type value_type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, value_type, op_info->type, " of store value");
+      expect_close(read_token(tokenizer));
+      type = op_info->type;
+      break;
+    }
+
+    case OP_STORE_GLOBAL: {
+      out_opcode(buf, OPCODE_SET_GLOBAL);
+      int index = parse_global_var(tokenizer, module);
+      out_leb128(buf, index, "global index");
+      Binding* binding = &module->globals[index];
+      type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, type, binding->type, "");
+      expect_close(read_token(tokenizer));
+      break;
+    }
+
+    case OP_SWITCH:
+      check_opcode(t.range.start, op_info->opcode);
+      type = parse_switch(tokenizer, module, function, buf, op_info->type);
+      break;
+
+    case OP_UNARY: {
+      check_opcode(t.range.start, op_info->opcode);
+      out_opcode(buf, op_info->opcode);
+      Type value_type = parse_expr(tokenizer, module, function, buf);
+      check_type(t.range.start, value_type, op_info->type, " of unary op");
+      type = value_type;
+      expect_close(read_token(tokenizer));
+      break;
+    }
+
+    default:
+      assert(0);
+      break;
   }
   return type;
 }
@@ -1441,16 +1427,11 @@ static void parse_func(Tokenizer* tokenizer,
   }
 
   Type type = TYPE_VOID;
-  while (1) {
-    if (t.type == TOKEN_TYPE_CLOSE_PAREN)
-      break;
-    if (t.type != TOKEN_TYPE_OPEN_PAREN)
-      unexpected_token(t);
-
+  while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
+    expect_open(t);
     Token open = t;
     t = read_token(tokenizer);
-    if (t.type != TOKEN_TYPE_ATOM)
-      unexpected_token(t);
+    expect_atom(t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {
@@ -1533,12 +1514,9 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
   }
 
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-    if (t.type != TOKEN_TYPE_OPEN_PAREN)
-      unexpected_token(t);
-
+    expect_open(t);
     t = read_token(tokenizer);
-    if (t.type != TOKEN_TYPE_ATOM)
-      unexpected_token(t);
+    expect_atom(t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {
@@ -1588,12 +1566,9 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
   Token t = read_token(tokenizer);
   Token first = t;
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-    if (t.type != TOKEN_TYPE_OPEN_PAREN)
-      unexpected_token(t);
-
+    expect_open(t);
     t = read_token(tokenizer);
-    if (t.type != TOKEN_TYPE_ATOM)
-      unexpected_token(t);
+    expect_atom(t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {
@@ -1715,12 +1690,9 @@ static void parse_module(Tokenizer* tokenizer) {
   int function_index = 0;
   Token t = read_token(tokenizer);
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-    if (t.type != TOKEN_TYPE_OPEN_PAREN)
-      unexpected_token(t);
-
+    expect_open(t);
     t = read_token(tokenizer);
-    if (t.type != TOKEN_TYPE_ATOM)
-      unexpected_token(t);
+    expect_atom(t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {
@@ -1783,12 +1755,9 @@ static void parse_module(Tokenizer* tokenizer) {
 static void parse(Tokenizer* tokenizer) {
   Token t = read_token(tokenizer);
   while (t.type != TOKEN_TYPE_EOF) {
-    if (t.type != TOKEN_TYPE_OPEN_PAREN)
-      unexpected_token(t);
-
+    expect_open(t);
     t = read_token(tokenizer);
-    if (t.type != TOKEN_TYPE_ATOM)
-      unexpected_token(t);
+    expect_atom(t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {

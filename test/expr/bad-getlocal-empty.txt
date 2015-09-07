@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (local i32) (get_local)))
 # STDERR:
-1:37: unexpected token ")"
+1:37: expected ATOM, not ")"
