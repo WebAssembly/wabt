@@ -1,8 +1,11 @@
 language: c
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y gperf
+sudo: false
+addon:
+  apt:
+    packages:
+      - gperf
 script:
+  - scripts/build-d8.sh
   - make
   - test/run-tests.py -v
 compiler:
