@@ -1,0 +1,7 @@
+# EXE: test/run-d8.py
+(module
+  (func (result i32)
+    (return (i32.const 42)))
+  (export "main" 0))
+# STDOUT:
+42

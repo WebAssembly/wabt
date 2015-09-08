@@ -142,8 +142,9 @@ class TestInfo(object):
       exe = os.path.join(REPO_ROOT_DIR, self.exe)
     else:
       exe = DEFAULT_EXE
-
-    return os.path.relpath(exe, SCRIPT_DIR)
+    # prepend os.curdir so Popen can find the executable. It won't work
+    # properly if the executable is in SCRIPT_DIR otherwise.
+    return os.path.join(os.curdir, os.path.relpath(exe, SCRIPT_DIR))
 
   def GetCommand(self, filename, override_exe=None):
     cmd = [self.GetExecutable(override_exe)]
@@ -158,13 +159,12 @@ class TestInfo(object):
     try:
       file_.write(self.input_)
       file_.flush()
-      cmd = ['sexpr-wasm'] + self.GetCommand(file_.name, override_exe)[1:]
-      exe = self.GetExecutable(override_exe)
+      cmd = self.GetCommand(file_.name, override_exe)
       try:
         start_time = time.time()
         # http://stackoverflow.com/a/10012262: subprocess with a timeout
-        process = subprocess.Popen(cmd, executable=exe, stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
         # Cheesy way to be able to set killed from inside kill_process
         killed = [False]
         def kill_process():
@@ -199,13 +199,17 @@ class TestInfo(object):
         f.write(stdout)
 
   def Diff(self, stdout, stderr):
+    msg = ''
     if self.expected_stderr != stderr:
       diff_lines = DiffLines(self.expected_stderr, stderr)
-      raise Error('stderr mismatch:\n' + ''.join(diff_lines))
+      msg += 'STDERR MISMATCH:\n' + ''.join(diff_lines)
 
     if self.expected_stdout != stdout:
       diff_lines = DiffLines(self.expected_stdout, stdout)
-      raise Error('stdout mismatch:\n' + ''.join(diff_lines))
+      msg += 'STDOUT MISMATCH:\n' + ''.join(diff_lines)
+
+    if msg:
+      raise Error(msg)
 
 
 class Status(object):

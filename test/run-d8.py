@@ -34,6 +34,11 @@ def main(args):
   else:
     exe = DEFAULT_EXE
 
+  if not os.path.exists(D8):
+    raise Error('d8 executable does not exist.\n'
+                'Run scripts/build-d8.sh to build it.\n'
+                'path: %s' % D8)
+
   generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
   try:
     # First compile the file
