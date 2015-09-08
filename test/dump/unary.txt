@@ -45,40 +45,42 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 5a                                         ; OPCODE_I32_NOT
-0000021: 57                                         ; OPCODE_I32_CLZ
-0000022: 58                                         ; OPCODE_I32_CTZ
-0000023: 59                                         ; OPCODE_I32_POPCNT
-0000024: 11                                         ; OPCODE_I32_CONST
-0000025: 0000 0000                                  ; u32 literal
-0000029: 72                                         ; OPCODE_I64_CLZ
-000002a: 73                                         ; OPCODE_I64_CTZ
-000002b: 74                                         ; OPCODE_I64_POPCNT
-000002c: 12                                         ; OPCODE_I64_CONST
-000002d: 0000 0000 0000 0000                        ; u64 literal
-0000035: 7c                                         ; OPCODE_F32_NEG
-0000036: 7b                                         ; OPCODE_F32_ABS
-0000037: 82                                         ; OPCODE_F32_SQRT
-0000038: 7e                                         ; OPCODE_F32_CEIL
-0000039: 7f                                         ; OPCODE_F32_FLOOR
-000003a: 80                                         ; OPCODE_F32_TRUNC
-000003b: 81                                         ; OPCODE_F32_NEAREST
-000003c: 14                                         ; OPCODE_F32_CONST
-000003d: 0000 0000                                  ; f32 literal
-0000041: 90                                         ; OPCODE_F64_NEG
-0000042: 8f                                         ; OPCODE_F64_ABS
-0000043: 96                                         ; OPCODE_F64_SQRT
-0000044: 92                                         ; OPCODE_F64_CEIL
-0000045: 93                                         ; OPCODE_F64_FLOOR
-0000046: 94                                         ; OPCODE_F64_TRUNC
-0000047: 95                                         ; OPCODE_F64_NEAREST
-0000048: 13                                         ; OPCODE_F64_CONST
-0000049: 0000 0000 0000 0000                        ; f64 literal
-0000012: 5100 0000                                  ; FIXUP func code end offset
+0000020: 03                                         ; OPCODE_BLOCK
+0000021: 01                                         ; toplevel block num expressions
+0000022: 5a                                         ; OPCODE_I32_NOT
+0000023: 57                                         ; OPCODE_I32_CLZ
+0000024: 58                                         ; OPCODE_I32_CTZ
+0000025: 59                                         ; OPCODE_I32_POPCNT
+0000026: 11                                         ; OPCODE_I32_CONST
+0000027: 0000 0000                                  ; u32 literal
+000002b: 72                                         ; OPCODE_I64_CLZ
+000002c: 73                                         ; OPCODE_I64_CTZ
+000002d: 74                                         ; OPCODE_I64_POPCNT
+000002e: 12                                         ; OPCODE_I64_CONST
+000002f: 0000 0000 0000 0000                        ; u64 literal
+0000037: 7c                                         ; OPCODE_F32_NEG
+0000038: 7b                                         ; OPCODE_F32_ABS
+0000039: 82                                         ; OPCODE_F32_SQRT
+000003a: 7e                                         ; OPCODE_F32_CEIL
+000003b: 7f                                         ; OPCODE_F32_FLOOR
+000003c: 80                                         ; OPCODE_F32_TRUNC
+000003d: 81                                         ; OPCODE_F32_NEAREST
+000003e: 14                                         ; OPCODE_F32_CONST
+000003f: 0000 0000                                  ; f32 literal
+0000043: 90                                         ; OPCODE_F64_NEG
+0000044: 8f                                         ; OPCODE_F64_ABS
+0000045: 96                                         ; OPCODE_F64_SQRT
+0000046: 92                                         ; OPCODE_F64_CEIL
+0000047: 93                                         ; OPCODE_F64_FLOOR
+0000048: 94                                         ; OPCODE_F64_TRUNC
+0000049: 95                                         ; OPCODE_F64_NEAREST
+000004a: 13                                         ; OPCODE_F64_CONST
+000004b: 0000 0000 0000 0000                        ; f64 literal
+0000012: 5300 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 5100 0000 0000 0000 0000 0000 0000  ..Q.............
-0000020: 5a57 5859 1100 0000 0072 7374 1200 0000  ZWXY.....rst....
-0000030: 0000 0000 007c 7b82 7e7f 8081 1400 0000  .....|{.~.......
-0000040: 0090 8f96 9293 9495 1300 0000 0000 0000  ................
-0000050: 00                                       .
+0000010: 0000 5300 0000 0000 0000 0000 0000 0000  ..S.............
+0000020: 0301 5a57 5859 1100 0000 0072 7374 1200  ..ZWXY.....rst..
+0000030: 0000 0000 0000 007c 7b82 7e7f 8081 1400  .......|{.~.....
+0000040: 0000 0090 8f96 9293 9495 1300 0000 0000  ................
+0000050: 0000 00                                  ...

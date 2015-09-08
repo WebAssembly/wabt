@@ -1988,6 +1988,10 @@ static void parse_module(Tokenizer* tokenizer) {
           printf("; function data %d\n", function_index - 1);
         out_u32_at(&output, function->offset + CODE_START_OFFSET,
                    output.size, "FIXUP func code start offset");
+        /* The v8-native-prototype requires all functions to have a toplevel
+         block */
+        out_opcode(&output, OPCODE_BLOCK);
+        out_u8(&output, 1, "toplevel block num expressions");
         parse_func(tokenizer, &module, function, &output);
         out_u32_at(&output, function->offset + CODE_END_OFFSET,
                    output.size, "FIXUP func code end offset");

@@ -23,12 +23,14 @@
 0000020: 00                                         ; func external
 ; function data 0
 000000f: 2100 0000                                  ; FIXUP func code start offset
-0000021: 19                                         ; OPCODE_CALL
-0000022: 00                                         ; func index
-0000023: 11                                         ; OPCODE_I32_CONST
-0000024: 0100 0000                                  ; u32 literal
-0000013: 2800 0000                                  ; FIXUP func code end offset
+0000021: 03                                         ; OPCODE_BLOCK
+0000022: 01                                         ; toplevel block num expressions
+0000023: 19                                         ; OPCODE_CALL
+0000024: 00                                         ; func index
+0000025: 11                                         ; OPCODE_I32_CONST
+0000026: 0100 0000                                  ; u32 literal
+0000013: 2a00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0100 0100 0000 0021  ...............!
-0000010: 0000 0028 0000 0000 0000 0000 0000 0000  ...(............
-0000020: 0019 0011 0100 0000                      ........
+0000010: 0000 002a 0000 0000 0000 0000 0000 0000  ...*............
+0000020: 0003 0119 0011 0100 0000                 ..........

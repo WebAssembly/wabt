@@ -27,14 +27,17 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: ad                                         ; OPCODE_F32_REINTERPRET_I32
-0000021: 11                                         ; OPCODE_I32_CONST
-0000022: 0000 0000                                  ; u32 literal
-0000026: b3                                         ; OPCODE_F64_REINTERPRET_I64
-0000027: 12                                         ; OPCODE_I64_CONST
-0000028: 0000 0000 0000 0000                        ; u64 literal
-0000012: 3000 0000                                  ; FIXUP func code end offset
+0000020: 03                                         ; OPCODE_BLOCK
+0000021: 01                                         ; toplevel block num expressions
+0000022: ad                                         ; OPCODE_F32_REINTERPRET_I32
+0000023: 11                                         ; OPCODE_I32_CONST
+0000024: 0000 0000                                  ; u32 literal
+0000028: b3                                         ; OPCODE_F64_REINTERPRET_I64
+0000029: 12                                         ; OPCODE_I64_CONST
+000002a: 0000 0000 0000 0000                        ; u64 literal
+0000012: 3200 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 3000 0000 0000 0000 0000 0000 0000  ..0.............
-0000020: ad11 0000 0000 b312 0000 0000 0000 0000  ................
+0000010: 0000 3200 0000 0000 0000 0000 0000 0000  ..2.............
+0000020: 0301 ad11 0000 0000 b312 0000 0000 0000  ................
+0000030: 0000                                     ..
