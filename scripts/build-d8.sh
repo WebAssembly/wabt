@@ -29,6 +29,9 @@ cd v8
 gclient update
 cd ..
 
+# Don't use the CC from the environment; v8 doesn't seem to build properly with
+# it.
+unset CC
 cd v8/v8
 GYP_GENERATORS=ninja build/gyp_v8 -Dv8_wasm=1
 time ninja -C out/Release d8
