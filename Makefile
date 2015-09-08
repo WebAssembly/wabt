@@ -9,7 +9,7 @@ all: $(addprefix out/,$(ALL))
 out/:
 	mkdir $@
 
-out/sexpr-wasm: sexpr-wasm.c hash.h | out
+out/sexpr-wasm: src/sexpr-wasm.c src/hash.h | out
 	$(CC) $(CFLAGS) -o $@ $<
 
 hash.h: hash.txt
