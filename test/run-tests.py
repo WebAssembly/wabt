@@ -14,12 +14,14 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
+DEFAULT_TIMEOUT = 2 # seconds
 
 
 class Error(Exception):
@@ -150,7 +152,7 @@ class TestInfo(object):
     cmd += ['--'] + AsList(self.args)
     return cmd
 
-  def Run(self, override_exe=None):
+  def Run(self, timeout, override_exe=None):
     # Pass 'pnacl' as the executable name so the output is consistent
     file_ = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
     try:
@@ -160,9 +162,23 @@ class TestInfo(object):
       exe = self.GetExecutable(override_exe)
       try:
         start_time = time.time()
+        # http://stackoverflow.com/a/10012262: subprocess with a timeout
         process = subprocess.Popen(cmd, executable=exe, stdout=subprocess.PIPE,
                                                         stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
+        # Cheesy way to be able to set killed from inside kill_process
+        killed = [False]
+        def kill_process():
+          killed[0] = True
+          process.kill()
+
+        timer = threading.Timer(timeout, kill_process)
+        try:
+          timer.start()
+          stdout, stderr = process.communicate()
+        finally:
+          timer.cancel()
+        if killed[0]:
+          raise Error('timeout')
         duration = time.time() - start_time
       except OSError as e:
         raise Error(str(e))
@@ -278,6 +294,8 @@ def main(args):
                       action='store_true')
   parser.add_argument('-j', '--jobs', help='number of jobs to use to run tests',
                       type=int, default=multiprocessing.cpu_count())
+  parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
+                      help='per test timeout in seconds')
   parser.add_argument('patterns', metavar='pattern', nargs='*',
                       help='test patterns.')
   options = parser.parse_args(args)
@@ -329,22 +347,26 @@ def main(args):
   processes = []
   status.Start(test_count)
 
-  def Worker(options, inq, outq):
+  def Worker(i, options, inq, outq):
     while True:
       try:
         info = inq.get(False)
         try:
-          out = info.Run(options.executable)
+          out = info.Run(options.timeout, options.executable)
         except Error as e:
           outq.put((info, e))
           continue
         outq.put((info, out))
       except Queue.Empty:
-        break
+        # Seems this can be fired even when the queue isn't actually empty.
+        # Double-check, via inq.empty()
+        if inq.empty():
+          break
 
   try:
-    for p in range(num_proc):
-      proc = multiprocessing.Process(target=Worker, args=(options, inq, outq))
+    for i, p in enumerate(range(num_proc)):
+      proc = multiprocessing.Process(target=Worker,
+                                     args=(i, options, inq, outq))
       processes.append(proc)
       proc.start()
 
