@@ -369,7 +369,8 @@ typedef struct NameTypePair {
 } NameTypePair;
 
 static int g_verbose;
-static const char* g_filename;
+static const char* g_infile;
+static const char* g_outfile;
 static int g_dump_module;
 
 static const char* s_opcode_names[] = {
@@ -553,6 +554,15 @@ static void out_string_token(OutputBuffer* buf, Token t, const char* desc) {
 
 static void dump_output_buffer(OutputBuffer* buf) {
   dump_memory(buf->start, buf->size, 0, 1, NULL);
+}
+
+static void write_output_buffer(OutputBuffer* buf, const char* filename) {
+  FILE* out = (strcmp(filename, "-") != 0) ? fopen(filename, "wb") : stdout;
+  if (!out)
+    FATAL("unable to open %s\n", filename);
+  if (fwrite(buf->start, 1, buf->size, out) != buf->size)
+    FATAL("unable to write %zd bytes\n", buf->size);
+  fclose(out);
 }
 
 static void destroy_output_buffer(OutputBuffer* buf) {
@@ -2022,6 +2032,15 @@ static void parse_module(Tokenizer* tokenizer) {
   if (g_dump_module)
     dump_output_buffer(&output);
 
+  if (g_outfile) {
+    /* TODO(binji): better way to prevent multiple output */
+    static int s_already_output = 0;
+    if (s_already_output)
+      FATAL("Can't write multiple modules to output\n");
+    s_already_output = 1;
+    write_output_buffer(&output, g_outfile);
+  }
+
   destroy_output_buffer(&output);
   destroy_module(&module);
 }
@@ -2057,6 +2076,7 @@ enum {
   FLAG_VERBOSE,
   FLAG_HELP,
   FLAG_DUMP_MODULE,
+  FLAG_OUTPUT,
   NUM_FLAGS
 };
 
@@ -2064,6 +2084,7 @@ static struct option g_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
     {"dump-module", no_argument, NULL, 'd'},
+    {"output", no_argument, NULL, 'o'},
     {NULL, 0, NULL, 0},
 };
 STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(g_long_options));
@@ -2125,7 +2146,7 @@ static void parse_options(int argc, char** argv) {
   int option_index;
 
   while (1) {
-    c = getopt_long(argc, argv, "vhd", g_long_options, &option_index);
+    c = getopt_long(argc, argv, "vhdo:", g_long_options, &option_index);
     if (c == -1) {
       break;
     }
@@ -2142,6 +2163,7 @@ static void parse_options(int argc, char** argv) {
           case FLAG_VERBOSE:
           case FLAG_HELP:
           case FLAG_DUMP_MODULE:
+          case FLAG_OUTPUT:
             /* Handled above by goto */
             assert(0);
         }
@@ -2158,6 +2180,10 @@ static void parse_options(int argc, char** argv) {
         g_dump_module = 1;
         break;
 
+      case 'o':
+        g_outfile = optarg;
+        break;
+
       case '?':
         break;
 
@@ -2168,7 +2194,7 @@ static void parse_options(int argc, char** argv) {
   }
 
   if (optind < argc) {
-    g_filename = argv[optind];
+    g_infile = argv[optind];
   } else {
     FATAL("No filename given.\n");
     usage(argv[0]);
@@ -2178,9 +2204,9 @@ static void parse_options(int argc, char** argv) {
 int main(int argc, char** argv) {
   parse_options(argc, argv);
 
-  FILE* f = fopen(g_filename, "rb");
+  FILE* f = fopen(g_infile, "rb");
   if (!f) {
-    FATAL("unable to read %s\n", g_filename);
+    FATAL("unable to read %s\n", g_infile);
   }
 
   fseek(f, 0, SEEK_END);
@@ -2191,7 +2217,7 @@ int main(int argc, char** argv) {
     FATAL("unable to alloc %zd bytes\n", fsize);
   }
   if (fread(data, 1, fsize, f) != fsize) {
-    FATAL("unable to read %zd bytes from %s\n", fsize, g_filename);
+    FATAL("unable to read %zd bytes from %s\n", fsize, g_infile);
   }
   fclose(f);
 
