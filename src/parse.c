@@ -33,78 +33,19 @@ typedef struct OpInfo OpInfo;
 
 typedef uint8_t MemAccess;
 
-
-static void* append_element(void** data,
-                            size_t* size,
-                            size_t* capacity,
-                            size_t elt_size);
-
 #define DEFINE_VECTOR(name, type)                                             \
-  typedef struct type##Vector {                                               \
-    type* data;                                                               \
-    size_t size;                                                              \
-    size_t capacity;                                                          \
-  } type##Vector;                                                             \
-  static void destroy_##name##_vector(type##Vector* vec) { free(vec->data); } \
-  static type* append_##name(type##Vector* vec) {                             \
+  void destroy_##name##_vector(type##Vector* vec) { free(vec->data); }        \
+  type* append_##name(type##Vector* vec) {                                    \
     return append_element((void**)&vec->data, &vec->size, &vec->capacity,     \
                           sizeof(type));                                      \
   }
 
 DEFINE_VECTOR(type, Type)
-
-typedef struct Binding {
-  char* name;
-  int index;
-} Binding;
 DEFINE_VECTOR(binding, Binding)
-
-typedef struct Variable {
-  size_t offset;
-  Type type;
-  /* The v8-native-prototype stores locals in i32/i64/f32/f64 order, where all
-   * variables of one type are grouped. index maps to this variable to its
-   * correct location in that order */
-  int index;
-} Variable;
 DEFINE_VECTOR(variable, Variable)
-
-typedef struct Function {
-  TypeVector result_types;
-  VariableVector locals; /* Includes args, they're at the start */
-  BindingVector local_bindings;
-  BindingVector labels;
-  size_t offset; /* offset in the output buffer (function bindings skip the
-                    signature */
-  int num_args;
-  int depth;
-} Function;
 DEFINE_VECTOR(function, Function)
-
-typedef struct Export {
-  char* name;
-  int index;
-} Export;
 DEFINE_VECTOR(export, Export)
-
-typedef struct Segment {
-  size_t offset;
-  size_t size;
-  uint32_t address;
-  Token data;
-} Segment;
 DEFINE_VECTOR(segment, Segment)
-
-typedef struct Module {
-  FunctionVector functions;
-  BindingVector function_bindings;
-  VariableVector globals;
-  BindingVector global_bindings;
-  ExportVector exports;
-  SegmentVector segments;
-  uint32_t initial_memory_size;
-  uint32_t max_memory_size;
-} Module;
 
 typedef struct OutputBuffer {
   void* start;
@@ -145,10 +86,10 @@ static uint32_t log_two_u32(uint32_t x) {
   return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
 }
 
-static void* append_element(void** data,
-                            size_t* size,
-                            size_t* capacity,
-                            size_t elt_size) {
+void* append_element(void** data,
+                     size_t* size,
+                     size_t* capacity,
+                     size_t elt_size) {
   if (*size + 1 > *capacity) {
     size_t new_capacity = *capacity ? *capacity * 2 : INITIAL_VECTOR_CAPACITY;
     size_t new_size = new_capacity * elt_size;

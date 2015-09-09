@@ -1,4 +1,6 @@
-#include "wasm.h"
+#ifndef WASM_PARSE_H
+#define WASM_PARSE_H
+//#include "wasm.h"
 
 typedef enum TokenType {
   TOKEN_TYPE_EOF,
@@ -40,3 +42,5 @@ extern int g_dump_module;
 
 void parse_module(Tokenizer* tokenizer);
 void parse_file(Tokenizer* tokenizer);
+
+#endif /* WASM_PARSE_H */
