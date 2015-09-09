@@ -3,14 +3,18 @@
 ALL = sexpr-wasm
 CFLAGS = -Wall -Werror -g
 
+OBJS = out/sexpr-wasm.o out/parse.o
+HEADERS = src/wasm.h src/wasm-parse.h
+
 .PHONY: all
 all: $(addprefix out/,$(ALL))
 
 out/:
 	mkdir $@
-
-out/sexpr-wasm: src/sexpr-wasm.c src/hash.h | out
-	$(CC) $(CFLAGS) -o $@ $<
+out/%.o: src/%.c $(HEADERS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+out/sexpr-wasm: out $(OBJS)
+	$(CC) -o $@ $(OBJS)
 
 hash.h: hash.txt
 	gperf --compare-strncmp --readonly-tables --struct-type $< --output-file $@
