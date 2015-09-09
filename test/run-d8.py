@@ -43,12 +43,17 @@ def main(args):
   try:
     # First compile the file
     cmd = [exe, options.file, '-o', generated.name]
+    if options.verbose:
+      cmd.append('-v')
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
       stdout, stderr = process.communicate()
     except OSError as e:
       raise Error(str(e))
+
+    if options.verbose:
+      print stdout
 
     if process.returncode != 0:
       raise Error(stderr)
