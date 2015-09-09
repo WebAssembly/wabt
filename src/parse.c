@@ -1697,8 +1697,8 @@ void parse_module(Tokenizer* tokenizer) {
         export->index = index;
 
         Function* exported = &module.functions.data[index];
-        out_u32_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
-                   "FIXUP func exported");
+        out_u8_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
+                  "FIXUP func exported");
         expect_close(read_token(tokenizer));
         break;
       }
