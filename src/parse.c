@@ -1266,16 +1266,17 @@ static Type parse_expr(Tokenizer* tokenizer,
   return type;
 }
 
-static void parse_func(Tokenizer* tokenizer,
-                       Module* module,
-                       Function* function,
-                       OutputBuffer* buf) {
+static int parse_func(Tokenizer* tokenizer,
+                      Module* module,
+                      Function* function,
+                      OutputBuffer* buf) {
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     /* named function */
     t = read_token(tokenizer);
   }
 
+  int num_exprs = 0;
   Type type = TYPE_VOID;
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(t);
@@ -1295,6 +1296,7 @@ static void parse_func(Tokenizer* tokenizer,
       default:
         rewind_token(tokenizer, open);
         type = parse_expr(tokenizer, module, function, buf);
+        ++num_exprs;
         break;
     }
     t = read_token(tokenizer);
@@ -1303,6 +1305,8 @@ static void parse_func(Tokenizer* tokenizer,
   Type result_type = get_result_type(t.range.start, function);
   if (result_type != TYPE_VOID)
     check_type(t.range.start, type, result_type, " in function result");
+
+  return num_exprs;
 }
 
 static void preparse_binding_list(Tokenizer* tokenizer,
@@ -1680,10 +1684,13 @@ void parse_module(Tokenizer* tokenizer) {
         /* The v8-native-prototype requires all functions to have a toplevel
          block */
         out_opcode(&output, OPCODE_BLOCK);
-        out_u8(&output, 1, "toplevel block num expressions");
-        parse_func(tokenizer, &module, function, &output);
-        out_u32_at(&output, function->offset + CODE_END_OFFSET,
-                   output.size, "FIXUP func code end offset");
+        size_t offset = output.size;
+        out_u8(&output, 0, "toplevel block num expressions");
+        int num_exprs = parse_func(tokenizer, &module, function, &output);
+        out_u8_at(&output, offset, num_exprs,
+                  "FIXUP toplevel block num expressions");
+        out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size,
+                   "FIXUP func code end offset");
         break;
       }
 

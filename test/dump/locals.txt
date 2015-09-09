@@ -22,9 +22,10 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 03                                         ; OPCODE_BLOCK
-0000021: 01                                         ; toplevel block num expressions
+0000021: 00                                         ; toplevel block num expressions
+0000021: 00                                         ; FIXUP toplevel block num expressions
 0000012: 2200 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 2200 0000 0100 0200 0300 0400 0000  ..".............
-0000020: 0301                                     ..
+0000020: 0300                                     ..

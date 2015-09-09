@@ -23,7 +23,8 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 03                                         ; OPCODE_BLOCK
-0000021: 01                                         ; toplevel block num expressions
+0000021: 00                                         ; toplevel block num expressions
+0000021: 00                                         ; FIXUP toplevel block num expressions
 0000012: 2200 0000                                  ; FIXUP func code end offset
 000001e: 01                                         ; FIXUP func exported
 ; names
@@ -31,4 +32,4 @@
 0000022: 666f 6f00                                  ; export name
 0000000: 0001 0000 0100 0000 0000 2200 0000 2000  .........."... .
 0000010: 0000 2200 0000 0000 0000 0000 0000 0100  ..".............
-0000020: 0301 666f 6f00                           ..foo.
+0000020: 0300 666f 6f00                           ..foo.

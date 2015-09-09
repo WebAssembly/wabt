@@ -45,7 +45,7 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 03                                         ; OPCODE_BLOCK
-0000021: 01                                         ; toplevel block num expressions
+0000021: 00                                         ; toplevel block num expressions
 0000022: a1                                         ; OPCODE_I32_CONVERT_I64
 0000023: a7                                         ; OPCODE_I64_UCONVERT_I32
 0000024: 9d                                         ; OPCODE_I32_SCONVERT_F32
@@ -73,10 +73,11 @@
 0000040: b2                                         ; OPCODE_F64_CONVERT_F32
 0000041: 14                                         ; OPCODE_F32_CONST
 0000042: 0000 0000                                  ; f32 literal
+0000021: 03                                         ; FIXUP toplevel block num expressions
 0000012: 4600 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 4600 0000 0000 0000 0000 0000 0000  ..F.............
-0000020: 0301 a1a7 9da8 9fa9 9eae a0af 1100 0000  ................
+0000020: 0303 a1a7 9da8 9fa9 9eae a0af 1100 0000  ................
 0000030: 00a2 aaa4 aba3 b0a5 b1a6 1100 0000 00ac  ................
 0000040: b214 0000 0000                           ......

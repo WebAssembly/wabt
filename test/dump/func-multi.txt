@@ -48,17 +48,20 @@
 ; function data 0
 000000e: 5000 0000                                  ; FIXUP func code start offset
 0000050: 03                                         ; OPCODE_BLOCK
-0000051: 01                                         ; toplevel block num expressions
+0000051: 00                                         ; toplevel block num expressions
+0000051: 00                                         ; FIXUP toplevel block num expressions
 0000012: 5200 0000                                  ; FIXUP func code end offset
 ; function data 1
 0000026: 5200 0000                                  ; FIXUP func code start offset
 0000052: 03                                         ; OPCODE_BLOCK
-0000053: 01                                         ; toplevel block num expressions
+0000053: 00                                         ; toplevel block num expressions
+0000053: 00                                         ; FIXUP toplevel block num expressions
 000002a: 5400 0000                                  ; FIXUP func code end offset
 ; function data 2
 000003e: 5400 0000                                  ; FIXUP func code start offset
 0000054: 03                                         ; OPCODE_BLOCK
-0000055: 01                                         ; toplevel block num expressions
+0000055: 00                                         ; toplevel block num expressions
+0000055: 00                                         ; FIXUP toplevel block num expressions
 0000042: 5600 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0300 0000 0000 0000 0000 5000  ..............P.
@@ -66,4 +69,4 @@
 0000020: 0000 0000 0000 5200 0000 5400 0000 0000  ......R...T.....
 0000030: 0000 0000 0000 0000 0000 0000 0000 5400  ..............T.
 0000040: 0000 5600 0000 0000 0000 0000 0000 0000  ..V.............
-0000050: 0301 0301 0301                           ......
+0000050: 0300 0300 0300                           ......

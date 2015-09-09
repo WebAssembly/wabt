@@ -70,7 +70,7 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 03                                         ; OPCODE_BLOCK
-0000021: 01                                         ; toplevel block num expressions
+0000021: 00                                         ; toplevel block num expressions
 0000022: 4d                                         ; OPCODE_I32_EQ
 0000023: 4e                                         ; OPCODE_I32_NE
 0000024: 4f                                         ; OPCODE_I32_SLT
@@ -213,11 +213,12 @@
 00001c4: 0000 0000 0000 0000                        ; f64 literal
 00001cc: 13                                         ; OPCODE_F64_CONST
 00001cd: 0000 0000 0000 0000                        ; f64 literal
+0000021: 17                                         ; FIXUP toplevel block num expressions
 0000012: d501 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 d501 0000 0000 0000 0000 0000 0000  ................
-0000020: 0301 4d4e 4f51 5052 5355 5456 1100 0000  ..MNOQPRSUTV....
+0000020: 0317 4d4e 4f51 5052 5355 5456 1100 0000  ..MNOQPRSUTV....
 0000030: 0011 0000 0000 1100 0000 0011 0000 0000  ................
 0000040: 1100 0000 0011 0000 0000 1100 0000 0011  ................
 0000050: 0000 0000 1100 0000 0011 0000 0000 1100  ................

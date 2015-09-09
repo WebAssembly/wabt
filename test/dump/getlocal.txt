@@ -35,7 +35,7 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 03                                         ; OPCODE_BLOCK
-0000021: 01                                         ; toplevel block num expressions
+0000021: 00                                         ; toplevel block num expressions
 0000022: 15                                         ; OPCODE_GET_LOCAL
 0000023: 06                                         ; remapped local index
 0000024: 15                                         ; OPCODE_GET_LOCAL
@@ -52,9 +52,10 @@
 000002f: 07                                         ; remapped local index
 0000030: 15                                         ; OPCODE_GET_LOCAL
 0000031: 03                                         ; remapped local index
+0000021: 08                                         ; FIXUP toplevel block num expressions
 0000012: 3200 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 3200 0000 0200 0200 0200 0200 0000  ..2.............
-0000020: 0301 1506 1504 1502 1500 1501 1505 1507  ................
+0000020: 0308 1506 1504 1502 1500 1501 1505 1507  ................
 0000030: 1503                                     ..

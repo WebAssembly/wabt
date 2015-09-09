@@ -24,11 +24,12 @@
 ; function data 0
 000000f: 2100 0000                                  ; FIXUP func code start offset
 0000021: 03                                         ; OPCODE_BLOCK
-0000022: 01                                         ; toplevel block num expressions
+0000022: 00                                         ; toplevel block num expressions
 0000023: 19                                         ; OPCODE_CALL
 0000024: 00                                         ; func index
 0000025: 11                                         ; OPCODE_I32_CONST
 0000026: 0100 0000                                  ; u32 literal
+0000022: 01                                         ; FIXUP toplevel block num expressions
 0000013: 2a00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0100 0100 0000 0021  ...............!

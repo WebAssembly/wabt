@@ -33,7 +33,7 @@
 ; function data 0
 000001a: 2c00 0000                                  ; FIXUP func code start offset
 000002c: 03                                         ; OPCODE_BLOCK
-000002d: 01                                         ; toplevel block num expressions
+000002d: 00                                         ; toplevel block num expressions
 000002e: 18                                         ; OPCODE_SET_GLOBAL
 000002f: 00                                         ; global index
 0000030: 40                                         ; OPCODE_I32_ADD
@@ -46,6 +46,7 @@
 000003a: 00                                         ; remapped local index
 000003b: 15                                         ; OPCODE_GET_LOCAL
 000003c: 01                                         ; remapped local index
+000002d: 02                                         ; FIXUP toplevel block num expressions
 000001e: 3d00 0000                                  ; FIXUP func code end offset
 000002a: 01                                         ; FIXUP func exported
 ; names
@@ -53,5 +54,5 @@
 000003d: 6600                                       ; export name
 0000000: 0001 0100 0100 0000 0000 0000 0400 0000  ................
 0000010: 0000 0201 0101 3d00 0000 2c00 0000 3d00  ......=...,...=.
-0000020: 0000 0000 0000 0000 0000 0100 0301 1800  ................
+0000020: 0000 0000 0000 0000 0000 0100 0302 1800  ................
 0000030: 4017 0011 0100 0000 4015 0015 0166 00    @.......@....f.
