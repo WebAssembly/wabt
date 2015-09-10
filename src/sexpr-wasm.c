@@ -6,6 +6,7 @@
 
 #include "wasm.h"
 #include "wasm-parse.h"
+#include "wasm-gen.h"
 
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define FATAL_AT(loc, ...)                           \
@@ -171,6 +172,6 @@ int main(int argc, char** argv) {
   tokenizer.loc.line = 1;
   tokenizer.loc.col = 1;
 
-  parse_file(&tokenizer);
+  gen_file(&tokenizer);
   return 0;
 }

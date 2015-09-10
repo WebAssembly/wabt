@@ -8,6 +8,8 @@
 
 #include "wasm.h"
 #include "wasm-parse.h"
+/* TODO(binji): remove this when the parser no longer generates output */
+#include "wasm-gen.h"
 
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -20,11 +22,6 @@
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
 #define INITIAL_VECTOR_CAPACITY 8
-#define INITIAL_OUTPUT_BUFFER_CAPACITY (64 * 1024)
-#define DEFAULT_MEMORY_EXPORT 1
-
-#define DUMP_OCTETS_PER_LINE 16
-#define DUMP_OCTETS_PER_GROUP 2
 
 #include "hash.h"
 
@@ -50,12 +47,6 @@ DEFINE_VECTOR(function, Function)
 DEFINE_VECTOR(export, Export)
 DEFINE_VECTOR(segment, Segment)
 
-typedef struct OutputBuffer {
-  void* start;
-  size_t size;
-  size_t capacity;
-} OutputBuffer;
-
 typedef struct NameTypePair {
   const char* name;
   Type type;
@@ -64,12 +55,6 @@ typedef struct NameTypePair {
 int g_verbose;
 const char* g_outfile;
 int g_dump_module;
-
-static const char* s_opcode_names[] = {
-#define OPCODE(name, code) [code] = "OPCODE_" #name,
-    OPCODES(OPCODE)
-#undef OPCODE
-};
 
 static NameTypePair s_types[] = {
     {"i32", TYPE_I32},
@@ -82,12 +67,6 @@ static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == NUM_TYPES);
-
-static uint32_t log_two_u32(uint32_t x) {
-  if (!x)
-    return 0;
-  return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
-}
 
 void* append_element(void** data,
                      size_t* size,
@@ -108,157 +87,6 @@ static void pop_binding(BindingVector* vec) {
   assert(vec->size > 0);
   free(vec->data[vec->size - 1].name);
   vec->size--;
-}
-
-static void dump_memory(const void* start,
-                        size_t size,
-                        size_t offset,
-                        int print_chars,
-                        const char* desc) {
-  /* mimic xxd output */
-  const uint8_t* p = start;
-  const uint8_t* end = p + size;
-  while (p < end) {
-    const uint8_t* line = p;
-    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07x: ", (int)((void*)p - start + offset));
-    while (p < line_end) {
-      int i;
-      for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
-        if (p < end) {
-          printf("%02x", *p);
-        } else {
-          putchar(' ');
-          putchar(' ');
-        }
-      }
-      putchar(' ');
-    }
-
-    putchar(' ');
-    p = line;
-    int i;
-    for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
-      if (print_chars)
-        printf("%c", isprint(*p) ? *p : '.');
-    /* if there are multiple lines, only print the desc on the last one */
-    if (p >= end && desc)
-      printf("  ; %s", desc);
-    putchar('\n');
-  }
-}
-
-static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
-  buf->start = malloc(initial_capacity);
-  if (!buf->start)
-    FATAL("unable to allocate %zd bytes\n", initial_capacity);
-  buf->size = 0;
-  buf->capacity = initial_capacity;
-}
-
-static void ensure_output_buffer_capacity(OutputBuffer* buf,
-                                          size_t ensure_capacity) {
-  if (ensure_capacity > buf->capacity) {
-    size_t new_capacity = buf->capacity * 2;
-    while (new_capacity < ensure_capacity)
-      new_capacity *= 2;
-    buf->start = realloc(buf->start, new_capacity);
-    if (!buf->start)
-      FATAL("unable to allocate %zd bytes\n", new_capacity);
-    buf->capacity = new_capacity;
-  }
-}
-
-static size_t out_data(OutputBuffer* buf,
-                       size_t offset,
-                       const void* src,
-                       size_t size,
-                       const char* desc) {
-  assert(offset <= buf->size);
-  ensure_output_buffer_capacity(buf, offset + size);
-  memcpy(buf->start + offset, src, size);
-  if (g_verbose)
-    dump_memory(buf->start + offset, size, offset, 0, desc);
-  return offset + size;
-}
-
-/* TODO(binji): endianness */
-#define OUT_TYPE(name, ctype)                                                \
-  static void out_##name(OutputBuffer* buf, ctype value, const char* desc) { \
-    buf->size = out_data(buf, buf->size, &value, sizeof(value), desc);       \
-  }
-
-OUT_TYPE(u8, uint8_t)
-OUT_TYPE(u16, uint16_t)
-OUT_TYPE(u32, uint32_t)
-OUT_TYPE(u64, uint64_t)
-OUT_TYPE(f32, float)
-OUT_TYPE(f64, double)
-
-#undef OUT_TYPE
-
-#define OUT_AT_TYPE(name, ctype)                                               \
-  static void out_##name##_at(OutputBuffer* buf, uint32_t offset, ctype value, \
-                              const char* desc) {                              \
-    out_data(buf, offset, &value, sizeof(value), desc);                        \
-  }
-
-OUT_AT_TYPE(u8, uint8_t)
-OUT_AT_TYPE(u32, uint32_t)
-
-#undef OUT_AT_TYPE
-
-static void out_opcode(OutputBuffer* buf, Opcode opcode) {
-  out_u8(buf, (uint8_t)opcode, s_opcode_names[opcode]);
-}
-
-static void out_leb128(OutputBuffer* buf, uint32_t value, const char* desc) {
-  uint8_t data[5]; /* max 5 bytes */
-  int i = 0;
-  do {
-    assert(i < 5);
-    data[i] = value & 0x7f;
-    value >>= 7;
-    if (value)
-      data[i] |= 0x80;
-    ++i;
-  } while (value);
-  buf->size = out_data(buf, buf->size, data, i, desc);
-}
-
-static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
-  buf->size = out_data(buf, buf->size, s, strlen(s) + 1, desc);
-}
-
-static size_t copy_string_contents(Token t, char* dest, size_t size);
-
-static void out_string_token(OutputBuffer* buf, Token t, const char* desc) {
-  assert(t.type == TOKEN_TYPE_STRING);
-  size_t max_size = t.range.end.pos - t.range.start.pos;
-  size_t offset = buf->size;
-  ensure_output_buffer_capacity(buf, offset + max_size);
-  void* dest = buf->start + offset;
-  int actual_size = copy_string_contents(t, dest, max_size);
-  if (g_verbose)
-    dump_memory(buf->start + offset, actual_size, offset, 1, desc);
-  buf->size += actual_size;
-}
-
-static void dump_output_buffer(OutputBuffer* buf) {
-  dump_memory(buf->start, buf->size, 0, 1, NULL);
-}
-
-static void write_output_buffer(OutputBuffer* buf, const char* filename) {
-  FILE* out = (strcmp(filename, "-") != 0) ? fopen(filename, "wb") : stdout;
-  if (!out)
-    FATAL("unable to open %s\n", filename);
-  if (fwrite(buf->start, 1, buf->size, out) != buf->size)
-    FATAL("unable to write %zd bytes\n", buf->size);
-  fclose(out);
-}
-
-static void destroy_output_buffer(OutputBuffer* buf) {
-  free(buf->start);
 }
 
 static int get_binding_by_name(BindingVector* bindings, const char* name) {
@@ -538,7 +366,7 @@ static size_t string_contents_length(Token t) {
   return length;
 }
 
-static size_t copy_string_contents(Token t, char* dest, size_t size) {
+size_t copy_string_contents(Token t, char* dest, size_t size) {
   assert(t.type == TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
   const char* end = t.range.end.pos - 1;
@@ -1569,105 +1397,10 @@ static void destroy_module(Module* module) {
   destroy_segment_vector(&module->segments);
 }
 
-static void out_module_header(OutputBuffer* buf, Module* module) {
-  out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
-  out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
-  out_u16(buf, module->globals.size, "num globals");
-  out_u16(buf, module->functions.size, "num funcs");
-  out_u16(buf, module->segments.size, "num data segments");
-
-  int i;
-  for (i = 0; i < module->globals.size; ++i) {
-    Variable* global = &module->globals.data[i];
-    if (g_verbose)
-      printf("; global header %d\n", i);
-    global->offset = buf->size;
-    /* TODO(binji): v8-native-prototype globals use mem types, not local types.
-       The spec currently specifies local types, and uses an anonymous memory
-       space for storage. Resolve this discrepancy. */
-    const uint8_t global_type_codes[NUM_TYPES] = {-1, 4, 6, 8, 9};
-    out_u32(buf, 0, "global name offset");
-    out_u8(buf, global_type_codes[global->type], "global mem type");
-    out_u32(buf, 0, "global offset");
-    out_u8(buf, 0, "export global");
-  }
-
-  for (i = 0; i < module->functions.size; ++i) {
-    Function* function = &module->functions.data[i];
-    if (g_verbose)
-      printf("; function header %d\n", i);
-
-    out_u8(buf, function->num_args, "func num args");
-    out_u8(buf,
-           function->result_types.size ? function->result_types.data[0] : 0,
-           "func result type");
-    int j;
-    for (j = 0; j < function->num_args; ++j)
-      out_u8(buf, function->locals.data[j].type, "func arg type");
-#define CODE_START_OFFSET 4
-#define CODE_END_OFFSET 8
-#define FUNCTION_EXPORTED_OFFSET 20
-    /* function offset skips the signature; it is variable size, and everything
-     * we need to fix up is afterward */
-    function->offset = buf->size;
-    out_u32(buf, 0, "func name offset");
-    out_u32(buf, 0, "func code start offset");
-    out_u32(buf, 0, "func code end offset");
-
-    int num_locals[NUM_TYPES] = {};
-    for (j = function->num_args; j < function->locals.size; ++j)
-      num_locals[function->locals.data[j].type]++;
-
-    out_u16(buf, num_locals[TYPE_I32], "num local i32");
-    out_u16(buf, num_locals[TYPE_I64], "num local i64");
-    out_u16(buf, num_locals[TYPE_F32], "num local f32");
-    out_u16(buf, num_locals[TYPE_F64], "num local f64");
-    out_u8(buf, 0, "export func");
-    out_u8(buf, 0, "func external");
-  }
-
-  for (i = 0; i < module->segments.size; ++i) {
-    Segment* segment = &module->segments.data[i];
-    if (g_verbose)
-      printf("; segment header %d\n", i);
-#define SEGMENT_DATA_OFFSET 4
-    segment->offset = buf->size;
-    out_u32(buf, segment->address, "segment address");
-    out_u32(buf, 0, "segment data offset");
-    out_u32(buf, segment->size, "segment size");
-    out_u8(buf, 1, "segment init");
-  }
-}
-
-static void out_module_footer(OutputBuffer* buf, Module* module) {
-  int i;
-  for (i = 0; i < module->segments.size; ++i) {
-    if (g_verbose)
-      printf("; segment data %d\n", i);
-    Segment* segment = &module->segments.data[i];
-    out_u32_at(buf, segment->offset + SEGMENT_DATA_OFFSET, buf->size,
-               "FIXUP segment data offset");
-    out_string_token(buf, segment->data, "segment data");
-  }
-
-  /* output name table */
-  if (g_verbose)
-    printf("; names\n");
-  for (i = 0; i < module->exports.size; ++i) {
-    Export* export = &module->exports.data[i];
-    Function* function = &module->functions.data[export->index];
-    out_u32_at(buf, function->offset, buf->size, "FIXUP func name offset");
-    out_cstr(buf, export->name, "export name");
-  }
-}
-
-void parse_module(Tokenizer* tokenizer) {
+void parse_module(Parser* parser, Tokenizer* tokenizer) {
   Module module = {};
   preparse_module(tokenizer, &module);
-
-  OutputBuffer output = {};
-  init_output_buffer(&output, INITIAL_OUTPUT_BUFFER_CAPACITY);
-  out_module_header(&output, &module);
+  parser->before_parse_module(&module, parser->user_data);
 
   int function_index = 0;
   Token t = read_token(tokenizer);
@@ -1680,24 +1413,16 @@ void parse_module(Tokenizer* tokenizer) {
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_FUNC: {
         Function* function = &module.functions.data[function_index++];
-        if (g_verbose)
-          printf("; function data %d\n", function_index - 1);
-        out_u32_at(&output, function->offset + CODE_START_OFFSET, output.size,
-                   "FIXUP func code start offset");
-        /* The v8-native-prototype requires all functions to have a toplevel
-         block */
-        out_opcode(&output, OPCODE_BLOCK);
-        size_t offset = output.size;
-        out_u8(&output, 0, "toplevel block num expressions");
-        int num_exprs = parse_func(tokenizer, &module, function, &output);
-        out_u8_at(&output, offset, num_exprs,
-                  "FIXUP toplevel block num expressions");
-        out_u32_at(&output, function->offset + CODE_END_OFFSET, output.size,
-                   "FIXUP func code end offset");
+        parser->before_parse_function(&module, function, parser->user_data);
+        OutputBuffer* buf = hack_get_output_buffer(parser);
+        int num_exprs = parse_func(tokenizer, &module, function, buf);
+        parser->after_parse_function(&module, function, num_exprs,
+                                     parser->user_data);
         break;
       }
 
       case OP_EXPORT: {
+        parser->before_parse_export(&module, parser->user_data);
         t = read_token(tokenizer);
         expect_string(t);
         int index = parse_function_var(tokenizer, &module);
@@ -1706,10 +1431,8 @@ void parse_module(Tokenizer* tokenizer) {
         export->name = dup_string_contents(t);
         export->index = index;
 
-        Function* exported = &module.functions.data[index];
-        out_u8_at(&output, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
-                  "FIXUP func exported");
         expect_close(read_token(tokenizer));
+        parser->after_parse_export(&module, index, parser->user_data);
         break;
       }
 
@@ -1730,25 +1453,12 @@ void parse_module(Tokenizer* tokenizer) {
     t = read_token(tokenizer);
   }
 
-  out_module_footer(&output, &module);
+  parser->after_parse_module(&module, parser->user_data);
 
-  if (g_dump_module)
-    dump_output_buffer(&output);
-
-  if (g_outfile) {
-    /* TODO(binji): better way to prevent multiple output */
-    static int s_already_output = 0;
-    if (s_already_output)
-      FATAL("Can't write multiple modules to output\n");
-    s_already_output = 1;
-    write_output_buffer(&output, g_outfile);
-  }
-
-  destroy_output_buffer(&output);
   destroy_module(&module);
 }
 
-void parse_file(Tokenizer* tokenizer) {
+void parse_file(Parser* parser, Tokenizer* tokenizer) {
   Token t = read_token(tokenizer);
   while (t.type != TOKEN_TYPE_EOF) {
     expect_open(t);
@@ -1758,7 +1468,7 @@ void parse_file(Tokenizer* tokenizer) {
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_MODULE:
-        parse_module(tokenizer);
+        parse_module(parser, tokenizer);
         break;
 
       case OP_ASSERT_EQ:

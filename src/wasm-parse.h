@@ -40,7 +40,24 @@ extern int g_verbose;
 extern const char* g_outfile;
 extern int g_dump_module;
 
-void parse_module(Tokenizer* tokenizer);
-void parse_file(Tokenizer* tokenizer);
+typedef struct Module Module;
+typedef struct Function Function;
+
+typedef struct Parser {
+  void* user_data;
+  void (*before_parse_module)(Module* m, void* user_data);
+  void (*after_parse_module)(Module* m, void* user_data);
+  void (*before_parse_function)(Module* m, Function* f, void* user_data);
+  void (*after_parse_function)(Module* m,
+                               Function* f,
+                               int num_exprs,
+                               void* user_data);
+  void (*before_parse_export)(Module* m, void* user_data);
+  void (*after_parse_export)(Module* m, int function_index, void* user_data);
+} Parser;
+
+size_t copy_string_contents(Token t, char* dest, size_t size);
+void parse_module(Parser* parser, Tokenizer* tokenizer);
+void parse_file(Parser* parser, Tokenizer* tokenizer);
 
 #endif /* WASM_PARSE_H */

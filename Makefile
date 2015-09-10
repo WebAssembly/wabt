@@ -3,7 +3,7 @@
 ALL = sexpr-wasm
 CFLAGS = -Wall -Werror -g
 
-OBJS = out/sexpr-wasm.o out/parse.o
+OBJS = out/sexpr-wasm.o out/parse.o out/wasm-gen.o
 HEADERS = src/wasm.h src/wasm-parse.h
 
 .PHONY: all
