@@ -224,19 +224,13 @@ typedef enum Opcode {
 #undef OPCODE
 } Opcode;
 
-void* append_element(void** data,
-                     size_t* size,
-                     size_t* capacity,
-                     size_t elt_size);
-
-
-#define DECLARE_VECTOR(name, type)                                             \
-  typedef struct type##Vector {                                               \
-    type* data;                                                               \
-    size_t size;                                                              \
-    size_t capacity;                                                          \
-  } type##Vector;                                                             \
-  void destroy_##name##_vector(type##Vector* vec);                            \
+#define DECLARE_VECTOR(name, type)                 \
+  typedef struct type##Vector {                    \
+    type* data;                                    \
+    size_t size;                                   \
+    size_t capacity;                               \
+  } type##Vector;                                  \
+  void destroy_##name##_vector(type##Vector* vec); \
   type* append_##name(type##Vector* vec);
 
 DECLARE_VECTOR(type, Type)
@@ -293,6 +287,5 @@ typedef struct Module {
   uint32_t initial_memory_size;
   uint32_t max_memory_size;
 } Module;
-
 
 #endif /* WASM_H */

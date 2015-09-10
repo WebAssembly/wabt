@@ -9,7 +9,6 @@
 #include "wasm.h"
 #include "wasm-parse.h"
 
-
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
@@ -30,14 +29,18 @@
 #include "hash.h"
 
 typedef struct OpInfo OpInfo;
-
 typedef uint8_t MemAccess;
 
-#define DEFINE_VECTOR(name, type)                                             \
-  void destroy_##name##_vector(type##Vector* vec) { free(vec->data); }        \
-  type* append_##name(type##Vector* vec) {                                    \
-    return append_element((void**)&vec->data, &vec->size, &vec->capacity,     \
-                          sizeof(type));                                      \
+static void* append_element(void** data,
+                            size_t* size,
+                            size_t* capacity,
+                            size_t elt_size);
+
+#define DEFINE_VECTOR(name, type)                                         \
+  void destroy_##name##_vector(type##Vector* vec) { free(vec->data); }    \
+  type* append_##name(type##Vector* vec) {                                \
+    return append_element((void**)&vec->data, &vec->size, &vec->capacity, \
+                          sizeof(type));                                  \
   }
 
 DEFINE_VECTOR(type, Type)
@@ -782,13 +785,13 @@ static int parse_function_var(Tokenizer* tokenizer, Module* module) {
 }
 
 static int parse_global_var(Tokenizer* tokenizer, Module* module) {
-  return parse_var(tokenizer, &module->global_bindings,
-                   module->globals.size, "global");
+  return parse_var(tokenizer, &module->global_bindings, module->globals.size,
+                   "global");
 }
 
 static int parse_local_var(Tokenizer* tokenizer, Function* function) {
-  return parse_var(tokenizer, &function->local_bindings,
-                   function->locals.size, "local");
+  return parse_var(tokenizer, &function->local_bindings, function->locals.size,
+                   "local");
 }
 
 /* Labels are indexed in reverse order (0 is the most recent, etc.), so handle
@@ -1679,8 +1682,8 @@ void parse_module(Tokenizer* tokenizer) {
         Function* function = &module.functions.data[function_index++];
         if (g_verbose)
           printf("; function data %d\n", function_index - 1);
-        out_u32_at(&output, function->offset + CODE_START_OFFSET,
-                   output.size, "FIXUP func code start offset");
+        out_u32_at(&output, function->offset + CODE_START_OFFSET, output.size,
+                   "FIXUP func code start offset");
         /* The v8-native-prototype requires all functions to have a toplevel
          block */
         out_opcode(&output, OPCODE_BLOCK);

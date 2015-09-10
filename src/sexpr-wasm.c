@@ -16,14 +16,7 @@
 #define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
-
-enum {
-  FLAG_VERBOSE,
-  FLAG_HELP,
-  FLAG_DUMP_MODULE,
-  FLAG_OUTPUT,
-  NUM_FLAGS
-};
+enum { FLAG_VERBOSE, FLAG_HELP, FLAG_DUMP_MODULE, FLAG_OUTPUT, NUM_FLAGS };
 
 static const char* g_infile;
 
