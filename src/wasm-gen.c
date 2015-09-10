@@ -19,6 +19,16 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
+typedef struct OutputBuffer {
+  void* start;
+  size_t size;
+  size_t capacity;
+} OutputBuffer;
+
+extern const char* g_outfile;
+extern int g_dump_module;
+extern int g_verbose;
+
 static const char* s_opcode_names[] = {
 #define OPCODE(name, code) [code] = "OPCODE_" #name,
     OPCODES(OPCODE)
@@ -277,13 +287,13 @@ typedef struct Context {
   int function_num_exprs_offset;
 } Context;
 
-static void before_parse_module(Module* module, void* user_data) {
+static void before_module(Module* module, void* user_data) {
   Context* ctx = user_data;
   init_output_buffer(ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
   out_module_header(ctx->buf, module);
 }
 
-static void after_parse_module(Module* module, void* user_data) {
+static void after_module(Module* module, void* user_data) {
   Context* ctx = user_data;
 
   out_module_footer(ctx->buf, module);
@@ -302,9 +312,9 @@ static void after_parse_module(Module* module, void* user_data) {
   destroy_output_buffer(ctx->buf);
 }
 
-static void before_parse_function(Module* module,
-                                  Function* function,
-                                  void* user_data) {
+static void before_function(Module* module,
+                            Function* function,
+                            void* user_data) {
   Context* ctx = user_data;
   int function_index = function - module->functions.data + 1;
   if (g_verbose)
@@ -318,10 +328,10 @@ static void before_parse_function(Module* module,
   out_u8(ctx->buf, 0, "toplevel block num expressions");
 }
 
-static void after_parse_function(Module* module,
-                                 Function* function,
-                                 int num_exprs,
-                                 void* user_data) {
+static void after_function(Module* module,
+                           Function* function,
+                           int num_exprs,
+                           void* user_data) {
   Context* ctx = user_data;
   out_u8_at(ctx->buf, ctx->function_num_exprs_offset, num_exprs,
             "FIXUP toplevel block num expressions");
@@ -329,20 +339,173 @@ static void after_parse_function(Module* module,
              "FIXUP func code end offset");
 }
 
-static void before_parse_export(Module* module, void* user_data) {
-}
+static void before_export(Module* module, void* user_data) {}
 
-static void after_parse_export(Module* module,
-                               int function_index,
-                               void* user_data) {
+static void after_export(Module* module, int function_index, void* user_data) {
   Context* ctx = user_data;
   Function* exported = &module->functions.data[function_index];
   out_u8_at(ctx->buf, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
             "FIXUP func exported");
 }
 
-OutputBuffer* hack_get_output_buffer(struct Parser* parser) {
-  return ((Context*)parser->user_data)->buf;
+static Cookie before_block(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_BLOCK);
+  Cookie cookie = (Cookie)ctx->buf->size;
+  out_u8(ctx->buf, 0, "num expressions");
+  return cookie;
+}
+
+static void after_block(int num_exprs, Cookie cookie, void* user_data) {
+  Context* ctx = user_data;
+  uint32_t offset = (uint32_t)cookie;
+  out_u8_at(ctx->buf, offset, num_exprs, "FIXUP num expressions");
+}
+
+static void before_binary(enum Opcode opcode, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+}
+
+static void after_break(int depth, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_BREAK);
+  out_u8(ctx->buf, depth, "break depth");
+}
+
+static void before_call(int function_index, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_CALL);
+  out_leb128(ctx->buf, function_index, "func index");
+}
+
+static void before_compare(enum Opcode opcode, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+}
+
+static void before_const(enum Opcode opcode, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+}
+
+static void before_convert(enum Opcode opcode, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+}
+
+static void after_get_local(int remapped_index, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_GET_LOCAL);
+  out_leb128(ctx->buf, remapped_index, "remapped local index");
+}
+
+static Cookie before_if(void* user_data) {
+  Context* ctx = user_data;
+  uint32_t offset = ctx->buf->size;
+  out_opcode(ctx->buf, OPCODE_IF);
+  return (Cookie)offset;
+}
+
+static void after_if(int with_else, Cookie cookie, void* user_data) {
+  Context* ctx = user_data;
+  if (with_else) {
+    uint32_t offset = (uint32_t)cookie;
+    out_u8_at(ctx->buf, offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
+  }
+}
+
+static Cookie before_label(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_BLOCK);
+  Cookie cookie = (Cookie)ctx->buf->size;
+  out_u8(ctx->buf, 0, "num expressions");
+  return cookie;
+}
+
+static void after_label(int num_exprs, Cookie cookie, void* user_data) {
+  Context* ctx = user_data;
+  uint32_t offset = (uint32_t)cookie;
+  out_u8_at(ctx->buf, offset, num_exprs, "FIXUP num expressions");
+}
+
+static void before_load(enum Opcode opcode, uint8_t access, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+  out_u8(ctx->buf, access, "load access byte");
+}
+
+static void after_load_global(int index, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_GET_GLOBAL);
+  out_leb128(ctx->buf, index, "global index");
+}
+
+static Cookie before_loop(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_LOOP);
+  Cookie cookie = (Cookie)ctx->buf->size;
+  out_u8(ctx->buf, 0, "num expressions");
+  return cookie;
+}
+
+static void after_loop(int num_exprs, Cookie cookie, void* user_data) {
+  Context* ctx = user_data;
+  uint32_t offset = (uint32_t)cookie;
+  out_u8_at(ctx->buf, offset, num_exprs, "FIXUP num expressions");
+}
+
+static void after_nop(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_NOP);
+}
+
+static void before_return(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_RETURN);
+}
+
+static void before_set_local(int index, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_SET_LOCAL);
+  out_leb128(ctx->buf, index, "remapped local index");
+}
+
+static void before_store(enum Opcode opcode, uint8_t access, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+  out_u8(ctx->buf, access, "store access byte");
+}
+
+static void before_store_global(int index, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, OPCODE_SET_GLOBAL);
+  out_leb128(ctx->buf, index, "global index");
+}
+
+static void before_unary(enum Opcode opcode, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(ctx->buf, opcode);
+}
+
+static void u32_literal(uint32_t value, void* user_data) {
+  Context* ctx = user_data;
+  out_u32(ctx->buf, value, "u32 literal");
+}
+
+static void u64_literal(uint64_t value, void* user_data) {
+  Context* ctx = user_data;
+  out_u64(ctx->buf, value, "u64 literal");
+}
+
+static void f32_literal(float value, void* user_data) {
+  Context* ctx = user_data;
+  out_f32(ctx->buf, value, "f32 literal");
+}
+
+static void f64_literal(double value, void* user_data) {
+  Context* ctx = user_data;
+  out_f64(ctx->buf, value, "f64 literal");
 }
 
 void gen_file(Tokenizer* tokenizer) {
@@ -351,14 +514,41 @@ void gen_file(Tokenizer* tokenizer) {
   Context ctx;
   ctx.buf = &buf;
 
-  Parser parser;
+  Parser parser = {};
   parser.user_data = &ctx;
-  parser.before_parse_module = before_parse_module;
-  parser.after_parse_module = after_parse_module;
-  parser.before_parse_function = before_parse_function;
-  parser.after_parse_function = after_parse_function;
-  parser.before_parse_export = before_parse_export;
-  parser.after_parse_export = after_parse_export;
+  parser.before_module = before_module;
+  parser.after_module = after_module;
+  parser.before_function = before_function;
+  parser.after_function = after_function;
+  parser.before_export = before_export;
+  parser.after_export = after_export;
+  parser.before_block = before_block;
+  parser.after_block = after_block;
+  parser.before_binary = before_binary;
+  parser.after_break = after_break;
+  parser.before_call = before_call;
+  parser.before_compare = before_compare;
+  parser.before_const = before_const;
+  parser.before_convert = before_convert;
+  parser.after_get_local = after_get_local;
+  parser.before_if = before_if;
+  parser.after_if = after_if;
+  parser.before_label = before_label;
+  parser.after_label = after_label;
+  parser.before_load = before_load;
+  parser.after_load_global = after_load_global;
+  parser.before_loop = before_loop;
+  parser.after_loop = after_loop;
+  parser.after_nop = after_nop;
+  parser.before_return = before_return;
+  parser.before_set_local = before_set_local;
+  parser.before_store = before_store;
+  parser.before_store_global = before_store_global;
+  parser.before_unary = before_unary;
+  parser.u32_literal = u32_literal;
+  parser.u64_literal = u64_literal;
+  parser.f32_literal = f32_literal;
+  parser.f64_literal = f64_literal;
 
   parse_file(&parser, tokenizer);
 }

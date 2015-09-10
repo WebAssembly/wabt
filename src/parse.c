@@ -8,8 +8,6 @@
 
 #include "wasm.h"
 #include "wasm-parse.h"
-/* TODO(binji): remove this when the parser no longer generates output */
-#include "wasm-gen.h"
 
 #define TABS_TO_SPACES 8
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -52,10 +50,6 @@ typedef struct NameTypePair {
   Type type;
 } NameTypePair;
 
-int g_verbose;
-const char* g_outfile;
-int g_dump_module;
-
 static NameTypePair s_types[] = {
     {"i32", TYPE_I32},
     {"i64", TYPE_I64},
@@ -68,10 +62,10 @@ static const char* s_type_names[] = {
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == NUM_TYPES);
 
-void* append_element(void** data,
-                     size_t* size,
-                     size_t* capacity,
-                     size_t elt_size) {
+static void* append_element(void** data,
+                            size_t* size,
+                            size_t* capacity,
+                            size_t elt_size) {
   if (*size + 1 > *capacity) {
     size_t new_capacity = *capacity ? *capacity * 2 : INITIAL_VECTOR_CAPACITY;
     size_t new_size = new_capacity * elt_size;
@@ -667,32 +661,31 @@ static void parse_type(Tokenizer* tokenizer, Type* type) {
     FATAL_AT(t.range.start, "expected type\n");
 }
 
-static Type parse_expr(Tokenizer* tokenizer,
+static Type parse_expr(Parser* parser,
+                       Tokenizer* tokenizer,
                        Module* module,
-                       Function* function,
-                       OutputBuffer* buf);
+                       Function* function);
 
-static Type parse_block(Tokenizer* tokenizer,
+static Type parse_block(Parser* parser,
+                        Tokenizer* tokenizer,
                         Module* module,
                         Function* function,
-                        OutputBuffer* buf) {
-  size_t offset = buf->size;
-  out_u8(buf, 0, "num expressions");
+                        int* out_num_exprs) {
   int num_exprs = 0;
   Type type;
   while (1) {
-    type = parse_expr(tokenizer, module, function, buf);
+    type = parse_expr(parser, tokenizer, module, function);
     ++num_exprs;
     Token t = read_token(tokenizer);
     if (t.type == TOKEN_TYPE_CLOSE_PAREN)
       break;
     rewind_token(tokenizer, t);
   }
-  out_u8_at(buf, offset, num_exprs, "FIXUP num expressions");
+  *out_num_exprs = num_exprs;
   return type;
 }
 
-static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
+static void parse_literal(Parser* parser, Tokenizer* tokenizer, Type type) {
   Token t = read_token(tokenizer);
   expect_atom(t);
   const char* p = t.range.start.pos;
@@ -702,7 +695,7 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
       uint32_t value;
       if (!read_uint32(&p, end, &value))
         FATAL_AT(t.range.start, "invalid unsigned 32-bit int\n");
-      out_u32(buf, value, "u32 literal");
+      parser->u32_literal(value, parser->user_data);
       break;
     }
 
@@ -710,7 +703,7 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
       uint64_t value;
       if (!read_uint64(&p, end, &value))
         FATAL_AT(t.range.start, "invalid unsigned 64-bit int\n");
-      out_u64(buf, value, "u64 literal");
+      parser->u64_literal(value, parser->user_data);
       break;
     }
 
@@ -720,9 +713,9 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
       if (!read_double(&p, end, &value))
         FATAL_AT(t.range.start, "invalid double\n");
       if (type == TYPE_F32)
-        out_f32(buf, (float)value, "f32 literal");
+        parser->f32_literal((float)value, parser->user_data);
       else
-        out_f64(buf, value, "f64 literal");
+        parser->f64_literal(value, parser->user_data);
       break;
     }
 
@@ -731,13 +724,13 @@ static void parse_literal(Tokenizer* tokenizer, OutputBuffer* buf, Type type) {
   }
 }
 
-static Type parse_switch(Tokenizer* tokenizer,
+static Type parse_switch(Parser* parser,
+                         Tokenizer* tokenizer,
                          Module* module,
                          Function* function,
-                         OutputBuffer* buf,
                          Type in_type) {
   int num_cases = 0;
-  Type cond_type = parse_expr(tokenizer, module, function, buf);
+  Type cond_type = parse_expr(parser, tokenizer, module, function);
   check_type(tokenizer->loc, cond_type, in_type, " in switch condition");
   Type type = TYPE_VOID;
   Token t = read_token(tokenizer);
@@ -747,13 +740,13 @@ static Type parse_switch(Tokenizer* tokenizer,
     t = read_token(tokenizer);
     expect_atom(t);
     if (match_atom(t, "case")) {
-      parse_literal(tokenizer, buf, in_type);
+      parse_literal(parser, tokenizer, in_type);
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
         Type value_type;
         while (1) {
-          value_type = parse_expr(tokenizer, module, function, buf);
+          value_type = parse_expr(parser, tokenizer, module, function);
           t = read_token(tokenizer);
           if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
             break;
@@ -776,7 +769,7 @@ static Type parse_switch(Tokenizer* tokenizer,
     } else {
       /* default case */
       rewind_token(tokenizer, open);
-      Type value_type = parse_expr(tokenizer, module, function, buf);
+      Type value_type = parse_expr(parser, tokenizer, module, function);
       if (value_type == TYPE_VOID) {
         type = TYPE_VOID;
       } else {
@@ -792,10 +785,10 @@ static Type parse_switch(Tokenizer* tokenizer,
   return type;
 }
 
-static Type parse_expr(Tokenizer* tokenizer,
+static Type parse_expr(Parser* parser,
+                       Tokenizer* tokenizer,
                        Module* module,
-                       Function* function,
-                       OutputBuffer* buf) {
+                       Function* function) {
   Type type = TYPE_VOID;
   expect_open(read_token(tokenizer));
   Token t = read_token(tokenizer);
@@ -811,10 +804,10 @@ static Type parse_expr(Tokenizer* tokenizer,
   switch (op_info->op_type) {
     case OP_BINARY: {
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      Type value0_type = parse_expr(tokenizer, module, function, buf);
+      parser->before_binary(op_info->opcode, parser->user_data);
+      Type value0_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value0_type, op_info->type, "binary op", 0);
-      Type value1_type = parse_expr(tokenizer, module, function, buf);
+      Type value1_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value1_type, op_info->type, "binary op", 1);
       assert(value0_type == value1_type);
       type = value0_type;
@@ -822,15 +815,17 @@ static Type parse_expr(Tokenizer* tokenizer,
       break;
     }
 
-    case OP_BLOCK:
-      out_opcode(buf, OPCODE_BLOCK);
+    case OP_BLOCK: {
+      Cookie cookie = parser->before_block(parser->user_data);
       function->depth++;
-      type = parse_block(tokenizer, module, function, buf);
+      int num_exprs;
+      type = parse_block(parser, tokenizer, module, function, &num_exprs);
       function->depth--;
+      parser->after_block(num_exprs, cookie, parser->user_data);
       break;
+    }
 
     case OP_BREAK: {
-      out_opcode(buf, OPCODE_BREAK);
       t = read_token(tokenizer);
       int depth = 0;
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
@@ -843,14 +838,13 @@ static Type parse_expr(Tokenizer* tokenizer,
       } else if (function->labels.size == 0) {
         FATAL_AT(t.range.start, "label variable out of range (max 0)\n");
       }
-      out_u8(buf, depth, "break depth");
+      parser->after_break(depth, parser->user_data);
       break;
     }
 
     case OP_CALL: {
-      out_opcode(buf, OPCODE_CALL);
       int index = parse_function_var(tokenizer, module);
-      out_leb128(buf, index, "func index");
+      parser->before_call(index, parser->user_data);
       Function* callee = &module->functions.data[index];
 
       int num_args = 0;
@@ -864,7 +858,7 @@ static Type parse_expr(Tokenizer* tokenizer,
                    "too many arguments to function. got %d, expected %d\n",
                    num_args, callee->num_args);
         }
-        Type arg_type = parse_expr(tokenizer, module, function, buf);
+        Type arg_type = parse_expr(parser, tokenizer, module, function);
         Type expected = callee->locals.data[num_args - 1].type;
         check_type_arg(t.range.start, arg_type, expected, "call", num_args - 1);
       }
@@ -885,11 +879,11 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_COMPARE: {
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      Type value0_type = parse_expr(tokenizer, module, function, buf);
+      parser->before_compare(op_info->opcode, parser->user_data);
+      Type value0_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value0_type, op_info->type, "compare op",
                      0);
-      Type value1_type = parse_expr(tokenizer, module, function, buf);
+      Type value1_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value1_type, op_info->type, "compare op",
                      1);
       type = TYPE_I32;
@@ -899,16 +893,16 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_CONST:
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      parse_literal(tokenizer, buf, op_info->type);
+      parser->before_const(op_info->opcode, parser->user_data);
+      parse_literal(parser, tokenizer, op_info->type);
       expect_close(read_token(tokenizer));
       type = op_info->type;
       break;
 
     case OP_CONVERT: {
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      Type value_type = parse_expr(tokenizer, module, function, buf);
+      parser->before_convert(op_info->opcode, parser->user_data);
+      Type value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type2, " of convert op");
       expect_close(read_token(tokenizer));
       type = op_info->type;
@@ -920,26 +914,25 @@ static Type parse_expr(Tokenizer* tokenizer,
       break;
 
     case OP_GET_LOCAL: {
-      out_opcode(buf, OPCODE_GET_LOCAL);
       int index = parse_local_var(tokenizer, function);
       Variable* variable = &function->locals.data[index];
       type = variable->type;
-      out_leb128(buf, variable->index, "remapped local index");
       expect_close(read_token(tokenizer));
+      parser->after_get_local(variable->index, parser->user_data);
       break;
     }
 
     case OP_IF: {
-      uint32_t opcode_offset = buf->size;
-      out_opcode(buf, OPCODE_IF);
-      Type cond_type = parse_expr(tokenizer, module, function, buf);
+      Cookie cookie = parser->before_if(parser->user_data);
+      Type cond_type = parse_expr(parser, tokenizer, module, function);
       check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
-      Type true_type = parse_expr(tokenizer, module, function, buf);
+      Type true_type = parse_expr(parser, tokenizer, module, function);
       t = read_token(tokenizer);
+      int with_else = 0;
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
-        out_u8_at(buf, opcode_offset, OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
+        with_else = 1;
         rewind_token(tokenizer, t);
-        Type false_type = parse_expr(tokenizer, module, function, buf);
+        Type false_type = parse_expr(parser, tokenizer, module, function);
         if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
           type = TYPE_VOID;
         } else {
@@ -951,11 +944,12 @@ static Type parse_expr(Tokenizer* tokenizer,
       } else {
         type = true_type;
       }
+      parser->after_if(with_else, cookie, parser->user_data);
       break;
     }
 
     case OP_LABEL: {
-      out_opcode(buf, OPCODE_BLOCK);
+      Cookie cookie = parser->before_label(parser->user_data);
 
       t = read_token(tokenizer);
       Binding* binding = append_binding(&function->labels);
@@ -974,17 +968,18 @@ static Type parse_expr(Tokenizer* tokenizer,
         unexpected_token(t);
       }
 
-      type = parse_block(tokenizer, module, function, buf);
+      int num_exprs;
+      type = parse_block(parser, tokenizer, module, function, &num_exprs);
       pop_binding(&function->labels);
       function->depth--;
+      parser->after_label(num_exprs, cookie, parser->user_data);
       break;
     }
 
     case OP_LOAD: {
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      out_u8(buf, op_info->access, "load access byte");
-      Type index_type = parse_expr(tokenizer, module, function, buf);
+      parser->before_load(op_info->opcode, op_info->access, parser->user_data);
+      Type index_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, index_type, TYPE_I32, " of load index");
       expect_close(read_token(tokenizer));
       type = op_info->type;
@@ -992,28 +987,30 @@ static Type parse_expr(Tokenizer* tokenizer,
     }
 
     case OP_LOAD_GLOBAL: {
-      out_opcode(buf, OPCODE_GET_GLOBAL);
       int index = parse_global_var(tokenizer, module);
-      out_leb128(buf, index, "global index");
       type = module->globals.data[index].type;
       expect_close(read_token(tokenizer));
+      parser->after_load_global(index, parser->user_data);
       break;
     }
 
-    case OP_LOOP:
-      out_opcode(buf, OPCODE_LOOP);
+    case OP_LOOP: {
+      Cookie cookie = parser->before_loop(parser->user_data);
       function->depth++;
-      type = parse_block(tokenizer, module, function, buf);
+      int num_exprs;
+      type = parse_block(parser, tokenizer, module, function, &num_exprs);
       function->depth--;
+      parser->after_loop(num_exprs, cookie, parser->user_data);
       break;
+    }
 
     case OP_NOP:
-      out_opcode(buf, OPCODE_NOP);
+      parser->after_nop(parser->user_data);
       expect_close(read_token(tokenizer));
       break;
 
     case OP_RETURN: {
-      out_opcode(buf, OPCODE_RETURN);
+      parser->before_return(parser->user_data);
       int num_results = 0;
       while (1) {
         t = read_token(tokenizer);
@@ -1025,7 +1022,7 @@ static Type parse_expr(Tokenizer* tokenizer,
                    num_results, function->result_types.size);
         }
         rewind_token(tokenizer, t);
-        Type result_type = parse_expr(tokenizer, module, function, buf);
+        Type result_type = parse_expr(parser, tokenizer, module, function);
         Type expected = function->result_types.data[num_results - 1];
         check_type_arg(t.range.start, result_type, expected, "return",
                        num_results - 1);
@@ -1041,11 +1038,10 @@ static Type parse_expr(Tokenizer* tokenizer,
     }
 
     case OP_SET_LOCAL: {
-      out_opcode(buf, OPCODE_SET_LOCAL);
       int index = parse_local_var(tokenizer, function);
       Variable* variable = &function->locals.data[index];
-      out_leb128(buf, variable->index, "remapped local index");
-      type = parse_expr(tokenizer, module, function, buf);
+      parser->before_set_local(variable->index, parser->user_data);
+      type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
       break;
@@ -1053,11 +1049,10 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_STORE: {
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      out_u8(buf, op_info->access, "store access byte");
-      Type index_type = parse_expr(tokenizer, module, function, buf);
+      parser->before_store(op_info->opcode, op_info->access, parser->user_data);
+      Type index_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, index_type, TYPE_I32, " of store index");
-      Type value_type = parse_expr(tokenizer, module, function, buf);
+      Type value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type, " of store value");
       expect_close(read_token(tokenizer));
       type = op_info->type;
@@ -1065,11 +1060,10 @@ static Type parse_expr(Tokenizer* tokenizer,
     }
 
     case OP_STORE_GLOBAL: {
-      out_opcode(buf, OPCODE_SET_GLOBAL);
       int index = parse_global_var(tokenizer, module);
-      out_leb128(buf, index, "global index");
+      parser->before_store_global(index, parser->user_data);
       Variable* variable = &module->globals.data[index];
-      type = parse_expr(tokenizer, module, function, buf);
+      type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
       break;
@@ -1077,13 +1071,13 @@ static Type parse_expr(Tokenizer* tokenizer,
 
     case OP_SWITCH:
       check_opcode(t.range.start, op_info->opcode);
-      type = parse_switch(tokenizer, module, function, buf, op_info->type);
+      type = parse_switch(parser, tokenizer, module, function, op_info->type);
       break;
 
     case OP_UNARY: {
       check_opcode(t.range.start, op_info->opcode);
-      out_opcode(buf, op_info->opcode);
-      Type value_type = parse_expr(tokenizer, module, function, buf);
+      parser->before_unary(op_info->opcode, parser->user_data);
+      Type value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type, " of unary op");
       type = value_type;
       expect_close(read_token(tokenizer));
@@ -1097,10 +1091,10 @@ static Type parse_expr(Tokenizer* tokenizer,
   return type;
 }
 
-static int parse_func(Tokenizer* tokenizer,
+static int parse_func(Parser* parser,
+                      Tokenizer* tokenizer,
                       Module* module,
-                      Function* function,
-                      OutputBuffer* buf) {
+                      Function* function) {
   Token t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     /* named function */
@@ -1126,7 +1120,7 @@ static int parse_func(Tokenizer* tokenizer,
 
       default:
         rewind_token(tokenizer, open);
-        type = parse_expr(tokenizer, module, function, buf);
+        type = parse_expr(parser, tokenizer, module, function);
         ++num_exprs;
         break;
     }
@@ -1400,7 +1394,7 @@ static void destroy_module(Module* module) {
 void parse_module(Parser* parser, Tokenizer* tokenizer) {
   Module module = {};
   preparse_module(tokenizer, &module);
-  parser->before_parse_module(&module, parser->user_data);
+  parser->before_module(&module, parser->user_data);
 
   int function_index = 0;
   Token t = read_token(tokenizer);
@@ -1413,16 +1407,15 @@ void parse_module(Parser* parser, Tokenizer* tokenizer) {
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_FUNC: {
         Function* function = &module.functions.data[function_index++];
-        parser->before_parse_function(&module, function, parser->user_data);
-        OutputBuffer* buf = hack_get_output_buffer(parser);
-        int num_exprs = parse_func(tokenizer, &module, function, buf);
-        parser->after_parse_function(&module, function, num_exprs,
+        parser->before_function(&module, function, parser->user_data);
+        int num_exprs = parse_func(parser, tokenizer, &module, function);
+        parser->after_function(&module, function, num_exprs,
                                      parser->user_data);
         break;
       }
 
       case OP_EXPORT: {
-        parser->before_parse_export(&module, parser->user_data);
+        parser->before_export(&module, parser->user_data);
         t = read_token(tokenizer);
         expect_string(t);
         int index = parse_function_var(tokenizer, &module);
@@ -1432,7 +1425,7 @@ void parse_module(Parser* parser, Tokenizer* tokenizer) {
         export->index = index;
 
         expect_close(read_token(tokenizer));
-        parser->after_parse_export(&module, index, parser->user_data);
+        parser->after_export(&module, index, parser->user_data);
         break;
       }
 
@@ -1453,7 +1446,7 @@ void parse_module(Parser* parser, Tokenizer* tokenizer) {
     t = read_token(tokenizer);
   }
 
-  parser->after_parse_module(&module, parser->user_data);
+  parser->after_module(&module, parser->user_data);
 
   destroy_module(&module);
 }

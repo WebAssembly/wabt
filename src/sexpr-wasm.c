@@ -20,6 +20,9 @@
 enum { FLAG_VERBOSE, FLAG_HELP, FLAG_DUMP_MODULE, FLAG_OUTPUT, NUM_FLAGS };
 
 static const char* g_infile;
+const char* g_outfile;
+int g_dump_module;
+int g_verbose;
 
 static struct option g_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},

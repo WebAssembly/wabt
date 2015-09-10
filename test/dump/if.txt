@@ -34,9 +34,9 @@
 000002b: 0000 0000                                  ; u32 literal
 000002f: 14                                         ; OPCODE_F32_CONST
 0000030: 0000 803f                                  ; f32 literal
-0000029: 02                                         ; FIXUP OPCODE_IF_THEN
 0000034: 14                                         ; OPCODE_F32_CONST
 0000035: 0000 0040                                  ; f32 literal
+0000029: 02                                         ; FIXUP OPCODE_IF_THEN
 0000021: 02                                         ; FIXUP toplevel block num expressions
 0000012: 3900 0000                                  ; FIXUP func code end offset
 ; names
