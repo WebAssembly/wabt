@@ -1,8 +1,10 @@
 (module
   (func
     (i32.const 0)
+    (i32.const -2147483648)
     (i32.const 4294967295)
     (i64.const 0)
+    (i64.const -9223372036854775808)
     (i64.const 18446744073709551615)
     (f32.const 0.0)
     (f32.const 1e23)

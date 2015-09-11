@@ -98,11 +98,35 @@ static const OpInfo* get_op_info(WasmToken t) {
                      (int)(t.range.end.pos - t.range.start.pos));
 }
 
-static int read_uint32(const char** s, const char* end, uint32_t* out) {
+static int read_int32(const char** s,
+                      const char* end,
+                      uint32_t* out,
+                      int allow_signed) {
+  int has_sign = **s == '-';
+  if (!allow_signed && has_sign)
+    return 0;
+
+  /* Normally, strtoul is defined to parse negative and positive numbers
+   * automatically, which is actually what we want here. The trouble is that on
+   * 64-bit systems, unsigned long is 64-bit, which means that when we parse a
+   * value, it won't be clamped to 32-bits (which we want). We can clamp
+   * manually, but then values that are too large (> UINT32_MAX) wouldn't be
+   * handled properly. */
   errno = 0;
   char* endptr;
-  uint64_t value = strtoul(*s, &endptr, 10);
-  if (endptr != end || errno != 0 || value >= (uint64_t)UINT32_MAX + 1)
+  uint32_t value;
+  if (has_sign) {
+    int64_t value64 = strtol(*s, &endptr, 10);
+    if (value64 < INT32_MIN)
+      return 0;
+    value = (uint32_t)(uint64_t)value64;
+  } else {
+    uint64_t value64 = strtoul(*s, &endptr, 10);
+    if (value64 > UINT32_MAX)
+      return 0;
+    value = (uint32_t)value64;
+  }
+  if (endptr != end || errno != 0)
     return 0;
   *out = value;
   *s = endptr;
@@ -131,7 +155,7 @@ static int read_double(const char** s, const char* end, double* out) {
 
 static int read_uint32_token(WasmToken t, uint32_t* out) {
   const char* p = t.range.start.pos;
-  return read_uint32(&p, t.range.end.pos, out);
+  return read_int32(&p, t.range.end.pos, out, 0);
 }
 
 static WasmToken read_token(WasmTokenizer* t) {
@@ -490,7 +514,7 @@ static int match_load_store_aligned(WasmToken t, OpInfo* op_info) {
 
       ++end;
       uint32_t alignment;
-      if (!read_uint32(&end, t.range.end.pos, &alignment))
+      if (!read_int32(&end, t.range.end.pos, &alignment, 0))
         return 0;
 
       /* check that alignment is power-of-two */
@@ -589,7 +613,7 @@ static int parse_var(WasmTokenizer* tokenizer,
   } else {
     /* var index */
     uint32_t index;
-    if (!read_uint32(&p, t.range.end.pos, &index) || p != t.range.end.pos) {
+    if (!read_int32(&p, t.range.end.pos, &index, 0) || p != t.range.end.pos) {
       FATAL_AT(t.range.start, "invalid var index\n");
     }
 
@@ -640,7 +664,7 @@ static int parse_label_var(WasmTokenizer* tokenizer, WasmFunction* function) {
   } else {
     /* var index */
     uint32_t index;
-    if (!read_uint32(&p, t.range.end.pos, &index) || p != t.range.end.pos) {
+    if (!read_int32(&p, t.range.end.pos, &index, 0) || p != t.range.end.pos) {
       FATAL_AT(t.range.start, "invalid var index\n");
     }
 
@@ -696,8 +720,8 @@ static void parse_literal(WasmParser* parser,
   switch (type) {
     case TYPE_I32: {
       uint32_t value;
-      if (!read_uint32(&p, end, &value))
-        FATAL_AT(t.range.start, "invalid unsigned 32-bit int\n");
+      if (!read_int32(&p, end, &value, 1))
+        FATAL_AT(t.range.start, "invalid 32-bit int\n");
       parser->u32_literal(value, parser->user_data);
       break;
     }
@@ -705,7 +729,7 @@ static void parse_literal(WasmParser* parser,
     case TYPE_I64: {
       uint64_t value;
       if (!read_uint64(&p, end, &value))
-        FATAL_AT(t.range.start, "invalid unsigned 64-bit int\n");
+        FATAL_AT(t.range.start, "invalid 64-bit int\n");
       parser->u64_literal(value, parser->user_data);
       break;
     }

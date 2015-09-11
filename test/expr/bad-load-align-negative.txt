@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (i32.load/i8/-1 (i32.const 0))))
+# STDERR:
+1:16: unexpected token "i32.load/i8/-1"

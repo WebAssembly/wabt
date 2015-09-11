@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (memory 100 (segment -1 "foo")))
+# STDERR:
+1:30: invalid memory segment address
