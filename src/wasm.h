@@ -4,6 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#else
+#define EXTERN_C
+#endif
+
 /* These values match the v8-native-prototype's type's values */
 typedef enum WasmType {
   TYPE_VOID,
@@ -255,8 +261,8 @@ typedef struct WasmToken {
     size_t size;                                        \
     size_t capacity;                                    \
   } type##Vector;                                       \
-  void wasm_destroy_##name##_vector(type##Vector* vec); \
-  type* wasm_append_##name(type##Vector* vec);
+  EXTERN_C void wasm_destroy_##name##_vector(type##Vector* vec); \
+  EXTERN_C type* wasm_append_##name(type##Vector* vec);
 
 DECLARE_VECTOR(type, WasmType)
 

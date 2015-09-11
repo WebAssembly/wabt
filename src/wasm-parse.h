@@ -62,14 +62,8 @@ typedef struct WasmParser {
   void (*f64_literal)(double value, void* user_data);
 } WasmParser;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
-void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer);
-void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer);
-#ifdef __cplusplus
-}
-#endif
+
+EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
+EXTERN_C void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer);
 
 #endif /* WASM_PARSE_H */
