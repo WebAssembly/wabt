@@ -1,0 +1,12 @@
+# EXE: test/run-d8.py
+(module
+  (;
+    ;; currently unsupported in v8-native-prototype
+    (export "f32_reinterpret_i32" $f32_reinterpret_i32)
+    (func $f32_reinterpret_i32 (result f32)
+        (f32.reinterpret/i32 (i32.const 939524096)))
+
+    (export "f64_reinterpret_i64" $f64_reinterpret_i64)
+    (func $f64_reinterpret_i64 (result f64) (f64.reinterpret/i64 (i64.const 0)))
+  ;)
+)
