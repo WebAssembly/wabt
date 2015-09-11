@@ -5,4 +5,8 @@ if (arguments.length != 1) {
 
 var buffer = readbuffer(arguments[0]);
 var module = WASM.instantiateModule(buffer, {});
-print(module.main());
+for (var name in module) {
+  if (module[name] instanceof Function) {
+    print(name + '() = ' + module[name]());
+  }
+}

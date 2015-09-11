@@ -4,4 +4,4 @@
     (return (i32.const 42)))
   (export "main" 0))
 # STDOUT:
-42
+main() = 42
