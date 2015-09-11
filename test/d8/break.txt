@@ -1,0 +1,30 @@
+# EXE: test/run-d8.py
+(module
+  (export "break0" $break0)
+  (func $break0 (result i32)
+    (local i32 i32)
+    (label
+      (if (i32.const 1) (break))
+      (set_local 0 (i32.const 1)))  ;; not executed
+    (set_local 1 (i32.const 1))
+    (return (i32.add
+        (i32.eq (get_local 0) (i32.const 0))
+        (i32.eq (get_local 1) (i32.const 1)))))
+
+  (export "break1" $break1)
+  (func $break1 (result i32)
+    (local i32 i32 i32)
+    (label
+      (label
+        (if (i32.const 1) (break 1))
+        (set_local 0 (i32.const 1)))  ;; not executed
+      (set_local 1 (i32.const 1)))    ;; not executed
+    (set_local 2 (i32.const 1))
+    (return (i32.add
+                (i32.add (i32.eq (get_local 0) (i32.const 0))
+                         (i32.eq (get_local 1) (i32.const 0)))
+                (i32.eq (get_local 2) (i32.const 1)))))
+)
+# STDOUT:
+break0() = 2
+break1() = 3
