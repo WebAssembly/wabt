@@ -31,23 +31,23 @@ static void* append_element(void** data,
                             size_t* capacity,
                             size_t elt_size);
 
-#define DEFINE_VECTOR(name, type)                                         \
-  void destroy_##name##_vector(type##Vector* vec) { free(vec->data); }    \
-  type* append_##name(type##Vector* vec) {                                \
-    return append_element((void**)&vec->data, &vec->size, &vec->capacity, \
-                          sizeof(type));                                  \
+#define DEFINE_VECTOR(name, type)                                              \
+  void wasm_destroy_##name##_vector(type##Vector* vec) { free(vec->data); }    \
+  type* wasm_append_##name(type##Vector* vec) {                                \
+    return append_element((void**)&vec->data, &vec->size, &vec->capacity,      \
+                          sizeof(type));                                       \
   }
 
-DEFINE_VECTOR(type, Type)
-DEFINE_VECTOR(binding, Binding)
-DEFINE_VECTOR(variable, Variable)
-DEFINE_VECTOR(function, Function)
-DEFINE_VECTOR(export, Export)
-DEFINE_VECTOR(segment, Segment)
+DEFINE_VECTOR(type, WasmType)
+DEFINE_VECTOR(binding, WasmBinding)
+DEFINE_VECTOR(variable, WasmVariable)
+DEFINE_VECTOR(function, WasmFunction)
+DEFINE_VECTOR(export, WasmExport)
+DEFINE_VECTOR(segment, WasmSegment)
 
 typedef struct NameTypePair {
   const char* name;
-  Type type;
+  WasmType type;
 } NameTypePair;
 
 static NameTypePair s_types[] = {
@@ -77,23 +77,23 @@ static void* append_element(void** data,
   return *data + (*size)++ * elt_size;
 }
 
-static void pop_binding(BindingVector* vec) {
+static void pop_binding(WasmBindingVector* vec) {
   assert(vec->size > 0);
   free(vec->data[vec->size - 1].name);
   vec->size--;
 }
 
-static int get_binding_by_name(BindingVector* bindings, const char* name) {
+static int get_binding_by_name(WasmBindingVector* bindings, const char* name) {
   int i;
   for (i = 0; i < bindings->size; ++i) {
-    Binding* binding = &bindings->data[i];
+    WasmBinding* binding = &bindings->data[i];
     if (binding->name && strcmp(name, binding->name) == 0)
       return i;
   }
   return -1;
 }
 
-static const OpInfo* get_op_info(Token t) {
+static const OpInfo* get_op_info(WasmToken t) {
   return in_word_set(t.range.start.pos,
                      (int)(t.range.end.pos - t.range.start.pos));
 }
@@ -129,13 +129,13 @@ static int read_double(const char** s, const char* end, double* out) {
   return 1;
 }
 
-static int read_uint32_token(Token t, uint32_t* out) {
+static int read_uint32_token(WasmToken t, uint32_t* out) {
   const char* p = t.range.start.pos;
   return read_uint32(&p, t.range.end.pos, out);
 }
 
-static Token read_token(Tokenizer* t) {
-  Token result;
+static WasmToken read_token(WasmTokenizer* t) {
+  WasmToken result;
 
   while (t->loc.pos < t->source.end) {
     switch (*t->loc.pos) {
@@ -313,7 +313,7 @@ static Token read_token(Tokenizer* t) {
   return result;
 }
 
-static void rewind_token(Tokenizer* tokenizer, Token t) {
+static void rewind_token(WasmTokenizer* tokenizer, WasmToken t) {
   tokenizer->loc = t.range.start;
 }
 
@@ -328,7 +328,7 @@ static int hexdigit(char c) {
   }
 }
 
-static size_t string_contents_length(Token t) {
+static size_t string_contents_length(WasmToken t) {
   assert(t.type == TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
   const char* end = t.range.end.pos - 1;
@@ -360,7 +360,7 @@ static size_t string_contents_length(Token t) {
   return length;
 }
 
-size_t copy_string_contents(Token t, char* dest, size_t size) {
+size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size) {
   assert(t.type == TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
   const char* end = t.range.end.pos - 1;
@@ -402,7 +402,7 @@ size_t copy_string_contents(Token t, char* dest, size_t size) {
   return dest - dest_start;
 }
 
-static char* dup_string_contents(Token t) {
+static char* dup_string_contents(WasmToken t) {
   assert(t.type == TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
   const char* end = t.range.end.pos - 1;
@@ -411,12 +411,12 @@ static char* dup_string_contents(Token t) {
    * through the string once. */
   size_t size = end - src + 1; /* +1 for \0 */
   char* result = malloc(size);
-  size_t actual_size = copy_string_contents(t, result, size);
+  size_t actual_size = wasm_copy_string_contents(t, result, size);
   result[actual_size] = '\0';
   return result;
 }
 
-static void expect(Token t, TokenType token_type, const char* desc) {
+static void expect(WasmToken t, WasmTokenType token_type, const char* desc) {
   if (t.type == TOKEN_TYPE_EOF) {
     FATAL_AT(t.range.start, "unexpected EOF\n");
   } else if (t.type != token_type) {
@@ -425,7 +425,7 @@ static void expect(Token t, TokenType token_type, const char* desc) {
   }
 }
 
-static void unexpected_token(Token t) {
+static void unexpected_token(WasmToken t) {
   if (t.type == TOKEN_TYPE_EOF) {
     FATAL_AT(t.range.start, " unexpected EOF\n");
   } else {
@@ -434,39 +434,39 @@ static void unexpected_token(Token t) {
   }
 }
 
-static void expect_open(Token t) {
+static void expect_open(WasmToken t) {
   expect(t, TOKEN_TYPE_OPEN_PAREN, "'('");
 }
 
-static void expect_close(Token t) {
+static void expect_close(WasmToken t) {
   expect(t, TOKEN_TYPE_CLOSE_PAREN, "')'");
 }
 
-static void expect_atom(Token t) {
+static void expect_atom(WasmToken t) {
   expect(t, TOKEN_TYPE_ATOM, "ATOM");
 }
 
-static void expect_string(Token t) {
+static void expect_string(WasmToken t) {
   expect(t, TOKEN_TYPE_STRING, "STRING");
 }
 
-static void expect_var_name(Token t) {
+static void expect_var_name(WasmToken t) {
   expect_atom(t);
   if (t.range.end.pos - t.range.start.pos < 1 || t.range.start.pos[0] != '$')
     FATAL_AT(t.range.start, "expected name to begin with $\n");
 }
 
-static void check_opcode(SourceLocation loc, Opcode opcode) {
+static void check_opcode(WasmSourceLocation loc, WasmOpcode opcode) {
   if (opcode == OPCODE_INVALID)
     FATAL_AT(loc, "no opcode for instruction\n");
 }
 
-static int match_atom(Token t, const char* s) {
+static int match_atom(WasmToken t, const char* s) {
   return strncmp(t.range.start.pos, s, t.range.end.pos - t.range.start.pos) ==
          0;
 }
 
-static int match_type(Token t, Type* type) {
+static int match_type(WasmToken t, WasmType* type) {
   int i;
   for (i = 0; i < ARRAY_SIZE(s_types); ++i) {
     if (match_atom(t, s_types[i].name)) {
@@ -478,7 +478,7 @@ static int match_type(Token t, Type* type) {
   return 0;
 }
 
-static int match_load_store_aligned(Token t, OpInfo* op_info) {
+static int match_load_store_aligned(WasmToken t, OpInfo* op_info) {
   /* look for a slash near the end of the string */
   const char* p = t.range.start.pos;
   const char* end = t.range.end.pos - 1;
@@ -516,9 +516,9 @@ static int match_load_store_aligned(Token t, OpInfo* op_info) {
   return 0;
 }
 
-static void check_type(SourceLocation loc,
-                       Type actual,
-                       Type expected,
+static void check_type(WasmSourceLocation loc,
+                       WasmType actual,
+                       WasmType expected,
                        const char* desc) {
   if (actual != expected) {
     FATAL_AT(loc, "type mismatch%s. got %s, expected %s\n", desc,
@@ -526,9 +526,9 @@ static void check_type(SourceLocation loc,
   }
 }
 
-static void check_type_arg(SourceLocation loc,
-                           Type actual,
-                           Type expected,
+static void check_type_arg(WasmSourceLocation loc,
+                           WasmType actual,
+                           WasmType expected,
                            const char* desc,
                            int arg_index) {
   if (actual != expected) {
@@ -537,7 +537,8 @@ static void check_type_arg(SourceLocation loc,
   }
 }
 
-static Type get_result_type(SourceLocation loc, Function* function) {
+static WasmType get_result_type(WasmSourceLocation loc,
+                                WasmFunction* function) {
   switch (function->result_types.size) {
     case 0:
       return TYPE_VOID;
@@ -551,10 +552,10 @@ static Type get_result_type(SourceLocation loc, Function* function) {
   }
 }
 
-static void parse_generic(Tokenizer* tokenizer) {
+static void parse_generic(WasmTokenizer* tokenizer) {
   int nesting = 1;
   while (nesting > 0) {
-    Token t = read_token(tokenizer);
+    WasmToken t = read_token(tokenizer);
     if (t.type == TOKEN_TYPE_OPEN_PAREN) {
       nesting++;
     } else if (t.type == TOKEN_TYPE_CLOSE_PAREN) {
@@ -565,11 +566,11 @@ static void parse_generic(Tokenizer* tokenizer) {
   }
 }
 
-static int parse_var(Tokenizer* tokenizer,
-                     BindingVector* bindings,
+static int parse_var(WasmTokenizer* tokenizer,
+                     WasmBindingVector* bindings,
                      int num_vars,
                      const char* desc) {
-  Token t = read_token(tokenizer);
+  WasmToken t = read_token(tokenizer);
   expect_atom(t);
 
   const char* p = t.range.start.pos;
@@ -578,7 +579,7 @@ static int parse_var(Tokenizer* tokenizer,
     /* var name */
     int i;
     for (i = 0; i < bindings->size; ++i) {
-      Binding* binding = &bindings->data[i];
+      WasmBinding* binding = &bindings->data[i];
       const char* name = binding->name;
       if (name && strncmp(name, p, end - p) == 0)
         return binding->index;
@@ -601,25 +602,25 @@ static int parse_var(Tokenizer* tokenizer,
   }
 }
 
-static int parse_function_var(Tokenizer* tokenizer, Module* module) {
+static int parse_function_var(WasmTokenizer* tokenizer, WasmModule* module) {
   return parse_var(tokenizer, &module->function_bindings,
                    module->functions.size, "function");
 }
 
-static int parse_global_var(Tokenizer* tokenizer, Module* module) {
+static int parse_global_var(WasmTokenizer* tokenizer, WasmModule* module) {
   return parse_var(tokenizer, &module->global_bindings, module->globals.size,
                    "global");
 }
 
-static int parse_local_var(Tokenizer* tokenizer, Function* function) {
+static int parse_local_var(WasmTokenizer* tokenizer, WasmFunction* function) {
   return parse_var(tokenizer, &function->local_bindings, function->locals.size,
                    "local");
 }
 
 /* Labels are indexed in reverse order (0 is the most recent, etc.), so handle
  * them separately */
-static int parse_label_var(Tokenizer* tokenizer, Function* function) {
-  Token t = read_token(tokenizer);
+static int parse_label_var(WasmTokenizer* tokenizer, WasmFunction* function) {
+  WasmToken t = read_token(tokenizer);
   expect_atom(t);
 
   const char* p = t.range.start.pos;
@@ -628,7 +629,7 @@ static int parse_label_var(Tokenizer* tokenizer, Function* function) {
     /* var name */
     int i;
     for (i = 0; i < function->labels.size; ++i) {
-      Binding* binding = &function->labels.data[i];
+      WasmBinding* binding = &function->labels.data[i];
       const char* name = binding->name;
       if (name && strncmp(name, p, end - p) == 0)
         /* index is actually the current block depth */
@@ -655,28 +656,28 @@ static int parse_label_var(Tokenizer* tokenizer, Function* function) {
   }
 }
 
-static void parse_type(Tokenizer* tokenizer, Type* type) {
-  Token t = read_token(tokenizer);
+static void parse_type(WasmTokenizer* tokenizer, WasmType* type) {
+  WasmToken t = read_token(tokenizer);
   if (!match_type(t, type))
     FATAL_AT(t.range.start, "expected type\n");
 }
 
-static Type parse_expr(Parser* parser,
-                       Tokenizer* tokenizer,
-                       Module* module,
-                       Function* function);
+static WasmType parse_expr(WasmParser* parser,
+                       WasmTokenizer* tokenizer,
+                       WasmModule* module,
+                       WasmFunction* function);
 
-static Type parse_block(Parser* parser,
-                        Tokenizer* tokenizer,
-                        Module* module,
-                        Function* function,
+static WasmType parse_block(WasmParser* parser,
+                        WasmTokenizer* tokenizer,
+                        WasmModule* module,
+                        WasmFunction* function,
                         int* out_num_exprs) {
   int num_exprs = 0;
-  Type type;
+  WasmType type;
   while (1) {
     type = parse_expr(parser, tokenizer, module, function);
     ++num_exprs;
-    Token t = read_token(tokenizer);
+    WasmToken t = read_token(tokenizer);
     if (t.type == TOKEN_TYPE_CLOSE_PAREN)
       break;
     rewind_token(tokenizer, t);
@@ -685,8 +686,10 @@ static Type parse_block(Parser* parser,
   return type;
 }
 
-static void parse_literal(Parser* parser, Tokenizer* tokenizer, Type type) {
-  Token t = read_token(tokenizer);
+static void parse_literal(WasmParser* parser,
+                          WasmTokenizer* tokenizer,
+                          WasmType type) {
+  WasmToken t = read_token(tokenizer);
   expect_atom(t);
   const char* p = t.range.start.pos;
   const char* end = t.range.end.pos;
@@ -724,19 +727,19 @@ static void parse_literal(Parser* parser, Tokenizer* tokenizer, Type type) {
   }
 }
 
-static Type parse_switch(Parser* parser,
-                         Tokenizer* tokenizer,
-                         Module* module,
-                         Function* function,
-                         Type in_type) {
+static WasmType parse_switch(WasmParser* parser,
+                         WasmTokenizer* tokenizer,
+                         WasmModule* module,
+                         WasmFunction* function,
+                         WasmType in_type) {
   int num_cases = 0;
-  Type cond_type = parse_expr(parser, tokenizer, module, function);
+  WasmType cond_type = parse_expr(parser, tokenizer, module, function);
   check_type(tokenizer->loc, cond_type, in_type, " in switch condition");
-  Type type = TYPE_VOID;
-  Token t = read_token(tokenizer);
+  WasmType type = TYPE_VOID;
+  WasmToken t = read_token(tokenizer);
   while (1) {
     expect_open(t);
-    Token open = t;
+    WasmToken open = t;
     t = read_token(tokenizer);
     expect_atom(t);
     if (match_atom(t, "case")) {
@@ -744,7 +747,7 @@ static Type parse_switch(Parser* parser,
       t = read_token(tokenizer);
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
-        Type value_type;
+        WasmType value_type;
         while (1) {
           value_type = parse_expr(parser, tokenizer, module, function);
           t = read_token(tokenizer);
@@ -769,7 +772,7 @@ static Type parse_switch(Parser* parser,
     } else {
       /* default case */
       rewind_token(tokenizer, open);
-      Type value_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value_type = parse_expr(parser, tokenizer, module, function);
       if (value_type == TYPE_VOID) {
         type = TYPE_VOID;
       } else {
@@ -785,13 +788,13 @@ static Type parse_switch(Parser* parser,
   return type;
 }
 
-static Type parse_expr(Parser* parser,
-                       Tokenizer* tokenizer,
-                       Module* module,
-                       Function* function) {
-  Type type = TYPE_VOID;
+static WasmType parse_expr(WasmParser* parser,
+                       WasmTokenizer* tokenizer,
+                       WasmModule* module,
+                       WasmFunction* function) {
+  WasmType type = TYPE_VOID;
   expect_open(read_token(tokenizer));
-  Token t = read_token(tokenizer);
+  WasmToken t = read_token(tokenizer);
   expect_atom(t);
 
   OpInfo op_info_aligned;
@@ -805,9 +808,9 @@ static Type parse_expr(Parser* parser,
     case OP_BINARY: {
       check_opcode(t.range.start, op_info->opcode);
       parser->before_binary(op_info->opcode, parser->user_data);
-      Type value0_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value0_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value0_type, op_info->type, "binary op", 0);
-      Type value1_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value1_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value1_type, op_info->type, "binary op", 1);
       assert(value0_type == value1_type);
       type = value0_type;
@@ -816,7 +819,7 @@ static Type parse_expr(Parser* parser,
     }
 
     case OP_BLOCK: {
-      Cookie cookie = parser->before_block(parser->user_data);
+      WasmParserCookie cookie = parser->before_block(parser->user_data);
       function->depth++;
       int num_exprs;
       type = parse_block(parser, tokenizer, module, function, &num_exprs);
@@ -845,11 +848,11 @@ static Type parse_expr(Parser* parser,
     case OP_CALL: {
       int index = parse_function_var(tokenizer, module);
       parser->before_call(index, parser->user_data);
-      Function* callee = &module->functions.data[index];
+      WasmFunction* callee = &module->functions.data[index];
 
       int num_args = 0;
       while (1) {
-        Token t = read_token(tokenizer);
+        WasmToken t = read_token(tokenizer);
         if (t.type == TOKEN_TYPE_CLOSE_PAREN)
           break;
         rewind_token(tokenizer, t);
@@ -858,8 +861,8 @@ static Type parse_expr(Parser* parser,
                    "too many arguments to function. got %d, expected %d\n",
                    num_args, callee->num_args);
         }
-        Type arg_type = parse_expr(parser, tokenizer, module, function);
-        Type expected = callee->locals.data[num_args - 1].type;
+        WasmType arg_type = parse_expr(parser, tokenizer, module, function);
+        WasmType expected = callee->locals.data[num_args - 1].type;
         check_type_arg(t.range.start, arg_type, expected, "call", num_args - 1);
       }
 
@@ -880,10 +883,10 @@ static Type parse_expr(Parser* parser,
     case OP_COMPARE: {
       check_opcode(t.range.start, op_info->opcode);
       parser->before_compare(op_info->opcode, parser->user_data);
-      Type value0_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value0_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value0_type, op_info->type, "compare op",
                      0);
-      Type value1_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value1_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value1_type, op_info->type, "compare op",
                      1);
       type = TYPE_I32;
@@ -902,7 +905,7 @@ static Type parse_expr(Parser* parser,
     case OP_CONVERT: {
       check_opcode(t.range.start, op_info->opcode);
       parser->before_convert(op_info->opcode, parser->user_data);
-      Type value_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type2, " of convert op");
       expect_close(read_token(tokenizer));
       type = op_info->type;
@@ -915,7 +918,7 @@ static Type parse_expr(Parser* parser,
 
     case OP_GET_LOCAL: {
       int index = parse_local_var(tokenizer, function);
-      Variable* variable = &function->locals.data[index];
+      WasmVariable* variable = &function->locals.data[index];
       type = variable->type;
       expect_close(read_token(tokenizer));
       parser->after_get_local(variable->index, parser->user_data);
@@ -923,16 +926,16 @@ static Type parse_expr(Parser* parser,
     }
 
     case OP_IF: {
-      Cookie cookie = parser->before_if(parser->user_data);
-      Type cond_type = parse_expr(parser, tokenizer, module, function);
+      WasmParserCookie cookie = parser->before_if(parser->user_data);
+      WasmType cond_type = parse_expr(parser, tokenizer, module, function);
       check_type(tokenizer->loc, cond_type, TYPE_I32, " of condition");
-      Type true_type = parse_expr(parser, tokenizer, module, function);
+      WasmType true_type = parse_expr(parser, tokenizer, module, function);
       t = read_token(tokenizer);
       int with_else = 0;
       if (t.type != TOKEN_TYPE_CLOSE_PAREN) {
         with_else = 1;
         rewind_token(tokenizer, t);
-        Type false_type = parse_expr(parser, tokenizer, module, function);
+        WasmType false_type = parse_expr(parser, tokenizer, module, function);
         if (true_type == TYPE_VOID || false_type == TYPE_VOID) {
           type = TYPE_VOID;
         } else {
@@ -949,10 +952,10 @@ static Type parse_expr(Parser* parser,
     }
 
     case OP_LABEL: {
-      Cookie cookie = parser->before_label(parser->user_data);
+      WasmParserCookie cookie = parser->before_label(parser->user_data);
 
       t = read_token(tokenizer);
-      Binding* binding = append_binding(&function->labels);
+      WasmBinding* binding = wasm_append_binding(&function->labels);
       binding->name = NULL;
       binding->index = function->depth++;
 
@@ -979,7 +982,7 @@ static Type parse_expr(Parser* parser,
     case OP_LOAD: {
       check_opcode(t.range.start, op_info->opcode);
       parser->before_load(op_info->opcode, op_info->access, parser->user_data);
-      Type index_type = parse_expr(parser, tokenizer, module, function);
+      WasmType index_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, index_type, TYPE_I32, " of load index");
       expect_close(read_token(tokenizer));
       type = op_info->type;
@@ -995,7 +998,7 @@ static Type parse_expr(Parser* parser,
     }
 
     case OP_LOOP: {
-      Cookie cookie = parser->before_loop(parser->user_data);
+      WasmParserCookie cookie = parser->before_loop(parser->user_data);
       function->depth++;
       int num_exprs;
       type = parse_block(parser, tokenizer, module, function, &num_exprs);
@@ -1022,8 +1025,8 @@ static Type parse_expr(Parser* parser,
                    num_results, function->result_types.size);
         }
         rewind_token(tokenizer, t);
-        Type result_type = parse_expr(parser, tokenizer, module, function);
-        Type expected = function->result_types.data[num_results - 1];
+        WasmType result_type = parse_expr(parser, tokenizer, module, function);
+        WasmType expected = function->result_types.data[num_results - 1];
         check_type_arg(t.range.start, result_type, expected, "return",
                        num_results - 1);
       }
@@ -1039,7 +1042,7 @@ static Type parse_expr(Parser* parser,
 
     case OP_SET_LOCAL: {
       int index = parse_local_var(tokenizer, function);
-      Variable* variable = &function->locals.data[index];
+      WasmVariable* variable = &function->locals.data[index];
       parser->before_set_local(variable->index, parser->user_data);
       type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, type, variable->type, "");
@@ -1050,9 +1053,9 @@ static Type parse_expr(Parser* parser,
     case OP_STORE: {
       check_opcode(t.range.start, op_info->opcode);
       parser->before_store(op_info->opcode, op_info->access, parser->user_data);
-      Type index_type = parse_expr(parser, tokenizer, module, function);
+      WasmType index_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, index_type, TYPE_I32, " of store index");
-      Type value_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type, " of store value");
       expect_close(read_token(tokenizer));
       type = op_info->type;
@@ -1062,7 +1065,7 @@ static Type parse_expr(Parser* parser,
     case OP_STORE_GLOBAL: {
       int index = parse_global_var(tokenizer, module);
       parser->before_store_global(index, parser->user_data);
-      Variable* variable = &module->globals.data[index];
+      WasmVariable* variable = &module->globals.data[index];
       type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
@@ -1077,7 +1080,7 @@ static Type parse_expr(Parser* parser,
     case OP_UNARY: {
       check_opcode(t.range.start, op_info->opcode);
       parser->before_unary(op_info->opcode, parser->user_data);
-      Type value_type = parse_expr(parser, tokenizer, module, function);
+      WasmType value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type, " of unary op");
       type = value_type;
       expect_close(read_token(tokenizer));
@@ -1091,21 +1094,21 @@ static Type parse_expr(Parser* parser,
   return type;
 }
 
-static int parse_func(Parser* parser,
-                      Tokenizer* tokenizer,
-                      Module* module,
-                      Function* function) {
-  Token t = read_token(tokenizer);
+static int parse_func(WasmParser* parser,
+                      WasmTokenizer* tokenizer,
+                      WasmModule* module,
+                      WasmFunction* function) {
+  WasmToken t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     /* named function */
     t = read_token(tokenizer);
   }
 
   int num_exprs = 0;
-  Type type = TYPE_VOID;
+  WasmType type = TYPE_VOID;
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(t);
-    Token open = t;
+    WasmToken open = t;
     t = read_token(tokenizer);
     expect_atom(t);
 
@@ -1127,22 +1130,22 @@ static int parse_func(Parser* parser,
     t = read_token(tokenizer);
   }
 
-  Type result_type = get_result_type(t.range.start, function);
+  WasmType result_type = get_result_type(t.range.start, function);
   if (result_type != TYPE_VOID)
     check_type(t.range.start, type, result_type, " in function result");
 
   return num_exprs;
 }
 
-static void preparse_binding_list(Tokenizer* tokenizer,
-                                  VariableVector* variables,
-                                  BindingVector* bindings,
+static void preparse_binding_list(WasmTokenizer* tokenizer,
+                                  WasmVariableVector* variables,
+                                  WasmBindingVector* bindings,
                                   const char* desc) {
-  Token t = read_token(tokenizer);
-  Type type;
+  WasmToken t = read_token(tokenizer);
+  WasmType type;
   if (match_type(t, &type)) {
     while (1) {
-      Variable* variable = append_variable(variables);
+      WasmVariable* variable = wasm_append_variable(variables);
       variable->type = type;
       variable->offset = 0;
       variable->index = 0;
@@ -1163,22 +1166,22 @@ static void preparse_binding_list(Tokenizer* tokenizer,
     if (get_binding_by_name(bindings, name) != -1)
       FATAL_AT(t.range.start, "redefinition of %s \"%s\"\n", desc, name);
 
-    Variable* variable = append_variable(variables);
+    WasmVariable* variable = wasm_append_variable(variables);
     variable->type = type;
     variable->offset = 0;
     variable->index = 0;
 
-    Binding* binding = append_binding(bindings);
+    WasmBinding* binding = wasm_append_binding(bindings);
     binding->name = name;
     binding->index = variables->size - 1;
   }
 }
 
-static void remap_locals(Function* function) {
+static void remap_locals(WasmFunction* function) {
   int max[NUM_TYPES] = {};
   int i;
   for (i = function->num_args; i < function->locals.size; ++i) {
-    Variable* variable = &function->locals.data[i];
+    WasmVariable* variable = &function->locals.data[i];
     max[variable->type]++;
   }
 
@@ -1194,16 +1197,16 @@ static void remap_locals(Function* function) {
 
   int seen[NUM_TYPES] = {};
   for (i = function->num_args; i < function->locals.size; ++i) {
-    Variable* variable = &function->locals.data[i];
+    WasmVariable* variable = &function->locals.data[i];
     variable->index = start[variable->type] + seen[variable->type]++;
   }
 }
 
-static void preparse_func(Tokenizer* tokenizer, Module* module) {
-  Function* function = append_function(&module->functions);
+static void preparse_func(WasmTokenizer* tokenizer, WasmModule* module) {
+  WasmFunction* function = wasm_append_function(&module->functions);
   memset(function, 0, sizeof(*function));
 
-  Token t = read_token(tokenizer);
+  WasmToken t = read_token(tokenizer);
   if (t.type == TOKEN_TYPE_ATOM) {
     /* named function */
     char* name =
@@ -1211,7 +1214,7 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
     if (get_binding_by_name(&module->function_bindings, name) != -1)
       FATAL_AT(t.range.start, "redefinition of function \"%s\"\n", name);
 
-    Binding* binding = append_binding(&module->function_bindings);
+    WasmBinding* binding = wasm_append_binding(&module->function_bindings);
     binding->name = name;
     binding->index = module->functions.size - 1;
     t = read_token(tokenizer);
@@ -1236,10 +1239,10 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
       case OP_RESULT: {
         t = read_token(tokenizer);
         while (1) {
-          Type type;
+          WasmType type;
           if (!match_type(t, &type))
             unexpected_token(t);
-          *(Type*)append_type(&function->result_types) = type;
+          *(WasmType*)wasm_append_type(&function->result_types) = type;
 
           t = read_token(tokenizer);
           if (t.type == TOKEN_TYPE_CLOSE_PAREN)
@@ -1264,10 +1267,10 @@ static void preparse_func(Tokenizer* tokenizer, Module* module) {
   remap_locals(function);
 }
 
-static void preparse_module(Tokenizer* tokenizer, Module* module) {
+static void preparse_module(WasmTokenizer* tokenizer, WasmModule* module) {
   int seen_memory = 0;
-  Token t = read_token(tokenizer);
-  Token first = t;
+  WasmToken t = read_token(tokenizer);
+  WasmToken first = t;
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(t);
     t = read_token(tokenizer);
@@ -1319,7 +1322,7 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
           t = read_token(tokenizer);
           expect_atom(t);
 
-          Segment* segment = append_segment(&module->segments);
+          WasmSegment* segment = wasm_append_segment(&module->segments);
 
           if (!read_uint32_token(t, &segment->address))
             FATAL_AT(t.range.start, "invalid memory segment address\n");
@@ -1365,39 +1368,39 @@ static void preparse_module(Tokenizer* tokenizer, Module* module) {
   rewind_token(tokenizer, first);
 }
 
-static void destroy_binding_list(BindingVector* bindings) {
+static void wasm_destroy_binding_list(WasmBindingVector* bindings) {
   int i;
   for (i = 0; i < bindings->size; ++i)
     free(bindings->data[i].name);
-  destroy_binding_vector(bindings);
+  wasm_destroy_binding_vector(bindings);
 }
 
-static void destroy_module(Module* module) {
+static void wasm_destroy_module(WasmModule* module) {
   int i;
   for (i = 0; i < module->functions.size; ++i) {
-    Function* function = &module->functions.data[i];
-    destroy_type_vector(&function->result_types);
-    destroy_variable_vector(&function->locals);
-    destroy_binding_list(&function->local_bindings);
-    destroy_binding_list(&function->labels);
+    WasmFunction* function = &module->functions.data[i];
+    wasm_destroy_type_vector(&function->result_types);
+    wasm_destroy_variable_vector(&function->locals);
+    wasm_destroy_binding_list(&function->local_bindings);
+    wasm_destroy_binding_list(&function->labels);
   }
-  destroy_binding_list(&module->function_bindings);
-  destroy_binding_list(&module->global_bindings);
-  destroy_function_vector(&module->functions);
-  destroy_variable_vector(&module->globals);
+  wasm_destroy_binding_list(&module->function_bindings);
+  wasm_destroy_binding_list(&module->global_bindings);
+  wasm_destroy_function_vector(&module->functions);
+  wasm_destroy_variable_vector(&module->globals);
   for (i = 0; i < module->exports.size; ++i)
     free(module->exports.data[i].name);
-  destroy_export_vector(&module->exports);
-  destroy_segment_vector(&module->segments);
+  wasm_destroy_export_vector(&module->exports);
+  wasm_destroy_segment_vector(&module->segments);
 }
 
-void parse_module(Parser* parser, Tokenizer* tokenizer) {
-  Module module = {};
+static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
+  WasmModule module = {};
   preparse_module(tokenizer, &module);
   parser->before_module(&module, parser->user_data);
 
   int function_index = 0;
-  Token t = read_token(tokenizer);
+  WasmToken t = read_token(tokenizer);
   while (t.type != TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(t);
     t = read_token(tokenizer);
@@ -1406,7 +1409,7 @@ void parse_module(Parser* parser, Tokenizer* tokenizer) {
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : OP_NONE) {
       case OP_FUNC: {
-        Function* function = &module.functions.data[function_index++];
+        WasmFunction* function = &module.functions.data[function_index++];
         parser->before_function(&module, function, parser->user_data);
         int num_exprs = parse_func(parser, tokenizer, &module, function);
         parser->after_function(&module, function, num_exprs,
@@ -1420,7 +1423,7 @@ void parse_module(Parser* parser, Tokenizer* tokenizer) {
         expect_string(t);
         int index = parse_function_var(tokenizer, &module);
 
-        Export* export = append_export(&module.exports);
+        WasmExport* export = wasm_append_export(&module.exports);
         export->name = dup_string_contents(t);
         export->index = index;
 
@@ -1448,11 +1451,11 @@ void parse_module(Parser* parser, Tokenizer* tokenizer) {
 
   parser->after_module(&module, parser->user_data);
 
-  destroy_module(&module);
+  wasm_destroy_module(&module);
 }
 
-void parse_file(Parser* parser, Tokenizer* tokenizer) {
-  Token t = read_token(tokenizer);
+void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
+  WasmToken t = read_token(tokenizer);
   while (t.type != TOKEN_TYPE_EOF) {
     expect_open(t);
     t = read_token(tokenizer);

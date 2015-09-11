@@ -165,11 +165,11 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
-  Source source;
+  WasmSource source;
   source.start = data;
   source.end = data + fsize;
 
-  Tokenizer tokenizer;
+  WasmTokenizer tokenizer;
   tokenizer.source = source;
   tokenizer.loc.pos = source.start;
   tokenizer.loc.line = 1;

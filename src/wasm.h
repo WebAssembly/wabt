@@ -1,28 +1,29 @@
 #ifndef WASM_H
 #define WASM_H
 
-#include "wasm-parse.h"
+#include <stddef.h>
+#include <stdint.h>
 
 /* These values match the v8-native-prototype's type's values */
-typedef enum Type {
+typedef enum WasmType {
   TYPE_VOID,
   TYPE_I32,
   TYPE_I64,
   TYPE_F32,
   TYPE_F64,
   NUM_TYPES,
-} Type;
+} WasmType;
 
-typedef enum MemType {
+typedef enum WasmMemType {
   MEM_TYPE_I8,
   MEM_TYPE_I16,
   MEM_TYPE_I32,
   MEM_TYPE_I64,
   MEM_TYPE_F32,
   MEM_TYPE_F64,
-} MemType;
+} WasmMemType;
 
-typedef enum OpType {
+typedef enum WasmOpType {
   OP_NONE,
   OP_ASSERT_EQ,
   OP_ASSERT_INVALID,
@@ -58,7 +59,7 @@ typedef enum OpType {
   OP_SWITCH,
   OP_TABLE,
   OP_UNARY,
-} OpType;
+} WasmOpType;
 
 #define OPCODES(V)             \
   V(NOP, 0x00)                 \
@@ -217,75 +218,99 @@ typedef enum OpType {
   V(F64_CONVERT_F32, 0xb2)     \
   V(F64_REINTERPRET_I64, 0xb3)
 
-typedef enum Opcode {
+typedef enum WasmOpcode {
   OPCODE_INVALID = -1,
 #define OPCODE(name, code) OPCODE_##name = code,
   OPCODES(OPCODE)
 #undef OPCODE
-} Opcode;
+} WasmOpcode;
 
-#define DECLARE_VECTOR(name, type)                 \
-  typedef struct type##Vector {                    \
-    type* data;                                    \
-    size_t size;                                   \
-    size_t capacity;                               \
-  } type##Vector;                                  \
-  void destroy_##name##_vector(type##Vector* vec); \
-  type* append_##name(type##Vector* vec);
+typedef enum WasmTokenType {
+  TOKEN_TYPE_EOF,
+  TOKEN_TYPE_OPEN_PAREN,
+  TOKEN_TYPE_CLOSE_PAREN,
+  TOKEN_TYPE_ATOM,
+  TOKEN_TYPE_STRING,
+} WasmTokenType;
 
-DECLARE_VECTOR(type, Type)
+typedef struct WasmSourceLocation {
+  const char* pos;
+  int line;
+  int col;
+} WasmSourceLocation;
 
-typedef struct Binding {
+typedef struct WasmSourceRange {
+  WasmSourceLocation start;
+  WasmSourceLocation end;
+} WasmSourceRange;
+
+typedef struct WasmToken {
+  WasmTokenType type;
+  WasmSourceRange range;
+} WasmToken;
+
+#define DECLARE_VECTOR(name, type)                      \
+  typedef struct type##Vector {                         \
+    type* data;                                         \
+    size_t size;                                        \
+    size_t capacity;                                    \
+  } type##Vector;                                       \
+  void wasm_destroy_##name##_vector(type##Vector* vec); \
+  type* wasm_append_##name(type##Vector* vec);
+
+DECLARE_VECTOR(type, WasmType)
+
+typedef struct WasmBinding {
   char* name;
   int index;
-} Binding;
-DECLARE_VECTOR(binding, Binding)
+} WasmBinding;
+DECLARE_VECTOR(binding, WasmBinding)
 
-typedef struct Variable {
+typedef struct WasmVariable {
   size_t offset;
-  Type type;
+  WasmType type;
   /* The v8-native-prototype stores locals in i32/i64/f32/f64 order, where all
    * variables of one type are grouped. index maps to this variable to its
    * correct location in that order */
   int index;
-} Variable;
-DECLARE_VECTOR(variable, Variable)
+} WasmVariable;
+DECLARE_VECTOR(variable, WasmVariable)
 
-typedef struct Function {
-  TypeVector result_types;
-  VariableVector locals; /* Includes args, they're at the start */
-  BindingVector local_bindings;
-  BindingVector labels;
+typedef struct WasmFunction {
+  WasmTypeVector result_types;
+  WasmVariableVector locals; /* Includes args, they're at the start */
+  WasmBindingVector local_bindings;
+  WasmBindingVector labels;
   size_t offset; /* offset in the output buffer (function bindings skip the
                     signature */
   int num_args;
   int depth;
-} Function;
-DECLARE_VECTOR(function, Function)
+} WasmFunction;
+DECLARE_VECTOR(function, WasmFunction)
 
-typedef struct Export {
+typedef struct WasmExport {
   char* name;
   int index;
-} Export;
-DECLARE_VECTOR(export, Export)
+} WasmExport;
+DECLARE_VECTOR(export, WasmExport)
 
 typedef struct Segment {
   size_t offset;
   size_t size;
   uint32_t address;
-  Token data;
-} Segment;
-DECLARE_VECTOR(segment, Segment)
+  WasmToken data;
+} WasmSegment;
+DECLARE_VECTOR(segment, WasmSegment)
 
-typedef struct Module {
-  FunctionVector functions;
-  BindingVector function_bindings;
-  VariableVector globals;
-  BindingVector global_bindings;
-  ExportVector exports;
-  SegmentVector segments;
+typedef struct WasmModule {
+  WasmFunctionVector functions;
+  WasmBindingVector function_bindings;
+  WasmVariableVector globals;
+  WasmBindingVector global_bindings;
+  WasmExportVector exports;
+  WasmSegmentVector segments;
   uint32_t initial_memory_size;
   uint32_t max_memory_size;
-} Module;
+} WasmModule;
 
 #endif /* WASM_H */
