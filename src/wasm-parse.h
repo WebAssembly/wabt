@@ -13,7 +13,6 @@ typedef struct WasmTokenizer {
   WasmSourceLocation loc;
 } WasmTokenizer;
 
-
 typedef uintptr_t WasmParserCookie;
 
 typedef struct WasmParser {
@@ -61,7 +60,6 @@ typedef struct WasmParser {
   void (*f32_literal)(float value, void* user_data);
   void (*f64_literal)(double value, void* user_data);
 } WasmParser;
-
 
 EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
 EXTERN_C void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer);

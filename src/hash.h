@@ -1,5 +1,5 @@
 /* C code produced by gperf version 3.0.4 */
-/* Command-line: gperf --compare-strncmp --readonly-tables --struct-type --output-file hash.h hash.txt  */
+/* Command-line: gperf --compare-strncmp --readonly-tables --struct-type --output-file src/hash.h src/hash.txt  */
 /* Computed positions: -k'1-2,5-6,10-13,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -29,7 +29,7 @@
 error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
 #endif
 
-#line 1 "hash.txt"
+#line 1 "src/hash.txt"
 struct OpInfo {
   const char* name;
   int op_type;
@@ -139,523 +139,523 @@ in_word_set (str, len)
     {
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 165 "hash.txt"
-      {"i64.lt_u", OP_COMPARE, OPCODE_I64_ULT, TYPE_I64},
+#line 165 "src/hash.txt"
+      {"i64.lt_u", WASM_OP_COMPARE, WASM_OPCODE_I64_ULT, WASM_TYPE_I64},
       {""},
-#line 169 "hash.txt"
-      {"i64.popcnt", OP_UNARY, OPCODE_I64_POPCNT, TYPE_I64},
+#line 169 "src/hash.txt"
+      {"i64.popcnt", WASM_OP_UNARY, WASM_OPCODE_I64_POPCNT, WASM_TYPE_I64},
       {""},
-#line 195 "hash.txt"
-      {"if", OP_IF, OPCODE_IF},
-#line 107 "hash.txt"
-      {"i32.lt_u", OP_COMPARE, OPCODE_I32_ULT, TYPE_I32},
-#line 200 "hash.txt"
-      {"loop", OP_LOOP, OPCODE_LOOP},
-#line 112 "hash.txt"
-      {"i32.popcnt", OP_UNARY, OPCODE_I32_POPCNT, TYPE_I32},
-#line 65 "hash.txt"
-      {"f64.lt", OP_COMPARE, OPCODE_F64_LT, TYPE_F64},
-#line 174 "hash.txt"
-      {"i64.shl", OP_BINARY, OPCODE_I64_SHL, TYPE_I64},
-#line 164 "hash.txt"
-      {"i64.lt_s", OP_COMPARE, OPCODE_I64_SLT, TYPE_I64},
+#line 195 "src/hash.txt"
+      {"if", WASM_OP_IF, WASM_OPCODE_IF},
+#line 107 "src/hash.txt"
+      {"i32.lt_u", WASM_OP_COMPARE, WASM_OPCODE_I32_ULT, WASM_TYPE_I32},
+#line 200 "src/hash.txt"
+      {"loop", WASM_OP_LOOP, WASM_OPCODE_LOOP},
+#line 112 "src/hash.txt"
+      {"i32.popcnt", WASM_OP_UNARY, WASM_OPCODE_I32_POPCNT, WASM_TYPE_I32},
+#line 65 "src/hash.txt"
+      {"f64.lt", WASM_OP_COMPARE, WASM_OPCODE_F64_LT, WASM_TYPE_F64},
+#line 174 "src/hash.txt"
+      {"i64.shl", WASM_OP_BINARY, WASM_OPCODE_I64_SHL, WASM_TYPE_I64},
+#line 164 "src/hash.txt"
+      {"i64.lt_s", WASM_OP_COMPARE, WASM_OPCODE_I64_SLT, WASM_TYPE_I64},
       {""}, {""},
-#line 35 "hash.txt"
-      {"f32.lt", OP_COMPARE, OPCODE_F32_LT, TYPE_F32},
-#line 117 "hash.txt"
-      {"i32.shl", OP_BINARY, OPCODE_I32_SHL, TYPE_I32},
-#line 106 "hash.txt"
-      {"i32.lt_s", OP_COMPARE, OPCODE_I32_SLT, TYPE_I32},
+#line 35 "src/hash.txt"
+      {"f32.lt", WASM_OP_COMPARE, WASM_OPCODE_F32_LT, WASM_TYPE_F32},
+#line 117 "src/hash.txt"
+      {"i32.shl", WASM_OP_BINARY, WASM_OPCODE_I32_SHL, WASM_TYPE_I32},
+#line 106 "src/hash.txt"
+      {"i32.lt_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SLT, WASM_TYPE_I32},
       {""}, {""}, {""},
-#line 166 "hash.txt"
-      {"i64.mul", OP_BINARY, OPCODE_I64_MUL, TYPE_I64},
+#line 166 "src/hash.txt"
+      {"i64.mul", WASM_OP_BINARY, WASM_OPCODE_I64_MUL, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 108 "hash.txt"
-      {"i32.mul", OP_BINARY, OPCODE_I32_MUL, TYPE_I32},
+#line 108 "src/hash.txt"
+      {"i32.mul", WASM_OP_BINARY, WASM_OPCODE_I32_MUL, WASM_TYPE_I32},
       {""}, {""},
-#line 199 "hash.txt"
-      {"local", OP_LOCAL},
+#line 199 "src/hash.txt"
+      {"local", WASM_OP_LOCAL},
       {""},
-#line 68 "hash.txt"
-      {"f64.mul", OP_BINARY, OPCODE_F64_MUL, TYPE_F64},
+#line 68 "src/hash.txt"
+      {"f64.mul", WASM_OP_BINARY, WASM_OPCODE_F64_MUL, WASM_TYPE_F64},
       {""}, {""},
-#line 184 "hash.txt"
-      {"i64.store_u/i16", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I16, 1},
+#line 184 "src/hash.txt"
+      {"i64.store_u/i16", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 1},
       {""},
-#line 38 "hash.txt"
-      {"f32.mul", OP_BINARY, OPCODE_F32_MUL, TYPE_F32},
+#line 38 "src/hash.txt"
+      {"f32.mul", WASM_OP_BINARY, WASM_OPCODE_F32_MUL, WASM_TYPE_F32},
       {""}, {""},
-#line 125 "hash.txt"
-      {"i32.store_u/i16", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I16, 1},
-#line 188 "hash.txt"
-      {"i64.sub", OP_BINARY, OPCODE_I64_SUB, TYPE_I64},
+#line 125 "src/hash.txt"
+      {"i32.store_u/i16", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 1},
+#line 188 "src/hash.txt"
+      {"i64.sub", WASM_OP_BINARY, WASM_OPCODE_I64_SUB, WASM_TYPE_I64},
       {""}, {""},
-#line 161 "hash.txt"
-      {"i64.load_u/i32", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I32, 2},
-#line 180 "hash.txt"
-      {"i64.store_s/i16", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I16, 5},
-#line 128 "hash.txt"
-      {"i32.sub", OP_BINARY, OPCODE_I32_SUB, TYPE_I32},
-#line 175 "hash.txt"
-      {"i64.shr", OP_BINARY, OPCODE_I64_SHR, TYPE_I64},
+#line 161 "src/hash.txt"
+      {"i64.load_u/i32", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 2},
+#line 180 "src/hash.txt"
+      {"i64.store_s/i16", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 5},
+#line 128 "src/hash.txt"
+      {"i32.sub", WASM_OP_BINARY, WASM_OPCODE_I32_SUB, WASM_TYPE_I32},
+#line 175 "src/hash.txt"
+      {"i64.shr", WASM_OP_BINARY, WASM_OPCODE_I64_SHR, WASM_TYPE_I64},
       {""},
-#line 104 "hash.txt"
-      {"i32.load_u/i32", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I32, 2},
-#line 122 "hash.txt"
-      {"i32.store_s/i16", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I16, 5},
-#line 77 "hash.txt"
-      {"f64.sub", OP_BINARY, OPCODE_F64_SUB, TYPE_F64},
-#line 118 "hash.txt"
-      {"i32.shr", OP_BINARY, OPCODE_I32_SHR, TYPE_I32},
-#line 177 "hash.txt"
-      {"i64.store/i32", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I32, 6},
-#line 157 "hash.txt"
-      {"i64.load_s/i32", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I32, 6},
-#line 185 "hash.txt"
-      {"i64.store_u/i32", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I32, 2},
-#line 45 "hash.txt"
-      {"f32.sub", OP_BINARY, OPCODE_F32_SUB, TYPE_F32},
+#line 104 "src/hash.txt"
+      {"i32.load_u/i32", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 2},
+#line 122 "src/hash.txt"
+      {"i32.store_s/i16", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 5},
+#line 77 "src/hash.txt"
+      {"f64.sub", WASM_OP_BINARY, WASM_OPCODE_F64_SUB, WASM_TYPE_F64},
+#line 118 "src/hash.txt"
+      {"i32.shr", WASM_OP_BINARY, WASM_OPCODE_I32_SHR, WASM_TYPE_I32},
+#line 177 "src/hash.txt"
+      {"i64.store/i32", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
+#line 157 "src/hash.txt"
+      {"i64.load_s/i32", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
+#line 185 "src/hash.txt"
+      {"i64.store_u/i32", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 2},
+#line 45 "src/hash.txt"
+      {"f32.sub", WASM_OP_BINARY, WASM_OPCODE_F32_SUB, WASM_TYPE_F32},
       {""},
-#line 120 "hash.txt"
-      {"i32.store/i32", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I32, 6},
-#line 101 "hash.txt"
-      {"i32.load_s/i32", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I32, 6},
-#line 126 "hash.txt"
-      {"i32.store_u/i32", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I32, 2},
+#line 120 "src/hash.txt"
+      {"i32.store/i32", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 6},
+#line 101 "src/hash.txt"
+      {"i32.load_s/i32", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 6},
+#line 126 "src/hash.txt"
+      {"i32.store_u/i32", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 2},
       {""},
-#line 153 "hash.txt"
-      {"i64.load/i32", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I32, 6},
+#line 153 "src/hash.txt"
+      {"i64.load/i32", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
       {""}, {""},
-#line 181 "hash.txt"
-      {"i64.store_s/i32", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I32, 6},
+#line 181 "src/hash.txt"
+      {"i64.store_s/i32", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
       {""},
-#line 98 "hash.txt"
-      {"i32.load/i32", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I32, 6},
-#line 203 "hash.txt"
-      {"nop", OP_NOP, OPCODE_NOP, TYPE_VOID},
-#line 59 "hash.txt"
-      {"f64.floor", OP_UNARY, OPCODE_F64_FLOOR, TYPE_F64},
-#line 123 "hash.txt"
-      {"i32.store_s/i32", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I32, 6},
+#line 98 "src/hash.txt"
+      {"i32.load/i32", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 6},
+#line 203 "src/hash.txt"
+      {"nop", WASM_OP_NOP, WASM_OPCODE_NOP, WASM_TYPE_VOID},
+#line 59 "src/hash.txt"
+      {"f64.floor", WASM_OP_UNARY, WASM_OPCODE_F64_FLOOR, WASM_TYPE_F64},
+#line 123 "src/hash.txt"
+      {"i32.store_s/i32", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 6},
       {""}, {""},
-#line 75 "hash.txt"
-      {"f64.store/f32", OP_STORE, OPCODE_INVALID, TYPE_F64, MEM_TYPE_F32, 0},
-#line 30 "hash.txt"
-      {"f32.floor", OP_UNARY, OPCODE_F32_FLOOR, TYPE_F32},
+#line 75 "src/hash.txt"
+      {"f64.store/f32", WASM_OP_STORE, WASM_OPCODE_INVALID, WASM_TYPE_F64, WASM_MEM_TYPE_F32, 0},
+#line 30 "src/hash.txt"
+      {"f32.floor", WASM_OP_UNARY, WASM_OPCODE_F32_FLOOR, WASM_TYPE_F32},
       {""}, {""},
-#line 110 "hash.txt"
-      {"i32.not", OP_UNARY, OPCODE_I32_NOT, TYPE_I32},
-#line 44 "hash.txt"
-      {"f32.store/f32", OP_STORE, OPCODE_F32_STORE_I32, TYPE_F32, MEM_TYPE_F32, 0},
+#line 110 "src/hash.txt"
+      {"i32.not", WASM_OP_UNARY, WASM_OPCODE_I32_NOT, WASM_TYPE_I32},
+#line 44 "src/hash.txt"
+      {"f32.store/f32", WASM_OP_STORE, WASM_OPCODE_F32_STORE_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32, 0},
       {""},
-#line 197 "hash.txt"
-      {"label", OP_LABEL, OPCODE_INVALID},
+#line 197 "src/hash.txt"
+      {"label", WASM_OP_LABEL, WASM_OPCODE_INVALID},
       {""},
-#line 63 "hash.txt"
-      {"f64.load/f32", OP_LOAD, OPCODE_INVALID, TYPE_F64, MEM_TYPE_F32, 0},
+#line 63 "src/hash.txt"
+      {"f64.load/f32", WASM_OP_LOAD, WASM_OPCODE_INVALID, WASM_TYPE_F64, WASM_MEM_TYPE_F32, 0},
       {""}, {""}, {""}, {""},
-#line 34 "hash.txt"
-      {"f32.load/f32", OP_LOAD, OPCODE_F32_LOAD_I32, TYPE_F32, MEM_TYPE_F32, 0},
+#line 34 "src/hash.txt"
+      {"f32.load/f32", WASM_OP_LOAD, WASM_OPCODE_F32_LOAD_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32, 0},
       {""}, {""},
-#line 204 "hash.txt"
-      {"param", OP_PARAM},
-#line 168 "hash.txt"
-      {"i64.or", OP_BINARY, OPCODE_I64_OR, TYPE_I64},
-#line 67 "hash.txt"
-      {"f64.min", OP_BINARY, OPCODE_F64_MIN, TYPE_F64},
-#line 149 "hash.txt"
-      {"i64.gt_u", OP_COMPARE, OPCODE_I64_UGT, TYPE_I64},
+#line 204 "src/hash.txt"
+      {"param", WASM_OP_PARAM},
+#line 168 "src/hash.txt"
+      {"i64.or", WASM_OP_BINARY, WASM_OPCODE_I64_OR, WASM_TYPE_I64},
+#line 67 "src/hash.txt"
+      {"f64.min", WASM_OP_BINARY, WASM_OPCODE_F64_MIN, WASM_TYPE_F64},
+#line 149 "src/hash.txt"
+      {"i64.gt_u", WASM_OP_COMPARE, WASM_OPCODE_I64_UGT, WASM_TYPE_I64},
       {""}, {""},
-#line 111 "hash.txt"
-      {"i32.or", OP_BINARY, OPCODE_I32_OR, TYPE_I32},
-#line 37 "hash.txt"
-      {"f32.min", OP_BINARY, OPCODE_F32_MIN, TYPE_F32},
-#line 94 "hash.txt"
-      {"i32.gt_u", OP_COMPARE, OPCODE_I32_UGT, TYPE_I32},
+#line 111 "src/hash.txt"
+      {"i32.or", WASM_OP_BINARY, WASM_OPCODE_I32_OR, WASM_TYPE_I32},
+#line 37 "src/hash.txt"
+      {"f32.min", WASM_OP_BINARY, WASM_OPCODE_F32_MIN, WASM_TYPE_F32},
+#line 94 "src/hash.txt"
+      {"i32.gt_u", WASM_OP_COMPARE, WASM_OPCODE_I32_UGT, WASM_TYPE_I32},
       {""},
-#line 192 "hash.txt"
-      {"i64.trunc_u/f32", OP_CONVERT, OPCODE_I64_UCONVERT_F32, TYPE_I64, TYPE_F32},
-#line 61 "hash.txt"
-      {"f64.gt", OP_COMPARE, OPCODE_F64_GT, TYPE_F64},
+#line 192 "src/hash.txt"
+      {"i64.trunc_u/f32", WASM_OP_CONVERT, WASM_OPCODE_I64_UCONVERT_F32, WASM_TYPE_I64, WASM_TYPE_F32},
+#line 61 "src/hash.txt"
+      {"f64.gt", WASM_OP_COMPARE, WASM_OPCODE_F64_GT, WASM_TYPE_F64},
       {""},
-#line 148 "hash.txt"
-      {"i64.gt_s", OP_COMPARE, OPCODE_I64_SGT, TYPE_I64},
-#line 162 "hash.txt"
-      {"i64.load_u/i64", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I64, 3},
-#line 132 "hash.txt"
-      {"i32.trunc_u/f32", OP_CONVERT, OPCODE_I32_UCONVERT_F32, TYPE_I32, TYPE_F32},
-#line 32 "hash.txt"
-      {"f32.gt", OP_COMPARE, OPCODE_F32_GT, TYPE_F32},
-#line 173 "hash.txt"
-      {"i64.sar", OP_BINARY, OPCODE_I64_SAR, TYPE_I64},
-#line 93 "hash.txt"
-      {"i32.gt_s", OP_COMPARE, OPCODE_I32_SGT, TYPE_I32},
+#line 148 "src/hash.txt"
+      {"i64.gt_s", WASM_OP_COMPARE, WASM_OPCODE_I64_SGT, WASM_TYPE_I64},
+#line 162 "src/hash.txt"
+      {"i64.load_u/i64", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 3},
+#line 132 "src/hash.txt"
+      {"i32.trunc_u/f32", WASM_OP_CONVERT, WASM_OPCODE_I32_UCONVERT_F32, WASM_TYPE_I32, WASM_TYPE_F32},
+#line 32 "src/hash.txt"
+      {"f32.gt", WASM_OP_COMPARE, WASM_OPCODE_F32_GT, WASM_TYPE_F32},
+#line 173 "src/hash.txt"
+      {"i64.sar", WASM_OP_BINARY, WASM_OPCODE_I64_SAR, WASM_TYPE_I64},
+#line 93 "src/hash.txt"
+      {"i32.gt_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SGT, WASM_TYPE_I32},
       {""},
-#line 190 "hash.txt"
-      {"i64.trunc_s/f32", OP_CONVERT, OPCODE_I64_SCONVERT_F32, TYPE_I64, TYPE_F32},
-#line 48 "hash.txt"
-      {"f64.abs", OP_UNARY, OPCODE_F64_ABS, TYPE_F64},
-#line 116 "hash.txt"
-      {"i32.sar", OP_BINARY, OPCODE_I32_SAR, TYPE_I32},
-#line 151 "hash.txt"
-      {"i64.le_u", OP_COMPARE, OPCODE_I64_ULE, TYPE_I64},
-#line 158 "hash.txt"
-      {"i64.load_s/i64", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I64, 7},
-#line 130 "hash.txt"
-      {"i32.trunc_s/f32", OP_CONVERT, OPCODE_I32_SCONVERT_F32, TYPE_I32, TYPE_F32},
-#line 18 "hash.txt"
-      {"f32.abs", OP_UNARY, OPCODE_F32_ABS, TYPE_F32},
-#line 194 "hash.txt"
-      {"i64.xor", OP_BINARY, OPCODE_I64_XOR, TYPE_I64},
-#line 96 "hash.txt"
-      {"i32.le_u", OP_COMPARE, OPCODE_I32_ULE, TYPE_I32},
-#line 80 "hash.txt"
-      {"func", OP_FUNC},
-#line 186 "hash.txt"
-      {"i64.store_u/i64", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I64, 3},
+#line 190 "src/hash.txt"
+      {"i64.trunc_s/f32", WASM_OP_CONVERT, WASM_OPCODE_I64_SCONVERT_F32, WASM_TYPE_I64, WASM_TYPE_F32},
+#line 48 "src/hash.txt"
+      {"f64.abs", WASM_OP_UNARY, WASM_OPCODE_F64_ABS, WASM_TYPE_F64},
+#line 116 "src/hash.txt"
+      {"i32.sar", WASM_OP_BINARY, WASM_OPCODE_I32_SAR, WASM_TYPE_I32},
+#line 151 "src/hash.txt"
+      {"i64.le_u", WASM_OP_COMPARE, WASM_OPCODE_I64_ULE, WASM_TYPE_I64},
+#line 158 "src/hash.txt"
+      {"i64.load_s/i64", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 7},
+#line 130 "src/hash.txt"
+      {"i32.trunc_s/f32", WASM_OP_CONVERT, WASM_OPCODE_I32_SCONVERT_F32, WASM_TYPE_I32, WASM_TYPE_F32},
+#line 18 "src/hash.txt"
+      {"f32.abs", WASM_OP_UNARY, WASM_OPCODE_F32_ABS, WASM_TYPE_F32},
+#line 194 "src/hash.txt"
+      {"i64.xor", WASM_OP_BINARY, WASM_OPCODE_I64_XOR, WASM_TYPE_I64},
+#line 96 "src/hash.txt"
+      {"i32.le_u", WASM_OP_COMPARE, WASM_OPCODE_I32_ULE, WASM_TYPE_I32},
+#line 80 "src/hash.txt"
+      {"func", WASM_OP_FUNC},
+#line 186 "src/hash.txt"
+      {"i64.store_u/i64", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 3},
       {""},
-#line 135 "hash.txt"
-      {"i32.xor", OP_BINARY, OPCODE_I32_XOR, TYPE_I32},
-#line 150 "hash.txt"
-      {"i64.le_s", OP_COMPARE, OPCODE_I64_SLE, TYPE_I64},
-#line 139 "hash.txt"
-      {"i64.const", OP_CONST, OPCODE_I64_CONST, TYPE_I64},
+#line 135 "src/hash.txt"
+      {"i32.xor", WASM_OP_BINARY, WASM_OPCODE_I32_XOR, WASM_TYPE_I32},
+#line 150 "src/hash.txt"
+      {"i64.le_s", WASM_OP_COMPARE, WASM_OPCODE_I64_SLE, WASM_TYPE_I64},
+#line 139 "src/hash.txt"
+      {"i64.const", WASM_OP_CONST, WASM_OPCODE_I64_CONST, WASM_TYPE_I64},
       {""}, {""},
-#line 140 "hash.txt"
-      {"i64.ctz", OP_UNARY, OPCODE_I64_CTZ, TYPE_I64},
-#line 95 "hash.txt"
-      {"i32.le_s", OP_COMPARE, OPCODE_I32_SLE, TYPE_I32},
-#line 86 "hash.txt"
-      {"i32.const", OP_CONST, OPCODE_I32_CONST, TYPE_I32},
-#line 182 "hash.txt"
-      {"i64.store_s/i64", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I64, 7},
+#line 140 "src/hash.txt"
+      {"i64.ctz", WASM_OP_UNARY, WASM_OPCODE_I64_CTZ, WASM_TYPE_I64},
+#line 95 "src/hash.txt"
+      {"i32.le_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SLE, WASM_TYPE_I32},
+#line 86 "src/hash.txt"
+      {"i32.const", WASM_OP_CONST, WASM_OPCODE_I32_CONST, WASM_TYPE_I32},
+#line 182 "src/hash.txt"
+      {"i64.store_s/i64", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 7},
       {""},
-#line 87 "hash.txt"
-      {"i32.ctz", OP_UNARY, OPCODE_I32_CTZ, TYPE_I32},
+#line 87 "src/hash.txt"
+      {"i32.ctz", WASM_OP_UNARY, WASM_OPCODE_I32_CTZ, WASM_TYPE_I32},
       {""},
-#line 51 "hash.txt"
-      {"f64.const", OP_CONST, OPCODE_F64_CONST, TYPE_F64},
+#line 51 "src/hash.txt"
+      {"f64.const", WASM_OP_CONST, WASM_OPCODE_F64_CONST, WASM_TYPE_F64},
       {""}, {""},
-#line 138 "hash.txt"
-      {"i64.clz", OP_UNARY, OPCODE_I64_CLZ, TYPE_I64},
+#line 138 "src/hash.txt"
+      {"i64.clz", WASM_OP_UNARY, WASM_OPCODE_I64_CLZ, WASM_TYPE_I64},
       {""},
-#line 21 "hash.txt"
-      {"f32.const", OP_CONST, OPCODE_F32_CONST, TYPE_F32},
-#line 189 "hash.txt"
-      {"i64.switch", OP_SWITCH, OPCODE_INVALID, TYPE_I64},
+#line 21 "src/hash.txt"
+      {"f32.const", WASM_OP_CONST, WASM_OPCODE_F32_CONST, WASM_TYPE_F32},
+#line 189 "src/hash.txt"
+      {"i64.switch", WASM_OP_SWITCH, WASM_OPCODE_INVALID, WASM_TYPE_I64},
       {""},
-#line 85 "hash.txt"
-      {"i32.clz", OP_UNARY, OPCODE_I32_CLZ, TYPE_I32},
+#line 85 "src/hash.txt"
+      {"i32.clz", WASM_OP_UNARY, WASM_OPCODE_I32_CLZ, WASM_TYPE_I32},
       {""},
-#line 207 "hash.txt"
-      {"set_local", OP_SET_LOCAL, OPCODE_SET_LOCAL},
-#line 129 "hash.txt"
-      {"i32.switch", OP_SWITCH, OPCODE_SWITCH, TYPE_I32},
+#line 207 "src/hash.txt"
+      {"set_local", WASM_OP_SET_LOCAL, WASM_OPCODE_SET_LOCAL},
+#line 129 "src/hash.txt"
+      {"i32.switch", WASM_OP_SWITCH, WASM_OPCODE_SWITCH, WASM_TYPE_I32},
       {""}, {""}, {""},
-#line 172 "hash.txt"
-      {"i64.rem_u", OP_BINARY, OPCODE_I64_UREM, TYPE_I64},
-#line 78 "hash.txt"
-      {"f64.switch", OP_SWITCH, OPCODE_INVALID, TYPE_F64},
+#line 172 "src/hash.txt"
+      {"i64.rem_u", WASM_OP_BINARY, WASM_OPCODE_I64_UREM, WASM_TYPE_I64},
+#line 78 "src/hash.txt"
+      {"f64.switch", WASM_OP_SWITCH, WASM_OPCODE_INVALID, WASM_TYPE_F64},
       {""},
-#line 66 "hash.txt"
-      {"f64.max", OP_BINARY, OPCODE_F64_MAX, TYPE_F64},
+#line 66 "src/hash.txt"
+      {"f64.max", WASM_OP_BINARY, WASM_OPCODE_F64_MAX, WASM_TYPE_F64},
       {""},
-#line 115 "hash.txt"
-      {"i32.rem_u", OP_BINARY, OPCODE_I32_UREM, TYPE_I32},
-#line 46 "hash.txt"
-      {"f32.switch", OP_SWITCH, OPCODE_INVALID, TYPE_F32},
-#line 205 "hash.txt"
-      {"result", OP_RESULT},
-#line 36 "hash.txt"
-      {"f32.max", OP_BINARY, OPCODE_F32_MAX, TYPE_F32},
+#line 115 "src/hash.txt"
+      {"i32.rem_u", WASM_OP_BINARY, WASM_OPCODE_I32_UREM, WASM_TYPE_I32},
+#line 46 "src/hash.txt"
+      {"f32.switch", WASM_OP_SWITCH, WASM_OPCODE_INVALID, WASM_TYPE_F32},
+#line 205 "src/hash.txt"
+      {"result", WASM_OP_RESULT},
+#line 36 "src/hash.txt"
+      {"f32.max", WASM_OP_BINARY, WASM_OPCODE_F32_MAX, WASM_TYPE_F32},
       {""},
-#line 171 "hash.txt"
-      {"i64.rem_s", OP_BINARY, OPCODE_I64_SREM, TYPE_I64},
+#line 171 "src/hash.txt"
+      {"i64.rem_s", WASM_OP_BINARY, WASM_OPCODE_I64_SREM, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 114 "hash.txt"
-      {"i32.rem_s", OP_BINARY, OPCODE_I32_SREM, TYPE_I32},
-#line 193 "hash.txt"
-      {"i64.trunc_u/f64", OP_CONVERT, OPCODE_I64_UCONVERT_F64, TYPE_I64, TYPE_F64},
-#line 201 "hash.txt"
-      {"memory", OP_MEMORY},
+#line 114 "src/hash.txt"
+      {"i32.rem_s", WASM_OP_BINARY, WASM_OPCODE_I32_SREM, WASM_TYPE_I32},
+#line 193 "src/hash.txt"
+      {"i64.trunc_u/f64", WASM_OP_CONVERT, WASM_OPCODE_I64_UCONVERT_F64, WASM_TYPE_I64, WASM_TYPE_F64},
+#line 201 "src/hash.txt"
+      {"memory", WASM_OP_MEMORY},
       {""}, {""},
-#line 79 "hash.txt"
-      {"f64.trunc", OP_UNARY, OPCODE_F64_TRUNC, TYPE_F64},
-#line 133 "hash.txt"
-      {"i32.trunc_u/f64", OP_CONVERT, OPCODE_I32_UCONVERT_F64, TYPE_I32, TYPE_F64},
+#line 79 "src/hash.txt"
+      {"f64.trunc", WASM_OP_UNARY, WASM_OPCODE_F64_TRUNC, WASM_TYPE_F64},
+#line 133 "src/hash.txt"
+      {"i32.trunc_u/f64", WASM_OP_CONVERT, WASM_OPCODE_I32_UCONVERT_F64, WASM_TYPE_I32, WASM_TYPE_F64},
       {""}, {""}, {""},
-#line 47 "hash.txt"
-      {"f32.trunc", OP_UNARY, OPCODE_F32_TRUNC, TYPE_F32},
-#line 191 "hash.txt"
-      {"i64.trunc_s/f64", OP_CONVERT, OPCODE_I64_SCONVERT_F64, TYPE_I64, TYPE_F64},
+#line 47 "src/hash.txt"
+      {"f32.trunc", WASM_OP_UNARY, WASM_OPCODE_F32_TRUNC, WASM_TYPE_F32},
+#line 191 "src/hash.txt"
+      {"i64.trunc_s/f64", WASM_OP_CONVERT, WASM_OPCODE_I64_SCONVERT_F64, WASM_TYPE_I64, WASM_TYPE_F64},
       {""}, {""},
-#line 178 "hash.txt"
-      {"i64.store/i64", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I64, 7},
-#line 15 "hash.txt"
-      {"call", OP_CALL, OPCODE_CALL},
-#line 131 "hash.txt"
-      {"i32.trunc_s/f64", OP_CONVERT, OPCODE_I32_SCONVERT_F64, TYPE_I32, TYPE_F64},
-#line 82 "hash.txt"
-      {"global", OP_GLOBAL},
+#line 178 "src/hash.txt"
+      {"i64.store/i64", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 7},
+#line 15 "src/hash.txt"
+      {"call", WASM_OP_CALL, WASM_OPCODE_CALL},
+#line 131 "src/hash.txt"
+      {"i32.trunc_s/f64", WASM_OP_CONVERT, WASM_OPCODE_I32_SCONVERT_F64, WASM_TYPE_I32, WASM_TYPE_F64},
+#line 82 "src/hash.txt"
+      {"global", WASM_OP_GLOBAL},
       {""}, {""}, {""}, {""}, {""},
-#line 154 "hash.txt"
-      {"i64.load/i64", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I64, 7},
+#line 154 "src/hash.txt"
+      {"i64.load/i64", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 7},
       {""}, {""}, {""}, {""}, {""}, {""},
-#line 187 "hash.txt"
-      {"i64.store_u/i8", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I8, 0},
-#line 72 "hash.txt"
-      {"f64.promote/f32", OP_CONVERT, OPCODE_F64_CONVERT_F32, TYPE_F64, TYPE_F32},
-#line 69 "hash.txt"
-      {"f64.nearest", OP_UNARY, OPCODE_F64_NEAREST, TYPE_F64},
+#line 187 "src/hash.txt"
+      {"i64.store_u/i8", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 0},
+#line 72 "src/hash.txt"
+      {"f64.promote/f32", WASM_OP_CONVERT, WASM_OPCODE_F64_CONVERT_F32, WASM_TYPE_F64, WASM_TYPE_F32},
+#line 69 "src/hash.txt"
+      {"f64.nearest", WASM_OP_UNARY, WASM_OPCODE_F64_NEAREST, WASM_TYPE_F64},
       {""},
-#line 76 "hash.txt"
-      {"f64.store/f64", OP_STORE, OPCODE_F64_STORE_I32, TYPE_F64, MEM_TYPE_F64, 0},
-#line 127 "hash.txt"
-      {"i32.store_u/i8", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I8, 0},
+#line 76 "src/hash.txt"
+      {"f64.store/f64", WASM_OP_STORE, WASM_OPCODE_F64_STORE_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64, 0},
+#line 127 "src/hash.txt"
+      {"i32.store_u/i8", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 0},
       {""},
-#line 39 "hash.txt"
-      {"f32.nearest", OP_UNARY, OPCODE_F32_NEAREST, TYPE_F32},
+#line 39 "src/hash.txt"
+      {"f32.nearest", WASM_OP_UNARY, WASM_OPCODE_F32_NEAREST, WASM_TYPE_F32},
       {""},
-#line 147 "hash.txt"
-      {"i64.ge_u", OP_COMPARE, OPCODE_I64_UGE, TYPE_I64},
-#line 183 "hash.txt"
-      {"i64.store_s/i8", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I8, 4},
+#line 147 "src/hash.txt"
+      {"i64.ge_u", WASM_OP_COMPARE, WASM_OPCODE_I64_UGE, WASM_TYPE_I64},
+#line 183 "src/hash.txt"
+      {"i64.store_s/i8", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 4},
       {""}, {""},
-#line 64 "hash.txt"
-      {"f64.load/f64", OP_LOAD, OPCODE_F64_LOAD_I32, TYPE_F64, MEM_TYPE_F64, 0},
-#line 92 "hash.txt"
-      {"i32.ge_u", OP_COMPARE, OPCODE_I32_UGE, TYPE_I32},
-#line 124 "hash.txt"
-      {"i32.store_s/i8", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I8, 4},
+#line 64 "src/hash.txt"
+      {"f64.load/f64", WASM_OP_LOAD, WASM_OPCODE_F64_LOAD_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64, 0},
+#line 92 "src/hash.txt"
+      {"i32.ge_u", WASM_OP_COMPARE, WASM_OPCODE_I32_UGE, WASM_TYPE_I32},
+#line 124 "src/hash.txt"
+      {"i32.store_s/i8", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 4},
       {""}, {""}, {""},
-#line 146 "hash.txt"
-      {"i64.ge_s", OP_COMPARE, OPCODE_I64_SGE, TYPE_I64},
-#line 142 "hash.txt"
-      {"i64.div_u", OP_BINARY, OPCODE_I64_UDIV, TYPE_I64},
+#line 146 "src/hash.txt"
+      {"i64.ge_s", WASM_OP_COMPARE, WASM_OPCODE_I64_SGE, WASM_TYPE_I64},
+#line 142 "src/hash.txt"
+      {"i64.div_u", WASM_OP_BINARY, WASM_OPCODE_I64_UDIV, WASM_TYPE_I64},
       {""},
-#line 17 "hash.txt"
-      {"export", OP_EXPORT},
+#line 17 "src/hash.txt"
+      {"export", WASM_OP_EXPORT},
       {""},
-#line 91 "hash.txt"
-      {"i32.ge_s", OP_COMPARE, OPCODE_I32_SGE, TYPE_I32},
-#line 89 "hash.txt"
-      {"i32.div_u", OP_BINARY, OPCODE_I32_UDIV, TYPE_I32},
+#line 91 "src/hash.txt"
+      {"i32.ge_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SGE, WASM_TYPE_I32},
+#line 89 "src/hash.txt"
+      {"i32.div_u", WASM_OP_BINARY, WASM_OPCODE_I32_UDIV, WASM_TYPE_I32},
       {""},
-#line 198 "hash.txt"
-      {"load_global", OP_LOAD_GLOBAL, OPCODE_GET_GLOBAL},
-#line 57 "hash.txt"
-      {"f64.div", OP_BINARY, OPCODE_F64_DIV, TYPE_F64},
+#line 198 "src/hash.txt"
+      {"load_global", WASM_OP_LOAD_GLOBAL, WASM_OPCODE_GET_GLOBAL},
+#line 57 "src/hash.txt"
+      {"f64.div", WASM_OP_BINARY, WASM_OPCODE_F64_DIV, WASM_TYPE_F64},
       {""},
-#line 141 "hash.txt"
-      {"i64.div_s", OP_BINARY, OPCODE_I64_SDIV, TYPE_I64},
+#line 141 "src/hash.txt"
+      {"i64.div_s", WASM_OP_BINARY, WASM_OPCODE_I64_SDIV, WASM_TYPE_I64},
       {""}, {""},
-#line 28 "hash.txt"
-      {"f32.div", OP_BINARY, OPCODE_F32_DIV, TYPE_F32},
-#line 74 "hash.txt"
-      {"f64.sqrt", OP_UNARY, OPCODE_F64_SQRT, TYPE_F64},
-#line 88 "hash.txt"
-      {"i32.div_s", OP_BINARY, OPCODE_I32_SDIV, TYPE_I32},
+#line 28 "src/hash.txt"
+      {"f32.div", WASM_OP_BINARY, WASM_OPCODE_F32_DIV, WASM_TYPE_F32},
+#line 74 "src/hash.txt"
+      {"f64.sqrt", WASM_OP_UNARY, WASM_OPCODE_F64_SQRT, WASM_TYPE_F64},
+#line 88 "src/hash.txt"
+      {"i32.div_s", WASM_OP_BINARY, WASM_OPCODE_I32_SDIV, WASM_TYPE_I32},
       {""},
-#line 62 "hash.txt"
-      {"f64.le", OP_COMPARE, OPCODE_F64_LE, TYPE_F64},
-#line 54 "hash.txt"
-      {"f64.convert_u/i32", OP_CONVERT, OPCODE_F64_UCONVERT_I32, TYPE_F64, TYPE_I32},
-#line 43 "hash.txt"
-      {"f32.sqrt", OP_UNARY, OPCODE_F32_SQRT, TYPE_F32},
-#line 81 "hash.txt"
-      {"get_local", OP_GET_LOCAL, OPCODE_GET_LOCAL},
+#line 62 "src/hash.txt"
+      {"f64.le", WASM_OP_COMPARE, WASM_OPCODE_F64_LE, WASM_TYPE_F64},
+#line 54 "src/hash.txt"
+      {"f64.convert_u/i32", WASM_OP_CONVERT, WASM_OPCODE_F64_UCONVERT_I32, WASM_TYPE_F64, WASM_TYPE_I32},
+#line 43 "src/hash.txt"
+      {"f32.sqrt", WASM_OP_UNARY, WASM_OPCODE_F32_SQRT, WASM_TYPE_F32},
+#line 81 "src/hash.txt"
+      {"get_local", WASM_OP_GET_LOCAL, WASM_OPCODE_GET_LOCAL},
       {""},
-#line 33 "hash.txt"
-      {"f32.le", OP_COMPARE, OPCODE_F32_LE, TYPE_F32},
-#line 24 "hash.txt"
-      {"f32.convert_u/i32", OP_CONVERT, OPCODE_F32_UCONVERT_I32, TYPE_F32, TYPE_I32},
+#line 33 "src/hash.txt"
+      {"f32.le", WASM_OP_COMPARE, WASM_OPCODE_F32_LE, WASM_TYPE_F32},
+#line 24 "src/hash.txt"
+      {"f32.convert_u/i32", WASM_OP_CONVERT, WASM_OPCODE_F32_UCONVERT_I32, WASM_TYPE_F32, WASM_TYPE_I32},
       {""}, {""}, {""}, {""},
-#line 52 "hash.txt"
-      {"f64.convert_s/i32", OP_CONVERT, OPCODE_F64_SCONVERT_I32, TYPE_F64, TYPE_I32},
-#line 50 "hash.txt"
-      {"f64.ceil", OP_UNARY, OPCODE_F64_CEIL, TYPE_F64},
+#line 52 "src/hash.txt"
+      {"f64.convert_s/i32", WASM_OP_CONVERT, WASM_OPCODE_F64_SCONVERT_I32, WASM_TYPE_F64, WASM_TYPE_I32},
+#line 50 "src/hash.txt"
+      {"f64.ceil", WASM_OP_UNARY, WASM_OPCODE_F64_CEIL, WASM_TYPE_F64},
       {""}, {""}, {""},
-#line 22 "hash.txt"
-      {"f32.convert_s/i32", OP_CONVERT, OPCODE_F32_SCONVERT_I32, TYPE_F32, TYPE_I32},
-#line 20 "hash.txt"
-      {"f32.ceil", OP_UNARY, OPCODE_F32_CEIL, TYPE_F32},
-#line 12 "hash.txt"
-      {"block", OP_BLOCK, OPCODE_BLOCK},
+#line 22 "src/hash.txt"
+      {"f32.convert_s/i32", WASM_OP_CONVERT, WASM_OPCODE_F32_SCONVERT_I32, WASM_TYPE_F32, WASM_TYPE_I32},
+#line 20 "src/hash.txt"
+      {"f32.ceil", WASM_OP_UNARY, WASM_OPCODE_F32_CEIL, WASM_TYPE_F32},
+#line 12 "src/hash.txt"
+      {"block", WASM_OP_BLOCK, WASM_OPCODE_BLOCK},
       {""},
-#line 202 "hash.txt"
-      {"module", OP_MODULE},
+#line 202 "src/hash.txt"
+      {"module", WASM_OP_MODULE},
       {""},
-#line 176 "hash.txt"
-      {"i64.store/i16", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I16, 5},
+#line 176 "src/hash.txt"
+      {"i64.store/i16", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 5},
       {""}, {""}, {""}, {""},
-#line 119 "hash.txt"
-      {"i32.store/i16", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I16, 5},
+#line 119 "src/hash.txt"
+      {"i32.store/i16", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 5},
       {""}, {""},
-#line 208 "hash.txt"
-      {"store_global", OP_STORE_GLOBAL, OPCODE_SET_GLOBAL},
-#line 152 "hash.txt"
-      {"i64.load/i16", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I16, 5},
+#line 208 "src/hash.txt"
+      {"store_global", WASM_OP_STORE_GLOBAL, WASM_OPCODE_SET_GLOBAL},
+#line 152 "src/hash.txt"
+      {"i64.load/i16", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 5},
       {""},
-#line 160 "hash.txt"
-      {"i64.load_u/i16", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I16, 1},
+#line 160 "src/hash.txt"
+      {"i64.load_u/i16", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 1},
       {""}, {""},
-#line 97 "hash.txt"
-      {"i32.load/i16", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I16, 5},
+#line 97 "src/hash.txt"
+      {"i32.load/i16", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 5},
       {""},
-#line 103 "hash.txt"
-      {"i32.load_u/i16", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I16, 1},
-#line 209 "hash.txt"
-      {"table", OP_TABLE},
+#line 103 "src/hash.txt"
+      {"i32.load_u/i16", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 1},
+#line 209 "src/hash.txt"
+      {"table", WASM_OP_TABLE},
       {""}, {""}, {""},
-#line 156 "hash.txt"
-      {"i64.load_s/i16", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I16, 5},
+#line 156 "src/hash.txt"
+      {"i64.load_s/i16", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 5},
       {""}, {""}, {""}, {""},
-#line 100 "hash.txt"
-      {"i32.load_s/i16", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I16, 5},
+#line 100 "src/hash.txt"
+      {"i32.load_s/i16", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 5},
       {""}, {""},
-#line 70 "hash.txt"
-      {"f64.neg", OP_UNARY, OPCODE_F64_NEG, TYPE_F64},
+#line 70 "src/hash.txt"
+      {"f64.neg", WASM_OP_UNARY, WASM_OPCODE_F64_NEG, WASM_TYPE_F64},
       {""},
-#line 13 "hash.txt"
-      {"break", OP_BREAK, OPCODE_BREAK},
+#line 13 "src/hash.txt"
+      {"break", WASM_OP_BREAK, WASM_OPCODE_BREAK},
       {""}, {""},
-#line 40 "hash.txt"
-      {"f32.neg", OP_UNARY, OPCODE_F32_NEG, TYPE_F32},
+#line 40 "src/hash.txt"
+      {"f32.neg", WASM_OP_UNARY, WASM_OPCODE_F32_NEG, WASM_TYPE_F32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 55 "hash.txt"
-      {"f64.convert_u/i64", OP_CONVERT, OPCODE_F64_UCONVERT_I64, TYPE_F64, TYPE_I64},
+#line 55 "src/hash.txt"
+      {"f64.convert_u/i64", WASM_OP_CONVERT, WASM_OPCODE_F64_UCONVERT_I64, WASM_TYPE_F64, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 25 "hash.txt"
-      {"f32.convert_u/i64", OP_CONVERT, OPCODE_F32_UCONVERT_I64, TYPE_F32, TYPE_I64},
+#line 25 "src/hash.txt"
+      {"f32.convert_u/i64", WASM_OP_CONVERT, WASM_OPCODE_F32_UCONVERT_I64, WASM_TYPE_F32, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 53 "hash.txt"
-      {"f64.convert_s/i64", OP_CONVERT, OPCODE_F64_SCONVERT_I64, TYPE_F64, TYPE_I64},
+#line 53 "src/hash.txt"
+      {"f64.convert_s/i64", WASM_OP_CONVERT, WASM_OPCODE_F64_SCONVERT_I64, WASM_TYPE_F64, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 23 "hash.txt"
-      {"f32.convert_s/i64", OP_CONVERT, OPCODE_F32_SCONVERT_I64, TYPE_F32, TYPE_I64},
+#line 23 "src/hash.txt"
+      {"f32.convert_s/i64", WASM_OP_CONVERT, WASM_OPCODE_F32_SCONVERT_I64, WASM_TYPE_F32, WASM_TYPE_I64},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 60 "hash.txt"
-      {"f64.ge", OP_COMPARE, OPCODE_F64_GE, TYPE_F64},
+#line 60 "src/hash.txt"
+      {"f64.ge", WASM_OP_COMPARE, WASM_OPCODE_F64_GE, WASM_TYPE_F64},
       {""}, {""},
-#line 10 "hash.txt"
-      {"assert_eq", OP_ASSERT_EQ},
+#line 10 "src/hash.txt"
+      {"assert_eq", WASM_OP_ASSERT_EQ},
       {""},
-#line 31 "hash.txt"
-      {"f32.ge", OP_COMPARE, OPCODE_F32_GE, TYPE_F32},
-#line 179 "hash.txt"
-      {"i64.store/i8", OP_STORE, OPCODE_I64_STORE_I32, TYPE_I64, MEM_TYPE_I8, 4},
+#line 31 "src/hash.txt"
+      {"f32.ge", WASM_OP_COMPARE, WASM_OPCODE_F32_GE, WASM_TYPE_F32},
+#line 179 "src/hash.txt"
+      {"i64.store/i8", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 4},
       {""}, {""}, {""},
-#line 206 "hash.txt"
-      {"return", OP_RETURN, OPCODE_RETURN},
-#line 121 "hash.txt"
-      {"i32.store/i8", OP_STORE, OPCODE_I32_STORE_I32, TYPE_I32, MEM_TYPE_I8, 4},
+#line 206 "src/hash.txt"
+      {"return", WASM_OP_RETURN, WASM_OPCODE_RETURN},
+#line 121 "src/hash.txt"
+      {"i32.store/i8", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 4},
       {""}, {""}, {""},
-#line 155 "hash.txt"
-      {"i64.load/i8", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I8, 4},
+#line 155 "src/hash.txt"
+      {"i64.load/i8", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 4},
       {""},
-#line 163 "hash.txt"
-      {"i64.load_u/i8", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I8, 0},
+#line 163 "src/hash.txt"
+      {"i64.load_u/i8", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 0},
       {""}, {""},
-#line 99 "hash.txt"
-      {"i32.load/i8", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I8, 4},
-#line 137 "hash.txt"
-      {"i64.and", OP_BINARY, OPCODE_I64_AND, TYPE_I64},
-#line 105 "hash.txt"
-      {"i32.load_u/i8", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I8, 0},
+#line 99 "src/hash.txt"
+      {"i32.load/i8", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 4},
+#line 137 "src/hash.txt"
+      {"i64.and", WASM_OP_BINARY, WASM_OPCODE_I64_AND, WASM_TYPE_I64},
+#line 105 "src/hash.txt"
+      {"i32.load_u/i8", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 0},
       {""}, {""}, {""},
-#line 84 "hash.txt"
-      {"i32.and", OP_BINARY, OPCODE_I32_AND, TYPE_I32},
-#line 159 "hash.txt"
-      {"i64.load_s/i8", OP_LOAD, OPCODE_I64_LOAD_I32, TYPE_I64, MEM_TYPE_I8, 4},
+#line 84 "src/hash.txt"
+      {"i32.and", WASM_OP_BINARY, WASM_OPCODE_I32_AND, WASM_TYPE_I32},
+#line 159 "src/hash.txt"
+      {"i64.load_s/i8", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 4},
       {""}, {""}, {""},
-#line 134 "hash.txt"
-      {"i32.wrap/i64", OP_CONVERT, OPCODE_I32_CONVERT_I64, TYPE_I32, TYPE_I64},
-#line 102 "hash.txt"
-      {"i32.load_s/i8", OP_LOAD, OPCODE_I32_LOAD_I32, TYPE_I32, MEM_TYPE_I8, 4},
+#line 134 "src/hash.txt"
+      {"i32.wrap/i64", WASM_OP_CONVERT, WASM_OPCODE_I32_CONVERT_I64, WASM_TYPE_I32, WASM_TYPE_I64},
+#line 102 "src/hash.txt"
+      {"i32.load_s/i8", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 4},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""},
-#line 16 "hash.txt"
-      {"destruct", OP_DESTRUCT, OPCODE_INVALID},
+#line 16 "src/hash.txt"
+      {"destruct", WASM_OP_DESTRUCT, WASM_OPCODE_INVALID},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 56 "hash.txt"
-      {"f64.copysign", OP_BINARY, OPCODE_F64_COPYSIGN, TYPE_F64},
+#line 56 "src/hash.txt"
+      {"f64.copysign", WASM_OP_BINARY, WASM_OPCODE_F64_COPYSIGN, WASM_TYPE_F64},
       {""}, {""}, {""}, {""},
-#line 26 "hash.txt"
-      {"f32.copysign", OP_BINARY, OPCODE_F32_COPYSIGN, TYPE_F32},
+#line 26 "src/hash.txt"
+      {"f32.copysign", WASM_OP_BINARY, WASM_OPCODE_F32_COPYSIGN, WASM_TYPE_F32},
       {""},
-#line 113 "hash.txt"
-      {"i32.reinterpret/f32", OP_CONVERT, OPCODE_INVALID, TYPE_I32},
+#line 113 "src/hash.txt"
+      {"i32.reinterpret/f32", WASM_OP_CONVERT, WASM_OPCODE_INVALID, WASM_TYPE_I32},
       {""},
-#line 196 "hash.txt"
-      {"invoke", OP_INVOKE},
-#line 167 "hash.txt"
-      {"i64.neq", OP_COMPARE, OPCODE_I64_NE, TYPE_I64},
+#line 196 "src/hash.txt"
+      {"invoke", WASM_OP_INVOKE},
+#line 167 "src/hash.txt"
+      {"i64.neq", WASM_OP_COMPARE, WASM_OPCODE_I64_NE, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 109 "hash.txt"
-      {"i32.neq", OP_COMPARE, OPCODE_I32_NE, TYPE_I32},
+#line 109 "src/hash.txt"
+      {"i32.neq", WASM_OP_COMPARE, WASM_OPCODE_I32_NE, WASM_TYPE_I32},
       {""},
-#line 42 "hash.txt"
-      {"f32.reinterpret/i32", OP_CONVERT, OPCODE_F32_REINTERPRET_I32, TYPE_F32, TYPE_I32},
+#line 42 "src/hash.txt"
+      {"f32.reinterpret/i32", WASM_OP_CONVERT, WASM_OPCODE_F32_REINTERPRET_I32, WASM_TYPE_F32, WASM_TYPE_I32},
       {""}, {""},
-#line 71 "hash.txt"
-      {"f64.neq", OP_COMPARE, OPCODE_F64_NE, TYPE_F64},
+#line 71 "src/hash.txt"
+      {"f64.neq", WASM_OP_COMPARE, WASM_OPCODE_F64_NE, WASM_TYPE_F64},
       {""}, {""}, {""}, {""},
-#line 41 "hash.txt"
-      {"f32.neq", OP_COMPARE, OPCODE_F32_NE, TYPE_F32},
+#line 41 "src/hash.txt"
+      {"f32.neq", WASM_OP_COMPARE, WASM_OPCODE_F32_NE, WASM_TYPE_F32},
       {""},
-#line 11 "hash.txt"
-      {"assert_invalid", OP_ASSERT_INVALID},
+#line 11 "src/hash.txt"
+      {"assert_invalid", WASM_OP_ASSERT_INVALID},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""},
-#line 170 "hash.txt"
-      {"i64.reinterpret/f64", OP_CONVERT, OPCODE_INVALID, TYPE_I64},
+#line 170 "src/hash.txt"
+      {"i64.reinterpret/f64", WASM_OP_CONVERT, WASM_OPCODE_INVALID, WASM_TYPE_I64},
       {""},
-#line 145 "hash.txt"
-      {"i64.extend_u/i32", OP_CONVERT, OPCODE_I64_UCONVERT_I32, TYPE_I64, TYPE_I32},
+#line 145 "src/hash.txt"
+      {"i64.extend_u/i32", WASM_OP_CONVERT, WASM_OPCODE_I64_UCONVERT_I32, WASM_TYPE_I64, WASM_TYPE_I32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 73 "hash.txt"
-      {"f64.reinterpret/i64", OP_CONVERT, OPCODE_F64_REINTERPRET_I64, TYPE_F64, TYPE_I64},
+#line 73 "src/hash.txt"
+      {"f64.reinterpret/i64", WASM_OP_CONVERT, WASM_OPCODE_F64_REINTERPRET_I64, WASM_TYPE_F64, WASM_TYPE_I64},
       {""},
-#line 144 "hash.txt"
-      {"i64.extend_s/i32", OP_CONVERT, OPCODE_I64_SCONVERT_I32, TYPE_I64, TYPE_I32},
+#line 144 "src/hash.txt"
+      {"i64.extend_s/i32", WASM_OP_CONVERT, WASM_OPCODE_I64_SCONVERT_I32, WASM_TYPE_I64, WASM_TYPE_I32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""},
-#line 14 "hash.txt"
-      {"call_indirect", OP_CALL_INDIRECT, OPCODE_CALL_INDIRECT},
+#line 14 "src/hash.txt"
+      {"call_indirect", WASM_OP_CALL_INDIRECT, WASM_OPCODE_CALL_INDIRECT},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""},
-#line 136 "hash.txt"
-      {"i64.add", OP_BINARY, OPCODE_I64_ADD, TYPE_I64},
+#line 136 "src/hash.txt"
+      {"i64.add", WASM_OP_BINARY, WASM_OPCODE_I64_ADD, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 83 "hash.txt"
-      {"i32.add", OP_BINARY, OPCODE_I32_ADD, TYPE_I32},
+#line 83 "src/hash.txt"
+      {"i32.add", WASM_OP_BINARY, WASM_OPCODE_I32_ADD, WASM_TYPE_I32},
       {""}, {""}, {""}, {""},
-#line 49 "hash.txt"
-      {"f64.add", OP_BINARY, OPCODE_F64_ADD, TYPE_F64},
+#line 49 "src/hash.txt"
+      {"f64.add", WASM_OP_BINARY, WASM_OPCODE_F64_ADD, WASM_TYPE_F64},
       {""}, {""}, {""}, {""},
-#line 19 "hash.txt"
-      {"f32.add", OP_BINARY, OPCODE_F32_ADD, TYPE_F32},
+#line 19 "src/hash.txt"
+      {"f32.add", WASM_OP_BINARY, WASM_OPCODE_F32_ADD, WASM_TYPE_F32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""},
-#line 143 "hash.txt"
-      {"i64.eq", OP_COMPARE, OPCODE_I64_EQ, TYPE_I64},
+#line 143 "src/hash.txt"
+      {"i64.eq", WASM_OP_COMPARE, WASM_OPCODE_I64_EQ, WASM_TYPE_I64},
       {""}, {""}, {""}, {""},
-#line 90 "hash.txt"
-      {"i32.eq", OP_COMPARE, OPCODE_I32_EQ, TYPE_I32},
+#line 90 "src/hash.txt"
+      {"i32.eq", WASM_OP_COMPARE, WASM_OPCODE_I32_EQ, WASM_TYPE_I32},
       {""}, {""}, {""}, {""},
-#line 58 "hash.txt"
-      {"f64.eq", OP_COMPARE, OPCODE_F64_EQ, TYPE_F64},
+#line 58 "src/hash.txt"
+      {"f64.eq", WASM_OP_COMPARE, WASM_OPCODE_F64_EQ, WASM_TYPE_F64},
       {""}, {""}, {""}, {""},
-#line 29 "hash.txt"
-      {"f32.eq", OP_COMPARE, OPCODE_F32_EQ, TYPE_F32},
+#line 29 "src/hash.txt"
+      {"f32.eq", WASM_OP_COMPARE, WASM_OPCODE_F32_EQ, WASM_TYPE_F32},
       {""}, {""},
-#line 27 "hash.txt"
-      {"f32.demote/f64", OP_CONVERT, OPCODE_F32_CONVERT_F64, TYPE_F32, TYPE_F64}
+#line 27 "src/hash.txt"
+      {"f32.demote/f64", WASM_OP_CONVERT, WASM_OPCODE_F32_CONVERT_F64, WASM_TYPE_F32, WASM_TYPE_F64}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
