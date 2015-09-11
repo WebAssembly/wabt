@@ -1,0 +1,26 @@
+# EXE: test/run-d8.py
+(module
+  (export "if1" $if1)
+  (func $if1 (result i32) (local i32)
+    (set_local 0 (i32.const 0))
+    (if (i32.const 1)
+      (set_local 0 (i32.add (get_local 0)
+                            (i32.const 1))))
+    (if (i32.const 0)
+      (set_local 0 (i32.add (get_local 0)
+                            (i32.const 1))))
+    (return (get_local 0)))
+
+  (export "if2" $if2)
+  (func $if2 (result i32) (local i32 i32)
+    (if (i32.const 1)
+      (set_local 0 (i32.const 1))
+      (set_local 0 (i32.const 2)))
+    (if (i32.const 0)
+      (set_local 1 (i32.const 4))
+      (set_local 1 (i32.const 8)))
+    (return (i32.add (get_local 0) (get_local 1))))
+)
+# STDOUT:
+if1() = 1
+if2() = 9
