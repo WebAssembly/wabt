@@ -102,34 +102,34 @@ static int read_int32(const char** s,
                       const char* end,
                       uint32_t* out,
                       int allow_signed) {
-  int has_sign = **s == '-';
-  if (!allow_signed && has_sign)
-    return 0;
-
-  /* Normally, strtoul is defined to parse negative and positive numbers
-   * automatically, which is actually what we want here. The trouble is that on
-   * 64-bit systems, unsigned long is 64-bit, which means that when we parse a
-   * value, it won't be clamped to 32-bits (which we want). We can clamp
-   * manually, but then values that are too large (> UINT32_MAX) wouldn't be
-   * handled properly. */
-  errno = 0;
-  char* endptr;
-  uint32_t value;
-  if (has_sign) {
-    int64_t value64 = strtol(*s, &endptr, 10);
-    if (value64 < INT32_MIN)
+  int has_sign = 0;
+  if (**s == '-') {
+    if (!allow_signed)
       return 0;
-    value = (uint32_t)(uint64_t)value64;
-  } else {
-    uint64_t value64 = strtoul(*s, &endptr, 10);
-    if (value64 > UINT32_MAX)
-      return 0;
-    value = (uint32_t)value64;
+    has_sign = 1;
+    (*s)++;
   }
-  if (endptr != end || errno != 0)
+  const int base = 10;
+  uint32_t value = 0;
+  if (*s == end)
     return 0;
+  for (; *s < end; ++(*s)) {
+    uint32_t digit = (**s - '0');
+    if (digit > 9)
+      return 0;
+    uint32_t old_value = value;
+    value = value * base + digit;
+    /* check for overflow */
+    if (old_value > value)
+      return 0;
+  }
+  if (has_sign) {
+    if (value > (uint32_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
+      return 0;
+    value = UINT32_MAX - value + 1;
+  }
+
   *out = value;
-  *s = endptr;
   return 1;
 }
 

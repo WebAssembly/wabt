@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (func (i32.const -2147483649)))
+# STDERR:
+1:26: invalid 32-bit int
