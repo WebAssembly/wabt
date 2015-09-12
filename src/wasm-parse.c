@@ -606,7 +606,10 @@ static int parse_var(WasmTokenizer* tokenizer,
     for (i = 0; i < bindings->size; ++i) {
       WasmBinding* binding = &bindings->data[i];
       const char* name = binding->name;
-      if (name && strncmp(name, p, end - p) == 0)
+      /* The token is not NULL-terminated, so use strncmp. But make sure that
+       * they're actually equal by checking for the NULL-terminator in name at
+       * the same place */
+      if (name && strncmp(name, p, end - p) == 0 && name[end - p] == 0)
         return binding->index;
     }
     FATAL_AT(t.range.start, "undefined %s variable \"%.*s\"\n", desc,
