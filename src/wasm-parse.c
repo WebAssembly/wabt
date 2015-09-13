@@ -98,10 +98,70 @@ static const OpInfo* get_op_info(WasmToken t) {
                      (int)(t.range.end.pos - t.range.start.pos));
 }
 
+static int read_uint64(const char** s, const char* end, uint64_t* out) {
+  if (*s == end)
+    return 0;
+  uint64_t value = 0;
+  if (**s == '0' && *s + 1 < end && *(*s + 1) == 'x') {
+    *s += 2;
+    if (*s == end)
+      return 0;
+    for (; *s < end; ++(*s)) {
+      uint32_t digit;
+      char c = **s;
+      if ((c - '0') <= 9) {
+        digit = c - '0';
+      } else if ((c - 'a') <= 6) {
+        digit = 10 + (c - 'a');
+      } else if ((c - 'A') <= 6) {
+        digit = 10 + (c - 'A');
+      } else {
+        return 0;
+      }
+      uint64_t old_value = value;
+      value = value * 16 + digit;
+      /* check for overflow */
+      if (old_value > value)
+        return 0;
+    }
+  } else {
+    for (; *s < end; ++(*s)) {
+      uint32_t digit = (**s - '0');
+      if (digit > 9)
+        return 0;
+      uint64_t old_value = value;
+      value = value * 10 + digit;
+      /* check for overflow */
+      if (old_value > value)
+        return 0;
+    }
+  }
+  *out = value;
+  return 1;
+}
+
+static int read_int64(const char** s, const char* end, uint64_t* out) {
+  int has_sign = 0;
+  if (**s == '-') {
+    has_sign = 1;
+    (*s)++;
+  }
+  uint64_t value;
+  int result = read_uint64(s, end, &value);
+  if (has_sign) {
+    if (value > (uint64_t)INT64_MAX + 1) /* abs(INT64_MIN) == INT64_MAX + 1 */
+      return 0;
+    value = UINT64_MAX - value + 1;
+  }
+  *out = value;
+  return result;
+}
+
 static int read_int32(const char** s,
                       const char* end,
                       uint32_t* out,
                       int allow_signed) {
+  uint64_t value;
   int has_sign = 0;
   if (**s == '-') {
     if (!allow_signed)
@@ -109,38 +169,17 @@ static int read_int32(const char** s,
     has_sign = 1;
     (*s)++;
   }
-  const int base = 10;
-  uint32_t value = 0;
-  if (*s == end)
-    return 0;
-  for (; *s < end; ++(*s)) {
-    uint32_t digit = (**s - '0');
-    if (digit > 9)
-      return 0;
-    uint32_t old_value = value;
-    value = value * base + digit;
-    /* check for overflow */
-    if (old_value > value)
-      return 0;
-  }
+  int result = read_uint64(s, end, &value);
   if (has_sign) {
-    if (value > (uint32_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
+    if (value > (uint64_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
       return 0;
     value = UINT32_MAX - value + 1;
+  } else {
+    if (value > (uint64_t)UINT32_MAX)
+      return 0;
   }
-
-  *out = value;
-  return 1;
-}
-
-static int read_uint64(const char** s, const char* end, uint64_t* out) {
-  errno = 0;
-  char* endptr;
-  *out = strtoull(*s, &endptr, 10);
-  if (endptr != end || errno != 0)
-    return 0;
-  *s = endptr;
-  return 1;
+  *out = (uint32_t)value;
+  return result;
 }
 
 static int read_double(const char** s, const char* end, double* out) {
@@ -342,12 +381,12 @@ static void rewind_token(WasmTokenizer* tokenizer, WasmToken t) {
 }
 
 static int hexdigit(char c) {
-  if (c >= '0' && c <= '9') {
+  if ((c - '0') <= 9) {
     return c - '0';
-  } else if (c >= 'a' && c <= 'f') {
+  } else if ((c - 'a') <= 6) {
     return 10 + (c - 'a');
   } else {
-    assert(c >= 'A' && c <= 'F');
+    assert((c - 'A') <= 6);
     return 10 + (c - 'A');
   }
 }
@@ -732,7 +771,7 @@ static void parse_literal(WasmParser* parser,
 
     case WASM_TYPE_I64: {
       uint64_t value;
-      if (!read_uint64(&p, end, &value))
+      if (!read_int64(&p, end, &value))
         FATAL_AT(t.range.start, "invalid 64-bit int\n");
       parser->u64_literal(value, parser->user_data);
       break;
