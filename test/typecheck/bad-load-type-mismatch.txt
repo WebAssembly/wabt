@@ -1,6 +1,6 @@
 # ERROR: 1
 (module
   (func
-    (i32.load_s/i32 (f32.const 0))))
+    (i32.load/i32 (f32.const 0))))
 # STDERR:
 3:6: type mismatch of load index. got f32, expected i32
