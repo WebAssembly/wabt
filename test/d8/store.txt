@@ -1,0 +1,47 @@
+# EXE: test/run-d8.py
+(module
+  (memory 128)
+
+  (export "i32_store_i8" $i32_store_i8)
+  (func $i32_store_i8 (result i32)
+      (i32.store/i8 (i32.const 0) (i32.const 0xfb))
+      (i32.store/i8 (i32.const 1) (i32.const 0xfc))
+      (i32.store/i8 (i32.const 2) (i32.const 0xfd))
+      (i32.store/i8 (i32.const 3) (i32.const 0xfe))
+      (i32.load/i32 (i32.const 0)))
+
+  (export "i32_store_i16" $i32_store_i16)
+  (func $i32_store_i16 (result i32)
+      (i32.store/i16 (i32.const 0) (i32.const 0xcac9))
+      (i32.store/i16 (i32.const 2) (i32.const 0xcccb))
+      (i32.load/i32 (i32.const 0)))
+
+  (export "i32_store_i32" $i32_store_i32)
+  (func $i32_store_i32 (result i32)
+      (i32.store/i32 (i32.const 0) (i32.const -123456))
+      (i32.load/i32 (i32.const 0)))
+
+  ;; v8-native-prototype currently crashes if you try to return an i64, so
+  ;; we'll do a comparison against the expected value instead.
+  (export "i64_store_i64" $i64_store_i64)
+  (func $i64_store_i64 (result i32)
+      (i64.store/i64 (i32.const 0) (i64.const 0xbaddc0de600dd00d))
+      (i64.eq (i64.load/i64 (i32.const 0)) (i64.const 0xbaddc0de600dd00d)))
+
+  (export "f32_store_f32" $f32_store_f32)
+  (func $f32_store_f32 (result i32)
+      (f32.store/f32 (i32.const 0) (f32.const 1.5))
+      (i32.load/i32 (i32.const 0)))
+
+  (export "f64_store_f64" $f64_store_f64)
+  (func $f64_store_f64 (result i32)
+      (f64.store/f64 (i32.const 0) (f64.const -1000.75))
+      (i32.load/i32 (i32.const 4)))
+)
+# STDOUT:
+i32_store_i8() = -16909061
+i32_store_i16() = -859059511
+i32_store_i32() = -123456
+i64_store_i64() = 1
+f32_store_f32() = 1069547520
+f64_store_f64() = -1064352256
