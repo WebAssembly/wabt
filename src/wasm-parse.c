@@ -7,21 +7,17 @@
 #include <string.h>
 
 #include "wasm.h"
+#include "wasm-internal.h"
 #include "wasm-parse.h"
 
+#include "hash.h"
+
 #define TABS_TO_SPACES 8
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
+#define INITIAL_VECTOR_CAPACITY 8
+
 #define FATAL_AT(loc, ...)                           \
   fprintf(stderr, "%d:%d: ", (loc).line, (loc).col), \
       fprintf(stderr, __VA_ARGS__), exit(1)
-#define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
-#define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
-#define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
-
-#define INITIAL_VECTOR_CAPACITY 8
-
-#include "hash.h"
 
 typedef struct OpInfo OpInfo;
 typedef uint8_t MemAccess;

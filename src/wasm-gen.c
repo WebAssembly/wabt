@@ -6,13 +6,9 @@
 #include <string.h>
 
 #include "wasm.h"
+#include "wasm-internal.h"
 #include "wasm-parse.h"
 #include "wasm-gen.h"
-
-#define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
-#define FATAL_AT(loc, ...)                           \
-  fprintf(stderr, "%d:%d: ", (loc).line, (loc).col), \
-      fprintf(stderr, __VA_ARGS__), exit(1)
 
 #define INITIAL_OUTPUT_BUFFER_CAPACITY (64 * 1024)
 #define DEFAULT_MEMORY_EXPORT 1

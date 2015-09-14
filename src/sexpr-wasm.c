@@ -5,17 +5,9 @@
 #include <stdlib.h>
 
 #include "wasm.h"
+#include "wasm-internal.h"
 #include "wasm-parse.h"
 #include "wasm-gen.h"
-
-#define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
-#define FATAL_AT(loc, ...)                           \
-  fprintf(stderr, "%d:%d: ", (loc).line, (loc).col), \
-      fprintf(stderr, __VA_ARGS__), exit(1)
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
-#define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
-#define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
 enum { FLAG_VERBOSE, FLAG_HELP, FLAG_DUMP_MODULE, FLAG_OUTPUT, NUM_FLAGS };
 
