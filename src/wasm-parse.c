@@ -1490,7 +1490,7 @@ static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
         export->index = index;
 
         expect_close(read_token(tokenizer));
-        parser->after_export(&module, index, parser->user_data);
+        parser->after_export(&module, export, parser->user_data);
         break;
       }
 
