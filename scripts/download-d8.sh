@@ -30,6 +30,8 @@ Download() {
   fi
 }
 
+mkdir -p "${OUT_DIR}"
+
 for file in d8 natives_blob.bin snapshot_blob.bin; do
   Download ${BUCKET_URL}/${file} "${OUT_DIR}/${file}"
 done
