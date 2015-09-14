@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/binji/sexpr-wasm.svg?branch=master
-    :target: https://travis-ci.org/binji/sexpr-wasm
+.. image:: https://travis-ci.org/WebAssembly/sexpr-wasm-prototype.svg?branch=master
+    :target: https://travis-ci.org/WebAssembly/sexpr-wasm-prototype
     :alt: Build Status
 
 sexpr-wasm
@@ -14,7 +14,7 @@ Cloning
 
 Clone as normal, but don't forget to update/init submodules as well::
 
-  $ git clone https://github.com/binji/sexpr-wasm
+  $ git clone https://github.com/WebAssembly/sexpr-wasm-prototype
   $ git submodule update --init
 
 This will fetch the v8-native-prototype repo, which is needed for some tests.
