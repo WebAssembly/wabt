@@ -338,10 +338,10 @@ static void after_function(WasmModule* module,
 static void before_export(WasmModule* module, void* user_data) {}
 
 static void after_export(WasmModule* module,
-                         int function_index,
+                         WasmExport* export,
                          void* user_data) {
   Context* ctx = user_data;
-  WasmFunction* exported = &module->functions.data[function_index];
+  WasmFunction* exported = &module->functions.data[export->index];
   out_u8_at(ctx->buf, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
             "FIXUP func exported");
 }
