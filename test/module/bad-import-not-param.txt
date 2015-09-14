@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (import "foo" "bar" (parump i32)))
+# STDERR:
+1:30: expected "param"

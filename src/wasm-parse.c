@@ -39,6 +39,7 @@ DEFINE_VECTOR(binding, WasmBinding)
 DEFINE_VECTOR(variable, WasmVariable)
 DEFINE_VECTOR(function, WasmFunction)
 DEFINE_VECTOR(export, WasmExport)
+DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
 
 typedef struct NameTypePair {
@@ -513,6 +514,13 @@ static void expect_var_name(WasmToken t) {
   expect_atom(t);
   if (t.range.end.pos - t.range.start.pos < 1 || t.range.start.pos[0] != '$')
     FATAL_AT(t.range.start, "expected name to begin with $\n");
+}
+
+static void expect_atom_op(WasmToken t, WasmOpType op, const char* desc) {
+  expect_atom(t);
+  const OpInfo* op_info = get_op_info(t);
+  if (!op_info || op_info->op_type != op)
+    FATAL_AT(t.range.start, "expected \"%s\"\n", desc);
 }
 
 static void check_opcode(WasmSourceLocation loc, WasmOpcode opcode) {
@@ -1200,6 +1208,29 @@ static int parse_func(WasmParser* parser,
   return num_exprs;
 }
 
+static void parse_type_list(WasmTokenizer* tokenizer,
+                            WasmVariableVector* variables, int allow_empty) {
+  WasmToken t = read_token(tokenizer);
+  WasmType type;
+  if (allow_empty && t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
+    return;
+  if (!match_type(t, &type))
+    FATAL_AT(t.range.start, "expected a type, not \"%.*s\"\n",
+             (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
+  while (1) {
+    WasmVariable* variable = wasm_append_variable(variables);
+    variable->type = type;
+    variable->offset = 0;
+    variable->index = 0;
+
+    t = read_token(tokenizer);
+    if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
+      break;
+    else if (!match_type(t, &type))
+      unexpected_token(t);
+  }
+}
+
 static void preparse_binding_list(WasmTokenizer* tokenizer,
                                   WasmVariableVector* variables,
                                   WasmBindingVector* bindings,
@@ -1207,18 +1238,8 @@ static void preparse_binding_list(WasmTokenizer* tokenizer,
   WasmToken t = read_token(tokenizer);
   WasmType type;
   if (match_type(t, &type)) {
-    while (1) {
-      WasmVariable* variable = wasm_append_variable(variables);
-      variable->type = type;
-      variable->offset = 0;
-      variable->index = 0;
-
-      t = read_token(tokenizer);
-      if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
-        break;
-      else if (!match_type(t, &type))
-        unexpected_token(t);
-    }
+    rewind_token(tokenizer, t);
+    parse_type_list(tokenizer, variables, 0);
   } else {
     expect_var_name(t);
     parse_type(tokenizer, &type);
@@ -1422,6 +1443,48 @@ static void preparse_module(WasmTokenizer* tokenizer, WasmModule* module) {
         break;
       }
 
+      case WASM_OP_IMPORT: {
+        WasmImport* import = wasm_append_import(&module->imports);
+        memset(import, 0, sizeof(*import));
+
+        WasmToken t = read_token(tokenizer);
+        if (t.type == WASM_TOKEN_TYPE_ATOM) {
+          /* named import */
+          expect_var_name(t);
+          char* name =
+              strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+          if (get_binding_by_name(&module->import_bindings, name) != -1)
+            FATAL_AT(t.range.start, "redefinition of import \"%s\"\n", name);
+
+          WasmBinding* binding = wasm_append_binding(&module->import_bindings);
+          binding->name = name;
+          binding->index = module->imports.size - 1;
+          t = read_token(tokenizer);
+        }
+
+        expect_string(t);
+        import->module_name = dup_string_contents(t);
+        t = read_token(tokenizer);
+        expect_string(t);
+        import->func_name = dup_string_contents(t);
+        t = read_token(tokenizer);
+        /* ( param is required */
+        expect_open(t);
+        t = read_token(tokenizer);
+        expect_atom_op(t, WASM_OP_PARAM, "param");
+        parse_type_list(tokenizer, &import->args, 1);
+        t = read_token(tokenizer);
+        if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+          expect_open(t);
+          t = read_token(tokenizer);
+          expect_atom_op(t, WASM_OP_RESULT, "result");
+          parse_type(tokenizer, &import->result_type);
+        } else {
+          import->result_type = WASM_TYPE_VOID;
+        }
+        break;
+      }
+
       default:
         parse_generic(tokenizer);
         break;
@@ -1454,6 +1517,14 @@ static void wasm_destroy_module(WasmModule* module) {
   for (i = 0; i < module->exports.size; ++i)
     free(module->exports.data[i].name);
   wasm_destroy_export_vector(&module->exports);
+  wasm_destroy_binding_list(&module->import_bindings);
+  for (i = 0; i < module->imports.size; ++i) {
+    WasmImport* import = &module->imports.data[i];
+    free(import->module_name);
+    free(import->func_name);
+    wasm_destroy_variable_vector(&import->args);
+  }
+  wasm_destroy_import_vector(&module->imports);
   wasm_destroy_segment_vector(&module->segments);
 }
 
@@ -1500,6 +1571,7 @@ static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
 
       case WASM_OP_GLOBAL:
       case WASM_OP_MEMORY:
+      case WASM_OP_IMPORT:
         /* Skip, this has already been pre-parsed */
         parse_generic(tokenizer);
         break;

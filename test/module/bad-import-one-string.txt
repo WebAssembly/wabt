@@ -1,0 +1,4 @@
+# ERROR: 1
+(module (import "foo" (param i32)))
+# STDERR:
+1:23: expected STRING, not "("

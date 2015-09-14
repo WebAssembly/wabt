@@ -47,6 +47,7 @@ typedef enum WasmOpType {
   WASM_OP_GET_LOCAL,
   WASM_OP_GLOBAL,
   WASM_OP_IF,
+  WASM_OP_IMPORT,
   WASM_OP_INVOKE,
   WASM_OP_LABEL,
   WASM_OP_LOAD,
@@ -300,6 +301,14 @@ typedef struct WasmExport {
 } WasmExport;
 DECLARE_VECTOR(export, WasmExport)
 
+typedef struct WasmImport {
+  char* module_name;
+  char* func_name;
+  WasmType result_type;
+  WasmVariableVector args;
+} WasmImport;
+DECLARE_VECTOR(import, WasmImport)
+
 typedef struct Segment {
   size_t offset;
   size_t size;
@@ -314,6 +323,8 @@ typedef struct WasmModule {
   WasmVariableVector globals;
   WasmBindingVector global_bindings;
   WasmExportVector exports;
+  WasmImportVector imports;
+  WasmBindingVector import_bindings;
   WasmSegmentVector segments;
   uint32_t initial_memory_size;
   uint32_t max_memory_size;
