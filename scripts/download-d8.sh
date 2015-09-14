@@ -7,7 +7,7 @@ ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 OUT_DIR="${ROOT_DIR}/out"
 
 V8_SHA=8a09bf63714ee165fa91e1091bf205d4505c0e29
-BUCKET_URL=https://storage.googleapis.com/sexpr-wasm/v8-native-prototype/${V8_SHA}
+BUCKET_URL=https://storage.googleapis.com/webassembly/v8-native-prototype/${V8_SHA}
 
 Download() {
   local URL=$1
