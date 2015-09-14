@@ -1,6 +1,6 @@
 language: c
 sudo: false
-addon:
+addons:
   apt:
     packages:
       - gperf
