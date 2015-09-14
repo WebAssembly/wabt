@@ -9,8 +9,9 @@ import tempfile
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
-D8 = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8-native-prototype', 'v8',
-                  'v8', 'out', 'Release', 'd8')
+BUILT_D8 = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8-native-prototype',
+                        'v8', 'v8', 'out', 'Release', 'd8')
+DOWNLOAD_D8 = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 
 
@@ -34,10 +35,13 @@ def main(args):
   else:
     exe = DEFAULT_EXE
 
-  if not os.path.exists(D8):
-    raise Error('d8 executable does not exist.\n'
-                'Run scripts/build-d8.sh to build it.\n'
-                'path: %s' % D8)
+  d8 = BUILT_D8
+  if not os.path.exists(d8):
+    d8 = DOWNLOAD_D8
+    if not os.path.exists(d8):
+      raise Error('d8 executable does not exist.\n'
+                  'Run scripts/build-d8.sh to build it.\n'
+                  'path: %s\npath: %s\n' % (BUILT_D8, DOWNLOAD_D8))
 
   generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
   try:
@@ -60,7 +64,7 @@ def main(args):
 
     # Now run the generated file
     try:
-      subprocess.check_call([D8, WASM_JS, '--', generated.name])
+      subprocess.check_call([d8, WASM_JS, '--', generated.name])
     except subprocess.CalledProcessError as e:
       raise Error(str(e))
   finally:

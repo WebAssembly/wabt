@@ -5,7 +5,7 @@ addon:
     packages:
       - gperf
 script:
-  - scripts/build-d8.sh
+  - scripts/download-d8.sh
   - make
   - test/run-tests.py -v
 compiler:
