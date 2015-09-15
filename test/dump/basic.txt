@@ -14,45 +14,44 @@
 ; global header 0
 0000008: 0000 0000                                  ; global name offset
 000000c: 04                                         ; global mem type
-000000d: 0000 0000                                  ; global offset
-0000011: 00                                         ; export global
+000000d: 00                                         ; export global
 ; function header 0
-0000012: 02                                         ; func num args
-0000013: 01                                         ; func result type
-0000014: 01                                         ; func arg type
-0000015: 01                                         ; func arg type
-0000016: 0000 0000                                  ; func name offset
-000001a: 0000 0000                                  ; func code start offset
-000001e: 0000 0000                                  ; func code end offset
-0000022: 0000                                       ; num local i32
-0000024: 0000                                       ; num local i64
-0000026: 0000                                       ; num local f32
-0000028: 0000                                       ; num local f64
-000002a: 00                                         ; export func
-000002b: 00                                         ; func external
+000000e: 02                                         ; func num args
+000000f: 01                                         ; func result type
+0000010: 01                                         ; func arg type
+0000011: 01                                         ; func arg type
+0000012: 0000 0000                                  ; func name offset
+0000016: 0000 0000                                  ; func code start offset
+000001a: 0000 0000                                  ; func code end offset
+000001e: 0000                                       ; num local i32
+0000020: 0000                                       ; num local i64
+0000022: 0000                                       ; num local f32
+0000024: 0000                                       ; num local f64
+0000026: 00                                         ; export func
+0000027: 00                                         ; func external
 ; function data 0
-000001a: 2c00 0000                                  ; FIXUP func code start offset
-000002c: 03                                         ; OPCODE_BLOCK
-000002d: 00                                         ; toplevel block num expressions
-000002e: 18                                         ; OPCODE_SET_GLOBAL
-000002f: 00                                         ; global index
-0000030: 40                                         ; OPCODE_I32_ADD
-0000031: 17                                         ; OPCODE_GET_GLOBAL
-0000032: 00                                         ; global index
-0000033: 10                                         ; OPCODE_I8_CONST
-0000034: 01                                         ; u8 literal
-0000035: 40                                         ; OPCODE_I32_ADD
-0000036: 15                                         ; OPCODE_GET_LOCAL
-0000037: 00                                         ; remapped local index
-0000038: 15                                         ; OPCODE_GET_LOCAL
-0000039: 01                                         ; remapped local index
-000002d: 02                                         ; FIXUP toplevel block num expressions
-000001e: 3a00 0000                                  ; FIXUP func code end offset
-000002a: 01                                         ; FIXUP func exported
+0000016: 2800 0000                                  ; FIXUP func code start offset
+0000028: 03                                         ; OPCODE_BLOCK
+0000029: 00                                         ; toplevel block num expressions
+000002a: 18                                         ; OPCODE_SET_GLOBAL
+000002b: 00                                         ; global index
+000002c: 40                                         ; OPCODE_I32_ADD
+000002d: 17                                         ; OPCODE_GET_GLOBAL
+000002e: 00                                         ; global index
+000002f: 10                                         ; OPCODE_I8_CONST
+0000030: 01                                         ; u8 literal
+0000031: 40                                         ; OPCODE_I32_ADD
+0000032: 15                                         ; OPCODE_GET_LOCAL
+0000033: 00                                         ; remapped local index
+0000034: 15                                         ; OPCODE_GET_LOCAL
+0000035: 01                                         ; remapped local index
+0000029: 02                                         ; FIXUP toplevel block num expressions
+000001a: 3600 0000                                  ; FIXUP func code end offset
+0000026: 01                                         ; FIXUP func exported
 ; names
-0000016: 3a00 0000                                  ; FIXUP func name offset
-000003a: 6600                                       ; export name
-0000000: 0001 0100 0100 0000 0000 0000 0400 0000  ................
-0000010: 0000 0201 0101 3a00 0000 2c00 0000 3a00  ......:...,...:.
-0000020: 0000 0000 0000 0000 0000 0100 0302 1800  ................
-0000030: 4017 0010 0140 1500 1501 6600            @....@....f.
+0000012: 3600 0000                                  ; FIXUP func name offset
+0000036: 6600                                       ; export name
+0000000: 0001 0100 0100 0000 0000 0000 0400 0201  ................
+0000010: 0101 3600 0000 2800 0000 3600 0000 0000  ..6...(...6.....
+0000020: 0000 0000 0000 0100 0302 1800 4017 0010  ............@...
+0000030: 0140 1500 1501 6600                      .@....f.

@@ -198,14 +198,9 @@ static void out_module_header(OutputBuffer* buf, WasmModule* module) {
     WasmVariable* global = &module->globals.data[i];
     if (g_verbose)
       printf("; global header %d\n", i);
-    global->offset = buf->size;
-    /* TODO(binji): v8-native-prototype globals use mem types, not local types.
-       The spec currently specifies local types, and uses an anonymous memory
-       space for storage. Resolve this discrepancy. */
     const uint8_t global_type_codes[WASM_NUM_TYPES] = {-1, 4, 6, 8, 9};
     out_u32(buf, 0, "global name offset");
     out_u8(buf, global_type_codes[global->type], "global mem type");
-    out_u32(buf, 0, "global offset");
     out_u8(buf, 0, "export global");
   }
 
