@@ -12,8 +12,8 @@
                     (i32.or
                       (i32.xor
                         (i32.shl
-                          (i32.shr
-                            (i32.sar
+                          (i32.shr_u
+                            (i32.shr_s
                               (i32.const 0)
                               (i32.const 0))
                             (i32.const 0))
@@ -40,8 +40,8 @@
                     (i64.or
                       (i64.xor
                         (i64.shl
-                          (i64.shr
-                            (i64.sar
+                          (i64.shr_u
+                            (i64.shr_s
                               (i64.const 0)
                               (i64.const 0))
                             (i64.const 0))

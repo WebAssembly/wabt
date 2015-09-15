@@ -23,10 +23,10 @@
   (func $i32_xor (result i32) (i32.xor (i32.const 11) (i32.const 5)))
   (export "i32_shl" $i32_shl)
   (func $i32_shl (result i32) (i32.shl (i32.const -100) (i32.const 3)))
-  (export "i32_shr" $i32_shr)
-  (func $i32_shr (result i32) (i32.shr (i32.const -100) (i32.const 3)))
-  (export "i32_sar" $i32_sar)
-  (func $i32_sar (result i32) (i32.sar (i32.const -100) (i32.const 3)))
+  (export "i32_shr_u" $i32_shr_u)
+  (func $i32_shr_u (result i32) (i32.shr_u (i32.const -100) (i32.const 3)))
+  (export "i32_shr_s" $i32_shr_s)
+  (func $i32_shr_s (result i32) (i32.shr_s (i32.const -100) (i32.const 3)))
 
   ;; i64
   ;; v8-native-prototype currently crashes if you try to return an i64, so
@@ -64,12 +64,13 @@
   (export "i64_shl" $i64_shl)
   (func $i64_shl (result i32) (i64.eq (i64.shl (i64.const -100) (i64.const 3))
                                       (i64.const -800)))
-  (export "i64_shr" $i64_shr)
-  (func $i64_shr (result i32) (i64.eq (i64.shr (i64.const -100) (i64.const 3))
-                                      (i64.const 2305843009213693939)))
-  (export "i64_sar" $i64_sar)
-  (func $i64_sar (result i32) (i64.eq (i64.sar (i64.const -100) (i64.const 3))
-                                      (i64.const -13)))
+  (export "i64_shr_u" $i64_shr_u)
+  (func $i64_shr_u (result i32)
+      (i64.eq (i64.shr_u (i64.const -100) (i64.const 3))
+              (i64.const 2305843009213693939)))
+  (export "i64_shr_s" $i64_shr_s)
+  (func $i64_shr_s (result i32)
+      (i64.eq (i64.shr_s (i64.const -100) (i64.const 3)) (i64.const -13)))
 
   ;; f32
   (export "f32_add" $f32_add)
@@ -124,8 +125,8 @@ i32_and() = 1
 i32_or() = 15
 i32_xor() = 14
 i32_shl() = -800
-i32_shr() = 536870899
-i32_sar() = -13
+i32_shr_u() = 536870899
+i32_shr_s() = -13
 i64_add() = 1
 i64_sub() = 1
 i64_mul() = 1
@@ -137,8 +138,8 @@ i64_and() = 1
 i64_or() = 1
 i64_xor() = 1
 i64_shl() = 1
-i64_shr() = 1
-i64_sar() = 1
+i64_shr_u() = 1
+i64_shr_s() = 1
 f32_add() = 5
 f32_sub() = -9995.5
 f32_mul() = -8487.1875
