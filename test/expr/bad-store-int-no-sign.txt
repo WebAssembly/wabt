@@ -1,4 +1,0 @@
-# ERROR: 1
-(module (func (i32.store (i32.const 0) (i32.const 0))))
-# STDERR:
-1:16: unexpected token "i32.store"

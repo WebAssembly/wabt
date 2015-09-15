@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (i32.load/i32/3 (i32.const 0))))
+(module (func (i32.load/3 (i32.const 0))))
 # STDERR:
 1:16: alignment must be power-of-two

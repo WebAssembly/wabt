@@ -1,4 +1,4 @@
 # ERROR: 1
-(module (func (f32.store/f32/3 (i32.const 0) (f32.const 0.0))))
+(module (func (f32.store/3 (i32.const 0) (f32.const 0.0))))
 # STDERR:
 1:16: alignment must be power-of-two
