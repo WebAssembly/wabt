@@ -1,0 +1,7 @@
+# ERROR: 1
+(module
+  (import "foo" "bar" (param i32 i32))
+  (func
+    (call_import 0 (i32.const 0))))
+# STDERR:
+4:6: too few arguments to function. got 1, expected 2

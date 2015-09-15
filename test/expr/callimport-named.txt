@@ -1,0 +1,4 @@
+(module
+  (import $bar "foo" "bar" (param f32))
+  (func
+    (call_import $bar (f32.const 0))))

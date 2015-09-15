@@ -1,0 +1,4 @@
+(module
+  (import "foo" "bar" (param i32) (result i32))
+  (func (param i32) (result i32)
+    (call_import 0 (i32.const 0))))

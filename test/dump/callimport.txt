@@ -1,0 +1,65 @@
+# FLAGS: -dv
+(module
+  (import "foo" "bar" (param i32 f32) (result i32))
+  (func (result i32)
+    ;; input import 0 -> output func 0
+    (call_import 0 (i32.const 1) (f32.const 2))
+    ;; input func 0 -> output func 1
+    ;; imports and funcs have different name/number spaces in the input format,
+    ;; but use the same number-space for the output format. Imports always come
+    ;; first.
+    (call 0)))
+# STDOUT:
+0000000: 00                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0200                                       ; num funcs
+0000006: 0000                                       ; num data segments
+; import header 0
+0000008: 02                                         ; import num args
+0000009: 01                                         ; import result_type
+000000a: 01                                         ; import arg type
+000000b: 03                                         ; import arg type
+000000c: 0000 0000                                  ; import name offset
+0000010: 0000 0000                                  ; import code start offset
+0000014: 0000 0000                                  ; import code end offset
+0000018: 0000                                       ; num local i32
+000001a: 0000                                       ; num local i64
+000001c: 0000                                       ; num local f32
+000001e: 0000                                       ; num local f64
+0000020: 00                                         ; export func
+0000021: 01                                         ; import external
+; function header 0
+0000022: 00                                         ; func num args
+0000023: 01                                         ; func result type
+0000024: 0000 0000                                  ; func name offset
+0000028: 0000 0000                                  ; func code start offset
+000002c: 0000 0000                                  ; func code end offset
+0000030: 0000                                       ; num local i32
+0000032: 0000                                       ; num local i64
+0000034: 0000                                       ; num local f32
+0000036: 0000                                       ; num local f64
+0000038: 00                                         ; export func
+0000039: 00                                         ; func external
+; function data 0
+0000028: 3a00 0000                                  ; FIXUP func code start offset
+000003a: 03                                         ; OPCODE_BLOCK
+000003b: 00                                         ; toplevel block num expressions
+000003c: 19                                         ; OPCODE_CALL
+000003d: 00                                         ; import index
+000003e: 11                                         ; OPCODE_I32_CONST
+000003f: 0100 0000                                  ; u32 literal
+0000043: 14                                         ; OPCODE_F32_CONST
+0000044: 0000 0040                                  ; f32 literal
+0000048: 19                                         ; OPCODE_CALL
+0000049: 01                                         ; func index
+000003b: 02                                         ; FIXUP toplevel block num expressions
+000002c: 4a00 0000                                  ; FIXUP func code end offset
+; names
+000000c: 4a00 0000                                  ; FIXUP import name offset
+000004a: 6261 7200                                  ; import name
+0000000: 0001 0000 0200 0000 0201 0103 4a00 0000  ............J...
+0000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+0000020: 0001 0001 0000 0000 3a00 0000 4a00 0000  ........:...J...
+0000030: 0000 0000 0000 0000 0000 0302 1900 1101  ................
+0000040: 0000 0014 0000 0040 1901 6261 7200       .......@..bar.

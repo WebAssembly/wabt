@@ -1,0 +1,6 @@
+# ERROR: 1
+(module
+  (import "foo" "bar" (param i32))
+  (func (call_import 0 (f32.const 0))))
+# STDERR:
+3:24: type mismatch for argument 0 of call_import. got f32, expected i32

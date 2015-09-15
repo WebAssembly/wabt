@@ -3,8 +3,9 @@ if (arguments.length != 1) {
   quit(0);
 }
 
+var ffi = { print: print };
 var buffer = readbuffer(arguments[0]);
-var module = WASM.instantiateModule(buffer, {});
+var module = WASM.instantiateModule(buffer, ffi);
 for (var name in module) {
   if (module[name] instanceof Function) {
     print(name + '() = ' + module[name]());

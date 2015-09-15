@@ -678,6 +678,11 @@ static int parse_function_var(WasmTokenizer* tokenizer, WasmModule* module) {
                    module->functions.size, "function");
 }
 
+static int parse_import_var(WasmTokenizer* tokenizer, WasmModule* module) {
+  return parse_var(tokenizer, &module->import_bindings, module->imports.size,
+                   "import");
+}
+
 static int parse_global_var(WasmTokenizer* tokenizer, WasmModule* module) {
   return parse_var(tokenizer, &module->global_bindings, module->globals.size,
                    "global");
@@ -944,6 +949,38 @@ static WasmType parse_expr(WasmParser* parser,
       }
 
       type = get_result_type(t.range.start, callee);
+      break;
+    }
+
+    case WASM_OP_CALL_IMPORT: {
+      int index = parse_import_var(tokenizer, module);
+      parser->before_call_import(index, parser->user_data);
+      WasmImport* callee = &module->imports.data[index];
+
+      int num_args = 0;
+      while (1) {
+        WasmToken t = read_token(tokenizer);
+        if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
+          break;
+        rewind_token(tokenizer, t);
+        if (++num_args > callee->args.size) {
+          FATAL_AT(t.range.start,
+                   "too many arguments to function. got %d, expected %zd\n",
+                   num_args, callee->args.size);
+        }
+        WasmType arg_type = parse_expr(parser, tokenizer, module, function);
+        WasmType expected = callee->args.data[num_args - 1].type;
+        check_type_arg(t.range.start, arg_type, expected, "call_import",
+                       num_args - 1);
+      }
+
+      if (num_args < callee->args.size) {
+        FATAL_AT(t.range.start,
+                 "too few arguments to function. got %d, expected %zd\n",
+                 num_args, callee->args.size);
+      }
+
+      type = callee->result_type;
       break;
     }
 
@@ -1479,6 +1516,8 @@ static void preparse_module(WasmTokenizer* tokenizer, WasmModule* module) {
           t = read_token(tokenizer);
           expect_atom_op(t, WASM_OP_RESULT, "result");
           parse_type(tokenizer, &import->result_type);
+          expect_close(read_token(tokenizer)); /* close result */
+          expect_close(read_token(tokenizer)); /* close import */
         } else {
           import->result_type = WASM_TYPE_VOID;
         }
