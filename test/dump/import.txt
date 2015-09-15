@@ -1,0 +1,50 @@
+# FLAGS: -dv
+(module
+  ;; v8-native-prototype doesn't support module name, so just use the func name
+  (import "ignored" "test" (param i32 i64 f32 f64))
+  (import "ignored" "test2" (param i32) (result i32)))
+# STDOUT:
+0000000: 00                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0000                                       ; num funcs
+0000006: 0000                                       ; num data segments
+; import header 0
+0000008: 04                                         ; import num args
+0000009: 00                                         ; import result_type
+000000a: 01                                         ; import arg type
+000000b: 02                                         ; import arg type
+000000c: 03                                         ; import arg type
+000000d: 04                                         ; import arg type
+000000e: 0000 0000                                  ; import name offset
+0000012: 0000 0000                                  ; import code start offset
+0000016: 0000 0000                                  ; import code end offset
+000001a: 0000                                       ; num local i32
+000001c: 0000                                       ; num local i64
+000001e: 0000                                       ; num local f32
+0000020: 0000                                       ; num local f64
+0000022: 00                                         ; export func
+0000023: 01                                         ; import external
+; import header 1
+0000024: 01                                         ; import num args
+0000025: 01                                         ; import result_type
+0000026: 01                                         ; import arg type
+0000027: 0000 0000                                  ; import name offset
+000002b: 0000 0000                                  ; import code start offset
+000002f: 0000 0000                                  ; import code end offset
+0000033: 0000                                       ; num local i32
+0000035: 0000                                       ; num local i64
+0000037: 0000                                       ; num local f32
+0000039: 0000                                       ; num local f64
+000003b: 00                                         ; export func
+000003c: 01                                         ; import external
+; names
+000000e: 3d00 0000                                  ; FIXUP import name offset
+000003d: 7465 7374 00                               ; import name
+0000027: 4200 0000                                  ; FIXUP import name offset
+0000042: 7465 7374 3200                             ; import name
+0000000: 0001 0000 0000 0000 0400 0102 0304 3d00  ..............=.
+0000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+0000020: 0000 0001 0101 0142 0000 0000 0000 0000  .......B........
+0000030: 0000 0000 0000 0000 0000 0000 0174 6573  .............tes
+0000040: 7400 7465 7374 3200                      t.test2.

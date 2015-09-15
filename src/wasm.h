@@ -306,6 +306,7 @@ typedef struct WasmImport {
   char* func_name;
   WasmType result_type;
   WasmVariableVector args;
+  size_t offset; /* offset of the import name in the output buffer */
 } WasmImport;
 DECLARE_VECTOR(import, WasmImport)
 

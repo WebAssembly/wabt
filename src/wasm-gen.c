@@ -209,6 +209,30 @@ static void out_module_header(OutputBuffer* buf, WasmModule* module) {
     out_u8(buf, 0, "export global");
   }
 
+  for (i = 0; i < module->imports.size; ++i) {
+    WasmImport* import = &module->imports.data[i];
+    if (g_verbose)
+      printf("; import header %d\n", i);
+
+    out_u8(buf, import->args.size, "import num args");
+    out_u8(buf, import->result_type, "import result_type");
+
+    int j;
+    for (j = 0; j < import->args.size; ++j)
+      out_u8(buf, import->args.data[j].type, "import arg type");
+
+    import->offset = buf->size;
+    out_u32(buf, 0, "import name offset");
+    out_u32(buf, 0, "import code start offset");
+    out_u32(buf, 0, "import code end offset");
+    out_u16(buf, 0, "num local i32");
+    out_u16(buf, 0, "num local i64");
+    out_u16(buf, 0, "num local f32");
+    out_u16(buf, 0, "num local f64");
+    out_u8(buf, 0, "export func");
+    out_u8(buf, 1, "import external");
+  }
+
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
     if (g_verbose)
@@ -270,6 +294,11 @@ static void out_module_footer(OutputBuffer* buf, WasmModule* module) {
   /* output name table */
   if (g_verbose)
     printf("; names\n");
+  for (i = 0; i < module->imports.size; ++i) {
+    WasmImport* import = &module->imports.data[i];
+    out_u32_at(buf, import->offset, buf->size, "FIXUP import name offset");
+    out_cstr(buf, import->func_name, "import name");
+  }
   for (i = 0; i < module->exports.size; ++i) {
     WasmExport* export = &module->exports.data[i];
     WasmFunction* function = &module->functions.data[export->index];
