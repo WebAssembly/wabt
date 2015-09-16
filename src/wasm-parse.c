@@ -34,7 +34,6 @@ static void* append_element(void** data,
                           sizeof(type));                                    \
   }
 
-DEFINE_VECTOR(type, WasmType)
 DEFINE_VECTOR(binding, WasmBinding)
 DEFINE_VECTOR(variable, WasmVariable)
 DEFINE_VECTOR(function, WasmFunction)
@@ -605,21 +604,6 @@ static void check_type_arg(WasmSourceLocation loc,
   }
 }
 
-static WasmType get_result_type(WasmSourceLocation loc,
-                                WasmFunction* function) {
-  switch (function->result_types.size) {
-    case 0:
-      return WASM_TYPE_VOID;
-
-    case 1:
-      return function->result_types.data[0];
-
-    default:
-      FATAL_AT(loc, "multiple return values currently unsupported\n");
-      return WASM_TYPE_VOID;
-  }
-}
-
 static void parse_generic(WasmTokenizer* tokenizer) {
   int nesting = 1;
   while (nesting > 0) {
@@ -950,7 +934,7 @@ static WasmType parse_expr(WasmParser* parser,
                  num_args, callee->num_args);
       }
 
-      type = get_result_type(t.range.start, callee);
+      type = callee->result_type;
       break;
     }
 
@@ -1127,29 +1111,16 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_RETURN: {
       parser->before_return(parser->user_data);
-      int num_results = 0;
-      while (1) {
-        t = read_token(tokenizer);
-        if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
-          break;
-        if (++num_results > function->result_types.size) {
-          FATAL_AT(t.range.start,
-                   "too many return values. got %d, expected %zd\n",
-                   num_results, function->result_types.size);
-        }
+      WasmType result_type = WASM_TYPE_VOID;
+      t = read_token(tokenizer);
+      if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
-        WasmType result_type = parse_expr(parser, tokenizer, module, function);
-        WasmType expected = function->result_types.data[num_results - 1];
-        check_type_arg(t.range.start, result_type, expected, "return",
-                       num_results - 1);
+        result_type = parse_expr(parser, tokenizer, module, function);
+        expect_close(read_token(tokenizer));
       }
 
-      if (num_results < function->result_types.size) {
-        FATAL_AT(t.range.start, "too few return values. got %d, expected %zd\n",
-                 num_results, function->result_types.size);
-      }
-
-      type = get_result_type(t.range.start, function);
+      check_type(t.range.start, result_type, function->result_type, "");
+      type = result_type;
       break;
     }
 
@@ -1243,9 +1214,9 @@ static int parse_func(WasmParser* parser,
     t = read_token(tokenizer);
   }
 
-  WasmType result_type = get_result_type(t.range.start, function);
-  if (result_type != WASM_TYPE_VOID)
-    check_type(t.range.start, type, result_type, " in function result");
+  if (function->result_type != WASM_TYPE_VOID)
+    check_type(t.range.start, type, function->result_type,
+               " in function result");
 
   return num_exprs;
 }
@@ -1364,16 +1335,11 @@ static void preparse_func(WasmTokenizer* tokenizer, WasmModule* module) {
 
       case WASM_OP_RESULT: {
         t = read_token(tokenizer);
-        while (1) {
-          WasmType type;
-          if (!match_type(t, &type))
-            unexpected_token(t);
-          *(WasmType*)wasm_append_type(&function->result_types) = type;
-
-          t = read_token(tokenizer);
-          if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
-            break;
-        }
+        WasmType type;
+        if (!match_type(t, &type))
+          unexpected_token(t);
+        function->result_type = type;
+        expect_close(read_token(tokenizer));
         break;
       }
 
@@ -1549,7 +1515,6 @@ static void wasm_destroy_module(WasmModule* module) {
   int i;
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
-    wasm_destroy_type_vector(&function->result_types);
     wasm_destroy_variable_vector(&function->locals);
     wasm_destroy_binding_list(&function->local_bindings);
     wasm_destroy_binding_list(&function->labels);

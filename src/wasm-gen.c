@@ -234,9 +234,7 @@ static void out_module_header(OutputBuffer* buf, WasmModule* module) {
       printf("; function header %d\n", i);
 
     out_u8(buf, function->num_args, "func num args");
-    out_u8(buf,
-           function->result_types.size ? function->result_types.data[0] : 0,
-           "func result type");
+    out_u8(buf, function->result_type, "func result type");
     int j;
     for (j = 0; j < function->num_args; ++j)
       out_u8(buf, function->locals.data[j].type, "func arg type");

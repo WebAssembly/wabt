@@ -266,8 +266,6 @@ typedef struct WasmToken {
   EXTERN_C void wasm_destroy_##name##_vector(type##Vector* vec); \
   EXTERN_C type* wasm_append_##name(type##Vector* vec);
 
-DECLARE_VECTOR(type, WasmType)
-
 typedef struct WasmBinding {
   char* name;
   int index;
@@ -285,7 +283,7 @@ typedef struct WasmVariable {
 DECLARE_VECTOR(variable, WasmVariable)
 
 typedef struct WasmFunction {
-  WasmTypeVector result_types;
+  WasmType result_type;
   WasmVariableVector locals; /* Includes args, they're at the start */
   WasmBindingVector local_bindings;
   WasmBindingVector labels;
