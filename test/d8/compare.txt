@@ -6,10 +6,10 @@
   (export "i32_eq_false" $i32_eq_false)
   (func $i32_eq_false (result i32) (i32.eq (i32.const 1) (i32.const -1)))
 
-  (export "i32_neq_true" $i32_neq_true)
-  (func $i32_neq_true (result i32) (i32.neq (i32.const 1) (i32.const -1)))
-  (export "i32_neq_false" $i32_neq_false)
-  (func $i32_neq_false (result i32) (i32.neq (i32.const -1) (i32.const -1)))
+  (export "i32_ne_true" $i32_ne_true)
+  (func $i32_ne_true (result i32) (i32.ne (i32.const 1) (i32.const -1)))
+  (export "i32_ne_false" $i32_ne_false)
+  (func $i32_ne_false (result i32) (i32.ne (i32.const -1) (i32.const -1)))
 
   (export "i32_lt_s_less" $i32_lt_s_less)
   (func $i32_lt_s_less (result i32) (i32.lt_s (i32.const -1) (i32.const 1)))
@@ -73,10 +73,10 @@
   (export "i64_eq_false" $i64_eq_false)
   (func $i64_eq_false (result i32) (i64.eq (i64.const 1) (i64.const -1)))
 
-  (export "i64_neq_true" $i64_neq_true)
-  (func $i64_neq_true (result i32) (i64.neq (i64.const 1) (i64.const -1)))
-  (export "i64_neq_false" $i64_neq_false)
-  (func $i64_neq_false (result i32) (i64.neq (i64.const -1) (i64.const -1)))
+  (export "i64_ne_true" $i64_ne_true)
+  (func $i64_ne_true (result i32) (i64.ne (i64.const 1) (i64.const -1)))
+  (export "i64_ne_false" $i64_ne_false)
+  (func $i64_ne_false (result i32) (i64.ne (i64.const -1) (i64.const -1)))
 
   (export "i64_lt_s_less" $i64_lt_s_less)
   (func $i64_lt_s_less (result i32) (i64.lt_s (i64.const -1) (i64.const 1)))
@@ -140,10 +140,10 @@
   (export "f32_eq_false" $f32_eq_false)
   (func $f32_eq_false (result i32) (f32.eq (f32.const 1) (f32.const -1)))
 
-  (export "f32_neq_true" $f32_neq_true)
-  (func $f32_neq_true (result i32) (f32.neq (f32.const 1) (f32.const -1)))
-  (export "f32_neq_false" $f32_neq_false)
-  (func $f32_neq_false (result i32) (f32.neq (f32.const -1) (f32.const -1)))
+  (export "f32_ne_true" $f32_ne_true)
+  (func $f32_ne_true (result i32) (f32.ne (f32.const 1) (f32.const -1)))
+  (export "f32_ne_false" $f32_ne_false)
+  (func $f32_ne_false (result i32) (f32.ne (f32.const -1) (f32.const -1)))
 
   (export "f32_lt_less" $f32_lt_less)
   (func $f32_lt_less (result i32) (f32.lt (f32.const -1) (f32.const 1)))
@@ -179,10 +179,10 @@
   (export "f64_eq_false" $f64_eq_false)
   (func $f64_eq_false (result i32) (f64.eq (f64.const 1) (f64.const -1)))
 
-  (export "f64_neq_true" $f64_neq_true)
-  (func $f64_neq_true (result i32) (f64.neq (f64.const 1) (f64.const -1)))
-  (export "f64_neq_false" $f64_neq_false)
-  (func $f64_neq_false (result i32) (f64.neq (f64.const -1) (f64.const -1)))
+  (export "f64_ne_true" $f64_ne_true)
+  (func $f64_ne_true (result i32) (f64.ne (f64.const 1) (f64.const -1)))
+  (export "f64_ne_false" $f64_ne_false)
+  (func $f64_ne_false (result i32) (f64.ne (f64.const -1) (f64.const -1)))
 
   (export "f64_lt_less" $f64_lt_less)
   (func $f64_lt_less (result i32) (f64.lt (f64.const -1) (f64.const 1)))
@@ -215,8 +215,8 @@
 # STDOUT:
 i32_eq_true() = 1
 i32_eq_false() = 0
-i32_neq_true() = 1
-i32_neq_false() = 0
+i32_ne_true() = 1
+i32_ne_false() = 0
 i32_lt_s_less() = 1
 i32_lt_s_equal() = 0
 i32_lt_s_greater() = 0
@@ -243,8 +243,8 @@ i32_ge_u_equal() = 1
 i32_ge_u_greater() = 1
 i64_eq_true() = 1
 i64_eq_false() = 0
-i64_neq_true() = 1
-i64_neq_false() = 0
+i64_ne_true() = 1
+i64_ne_false() = 0
 i64_lt_s_less() = 1
 i64_lt_s_equal() = 0
 i64_lt_s_greater() = 0
@@ -271,8 +271,8 @@ i64_ge_u_equal() = 1
 i64_ge_u_greater() = 1
 f32_eq_true() = 1
 f32_eq_false() = 0
-f32_neq_true() = 1
-f32_neq_false() = 0
+f32_ne_true() = 1
+f32_ne_false() = 0
 f32_lt_less() = 1
 f32_lt_equal() = 0
 f32_lt_greater() = 0
@@ -287,8 +287,8 @@ f32_ge_equal() = 1
 f32_ge_greater() = 1
 f64_eq_true() = 1
 f64_eq_false() = 0
-f64_neq_true() = 1
-f64_neq_false() = 0
+f64_ne_true() = 1
+f64_ne_false() = 0
 f64_lt_less() = 1
 f64_lt_equal() = 0
 f64_lt_greater() = 0

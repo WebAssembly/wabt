@@ -2,7 +2,7 @@
 (module
   (func
     (i32.eq
-      (i32.neq
+      (i32.ne
         (i32.lt_s
           (i32.lt_u
             (i32.le_s
@@ -26,7 +26,7 @@
     ;; all comparisons return i32, so these tests can't be chained like the one
     ;; above
     (i64.eq (i64.const 0) (i64.const 0))
-    (i64.neq (i64.const 0) (i64.const 0))
+    (i64.ne (i64.const 0) (i64.const 0))
     (i64.lt_s (i64.const 0) (i64.const 0))
     (i64.lt_u (i64.const 0) (i64.const 0))
     (i64.le_s (i64.const 0) (i64.const 0))
@@ -37,14 +37,14 @@
     (i64.ge_u (i64.const 0) (i64.const 0))
 
     (f32.eq (f32.const 0) (f32.const 0))
-    (f32.neq (f32.const 0) (f32.const 0))
+    (f32.ne (f32.const 0) (f32.const 0))
     (f32.lt (f32.const 0) (f32.const 0))
     (f32.le (f32.const 0) (f32.const 0))
     (f32.gt (f32.const 0) (f32.const 0))
     (f32.ge (f32.const 0) (f32.const 0))
 
     (f64.eq (f64.const 0) (f64.const 0))
-    (f64.neq (f64.const 0) (f64.const 0))
+    (f64.ne (f64.const 0) (f64.const 0))
     (f64.lt (f64.const 0) (f64.const 0))
     (f64.le (f64.const 0) (f64.const 0))
     (f64.gt (f64.const 0) (f64.const 0))
