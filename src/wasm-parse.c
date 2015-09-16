@@ -1019,10 +1019,6 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
-    case WASM_OP_DESTRUCT:
-      /* TODO(binji) */
-      break;
-
     case WASM_OP_GET_LOCAL: {
       int index = parse_local_var(tokenizer, function);
       WasmVariable* variable = &function->locals.data[index];
