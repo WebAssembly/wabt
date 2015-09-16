@@ -26,21 +26,21 @@
 0000020: 03                                         ; OPCODE_BLOCK
 0000021: 00                                         ; toplevel block num expressions
 0000022: 01                                         ; OPCODE_IF
-0000023: 11                                         ; OPCODE_I32_CONST
-0000024: 0100 0000                                  ; u32 literal
-0000028: 00                                         ; OPCODE_NOP
-0000029: 01                                         ; OPCODE_IF
-000002a: 11                                         ; OPCODE_I32_CONST
-000002b: 0000 0000                                  ; u32 literal
-000002f: 14                                         ; OPCODE_F32_CONST
-0000030: 0000 803f                                  ; f32 literal
-0000034: 14                                         ; OPCODE_F32_CONST
-0000035: 0000 0040                                  ; f32 literal
-0000029: 02                                         ; FIXUP OPCODE_IF_THEN
+0000023: 10                                         ; OPCODE_I8_CONST
+0000024: 01                                         ; u8 literal
+0000025: 00                                         ; OPCODE_NOP
+0000026: 01                                         ; OPCODE_IF
+0000027: 10                                         ; OPCODE_I8_CONST
+0000028: 00                                         ; u8 literal
+0000029: 14                                         ; OPCODE_F32_CONST
+000002a: 0000 803f                                  ; f32 literal
+000002e: 14                                         ; OPCODE_F32_CONST
+000002f: 0000 0040                                  ; f32 literal
+0000026: 02                                         ; FIXUP OPCODE_IF_THEN
 0000021: 02                                         ; FIXUP toplevel block num expressions
-0000012: 3900 0000                                  ; FIXUP func code end offset
+0000012: 3300 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 3900 0000 0000 0000 0000 0000 0000  ..9.............
-0000020: 0302 0111 0100 0000 0002 1100 0000 0014  ................
-0000030: 0000 803f 1400 0000 40                   ...?....@
+0000010: 0000 3300 0000 0000 0000 0000 0000 0000  ..3.............
+0000020: 0302 0110 0100 0210 0014 0000 803f 1400  .............?..
+0000030: 0000 40                                  ..@

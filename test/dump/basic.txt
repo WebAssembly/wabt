@@ -39,20 +39,20 @@
 0000030: 40                                         ; OPCODE_I32_ADD
 0000031: 17                                         ; OPCODE_GET_GLOBAL
 0000032: 00                                         ; global index
-0000033: 11                                         ; OPCODE_I32_CONST
-0000034: 0100 0000                                  ; u32 literal
-0000038: 40                                         ; OPCODE_I32_ADD
-0000039: 15                                         ; OPCODE_GET_LOCAL
-000003a: 00                                         ; remapped local index
-000003b: 15                                         ; OPCODE_GET_LOCAL
-000003c: 01                                         ; remapped local index
+0000033: 10                                         ; OPCODE_I8_CONST
+0000034: 01                                         ; u8 literal
+0000035: 40                                         ; OPCODE_I32_ADD
+0000036: 15                                         ; OPCODE_GET_LOCAL
+0000037: 00                                         ; remapped local index
+0000038: 15                                         ; OPCODE_GET_LOCAL
+0000039: 01                                         ; remapped local index
 000002d: 02                                         ; FIXUP toplevel block num expressions
-000001e: 3d00 0000                                  ; FIXUP func code end offset
+000001e: 3a00 0000                                  ; FIXUP func code end offset
 000002a: 01                                         ; FIXUP func exported
 ; names
-0000016: 3d00 0000                                  ; FIXUP func name offset
-000003d: 6600                                       ; export name
+0000016: 3a00 0000                                  ; FIXUP func name offset
+000003a: 6600                                       ; export name
 0000000: 0001 0100 0100 0000 0000 0000 0400 0000  ................
-0000010: 0000 0201 0101 3d00 0000 2c00 0000 3d00  ......=...,...=.
+0000010: 0000 0201 0101 3a00 0000 2c00 0000 3a00  ......:...,...:.
 0000020: 0000 0000 0000 0000 0000 0100 0302 1800  ................
-0000030: 4017 0011 0100 0000 4015 0015 0166 00    @.......@....f.
+0000030: 4017 0010 0140 1500 1501 6600            @....@....f.

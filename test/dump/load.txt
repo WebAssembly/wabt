@@ -33,42 +33,41 @@
 0000021: 00                                         ; toplevel block num expressions
 0000022: 20                                         ; OPCODE_I32_LOAD_I32
 0000023: 06                                         ; load access byte
-0000024: 11                                         ; OPCODE_I32_CONST
-0000025: 0000 0000                                  ; u32 literal
-0000029: 21                                         ; OPCODE_I64_LOAD_I32
-000002a: 07                                         ; load access byte
-000002b: 11                                         ; OPCODE_I32_CONST
-000002c: 0000 0000                                  ; u32 literal
-0000030: 20                                         ; OPCODE_I32_LOAD_I32
-0000031: 04                                         ; load access byte
-0000032: 11                                         ; OPCODE_I32_CONST
-0000033: 0000 0000                                  ; u32 literal
-0000037: 20                                         ; OPCODE_I32_LOAD_I32
-0000038: 05                                         ; load access byte
-0000039: 11                                         ; OPCODE_I32_CONST
-000003a: 0000 0000                                  ; u32 literal
-000003e: 20                                         ; OPCODE_I32_LOAD_I32
+0000024: 10                                         ; OPCODE_I8_CONST
+0000025: 00                                         ; u8 literal
+0000026: 21                                         ; OPCODE_I64_LOAD_I32
+0000027: 07                                         ; load access byte
+0000028: 10                                         ; OPCODE_I8_CONST
+0000029: 00                                         ; u8 literal
+000002a: 20                                         ; OPCODE_I32_LOAD_I32
+000002b: 04                                         ; load access byte
+000002c: 10                                         ; OPCODE_I8_CONST
+000002d: 00                                         ; u8 literal
+000002e: 20                                         ; OPCODE_I32_LOAD_I32
+000002f: 05                                         ; load access byte
+0000030: 10                                         ; OPCODE_I8_CONST
+0000031: 00                                         ; u8 literal
+0000032: 20                                         ; OPCODE_I32_LOAD_I32
+0000033: 00                                         ; load access byte
+0000034: 10                                         ; OPCODE_I8_CONST
+0000035: 00                                         ; u8 literal
+0000036: 20                                         ; OPCODE_I32_LOAD_I32
+0000037: 01                                         ; load access byte
+0000038: 10                                         ; OPCODE_I8_CONST
+0000039: 00                                         ; u8 literal
+000003a: 22                                         ; OPCODE_F32_LOAD_I32
+000003b: 00                                         ; load access byte
+000003c: 10                                         ; OPCODE_I8_CONST
+000003d: 00                                         ; u8 literal
+000003e: 23                                         ; OPCODE_F64_LOAD_I32
 000003f: 00                                         ; load access byte
-0000040: 11                                         ; OPCODE_I32_CONST
-0000041: 0000 0000                                  ; u32 literal
-0000045: 20                                         ; OPCODE_I32_LOAD_I32
-0000046: 01                                         ; load access byte
-0000047: 11                                         ; OPCODE_I32_CONST
-0000048: 0000 0000                                  ; u32 literal
-000004c: 22                                         ; OPCODE_F32_LOAD_I32
-000004d: 00                                         ; load access byte
-000004e: 11                                         ; OPCODE_I32_CONST
-000004f: 0000 0000                                  ; u32 literal
-0000053: 23                                         ; OPCODE_F64_LOAD_I32
-0000054: 00                                         ; load access byte
-0000055: 11                                         ; OPCODE_I32_CONST
-0000056: 0000 0000                                  ; u32 literal
+0000040: 10                                         ; OPCODE_I8_CONST
+0000041: 00                                         ; u8 literal
 0000021: 08                                         ; FIXUP toplevel block num expressions
-0000012: 5a00 0000                                  ; FIXUP func code end offset
+0000012: 4200 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 5a00 0000 0000 0000 0000 0000 0000  ..Z.............
-0000020: 0308 2006 1100 0000 0021 0711 0000 0000  .. ......!......
-0000030: 2004 1100 0000 0020 0511 0000 0000 2000   ...... ...... .
-0000040: 1100 0000 0020 0111 0000 0000 2200 1100  ..... ......"...
-0000050: 0000 0023 0011 0000 0000                 ...#......
+0000010: 0000 4200 0000 0000 0000 0000 0000 0000  ..B.............
+0000020: 0308 2006 1000 2107 1000 2004 1000 2005  .. ...!... ... .
+0000030: 1000 2000 1000 2001 1000 2200 1000 2300  .. ... ..."...#.
+0000040: 1000                                     ..

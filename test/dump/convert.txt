@@ -56,28 +56,27 @@
 0000029: ae                                         ; OPCODE_F64_SCONVERT_I32
 000002a: a0                                         ; OPCODE_I32_UCONVERT_F64
 000002b: af                                         ; OPCODE_F64_UCONVERT_I32
-000002c: 11                                         ; OPCODE_I32_CONST
-000002d: 0000 0000                                  ; u32 literal
-0000031: a2                                         ; OPCODE_I64_SCONVERT_F32
-0000032: aa                                         ; OPCODE_F32_SCONVERT_I64
-0000033: a4                                         ; OPCODE_I64_UCONVERT_F32
-0000034: ab                                         ; OPCODE_F32_UCONVERT_I64
-0000035: a3                                         ; OPCODE_I64_SCONVERT_F64
-0000036: b0                                         ; OPCODE_F64_SCONVERT_I64
-0000037: a5                                         ; OPCODE_I64_UCONVERT_F64
-0000038: b1                                         ; OPCODE_F64_UCONVERT_I64
-0000039: a6                                         ; OPCODE_I64_SCONVERT_I32
-000003a: 11                                         ; OPCODE_I32_CONST
-000003b: 0000 0000                                  ; u32 literal
-000003f: ac                                         ; OPCODE_F32_CONVERT_F64
-0000040: b2                                         ; OPCODE_F64_CONVERT_F32
-0000041: 14                                         ; OPCODE_F32_CONST
-0000042: 0000 0000                                  ; f32 literal
+000002c: 10                                         ; OPCODE_I8_CONST
+000002d: 00                                         ; u8 literal
+000002e: a2                                         ; OPCODE_I64_SCONVERT_F32
+000002f: aa                                         ; OPCODE_F32_SCONVERT_I64
+0000030: a4                                         ; OPCODE_I64_UCONVERT_F32
+0000031: ab                                         ; OPCODE_F32_UCONVERT_I64
+0000032: a3                                         ; OPCODE_I64_SCONVERT_F64
+0000033: b0                                         ; OPCODE_F64_SCONVERT_I64
+0000034: a5                                         ; OPCODE_I64_UCONVERT_F64
+0000035: b1                                         ; OPCODE_F64_UCONVERT_I64
+0000036: a6                                         ; OPCODE_I64_SCONVERT_I32
+0000037: 10                                         ; OPCODE_I8_CONST
+0000038: 00                                         ; u8 literal
+0000039: ac                                         ; OPCODE_F32_CONVERT_F64
+000003a: b2                                         ; OPCODE_F64_CONVERT_F32
+000003b: 14                                         ; OPCODE_F32_CONST
+000003c: 0000 0000                                  ; f32 literal
 0000021: 03                                         ; FIXUP toplevel block num expressions
-0000012: 4600 0000                                  ; FIXUP func code end offset
+0000012: 4000 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 4600 0000 0000 0000 0000 0000 0000  ..F.............
-0000020: 0303 a1a7 9da8 9fa9 9eae a0af 1100 0000  ................
-0000030: 00a2 aaa4 aba3 b0a5 b1a6 1100 0000 00ac  ................
-0000040: b214 0000 0000                           ......
+0000010: 0000 4000 0000 0000 0000 0000 0000 0000  ..@.............
+0000020: 0303 a1a7 9da8 9fa9 9eae a0af 1000 a2aa  ................
+0000030: a4ab a3b0 a5b1 a610 00ac b214 0000 0000  ................

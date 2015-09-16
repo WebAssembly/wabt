@@ -51,37 +51,36 @@
 0000023: 57                                         ; OPCODE_I32_CLZ
 0000024: 58                                         ; OPCODE_I32_CTZ
 0000025: 59                                         ; OPCODE_I32_POPCNT
-0000026: 11                                         ; OPCODE_I32_CONST
-0000027: 0000 0000                                  ; u32 literal
-000002b: 72                                         ; OPCODE_I64_CLZ
-000002c: 73                                         ; OPCODE_I64_CTZ
-000002d: 74                                         ; OPCODE_I64_POPCNT
-000002e: 12                                         ; OPCODE_I64_CONST
-000002f: 0000 0000 0000 0000                        ; u64 literal
-0000037: 7c                                         ; OPCODE_F32_NEG
-0000038: 7b                                         ; OPCODE_F32_ABS
-0000039: 82                                         ; OPCODE_F32_SQRT
-000003a: 7e                                         ; OPCODE_F32_CEIL
-000003b: 7f                                         ; OPCODE_F32_FLOOR
-000003c: 80                                         ; OPCODE_F32_TRUNC
-000003d: 81                                         ; OPCODE_F32_NEAREST
-000003e: 14                                         ; OPCODE_F32_CONST
-000003f: 0000 0000                                  ; f32 literal
-0000043: 90                                         ; OPCODE_F64_NEG
-0000044: 8f                                         ; OPCODE_F64_ABS
-0000045: 96                                         ; OPCODE_F64_SQRT
-0000046: 92                                         ; OPCODE_F64_CEIL
-0000047: 93                                         ; OPCODE_F64_FLOOR
-0000048: 94                                         ; OPCODE_F64_TRUNC
-0000049: 95                                         ; OPCODE_F64_NEAREST
-000004a: 13                                         ; OPCODE_F64_CONST
-000004b: 0000 0000 0000 0000                        ; f64 literal
+0000026: 10                                         ; OPCODE_I8_CONST
+0000027: 00                                         ; u8 literal
+0000028: 72                                         ; OPCODE_I64_CLZ
+0000029: 73                                         ; OPCODE_I64_CTZ
+000002a: 74                                         ; OPCODE_I64_POPCNT
+000002b: 12                                         ; OPCODE_I64_CONST
+000002c: 0000 0000 0000 0000                        ; u64 literal
+0000034: 7c                                         ; OPCODE_F32_NEG
+0000035: 7b                                         ; OPCODE_F32_ABS
+0000036: 82                                         ; OPCODE_F32_SQRT
+0000037: 7e                                         ; OPCODE_F32_CEIL
+0000038: 7f                                         ; OPCODE_F32_FLOOR
+0000039: 80                                         ; OPCODE_F32_TRUNC
+000003a: 81                                         ; OPCODE_F32_NEAREST
+000003b: 14                                         ; OPCODE_F32_CONST
+000003c: 0000 0000                                  ; f32 literal
+0000040: 90                                         ; OPCODE_F64_NEG
+0000041: 8f                                         ; OPCODE_F64_ABS
+0000042: 96                                         ; OPCODE_F64_SQRT
+0000043: 92                                         ; OPCODE_F64_CEIL
+0000044: 93                                         ; OPCODE_F64_FLOOR
+0000045: 94                                         ; OPCODE_F64_TRUNC
+0000046: 95                                         ; OPCODE_F64_NEAREST
+0000047: 13                                         ; OPCODE_F64_CONST
+0000048: 0000 0000 0000 0000                        ; f64 literal
 0000021: 04                                         ; FIXUP toplevel block num expressions
-0000012: 5300 0000                                  ; FIXUP func code end offset
+0000012: 5000 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 5300 0000 0000 0000 0000 0000 0000  ..S.............
-0000020: 0304 5a57 5859 1100 0000 0072 7374 1200  ..ZWXY.....rst..
-0000030: 0000 0000 0000 007c 7b82 7e7f 8081 1400  .......|{.~.....
-0000040: 0000 0090 8f96 9293 9495 1300 0000 0000  ................
-0000050: 0000 00                                  ...
+0000010: 0000 5000 0000 0000 0000 0000 0000 0000  ..P.............
+0000020: 0304 5a57 5859 1000 7273 7412 0000 0000  ..ZWXY..rst.....
+0000030: 0000 0000 7c7b 827e 7f80 8114 0000 0000  ....|{.~........
+0000040: 908f 9692 9394 9513 0000 0000 0000 0000  ................

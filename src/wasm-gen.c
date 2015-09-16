@@ -428,21 +428,31 @@ static void after_const(enum WasmOpcode opcode,
                         WasmNumber value,
                         void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
   switch (type) {
-    case WASM_TYPE_I32:
-      out_u32(ctx->buf, value.i32, "u32 literal");
+    case WASM_TYPE_I32: {
+      int32_t i32 = value.i32;
+      if (i32 >= -128 && i32 < 127) {
+        out_opcode(ctx->buf, WASM_OPCODE_I8_CONST);
+        out_u8(ctx->buf, value.i32, "u8 literal");
+      } else {
+        out_opcode(ctx->buf, opcode);
+        out_u32(ctx->buf, value.i32, "u32 literal");
+      }
       break;
+    }
 
     case WASM_TYPE_I64:
+      out_opcode(ctx->buf, opcode);
       out_u64(ctx->buf, value.i64, "u64 literal");
       break;
 
     case WASM_TYPE_F32:
+      out_opcode(ctx->buf, opcode);
       out_f32(ctx->buf, value.f32, "f32 literal");
       break;
 
     case WASM_TYPE_F64:
+      out_opcode(ctx->buf, opcode);
       out_f64(ctx->buf, value.f64, "f64 literal");
       break;
 

@@ -37,24 +37,24 @@
 0000025: 00                                         ; num expressions
 0000026: 03                                         ; OPCODE_BLOCK
 0000027: 00                                         ; num expressions
-0000028: 11                                         ; OPCODE_I32_CONST
-0000029: 0000 0000                                  ; u32 literal
-000002d: 03                                         ; OPCODE_BLOCK
-000002e: 00                                         ; num expressions
-000002f: 08                                         ; OPCODE_BREAK
-0000030: 00                                         ; break depth
-0000031: 08                                         ; OPCODE_BREAK
-0000032: 00                                         ; break depth
-0000033: 08                                         ; OPCODE_BREAK
-0000034: 03                                         ; break depth
-000002e: 03                                         ; FIXUP num expressions
+0000028: 10                                         ; OPCODE_I8_CONST
+0000029: 00                                         ; u8 literal
+000002a: 03                                         ; OPCODE_BLOCK
+000002b: 00                                         ; num expressions
+000002c: 08                                         ; OPCODE_BREAK
+000002d: 00                                         ; break depth
+000002e: 08                                         ; OPCODE_BREAK
+000002f: 00                                         ; break depth
+0000030: 08                                         ; OPCODE_BREAK
+0000031: 03                                         ; break depth
+000002b: 03                                         ; FIXUP num expressions
 0000027: 02                                         ; FIXUP num expressions
 0000025: 01                                         ; FIXUP num expressions
 0000023: 01                                         ; FIXUP num expressions
 0000021: 01                                         ; FIXUP toplevel block num expressions
-0000012: 3500 0000                                  ; FIXUP func code end offset
+0000012: 3200 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 3500 0000 0000 0000 0000 0000 0000  ..5.............
-0000020: 0301 0301 0601 0302 1100 0000 0003 0308  ................
-0000030: 0008 0008 03                             .....
+0000010: 0000 3200 0000 0000 0000 0000 0000 0000  ..2.............
+0000020: 0301 0301 0601 0302 1000 0303 0800 0800  ................
+0000030: 0803                                     ..
