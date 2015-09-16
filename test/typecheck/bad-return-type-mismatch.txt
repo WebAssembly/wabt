@@ -3,4 +3,4 @@
   (func (result i32)
     (return (f32.const 0))))
 # STDERR:
-3:13: type mismatch for argument 0 of return. got f32, expected i32
+3:13: type mismatch. got f32, expected i32

@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (result i32 i64)))
 # STDERR:
-1:31: multiple return values currently unsupported
+1:27: expected ')', not "i64"

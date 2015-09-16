@@ -2,4 +2,4 @@
 (module (func (result f32 f32)
   (return (f32.const 0) (f32.const 3.14))))
 # STDERR:
-2:41: multiple return values currently unsupported
+1:27: expected ')', not "f32"
