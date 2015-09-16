@@ -423,9 +423,33 @@ static void before_compare(enum WasmOpcode opcode, void* user_data) {
   out_opcode(ctx->buf, opcode);
 }
 
-static void before_const(enum WasmOpcode opcode, void* user_data) {
+static void after_const(enum WasmOpcode opcode,
+                        WasmType type,
+                        WasmNumber value,
+                        void* user_data) {
   Context* ctx = user_data;
   out_opcode(ctx->buf, opcode);
+  switch (type) {
+    case WASM_TYPE_I32:
+      out_u32(ctx->buf, value.i32, "u32 literal");
+      break;
+
+    case WASM_TYPE_I64:
+      out_u64(ctx->buf, value.i64, "u64 literal");
+      break;
+
+    case WASM_TYPE_F32:
+      out_f32(ctx->buf, value.f32, "f32 literal");
+      break;
+
+    case WASM_TYPE_F64:
+      out_f64(ctx->buf, value.f64, "f64 literal");
+      break;
+
+    default:
+      assert(0);
+      break;
+  }
 }
 
 static void before_convert(enum WasmOpcode opcode, void* user_data) {
@@ -535,26 +559,6 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(ctx->buf, opcode);
 }
 
-static void u32_literal(uint32_t value, void* user_data) {
-  Context* ctx = user_data;
-  out_u32(ctx->buf, value, "u32 literal");
-}
-
-static void u64_literal(uint64_t value, void* user_data) {
-  Context* ctx = user_data;
-  out_u64(ctx->buf, value, "u64 literal");
-}
-
-static void f32_literal(float value, void* user_data) {
-  Context* ctx = user_data;
-  out_f32(ctx->buf, value, "f32 literal");
-}
-
-static void f64_literal(double value, void* user_data) {
-  Context* ctx = user_data;
-  out_f64(ctx->buf, value, "f64 literal");
-}
-
 void gen_file(WasmTokenizer* tokenizer) {
   OutputBuffer buf;
 
@@ -576,7 +580,7 @@ void gen_file(WasmTokenizer* tokenizer) {
   parser.before_call = before_call;
   parser.before_call_import = before_call_import;
   parser.before_compare = before_compare;
-  parser.before_const = before_const;
+  parser.after_const = after_const;
   parser.before_convert = before_convert;
   parser.after_get_local = after_get_local;
   parser.before_if = before_if;
@@ -593,10 +597,5 @@ void gen_file(WasmTokenizer* tokenizer) {
   parser.before_store = before_store;
   parser.before_store_global = before_store_global;
   parser.before_unary = before_unary;
-  parser.u32_literal = u32_literal;
-  parser.u64_literal = u64_literal;
-  parser.f32_literal = f32_literal;
-  parser.f64_literal = f64_literal;
-
   wasm_parse_file(&parser, tokenizer);
 }

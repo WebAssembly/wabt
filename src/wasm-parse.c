@@ -764,7 +764,8 @@ static WasmType parse_block(WasmParser* parser,
 
 static void parse_literal(WasmParser* parser,
                           WasmTokenizer* tokenizer,
-                          WasmType type) {
+                          WasmType type,
+                          WasmNumber *number) {
   WasmToken t = read_token(tokenizer);
   expect_atom(t);
   const char* p = t.range.start.pos;
@@ -774,7 +775,7 @@ static void parse_literal(WasmParser* parser,
       uint32_t value;
       if (!read_int32(&p, end, &value, 1))
         FATAL_AT(t.range.start, "invalid 32-bit int\n");
-      parser->u32_literal(value, parser->user_data);
+      number->i32 = value;
       break;
     }
 
@@ -782,7 +783,7 @@ static void parse_literal(WasmParser* parser,
       uint64_t value;
       if (!read_int64(&p, end, &value))
         FATAL_AT(t.range.start, "invalid 64-bit int\n");
-      parser->u64_literal(value, parser->user_data);
+      number->i64 = value;
       break;
     }
 
@@ -792,9 +793,9 @@ static void parse_literal(WasmParser* parser,
       if (!read_double(&p, end, &value))
         FATAL_AT(t.range.start, "invalid double\n");
       if (type == WASM_TYPE_F32)
-        parser->f32_literal((float)value, parser->user_data);
+        number->f32 = value;
       else
-        parser->f64_literal(value, parser->user_data);
+        number->f64 = value;
       break;
     }
 
@@ -819,7 +820,8 @@ static WasmType parse_switch(WasmParser* parser,
     t = read_token(tokenizer);
     expect_atom(t);
     if (match_atom(t, "case")) {
-      parse_literal(parser, tokenizer, in_type);
+      WasmNumber number;
+      parse_literal(parser, tokenizer, in_type, &number);
       t = read_token(tokenizer);
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(tokenizer, t);
@@ -1002,13 +1004,16 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
-    case WASM_OP_CONST:
+    case WASM_OP_CONST: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_const(op_info->opcode, parser->user_data);
-      parse_literal(parser, tokenizer, op_info->type);
+      WasmNumber value;
+      parse_literal(parser, tokenizer, op_info->type, &value);
       expect_close(read_token(tokenizer));
+      parser->after_const(op_info->opcode, op_info->type, value,
+                          parser->user_data);
       type = op_info->type;
       break;
+    }
 
     case WASM_OP_CONVERT: {
       check_opcode(t.range.start, op_info->opcode);

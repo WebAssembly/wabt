@@ -13,6 +13,13 @@ typedef struct WasmTokenizer {
   WasmSourceLocation loc;
 } WasmTokenizer;
 
+typedef union WasmNumber {
+  uint32_t i32;
+  uint64_t i64;
+  float f32;
+  double f64;
+} WasmNumber;
+
 typedef uintptr_t WasmParserCookie;
 
 typedef struct WasmParser {
@@ -38,7 +45,10 @@ typedef struct WasmParser {
   void (*before_call)(int function_index, void* user_data);
   void (*before_call_import)(int import_index, void* user_data);
   void (*before_compare)(enum WasmOpcode opcode, void* user_data);
-  void (*before_const)(enum WasmOpcode opcode, void* user_data);
+  void (*after_const)(enum WasmOpcode opcode,
+                      WasmType type,
+                      WasmNumber value,
+                      void* user_data);
   void (*before_convert)(enum WasmOpcode opcode, void* user_data);
   WasmParserCookie (*before_label)(void* user_data);
   void (*after_label)(int num_exprs, WasmParserCookie cookie, void* user_data);
@@ -55,11 +65,6 @@ typedef struct WasmParser {
   void (*before_store)(enum WasmOpcode opcode, uint8_t access, void* user_data);
   void (*before_store_global)(int index, void* user_data);
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
-
-  void (*u32_literal)(uint32_t value, void* user_data);
-  void (*u64_literal)(uint64_t value, void* user_data);
-  void (*f32_literal)(float value, void* user_data);
-  void (*f64_literal)(double value, void* user_data);
 } WasmParser;
 
 EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
