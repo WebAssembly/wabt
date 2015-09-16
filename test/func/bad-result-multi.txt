@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (result i32 i64)))
 # STDERR:
-1:27: expected ')', not "i64"
+func/bad-result-multi.txt:2:27: expected ')', not "i64"

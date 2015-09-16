@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (i32.const one-hundred)))
 # STDERR:
-1:26: invalid 32-bit int
+expr/bad-const-i32-garbage.txt:2:26: invalid 32-bit int

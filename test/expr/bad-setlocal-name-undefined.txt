@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (set_local $n (i32.const 0))))
 # STDERR:
-1:26: undefined local variable "$n"
+expr/bad-setlocal-name-undefined.txt:2:26: undefined local variable "$n"

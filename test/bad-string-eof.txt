@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func) (export "
 # STDERR:
-1:25: newline in string
+bad-string-eof.txt:2:25: newline in string

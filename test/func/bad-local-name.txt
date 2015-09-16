@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (local 0 i32)))
 # STDERR:
-1:22: expected name to begin with $
+func/bad-local-name.txt:2:22: expected name to begin with $

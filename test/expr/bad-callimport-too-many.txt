@@ -4,4 +4,4 @@
   (func
     (call_import 0 (i32.const 0) (i32.const 1) (i32.const 2))))
 # STDERR:
-4:48: too many arguments to function. got 3, expected 2
+expr/bad-callimport-too-many.txt:5:48: too many arguments to function. got 3, expected 2

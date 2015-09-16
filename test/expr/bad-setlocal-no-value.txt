@@ -3,4 +3,4 @@
   (local i32)
   (set_local 0)))
 # STDERR:
-3:15: expected '(', not ")"
+expr/bad-setlocal-no-value.txt:4:15: expected '(', not ")"

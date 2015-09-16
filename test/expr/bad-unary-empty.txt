@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (f32.neg)))
 # STDERR:
-1:23: expected '(', not ")"
+expr/bad-unary-empty.txt:2:23: expected '(', not ")"

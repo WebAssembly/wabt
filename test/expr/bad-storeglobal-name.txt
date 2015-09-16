@@ -2,4 +2,4 @@
 (module (global $n i32)
   (func (store_global n (i32.const 0))))
 # STDERR:
-2:23: invalid var index
+expr/bad-storeglobal-name.txt:3:23: invalid var index

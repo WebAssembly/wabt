@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (break $n)))
 # STDERR:
-1:22: undefined label variable "$n"
+expr/bad-break-name-undefined.txt:2:22: undefined label variable "$n"

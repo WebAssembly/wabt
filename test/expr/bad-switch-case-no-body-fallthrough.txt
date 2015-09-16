@@ -4,4 +4,4 @@
     (i32.switch (i32.const 0)
       (case 0 fallthrough))))
 # STDERR:
-4:15: expected '(', not "fallthrough"
+expr/bad-switch-case-no-body-fallthrough.txt:5:15: expected '(', not "fallthrough"

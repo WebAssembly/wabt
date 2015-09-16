@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func) (export "foobar\r\n"))
 # STDERR:
-1:32: bad escape sequence
+bad-string-escape.txt:2:32: bad escape sequence

@@ -2,4 +2,4 @@
 (module (global $n i32)
   (func (load_global)))
 # STDERR:
-2:21: expected ATOM, not ")"
+expr/bad-loadglobal-empty.txt:3:21: expected ATOM, not ")"

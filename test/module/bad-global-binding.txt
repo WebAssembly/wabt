@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (global $n $foo))
 # STDERR:
-1:20: expected type
+module/bad-global-binding.txt:2:20: expected type

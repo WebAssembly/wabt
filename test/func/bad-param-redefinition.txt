@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (param $n i32) (param $n f32)))
 # STDERR:
-1:37: redefinition of function argument "$n"
+func/bad-param-redefinition.txt:2:37: redefinition of function argument "$n"

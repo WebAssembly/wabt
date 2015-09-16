@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (local i32) (param i32)))
 # STDERR:
-1:28: parameters must come before locals
+func/bad-param-after-local.txt:2:28: parameters must come before locals

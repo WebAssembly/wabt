@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (result foo)))
 # STDERR:
-1:23: unexpected token "foo"
+func/bad-result-type.txt:2:23: unexpected token "foo"

@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (memory))
 # STDERR:
-1:16: expected ATOM, not ")"
+module/bad-memory-empty.txt:2:16: expected ATOM, not ")"

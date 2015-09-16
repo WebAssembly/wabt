@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (nop)) (export "nop" 0 foo))
 # STDERR:
-1:38: expected ')', not "foo"
+module/bad-export-too-many.txt:2:38: expected ')', not "foo"

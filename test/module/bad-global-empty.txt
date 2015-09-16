@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (global))
 # STDERR:
-1:16: expected ATOM, not ")"
+module/bad-global-empty.txt:2:16: expected ATOM, not ")"

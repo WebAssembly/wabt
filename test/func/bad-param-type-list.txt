@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (param i32 i64 foo f32)))
 # STDERR:
-1:30: unexpected token "foo"
+func/bad-param-type-list.txt:2:30: unexpected token "foo"

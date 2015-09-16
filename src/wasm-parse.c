@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,9 +16,7 @@
 #define TABS_TO_SPACES 8
 #define INITIAL_VECTOR_CAPACITY 8
 
-#define FATAL_AT(loc, ...)                           \
-  fprintf(stderr, "%d:%d: ", (loc).line, (loc).col), \
-      fprintf(stderr, __VA_ARGS__), exit(1)
+#define FATAL_AT(loc, ...) fatal_at(loc, __VA_ARGS__)
 
 typedef struct OpInfo OpInfo;
 typedef uint8_t MemAccess;
@@ -57,6 +56,17 @@ static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+
+static void fatal_at(WasmSourceLocation loc, const char* format, ...)
+    __attribute__((noreturn));
+static void fatal_at(WasmSourceLocation loc, const char* format, ...) {
+  fprintf(stderr, "%s:%d:%d: ", loc.source->filename, loc.line, loc.col);
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+  exit(1);
+}
 
 static void* append_element(void** data,
                             size_t* size,
@@ -1622,4 +1632,17 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
     }
     t = read_token(tokenizer);
   }
+}
+
+void wasm_init_tokenizer(WasmTokenizer* tokenizer,
+                         const char* filename,
+                         char* source_start,
+                         char* source_end) {
+  tokenizer->source.filename = filename;
+  tokenizer->source.start = source_start;
+  tokenizer->source.end = source_end;
+  tokenizer->loc.source = &tokenizer->source;
+  tokenizer->loc.pos = tokenizer->source.start;
+  tokenizer->loc.line = 1;
+  tokenizer->loc.col = 1;
 }

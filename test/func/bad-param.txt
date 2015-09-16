@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (param foo)))
 # STDERR:
-1:22: expected name to begin with $
+func/bad-param.txt:2:22: expected name to begin with $

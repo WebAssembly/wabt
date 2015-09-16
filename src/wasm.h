@@ -241,7 +241,14 @@ typedef enum WasmTokenType {
   WASM_TOKEN_TYPE_STRING,
 } WasmTokenType;
 
+typedef struct WasmSource {
+  const char* filename;
+  const char* start;
+  const char* end;
+} WasmSource;
+
 typedef struct WasmSourceLocation {
+  WasmSource* source;
   const char* pos;
   int line;
   int col;
@@ -256,6 +263,11 @@ typedef struct WasmToken {
   WasmTokenType type;
   WasmSourceRange range;
 } WasmToken;
+
+typedef struct WasmTokenizer {
+  WasmSource source;
+  WasmSourceLocation loc;
+} WasmTokenizer;
 
 #define DECLARE_VECTOR(name, type)                      \
   typedef struct type##Vector {                         \

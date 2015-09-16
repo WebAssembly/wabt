@@ -2,4 +2,4 @@
 (module (global $n f32)
   (func (load_global n)))
 # STDERR:
-2:22: invalid var index
+expr/bad-loadglobal-name.txt:3:22: invalid var index

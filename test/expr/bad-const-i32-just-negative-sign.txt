@@ -2,4 +2,4 @@
 (module
   (func (i32.const -)))
 # STDERR:
-2:20: invalid 32-bit int
+expr/bad-const-i32-just-negative-sign.txt:3:20: invalid 32-bit int

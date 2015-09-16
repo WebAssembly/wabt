@@ -1,4 +1,4 @@
 # ERROR: 1
 (foo bar)
 # STDERR:
-1:2: unexpected token "foo"
+bad-toplevel.txt:2:2: unexpected token "foo"

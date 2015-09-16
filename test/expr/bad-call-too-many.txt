@@ -3,4 +3,4 @@
   (func (param i32 i64)
     (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
 # STDERR:
-3:41: too many arguments to function. got 3, expected 2
+expr/bad-call-too-many.txt:4:41: too many arguments to function. got 3, expected 2

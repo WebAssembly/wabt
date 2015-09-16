@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (storeu.i32.foo (i32.const 0) (i32.const 0))))
 # STDERR:
-1:16: unexpected token "storeu.i32.foo"
+expr/bad-store-align.txt:2:16: unexpected token "storeu.i32.foo"

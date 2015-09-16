@@ -3,4 +3,4 @@
   (func
     (i32.add (i32.const 0) (f32.const 0))))
 # STDERR:
-3:6: type mismatch for argument 1 of binary op. got f32, expected i32
+typecheck/bad-binary-type-mismatch-2.txt:4:6: type mismatch for argument 1 of binary op. got f32, expected i32

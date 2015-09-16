@@ -7,4 +7,4 @@
           (break)
           (f32.const 0.0))))))
 # STDERR:
-3:6: type mismatch. got void, expected f32
+typecheck/bad-if-value-void.txt:4:6: type mismatch. got void, expected f32

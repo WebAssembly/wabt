@@ -3,4 +3,4 @@
   (local i32 i32)
   (set_local 0 (i32.const 0) (nop))))
 # STDERR:
-3:30: expected ')', not "("
+expr/bad-setlocal-too-many.txt:4:30: expected ')', not "("

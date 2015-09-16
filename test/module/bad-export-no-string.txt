@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (nop)) (export nop nop))
 # STDERR:
-1:30: expected STRING, not "nop"
+module/bad-export-no-string.txt:2:30: expected STRING, not "nop"

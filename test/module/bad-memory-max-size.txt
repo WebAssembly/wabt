@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (memory 100 foo))
 # STDERR:
-1:21: invalid max memory size
+module/bad-memory-max-size.txt:2:21: invalid max memory size

@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (local foo)))
 # STDERR:
-1:22: expected name to begin with $
+func/bad-local-type.txt:2:22: expected name to begin with $

@@ -102,6 +102,7 @@ static void parse_options(int argc, char** argv) {
           case FLAG_OUTPUT:
             /* Handled above by goto */
             assert(0);
+            break;
         }
         break;
 
@@ -157,16 +158,8 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
-  WasmSource source;
-  source.start = data;
-  source.end = data + fsize;
-
   WasmTokenizer tokenizer;
-  tokenizer.source = source;
-  tokenizer.loc.pos = source.start;
-  tokenizer.loc.line = 1;
-  tokenizer.loc.col = 1;
-
+  wasm_init_tokenizer(&tokenizer, g_infile, data, data + fsize);
   gen_file(&tokenizer);
   return 0;
 }

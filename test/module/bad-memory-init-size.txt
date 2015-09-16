@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (memory foo))
 # STDERR:
-1:17: invalid initial memory size
+module/bad-memory-init-size.txt:2:17: invalid initial memory size

@@ -3,16 +3,6 @@
 
 #include "wasm.h"
 
-typedef struct WasmSource {
-  const char* start;
-  const char* end;
-} WasmSource;
-
-typedef struct WasmTokenizer {
-  WasmSource source;
-  WasmSourceLocation loc;
-} WasmTokenizer;
-
 typedef union WasmNumber {
   uint32_t i32;
   uint64_t i64;
@@ -67,6 +57,10 @@ typedef struct WasmParser {
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
 } WasmParser;
 
+EXTERN_C void wasm_init_tokenizer(WasmTokenizer* tokenizer,
+                                  const char* filename,
+                                  char* source_start,
+                                  char* source_end);
 EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
 EXTERN_C void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer);
 

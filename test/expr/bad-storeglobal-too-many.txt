@@ -2,4 +2,4 @@
 (module (global i32)
   (func (store_global 0 (i32.const 0) (nop))))
 # STDERR:
-2:39: expected ')', not "("
+expr/bad-storeglobal-too-many.txt:3:39: expected ')', not "("

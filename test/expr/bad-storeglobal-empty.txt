@@ -2,4 +2,4 @@
 (module (global i32)
   (func (store_global 0)))
 # STDERR:
-2:24: expected '(', not ")"
+expr/bad-storeglobal-empty.txt:3:24: expected '(', not ")"

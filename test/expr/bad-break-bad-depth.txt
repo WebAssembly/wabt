@@ -5,4 +5,4 @@
       (label ;; 0
         (break 2)))))
 # STDERR:
-5:16: label variable out of range (max 2)
+expr/bad-break-bad-depth.txt:6:16: label variable out of range (max 2)

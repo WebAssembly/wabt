@@ -3,4 +3,4 @@
   (func
     (i32.load (f32.const 0))))
 # STDERR:
-3:6: type mismatch of load index. got f32, expected i32
+typecheck/bad-load-type-mismatch.txt:4:6: type mismatch of load index. got f32, expected i32

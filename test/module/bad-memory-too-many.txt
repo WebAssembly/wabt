@@ -3,4 +3,4 @@
   (memory 100)
   (memory 1000))
 # STDERR:
-3:4: only one memory block allowed
+module/bad-memory-too-many.txt:4:4: only one memory block allowed

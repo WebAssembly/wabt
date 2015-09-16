@@ -3,4 +3,4 @@
   (func
     (f32.neg (f64.const 0))))
 # STDERR:
-3:6: type mismatch of unary op. got f64, expected f32
+typecheck/bad-unary-type-mismatch.txt:4:6: type mismatch of unary op. got f64, expected f32

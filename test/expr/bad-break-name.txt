@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (label $foo (break foo))))
 # STDERR:
-1:34: invalid var index
+expr/bad-break-name.txt:2:34: invalid var index

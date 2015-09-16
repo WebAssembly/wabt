@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (loadu.i32.foo (i32.const 0))))
 # STDERR:
-1:16: unexpected token "loadu.i32.foo"
+expr/bad-load-align.txt:2:16: unexpected token "loadu.i32.foo"

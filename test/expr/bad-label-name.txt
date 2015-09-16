@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (label foo (nop))))
 # STDERR:
-1:22: expected name to begin with $
+expr/bad-label-name.txt:2:22: expected name to begin with $

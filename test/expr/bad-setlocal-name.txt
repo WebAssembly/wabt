@@ -3,4 +3,4 @@
   (local $n i32)
   (set_local n (i32.const 0))))
 # STDERR:
-3:14: invalid var index
+expr/bad-setlocal-name.txt:4:14: invalid var index

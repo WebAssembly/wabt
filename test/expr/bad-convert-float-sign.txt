@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (f32.converts.f64 (f32.const 0))))
 # STDERR:
-1:16: unexpected token "f32.converts.f64"
+expr/bad-convert-float-sign.txt:2:16: unexpected token "f32.converts.f64"

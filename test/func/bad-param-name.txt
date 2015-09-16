@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (param 0 i32)))
 # STDERR:
-1:22: expected name to begin with $
+func/bad-param-name.txt:2:22: expected name to begin with $

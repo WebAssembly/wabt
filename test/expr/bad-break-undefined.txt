@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (break 0)))
 # STDERR:
-1:22: label variable out of range (max 0)
+expr/bad-break-undefined.txt:2:22: label variable out of range (max 0)

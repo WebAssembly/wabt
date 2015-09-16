@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (label)))
 # STDERR:
-1:21: unexpected token ")"
+expr/bad-label.txt:2:21: unexpected token ")"

@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (import "foo" "bar" (parump i32)))
 # STDERR:
-1:30: expected "param"
+module/bad-import-not-param.txt:2:30: expected "param"

@@ -3,4 +3,4 @@
   (func $n (nop))
   (func $n (nop)))
 # STDERR:
-3:9: redefinition of function "$n"
+module/bad-func-redefinition.txt:4:9: redefinition of function "$n"

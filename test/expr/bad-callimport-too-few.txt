@@ -4,4 +4,4 @@
   (func
     (call_import 0 (i32.const 0))))
 # STDERR:
-4:6: too few arguments to function. got 1, expected 2
+expr/bad-callimport-too-few.txt:5:6: too few arguments to function. got 1, expected 2

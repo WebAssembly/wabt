@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (local)))
 # STDERR:
-1:21: expected ATOM, not ")"
+func/bad-local-empty.txt:2:21: expected ATOM, not ")"

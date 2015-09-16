@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (export "foo" $foo))
 # STDERR:
-1:23: undefined function variable "$foo"
+module/bad-export-name-undefined.txt:2:23: undefined function variable "$foo"
