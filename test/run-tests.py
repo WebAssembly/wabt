@@ -327,6 +327,9 @@ def main(args):
     for test_name in test_names:
       print test_name
     return 0
+  if not test_names:
+    print 'no tests match that filter'
+    return 1
 
   if options.executable:
     if not os.path.exists(options.executable):
