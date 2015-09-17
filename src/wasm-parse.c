@@ -1620,7 +1620,8 @@ void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
 
 void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
   WasmToken t = read_token(tokenizer);
-  while (t.type != WASM_TOKEN_TYPE_EOF) {
+  int seen_module = 0;
+  do {
     expect_open(t);
     WasmToken open = t;
     t = read_token(tokenizer);
@@ -1629,6 +1630,7 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
       case WASM_OP_MODULE: {
+        seen_module = 1;
         rewind_token(tokenizer, open);
         wasm_parse_module(parser, tokenizer);
         break;
@@ -1637,6 +1639,10 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
       case WASM_OP_ASSERT_EQ:
       case WASM_OP_ASSERT_INVALID:
       case WASM_OP_INVOKE:
+        if (!seen_module)
+          FATAL_AT(t.range.start, "%.*s must occur after a module definition",
+                   (int)(t.range.end.pos - t.range.start.pos),
+                   t.range.start.pos);
         parse_generic(tokenizer);
         break;
 
@@ -1645,7 +1651,7 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
         break;
     }
     t = read_token(tokenizer);
-  }
+  } while (t.type != WASM_TOKEN_TYPE_EOF);
 }
 
 void wasm_init_tokenizer(WasmTokenizer* tokenizer,
