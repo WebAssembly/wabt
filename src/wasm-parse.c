@@ -18,6 +18,8 @@
 
 #define FATAL_AT(loc, ...) fatal_at(loc, __VA_ARGS__)
 
+#define CALLBACK(parser, name, args) ((parser->name) ? parser->name args : 0)
+
 typedef struct OpInfo OpInfo;
 typedef uint8_t MemAccess;
 
@@ -879,7 +881,7 @@ static WasmType parse_expr(WasmParser* parser,
   switch (op_info->op_type) {
     case WASM_OP_BINARY: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_binary(op_info->opcode, parser->user_data);
+      CALLBACK(parser, before_binary, (op_info->opcode, parser->user_data));
       WasmType value0_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value0_type, op_info->type, "binary op", 0);
       WasmType value1_type = parse_expr(parser, tokenizer, module, function);
@@ -891,12 +893,13 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_BLOCK: {
-      WasmParserCookie cookie = parser->before_block(parser->user_data);
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_block, (parser->user_data));
       function->depth++;
       int num_exprs;
       type = parse_block(parser, tokenizer, module, function, &num_exprs);
       function->depth--;
-      parser->after_block(num_exprs, cookie, parser->user_data);
+      CALLBACK(parser, after_block, (num_exprs, cookie, parser->user_data));
       break;
     }
 
@@ -913,13 +916,13 @@ static WasmType parse_expr(WasmParser* parser,
       } else if (function->labels.size == 0) {
         FATAL_AT(t.range.start, "label variable out of range (max 0)\n");
       }
-      parser->after_break(depth, parser->user_data);
+      CALLBACK(parser, after_break, (depth, parser->user_data));
       break;
     }
 
     case WASM_OP_CALL: {
       int index = parse_function_var(tokenizer, module);
-      parser->before_call(index, parser->user_data);
+      CALLBACK(parser, before_call, (index, parser->user_data));
       WasmFunction* callee = &module->functions.data[index];
 
       int num_args = 0;
@@ -950,7 +953,7 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_CALL_IMPORT: {
       int index = parse_import_var(tokenizer, module);
-      parser->before_call_import(index, parser->user_data);
+      CALLBACK(parser, before_call_import, (index, parser->user_data));
       WasmImport* callee = &module->imports.data[index];
 
       int num_args = 0;
@@ -986,7 +989,7 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_COMPARE: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_compare(op_info->opcode, parser->user_data);
+      CALLBACK(parser, before_compare, (op_info->opcode, parser->user_data));
       WasmType value0_type = parse_expr(parser, tokenizer, module, function);
       check_type_arg(t.range.start, value0_type, op_info->type, "compare op",
                      0);
@@ -1003,15 +1006,15 @@ static WasmType parse_expr(WasmParser* parser,
       WasmNumber value;
       parse_literal(parser, tokenizer, op_info->type, &value);
       expect_close(read_token(tokenizer));
-      parser->after_const(op_info->opcode, op_info->type, value,
-                          parser->user_data);
+      CALLBACK(parser, after_const,
+               (op_info->opcode, op_info->type, value, parser->user_data));
       type = op_info->type;
       break;
     }
 
     case WASM_OP_CONVERT: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_convert(op_info->opcode, parser->user_data);
+      CALLBACK(parser, before_convert, (op_info->opcode, parser->user_data));
       WasmType value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type2, " of convert op");
       expect_close(read_token(tokenizer));
@@ -1024,12 +1027,13 @@ static WasmType parse_expr(WasmParser* parser,
       WasmVariable* variable = &function->locals.data[index];
       type = variable->type;
       expect_close(read_token(tokenizer));
-      parser->after_get_local(variable->index, parser->user_data);
+      CALLBACK(parser, after_get_local, (variable->index, parser->user_data));
       break;
     }
 
     case WASM_OP_IF: {
-      WasmParserCookie cookie = parser->before_if(parser->user_data);
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_if, (parser->user_data));
       WasmType cond_type = parse_expr(parser, tokenizer, module, function);
       check_type(tokenizer->loc, cond_type, WASM_TYPE_I32, " of condition");
       WasmType true_type = parse_expr(parser, tokenizer, module, function);
@@ -1050,12 +1054,13 @@ static WasmType parse_expr(WasmParser* parser,
       } else {
         type = true_type;
       }
-      parser->after_if(with_else, cookie, parser->user_data);
+      CALLBACK(parser, after_if, (with_else, cookie, parser->user_data));
       break;
     }
 
     case WASM_OP_LABEL: {
-      WasmParserCookie cookie = parser->before_label(parser->user_data);
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_label, (parser->user_data));
 
       t = read_token(tokenizer);
       WasmBinding* binding = wasm_append_binding(&function->labels);
@@ -1078,13 +1083,14 @@ static WasmType parse_expr(WasmParser* parser,
       type = parse_block(parser, tokenizer, module, function, &num_exprs);
       pop_binding(&function->labels);
       function->depth--;
-      parser->after_label(num_exprs, cookie, parser->user_data);
+      CALLBACK(parser, after_label, (num_exprs, cookie, parser->user_data));
       break;
     }
 
     case WASM_OP_LOAD: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_load(op_info->opcode, op_info->access, parser->user_data);
+      CALLBACK(parser, before_load,
+               (op_info->opcode, op_info->access, parser->user_data));
       WasmType index_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, index_type, WASM_TYPE_I32, " of load index");
       expect_close(read_token(tokenizer));
@@ -1096,27 +1102,28 @@ static WasmType parse_expr(WasmParser* parser,
       int index = parse_global_var(tokenizer, module);
       type = module->globals.data[index].type;
       expect_close(read_token(tokenizer));
-      parser->after_load_global(index, parser->user_data);
+      CALLBACK(parser, after_load_global, (index, parser->user_data));
       break;
     }
 
     case WASM_OP_LOOP: {
-      WasmParserCookie cookie = parser->before_loop(parser->user_data);
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_loop, (parser->user_data));
       function->depth++;
       int num_exprs;
       type = parse_block(parser, tokenizer, module, function, &num_exprs);
       function->depth--;
-      parser->after_loop(num_exprs, cookie, parser->user_data);
+      CALLBACK(parser, after_loop, (num_exprs, cookie, parser->user_data));
       break;
     }
 
     case WASM_OP_NOP:
-      parser->after_nop(parser->user_data);
+      CALLBACK(parser, after_nop, (parser->user_data));
       expect_close(read_token(tokenizer));
       break;
 
     case WASM_OP_RETURN: {
-      parser->before_return(parser->user_data);
+      CALLBACK(parser, before_return, (parser->user_data));
       WasmType result_type = WASM_TYPE_VOID;
       t = read_token(tokenizer);
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
@@ -1133,7 +1140,7 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_SET_LOCAL: {
       int index = parse_local_var(tokenizer, function);
       WasmVariable* variable = &function->locals.data[index];
-      parser->before_set_local(variable->index, parser->user_data);
+      CALLBACK(parser, before_set_local, (variable->index, parser->user_data));
       type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, type, variable->type, "");
       expect_close(read_token(tokenizer));
@@ -1142,7 +1149,8 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_STORE: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_store(op_info->opcode, op_info->access, parser->user_data);
+      CALLBACK(parser, before_store,
+               (op_info->opcode, op_info->access, parser->user_data));
       WasmType index_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, index_type, WASM_TYPE_I32, " of store index");
       WasmType value_type = parse_expr(parser, tokenizer, module, function);
@@ -1154,7 +1162,7 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_STORE_GLOBAL: {
       int index = parse_global_var(tokenizer, module);
-      parser->before_store_global(index, parser->user_data);
+      CALLBACK(parser, before_store_global, (index, parser->user_data));
       WasmVariable* variable = &module->globals.data[index];
       type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, type, variable->type, "");
@@ -1169,7 +1177,7 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_UNARY: {
       check_opcode(t.range.start, op_info->opcode);
-      parser->before_unary(op_info->opcode, parser->user_data);
+      CALLBACK(parser, before_unary, (op_info->opcode, parser->user_data));
       WasmType value_type = parse_expr(parser, tokenizer, module, function);
       check_type(t.range.start, value_type, op_info->type, " of unary op");
       type = value_type;
@@ -1546,7 +1554,7 @@ static void wasm_destroy_module(WasmModule* module) {
 static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
   WasmModule module = {};
   preparse_module(tokenizer, &module);
-  parser->before_module(&module, parser->user_data);
+  CALLBACK(parser, before_module, (&module, parser->user_data));
 
   int function_index = 0;
   WasmToken t = read_token(tokenizer);
@@ -1559,14 +1567,16 @@ static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
       case WASM_OP_FUNC: {
         WasmFunction* function = &module.functions.data[function_index++];
-        parser->before_function(&module, function, parser->user_data);
+        CALLBACK(parser, before_function,
+                 (&module, function, parser->user_data));
         int num_exprs = parse_func(parser, tokenizer, &module, function);
-        parser->after_function(&module, function, num_exprs, parser->user_data);
+        CALLBACK(parser, after_function,
+                 (&module, function, num_exprs, parser->user_data));
         break;
       }
 
       case WASM_OP_EXPORT: {
-        parser->before_export(&module, parser->user_data);
+        CALLBACK(parser, before_export, (&module, parser->user_data));
         t = read_token(tokenizer);
         expect_string(t);
         int index = parse_function_var(tokenizer, &module);
@@ -1576,7 +1586,7 @@ static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
         export->index = index;
 
         expect_close(read_token(tokenizer));
-        parser->after_export(&module, export, parser->user_data);
+        CALLBACK(parser, after_export, (&module, export, parser->user_data));
         break;
       }
 
@@ -1598,7 +1608,7 @@ static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
     t = read_token(tokenizer);
   }
 
-  parser->after_module(&module, parser->user_data);
+  CALLBACK(parser, after_module, (&module, parser->user_data));
 
   wasm_destroy_module(&module);
 }
