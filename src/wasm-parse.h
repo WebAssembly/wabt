@@ -62,6 +62,7 @@ EXTERN_C void wasm_init_tokenizer(WasmTokenizer* tokenizer,
                                   char* source_start,
                                   char* source_end);
 EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
+EXTERN_C void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer);
 EXTERN_C void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer);
 
 #endif /* WASM_PARSE_H */

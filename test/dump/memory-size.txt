@@ -1,4 +1,4 @@
-# FLAGS: -dv
+# FLAGS: -dv --multi-module
 (module (memory 128))
 (module (memory 256))
 (module (memory 512))

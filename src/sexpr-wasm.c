@@ -9,18 +9,27 @@
 #include "wasm-parse.h"
 #include "wasm-gen.h"
 
-enum { FLAG_VERBOSE, FLAG_HELP, FLAG_DUMP_MODULE, FLAG_OUTPUT, NUM_FLAGS };
+enum {
+  FLAG_VERBOSE,
+  FLAG_HELP,
+  FLAG_DUMP_MODULE,
+  FLAG_OUTPUT,
+  FLAG_MULTI_MODULE,
+  NUM_FLAGS
+};
 
 static const char* g_infile;
 const char* g_outfile;
 int g_dump_module;
 int g_verbose;
+static int g_multi_module;
 
 static struct option g_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
     {"dump-module", no_argument, NULL, 'd'},
     {"output", no_argument, NULL, 'o'},
+    {"multi-module", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(g_long_options));
@@ -34,6 +43,8 @@ typedef struct OptionHelp {
 static OptionHelp g_option_help[] = {
     {FLAG_VERBOSE, NULL, "use multiple times for more info"},
     {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
+    {FLAG_MULTI_MODULE, NULL,
+     "parse a file with multiple modules and assertions, like the spec tests"},
     {NUM_FLAGS, NULL},
 };
 
@@ -103,6 +114,10 @@ static void parse_options(int argc, char** argv) {
             /* Handled above by goto */
             assert(0);
             break;
+
+          case FLAG_MULTI_MODULE:
+            g_multi_module = 1;
+            break;
         }
         break;
 
@@ -160,6 +175,6 @@ int main(int argc, char** argv) {
 
   WasmTokenizer tokenizer;
   wasm_init_tokenizer(&tokenizer, g_infile, data, data + fsize);
-  gen_file(&tokenizer);
+  wasm_gen_file(&tokenizer, g_multi_module);
   return 0;
 }

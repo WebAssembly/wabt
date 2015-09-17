@@ -1551,13 +1551,18 @@ static void wasm_destroy_module(WasmModule* module) {
   wasm_destroy_segment_vector(&module->segments);
 }
 
-static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
+void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
+  WasmToken t = read_token(tokenizer);
+  expect_open(t);
+  t = read_token(tokenizer);
+  expect_atom_op(t, WASM_OP_MODULE, "module");
+
   WasmModule module = {};
   preparse_module(tokenizer, &module);
   CALLBACK(parser, before_module, (&module, parser->user_data));
 
   int function_index = 0;
-  WasmToken t = read_token(tokenizer);
+  t = read_token(tokenizer);
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(t);
     t = read_token(tokenizer);
@@ -1617,14 +1622,17 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
   WasmToken t = read_token(tokenizer);
   while (t.type != WASM_TOKEN_TYPE_EOF) {
     expect_open(t);
+    WasmToken open = t;
     t = read_token(tokenizer);
     expect_atom(t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
-      case WASM_OP_MODULE:
-        parse_module(parser, tokenizer);
+      case WASM_OP_MODULE: {
+        rewind_token(tokenizer, open);
+        wasm_parse_module(parser, tokenizer);
         break;
+      }
 
       case WASM_OP_ASSERT_EQ:
       case WASM_OP_ASSERT_INVALID:
