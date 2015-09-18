@@ -1551,7 +1551,7 @@ static void wasm_destroy_module(WasmModule* module) {
   wasm_destroy_segment_vector(&module->segments);
 }
 
-void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
+static void parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
   WasmToken t = read_token(tokenizer);
   expect_open(t);
   t = read_token(tokenizer);
@@ -1618,6 +1618,13 @@ void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
   wasm_destroy_module(&module);
 }
 
+void wasm_parse_module(WasmParser* parser, WasmTokenizer* tokenizer) {
+  parse_module(parser, tokenizer);
+  WasmToken t = read_token(tokenizer);
+  if (t.type != WASM_TOKEN_TYPE_EOF)
+    FATAL_AT(t.range.start, "expected EOF\n");
+}
+
 void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
   WasmToken t = read_token(tokenizer);
   int seen_module = 0;
@@ -1632,7 +1639,7 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
       case WASM_OP_MODULE: {
         seen_module = 1;
         rewind_token(tokenizer, open);
-        wasm_parse_module(parser, tokenizer);
+        parse_module(parser, tokenizer);
         break;
       }
 
@@ -1640,7 +1647,7 @@ void wasm_parse_file(WasmParser* parser, WasmTokenizer* tokenizer) {
       case WASM_OP_ASSERT_INVALID:
       case WASM_OP_INVOKE:
         if (!seen_module)
-          FATAL_AT(t.range.start, "%.*s must occur after a module definition",
+          FATAL_AT(t.range.start, "%.*s must occur after a module definition\n",
                    (int)(t.range.end.pos - t.range.start.pos),
                    t.range.start.pos);
         parse_generic(tokenizer);
