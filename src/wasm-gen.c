@@ -562,13 +562,15 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(ctx->buf, opcode);
 }
 
-void wasm_gen_file(WasmTokenizer* tokenizer, int multi_module) {
+void wasm_gen_file(WasmSource* source, int multi_module) {
   OutputBuffer buf;
 
   Context ctx;
   ctx.buf = &buf;
 
   WasmParser parser = {};
+  wasm_init_parser(&parser, source);
+
   parser.user_data = &ctx;
   parser.before_module = before_module;
   parser.after_module = after_module;
@@ -601,8 +603,8 @@ void wasm_gen_file(WasmTokenizer* tokenizer, int multi_module) {
   parser.before_store_global = before_store_global;
   parser.before_unary = before_unary;
   if (multi_module) {
-    wasm_parse_file(&parser, tokenizer);
+    wasm_parse_file(&parser);
   } else {
-    wasm_parse_module(&parser, tokenizer);
+    wasm_parse_module(&parser);
   }
 }

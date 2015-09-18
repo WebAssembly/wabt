@@ -173,8 +173,10 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
-  WasmTokenizer tokenizer;
-  wasm_init_tokenizer(&tokenizer, g_infile, data, data + fsize);
-  wasm_gen_file(&tokenizer, g_multi_module);
+  WasmSource source;
+  source.filename = g_infile;
+  source.start = data;
+  source.end = data + fsize;
+  wasm_gen_file(&source, g_multi_module);
   return 0;
 }
