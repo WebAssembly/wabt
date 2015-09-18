@@ -1230,7 +1230,7 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     default:
-      assert(0);
+      unexpected_token(parser, t);
       break;
   }
   return type;
