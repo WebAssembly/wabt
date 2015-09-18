@@ -15,6 +15,8 @@ typedef uintptr_t WasmParserCookie;
 typedef struct WasmParser {
   WasmTokenizer tokenizer;
   void* user_data;
+  void* internal;
+  void (*error)(WasmSourceLocation loc, const char* msg, void* user_data);
   void (*before_module)(struct WasmModule* m, void* user_data);
   void (*after_module)(struct WasmModule* m, void* user_data);
   void (*before_function)(struct WasmModule* m,
@@ -59,8 +61,8 @@ typedef struct WasmParser {
 } WasmParser;
 
 EXTERN_C void wasm_init_parser(WasmParser* parser, WasmSource* source);
-EXTERN_C void wasm_parse_module(WasmParser* parser);
-EXTERN_C void wasm_parse_file(WasmParser* parser);
+EXTERN_C int wasm_parse_module(WasmParser* parser);
+EXTERN_C int wasm_parse_file(WasmParser* parser);
 EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
 
 #endif /* WASM_PARSE_H */

@@ -306,6 +306,10 @@ typedef struct Context {
   int function_num_exprs_offset;
 } Context;
 
+static void error(WasmSourceLocation loc, const char* msg, void* user_data) {
+  fprintf(stderr, "%s:%d:%d: %s", loc.source->filename, loc.line, loc.col, msg);
+}
+
 static void before_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
   ctx->module = module;
@@ -562,7 +566,7 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(ctx->buf, opcode);
 }
 
-void wasm_gen_file(WasmSource* source, int multi_module) {
+int wasm_gen_file(WasmSource* source, int multi_module) {
   OutputBuffer buf;
 
   Context ctx;
@@ -572,6 +576,7 @@ void wasm_gen_file(WasmSource* source, int multi_module) {
   wasm_init_parser(&parser, source);
 
   parser.user_data = &ctx;
+  parser.error = error;
   parser.before_module = before_module;
   parser.after_module = after_module;
   parser.before_function = before_function;
@@ -602,9 +607,5 @@ void wasm_gen_file(WasmSource* source, int multi_module) {
   parser.before_store = before_store;
   parser.before_store_global = before_store_global;
   parser.before_unary = before_unary;
-  if (multi_module) {
-    wasm_parse_file(&parser);
-  } else {
-    wasm_parse_module(&parser);
-  }
+  return multi_module ? wasm_parse_file(&parser) : wasm_parse_module(&parser);
 }

@@ -177,6 +177,5 @@ int main(int argc, char** argv) {
   source.filename = g_infile;
   source.start = data;
   source.end = data + fsize;
-  wasm_gen_file(&source, g_multi_module);
-  return 0;
+  return wasm_gen_file(&source, g_multi_module);
 }
