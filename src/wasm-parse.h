@@ -56,6 +56,13 @@ typedef struct WasmParserCallbacks {
   void (*before_store)(enum WasmOpcode opcode, uint8_t access, void* user_data);
   void (*before_store_global)(int index, void* user_data);
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
+
+  /* used in spec repo tests */
+  void (*before_assert_eq)(const char* invoke_name,
+                           int invoke_function_index,
+                           void* user_data);
+  void (*after_assert_eq_invoke)(void* user_data);
+  void (*after_assert_eq)(void* user_data);
 } WasmParserCallbacks;
 
 EXTERN_C int wasm_parse_module(WasmSource* source, WasmParserCallbacks* parser);

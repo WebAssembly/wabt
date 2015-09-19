@@ -1,0 +1,8 @@
+# ERROR: 1
+# FLAGS: --multi-module
+(module
+  (func $foo (result i32) (i32.const 0))
+  (export "foo" $foo))
+(assert_eq (invoke "foo" (i32.const 0)) (i32.const 0))
+# STDERR:
+assert/bad-asserteq-too-many.txt:6:26: too many arguments to function. got 1, expected 0

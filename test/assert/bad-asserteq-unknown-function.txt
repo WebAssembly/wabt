@@ -1,0 +1,6 @@
+# ERROR: 1
+# FLAGS: --multi-module
+(module)
+(assert_eq (invoke "foo") (i32.const 0))
+# STDERR:
+assert/bad-asserteq-unknown-function.txt:4:20: unknown function export "foo"

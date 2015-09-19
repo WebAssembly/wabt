@@ -976,6 +976,38 @@ static WasmType parse_switch(WasmParser* parser,
   return type;
 }
 
+static WasmType parse_call_args(WasmParser* parser,
+                                WasmModule* module,
+                                WasmFunction* function,
+                                WasmFunction* callee,
+                                const char* desc) {
+  WasmToken t;
+  int num_args = 0;
+  while (1) {
+    t = read_token(parser);
+    if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
+      break;
+    rewind_token(parser, t);
+    if (++num_args > callee->num_args) {
+      FATAL_AT(parser, t.range.start,
+               "too many arguments to function. got %d, expected %d\n",
+               num_args, callee->num_args);
+    }
+    WasmType arg_type = parse_expr(parser, module, function);
+    WasmType expected = callee->locals.data[num_args - 1].type;
+    check_type_arg(parser, t.range.start, arg_type, expected, desc,
+                   num_args - 1);
+  }
+
+  if (num_args < callee->num_args) {
+    FATAL_AT(parser, t.range.start,
+             "too few arguments to function. got %d, expected %d\n", num_args,
+             callee->num_args);
+  }
+
+  return callee->result_type;
+}
+
 static WasmType parse_expr(WasmParser* parser,
                            WasmModule* module,
                            WasmFunction* function) {
@@ -1040,31 +1072,7 @@ static WasmType parse_expr(WasmParser* parser,
       int index = parse_function_var(parser, module);
       CALLBACK(parser, before_call, (index, parser->user_data));
       WasmFunction* callee = &module->functions.data[index];
-
-      int num_args = 0;
-      while (1) {
-        WasmToken t = read_token(parser);
-        if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
-          break;
-        rewind_token(parser, t);
-        if (++num_args > callee->num_args) {
-          FATAL_AT(parser, t.range.start,
-                   "too many arguments to function. got %d, expected %d\n",
-                   num_args, callee->num_args);
-        }
-        WasmType arg_type = parse_expr(parser, module, function);
-        WasmType expected = callee->locals.data[num_args - 1].type;
-        check_type_arg(parser, t.range.start, arg_type, expected, "call",
-                       num_args - 1);
-      }
-
-      if (num_args < callee->num_args) {
-        FATAL_AT(parser, t.range.start,
-                 "too few arguments to function. got %d, expected %d\n",
-                 num_args, callee->num_args);
-      }
-
-      type = callee->result_type;
+      type = parse_call_args(parser, module, function, callee, "call");
       break;
     }
 
@@ -1694,15 +1702,14 @@ static void wasm_destroy_module(WasmModule* module) {
   wasm_destroy_segment_vector(&module->segments);
 }
 
-static void parse_module(WasmParser* parser) {
+static void parse_module(WasmParser* parser, WasmModule* module) {
   WasmToken t = read_token(parser);
   expect_open(parser, t);
   t = read_token(parser);
   expect_atom_op(parser, t, WASM_OP_MODULE, "module");
 
-  WasmModule module = {};
-  preparse_module(parser, &module);
-  CALLBACK(parser, before_module, (&module, parser->user_data));
+  preparse_module(parser, module);
+  CALLBACK(parser, before_module, (module, parser->user_data));
 
   int function_index = 0;
   t = read_token(parser);
@@ -1714,28 +1721,28 @@ static void parse_module(WasmParser* parser) {
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
       case WASM_OP_FUNC: {
-        WasmFunction* function = &module.functions.data[function_index++];
+        WasmFunction* function = &module->functions.data[function_index++];
         CALLBACK(parser, before_function,
-                 (&module, function, parser->user_data));
-        int num_exprs = parse_func(parser, &module, function);
+                 (module, function, parser->user_data));
+        int num_exprs = parse_func(parser, module, function);
         CALLBACK(parser, after_function,
-                 (&module, function, num_exprs, parser->user_data));
+                 (module, function, num_exprs, parser->user_data));
         break;
       }
 
       case WASM_OP_EXPORT: {
-        CALLBACK(parser, before_export, (&module, parser->user_data));
+        CALLBACK(parser, before_export, (module, parser->user_data));
         t = read_token(parser);
         expect_string(parser, t);
-        int index = parse_function_var(parser, &module);
+        int index = parse_function_var(parser, module);
 
-        WasmExport* export = wasm_append_export(&module.exports);
+        WasmExport* export = wasm_append_export(&module->exports);
         CHECK_ALLOC(parser, export, t.range.start);
         export->name = dup_string_contents(t);
         export->index = index;
 
         expect_close(parser, read_token(parser));
-        CALLBACK(parser, after_export, (&module, export, parser->user_data));
+        CALLBACK(parser, after_export, (module, export, parser->user_data));
         break;
       }
 
@@ -1757,9 +1764,7 @@ static void parse_module(WasmParser* parser) {
     t = read_token(parser);
   }
 
-  CALLBACK(parser, after_module, (&module, parser->user_data));
-
-  wasm_destroy_module(&module);
+  CALLBACK(parser, after_module, (module, parser->user_data));
 }
 
 static void init_parser(WasmParser* parser,
@@ -1775,15 +1780,17 @@ static void init_parser(WasmParser* parser,
 }
 
 int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
+  WasmModule module = {};
   WasmParser parser = {};
   init_parser(&parser, callbacks, source);
 
   if (setjmp(parser.jump_buf)) {
+    wasm_destroy_module(&module);
     /* error */
     return 1;
   }
 
-  parse_module(&parser);
+  parse_module(&parser, &module);
   WasmToken t = read_token(&parser);
   if (t.type != WASM_TOKEN_TYPE_EOF)
     FATAL_AT(&parser, t.range.start, "expected EOF\n");
@@ -1791,47 +1798,97 @@ int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
 }
 
 int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
-  WasmParser parser = {};
-  init_parser(&parser, callbacks, source);
+  WasmModule module = {};
+  WasmParser parser_object = {};
+  WasmParser* parser = &parser_object;
+  init_parser(parser, callbacks, source);
 
-  if (setjmp(parser.jump_buf)) {
+  if (setjmp(parser->jump_buf)) {
     /* error */
+    wasm_destroy_module(&module);
     return 1;
   }
 
-  WasmToken t = read_token(&parser);
+  WasmToken t = read_token(parser);
   int seen_module = 0;
   do {
-    expect_open(&parser, t);
+    expect_open(parser, t);
     WasmToken open = t;
-    t = read_token(&parser);
-    expect_atom(&parser, t);
+    t = read_token(parser);
+    expect_atom(parser, t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
       case WASM_OP_MODULE: {
         seen_module = 1;
-        rewind_token(&parser, open);
-        parse_module(&parser);
+        rewind_token(parser, open);
+        /* Destroy previous module, if any */
+        wasm_destroy_module(&module);
+        memset(&module, 0, sizeof(module));
+        parse_module(parser, &module);
         break;
       }
 
-      case WASM_OP_ASSERT_EQ:
+      case WASM_OP_ASSERT_EQ: {
+        if (!seen_module)
+          FATAL_AT(parser, t.range.start,
+                   "assert_eq must occur after a module definition\n");
+
+        expect_open(parser, read_token(parser));
+        expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
+        t = read_token(parser);
+        expect_string(parser, t);
+        char* name = dup_string_contents(t);
+        /* Find the function with this exported name */
+        int i;
+        int function_index = -1;
+        for (i = 0; i < module.exports.size; ++i) {
+          WasmExport* export = &module.exports.data[i];
+          if (strcmp(name, export->name) == 0) {
+            function_index = export->index;
+            break;
+          }
+        }
+        if (function_index < 0)
+          FATAL_AT(parser, t.range.start, "unknown function export %.*s\n",
+                   (int)(t.range.end.pos - t.range.start.pos),
+                   t.range.start.pos);
+
+        CALLBACK(parser, before_assert_eq,
+                 (name, function_index, parser->user_data));
+        free(name);
+
+        WasmFunction dummy_function = {};
+        WasmFunction* invokee = &module.functions.data[function_index];
+        WasmType left_type = parse_call_args(parser, &module, &dummy_function,
+                                             invokee, "invoke");
+        CALLBACK(parser, after_assert_eq_invoke, (parser->user_data));
+
+        WasmType right_type = parse_expr(parser, &module, &dummy_function);
+        check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
+
+        CALLBACK(parser, after_assert_eq, (parser->user_data));
+        expect_close(parser, read_token(parser));
+        break;
+      }
+
       case WASM_OP_ASSERT_INVALID:
       case WASM_OP_INVOKE:
         if (!seen_module)
-          FATAL_AT(&parser, t.range.start,
+          FATAL_AT(parser, t.range.start,
                    "%.*s must occur after a module definition\n",
                    (int)(t.range.end.pos - t.range.start.pos),
                    t.range.start.pos);
-        parse_generic(&parser);
+        parse_generic(parser);
         break;
 
       default:
-        unexpected_token(&parser, t);
+        unexpected_token(parser, t);
         break;
     }
-    t = read_token(&parser);
+    t = read_token(parser);
   } while (t.type != WASM_TOKEN_TYPE_EOF);
+
+  wasm_destroy_module(&module);
   return 0;
 }
