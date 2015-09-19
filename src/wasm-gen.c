@@ -157,16 +157,16 @@ static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
   buf->size = out_data(buf, buf->size, s, strlen(s) + 1, desc);
 }
 
-static void out_string_token(OutputBuffer* buf, WasmToken t, const char* desc) {
-  assert(t.type == WASM_TOKEN_TYPE_STRING);
-  size_t max_size = t.range.end.pos - t.range.start.pos;
+static void out_segment(OutputBuffer* buf,
+                        WasmSegment* segment,
+                        const char* desc) {
   size_t offset = buf->size;
-  ensure_output_buffer_capacity(buf, offset + max_size);
+  ensure_output_buffer_capacity(buf, offset + segment->size);
   void* dest = buf->start + offset;
-  int actual_size = wasm_copy_string_contents(t, dest, max_size);
+  wasm_copy_segment_data(segment->data, dest, segment->size);
   if (g_verbose)
-    dump_memory(buf->start + offset, actual_size, offset, 1, desc);
-  buf->size += actual_size;
+    dump_memory(buf->start + offset, segment->size, offset, 1, desc);
+  buf->size += segment->size;
 }
 
 static void dump_output_buffer(OutputBuffer* buf) {
@@ -281,7 +281,7 @@ static void out_module_footer(OutputBuffer* buf, WasmModule* module) {
     WasmSegment* segment = &module->segments.data[i];
     out_u32_at(buf, segment->offset + SEGMENT_DATA_OFFSET, buf->size,
                "FIXUP segment data offset");
-    out_string_token(buf, segment->data, "segment data");
+    out_segment(buf, segment, "segment data");
   }
 
   /* output name table */
@@ -572,40 +572,39 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   Context ctx;
   ctx.buf = &buf;
 
-  WasmParser parser = {};
-  wasm_init_parser(&parser, source);
-
-  parser.user_data = &ctx;
-  parser.error = error;
-  parser.before_module = before_module;
-  parser.after_module = after_module;
-  parser.before_function = before_function;
-  parser.after_function = after_function;
-  parser.before_export = before_export;
-  parser.after_export = after_export;
-  parser.before_block = before_block;
-  parser.after_block = after_block;
-  parser.before_binary = before_binary;
-  parser.after_break = after_break;
-  parser.before_call = before_call;
-  parser.before_call_import = before_call_import;
-  parser.before_compare = before_compare;
-  parser.after_const = after_const;
-  parser.before_convert = before_convert;
-  parser.after_get_local = after_get_local;
-  parser.before_if = before_if;
-  parser.after_if = after_if;
-  parser.before_label = before_label;
-  parser.after_label = after_label;
-  parser.before_load = before_load;
-  parser.after_load_global = after_load_global;
-  parser.before_loop = before_loop;
-  parser.after_loop = after_loop;
-  parser.after_nop = after_nop;
-  parser.before_return = before_return;
-  parser.before_set_local = before_set_local;
-  parser.before_store = before_store;
-  parser.before_store_global = before_store_global;
-  parser.before_unary = before_unary;
-  return multi_module ? wasm_parse_file(&parser) : wasm_parse_module(&parser);
+  WasmParserCallbacks callbacks = {};
+  callbacks.user_data = &ctx;
+  callbacks.error = error;
+  callbacks.before_module = before_module;
+  callbacks.after_module = after_module;
+  callbacks.before_function = before_function;
+  callbacks.after_function = after_function;
+  callbacks.before_export = before_export;
+  callbacks.after_export = after_export;
+  callbacks.before_block = before_block;
+  callbacks.after_block = after_block;
+  callbacks.before_binary = before_binary;
+  callbacks.after_break = after_break;
+  callbacks.before_call = before_call;
+  callbacks.before_call_import = before_call_import;
+  callbacks.before_compare = before_compare;
+  callbacks.after_const = after_const;
+  callbacks.before_convert = before_convert;
+  callbacks.after_get_local = after_get_local;
+  callbacks.before_if = before_if;
+  callbacks.after_if = after_if;
+  callbacks.before_label = before_label;
+  callbacks.after_label = after_label;
+  callbacks.before_load = before_load;
+  callbacks.after_load_global = after_load_global;
+  callbacks.before_loop = before_loop;
+  callbacks.after_loop = after_loop;
+  callbacks.after_nop = after_nop;
+  callbacks.before_return = before_return;
+  callbacks.before_set_local = before_set_local;
+  callbacks.before_store = before_store;
+  callbacks.before_store_global = before_store_global;
+  callbacks.before_unary = before_unary;
+  return multi_module ? wasm_parse_file(source, &callbacks)
+                      : wasm_parse_module(source, &callbacks);
 }

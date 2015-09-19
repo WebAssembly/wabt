@@ -20,55 +20,6 @@ typedef enum WasmType {
   WASM_NUM_TYPES,
 } WasmType;
 
-typedef enum WasmMemType {
-  WASM_MEM_TYPE_I8,
-  WASM_MEM_TYPE_I16,
-  WASM_MEM_TYPE_I32,
-  WASM_MEM_TYPE_I64,
-  WASM_MEM_TYPE_F32,
-  WASM_MEM_TYPE_F64,
-} WasmMemType;
-
-typedef enum WasmOpType {
-  WASM_OP_NONE,
-  WASM_OP_ASSERT_EQ,
-  WASM_OP_ASSERT_INVALID,
-  WASM_OP_BINARY,
-  WASM_OP_BLOCK,
-  WASM_OP_BREAK,
-  WASM_OP_CALL,
-  WASM_OP_CALL_IMPORT,
-  WASM_OP_CALL_INDIRECT,
-  WASM_OP_COMPARE,
-  WASM_OP_CONST,
-  WASM_OP_CONVERT,
-  WASM_OP_DESTRUCT,
-  WASM_OP_EXPORT,
-  WASM_OP_FUNC,
-  WASM_OP_GET_LOCAL,
-  WASM_OP_GLOBAL,
-  WASM_OP_IF,
-  WASM_OP_IMPORT,
-  WASM_OP_INVOKE,
-  WASM_OP_LABEL,
-  WASM_OP_LOAD,
-  WASM_OP_LOAD_GLOBAL,
-  WASM_OP_LOCAL,
-  WASM_OP_LOOP,
-  WASM_OP_MEMORY,
-  WASM_OP_MODULE,
-  WASM_OP_NOP,
-  WASM_OP_PARAM,
-  WASM_OP_RESULT,
-  WASM_OP_RETURN,
-  WASM_OP_SET_LOCAL,
-  WASM_OP_STORE,
-  WASM_OP_STORE_GLOBAL,
-  WASM_OP_SWITCH,
-  WASM_OP_TABLE,
-  WASM_OP_UNARY,
-} WasmOpType;
-
 #define OPCODES(V)             \
   V(NOP, 0x00)                 \
   V(IF, 0x01)                  \
@@ -233,14 +184,6 @@ typedef enum WasmOpcode {
 #undef OPCODE
 } WasmOpcode;
 
-typedef enum WasmTokenType {
-  WASM_TOKEN_TYPE_EOF,
-  WASM_TOKEN_TYPE_OPEN_PAREN,
-  WASM_TOKEN_TYPE_CLOSE_PAREN,
-  WASM_TOKEN_TYPE_ATOM,
-  WASM_TOKEN_TYPE_STRING,
-} WasmTokenType;
-
 typedef struct WasmSource {
   const char* filename;
   const char* start;
@@ -254,27 +197,12 @@ typedef struct WasmSourceLocation {
   int col;
 } WasmSourceLocation;
 
-typedef struct WasmSourceRange {
-  WasmSourceLocation start;
-  WasmSourceLocation end;
-} WasmSourceRange;
-
-typedef struct WasmToken {
-  WasmTokenType type;
-  WasmSourceRange range;
-} WasmToken;
-
-typedef struct WasmTokenizer {
-  WasmSource source;
-  WasmSourceLocation loc;
-} WasmTokenizer;
-
-#define DECLARE_VECTOR(name, type)                      \
-  typedef struct type##Vector {                         \
-    type* data;                                         \
-    size_t size;                                        \
-    size_t capacity;                                    \
-  } type##Vector;                                       \
+#define DECLARE_VECTOR(name, type)                               \
+  typedef struct type##Vector {                                  \
+    type* data;                                                  \
+    size_t size;                                                 \
+    size_t capacity;                                             \
+  } type##Vector;                                                \
   EXTERN_C void wasm_destroy_##name##_vector(type##Vector* vec); \
   EXTERN_C type* wasm_append_##name(type##Vector* vec);
 
@@ -321,11 +249,13 @@ typedef struct WasmImport {
 } WasmImport;
 DECLARE_VECTOR(import, WasmImport)
 
-typedef struct Segment {
+typedef void* WasmSegmentData;
+
+typedef struct WasmSegment {
   size_t offset;
   size_t size;
   uint32_t address;
-  WasmToken data;
+  WasmSegmentData data; /* don't access directly; call wasm_copy_segment_data */
 } WasmSegment;
 DECLARE_VECTOR(segment, WasmSegment)
 

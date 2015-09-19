@@ -12,10 +12,8 @@ typedef union WasmNumber {
 
 typedef uintptr_t WasmParserCookie;
 
-typedef struct WasmParser {
-  WasmTokenizer tokenizer;
+typedef struct WasmParserCallbacks {
   void* user_data;
-  void* internal;
   void (*error)(WasmSourceLocation loc, const char* msg, void* user_data);
   void (*before_module)(struct WasmModule* m, void* user_data);
   void (*after_module)(struct WasmModule* m, void* user_data);
@@ -58,11 +56,12 @@ typedef struct WasmParser {
   void (*before_store)(enum WasmOpcode opcode, uint8_t access, void* user_data);
   void (*before_store_global)(int index, void* user_data);
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
-} WasmParser;
+} WasmParserCallbacks;
 
-EXTERN_C void wasm_init_parser(WasmParser* parser, WasmSource* source);
-EXTERN_C int wasm_parse_module(WasmParser* parser);
-EXTERN_C int wasm_parse_file(WasmParser* parser);
-EXTERN_C size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size);
+EXTERN_C int wasm_parse_module(WasmSource* source, WasmParserCallbacks* parser);
+EXTERN_C int wasm_parse_file(WasmSource* source, WasmParserCallbacks* parser);
+EXTERN_C void wasm_copy_segment_data(WasmSegmentData data,
+                                     char* dest,
+                                     size_t size);
 
 #endif /* WASM_PARSE_H */

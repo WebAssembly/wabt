@@ -13,21 +13,98 @@
 #include "wasm-internal.h"
 #include "wasm-parse.h"
 
-#include "hash.h"
-
 #define TABS_TO_SPACES 8
 #define INITIAL_VECTOR_CAPACITY 8
 
 #define FATAL_AT(parser, loc, ...) fatal_at(parser, loc, __VA_ARGS__)
-#define CALLBACK(parser, name, args) ((parser->name) ? parser->name args : 0)
+#define CALLBACK(parser, name, args) \
+  ((parser->callbacks->name) ? parser->callbacks->name args : 0)
 #define CHECK_ALLOC(parser, p, loc) \
   if (!p)                           \
     fatal_at(parser, loc, "allocation of " #p " failed");
 
-typedef struct OpInfo OpInfo;
-typedef uint8_t MemAccess;
+typedef enum WasmMemType {
+  WASM_MEM_TYPE_I8,
+  WASM_MEM_TYPE_I16,
+  WASM_MEM_TYPE_I32,
+  WASM_MEM_TYPE_I64,
+  WASM_MEM_TYPE_F32,
+  WASM_MEM_TYPE_F64,
+} WasmMemType;
 
-typedef struct WasmParserInternal { jmp_buf jump_buf; } WasmParserInternal;
+typedef enum WasmOpType {
+  WASM_OP_NONE,
+  WASM_OP_ASSERT_EQ,
+  WASM_OP_ASSERT_INVALID,
+  WASM_OP_BINARY,
+  WASM_OP_BLOCK,
+  WASM_OP_BREAK,
+  WASM_OP_CALL,
+  WASM_OP_CALL_IMPORT,
+  WASM_OP_CALL_INDIRECT,
+  WASM_OP_COMPARE,
+  WASM_OP_CONST,
+  WASM_OP_CONVERT,
+  WASM_OP_DESTRUCT,
+  WASM_OP_EXPORT,
+  WASM_OP_FUNC,
+  WASM_OP_GET_LOCAL,
+  WASM_OP_GLOBAL,
+  WASM_OP_IF,
+  WASM_OP_IMPORT,
+  WASM_OP_INVOKE,
+  WASM_OP_LABEL,
+  WASM_OP_LOAD,
+  WASM_OP_LOAD_GLOBAL,
+  WASM_OP_LOCAL,
+  WASM_OP_LOOP,
+  WASM_OP_MEMORY,
+  WASM_OP_MODULE,
+  WASM_OP_NOP,
+  WASM_OP_PARAM,
+  WASM_OP_RESULT,
+  WASM_OP_RETURN,
+  WASM_OP_SET_LOCAL,
+  WASM_OP_STORE,
+  WASM_OP_STORE_GLOBAL,
+  WASM_OP_SWITCH,
+  WASM_OP_TABLE,
+  WASM_OP_UNARY,
+} WasmOpType;
+
+#include "hash.h"
+
+typedef struct OpInfo OpInfo;
+
+typedef enum WasmTokenType {
+  WASM_TOKEN_TYPE_EOF,
+  WASM_TOKEN_TYPE_OPEN_PAREN,
+  WASM_TOKEN_TYPE_CLOSE_PAREN,
+  WASM_TOKEN_TYPE_ATOM,
+  WASM_TOKEN_TYPE_STRING,
+} WasmTokenType;
+
+typedef struct WasmSourceRange {
+  WasmSourceLocation start;
+  WasmSourceLocation end;
+} WasmSourceRange;
+
+typedef struct WasmToken {
+  WasmTokenType type;
+  WasmSourceRange range;
+} WasmToken;
+
+typedef struct WasmTokenizer {
+  WasmSource source;
+  WasmSourceLocation loc;
+} WasmTokenizer;
+
+typedef struct WasmParser {
+  WasmParserCallbacks* callbacks;
+  WasmTokenizer tokenizer;
+  jmp_buf jump_buf;
+  void* user_data; /* copied from callbacks->user_data, for convenience */
+} WasmParser;
 
 static void* append_element(void** data,
                             size_t* size,
@@ -87,8 +164,7 @@ static void fatal_at(WasmParser* parser,
 
   CALLBACK(parser, error, (loc, buffer, parser->user_data));
 
-  WasmParserInternal* internal = parser->internal;
-  longjmp(internal->jump_buf, 1);
+  longjmp(parser->jump_buf, 1);
 }
 
 static void* append_element(void** data,
@@ -453,7 +529,7 @@ static size_t string_contents_length(WasmToken t) {
   return length;
 }
 
-size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size) {
+static size_t copy_string_contents(WasmToken t, char* dest, size_t size) {
   assert(t.type == WASM_TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
   const char* end = t.range.end.pos - 1;
@@ -495,6 +571,10 @@ size_t wasm_copy_string_contents(WasmToken t, char* dest, size_t size) {
   return dest - dest_start;
 }
 
+void wasm_copy_segment_data(WasmSegmentData data, char* dest, size_t size) {
+  copy_string_contents(*(WasmToken*)data, dest, size);
+}
+
 static char* dup_string_contents(WasmToken t) {
   assert(t.type == WASM_TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
@@ -504,7 +584,7 @@ static char* dup_string_contents(WasmToken t) {
    * through the string once. */
   size_t size = end - src + 1; /* +1 for \0 */
   char* result = malloc(size);
-  size_t actual_size = wasm_copy_string_contents(t, result, size);
+  size_t actual_size = copy_string_contents(t, result, size);
   result[actual_size] = '\0';
   return result;
 }
@@ -1500,7 +1580,11 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
 
           t = read_token(parser);
           expect_string(parser, t);
-          segment->data = t;
+          /* Allocate memory for the segment data to hide the underlying token
+           object from the caller */
+          WasmSegmentData data = malloc(sizeof(WasmToken));
+          *(WasmToken*)data = t;
+          segment->data = data;
           segment->size = string_contents_length(t);
 
           last_segment_end = segment->address + segment->size;
@@ -1604,6 +1688,9 @@ static void wasm_destroy_module(WasmModule* module) {
     wasm_destroy_variable_vector(&import->args);
   }
   wasm_destroy_import_vector(&module->imports);
+  for (i = 0; i < module->segments.size; ++i) {
+    free(module->segments.data[i].data);
+  }
   wasm_destroy_segment_vector(&module->segments);
 }
 
@@ -1675,43 +1762,57 @@ static void parse_module(WasmParser* parser) {
   wasm_destroy_module(&module);
 }
 
-int wasm_parse_module(WasmParser* parser) {
-  WasmParserInternal internal;
-  parser->internal = &internal;
-  if (setjmp(internal.jump_buf)) {
+static void init_parser(WasmParser* parser,
+                        WasmParserCallbacks* callbacks,
+                        WasmSource* source) {
+  parser->callbacks = callbacks;
+  parser->user_data = callbacks->user_data;
+  parser->tokenizer.source = *source;
+  parser->tokenizer.loc.source = &parser->tokenizer.source;
+  parser->tokenizer.loc.pos = parser->tokenizer.source.start;
+  parser->tokenizer.loc.line = 1;
+  parser->tokenizer.loc.col = 1;
+}
+
+int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
+  WasmParser parser = {};
+  init_parser(&parser, callbacks, source);
+
+  if (setjmp(parser.jump_buf)) {
     /* error */
     return 1;
   }
 
-  parse_module(parser);
-  WasmToken t = read_token(parser);
+  parse_module(&parser);
+  WasmToken t = read_token(&parser);
   if (t.type != WASM_TOKEN_TYPE_EOF)
-    FATAL_AT(parser, t.range.start, "expected EOF\n");
+    FATAL_AT(&parser, t.range.start, "expected EOF\n");
   return 0;
 }
 
-int wasm_parse_file(WasmParser* parser) {
-  WasmParserInternal internal;
-  parser->internal = &internal;
-  if (setjmp(internal.jump_buf)) {
+int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
+  WasmParser parser = {};
+  init_parser(&parser, callbacks, source);
+
+  if (setjmp(parser.jump_buf)) {
     /* error */
     return 1;
   }
 
-  WasmToken t = read_token(parser);
+  WasmToken t = read_token(&parser);
   int seen_module = 0;
   do {
-    expect_open(parser, t);
+    expect_open(&parser, t);
     WasmToken open = t;
-    t = read_token(parser);
-    expect_atom(parser, t);
+    t = read_token(&parser);
+    expect_atom(&parser, t);
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
       case WASM_OP_MODULE: {
         seen_module = 1;
-        rewind_token(parser, open);
-        parse_module(parser);
+        rewind_token(&parser, open);
+        parse_module(&parser);
         break;
       }
 
@@ -1719,27 +1820,18 @@ int wasm_parse_file(WasmParser* parser) {
       case WASM_OP_ASSERT_INVALID:
       case WASM_OP_INVOKE:
         if (!seen_module)
-          FATAL_AT(parser, t.range.start,
+          FATAL_AT(&parser, t.range.start,
                    "%.*s must occur after a module definition\n",
                    (int)(t.range.end.pos - t.range.start.pos),
                    t.range.start.pos);
-        parse_generic(parser);
+        parse_generic(&parser);
         break;
 
       default:
-        unexpected_token(parser, t);
+        unexpected_token(&parser, t);
         break;
     }
-    t = read_token(parser);
+    t = read_token(&parser);
   } while (t.type != WASM_TOKEN_TYPE_EOF);
   return 0;
-}
-
-void wasm_init_parser(WasmParser* parser, WasmSource* source) {
-  memset(parser, 0, sizeof(*parser));
-  parser->tokenizer.source = *source;
-  parser->tokenizer.loc.source = &parser->tokenizer.source;
-  parser->tokenizer.loc.pos = parser->tokenizer.source.start;
-  parser->tokenizer.loc.line = 1;
-  parser->tokenizer.loc.col = 1;
 }
