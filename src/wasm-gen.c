@@ -556,6 +556,13 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(ctx->buf, opcode);
 }
 
+static void assert_invalid_error(WasmSourceLocation loc,
+                                 const char* msg,
+                                 void* user_data) {
+  fprintf(stdout, "assert_invalid error:\n  %s:%d:%d: %s", loc.source->filename,
+          loc.line, loc.col, msg);
+}
+
 int wasm_gen_file(WasmSource* source, int multi_module) {
   OutputBuffer buf = {};
 
@@ -595,6 +602,7 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   callbacks.before_store = before_store;
   callbacks.before_store_global = before_store_global;
   callbacks.before_unary = before_unary;
+  callbacks.assert_invalid_error = assert_invalid_error;
 
   int result;
   if (multi_module) {

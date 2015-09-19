@@ -18,7 +18,7 @@
 
 #define FATAL_AT(parser, loc, ...) fatal_at(parser, loc, __VA_ARGS__)
 #define CALLBACK(parser, name, args) \
-  ((parser->callbacks->name) ? parser->callbacks->name args : 0)
+  (((parser)->callbacks->name) ? (parser)->callbacks->name args : 0)
 #define CHECK_ALLOC(parser, p, loc) \
   if (!p)                           \
     fatal_at(parser, loc, "allocation of " #p " failed");
@@ -1779,6 +1779,13 @@ static void init_parser(WasmParser* parser,
   parser->tokenizer.loc.col = 1;
 }
 
+static void assert_invalid_error(WasmSourceLocation loc,
+                                 const char* msg,
+                                 void* user_data) {
+  WasmParser* parser = user_data;
+  CALLBACK(parser, assert_invalid_error, (loc, msg, parser->user_data));
+}
+
 int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
   WasmModule module = {};
   WasmParser parser = {};
@@ -1872,13 +1879,52 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
         break;
       }
 
-      case WASM_OP_ASSERT_INVALID:
+      case WASM_OP_ASSERT_INVALID: {
+        t = read_token(parser);
+        WasmToken open = t;
+        expect_open(parser, t);
+        expect_atom_op(parser, read_token(parser), WASM_OP_MODULE, "module");
+
+        {
+          WasmParserCallbacks callbacks = {};
+          callbacks.error = assert_invalid_error;
+          callbacks.user_data = parser;
+
+          WasmParser parser2 = {};
+          parser2.callbacks = &callbacks;
+          parser2.user_data = callbacks.user_data;
+          parser2.tokenizer = parser->tokenizer;
+
+          WasmModule module2 = {};
+          int result = 0;
+          if (setjmp(parser2.jump_buf)) {
+            /* error occurred */
+            result = 1;
+          } else {
+            rewind_token(&parser2, open);
+            parse_module(&parser2, &module2);
+          }
+          wasm_destroy_module(&module2);
+
+          if (result == 0)
+            FATAL_AT(parser, parser->tokenizer.loc,
+                     "expected module to be invalid\n");
+        }
+
+        /* skip over the module, regardless of how much was parsed by parser2 */
+        parse_generic(parser);
+
+        /* ignore string, these are error messages that will only match the
+           spec repo */
+        expect_string(parser, read_token(parser));
+        expect_close(parser, read_token(parser));
+        break;
+      }
+
       case WASM_OP_INVOKE:
         if (!seen_module)
           FATAL_AT(parser, t.range.start,
-                   "%.*s must occur after a module definition\n",
-                   (int)(t.range.end.pos - t.range.start.pos),
-                   t.range.start.pos);
+                   "invoke must occur after a module definition\n");
         parse_generic(parser);
         break;
 

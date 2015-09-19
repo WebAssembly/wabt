@@ -63,6 +63,11 @@ typedef struct WasmParserCallbacks {
                            void* user_data);
   void (*after_assert_eq_invoke)(void* user_data);
   void (*after_assert_eq)(void* user_data);
+
+  /* called with the error from the module parsed inside of assert_invalid */
+  void (*assert_invalid_error)(WasmSourceLocation loc,
+                               const char* msg,
+                               void* user_data);
 } WasmParserCallbacks;
 
 EXTERN_C int wasm_parse_module(WasmSource* source, WasmParserCallbacks* parser);
