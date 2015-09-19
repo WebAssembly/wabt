@@ -58,11 +58,12 @@ typedef struct WasmParserCallbacks {
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
 
   /* used in spec repo tests */
-  void (*before_assert_eq)(const char* invoke_name,
-                           int invoke_function_index,
-                           void* user_data);
-  void (*after_assert_eq_invoke)(void* user_data);
+  void (*before_assert_eq)(void* user_data);
   void (*after_assert_eq)(void* user_data);
+  void (*before_invoke)(const char* invoke_name,
+                        int invoke_function_index,
+                        void* user_data);
+  void (*after_invoke)(void* user_data);
 
   /* called with the error from the module parsed inside of assert_invalid */
   void (*assert_invalid_error)(WasmSourceLocation loc,

@@ -1804,6 +1804,35 @@ int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
   return 0;
 }
 
+static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
+  WasmToken t = read_token(parser);
+  expect_string(parser, t);
+  char* name = dup_string_contents(t);
+  /* Find the function with this exported name */
+  int i;
+  int function_index = -1;
+  for (i = 0; i < module->exports.size; ++i) {
+    WasmExport* export = &module->exports.data[i];
+    if (strcmp(name, export->name) == 0) {
+      function_index = export->index;
+      break;
+    }
+  }
+  if (function_index < 0)
+    FATAL_AT(parser, t.range.start, "unknown function export %.*s\n",
+             (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
+
+  CALLBACK(parser, before_invoke, (name, function_index, parser->user_data));
+  free(name);
+
+  WasmFunction dummy_function = {};
+  WasmFunction* invokee = &module->functions.data[function_index];
+  WasmType result_type =
+      parse_call_args(parser, module, &dummy_function, invokee, "invoke");
+  CALLBACK(parser, after_invoke, (parser->user_data));
+  return result_type;
+}
+
 int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
   WasmModule module = {};
   WasmParser parser_object = {};
@@ -1843,34 +1872,11 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
 
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
-        t = read_token(parser);
-        expect_string(parser, t);
-        char* name = dup_string_contents(t);
-        /* Find the function with this exported name */
-        int i;
-        int function_index = -1;
-        for (i = 0; i < module.exports.size; ++i) {
-          WasmExport* export = &module.exports.data[i];
-          if (strcmp(name, export->name) == 0) {
-            function_index = export->index;
-            break;
-          }
-        }
-        if (function_index < 0)
-          FATAL_AT(parser, t.range.start, "unknown function export %.*s\n",
-                   (int)(t.range.end.pos - t.range.start.pos),
-                   t.range.start.pos);
 
-        CALLBACK(parser, before_assert_eq,
-                 (name, function_index, parser->user_data));
-        free(name);
+        CALLBACK(parser, before_assert_eq, (parser->user_data));
 
         WasmFunction dummy_function = {};
-        WasmFunction* invokee = &module.functions.data[function_index];
-        WasmType left_type = parse_call_args(parser, &module, &dummy_function,
-                                             invokee, "invoke");
-        CALLBACK(parser, after_assert_eq_invoke, (parser->user_data));
-
+        WasmType left_type = parse_invoke(parser, &module);
         WasmType right_type = parse_expr(parser, &module, &dummy_function);
         check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
 
@@ -1925,7 +1931,7 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
         if (!seen_module)
           FATAL_AT(parser, t.range.start,
                    "invoke must occur after a module definition\n");
-        parse_generic(parser);
+        parse_invoke(parser, &module);
         break;
 
       default:

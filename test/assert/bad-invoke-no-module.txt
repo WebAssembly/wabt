@@ -1,0 +1,5 @@
+# ERROR: 1
+# FLAGS: --multi-module
+(invoke "foo")
+# STDERR:
+assert/bad-invoke-no-module.txt:3:2: invoke must occur after a module definition
