@@ -38,6 +38,8 @@ static uint32_t log_two_u32(uint32_t x) {
 }
 
 static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
+  /* We may be reusing the buffer, free it */
+  free(buf->start);
   buf->start = malloc(initial_capacity);
   if (!buf->start)
     FATAL("unable to allocate %zd bytes\n", initial_capacity);
@@ -319,21 +321,9 @@ static void before_module(WasmModule* module, void* user_data) {
 
 static void after_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
-
   out_module_footer(ctx->buf, module);
-
   if (g_dump_module)
     dump_output_buffer(ctx->buf);
-
-  if (g_outfile) {
-    /* TODO(binji): better way to prevent multiple output */
-    static int s_already_output = 0;
-    if (s_already_output)
-      FATAL("Can't write multiple modules to output\n");
-    s_already_output = 1;
-    write_output_buffer(ctx->buf, g_outfile);
-  }
-  destroy_output_buffer(ctx->buf);
 }
 
 static void before_function(WasmModule* module,
@@ -567,7 +557,7 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
 }
 
 int wasm_gen_file(WasmSource* source, int multi_module) {
-  OutputBuffer buf;
+  OutputBuffer buf = {};
 
   Context ctx;
   ctx.buf = &buf;
@@ -605,6 +595,16 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   callbacks.before_store = before_store;
   callbacks.before_store_global = before_store_global;
   callbacks.before_unary = before_unary;
-  return multi_module ? wasm_parse_file(source, &callbacks)
-                      : wasm_parse_module(source, &callbacks);
+
+  int result;
+  if (multi_module) {
+    result = wasm_parse_file(source, &callbacks);
+  } else {
+    result = wasm_parse_module(source, &callbacks);
+    if (result == 0 && g_outfile)
+      write_output_buffer(&buf, g_outfile);
+  }
+
+  destroy_output_buffer(&buf);
+  return result;
 }
