@@ -39,8 +39,8 @@ typedef struct OutputBuffer {
 } OutputBuffer;
 
 typedef struct Context {
+  OutputBuffer buf;
   WasmModule* module;
-  OutputBuffer* buf;
   uint32_t function_num_exprs_offset;
   /* offset of each function/segment header in buf. */
   uint32_t* function_header_offsets;
@@ -214,8 +214,14 @@ static void destroy_output_buffer(OutputBuffer* buf) {
   free(buf->start);
 }
 
+static void destroy_context(Context* ctx) {
+  destroy_output_buffer(&ctx->buf);
+  free(ctx->function_header_offsets);
+  free(ctx->segment_header_offsets);
+}
+
 static void out_module_header(Context* ctx, WasmModule* module) {
-  OutputBuffer* buf = ctx->buf;
+  OutputBuffer* buf = &ctx->buf;
   out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
   out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
   out_u16(buf, module->globals.size, "num globals");
@@ -294,7 +300,7 @@ static void out_module_header(Context* ctx, WasmModule* module) {
 }
 
 static void out_module_footer(Context* ctx, WasmModule* module) {
-  OutputBuffer* buf = ctx->buf;
+  OutputBuffer* buf = &ctx->buf;
   int i;
   for (i = 0; i < module->segments.size; ++i) {
     if (g_verbose)
@@ -355,7 +361,7 @@ static void before_module(WasmModule* module, void* user_data) {
   }
 
   ctx->module = module;
-  init_output_buffer(ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
   out_module_header(ctx, module);
 }
 
@@ -363,7 +369,7 @@ static void after_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
   out_module_footer(ctx, module);
   if (g_dump_module)
-    dump_output_buffer(ctx->buf);
+    dump_output_buffer(&ctx->buf);
 }
 
 static void before_function(WasmModule* module,
@@ -373,14 +379,14 @@ static void before_function(WasmModule* module,
   int function_index = function - module->functions.data;
   if (g_verbose)
     printf("; function data %d\n", function_index);
-  out_u32_at(ctx->buf, ctx->function_header_offsets[function_index] +
+  out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
                            FUNC_HEADER_CODE_START_OFFSET(function->num_args),
-             ctx->buf->size, "FIXUP func code start offset");
+             ctx->buf.size, "FIXUP func code start offset");
   /* The v8-native-prototype requires all functions to have a toplevel
    block */
-  out_opcode(ctx->buf, WASM_OPCODE_BLOCK);
-  ctx->function_num_exprs_offset = ctx->buf->size;
-  out_u8(ctx->buf, 0, "toplevel block num expressions");
+  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
+  ctx->function_num_exprs_offset = ctx->buf.size;
+  out_u8(&ctx->buf, 0, "toplevel block num expressions");
 }
 
 static void after_function(WasmModule* module,
@@ -389,11 +395,11 @@ static void after_function(WasmModule* module,
                            void* user_data) {
   Context* ctx = user_data;
   int function_index = function - module->functions.data;
-  out_u8_at(ctx->buf, ctx->function_num_exprs_offset, num_exprs,
+  out_u8_at(&ctx->buf, ctx->function_num_exprs_offset, num_exprs,
             "FIXUP toplevel block num expressions");
-  out_u32_at(ctx->buf, ctx->function_header_offsets[function_index] +
+  out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
                            FUNC_HEADER_CODE_END_OFFSET(function->num_args),
-             ctx->buf->size, "FIXUP func code end offset");
+             ctx->buf.size, "FIXUP func code end offset");
 }
 
 static void before_export(WasmModule* module, void* user_data) {}
@@ -403,16 +409,16 @@ static void after_export(WasmModule* module,
                          void* user_data) {
   Context* ctx = user_data;
   int function_index = function - module->functions.data;
-  out_u8_at(ctx->buf, ctx->function_header_offsets[function_index] +
+  out_u8_at(&ctx->buf, ctx->function_header_offsets[function_index] +
                           FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
             1, "FIXUP func exported");
 }
 
 static WasmParserCookie before_block(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_BLOCK);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf->size;
-  out_u8(ctx->buf, 0, "num expressions");
+  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
+  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  out_u8(&ctx->buf, 0, "num expressions");
   return cookie;
 }
 
@@ -421,37 +427,37 @@ static void after_block(int num_exprs,
                         void* user_data) {
   Context* ctx = user_data;
   uint32_t offset = (uint32_t)cookie;
-  out_u8_at(ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
 }
 
 static void before_binary(enum WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
+  out_opcode(&ctx->buf, opcode);
 }
 
 static void after_break(int depth, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_BREAK);
-  out_u8(ctx->buf, depth, "break depth");
+  out_opcode(&ctx->buf, WASM_OPCODE_BREAK);
+  out_u8(&ctx->buf, depth, "break depth");
 }
 
 static void before_call(int function_index, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_CALL);
+  out_opcode(&ctx->buf, WASM_OPCODE_CALL);
   /* defined functions are always after all imports */
-  out_leb128(ctx->buf, ctx->module->imports.size + function_index,
+  out_leb128(&ctx->buf, ctx->module->imports.size + function_index,
              "func index");
 }
 
 static void before_call_import(int import_index, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_CALL);
-  out_leb128(ctx->buf, import_index, "import index");
+  out_opcode(&ctx->buf, WASM_OPCODE_CALL);
+  out_leb128(&ctx->buf, import_index, "import index");
 }
 
 static void before_compare(enum WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
+  out_opcode(&ctx->buf, opcode);
 }
 
 static void after_const(enum WasmOpcode opcode,
@@ -463,28 +469,28 @@ static void after_const(enum WasmOpcode opcode,
     case WASM_TYPE_I32: {
       int32_t i32 = value.i32;
       if (i32 >= -128 && i32 < 127) {
-        out_opcode(ctx->buf, WASM_OPCODE_I8_CONST);
-        out_u8(ctx->buf, value.i32, "u8 literal");
+        out_opcode(&ctx->buf, WASM_OPCODE_I8_CONST);
+        out_u8(&ctx->buf, value.i32, "u8 literal");
       } else {
-        out_opcode(ctx->buf, opcode);
-        out_u32(ctx->buf, value.i32, "u32 literal");
+        out_opcode(&ctx->buf, opcode);
+        out_u32(&ctx->buf, value.i32, "u32 literal");
       }
       break;
     }
 
     case WASM_TYPE_I64:
-      out_opcode(ctx->buf, opcode);
-      out_u64(ctx->buf, value.i64, "u64 literal");
+      out_opcode(&ctx->buf, opcode);
+      out_u64(&ctx->buf, value.i64, "u64 literal");
       break;
 
     case WASM_TYPE_F32:
-      out_opcode(ctx->buf, opcode);
-      out_f32(ctx->buf, value.f32, "f32 literal");
+      out_opcode(&ctx->buf, opcode);
+      out_f32(&ctx->buf, value.f32, "f32 literal");
       break;
 
     case WASM_TYPE_F64:
-      out_opcode(ctx->buf, opcode);
-      out_f64(ctx->buf, value.f64, "f64 literal");
+      out_opcode(&ctx->buf, opcode);
+      out_f64(&ctx->buf, value.f64, "f64 literal");
       break;
 
     default:
@@ -495,19 +501,19 @@ static void after_const(enum WasmOpcode opcode,
 
 static void before_convert(enum WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
+  out_opcode(&ctx->buf, opcode);
 }
 
 static void after_get_local(int remapped_index, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_GET_LOCAL);
-  out_leb128(ctx->buf, remapped_index, "remapped local index");
+  out_opcode(&ctx->buf, WASM_OPCODE_GET_LOCAL);
+  out_leb128(&ctx->buf, remapped_index, "remapped local index");
 }
 
 static WasmParserCookie before_if(void* user_data) {
   Context* ctx = user_data;
-  uint32_t offset = ctx->buf->size;
-  out_opcode(ctx->buf, WASM_OPCODE_IF);
+  uint32_t offset = ctx->buf.size;
+  out_opcode(&ctx->buf, WASM_OPCODE_IF);
   return (WasmParserCookie)offset;
 }
 
@@ -515,15 +521,15 @@ static void after_if(int with_else, WasmParserCookie cookie, void* user_data) {
   Context* ctx = user_data;
   if (with_else) {
     uint32_t offset = (uint32_t)cookie;
-    out_u8_at(ctx->buf, offset, WASM_OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
+    out_u8_at(&ctx->buf, offset, WASM_OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
   }
 }
 
 static WasmParserCookie before_label(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_BLOCK);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf->size;
-  out_u8(ctx->buf, 0, "num expressions");
+  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
+  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  out_u8(&ctx->buf, 0, "num expressions");
   return cookie;
 }
 
@@ -532,28 +538,28 @@ static void after_label(int num_exprs,
                         void* user_data) {
   Context* ctx = user_data;
   uint32_t offset = (uint32_t)cookie;
-  out_u8_at(ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
 }
 
 static void before_load(enum WasmOpcode opcode,
                         uint8_t access,
                         void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
-  out_u8(ctx->buf, access, "load access byte");
+  out_opcode(&ctx->buf, opcode);
+  out_u8(&ctx->buf, access, "load access byte");
 }
 
 static void after_load_global(int index, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_GET_GLOBAL);
-  out_leb128(ctx->buf, index, "global index");
+  out_opcode(&ctx->buf, WASM_OPCODE_GET_GLOBAL);
+  out_leb128(&ctx->buf, index, "global index");
 }
 
 static WasmParserCookie before_loop(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_LOOP);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf->size;
-  out_u8(ctx->buf, 0, "num expressions");
+  out_opcode(&ctx->buf, WASM_OPCODE_LOOP);
+  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  out_u8(&ctx->buf, 0, "num expressions");
   return cookie;
 }
 
@@ -562,42 +568,42 @@ static void after_loop(int num_exprs,
                        void* user_data) {
   Context* ctx = user_data;
   uint32_t offset = (uint32_t)cookie;
-  out_u8_at(ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
 }
 
 static void after_nop(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_NOP);
+  out_opcode(&ctx->buf, WASM_OPCODE_NOP);
 }
 
 static void before_return(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_RETURN);
+  out_opcode(&ctx->buf, WASM_OPCODE_RETURN);
 }
 
 static void before_set_local(int index, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_SET_LOCAL);
-  out_leb128(ctx->buf, index, "remapped local index");
+  out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
+  out_leb128(&ctx->buf, index, "remapped local index");
 }
 
 static void before_store(enum WasmOpcode opcode,
                          uint8_t access,
                          void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
-  out_u8(ctx->buf, access, "store access byte");
+  out_opcode(&ctx->buf, opcode);
+  out_u8(&ctx->buf, access, "store access byte");
 }
 
 static void before_store_global(int index, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, WASM_OPCODE_SET_GLOBAL);
-  out_leb128(ctx->buf, index, "global index");
+  out_opcode(&ctx->buf, WASM_OPCODE_SET_GLOBAL);
+  out_leb128(&ctx->buf, index, "global index");
 }
 
 static void before_unary(enum WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  out_opcode(ctx->buf, opcode);
+  out_opcode(&ctx->buf, opcode);
 }
 
 static void assert_invalid_error(WasmSourceLocation loc,
@@ -608,11 +614,7 @@ static void assert_invalid_error(WasmSourceLocation loc,
 }
 
 int wasm_gen_file(WasmSource* source, int multi_module) {
-  OutputBuffer buf = {};
-
   Context ctx = {};
-  ctx.buf = &buf;
-
   WasmParserCallbacks callbacks = {};
   callbacks.user_data = &ctx;
   callbacks.error = error;
@@ -654,11 +656,9 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   } else {
     result = wasm_parse_module(source, &callbacks);
     if (result == 0 && g_outfile)
-      write_output_buffer(&buf, g_outfile);
+      write_output_buffer(&ctx.buf, g_outfile);
   }
 
-  destroy_output_buffer(&buf);
-  free(ctx.function_header_offsets);
-  free(ctx.segment_header_offsets);
+  destroy_context(&ctx);
   return result;
 }
