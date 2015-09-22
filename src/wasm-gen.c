@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include "wasm.h"
@@ -22,8 +23,12 @@
 #define FUNC_HEADER_SIZE(num_args) (24 + (num_args))
 #define SEGMENT_HEADER_SIZE 13
 
+/* offsets from the start of a global header */
+#define GLOBAL_HEADER_NAME_OFFSET 0
+
 /* offsets from the start of a function header */
 #define FUNC_SIG_SIZE(num_args) (2 + (num_args))
+#define FUNC_HEADER_RESULT_TYPE_OFFSET 1
 #define FUNC_HEADER_NAME_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 0)
 #define FUNC_HEADER_CODE_START_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 4)
 #define FUNC_HEADER_CODE_END_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 8)
@@ -40,8 +45,11 @@ typedef struct OutputBuffer {
 
 typedef struct Context {
   OutputBuffer buf;
+  OutputBuffer temp_buf;
+  OutputBuffer js_buf;
   WasmModule* module;
   uint32_t function_num_exprs_offset;
+  int assert_eq_count;
   /* offset of each function/segment header in buf. */
   uint32_t* function_header_offsets;
   uint32_t* segment_header_offsets;
@@ -124,6 +132,19 @@ static void dump_memory(const void* start,
   }
 }
 
+static void move_data(OutputBuffer* buf,
+                      size_t dest_offset,
+                      size_t src_offset,
+                      size_t size) {
+  assert(dest_offset + size <= buf->size);
+  assert(src_offset + size <= buf->size);
+  memmove(buf->start + dest_offset, buf->start + src_offset, size);
+  if (g_verbose) {
+    printf("; move [%07zx,%07zx) -> [%07zx,%07zx)\n", src_offset,
+           src_offset + size, dest_offset, dest_offset + size);
+  }
+}
+
 static size_t out_data(OutputBuffer* buf,
                        size_t offset,
                        const void* src,
@@ -138,9 +159,9 @@ static size_t out_data(OutputBuffer* buf,
 }
 
 /* TODO(binji): endianness */
-#define OUT_TYPE(name, ctype)                                          \
-  void out_##name(OutputBuffer* buf, ctype value, const char* desc) {  \
-    buf->size = out_data(buf, buf->size, &value, sizeof(value), desc); \
+#define OUT_TYPE(name, ctype)                                                \
+  static void out_##name(OutputBuffer* buf, ctype value, const char* desc) { \
+    buf->size = out_data(buf, buf->size, &value, sizeof(value), desc);       \
   }
 
 OUT_TYPE(u8, uint8_t)
@@ -152,16 +173,38 @@ OUT_TYPE(f64, double)
 
 #undef OUT_TYPE
 
-#define OUT_AT_TYPE(name, ctype)                                        \
-  void out_##name##_at(OutputBuffer* buf, uint32_t offset, ctype value, \
-                       const char* desc) {                              \
-    out_data(buf, offset, &value, sizeof(value), desc);                 \
+#define OUT_AT_TYPE(name, ctype)                                               \
+  static void out_##name##_at(OutputBuffer* buf, uint32_t offset, ctype value, \
+                              const char* desc) {                              \
+    out_data(buf, offset, &value, sizeof(value), desc);                        \
   }
 
 OUT_AT_TYPE(u8, uint8_t)
+OUT_AT_TYPE(u16, uint16_t)
 OUT_AT_TYPE(u32, uint32_t)
 
 #undef OUT_AT_TYPE
+
+#define READ_AT_TYPE(name, ctype)                                   \
+  static ctype read_##name##_at(OutputBuffer* buf, size_t offset) { \
+    assert(offset + sizeof(ctype) <= buf->size);                    \
+    ctype value;                                                    \
+    memcpy(&value, buf->start + offset, sizeof(value));             \
+    return value;                                                   \
+  }
+
+READ_AT_TYPE(u8, uint8_t)
+READ_AT_TYPE(u16, uint16_t)
+READ_AT_TYPE(u32, uint32_t)
+
+#undef READ_AT_TYPE
+
+static void add_u32_at(OutputBuffer* buf,
+                       size_t offset,
+                       uint32_t addend,
+                       const char* desc) {
+  out_u32_at(buf, offset, read_u32_at(buf, offset) + addend, desc);
+}
 
 void out_opcode(OutputBuffer* buf, WasmOpcode opcode) {
   out_u8(buf, (uint8_t)opcode, s_opcode_names[opcode]);
@@ -197,6 +240,22 @@ static void out_segment(OutputBuffer* buf,
   buf->size += segment->size;
 }
 
+static void out_printf(OutputBuffer* buf, const char* format, ...) {
+  va_list args;
+  va_list args_copy;
+  va_start(args, format);
+  va_copy(args_copy, args);
+  /* + 1 to account for the \0 that will be added automatically by vsnprintf */
+  int len = vsnprintf(NULL, 0, format, args) + 1;
+  va_end(args);
+  ensure_output_buffer_capacity(buf, buf->size + len);
+  char* buffer = buf->start + buf->size;
+  vsnprintf(buffer, len, format, args_copy);
+  va_end(args_copy);
+  /* - 1 to remove the trailing \0 that was added by vsnprintf */
+  buf->size += len - 1;
+}
+
 static void dump_output_buffer(OutputBuffer* buf) {
   dump_memory(buf->start, buf->size, 0, 1, NULL);
 }
@@ -216,11 +275,13 @@ static void destroy_output_buffer(OutputBuffer* buf) {
 
 static void destroy_context(Context* ctx) {
   destroy_output_buffer(&ctx->buf);
+  destroy_output_buffer(&ctx->temp_buf);
   free(ctx->function_header_offsets);
   free(ctx->segment_header_offsets);
 }
 
-static void out_module_header(Context* ctx, WasmModule* module) {
+static void out_module_header(Context* ctx,
+                              WasmModule* module) {
   OutputBuffer* buf = &ctx->buf;
   out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
   out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
@@ -301,6 +362,7 @@ static void out_module_header(Context* ctx, WasmModule* module) {
 
 static void out_module_footer(Context* ctx, WasmModule* module) {
   OutputBuffer* buf = &ctx->buf;
+
   int i;
   for (i = 0; i < module->segments.size; ++i) {
     if (g_verbose)
@@ -606,6 +668,191 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
+static void finish_module(Context* ctx) {
+  if (!ctx->temp_buf.size)
+    return;
+
+  out_printf(&ctx->js_buf, "var m = createModule([\n");
+  OutputBuffer* module_buf = &ctx->temp_buf;
+  const uint8_t* p = module_buf->start;
+  const uint8_t* end = module_buf->start + module_buf->size;
+  while (p < end) {
+    out_printf(&ctx->js_buf, " ");
+    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    for (; p < line_end; ++p)
+      out_printf(&ctx->js_buf, "%4d,", *p);
+    out_printf(&ctx->js_buf, "\n");
+  }
+  out_printf(&ctx->js_buf, "]);\nrunTests(m);\n");
+}
+
+static void before_module_multi(WasmModule* module, void* user_data) {
+  Context* ctx = user_data;
+  finish_module(ctx);
+  before_module(module, user_data);
+}
+
+static void after_module_multi(WasmModule* module, void* user_data) {
+  after_module(module, user_data);
+  /* assert_eq writes its commands directly into ctx->buf. This function data
+   will then be added to the previous module. To make this work, we swap
+   ctx->buf with ctx->temp_buf; then the functions above that write to ctx->buf
+   will not modify the module (which will be saved in ctx->temp_buf).
+
+   When the next module is processed, we don't need to swap back, because we
+   don't care about the contents of either buffer */
+  Context* ctx = user_data;
+  OutputBuffer temp = ctx->buf;
+  ctx->buf = ctx->temp_buf;
+  ctx->temp_buf = temp;
+  ctx->assert_eq_count = 0;
+}
+
+static void before_assert_eq(void* user_data) {
+  Context* ctx = user_data;
+  if (g_verbose)
+    printf("; before assert_eq_%d\n", ctx->assert_eq_count);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
+  out_u8(&ctx->buf, 1, "assert eq block num expressions");
+  out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
+}
+
+static void after_assert_eq(void* user_data) {
+  /* We now have the data for the assert_eq function in ctx->buf. Add this as a
+   new function to ctx->temp_buf. */
+  Context* ctx = user_data;
+  char name[256];
+  snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
+  const size_t header_size = FUNC_HEADER_SIZE(0);
+  const size_t data_size = ctx->buf.size;
+  const size_t name_size = strlen(name) + 1;
+  const size_t total_added_size = header_size + data_size + name_size;
+  const size_t new_size = ctx->temp_buf.size + total_added_size;
+  const size_t old_size = ctx->temp_buf.size;
+
+  if (g_verbose)
+    printf("; after %s\n", name);
+
+  ensure_output_buffer_capacity(&ctx->temp_buf, new_size);
+  ctx->temp_buf.size = new_size;
+
+  /* We need to add a new function header, data and name to the name table:
+   OLD:                 NEW:
+   module header        module header
+   global headers       global headers
+   function headers     function headers
+                        NEW function header
+   segment headers      segment headers
+   function data        function data
+                        NEW function data
+   segment data         segment data
+   name table           name table
+                        NEW name
+   */
+
+  const uint16_t num_globals = read_u16_at(&ctx->temp_buf, 2);
+  const uint16_t num_functions = read_u16_at(&ctx->temp_buf, 4);
+  const uint16_t num_segments = read_u16_at(&ctx->temp_buf, 6);
+
+  /* fixup the number of functions */
+  out_u16_at(&ctx->temp_buf, 4, read_u16_at(&ctx->temp_buf, 4) + 1,
+             "FIXUP num functions");
+
+  /* fixup the global offsets */
+  int i;
+  uint32_t offset = GLOBAL_HEADERS_OFFSET;
+  for (i = 0; i < num_globals; ++i) {
+    add_u32_at(&ctx->temp_buf, offset + GLOBAL_HEADER_NAME_OFFSET,
+               header_size + data_size, "FIXUP global name offset");
+    offset += GLOBAL_HEADER_SIZE;
+  }
+
+  /* fixup the function offsets */
+  for (i = 0; i < num_functions; ++i) {
+    const uint8_t num_args = read_u8_at(&ctx->temp_buf, offset);
+    add_u32_at(&ctx->temp_buf, offset + FUNC_HEADER_NAME_OFFSET(num_args),
+               header_size + data_size, "FIXUP func name offset");
+    add_u32_at(&ctx->temp_buf, offset + FUNC_HEADER_CODE_START_OFFSET(num_args),
+               header_size, "FIXUP func code start offset");
+    add_u32_at(&ctx->temp_buf, offset + FUNC_HEADER_CODE_END_OFFSET(num_args),
+               header_size, "FIXUP func code end offset");
+    offset += FUNC_HEADER_SIZE(num_args);
+  }
+  uint32_t old_func_header_end = offset;
+
+  /* fixup the segment offsets */
+  for (i = 0; i < num_segments; ++i) {
+    add_u32_at(&ctx->temp_buf, offset + SEGMENT_HEADER_DATA_OFFSET,
+               header_size + data_size, "FIXUP segment data offset");
+    offset += SEGMENT_HEADER_SIZE;
+  }
+
+  /* if there are no functions, then the end of the function data is the end of
+   the headers */
+  uint32_t old_func_data_end = offset;
+  if (num_functions) {
+    /* we don't have to keep track of the number of args of the last function
+     because it will be subtracted out, so we just use 0 */
+    uint32_t last_func_code_end_offset = old_func_header_end -
+                                         FUNC_HEADER_SIZE(0) +
+                                         FUNC_HEADER_CODE_END_OFFSET(0);
+    old_func_data_end =
+        read_u32_at(&ctx->temp_buf, last_func_code_end_offset) - header_size;
+  }
+
+  /* move everything after the function data down, but leave room for the new
+   function name */
+  move_data(&ctx->temp_buf, old_func_data_end + header_size + data_size,
+            old_func_data_end, old_size - old_func_data_end);
+
+  /* write the new name */
+  const uint32_t new_name_offset = new_size - name_size;
+  out_data(&ctx->temp_buf, new_name_offset, name, name_size, "assert_eq name");
+
+  /* write the new function data */
+  const uint32_t new_data_offset = old_func_data_end + header_size;
+  out_data(&ctx->temp_buf, new_data_offset, ctx->buf.start, ctx->buf.size,
+           "assert_eq func data");
+
+  /* move everything between the end of the function headers and the end of the
+   function data down */
+  move_data(&ctx->temp_buf, old_func_header_end + header_size,
+            old_func_header_end, old_func_data_end - old_func_header_end);
+
+  /* write the new header */
+  const uint32_t new_header_offset = old_func_header_end;
+  if (g_verbose) {
+    printf("; clear [%07x,%07x)\n", new_header_offset,
+           new_header_offset + FUNC_HEADER_SIZE(0));
+  }
+  memset(ctx->temp_buf.start + new_header_offset, 0, FUNC_HEADER_SIZE(0));
+  out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
+            WASM_TYPE_I32, "assert_eq result type");
+  out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_NAME_OFFSET(0),
+             new_name_offset, "assert_eq name offset");
+  out_u32_at(&ctx->temp_buf,
+             new_header_offset + FUNC_HEADER_CODE_START_OFFSET(0),
+             new_data_offset, "assert_eq code start offset");
+  out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_CODE_END_OFFSET(0),
+             new_data_offset + data_size, "assert_eq code end offset");
+  out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_EXPORTED_OFFSET(0),
+            1, "assert_eq export");
+}
+
+static void before_invoke(const char* invoke_name,
+                          int invoke_function_index,
+                          void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_CALL);
+  /* defined functions are always after all imports */
+  out_leb128(&ctx->buf, ctx->module->imports.size + invoke_function_index,
+             "invoke func index");
+}
+
+static void after_invoke(void* user_data) {
+}
+
 static void assert_invalid_error(WasmSourceLocation loc,
                                  const char* msg,
                                  void* user_data) {
@@ -652,7 +899,20 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
 
   int result;
   if (multi_module) {
+    if (g_outfile) {
+      callbacks.before_module = before_module_multi;
+      callbacks.after_module = after_module_multi;
+      callbacks.before_assert_eq = before_assert_eq;
+      callbacks.after_assert_eq = after_assert_eq;
+      callbacks.before_invoke = before_invoke;
+      callbacks.after_invoke = after_invoke;
+      init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+    }
     result = wasm_parse_file(source, &callbacks);
+    if (g_outfile) {
+      finish_module(&ctx);
+      write_output_buffer(&ctx.js_buf, g_outfile);
+    }
   } else {
     result = wasm_parse_module(source, &callbacks);
     if (result == 0 && g_outfile)

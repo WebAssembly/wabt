@@ -13,6 +13,7 @@ BUILT_D8 = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8-native-prototype',
                         'v8', 'v8', 'out', 'Release', 'd8')
 DOWNLOAD_D8 = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
+SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
 
 
 class Error(Exception):
@@ -25,6 +26,7 @@ def main(args):
                       help='override executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--spec', help='run spec tests.', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -49,6 +51,8 @@ def main(args):
     cmd = [exe, options.file, '-o', generated.name]
     if options.verbose:
       cmd.append('-v')
+    if options.spec:
+      cmd.append('--multi-module')
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
@@ -64,7 +68,13 @@ def main(args):
 
     # Now run the generated file
     try:
-      subprocess.check_call([d8, WASM_JS, '--', generated.name])
+      if options.spec:
+        # The generated file is JavaScript, so run it directly.
+        cmd = [d8, SPEC_JS, generated.name]
+      else:
+        cmd = [d8, WASM_JS, '--', generated.name]
+
+      subprocess.check_call(cmd)
     except subprocess.CalledProcessError as e:
       raise Error(str(e))
   finally:
