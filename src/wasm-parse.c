@@ -121,7 +121,6 @@ static void* append_element(void** data,
 DEFINE_VECTOR(binding, WasmBinding)
 DEFINE_VECTOR(variable, WasmVariable)
 DEFINE_VECTOR(function, WasmFunction)
-DEFINE_VECTOR(export, WasmExport)
 DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
 
@@ -1680,14 +1679,12 @@ static void wasm_destroy_module(WasmModule* module) {
     wasm_destroy_variable_vector(&function->locals);
     wasm_destroy_binding_list(&function->local_bindings);
     wasm_destroy_binding_list(&function->labels);
+    free(function->exported_name);
   }
   wasm_destroy_binding_list(&module->function_bindings);
   wasm_destroy_binding_list(&module->global_bindings);
   wasm_destroy_function_vector(&module->functions);
   wasm_destroy_variable_vector(&module->globals);
-  for (i = 0; i < module->exports.size; ++i)
-    free(module->exports.data[i].name);
-  wasm_destroy_export_vector(&module->exports);
   wasm_destroy_binding_list(&module->import_bindings);
   for (i = 0; i < module->imports.size; ++i) {
     WasmImport* import = &module->imports.data[i];
@@ -1735,14 +1732,12 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
         t = read_token(parser);
         expect_string(parser, t);
         int index = parse_function_var(parser, module);
-
-        WasmExport* export = wasm_append_export(&module->exports);
-        CHECK_ALLOC(parser, export, t.range.start);
-        export->name = dup_string_contents(t);
-        export->index = index;
+        WasmFunction* function = &module->functions.data[index];
+        function->exported_name = dup_string_contents(t);
+        function->exported = 1;
 
         expect_close(parser, read_token(parser));
-        CALLBACK(parser, after_export, (module, export, parser->user_data));
+        CALLBACK(parser, after_export, (module, function, parser->user_data));
         break;
       }
 
@@ -1811,10 +1806,10 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
   /* Find the function with this exported name */
   int i;
   int function_index = -1;
-  for (i = 0; i < module->exports.size; ++i) {
-    WasmExport* export = &module->exports.data[i];
-    if (strcmp(name, export->name) == 0) {
-      function_index = export->index;
+  for (i = 0; i < module->functions.size; ++i) {
+    WasmFunction* function = &module->functions.data[i];
+    if (strcmp(name, function->exported_name) == 0) {
+      function_index = i;
       break;
     }
   }

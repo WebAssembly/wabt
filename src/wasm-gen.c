@@ -294,11 +294,12 @@ static void out_module_footer(OutputBuffer* buf, WasmModule* module) {
     out_u32_at(buf, import->offset, buf->size, "FIXUP import name offset");
     out_cstr(buf, import->func_name, "import name");
   }
-  for (i = 0; i < module->exports.size; ++i) {
-    WasmExport* export = &module->exports.data[i];
-    WasmFunction* function = &module->functions.data[export->index];
-    out_u32_at(buf, function->offset, buf->size, "FIXUP func name offset");
-    out_cstr(buf, export->name, "export name");
+  for (i = 0; i < module->functions.size; ++i) {
+    WasmFunction* function = &module->functions.data[i];
+    if (function->exported) {
+      out_u32_at(buf, function->offset, buf->size, "FIXUP func name offset");
+      out_cstr(buf, function->exported_name, "export name");
+    }
   }
 }
 
@@ -356,11 +357,10 @@ static void after_function(WasmModule* module,
 static void before_export(WasmModule* module, void* user_data) {}
 
 static void after_export(WasmModule* module,
-                         WasmExport* export,
+                         WasmFunction* function,
                          void* user_data) {
   Context* ctx = user_data;
-  WasmFunction* exported = &module->functions.data[export->index];
-  out_u8_at(ctx->buf, exported->offset + FUNCTION_EXPORTED_OFFSET, 1,
+  out_u8_at(ctx->buf, function->offset + FUNCTION_EXPORTED_OFFSET, 1,
             "FIXUP func exported");
 }
 

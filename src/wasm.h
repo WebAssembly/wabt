@@ -231,14 +231,13 @@ typedef struct WasmFunction {
                     signature */
   int num_args;
   int depth;
+
+  /* exported and exported_name won't be valid until after the before_export
+   * callback */
+  char* exported_name;
+  int exported;
 } WasmFunction;
 DECLARE_VECTOR(function, WasmFunction)
-
-typedef struct WasmExport {
-  char* name;
-  int index;
-} WasmExport;
-DECLARE_VECTOR(export, WasmExport)
 
 typedef struct WasmImport {
   char* module_name;
@@ -264,7 +263,6 @@ typedef struct WasmModule {
   WasmBindingVector function_bindings;
   WasmVariableVector globals;
   WasmBindingVector global_bindings;
-  WasmExportVector exports;
   WasmImportVector imports;
   WasmBindingVector import_bindings;
   WasmSegmentVector segments;
