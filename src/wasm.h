@@ -226,8 +226,6 @@ typedef struct WasmFunction {
   WasmVariableVector locals; /* Includes args, they're at the start */
   WasmBindingVector local_bindings;
   WasmBindingVector labels;
-  size_t offset; /* offset in the output buffer (function bindings skip the
-                    signature */
   int num_args;
   int depth;
 
@@ -249,7 +247,6 @@ DECLARE_VECTOR(import, WasmImport)
 typedef void* WasmSegmentData;
 
 typedef struct WasmSegment {
-  size_t offset;
   size_t size;
   uint32_t address;
   WasmSegmentData data; /* don't access directly; call wasm_copy_segment_data */

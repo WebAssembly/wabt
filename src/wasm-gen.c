@@ -20,6 +20,7 @@
 #define FUNC_HEADERS_OFFSET(num_globals) \
   (GLOBAL_HEADERS_OFFSET + (num_globals)*GLOBAL_HEADER_SIZE)
 #define FUNC_HEADER_SIZE(num_args) (24 + (num_args))
+#define SEGMENT_HEADER_SIZE 13
 
 /* offsets from the start of a function header */
 #define FUNC_SIG_SIZE(num_args) (2 + (num_args))
@@ -36,6 +37,15 @@ typedef struct OutputBuffer {
   size_t size;
   size_t capacity;
 } OutputBuffer;
+
+typedef struct Context {
+  WasmModule* module;
+  OutputBuffer* buf;
+  uint32_t function_num_exprs_offset;
+  /* offset of each function/segment header in buf. */
+  uint32_t* function_header_offsets;
+  uint32_t* segment_header_offsets;
+} Context;
 
 extern const char* g_outfile;
 extern int g_dump_module;
@@ -204,7 +214,8 @@ static void destroy_output_buffer(OutputBuffer* buf) {
   free(buf->start);
 }
 
-static void out_module_header(OutputBuffer* buf, WasmModule* module) {
+static void out_module_header(Context* ctx, WasmModule* module) {
+  OutputBuffer* buf = ctx->buf;
   out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
   out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
   out_u16(buf, module->globals.size, "num globals");
@@ -250,7 +261,6 @@ static void out_module_header(OutputBuffer* buf, WasmModule* module) {
     if (g_verbose)
       printf("; function header %d\n", i);
 
-    function->offset = buf->size;
     out_u8(buf, function->num_args, "func num args");
     out_u8(buf, function->result_type, "func result type");
     int j;
@@ -276,7 +286,6 @@ static void out_module_header(OutputBuffer* buf, WasmModule* module) {
     WasmSegment* segment = &module->segments.data[i];
     if (g_verbose)
       printf("; segment header %d\n", i);
-    segment->offset = buf->size;
     out_u32(buf, segment->address, "segment address");
     out_u32(buf, 0, "segment data offset");
     out_u32(buf, segment->size, "segment size");
@@ -284,14 +293,15 @@ static void out_module_header(OutputBuffer* buf, WasmModule* module) {
   }
 }
 
-static void out_module_footer(OutputBuffer* buf, WasmModule* module) {
+static void out_module_footer(Context* ctx, WasmModule* module) {
+  OutputBuffer* buf = ctx->buf;
   int i;
   for (i = 0; i < module->segments.size; ++i) {
     if (g_verbose)
       printf("; segment data %d\n", i);
     WasmSegment* segment = &module->segments.data[i];
-    out_u32_at(buf, segment->offset + SEGMENT_HEADER_DATA_OFFSET, buf->size,
-               "FIXUP segment data offset");
+    out_u32_at(buf, ctx->segment_header_offsets[i] + SEGMENT_HEADER_DATA_OFFSET,
+               buf->size, "FIXUP segment data offset");
     out_segment(buf, segment, "segment data");
   }
 
@@ -317,26 +327,41 @@ static void out_module_footer(OutputBuffer* buf, WasmModule* module) {
   }
 }
 
-typedef struct Context {
-  WasmModule* module;
-  OutputBuffer* buf;
-  int function_num_exprs_offset;
-} Context;
-
 static void error(WasmSourceLocation loc, const char* msg, void* user_data) {
   fprintf(stderr, "%s:%d:%d: %s", loc.source->filename, loc.line, loc.col, msg);
 }
 
 static void before_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
+  ctx->function_header_offsets = realloc(
+      ctx->function_header_offsets, module->functions.size * sizeof(uint32_t));
+  int i;
+  uint32_t offset = FUNC_HEADERS_OFFSET(module->globals.size);
+  /* skip past the import headers */
+  for (i = 0; i < module->imports.size; ++i)
+    offset += FUNC_HEADER_SIZE(module->imports.data[i].args.size);
+
+  for (i = 0; i < module->functions.size; ++i) {
+    WasmFunction* function = &module->functions.data[i];
+    ctx->function_header_offsets[i] = offset;
+    offset += FUNC_HEADER_SIZE(function->num_args);
+  }
+
+  ctx->segment_header_offsets = realloc(
+      ctx->segment_header_offsets, module->segments.size * sizeof(uint32_t));
+  for (i = 0; i < module->segments.size; ++i) {
+    ctx->segment_header_offsets[i] = offset;
+    offset += SEGMENT_HEADER_SIZE;
+  }
+
   ctx->module = module;
   init_output_buffer(ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
-  out_module_header(ctx->buf, module);
+  out_module_header(ctx, module);
 }
 
 static void after_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
-  out_module_footer(ctx->buf, module);
+  out_module_footer(ctx, module);
   if (g_dump_module)
     dump_output_buffer(ctx->buf);
 }
@@ -345,10 +370,10 @@ static void before_function(WasmModule* module,
                             WasmFunction* function,
                             void* user_data) {
   Context* ctx = user_data;
-  int function_index = function - module->functions.data + 1;
+  int function_index = function - module->functions.data;
   if (g_verbose)
-    printf("; function data %d\n", function_index - 1);
-  out_u32_at(ctx->buf, function->offset +
+    printf("; function data %d\n", function_index);
+  out_u32_at(ctx->buf, ctx->function_header_offsets[function_index] +
                            FUNC_HEADER_CODE_START_OFFSET(function->num_args),
              ctx->buf->size, "FIXUP func code start offset");
   /* The v8-native-prototype requires all functions to have a toplevel
@@ -363,10 +388,11 @@ static void after_function(WasmModule* module,
                            int num_exprs,
                            void* user_data) {
   Context* ctx = user_data;
+  int function_index = function - module->functions.data;
   out_u8_at(ctx->buf, ctx->function_num_exprs_offset, num_exprs,
             "FIXUP toplevel block num expressions");
-  out_u32_at(ctx->buf,
-             function->offset + FUNC_HEADER_CODE_END_OFFSET(function->num_args),
+  out_u32_at(ctx->buf, ctx->function_header_offsets[function_index] +
+                           FUNC_HEADER_CODE_END_OFFSET(function->num_args),
              ctx->buf->size, "FIXUP func code end offset");
 }
 
@@ -376,8 +402,9 @@ static void after_export(WasmModule* module,
                          WasmFunction* function,
                          void* user_data) {
   Context* ctx = user_data;
-  out_u8_at(ctx->buf,
-            function->offset + FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
+  int function_index = function - module->functions.data;
+  out_u8_at(ctx->buf, ctx->function_header_offsets[function_index] +
+                          FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
             1, "FIXUP func exported");
 }
 
@@ -583,7 +610,7 @@ static void assert_invalid_error(WasmSourceLocation loc,
 int wasm_gen_file(WasmSource* source, int multi_module) {
   OutputBuffer buf = {};
 
-  Context ctx;
+  Context ctx = {};
   ctx.buf = &buf;
 
   WasmParserCallbacks callbacks = {};
@@ -631,5 +658,7 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   }
 
   destroy_output_buffer(&buf);
+  free(ctx.function_header_offsets);
+  free(ctx.segment_header_offsets);
   return result;
 }
