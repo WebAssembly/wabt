@@ -213,7 +213,6 @@ typedef struct WasmBinding {
 DECLARE_VECTOR(binding, WasmBinding)
 
 typedef struct WasmVariable {
-  size_t offset;
   WasmType type;
   /* The v8-native-prototype stores locals in i32/i64/f32/f64 order, where all
    * variables of one type are grouped. index maps to this variable to its
@@ -244,7 +243,6 @@ typedef struct WasmImport {
   char* func_name;
   WasmType result_type;
   WasmVariableVector args;
-  size_t offset; /* offset of the import name in the output buffer */
 } WasmImport;
 DECLARE_VECTOR(import, WasmImport)
 

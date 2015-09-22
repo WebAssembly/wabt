@@ -1379,7 +1379,6 @@ static void parse_type_list(WasmParser* parser,
     WasmVariable* variable = wasm_append_variable(variables);
     CHECK_ALLOC(parser, variable, t.range.start);
     variable->type = type;
-    variable->offset = 0;
     variable->index = 0;
 
     t = read_token(parser);
@@ -1413,7 +1412,6 @@ static void preparse_binding_list(WasmParser* parser,
     WasmVariable* variable = wasm_append_variable(variables);
     CHECK_ALLOC(parser, variable, t.range.start);
     variable->type = type;
-    variable->offset = 0;
     variable->index = 0;
 
     WasmBinding* binding = wasm_append_binding(bindings);
