@@ -473,9 +473,15 @@ static void after_export(WasmModule* module,
                          void* user_data) {
   Context* ctx = user_data;
   int function_index = function - module->functions.data;
-  out_u8_at(&ctx->buf, ctx->function_header_offsets[function_index] +
-                          FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
-            1, "FIXUP func exported");
+  /* HACK(binji): v8-native-prototype crashes when you export functions that
+   return i64. This unfortunately prevents assert_eq on functions that return
+   i64. For now, don't mark those functions as exported in the generated
+   output. */
+  if (function->result_type != WASM_TYPE_I64) {
+    out_u8_at(&ctx->buf, ctx->function_header_offsets[function_index] +
+                            FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
+              1, "FIXUP func exported");
+  }
 }
 
 static WasmParserCookie before_block(void* user_data) {

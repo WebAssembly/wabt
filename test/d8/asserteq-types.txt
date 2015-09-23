@@ -14,13 +14,11 @@
     (f64.add (get_local 0) (f64.const 1)))
 
   (export "i32" $i32)
-;; looks like v8-native-prototype crashes when you export a function that
-;; returns an i64
-;;  (export "i64" $i64)
+  (export "i64" $i64)
   (export "f32" $f32)
   (export "f64" $f64))
 (assert_eq (invoke "i32" (i32.const 1)) (i32.const 2))
-;;(assert_eq (invoke "i64" (i64.const 1)) (i64.const 2))
+(assert_eq (invoke "i64" (i64.const 1)) (i64.const 2))
 (assert_eq (invoke "f32" (f32.const 1)) (f32.const 2))
 (assert_eq (invoke "f64" (f64.const 1)) (f64.const 2))
 # STDOUT:
@@ -28,4 +26,5 @@ instantiating module
 $assert_eq_0 OK
 $assert_eq_1 OK
 $assert_eq_2 OK
-3/3 tests passed.
+$assert_eq_3 OK
+4/4 tests passed.
