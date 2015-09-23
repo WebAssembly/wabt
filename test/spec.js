@@ -19,6 +19,7 @@ function runTests(module) {
         var f = module[name];
         var result = f();
         if (result == 1) {
+          print(name + " OK");
           passed++;
         } else {
           print(name + " failed, expected 1, got " + result);

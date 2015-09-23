@@ -7,4 +7,6 @@
 (assert_eq (invoke "f" (i32.const -100)) (i32.const -100))
 # STDOUT:
 instantiating module
+$assert_eq_0 OK
+$assert_eq_1 OK
 2/2 tests passed.
