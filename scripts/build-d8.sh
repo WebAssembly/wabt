@@ -19,15 +19,20 @@ export PATH=$PWD/depot_tools:$PATH
 if [[ ! -d v8 ]]; then
   echo "Fetching v8"
   mkdir v8
-  cd v8
+  pushd v8
   fetch --no-history v8
   ln -fs $PWD/.. v8/third_party/wasm
-  cd ..
+  popd
+else
+  pushd v8/v8
+  git fetch origin
+  git checkout origin/master
+  popd
 fi
 
-cd v8
+pushd v8
 gclient update
-cd ..
+popd
 
 # Don't use the CC from the environment; v8 doesn't seem to build properly with
 # it.
