@@ -6,11 +6,6 @@ function createModule(a) {
   return module;
 }
 
-function assert(x) {
-  if (!x)
-    throw('Error!');
-};
-
 function startsWith(s, prefix) {
   return s.lastIndexOf(prefix, 0) == 0;
 }
@@ -29,6 +24,9 @@ function runTests(module) {
           print(name + " failed, expected 1, got " + result);
           failed++;
         }
+      } else if (startsWith(name, '$invoke')) {
+        var f = module[name];
+        print(name + " = " + f());
       }
     }
   }

@@ -50,9 +50,11 @@ typedef struct Context {
   WasmModule* module;
   uint32_t function_num_exprs_offset;
   int assert_eq_count;
+  int invoke_count;
   /* offset of each function/segment header in buf. */
   uint32_t* function_header_offsets;
   uint32_t* segment_header_offsets;
+  int in_assert_eq;
 } Context;
 
 extern const char* g_outfile;
@@ -710,6 +712,7 @@ static void after_module_multi(WasmModule* module, void* user_data) {
 
 static void before_assert_eq(void* user_data) {
   Context* ctx = user_data;
+  ctx->in_assert_eq = 1;
   if (g_verbose)
     printf("; before assert_eq_%d\n", ctx->assert_eq_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
@@ -718,12 +721,9 @@ static void before_assert_eq(void* user_data) {
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
 }
 
-static void after_assert_eq(void* user_data) {
-  /* We now have the data for the assert_eq function in ctx->buf. Add this as a
+static void append_nullary_function(Context* ctx, const char* name) {
+  /* We assume that the data for the function in ctx->buf. Add this as a
    new function to ctx->temp_buf. */
-  Context* ctx = user_data;
-  char name[256];
-  snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
   const size_t header_size = FUNC_HEADER_SIZE(0);
   const size_t data_size = ctx->buf.size;
   const size_t name_size = strlen(name) + 1;
@@ -808,12 +808,12 @@ static void after_assert_eq(void* user_data) {
 
   /* write the new name */
   const uint32_t new_name_offset = new_size - name_size;
-  out_data(&ctx->temp_buf, new_name_offset, name, name_size, "assert_eq name");
+  out_data(&ctx->temp_buf, new_name_offset, name, name_size, "func name");
 
   /* write the new function data */
   const uint32_t new_data_offset = old_func_data_end + header_size;
   out_data(&ctx->temp_buf, new_data_offset, ctx->buf.start, ctx->buf.size,
-           "assert_eq func data");
+           "func func data");
 
   /* move everything between the end of the function headers and the end of the
    function data down */
@@ -828,22 +828,38 @@ static void after_assert_eq(void* user_data) {
   }
   memset(ctx->temp_buf.start + new_header_offset, 0, FUNC_HEADER_SIZE(0));
   out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
-            WASM_TYPE_I32, "assert_eq result type");
+            WASM_TYPE_I32, "func result type");
   out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_NAME_OFFSET(0),
-             new_name_offset, "assert_eq name offset");
+             new_name_offset, "func name offset");
   out_u32_at(&ctx->temp_buf,
              new_header_offset + FUNC_HEADER_CODE_START_OFFSET(0),
-             new_data_offset, "assert_eq code start offset");
+             new_data_offset, "func code start offset");
   out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_CODE_END_OFFSET(0),
-             new_data_offset + data_size, "assert_eq code end offset");
+             new_data_offset + data_size, "func code end offset");
   out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_EXPORTED_OFFSET(0),
-            1, "assert_eq export");
+            1, "func export");
+}
+
+static void after_assert_eq(void* user_data) {
+  Context* ctx = user_data;
+  char name[256];
+  snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
+  append_nullary_function(ctx, name);
+  ctx->in_assert_eq = 0;
 }
 
 static void before_invoke(const char* invoke_name,
                           int invoke_function_index,
                           void* user_data) {
   Context* ctx = user_data;
+  if (!ctx->in_assert_eq) {
+    if (g_verbose)
+      printf("; before invoke_%d\n", ctx->invoke_count);
+    init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+    out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
+    out_u8(&ctx->buf, 1, "invoke eq block num expressions");
+  }
+
   out_opcode(&ctx->buf, WASM_OPCODE_CALL);
   /* defined functions are always after all imports */
   out_leb128(&ctx->buf, ctx->module->imports.size + invoke_function_index,
@@ -851,6 +867,12 @@ static void before_invoke(const char* invoke_name,
 }
 
 static void after_invoke(void* user_data) {
+  Context* ctx = user_data;
+  if (ctx->in_assert_eq)
+    return;
+  char name[256];
+  snprintf(name, 256, "$invoke_%d", ctx->invoke_count++);
+  append_nullary_function(ctx, name);
 }
 
 static void assert_invalid_error(WasmSourceLocation loc,
