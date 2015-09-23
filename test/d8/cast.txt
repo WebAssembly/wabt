@@ -1,12 +1,27 @@
 # EXE: test/run-d8.py
 (module
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "f32_reinterpret_i32" $f32_reinterpret_i32)
-    (func $f32_reinterpret_i32 (result f32)
-        (f32.reinterpret/i32 (i32.const 939524096)))
+  (export "f32_reinterpret_i32" $f32_reinterpret_i32)
+  (func $f32_reinterpret_i32 (result f32)
+    (f32.reinterpret/i32 (i32.const 0x40900000)))
 
-    (export "f64_reinterpret_i64" $f64_reinterpret_i64)
-    (func $f64_reinterpret_i64 (result f64) (f64.reinterpret/i64 (i64.const 0)))
-  ;)
+  (export "i32_reinterpret_f32" $i32_reinterpret_f32)
+  (func $i32_reinterpret_f32 (result i32)
+    (i32.reinterpret/f32 (f32.const -3.5)))
+
+  (export "f64_reinterpret_i64" $f64_reinterpret_i64)
+  (func $f64_reinterpret_i64 (result f64)
+    (f64.reinterpret/i64 (i64.const 0x405f480000000000)))
+
+  ;; v8-native-prototype currently crashes if you try to return an i64, so
+  ;; we'll do a comparison against the expected value instead.
+  (export "i64_reinterpret_f64" $i64_reinterpret_f64)
+  (func $i64_reinterpret_f64 (result i32)
+    (i64.eq
+      (i64.reinterpret/f64 (f64.const 1.375e10))
+      (i64.const 0x42099c82cc000000)))
 )
+# STDOUT:
+f32_reinterpret_i32() = 4.5
+i32_reinterpret_f32() = -1067450368
+f64_reinterpret_i64() = 125.125
+i64_reinterpret_f64() = 1

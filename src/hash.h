@@ -320,7 +320,7 @@ in_word_set (str, len)
       {"i32.mul", WASM_OP_BINARY, WASM_OPCODE_I32_MUL, WASM_TYPE_I32},
       {""},
 #line 147 "src/hash.txt"
-      {"i64.reinterpret/f64", WASM_OP_CONVERT, WASM_OPCODE_INVALID, WASM_TYPE_I64},
+      {"i64.reinterpret/f64", WASM_OP_CONVERT, WASM_OPCODE_I64_REINTERPRET_F64, WASM_TYPE_I64, WASM_TYPE_F64},
 #line 156 "src/hash.txt"
       {"i64.trunc_s/f32", WASM_OP_CONVERT, WASM_OPCODE_I64_SCONVERT_F32, WASM_TYPE_I64, WASM_TYPE_F32},
       {""},
@@ -458,7 +458,7 @@ in_word_set (str, len)
       {"i32.shl", WASM_OP_BINARY, WASM_OPCODE_I32_SHL, WASM_TYPE_I32},
       {""},
 #line 107 "src/hash.txt"
-      {"i32.reinterpret/f32", WASM_OP_CONVERT, WASM_OPCODE_INVALID, WASM_TYPE_I32},
+      {"i32.reinterpret/f32", WASM_OP_CONVERT, WASM_OPCODE_I32_REINTERPRET_F32, WASM_TYPE_I32, WASM_TYPE_F32},
       {""},
 #line 58 "src/hash.txt"
       {"f64.eq", WASM_OP_COMPARE, WASM_OPCODE_F64_EQ, WASM_TYPE_F64},

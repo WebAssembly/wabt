@@ -175,7 +175,9 @@ typedef enum WasmType {
   V(F64_SCONVERT_I64, 0xb0)    \
   V(F64_UCONVERT_I64, 0xb1)    \
   V(F64_CONVERT_F32, 0xb2)     \
-  V(F64_REINTERPRET_I64, 0xb3)
+  V(F64_REINTERPRET_I64, 0xb3) \
+  V(I32_REINTERPRET_F32, 0xb4) \
+  V(I64_REINTERPRET_F64, 0xb5)
 
 typedef enum WasmOpcode {
   WASM_OPCODE_INVALID = -1,

@@ -2,7 +2,6 @@
 (module
   (func
     (f32.reinterpret/i32 (i32.const 0))
-;;    (i32.reinterpret/f32 (f32.const 0))
+    (i32.reinterpret/f32 (f32.const 0))
     (f64.reinterpret/i64 (i64.const 0))
-;;    (i64.reinterpret/f64 (f64.const 0))
-  ))
+    (i64.reinterpret/f64 (f64.const 0))))
