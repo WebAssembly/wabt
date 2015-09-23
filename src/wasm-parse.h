@@ -58,8 +58,10 @@ typedef struct WasmParserCallbacks {
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
 
   /* used in spec repo tests */
-  void (*before_assert_eq)(void* user_data);
-  void (*after_assert_eq)(void* user_data);
+  WasmParserCookie (*before_assert_eq)(void* user_data);
+  void (*after_assert_eq)(WasmType type,
+                          WasmParserCookie cookie,
+                          void* user_data);
   void (*before_invoke)(const char* invoke_name,
                         int invoke_function_index,
                         void* user_data);

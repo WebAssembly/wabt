@@ -710,7 +710,7 @@ static void after_module_multi(WasmModule* module, void* user_data) {
   ctx->assert_eq_count = 0;
 }
 
-static void before_assert_eq(void* user_data) {
+static WasmParserCookie before_assert_eq(void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert_eq = 1;
   if (g_verbose)
@@ -718,7 +718,9 @@ static void before_assert_eq(void* user_data) {
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 1, "assert eq block num expressions");
+  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
+  return cookie;
 }
 
 static void append_nullary_function(Context* ctx, const char* name) {
@@ -840,11 +842,36 @@ static void append_nullary_function(Context* ctx, const char* name) {
             1, "func export");
 }
 
-static void after_assert_eq(void* user_data) {
+static void after_assert_eq(WasmType type,
+                            WasmParserCookie cookie,
+                            void* user_data) {
   Context* ctx = user_data;
+
+  uint32_t offset = (uint32_t)cookie;
+  WasmOpcode opcode;
+  switch (type) {
+    case WASM_TYPE_I32:
+      opcode = WASM_OPCODE_I32_EQ;
+      break;
+    case WASM_TYPE_I64:
+      opcode = WASM_OPCODE_I64_EQ;
+      break;
+    case WASM_TYPE_F32:
+      opcode = WASM_OPCODE_F32_EQ;
+      break;
+    case WASM_TYPE_F64:
+      opcode = WASM_OPCODE_F64_EQ;
+      break;
+    default:
+      assert(0);
+  }
+
+  out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_eq opcode");
+
   char name[256];
   snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
   append_nullary_function(ctx, name);
+
   ctx->in_assert_eq = 0;
 }
 

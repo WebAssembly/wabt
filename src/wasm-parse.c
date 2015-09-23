@@ -1806,7 +1806,7 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
   int function_index = -1;
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
-    if (strcmp(name, function->exported_name) == 0) {
+    if (function->exported && strcmp(name, function->exported_name) == 0) {
       function_index = i;
       break;
     }
@@ -1866,14 +1866,16 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
 
-        CALLBACK(parser, before_assert_eq, (parser->user_data));
+        WasmParserCookie cookie =
+            CALLBACK(parser, before_assert_eq, (parser->user_data));
 
         WasmFunction dummy_function = {};
         WasmType left_type = parse_invoke(parser, &module);
         WasmType right_type = parse_expr(parser, &module, &dummy_function);
         check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
 
-        CALLBACK(parser, after_assert_eq, (parser->user_data));
+        CALLBACK(parser, after_assert_eq,
+                 (left_type, cookie, parser->user_data));
         expect_close(parser, read_token(parser));
         break;
       }
