@@ -1,0 +1,32 @@
+# EXE: test/run-d8.py
+# FLAGS: --spec
+(module
+  (memory 100 (segment 0 "hello") (segment 20 "goodbye"))
+  (global $n i32)
+  (global $m i32)
+  (func $f (result i32) (i32.const 1))
+  (func $g (param i32) (result i32)
+    (store_global $m (i32.add (load_global $m) (i32.const 1)))
+    (i32.add (get_local 0) (load_global $m)))
+  (func $h (param i32) (result i32)
+    (i32.load8_u (get_local 0)))
+  (export "f" $f)
+  (export "g" $g)
+  (export "h" $h))
+(assert_eq (invoke "f") (i32.const 1))
+(assert_eq (invoke "g" (i32.const 1)) (i32.const 2))
+(assert_eq (invoke "g" (i32.const 1)) (i32.const 3))
+(assert_eq (invoke "g" (i32.const 11)) (i32.const 14))
+(assert_eq (invoke "g" (i32.const 111)) (i32.const 115))
+(assert_eq (invoke "h" (i32.const 0)) (i32.const 104))  ;; h
+(assert_eq (invoke "h" (i32.const 20)) (i32.const 103))  ;; g
+# STDOUT:
+instantiating module
+$assert_eq_0 OK
+$assert_eq_1 OK
+$assert_eq_2 OK
+$assert_eq_3 OK
+$assert_eq_4 OK
+$assert_eq_5 OK
+$assert_eq_6 OK
+7/7 tests passed.
