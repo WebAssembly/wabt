@@ -139,10 +139,14 @@ class TestInfo(object):
     self.expected_stderr = ''.join(stderr_lines)
 
   def GetExecutable(self, override_exe):
-    if override_exe:
-      exe = override_exe
-    elif self.exe:
+    # If the test overrides the executable, we assume that it knows best, so we
+    # don't allow the commandline to override it. Instead, we assume that
+    # executable will take the "-e" flag to specify the sexpr-wasm executable
+    # to run.
+    if self.exe:
       exe = os.path.join(REPO_ROOT_DIR, self.exe)
+    elif override_exe:
+      exe = override_exe
     else:
       exe = DEFAULT_EXE
     return os.path.abspath(os.path.join(SCRIPT_DIR, exe))
@@ -150,6 +154,9 @@ class TestInfo(object):
   def GetCommand(self, filename, override_exe=None):
     cmd = [self.GetExecutable(override_exe)]
     cmd += self.flags
+    # See comment in GetExecutable above
+    if self.exe and override_exe:
+      cmd += ['-e', override_exe]
     cmd += [filename]
     cmd += ['--'] + AsList(self.args)
     return cmd
