@@ -273,7 +273,9 @@ static int read_int32(const char** s,
     has_sign = 1;
     (*s)++;
   }
-  int result = read_uint64(s, end, &value);
+  if (!read_uint64(s, end, &value))
+    return 0;
+
   if (has_sign) {
     if (value > (uint64_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
       return 0;
@@ -283,7 +285,7 @@ static int read_int32(const char** s,
       return 0;
   }
   *out = (uint32_t)value;
-  return result;
+  return 1;
 }
 
 static int read_double(const char** s, const char* end, double* out) {
@@ -1567,22 +1569,20 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
           t = read_token(parser);
           expect_atom(parser, t);
 
-          WasmSegment* segment = wasm_append_segment(&module->segments);
-          CHECK_ALLOC(parser, segment, t.range.start);
-
-          if (!read_uint32_token(t, &segment->address))
+          uint32_t address;
+          if (!read_uint32_token(t, &address))
             FATAL_AT(parser, t.range.start, "invalid memory segment address\n");
 
-          if (segment->address < last_segment_end) {
+          if (address < last_segment_end) {
             FATAL_AT(parser, t.range.start,
                      "address (%u) less than end of previous segment (%u)\n",
-                     segment->address, last_segment_end);
+                     address, last_segment_end);
           }
 
-          if (segment->address >= module->initial_memory_size) {
+          if (address >= module->initial_memory_size) {
             FATAL_AT(parser, t.range.start,
                      "address (%u) greater than initial memory size (%u)\n",
-                     segment->address, module->initial_memory_size);
+                     address, module->initial_memory_size);
           }
 
           t = read_token(parser);
@@ -1591,6 +1591,10 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
            object from the caller */
           WasmSegmentData data = malloc(sizeof(WasmToken));
           *(WasmToken*)data = t;
+
+          WasmSegment* segment = wasm_append_segment(&module->segments);
+          CHECK_ALLOC(parser, segment, t.range.start);
+          segment->address = address;
           segment->data = data;
           segment->size = string_contents_length(t);
 

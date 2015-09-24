@@ -90,7 +90,7 @@ static void usage(const char* prog) {
 
 static void parse_options(int argc, char** argv) {
   int c;
-  int option_index;
+  int option_index = 0;
 
   while (1) {
     c = getopt_long(argc, argv, "vhdo:", g_long_options, &option_index);
