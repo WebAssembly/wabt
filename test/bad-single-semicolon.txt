@@ -1,0 +1,5 @@
+# ERROR: 1
+; foo bar
+(module)
+# STDERR:
+bad-single-semicolon.txt:2:1: unexpected semicolon

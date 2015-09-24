@@ -384,6 +384,8 @@ static WasmToken read_token(WasmParser* parser) {
             t->loc.col++;
             t->loc.pos++;
           }
+        } else {
+          FATAL_AT(parser, t->loc, "unexpected semicolon\n");
         }
         break;
 
