@@ -1266,6 +1266,7 @@ static WasmType parse_expr(WasmParser* parser,
 
       check_type(parser, t.range.start, result_type, function->result_type, "");
       type = result_type;
+      CALLBACK(parser, after_return, (type, parser->user_data));
       break;
     }
 

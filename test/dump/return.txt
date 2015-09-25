@@ -1,12 +1,13 @@
 # FLAGS: -dv
 (module
   (func (result i32)
-    (return (i32.const 42))))
+    (return (i32.const 42)))
+  (func (return)))
 # STDOUT:
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
-0000004: 0100                                       ; num funcs
+0000004: 0200                                       ; num funcs
 0000006: 0000                                       ; num data segments
 ; function header 0
 0000008: 00                                         ; func num args
@@ -20,13 +21,30 @@
 000001c: 0000                                       ; num local f64
 000001e: 00                                         ; export func
 000001f: 00                                         ; func external
+; function header 1
+0000020: 00                                         ; func num args
+0000021: 00                                         ; func result type
+0000022: 0000 0000                                  ; func name offset
+0000026: 0000 0000                                  ; func code start offset
+000002a: 0000 0000                                  ; func code end offset
+000002e: 0000                                       ; num local i32
+0000030: 0000                                       ; num local i64
+0000032: 0000                                       ; num local f32
+0000034: 0000                                       ; num local f64
+0000036: 00                                         ; export func
+0000037: 00                                         ; func external
 ; function data 0
-000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 09                                         ; OPCODE_RETURN
-0000021: 10                                         ; OPCODE_I8_CONST
-0000022: 2a                                         ; u8 literal
-0000012: 2300 0000                                  ; FIXUP func code end offset
+000000e: 3800 0000                                  ; FIXUP func code start offset
+0000038: 09                                         ; OPCODE_RETURN
+0000039: 10                                         ; OPCODE_I8_CONST
+000003a: 2a                                         ; u8 literal
+0000012: 3b00 0000                                  ; FIXUP func code end offset
+; function data 1
+0000026: 3b00 0000                                  ; FIXUP func code start offset
+000003b: 09                                         ; OPCODE_RETURN
+000002a: 3c00 0000                                  ; FIXUP func code end offset
 ; names
-0000000: 0001 0000 0100 0000 0001 0000 0000 2000  .............. .
-0000010: 0000 2300 0000 0000 0000 0000 0000 0000  ..#.............
-0000020: 0910 2a                                  ..*
+0000000: 0001 0000 0200 0000 0001 0000 0000 3800  ..............8.
+0000010: 0000 3b00 0000 0000 0000 0000 0000 0000  ..;.............
+0000020: 0000 0000 0000 3b00 0000 3c00 0000 0000  ......;...<.....
+0000030: 0000 0000 0000 0000 0910 2a09            ..........*.
