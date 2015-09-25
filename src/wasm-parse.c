@@ -1411,8 +1411,8 @@ static void preparse_binding_list(WasmParser* parser,
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
     if (get_binding_by_name(bindings, name) != -1) {
       free(name);
-      FATAL_AT(parser, t.range.start, "redefinition of %s \"%s\"\n", desc,
-               name);
+      FATAL_AT(parser, t.range.start, "redefinition of %s \"%.*s\"\n", desc,
+               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
     }
 
     WasmVariable* variable = wasm_append_variable(variables);
@@ -1464,8 +1464,8 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
     if (get_binding_by_name(&module->function_bindings, name) != -1) {
       free(name);
-      FATAL_AT(parser, t.range.start, "redefinition of function \"%s\"\n",
-               name);
+      FATAL_AT(parser, t.range.start, "redefinition of function \"%.*s\"\n",
+               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
     }
 
     WasmBinding* binding = wasm_append_binding(&module->function_bindings);
@@ -1630,8 +1630,9 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
               strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
           if (get_binding_by_name(&module->import_bindings, name) != -1) {
             free(name);
-            FATAL_AT(parser, t.range.start, "redefinition of import \"%s\"\n",
-                     name);
+            FATAL_AT(parser, t.range.start, "redefinition of import \"%.*s\"\n",
+                     (int)(t.range.end.pos - t.range.start.pos),
+                     t.range.start.pos);
           }
 
           WasmBinding* binding = wasm_append_binding(&module->import_bindings);
