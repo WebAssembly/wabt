@@ -8,9 +8,9 @@ script:
   - scripts/download-d8.sh
   - make everything
   - test/run-tests.py -v
-  - test/run-tests.py -e out/sexpr-wasm-asan -v
-  - test/run-tests.py -e out/sexpr-wasm-msan -v
-  - test/run-tests.py -e out/sexpr-wasm-lsan -v
+  - test/run-tests.py -e out/sexpr-wasm-asan -v --timeout=4
+  - test/run-tests.py -e out/sexpr-wasm-msan -v --timeout=4
+  - test/run-tests.py -e out/sexpr-wasm-lsan -v --timeout=4
 compiler:
   - clang
   - gcc
