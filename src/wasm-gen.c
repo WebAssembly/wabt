@@ -278,6 +278,7 @@ static void destroy_output_buffer(OutputBuffer* buf) {
 static void destroy_context(Context* ctx) {
   destroy_output_buffer(&ctx->buf);
   destroy_output_buffer(&ctx->temp_buf);
+  destroy_output_buffer(&ctx->js_buf);
   free(ctx->function_header_offsets);
   free(ctx->segment_header_offsets);
 }

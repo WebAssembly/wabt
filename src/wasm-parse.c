@@ -1409,9 +1409,11 @@ static void preparse_binding_list(WasmParser* parser,
 
     char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_binding_by_name(bindings, name) != -1)
+    if (get_binding_by_name(bindings, name) != -1) {
+      free(name);
       FATAL_AT(parser, t.range.start, "redefinition of %s \"%s\"\n", desc,
                name);
+    }
 
     WasmVariable* variable = wasm_append_variable(variables);
     CHECK_ALLOC(parser, variable, t.range.start);
@@ -1460,9 +1462,11 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
     /* named function */
     char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_binding_by_name(&module->function_bindings, name) != -1)
+    if (get_binding_by_name(&module->function_bindings, name) != -1) {
+      free(name);
       FATAL_AT(parser, t.range.start, "redefinition of function \"%s\"\n",
                name);
+    }
 
     WasmBinding* binding = wasm_append_binding(&module->function_bindings);
     CHECK_ALLOC(parser, binding, t.range.start);
@@ -1624,9 +1628,11 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
           expect_var_name(parser, t);
           char* name =
               strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-          if (get_binding_by_name(&module->import_bindings, name) != -1)
+          if (get_binding_by_name(&module->import_bindings, name) != -1) {
+            free(name);
             FATAL_AT(parser, t.range.start, "redefinition of import \"%s\"\n",
                      name);
+          }
 
           WasmBinding* binding = wasm_append_binding(&module->import_bindings);
           CHECK_ALLOC(parser, binding, t.range.start);
@@ -1800,6 +1806,7 @@ int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
   WasmToken t = read_token(&parser);
   if (t.type != WASM_TOKEN_TYPE_EOF)
     FATAL_AT(&parser, t.range.start, "expected EOF\n");
+  wasm_destroy_module(&module);
   return 0;
 }
 
@@ -1817,9 +1824,11 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
       break;
     }
   }
-  if (function_index < 0)
+  if (function_index < 0) {
+    free(name);
     FATAL_AT(parser, t.range.start, "unknown function export %.*s\n",
              (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
+  }
 
   CALLBACK(parser, before_invoke, (name, function_index, parser->user_data));
   free(name);
