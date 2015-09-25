@@ -68,6 +68,9 @@ test-msan: out/sexpr-wasm-msan
 test-lsan: out/sexpr-wasm-lsan
 	@python test/run-tests.py -e $<
 
+.PHONY: test-everything
+test-everything: test test-asan test-msan test-lsan
+
 #### CLEAN ####
 .PHONY: clean
 clean:
