@@ -34,28 +34,24 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
+0000020: 15                                         ; OPCODE_GET_LOCAL
+0000021: 06                                         ; remapped local index
 0000022: 15                                         ; OPCODE_GET_LOCAL
-0000023: 06                                         ; remapped local index
+0000023: 04                                         ; remapped local index
 0000024: 15                                         ; OPCODE_GET_LOCAL
-0000025: 04                                         ; remapped local index
+0000025: 02                                         ; remapped local index
 0000026: 15                                         ; OPCODE_GET_LOCAL
-0000027: 02                                         ; remapped local index
+0000027: 00                                         ; remapped local index
 0000028: 15                                         ; OPCODE_GET_LOCAL
-0000029: 00                                         ; remapped local index
+0000029: 01                                         ; remapped local index
 000002a: 15                                         ; OPCODE_GET_LOCAL
-000002b: 01                                         ; remapped local index
+000002b: 05                                         ; remapped local index
 000002c: 15                                         ; OPCODE_GET_LOCAL
-000002d: 05                                         ; remapped local index
+000002d: 07                                         ; remapped local index
 000002e: 15                                         ; OPCODE_GET_LOCAL
-000002f: 07                                         ; remapped local index
-0000030: 15                                         ; OPCODE_GET_LOCAL
-0000031: 03                                         ; remapped local index
-0000021: 08                                         ; FIXUP toplevel block num expressions
-0000012: 3200 0000                                  ; FIXUP func code end offset
+000002f: 03                                         ; remapped local index
+0000012: 3000 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 3200 0000 0200 0200 0200 0200 0000  ..2.............
-0000020: 0308 1506 1504 1502 1500 1501 1505 1507  ................
-0000030: 1503                                     ..
+0000010: 0000 3000 0000 0200 0200 0200 0200 0000  ..0.............
+0000020: 1506 1504 1502 1500 1501 1505 1507 1503  ................

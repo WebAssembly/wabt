@@ -35,44 +35,41 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
-0000022: 11                                         ; OPCODE_I32_CONST
-0000023: 0000 0080                                  ; u32 literal
+0000020: 11                                         ; OPCODE_I32_CONST
+0000021: 0000 0080                                  ; u32 literal
+0000025: 10                                         ; OPCODE_I8_CONST
+0000026: ff                                         ; u8 literal
 0000027: 10                                         ; OPCODE_I8_CONST
-0000028: ff                                         ; u8 literal
+0000028: 00                                         ; u8 literal
 0000029: 10                                         ; OPCODE_I8_CONST
-000002a: 00                                         ; u8 literal
-000002b: 10                                         ; OPCODE_I8_CONST
-000002c: ff                                         ; u8 literal
-000002d: 12                                         ; OPCODE_I64_CONST
-000002e: 0000 0000 0000 0080                        ; u64 literal
-0000036: 12                                         ; OPCODE_I64_CONST
-0000037: ffff ffff ffff ffff                        ; u64 literal
-000003f: 12                                         ; OPCODE_I64_CONST
-0000040: 0000 0000 0000 0000                        ; u64 literal
-0000048: 12                                         ; OPCODE_I64_CONST
-0000049: ffff ffff ffff ffff                        ; u64 literal
-0000051: 14                                         ; OPCODE_F32_CONST
-0000052: 0000 0000                                  ; f32 literal
-0000056: 14                                         ; OPCODE_F32_CONST
-0000057: 1668 a965                                  ; f32 literal
-000005b: 14                                         ; OPCODE_F32_CONST
-000005c: 4020 4f37                                  ; f32 literal
-0000060: 13                                         ; OPCODE_F64_CONST
-0000061: 0000 0000 0000 0000                        ; f64 literal
-0000069: 13                                         ; OPCODE_F64_CONST
-000006a: b856 0e3c dd9a efbf                        ; f64 literal
-0000072: 13                                         ; OPCODE_F64_CONST
-0000073: 182d 4454 fb21 1940                        ; f64 literal
-0000021: 0e                                         ; FIXUP toplevel block num expressions
-0000012: 7b00 0000                                  ; FIXUP func code end offset
+000002a: ff                                         ; u8 literal
+000002b: 12                                         ; OPCODE_I64_CONST
+000002c: 0000 0000 0000 0080                        ; u64 literal
+0000034: 12                                         ; OPCODE_I64_CONST
+0000035: ffff ffff ffff ffff                        ; u64 literal
+000003d: 12                                         ; OPCODE_I64_CONST
+000003e: 0000 0000 0000 0000                        ; u64 literal
+0000046: 12                                         ; OPCODE_I64_CONST
+0000047: ffff ffff ffff ffff                        ; u64 literal
+000004f: 14                                         ; OPCODE_F32_CONST
+0000050: 0000 0000                                  ; f32 literal
+0000054: 14                                         ; OPCODE_F32_CONST
+0000055: 1668 a965                                  ; f32 literal
+0000059: 14                                         ; OPCODE_F32_CONST
+000005a: 4020 4f37                                  ; f32 literal
+000005e: 13                                         ; OPCODE_F64_CONST
+000005f: 0000 0000 0000 0000                        ; f64 literal
+0000067: 13                                         ; OPCODE_F64_CONST
+0000068: b856 0e3c dd9a efbf                        ; f64 literal
+0000070: 13                                         ; OPCODE_F64_CONST
+0000071: 182d 4454 fb21 1940                        ; f64 literal
+0000012: 7900 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 7b00 0000 0000 0000 0000 0000 0000  ..{.............
-0000020: 030e 1100 0000 8010 ff10 0010 ff12 0000  ................
-0000030: 0000 0000 0080 12ff ffff ffff ffff ff12  ................
-0000040: 0000 0000 0000 0000 12ff ffff ffff ffff  ................
-0000050: ff14 0000 0000 1416 68a9 6514 4020 4f37  ........h.e.@ O7
-0000060: 1300 0000 0000 0000 0013 b856 0e3c dd9a  ...........V.<..
-0000070: efbf 1318 2d44 54fb 2119 40              ....-DT.!.@
+0000010: 0000 7900 0000 0000 0000 0000 0000 0000  ..y.............
+0000020: 1100 0000 8010 ff10 0010 ff12 0000 0000  ................
+0000030: 0000 0080 12ff ffff ffff ffff ff12 0000  ................
+0000040: 0000 0000 0000 12ff ffff ffff ffff ff14  ................
+0000050: 0000 0000 1416 68a9 6514 4020 4f37 1300  ......h.e.@ O7..
+0000060: 0000 0000 0000 0013 b856 0e3c dd9a efbf  .........V.<....
+0000070: 1318 2d44 54fb 2119 40                   ..-DT.!.@

@@ -445,13 +445,8 @@ static void before_function(WasmModule* module,
   if (g_verbose)
     printf("; function data %d\n", function_index);
   out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
-                           FUNC_HEADER_CODE_START_OFFSET(function->num_args),
+                            FUNC_HEADER_CODE_START_OFFSET(function->num_args),
              ctx->buf.size, "FIXUP func code start offset");
-  /* The v8-native-prototype requires all functions to have a toplevel
-   block */
-  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
-  ctx->function_num_exprs_offset = ctx->buf.size;
-  out_u8(&ctx->buf, 0, "toplevel block num expressions");
 }
 
 static void after_function(WasmModule* module,
@@ -460,10 +455,8 @@ static void after_function(WasmModule* module,
                            void* user_data) {
   Context* ctx = user_data;
   int function_index = function - module->functions.data;
-  out_u8_at(&ctx->buf, ctx->function_num_exprs_offset, num_exprs,
-            "FIXUP toplevel block num expressions");
   out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
-                           FUNC_HEADER_CODE_END_OFFSET(function->num_args),
+                            FUNC_HEADER_CODE_END_OFFSET(function->num_args),
              ctx->buf.size, "FIXUP func code end offset");
 }
 
@@ -723,8 +716,6 @@ static WasmParserCookie before_assert_eq(void* user_data) {
   if (g_verbose)
     printf("; before assert_eq_%d\n", ctx->assert_eq_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
-  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
-  out_u8(&ctx->buf, 1, "assert eq block num expressions");
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
   return cookie;
@@ -890,8 +881,6 @@ static void before_invoke(const char* invoke_name,
     if (g_verbose)
       printf("; before invoke_%d\n", ctx->invoke_count);
     init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
-    out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
-    out_u8(&ctx->buf, 1, "invoke eq block num expressions");
   }
 
   out_opcode(&ctx->buf, WASM_OPCODE_CALL);

@@ -31,27 +31,24 @@
 0000027: 00                                         ; func external
 ; function data 0
 0000016: 2800 0000                                  ; FIXUP func code start offset
-0000028: 03                                         ; OPCODE_BLOCK
-0000029: 00                                         ; toplevel block num expressions
-000002a: 18                                         ; OPCODE_SET_GLOBAL
-000002b: 00                                         ; global index
-000002c: 40                                         ; OPCODE_I32_ADD
-000002d: 17                                         ; OPCODE_GET_GLOBAL
-000002e: 00                                         ; global index
-000002f: 10                                         ; OPCODE_I8_CONST
-0000030: 01                                         ; u8 literal
-0000031: 40                                         ; OPCODE_I32_ADD
+0000028: 18                                         ; OPCODE_SET_GLOBAL
+0000029: 00                                         ; global index
+000002a: 40                                         ; OPCODE_I32_ADD
+000002b: 17                                         ; OPCODE_GET_GLOBAL
+000002c: 00                                         ; global index
+000002d: 10                                         ; OPCODE_I8_CONST
+000002e: 01                                         ; u8 literal
+000002f: 40                                         ; OPCODE_I32_ADD
+0000030: 15                                         ; OPCODE_GET_LOCAL
+0000031: 00                                         ; remapped local index
 0000032: 15                                         ; OPCODE_GET_LOCAL
-0000033: 00                                         ; remapped local index
-0000034: 15                                         ; OPCODE_GET_LOCAL
-0000035: 01                                         ; remapped local index
-0000029: 02                                         ; FIXUP toplevel block num expressions
-000001a: 3600 0000                                  ; FIXUP func code end offset
+0000033: 01                                         ; remapped local index
+000001a: 3400 0000                                  ; FIXUP func code end offset
 0000026: 01                                         ; FIXUP func exported
 ; names
-0000012: 3600 0000                                  ; FIXUP func name offset
-0000036: 6600                                       ; export name
+0000012: 3400 0000                                  ; FIXUP func name offset
+0000034: 6600                                       ; export name
 0000000: 0001 0100 0100 0000 0000 0000 0400 0201  ................
-0000010: 0101 3600 0000 2800 0000 3600 0000 0000  ..6...(...6.....
-0000020: 0000 0000 0000 0100 0302 1800 4017 0010  ............@...
-0000030: 0140 1500 1501 6600                      .@....f.
+0000010: 0101 3400 0000 2800 0000 3400 0000 0000  ..4...(...4.....
+0000020: 0000 0000 0000 0100 1800 4017 0010 0140  ..........@....@
+0000030: 1500 1501 6600                           ....f.

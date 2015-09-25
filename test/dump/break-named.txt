@@ -29,28 +29,25 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
-0000022: 03                                         ; OPCODE_BLOCK
+0000021: 00                                         ; num expressions
+0000022: 06                                         ; OPCODE_LOOP
 0000023: 00                                         ; num expressions
-0000024: 06                                         ; OPCODE_LOOP
+0000024: 03                                         ; OPCODE_BLOCK
 0000025: 00                                         ; num expressions
-0000026: 03                                         ; OPCODE_BLOCK
-0000027: 00                                         ; num expressions
-0000028: 10                                         ; OPCODE_I8_CONST
-0000029: 00                                         ; u8 literal
-000002a: 03                                         ; OPCODE_BLOCK
-000002b: 00                                         ; num expressions
+0000026: 10                                         ; OPCODE_I8_CONST
+0000027: 00                                         ; u8 literal
+0000028: 03                                         ; OPCODE_BLOCK
+0000029: 00                                         ; num expressions
+000002a: 08                                         ; OPCODE_BREAK
+000002b: 00                                         ; break depth
 000002c: 08                                         ; OPCODE_BREAK
-000002d: 00                                         ; break depth
-000002e: 08                                         ; OPCODE_BREAK
-000002f: 03                                         ; break depth
-000002b: 02                                         ; FIXUP num expressions
-0000027: 02                                         ; FIXUP num expressions
-0000025: 01                                         ; FIXUP num expressions
+000002d: 03                                         ; break depth
+0000029: 02                                         ; FIXUP num expressions
+0000025: 02                                         ; FIXUP num expressions
 0000023: 01                                         ; FIXUP num expressions
-0000021: 01                                         ; FIXUP toplevel block num expressions
-0000012: 3000 0000                                  ; FIXUP func code end offset
+0000021: 01                                         ; FIXUP num expressions
+0000012: 2e00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 3000 0000 0000 0000 0000 0000 0000  ..0.............
-0000020: 0301 0301 0601 0302 1000 0302 0800 0803  ................
+0000010: 0000 2e00 0000 0000 0000 0000 0000 0000  ................
+0000020: 0301 0601 0302 1000 0302 0800 0803       ..............

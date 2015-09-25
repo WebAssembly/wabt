@@ -29,45 +29,41 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
-0000022: 20                                         ; OPCODE_I32_LOAD_I32
-0000023: 06                                         ; load access byte
-0000024: 10                                         ; OPCODE_I8_CONST
-0000025: 00                                         ; u8 literal
-0000026: 21                                         ; OPCODE_I64_LOAD_I32
-0000027: 07                                         ; load access byte
-0000028: 10                                         ; OPCODE_I8_CONST
-0000029: 00                                         ; u8 literal
-000002a: 20                                         ; OPCODE_I32_LOAD_I32
-000002b: 04                                         ; load access byte
-000002c: 10                                         ; OPCODE_I8_CONST
-000002d: 00                                         ; u8 literal
-000002e: 20                                         ; OPCODE_I32_LOAD_I32
-000002f: 05                                         ; load access byte
-0000030: 10                                         ; OPCODE_I8_CONST
-0000031: 00                                         ; u8 literal
-0000032: 20                                         ; OPCODE_I32_LOAD_I32
-0000033: 00                                         ; load access byte
-0000034: 10                                         ; OPCODE_I8_CONST
-0000035: 00                                         ; u8 literal
-0000036: 20                                         ; OPCODE_I32_LOAD_I32
-0000037: 01                                         ; load access byte
-0000038: 10                                         ; OPCODE_I8_CONST
-0000039: 00                                         ; u8 literal
-000003a: 22                                         ; OPCODE_F32_LOAD_I32
-000003b: 00                                         ; load access byte
-000003c: 10                                         ; OPCODE_I8_CONST
-000003d: 00                                         ; u8 literal
-000003e: 23                                         ; OPCODE_F64_LOAD_I32
-000003f: 00                                         ; load access byte
-0000040: 10                                         ; OPCODE_I8_CONST
-0000041: 00                                         ; u8 literal
-0000021: 08                                         ; FIXUP toplevel block num expressions
-0000012: 4200 0000                                  ; FIXUP func code end offset
+0000020: 20                                         ; OPCODE_I32_LOAD_I32
+0000021: 06                                         ; load access byte
+0000022: 10                                         ; OPCODE_I8_CONST
+0000023: 00                                         ; u8 literal
+0000024: 21                                         ; OPCODE_I64_LOAD_I32
+0000025: 07                                         ; load access byte
+0000026: 10                                         ; OPCODE_I8_CONST
+0000027: 00                                         ; u8 literal
+0000028: 20                                         ; OPCODE_I32_LOAD_I32
+0000029: 04                                         ; load access byte
+000002a: 10                                         ; OPCODE_I8_CONST
+000002b: 00                                         ; u8 literal
+000002c: 20                                         ; OPCODE_I32_LOAD_I32
+000002d: 05                                         ; load access byte
+000002e: 10                                         ; OPCODE_I8_CONST
+000002f: 00                                         ; u8 literal
+0000030: 20                                         ; OPCODE_I32_LOAD_I32
+0000031: 00                                         ; load access byte
+0000032: 10                                         ; OPCODE_I8_CONST
+0000033: 00                                         ; u8 literal
+0000034: 20                                         ; OPCODE_I32_LOAD_I32
+0000035: 01                                         ; load access byte
+0000036: 10                                         ; OPCODE_I8_CONST
+0000037: 00                                         ; u8 literal
+0000038: 22                                         ; OPCODE_F32_LOAD_I32
+0000039: 00                                         ; load access byte
+000003a: 10                                         ; OPCODE_I8_CONST
+000003b: 00                                         ; u8 literal
+000003c: 23                                         ; OPCODE_F64_LOAD_I32
+000003d: 00                                         ; load access byte
+000003e: 10                                         ; OPCODE_I8_CONST
+000003f: 00                                         ; u8 literal
+0000012: 4000 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 4200 0000 0000 0000 0000 0000 0000  ..B.............
-0000020: 0308 2006 1000 2107 1000 2004 1000 2005  .. ...!... ... .
-0000030: 1000 2000 1000 2001 1000 2200 1000 2300  .. ... ..."...#.
-0000040: 1000                                     ..
+0000010: 0000 4000 0000 0000 0000 0000 0000 0000  ..@.............
+0000020: 2006 1000 2107 1000 2004 1000 2005 1000   ...!... ... ...
+0000030: 2000 1000 2001 1000 2200 1000 2300 1000   ... ..."...#...

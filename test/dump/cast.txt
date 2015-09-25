@@ -26,24 +26,21 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
-0000022: ad                                         ; OPCODE_F32_REINTERPRET_I32
-0000023: 10                                         ; OPCODE_I8_CONST
-0000024: 00                                         ; u8 literal
-0000025: b4                                         ; OPCODE_I32_REINTERPRET_F32
-0000026: 14                                         ; OPCODE_F32_CONST
-0000027: 0000 0000                                  ; f32 literal
-000002b: b3                                         ; OPCODE_F64_REINTERPRET_I64
-000002c: 12                                         ; OPCODE_I64_CONST
-000002d: 0000 0000 0000 0000                        ; u64 literal
-0000035: b5                                         ; OPCODE_I64_REINTERPRET_F64
-0000036: 13                                         ; OPCODE_F64_CONST
-0000037: 0000 0000 0000 0000                        ; f64 literal
-0000021: 04                                         ; FIXUP toplevel block num expressions
-0000012: 3f00 0000                                  ; FIXUP func code end offset
+0000020: ad                                         ; OPCODE_F32_REINTERPRET_I32
+0000021: 10                                         ; OPCODE_I8_CONST
+0000022: 00                                         ; u8 literal
+0000023: b4                                         ; OPCODE_I32_REINTERPRET_F32
+0000024: 14                                         ; OPCODE_F32_CONST
+0000025: 0000 0000                                  ; f32 literal
+0000029: b3                                         ; OPCODE_F64_REINTERPRET_I64
+000002a: 12                                         ; OPCODE_I64_CONST
+000002b: 0000 0000 0000 0000                        ; u64 literal
+0000033: b5                                         ; OPCODE_I64_REINTERPRET_F64
+0000034: 13                                         ; OPCODE_F64_CONST
+0000035: 0000 0000 0000 0000                        ; f64 literal
+0000012: 3d00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 3f00 0000 0000 0000 0000 0000 0000  ..?.............
-0000020: 0304 ad10 00b4 1400 0000 00b3 1200 0000  ................
-0000030: 0000 0000 00b5 1300 0000 0000 0000 00    ...............
+0000010: 0000 3d00 0000 0000 0000 0000 0000 0000  ..=.............
+0000020: ad10 00b4 1400 0000 00b3 1200 0000 0000  ................
+0000030: 0000 00b5 1300 0000 0000 0000 00         .............

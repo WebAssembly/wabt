@@ -42,30 +42,27 @@
 0000037: 00                                         ; func external
 ; function data 0
 0000026: 3800 0000                                  ; FIXUP func code start offset
-0000038: 03                                         ; OPCODE_BLOCK
-0000039: 00                                         ; toplevel block num expressions
-000003a: 18                                         ; OPCODE_SET_GLOBAL
-000003b: 00                                         ; global index
-000003c: 10                                         ; OPCODE_I8_CONST
-000003d: 00                                         ; u8 literal
-000003e: 18                                         ; OPCODE_SET_GLOBAL
-000003f: 01                                         ; global index
-0000040: 12                                         ; OPCODE_I64_CONST
-0000041: 0100 0000 0000 0000                        ; u64 literal
-0000049: 18                                         ; OPCODE_SET_GLOBAL
-000004a: 02                                         ; global index
-000004b: 14                                         ; OPCODE_F32_CONST
-000004c: 0000 0040                                  ; f32 literal
-0000050: 18                                         ; OPCODE_SET_GLOBAL
-0000051: 03                                         ; global index
-0000052: 13                                         ; OPCODE_F64_CONST
-0000053: 0000 0000 0000 0840                        ; f64 literal
-0000039: 04                                         ; FIXUP toplevel block num expressions
-000002a: 5b00 0000                                  ; FIXUP func code end offset
+0000038: 18                                         ; OPCODE_SET_GLOBAL
+0000039: 00                                         ; global index
+000003a: 10                                         ; OPCODE_I8_CONST
+000003b: 00                                         ; u8 literal
+000003c: 18                                         ; OPCODE_SET_GLOBAL
+000003d: 01                                         ; global index
+000003e: 12                                         ; OPCODE_I64_CONST
+000003f: 0100 0000 0000 0000                        ; u64 literal
+0000047: 18                                         ; OPCODE_SET_GLOBAL
+0000048: 02                                         ; global index
+0000049: 14                                         ; OPCODE_F32_CONST
+000004a: 0000 0040                                  ; f32 literal
+000004e: 18                                         ; OPCODE_SET_GLOBAL
+000004f: 03                                         ; global index
+0000050: 13                                         ; OPCODE_F64_CONST
+0000051: 0000 0000 0000 0840                        ; f64 literal
+000002a: 5900 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0400 0100 0000 0000 0000 0400 0000  ................
 0000010: 0000 0600 0000 0000 0800 0000 0000 0900  ................
-0000020: 0000 0000 0000 3800 0000 5b00 0000 0000  ......8...[.....
-0000030: 0000 0000 0000 0000 0304 1800 1000 1801  ................
-0000040: 1201 0000 0000 0000 0018 0214 0000 0040  ...............@
-0000050: 1803 1300 0000 0000 0008 40              ..........@
+0000020: 0000 0000 0000 3800 0000 5900 0000 0000  ......8...Y.....
+0000030: 0000 0000 0000 0000 1800 1000 1801 1201  ................
+0000040: 0000 0000 0000 0018 0214 0000 0040 1803  .............@..
+0000050: 1300 0000 0000 0008 40                   ........@

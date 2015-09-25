@@ -60,43 +60,31 @@
 0000067: 00                                         ; func external
 ; function data 0
 000000e: 6800 0000                                  ; FIXUP func code start offset
-0000068: 03                                         ; OPCODE_BLOCK
-0000069: 00                                         ; toplevel block num expressions
-000006a: 10                                         ; OPCODE_I8_CONST
-000006b: 00                                         ; u8 literal
-0000069: 01                                         ; FIXUP toplevel block num expressions
-0000012: 6c00 0000                                  ; FIXUP func code end offset
+0000068: 10                                         ; OPCODE_I8_CONST
+0000069: 00                                         ; u8 literal
+0000012: 6a00 0000                                  ; FIXUP func code end offset
 ; function data 1
-0000026: 6c00 0000                                  ; FIXUP func code start offset
-000006c: 03                                         ; OPCODE_BLOCK
-000006d: 00                                         ; toplevel block num expressions
-000006e: 12                                         ; OPCODE_I64_CONST
-000006f: 0000 0000 0000 0000                        ; u64 literal
-000006d: 01                                         ; FIXUP toplevel block num expressions
-000002a: 7700 0000                                  ; FIXUP func code end offset
+0000026: 6a00 0000                                  ; FIXUP func code start offset
+000006a: 12                                         ; OPCODE_I64_CONST
+000006b: 0000 0000 0000 0000                        ; u64 literal
+000002a: 7300 0000                                  ; FIXUP func code end offset
 ; function data 2
-000003e: 7700 0000                                  ; FIXUP func code start offset
-0000077: 03                                         ; OPCODE_BLOCK
-0000078: 00                                         ; toplevel block num expressions
-0000079: 14                                         ; OPCODE_F32_CONST
-000007a: 0000 0000                                  ; f32 literal
-0000078: 01                                         ; FIXUP toplevel block num expressions
-0000042: 7e00 0000                                  ; FIXUP func code end offset
+000003e: 7300 0000                                  ; FIXUP func code start offset
+0000073: 14                                         ; OPCODE_F32_CONST
+0000074: 0000 0000                                  ; f32 literal
+0000042: 7800 0000                                  ; FIXUP func code end offset
 ; function data 3
-0000056: 7e00 0000                                  ; FIXUP func code start offset
-000007e: 03                                         ; OPCODE_BLOCK
-000007f: 00                                         ; toplevel block num expressions
-0000080: 13                                         ; OPCODE_F64_CONST
-0000081: 0000 0000 0000 0000                        ; f64 literal
-000007f: 01                                         ; FIXUP toplevel block num expressions
-000005a: 8900 0000                                  ; FIXUP func code end offset
+0000056: 7800 0000                                  ; FIXUP func code start offset
+0000078: 13                                         ; OPCODE_F64_CONST
+0000079: 0000 0000 0000 0000                        ; f64 literal
+000005a: 8100 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0400 0000 0001 0000 0000 6800  ..............h.
-0000010: 0000 6c00 0000 0000 0000 0000 0000 0000  ..l.............
-0000020: 0002 0000 0000 6c00 0000 7700 0000 0000  ......l...w.....
-0000030: 0000 0000 0000 0000 0003 0000 0000 7700  ..............w.
-0000040: 0000 7e00 0000 0000 0000 0000 0000 0000  ..~.............
-0000050: 0004 0000 0000 7e00 0000 8900 0000 0000  ......~.........
-0000060: 0000 0000 0000 0000 0301 1000 0301 1200  ................
-0000070: 0000 0000 0000 0003 0114 0000 0000 0301  ................
-0000080: 1300 0000 0000 0000 00                   .........
+0000010: 0000 6a00 0000 0000 0000 0000 0000 0000  ..j.............
+0000020: 0002 0000 0000 6a00 0000 7300 0000 0000  ......j...s.....
+0000030: 0000 0000 0000 0000 0003 0000 0000 7300  ..............s.
+0000040: 0000 7800 0000 0000 0000 0000 0000 0000  ..x.............
+0000050: 0004 0000 0000 7800 0000 8100 0000 0000  ......x.........
+0000060: 0000 0000 0000 0000 1000 1200 0000 0000  ................
+0000070: 0000 0014 0000 0000 1300 0000 0000 0000  ................
+0000080: 00                                       .

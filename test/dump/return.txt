@@ -22,14 +22,11 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
-0000022: 09                                         ; OPCODE_RETURN
-0000023: 10                                         ; OPCODE_I8_CONST
-0000024: 2a                                         ; u8 literal
-0000021: 01                                         ; FIXUP toplevel block num expressions
-0000012: 2500 0000                                  ; FIXUP func code end offset
+0000020: 09                                         ; OPCODE_RETURN
+0000021: 10                                         ; OPCODE_I8_CONST
+0000022: 2a                                         ; u8 literal
+0000012: 2300 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0001 0000 0000 2000  .............. .
-0000010: 0000 2500 0000 0000 0000 0000 0000 0000  ..%.............
-0000020: 0301 0910 2a                             ....*
+0000010: 0000 2300 0000 0000 0000 0000 0000 0000  ..#.............
+0000020: 0910 2a                                  ..*

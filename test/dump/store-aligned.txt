@@ -40,114 +40,111 @@
 000001f: 00                                         ; func external
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; toplevel block num expressions
-0000022: 30                                         ; OPCODE_I32_STORE_I32
-0000023: 04                                         ; store access byte
+0000020: 30                                         ; OPCODE_I32_STORE_I32
+0000021: 04                                         ; store access byte
+0000022: 10                                         ; OPCODE_I8_CONST
+0000023: 00                                         ; u8 literal
 0000024: 10                                         ; OPCODE_I8_CONST
 0000025: 00                                         ; u8 literal
-0000026: 10                                         ; OPCODE_I8_CONST
-0000027: 00                                         ; u8 literal
-0000028: 30                                         ; OPCODE_I32_STORE_I32
-0000029: 04                                         ; store access byte
+0000026: 30                                         ; OPCODE_I32_STORE_I32
+0000027: 04                                         ; store access byte
+0000028: 10                                         ; OPCODE_I8_CONST
+0000029: 00                                         ; u8 literal
 000002a: 10                                         ; OPCODE_I8_CONST
 000002b: 00                                         ; u8 literal
-000002c: 10                                         ; OPCODE_I8_CONST
-000002d: 00                                         ; u8 literal
-000002e: 30                                         ; OPCODE_I32_STORE_I32
-000002f: 04                                         ; store access byte
+000002c: 30                                         ; OPCODE_I32_STORE_I32
+000002d: 04                                         ; store access byte
+000002e: 10                                         ; OPCODE_I8_CONST
+000002f: 00                                         ; u8 literal
 0000030: 10                                         ; OPCODE_I8_CONST
 0000031: 00                                         ; u8 literal
-0000032: 10                                         ; OPCODE_I8_CONST
-0000033: 00                                         ; u8 literal
-0000034: 30                                         ; OPCODE_I32_STORE_I32
-0000035: 04                                         ; store access byte
+0000032: 30                                         ; OPCODE_I32_STORE_I32
+0000033: 04                                         ; store access byte
+0000034: 10                                         ; OPCODE_I8_CONST
+0000035: 00                                         ; u8 literal
 0000036: 10                                         ; OPCODE_I8_CONST
 0000037: 00                                         ; u8 literal
-0000038: 10                                         ; OPCODE_I8_CONST
-0000039: 00                                         ; u8 literal
-000003a: 30                                         ; OPCODE_I32_STORE_I32
-000003b: 0d                                         ; store access byte
+0000038: 30                                         ; OPCODE_I32_STORE_I32
+0000039: 0d                                         ; store access byte
+000003a: 10                                         ; OPCODE_I8_CONST
+000003b: 00                                         ; u8 literal
 000003c: 10                                         ; OPCODE_I8_CONST
 000003d: 00                                         ; u8 literal
-000003e: 10                                         ; OPCODE_I8_CONST
-000003f: 00                                         ; u8 literal
-0000040: 30                                         ; OPCODE_I32_STORE_I32
-0000041: 05                                         ; store access byte
+000003e: 30                                         ; OPCODE_I32_STORE_I32
+000003f: 05                                         ; store access byte
+0000040: 10                                         ; OPCODE_I8_CONST
+0000041: 00                                         ; u8 literal
 0000042: 10                                         ; OPCODE_I8_CONST
 0000043: 00                                         ; u8 literal
-0000044: 10                                         ; OPCODE_I8_CONST
-0000045: 00                                         ; u8 literal
-0000046: 30                                         ; OPCODE_I32_STORE_I32
-0000047: 05                                         ; store access byte
+0000044: 30                                         ; OPCODE_I32_STORE_I32
+0000045: 05                                         ; store access byte
+0000046: 10                                         ; OPCODE_I8_CONST
+0000047: 00                                         ; u8 literal
 0000048: 10                                         ; OPCODE_I8_CONST
 0000049: 00                                         ; u8 literal
-000004a: 10                                         ; OPCODE_I8_CONST
-000004b: 00                                         ; u8 literal
-000004c: 30                                         ; OPCODE_I32_STORE_I32
-000004d: 05                                         ; store access byte
+000004a: 30                                         ; OPCODE_I32_STORE_I32
+000004b: 05                                         ; store access byte
+000004c: 10                                         ; OPCODE_I8_CONST
+000004d: 00                                         ; u8 literal
 000004e: 10                                         ; OPCODE_I8_CONST
 000004f: 00                                         ; u8 literal
-0000050: 10                                         ; OPCODE_I8_CONST
-0000051: 00                                         ; u8 literal
-0000052: 30                                         ; OPCODE_I32_STORE_I32
-0000053: 0e                                         ; store access byte
+0000050: 30                                         ; OPCODE_I32_STORE_I32
+0000051: 0e                                         ; store access byte
+0000052: 10                                         ; OPCODE_I8_CONST
+0000053: 00                                         ; u8 literal
 0000054: 10                                         ; OPCODE_I8_CONST
 0000055: 00                                         ; u8 literal
-0000056: 10                                         ; OPCODE_I8_CONST
-0000057: 00                                         ; u8 literal
-0000058: 30                                         ; OPCODE_I32_STORE_I32
-0000059: 0e                                         ; store access byte
+0000056: 30                                         ; OPCODE_I32_STORE_I32
+0000057: 0e                                         ; store access byte
+0000058: 10                                         ; OPCODE_I8_CONST
+0000059: 00                                         ; u8 literal
 000005a: 10                                         ; OPCODE_I8_CONST
 000005b: 00                                         ; u8 literal
-000005c: 10                                         ; OPCODE_I8_CONST
-000005d: 00                                         ; u8 literal
-000005e: 30                                         ; OPCODE_I32_STORE_I32
-000005f: 06                                         ; store access byte
+000005c: 30                                         ; OPCODE_I32_STORE_I32
+000005d: 06                                         ; store access byte
+000005e: 10                                         ; OPCODE_I8_CONST
+000005f: 00                                         ; u8 literal
 0000060: 10                                         ; OPCODE_I8_CONST
 0000061: 00                                         ; u8 literal
-0000062: 10                                         ; OPCODE_I8_CONST
-0000063: 00                                         ; u8 literal
-0000064: 30                                         ; OPCODE_I32_STORE_I32
-0000065: 06                                         ; store access byte
+0000062: 30                                         ; OPCODE_I32_STORE_I32
+0000063: 06                                         ; store access byte
+0000064: 10                                         ; OPCODE_I8_CONST
+0000065: 00                                         ; u8 literal
 0000066: 10                                         ; OPCODE_I8_CONST
 0000067: 00                                         ; u8 literal
-0000068: 10                                         ; OPCODE_I8_CONST
-0000069: 00                                         ; u8 literal
-000006a: 31                                         ; OPCODE_I64_STORE_I32
-000006b: 0f                                         ; store access byte
-000006c: 10                                         ; OPCODE_I8_CONST
-000006d: 00                                         ; u8 literal
-000006e: 12                                         ; OPCODE_I64_CONST
-000006f: 0000 0000 0000 0000                        ; u64 literal
-0000077: 31                                         ; OPCODE_I64_STORE_I32
-0000078: 0f                                         ; store access byte
-0000079: 10                                         ; OPCODE_I8_CONST
-000007a: 00                                         ; u8 literal
-000007b: 12                                         ; OPCODE_I64_CONST
-000007c: 0000 0000 0000 0000                        ; u64 literal
-0000084: 31                                         ; OPCODE_I64_STORE_I32
-0000085: 0f                                         ; store access byte
-0000086: 10                                         ; OPCODE_I8_CONST
-0000087: 00                                         ; u8 literal
-0000088: 12                                         ; OPCODE_I64_CONST
-0000089: 0000 0000 0000 0000                        ; u64 literal
-0000091: 31                                         ; OPCODE_I64_STORE_I32
-0000092: 07                                         ; store access byte
-0000093: 10                                         ; OPCODE_I8_CONST
-0000094: 00                                         ; u8 literal
-0000095: 12                                         ; OPCODE_I64_CONST
-0000096: 0000 0000 0000 0000                        ; u64 literal
-0000021: 10                                         ; FIXUP toplevel block num expressions
-0000012: 9e00 0000                                  ; FIXUP func code end offset
+0000068: 31                                         ; OPCODE_I64_STORE_I32
+0000069: 0f                                         ; store access byte
+000006a: 10                                         ; OPCODE_I8_CONST
+000006b: 00                                         ; u8 literal
+000006c: 12                                         ; OPCODE_I64_CONST
+000006d: 0000 0000 0000 0000                        ; u64 literal
+0000075: 31                                         ; OPCODE_I64_STORE_I32
+0000076: 0f                                         ; store access byte
+0000077: 10                                         ; OPCODE_I8_CONST
+0000078: 00                                         ; u8 literal
+0000079: 12                                         ; OPCODE_I64_CONST
+000007a: 0000 0000 0000 0000                        ; u64 literal
+0000082: 31                                         ; OPCODE_I64_STORE_I32
+0000083: 0f                                         ; store access byte
+0000084: 10                                         ; OPCODE_I8_CONST
+0000085: 00                                         ; u8 literal
+0000086: 12                                         ; OPCODE_I64_CONST
+0000087: 0000 0000 0000 0000                        ; u64 literal
+000008f: 31                                         ; OPCODE_I64_STORE_I32
+0000090: 07                                         ; store access byte
+0000091: 10                                         ; OPCODE_I8_CONST
+0000092: 00                                         ; u8 literal
+0000093: 12                                         ; OPCODE_I64_CONST
+0000094: 0000 0000 0000 0000                        ; u64 literal
+0000012: 9c00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 9e00 0000 0000 0000 0000 0000 0000  ................
-0000020: 0310 3004 1000 1000 3004 1000 1000 3004  ..0.....0.....0.
-0000030: 1000 1000 3004 1000 1000 300d 1000 1000  ....0.....0.....
-0000040: 3005 1000 1000 3005 1000 1000 3005 1000  0.....0.....0...
-0000050: 1000 300e 1000 1000 300e 1000 1000 3006  ..0.....0.....0.
-0000060: 1000 1000 3006 1000 1000 310f 1000 1200  ....0.....1.....
-0000070: 0000 0000 0000 0031 0f10 0012 0000 0000  .......1........
-0000080: 0000 0000 310f 1000 1200 0000 0000 0000  ....1...........
-0000090: 0031 0710 0012 0000 0000 0000 0000       .1............
+0000010: 0000 9c00 0000 0000 0000 0000 0000 0000  ................
+0000020: 3004 1000 1000 3004 1000 1000 3004 1000  0.....0.....0...
+0000030: 1000 3004 1000 1000 300d 1000 1000 3005  ..0.....0.....0.
+0000040: 1000 1000 3005 1000 1000 3005 1000 1000  ....0.....0.....
+0000050: 300e 1000 1000 300e 1000 1000 3006 1000  0.....0.....0...
+0000060: 1000 3006 1000 1000 310f 1000 1200 0000  ..0.....1.......
+0000070: 0000 0000 0031 0f10 0012 0000 0000 0000  .....1..........
+0000080: 0000 310f 1000 1200 0000 0000 0000 0031  ..1............1
+0000090: 0710 0012 0000 0000 0000 0000            ............

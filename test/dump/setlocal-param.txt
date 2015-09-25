@@ -34,37 +34,34 @@
 0000021: 00                                         ; func external
 ; function data 0
 0000010: 2200 0000                                  ; FIXUP func code start offset
-0000022: 03                                         ; OPCODE_BLOCK
-0000023: 00                                         ; toplevel block num expressions
-0000024: 16                                         ; OPCODE_SET_LOCAL
-0000025: 00                                         ; remapped local index
-0000026: 10                                         ; OPCODE_I8_CONST
-0000027: 00                                         ; u8 literal
-0000028: 16                                         ; OPCODE_SET_LOCAL
-0000029: 01                                         ; remapped local index
-000002a: 14                                         ; OPCODE_F32_CONST
-000002b: 0000 0000                                  ; f32 literal
-000002f: 16                                         ; OPCODE_SET_LOCAL
-0000030: 03                                         ; remapped local index
-0000031: 12                                         ; OPCODE_I64_CONST
-0000032: 0000 0000 0000 0000                        ; u64 literal
-000003a: 16                                         ; OPCODE_SET_LOCAL
-000003b: 04                                         ; remapped local index
-000003c: 14                                         ; OPCODE_F32_CONST
-000003d: 0000 0000                                  ; f32 literal
-0000041: 16                                         ; OPCODE_SET_LOCAL
-0000042: 02                                         ; remapped local index
-0000043: 10                                         ; OPCODE_I8_CONST
-0000044: 00                                         ; u8 literal
-0000045: 16                                         ; OPCODE_SET_LOCAL
-0000046: 05                                         ; remapped local index
-0000047: 14                                         ; OPCODE_F32_CONST
-0000048: 0000 0000                                  ; f32 literal
-0000023: 06                                         ; FIXUP toplevel block num expressions
-0000014: 4c00 0000                                  ; FIXUP func code end offset
+0000022: 16                                         ; OPCODE_SET_LOCAL
+0000023: 00                                         ; remapped local index
+0000024: 10                                         ; OPCODE_I8_CONST
+0000025: 00                                         ; u8 literal
+0000026: 16                                         ; OPCODE_SET_LOCAL
+0000027: 01                                         ; remapped local index
+0000028: 14                                         ; OPCODE_F32_CONST
+0000029: 0000 0000                                  ; f32 literal
+000002d: 16                                         ; OPCODE_SET_LOCAL
+000002e: 03                                         ; remapped local index
+000002f: 12                                         ; OPCODE_I64_CONST
+0000030: 0000 0000 0000 0000                        ; u64 literal
+0000038: 16                                         ; OPCODE_SET_LOCAL
+0000039: 04                                         ; remapped local index
+000003a: 14                                         ; OPCODE_F32_CONST
+000003b: 0000 0000                                  ; f32 literal
+000003f: 16                                         ; OPCODE_SET_LOCAL
+0000040: 02                                         ; remapped local index
+0000041: 10                                         ; OPCODE_I8_CONST
+0000042: 00                                         ; u8 literal
+0000043: 16                                         ; OPCODE_SET_LOCAL
+0000044: 05                                         ; remapped local index
+0000045: 14                                         ; OPCODE_F32_CONST
+0000046: 0000 0000                                  ; f32 literal
+0000014: 4a00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0200 0103 0000 0000  ................
-0000010: 2200 0000 4c00 0000 0100 0100 0200 0000  "...L...........
-0000020: 0000 0306 1600 1000 1601 1400 0000 0016  ................
-0000030: 0312 0000 0000 0000 0000 1604 1400 0000  ................
-0000040: 0016 0210 0016 0514 0000 0000            ............
+0000010: 2200 0000 4a00 0000 0100 0100 0200 0000  "...J...........
+0000020: 0000 1600 1000 1601 1400 0000 0016 0312  ................
+0000030: 0000 0000 0000 0000 1604 1400 0000 0016  ................
+0000040: 0210 0016 0514 0000 0000                 ..........
