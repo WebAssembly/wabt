@@ -6,8 +6,11 @@ addons:
       - gperf
 script:
   - scripts/download-d8.sh
-  - make
+  - make everything
   - test/run-tests.py -v
+  - test/run-tests.py -e out/sexpr-wasm-asan -v
+  - test/run-tests.py -e out/sexpr-wasm-msan -v
+  - test/run-tests.py -e out/sexpr-wasm-lsan -v
 compiler:
   - clang
   - gcc
