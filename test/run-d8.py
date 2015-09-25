@@ -45,8 +45,9 @@ def main(args):
                   'Run scripts/build-d8.sh to build it.\n'
                   'path: %s\npath: %s\n' % (BUILT_D8, DOWNLOAD_D8))
 
-  generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
+  generated = None
   try:
+    generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
     # First compile the file
     cmd = [exe, options.file, '-o', generated.name]
     if options.verbose:
@@ -54,31 +55,20 @@ def main(args):
     if options.spec:
       cmd.append('--multi-module')
     try:
-      process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE)
-      stdout, stderr = process.communicate()
+      subprocess.check_call(cmd)
     except OSError as e:
       raise Error(str(e))
 
-    if options.verbose:
-      print stdout
-
-    if process.returncode != 0:
-      raise Error(stderr)
-
     # Now run the generated file
-    try:
-      if options.spec:
-        # The generated file is JavaScript, so run it directly.
-        cmd = [d8, SPEC_JS, generated.name]
-      else:
-        cmd = [d8, WASM_JS, '--', generated.name]
-
-      subprocess.check_call(cmd)
-    except subprocess.CalledProcessError as e:
-      raise Error(str(e))
+    if options.spec:
+      # The generated file is JavaScript, so run it directly.
+      cmd = [d8, SPEC_JS, generated.name]
+    else:
+      cmd = [d8, WASM_JS, '--', generated.name]
+    subprocess.check_call(cmd)
   finally:
-    generated.close()
+    if generated:
+      generated.close()
 
   return 0
 
@@ -86,6 +76,6 @@ def main(args):
 if __name__ == '__main__':
   try:
     sys.exit(main(sys.argv[1:]))
-  except Error as e:
+  except (Error, subprocess.CalledProcessError) as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)

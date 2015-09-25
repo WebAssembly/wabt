@@ -165,6 +165,18 @@ class TestInfo(object):
     except OSError as e:
       if not os.path.isdir(file_dir):
         raise
+
+    process = None
+    # Cheesy way to be able to set is_timeout from inside KillProcess
+    is_timeout = [False]
+    def KillProcess(timeout=True):
+      if process:
+        try:
+          os.killpg(os.getpgid(process.pid), 15)
+        except OSError:
+          pass
+        is_timeout[0] = timeout
+
     file_ = open(file_path, 'w')
     try:
       # add an empty line for each header line so the line numbers match
@@ -178,25 +190,23 @@ class TestInfo(object):
       try:
         start_time = time.time()
         # http://stackoverflow.com/a/10012262: subprocess with a timeout
+        # http://stackoverflow.com/a/22582602: kill subprocess and children
         process = subprocess.Popen(cmd, cwd=temp_dir, stdout=subprocess.PIPE,
-                                                      stderr=subprocess.PIPE)
-        # Cheesy way to be able to set killed from inside kill_process
-        killed = [False]
-        def kill_process():
-          killed[0] = True
-          process.kill()
-
-        timer = threading.Timer(timeout, kill_process)
+                                                      stderr=subprocess.PIPE,
+                                   preexec_fn=os.setsid)
+        timer = threading.Timer(timeout, KillProcess)
         try:
           timer.start()
           stdout, stderr = process.communicate()
         finally:
           timer.cancel()
-        if killed[0]:
-          raise Error('timeout')
+        if is_timeout[0]:
+          raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
         duration = time.time() - start_time
       except OSError as e:
         raise Error(str(e))
+      finally:
+        KillProcess(False)
     finally:
       file_.close()
 
@@ -367,20 +377,23 @@ def main(args):
   status.Start(test_count)
 
   def Worker(i, options, inq, outq):
-    while True:
-      try:
-        info = inq.get(False)
+    try:
+      while True:
         try:
-          out = info.Run(options.timeout, temp_dir, options.executable)
-        except Error as e:
-          outq.put((info, e))
-          continue
-        outq.put((info, out))
-      except Queue.Empty:
-        # Seems this can be fired even when the queue isn't actually empty.
-        # Double-check, via inq.empty()
-        if inq.empty():
-          break
+          info = inq.get(False)
+          try:
+            out = info.Run(options.timeout, temp_dir, options.executable)
+          except Error as e:
+            outq.put((info, e))
+            continue
+          outq.put((info, out))
+        except Queue.Empty:
+          # Seems this can be fired even when the queue isn't actually empty.
+          # Double-check, via inq.empty()
+          if inq.empty():
+            break
+    except KeyboardInterrupt:
+      pass
 
   temp_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
   try:
@@ -421,6 +434,9 @@ def main(args):
           status.Passed(info, duration)
       except Error as e:
         status.Failed(info, str(e))
+  except KeyboardInterrupt:
+    for proc in processes:
+      proc.join()
   finally:
     for proc in processes:
       proc.terminate()
