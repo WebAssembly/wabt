@@ -70,7 +70,6 @@ class TestInfo(object):
     self.expected_stderr = ''
     self.exe = None
     self.flags = []
-    self.args = []
     self.expected_error = 0
     self.slow = False
 
@@ -113,8 +112,6 @@ class TestInfo(object):
             self.flags = shlex.split(value)
           elif key == 'error':
             self.expected_error = int(value)
-          elif key == 'args':
-            self.args = shlex.split(value)
           elif key == 'slow':
             self.slow = True
           else:
@@ -158,7 +155,6 @@ class TestInfo(object):
     if self.exe and override_exe:
       cmd += ['-e', override_exe]
     cmd += [filename]
-    cmd += ['--'] + AsList(self.args)
     return cmd
 
   def Run(self, timeout, temp_dir, override_exe=None):

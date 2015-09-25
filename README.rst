@@ -129,3 +129,106 @@ To run a subset of the tests, use a glob-like syntax::
   + expr/bad-const-i32-just-negative-sign.txt (0.002s)
   + expr/bad-const-i32-underflow.txt (0.002s)
   [+5|-0|%100] (0.01s)
+
+When tests are broken, they will give you the expected stdout/stderr as a diff::
+
+  $ <introduce bug in wasm-gen.c>
+  $ test/run-tests.py store
+  - d8/store.txt
+    STDOUT MISMATCH:
+    --- expected
+    +++ actual
+    @@ -1,6 +1,6 @@
+    -i32_store8() = -16909061
+    -i32_store16() = -859059511
+    -i32_store() = -123456
+    +i32_store8() = 1050144
+    +i32_store16() = 1050144
+    +i32_store() = 1
+     i64_store() = 1
+     f32_store() = 1069547520
+     f64_store() = -1064352256
+
+  **** FAILED ******************************************************************
+  - d8/store.txt
+  [+18|-1|%100] (0.06s)
+
+Writing New Tests
+-----------------
+
+Tests must be placed in the test/ directory, and must have the extension
+`.txt`. The directory structure is mostly for convenience, so for example you
+can type `test/run-tests.py d8` to run all the tests that execute in d8.
+There's otherwise no logic attached to a test being in a given directory.
+
+That being said, try to make the test names self explanatory, and try to test
+only one thing. Also make sure that tests that are expected to fail start with
+`bad-`.
+
+The test format is straightforward::
+
+  # KEY1: VALUE1A VALUE1B...
+  # KEY2: VALUE2A VALUE2B...
+  (input (to)
+    (the executable))
+  # STDOUT:
+  expected stdout
+  # STDERR:
+  expected stderr
+
+The test runner will copy the input to a temporary file and pass it as an
+argument to the executable (which by default is out/sexpr-wasm).
+
+The currently supported list of keys:
+
+- EXE: the executable to run, defaults to out/sexpr-wasm
+- FLAGS: additional flags to pass to the executable
+- ERROR: the expected return value from the executable, defaults to 0
+- SLOW: if defined, this test is marked as being slow, and is skipped unless
+  you pass --slow to run-tests.py
+
+When you first write a test, it's easiest if you omit the expected stdout and
+stderr. You can have the test harness fill it in for you automatically. First
+let's write our test::
+
+  $ cat > test/my-awesome-test.txt << HERE
+  # EXE: test/run-d8.py
+  # FLAGS: --spec
+  (module
+    (export "add2" 0)
+    (func (param i32) (result i32)
+      (i32.add (get_local 0) (i32.const 2))))
+  (assert_eq (invoke "add2" (i32.const 4)) (i32.const 6))
+  (assert_eq (invoke "add2" (i32.const -2)) (i32.const 0))
+  HERE
+
+If we run it, it will fail::
+
+  $ test/run-tests.py awesome
+  - my-awesome-test.txt
+    STDOUT MISMATCH:
+    --- expected
+    +++ actual
+    @@ -0,0 +1,4 @@
+    +instantiating module
+    +$assert_eq_0 OK
+    +$assert_eq_1 OK
+    +2/2 tests passed.
+
+  **** FAILED ******************************************************************
+  - my-awesome-test.txt
+  [+0|-1|%100] (0.05s)
+
+We can rebase it automatically with the `-r` flag. Running the test again shows
+that the expected stdout has been added::
+
+  $ test/run-tests.py awesome -r
+  [+1|-0|%100] (0.05s)
+  $ test/run-tests.py awesome
+  [+1|-0|%100] (0.05s)
+  $ tail -n 5 test/my-awesome-test.txt
+  # STDOUT:
+  instantiating module
+  $assert_eq_0 OK
+  $assert_eq_1 OK
+  2/2 tests passed.
