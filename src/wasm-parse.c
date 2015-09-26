@@ -197,6 +197,17 @@ static int get_binding_by_name(WasmBindingVector* bindings, const char* name) {
   return -1;
 }
 
+static int get_function_by_export_name(WasmFunctionVector* functions,
+                                       const char* name) {
+  int i;
+  for (i = 0; i < functions->size; ++i) {
+    WasmFunction* function = &functions->data[i];
+    if (function->exported && strcmp(name, function->exported_name) == 0)
+      return i;
+  }
+  return -1;
+}
+
 static const OpInfo* get_op_info(WasmToken t) {
   return in_word_set(t.range.start.pos,
                      (int)(t.range.end.pos - t.range.start.pos));
@@ -1744,8 +1755,16 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
         t = read_token(parser);
         expect_string(parser, t);
         int index = parse_function_var(parser, module);
+        char* export_name = dup_string_contents(t);
+        if (get_function_by_export_name(&module->functions, export_name) !=
+            -1) {
+          free(export_name);
+          FATAL_AT(parser, t.range.start, "duplicate function export %.*s\n",
+                   (int)(t.range.end.pos - t.range.start.pos),
+                   t.range.start.pos);
+        }
         WasmFunction* function = &module->functions.data[index];
-        function->exported_name = dup_string_contents(t);
+        function->exported_name = export_name;
         function->exported = 1;
 
         expect_close(parser, read_token(parser));
@@ -1817,15 +1836,7 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
   expect_string(parser, t);
   char* name = dup_string_contents(t);
   /* Find the function with this exported name */
-  int i;
-  int function_index = -1;
-  for (i = 0; i < module->functions.size; ++i) {
-    WasmFunction* function = &module->functions.data[i];
-    if (function->exported && strcmp(name, function->exported_name) == 0) {
-      function_index = i;
-      break;
-    }
-  }
+  int function_index = get_function_by_export_name(&module->functions, name);
   if (function_index < 0) {
     free(name);
     FATAL_AT(parser, t.range.start, "unknown function export %.*s\n",
