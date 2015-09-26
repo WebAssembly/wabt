@@ -73,6 +73,7 @@ class TestInfo(object):
     self.flags = []
     self.expected_error = 0
     self.slow = False
+    self.skip = False
 
   def Parse(self, filename):
     self.name = filename
@@ -117,6 +118,8 @@ class TestInfo(object):
             self.expected_error = int(value)
           elif key == 'slow':
             self.slow = True
+          elif key == 'skip':
+            self.skip = True
           else:
             raise Error('Unknown directive: %s' % key)
         elif state == 'header':
@@ -293,7 +296,10 @@ class Status(object):
   def _PrintShortStatus(self, info):
     total_duration = time.time() - self.start_time
     name = info.name if info else ''
-    percent = 100 * (self.passed + self.failed) / self.total
+    if self.total:
+      percent = 100 * (self.passed + self.failed) / self.total
+    else:
+      percent = 100
     status = '[+%d|-%d|%%%d] (%.2fs) %s\r' % (self.passed, self.failed,
                                               percent, total_duration, name)
     self.last_length = len(status)
@@ -377,7 +383,7 @@ def main(args):
   inq = multiprocessing.Queue()
   test_count = 0
   for info in infos:
-    if not options.slow and info.slow:
+    if info.skip or (not options.slow and info.slow):
       status.Skipped(info)
       continue
     inq.put(info)

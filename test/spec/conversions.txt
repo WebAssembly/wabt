@@ -1,0 +1,4 @@
+# SKIP: ExprI64SConvertF32 is unimplemented in v8-native-prototype
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/conversions.wasm
