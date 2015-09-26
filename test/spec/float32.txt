@@ -1,0 +1,12 @@
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/float32.wasm
+# STDOUT:
+instantiating module
+$assert_eq_0 OK
+$assert_eq_1 OK
+$assert_eq_2 OK
+$assert_eq_3 OK
+$assert_eq_4 OK
+$assert_eq_5 OK
+6/6 tests passed.
