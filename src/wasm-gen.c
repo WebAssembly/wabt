@@ -468,10 +468,21 @@ static void after_export(WasmModule* module,
   Context* ctx = user_data;
   int function_index = function - module->functions.data;
   /* HACK(binji): v8-native-prototype crashes when you export functions that
-   return i64. This unfortunately prevents assert_eq on functions that return
-   i64. For now, don't mark those functions as exported in the generated
-   output. */
-  if (function->result_type != WASM_TYPE_I64) {
+   use i64 in the signature. This unfortunately prevents assert_eq on functions
+   that return i64. For now, don't mark those functions as exported in the
+   generated output. */
+  int has_i64 = function->result_type == WASM_TYPE_I64;
+  if (!has_i64) {
+    int i;
+    for (i = 0; i < function->num_args; ++i) {
+      if (function->locals.data[i].type == WASM_TYPE_I64) {
+        has_i64 = 1;
+        break;
+      }
+    }
+  }
+
+  if (!has_i64) {
     out_u8_at(&ctx->buf, ctx->function_header_offsets[function_index] +
                             FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
               1, "FIXUP func exported");
