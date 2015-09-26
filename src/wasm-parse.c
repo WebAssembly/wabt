@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <math.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -303,7 +304,8 @@ static int read_double(const char** s, const char* end, double* out) {
   errno = 0;
   char* endptr;
   *out = strtod(*s, &endptr);
-  if (endptr != end || errno != 0)
+  if (endptr != end ||
+      ((*out == 0 || *out == HUGE_VAL || *out == -HUGE_VAL) && errno != 0))
     return 0;
   *s = endptr;
   return 1;
