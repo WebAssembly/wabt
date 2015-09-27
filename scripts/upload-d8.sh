@@ -8,7 +8,7 @@ V8_DIR="${ROOT_DIR}/third_party/v8-native-prototype"
 V8_OUT_DIR="${V8_DIR}/v8/v8/out/Release"
 
 V8_SHA=$(cd ${V8_DIR} && git rev-parse HEAD)
-BUCKET_URL=gs://webassembly/v8-native-prototype/${V8_SHA}
+BUCKET_URL=gs://webassembly/v8-native-prototype/${V8_SHA}/
 FILES="d8 natives_blob.bin snapshot_blob.bin"
 
 for file in ${FILES}; do
