@@ -232,7 +232,6 @@ typedef struct WasmFunction {
   WasmBindingVector local_bindings;
   WasmBindingVector labels;
   int num_args;
-  int depth;
 
   /* exported and exported_name won't be valid until after the before_export
    * callback */

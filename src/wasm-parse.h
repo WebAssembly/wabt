@@ -35,7 +35,7 @@ typedef struct WasmParserCallbacks {
                       int num_exprs,
                       WasmParserCookie cookie,
                       void* user_data);
-  void (*after_break)(int depth, void* user_data);
+  void (*after_break)(int label_depth, void* user_data);
   void (*before_call)(int function_index, void* user_data);
   void (*before_call_import)(int import_index, void* user_data);
   void (*before_compare)(enum WasmOpcode opcode, void* user_data);

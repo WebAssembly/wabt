@@ -43,6 +43,12 @@ typedef struct OutputBuffer {
   size_t capacity;
 } OutputBuffer;
 
+typedef struct LabelInfo {
+  uint32_t offset;
+  int block_depth;
+  struct LabelInfo* next_label;
+} LabelInfo;
+
 typedef struct Context {
   OutputBuffer buf;
   OutputBuffer temp_buf;
@@ -54,7 +60,9 @@ typedef struct Context {
   /* offset of each function/segment header in buf. */
   uint32_t* function_header_offsets;
   uint32_t* segment_header_offsets;
+  LabelInfo* top_label;
   int in_assert_eq;
+  int block_depth;
 } Context;
 
 extern const char* g_outfile;
@@ -276,6 +284,12 @@ static void destroy_output_buffer(OutputBuffer* buf) {
 }
 
 static void destroy_context(Context* ctx) {
+  LabelInfo* label = ctx->top_label;
+  while (label) {
+    LabelInfo* next_label = label->next_label;
+    free(label);
+    label = next_label;
+  }
   destroy_output_buffer(&ctx->buf);
   destroy_output_buffer(&ctx->temp_buf);
   destroy_output_buffer(&ctx->js_buf);
@@ -494,6 +508,7 @@ static WasmParserCookie before_block(void* user_data) {
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 0, "num expressions");
+  ctx->block_depth++;
   return cookie;
 }
 
@@ -502,6 +517,7 @@ static void after_block(WasmType type,
                         WasmParserCookie cookie,
                         void* user_data) {
   Context* ctx = user_data;
+  ctx->block_depth--;
   uint32_t offset = (uint32_t)cookie;
   if (type != WASM_TYPE_VOID)
     out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
@@ -514,10 +530,14 @@ static void before_binary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void after_break(int depth, void* user_data) {
+static void after_break(int label_depth, void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_BREAK);
-  out_u8(&ctx->buf, depth, "break depth");
+  LabelInfo* label_info = ctx->top_label;
+  for (; label_depth > 0; label_depth--)
+    label_info = label_info->next_label;
+  int block_depth = (ctx->block_depth - 1) - label_info->block_depth;
+  out_u8(&ctx->buf, block_depth, "break depth");
 }
 
 static void before_call(int function_index, void* user_data) {
@@ -619,16 +639,24 @@ static void after_if(WasmType type,
 static WasmParserCookie before_label(void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  LabelInfo* label_info = malloc(sizeof(LabelInfo));
+  label_info->offset = ctx->buf.size;
+  label_info->block_depth = ctx->block_depth++;
+  label_info->next_label = ctx->top_label;
+  ctx->top_label = label_info;
   out_u8(&ctx->buf, 0, "num expressions");
-  return cookie;
+  return (WasmParserCookie)label_info;
 }
 
 static void after_label(int num_exprs,
                         WasmParserCookie cookie,
                         void* user_data) {
   Context* ctx = user_data;
-  uint32_t offset = (uint32_t)cookie;
+  ctx->block_depth--;
+  LabelInfo* label_info = (LabelInfo*)cookie;
+  ctx->top_label = label_info->next_label;
+  uint32_t offset = label_info->offset;
+  free(label_info);
   out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
 }
 
@@ -651,6 +679,7 @@ static WasmParserCookie before_loop(void* user_data) {
   out_opcode(&ctx->buf, WASM_OPCODE_LOOP);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_u8(&ctx->buf, 0, "num expressions");
+  ctx->block_depth++;
   return cookie;
 }
 
@@ -658,6 +687,7 @@ static void after_loop(int num_exprs,
                        WasmParserCookie cookie,
                        void* user_data) {
   Context* ctx = user_data;
+  ctx->block_depth--;
   uint32_t offset = (uint32_t)cookie;
   out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
 }

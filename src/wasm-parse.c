@@ -842,7 +842,7 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
       WasmBinding* binding = &function->labels.data[i];
       const char* name = binding->name;
       if (name && strncmp(name, p, end - p) == 0)
-        /* index is actually the current block depth */
+        /* index is actually the current label depth */
         return binding->index;
     }
     FATAL_AT(parser, t.range.start, "undefined label variable \"%.*s\"\n",
@@ -860,7 +860,7 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
     }
 
     /* Index in reverse, so 0 is the most recent label. The stored "index" is
-     * actually the block depth, so return that instead */
+     * actually the label depth, so return that instead */
     index = (function->labels.size - 1) - index;
     return function->labels.data[index].index;
   }
@@ -1080,10 +1080,8 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_BLOCK: {
       WasmParserCookie cookie =
           CALLBACK(parser, before_block, (parser->user_data));
-      function->depth++;
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs, &continuation);
-      function->depth--;
       CALLBACK(parser, after_block,
                (type, num_exprs, cookie, parser->user_data));
       break;
@@ -1097,7 +1095,7 @@ static WasmType parse_expr(WasmParser* parser,
         /* parse_label_var returns the depth counting up (so 0 is the topmost
          block of this function). We want the depth counting down (so 0 is the
          most recent block). */
-        depth = (function->depth - 1) - parse_label_var(parser, function);
+        depth = function->labels.size - parse_label_var(parser, function);
         expect_close(parser, read_token(parser));
       } else if (function->labels.size == 0) {
         FATAL_AT(parser, t.range.start,
@@ -1239,7 +1237,7 @@ static WasmType parse_expr(WasmParser* parser,
       WasmBinding* binding = wasm_append_binding(&function->labels);
       CHECK_ALLOC(parser, binding, t.range.start);
       binding->name = NULL;
-      binding->index = function->depth++;
+      binding->index = function->labels.size;
 
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
         /* label */
@@ -1256,7 +1254,6 @@ static WasmType parse_expr(WasmParser* parser,
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs, &continuation);
       pop_binding(&function->labels);
-      function->depth--;
       CALLBACK(parser, after_label, (num_exprs, cookie, parser->user_data));
       break;
     }
@@ -1284,12 +1281,10 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_LOOP: {
       WasmParserCookie cookie =
           CALLBACK(parser, before_loop, (parser->user_data));
-      function->depth++;
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs, &continuation);
       /* Loops are infinite, so there is never a "normal" continuation */
       continuation &= ~WASM_CONTINUATION_NORMAL;
-      function->depth--;
       CALLBACK(parser, after_loop, (num_exprs, cookie, parser->user_data));
       break;
     }
