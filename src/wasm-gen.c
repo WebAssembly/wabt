@@ -599,7 +599,16 @@ static void after_if(WasmType type,
   Context* ctx = user_data;
   if (with_else) {
     uint32_t offset = (uint32_t)cookie;
-    out_u8_at(&ctx->buf, offset, WASM_OPCODE_IF_THEN, "FIXUP OPCODE_IF_THEN");
+    WasmOpcode opcode;
+    const char* desc;
+    if (type == WASM_TYPE_VOID) {
+      opcode = WASM_OPCODE_IF_THEN;
+      desc = "FIXUP OPCODE_IF_THEN";
+    } else {
+      opcode = WASM_OPCODE_EXPR_IF;
+      desc = "FIXUP OPCODE_EXPR_IF";
+    }
+    out_u8_at(&ctx->buf, offset, opcode, desc);
   }
 }
 

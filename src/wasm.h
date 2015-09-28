@@ -42,8 +42,11 @@ typedef enum WasmType {
   V(SET_GLOBAL, 0x18)          \
   V(CALL, 0x19)                \
   V(CALL_INDIRECT, 0x1a)       \
-  V(TERNARY, 0x1b)             \
+  V(EXPR_IF, 0x1b)             \
   V(COMMA, 0x1c)               \
+  V(EXPR_BLOCK, 0x1d)          \
+  V(EXPR_LOOP, 0x1e)           \
+  V(EXPR_BREAK, 0x1f)          \
   V(I32_LOAD_I32, 0x20)        \
   V(I64_LOAD_I32, 0x21)        \
   V(F32_LOAD_I32, 0x22)        \
