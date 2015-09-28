@@ -238,11 +238,11 @@ static int read_uint64(const char** s, const char* end, uint64_t* out) {
     for (; *s < end; ++(*s)) {
       uint32_t digit;
       char c = **s;
-      if ((c - '0') <= 9) {
+      if ((unsigned int)(c - '0') <= 9) {
         digit = c - '0';
-      } else if ((c - 'a') <= 6) {
+      } else if ((unsigned int)(c - 'a') <= 6) {
         digit = 10 + (c - 'a');
-      } else if ((c - 'A') <= 6) {
+      } else if ((unsigned int)(c - 'A') <= 6) {
         digit = 10 + (c - 'A');
       } else {
         return 0;
