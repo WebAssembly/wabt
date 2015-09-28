@@ -75,10 +75,12 @@ typedef enum WasmOpType {
 
 enum {
   WASM_CONTINUATION_NORMAL = 1,
-  WASM_CONTINUATION_BREAK = 2,
-  WASM_CONTINUATION_RETURN = 4,
+  WASM_CONTINUATION_RETURN = 2,
+  WASM_CONTINUATION_BREAK_0 = 4,
 };
-typedef unsigned int WasmContinuation;
+typedef uint32_t WasmContinuation;
+#define CONTINUATION_BREAK_MASK (~(WasmContinuation)3)
+#define MAX_BREAK_DEPTH 30
 
 #include "hash.h"
 
@@ -148,6 +150,10 @@ static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+
+static int is_power_of_two(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
 
 static void fatal_at(WasmParser* parser,
                      WasmSourceLocation loc,
@@ -708,7 +714,7 @@ static int match_load_store_aligned(WasmParser* parser,
         return 0;
 
       /* check that alignment is power-of-two */
-      if (alignment == 0 || (alignment & (alignment - 1)) != 0)
+      if (!is_power_of_two(alignment))
         FATAL_AT(parser, t.range.start, "alignment must be power-of-two\n");
 
       int native_mem_type_alignment[] = {
@@ -889,11 +895,19 @@ static WasmType parse_block(WasmParser* parser,
     WasmContinuation this_continuation;
     type = parse_expr(parser, module, function, &this_continuation);
     if (continuation & WASM_CONTINUATION_NORMAL) {
-      if (this_continuation == WASM_CONTINUATION_RETURN ||
-          this_continuation == WASM_CONTINUATION_BREAK)
-        continuation = this_continuation;
+      /* If the continuation is a power of two, then at this point we've hit a
+       return or break that is forced. A previous return/break is still
+       possible, but a normal continuation is not. */
+      if (this_continuation != WASM_CONTINUATION_NORMAL &&
+          is_power_of_two(this_continuation))
+        continuation =
+            (continuation & ~WASM_CONTINUATION_NORMAL) | this_continuation;
       else
         continuation |= this_continuation;
+    } else {
+      /* The current continuation does not include normal, so the current
+       expression will never be executed. */
+      /* TODO(binji): should this raise an error or warning? */
     }
     ++num_exprs;
     WasmToken t = read_token(parser);
@@ -1101,7 +1115,12 @@ static WasmType parse_expr(WasmParser* parser,
         FATAL_AT(parser, t.range.start,
                  "label variable out of range (max 0)\n");
       }
-      continuation = WASM_CONTINUATION_BREAK;
+      if (depth > MAX_BREAK_DEPTH) {
+        FATAL_AT(parser, t.range.start,
+                 "break depth %d not supported (max %d)\n", depth,
+                 MAX_BREAK_DEPTH);
+      }
+      continuation = WASM_CONTINUATION_BREAK_0 << depth;
       CALLBACK(parser, after_break, (depth, parser->user_data));
       break;
     }
@@ -1253,6 +1272,16 @@ static WasmType parse_expr(WasmParser* parser,
 
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs, &continuation);
+      if (continuation & WASM_CONTINUATION_BREAK_0) {
+        continuation = (continuation & ~WASM_CONTINUATION_BREAK_0) |
+                       WASM_CONTINUATION_NORMAL;
+      }
+      /* Shift all of the break depths down by 1, keeping the other
+       continuations. Since we cleared WASM_CONTINUATION_BREAK_0 above if it
+       was set, we don't have to worry about it shifting into a
+       WASM_CONTINUATION_RETURN */
+      continuation = (continuation & ~CONTINUATION_BREAK_MASK) |
+                     ((continuation & CONTINUATION_BREAK_MASK) >> 1);
       pop_binding(&function->labels);
       CALLBACK(parser, after_label, (num_exprs, cookie, parser->user_data));
       break;

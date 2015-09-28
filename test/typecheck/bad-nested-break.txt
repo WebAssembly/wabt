@@ -1,0 +1,15 @@
+# ERROR: 1
+(module
+  (func (result i32)
+    (label $outer
+      (label $inner
+        (loop
+          (if (i32.const 1)
+            (break $outer))
+          (break $inner)))
+      (return (i32.const 2)))
+    ;; the existence of the (break $outer) statement requires there to be a
+    ;; return statement here.
+  ))
+# STDERR:
+typecheck/bad-nested-break.txt:13:3: type mismatch in function result. got void, expected i32
