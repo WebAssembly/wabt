@@ -31,7 +31,10 @@ typedef struct WasmParserCallbacks {
 
   void (*before_binary)(enum WasmOpcode opcode, void* user_data);
   WasmParserCookie (*before_block)(void* user_data);
-  void (*after_block)(int num_exprs, WasmParserCookie cookie, void* user_data);
+  void (*after_block)(WasmType type,
+                      int num_exprs,
+                      WasmParserCookie cookie,
+                      void* user_data);
   void (*after_break)(int depth, void* user_data);
   void (*before_call)(int function_index, void* user_data);
   void (*before_call_import)(int import_index, void* user_data);

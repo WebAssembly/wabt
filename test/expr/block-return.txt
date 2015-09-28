@@ -1,0 +1,5 @@
+(module
+  (func (result i32)
+    (block
+      (nop)
+      (return (i32.const 1)))))

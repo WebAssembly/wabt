@@ -880,11 +880,21 @@ static WasmType parse_expr(WasmParser* parser,
 static WasmType parse_block(WasmParser* parser,
                             WasmModule* module,
                             WasmFunction* function,
-                            int* out_num_exprs) {
+                            int* out_num_exprs,
+                            WasmContinuation* out_continuation) {
   int num_exprs = 0;
+  WasmContinuation continuation = WASM_CONTINUATION_NORMAL;
   WasmType type;
   while (1) {
-    type = parse_expr(parser, module, function, NULL);
+    WasmContinuation this_continuation;
+    type = parse_expr(parser, module, function, &this_continuation);
+    if (continuation & WASM_CONTINUATION_NORMAL) {
+      if (this_continuation == WASM_CONTINUATION_RETURN ||
+          this_continuation == WASM_CONTINUATION_BREAK)
+        continuation = this_continuation;
+      else
+        continuation |= this_continuation;
+    }
     ++num_exprs;
     WasmToken t = read_token(parser);
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
@@ -892,6 +902,8 @@ static WasmType parse_block(WasmParser* parser,
     rewind_token(parser, t);
   }
   *out_num_exprs = num_exprs;
+  if (out_continuation)
+    *out_continuation = continuation;
   return type;
 }
 
@@ -1070,9 +1082,10 @@ static WasmType parse_expr(WasmParser* parser,
           CALLBACK(parser, before_block, (parser->user_data));
       function->depth++;
       int num_exprs;
-      type = parse_block(parser, module, function, &num_exprs);
+      type = parse_block(parser, module, function, &num_exprs, &continuation);
       function->depth--;
-      CALLBACK(parser, after_block, (num_exprs, cookie, parser->user_data));
+      CALLBACK(parser, after_block,
+               (type, num_exprs, cookie, parser->user_data));
       break;
     }
 
@@ -1241,7 +1254,7 @@ static WasmType parse_expr(WasmParser* parser,
       }
 
       int num_exprs;
-      type = parse_block(parser, module, function, &num_exprs);
+      type = parse_block(parser, module, function, &num_exprs, &continuation);
       pop_binding(&function->labels);
       function->depth--;
       CALLBACK(parser, after_label, (num_exprs, cookie, parser->user_data));
@@ -1273,7 +1286,9 @@ static WasmType parse_expr(WasmParser* parser,
           CALLBACK(parser, before_loop, (parser->user_data));
       function->depth++;
       int num_exprs;
-      type = parse_block(parser, module, function, &num_exprs);
+      type = parse_block(parser, module, function, &num_exprs, &continuation);
+      /* Loops are infinite, so there is never a "normal" continuation */
+      continuation &= ~WASM_CONTINUATION_NORMAL;
       function->depth--;
       CALLBACK(parser, after_loop, (num_exprs, cookie, parser->user_data));
       break;

@@ -4,12 +4,16 @@
     (block
       (nop)
       (nop)
-      (nop))))
+      (nop)))
+
+  (func (result i32)
+    (block
+      (i32.const 1))))
 # STDOUT:
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
-0000004: 0100                                       ; num funcs
+0000004: 0200                                       ; num funcs
 0000006: 0000                                       ; num data segments
 ; function header 0
 0000008: 00                                         ; func num args
@@ -23,16 +27,39 @@
 000001c: 0000                                       ; num local f64
 000001e: 00                                         ; export func
 000001f: 00                                         ; func external
+; function header 1
+0000020: 00                                         ; func num args
+0000021: 01                                         ; func result type
+0000022: 0000 0000                                  ; func name offset
+0000026: 0000 0000                                  ; func code start offset
+000002a: 0000 0000                                  ; func code end offset
+000002e: 0000                                       ; num local i32
+0000030: 0000                                       ; num local i64
+0000032: 0000                                       ; num local f32
+0000034: 0000                                       ; num local f64
+0000036: 00                                         ; export func
+0000037: 00                                         ; func external
 ; function data 0
-000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 03                                         ; OPCODE_BLOCK
-0000021: 00                                         ; num expressions
-0000022: 00                                         ; OPCODE_NOP
-0000023: 00                                         ; OPCODE_NOP
-0000024: 00                                         ; OPCODE_NOP
-0000021: 03                                         ; FIXUP num expressions
-0000012: 2500 0000                                  ; FIXUP func code end offset
+000000e: 3800 0000                                  ; FIXUP func code start offset
+0000038: 03                                         ; OPCODE_BLOCK
+0000039: 00                                         ; num expressions
+000003a: 00                                         ; OPCODE_NOP
+000003b: 00                                         ; OPCODE_NOP
+000003c: 00                                         ; OPCODE_NOP
+0000039: 03                                         ; FIXUP num expressions
+0000012: 3d00 0000                                  ; FIXUP func code end offset
+; function data 1
+0000026: 3d00 0000                                  ; FIXUP func code start offset
+000003d: 03                                         ; OPCODE_BLOCK
+000003e: 00                                         ; num expressions
+000003f: 10                                         ; OPCODE_I8_CONST
+0000040: 01                                         ; u8 literal
+000003d: 1d                                         ; FIXUP OPCODE_EXPR_BLOCK
+000003e: 01                                         ; FIXUP num expressions
+000002a: 4100 0000                                  ; FIXUP func code end offset
 ; names
-0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 2500 0000 0000 0000 0000 0000 0000  ..%.............
-0000020: 0303 0000 00                             .....
+0000000: 0001 0000 0200 0000 0000 0000 0000 3800  ..............8.
+0000010: 0000 3d00 0000 0000 0000 0000 0000 0000  ..=.............
+0000020: 0001 0000 0000 3d00 0000 4100 0000 0000  ......=...A.....
+0000030: 0000 0000 0000 0000 0303 0000 001d 0110  ................
+0000040: 01                                       .

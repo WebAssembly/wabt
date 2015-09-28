@@ -491,18 +491,22 @@ static void after_export(WasmModule* module,
 
 static WasmParserCookie before_block(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 0, "num expressions");
   return cookie;
 }
 
-static void after_block(int num_exprs,
+static void after_block(WasmType type,
+                        int num_exprs,
                         WasmParserCookie cookie,
                         void* user_data) {
   Context* ctx = user_data;
   uint32_t offset = (uint32_t)cookie;
-  out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  if (type != WASM_TYPE_VOID)
+    out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
+              "FIXUP OPCODE_EXPR_BLOCK");
+  out_u8_at(&ctx->buf, offset + 1, num_exprs, "FIXUP num expressions");
 }
 
 static void before_binary(enum WasmOpcode opcode, void* user_data) {

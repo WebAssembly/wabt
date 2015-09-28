@@ -1,0 +1,9 @@
+# EXE: test/run-d8.py
+(module
+  (func $test (result i32)
+    (block
+      (i32.const 10)
+      (i32.const 1)))
+  (export "test" $test))
+# STDOUT:
+test() = 1

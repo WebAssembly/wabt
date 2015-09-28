@@ -525,7 +525,7 @@ in_word_set (str, len)
       {"nop", WASM_OP_NOP, WASM_OPCODE_NOP, WASM_TYPE_VOID},
       {""}, {""}, {""}, {""}, {""},
 #line 12 "src/hash.txt"
-      {"block", WASM_OP_BLOCK, WASM_OPCODE_BLOCK},
+      {"block", WASM_OP_BLOCK, WASM_OPCODE_EXPR_BLOCK},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""},
