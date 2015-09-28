@@ -592,7 +592,10 @@ static WasmParserCookie before_if(void* user_data) {
   return (WasmParserCookie)offset;
 }
 
-static void after_if(int with_else, WasmParserCookie cookie, void* user_data) {
+static void after_if(WasmType type,
+                     int with_else,
+                     WasmParserCookie cookie,
+                     void* user_data) {
   Context* ctx = user_data;
   if (with_else) {
     uint32_t offset = (uint32_t)cookie;

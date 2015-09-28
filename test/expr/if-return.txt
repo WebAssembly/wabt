@@ -1,0 +1,5 @@
+(module
+  (func (result i32)
+    (if (i32.const 1)
+      (return (i32.const 2))
+      (return (i32.const 3)))))
