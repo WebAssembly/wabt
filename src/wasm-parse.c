@@ -1906,14 +1906,15 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
              (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
   }
 
-  CALLBACK(parser, before_invoke, (name, function_index, parser->user_data));
+  WasmParserCookie cookie = CALLBACK(parser, before_invoke,
+                                     (name, function_index, parser->user_data));
   free(name);
 
   WasmFunction dummy_function = {};
   WasmFunction* invokee = &module->functions.data[function_index];
   WasmType result_type =
       parse_call_args(parser, module, &dummy_function, invokee, "invoke");
-  CALLBACK(parser, after_invoke, (parser->user_data));
+  CALLBACK(parser, after_invoke, (cookie, parser->user_data));
   return result_type;
 }
 

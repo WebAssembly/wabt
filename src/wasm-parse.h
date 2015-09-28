@@ -69,10 +69,10 @@ typedef struct WasmParserCallbacks {
   void (*after_assert_eq)(WasmType type,
                           WasmParserCookie cookie,
                           void* user_data);
-  void (*before_invoke)(const char* invoke_name,
-                        int invoke_function_index,
-                        void* user_data);
-  void (*after_invoke)(void* user_data);
+  WasmParserCookie (*before_invoke)(const char* invoke_name,
+                                    int invoke_function_index,
+                                    void* user_data);
+  void (*after_invoke)(WasmParserCookie cookie, void* user_data);
 
   /* called with the error from the module parsed inside of assert_invalid */
   void (*assert_invalid_error)(WasmSourceLocation loc,

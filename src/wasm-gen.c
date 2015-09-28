@@ -778,7 +778,9 @@ static WasmParserCookie before_assert_eq(void* user_data) {
   return cookie;
 }
 
-static void append_nullary_function(Context* ctx, const char* name) {
+static void append_nullary_function(Context* ctx,
+                                    const char* name,
+                                    WasmType result_type) {
   /* We assume that the data for the function in ctx->buf. Add this as a
    new function to ctx->temp_buf. */
   const size_t header_size = FUNC_HEADER_SIZE(0);
@@ -885,7 +887,7 @@ static void append_nullary_function(Context* ctx, const char* name) {
   }
   memset(ctx->temp_buf.start + new_header_offset, 0, FUNC_HEADER_SIZE(0));
   out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
-            WASM_TYPE_I32, "func result type");
+            result_type, "func result type");
   out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_NAME_OFFSET(0),
              new_name_offset, "func name offset");
   out_u32_at(&ctx->temp_buf,
@@ -925,14 +927,14 @@ static void after_assert_eq(WasmType type,
 
   char name[256];
   snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
-  append_nullary_function(ctx, name);
+  append_nullary_function(ctx, name, WASM_TYPE_I32);
 
   ctx->in_assert_eq = 0;
 }
 
-static void before_invoke(const char* invoke_name,
-                          int invoke_function_index,
-                          void* user_data) {
+static WasmParserCookie before_invoke(const char* invoke_name,
+                                      int invoke_function_index,
+                                      void* user_data) {
   Context* ctx = user_data;
   if (!ctx->in_assert_eq) {
     if (g_verbose)
@@ -944,15 +946,20 @@ static void before_invoke(const char* invoke_name,
   /* defined functions are always after all imports */
   out_leb128(&ctx->buf, ctx->module->imports.size + invoke_function_index,
              "invoke func index");
+
+  return (WasmParserCookie)invoke_function_index;
 }
 
-static void after_invoke(void* user_data) {
+static void after_invoke(WasmParserCookie cookie, void* user_data) {
   Context* ctx = user_data;
   if (ctx->in_assert_eq)
     return;
+
+  int invoke_function_index = (int)cookie;
+  WasmFunction* function = &ctx->module->functions.data[invoke_function_index];
   char name[256];
   snprintf(name, 256, "$invoke_%d", ctx->invoke_count++);
-  append_nullary_function(ctx, name);
+  append_nullary_function(ctx, name, function->result_type);
 }
 
 static void assert_invalid_error(WasmSourceLocation loc,
