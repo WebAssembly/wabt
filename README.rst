@@ -85,6 +85,20 @@ If you just want to run a quick test, you can use the run-d8.py script instead::
   $ test/run-d8.py test.wasm
   test() = 3
 
+To run spec-style tests (with assert_eq, invoke, etc.) use the `--spec` flag::
+
+  $ cat > test2.wasm << HERE
+  (module
+    (export "neg" 0)
+    (func (param i32) (result i32)
+      (i32.sub (i32.const 0) (get_local 0))))
+  (assert_eq (invoke "neg" (i32.const 100)) (i32.const -100))
+  HERE
+  $ test/run-d8.py --spec test2.wasm
+  instantiating module
+  $assert_eq_0 OK
+  1/1 tests passed.
+
 Tests
 -----
 
