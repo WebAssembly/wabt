@@ -717,6 +717,11 @@ static int match_load_store_aligned(WasmParser* parser,
       if (!is_power_of_two(alignment))
         FATAL_AT(parser, t.range.start, "alignment must be power-of-two\n");
 
+      *op_info = *found;
+#if 0
+  /* TODO(binji): setting the unaligned memory access bit is currently an error
+   in v8-native-prototype. */
+
       int native_mem_type_alignment[] = {
           1, /* MEM_TYPE_I8 */
           2, /* MEM_TYPE_I16 */
@@ -726,9 +731,9 @@ static int match_load_store_aligned(WasmParser* parser,
           8, /* MEM_TYPE_F64 */
       };
 
-      *op_info = *found;
       if (alignment && alignment < native_mem_type_alignment[op_info->type2])
         op_info->access |= 0x8; /* unaligned access */
+#endif
       return 1;
     }
     end--;
@@ -1658,7 +1663,7 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
                      address, last_segment_end);
           }
 
-          if (address >= module->initial_memory_size) {
+          if (address > module->initial_memory_size) {
             FATAL_AT(parser, t.range.start,
                      "address (%u) greater than initial memory size (%u)\n",
                      address, module->initial_memory_size);

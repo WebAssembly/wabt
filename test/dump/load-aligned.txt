@@ -72,7 +72,7 @@
 000002e: 10                                         ; OPCODE_I8_CONST
 000002f: 00                                         ; u8 literal
 0000030: 20                                         ; OPCODE_I32_LOAD_I32
-0000031: 0d                                         ; load access byte
+0000031: 05                                         ; load access byte
 0000032: 10                                         ; OPCODE_I8_CONST
 0000033: 00                                         ; u8 literal
 0000034: 20                                         ; OPCODE_I32_LOAD_I32
@@ -88,11 +88,11 @@
 000003e: 10                                         ; OPCODE_I8_CONST
 000003f: 00                                         ; u8 literal
 0000040: 20                                         ; OPCODE_I32_LOAD_I32
-0000041: 0e                                         ; load access byte
+0000041: 06                                         ; load access byte
 0000042: 10                                         ; OPCODE_I8_CONST
 0000043: 00                                         ; u8 literal
 0000044: 20                                         ; OPCODE_I32_LOAD_I32
-0000045: 0e                                         ; load access byte
+0000045: 06                                         ; load access byte
 0000046: 10                                         ; OPCODE_I8_CONST
 0000047: 00                                         ; u8 literal
 0000048: 20                                         ; OPCODE_I32_LOAD_I32
@@ -104,15 +104,15 @@
 000004e: 10                                         ; OPCODE_I8_CONST
 000004f: 00                                         ; u8 literal
 0000050: 21                                         ; OPCODE_I64_LOAD_I32
-0000051: 0f                                         ; load access byte
+0000051: 07                                         ; load access byte
 0000052: 10                                         ; OPCODE_I8_CONST
 0000053: 00                                         ; u8 literal
 0000054: 21                                         ; OPCODE_I64_LOAD_I32
-0000055: 0f                                         ; load access byte
+0000055: 07                                         ; load access byte
 0000056: 10                                         ; OPCODE_I8_CONST
 0000057: 00                                         ; u8 literal
 0000058: 21                                         ; OPCODE_I64_LOAD_I32
-0000059: 0f                                         ; load access byte
+0000059: 07                                         ; load access byte
 000005a: 10                                         ; OPCODE_I8_CONST
 000005b: 00                                         ; u8 literal
 000005c: 21                                         ; OPCODE_I64_LOAD_I32
@@ -136,7 +136,7 @@
 000006e: 10                                         ; OPCODE_I8_CONST
 000006f: 00                                         ; u8 literal
 0000070: 21                                         ; OPCODE_I64_LOAD_I32
-0000071: 0d                                         ; load access byte
+0000071: 05                                         ; load access byte
 0000072: 10                                         ; OPCODE_I8_CONST
 0000073: 00                                         ; u8 literal
 0000074: 21                                         ; OPCODE_I64_LOAD_I32
@@ -152,11 +152,11 @@
 000007e: 10                                         ; OPCODE_I8_CONST
 000007f: 00                                         ; u8 literal
 0000080: 21                                         ; OPCODE_I64_LOAD_I32
-0000081: 0e                                         ; load access byte
+0000081: 06                                         ; load access byte
 0000082: 10                                         ; OPCODE_I8_CONST
 0000083: 00                                         ; u8 literal
 0000084: 21                                         ; OPCODE_I64_LOAD_I32
-0000085: 0e                                         ; load access byte
+0000085: 06                                         ; load access byte
 0000086: 10                                         ; OPCODE_I8_CONST
 0000087: 00                                         ; u8 literal
 0000088: 21                                         ; OPCODE_I64_LOAD_I32
@@ -172,9 +172,9 @@
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
 0000010: 0000 9000 0000 0000 0000 0000 0000 0000  ................
 0000020: 2004 1000 2004 1000 2004 1000 2004 1000   ... ... ... ...
-0000030: 200d 1000 2005 1000 2005 1000 2005 1000   ... ... ... ...
-0000040: 200e 1000 200e 1000 2006 1000 2006 1000   ... ... ... ...
-0000050: 210f 1000 210f 1000 210f 1000 2107 1000  !...!...!...!...
+0000030: 2005 1000 2005 1000 2005 1000 2005 1000   ... ... ... ...
+0000040: 2006 1000 2006 1000 2006 1000 2006 1000   ... ... ... ...
+0000050: 2107 1000 2107 1000 2107 1000 2107 1000  !...!...!...!...
 0000060: 2104 1000 2104 1000 2104 1000 2104 1000  !...!...!...!...
-0000070: 210d 1000 2105 1000 2105 1000 2105 1000  !...!...!...!...
-0000080: 210e 1000 210e 1000 2106 1000 2106 1000  !...!...!...!...
+0000070: 2105 1000 2105 1000 2105 1000 2105 1000  !...!...!...!...
+0000080: 2106 1000 2106 1000 2106 1000 2106 1000  !...!...!...!...

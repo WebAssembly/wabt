@@ -1,0 +1,74 @@
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/memory.wasm
+# STDOUT:
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:13:21: max size (0) must be greater than or equal to initial size (1)
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:17:34: segment ends past the end of the initial memory size (0)
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:21:53: address (500) greater than initial memory size (100)
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:25:55: address (0) less than end of previous segment (3)
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:29:54: address (0) less than end of previous segment (5)
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:33:69: address (1) less than end of previous segment (3)
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:44:18: alignment must be power-of-two
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:48:18: alignment must be power-of-two
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:52:18: alignment must be power-of-two
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:56:18: alignment must be power-of-two
+assert_invalid error:
+  third_party/spec/ml-proto/test/memory.wasm:60:18: alignment must be power-of-two
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+0/0 tests passed.
+instantiating module
+$assert_eq_0 OK
+$assert_eq_1 OK
+$assert_eq_2 OK
+$assert_eq_3 OK
+$assert_eq_4 OK
+$assert_eq_5 OK
+$assert_eq_6 OK
+$assert_eq_7 OK
+$assert_eq_8 OK
+$assert_eq_9 OK
+$assert_eq_10 OK
+$assert_eq_11 OK
+$assert_eq_12 failed, expected 1, got 0
+$assert_eq_13 OK
+$assert_eq_14 failed, expected 1, got 0
+$assert_eq_15 OK
+$assert_eq_16 failed, expected 1, got 0
+$assert_eq_17 OK
+$assert_eq_18 OK
+$assert_eq_19 OK
+$assert_eq_20 OK
+$assert_eq_21 OK
+$assert_eq_22 OK
+$assert_eq_23 OK
+21/24 tests passed.
