@@ -21,6 +21,25 @@
       (i32.store (i32.const 0) (i32.const -123456))
       (i32.load (i32.const 0)))
 
+  (export "i64_store8" $i64_store8)
+  (func $i64_store8 (result i32)
+      (i64.store8 (i32.const 0) (i64.const 0xeeeeeeeeeeeeeefb))
+      (i64.store8 (i32.const 1) (i64.const 0xeeeeeeeeeeeeeefc))
+      (i64.store8 (i32.const 2) (i64.const 0xeeeeeeeeeeeeeefd))
+      (i64.store8 (i32.const 3) (i64.const 0xeeeeeeeeeeeeeefe))
+      (i32.load (i32.const 0)))
+
+  (export "i64_store16" $i64_store16)
+  (func $i64_store16 (result i32)
+      (i64.store16 (i32.const 0) (i64.const 0xeeeeeeeeeeeecac9))
+      (i64.store16 (i32.const 2) (i64.const 0xeeeeeeeeeeeecccb))
+      (i32.load (i32.const 0)))
+
+  (export "i64_store32" $i64_store32)
+  (func $i64_store32 (result i32)
+      (i64.store32 (i32.const 0) (i64.const -123456))
+      (i32.load (i32.const 0)))
+
   ;; v8-native-prototype currently crashes if you try to return an i64, so
   ;; we'll do a comparison against the expected value instead.
   (export "i64_store" $i64_store)
@@ -42,6 +61,9 @@
 i32_store8() = -16909061
 i32_store16() = -859059511
 i32_store() = -123456
+i64_store8() = -16909061
+i64_store16() = -859059511
+i64_store32() = -123456
 i64_store() = 1
 f32_store() = 1069547520
 f64_store() = -1064352256

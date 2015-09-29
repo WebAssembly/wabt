@@ -2,11 +2,17 @@
 (module
   (func
     (i32.load (i32.const 0))
-    (i64.load (i32.const 0))
     (i32.load8_s (i32.const 0))
     (i32.load16_s (i32.const 0))
     (i32.load8_u (i32.const 0))
     (i32.load16_u (i32.const 0))
+    (i64.load (i32.const 0))
+    (i64.load8_s (i32.const 0))
+    (i64.load16_s (i32.const 0))
+    (i64.load32_s (i32.const 0))
+    (i64.load8_u (i32.const 0))
+    (i64.load16_u (i32.const 0))
+    (i64.load32_u (i32.const 0))
     (f32.load (i32.const 0))
     (f64.load (i32.const 0))))
 # STDOUT:
@@ -33,37 +39,63 @@
 0000021: 06                                         ; load access byte
 0000022: 10                                         ; OPCODE_I8_CONST
 0000023: 00                                         ; u8 literal
-0000024: 21                                         ; OPCODE_I64_LOAD_I32
-0000025: 07                                         ; load access byte
+0000024: 20                                         ; OPCODE_I32_LOAD_I32
+0000025: 04                                         ; load access byte
 0000026: 10                                         ; OPCODE_I8_CONST
 0000027: 00                                         ; u8 literal
 0000028: 20                                         ; OPCODE_I32_LOAD_I32
-0000029: 04                                         ; load access byte
+0000029: 05                                         ; load access byte
 000002a: 10                                         ; OPCODE_I8_CONST
 000002b: 00                                         ; u8 literal
 000002c: 20                                         ; OPCODE_I32_LOAD_I32
-000002d: 05                                         ; load access byte
+000002d: 00                                         ; load access byte
 000002e: 10                                         ; OPCODE_I8_CONST
 000002f: 00                                         ; u8 literal
 0000030: 20                                         ; OPCODE_I32_LOAD_I32
-0000031: 00                                         ; load access byte
+0000031: 01                                         ; load access byte
 0000032: 10                                         ; OPCODE_I8_CONST
 0000033: 00                                         ; u8 literal
-0000034: 20                                         ; OPCODE_I32_LOAD_I32
-0000035: 01                                         ; load access byte
+0000034: 21                                         ; OPCODE_I64_LOAD_I32
+0000035: 07                                         ; load access byte
 0000036: 10                                         ; OPCODE_I8_CONST
 0000037: 00                                         ; u8 literal
-0000038: 22                                         ; OPCODE_F32_LOAD_I32
-0000039: 00                                         ; load access byte
+0000038: 21                                         ; OPCODE_I64_LOAD_I32
+0000039: 04                                         ; load access byte
 000003a: 10                                         ; OPCODE_I8_CONST
 000003b: 00                                         ; u8 literal
-000003c: 23                                         ; OPCODE_F64_LOAD_I32
-000003d: 00                                         ; load access byte
+000003c: 21                                         ; OPCODE_I64_LOAD_I32
+000003d: 05                                         ; load access byte
 000003e: 10                                         ; OPCODE_I8_CONST
 000003f: 00                                         ; u8 literal
-0000012: 4000 0000                                  ; FIXUP func code end offset
+0000040: 21                                         ; OPCODE_I64_LOAD_I32
+0000041: 06                                         ; load access byte
+0000042: 10                                         ; OPCODE_I8_CONST
+0000043: 00                                         ; u8 literal
+0000044: 21                                         ; OPCODE_I64_LOAD_I32
+0000045: 00                                         ; load access byte
+0000046: 10                                         ; OPCODE_I8_CONST
+0000047: 00                                         ; u8 literal
+0000048: 21                                         ; OPCODE_I64_LOAD_I32
+0000049: 01                                         ; load access byte
+000004a: 10                                         ; OPCODE_I8_CONST
+000004b: 00                                         ; u8 literal
+000004c: 21                                         ; OPCODE_I64_LOAD_I32
+000004d: 02                                         ; load access byte
+000004e: 10                                         ; OPCODE_I8_CONST
+000004f: 00                                         ; u8 literal
+0000050: 22                                         ; OPCODE_F32_LOAD_I32
+0000051: 00                                         ; load access byte
+0000052: 10                                         ; OPCODE_I8_CONST
+0000053: 00                                         ; u8 literal
+0000054: 23                                         ; OPCODE_F64_LOAD_I32
+0000055: 00                                         ; load access byte
+0000056: 10                                         ; OPCODE_I8_CONST
+0000057: 00                                         ; u8 literal
+0000012: 5800 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 4000 0000 0000 0000 0000 0000 0000  ..@.............
-0000020: 2006 1000 2107 1000 2004 1000 2005 1000   ...!... ... ...
-0000030: 2000 1000 2001 1000 2200 1000 2300 1000   ... ..."...#...
+0000010: 0000 5800 0000 0000 0000 0000 0000 0000  ..X.............
+0000020: 2006 1000 2004 1000 2005 1000 2000 1000   ... ... ... ...
+0000030: 2001 1000 2107 1000 2104 1000 2105 1000   ...!...!...!...
+0000040: 2106 1000 2100 1000 2101 1000 2102 1000  !...!...!...!...
+0000050: 2200 1000 2300 1000                      "...#...

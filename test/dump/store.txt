@@ -5,6 +5,9 @@
     (i32.store16 (i32.const 0) (i32.const 0))
     (i32.store (i32.const 0) (i32.const 0))
     (i64.store (i32.const 0) (i64.const 0))
+    (i64.store8 (i32.const 0) (i64.const 0))
+    (i64.store16 (i32.const 0) (i64.const 0))
+    (i64.store32 (i32.const 0) (i64.const 0))
     (f32.store (i32.const 0) (f32.const 0))
     (f64.store (i32.const 0) (f64.const 0))))
 # STDOUT:
@@ -51,23 +54,43 @@
 0000035: 00                                         ; u8 literal
 0000036: 12                                         ; OPCODE_I64_CONST
 0000037: 0000 0000 0000 0000                        ; u64 literal
-000003f: 32                                         ; OPCODE_F32_STORE_I32
-0000040: 00                                         ; store access byte
+000003f: 31                                         ; OPCODE_I64_STORE_I32
+0000040: 04                                         ; store access byte
 0000041: 10                                         ; OPCODE_I8_CONST
 0000042: 00                                         ; u8 literal
-0000043: 14                                         ; OPCODE_F32_CONST
-0000044: 0000 0000                                  ; f32 literal
-0000048: 33                                         ; OPCODE_F64_STORE_I32
-0000049: 00                                         ; store access byte
-000004a: 10                                         ; OPCODE_I8_CONST
-000004b: 00                                         ; u8 literal
-000004c: 13                                         ; OPCODE_F64_CONST
-000004d: 0000 0000 0000 0000                        ; f64 literal
-0000012: 5500 0000                                  ; FIXUP func code end offset
+0000043: 12                                         ; OPCODE_I64_CONST
+0000044: 0000 0000 0000 0000                        ; u64 literal
+000004c: 31                                         ; OPCODE_I64_STORE_I32
+000004d: 05                                         ; store access byte
+000004e: 10                                         ; OPCODE_I8_CONST
+000004f: 00                                         ; u8 literal
+0000050: 12                                         ; OPCODE_I64_CONST
+0000051: 0000 0000 0000 0000                        ; u64 literal
+0000059: 31                                         ; OPCODE_I64_STORE_I32
+000005a: 06                                         ; store access byte
+000005b: 10                                         ; OPCODE_I8_CONST
+000005c: 00                                         ; u8 literal
+000005d: 12                                         ; OPCODE_I64_CONST
+000005e: 0000 0000 0000 0000                        ; u64 literal
+0000066: 32                                         ; OPCODE_F32_STORE_I32
+0000067: 00                                         ; store access byte
+0000068: 10                                         ; OPCODE_I8_CONST
+0000069: 00                                         ; u8 literal
+000006a: 14                                         ; OPCODE_F32_CONST
+000006b: 0000 0000                                  ; f32 literal
+000006f: 33                                         ; OPCODE_F64_STORE_I32
+0000070: 00                                         ; store access byte
+0000071: 10                                         ; OPCODE_I8_CONST
+0000072: 00                                         ; u8 literal
+0000073: 13                                         ; OPCODE_F64_CONST
+0000074: 0000 0000 0000 0000                        ; f64 literal
+0000012: 7c00 0000                                  ; FIXUP func code end offset
 ; names
 0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 5500 0000 0000 0000 0000 0000 0000  ..U.............
+0000010: 0000 7c00 0000 0000 0000 0000 0000 0000  ..|.............
 0000020: 3004 1000 1000 3005 1000 1000 3006 1000  0.....0.....0...
-0000030: 1000 3107 1000 1200 0000 0000 0000 0032  ..1............2
-0000040: 0010 0014 0000 0000 3300 1000 1300 0000  ........3.......
-0000050: 0000 0000 00                             .....
+0000030: 1000 3107 1000 1200 0000 0000 0000 0031  ..1............1
+0000040: 0410 0012 0000 0000 0000 0000 3105 1000  ............1...
+0000050: 1200 0000 0000 0000 0031 0610 0012 0000  .........1......
+0000060: 0000 0000 0000 3200 1000 1400 0000 0033  ......2........3
+0000070: 0010 0013 0000 0000 0000 0000            ............
