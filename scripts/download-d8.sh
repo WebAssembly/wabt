@@ -6,7 +6,7 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 OUT_DIR="${ROOT_DIR}/out"
 
-V8_SHA=a1d0f8d9e564f8a95f752c021993911bafdb6d65
+V8_SHA=1e3d7a199848a4850085e5c7f9dcb524d3f23d6a
 BUCKET_URL=https://storage.googleapis.com/webassembly/v8-native-prototype/${V8_SHA}
 
 Download() {

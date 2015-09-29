@@ -59,11 +59,11 @@ $assert_eq_8 OK
 $assert_eq_9 OK
 $assert_eq_10 OK
 $assert_eq_11 OK
-$assert_eq_12 failed, expected 1, got 0
+$assert_eq_12 OK
 $assert_eq_13 OK
-$assert_eq_14 failed, expected 1, got 0
+$assert_eq_14 OK
 $assert_eq_15 OK
-$assert_eq_16 failed, expected 1, got 0
+$assert_eq_16 OK
 $assert_eq_17 OK
 $assert_eq_18 OK
 $assert_eq_19 OK
@@ -71,4 +71,4 @@ $assert_eq_20 OK
 $assert_eq_21 OK
 $assert_eq_22 OK
 $assert_eq_23 OK
-21/24 tests passed.
+24/24 tests passed.
