@@ -102,7 +102,7 @@ class TestInfo(object):
           if state != 'header':
             raise Error('unexpected directive: %s' % line)
 
-          key, value = directive.split(':')
+          key, value = directive.split(':', 1)
           key = key.strip().lower()
           value = value.strip()
           if key in seen_keys:

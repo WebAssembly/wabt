@@ -69,6 +69,8 @@ typedef struct WasmParserCallbacks {
   void (*after_assert_eq)(WasmType type,
                           WasmParserCookie cookie,
                           void* user_data);
+  void (*before_assert_trap)(void* user_data);
+  void (*after_assert_trap)(void* user_data);
   WasmParserCookie (*before_invoke)(const char* invoke_name,
                                     int invoke_function_index,
                                     void* user_data);

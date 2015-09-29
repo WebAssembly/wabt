@@ -37,6 +37,7 @@ typedef enum WasmOpType {
   WASM_OP_NONE,
   WASM_OP_ASSERT_EQ,
   WASM_OP_ASSERT_INVALID,
+  WASM_OP_ASSERT_TRAP,
   WASM_OP_BINARY,
   WASM_OP_BLOCK,
   WASM_OP_BREAK,
@@ -1974,6 +1975,24 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
 
         CALLBACK(parser, after_assert_eq,
                  (left_type, cookie, parser->user_data));
+        expect_close(parser, read_token(parser));
+        break;
+      }
+
+      case WASM_OP_ASSERT_TRAP: {
+        if (!seen_module)
+          FATAL_AT(parser, t.range.start,
+                   "assert_trap must occur after a module definition\n");
+
+        expect_open(parser, read_token(parser));
+        expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
+
+        CALLBACK(parser, before_assert_trap, (parser->user_data));
+        parse_invoke(parser, &module);
+        CALLBACK(parser, after_assert_trap, (parser->user_data));
+        /* ignore string, these are error messages that will only match the
+           spec repo */
+        expect_string(parser, read_token(parser));
         expect_close(parser, read_token(parser));
         break;
       }

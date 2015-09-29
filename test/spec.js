@@ -15,8 +15,8 @@ function runTests(module) {
   var failed = 0;
   for (var name in module) {
     if (module[name] instanceof Function) {
+      var f = module[name];
       if (startsWith(name, '$assert_eq')) {
-        var f = module[name];
         var result = f();
         if (result == 1) {
           print(name + " OK");
@@ -25,8 +25,21 @@ function runTests(module) {
           print(name + " failed, expected 1, got " + result);
           failed++;
         }
+      } else if (startsWith(name, '$assert_trap')) {
+        var threw = false;
+        try {
+          f();
+        } catch (e) {
+          threw = true;
+        }
+        if (threw) {
+          print(name + " OK, threw");
+          passed++;
+        } else {
+          print(name + " failed, didn't throw");
+          failed++;
+        }
       } else if (startsWith(name, '$invoke')) {
-        var f = module[name];
         print(name + " = " + f());
       }
     }

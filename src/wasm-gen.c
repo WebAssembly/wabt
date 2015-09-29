@@ -56,12 +56,13 @@ typedef struct Context {
   WasmModule* module;
   uint32_t function_num_exprs_offset;
   int assert_eq_count;
+  int assert_trap_count;
   int invoke_count;
   /* offset of each function/segment header in buf. */
   uint32_t* function_header_offsets;
   uint32_t* segment_header_offsets;
   LabelInfo* top_label;
-  int in_assert_eq;
+  int in_assert;
   int block_depth;
 } Context;
 
@@ -765,17 +766,8 @@ static void after_module_multi(WasmModule* module, void* user_data) {
   ctx->buf = ctx->temp_buf;
   ctx->temp_buf = temp;
   ctx->assert_eq_count = 0;
-}
-
-static WasmParserCookie before_assert_eq(void* user_data) {
-  Context* ctx = user_data;
-  ctx->in_assert_eq = 1;
-  if (g_verbose)
-    printf("; before assert_eq_%d\n", ctx->assert_eq_count);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
-  out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
-  return cookie;
+  ctx->assert_trap_count = 0;
+  ctx->invoke_count = 0;
 }
 
 static void append_nullary_function(Context* ctx,
@@ -899,6 +891,17 @@ static void append_nullary_function(Context* ctx,
             1, "func export");
 }
 
+static WasmParserCookie before_assert_eq(void* user_data) {
+  Context* ctx = user_data;
+  ctx->in_assert = 1;
+  if (g_verbose)
+    printf("; before assert_eq_%d\n", ctx->assert_eq_count);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
+  return cookie;
+}
+
 static void after_assert_eq(WasmType type,
                             WasmParserCookie cookie,
                             void* user_data) {
@@ -929,14 +932,30 @@ static void after_assert_eq(WasmType type,
   snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32);
 
-  ctx->in_assert_eq = 0;
+  ctx->in_assert = 0;
+}
+
+static void before_assert_trap(void* user_data) {
+  Context* ctx = user_data;
+  ctx->in_assert = 1;
+  if (g_verbose)
+    printf("; before assert_trap_%d\n", ctx->assert_trap_count);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+}
+
+static void after_assert_trap( void* user_data) {
+  Context* ctx = user_data;
+  char name[256];
+  snprintf(name, 256, "$assert_trap_%d", ctx->assert_trap_count++);
+  append_nullary_function(ctx, name, WASM_TYPE_VOID);
+  ctx->in_assert = 0;
 }
 
 static WasmParserCookie before_invoke(const char* invoke_name,
                                       int invoke_function_index,
                                       void* user_data) {
   Context* ctx = user_data;
-  if (!ctx->in_assert_eq) {
+  if (!ctx->in_assert) {
     if (g_verbose)
       printf("; before invoke_%d\n", ctx->invoke_count);
     init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
@@ -952,7 +971,7 @@ static WasmParserCookie before_invoke(const char* invoke_name,
 
 static void after_invoke(WasmParserCookie cookie, void* user_data) {
   Context* ctx = user_data;
-  if (ctx->in_assert_eq)
+  if (ctx->in_assert)
     return;
 
   int invoke_function_index = (int)cookie;
@@ -1013,6 +1032,8 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
       callbacks.after_module = after_module_multi;
       callbacks.before_assert_eq = before_assert_eq;
       callbacks.after_assert_eq = after_assert_eq;
+      callbacks.before_assert_trap = before_assert_trap;
+      callbacks.after_assert_trap = after_assert_trap;
       callbacks.before_invoke = before_invoke;
       callbacks.after_invoke = after_invoke;
       init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
