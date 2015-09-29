@@ -1,0 +1,14 @@
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/memory_trap.wasm
+# STDOUT:
+instantiating module
+$invoke_0 = undefined
+$assert_eq_0 OK
+$assert_trap_0 failed, didn't throw
+$assert_trap_1 failed, didn't throw
+$assert_trap_2 failed, didn't throw
+$assert_trap_3 failed, didn't throw
+$assert_trap_4 failed, didn't throw
+$assert_trap_5 failed, didn't throw
+1/7 tests passed.
