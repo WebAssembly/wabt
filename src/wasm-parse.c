@@ -1541,12 +1541,13 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
   WasmToken t = read_token(parser);
   if (t.type == WASM_TOKEN_TYPE_ATOM) {
     /* named function */
-    char* name =
-        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+    expect_var_name(parser, t);
+    size_t name_len = t.range.end.pos - t.range.start.pos;
+    char* name = strndup(t.range.start.pos, name_len);
     if (get_binding_by_name(&module->function_bindings, name) != -1) {
       free(name);
       FATAL_AT(parser, t.range.start, "redefinition of function \"%.*s\"\n",
-               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
+               (int)name_len, t.range.start.pos);
     }
 
     WasmBinding* binding = wasm_append_binding(&module->function_bindings);

@@ -1,0 +1,5 @@
+# ERROR: 1
+(module
+  (func foo))
+# STDERR:
+func/bad-func-name.txt:3:9: expected name to begin with $
