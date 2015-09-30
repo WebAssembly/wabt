@@ -401,7 +401,7 @@ def main(args):
           info = inq.get(False)
           try:
             out = info.Run(options.timeout, temp_dir, options.executable)
-          except Error as e:
+          except Exception as e:
             outq.put((info, e))
             continue
           outq.put((info, out))
@@ -431,7 +431,7 @@ def main(args):
 
       finished_tests += 1
       try:
-        if isinstance(result, Error):
+        if isinstance(result, Exception):
           raise result
 
         stdout, stderr, returncode, duration = result
@@ -450,7 +450,7 @@ def main(args):
           else:
             info.Diff(stdout, stderr)
           status.Passed(info, duration)
-      except Error as e:
+      except Exception as e:
         status.Failed(info, str(e))
   except KeyboardInterrupt:
     for proc in processes:
