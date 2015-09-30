@@ -23,7 +23,9 @@ class Error(Exception):
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-e', '--executable', metavar='EXE',
-                      help='override executable.')
+                      help='override sexpr-wasm executable.')
+  parser.add_argument('--d8-executable', metavar='EXE',
+                      help='override d8 executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--spec', help='run spec tests.', action='store_true')
@@ -37,13 +39,15 @@ def main(args):
   else:
     exe = DEFAULT_EXE
 
-  d8 = BUILT_D8
-  if not os.path.exists(d8):
-    d8 = DOWNLOAD_D8
+  d8 = options.d8_executable
+  if not d8 or not os.path.exists(d8):
+    d8 = BUILT_D8
     if not os.path.exists(d8):
-      raise Error('d8 executable does not exist.\n'
-                  'Run scripts/build-d8.sh to build it.\n'
-                  'path: %s\npath: %s\n' % (BUILT_D8, DOWNLOAD_D8))
+      d8 = DOWNLOAD_D8
+      if not os.path.exists(d8):
+        raise Error('d8 executable does not exist.\n'
+                    'Run scripts/build-d8.sh to build it.\n'
+                    'path: %s\npath: %s\n' % (BUILT_D8, DOWNLOAD_D8))
 
   generated = None
   try:
