@@ -1,29 +1,29 @@
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/memory.wasm
+# STDIN_FILE: third_party/spec/ml-proto/test/memory.wase
 # STDOUT:
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:13:21: max size (0) must be greater than or equal to initial size (1)
+  third_party/spec/ml-proto/test/memory.wase:13:21: max size (0) must be greater than or equal to initial size (1)
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:17:34: segment ends past the end of the initial memory size (0)
+  third_party/spec/ml-proto/test/memory.wase:17:34: segment ends past the end of the initial memory size (0)
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:21:53: address (500) greater than initial memory size (100)
+  third_party/spec/ml-proto/test/memory.wase:21:53: address (500) greater than initial memory size (100)
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:25:55: address (0) less than end of previous segment (3)
+  third_party/spec/ml-proto/test/memory.wase:25:55: address (0) less than end of previous segment (3)
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:29:54: address (0) less than end of previous segment (5)
+  third_party/spec/ml-proto/test/memory.wase:29:54: address (0) less than end of previous segment (5)
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:33:69: address (1) less than end of previous segment (3)
+  third_party/spec/ml-proto/test/memory.wase:33:69: address (1) less than end of previous segment (3)
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:44:18: alignment must be power-of-two
+  third_party/spec/ml-proto/test/memory.wase:44:18: alignment must be power-of-two
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:48:18: alignment must be power-of-two
+  third_party/spec/ml-proto/test/memory.wase:48:18: alignment must be power-of-two
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:52:18: alignment must be power-of-two
+  third_party/spec/ml-proto/test/memory.wase:52:18: alignment must be power-of-two
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:56:18: alignment must be power-of-two
+  third_party/spec/ml-proto/test/memory.wase:56:18: alignment must be power-of-two
 assert_invalid error:
-  third_party/spec/ml-proto/test/memory.wasm:60:18: alignment must be power-of-two
+  third_party/spec/ml-proto/test/memory.wase:60:18: alignment must be power-of-two
 instantiating module
 0/0 tests passed.
 instantiating module

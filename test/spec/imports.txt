@@ -1,6 +1,6 @@
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/imports.wasm
+# STDIN_FILE: third_party/spec/ml-proto/test/imports.wase
 # STDOUT:
 instantiating module
 13
