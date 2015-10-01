@@ -1247,7 +1247,7 @@ static WasmType parse_expr(WasmParser* parser,
         continuation = true_continuation | false_continuation;
         expect_close(parser, read_token(parser));
       } else {
-        type = true_type;
+        type = WASM_TYPE_VOID;
         continuation = true_continuation | WASM_CONTINUATION_NORMAL;
       }
       CALLBACK(parser, after_if, (type, with_else, cookie, parser->user_data));

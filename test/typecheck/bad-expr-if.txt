@@ -1,0 +1,9 @@
+# ERROR: 1
+(module
+  (func (result i32)
+    (i32.add
+      (i32.const 1)
+      (if (i32.const 2)
+        (i32.const 3)))))
+# STDERR:
+typecheck/bad-expr-if.txt:4:6: type mismatch for argument 1 of binary op. got void, expected i32
