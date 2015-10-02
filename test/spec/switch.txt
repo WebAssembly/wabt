@@ -1,4 +1,4 @@
-# SKIP: incorrect type mismatch in switch statement
+# SKIP: i64.switch not supported
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/switch.wase

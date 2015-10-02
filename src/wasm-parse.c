@@ -1019,7 +1019,7 @@ static WasmType parse_switch(WasmParser* parser,
           type = value_type;
         } else if (value_type == WASM_TYPE_VOID) {
           type = WASM_TYPE_VOID;
-        } else {
+        } else if (type != WASM_TYPE_VOID) {
           check_type(parser, t.range.start, value_type, type,
                      " in switch case");
         }
@@ -1030,7 +1030,7 @@ static WasmType parse_switch(WasmParser* parser,
       WasmType value_type = parse_expr(parser, module, function, NULL);
       if (value_type == WASM_TYPE_VOID) {
         type = WASM_TYPE_VOID;
-      } else {
+      } else if (type != WASM_TYPE_VOID) {
         check_type(parser, t.range.start, value_type, type,
                    " in switch default case");
       }
