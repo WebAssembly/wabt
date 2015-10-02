@@ -231,6 +231,11 @@ typedef struct WasmLabel {
 } WasmLabel;
 DECLARE_VECTOR(label, WasmLabel)
 
+typedef struct WasmExportedNameList {
+  char* name;
+  struct WasmExportedNameList* next;
+} WasmExportedNameList;
+
 typedef struct WasmFunction {
   WasmType result_type;
   WasmVariableVector locals; /* Includes args, they're at the start */
@@ -241,7 +246,7 @@ typedef struct WasmFunction {
 
   /* exported and exported_name won't be valid until after the before_export
    * callback */
-  char* exported_name;
+  WasmExportedNameList exported_name;
   int exported;
 } WasmFunction;
 DECLARE_VECTOR(function, WasmFunction)

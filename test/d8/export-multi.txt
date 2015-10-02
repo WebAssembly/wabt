@@ -1,0 +1,15 @@
+# EXE: test/run-d8.py
+# FLAGS: --spec
+(module
+  (func (result i32)
+    (i32.const 1))
+  (export "a" 0)
+  (export "b" 0))
+
+(invoke "a")
+(invoke "b")
+# STDOUT:
+instantiating module
+$invoke_0 = 1
+$invoke_1 = 1
+0/0 tests passed.

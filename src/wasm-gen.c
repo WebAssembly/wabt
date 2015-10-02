@@ -407,7 +407,11 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
     if (function->exported) {
       out_u32_at(buf, offset + FUNC_HEADER_NAME_OFFSET(function->num_args),
                  buf->size, "FIXUP func name offset");
-      out_cstr(buf, function->exported_name, "export name");
+      /* TODO(binji): only exporting the first name for now,
+       v8-native-prototype only allows associating one name per function. We
+       could work around this by introducing a new function that forwards to
+       the old one, or by using the same code start/end offsets. */
+      out_cstr(buf, function->exported_name.name, "export name");
     }
     offset += FUNC_HEADER_SIZE(function->num_args);
   }

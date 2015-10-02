@@ -1,0 +1,4 @@
+(module
+  (func (nop))
+  (export "a" 0)
+  (export "b" 0))

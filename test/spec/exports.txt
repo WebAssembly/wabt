@@ -1,4 +1,3 @@
-# SKIP: leaks memory when function is exported twice with different names
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/exports.wase

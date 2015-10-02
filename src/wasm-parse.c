@@ -220,8 +220,14 @@ static int get_function_by_export_name(WasmFunctionVector* functions,
   int i;
   for (i = 0; i < functions->size; ++i) {
     WasmFunction* function = &functions->data[i];
-    if (function->exported && strcmp(name, function->exported_name) == 0)
-      return i;
+    if (function->exported) {
+      WasmExportedNameList* exported_name = &function->exported_name;
+      while (exported_name) {
+        if (strcmp(name, exported_name->name) == 0)
+          return i;
+        exported_name = exported_name->next;
+      }
+    }
   }
   return -1;
 }
@@ -1810,7 +1816,14 @@ static void wasm_destroy_module(WasmModule* module) {
     wasm_destroy_binding_list(&function->local_bindings);
     wasm_destroy_label_vector(&function->labels);
     wasm_destroy_binding_list(&function->label_bindings);
-    free(function->exported_name);
+    free(function->exported_name.name);
+    WasmExportedNameList* node = function->exported_name.next;
+    while (node) {
+      WasmExportedNameList* next_node = node->next;
+      free(node->name);
+      free(node);
+      node = next_node;
+    }
   }
   wasm_destroy_binding_list(&module->function_bindings);
   wasm_destroy_binding_list(&module->global_bindings);
@@ -1872,8 +1885,17 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
                    t.range.start.pos);
         }
         WasmFunction* function = &module->functions.data[index];
-        function->exported_name = export_name;
-        function->exported = 1;
+        if (function->exported) {
+          /* Exporting with another name */
+          WasmExportedNameList* new_node = malloc(sizeof(WasmExportedNameList));
+          new_node->name = export_name;
+          new_node->next = function->exported_name.next;
+          function->exported_name.next = new_node;
+        } else {
+          function->exported = 1;
+          function->exported_name.name = export_name;
+          function->exported_name.next = NULL;
+        }
 
         expect_close(parser, read_token(parser));
         CALLBACK(parser, after_export, (module, function, parser->user_data));
