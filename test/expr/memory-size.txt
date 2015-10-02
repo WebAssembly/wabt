@@ -1,0 +1,3 @@
+(module
+  (func
+    (memory_size)))

@@ -61,9 +61,12 @@ typedef enum WasmOpType {
   WASM_OP_LOCAL,
   WASM_OP_LOOP,
   WASM_OP_MEMORY,
+  WASM_OP_MEMORY_SIZE,
   WASM_OP_MODULE,
   WASM_OP_NOP,
+  WASM_OP_PAGE_SIZE,
   WASM_OP_PARAM,
+  WASM_OP_RESIZE_MEMORY,
   WASM_OP_RESULT,
   WASM_OP_RETURN,
   WASM_OP_SET_LOCAL,
@@ -1367,10 +1370,29 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
+    case WASM_OP_MEMORY_SIZE:
+      CALLBACK(parser, after_memory_size, (parser->user_data));
+      expect_close(parser, read_token(parser));
+      type = WASM_TYPE_I32;
+      break;
+
     case WASM_OP_NOP:
       CALLBACK(parser, after_nop, (parser->user_data));
       expect_close(parser, read_token(parser));
       break;
+
+    case WASM_OP_PAGE_SIZE:
+      CALLBACK(parser, after_page_size, (parser->user_data));
+      expect_close(parser, read_token(parser));
+      type = WASM_TYPE_I32;
+      break;
+
+    case WASM_OP_RESIZE_MEMORY: {
+      CALLBACK(parser, before_resize_memory, (parser->user_data));
+      type = parse_expr(parser, module, function, NULL);
+      expect_close(parser, read_token(parser));
+      break;
+    }
 
     case WASM_OP_RETURN: {
       CALLBACK(parser, before_return, (parser->user_data));

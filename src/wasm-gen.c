@@ -706,9 +706,26 @@ static void after_loop(int num_exprs,
   out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
 }
 
+static void after_memory_size(void* user_data) {
+  Context* ctx = user_data;
+  /* TODO(binji): not currently defined. Return 0 for now. */
+  out_opcode(&ctx->buf, WASM_OPCODE_I8_CONST);
+  out_u8(&ctx->buf, 0, "zero");
+}
+
 static void after_nop(void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_NOP);
+}
+
+static void after_page_size(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_PAGE_SIZE);
+}
+
+static void before_resize_memory(void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_RESIZE_MEMORY_I32);
 }
 
 static void before_return(void* user_data) {
@@ -1031,7 +1048,10 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   callbacks.after_load_global = after_load_global;
   callbacks.before_loop = before_loop;
   callbacks.after_loop = after_loop;
+  callbacks.after_memory_size = after_memory_size;
   callbacks.after_nop = after_nop;
+  callbacks.after_page_size = after_page_size;
+  callbacks.before_resize_memory = before_resize_memory;
   callbacks.before_return = before_return;
   callbacks.before_set_local = before_set_local;
   callbacks.before_store = before_store;
