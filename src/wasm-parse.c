@@ -134,6 +134,7 @@ DEFINE_VECTOR(variable, WasmVariable)
 DEFINE_VECTOR(function, WasmFunction)
 DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
+DEFINE_VECTOR(label, WasmLabel)
 
 typedef struct NameTypePair {
   const char* name;
@@ -196,10 +197,12 @@ static void* append_element(void** data,
   return *data + (*size)++ * elt_size;
 }
 
-static void pop_binding(WasmBindingVector* vec) {
-  assert(vec->size > 0);
-  free(vec->data[vec->size - 1].name);
-  vec->size--;
+static void pop_label(WasmFunction* function) {
+  assert(function->label_bindings.size > 0);
+  assert(function->labels.size > 0);
+  free(function->label_bindings.data[function->label_bindings.size - 1].name);
+  function->label_bindings.size--;
+  function->labels.size--;
 }
 
 static int get_binding_by_name(WasmBindingVector* bindings, const char* name) {
@@ -850,8 +853,8 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
   if (end - p >= 1 && p[0] == '$') {
     /* var name */
     int i;
-    for (i = 0; i < function->labels.size; ++i) {
-      WasmBinding* binding = &function->labels.data[i];
+    for (i = 0; i < function->label_bindings.size; ++i) {
+      WasmBinding* binding = &function->label_bindings.data[i];
       const char* name = binding->name;
       if (name && strncmp(name, p, end - p) == 0)
         /* index is actually the current label depth */
@@ -866,15 +869,15 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
       FATAL_AT(parser, t.range.start, "invalid var index\n");
     }
 
-    if (index >= function->labels.size) {
+    if (index >= function->label_bindings.size) {
       FATAL_AT(parser, t.range.start, "label variable out of range (max %zd)\n",
-               function->labels.size);
+               function->label_bindings.size);
     }
 
     /* Index in reverse, so 0 is the most recent label. The stored "index" is
      * actually the label depth, so return that instead */
-    index = (function->labels.size - 1) - index;
-    return function->labels.data[index].index;
+    index = (function->label_bindings.size - 1) - index;
+    return function->label_bindings.data[index].index;
   }
 }
 
@@ -1110,24 +1113,42 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_BREAK: {
       t = read_token(parser);
       int depth = 0;
-      if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+      if (t.type == WASM_TOKEN_TYPE_ATOM) {
         rewind_token(parser, t);
         /* parse_label_var returns the depth counting up (so 0 is the topmost
          block of this function). We want the depth counting down (so 0 is the
          most recent block). */
-        depth = function->labels.size - parse_label_var(parser, function);
-        expect_close(parser, read_token(parser));
-      } else if (function->labels.size == 0) {
+        depth =
+            function->label_bindings.size - parse_label_var(parser, function);
+        t = read_token(parser);
+      }
+      if (depth == 0 && function->label_bindings.size == 0) {
         FATAL_AT(parser, t.range.start,
                  "label variable out of range (max 0)\n");
-      }
-      if (depth > MAX_BREAK_DEPTH) {
+      } else if (depth > MAX_BREAK_DEPTH) {
         FATAL_AT(parser, t.range.start,
                  "break depth %d not supported (max %d)\n", depth,
                  MAX_BREAK_DEPTH);
       }
+      int with_expr = t.type == WASM_TOKEN_TYPE_OPEN_PAREN;
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_break, (with_expr, depth, parser->user_data));
+      if (with_expr) {
+        int label_index = (function->labels.size - 1) - depth;
+        WasmLabel* break_label = &function->labels.data[label_index];
+        rewind_token(parser, t);
+        WasmType break_type = parse_expr(parser, module, function, NULL);
+        if (break_label->type == WASM_NUM_TYPES) {
+          break_label->type = break_type;
+        } else {
+          check_type(parser, t.range.start, break_type, break_label->type,
+                     " of break expression");
+        }
+        t = read_token(parser);
+      }
+      expect_close(parser, t);
       continuation = WASM_CONTINUATION_BREAK_0 << depth;
-      CALLBACK(parser, after_break, (depth, parser->user_data));
+      CALLBACK(parser, after_break, (cookie, parser->user_data));
       break;
     }
 
@@ -1259,10 +1280,14 @@ static WasmType parse_expr(WasmParser* parser,
           CALLBACK(parser, before_label, (parser->user_data));
 
       t = read_token(parser);
-      WasmBinding* binding = wasm_append_binding(&function->labels);
+      WasmBinding* binding = wasm_append_binding(&function->label_bindings);
       CHECK_ALLOC(parser, binding, t.range.start);
       binding->name = NULL;
-      binding->index = function->labels.size;
+      binding->index = function->label_bindings.size;
+
+      WasmLabel* label = wasm_append_label(&function->labels);
+      CHECK_ALLOC(parser, label, t.range.start);
+      label->type = WASM_NUM_TYPES;
 
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
         /* label */
@@ -1277,7 +1302,18 @@ static WasmType parse_expr(WasmParser* parser,
       }
 
       int num_exprs;
-      type = parse_block(parser, module, function, &num_exprs, &continuation);
+      WasmType label_type =
+          parse_block(parser, module, function, &num_exprs, &continuation);
+      if (label->type != WASM_NUM_TYPES) {
+        if (label_type != WASM_TYPE_VOID ||
+            continuation & WASM_CONTINUATION_NORMAL) {
+          check_type(parser, t.range.start, label_type, label->type,
+                     " of final label expression");
+        }
+        type = label->type;
+      } else {
+        type = WASM_TYPE_VOID;
+      }
       if (continuation & WASM_CONTINUATION_BREAK_0) {
         continuation = (continuation & ~WASM_CONTINUATION_BREAK_0) |
                        WASM_CONTINUATION_NORMAL;
@@ -1288,8 +1324,9 @@ static WasmType parse_expr(WasmParser* parser,
        WASM_CONTINUATION_RETURN */
       continuation = (continuation & ~CONTINUATION_BREAK_MASK) |
                      ((continuation & CONTINUATION_BREAK_MASK) >> 1);
-      pop_binding(&function->labels);
-      CALLBACK(parser, after_label, (num_exprs, cookie, parser->user_data));
+      pop_label(function);
+      CALLBACK(parser, after_label,
+               (type, num_exprs, cookie, parser->user_data));
       break;
     }
 
@@ -1771,7 +1808,8 @@ static void wasm_destroy_module(WasmModule* module) {
     WasmFunction* function = &module->functions.data[i];
     wasm_destroy_variable_vector(&function->locals);
     wasm_destroy_binding_list(&function->local_bindings);
-    wasm_destroy_binding_list(&function->labels);
+    wasm_destroy_label_vector(&function->labels);
+    wasm_destroy_binding_list(&function->label_bindings);
     free(function->exported_name);
   }
   wasm_destroy_binding_list(&module->function_bindings);

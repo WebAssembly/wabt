@@ -1,0 +1,38 @@
+# FLAGS: -dv
+(module
+  (func
+    (label
+      (break 0 (i32.const 1)))))
+# STDOUT:
+0000000: 00                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+; function header 0
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0000                                       ; num local i32
+0000018: 0000                                       ; num local i64
+000001a: 0000                                       ; num local f32
+000001c: 0000                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+; function data 0
+000000e: 2000 0000                                  ; FIXUP func code start offset
+0000020: 03                                         ; OPCODE_BLOCK
+0000021: 00                                         ; num expressions
+0000022: 1f                                         ; OPCODE_EXPR_BREAK
+0000023: 00                                         ; break depth
+0000024: 10                                         ; OPCODE_I8_CONST
+0000025: 01                                         ; u8 literal
+0000020: 1d                                         ; FIXUP OPCODE_EXPR_BLOCK
+0000021: 01                                         ; FIXUP num expressions
+0000012: 2600 0000                                  ; FIXUP func code end offset
+; names
+0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
+0000010: 0000 2600 0000 0000 0000 0000 0000 0000  ..&.............
+0000020: 1d01 1f00 1001                           ......

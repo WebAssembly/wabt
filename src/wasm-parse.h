@@ -35,7 +35,10 @@ typedef struct WasmParserCallbacks {
                       int num_exprs,
                       WasmParserCookie cookie,
                       void* user_data);
-  void (*after_break)(int label_depth, void* user_data);
+  WasmParserCookie (*before_break)(int with_expr,
+                                   int label_depth,
+                                   void* user_data);
+  void (*after_break)(WasmParserCookie cookie, void* user_data);
   void (*before_call)(int function_index, void* user_data);
   void (*before_call_import)(int import_index, void* user_data);
   void (*before_compare)(enum WasmOpcode opcode, void* user_data);
@@ -45,7 +48,10 @@ typedef struct WasmParserCallbacks {
                       void* user_data);
   void (*before_convert)(enum WasmOpcode opcode, void* user_data);
   WasmParserCookie (*before_label)(void* user_data);
-  void (*after_label)(int num_exprs, WasmParserCookie cookie, void* user_data);
+  void (*after_label)(WasmType type,
+                      int num_exprs,
+                      WasmParserCookie cookie,
+                      void* user_data);
   void (*after_get_local)(int remapped_index, void* user_data);
   WasmParserCookie (*before_loop)(void* user_data);
   void (*after_loop)(int num_exprs, WasmParserCookie cookie, void* user_data);

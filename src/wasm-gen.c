@@ -531,15 +531,20 @@ static void before_binary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void after_break(int label_depth, void* user_data) {
+static WasmParserCookie before_break(int with_expr,
+                                     int label_depth,
+                                     void* user_data) {
   Context* ctx = user_data;
-  out_opcode(&ctx->buf, WASM_OPCODE_BREAK);
+  out_opcode(&ctx->buf, with_expr ? WASM_OPCODE_EXPR_BREAK : WASM_OPCODE_BREAK);
   LabelInfo* label_info = ctx->top_label;
   for (; label_depth > 0; label_depth--)
     label_info = label_info->next_label;
   int block_depth = (ctx->block_depth - 1) - label_info->block_depth;
   out_u8(&ctx->buf, block_depth, "break depth");
+  return 0;
 }
+
+static void after_break(WasmParserCookie cookie, void* user_data) {}
 
 static void before_call(int function_index, void* user_data) {
   Context* ctx = user_data;
@@ -639,17 +644,18 @@ static void after_if(WasmType type,
 
 static WasmParserCookie before_label(void* user_data) {
   Context* ctx = user_data;
-  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   LabelInfo* label_info = malloc(sizeof(LabelInfo));
   label_info->offset = ctx->buf.size;
   label_info->block_depth = ctx->block_depth++;
   label_info->next_label = ctx->top_label;
   ctx->top_label = label_info;
+  out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 0, "num expressions");
   return (WasmParserCookie)label_info;
 }
 
-static void after_label(int num_exprs,
+static void after_label(WasmType type,
+                        int num_exprs,
                         WasmParserCookie cookie,
                         void* user_data) {
   Context* ctx = user_data;
@@ -658,7 +664,10 @@ static void after_label(int num_exprs,
   ctx->top_label = label_info->next_label;
   uint32_t offset = label_info->offset;
   free(label_info);
-  out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  if (type != WASM_TYPE_VOID)
+    out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
+              "FIXUP OPCODE_EXPR_BLOCK");
+  out_u8_at(&ctx->buf, offset + 1, num_exprs, "FIXUP num expressions");
 }
 
 static void before_load(enum WasmOpcode opcode,
@@ -1002,6 +1011,7 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   callbacks.before_block = before_block;
   callbacks.after_block = after_block;
   callbacks.before_binary = before_binary;
+  callbacks.before_break = before_break;
   callbacks.after_break = after_break;
   callbacks.before_call = before_call;
   callbacks.before_call_import = before_call_import;

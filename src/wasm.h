@@ -226,11 +226,17 @@ typedef struct WasmVariable {
 } WasmVariable;
 DECLARE_VECTOR(variable, WasmVariable)
 
+typedef struct WasmLabel {
+  WasmType type;
+} WasmLabel;
+DECLARE_VECTOR(label, WasmLabel)
+
 typedef struct WasmFunction {
   WasmType result_type;
   WasmVariableVector locals; /* Includes args, they're at the start */
   WasmBindingVector local_bindings;
-  WasmBindingVector labels;
+  WasmLabelVector labels;
+  WasmBindingVector label_bindings;
   int num_args;
 
   /* exported and exported_name won't be valid until after the before_export
