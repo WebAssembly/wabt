@@ -52,7 +52,7 @@ typedef struct WasmParserCallbacks {
                       int num_exprs,
                       WasmParserCookie cookie,
                       void* user_data);
-  void (*after_get_local)(int remapped_index, void* user_data);
+  void (*after_get_local)(int index, void* user_data);
   WasmParserCookie (*before_loop)(void* user_data);
   void (*after_loop)(int num_exprs, WasmParserCookie cookie, void* user_data);
   WasmParserCookie (*before_if)(void* user_data);

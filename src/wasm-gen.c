@@ -54,16 +54,17 @@ typedef struct Context {
   OutputBuffer temp_buf;
   OutputBuffer js_buf;
   WasmModule* module;
-  uint32_t function_num_exprs_offset;
-  int assert_eq_count;
-  int assert_trap_count;
-  int invoke_count;
   /* offset of each function/segment header in buf. */
   uint32_t* function_header_offsets;
   uint32_t* segment_header_offsets;
   LabelInfo* top_label;
+  int* remapped_locals;
   int in_assert;
   int block_depth;
+  uint32_t function_num_exprs_offset;
+  int assert_eq_count;
+  int assert_trap_count;
+  int invoke_count;
 } Context;
 
 extern const char* g_outfile;
@@ -294,6 +295,7 @@ static void destroy_context(Context* ctx) {
   destroy_output_buffer(&ctx->buf);
   destroy_output_buffer(&ctx->temp_buf);
   destroy_output_buffer(&ctx->js_buf);
+  free(ctx->remapped_locals);
   free(ctx->function_header_offsets);
   free(ctx->segment_header_offsets);
 }
@@ -421,6 +423,31 @@ static void error(WasmSourceLocation loc, const char* msg, void* user_data) {
   fprintf(stderr, "%s:%d:%d: %s", loc.source->filename, loc.line, loc.col, msg);
 }
 
+static void remap_locals(Context* ctx, WasmFunction* function) {
+  int max[WASM_NUM_TYPES] = {};
+  int i;
+  for (i = function->num_args; i < function->locals.size; ++i) {
+    WasmVariable* variable = &function->locals.data[i];
+    max[variable->type]++;
+  }
+
+  /* Args don't need remapping */
+  for (i = 0; i < function->num_args; ++i)
+    ctx->remapped_locals[i] = i;
+
+  int start[WASM_NUM_TYPES];
+  start[WASM_TYPE_I32] = function->num_args;
+  start[WASM_TYPE_I64] = start[WASM_TYPE_I32] + max[WASM_TYPE_I32];
+  start[WASM_TYPE_F32] = start[WASM_TYPE_I64] + max[WASM_TYPE_I64];
+  start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
+
+  int seen[WASM_NUM_TYPES] = {};
+  for (i = function->num_args; i < function->locals.size; ++i) {
+    WasmVariable* variable = &function->locals.data[i];
+    ctx->remapped_locals[i] = start[variable->type] + seen[variable->type]++;
+  }
+}
+
 static void before_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
   ctx->function_header_offsets = realloc(
@@ -460,6 +487,10 @@ static void before_function(WasmModule* module,
                             WasmFunction* function,
                             void* user_data) {
   Context* ctx = user_data;
+  ctx->remapped_locals =
+      realloc(ctx->remapped_locals, function->locals.size * sizeof(int));
+  remap_locals(ctx, function);
+
   int function_index = function - module->functions.data;
   if (g_verbose)
     printf("; function data %d\n", function_index);
@@ -613,10 +644,10 @@ static void before_convert(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void after_get_local(int remapped_index, void* user_data) {
+static void after_get_local(int index, void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_GET_LOCAL);
-  out_leb128(&ctx->buf, remapped_index, "remapped local index");
+  out_leb128(&ctx->buf, ctx->remapped_locals[index], "remapped local index");
 }
 
 static WasmParserCookie before_if(void* user_data) {
@@ -736,7 +767,7 @@ static void before_return(void* user_data) {
 static void before_set_local(int index, void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
-  out_leb128(&ctx->buf, index, "remapped local index");
+  out_leb128(&ctx->buf, ctx->remapped_locals[index], "remapped local index");
 }
 
 static void before_store(enum WasmOpcode opcode,

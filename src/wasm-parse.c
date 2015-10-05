@@ -1273,7 +1273,7 @@ static WasmType parse_expr(WasmParser* parser,
       WasmVariable* variable = &function->locals.data[index];
       type = variable->type;
       expect_close(parser, read_token(parser));
-      CALLBACK(parser, after_get_local, (variable->index, parser->user_data));
+      CALLBACK(parser, after_get_local, (index, parser->user_data));
       break;
     }
 
@@ -1441,7 +1441,7 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_SET_LOCAL: {
       int index = parse_local_var(parser, function);
       WasmVariable* variable = &function->locals.data[index];
-      CALLBACK(parser, before_set_local, (variable->index, parser->user_data));
+      CALLBACK(parser, before_set_local, (index, parser->user_data));
       type = parse_expr(parser, module, function, NULL);
       check_type(parser, t.range.start, type, variable->type, "");
       expect_close(parser, read_token(parser));
@@ -1559,7 +1559,6 @@ static void parse_type_list(WasmParser* parser,
     WasmVariable* variable = wasm_append_variable(variables);
     CHECK_ALLOC(parser, variable, t.range.start);
     variable->type = type;
-    variable->index = 0;
 
     t = read_token(parser);
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
@@ -1594,37 +1593,11 @@ static void preparse_binding_list(WasmParser* parser,
     WasmVariable* variable = wasm_append_variable(variables);
     CHECK_ALLOC(parser, variable, t.range.start);
     variable->type = type;
-    variable->index = 0;
 
     WasmBinding* binding = wasm_append_binding(bindings);
     CHECK_ALLOC(parser, binding, t.range.start);
     binding->name = name;
     binding->index = variables->size - 1;
-  }
-}
-
-static void remap_locals(WasmFunction* function) {
-  int max[WASM_NUM_TYPES] = {};
-  int i;
-  for (i = function->num_args; i < function->locals.size; ++i) {
-    WasmVariable* variable = &function->locals.data[i];
-    max[variable->type]++;
-  }
-
-  /* Args don't need remapping */
-  for (i = 0; i < function->num_args; ++i)
-    function->locals.data[i].index = i;
-
-  int start[WASM_NUM_TYPES];
-  start[WASM_TYPE_I32] = function->num_args;
-  start[WASM_TYPE_I64] = start[WASM_TYPE_I32] + max[WASM_TYPE_I32];
-  start[WASM_TYPE_F32] = start[WASM_TYPE_I64] + max[WASM_TYPE_I64];
-  start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
-
-  int seen[WASM_NUM_TYPES] = {};
-  for (i = function->num_args; i < function->locals.size; ++i) {
-    WasmVariable* variable = &function->locals.data[i];
-    variable->index = start[variable->type] + seen[variable->type]++;
   }
 }
 
@@ -1691,8 +1664,6 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
     }
     t = read_token(parser);
   }
-
-  remap_locals(function);
 }
 
 static void preparse_module(WasmParser* parser, WasmModule* module) {

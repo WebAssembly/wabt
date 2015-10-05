@@ -222,10 +222,6 @@ DECLARE_VECTOR(binding, WasmBinding)
 
 typedef struct WasmVariable {
   WasmType type;
-  /* The v8-native-prototype stores locals in i32/i64/f32/f64 order, where all
-   * variables of one type are grouped. index maps to this variable to its
-   * correct location in that order */
-  int index;
 } WasmVariable;
 DECLARE_VECTOR(variable, WasmVariable)
 
