@@ -984,11 +984,12 @@ static WasmType parse_switch(WasmParser* parser,
                              WasmModule* module,
                              WasmFunction* function,
                              WasmType in_type) {
-  int num_cases = 0;
+  WasmParserCookie switch_cookie =
+      CALLBACK(parser, before_switch, (parser->user_data));
   WasmType cond_type = parse_expr(parser, module, function, NULL);
   check_type(parser, parser->tokenizer.loc, cond_type, in_type,
              " in switch condition");
-  WasmType type = WASM_TYPE_VOID;
+  WasmType type = WASM_NUM_TYPES;
   WasmToken t = read_token(parser);
   while (1) {
     expect_open(parser, t);
@@ -997,50 +998,76 @@ static WasmType parse_switch(WasmParser* parser,
     expect_atom(parser, t);
     if (match_atom(t, "case")) {
       WasmNumber number;
+      int fallthrough = 0;
+      int num_exprs = 0;
       parse_literal(parser, in_type, &number);
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_switch_case, (number, parser->user_data));
       t = read_token(parser);
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(parser, t);
         WasmType value_type;
+        WasmContinuation case_continuation;
         while (1) {
-          value_type = parse_expr(parser, module, function, NULL);
+          value_type = parse_expr(parser, module, function, &case_continuation);
+          ++num_exprs;
           t = read_token(parser);
           if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN) {
             break;
           } else if (t.type == WASM_TOKEN_TYPE_ATOM &&
                      match_atom(t, "fallthrough")) {
+            fallthrough = 1;
             expect_close(parser, read_token(parser));
             break;
           }
           rewind_token(parser, t);
         }
 
-        if (++num_cases == 1) {
+        if (case_continuation & WASM_CONTINUATION_NORMAL && fallthrough == 0) {
+          if (type == WASM_NUM_TYPES) {
+            type = value_type;
+          } else if (value_type == WASM_TYPE_VOID) {
+            type = WASM_TYPE_VOID;
+          } else if (type != WASM_TYPE_VOID) {
+            check_type(parser, t.range.start, value_type, type,
+                       " in switch case");
+          }
+        }
+      } else {
+        /* Empty case statement, implicit fallthrough */
+        fallthrough = 1;
+      }
+      CALLBACK(parser, after_switch_case,
+               (num_exprs, fallthrough, cookie, parser->user_data));
+    } else {
+      /* default case */
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_switch_default, (parser->user_data));
+      WasmContinuation case_continuation;
+      rewind_token(parser, open);
+      WasmType value_type =
+          parse_expr(parser, module, function, &case_continuation);
+      if (case_continuation & WASM_CONTINUATION_NORMAL) {
+        if (type == WASM_NUM_TYPES) {
           type = value_type;
         } else if (value_type == WASM_TYPE_VOID) {
           type = WASM_TYPE_VOID;
         } else if (type != WASM_TYPE_VOID) {
           check_type(parser, t.range.start, value_type, type,
-                     " in switch case");
+                     " in switch default case");
         }
       }
-    } else {
-      /* default case */
-      rewind_token(parser, open);
-      WasmType value_type = parse_expr(parser, module, function, NULL);
-      if (value_type == WASM_TYPE_VOID) {
-        type = WASM_TYPE_VOID;
-      } else if (type != WASM_TYPE_VOID) {
-        check_type(parser, t.range.start, value_type, type,
-                   " in switch default case");
-      }
       expect_close(parser, read_token(parser));
+      CALLBACK(parser, after_switch_default, (cookie, parser->user_data));
       break;
     }
     t = read_token(parser);
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
       break;
   }
+  if (type == WASM_NUM_TYPES)
+    type = WASM_TYPE_VOID;
+  CALLBACK(parser, after_switch, (switch_cookie, parser->user_data));
   return type;
 }
 
@@ -1447,7 +1474,10 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_SWITCH:
+      /* TODO(binji): we won't use the switch opcodes anyway */
+#if 0
       check_opcode(parser, t.range.start, op_info->opcode);
+#endif
       type = parse_switch(parser, module, function, op_info->type);
       break;
 

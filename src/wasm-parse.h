@@ -71,6 +71,15 @@ typedef struct WasmParserCallbacks {
   void (*before_set_local)(int index, void* user_data);
   void (*before_store)(enum WasmOpcode opcode, uint8_t access, void* user_data);
   void (*before_store_global)(int index, void* user_data);
+  WasmParserCookie (*before_switch)(void* user_data);
+  void (*after_switch)(WasmParserCookie cookie, void* user_data);
+  WasmParserCookie (*before_switch_case)(WasmNumber number, void* user_data);
+  void (*after_switch_case)(int num_exprs,
+                            int with_fallthrough,
+                            WasmParserCookie cookie,
+                            void* user_data);
+  WasmParserCookie (*before_switch_default)(void* user_data);
+  void (*after_switch_default)(WasmParserCookie cookie, void* user_data);
   void (*before_unary)(enum WasmOpcode opcode, void* user_data);
 
   /* used in spec repo tests */
