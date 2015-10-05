@@ -25,9 +25,8 @@ typedef struct WasmParserCallbacks {
                          int num_exprs,
                          void* user_data);
   void (*before_export)(struct WasmModule* m, void* user_data);
-  void (*after_export)(struct WasmModule* m,
-                       struct WasmFunction* f,
-                       void* user_data);
+  void (*after_export)(struct WasmModule* m, struct WasmFunction* f,
+                       const char* export_name, void* user_data);
 
   void (*before_binary)(enum WasmOpcode opcode, void* user_data);
   WasmParserCookie (*before_block)(void* user_data);

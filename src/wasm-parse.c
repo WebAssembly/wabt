@@ -1921,7 +1921,8 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
         }
 
         expect_close(parser, read_token(parser));
-        CALLBACK(parser, after_export, (module, function, parser->user_data));
+        CALLBACK(parser, after_export,
+                 (module, function, export_name, parser->user_data));
         break;
       }
 

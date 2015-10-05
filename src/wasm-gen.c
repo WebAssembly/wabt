@@ -512,9 +512,8 @@ static void after_function(WasmModule* module,
 
 static void before_export(WasmModule* module, void* user_data) {}
 
-static void after_export(WasmModule* module,
-                         WasmFunction* function,
-                         void* user_data) {
+static void after_export(WasmModule* module, WasmFunction* function,
+                         const char* export_name, void* user_data) {
   Context* ctx = user_data;
   int function_index = function - module->functions.data;
   /* HACK(binji): v8-native-prototype crashes when you export functions that
