@@ -380,6 +380,20 @@ static void out_module_header(Context* ctx,
   }
 }
 
+static int has_i64_inputs_or_outputs(WasmFunction* function) {
+  if (function->result_type == WASM_TYPE_I64) {
+    return 1;
+  } else {
+    int i;
+    for (i = 0; i < function->num_args; ++i) {
+      if (function->locals.data[i].type == WASM_TYPE_I64) {
+        return 1;
+      }
+    }
+    return 0;
+  }
+}
+
 static void out_module_footer(Context* ctx, WasmModule* module) {
   OutputBuffer* buf = &ctx->buf;
 
@@ -409,6 +423,18 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
     if (function->exported) {
       out_u32_at(buf, offset + FUNC_HEADER_NAME_OFFSET(function->num_args),
                  buf->size, "FIXUP func name offset");
+
+      /* HACK(binji): v8-native-prototype crashes when you export functions
+       that use i64 in the signature. This unfortunately prevents assert_eq on
+       functions that return i64. For now, don't mark those functions as
+       exported in the generated output. */
+      if (!has_i64_inputs_or_outputs(function)) {
+        out_u8_at(&ctx->buf,
+                  ctx->function_header_offsets[i] +
+                      FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
+                  1, "FIXUP func exported");
+      }
+
       /* TODO(binji): only exporting the first name for now,
        v8-native-prototype only allows associating one name per function. We
        could work around this by introducing a new function that forwards to
@@ -508,35 +534,6 @@ static void after_function(WasmModule* module,
   out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
                             FUNC_HEADER_CODE_END_OFFSET(function->num_args),
              ctx->buf.size, "FIXUP func code end offset");
-}
-
-static void before_export(WasmModule* module, void* user_data) {}
-
-static void after_export(WasmModule* module,
-                         WasmFunction* function,
-                         void* user_data) {
-  Context* ctx = user_data;
-  int function_index = function - module->functions.data;
-  /* HACK(binji): v8-native-prototype crashes when you export functions that
-   use i64 in the signature. This unfortunately prevents assert_eq on functions
-   that return i64. For now, don't mark those functions as exported in the
-   generated output. */
-  int has_i64 = function->result_type == WASM_TYPE_I64;
-  if (!has_i64) {
-    int i;
-    for (i = 0; i < function->num_args; ++i) {
-      if (function->locals.data[i].type == WASM_TYPE_I64) {
-        has_i64 = 1;
-        break;
-      }
-    }
-  }
-
-  if (!has_i64) {
-    out_u8_at(&ctx->buf, ctx->function_header_offsets[function_index] +
-                            FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
-              1, "FIXUP func exported");
-  }
 }
 
 static WasmParserCookie before_block(void* user_data) {
@@ -1058,8 +1055,6 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
   callbacks.after_module = after_module;
   callbacks.before_function = before_function;
   callbacks.after_function = after_function;
-  callbacks.before_export = before_export;
-  callbacks.after_export = after_export;
   callbacks.before_block = before_block;
   callbacks.after_block = after_block;
   callbacks.before_binary = before_binary;

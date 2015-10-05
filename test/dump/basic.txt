@@ -44,9 +44,9 @@
 0000032: 15                                         ; OPCODE_GET_LOCAL
 0000033: 01                                         ; remapped local index
 000001a: 3400 0000                                  ; FIXUP func code end offset
-0000026: 01                                         ; FIXUP func exported
 ; names
 0000012: 3400 0000                                  ; FIXUP func name offset
+0000026: 01                                         ; FIXUP func exported
 0000034: 6600                                       ; export name
 0000000: 0001 0100 0100 0000 0000 0000 0400 0201  ................
 0000010: 0101 3400 0000 2800 0000 3400 0000 0000  ..4...(...4.....

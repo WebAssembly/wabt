@@ -23,9 +23,9 @@
 ; function data 0
 000000e: 2000 0000                                  ; FIXUP func code start offset
 0000012: 2000 0000                                  ; FIXUP func code end offset
-000001e: 01                                         ; FIXUP func exported
 ; names
 000000a: 2000 0000                                  ; FIXUP func name offset
+000001e: 01                                         ; FIXUP func exported
 0000020: 666f 6f00                                  ; export name
 0000000: 0001 0000 0100 0000 0000 2000 0000 2000  .......... ... .
 0000010: 0000 2000 0000 0000 0000 0000 0000 0100  .. .............

@@ -27,6 +27,7 @@ typedef struct WasmParserCallbacks {
   void (*before_export)(struct WasmModule* m, void* user_data);
   void (*after_export)(struct WasmModule* m,
                        struct WasmFunction* f,
+                       const char* exported_name,
                        void* user_data);
 
   void (*before_binary)(enum WasmOpcode opcode, void* user_data);
