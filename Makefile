@@ -46,7 +46,7 @@ $(LSAN_OBJS): out/%.lsan.o: src/%.c | out
 out/sexpr-wasm-lsan: $(LSAN_OBJS) | out
 	clang $(LSAN_FLAGS) -o $@ $^
 
-src/hash.h: src/hash.txt
+src/wasm-keywords.h: src/wasm-keywords.gperf
 	gperf --compare-strncmp --readonly-tables --struct-type $< --output-file $@
 
 -include $(OBJS:.o=.d) $(ASAN_OBJS:.o=.d) $(MSAN_OBJS:.o=.d) $(LSAN_OBJS:.o=.d)

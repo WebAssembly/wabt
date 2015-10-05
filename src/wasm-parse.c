@@ -86,7 +86,7 @@ typedef uint32_t WasmContinuation;
 #define CONTINUATION_BREAK_MASK (~(WasmContinuation)3)
 #define MAX_BREAK_DEPTH 30
 
-#include "hash.h"
+#include "wasm-keywords.h"
 
 typedef struct OpInfo OpInfo;
 
