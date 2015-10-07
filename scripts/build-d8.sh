@@ -59,5 +59,5 @@ fi
 # it.
 unset CC
 cd v8/v8
-GYP_GENERATORS=ninja build/gyp_v8 -Dv8_wasm=1
+GYP_GENERATORS=ninja build/gyp_v8 -Dv8_wasm=1 -Dwerror=
 time ninja -C out/${config} d8
