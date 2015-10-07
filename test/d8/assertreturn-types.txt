@@ -17,14 +17,14 @@
   (export "i64" $i64)
   (export "f32" $f32)
   (export "f64" $f64))
-(assert_eq (invoke "i32" (i32.const 1)) (i32.const 2))
-(assert_eq (invoke "i64" (i64.const 1)) (i64.const 2))
-(assert_eq (invoke "f32" (f32.const 1)) (f32.const 2))
-(assert_eq (invoke "f64" (f64.const 1)) (f64.const 2))
+(assert_return (invoke "i32" (i32.const 1)) (i32.const 2))
+(assert_return (invoke "i64" (i64.const 1)) (i64.const 2))
+(assert_return (invoke "f32" (f32.const 1)) (f32.const 2))
+(assert_return (invoke "f64" (f64.const 1)) (f64.const 2))
 # STDOUT:
 instantiating module
-$assert_eq_0 OK
-$assert_eq_1 OK
-$assert_eq_2 OK
-$assert_eq_3 OK
+$assert_return_0 OK
+$assert_return_1 OK
+$assert_return_2 OK
+$assert_return_3 OK
 4/4 tests passed.

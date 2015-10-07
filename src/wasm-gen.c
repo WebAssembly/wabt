@@ -1012,7 +1012,7 @@ static void after_assert_return(WasmType type,
   out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_return opcode");
 
   char name[256];
-  snprintf(name, 256, "$assert_eq_%d", ctx->assert_return_count++);
+  snprintf(name, 256, "$assert_return_%d", ctx->assert_return_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, 0, 0);
 
   ctx->in_assert = 0;

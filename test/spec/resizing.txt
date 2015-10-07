@@ -3,20 +3,20 @@
 # STDIN_FILE: third_party/spec/ml-proto/test/resizing.wast
 # STDOUT:
 instantiating module
-$assert_eq_0 failed, expected 1, got 0
+$assert_return_0 failed, expected 1, got 0
 $invoke_0 = undefined
-$assert_eq_1 OK
+$assert_return_1 OK
 $assert_trap_0 failed, didn't throw
 $assert_trap_1 failed, didn't throw
 $invoke_1 = undefined
-$assert_eq_2 failed, expected 1, got 0
-$assert_eq_3 OK
-$assert_eq_4 OK
+$assert_return_2 failed, expected 1, got 0
+$assert_return_3 OK
+$assert_return_4 OK
 $invoke_2 = undefined
-$assert_eq_5 failed, expected 1, got 0
+$assert_return_5 failed, expected 1, got 0
 $invoke_3 = undefined
-$assert_eq_6 failed, expected 1, got 0
-$assert_eq_7 OK
+$assert_return_6 failed, expected 1, got 0
+$assert_return_7 OK
 $assert_trap_2 failed, didn't throw
 $assert_trap_3 failed, didn't throw
 4/12 tests passed.

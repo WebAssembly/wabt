@@ -1,8 +1,0 @@
-# ERROR: 1
-# FLAGS: --multi-module
-(module
-  (func (param i32) (result i32) (get_local 0))
-  (export "foo" 0))
-(assert_eq (invoke "foo" (i32.const 0)) (f32.const 0))
-# STDERR:
-typecheck/bad-asserteq-type-mismatch.txt:6:54: type mismatch. got f32, expected i32

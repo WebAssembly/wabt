@@ -15,5 +15,5 @@ instantiating module
 instantiating module
 0/0 tests passed.
 instantiating module
-$assert_eq_0 OK
+$assert_return_0 OK
 1/1 tests passed.

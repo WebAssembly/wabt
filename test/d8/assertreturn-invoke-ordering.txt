@@ -4,14 +4,14 @@
   (func (param i32) (result i32)
     (i32.mul (get_local 0) (i32.const 2)))
   (export "f" 0))
-(assert_eq (invoke "f" (i32.const 10)) (i32.const 20))
+(assert_return (invoke "f" (i32.const 10)) (i32.const 20))
 (invoke "f" (i32.const -15))
-(assert_eq (invoke "f" (i32.const 0)) (i32.const 0))
+(assert_return (invoke "f" (i32.const 0)) (i32.const 0))
 (invoke "f" (i32.const -111111))
 # STDOUT:
 instantiating module
-$assert_eq_0 OK
+$assert_return_0 OK
 $invoke_0 = -30
-$assert_eq_1 OK
+$assert_return_1 OK
 $invoke_1 = -222222
 2/2 tests passed.

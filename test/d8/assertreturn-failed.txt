@@ -4,8 +4,8 @@
   (func (param i32) (result i32)
     (i32.add (get_local 0) (i32.const 1)))
   (export "f" 0))
-(assert_eq (invoke "f" (i32.const 1)) (i32.const 11))
+(assert_return (invoke "f" (i32.const 1)) (i32.const 11))
 # STDOUT:
 instantiating module
-$assert_eq_0 failed, expected 1, got 0
+$assert_return_0 failed, expected 1, got 0
 0/1 tests passed.

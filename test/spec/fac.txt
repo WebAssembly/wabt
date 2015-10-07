@@ -3,8 +3,8 @@
 # STDIN_FILE: third_party/spec/ml-proto/test/fac.wast
 # STDOUT:
 instantiating module
-$assert_eq_0 OK
-$assert_eq_1 OK
-$assert_eq_2 OK
-$assert_eq_3 OK
+$assert_return_0 OK
+$assert_return_1 OK
+$assert_return_2 OK
+$assert_return_3 OK
 4/4 tests passed.

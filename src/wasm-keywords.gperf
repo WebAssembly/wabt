@@ -7,7 +7,6 @@ struct OpInfo {
   int access;
 };
 %%
-assert_eq, WASM_OP_ASSERT_RETURN
 assert_return, WASM_OP_ASSERT_RETURN
 assert_return_nan, WASM_OP_ASSERT_RETURN_NAN
 assert_invalid, WASM_OP_ASSERT_INVALID
