@@ -1,13 +1,13 @@
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/exports.wase
+# STDIN_FILE: third_party/spec/ml-proto/test/exports.wast
 # STDOUT:
 assert_invalid error:
-  third_party/spec/ml-proto/test/exports.wase:5:44: function variable out of range (max 1)
+  third_party/spec/ml-proto/test/exports.wast:5:44: function variable out of range (max 1)
 assert_invalid error:
-  third_party/spec/ml-proto/test/exports.wase:8:76: duplicate function export "a"
+  third_party/spec/ml-proto/test/exports.wast:8:76: duplicate function export "a"
 assert_invalid error:
-  third_party/spec/ml-proto/test/exports.wase:11:55: duplicate function export "a"
+  third_party/spec/ml-proto/test/exports.wast:11:55: duplicate function export "a"
 instantiating module
 0/0 tests passed.
 instantiating module

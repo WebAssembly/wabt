@@ -1,6 +1,6 @@
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/memory_trap.wase
+# STDIN_FILE: third_party/spec/ml-proto/test/memory_trap.wast
 # STDOUT:
 instantiating module
 $invoke_0 = undefined

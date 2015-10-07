@@ -1,6 +1,6 @@
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/resizing.wase
+# STDIN_FILE: third_party/spec/ml-proto/test/resizing.wast
 # STDOUT:
 instantiating module
 $assert_eq_0 failed, expected 1, got 0
