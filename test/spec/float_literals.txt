@@ -1,0 +1,4 @@
+# SKIP: complete float parsing not implemented yet
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/float_literals.wast

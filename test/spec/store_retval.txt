@@ -1,0 +1,4 @@
+# SKIP: print_i64 fails
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/store_retval.wast
