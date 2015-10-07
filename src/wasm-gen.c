@@ -62,7 +62,7 @@ typedef struct Context {
   int in_assert;
   int block_depth;
   uint32_t function_num_exprs_offset;
-  int assert_eq_count;
+  int assert_return_count;
   int assert_trap_count;
   int invoke_count;
 } Context;
@@ -425,7 +425,7 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
                  buf->size, "FIXUP func name offset");
 
       /* HACK(binji): v8-native-prototype crashes when you export functions
-       that use i64 in the signature. This unfortunately prevents assert_eq on
+       that use i64 in the signature. This unfortunately prevents assert_return on
        functions that return i64. For now, don't mark those functions as
        exported in the generated output. */
       if (!has_i64_inputs_or_outputs(function)) {
@@ -812,7 +812,7 @@ static void before_module_multi(WasmModule* module, void* user_data) {
 
 static void after_module_multi(WasmModule* module, void* user_data) {
   after_module(module, user_data);
-  /* assert_eq writes its commands directly into ctx->buf. This function data
+  /* assert_return writes its commands directly into ctx->buf. This function data
    will then be added to the previous module. To make this work, we swap
    ctx->buf with ctx->temp_buf; then the functions above that write to ctx->buf
    will not modify the module (which will be saved in ctx->temp_buf).
@@ -823,7 +823,7 @@ static void after_module_multi(WasmModule* module, void* user_data) {
   OutputBuffer temp = ctx->buf;
   ctx->buf = ctx->temp_buf;
   ctx->temp_buf = temp;
-  ctx->assert_eq_count = 0;
+  ctx->assert_return_count = 0;
   ctx->assert_trap_count = 0;
   ctx->invoke_count = 0;
 }
@@ -949,18 +949,18 @@ static void append_nullary_function(Context* ctx,
             1, "func export");
 }
 
-static WasmParserCookie before_assert_eq(void* user_data) {
+static WasmParserCookie before_assert_return(void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (g_verbose)
-    printf("; before assert_eq_%d\n", ctx->assert_eq_count);
+    printf("; before assert_return_%d\n", ctx->assert_return_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
   return cookie;
 }
 
-static void after_assert_eq(WasmType type,
+static void after_assert_return(WasmType type,
                             WasmParserCookie cookie,
                             void* user_data) {
   Context* ctx = user_data;
@@ -984,10 +984,10 @@ static void after_assert_eq(WasmType type,
       assert(0);
   }
 
-  out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_eq opcode");
+  out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_return opcode");
 
   char name[256];
-  snprintf(name, 256, "$assert_eq_%d", ctx->assert_eq_count++);
+  snprintf(name, 256, "$assert_return_%d", ctx->assert_return_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32);
 
   ctx->in_assert = 0;
@@ -1090,8 +1090,8 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
     if (g_outfile) {
       callbacks.before_module = before_module_multi;
       callbacks.after_module = after_module_multi;
-      callbacks.before_assert_eq = before_assert_eq;
-      callbacks.after_assert_eq = after_assert_eq;
+      callbacks.before_assert_return = before_assert_return;
+      callbacks.after_assert_return = after_assert_return;
       callbacks.before_assert_trap = before_assert_trap;
       callbacks.after_assert_trap = after_assert_trap;
       callbacks.before_invoke = before_invoke;

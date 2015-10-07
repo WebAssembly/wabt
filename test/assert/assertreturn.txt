@@ -5,10 +5,10 @@
   (func $bar (param f32) (result f32) (get_local 0))
   (export "bar" $bar))
 
-(assert_eq (invoke "foo") (i32.const 0))
-(assert_eq (invoke "bar" (f32.const 0)) (f32.const 0))
+(assert_return (invoke "foo") (i32.const 0))
+(assert_return (invoke "bar" (f32.const 0)) (f32.const 0))
 ;; ok to use more complex exprs
-(assert_eq
+(assert_return
   (invoke "bar"
     (f32.add (f32.const 1) (f32.const 10)))
   (f32.const 11))

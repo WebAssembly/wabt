@@ -35,7 +35,7 @@ typedef enum WasmMemType {
 
 typedef enum WasmOpType {
   WASM_OP_NONE,
-  WASM_OP_ASSERT_EQ,
+  WASM_OP_ASSERT_RETURN,
   WASM_OP_ASSERT_INVALID,
   WASM_OP_ASSERT_TRAP,
   WASM_OP_BINARY,
@@ -2041,16 +2041,16 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
         break;
       }
 
-      case WASM_OP_ASSERT_EQ: {
+      case WASM_OP_ASSERT_RETURN: {
         if (!seen_module)
           FATAL_AT(parser, t.range.start,
-                   "assert_eq must occur after a module definition\n");
+                   "assert_return must occur after a module definition\n");
 
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
 
         WasmParserCookie cookie =
-            CALLBACK(parser, before_assert_eq, (parser->user_data));
+            CALLBACK(parser, before_assert_return, (parser->user_data));
 
         WasmFunction dummy_function = {};
         WasmType left_type = parse_invoke(parser, &module);
@@ -2058,7 +2058,7 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
             parse_expr(parser, &module, &dummy_function, NULL);
         check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
 
-        CALLBACK(parser, after_assert_eq,
+        CALLBACK(parser, after_assert_return,
                  (left_type, cookie, parser->user_data));
         expect_close(parser, read_token(parser));
         break;

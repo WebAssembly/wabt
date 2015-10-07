@@ -2,4 +2,4 @@
 (module
   (export "f" 0)
   (func (result i32) (return (i32.const 0))))
-(assert_eq (invoke "f") (i32.const 0))
+(assert_return (invoke "f") (i32.const 0))

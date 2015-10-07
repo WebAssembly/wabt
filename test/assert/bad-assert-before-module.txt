@@ -1,5 +1,5 @@
 # FLAGS: --multi-module
 # ERROR: 1
-(assert_eq (invoke "f") (i32.const 0))
+(assert_return (invoke "f") (i32.const 0))
 # STDERR:
-assert/bad-assert-before-module.txt:3:2: assert_eq must occur after a module definition
+assert/bad-assert-before-module.txt:3:2: assert_return must occur after a module definition

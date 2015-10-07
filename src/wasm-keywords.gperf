@@ -7,7 +7,8 @@ struct OpInfo {
   int access;
 };
 %%
-assert_eq, WASM_OP_ASSERT_EQ
+assert_eq, WASM_OP_ASSERT_RETURN
+assert_return, WASM_OP_ASSERT_RETURN
 assert_invalid, WASM_OP_ASSERT_INVALID
 assert_trap, WASM_OP_ASSERT_TRAP
 block, WASM_OP_BLOCK, WASM_OPCODE_EXPR_BLOCK
