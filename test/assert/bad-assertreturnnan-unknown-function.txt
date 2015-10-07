@@ -1,0 +1,6 @@
+# ERROR: 1
+# FLAGS: --multi-module
+(module)
+(assert_return_nan (invoke "foo"))
+# STDERR:
+assert/bad-assertreturnnan-unknown-function.txt:4:28: unknown function export "foo"

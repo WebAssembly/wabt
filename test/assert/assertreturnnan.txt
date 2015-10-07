@@ -1,0 +1,8 @@
+# FLAGS: --multi-module
+(module
+  (func $foo (param f32) (result f32)
+    (f32.div (get_local 0) (f32.const 0)))
+  (export "foo" $foo))
+
+(assert_return_nan
+  (invoke "foo" (f32.const 0)))

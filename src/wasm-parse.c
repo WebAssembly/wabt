@@ -35,8 +35,9 @@ typedef enum WasmMemType {
 
 typedef enum WasmOpType {
   WASM_OP_NONE,
-  WASM_OP_ASSERT_RETURN,
   WASM_OP_ASSERT_INVALID,
+  WASM_OP_ASSERT_RETURN,
+  WASM_OP_ASSERT_RETURN_NAN,
   WASM_OP_ASSERT_TRAP,
   WASM_OP_BINARY,
   WASM_OP_BLOCK,
@@ -2060,6 +2061,30 @@ int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
 
         CALLBACK(parser, after_assert_return,
                  (left_type, cookie, parser->user_data));
+        expect_close(parser, read_token(parser));
+        break;
+      }
+
+      case WASM_OP_ASSERT_RETURN_NAN: {
+        if (!seen_module)
+          FATAL_AT(parser, t.range.start,
+                   "assert_return_nan must occur after a module definition\n");
+
+        expect_open(parser, read_token(parser));
+        expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
+
+        WasmParserCookie cookie =
+            CALLBACK(parser, before_assert_return_nan, (parser->user_data));
+
+        WasmType type = parse_invoke(parser, &module);
+        if (type != WASM_TYPE_F32 && type != WASM_TYPE_F64) {
+          FATAL_AT(parser, parser->tokenizer.loc,
+                   "type mismatch. got %s, expected f32 or f64\n",
+                   s_type_names[type]);
+        }
+
+        CALLBACK(parser, after_assert_return_nan,
+                 (type, cookie, parser->user_data));
         expect_close(parser, read_token(parser));
         break;
       }

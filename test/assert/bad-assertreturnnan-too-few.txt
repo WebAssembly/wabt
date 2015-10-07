@@ -1,0 +1,8 @@
+# ERROR: 1
+# FLAGS: --multi-module
+(module
+  (func $foo (param i32) (result f32) (f32.const 0))
+  (export "foo" $foo))
+(assert_return_nan (invoke "foo"))
+# STDERR:
+assert/bad-assertreturnnan-too-few.txt:6:33: too few arguments to function. got 0, expected 1

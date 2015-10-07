@@ -16,7 +16,8 @@ function runTests(module) {
   for (var name in module) {
     if (module[name] instanceof Function) {
       var f = module[name];
-      if (startsWith(name, '$assert_eq')) {
+      if (startsWith(name, '$assert_eq') ||
+          startsWith(name, "$assert_return")) {
         var result = f();
         if (result == 1) {
           print(name + " OK");
