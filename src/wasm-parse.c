@@ -161,6 +161,18 @@ static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
+/* compare two strings, one from start to end (not NULL-terminated), and other
+ is NULL-terminated. */
+static int string_eq(const char* start, const char* end, const char* other) {
+  while (start < end && *other) {
+    if (*start != *other)
+      return 0;
+    start++;
+    other++;
+  }
+  return start == end && *other == 0;
+}
+
 static void fatal_at(WasmParser* parser,
                      WasmSourceLocation loc,
                      const char* format,
@@ -693,8 +705,7 @@ static void check_opcode(WasmParser* parser,
 }
 
 static int match_atom(WasmToken t, const char* s) {
-  return strncmp(t.range.start.pos, s, t.range.end.pos - t.range.start.pos) ==
-         0;
+  return string_eq(t.range.start.pos, t.range.end.pos, s);
 }
 
 static int match_type(WasmToken t, WasmType* type) {
@@ -807,11 +818,7 @@ static int parse_var(WasmParser* parser,
     int i;
     for (i = 0; i < bindings->size; ++i) {
       WasmBinding* binding = &bindings->data[i];
-      const char* name = binding->name;
-      /* The token is not NULL-terminated, so use strncmp. But make sure that
-       * they're actually equal by checking for the NULL-terminator in name at
-       * the same place */
-      if (name && strncmp(name, p, end - p) == 0 && name[end - p] == 0)
+      if (binding->name && string_eq(p, end, binding->name))
         return binding->index;
     }
     FATAL_AT(parser, t.range.start, "undefined %s variable \"%.*s\"\n", desc,
@@ -865,8 +872,7 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
     int i;
     for (i = 0; i < function->label_bindings.size; ++i) {
       WasmBinding* binding = &function->label_bindings.data[i];
-      const char* name = binding->name;
-      if (name && strncmp(name, p, end - p) == 0)
+      if (binding->name && string_eq(p, end, binding->name))
         /* index is actually the current label depth */
         return binding->index;
     }
