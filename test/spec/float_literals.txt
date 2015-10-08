@@ -1,4 +1,46 @@
-# SKIP: complete float parsing not implemented yet
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/float_literals.wast
+# STDOUT:
+instantiating module
+$assert_return_0 OK
+$assert_return_1 OK
+$assert_return_2 OK
+$assert_return_3 OK
+$assert_return_4 OK
+$assert_return_5 OK
+$assert_return_6 OK
+$assert_return_7 OK
+$assert_return_8 OK
+$assert_return_9 OK
+$assert_return_10 OK
+$assert_return_11 OK
+$assert_return_12 OK
+$assert_return_13 OK
+$assert_return_14 OK
+$assert_return_15 OK
+$assert_return_16 OK
+$assert_return_17 OK
+$assert_return_18 OK
+$assert_return_19 OK
+$assert_return_20 OK
+$assert_return_21 OK
+$assert_return_22 OK
+$assert_return_23 OK
+$assert_return_24 OK
+$assert_return_25 OK
+$assert_return_26 OK
+$assert_return_27 OK
+$assert_return_28 OK
+$assert_return_29 OK
+$assert_return_30 OK
+$assert_return_31 OK
+$assert_return_32 OK
+$assert_return_33 OK
+$assert_return_34 OK
+$assert_return_35 OK
+$assert_return_36 OK
+$assert_return_37 OK
+$assert_return_38 OK
+$assert_return_39 OK
+40/40 tests passed.

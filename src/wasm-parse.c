@@ -361,9 +361,57 @@ static int read_int32(const char* s,
   return 1;
 }
 
+static int read_float_nan(const char* s, const char* end, float* out) {
+  int is_neg = 0;
+  if (*s == '-') {
+    is_neg = 1;
+    s++;
+  } else if (*s == '+') {
+    s++;
+  }
+  if (!string_starts_with(s, end, "nan"))
+    return 0;
+  s += 3;
+
+  uint32_t tag;
+  if (s != end) {
+    tag = 0;
+    if (!string_starts_with(s, end, "(0x"))
+      return 0;
+    s += 3;
+
+    for (; s < end && *s != ')'; ++s) {
+      uint32_t digit;
+      if (!hexdigit(*s, &digit))
+        return 0;
+      tag = tag * 16 + digit;
+      /* check for overflow */
+      const uint32_t max_tag = 0x7fffff;
+      if (tag > max_tag)
+        return 0;
+    }
+
+    if (s + 1 != end || *s != ')')
+      return 0;
+
+    /* NaN cannot have a zero tag, that is reserved for infinity */
+    if (tag == 0)
+      return 0;
+  } else {
+    /* normal quiet NaN */
+    tag = 0x400000;
+  }
+
+  uint32_t bits = 0x7f800000 | tag;
+  if (is_neg)
+    bits |= 0x80000000U;
+  memcpy(out, &bits, sizeof(*out));
+  return 1;
+}
+
 static int read_float(const char* s, const char* end, float* out) {
-  /* strtof doesn't return signed nans */
-  int neg_nan = string_starts_with(s, end, "-nan");
+  if (read_float_nan(s, end, out))
+    return 1;
 
   errno = 0;
   char* endptr;
@@ -373,21 +421,61 @@ static int read_float(const char* s, const char* end, float* out) {
       ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) && errno != 0))
     return 0;
 
-  if (neg_nan) {
-    /* set the sign bit */
-    uint32_t bits;
-    memcpy(&bits, &value, sizeof(bits));
-    bits |= 0x80000000;
-    memcpy(&value, &bits, sizeof(value));
-  }
-
   *out = value;
   return 1;
 }
 
+static int read_double_nan(const char* s, const char* end, double* out) {
+  int is_neg = 0;
+  if (*s == '-') {
+    is_neg = 1;
+    s++;
+  } else if (*s == '+') {
+    s++;
+  }
+  if (!string_starts_with(s, end, "nan"))
+    return 0;
+  s += 3;
+
+  uint64_t tag;
+  if (s != end) {
+    tag = 0;
+    if (!string_starts_with(s, end, "(0x"))
+      return 0;
+    s += 3;
+
+    for (; s < end && *s != ')'; ++s) {
+      uint32_t digit;
+      if (!hexdigit(*s, &digit))
+        return 0;
+      tag = tag * 16 + digit;
+      /* check for overflow */
+      const uint64_t max_tag = 0xfffffffffffffULL;
+      if (tag > max_tag)
+        return 0;
+    }
+
+    if (s + 1 != end || *s != ')')
+      return 0;
+
+    /* NaN cannot have a zero tag, that is reserved for infinity */
+    if (tag == 0)
+      return 0;
+  } else {
+    /* normal quiet NaN */
+    tag = 0x8000000000000ULL;
+  }
+
+  uint64_t bits = 0x7ff0000000000000ULL | tag;
+  if (is_neg)
+    bits |= 0x8000000000000000ULL;
+  memcpy(out, &bits, sizeof(*out));
+  return 1;
+}
+
 static int read_double(const char* s, const char* end, double* out) {
-  /* strtod doesn't return signed nans */
-  int neg_nan = string_starts_with(s, end, "-nan");
+  if (read_double_nan(s, end, out))
+    return 1;
 
   errno = 0;
   char* endptr;
@@ -396,14 +484,6 @@ static int read_double(const char* s, const char* end, double* out) {
   if (endptr != end ||
       ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) && errno != 0))
     return 0;
-
-  if (neg_nan) {
-    /* set the sign bit */
-    uint64_t bits;
-    memcpy(&bits, &value, sizeof(bits));
-    bits |= 0x8000000000000000ULL;
-    memcpy(&value, &bits, sizeof(value));
-  }
 
   *out = value;
   return 1;
