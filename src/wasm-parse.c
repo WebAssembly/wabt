@@ -117,6 +117,7 @@ typedef struct WasmTokenizer {
 typedef struct WasmParser {
   WasmParserCallbacks* callbacks;
   WasmTokenizer tokenizer;
+  WasmParserTypeCheck type_check;
   jmp_buf jump_buf;
   void* user_data; /* copied from callbacks->user_data, for convenience */
 } WasmParser;
@@ -1209,16 +1210,8 @@ static WasmType parse_switch(WasmParser* parser,
           rewind_token(parser, t);
         }
 
-        if (case_continuation & WASM_CONTINUATION_NORMAL && fallthrough == 0) {
-          if (type == WASM_TYPE_ALL) {
-            type = value_type;
-          } else if (value_type == WASM_TYPE_VOID) {
-            type = WASM_TYPE_VOID;
-          } else if (type != WASM_TYPE_VOID) {
-            check_type(parser, t.range.start, value_type, type,
-                       " in switch case");
-          }
-        }
+        if (case_continuation & WASM_CONTINUATION_NORMAL && fallthrough == 0)
+          type &= value_type;
       } else {
         /* Empty case statement, implicit fallthrough */
         fallthrough = 1;
@@ -1233,16 +1226,8 @@ static WasmType parse_switch(WasmParser* parser,
       rewind_token(parser, open);
       WasmType value_type =
           parse_expr(parser, module, function, &case_continuation);
-      if (case_continuation & WASM_CONTINUATION_NORMAL) {
-        if (type == WASM_TYPE_ALL) {
-          type = value_type;
-        } else if (value_type == WASM_TYPE_VOID) {
-          type = WASM_TYPE_VOID;
-        } else if (type != WASM_TYPE_VOID) {
-          check_type(parser, t.range.start, value_type, type,
-                     " in switch default case");
-        }
-      }
+      if (case_continuation & WASM_CONTINUATION_NORMAL)
+        type &= value_type;
       expect_close(parser, read_token(parser));
       CALLBACK(parser, after_switch_default, (cookie, parser->user_data));
       break;
@@ -1251,8 +1236,6 @@ static WasmType parse_switch(WasmParser* parser,
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
       break;
   }
-  if (type == WASM_TYPE_ALL)
-    type = WASM_TYPE_VOID;
   CALLBACK(parser, after_switch, (switch_cookie, parser->user_data));
   return type;
 }
@@ -1360,11 +1343,16 @@ static WasmType parse_expr(WasmParser* parser,
         WasmLabel* break_label = &function->labels.data[label_index];
         rewind_token(parser, t);
         WasmType break_type = parse_expr(parser, module, function, NULL);
-        if (break_label->type == WASM_TYPE_ALL) {
-          break_label->type = break_type;
+        if (parser->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
+          break_label->type &= break_type;
         } else {
-          check_type(parser, t.range.start, break_type, break_label->type,
-                     " of break expression");
+          assert(parser->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
+          if (break_label->type == WASM_TYPE_ALL) {
+            break_label->type = break_type;
+          } else {
+            check_type(parser, t.range.start, break_type, break_label->type,
+                       " of break expression");
+          }
         }
         t = read_token(parser);
       }
@@ -1480,13 +1468,7 @@ static WasmType parse_expr(WasmParser* parser,
         WasmContinuation false_continuation;
         WasmType false_type =
             parse_expr(parser, module, function, &false_continuation);
-        if (true_type == WASM_TYPE_VOID || false_type == WASM_TYPE_VOID) {
-          type = WASM_TYPE_VOID;
-        } else {
-          check_type(parser, parser->tokenizer.loc, false_type, true_type,
-                     " between true and false branches");
-          type = true_type;
-        }
+        type = true_type & false_type;
         continuation = true_continuation | false_continuation;
         expect_close(parser, read_token(parser));
       } else {
@@ -1526,15 +1508,20 @@ static WasmType parse_expr(WasmParser* parser,
       int num_exprs;
       WasmType label_type =
           parse_block(parser, module, function, &num_exprs, &continuation);
-      if (label->type != WASM_TYPE_ALL) {
-        if (label_type != WASM_TYPE_VOID ||
-            continuation & WASM_CONTINUATION_NORMAL) {
-          check_type(parser, t.range.start, label_type, label->type,
-                     " of final label expression");
-        }
-        type = label->type;
+      if (parser->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
+        type = label_type & label->type;
       } else {
-        type = WASM_TYPE_VOID;
+        assert(parser->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
+        if (label->type != WASM_TYPE_ALL) {
+          if (label_type != WASM_TYPE_VOID ||
+              continuation & WASM_CONTINUATION_NORMAL) {
+            check_type(parser, t.range.start, label_type, label->type,
+                       " of final label expression");
+          }
+          type = label->type;
+        } else {
+          type = WASM_TYPE_VOID;
+        }
       }
       if (continuation & WASM_CONTINUATION_BREAK_0) {
         continuation = (continuation & ~WASM_CONTINUATION_BREAK_0) |
@@ -2135,7 +2122,8 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
 
 static void init_parser(WasmParser* parser,
                         WasmParserCallbacks* callbacks,
-                        WasmSource* source) {
+                        WasmSource* source,
+                        WasmParserTypeCheck type_check) {
   parser->callbacks = callbacks;
   parser->user_data = callbacks->user_data;
   parser->tokenizer.source = *source;
@@ -2143,6 +2131,7 @@ static void init_parser(WasmParser* parser,
   parser->tokenizer.loc.pos = parser->tokenizer.source.start;
   parser->tokenizer.loc.line = 1;
   parser->tokenizer.loc.col = 1;
+  parser->type_check = type_check;
 }
 
 static void assert_invalid_error(WasmSourceLocation loc,
@@ -2152,10 +2141,12 @@ static void assert_invalid_error(WasmSourceLocation loc,
   CALLBACK(parser, assert_invalid_error, (loc, msg, parser->user_data));
 }
 
-int wasm_parse_module(WasmSource* source, WasmParserCallbacks* callbacks) {
+int wasm_parse_module(WasmSource* source,
+                      WasmParserCallbacks* callbacks,
+                      WasmParserTypeCheck type_check) {
   WasmModule module = {};
   WasmParser parser = {};
-  init_parser(&parser, callbacks, source);
+  init_parser(&parser, callbacks, source, type_check);
 
   if (setjmp(parser.jump_buf)) {
     wasm_destroy_module(&module);
@@ -2195,11 +2186,13 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
   return result_type;
 }
 
-int wasm_parse_file(WasmSource* source, WasmParserCallbacks* callbacks) {
+int wasm_parse_file(WasmSource* source,
+                    WasmParserCallbacks* callbacks,
+                    WasmParserTypeCheck type_check) {
   WasmModule module = {};
   WasmParser parser_object = {};
   WasmParser* parser = &parser_object;
-  init_parser(parser, callbacks, source);
+  init_parser(parser, callbacks, source, type_check);
 
   if (setjmp(parser->jump_buf)) {
     /* error */

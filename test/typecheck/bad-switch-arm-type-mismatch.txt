@@ -1,8 +1,8 @@
 # ERROR: 1
 (module
-  (func
+  (func (result i32)
     (i32.switch (i32.const 0)
       (case 1 (i32.const 0))
       (case 2 (f32.const 0)))))
 # STDERR:
-typecheck/bad-switch-arm-type-mismatch.txt:6:28: type mismatch in switch case. got f32, expected i32
+typecheck/bad-switch-arm-type-mismatch.txt:6:30: type mismatch in function result. got void, expected i32

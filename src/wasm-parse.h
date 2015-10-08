@@ -105,8 +105,17 @@ typedef struct WasmParserCallbacks {
                                void* user_data);
 } WasmParserCallbacks;
 
-EXTERN_C int wasm_parse_module(WasmSource* source, WasmParserCallbacks* parser);
-EXTERN_C int wasm_parse_file(WasmSource* source, WasmParserCallbacks* parser);
+typedef enum WasmParserTypeCheck {
+  WASM_PARSER_TYPE_CHECK_SPEC,
+  WASM_PARSER_TYPE_CHECK_V8_NATIVE,
+} WasmParserTypeCheck;
+
+EXTERN_C int wasm_parse_module(WasmSource* source,
+                               WasmParserCallbacks* parser,
+                               WasmParserTypeCheck type_check);
+EXTERN_C int wasm_parse_file(WasmSource* source,
+                             WasmParserCallbacks* parser,
+                             WasmParserTypeCheck type_check);
 EXTERN_C void wasm_copy_segment_data(WasmSegmentData data,
                                      char* dest,
                                      size_t size);

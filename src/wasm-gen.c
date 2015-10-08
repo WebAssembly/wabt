@@ -1148,7 +1148,9 @@ static void assert_invalid_error(WasmSourceLocation loc,
           loc.line, loc.col, msg);
 }
 
-int wasm_gen_file(WasmSource* source, int multi_module) {
+int wasm_gen_file(WasmSource* source,
+                  int multi_module,
+                  WasmParserTypeCheck type_check) {
   Context ctx = {};
   WasmParserCallbacks callbacks = {};
   callbacks.user_data = &ctx;
@@ -1202,13 +1204,15 @@ int wasm_gen_file(WasmSource* source, int multi_module) {
       callbacks.after_invoke = after_invoke;
       init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
     }
-    result = wasm_parse_file(source, &callbacks);
+    result =
+        wasm_parse_file(source, &callbacks, type_check);
     if (g_outfile) {
       finish_module(&ctx);
       write_output_buffer(&ctx.js_buf, g_outfile);
     }
   } else {
-    result = wasm_parse_module(source, &callbacks);
+    result =
+        wasm_parse_module(source, &callbacks, type_check);
     if (result == 0 && g_outfile)
       write_output_buffer(&ctx.buf, g_outfile);
   }

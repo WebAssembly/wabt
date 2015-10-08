@@ -1,5 +1,8 @@
 # ERROR: 1
 (module
-  (func (if (i32.const 0) (f32.const 0) (i32.const 0))))
+  (func (result i32)
+    (if (i32.const 0)
+      (f32.const 0)
+      (i32.const 0))))
 # STDERR:
-typecheck/bad-if-type-mismatch.txt:3:54: type mismatch between true and false branches. got i32, expected f32
+typecheck/bad-if-type-mismatch.txt:6:21: type mismatch in function result. got void, expected i32

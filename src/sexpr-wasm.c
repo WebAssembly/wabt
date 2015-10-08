@@ -15,6 +15,8 @@ enum {
   FLAG_DUMP_MODULE,
   FLAG_OUTPUT,
   FLAG_MULTI_MODULE,
+  FLAG_TYPECHECK_SPEC,
+  FLAG_TYPECHECK_V8,
   NUM_FLAGS
 };
 
@@ -22,6 +24,7 @@ static const char* g_infile;
 const char* g_outfile;
 int g_dump_module;
 int g_verbose;
+WasmParserTypeCheck g_parser_type_check = WASM_PARSER_TYPE_CHECK_V8_NATIVE;
 static int g_multi_module;
 
 static struct option g_long_options[] = {
@@ -30,6 +33,8 @@ static struct option g_long_options[] = {
     {"dump-module", no_argument, NULL, 'd'},
     {"output", no_argument, NULL, 'o'},
     {"multi-module", no_argument, NULL, 0},
+    {"typecheck-spec", no_argument, NULL, 0},
+    {"typecheck-v8", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(g_long_options));
@@ -118,6 +123,14 @@ static void parse_options(int argc, char** argv) {
           case FLAG_MULTI_MODULE:
             g_multi_module = 1;
             break;
+
+          case FLAG_TYPECHECK_SPEC:
+            g_parser_type_check = WASM_PARSER_TYPE_CHECK_SPEC;
+            break;
+
+          case FLAG_TYPECHECK_V8:
+            g_parser_type_check = WASM_PARSER_TYPE_CHECK_V8_NATIVE;
+            break;
         }
         break;
 
@@ -177,7 +190,7 @@ int main(int argc, char** argv) {
   source.filename = g_infile;
   source.start = data;
   source.end = data + fsize;
-  int result = wasm_gen_file(&source, g_multi_module);
+  int result = wasm_gen_file(&source, g_multi_module, g_parser_type_check);
   free(data);
   return result;
 }
