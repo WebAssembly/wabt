@@ -964,7 +964,8 @@ static void parse_literal(WasmParser* parser,
     case WASM_TYPE_I32: {
       uint32_t value;
       if (!read_int32(p, end, &value, 1))
-        FATAL_AT(parser, t.range.start, "invalid 32-bit int\n");
+        FATAL_AT(parser, t.range.start, "invalid i32 literal \"%.*s\"\n",
+                 (int)(end - p), p);
       number->i32 = value;
       break;
     }
@@ -972,7 +973,8 @@ static void parse_literal(WasmParser* parser,
     case WASM_TYPE_I64: {
       uint64_t value;
       if (!read_int64(p, end, &value))
-        FATAL_AT(parser, t.range.start, "invalid 64-bit int\n");
+        FATAL_AT(parser, t.range.start, "invalid i64 literal \"%.*s\"\n",
+                 (int)(end - p), p);
       number->i64 = value;
       break;
     }
@@ -980,7 +982,8 @@ static void parse_literal(WasmParser* parser,
     case WASM_TYPE_F32: {
       float value;
       if (!read_float(p, end, &value))
-        FATAL_AT(parser, t.range.start, "invalid float\n");
+        FATAL_AT(parser, t.range.start, "invalid f32 literal \"%.*s\"\n",
+                 (int)(end - p), p);
       number->f32 = value;
       break;
     }
@@ -988,7 +991,8 @@ static void parse_literal(WasmParser* parser,
     case WASM_TYPE_F64: {
       double value;
       if (!read_double(p, end, &value))
-        FATAL_AT(parser, t.range.start, "invalid double\n");
+        FATAL_AT(parser, t.range.start, "invalid f64 literal \"%.*s\"\n",
+                 (int)(end - p), p);
       number->f64 = value;
       break;
     }

@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (f32.const 1234.5678foo)))
 # STDERR:
-expr/bad-const-f32-trailing.txt:2:26: invalid float
+expr/bad-const-f32-trailing.txt:2:26: invalid f32 literal "1234.5678foo"

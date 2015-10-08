@@ -1,4 +1,4 @@
 # ERROR: 1
 (module (func (i32.const -2147483649)))
 # STDERR:
-expr/bad-const-i32-underflow.txt:2:26: invalid 32-bit int
+expr/bad-const-i32-underflow.txt:2:26: invalid i32 literal "-2147483649"
