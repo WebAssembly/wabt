@@ -161,6 +161,20 @@ static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
+static int hexdigit(char c, uint32_t* out) {
+  if ((unsigned int)(c - '0') <= 9) {
+    *out = c - '0';
+    return 1;
+  } else if ((unsigned int)(c - 'a') <= 6) {
+    *out = 10 + (c - 'a');
+    return 1;
+  } else if ((unsigned int)(c - 'A') <= 6) {
+    *out = 10 + (c - 'A');
+    return 1;
+  }
+  return 0;
+}
+
 /* compare two strings, one from start to end (not NULL-terminated), and other
  is NULL-terminated. */
 static int string_eq(const char* start, const char* end, const char* other) {
@@ -263,16 +277,8 @@ static int read_uint64(const char* s, const char* end, uint64_t* out) {
       return 0;
     for (; s < end; ++s) {
       uint32_t digit;
-      char c = *s;
-      if ((unsigned int)(c - '0') <= 9) {
-        digit = c - '0';
-      } else if ((unsigned int)(c - 'a') <= 6) {
-        digit = 10 + (c - 'a');
-      } else if ((unsigned int)(c - 'A') <= 6) {
-        digit = 10 + (c - 'A');
-      } else {
+      if (!hexdigit(*s, &digit))
         return 0;
-      }
       uint64_t old_value = value;
       value = value * 16 + digit;
       /* check for overflow */
@@ -548,17 +554,6 @@ static void rewind_token(WasmParser* parser, WasmToken t) {
   parser->tokenizer.loc = t.range.start;
 }
 
-static int hexdigit(char c) {
-  if ((c - '0') <= 9) {
-    return c - '0';
-  } else if ((c - 'a') <= 6) {
-    return 10 + (c - 'a');
-  } else {
-    assert((c - 'A') <= 6);
-    return 10 + (c - 'A');
-  }
-}
-
 static size_t string_contents_length(WasmToken t) {
   assert(t.type == WASM_TOKEN_TYPE_STRING);
   const char* src = t.range.start.pos + 1;
@@ -617,12 +612,17 @@ static size_t copy_string_contents(WasmToken t, char* dest, size_t size) {
         case '\"':
           *dest++ = '\"';
           break;
-        default:
+        default: {
           /* The string should be validated already, so we know this is a hex
            * sequence */
-          *dest++ = (hexdigit(src[0]) << 4) | hexdigit(src[1]);
+          uint32_t hi;
+          uint32_t lo;
+          if (!hexdigit(src[0], &hi) || !hexdigit(src[1], &lo))
+            assert(0);
+          *dest++ = (hi << 4) | lo;
           src++;
           break;
+        }
       }
       src++;
     } else {
