@@ -341,6 +341,14 @@ static int read_int32(const char* s,
   return 1;
 }
 
+static int read_float(const char* s, const char* end, float* out) {
+  errno = 0;
+  char* endptr;
+  *out = strtof(s, &endptr);
+  return endptr == end &&
+         ((*out != 0 && *out != HUGE_VALF && *out != -HUGE_VALF) || errno == 0);
+}
+
 static int read_double(const char* s, const char* end, double* out) {
   errno = 0;
   char* endptr;
@@ -969,15 +977,19 @@ static void parse_literal(WasmParser* parser,
       break;
     }
 
-    case WASM_TYPE_F32:
+    case WASM_TYPE_F32: {
+      float value;
+      if (!read_float(p, end, &value))
+        FATAL_AT(parser, t.range.start, "invalid float\n");
+      number->f32 = value;
+      break;
+    }
+
     case WASM_TYPE_F64: {
       double value;
       if (!read_double(p, end, &value))
         FATAL_AT(parser, t.range.start, "invalid double\n");
-      if (type == WASM_TYPE_F32)
-        number->f32 = value;
-      else
-        number->f64 = value;
+      number->f64 = value;
       break;
     }
 
