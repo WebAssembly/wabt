@@ -253,17 +253,17 @@ static const OpInfo* get_op_info(WasmToken t) {
                      (int)(t.range.end.pos - t.range.start.pos));
 }
 
-static int read_uint64(const char** s, const char* end, uint64_t* out) {
-  if (*s == end)
+static int read_uint64(const char* s, const char* end, uint64_t* out) {
+  if (s == end)
     return 0;
   uint64_t value = 0;
-  if (**s == '0' && *s + 1 < end && *(*s + 1) == 'x') {
-    *s += 2;
-    if (*s == end)
+  if (*s == '0' && s + 1 < end && s[1] == 'x') {
+    s += 2;
+    if (s == end)
       return 0;
-    for (; *s < end; ++(*s)) {
+    for (; s < end; ++s) {
       uint32_t digit;
-      char c = **s;
+      char c = *s;
       if ((unsigned int)(c - '0') <= 9) {
         digit = c - '0';
       } else if ((unsigned int)(c - 'a') <= 6) {
@@ -280,8 +280,8 @@ static int read_uint64(const char** s, const char* end, uint64_t* out) {
         return 0;
     }
   } else {
-    for (; *s < end; ++(*s)) {
-      uint32_t digit = (**s - '0');
+    for (; s < end; ++s) {
+      uint32_t digit = (*s - '0');
       if (digit > 9)
         return 0;
       uint64_t old_value = value;
@@ -291,15 +291,17 @@ static int read_uint64(const char** s, const char* end, uint64_t* out) {
         return 0;
     }
   }
+  if (s != end)
+    return 0;
   *out = value;
   return 1;
 }
 
-static int read_int64(const char** s, const char* end, uint64_t* out) {
+static int read_int64(const char* s, const char* end, uint64_t* out) {
   int has_sign = 0;
-  if (**s == '-') {
+  if (*s == '-') {
     has_sign = 1;
-    (*s)++;
+    s++;
   }
   uint64_t value;
   int result = read_uint64(s, end, &value);
@@ -312,17 +314,17 @@ static int read_int64(const char** s, const char* end, uint64_t* out) {
   return result;
 }
 
-static int read_int32(const char** s,
+static int read_int32(const char* s,
                       const char* end,
                       uint32_t* out,
                       int allow_signed) {
   uint64_t value;
   int has_sign = 0;
-  if (**s == '-') {
+  if (*s == '-') {
     if (!allow_signed)
       return 0;
     has_sign = 1;
-    (*s)++;
+    s++;
   }
   if (!read_uint64(s, end, &value))
     return 0;
@@ -339,20 +341,17 @@ static int read_int32(const char** s,
   return 1;
 }
 
-static int read_double(const char** s, const char* end, double* out) {
+static int read_double(const char* s, const char* end, double* out) {
   errno = 0;
   char* endptr;
-  *out = strtod(*s, &endptr);
-  if (endptr != end ||
-      ((*out == 0 || *out == HUGE_VAL || *out == -HUGE_VAL) && errno != 0))
-    return 0;
-  *s = endptr;
-  return 1;
+  *out = strtod(s, &endptr);
+  return endptr == end &&
+         ((*out != 0 && *out != HUGE_VAL && *out != -HUGE_VAL) || errno == 0);
 }
 
 static int read_uint32_token(WasmToken t, uint32_t* out) {
   const char* p = t.range.start.pos;
-  return read_int32(&p, t.range.end.pos, out, 0);
+  return read_int32(p, t.range.end.pos, out, 0);
 }
 
 static WasmToken read_token(WasmParser* parser) {
@@ -735,7 +734,7 @@ static int match_load_store_aligned(WasmParser* parser,
 
       ++end;
       uint32_t alignment;
-      if (!read_int32(&end, t.range.end.pos, &alignment, 0))
+      if (!read_int32(end, t.range.end.pos, &alignment, 0))
         return 0;
 
       /* check that alignment is power-of-two */
@@ -826,7 +825,7 @@ static int parse_var(WasmParser* parser,
   } else {
     /* var index */
     uint32_t index;
-    if (!read_int32(&p, t.range.end.pos, &index, 0) || p != t.range.end.pos) {
+    if (!read_int32(p, t.range.end.pos, &index, 0)) {
       FATAL_AT(parser, t.range.start, "invalid var index\n");
     }
 
@@ -881,7 +880,7 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
   } else {
     /* var index */
     uint32_t index;
-    if (!read_int32(&p, t.range.end.pos, &index, 0) || p != t.range.end.pos) {
+    if (!read_int32(p, t.range.end.pos, &index, 0)) {
       FATAL_AT(parser, t.range.start, "invalid var index\n");
     }
 
@@ -956,7 +955,7 @@ static void parse_literal(WasmParser* parser,
   switch (type) {
     case WASM_TYPE_I32: {
       uint32_t value;
-      if (!read_int32(&p, end, &value, 1))
+      if (!read_int32(p, end, &value, 1))
         FATAL_AT(parser, t.range.start, "invalid 32-bit int\n");
       number->i32 = value;
       break;
@@ -964,7 +963,7 @@ static void parse_literal(WasmParser* parser,
 
     case WASM_TYPE_I64: {
       uint64_t value;
-      if (!read_int64(&p, end, &value))
+      if (!read_int64(p, end, &value))
         FATAL_AT(parser, t.range.start, "invalid 64-bit int\n");
       number->i64 = value;
       break;
@@ -973,7 +972,7 @@ static void parse_literal(WasmParser* parser,
     case WASM_TYPE_F32:
     case WASM_TYPE_F64: {
       double value;
-      if (!read_double(&p, end, &value))
+      if (!read_double(p, end, &value))
         FATAL_AT(parser, t.range.start, "invalid double\n");
       if (type == WASM_TYPE_F32)
         number->f32 = value;
