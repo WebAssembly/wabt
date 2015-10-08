@@ -175,8 +175,8 @@ static int hexdigit(char c, uint32_t* out) {
   return 0;
 }
 
-/* compare two strings, one from start to end (not NULL-terminated), and other
- is NULL-terminated. */
+/* return 1 if the non-NULL-terminated string starting with |start| and ending
+ with |end| is equal to the NULL-terminated string |other|. */
 static int string_eq(const char* start, const char* end, const char* other) {
   while (start < end && *other) {
     if (*start != *other)
@@ -185,6 +185,20 @@ static int string_eq(const char* start, const char* end, const char* other) {
     other++;
   }
   return start == end && *other == 0;
+}
+
+/* return 1 if the non-NULL-terminated string starting with |start| and ending
+ with |end| starts with the NULL-terminated string |prefix|. */
+static int string_starts_with(const char* start,
+                              const char* end,
+                              const char* prefix) {
+  while (start < end && *prefix) {
+    if (*start != *prefix)
+      return 0;
+    start++;
+    prefix++;
+  }
+  return *prefix == 0;
 }
 
 static void fatal_at(WasmParser* parser,
@@ -348,19 +362,51 @@ static int read_int32(const char* s,
 }
 
 static int read_float(const char* s, const char* end, float* out) {
+  /* strtof doesn't return signed nans */
+  int neg_nan = string_starts_with(s, end, "-nan");
+
   errno = 0;
   char* endptr;
-  *out = strtof(s, &endptr);
-  return endptr == end &&
-         ((*out != 0 && *out != HUGE_VALF && *out != -HUGE_VALF) || errno == 0);
+  float value;
+  value = strtof(s, &endptr);
+  if (endptr != end ||
+      ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) && errno != 0))
+    return 0;
+
+  if (neg_nan) {
+    /* set the sign bit */
+    uint32_t bits;
+    memcpy(&bits, &value, sizeof(bits));
+    bits |= 0x80000000;
+    memcpy(&value, &bits, sizeof(value));
+  }
+
+  *out = value;
+  return 1;
 }
 
 static int read_double(const char* s, const char* end, double* out) {
+  /* strtod doesn't return signed nans */
+  int neg_nan = string_starts_with(s, end, "-nan");
+
   errno = 0;
   char* endptr;
-  *out = strtod(s, &endptr);
-  return endptr == end &&
-         ((*out != 0 && *out != HUGE_VAL && *out != -HUGE_VAL) || errno == 0);
+  double value;
+  value = strtod(s, &endptr);
+  if (endptr != end ||
+      ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) && errno != 0))
+    return 0;
+
+  if (neg_nan) {
+    /* set the sign bit */
+    uint64_t bits;
+    memcpy(&bits, &value, sizeof(bits));
+    bits |= 0x8000000000000000ULL;
+    memcpy(&value, &bits, sizeof(value));
+  }
+
+  *out = value;
+  return 1;
 }
 
 static int read_uint32_token(WasmToken t, uint32_t* out) {
@@ -519,28 +565,51 @@ static WasmToken read_token(WasmParser* parser) {
         result.range.end = t->loc;
         return result;
 
-      default:
+      default: {
+        const char* start = t->loc.pos;
+        int is_nan = 0;
         result.type = WASM_TOKEN_TYPE_ATOM;
         result.range.start = t->loc;
         t->loc.col++;
         t->loc.pos++;
         while (t->loc.pos < t->source.end) {
           switch (*t->loc.pos) {
+            case '(': {
+              /* special case for a nan value, e.g. -nan(0xaabb) */
+              const char* end = t->loc.pos;
+              if (string_eq(start, end, "nan") == 0 ||
+                  string_eq(start, end, "-nan") == 0 ||
+                  string_eq(start, end, "+nan") == 0) {
+                is_nan = 1;
+                goto continue_atom;
+              }
+              /* fallthrough, this is not a nan atom */
+            }
+
             case ' ':
             case '\t':
             case '\n':
-            case '(':
-            case ')':
               result.range.end = t->loc;
               return result;
 
+            continue_atom:
             default:
               t->loc.col++;
               t->loc.pos++;
               break;
+
+            case ')':
+              /* if this is an nan bits atom, keep the closing paren */
+              if (is_nan) {
+                t->loc.col++;
+                t->loc.pos++;
+              }
+              result.range.end = t->loc;
+              return result;
           }
         }
         break;
+      }
     }
   }
 
