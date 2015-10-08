@@ -153,9 +153,24 @@ static NameTypePair s_types[] = {
 };
 
 static const char* s_type_names[] = {
-    "void", "i32", "i64", "f32", "f64",
+    "void",
+    "i32",
+    "i64",
+    "i32 or i64",
+    "f32",
+    "i32 or f32",
+    "i64 or f32",
+    "i32, i64 or f32",
+    "f64",
+    "i32 or f64",
+    "i64 or f64",
+    "i32, i64 or f64",
+    "f32 or f64",
+    "i32, f32 or f64",
+    "i64, f32 or f64",
+    "i32, i64, f32 or f64",
 };
-STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_TYPE_ALL + 1);
 
 static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
@@ -1160,7 +1175,7 @@ static WasmType parse_switch(WasmParser* parser,
   WasmType cond_type = parse_expr(parser, module, function, NULL);
   check_type(parser, parser->tokenizer.loc, cond_type, in_type,
              " in switch condition");
-  WasmType type = WASM_NUM_TYPES;
+  WasmType type = WASM_TYPE_ALL;
   WasmToken t = read_token(parser);
   while (1) {
     expect_open(parser, t);
@@ -1195,7 +1210,7 @@ static WasmType parse_switch(WasmParser* parser,
         }
 
         if (case_continuation & WASM_CONTINUATION_NORMAL && fallthrough == 0) {
-          if (type == WASM_NUM_TYPES) {
+          if (type == WASM_TYPE_ALL) {
             type = value_type;
           } else if (value_type == WASM_TYPE_VOID) {
             type = WASM_TYPE_VOID;
@@ -1219,7 +1234,7 @@ static WasmType parse_switch(WasmParser* parser,
       WasmType value_type =
           parse_expr(parser, module, function, &case_continuation);
       if (case_continuation & WASM_CONTINUATION_NORMAL) {
-        if (type == WASM_NUM_TYPES) {
+        if (type == WASM_TYPE_ALL) {
           type = value_type;
         } else if (value_type == WASM_TYPE_VOID) {
           type = WASM_TYPE_VOID;
@@ -1236,7 +1251,7 @@ static WasmType parse_switch(WasmParser* parser,
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
       break;
   }
-  if (type == WASM_NUM_TYPES)
+  if (type == WASM_TYPE_ALL)
     type = WASM_TYPE_VOID;
   CALLBACK(parser, after_switch, (switch_cookie, parser->user_data));
   return type;
@@ -1345,7 +1360,7 @@ static WasmType parse_expr(WasmParser* parser,
         WasmLabel* break_label = &function->labels.data[label_index];
         rewind_token(parser, t);
         WasmType break_type = parse_expr(parser, module, function, NULL);
-        if (break_label->type == WASM_NUM_TYPES) {
+        if (break_label->type == WASM_TYPE_ALL) {
           break_label->type = break_type;
         } else {
           check_type(parser, t.range.start, break_type, break_label->type,
@@ -1494,7 +1509,7 @@ static WasmType parse_expr(WasmParser* parser,
 
       WasmLabel* label = wasm_append_label(&function->labels);
       CHECK_ALLOC(parser, label, t.range.start);
-      label->type = WASM_NUM_TYPES;
+      label->type = WASM_TYPE_ALL;
 
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
         /* label */
@@ -1511,7 +1526,7 @@ static WasmType parse_expr(WasmParser* parser,
       int num_exprs;
       WasmType label_type =
           parse_block(parser, module, function, &num_exprs, &continuation);
-      if (label->type != WASM_NUM_TYPES) {
+      if (label->type != WASM_TYPE_ALL) {
         if (label_type != WASM_TYPE_VOID ||
             continuation & WASM_CONTINUATION_NORMAL) {
           check_type(parser, t.range.start, label_type, label->type,

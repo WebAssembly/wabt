@@ -10,14 +10,13 @@
 #define EXTERN_C
 #endif
 
-/* These values match the v8-native-prototype's type's values */
 typedef enum WasmType {
-  WASM_TYPE_VOID,
-  WASM_TYPE_I32,
-  WASM_TYPE_I64,
-  WASM_TYPE_F32,
-  WASM_TYPE_F64,
-  WASM_NUM_TYPES,
+  WASM_TYPE_VOID = 0,
+  WASM_TYPE_I32 = 1,
+  WASM_TYPE_I64 = 2,
+  WASM_TYPE_F32 = 4,
+  WASM_TYPE_F64 = 8,
+  WASM_TYPE_ALL = 15,
 } WasmType;
 
 #define OPCODES(V)             \

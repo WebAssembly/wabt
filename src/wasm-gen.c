@@ -45,6 +45,15 @@
 /* offsets from the start of a segment header */
 #define SEGMENT_HEADER_DATA_OFFSET 4
 
+typedef enum WasmTypeV8 {
+  WASM_TYPE_V8_VOID,
+  WASM_TYPE_V8_I32,
+  WASM_TYPE_V8_I64,
+  WASM_TYPE_V8_F32,
+  WASM_TYPE_V8_F64,
+  WASM_NUM_V8_TYPES,
+} WasmTypeV8;
+
 typedef struct OutputBuffer {
   void* start;
   size_t size;
@@ -90,6 +99,23 @@ static uint32_t log_two_u32(uint32_t x) {
   if (!x)
     return 0;
   return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
+}
+
+static WasmTypeV8 wasm_type_to_v8_type(WasmType type) {
+  switch (type) {
+    case WASM_TYPE_VOID:
+      return WASM_TYPE_V8_VOID;
+    case WASM_TYPE_I32:
+      return WASM_TYPE_V8_I32;
+    case WASM_TYPE_I64:
+      return WASM_TYPE_V8_I64;
+    case WASM_TYPE_F32:
+      return WASM_TYPE_V8_F32;
+    case WASM_TYPE_F64:
+      return WASM_TYPE_V8_F64;
+    default:
+      FATAL("v8-native does not support type %d\n", type);
+  }
 }
 
 static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
@@ -323,9 +349,10 @@ static void out_module_header(Context* ctx,
     WasmVariable* global = &module->globals.data[i];
     if (g_verbose)
       printf("; global header %d\n", i);
-    const uint8_t global_type_codes[WASM_NUM_TYPES] = {-1, 4, 6, 8, 9};
+    const uint8_t global_type_codes[WASM_NUM_V8_TYPES] = {-1, 4, 6, 8, 9};
     out_u32(buf, 0, "global name offset");
-    out_u8(buf, global_type_codes[global->type], "global mem type");
+    out_u8(buf, global_type_codes[wasm_type_to_v8_type(global->type)],
+           "global mem type");
     out_u8(buf, 0, "export global");
   }
 
@@ -335,11 +362,13 @@ static void out_module_header(Context* ctx,
       printf("; import header %d\n", i);
 
     out_u8(buf, import->args.size, "import num args");
-    out_u8(buf, import->result_type, "import result_type");
+    out_u8(buf, wasm_type_to_v8_type(import->result_type),
+           "import result_type");
 
     int j;
     for (j = 0; j < import->args.size; ++j)
-      out_u8(buf, import->args.data[j].type, "import arg type");
+      out_u8(buf, wasm_type_to_v8_type(import->args.data[j].type),
+             "import arg type");
 
     out_u32(buf, 0, "import name offset");
     out_u32(buf, 0, "import code start offset");
@@ -358,22 +387,24 @@ static void out_module_header(Context* ctx,
       printf("; function header %d\n", i);
 
     out_u8(buf, function->num_args, "func num args");
-    out_u8(buf, function->result_type, "func result type");
+    out_u8(buf, wasm_type_to_v8_type(function->result_type),
+           "func result type");
     int j;
     for (j = 0; j < function->num_args; ++j)
-      out_u8(buf, function->locals.data[j].type, "func arg type");
+      out_u8(buf, wasm_type_to_v8_type(function->locals.data[j].type),
+             "func arg type");
     out_u32(buf, 0, "func name offset");
     out_u32(buf, 0, "func code start offset");
     out_u32(buf, 0, "func code end offset");
 
-    int num_locals[WASM_NUM_TYPES] = {};
+    int num_locals[WASM_NUM_V8_TYPES] = {};
     for (j = function->num_args; j < function->locals.size; ++j)
-      num_locals[function->locals.data[j].type]++;
+      num_locals[wasm_type_to_v8_type(function->locals.data[j].type)]++;
 
-    out_u16(buf, num_locals[WASM_TYPE_I32], "num local i32");
-    out_u16(buf, num_locals[WASM_TYPE_I64], "num local i64");
-    out_u16(buf, num_locals[WASM_TYPE_F32], "num local f32");
-    out_u16(buf, num_locals[WASM_TYPE_F64], "num local f64");
+    out_u16(buf, num_locals[WASM_TYPE_V8_I32], "num local i32");
+    out_u16(buf, num_locals[WASM_TYPE_V8_I64], "num local i64");
+    out_u16(buf, num_locals[WASM_TYPE_V8_F32], "num local f32");
+    out_u16(buf, num_locals[WASM_TYPE_V8_F64], "num local f64");
     out_u8(buf, 0, "export func");
     out_u8(buf, 0, "func external");
   }
@@ -459,27 +490,28 @@ static void error(WasmSourceLocation loc, const char* msg, void* user_data) {
 }
 
 static void remap_locals(Context* ctx, WasmFunction* function) {
-  int max[WASM_NUM_TYPES] = {};
+  int max[WASM_NUM_V8_TYPES] = {};
   int i;
   for (i = function->num_args; i < function->locals.size; ++i) {
     WasmVariable* variable = &function->locals.data[i];
-    max[variable->type]++;
+    max[wasm_type_to_v8_type(variable->type)]++;
   }
 
   /* Args don't need remapping */
   for (i = 0; i < function->num_args; ++i)
     ctx->remapped_locals[i] = i;
 
-  int start[WASM_NUM_TYPES];
-  start[WASM_TYPE_I32] = function->num_args;
-  start[WASM_TYPE_I64] = start[WASM_TYPE_I32] + max[WASM_TYPE_I32];
-  start[WASM_TYPE_F32] = start[WASM_TYPE_I64] + max[WASM_TYPE_I64];
-  start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
+  int start[WASM_NUM_V8_TYPES];
+  start[WASM_TYPE_V8_I32] = function->num_args;
+  start[WASM_TYPE_V8_I64] = start[WASM_TYPE_V8_I32] + max[WASM_TYPE_V8_I32];
+  start[WASM_TYPE_V8_F32] = start[WASM_TYPE_V8_I64] + max[WASM_TYPE_V8_I64];
+  start[WASM_TYPE_V8_F64] = start[WASM_TYPE_V8_F32] + max[WASM_TYPE_V8_F32];
 
-  int seen[WASM_NUM_TYPES] = {};
+  int seen[WASM_NUM_V8_TYPES] = {};
   for (i = function->num_args; i < function->locals.size; ++i) {
     WasmVariable* variable = &function->locals.data[i];
-    ctx->remapped_locals[i] = start[variable->type] + seen[variable->type]++;
+    WasmTypeV8 v8_type = wasm_type_to_v8_type(variable->type);
+    ctx->remapped_locals[i] = start[v8_type] + seen[v8_type]++;
   }
 }
 
@@ -950,7 +982,7 @@ static void append_nullary_function(Context* ctx,
   }
   memset(ctx->temp_buf.start + new_header_offset, 0, FUNC_HEADER_SIZE(0));
   out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
-            result_type, "func result type");
+            wasm_type_to_v8_type(result_type), "func result type");
   out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_NAME_OFFSET(0),
              new_name_offset, "func name offset");
   out_u32_at(&ctx->temp_buf,
