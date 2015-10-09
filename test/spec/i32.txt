@@ -1,4 +1,4 @@
-# SKIP: Unsupported opcode #87:ExprI32Clz
+# SKIP: Unsupported opcode #88:ExprI32Ctz
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/i32.wase
+# STDIN_FILE: third_party/spec/ml-proto/test/i32.wast

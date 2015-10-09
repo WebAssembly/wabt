@@ -1,4 +1,4 @@
-# SKIP: ExprI64SConvertF32 is unimplemented in v8-native-prototype
+# SKIP: Unsupported opcode #162:ExprI64SConvertF32
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/conversions.wase
+# STDIN_FILE: third_party/spec/ml-proto/test/conversions.wast
