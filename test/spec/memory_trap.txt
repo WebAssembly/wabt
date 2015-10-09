@@ -4,11 +4,13 @@
 # STDOUT:
 instantiating module
 $invoke_0 = undefined
-$assert_return_0 OK
+$assert_return_0 failed, expected 1, got 0
 $assert_trap_0 failed, didn't throw
 $assert_trap_1 failed, didn't throw
 $assert_trap_2 failed, didn't throw
 $assert_trap_3 failed, didn't throw
 $assert_trap_4 failed, didn't throw
 $assert_trap_5 failed, didn't throw
-1/7 tests passed.
+$assert_trap_6 failed, didn't throw
+$assert_trap_7 failed, didn't throw
+0/9 tests passed.
