@@ -1006,7 +1006,8 @@ static void append_nullary_function(Context* ctx,
             1, "func export");
 }
 
-static WasmParserCookie before_assert_return(void* user_data) {
+static WasmParserCookie before_assert_return(WasmSourceLocation loc,
+                                             void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (g_verbose)
@@ -1050,7 +1051,8 @@ static void after_assert_return(WasmType type,
   ctx->in_assert = 0;
 }
 
-static WasmParserCookie before_assert_return_nan(void* user_data) {
+static WasmParserCookie before_assert_return_nan(WasmSourceLocation loc,
+                                                 void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (g_verbose)
@@ -1095,7 +1097,7 @@ static void after_assert_return_nan(WasmType type,
   ctx->in_assert = 0;
 }
 
-static void before_assert_trap(void* user_data) {
+static void before_assert_trap(WasmSourceLocation loc, void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (g_verbose)
@@ -1111,7 +1113,8 @@ static void after_assert_trap( void* user_data) {
   ctx->in_assert = 0;
 }
 
-static WasmParserCookie before_invoke(const char* invoke_name,
+static WasmParserCookie before_invoke(WasmSourceLocation loc,
+                                      const char* invoke_name,
                                       int invoke_function_index,
                                       void* user_data) {
   Context* ctx = user_data;

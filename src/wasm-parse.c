@@ -2174,8 +2174,9 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
              (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
   }
 
-  WasmParserCookie cookie = CALLBACK(parser, before_invoke,
-                                     (name, function_index, parser->user_data));
+  WasmParserCookie cookie =
+      CALLBACK(parser, before_invoke,
+               (t.range.start, name, function_index, parser->user_data));
   free(name);
 
   WasmFunction dummy_function = {};
@@ -2228,8 +2229,8 @@ int wasm_parse_file(WasmSource* source,
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
 
-        WasmParserCookie cookie =
-            CALLBACK(parser, before_assert_return, (parser->user_data));
+        WasmParserCookie cookie = CALLBACK(parser, before_assert_return,
+                                           (t.range.start, parser->user_data));
 
         WasmFunction dummy_function = {};
         WasmType left_type = parse_invoke(parser, &module);
@@ -2251,8 +2252,8 @@ int wasm_parse_file(WasmSource* source,
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
 
-        WasmParserCookie cookie =
-            CALLBACK(parser, before_assert_return_nan, (parser->user_data));
+        WasmParserCookie cookie = CALLBACK(parser, before_assert_return_nan,
+                                           (t.range.start, parser->user_data));
 
         WasmType type = parse_invoke(parser, &module);
         if (type != WASM_TYPE_F32 && type != WASM_TYPE_F64) {
@@ -2275,7 +2276,8 @@ int wasm_parse_file(WasmSource* source,
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
 
-        CALLBACK(parser, before_assert_trap, (parser->user_data));
+        CALLBACK(parser, before_assert_trap,
+                 (t.range.start, parser->user_data));
         parse_invoke(parser, &module);
         CALLBACK(parser, after_assert_trap, (parser->user_data));
         /* ignore string, these are error messages that will only match the
