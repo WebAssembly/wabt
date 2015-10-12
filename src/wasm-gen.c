@@ -828,7 +828,12 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void finish_module(Context* ctx) {
+static void before_js_module(Context* ctx) {
+  const char* quiet_str = ctx->multi_module_verbose ? "false" : "true";
+  out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
+}
+
+static void after_js_module(Context* ctx) {
   if (!ctx->temp_buf.size)
     return;
 
@@ -843,13 +848,12 @@ static void finish_module(Context* ctx) {
       out_printf(&ctx->js_buf, "%4d,", *p);
     out_printf(&ctx->js_buf, "\n");
   }
-  const char* quiet_str = ctx->multi_module_verbose ? "false" : "true";
-  out_printf(&ctx->js_buf, "], %s);\nrunTests(m, %s);\n", quiet_str, quiet_str);
+  out_printf(&ctx->js_buf, "]);\nrunTests(m);\n");
 }
 
 static void before_module_multi(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
-  finish_module(ctx);
+  after_js_module(ctx);
   before_module(module, user_data);
 }
 
@@ -1208,11 +1212,12 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
       callbacks.before_invoke = before_invoke;
       callbacks.after_invoke = after_invoke;
       init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+      before_js_module(&ctx);
     }
     result =
         wasm_parse_file(source, &callbacks, options->type_check);
     if (g_outfile) {
-      finish_module(&ctx);
+      after_js_module(&ctx);
       write_output_buffer(&ctx.js_buf, g_outfile);
     }
   } else {

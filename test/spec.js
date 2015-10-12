@@ -1,8 +1,11 @@
-function wasm_write(memory, offset, count) {
+var quiet; /* global, defined by output from sexpr-wasm */
+
+function wasmWrite(memory, offset, count) {
   try {
     var view = new Uint8Array(memory, offset, count);
   } catch (exc) {
-    print("wasm_write(" + offset + ", " + count + ") failed on heap of size " + memory.byteLength);
+    print("wasmWrite(" + offset + ", " + count + ") failed on heap of size " +
+          memory.byteLength);
     throw exc;
   }
   var str = "";
@@ -13,12 +16,12 @@ function wasm_write(memory, offset, count) {
   write(str);
 }
 
-function createModule(a, quiet) {
+function createModule(a) {
   var memory = null;
   var u8a = new Uint8Array(a);
   var ffi = {
-    print: print, 
-    write: function (offset, count) { wasm_write(memory, offset, count); }
+    print: print,
+    write: function(offset, count) { wasmWrite(memory, offset, count); }
   };
   if (!quiet)
     print('instantiating module');
@@ -31,7 +34,7 @@ function startsWith(s, prefix) {
   return s.lastIndexOf(prefix, 0) == 0;
 }
 
-function runTests(module, quiet) {
+function runTests(module) {
   var passed = 0;
   var failed = 0;
   for (var name in module) {
