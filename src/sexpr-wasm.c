@@ -15,6 +15,7 @@ enum {
   FLAG_DUMP_MODULE,
   FLAG_OUTPUT,
   FLAG_MULTI_MODULE,
+  FLAG_MULTI_MODULE_VERBOSE,
   FLAG_TYPECHECK_SPEC,
   FLAG_TYPECHECK_V8,
   NUM_FLAGS
@@ -26,6 +27,7 @@ int g_dump_module;
 int g_verbose;
 WasmParserTypeCheck g_parser_type_check = WASM_PARSER_TYPE_CHECK_V8_NATIVE;
 static int g_multi_module;
+static int g_multi_module_verbose;
 
 static struct option g_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
@@ -33,6 +35,7 @@ static struct option g_long_options[] = {
     {"dump-module", no_argument, NULL, 'd'},
     {"output", no_argument, NULL, 'o'},
     {"multi-module", no_argument, NULL, 0},
+    {"multi-module-verbose", no_argument, NULL, 0},
     {"typecheck-spec", no_argument, NULL, 0},
     {"typecheck-v8", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
@@ -50,6 +53,8 @@ static OptionHelp g_option_help[] = {
     {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
     {FLAG_MULTI_MODULE, NULL,
      "parse a file with multiple modules and assertions, like the spec tests"},
+    {FLAG_MULTI_MODULE_VERBOSE, NULL,
+     "print logging messages when running multi-module files"},
     {NUM_FLAGS, NULL},
 };
 
@@ -124,6 +129,10 @@ static void parse_options(int argc, char** argv) {
             g_multi_module = 1;
             break;
 
+          case FLAG_MULTI_MODULE_VERBOSE:
+            g_multi_module_verbose = 1;
+            break;
+
           case FLAG_TYPECHECK_SPEC:
             g_parser_type_check = WASM_PARSER_TYPE_CHECK_SPEC;
             break;
@@ -190,7 +199,12 @@ int main(int argc, char** argv) {
   source.filename = g_infile;
   source.start = data;
   source.end = data + fsize;
-  int result = wasm_gen_file(&source, g_multi_module, g_parser_type_check);
+
+  WasmGenOptions options = {};
+  options.multi_module = g_multi_module;
+  options.multi_module_verbose = g_multi_module_verbose;
+  options.type_check = g_parser_type_check;
+  int result = wasm_gen_file(&source, &options);
   free(data);
   return result;
 }

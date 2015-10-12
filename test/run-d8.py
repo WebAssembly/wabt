@@ -57,7 +57,7 @@ def main(args):
     if options.verbose:
       cmd.append('-v')
     if options.spec:
-      cmd.append('--multi-module')
+      cmd.extend(['--multi-module', '--multi-module-verbose'])
     try:
       subprocess.check_call(cmd)
     except OSError as e:

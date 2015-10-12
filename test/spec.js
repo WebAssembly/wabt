@@ -13,13 +13,15 @@ function wasm_write(memory, offset, count) {
   write(str);
 }
 
-function createModule(a) {
+function createModule(a, quiet) {
   var memory = null;
   var u8a = new Uint8Array(a);
   var ffi = {
     print: print, 
     write: function (offset, count) { wasm_write(memory, offset, count); }
   };
+  if (!quiet)
+    print('instantiating module');
   var module = WASM.instantiateModule(u8a.buffer, ffi);
   memory = module.memory;
   return module;
@@ -29,9 +31,7 @@ function startsWith(s, prefix) {
   return s.lastIndexOf(prefix, 0) == 0;
 }
 
-function runTests(module) {
-  var quiet = true;
-
+function runTests(module, quiet) {
   var passed = 0;
   var failed = 0;
   for (var name in module) {

@@ -83,6 +83,7 @@ typedef struct Context {
   int assert_return_nan_count;
   int assert_trap_count;
   int invoke_count;
+  int multi_module_verbose;
 } Context;
 
 extern const char* g_outfile;
@@ -842,7 +843,8 @@ static void finish_module(Context* ctx) {
       out_printf(&ctx->js_buf, "%4d,", *p);
     out_printf(&ctx->js_buf, "\n");
   }
-  out_printf(&ctx->js_buf, "]);\nrunTests(m);\n");
+  const char* quiet_str = ctx->multi_module_verbose ? "false" : "true";
+  out_printf(&ctx->js_buf, "], %s);\nrunTests(m, %s);\n", quiet_str, quiet_str);
 }
 
 static void before_module_multi(WasmModule* module, void* user_data) {
@@ -1151,10 +1153,10 @@ static void assert_invalid_error(WasmSourceLocation loc,
           loc.line, loc.col, msg);
 }
 
-int wasm_gen_file(WasmSource* source,
-                  int multi_module,
-                  WasmParserTypeCheck type_check) {
+int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   Context ctx = {};
+  ctx.multi_module_verbose = options->multi_module_verbose;
+
   WasmParserCallbacks callbacks = {};
   callbacks.user_data = &ctx;
   callbacks.error = error;
@@ -1193,7 +1195,7 @@ int wasm_gen_file(WasmSource* source,
   callbacks.assert_invalid_error = assert_invalid_error;
 
   int result;
-  if (multi_module) {
+  if (options->multi_module) {
     if (g_outfile) {
       callbacks.before_module = before_module_multi;
       callbacks.after_module = after_module_multi;
@@ -1208,14 +1210,14 @@ int wasm_gen_file(WasmSource* source,
       init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
     }
     result =
-        wasm_parse_file(source, &callbacks, type_check);
+        wasm_parse_file(source, &callbacks, options->type_check);
     if (g_outfile) {
       finish_module(&ctx);
       write_output_buffer(&ctx.js_buf, g_outfile);
     }
   } else {
     result =
-        wasm_parse_module(source, &callbacks, type_check);
+        wasm_parse_module(source, &callbacks, options->type_check);
     if (result == 0 && g_outfile)
       write_output_buffer(&ctx.buf, g_outfile);
   }
