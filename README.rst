@@ -17,7 +17,8 @@ Clone as normal, but don't forget to update/init submodules as well::
   $ git clone https://github.com/WebAssembly/sexpr-wasm-prototype
   $ git submodule update --init
 
-This will fetch the v8-native-prototype repo, which is needed for some tests.
+This will fetch the v8-native-prototype and spec repos, which are needed for
+some tests.
 
 Building
 --------
@@ -31,14 +32,14 @@ Building just sexpr-wasm::
   cc -Wall -Werror -g -c -o out/wasm-gen.o src/wasm-gen.c
   cc -o out/sexpr-wasm out/sexpr-wasm.o out/wasm-parse.o out/wasm-gen.o
 
-If you make changes to src/hash.txt, you'll need to install gperf as well. On
-Debian-based systems::
+If you make changes to src/wasm-keywords.gperf, you'll need to install gperf as
+well. On Debian-based systems::
 
   $ sudo apt-get install gperf
   ...
-  $ touch src/hash.txt
+  $ touch src/wasm-keywords.gperf
   $ make
-  gperf --compare-strncmp --readonly-tables --struct-type src/hash.txt --output-file src/hash.h
+  gperf --compare-strncmp --readonly-tables --struct-type src/wasm-keywords.gperf --output-file src/wasm-keywords.h
   ...
 
 Building v8-native-prototype
@@ -51,6 +52,16 @@ rely on this repo. To build it::
   ...
 
 When it is finished, there will be a d8 executable in the
+``third_party/v8-native-prototype/v8/v8/out/Release`` directory.
+
+You can also download a prebuilt version (the same one used to test on Travis)
+by running the download-d8.sh script::
+
+  $ scripts/download-d8.sh
+  ...
+
+This downloads the d8 executable into the ``out`` directory. The test runner
+will look here if there is no d8 executable in the
 ``third_party/v8-native-prototype/v8/v8/out/Release`` directory.
 
 Running
