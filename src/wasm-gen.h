@@ -2,6 +2,9 @@
 #define WASM_GEN_H
 
 typedef struct WasmGenOptions {
+  const char* outfile;
+  int dump_module;
+  int verbose;
   int multi_module;
   int multi_module_verbose;
   enum WasmParserTypeCheck type_check;

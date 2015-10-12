@@ -58,6 +58,7 @@ typedef struct OutputBuffer {
   void* start;
   size_t size;
   size_t capacity;
+  int log_writes;
 } OutputBuffer;
 
 typedef struct LabelInfo {
@@ -67,6 +68,7 @@ typedef struct LabelInfo {
 } LabelInfo;
 
 typedef struct Context {
+  WasmGenOptions* options;
   OutputBuffer buf;
   OutputBuffer temp_buf;
   OutputBuffer js_buf;
@@ -83,12 +85,7 @@ typedef struct Context {
   int assert_return_nan_count;
   int assert_trap_count;
   int invoke_count;
-  int multi_module_verbose;
 } Context;
-
-extern const char* g_outfile;
-extern int g_dump_module;
-extern int g_verbose;
 
 static const char* s_opcode_names[] = {
 #define OPCODE(name, code) [code] = "OPCODE_" #name,
@@ -119,7 +116,9 @@ static WasmTypeV8 wasm_type_to_v8_type(WasmType type) {
   }
 }
 
-static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
+static void init_output_buffer(OutputBuffer* buf,
+                               size_t initial_capacity,
+                               int log_writes) {
   /* We may be reusing the buffer, free it */
   free(buf->start);
   buf->start = malloc(initial_capacity);
@@ -127,6 +126,7 @@ static void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
     FATAL("unable to allocate %zd bytes\n", initial_capacity);
   buf->size = 0;
   buf->capacity = initial_capacity;
+  buf->log_writes = log_writes;
 }
 
 static void ensure_output_buffer_capacity(OutputBuffer* buf,
@@ -187,7 +187,7 @@ static void move_data(OutputBuffer* buf,
   assert(dest_offset + size <= buf->size);
   assert(src_offset + size <= buf->size);
   memmove(buf->start + dest_offset, buf->start + src_offset, size);
-  if (g_verbose) {
+  if (buf->log_writes) {
     printf("; move [%07zx,%07zx) -> [%07zx,%07zx)\n", src_offset,
            src_offset + size, dest_offset, dest_offset + size);
   }
@@ -201,7 +201,7 @@ static size_t out_data(OutputBuffer* buf,
   assert(offset <= buf->size);
   ensure_output_buffer_capacity(buf, offset + size);
   memcpy(buf->start + offset, src, size);
-  if (g_verbose)
+  if (buf->log_writes)
     dump_memory(buf->start + offset, size, offset, 0, desc);
   return offset + size;
 }
@@ -283,7 +283,7 @@ static void out_segment(OutputBuffer* buf,
   ensure_output_buffer_capacity(buf, offset + segment->size);
   void* dest = buf->start + offset;
   wasm_copy_segment_data(segment->data, dest, segment->size);
-  if (g_verbose)
+  if (buf->log_writes)
     dump_memory(buf->start + offset, segment->size, offset, 1, desc);
   buf->size += segment->size;
 }
@@ -348,7 +348,7 @@ static void out_module_header(Context* ctx,
   int i;
   for (i = 0; i < module->globals.size; ++i) {
     WasmVariable* global = &module->globals.data[i];
-    if (g_verbose)
+    if (ctx->options->verbose)
       printf("; global header %d\n", i);
     const uint8_t global_type_codes[WASM_NUM_V8_TYPES] = {-1, 4, 6, 8, 9};
     out_u32(buf, 0, "global name offset");
@@ -359,7 +359,7 @@ static void out_module_header(Context* ctx,
 
   for (i = 0; i < module->imports.size; ++i) {
     WasmImport* import = &module->imports.data[i];
-    if (g_verbose)
+    if (ctx->options->verbose)
       printf("; import header %d\n", i);
 
     out_u8(buf, import->args.size, "import num args");
@@ -384,7 +384,7 @@ static void out_module_header(Context* ctx,
 
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
-    if (g_verbose)
+    if (ctx->options->verbose)
       printf("; function header %d\n", i);
 
     out_u8(buf, function->num_args, "func num args");
@@ -412,7 +412,7 @@ static void out_module_header(Context* ctx,
 
   for (i = 0; i < module->segments.size; ++i) {
     WasmSegment* segment = &module->segments.data[i];
-    if (g_verbose)
+    if (ctx->options->verbose)
       printf("; segment header %d\n", i);
     out_u32(buf, segment->address, "segment address");
     out_u32(buf, 0, "segment data offset");
@@ -440,7 +440,7 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
 
   int i;
   for (i = 0; i < module->segments.size; ++i) {
-    if (g_verbose)
+    if (ctx->options->verbose)
       printf("; segment data %d\n", i);
     WasmSegment* segment = &module->segments.data[i];
     out_u32_at(buf, ctx->segment_header_offsets[i] + SEGMENT_HEADER_DATA_OFFSET,
@@ -449,7 +449,7 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
   }
 
   /* output name table */
-  if (g_verbose)
+  if (ctx->options->verbose)
     printf("; names\n");
   uint32_t offset = FUNC_HEADERS_OFFSET(module->globals.size);
   for (i = 0; i < module->imports.size; ++i) {
@@ -540,14 +540,15 @@ static void before_module(WasmModule* module, void* user_data) {
   }
 
   ctx->module = module;
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
+                     ctx->options->verbose);
   out_module_header(ctx, module);
 }
 
 static void after_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
   out_module_footer(ctx, module);
-  if (g_dump_module)
+  if (ctx->options->dump_module)
     dump_output_buffer(&ctx->buf);
 }
 
@@ -560,7 +561,7 @@ static void before_function(WasmModule* module,
   remap_locals(ctx, function);
 
   int function_index = function - module->functions.data;
-  if (g_verbose)
+  if (ctx->options->verbose)
     printf("; function data %d\n", function_index);
   out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
                             FUNC_HEADER_CODE_START_OFFSET(function->num_args),
@@ -829,7 +830,7 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
 }
 
 static void before_js_module(Context* ctx) {
-  const char* quiet_str = ctx->multi_module_verbose ? "false" : "true";
+  const char* quiet_str = ctx->options->multi_module_verbose ? "false" : "true";
   out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
 }
 
@@ -891,7 +892,7 @@ static void append_nullary_function(Context* ctx,
   const size_t new_size = ctx->temp_buf.size + total_added_size;
   const size_t old_size = ctx->temp_buf.size;
 
-  if (g_verbose)
+  if (ctx->options->verbose)
     printf("; after %s\n", name);
 
   ensure_output_buffer_capacity(&ctx->temp_buf, new_size);
@@ -982,7 +983,7 @@ static void append_nullary_function(Context* ctx,
 
   /* write the new header */
   const uint32_t new_header_offset = old_func_header_end;
-  if (g_verbose) {
+  if (ctx->options->verbose) {
     printf("; clear [%07x,%07x)\n", new_header_offset,
            new_header_offset + FUNC_HEADER_SIZE(0));
   }
@@ -1016,9 +1017,10 @@ static WasmParserCookie before_assert_return(WasmSourceLocation loc,
                                              void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
-  if (g_verbose)
+  if (ctx->options->verbose)
     printf("; before assert_return_%d\n", ctx->assert_return_count);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
+                     ctx->options->verbose);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
   return cookie;
@@ -1061,9 +1063,10 @@ static WasmParserCookie before_assert_return_nan(WasmSourceLocation loc,
                                                  void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
-  if (g_verbose)
+  if (ctx->options->verbose)
     printf("; before assert_return_nan_%d\n", ctx->assert_return_nan_count);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
+                     ctx->options->verbose);
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
   out_u8(&ctx->buf, 0, "remapped local index");
   return 0;
@@ -1106,9 +1109,10 @@ static void after_assert_return_nan(WasmType type,
 static void before_assert_trap(WasmSourceLocation loc, void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
-  if (g_verbose)
+  if (ctx->options->verbose)
     printf("; before assert_trap_%d\n", ctx->assert_trap_count);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
+                     ctx->options->verbose);
 }
 
 static void after_assert_trap( void* user_data) {
@@ -1125,9 +1129,10 @@ static WasmParserCookie before_invoke(WasmSourceLocation loc,
                                       void* user_data) {
   Context* ctx = user_data;
   if (!ctx->in_assert) {
-    if (g_verbose)
+    if (ctx->options->verbose)
       printf("; before invoke_%d\n", ctx->invoke_count);
-    init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+    init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
+                       ctx->options->verbose);
   }
 
   out_opcode(&ctx->buf, WASM_OPCODE_CALL);
@@ -1159,7 +1164,7 @@ static void assert_invalid_error(WasmSourceLocation loc,
 
 int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   Context ctx = {};
-  ctx.multi_module_verbose = options->multi_module_verbose;
+  ctx.options = options;
 
   WasmParserCallbacks callbacks = {};
   callbacks.user_data = &ctx;
@@ -1200,7 +1205,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
 
   int result;
   if (options->multi_module) {
-    if (g_outfile) {
+    if (options->outfile) {
       callbacks.before_module = before_module_multi;
       callbacks.after_module = after_module_multi;
       callbacks.before_assert_return = before_assert_return;
@@ -1211,20 +1216,21 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
       callbacks.after_assert_trap = after_assert_trap;
       callbacks.before_invoke = before_invoke;
       callbacks.after_invoke = after_invoke;
-      init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+      init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
+                         options->verbose);
       before_js_module(&ctx);
     }
     result =
         wasm_parse_file(source, &callbacks, options->type_check);
-    if (g_outfile) {
+    if (options->outfile) {
       after_js_module(&ctx);
-      write_output_buffer(&ctx.js_buf, g_outfile);
+      write_output_buffer(&ctx.js_buf, options->outfile);
     }
   } else {
     result =
         wasm_parse_module(source, &callbacks, options->type_check);
-    if (result == 0 && g_outfile)
-      write_output_buffer(&ctx.buf, g_outfile);
+    if (result == 0 && options->outfile)
+      write_output_buffer(&ctx.buf, options->outfile);
   }
 
   destroy_context(&ctx);
