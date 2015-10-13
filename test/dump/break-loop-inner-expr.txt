@@ -1,0 +1,57 @@
+# FLAGS: -dv
+(module
+  (func
+    (loop $exit $count
+      (if (i32.const 1)
+        (break $count (i32.const 2)))
+      (if (i32.const 3)
+        (break $exit (i32.const 4)))
+      (i32.const 5))))
+# STDOUT:
+0000000: 00                                         ; mem size log 2
+0000001: 01                                         ; export mem
+0000002: 0000                                       ; num globals
+0000004: 0100                                       ; num funcs
+0000006: 0000                                       ; num data segments
+; function header 0
+0000008: 00                                         ; func num args
+0000009: 00                                         ; func result type
+000000a: 0000 0000                                  ; func name offset
+000000e: 0000 0000                                  ; func code start offset
+0000012: 0000 0000                                  ; func code end offset
+0000016: 0000                                       ; num local i32
+0000018: 0000                                       ; num local i64
+000001a: 0000                                       ; num local f32
+000001c: 0000                                       ; num local f64
+000001e: 00                                         ; export func
+000001f: 00                                         ; func external
+; function data 0
+000000e: 2000 0000                                  ; FIXUP func code start offset
+0000020: 06                                         ; OPCODE_LOOP
+0000021: 01                                         ; num expressions
+0000022: 03                                         ; OPCODE_BLOCK
+0000023: 00                                         ; num expressions
+0000024: 01                                         ; OPCODE_IF
+0000025: 10                                         ; OPCODE_I8_CONST
+0000026: 01                                         ; u8 literal
+0000027: 1f                                         ; OPCODE_EXPR_BREAK
+0000028: 00                                         ; break depth
+0000029: 10                                         ; OPCODE_I8_CONST
+000002a: 02                                         ; u8 literal
+000002b: 01                                         ; OPCODE_IF
+000002c: 10                                         ; OPCODE_I8_CONST
+000002d: 03                                         ; u8 literal
+000002e: 1f                                         ; OPCODE_EXPR_BREAK
+000002f: 01                                         ; break depth
+0000030: 10                                         ; OPCODE_I8_CONST
+0000031: 04                                         ; u8 literal
+0000032: 10                                         ; OPCODE_I8_CONST
+0000033: 05                                         ; u8 literal
+0000023: 03                                         ; FIXUP num expressions
+0000022: 1d                                         ; FIXUP OPCODE_EXPR_BLOCK
+0000012: 3400 0000                                  ; FIXUP func code end offset
+; names
+0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
+0000010: 0000 3400 0000 0000 0000 0000 0000 0000  ..4.............
+0000020: 0601 1d03 0110 011f 0010 0201 1003 1f01  ................
+0000030: 1004 1005                                ....

@@ -1,9 +1,10 @@
 # EXE: test/run-d8.py
 (module
+  ;; basic break test
   (export "break0" $break0)
   (func $break0 (result i32)
     (local i32 i32)
-    (label
+    (block $exit
       (if (i32.const 1) (break))
       (set_local 0 (i32.const 1)))  ;; not executed
     (set_local 1 (i32.const 1))
@@ -11,11 +12,12 @@
         (i32.eq (get_local 0) (i32.const 0))
         (i32.eq (get_local 1) (i32.const 1)))))
 
+  ;; test breaking with a depth > 0
   (export "break1" $break1)
   (func $break1 (result i32)
     (local i32 i32 i32)
-    (label
-      (label
+    (block $outer
+      (block $inner
         (if (i32.const 1) (break 1))
         (set_local 0 (i32.const 1)))  ;; not executed
       (set_local 1 (i32.const 1)))    ;; not executed
@@ -24,7 +26,43 @@
                 (i32.add (i32.eq (get_local 0) (i32.const 0))
                          (i32.eq (get_local 1) (i32.const 0)))
                 (i32.eq (get_local 2) (i32.const 1)))))
+
+  ;; test breaking to a label
+  (export "break2" $break2)
+  (func $break2 (result i32)
+    (label $exit
+      (block
+        (if (i32.const 1)
+          (break $exit))
+        (return (i32.const 1))))  ;; not executed
+    (return (i32.const 2)))
+
+  ;; test breaking in a loop with an exit and continue continuation
+  (export "break3" $break3)
+  (func $break3 (result i32)
+    (local i32 i32)
+    (loop $exit $cont
+      (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+      (if (i32.ge_s (get_local 0) (i32.const 5))
+        (break $exit))
+      (if (i32.eq (get_local 0) (i32.const 4))
+        (break $cont))
+      (set_local 1 (get_local 0)))
+    (return (get_local 1)))
+
+  ;; test breaking from a loop with only exit continuation
+  (export "break4" $break4)
+  (func $break4 (result i32)
+    (local i32)
+    (loop $exit
+      (if (i32.eq (get_local 0) (i32.const 3))
+        (break $exit))
+      (set_local 0 (i32.add (get_local 0) (i32.const 1))))
+    (return (get_local 0)))
 )
 # STDOUT:
 break0() = 2
 break1() = 3
+break2() = 2
+break3() = 3
+break4() = 3

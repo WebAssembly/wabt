@@ -1,2 +1,2 @@
 (module (func
-  (label (nop) (nop))))
+  (label (nop))))

@@ -257,14 +257,6 @@ static void* append_element(void** data,
   return *data + (*size)++ * elt_size;
 }
 
-static void pop_label(WasmFunction* function) {
-  assert(function->label_bindings.size > 0);
-  assert(function->labels.size > 0);
-  free(function->label_bindings.data[function->label_bindings.size - 1].name);
-  function->label_bindings.size--;
-  function->labels.size--;
-}
-
 static int get_binding_by_name(WasmBindingVector* bindings, const char* name) {
   int i;
   for (i = 0; i < bindings->size; ++i) {
@@ -962,6 +954,79 @@ static void check_type_arg(WasmParser* parser,
   }
 }
 
+static WasmType check_label_type(WasmParser* parser,
+                                 WasmSourceLocation loc,
+                                 WasmLabel* label,
+                                 WasmType type,
+                                 WasmContinuation continuation,
+                                 const char* desc) {
+  if (parser->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
+    return type & label->type;
+  } else {
+    assert(parser->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
+    if (label->type != WASM_TYPE_ALL) {
+      if (type != WASM_TYPE_VOID || continuation & WASM_CONTINUATION_NORMAL) {
+        check_type(parser, loc, type, label->type, desc);
+      }
+      return label->type;
+    } else {
+      return WASM_TYPE_VOID;
+    }
+  }
+}
+
+static WasmLabel* push_anonymous_label(WasmParser* parser,
+                                       WasmFunction* function,
+                                       WasmToken t) {
+  WasmBinding* binding = wasm_append_binding(&function->label_bindings);
+  CHECK_ALLOC(parser, binding, t.range.start);
+  binding->name = NULL;
+  binding->index = function->label_bindings.size;
+
+  WasmLabel* label = wasm_append_label(&function->labels);
+  CHECK_ALLOC(parser, label, t.range.start);
+  label->type = WASM_TYPE_ALL;
+  return label;
+}
+
+static WasmLabel* push_label(WasmParser* parser,
+                             WasmFunction* function,
+                             WasmToken t) {
+  expect_var_name(parser, t);
+  WasmBinding* binding = wasm_append_binding(&function->label_bindings);
+  CHECK_ALLOC(parser, binding, t.range.start);
+  binding->name =
+      strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+  binding->index = function->label_bindings.size;
+
+  WasmLabel* label = wasm_append_label(&function->labels);
+  CHECK_ALLOC(parser, label, t.range.start);
+  label->type = WASM_TYPE_ALL;
+  return label;
+}
+
+static void pop_label(WasmFunction* function) {
+  assert(function->label_bindings.size > 0);
+  assert(function->labels.size > 0);
+  free(function->label_bindings.data[function->label_bindings.size - 1].name);
+  function->label_bindings.size--;
+  function->labels.size--;
+}
+
+static WasmContinuation pop_break_continuation(WasmContinuation continuation) {
+  if (continuation & WASM_CONTINUATION_BREAK_0) {
+    continuation =
+        (continuation & ~WASM_CONTINUATION_BREAK_0) | WASM_CONTINUATION_NORMAL;
+  }
+  /* Shift all of the break depths down by 1, keeping the other
+   continuations. Since we cleared WASM_CONTINUATION_BREAK_0 above if it
+   was set, we don't have to worry about it shifting into a
+   WASM_CONTINUATION_RETURN */
+  continuation = (continuation & ~CONTINUATION_BREAK_MASK) |
+                 ((continuation & CONTINUATION_BREAK_MASK) >> 1);
+  return continuation;
+}
+
 static void parse_generic(WasmParser* parser) {
   int nesting = 1;
   while (nesting > 0) {
@@ -1306,10 +1371,25 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_BLOCK: {
+      t = read_token(parser);
+      WasmLabel* label = NULL;
+      if (t.type == WASM_TOKEN_TYPE_ATOM)
+        label = push_label(parser, function, t);
+      else
+        rewind_token(parser, t);
+
+      int with_label = label != NULL;
       WasmParserCookie cookie =
-          CALLBACK(parser, before_block, (parser->user_data));
+          CALLBACK(parser, before_block, (with_label, parser->user_data));
+
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs, &continuation);
+      if (label) {
+        type = check_label_type(parser, t.range.start, label, type,
+                                continuation, " of block final expression");
+        continuation = pop_break_continuation(continuation);
+        pop_label(function);
+      }
       CALLBACK(parser, after_block,
                (type, num_exprs, cookie, parser->user_data));
       break;
@@ -1484,58 +1564,23 @@ static WasmType parse_expr(WasmParser* parser,
           CALLBACK(parser, before_label, (parser->user_data));
 
       t = read_token(parser);
-      WasmBinding* binding = wasm_append_binding(&function->label_bindings);
-      CHECK_ALLOC(parser, binding, t.range.start);
-      binding->name = NULL;
-      binding->index = function->label_bindings.size;
-
-      WasmLabel* label = wasm_append_label(&function->labels);
-      CHECK_ALLOC(parser, label, t.range.start);
-      label->type = WASM_TYPE_ALL;
-
+      WasmLabel* label = NULL;
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
-        /* label */
-        expect_var_name(parser, t);
-        binding->name =
-            strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+        label = push_label(parser, function, t);
       } else if (t.type == WASM_TOKEN_TYPE_OPEN_PAREN) {
-        /* no label */
+        label = push_anonymous_label(parser, function, t);
         rewind_token(parser, t);
       } else {
         unexpected_token(parser, t);
       }
 
-      int num_exprs;
-      WasmType label_type =
-          parse_block(parser, module, function, &num_exprs, &continuation);
-      if (parser->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
-        type = label_type & label->type;
-      } else {
-        assert(parser->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
-        if (label->type != WASM_TYPE_ALL) {
-          if (label_type != WASM_TYPE_VOID ||
-              continuation & WASM_CONTINUATION_NORMAL) {
-            check_type(parser, t.range.start, label_type, label->type,
-                       " of final label expression");
-          }
-          type = label->type;
-        } else {
-          type = WASM_TYPE_VOID;
-        }
-      }
-      if (continuation & WASM_CONTINUATION_BREAK_0) {
-        continuation = (continuation & ~WASM_CONTINUATION_BREAK_0) |
-                       WASM_CONTINUATION_NORMAL;
-      }
-      /* Shift all of the break depths down by 1, keeping the other
-       continuations. Since we cleared WASM_CONTINUATION_BREAK_0 above if it
-       was set, we don't have to worry about it shifting into a
-       WASM_CONTINUATION_RETURN */
-      continuation = (continuation & ~CONTINUATION_BREAK_MASK) |
-                     ((continuation & CONTINUATION_BREAK_MASK) >> 1);
+      type = parse_expr(parser, module, function, &continuation);
+      type = check_label_type(parser, t.range.start, label, type, continuation,
+                              " of final label expression");
+      continuation = pop_break_continuation(continuation);
       pop_label(function);
-      CALLBACK(parser, after_label,
-               (type, num_exprs, cookie, parser->user_data));
+      expect_close(parser, read_token(parser));
+      CALLBACK(parser, after_label, (type, cookie, parser->user_data));
       break;
     }
 
@@ -1560,12 +1605,46 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_LOOP: {
+      t = read_token(parser);
+      WasmLabel* outer_label = NULL;
+      WasmLabel* inner_label = NULL;
+      if (t.type == WASM_TOKEN_TYPE_ATOM) {
+        /* outer label (i.e. break continuation) */
+        outer_label = push_label(parser, function, t);
+
+        t = read_token(parser);
+        if (t.type == WASM_TOKEN_TYPE_ATOM) {
+          /* inner label (i.e. continue continuation) */
+          inner_label = push_label(parser, function, t);
+        } else {
+          rewind_token(parser, t);
+        }
+      } else {
+        rewind_token(parser, t);
+      }
+
+      int with_inner_label = inner_label != NULL;
+      int with_outer_label = outer_label != NULL;
       WasmParserCookie cookie =
-          CALLBACK(parser, before_loop, (parser->user_data));
+          CALLBACK(parser, before_loop,
+                   (with_inner_label, with_outer_label, parser->user_data));
+
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs, &continuation);
+      if (inner_label) {
+        type = check_label_type(parser, t.range.start, inner_label, type,
+                                continuation, " of inner loop block");
+        continuation = pop_break_continuation(continuation);
+        pop_label(function);
+      }
       /* Loops are infinite, so there is never a "normal" continuation */
       continuation &= ~WASM_CONTINUATION_NORMAL;
+      if (outer_label) {
+        type = check_label_type(parser, t.range.start, outer_label, type,
+                                continuation, " of outer loop block");
+        continuation = pop_break_continuation(continuation);
+        pop_label(function);
+      }
       CALLBACK(parser, after_loop, (num_exprs, cookie, parser->user_data));
       break;
     }

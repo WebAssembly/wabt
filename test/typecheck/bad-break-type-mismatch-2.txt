@@ -1,8 +1,8 @@
 # ERROR: 1
 (module
   (func
-    (label
+    (block $exit
       (break (i32.const 1))
       (f32.const 2))))
 # STDERR:
-typecheck/bad-break-type-mismatch-2.txt:5:7: type mismatch of final label expression. got f32, expected i32
+typecheck/bad-break-type-mismatch-2.txt:4:12: type mismatch of block final expression. got f32, expected i32

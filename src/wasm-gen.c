@@ -62,9 +62,10 @@ typedef struct OutputBuffer {
 } OutputBuffer;
 
 typedef struct LabelInfo {
+  struct LabelInfo* next_label;
   uint32_t offset;
   int block_depth;
-  struct LabelInfo* next_label;
+  int with_expr;
 } LabelInfo;
 
 typedef struct Context {
@@ -516,6 +517,23 @@ static void remap_locals(Context* ctx, WasmFunction* function) {
   }
 }
 
+static LabelInfo* push_label_info(Context* ctx) {
+  LabelInfo* label_info = malloc(sizeof(LabelInfo));
+  label_info->offset = ctx->buf.size;
+  label_info->block_depth = ctx->block_depth++;
+  label_info->next_label = ctx->top_label;
+  label_info->with_expr = 0;
+  ctx->top_label = label_info;
+  return label_info;
+}
+
+static void pop_label_info(Context* ctx) {
+  LabelInfo* label_info = ctx->top_label;
+  ctx->block_depth--;
+  ctx->top_label = label_info->next_label;
+  free(label_info);
+}
+
 static void before_module(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
   ctx->function_header_offsets = realloc(
@@ -579,12 +597,18 @@ static void after_function(WasmModule* module,
              ctx->buf.size, "FIXUP func code end offset");
 }
 
-static WasmParserCookie before_block(void* user_data) {
+static WasmParserCookie before_block(int with_label, void* user_data) {
   Context* ctx = user_data;
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  WasmParserCookie cookie = 0;
+  /* TODO(binji): clean this up, it's a bit hacky right now. */
+  if (with_label) {
+    push_label_info(ctx);
+  } else {
+    ctx->block_depth++;
+    cookie = (WasmParserCookie)ctx->buf.size;
+  }
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 0, "num expressions");
-  ctx->block_depth++;
   return cookie;
 }
 
@@ -593,8 +617,14 @@ static void after_block(WasmType type,
                         WasmParserCookie cookie,
                         void* user_data) {
   Context* ctx = user_data;
-  ctx->block_depth--;
-  uint32_t offset = (uint32_t)cookie;
+  uint32_t offset;
+  if (cookie == 0) {
+    offset = ctx->top_label->offset;
+    pop_label_info(ctx);
+  } else {
+    ctx->block_depth--;
+    offset = (uint32_t)cookie;
+  }
   if (type != WASM_TYPE_VOID)
     out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
               "FIXUP OPCODE_EXPR_BLOCK");
@@ -614,6 +644,7 @@ static WasmParserCookie before_break(int with_expr,
   LabelInfo* label_info = ctx->top_label;
   for (; label_depth > 0; label_depth--)
     label_info = label_info->next_label;
+  label_info->with_expr = label_info->with_expr || with_expr;
   int block_depth = (ctx->block_depth - 1) - label_info->block_depth;
   out_u8(&ctx->buf, block_depth, "break depth");
   return 0;
@@ -719,30 +750,21 @@ static void after_if(WasmType type,
 
 static WasmParserCookie before_label(void* user_data) {
   Context* ctx = user_data;
-  LabelInfo* label_info = malloc(sizeof(LabelInfo));
-  label_info->offset = ctx->buf.size;
-  label_info->block_depth = ctx->block_depth++;
-  label_info->next_label = ctx->top_label;
-  ctx->top_label = label_info;
+  push_label_info(ctx);
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
-  out_u8(&ctx->buf, 0, "num expressions");
-  return (WasmParserCookie)label_info;
+  out_u8(&ctx->buf, 1, "num expressions");
+  return 0;
 }
 
 static void after_label(WasmType type,
-                        int num_exprs,
                         WasmParserCookie cookie,
                         void* user_data) {
   Context* ctx = user_data;
-  ctx->block_depth--;
-  LabelInfo* label_info = (LabelInfo*)cookie;
-  ctx->top_label = label_info->next_label;
-  uint32_t offset = label_info->offset;
-  free(label_info);
+  uint32_t offset = ctx->top_label->offset;
+  pop_label_info(ctx);
   if (type != WASM_TYPE_VOID)
     out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
               "FIXUP OPCODE_EXPR_BLOCK");
-  out_u8_at(&ctx->buf, offset + 1, num_exprs, "FIXUP num expressions");
 }
 
 static void before_load(enum WasmOpcode opcode,
@@ -759,12 +781,32 @@ static void after_load_global(int index, void* user_data) {
   out_leb128(&ctx->buf, index, "global index");
 }
 
-static WasmParserCookie before_loop(void* user_data) {
+static WasmParserCookie before_loop(int with_inner_label,
+                                    int with_outer_label,
+                                    void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_LOOP);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
-  out_u8(&ctx->buf, 0, "num expressions");
-  ctx->block_depth++;
+  WasmParserCookie cookie = 0;
+  /* TODO(binji): clean this up, it's a bit hacky right now. */
+  if (with_inner_label || with_outer_label) {
+    /* The outer label must be defined if the inner label is defined */
+    assert(with_outer_label);
+    push_label_info(ctx);
+    if (with_inner_label) {
+      /* The loop only has one expression: this nested block */
+      out_u8(&ctx->buf, 1, "num expressions");
+      out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
+      push_label_info(ctx);
+      out_u8(&ctx->buf, 0, "num expressions");
+      cookie = 1;
+    } else {
+      out_u8(&ctx->buf, 0, "num expressions");
+    }
+  } else {
+    cookie = (WasmParserCookie)ctx->buf.size;
+    out_u8(&ctx->buf, 0, "num expressions");
+    ctx->block_depth++;
+  }
   return cookie;
 }
 
@@ -772,9 +814,24 @@ static void after_loop(int num_exprs,
                        WasmParserCookie cookie,
                        void* user_data) {
   Context* ctx = user_data;
-  ctx->block_depth--;
-  uint32_t offset = (uint32_t)cookie;
-  out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  if (cookie == 0 || cookie == 1) {
+    LabelInfo* label_info = ctx->top_label;
+    out_u8_at(&ctx->buf, label_info->offset, num_exprs,
+              "FIXUP num expressions");
+    if (cookie == 1) {
+      /* inner and outer label */
+      if (label_info->with_expr)
+        out_u8_at(&ctx->buf, label_info->offset - 1, WASM_OPCODE_EXPR_BLOCK,
+                  "FIXUP OPCODE_EXPR_BLOCK");
+      pop_label_info(ctx);
+    }
+    pop_label_info(ctx);
+  } else {
+    /* no labels */
+    ctx->block_depth--;
+    uint32_t offset = (uint32_t)cookie;
+    out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
+  }
 }
 
 static void after_memory_size(void* user_data) {

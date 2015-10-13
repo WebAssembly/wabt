@@ -2,9 +2,10 @@
 (module
   (func $f (param i32) (result i32)
     (label
-      (if (i32.eq (get_local 0) (i32.const 0))
-        (break (i32.const 1)))
-      (i32.const 2)))
+      (block
+        (if (i32.eq (get_local 0) (i32.const 0))
+          (break (i32.const 1)))
+        (i32.const 2))))
 
   (func $test1 (result i32)
     (call $f (i32.const 0)))

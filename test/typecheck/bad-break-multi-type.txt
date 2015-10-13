@@ -4,7 +4,7 @@
 ;; similarly for now.
 (module
   (func
-    (label
+    (block $exit
       (break (i32.const 1))
       (break (f32.const 2)))))
 # STDERR:

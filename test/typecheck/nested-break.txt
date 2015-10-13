@@ -1,10 +1,11 @@
 (module
   (func (result i32)
     (label $outer
-      (label $inner
-        (loop
-          (if (i32.const 1)
-            (break $outer))
-          (break $inner)))
-      (return (i32.const 2)))
+      (block
+        (label $inner
+          (loop
+            (if (i32.const 1)
+              (break $outer))
+            (break $inner)))
+        (return (i32.const 2))))
     (return (i32.const 3))))

@@ -1,0 +1,6 @@
+(module
+  (func
+    (block $exit1
+      (break 0))
+    (block $exit2
+      (break $exit2))))
