@@ -1825,9 +1825,10 @@ static void parse_type_list(WasmParser* parser,
 static void preparse_binding_name(WasmParser* parser,
                                   WasmBindingVector* bindings,
                                   size_t index,
-                                  const char* desc) {
+                                  const char* desc,
+                                  int required) {
   WasmToken t = read_token(parser);
-  if (t.type == WASM_TOKEN_TYPE_ATOM) {
+  if (required || t.type == WASM_TOKEN_TYPE_ATOM) {
     expect_var_name(parser, t);
     char* name =
         strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
@@ -1851,31 +1852,16 @@ static void preparse_binding_list(WasmParser* parser,
                                   WasmBindingVector* bindings,
                                   const char* desc) {
   WasmToken t = read_token(parser);
+  rewind_token(parser, t);
   WasmType type;
   if (match_type(t, &type)) {
-    rewind_token(parser, t);
     parse_type_list(parser, variables, 0);
   } else {
-    expect_var_name(parser, t);
-    parse_type(parser, &type);
-    expect_close(parser, read_token(parser));
-
-    char* name =
-        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_binding_by_name(bindings, name) != -1) {
-      free(name);
-      FATAL_AT(parser, t.range.start, "redefinition of %s \"%.*s\"\n", desc,
-               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
-    }
-
     WasmVariable* variable = wasm_append_variable(variables);
     CHECK_ALLOC(parser, variable, t.range.start);
-    variable->type = type;
-
-    WasmBinding* binding = wasm_append_binding(bindings);
-    CHECK_ALLOC(parser, binding, t.range.start);
-    binding->name = name;
-    binding->index = variables->size - 1;
+    preparse_binding_name(parser, bindings, variables->size - 1, desc, 1);
+    parse_type(parser, &variable->type);
+    expect_close(parser, read_token(parser));
   }
 }
 
@@ -1885,7 +1871,7 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
   memset(function, 0, sizeof(*function));
 
   preparse_binding_name(parser, &module->function_bindings,
-                        module->functions.size - 1, "function");
+                        module->functions.size - 1, "function", 0);
   WasmToken t = read_token(parser);
 
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
@@ -2069,7 +2055,7 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         memset(import, 0, sizeof(*import));
 
         preparse_binding_name(parser, &module->import_bindings,
-                              module->imports.size - 1, "import");
+                              module->imports.size - 1, "import", 0);
         WasmToken t = read_token(parser);
 
         expect_string(parser, t);
@@ -2087,7 +2073,7 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         memset(sig, 0, sizeof(*sig));
 
         preparse_binding_name(parser, &module->signature_bindings,
-                              module->signatures.size - 1, "signature");
+                              module->signatures.size - 1, "signature", 0);
         WasmToken t = read_token(parser);
         expect_open(parser, t);
         t = read_token(parser);
