@@ -4,7 +4,7 @@
 (;; STDOUT ;;;
 third_party/spec/ml-proto/test/float_memory.wast:26: $assert_return_1 failed.
 third_party/spec/ml-proto/test/float_memory.wast:30: $assert_return_4 failed.
-third_party/spec/ml-proto/test/float_memory.wast:57: $assert_return_9 failed.
-third_party/spec/ml-proto/test/float_memory.wast:61: $assert_return_12 failed.
+third_party/spec/ml-proto/test/float_memory.wast:57: $assert_return_1 failed.
+third_party/spec/ml-proto/test/float_memory.wast:61: $assert_return_4 failed.
 12/16 tests passed.
 ;;; STDOUT ;;)

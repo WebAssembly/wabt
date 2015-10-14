@@ -9,7 +9,7 @@
 (assert_return (invoke "f" (i32.const 0)) (i32.const 0))
 (invoke "f" (i32.const -111111))
 (;; STDOUT ;;;
-$invoke_0 = -30
-$invoke_1 = -222222
+$invoke_1 = -30
+$invoke_3 = -222222
 2/2 tests passed.
 ;;; STDOUT ;;)

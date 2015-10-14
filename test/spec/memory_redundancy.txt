@@ -2,7 +2,7 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/memory_redundancy.wast
 (;; STDOUT ;;;
-$invoke_0 = undefined
 $invoke_1 = undefined
+$invoke_3 = undefined
 3/3 tests passed.
 ;;; STDOUT ;;)

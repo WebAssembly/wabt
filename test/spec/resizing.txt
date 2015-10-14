@@ -3,14 +3,14 @@
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/resizing.wast
 (;; STDOUT ;;;
 third_party/spec/ml-proto/test/resizing.wast:17: $assert_return_0 failed.
-third_party/spec/ml-proto/test/resizing.wast:20: $assert_trap_0 failed, didn't throw
-third_party/spec/ml-proto/test/resizing.wast:21: $assert_trap_1 failed, didn't throw
-$invoke_0 = undefined
-third_party/spec/ml-proto/test/resizing.wast:23: $assert_return_3 failed.
-third_party/spec/ml-proto/test/resizing.wast:27: $assert_return_7 failed.
-$invoke_1 = undefined
-third_party/spec/ml-proto/test/resizing.wast:29: $assert_return_8 failed.
-third_party/spec/ml-proto/test/resizing.wast:31: $assert_trap_2 failed, didn't throw
-third_party/spec/ml-proto/test/resizing.wast:32: $assert_trap_3 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:20: $assert_trap_3 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:21: $assert_trap_4 failed, didn't throw
+$invoke_5 = undefined
+third_party/spec/ml-proto/test/resizing.wast:23: $assert_return_6 failed.
+third_party/spec/ml-proto/test/resizing.wast:27: $assert_return_10 failed.
+$invoke_11 = undefined
+third_party/spec/ml-proto/test/resizing.wast:29: $assert_return_12 failed.
+third_party/spec/ml-proto/test/resizing.wast:31: $assert_trap_14 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:32: $assert_trap_15 failed, didn't throw
 6/14 tests passed.
 ;;; STDOUT ;;)

@@ -80,13 +80,9 @@ typedef struct Context {
   LabelInfo* top_label;
   int* remapped_locals;
   int in_assert;
-  int block_depth;
-  uint32_t function_num_exprs_offset;
-  int assert_return_count;
-  int assert_return_nan_count;
-  int assert_trap_count;
-  int invoke_count;
   int in_js_module;
+  int block_depth;
+  int assert_count;
 } Context;
 
 static const char* s_opcode_names[] = {
@@ -468,8 +464,8 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
                  buf->size, "FIXUP func name offset");
 
       /* HACK(binji): v8-native-prototype crashes when you export functions
-       that use i64 in the signature. This unfortunately prevents assert_return on
-       functions that return i64. For now, don't mark those functions as
+       that use i64 in the signature. This unfortunately prevents assert_return
+       on functions that return i64. For now, don't mark those functions as
        exported in the generated output. */
       if (!has_i64_inputs_or_outputs(function)) {
         out_u8_at(&ctx->buf,
@@ -944,9 +940,7 @@ static void after_module_multi(WasmModule* module, void* user_data) {
   OutputBuffer temp = ctx->buf;
   ctx->buf = ctx->temp_buf;
   ctx->temp_buf = temp;
-  ctx->assert_return_nan_count = 0;
-  ctx->assert_trap_count = 0;
-  ctx->invoke_count = 0;
+  ctx->assert_count = 0;
 }
 
 static void append_nullary_function(Context* ctx,
@@ -1091,14 +1085,14 @@ static WasmParserCookie before_assert_return(WasmSourceLocation loc,
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
-    printf("; before assert_return_%d\n", ctx->assert_return_count);
+    printf("; before assert_return_%d\n", ctx->assert_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
   out_printf(&ctx->js_buf,
              "  assertReturn(m, \"$assert_return_%d\", \"%s\", %d);\n",
-             ctx->assert_return_count, loc.source->filename, loc.line);
+             ctx->assert_count, loc.source->filename, loc.line);
   return cookie;
 }
 
@@ -1136,7 +1130,7 @@ static void after_assert_return(WasmType type,
   out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_return opcode");
 
   char name[256];
-  snprintf(name, 256, "$assert_return_%d", ctx->assert_return_count++);
+  snprintf(name, 256, "$assert_return_%d", ctx->assert_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, 0, 0);
   ctx->in_assert = 0;
 }
@@ -1146,14 +1140,14 @@ static WasmParserCookie before_assert_return_nan(WasmSourceLocation loc,
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
-    printf("; before assert_return_nan_%d\n", ctx->assert_return_nan_count);
+    printf("; before assert_return_nan_%d\n", ctx->assert_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
   out_u8(&ctx->buf, 0, "remapped local index");
   out_printf(&ctx->js_buf,
              "  assertReturn(m, \"$assert_return_nan_%d\", \"%s\", %d);\n",
-             ctx->assert_return_nan_count, loc.source->filename, loc.line);
+             ctx->assert_count, loc.source->filename, loc.line);
   return 0;
 }
 
@@ -1184,7 +1178,7 @@ static void after_assert_return_nan(WasmType type,
   out_u8(&ctx->buf, 0, "remapped local index");
 
   char name[256];
-  snprintf(name, 256, "$assert_return_nan_%d", ctx->assert_return_nan_count++);
+  snprintf(name, 256, "$assert_return_nan_%d", ctx->assert_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, num_local_f32,
                           num_local_f64);
   ctx->in_assert = 0;
@@ -1194,18 +1188,18 @@ static void before_assert_trap(WasmSourceLocation loc, void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
-    printf("; before assert_trap_%d\n", ctx->assert_trap_count);
+    printf("; before assert_trap_%d\n", ctx->assert_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
   out_printf(&ctx->js_buf,
              "  assertTrap(m, \"$assert_trap_%d\", \"%s\", %d);\n",
-             ctx->assert_trap_count, loc.source->filename, loc.line);
+             ctx->assert_count, loc.source->filename, loc.line);
 }
 
 static void after_assert_trap( void* user_data) {
   Context* ctx = user_data;
   char name[256];
-  snprintf(name, 256, "$assert_trap_%d", ctx->assert_trap_count++);
+  snprintf(name, 256, "$assert_trap_%d", ctx->assert_count++);
   append_nullary_function(ctx, name, WASM_TYPE_VOID, 0, 0, 0, 0);
   ctx->in_assert = 0;
 }
@@ -1217,7 +1211,7 @@ static WasmParserCookie before_invoke(WasmSourceLocation loc,
   Context* ctx = user_data;
   if (!ctx->in_assert) {
     if (ctx->options->verbose)
-      printf("; before invoke_%d\n", ctx->invoke_count);
+      printf("; before invoke_%d\n", ctx->assert_count);
     init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                        ctx->options->verbose);
   }
@@ -1229,7 +1223,7 @@ static WasmParserCookie before_invoke(WasmSourceLocation loc,
 
   if (!ctx->in_assert) {
     out_printf(&ctx->js_buf, "  invoke(m, \"$invoke_%d\");\n",
-               ctx->invoke_count);
+               ctx->assert_count);
   }
 
   return (WasmParserCookie)invoke_function_index;
@@ -1243,7 +1237,7 @@ static void after_invoke(WasmParserCookie cookie, void* user_data) {
   int invoke_function_index = (int)cookie;
   WasmFunction* function = &ctx->module->functions.data[invoke_function_index];
   char name[256];
-  snprintf(name, 256, "$invoke_%d", ctx->invoke_count++);
+  snprintf(name, 256, "$invoke_%d", ctx->assert_count++);
   append_nullary_function(ctx, name, function->result_type, 0, 0, 0, 0);
 }
 
