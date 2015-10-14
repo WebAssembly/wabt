@@ -1,4 +1,7 @@
-# SKIP: sexpr-wasm doesn't properly parse assert_return of void function
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/functions.wast
+# STDOUT:
+instantiating module
+$assert_return_0 OK
+1/1 tests passed.

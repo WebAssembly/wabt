@@ -1103,8 +1103,15 @@ static void after_assert_return(WasmType type,
     case WASM_TYPE_F64:
       opcode = WASM_OPCODE_F64_EQ;
       break;
-    default:
-      assert(0);
+    default: {
+      opcode = WASM_OPCODE_NOP;
+      /* The return type of the assert_return function is i32, but this invoked
+       function has a return type of void, so we have nothing to compare to.
+       Just return 1 to the caller, signifying everything is OK. */
+      out_opcode(&ctx->buf, WASM_OPCODE_I8_CONST);
+      out_u8(&ctx->buf, 1, "u8 literal");
+      break;
+    }
   }
 
   out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_return opcode");

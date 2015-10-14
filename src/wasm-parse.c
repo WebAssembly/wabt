@@ -2313,9 +2313,11 @@ int wasm_parse_file(WasmSource* source,
 
         WasmFunction dummy_function = {};
         WasmType left_type = parse_invoke(parser, &module);
-        WasmType right_type =
-            parse_expr(parser, &module, &dummy_function, NULL);
-        check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
+        if (left_type != WASM_TYPE_VOID) {
+          WasmType right_type =
+              parse_expr(parser, &module, &dummy_function, NULL);
+          check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
+        }
 
         CALLBACK(parser, after_assert_return,
                  (left_type, cookie, parser->user_data));
