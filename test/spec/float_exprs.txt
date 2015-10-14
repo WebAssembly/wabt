@@ -1,0 +1,174 @@
+# EXE: test/run-d8.py
+# FLAGS: --spec
+# STDIN_FILE: third_party/spec/ml-proto/test/float_exprs.wast
+# STDOUT:
+instantiating module
+$assert_return_0 OK
+$assert_return_1 OK
+$assert_return_2 OK
+$assert_return_3 OK
+$assert_return_4 OK
+5/5 tests passed.
+instantiating module
+$assert_return_5 OK
+$assert_return_6 OK
+$assert_return_7 OK
+$assert_return_8 OK
+$assert_return_9 OK
+$assert_return_10 OK
+$assert_return_11 OK
+$assert_return_12 OK
+$assert_return_13 OK
+$assert_return_14 OK
+10/10 tests passed.
+instantiating module
+$assert_return_15 OK
+$assert_return_16 OK
+2/2 tests passed.
+instantiating module
+$assert_return_17 OK
+$assert_return_18 OK
+2/2 tests passed.
+instantiating module
+$assert_return_19 OK
+$assert_return_20 OK
+$assert_return_21 OK
+$assert_return_22 OK
+$assert_return_23 OK
+$assert_return_24 OK
+6/6 tests passed.
+instantiating module
+$assert_return_nan_0 OK
+$assert_return_nan_1 OK
+$assert_return_nan_2 OK
+$assert_return_nan_3 OK
+$assert_return_nan_4 OK
+$assert_return_nan_5 OK
+6/6 tests passed.
+instantiating module
+$assert_return_25 OK
+$assert_return_26 OK
+2/2 tests passed.
+instantiating module
+$assert_return_27 OK
+$assert_return_28 OK
+2/2 tests passed.
+instantiating module
+$assert_return_nan_0 OK
+$assert_return_nan_1 OK
+$assert_return_nan_2 OK
+$assert_return_nan_3 OK
+4/4 tests passed.
+instantiating module
+$assert_return_29 OK
+$assert_return_30 OK
+$assert_return_31 OK
+$assert_return_32 OK
+$assert_return_33 OK
+$assert_return_34 OK
+$assert_return_35 OK
+$assert_return_36 OK
+$assert_return_37 OK
+$assert_return_38 OK
+10/10 tests passed.
+instantiating module
+$assert_return_39 OK
+$assert_return_40 OK
+$assert_return_41 OK
+$assert_return_42 OK
+$assert_return_43 OK
+$assert_return_44 OK
+$assert_return_45 OK
+$assert_return_46 OK
+$assert_return_47 OK
+$assert_return_48 OK
+10/10 tests passed.
+instantiating module
+$assert_return_49 OK
+$assert_return_50 OK
+$assert_return_51 OK
+$assert_return_52 OK
+$assert_return_53 OK
+$assert_return_54 OK
+$assert_return_55 OK
+$assert_return_56 OK
+$assert_return_57 OK
+$assert_return_58 OK
+10/10 tests passed.
+instantiating module
+$assert_return_59 OK
+$assert_return_60 OK
+$assert_return_61 OK
+$assert_return_62 OK
+$assert_return_63 OK
+$assert_return_64 OK
+$assert_return_65 OK
+$assert_return_66 OK
+$assert_return_67 OK
+$assert_return_68 OK
+10/10 tests passed.
+instantiating module
+$assert_return_69 OK
+$assert_return_70 OK
+$assert_return_71 OK
+$assert_return_72 OK
+$assert_return_nan_0 OK
+$assert_return_nan_1 OK
+$assert_return_nan_2 OK
+$assert_return_73 OK
+$assert_return_74 OK
+$assert_return_75 OK
+$assert_return_76 OK
+$assert_return_nan_3 OK
+$assert_return_nan_4 OK
+$assert_return_nan_5 OK
+14/14 tests passed.
+instantiating module
+$assert_return_77 OK
+$assert_return_78 OK
+$assert_return_79 OK
+$assert_return_80 OK
+$assert_return_nan_0 OK
+$assert_return_nan_1 OK
+$assert_return_nan_2 OK
+$assert_return_81 OK
+$assert_return_82 OK
+$assert_return_83 OK
+$assert_return_84 OK
+$assert_return_nan_3 OK
+$assert_return_nan_4 OK
+$assert_return_nan_5 OK
+14/14 tests passed.
+instantiating module
+$assert_return_85 OK
+$assert_return_86 OK
+$assert_return_87 OK
+$assert_return_88 OK
+$assert_return_89 OK
+$assert_return_90 OK
+$assert_return_91 OK
+$assert_return_92 OK
+$assert_return_93 OK
+$assert_return_94 OK
+10/10 tests passed.
+instantiating module
+$assert_return_95 OK
+$assert_return_96 OK
+$assert_return_97 OK
+$assert_return_98 OK
+$assert_return_99 OK
+5/5 tests passed.
+instantiating module
+$assert_return_100 OK
+$assert_return_101 OK
+$assert_return_102 OK
+$assert_return_103 OK
+$assert_return_104 OK
+5/5 tests passed.
+instantiating module
+$assert_return_105 OK
+$assert_return_106 OK
+$assert_return_107 OK
+$assert_return_108 OK
+$assert_return_109 OK
+5/5 tests passed.
