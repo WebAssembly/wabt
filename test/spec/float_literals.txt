@@ -43,4 +43,6 @@ $assert_return_36 OK
 $assert_return_37 OK
 $assert_return_38 OK
 $assert_return_39 OK
-40/40 tests passed.
+$assert_return_40 OK
+$assert_return_41 OK
+42/42 tests passed.

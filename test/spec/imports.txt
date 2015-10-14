@@ -1,9 +1,4 @@
+# SKIP: can't import print_i64
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/imports.wast
-# STDOUT:
-instantiating module
-13
-14 42
-$invoke_0 = undefined
-0/0 tests passed.
