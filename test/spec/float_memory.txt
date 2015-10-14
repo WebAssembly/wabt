@@ -2,24 +2,9 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/float_memory.wast
 (;; STDOUT ;;;
-instantiating module
-$assert_return_0 OK
-$assert_return_1 failed, expected 1, got 0
-$assert_return_2 OK
-$assert_return_3 OK
-$assert_return_4 failed, expected 1, got 0
-$assert_return_5 OK
-$assert_return_6 OK
-$assert_return_7 OK
-6/8 tests passed.
-instantiating module
-$assert_return_8 OK
-$assert_return_9 failed, expected 1, got 0
-$assert_return_10 OK
-$assert_return_11 OK
-$assert_return_12 failed, expected 1, got 0
-$assert_return_13 OK
-$assert_return_14 OK
-$assert_return_15 OK
-6/8 tests passed.
+third_party/spec/ml-proto/test/float_memory.wast:26: $assert_return_1 failed.
+third_party/spec/ml-proto/test/float_memory.wast:30: $assert_return_4 failed.
+third_party/spec/ml-proto/test/float_memory.wast:57: $assert_return_9 failed.
+third_party/spec/ml-proto/test/float_memory.wast:61: $assert_return_12 failed.
+12/16 tests passed.
 ;;; STDOUT ;;)

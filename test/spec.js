@@ -1,4 +1,6 @@
 var quiet; /* global, defined by output from sexpr-wasm */
+var passed = 0;
+var failed = 0;
 
 function wasmWrite(memory, offset, count) {
   try {
@@ -23,60 +25,45 @@ function createModule(a) {
     print: print,
     write: function(offset, count) { wasmWrite(memory, offset, count); }
   };
-  if (!quiet)
-    print('instantiating module');
   var module = WASM.instantiateModule(u8a.buffer, ffi);
   memory = module.memory;
   return module;
 }
 
-function startsWith(s, prefix) {
-  return s.lastIndexOf(prefix, 0) == 0;
+function assertReturn(m, name, file, line) {
+  var result = m[name]();
+  if (result == 1) {
+    passed++;
+  } else {
+    print(file + ":" + line + ": " + name + " failed.");
+    failed++;
+  }
 }
 
-function runTests(module) {
-  var passed = 0;
-  var failed = 0;
-  for (var name in module) {
-    if (module[name] instanceof Function) {
-      var f = module[name];
-      if (startsWith(name, "$assert_return")) {
-        var result = f();
-        if (result == 1) {
-          if (!quiet)
-            print(name + " OK");
-
-          passed++;
-        } else {
-          print(name + " failed, expected 1, got " + result);
-          failed++;
-        }
-      } else if (startsWith(name, '$assert_trap')) {
-        var threw = false;
-        try {
-          f();
-        } catch (e) {
-          threw = true;
-        }
-
-        if (threw) {
-          if (!quiet)
-            print(name + " OK, threw");
-
-          passed++;
-        } else {
-          print(name + " failed, didn't throw");
-          failed++;
-        }
-      } else if (startsWith(name, '$invoke')) {
-        var invokeResult = f();
-
-        if (!quiet)
-          print(name + " = " + invokeResult);
-      }
-    }
+function assertTrap(m, name, file, line) {
+  var threw = false;
+  try {
+    m[name]();
+  } catch (e) {
+    threw = true;
   }
 
+  if (threw) {
+    passed++;
+  } else {
+    print(file + ":" + line + ": " + name + " failed, didn't throw");
+    failed++;
+  }
+}
+
+function invoke(m, name) {
+  var invokeResult = m[name]();
+
+  if (!quiet)
+    print(name + " = " + invokeResult);
+}
+
+function end() {
   if ((failed > 0) || !quiet)
     print(passed + "/" + (passed + failed) + " tests passed.");
 }

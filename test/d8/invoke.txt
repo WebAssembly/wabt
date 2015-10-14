@@ -6,7 +6,6 @@
 (invoke "f" (i32.const 10))
 (invoke "f" (i32.const 123456))
 (;; STDOUT ;;;
-instantiating module
 $invoke_0 = 10
 $invoke_1 = 123456
 0/0 tests passed.

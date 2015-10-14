@@ -13,6 +13,3 @@
 
 
 ;;; STDERR ;;)
-(;; STDOUT ;;;
-instantiating module
-;;; STDOUT ;;)

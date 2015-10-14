@@ -8,13 +8,5 @@ assert_invalid error:
   third_party/spec/ml-proto/test/exports.wast:8:76: duplicate function export "a"
 assert_invalid error:
   third_party/spec/ml-proto/test/exports.wast:11:55: duplicate function export "a"
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-$assert_return_0 OK
 1/1 tests passed.
 ;;; STDOUT ;;)

@@ -24,52 +24,5 @@ assert_invalid error:
   third_party/spec/ml-proto/test/memory.wast:56:29: alignment must be power-of-two
 assert_invalid error:
   third_party/spec/ml-proto/test/memory.wast:60:29: alignment must be power-of-two
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-0/0 tests passed.
-instantiating module
-$assert_return_0 OK
-$assert_return_1 OK
-$assert_return_2 OK
-$assert_return_3 OK
-$assert_return_4 OK
-$assert_return_5 OK
-$assert_return_6 OK
-$assert_return_7 OK
-$assert_return_8 OK
-$assert_return_9 OK
-$assert_return_10 OK
-$assert_return_11 OK
-$assert_return_12 OK
-$assert_return_13 OK
-$assert_return_14 OK
-$assert_return_15 OK
-$assert_return_16 OK
-$assert_return_17 OK
-$assert_return_18 OK
-$assert_return_19 OK
-$assert_return_20 OK
-$assert_return_21 OK
-$assert_return_22 OK
-$assert_return_23 OK
 24/24 tests passed.
 ;;; STDOUT ;;)

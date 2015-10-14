@@ -86,6 +86,7 @@ typedef struct Context {
   int assert_return_nan_count;
   int assert_trap_count;
   int invoke_count;
+  int in_js_module;
 } Context;
 
 static const char* s_opcode_names[] = {
@@ -886,12 +887,26 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void before_js_module(Context* ctx) {
+static void js_file_start(Context* ctx) {
   const char* quiet_str = ctx->options->multi_module_verbose ? "false" : "true";
   out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
 }
 
-static void after_js_module(Context* ctx) {
+static void js_file_end(Context* ctx) {
+  out_printf(&ctx->js_buf, "end();\n");
+}
+
+static void js_module_start(Context* ctx) {
+  out_printf(&ctx->js_buf, "var tests = function(m) {\n");
+  ctx->in_js_module = 1;
+}
+
+static void js_module_end(Context* ctx) {
+  if (ctx->in_js_module) {
+    ctx->in_js_module = 0;
+    out_printf(&ctx->js_buf, "};\n");
+  }
+
   if (!ctx->temp_buf.size)
     return;
 
@@ -906,12 +921,13 @@ static void after_js_module(Context* ctx) {
       out_printf(&ctx->js_buf, "%4d,", *p);
     out_printf(&ctx->js_buf, "\n");
   }
-  out_printf(&ctx->js_buf, "]);\nrunTests(m);\n");
+  out_printf(&ctx->js_buf, "]);\ntests(m);\n");
 }
 
 static void before_module_multi(WasmModule* module, void* user_data) {
   Context* ctx = user_data;
-  after_js_module(ctx);
+  js_module_end(ctx);
+  js_module_start(ctx);
   before_module(module, user_data);
 }
 
@@ -1080,6 +1096,9 @@ static WasmParserCookie before_assert_return(WasmSourceLocation loc,
                      ctx->options->verbose);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
+  out_printf(&ctx->js_buf,
+             "  assertReturn(m, \"$assert_return_%d\", \"%s\", %d);\n",
+             ctx->assert_return_count, loc.source->filename, loc.line);
   return cookie;
 }
 
@@ -1119,7 +1138,6 @@ static void after_assert_return(WasmType type,
   char name[256];
   snprintf(name, 256, "$assert_return_%d", ctx->assert_return_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, 0, 0);
-
   ctx->in_assert = 0;
 }
 
@@ -1133,6 +1151,9 @@ static WasmParserCookie before_assert_return_nan(WasmSourceLocation loc,
                      ctx->options->verbose);
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
   out_u8(&ctx->buf, 0, "remapped local index");
+  out_printf(&ctx->js_buf,
+             "  assertReturn(m, \"$assert_return_nan_%d\", \"%s\", %d);\n",
+             ctx->assert_return_nan_count, loc.source->filename, loc.line);
   return 0;
 }
 
@@ -1166,7 +1187,6 @@ static void after_assert_return_nan(WasmType type,
   snprintf(name, 256, "$assert_return_nan_%d", ctx->assert_return_nan_count++);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, num_local_f32,
                           num_local_f64);
-
   ctx->in_assert = 0;
 }
 
@@ -1177,6 +1197,9 @@ static void before_assert_trap(WasmSourceLocation loc, void* user_data) {
     printf("; before assert_trap_%d\n", ctx->assert_trap_count);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
+  out_printf(&ctx->js_buf,
+             "  assertTrap(m, \"$assert_trap_%d\", \"%s\", %d);\n",
+             ctx->assert_trap_count, loc.source->filename, loc.line);
 }
 
 static void after_assert_trap( void* user_data) {
@@ -1203,6 +1226,11 @@ static WasmParserCookie before_invoke(WasmSourceLocation loc,
   /* defined functions are always after all imports */
   out_leb128(&ctx->buf, ctx->module->imports.size + invoke_function_index,
              "invoke func index");
+
+  if (!ctx->in_assert) {
+    out_printf(&ctx->js_buf, "  invoke(m, \"$invoke_%d\");\n",
+               ctx->invoke_count);
+  }
 
   return (WasmParserCookie)invoke_function_index;
 }
@@ -1282,12 +1310,13 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
       callbacks.after_invoke = after_invoke;
       init_output_buffer(&ctx.js_buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                          options->verbose);
-      before_js_module(&ctx);
+      js_file_start(&ctx);
     }
     result =
         wasm_parse_file(source, &callbacks, options->type_check);
     if (options->outfile) {
-      after_js_module(&ctx);
+      js_module_end(&ctx);
+      js_file_end(&ctx);
       write_output_buffer(&ctx.js_buf, options->outfile);
     }
   } else {

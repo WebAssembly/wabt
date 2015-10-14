@@ -22,10 +22,5 @@
 (assert_return (invoke "f32" (f32.const 1)) (f32.const 2))
 (assert_return (invoke "f64" (f64.const 1)) (f64.const 2))
 (;; STDOUT ;;;
-instantiating module
-$assert_return_0 OK
-$assert_return_1 OK
-$assert_return_2 OK
-$assert_return_3 OK
 4/4 tests passed.
 ;;; STDOUT ;;)

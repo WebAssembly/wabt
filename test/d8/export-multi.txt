@@ -9,7 +9,6 @@
 (invoke "a")
 (invoke "b")
 (;; STDOUT ;;;
-instantiating module
 $invoke_0 = 1
 $invoke_1 = 1
 0/0 tests passed.

@@ -12,8 +12,5 @@
 (assert_return_nan (invoke "f32"))
 (assert_return_nan (invoke "f64"))
 (;; STDOUT ;;;
-instantiating module
-$assert_return_nan_0 OK
-$assert_return_nan_1 OK
 2/2 tests passed.
 ;;; STDOUT ;;)

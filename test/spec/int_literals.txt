@@ -2,22 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/int_literals.wast
 (;; STDOUT ;;;
-instantiating module
-$assert_return_0 OK
-$assert_return_1 OK
-$assert_return_2 OK
-$assert_return_3 OK
-$assert_return_4 OK
-$assert_return_5 OK
-$assert_return_6 OK
-$assert_return_7 OK
-$assert_return_8 OK
-$assert_return_9 OK
-$assert_return_10 OK
-$assert_return_11 OK
-$assert_return_12 OK
-$assert_return_13 OK
-$assert_return_14 OK
-$assert_return_15 OK
 16/16 tests passed.
 ;;; STDOUT ;;)

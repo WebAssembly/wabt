@@ -6,8 +6,5 @@
 (assert_return (invoke "f" (i32.const 10)) (i32.const 10))
 (assert_return (invoke "f" (i32.const -100)) (i32.const -100))
 (;; STDOUT ;;;
-instantiating module
-$assert_return_0 OK
-$assert_return_1 OK
 2/2 tests passed.
 ;;; STDOUT ;;)

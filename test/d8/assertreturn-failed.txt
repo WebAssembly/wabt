@@ -6,7 +6,6 @@
   (export "f" 0))
 (assert_return (invoke "f" (i32.const 1)) (i32.const 11))
 (;; STDOUT ;;;
-instantiating module
-$assert_return_0 failed, expected 1, got 0
+d8/assertreturn-failed.txt:7: $assert_return_0 failed.
 0/1 tests passed.
 ;;; STDOUT ;;)
