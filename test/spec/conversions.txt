@@ -1,4 +1,15 @@
-# SKIP: Unsupported opcode #162:ExprI64SConvertF32
+# ERROR: 1
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/conversions.wast
+# STDERR:
+
+
+#
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 199
+# Unsupported opcode #162:ExprI64SConvertF32
+#
+
+
+# STDOUT:
+instantiating module

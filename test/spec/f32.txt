@@ -1,4 +1,15 @@
-# SKIP: Unsupported opcode #121:ExprF32Min
+# ERROR: 1
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/f32.wast
+# STDERR:
+
+
+#
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 199
+# Unsupported opcode #121:ExprF32Min
+#
+
+
+# STDOUT:
+instantiating module

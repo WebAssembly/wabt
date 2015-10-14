@@ -1,4 +1,4 @@
 # SKIP: switch generation not implemented currently
 # EXE: test/run-d8.py
 # FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/switch.wase
+# STDIN_FILE: third_party/spec/ml-proto/test/switch.wast

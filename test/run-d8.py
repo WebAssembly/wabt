@@ -20,6 +20,16 @@ class Error(Exception):
   pass
 
 
+def StripCallStack(stderr):
+  result = ''
+  for line in stderr.splitlines(1):
+    if line.startswith('==== C stack trace'):
+      return result
+    else:
+      result += line
+  return result
+
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-e', '--executable', metavar='EXE',
@@ -69,7 +79,14 @@ def main(args):
       cmd = [d8, SPEC_JS, generated.name]
     else:
       cmd = [d8, WASM_JS, '--', generated.name]
-    subprocess.check_call(cmd)
+    try:
+      process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+      _, stderr = process.communicate()
+      if process.returncode != 0:
+        raise Error(StripCallStack(stderr))
+    except OSError as e:
+      raise Error(str(e))
+
   finally:
     if generated:
       generated.close()

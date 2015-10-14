@@ -99,29 +99,27 @@ class TestInfo(object):
             state = 'stdout'
             continue
 
-          if state != 'header':
-            raise Error('unexpected directive: %s' % line)
-
-          key, value = directive.split(':', 1)
-          key = key.strip().lower()
-          value = value.strip()
-          if key in seen_keys:
-            raise Error('%s already set' % key)
-          seen_keys.add(key)
-          if key == 'exe':
-            self.exe = value
-          elif key == 'stdin_file':
-            self.input_file = value
-          elif key == 'flags':
-            self.flags = shlex.split(value)
-          elif key == 'error':
-            self.expected_error = int(value)
-          elif key == 'slow':
-            self.slow = True
-          elif key == 'skip':
-            self.skip = True
-          else:
-            raise Error('Unknown directive: %s' % key)
+          if state == 'header':
+            key, value = directive.split(':', 1)
+            key = key.strip().lower()
+            value = value.strip()
+            if key in seen_keys:
+              raise Error('%s already set' % key)
+            seen_keys.add(key)
+            if key == 'exe':
+              self.exe = value
+            elif key == 'stdin_file':
+              self.input_file = value
+            elif key == 'flags':
+              self.flags = shlex.split(value)
+            elif key == 'error':
+              self.expected_error = int(value)
+            elif key == 'slow':
+              self.slow = True
+            elif key == 'skip':
+              self.skip = True
+            else:
+              raise Error('Unknown directive: %s' % key)
         elif state == 'header':
           state = 'input'
 

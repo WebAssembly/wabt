@@ -1,4 +1,15 @@
-# SKIP: Unsupported opcode #141:ExprF64Min
+# ERROR: 1
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/f64.wast
+# STDERR:
+
+
+#
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 199
+# Unsupported opcode #141:ExprF64Min
+#
+
+
+# STDOUT:
+instantiating module

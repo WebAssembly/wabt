@@ -1,4 +1,15 @@
-# SKIP: Unsupported opcode #125:ExprF32CopySign
+# ERROR: 1
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/left-to-right.wast
+# STDERR:
+
+
+#
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 199
+# Unsupported opcode #125:ExprF32CopySign
+#
+
+
+# STDOUT:
+instantiating module

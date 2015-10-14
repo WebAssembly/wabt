@@ -1,4 +1,27 @@
-# SKIP: Unsupported opcode #162:ExprI64SConvertF32
+# ERROR: 1
 # EXE: test/run-d8.py
 # FLAGS: --spec
 # STDIN_FILE: third_party/spec/ml-proto/test/traps.wast
+# STDERR:
+
+
+#
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 199
+# Unsupported opcode #162:ExprI64SConvertF32
+#
+
+
+# STDOUT:
+instantiating module
+$assert_trap_0 failed, didn't throw
+$assert_trap_1 failed, didn't throw
+$assert_trap_2 failed, didn't throw
+$assert_trap_3 failed, didn't throw
+0/4 tests passed.
+instantiating module
+$assert_trap_0 failed, didn't throw
+$assert_trap_1 failed, didn't throw
+$assert_trap_2 failed, didn't throw
+$assert_trap_3 failed, didn't throw
+0/4 tests passed.
+instantiating module
