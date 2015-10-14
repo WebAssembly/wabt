@@ -1,0 +1,4 @@
+(module
+  (func $foomore(call $foo (i32.const 0x0)))
+  (func $foo (param i32)(nop))
+)

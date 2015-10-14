@@ -665,9 +665,9 @@ static WasmToken read_token(WasmParser* parser) {
             case '(': {
               /* special case for a nan value, e.g. -nan(0xaabb) */
               const char* end = t->loc.pos;
-              if (string_eq(start, end, "nan") == 0 ||
-                  string_eq(start, end, "-nan") == 0 ||
-                  string_eq(start, end, "+nan") == 0) {
+              if (string_eq(start, end, "nan") ||
+                  string_eq(start, end, "-nan") ||
+                  string_eq(start, end, "+nan")) {
                 is_nan = 1;
                 goto continue_atom;
               }
