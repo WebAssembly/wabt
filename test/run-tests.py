@@ -23,6 +23,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
 DEFAULT_TIMEOUT = 2 # seconds
+SLOW_TIMEOUT_MULTIPLIER = 2
 
 
 class Error(Exception):
@@ -174,6 +175,9 @@ class TestInfo(object):
     except OSError as e:
       if not os.path.isdir(file_dir):
         raise
+
+    if self.slow:
+      timeout *= SLOW_TIMEOUT_MULTIPLIER
 
     process = None
     # Cheesy way to be able to set is_timeout from inside KillProcess
@@ -335,8 +339,6 @@ def main(args):
   parser.add_argument('-r', '--rebase',
                       help='rebase a test to its current output.',
                       action='store_true')
-  parser.add_argument('-s', '--slow', help='run slow tests.',
-                      action='store_true')
   parser.add_argument('-j', '--jobs', help='number of jobs to use to run tests',
                       type=int, default=multiprocessing.cpu_count())
   parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
@@ -381,7 +383,7 @@ def main(args):
   inq = multiprocessing.Queue()
   test_count = 0
   for info in infos:
-    if info.skip or (not options.slow and info.slow):
+    if info.skip:
       status.Skipped(info)
       continue
     inq.put(info)

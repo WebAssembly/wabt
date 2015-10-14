@@ -209,8 +209,7 @@ The currently supported list of keys:
 - EXE: the executable to run, defaults to out/sexpr-wasm
 - FLAGS: additional flags to pass to the executable
 - ERROR: the expected return value from the executable, defaults to 0
-- SLOW: if defined, this test is marked as being slow, and is skipped unless
-  you pass --slow to run-tests.py
+- SLOW: if defined, this test's timeout is doubled.
 
 When you first write a test, it's easiest if you omit the expected stdout and
 stderr. You can have the test harness fill it in for you automatically. First
