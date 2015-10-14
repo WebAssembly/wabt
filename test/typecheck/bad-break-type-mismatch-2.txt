@@ -1,8 +1,9 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func
     (block $exit
       (break (i32.const 1))
       (f32.const 2))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-break-type-mismatch-2.txt:4:12: type mismatch of block final expression. got f32, expected i32
+;;; STDERR ;;)

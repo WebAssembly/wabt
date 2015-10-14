@@ -1,7 +1,8 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func
     (i32.switch (i32.const 0)
       (case 0 fallthrough))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-switch-case-no-body-fallthrough.txt:5:15: expected '(', not "fallthrough"
+;;; STDERR ;;)

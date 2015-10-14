@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (nop foo)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-nop.txt:2:20: expected ')', not "foo"
+;;; STDERR ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (f32.storeu (i32.const 0) (f32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-store-float.sign.txt:2:16: unexpected token "f32.storeu"
+;;; STDERR ;;)

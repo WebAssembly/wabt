@@ -1,4 +1,4 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (func
     (i32.wrap/i64
@@ -24,7 +24,7 @@
 
     (f32.demote/f64
       (f64.promote/f32 (f32.const 0)))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -77,3 +77,4 @@
 0000010: 0000 3e00 0000 0000 0000 0000 0000 0000  ..>.............
 0000020: a1a7 9da8 9fa9 9eae a0af 1000 a2aa a4ab  ................
 0000030: a3b0 a5b1 a610 00ac b214 0000 0000       ..............
+;;; STDOUT ;;)

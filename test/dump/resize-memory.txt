@@ -1,9 +1,9 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (memory 256 1024)
   (func (param i32)
     (resize_memory (get_local 0))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 0a                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -32,3 +32,4 @@
 0000000: 0a01 0000 0100 0000 0100 0100 0000 0021  ...............!
 0000010: 0000 0024 0000 0000 0000 0000 0000 0000  ...$............
 0000020: 0039 1500                                .9..
+;;; STDOUT ;;)

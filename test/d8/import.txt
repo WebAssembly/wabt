@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   ;; stdio is ignored
   (import $print_i32 "stdio" "print" (param i32))
@@ -9,7 +9,8 @@
     (return (i32.const 1)))
   (export "test" $test)
 )
-# STDOUT:
+(;; STDOUT ;;;
 100
 200 300
 test() = 1
+;;; STDOUT ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (export "foo" 0))
-# STDERR:
+(;; STDERR ;;;
 module/bad-export-undefined.txt:2:23: function variable out of range (max 0)
+;;; STDERR ;;)

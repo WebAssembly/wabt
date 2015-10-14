@@ -1,9 +1,10 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (global i32)
   (func
     (store_global 0
       (i32.switch (i32.const 0)
         (case 0 (nop))))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-switch-value-void.txt:5:6: type mismatch. got void, expected i32
+;;; STDERR ;;)

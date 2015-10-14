@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (memory 100 (segment foo)))
-# STDERR:
+(;; STDERR ;;;
 module/bad-memory-segment-address.txt:2:30: invalid memory segment address
+;;; STDERR ;;)

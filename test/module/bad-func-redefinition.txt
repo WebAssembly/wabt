@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func $n (nop))
   (func $n (nop)))
-# STDERR:
+(;; STDERR ;;;
 module/bad-func-redefinition.txt:4:9: redefinition of function "$n"
+;;; STDERR ;;)

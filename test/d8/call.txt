@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (export "call" $call)
   (func $call (result i32)
@@ -24,6 +24,7 @@
                   (call $fac (i32.sub (get_local 0) (i32.const 1)))))
       (return (i32.const 1))))
 )
-# STDOUT:
+(;; STDOUT ;;;
 call() = 10
 fac10() = 3628800
+;;; STDOUT ;;)

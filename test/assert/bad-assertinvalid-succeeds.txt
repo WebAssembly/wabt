@@ -1,7 +1,8 @@
-# ERROR: 1
-# FLAGS: --multi-module
+;;; ERROR: 1
+;;; FLAGS: --multi-module
 (assert_invalid
   (module (func (result i32) (i32.const 0)))
   "success")
-# STDERR:
+(;; STDERR ;;;
 assert/bad-assertinvalid-succeeds.txt:4:10: expected module to be invalid
+;;; STDERR ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (if (i32.const 0) (nop) (nop) (nop))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-if-too-many.txt:2:45: expected ')', not "("
+;;; STDERR ;;)

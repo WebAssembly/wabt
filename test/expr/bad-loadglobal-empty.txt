@@ -1,5 +1,6 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (global $n i32)
   (func (load_global)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-loadglobal-empty.txt:3:21: expected ATOM, not ")"
+;;; STDERR ;;)

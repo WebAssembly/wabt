@@ -1,8 +1,8 @@
-# ERROR: 1
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/traps.wast
-# STDERR:
+;;; ERROR: 1
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/traps.wast
+(;; STDERR ;;;
 
 
 #
@@ -11,7 +11,8 @@
 #
 
 
-# STDOUT:
+;;; STDERR ;;)
+(;; STDOUT ;;;
 instantiating module
 $assert_trap_0 failed, didn't throw
 $assert_trap_1 failed, didn't throw
@@ -25,3 +26,4 @@ $assert_trap_2 failed, didn't throw
 $assert_trap_3 failed, didn't throw
 0/4 tests passed.
 instantiating module
+;;; STDOUT ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (import "foo" "bar" (param i32) (resalt i32)))
-# STDERR:
+(;; STDERR ;;;
 module/bad-import-not-result.txt:2:42: expected "result"
+;;; STDERR ;;)

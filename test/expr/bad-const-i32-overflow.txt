@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (i32.const 4294967296)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-const-i32-overflow.txt:2:26: invalid i32 literal "4294967296"
+;;; STDERR ;;)

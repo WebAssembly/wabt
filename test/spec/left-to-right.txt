@@ -1,8 +1,8 @@
-# ERROR: 1
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/left-to-right.wast
-# STDERR:
+;;; ERROR: 1
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/left-to-right.wast
+(;; STDERR ;;;
 
 
 #
@@ -11,5 +11,7 @@
 #
 
 
-# STDOUT:
+;;; STDERR ;;)
+(;; STDOUT ;;;
 instantiating module
+;;; STDOUT ;;)

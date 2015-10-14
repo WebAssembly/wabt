@@ -1,7 +1,7 @@
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/float_memory.wast
-# STDOUT:
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/float_memory.wast
+(;; STDOUT ;;;
 instantiating module
 $assert_return_0 OK
 $assert_return_1 failed, expected 1, got 0
@@ -22,3 +22,4 @@ $assert_return_13 OK
 $assert_return_14 OK
 $assert_return_15 OK
 6/8 tests passed.
+;;; STDOUT ;;)

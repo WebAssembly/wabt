@@ -1,4 +1,4 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (func
     (i32.store8/1 (i32.const 0) (i32.const 0))
@@ -35,7 +35,7 @@
     (i64.store/2 (i32.const 0) (i64.const 0))
     (i64.store/4 (i32.const 0) (i64.const 0))
     (i64.store/8 (i32.const 0) (i64.const 0))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -245,3 +245,4 @@
 0000110: 0031 0710 0012 0000 0000 0000 0000 3107  .1............1.
 0000120: 1000 1200 0000 0000 0000 0031 0710 0012  ...........1....
 0000130: 0000 0000 0000 0000                      ........
+;;; STDOUT ;;)

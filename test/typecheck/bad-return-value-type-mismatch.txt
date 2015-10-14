@@ -1,8 +1,9 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (result i32)
     (i32.add
       (return (i32.const 1))
       (i32.const 2))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-return-value-type-mismatch.txt:4:6: type mismatch for argument 0 of binary op. got void, expected i32
+;;; STDERR ;;)

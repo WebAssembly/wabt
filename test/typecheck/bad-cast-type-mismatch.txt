@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (f32.reinterpret/i32 (f32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-cast-type-mismatch.txt:2:16: type mismatch of convert op. got f32, expected i32
+;;; STDERR ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (memory 100 foo))
-# STDERR:
+(;; STDERR ;;;
 module/bad-memory-max-size.txt:2:21: invalid max memory size
+;;; STDERR ;;)

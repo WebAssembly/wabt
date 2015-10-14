@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (export))
-# STDERR:
+(;; STDERR ;;;
 module/bad-export-empty.txt:2:16: expected STRING, not ")"
+;;; STDERR ;;)

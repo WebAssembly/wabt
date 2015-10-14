@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func) (export "foo\az"))
-# STDERR:
+(;; STDERR ;;;
 bad-string-hex-escape.txt:2:30: bad \xx escape sequence
+;;; STDERR ;;)

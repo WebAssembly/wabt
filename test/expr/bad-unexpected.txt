@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (module)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-unexpected.txt:2:16: unexpected token "module"
+;;; STDERR ;;)

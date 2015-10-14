@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (i32.add)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-binary-empty.txt:2:23: expected '(', not ")"
+;;; STDERR ;;)

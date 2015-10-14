@@ -90,39 +90,49 @@ class TestInfo(object):
       stderr_lines = []
       for line in f.readlines():
         empty = False
-        m = re.match(r'\s*#(.*)$', line)
+        m = re.match(r'\s*\(;; (STDOUT|STDERR) ;;;$', line)
         if m:
-          directive = m.group(1).strip()
-          if directive.lower() == 'stderr:':
+          directive = m.group(1)
+          if directive == 'STDERR':
             state = 'stderr'
             continue
-          elif directive.lower() == 'stdout:':
+          elif directive == 'STDOUT':
             state = 'stdout'
             continue
-
-          if state == 'header':
-            key, value = directive.split(':', 1)
-            key = key.strip().lower()
-            value = value.strip()
-            if key in seen_keys:
-              raise Error('%s already set' % key)
-            seen_keys.add(key)
-            if key == 'exe':
-              self.exe = value
-            elif key == 'stdin_file':
-              self.input_file = value
-            elif key == 'flags':
-              self.flags = shlex.split(value)
-            elif key == 'error':
-              self.expected_error = int(value)
-            elif key == 'slow':
-              self.slow = True
-            elif key == 'skip':
-              self.skip = True
+        else:
+          m = re.match(r'\s*;;;(.*)$', line)
+          if m:
+            directive = m.group(1).strip()
+            if state == 'header':
+              key, value = directive.split(':', 1)
+              key = key.strip()
+              value = value.strip()
+              if key in seen_keys:
+                raise Error('%s already set' % key)
+              seen_keys.add(key)
+              if key == 'EXE':
+                self.exe = value
+              elif key == 'STDIN_FILE':
+                self.input_file = value
+              elif key == 'FLAGS':
+                self.flags = shlex.split(value)
+              elif key == 'ERROR':
+                self.expected_error = int(value)
+              elif key == 'SLOW':
+                self.slow = True
+              elif key == 'SKIP':
+                self.skip = True
+              else:
+                raise Error('Unknown directive: %s' % key)
+            elif state in ('stdout', 'stderr'):
+              if not re.match(r'%s ;;\)$' % state.upper(), directive):
+                raise Error('Bad directive in %s block: %s' % (
+                    state, directive))
+              state = 'none'
             else:
-              raise Error('Unknown directive: %s' % key)
-        elif state == 'header':
-          state = 'input'
+              raise Error('Unexpected directive: %s' % directive)
+          elif state == 'header':
+            state = 'input'
 
         if state == 'header':
           header_lines.append(line)
@@ -234,11 +244,13 @@ class TestInfo(object):
       f.write(self.header)
       f.write(self.input_)
       if stderr:
-        f.write('# STDERR:\n')
+        f.write('(;; STDERR ;;;\n')
         f.write(stderr)
+        f.write(';;; STDERR ;;)\n')
       if stdout:
-        f.write('# STDOUT:\n')
+        f.write('(;; STDOUT ;;;\n')
         f.write(stdout)
+        f.write(';;; STDOUT ;;)\n')
 
   def Diff(self, stdout, stderr):
     msg = ''

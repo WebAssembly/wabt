@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func
   (break 0)
   (label (nop))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-break-defined-later.txt:3:10: label variable out of range (max 0)
+;;; STDERR ;;)

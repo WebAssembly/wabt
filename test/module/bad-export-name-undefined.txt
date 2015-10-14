@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (export "foo" $foo))
-# STDERR:
+(;; STDERR ;;;
 module/bad-export-name-undefined.txt:2:23: undefined function variable "$foo"
+;;; STDERR ;;)

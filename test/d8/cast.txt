@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (export "f32_reinterpret_i32" $f32_reinterpret_i32)
   (func $f32_reinterpret_i32 (result f32)
@@ -20,8 +20,9 @@
       (i64.reinterpret/f64 (f64.const 1.375e10))
       (i64.const 0x42099c82cc000000)))
 )
-# STDOUT:
+(;; STDOUT ;;;
 f32_reinterpret_i32() = 4.5
 i32_reinterpret_f32() = -1067450368
 f64_reinterpret_i64() = 125.125
 i64_reinterpret_f64() = 1
+;;; STDOUT ;;)

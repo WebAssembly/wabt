@@ -1,5 +1,6 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func foo))
-# STDERR:
+(;; STDERR ;;;
 func/bad-func-name.txt:3:9: expected name to begin with $
+;;; STDERR ;;)

@@ -1,5 +1,6 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (global i32)
   (func (store_global 0 (i32.const 0) (nop))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-storeglobal-too-many.txt:3:39: expected ')', not "("
+;;; STDERR ;;)

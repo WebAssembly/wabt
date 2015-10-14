@@ -1,9 +1,9 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   ;; v8-native-prototype doesn't support module name, so just use the func name
   (import "ignored" "test" (param i32 i64 f32 f64))
   (import "ignored" "test2" (param i32) (result i32)))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -48,3 +48,4 @@
 0000020: 0000 0001 0101 0142 0000 0000 0000 0000  .......B........
 0000030: 0000 0000 0000 0000 0000 0000 0174 6573  .............tes
 0000040: 7400 7465 7374 3200                      t.test2.
+;;; STDOUT ;;)

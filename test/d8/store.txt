@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (memory 128)
 
@@ -57,7 +57,7 @@
       (f64.store (i32.const 0) (f64.const -1000.75))
       (i32.load (i32.const 4)))
 )
-# STDOUT:
+(;; STDOUT ;;;
 i32_store8() = -16909061
 i32_store16() = -859059511
 i32_store() = -123456
@@ -67,3 +67,4 @@ i64_store32() = -123456
 i64_store() = 1
 f32_store() = 1069547520
 f64_store() = -1064352256
+;;; STDOUT ;;)

@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   ;; basic break test
   (export "break0" $break0)
@@ -60,9 +60,10 @@
       (set_local 0 (i32.add (get_local 0) (i32.const 1))))
     (return (get_local 0)))
 )
-# STDOUT:
+(;; STDOUT ;;;
 break0() = 2
 break1() = 3
 break2() = 2
 break3() = 3
 break4() = 3
+;;; STDOUT ;;)

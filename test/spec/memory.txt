@@ -1,7 +1,7 @@
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/memory.wast
-# STDOUT:
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/memory.wast
+(;; STDOUT ;;;
 assert_invalid error:
   third_party/spec/ml-proto/test/memory.wast:13:21: max size (0) must be greater than or equal to initial size (1)
 assert_invalid error:
@@ -72,3 +72,4 @@ $assert_return_21 OK
 $assert_return_22 OK
 $assert_return_23 OK
 24/24 tests passed.
+;;; STDOUT ;;)

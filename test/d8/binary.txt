@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   ;; i32
   (export "i32_add" $i32_add)
@@ -113,7 +113,7 @@
     (func $f64_copysign (result f64) (f64.copysign (f64.const 0) (f64.const 0)))
   ;)
   )
-# STDOUT:
+(;; STDOUT ;;;
 i32_add() = 3
 i32_sub() = 16
 i32_mul() = 21
@@ -148,3 +148,4 @@ f64_add() = 1111111110
 f64_sub() = 1.234e+59
 f64_mul() = -15179717820000
 f64_div() = 1e+150
+;;; STDOUT ;;)

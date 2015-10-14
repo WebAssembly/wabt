@@ -1,8 +1,8 @@
-# SLOW:
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/f32_cmp.wast
-# STDOUT:
+;;; SLOW:
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/f32_cmp.wast
+(;; STDOUT ;;;
 instantiating module
 $assert_return_0 OK
 $assert_return_1 OK
@@ -1949,3 +1949,4 @@ $assert_return_1941 OK
 $assert_return_1942 OK
 $assert_return_1943 OK
 1944/1944 tests passed.
+;;; STDOUT ;;)

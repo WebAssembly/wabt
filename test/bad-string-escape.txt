@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func) (export "foobar\r\n"))
-# STDERR:
+(;; STDERR ;;;
 bad-string-escape.txt:2:32: bad escape sequence
+;;; STDERR ;;)

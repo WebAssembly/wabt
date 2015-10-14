@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (result i32)
     (return)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-return-too-few.txt:4:12: type mismatch. got void, expected i32
+;;; STDERR ;;)

@@ -1,7 +1,7 @@
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/memory_trap.wast
-# STDOUT:
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/memory_trap.wast
+(;; STDOUT ;;;
 instantiating module
 $assert_return_0 OK
 $assert_return_1 failed, expected 1, got 0
@@ -14,3 +14,4 @@ $assert_trap_5 failed, didn't throw
 $assert_trap_6 failed, didn't throw
 $assert_trap_7 failed, didn't throw
 1/10 tests passed.
+;;; STDOUT ;;)

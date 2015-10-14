@@ -1,5 +1,6 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (local $foo f64)
   (get_local $foo (nop))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-getlocal-too-many.txt:3:19: expected ')', not "("
+;;; STDERR ;;)

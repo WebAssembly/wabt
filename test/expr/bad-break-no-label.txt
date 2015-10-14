@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (break)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-break-no-label.txt:2:21: label variable out of range (max 0)
+;;; STDERR ;;)

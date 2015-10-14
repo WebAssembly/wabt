@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (memory 100)
   (memory 1000))
-# STDERR:
+(;; STDERR ;;;
 module/bad-memory-too-many.txt:4:4: only one memory block allowed
+;;; STDERR ;;)

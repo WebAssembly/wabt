@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (f32.loads (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-load-float-sign.txt:2:16: unexpected token "f32.loads"
+;;; STDERR ;;)

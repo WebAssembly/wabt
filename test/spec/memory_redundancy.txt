@@ -1,7 +1,7 @@
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/memory_redundancy.wast
-# STDOUT:
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/memory_redundancy.wast
+(;; STDOUT ;;;
 instantiating module
 $assert_return_0 OK
 $invoke_0 = undefined
@@ -9,3 +9,4 @@ $assert_return_1 OK
 $invoke_1 = undefined
 $assert_return_2 OK
 3/3 tests passed.
+;;; STDOUT ;;)

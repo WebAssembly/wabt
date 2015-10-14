@@ -1,10 +1,10 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (func (result i32) (i32.const 0))
   (func (result i64) (i64.const 0))
   (func (result f32) (f32.const 0))
   (func (result f64) (f64.const 0)))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -88,3 +88,4 @@
 0000060: 0000 0000 0000 0000 1000 1200 0000 0000  ................
 0000070: 0000 0014 0000 0000 1300 0000 0000 0000  ................
 0000080: 00                                       .
+;;; STDOUT ;;)

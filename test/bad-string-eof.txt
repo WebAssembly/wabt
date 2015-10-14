@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func) (export "
-# STDERR:
+(;; STDERR ;;;
 bad-string-eof.txt:2:25: newline in string
+;;; STDERR ;;)

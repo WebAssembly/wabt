@@ -1,4 +1,4 @@
-# SKIP: sexpr-wasm doesn't properly parse labeled switch
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/labels.wast
+;;; SKIP: sexpr-wasm doesn't properly parse labeled switch
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/labels.wast

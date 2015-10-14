@@ -1,4 +1,4 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (local f32)
     (set_local 0
@@ -6,5 +6,6 @@
         (if (i32.const 0)
           (break)
           (f32.const 0.0))))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-if-value-void.txt:4:6: type mismatch. got void, expected f32
+;;; STDERR ;;)

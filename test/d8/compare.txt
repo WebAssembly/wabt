@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   ;; i32
   (export "i32_eq_true" $i32_eq_true)
@@ -212,7 +212,7 @@
   (export "f64_ge_greater" $f64_ge_greater)
   (func $f64_ge_greater (result i32) (f64.ge (f64.const 1) (f64.const -1)))
 )
-# STDOUT:
+(;; STDOUT ;;;
 i32_eq_true() = 1
 i32_eq_false() = 0
 i32_ne_true() = 1
@@ -301,3 +301,4 @@ f64_gt_greater() = 1
 f64_ge_less() = 0
 f64_ge_equal() = 1
 f64_ge_greater() = 1
+;;; STDOUT ;;)

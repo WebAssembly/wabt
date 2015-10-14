@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (if (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-if-no-then.txt:2:32: expected '(', not ")"
+;;; STDERR ;;)

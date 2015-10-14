@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (load.x32 (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-load-type.txt:2:16: unexpected token "load.x32"
+;;; STDERR ;;)

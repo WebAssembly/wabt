@@ -1,4 +1,4 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (func
     (loop $exit $count
@@ -7,7 +7,7 @@
       (if (i32.const 3)
         (break $exit (i32.const 4)))
       (i32.const 5))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -55,3 +55,4 @@
 0000010: 0000 3400 0000 0000 0000 0000 0000 0000  ..4.............
 0000020: 0601 1d03 0110 011f 0010 0201 1003 1f01  ................
 0000030: 1004 1005                                ....
+;;; STDOUT ;;)

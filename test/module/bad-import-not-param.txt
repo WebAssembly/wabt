@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (import "foo" "bar" (parump i32)))
-# STDERR:
+(;; STDERR ;;;
 module/bad-import-not-param.txt:2:30: expected "param"
+;;; STDERR ;;)

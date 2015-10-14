@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (i32.const one-hundred)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-const-i32-garbage.txt:2:26: invalid i32 literal "one-hundred"
+;;; STDERR ;;)

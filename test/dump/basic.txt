@@ -1,11 +1,11 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (global $g i32)
   (func $f (param i32 i32) (result i32)
     (store_global $g (i32.add (load_global $g) (i32.const 1)))
     (i32.add (get_local 0) (get_local 1)))
   (export "f" $f))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0100                                       ; num globals
@@ -52,3 +52,4 @@
 0000010: 0101 3400 0000 2800 0000 3400 0000 0000  ..4...(...4.....
 0000020: 0000 0000 0000 0100 1800 4017 0010 0140  ..........@....@
 0000030: 1500 1501 6600                           ....f.
+;;; STDOUT ;;)

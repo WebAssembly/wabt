@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (result i32)
     (return (f32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-return-type-mismatch.txt:4:13: type mismatch. got f32, expected i32
+;;; STDERR ;;)

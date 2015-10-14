@@ -1,4 +1,4 @@
-# FLAGS: --multi-module
+;;; FLAGS: --multi-module
 (module
   (export "test" $test)
   (func $test (param i32) (result i32)

@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (global i32 f32 i64 f64)
   (export "store_i32" $store_i32)
@@ -22,7 +22,7 @@
   (func $store_f64 (store_global 3 (f64.const 4)))
   (export "load_f64" $load_f64)
   (func $load_f64 (result f64) (load_global 3)))
-# STDOUT:
+(;; STDOUT ;;;
 store_i32() = undefined
 load_i32() = 1
 store_f32() = undefined
@@ -31,3 +31,4 @@ store_i64() = undefined
 load_i64() = 1
 store_f64() = undefined
 load_f64() = 4
+;;; STDOUT ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (export "foo" foo))
-# STDERR:
+(;; STDERR ;;;
 module/bad-export-name.txt:2:23: invalid var index
+;;; STDERR ;;)

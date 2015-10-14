@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (get_local $n)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-getlocal-name-undefined.txt:2:26: undefined local variable "$n"
+;;; STDERR ;;)

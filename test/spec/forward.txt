@@ -1,10 +1,11 @@
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/forward.wast
-# STDOUT:
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/forward.wast
+(;; STDOUT ;;;
 instantiating module
 $assert_return_0 OK
 $assert_return_1 OK
 $assert_return_2 OK
 $assert_return_3 OK
 4/4 tests passed.
+;;; STDOUT ;;)

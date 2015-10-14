@@ -1,9 +1,9 @@
-# FLAGS: -dv --multi-module
+;;; FLAGS: -dv --multi-module
 (module (memory 128))
 (module (memory 256))
 (module (memory 512))
 (module (memory 1000))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 07                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -32,3 +32,4 @@
 0000006: 0000                                       ; num data segments
 ; names
 0000000: 0a01 0000 0000 0000                      ........
+;;; STDOUT ;;)

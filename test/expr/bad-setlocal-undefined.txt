@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (set_local 0 (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-setlocal-undefined.txt:2:26: local variable out of range (max 0)
+;;; STDERR ;;)

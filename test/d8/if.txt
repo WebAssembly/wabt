@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (export "if1" $if1)
   (func $if1 (result i32) (local i32)
@@ -21,6 +21,7 @@
       (set_local 1 (i32.const 8)))
     (return (i32.add (get_local 0) (get_local 1))))
 )
-# STDOUT:
+(;; STDOUT ;;;
 if1() = 1
 if2() = 9
+;;; STDOUT ;;)

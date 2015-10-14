@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   ;; i32
   (export "i32_not_100" $i32_not_100)
@@ -72,7 +72,7 @@
     (func $f64_nearest_hi (result f64) (f64.nearest (f64.const 1.75)))
   ;)
 )
-# STDOUT:
+(;; STDOUT ;;;
 i32_not_100() = 0
 i32_not_0() = 1
 f32_neg() = -100
@@ -83,3 +83,4 @@ f64_neg() = -100
 f64_abs() = 100
 f64_sqrt_neg() = NaN
 f64_sqrt_100() = 10
+;;; STDOUT ;;)

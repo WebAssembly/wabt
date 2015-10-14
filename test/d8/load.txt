@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (memory 128
       (segment 0 "\ff\ff\ff\ff")
@@ -52,7 +52,7 @@
   (export "f64_load" $f64_load)
   (func $f64_load (result f64) (f64.load (i32.const 8)))
 )
-# STDOUT:
+(;; STDOUT ;;;
 i32_load8_s() = -1
 i32_load16_s() = -1
 i32_load() = -1
@@ -67,3 +67,4 @@ i64_load16_u() = 1
 i64_load32_u() = 1
 f32_load() = 25.75
 f64_load() = 1023.875
+;;; STDOUT ;;)

@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func
     (i32.eq (f32.const 0) (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-compare-type-mismatch-1.txt:4:6: type mismatch for argument 0 of compare op. got f32, expected i32
+;;; STDERR ;;)

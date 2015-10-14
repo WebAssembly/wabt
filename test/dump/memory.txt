@@ -1,7 +1,7 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (memory 100 (segment 10 "hello") (segment 20 "goodbye")))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 07                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -27,3 +27,4 @@
 0000000: 0701 0000 0000 0200 0a00 0000 2200 0000  ............"...
 0000010: 0500 0000 0114 0000 0027 0000 0007 0000  .........'......
 0000020: 0001 6865 6c6c 6f67 6f6f 6462 7965       ..hellogoodbye
+;;; STDOUT ;;)

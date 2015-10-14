@@ -1,7 +1,8 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (import "foo" "bar" (param i32 i32))
   (func
     (call_import 0 (i32.const 0) (i32.const 1) (i32.const 2))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-callimport-too-many.txt:5:48: too many arguments to function. got 3, expected 2
+;;; STDERR ;;)

@@ -1,4 +1,4 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func
     (label
@@ -6,5 +6,6 @@
         (if (i32.const 1)
           (break (i32.const 2)))
         (f32.const 3)))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-label-multi-type.txt:5:7: type mismatch of final label expression. got f32, expected i32
+;;; STDERR ;;)

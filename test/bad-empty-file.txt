@@ -1,3 +1,4 @@
-# ERROR: 1
-# STDERR:
+;;; ERROR: 1
+(;; STDERR ;;;
 bad-empty-file.txt:2:1: unexpected EOF
+;;; STDERR ;;)

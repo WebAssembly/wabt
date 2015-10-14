@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (foo bar)
-# STDERR:
+(;; STDERR ;;;
 bad-toplevel.txt:2:2: expected "module"
+;;; STDERR ;;)

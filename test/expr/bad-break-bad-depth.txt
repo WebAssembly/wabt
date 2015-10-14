@@ -1,8 +1,9 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func
     (label   ;; 1
       (label ;; 0
         (break 2)))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-break-bad-depth.txt:6:16: label variable out of range (max 2)
+;;; STDERR ;;)

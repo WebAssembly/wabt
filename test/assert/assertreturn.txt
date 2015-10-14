@@ -1,4 +1,4 @@
-# FLAGS: --multi-module
+;;; FLAGS: --multi-module
 (module
   (func $foo (result i32) (i32.const 0))
   (export "foo" $foo)

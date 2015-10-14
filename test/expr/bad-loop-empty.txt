@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (loop)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-loop-empty.txt:2:20: expected '(', not ")"
+;;; STDERR ;;)

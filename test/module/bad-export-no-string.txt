@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (nop)) (export nop nop))
-# STDERR:
+(;; STDERR ;;;
 module/bad-export-no-string.txt:2:30: expected STRING, not "nop"
+;;; STDERR ;;)

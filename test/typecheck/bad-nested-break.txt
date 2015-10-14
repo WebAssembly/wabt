@@ -1,4 +1,4 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (result i32)
     (label $outer
@@ -12,5 +12,6 @@
     ;; the existence of the (break $outer) statement requires there to be a
     ;; return statement here.
   ))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-nested-break.txt:14:3: type mismatch in function result. got void, expected i32
+;;; STDERR ;;)

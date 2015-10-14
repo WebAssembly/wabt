@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (result)))
-# STDERR:
+(;; STDERR ;;;
 func/bad-result-empty.txt:2:22: unexpected token ")"
+;;; STDERR ;;)

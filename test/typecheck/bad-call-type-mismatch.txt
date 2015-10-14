@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (param i32 i64)
     (call 0 (i64.const 0) (i64.const 0))))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-call-type-mismatch.txt:4:13: type mismatch for argument 0 of call. got i64, expected i32
+;;; STDERR ;;)

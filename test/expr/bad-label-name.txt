@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (label foo (nop))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-label-name.txt:2:22: expected name to begin with $
+;;; STDERR ;;)

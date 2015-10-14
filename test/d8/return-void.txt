@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   (memory 4)
   (func $store_unless (param i32)
@@ -21,8 +21,9 @@
   (func $check2 (result i32)
     (i32.load (i32.const 0)))
   (export "check2" $check2))
-# STDOUT:
+(;; STDOUT ;;;
 test1() = undefined
 check1() = 0
 test2() = undefined
 check2() = 1
+;;; STDOUT ;;)

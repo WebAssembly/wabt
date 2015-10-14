@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (f32.convert_s/i32)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-convert-empty.txt:2:33: expected '(', not ")"
+;;; STDERR ;;)

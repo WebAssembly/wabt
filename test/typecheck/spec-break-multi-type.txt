@@ -1,4 +1,4 @@
-# FLAGS: --typecheck-spec
+;;; FLAGS: --typecheck-spec
 (module
   (func
     (block $exit

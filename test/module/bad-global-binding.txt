@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (global $n $foo))
-# STDERR:
+(;; STDERR ;;;
 module/bad-global-binding.txt:2:20: expected type
+;;; STDERR ;;)

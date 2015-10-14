@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (local $n)))
-# STDERR:
+(;; STDERR ;;;
 func/bad-local-binding-no-type.txt:2:24: expected type
+;;; STDERR ;;)

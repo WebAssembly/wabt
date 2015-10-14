@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (param foo)))
-# STDERR:
+(;; STDERR ;;;
 func/bad-param.txt:2:22: expected name to begin with $
+;;; STDERR ;;)

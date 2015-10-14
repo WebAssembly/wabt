@@ -1,9 +1,10 @@
-# ERROR: 1
-# FLAGS: --multi-module
+;;; ERROR: 1
+;;; FLAGS: --multi-module
 (module
   (export "foo" $foo)
   (func $foo))
 
 (invoke "bar")
-# STDERR:
+(;; STDERR ;;;
 assert/bad-invoke-unknown-function.txt:7:9: unknown function export "bar"
+;;; STDERR ;;)

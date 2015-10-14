@@ -192,14 +192,16 @@ only one thing. Also make sure that tests that are expected to fail start with
 
 The test format is straightforward::
 
-  # KEY1: VALUE1A VALUE1B...
-  # KEY2: VALUE2A VALUE2B...
+  ;;; KEY1: VALUE1A VALUE1B...
+  ;;; KEY2: VALUE2A VALUE2B...
   (input (to)
     (the executable))
-  # STDOUT:
+  (;; STDOUT ;;;
   expected stdout
-  # STDERR:
+  ;;; STDOUT ;;)
+  (;; STDERR ;;;
   expected stderr
+  ;;; STDERR ;;)
 
 The test runner will copy the input to a temporary file and pass it as an
 argument to the executable (which by default is out/sexpr-wasm).
@@ -216,8 +218,8 @@ stderr. You can have the test harness fill it in for you automatically. First
 let's write our test::
 
   $ cat > test/my-awesome-test.txt << HERE
-  # EXE: test/run-d8.py
-  # FLAGS: --spec
+  ;;; EXE: test/run-d8.py
+  ;;; FLAGS: --spec
   (module
     (export "add2" 0)
     (func (param i32) (result i32)
@@ -250,9 +252,10 @@ that the expected stdout has been added::
   [+1|-0|%100] (0.05s)
   $ test/run-tests.py awesome
   [+1|-0|%100] (0.05s)
-  $ tail -n 5 test/my-awesome-test.txt
-  # STDOUT:
+  $ tail -n 6 test/my-awesome-test.txt
+  (;; STDOUT ;;;
   instantiating module
   $assert_eq_0 OK
   $assert_eq_1 OK
   2/2 tests passed.
+  ;;; STDOUT ;;)

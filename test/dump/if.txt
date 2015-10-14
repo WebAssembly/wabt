@@ -1,11 +1,11 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (func
     (if (i32.const 1) (nop))
     (if (i32.const 0) (f32.const 1.0) (f32.const 2.0)))
   (func
     (if (i32.const 1) (return) (return))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -65,3 +65,4 @@
 0000020: 0000 0000 0000 4900 0000 4e00 0000 0000  ......I...N.....
 0000030: 0000 0000 0000 0000 0110 0100 1b10 0014  ................
 0000040: 0000 803f 1400 0000 4002 1001 0909       ...?....@.....
+;;; STDOUT ;;)

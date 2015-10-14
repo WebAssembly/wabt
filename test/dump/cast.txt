@@ -1,4 +1,4 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 ;; int->float reinterpret unsupported currently
 (module
   (func
@@ -6,7 +6,7 @@
     (i32.reinterpret/f32 (f32.const 0))
     (f64.reinterpret/i64 (i64.const 0))
     (i64.reinterpret/f64 (f64.const 0))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0000                                       ; num globals
@@ -44,3 +44,4 @@
 0000010: 0000 3d00 0000 0000 0000 0000 0000 0000  ..=.............
 0000020: ad10 00b4 1400 0000 00b3 1200 0000 0000  ................
 0000030: 0000 00b5 1300 0000 0000 0000 00         .............
+;;; STDOUT ;;)

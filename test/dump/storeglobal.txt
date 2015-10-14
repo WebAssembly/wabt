@@ -1,4 +1,4 @@
-# FLAGS: -dv
+;;; FLAGS: -dv
 (module
   (global i32 i64 f32 f64)
   (func
@@ -6,7 +6,7 @@
     (store_global 1 (i64.const 1))
     (store_global 2 (f32.const 2))
     (store_global 3 (f64.const 3))))
-# STDOUT:
+(;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
 0000002: 0400                                       ; num globals
@@ -66,3 +66,4 @@
 0000030: 0000 0000 0000 0000 1800 1000 1801 1201  ................
 0000040: 0000 0000 0000 0018 0214 0000 0040 1803  .............@..
 0000050: 1300 0000 0000 0008 40                   ........@
+;;; STDOUT ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (i64.const 18446744073709551616)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-const-i64-overflow.txt:2:26: invalid i64 literal "18446744073709551616"
+;;; STDERR ;;)

@@ -1,4 +1,5 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func (local i32) (get_local)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-getlocal-empty.txt:2:37: expected ATOM, not ")"
+;;; STDERR ;;)

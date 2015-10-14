@@ -1,5 +1,6 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (global $n f32)
   (func (load_global n)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-loadglobal-name.txt:3:22: invalid var index
+;;; STDERR ;;)

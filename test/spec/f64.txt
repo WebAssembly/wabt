@@ -1,9 +1,9 @@
-# SLOW:
-# ERROR: 1
-# EXE: test/run-d8.py
-# FLAGS: --spec
-# STDIN_FILE: third_party/spec/ml-proto/test/f64.wast
-# STDERR:
+;;; SLOW:
+;;; ERROR: 1
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/spec/ml-proto/test/f64.wast
+(;; STDERR ;;;
 
 
 #
@@ -12,5 +12,7 @@
 #
 
 
-# STDOUT:
+;;; STDERR ;;)
+(;; STDOUT ;;;
 instantiating module
+;;; STDOUT ;;)

@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func
   (local i32 i32)
   (set_local 0 (i32.const 0) (nop))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-setlocal-too-many.txt:4:30: expected ')', not "("
+;;; STDERR ;;)

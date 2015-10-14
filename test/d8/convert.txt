@@ -1,4 +1,4 @@
-# EXE: test/run-d8.py
+;;; EXE: test/run-d8.py
 (module
   ;; i32
   (export "i32_wrap_i64" $i32_wrap_i64)
@@ -69,7 +69,7 @@
     (func $f64_convert_u_i64 (result f64) (f64.convert_u/i64 (i64.const 0)))
   ;)
 )
-# STDOUT:
+(;; STDOUT ;;;
 i32_wrap_i64() = -1
 i32_trunc_s_f32() = -100
 i32_trunc_u_f32() = -1294967296
@@ -83,3 +83,4 @@ f32_demote_f64() = 12345679
 f64_convert_s_i32() = -1
 f64_convert_u_i32() = 4294967295
 f64_demote_f32() = 12345679
+;;; STDOUT ;;)

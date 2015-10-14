@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func
   (local $n i32)
   (set_local n (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-setlocal-name.txt:4:14: invalid var index
+;;; STDERR ;;)

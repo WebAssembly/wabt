@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func
     (i32.switch (i32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-switch-empty.txt:4:30: expected '(', not ")"
+;;; STDERR ;;)

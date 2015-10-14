@@ -1,8 +1,9 @@
-# ERROR: 1
-# FLAGS: --multi-module
+;;; ERROR: 1
+;;; FLAGS: --multi-module
 (module
   (func (param i32))
   (export "foo" 0))
 (invoke "foo")
-# STDERR:
+(;; STDERR ;;;
 assert/bad-invoke-too-few.txt:6:14: too few arguments to function. got 0, expected 1
+;;; STDERR ;;)

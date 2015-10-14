@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module
   (func (param i32 i64)
     (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-call-too-many.txt:4:41: too many arguments to function. got 3, expected 2
+;;; STDERR ;;)

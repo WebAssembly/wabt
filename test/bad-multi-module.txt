@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 ;; illegal to parse multiple modules without --multi-module
 (module)
 (module)
-# STDERR:
+(;; STDERR ;;;
 bad-multi-module.txt:4:1: expected EOF
+;;; STDERR ;;)

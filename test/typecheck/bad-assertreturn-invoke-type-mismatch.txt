@@ -1,8 +1,9 @@
-# ERROR: 1
-# FLAGS: --multi-module
+;;; ERROR: 1
+;;; FLAGS: --multi-module
 (module
   (func (param i32) (result i32) (get_local 0))
   (export "foo" 0))
 (assert_return (invoke "foo" (f32.const 0)) (i32.const 0))
-# STDERR:
+(;; STDERR ;;;
 typecheck/bad-assertreturn-invoke-type-mismatch.txt:6:30: type mismatch for argument 0 of invoke. got f32, expected i32
+;;; STDERR ;;)

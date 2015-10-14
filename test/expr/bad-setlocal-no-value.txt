@@ -1,6 +1,7 @@
-# ERROR: 1
+;;; ERROR: 1
 (module (func
   (local i32)
   (set_local 0)))
-# STDERR:
+(;; STDERR ;;;
 expr/bad-setlocal-no-value.txt:4:15: expected '(', not ")"
+;;; STDERR ;;)
