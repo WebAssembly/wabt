@@ -1,4 +1,24 @@
-;;; SKIP: print_i64 fails
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/store_retval.wast
+(;; STDERR ;;;
+
+
+#
+# Fatal error in , line 0
+# unimplemented code
+#
+
+
+;;; STDERR ;;)
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/spec/ml-proto/test/store_retval.wast:34:10: type mismatch. got i32, expected i64
+assert_invalid error:
+  third_party/spec/ml-proto/test/store_retval.wast:39:10: type mismatch. got i64, expected i32
+assert_invalid error:
+  third_party/spec/ml-proto/test/store_retval.wast:44:10: type mismatch. got f32, expected f64
+assert_invalid error:
+  third_party/spec/ml-proto/test/store_retval.wast:49:10: type mismatch. got f64, expected f32
+;;; STDOUT ;;)
