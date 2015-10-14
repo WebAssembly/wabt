@@ -75,6 +75,7 @@ typedef enum WasmOpType {
   WASM_OP_STORE_GLOBAL,
   WASM_OP_SWITCH,
   WASM_OP_TABLE,
+  WASM_OP_TYPE,
   WASM_OP_UNARY,
 } WasmOpType;
 
@@ -136,6 +137,7 @@ static void* append_element(void** data,
 
 DEFINE_VECTOR(binding, WasmBinding)
 DEFINE_VECTOR(variable, WasmVariable)
+DEFINE_VECTOR(signature, WasmSignature)
 DEFINE_VECTOR(function, WasmFunction)
 DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
@@ -1461,24 +1463,24 @@ static WasmType parse_expr(WasmParser* parser,
         if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
           break;
         rewind_token(parser, t);
-        if (++num_args > callee->args.size) {
+        if (++num_args > callee->signature.args.size) {
           FATAL_AT(parser, t.range.start,
                    "too many arguments to function. got %d, expected %zd\n",
-                   num_args, callee->args.size);
+                   num_args, callee->signature.args.size);
         }
         WasmType arg_type = parse_expr(parser, module, function, NULL);
-        WasmType expected = callee->args.data[num_args - 1].type;
+        WasmType expected = callee->signature.args.data[num_args - 1].type;
         check_type_arg(parser, t.range.start, arg_type, expected, "call_import",
                        num_args - 1);
       }
 
-      if (num_args < callee->args.size) {
+      if (num_args < callee->signature.args.size) {
         FATAL_AT(parser, t.range.start,
                  "too few arguments to function. got %d, expected %zd\n",
-                 num_args, callee->args.size);
+                 num_args, callee->signature.args.size);
       }
 
-      type = callee->result_type;
+      type = callee->signature.result_type;
       break;
     }
 
@@ -1820,6 +1822,30 @@ static void parse_type_list(WasmParser* parser,
   }
 }
 
+static void preparse_binding_name(WasmParser* parser,
+                                  WasmBindingVector* bindings,
+                                  size_t index,
+                                  const char* desc) {
+  WasmToken t = read_token(parser);
+  if (t.type == WASM_TOKEN_TYPE_ATOM) {
+    expect_var_name(parser, t);
+    char* name =
+        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+    if (get_binding_by_name(bindings, name) != -1) {
+      free(name);
+      FATAL_AT(parser, t.range.start, "redefinition of %s \"%.*s\"\n", desc,
+               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
+    }
+
+    WasmBinding* binding = wasm_append_binding(bindings);
+    CHECK_ALLOC(parser, binding, t.range.start);
+    binding->name = name;
+    binding->index = index;
+  } else {
+    rewind_token(parser, t);
+  }
+}
+
 static void preparse_binding_list(WasmParser* parser,
                                   WasmVariableVector* variables,
                                   WasmBindingVector* bindings,
@@ -1858,24 +1884,9 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
   CHECK_ALLOC(parser, function, parser->tokenizer.loc);
   memset(function, 0, sizeof(*function));
 
+  preparse_binding_name(parser, &module->function_bindings,
+                        module->functions.size - 1, "function");
   WasmToken t = read_token(parser);
-  if (t.type == WASM_TOKEN_TYPE_ATOM) {
-    /* named function */
-    expect_var_name(parser, t);
-    size_t name_len = t.range.end.pos - t.range.start.pos;
-    char* name = strndup(t.range.start.pos, name_len);
-    if (get_binding_by_name(&module->function_bindings, name) != -1) {
-      free(name);
-      FATAL_AT(parser, t.range.start, "redefinition of function \"%.*s\"\n",
-               (int)name_len, t.range.start.pos);
-    }
-
-    WasmBinding* binding = wasm_append_binding(&module->function_bindings);
-    CHECK_ALLOC(parser, binding, t.range.start);
-    binding->name = name;
-    binding->index = module->functions.size - 1;
-    t = read_token(parser);
-  }
 
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(parser, t);
@@ -1915,6 +1926,41 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
         break;
     }
     t = read_token(parser);
+  }
+}
+
+static void preparse_signature(WasmParser* parser, WasmSignature* sig) {
+  WasmToken t = read_token(parser);
+  if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+    expect_open(parser, t);
+    t = read_token(parser);
+    expect_atom(parser, t);
+    const OpInfo* op_info = get_op_info(t);
+    sig->result_type = WASM_TYPE_VOID;
+
+    switch (op_info ? op_info->op_type : WASM_OP_NONE) {
+      case WASM_OP_PARAM:
+        parse_type_list(parser, &sig->args, 1);
+        t = read_token(parser);
+        if (t.type != WASM_TOKEN_TYPE_OPEN_PAREN) {
+          expect_close(parser, t);
+          break;
+        }
+
+        /* fallthrough to parsing result */
+        t = read_token(parser);
+        expect_atom_op(parser, t, WASM_OP_RESULT, "result");
+
+      case WASM_OP_RESULT:
+        parse_type(parser, &sig->result_type);
+        expect_close(parser, read_token(parser)); /* close result */
+        expect_close(parser, read_token(parser)); /* close sig */
+        break;
+
+      default:
+        unexpected_token(parser, t);
+        break;
+    }
   }
 }
 
@@ -2022,48 +2068,32 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         CHECK_ALLOC(parser, import, t.range.start);
         memset(import, 0, sizeof(*import));
 
+        preparse_binding_name(parser, &module->import_bindings,
+                              module->imports.size - 1, "import");
         WasmToken t = read_token(parser);
-        if (t.type == WASM_TOKEN_TYPE_ATOM) {
-          /* named import */
-          expect_var_name(parser, t);
-          char* name =
-              strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-          if (get_binding_by_name(&module->import_bindings, name) != -1) {
-            free(name);
-            FATAL_AT(parser, t.range.start, "redefinition of import \"%.*s\"\n",
-                     (int)(t.range.end.pos - t.range.start.pos),
-                     t.range.start.pos);
-          }
-
-          WasmBinding* binding = wasm_append_binding(&module->import_bindings);
-          CHECK_ALLOC(parser, binding, t.range.start);
-          binding->name = name;
-          binding->index = module->imports.size - 1;
-          t = read_token(parser);
-        }
 
         expect_string(parser, t);
         import->module_name = dup_string_contents(t);
         t = read_token(parser);
         expect_string(parser, t);
         import->func_name = dup_string_contents(t);
-        t = read_token(parser);
-        /* ( param is required */
+        preparse_signature(parser, &import->signature);
+        break;
+      }
+
+      case WASM_OP_TYPE: {
+        WasmSignature* sig = wasm_append_signature(&module->signatures);
+        CHECK_ALLOC(parser, sig, t.range.start);
+        memset(sig, 0, sizeof(*sig));
+
+        preparse_binding_name(parser, &module->signature_bindings,
+                              module->signatures.size - 1, "signature");
+        WasmToken t = read_token(parser);
         expect_open(parser, t);
         t = read_token(parser);
-        expect_atom_op(parser, t, WASM_OP_PARAM, "param");
-        parse_type_list(parser, &import->args, 1);
-        t = read_token(parser);
-        if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-          expect_open(parser, t);
-          t = read_token(parser);
-          expect_atom_op(parser, t, WASM_OP_RESULT, "result");
-          parse_type(parser, &import->result_type);
-          expect_close(parser, read_token(parser)); /* close result */
-          expect_close(parser, read_token(parser)); /* close import */
-        } else {
-          import->result_type = WASM_TYPE_VOID;
-        }
+        expect_atom_op(parser, t, WASM_OP_FUNC, "func");
+        preparse_signature(parser, sig);
+        expect_close(parser, read_token(parser));
         break;
       }
 
@@ -2081,6 +2111,10 @@ static void wasm_destroy_binding_list(WasmBindingVector* bindings) {
   for (i = 0; i < bindings->size; ++i)
     free(bindings->data[i].name);
   wasm_destroy_binding_vector(bindings);
+}
+
+static void wasm_destroy_signature(WasmSignature* sig) {
+  wasm_destroy_variable_vector(&sig->args);
 }
 
 static void wasm_destroy_module(WasmModule* module) {
@@ -2109,13 +2143,15 @@ static void wasm_destroy_module(WasmModule* module) {
     WasmImport* import = &module->imports.data[i];
     free(import->module_name);
     free(import->func_name);
-    wasm_destroy_variable_vector(&import->args);
+    wasm_destroy_signature(&import->signature);
   }
   wasm_destroy_import_vector(&module->imports);
-  for (i = 0; i < module->segments.size; ++i) {
+  for (i = 0; i < module->segments.size; ++i)
     free(module->segments.data[i].data);
-  }
   wasm_destroy_segment_vector(&module->segments);
+  for (i = 0; i < module->signatures.size; ++i)
+    wasm_destroy_signature(&module->signatures.data[i]);
+  wasm_destroy_signature_vector(&module->signatures);
 }
 
 static void parse_module(WasmParser* parser, WasmModule* module) {
@@ -2185,6 +2221,7 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
       case WASM_OP_GLOBAL:
       case WASM_OP_MEMORY:
       case WASM_OP_IMPORT:
+      case WASM_OP_TYPE:
         /* Skip, this has already been pre-parsed */
         parse_generic(parser);
         break;

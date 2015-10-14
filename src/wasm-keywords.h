@@ -39,7 +39,7 @@ struct OpInfo {
   int access;
 };
 
-#define TOTAL_KEYWORDS 181
+#define TOTAL_KEYWORDS 182
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 19
 #define MIN_HASH_VALUE 18
@@ -72,7 +72,7 @@ hash (str, len)
       433, 433, 433, 433, 433,  15, 433,  10,  25, 115,
         5,  15,  10,   0,  80,   0, 433,  50,  30, 140,
        50, 105,  15,  60,   5,   5,   5,  55,  25,  20,
-      150,  20,   5, 433, 433, 433, 433, 433, 433, 433,
+      150,  70,   5, 433, 433, 433, 433, 433, 433, 433,
       433, 433, 433, 433, 433, 433, 433, 433, 433, 433,
       433, 433, 433, 433, 433, 433, 433, 433, 433, 433,
       433, 433, 433, 433, 433, 433, 433, 433, 433, 433,
@@ -268,7 +268,9 @@ in_word_set (str, len)
       {"i64.sub", WASM_OP_BINARY, WASM_OPCODE_I64_SUB, WASM_TYPE_I64},
 #line 45 "src/wasm-keywords.gperf"
       {"f32.sqrt", WASM_OP_UNARY, WASM_OPCODE_F32_SQRT, WASM_TYPE_F32},
-      {""}, {""},
+#line 191 "src/wasm-keywords.gperf"
+      {"type", WASM_OP_TYPE},
+      {""},
 #line 72 "src/wasm-keywords.gperf"
       {"f64.ne", WASM_OP_COMPARE, WASM_OPCODE_F64_NE, WASM_TYPE_F64},
 #line 118 "src/wasm-keywords.gperf"
@@ -420,8 +422,7 @@ in_word_set (str, len)
       {"i64.shr_u", WASM_OP_BINARY, WASM_OPCODE_I64_SHR, WASM_TYPE_I64},
 #line 168 "src/wasm-keywords.gperf"
       {"i64.trunc_s/f64", WASM_OP_CONVERT, WASM_OPCODE_I64_SCONVERT_F64, WASM_TYPE_I64, WASM_TYPE_F64},
-#line 180 "src/wasm-keywords.gperf"
-      {"memory", WASM_OP_MEMORY},
+      {""},
 #line 68 "src/wasm-keywords.gperf"
       {"f64.min", WASM_OP_BINARY, WASM_OPCODE_F64_MIN, WASM_TYPE_F64},
       {""},
@@ -439,14 +440,10 @@ in_word_set (str, len)
       {"i64.store32", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
 #line 11 "src/wasm-keywords.gperf"
       {"assert_return_nan", WASM_OP_ASSERT_RETURN_NAN},
-#line 185 "src/wasm-keywords.gperf"
-      {"resize_memory", WASM_OP_RESIZE_MEMORY, WASM_OPCODE_RESIZE_MEMORY_I32},
+      {""},
 #line 81 "src/wasm-keywords.gperf"
       {"get_local", WASM_OP_GET_LOCAL, WASM_OPCODE_GET_LOCAL},
-      {""},
-#line 179 "src/wasm-keywords.gperf"
-      {"memory_size", WASM_OP_MEMORY_SIZE, WASM_OPCODE_INVALID},
-      {""}, {""},
+      {""}, {""}, {""}, {""},
 #line 188 "src/wasm-keywords.gperf"
       {"set_local", WASM_OP_SET_LOCAL, WASM_OPCODE_SET_LOCAL},
       {""}, {""},
@@ -502,7 +499,9 @@ in_word_set (str, len)
       {"call_import", WASM_OP_CALL_IMPORT, WASM_OPCODE_CALL},
 #line 171 "src/wasm-keywords.gperf"
       {"i64.xor", WASM_OP_BINARY, WASM_OPCODE_I64_XOR, WASM_TYPE_I64},
-      {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 179 "src/wasm-keywords.gperf"
+      {"memory_size", WASM_OP_MEMORY_SIZE, WASM_OPCODE_INVALID},
 #line 125 "src/wasm-keywords.gperf"
       {"i32.xor", WASM_OP_BINARY, WASM_OPCODE_I32_XOR, WASM_TYPE_I32},
       {""}, {""},
@@ -529,7 +528,9 @@ in_word_set (str, len)
 #line 73 "src/wasm-keywords.gperf"
       {"f64.promote/f32", WASM_OP_CONVERT, WASM_OPCODE_F64_CONVERT_F32, WASM_TYPE_F64, WASM_TYPE_F32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
+      {""},
+#line 180 "src/wasm-keywords.gperf"
+      {"memory", WASM_OP_MEMORY},
 #line 55 "src/wasm-keywords.gperf"
       {"f64.convert_s/i64", WASM_OP_CONVERT, WASM_OPCODE_F64_SCONVERT_I64, WASM_TYPE_F64, WASM_TYPE_I64},
       {""}, {""},
@@ -542,7 +543,9 @@ in_word_set (str, len)
       {""}, {""}, {""}, {""},
 #line 67 "src/wasm-keywords.gperf"
       {"f64.max", WASM_OP_BINARY, WASM_OPCODE_F64_MAX, WASM_TYPE_F64},
-      {""}, {""}, {""}, {""},
+#line 185 "src/wasm-keywords.gperf"
+      {"resize_memory", WASM_OP_RESIZE_MEMORY, WASM_OPCODE_RESIZE_MEMORY_I32},
+      {""}, {""}, {""},
 #line 38 "src/wasm-keywords.gperf"
       {"f32.max", WASM_OP_BINARY, WASM_OPCODE_F32_MAX, WASM_TYPE_F32},
       {""}, {""},

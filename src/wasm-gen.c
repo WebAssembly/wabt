@@ -360,13 +360,13 @@ static void out_module_header(Context* ctx,
     if (ctx->options->verbose)
       printf("; import header %d\n", i);
 
-    out_u8(buf, import->args.size, "import num args");
-    out_u8(buf, wasm_type_to_v8_type(import->result_type),
+    out_u8(buf, import->signature.args.size, "import num args");
+    out_u8(buf, wasm_type_to_v8_type(import->signature.result_type),
            "import result_type");
 
     int j;
-    for (j = 0; j < import->args.size; ++j)
-      out_u8(buf, wasm_type_to_v8_type(import->args.data[j].type),
+    for (j = 0; j < import->signature.args.size; ++j)
+      out_u8(buf, wasm_type_to_v8_type(import->signature.args.data[j].type),
              "import arg type");
 
     out_u32(buf, 0, "import name offset");
@@ -452,10 +452,11 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
   uint32_t offset = FUNC_HEADERS_OFFSET(module->globals.size);
   for (i = 0; i < module->imports.size; ++i) {
     WasmImport* import = &module->imports.data[i];
-    out_u32_at(buf, offset + FUNC_HEADER_NAME_OFFSET(import->args.size),
+    out_u32_at(buf,
+               offset + FUNC_HEADER_NAME_OFFSET(import->signature.args.size),
                buf->size, "FIXUP import name offset");
     out_cstr(buf, import->func_name, "import name");
-    offset += FUNC_HEADER_SIZE(import->args.size);
+    offset += FUNC_HEADER_SIZE(import->signature.args.size);
   }
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
@@ -539,7 +540,7 @@ static void before_module(WasmModule* module, void* user_data) {
   uint32_t offset = FUNC_HEADERS_OFFSET(module->globals.size);
   /* skip past the import headers */
   for (i = 0; i < module->imports.size; ++i)
-    offset += FUNC_HEADER_SIZE(module->imports.data[i].args.size);
+    offset += FUNC_HEADER_SIZE(module->imports.data[i].signature.args.size);
 
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];

@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (import "foo" "bar"))
-(;; STDERR ;;;
-module/bad-import-no-param.txt:2:28: expected '(', not ")"
-;;; STDERR ;;)

@@ -234,6 +234,12 @@ typedef struct WasmExportedNameList {
   struct WasmExportedNameList* next;
 } WasmExportedNameList;
 
+typedef struct WasmSignature {
+  WasmType result_type;
+  WasmVariableVector args;
+} WasmSignature;
+DECLARE_VECTOR(signature, WasmSignature);
+
 typedef struct WasmFunction {
   WasmType result_type;
   WasmVariableVector locals; /* Includes args, they're at the start */
@@ -252,8 +258,7 @@ DECLARE_VECTOR(function, WasmFunction)
 typedef struct WasmImport {
   char* module_name;
   char* func_name;
-  WasmType result_type;
-  WasmVariableVector args;
+  WasmSignature signature;
 } WasmImport;
 DECLARE_VECTOR(import, WasmImport)
 
@@ -267,6 +272,8 @@ typedef struct WasmSegment {
 DECLARE_VECTOR(segment, WasmSegment)
 
 typedef struct WasmModule {
+  WasmSignatureVector signatures;
+  WasmBindingVector signature_bindings;
   WasmFunctionVector functions;
   WasmBindingVector function_bindings;
   WasmVariableVector globals;
