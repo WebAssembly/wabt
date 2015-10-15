@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (local i32) (param i32)))
 (;; STDERR ;;;
-func/bad-param-after-local.txt:2:28: parameters must come before locals
+func/bad-param-after-local.txt:2:28: parameters cannot be specified after local definition
 ;;; STDERR ;;)

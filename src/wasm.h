@@ -247,6 +247,7 @@ typedef struct WasmFunction {
   WasmLabelVector labels;
   WasmBindingVector label_bindings;
   int num_args;
+  WasmSignature* signature; /* May be NULL */
 
   /* exported and exported_name won't be valid until after the before_export
    * callback */

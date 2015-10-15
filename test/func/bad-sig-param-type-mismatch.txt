@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module
+  (type $t (func (param i32 f32)))
+  (func (type $t) (param f32 f32)))
+(;; STDERR ;;;
+func/bad-sig-param-type-mismatch.txt:4:34: expected argument 0 to have type i32, got f32
+;;; STDERR ;;)

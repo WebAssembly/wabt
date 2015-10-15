@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module
+  (type $t (func (param i32 f32)))
+  (func (type $t) (param i32)))
+(;; STDERR ;;;
+func/bad-sig-too-few-params.txt:4:30: expected 2 arguments, got 1
+;;; STDERR ;;)

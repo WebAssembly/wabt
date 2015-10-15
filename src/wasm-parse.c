@@ -1098,6 +1098,11 @@ static int parse_local_var(WasmParser* parser, WasmFunction* function) {
                    "local");
 }
 
+static int parse_signature_var(WasmParser* parser, WasmModule* module) {
+  return parse_var(parser, &module->signature_bindings, module->signatures.size,
+                   "signature");
+}
+
 /* Labels are indexed in reverse order (0 is the most recent, etc.), so handle
  * them separately */
 static int parse_label_var(WasmParser* parser, WasmFunction* function) {
@@ -1778,6 +1783,7 @@ static int parse_func(WasmParser* parser,
       case WASM_OP_PARAM:
       case WASM_OP_RESULT:
       case WASM_OP_LOCAL:
+      case WASM_OP_TYPE:
         /* Skip, this has already been pre-parsed */
         parse_generic(parser);
         break;
@@ -1865,6 +1871,44 @@ static void preparse_binding_list(WasmParser* parser,
   }
 }
 
+static void check_or_copy_func_signature(WasmParser* parser,
+                                         WasmSourceLocation loc,
+                                         WasmFunction* function,
+                                         int seen_param_or_result) {
+  /* Finished the params/result, check it against the specified signature
+   if there is one */
+  if (function->signature) {
+    int i;
+    if (seen_param_or_result) {
+      if (function->num_args != function->signature->args.size)
+        FATAL_AT(parser, loc, "expected %d arguments, got %d\n",
+                 function->signature->args.size, function->num_args);
+      if (function->signature->result_type != function->result_type)
+        FATAL_AT(parser, loc,
+                 "expected result type to be %s, got %s\n",
+                 s_type_names[function->signature->result_type],
+                 s_type_names[function->result_type]);
+
+      for (i = 0; i < function->num_args; ++i) {
+        if (function->signature->args.data[i].type !=
+            function->locals.data[i].type)
+          FATAL_AT(parser, loc,
+                   "expected argument %d to have type %s, got %s\n", i,
+                   s_type_names[function->signature->args.data[i].type],
+                   s_type_names[function->locals.data[i].type]);
+      }
+    } else {
+      /* Copy args from signature */
+      for (i = 0; i < function->signature->args.size; ++i) {
+        WasmVariable* variable = wasm_append_variable(&function->locals);
+        CHECK_ALLOC(parser, variable, loc);
+        variable->type = function->signature->args.data[i].type;
+      }
+      function->result_type = function->signature->result_type;
+    }
+  }
+}
+
 static void preparse_func(WasmParser* parser, WasmModule* module) {
   WasmFunction* function = wasm_append_function(&module->functions);
   CHECK_ALLOC(parser, function, parser->tokenizer.loc);
@@ -1874,6 +1918,27 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
                         module->functions.size - 1, "function", 0);
   WasmToken t = read_token(parser);
 
+  enum State {
+    STATE_NONE,
+    STATE_TYPE,
+    STATE_PARAM,
+    STATE_RESULT,
+    STATE_LOCAL,
+    STATE_BODY,
+  };
+  const char* state_name[] = {
+    "function start",
+    "type definition",
+    "param definition",
+    "result definition",
+    "local definition",
+    "function body",
+  };
+  enum State last_state = STATE_NONE;
+  enum State state = STATE_NONE;
+
+  int seen_param = 0;
+  int seen_result = 0;
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(parser, t);
     t = read_token(parser);
@@ -1881,17 +1946,70 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
 
     const OpInfo* op_info = get_op_info(t);
     switch (op_info ? op_info->op_type : WASM_OP_NONE) {
-      case WASM_OP_PARAM:
-        /* Don't allow adding params after locals */
-        if (function->num_args != function->locals.size)
+      case WASM_OP_TYPE: {
+        if (state > STATE_TYPE)
+          FATAL_AT(parser, t.range.start, "type signature must be first\n");
+        else if (state == STATE_TYPE && function->signature)
           FATAL_AT(parser, t.range.start,
-                   "parameters must come before locals\n");
+                   "type signature cannot be defined twice\n");
+        state = STATE_TYPE;
+        break;
+      }
+
+      case WASM_OP_PARAM: {
+        if (state > STATE_PARAM)
+          FATAL_AT(parser, t.range.start,
+                   "parameters cannot be specified after %s\n",
+                   state_name[state]);
+        state = STATE_PARAM;
+        seen_param = 1;
+        break;
+      }
+
+      case WASM_OP_RESULT: {
+        if (state > STATE_RESULT)
+          FATAL_AT(parser, t.range.start,
+                   "result cannot be specified after %s\n", state_name[state]);
+        else if (state == STATE_RESULT && seen_result)
+          FATAL_AT(parser, t.range.start, "result cannot be defined twice\n");
+        state = STATE_RESULT;
+        seen_result = 1;
+        break;
+      }
+
+      case WASM_OP_LOCAL:
+        if (state > STATE_LOCAL)
+          FATAL_AT(parser, t.range.start,
+                   "locals cannot be specified after %s\n", state_name[state]);
+        state = STATE_LOCAL;
+        break;
+
+      default:
+        state = STATE_BODY;
+        break;
+    }
+
+    if (last_state <= STATE_RESULT && state > STATE_RESULT)
+      check_or_copy_func_signature(parser, t.range.start, function,
+                                   seen_param || seen_result);
+
+    switch (state) {
+      case STATE_TYPE: {
+        int index = parse_signature_var(parser, module);
+        expect_close(parser, read_token(parser));
+        WasmSignature* sig = &module->signatures.data[index];
+        function->signature = sig;
+        break;
+      }
+
+      case STATE_PARAM: {
         preparse_binding_list(parser, &function->locals,
                               &function->local_bindings, "function argument");
         function->num_args = function->locals.size;
         break;
+      }
 
-      case WASM_OP_RESULT: {
+      case STATE_RESULT: {
         t = read_token(parser);
         WasmType type;
         if (!match_type(t, &type))
@@ -1901,18 +2019,28 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
         break;
       }
 
-      case WASM_OP_LOCAL:
+      case STATE_LOCAL:
         preparse_binding_list(parser, &function->locals,
                               &function->local_bindings, "local");
         break;
 
-      default:
+      case STATE_BODY:
         rewind_token(parser, t);
         parse_generic(parser);
         break;
+
+      default:
+        assert(0);
+        break;
     }
+
     t = read_token(parser);
+    last_state = state;
   }
+
+  if (last_state <= STATE_RESULT)
+    check_or_copy_func_signature(parser, t.range.start, function,
+                                 seen_param || seen_result);
 }
 
 static void preparse_signature(WasmParser* parser, WasmSignature* sig) {
@@ -2138,6 +2266,7 @@ static void wasm_destroy_module(WasmModule* module) {
   for (i = 0; i < module->signatures.size; ++i)
     wasm_destroy_signature(&module->signatures.data[i]);
   wasm_destroy_signature_vector(&module->signatures);
+  wasm_destroy_binding_list(&module->signature_bindings);
 }
 
 static void parse_module(WasmParser* parser, WasmModule* module) {
