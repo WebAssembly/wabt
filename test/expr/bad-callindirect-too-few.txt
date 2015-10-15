@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module
+  (type $t (func (param i32 i32)))
+  (func
+    (call_indirect $t (i32.const 0))))
+(;; STDERR ;;;
+expr/bad-callindirect-too-few.txt:5:36: too few arguments to function. got 1, expected 2
+;;; STDERR ;;)

@@ -1313,36 +1313,44 @@ static WasmType parse_switch(WasmParser* parser,
   return type;
 }
 
-static WasmType parse_call_args(WasmParser* parser,
-                                WasmModule* module,
-                                WasmFunction* function,
-                                WasmFunction* callee,
-                                const char* desc) {
+static void parse_call_args_generic(WasmParser* parser,
+                                    WasmModule* module,
+                                    WasmFunction* function,
+                                    WasmVariableVector* args,
+                                    int num_args,
+                                    const char* desc) {
   WasmToken t;
-  int num_args = 0;
+  int parsed_args = 0;
   while (1) {
     t = read_token(parser);
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
       break;
     rewind_token(parser, t);
-    if (++num_args > callee->num_args) {
+    if (++parsed_args > num_args) {
       FATAL_AT(parser, t.range.start,
                "too many arguments to function. got %d, expected %d\n",
-               num_args, callee->num_args);
+               parsed_args, num_args);
     }
     WasmType arg_type = parse_expr(parser, module, function, NULL);
-    WasmType expected = callee->locals.data[num_args - 1].type;
+    WasmType expected = args->data[parsed_args - 1].type;
     check_type_arg(parser, t.range.start, arg_type, expected, desc,
-                   num_args - 1);
+                   parsed_args - 1);
   }
 
-  if (num_args < callee->num_args) {
+  if (parsed_args < num_args) {
     FATAL_AT(parser, t.range.start,
-             "too few arguments to function. got %d, expected %d\n", num_args,
-             callee->num_args);
+             "too few arguments to function. got %d, expected %d\n",
+             parsed_args, num_args);
   }
+}
 
-  return callee->result_type;
+static void parse_call_args(WasmParser* parser,
+                            WasmModule* module,
+                            WasmFunction* function,
+                            WasmFunction* callee,
+                            const char* desc) {
+  parse_call_args_generic(parser, module, function, &callee->locals,
+                          callee->num_args, desc);
 }
 
 static WasmType parse_expr(WasmParser* parser,
@@ -1454,7 +1462,8 @@ static WasmType parse_expr(WasmParser* parser,
       int index = parse_function_var(parser, module);
       CALLBACK(parser, before_call, (index, parser->user_data));
       WasmFunction* callee = &module->functions.data[index];
-      type = parse_call_args(parser, module, function, callee, "call");
+      parse_call_args(parser, module, function, callee, "call");
+      type = callee->result_type;
       break;
     }
 
@@ -1490,9 +1499,16 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
-    case WASM_OP_CALL_INDIRECT:
-      /* TODO(binji) */
+    case WASM_OP_CALL_INDIRECT: {
+      check_opcode(parser, t.range.start, op_info->opcode);
+      int index = parse_signature_var(parser, module);
+      WasmSignature* sig = &module->signatures.data[index];
+      CALLBACK(parser, before_call_indirect, (index, parser->user_data));
+      parse_call_args_generic(parser, module, function, &sig->args,
+                              sig->args.size, "call_indirect");
+      type = sig->result_type;
       break;
+    }
 
     case WASM_OP_COMPARE: {
       check_opcode(parser, t.range.start, op_info->opcode);
@@ -2429,10 +2445,9 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
 
   WasmFunction dummy_function = {};
   WasmFunction* invokee = &module->functions.data[function_index];
-  WasmType result_type =
-      parse_call_args(parser, module, &dummy_function, invokee, "invoke");
+  parse_call_args(parser, module, &dummy_function, invokee, "invoke");
   CALLBACK(parser, after_invoke, (cookie, parser->user_data));
-  return result_type;
+  return invokee->result_type;
 }
 
 int wasm_parse_file(WasmSource* source,

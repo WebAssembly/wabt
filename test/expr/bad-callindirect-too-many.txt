@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module
+  (type $t (func (param i32 i32)))
+  (func
+    (call_indirect $t (i32.const 0) (i32.const 1) (i32.const 2))))
+(;; STDERR ;;;
+expr/bad-callindirect-too-many.txt:5:51: too many arguments to function. got 3, expected 2
+;;; STDERR ;;)
