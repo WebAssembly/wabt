@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module
+  (func (param i32))
+  (table 0)
+  (table 0))
+(;; STDERR ;;;
+module/bad-table-too-many.txt:5:4: only one table allowed
+;;; STDERR ;;)

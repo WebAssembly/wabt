@@ -142,6 +142,7 @@ DEFINE_VECTOR(function, WasmFunction)
 DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
 DEFINE_VECTOR(label, WasmLabel)
+DEFINE_VECTOR(function_ptr, WasmFunctionPtr)
 
 typedef struct NameTypePair {
   const char* name;
@@ -2267,6 +2268,7 @@ static void wasm_destroy_module(WasmModule* module) {
     wasm_destroy_signature(&module->signatures.data[i]);
   wasm_destroy_signature_vector(&module->signatures);
   wasm_destroy_binding_list(&module->signature_bindings);
+  wasm_destroy_function_ptr_vector(&module->function_table);
 }
 
 static void parse_module(WasmParser* parser, WasmModule* module) {
@@ -2278,6 +2280,7 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
   preparse_module(parser, module);
   CALLBACK(parser, before_module, (module, parser->user_data));
 
+  int seen_table = 0;
   int function_index = 0;
   t = read_token(parser);
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
@@ -2329,9 +2332,23 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
         break;
       }
 
-      case WASM_OP_TABLE:
-        parse_generic(parser);
+      case WASM_OP_TABLE: {
+        if (seen_table)
+          FATAL_AT(parser, t.range.start, "only one table allowed\n");
+        seen_table = 1;
+        t = read_token(parser);
+        while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+          rewind_token(parser, t);
+          WasmFunctionPtr* function_ptr =
+              wasm_append_function_ptr(&module->function_table);
+          CHECK_ALLOC(parser, function_ptr, t.range.start);
+          int index = parse_function_var(parser, module);
+          WasmFunction* function = &module->functions.data[index];
+          *function_ptr = function;
+          t = read_token(parser);
+        }
         break;
+      }
 
       case WASM_OP_GLOBAL:
       case WASM_OP_MEMORY:

@@ -256,6 +256,9 @@ typedef struct WasmFunction {
 } WasmFunction;
 DECLARE_VECTOR(function, WasmFunction)
 
+typedef WasmFunction* WasmFunctionPtr;
+DECLARE_VECTOR(function_ptr, WasmFunctionPtr)
+
 typedef struct WasmImport {
   char* module_name;
   char* func_name;
@@ -282,6 +285,7 @@ typedef struct WasmModule {
   WasmImportVector imports;
   WasmBindingVector import_bindings;
   WasmSegmentVector segments;
+  WasmFunctionPtrVector function_table;
   uint32_t initial_memory_size;
   uint32_t max_memory_size;
 } WasmModule;
