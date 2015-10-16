@@ -1,3 +1,3 @@
 (module
   (func
-    (resize_memory (i32.const 100))))
+    (grow_memory (i32.const 100))))

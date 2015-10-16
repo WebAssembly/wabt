@@ -898,7 +898,7 @@ static void after_page_size(void* user_data) {
   out_opcode(&ctx->buf, WASM_OPCODE_PAGE_SIZE);
 }
 
-static void before_resize_memory(void* user_data) {
+static void before_grow_memory(void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_RESIZE_MEMORY_I32);
 }
@@ -1333,7 +1333,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.after_memory_size = after_memory_size;
   callbacks.after_nop = after_nop;
   callbacks.after_page_size = after_page_size;
-  callbacks.before_resize_memory = before_resize_memory;
+  callbacks.before_grow_memory = before_grow_memory;
   callbacks.before_return = before_return;
   callbacks.before_set_local = before_set_local;
   callbacks.before_store = before_store;

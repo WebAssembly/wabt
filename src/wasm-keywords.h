@@ -522,9 +522,7 @@ in_word_set (str, len)
       {""}, {""}, {""}, {""},
 #line 99 "src/wasm-keywords.gperf"
       {"i32.load16_u", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 1},
-#line 186 "src/wasm-keywords.gperf"
-      {"resize_memory", WASM_OP_RESIZE_MEMORY, WASM_OPCODE_RESIZE_MEMORY_I32},
-      {""}, {""},
+      {""}, {""}, {""},
 #line 148 "src/wasm-keywords.gperf"
       {"i64.load8_u", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 0},
       {""},
@@ -580,11 +578,13 @@ in_word_set (str, len)
       {""}, {""}, {""}, {""},
 #line 25 "src/wasm-keywords.gperf"
       {"f32.convert_s/i32", WASM_OP_CONVERT, WASM_OPCODE_F32_SCONVERT_I32, WASM_TYPE_F32, WASM_TYPE_I32},
+      {""}, {""}, {""},
+#line 186 "src/wasm-keywords.gperf"
+      {"grow_memory", WASM_OP_GROW_MEMORY, WASM_OPCODE_RESIZE_MEMORY_I32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 136 "src/wasm-keywords.gperf"
       {"i64.extend_u/i32", WASM_OP_CONVERT, WASM_OPCODE_I64_UCONVERT_I32, WASM_TYPE_I64, WASM_TYPE_I32},
       {""}, {""}, {""}, {""}, {""},

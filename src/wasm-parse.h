@@ -68,7 +68,7 @@ typedef struct WasmParserCallbacks {
   void (*after_memory_size)(void* user_data);
   void (*after_nop)(void* user_data);
   void (*after_page_size)(void* user_data);
-  void (*before_resize_memory)(void* user_data);
+  void (*before_grow_memory)(void* user_data);
   void (*before_return)(void* user_data);
   void (*after_return)(WasmType type, void* user_data);
   void (*before_set_local)(int index, void* user_data);
