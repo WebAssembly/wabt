@@ -983,6 +983,20 @@ static void before_store_global(WasmParserCallbackInfo* info, int index) {
   out_leb128(&ctx->buf, index, "global index");
 }
 
+static void before_switch(WasmParserCallbackInfo* info, int with_label) {
+  Context* ctx = info->user_data;
+  if (with_label)
+    push_label_info(ctx, LABEL_TYPE_BLOCK);
+  info->cookie = (WasmParserCookie)with_label;
+}
+
+static void after_switch(WasmParserCallbackInfo* info) {
+  int with_label = (int)info->cookie;
+  Context* ctx = info->user_data;
+  if (with_label)
+    pop_label_info(ctx);
+}
+
 static void before_unary(WasmParserCallbackInfo* info, enum WasmOpcode opcode) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, opcode);
@@ -1416,6 +1430,8 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.before_set_local = before_set_local;
   callbacks.before_store = before_store;
   callbacks.before_store_global = before_store_global;
+  callbacks.before_switch = before_switch;
+  callbacks.after_switch = after_switch;
   callbacks.before_unary = before_unary;
   callbacks.assert_invalid_error = assert_invalid_error;
 

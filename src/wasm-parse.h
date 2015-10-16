@@ -78,8 +78,9 @@ typedef struct WasmParserCallbacks {
                        enum WasmOpcode opcode,
                        WasmMemType mem_type,
                        uint32_t alignment);
+
   void (*before_store_global)(WasmParserCallbackInfo* info, int index);
-  void (*before_switch)(WasmParserCallbackInfo* info);
+  void (*before_switch)(WasmParserCallbackInfo* info, int with_label);
   void (*after_switch)(WasmParserCallbackInfo* info);
   void (*before_switch_case)(WasmParserCallbackInfo* info, WasmNumber number);
   void (*after_switch_case)(WasmParserCallbackInfo* info,

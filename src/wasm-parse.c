@@ -1249,14 +1249,24 @@ static void parse_literal(WasmParser* parser,
 static WasmType parse_switch(WasmParser* parser,
                              WasmModule* module,
                              WasmFunction* function,
-                             WasmType in_type) {
+                             WasmType in_type,
+                             WasmContinuation* out_continuation) {
+  WasmToken t = read_token(parser);
+  WasmContinuation continuation = WASM_CONTINUATION_NORMAL;
+  WasmLabel* label = NULL;
+  if (t.type == WASM_TOKEN_TYPE_ATOM)
+    label = push_label(parser, function, t);
+  else
+    rewind_token(parser, t);
+  int with_label = label != NULL;
+
   WasmParserCookie switch_cookie =
-      CALLBACK(parser, before_switch, (&parser->info));
+      CALLBACK(parser, before_switch, (&parser->info, with_label));
   WasmType cond_type = parse_expr(parser, module, function, NULL);
   check_type(parser, parser->tokenizer.loc, cond_type, in_type,
              " in switch condition");
   WasmType type = WASM_TYPE_ALL;
-  WasmToken t = read_token(parser);
+  t = read_token(parser);
   while (1) {
     expect_open(parser, t);
     WasmToken open = t;
@@ -1289,8 +1299,11 @@ static WasmType parse_switch(WasmParser* parser,
           rewind_token(parser, t);
         }
 
-        if (case_continuation & WASM_CONTINUATION_NORMAL && fallthrough == 0)
-          type &= value_type;
+        if (fallthrough == 0) {
+          continuation |= case_continuation;
+          if (case_continuation & WASM_CONTINUATION_NORMAL)
+            type &= value_type;
+        }
       } else {
         /* Empty case statement, implicit fallthrough */
         fallthrough = 1;
@@ -1305,6 +1318,7 @@ static WasmType parse_switch(WasmParser* parser,
       rewind_token(parser, open);
       WasmType value_type =
           parse_expr(parser, module, function, &case_continuation);
+      continuation |= case_continuation;
       if (case_continuation & WASM_CONTINUATION_NORMAL)
         type &= value_type;
       expect_close(parser, read_token(parser));
@@ -1315,7 +1329,14 @@ static WasmType parse_switch(WasmParser* parser,
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
       break;
   }
+  if (label) {
+    type = check_label_type(parser, t.range.start, label, type, continuation,
+                            " of switch expression");
+    continuation = pop_break_continuation(continuation);
+    pop_label(function);
+  }
   CALLBACK_COOKIE(parser, after_switch, switch_cookie, (&parser->info));
+  *out_continuation = continuation;
   return type;
 }
 
@@ -1766,7 +1787,8 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_SWITCH:
-      type = parse_switch(parser, module, function, op_info->type);
+      type =
+          parse_switch(parser, module, function, op_info->type, &continuation);
       break;
 
     case WASM_OP_UNARY: {
