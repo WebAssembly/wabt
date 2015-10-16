@@ -8,6 +8,7 @@ typedef struct WasmGenOptions {
   int multi_module;
   int multi_module_verbose;
   enum WasmParserTypeCheck type_check;
+  int br_if;
 } WasmGenOptions;
 
 int wasm_gen_file(struct WasmSource* source, WasmGenOptions* options);

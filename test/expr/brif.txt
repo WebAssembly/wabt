@@ -1,0 +1,5 @@
+;;; FLAGS: --br-if
+(module
+  (func
+    (label $foo
+      (br_if 0 (i32.const 1)))))

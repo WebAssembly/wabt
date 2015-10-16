@@ -18,6 +18,7 @@ enum {
   FLAG_MULTI_MODULE_VERBOSE,
   FLAG_TYPECHECK_SPEC,
   FLAG_TYPECHECK_V8,
+  FLAG_BR_IF,
   NUM_FLAGS
 };
 
@@ -29,6 +30,7 @@ static WasmParserTypeCheck s_parser_type_check =
     WASM_PARSER_TYPE_CHECK_V8_NATIVE;
 static int s_multi_module;
 static int s_multi_module_verbose;
+static int s_br_if;
 
 static struct option s_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
@@ -39,6 +41,7 @@ static struct option s_long_options[] = {
     {"multi-module-verbose", no_argument, NULL, 0},
     {"typecheck-spec", no_argument, NULL, 0},
     {"typecheck-v8", no_argument, NULL, 0},
+    {"br-if", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(s_long_options));
@@ -56,6 +59,7 @@ static OptionHelp s_option_help[] = {
      "parse a file with multiple modules and assertions, like the spec tests"},
     {FLAG_MULTI_MODULE_VERBOSE, NULL,
      "print logging messages when running multi-module files"},
+    {FLAG_BR_IF, NULL, "use br_if and loops without explicit branches"},
     {NUM_FLAGS, NULL},
 };
 
@@ -141,6 +145,10 @@ static void parse_options(int argc, char** argv) {
           case FLAG_TYPECHECK_V8:
             s_parser_type_check = WASM_PARSER_TYPE_CHECK_V8_NATIVE;
             break;
+
+          case FLAG_BR_IF:
+            s_br_if = 1;
+            break;
         }
         break;
 
@@ -208,6 +216,7 @@ int main(int argc, char** argv) {
   options.multi_module = s_multi_module;
   options.multi_module_verbose = s_multi_module_verbose;
   options.type_check = s_parser_type_check;
+  options.br_if = s_br_if;
   int result = wasm_gen_file(&source, &options);
   free(data);
   return result;

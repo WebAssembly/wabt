@@ -1290,6 +1290,10 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.before_unary = before_unary;
   callbacks.assert_invalid_error = assert_invalid_error;
 
+  WasmParserOptions parser_options = {};
+  parser_options.type_check = options->type_check;
+  parser_options.br_if = options->br_if;
+
   int result;
   if (options->multi_module) {
     if (options->outfile) {
@@ -1308,7 +1312,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
       js_file_start(&ctx);
     }
     result =
-        wasm_parse_file(source, &callbacks, options->type_check);
+        wasm_parse_file(source, &callbacks, &parser_options);
     if (options->outfile) {
       js_module_end(&ctx);
       js_file_end(&ctx);
@@ -1316,7 +1320,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
     }
   } else {
     result =
-        wasm_parse_module(source, &callbacks, options->type_check);
+        wasm_parse_module(source, &callbacks, &parser_options);
     if (result == 0 && options->outfile)
       write_output_buffer(&ctx.buf, options->outfile);
   }

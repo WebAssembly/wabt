@@ -1,0 +1,5 @@
+;;; FLAGS: --br-if
+(module
+  (func
+    (block $foo
+      (br_if $foo (i32.const 1)))))

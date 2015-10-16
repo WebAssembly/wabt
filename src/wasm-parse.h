@@ -40,6 +40,8 @@ typedef struct WasmParserCallbacks {
                                    int label_depth,
                                    void* user_data);
   void (*after_break)(WasmParserCookie cookie, void* user_data);
+  WasmParserCookie (*before_br_if)(int label_depth, void* user_data);
+  void (*after_br_if)(WasmParserCookie cookie, void* user_data);
   void (*before_call)(int function_index, void* user_data);
   void (*before_call_import)(int import_index, void* user_data);
   void (*before_call_indirect)(int signature_index, void* user_data);
@@ -113,12 +115,17 @@ typedef enum WasmParserTypeCheck {
   WASM_PARSER_TYPE_CHECK_V8_NATIVE,
 } WasmParserTypeCheck;
 
+typedef struct WasmParserOptions {
+  WasmParserTypeCheck type_check;
+  int br_if;
+} WasmParserOptions;
+
 EXTERN_C int wasm_parse_module(WasmSource* source,
                                WasmParserCallbacks* parser,
-                               WasmParserTypeCheck type_check);
+                               WasmParserOptions* options);
 EXTERN_C int wasm_parse_file(WasmSource* source,
                              WasmParserCallbacks* parser,
-                             WasmParserTypeCheck type_check);
+                             WasmParserOptions* options);
 EXTERN_C void wasm_copy_segment_data(WasmSegmentData data,
                                      char* dest,
                                      size_t size);

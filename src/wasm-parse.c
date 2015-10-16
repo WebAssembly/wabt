@@ -42,6 +42,7 @@ typedef enum WasmOpType {
   WASM_OP_BINARY,
   WASM_OP_BLOCK,
   WASM_OP_BREAK,
+  WASM_OP_BR_IF,
   WASM_OP_CALL,
   WASM_OP_CALL_IMPORT,
   WASM_OP_CALL_INDIRECT,
@@ -117,8 +118,8 @@ typedef struct WasmTokenizer {
 
 typedef struct WasmParser {
   WasmParserCallbacks* callbacks;
+  WasmParserOptions* options;
   WasmTokenizer tokenizer;
-  WasmParserTypeCheck type_check;
   jmp_buf jump_buf;
   void* user_data; /* copied from callbacks->user_data, for convenience */
 } WasmParser;
@@ -963,10 +964,10 @@ static WasmType check_label_type(WasmParser* parser,
                                  WasmType type,
                                  WasmContinuation continuation,
                                  const char* desc) {
-  if (parser->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
+  if (parser->options->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
     return type & label->type;
   } else {
-    assert(parser->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
+    assert(parser->options->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
     if (label->type != WASM_TYPE_ALL) {
       if (type != WASM_TYPE_VOID || continuation & WASM_CONTINUATION_NORMAL) {
         check_type(parser, loc, type, label->type, desc);
@@ -975,6 +976,18 @@ static WasmType check_label_type(WasmParser* parser,
     } else {
       return WASM_TYPE_VOID;
     }
+  }
+}
+
+static void check_break_depth(WasmParser* parser,
+                              WasmSourceLocation loc,
+                              WasmFunction* function,
+                              int depth) {
+  if (depth == 0 && function->label_bindings.size == 0) {
+    FATAL_AT(parser, loc, "label variable out of range (max 0)\n");
+  } else if (depth > MAX_BREAK_DEPTH) {
+    FATAL_AT(parser, loc, "break depth %d not supported (max %d)\n", depth,
+             MAX_BREAK_DEPTH);
   }
 }
 
@@ -1140,6 +1153,13 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
     index = (function->label_bindings.size - 1) - index;
     return function->label_bindings.data[index].index;
   }
+}
+
+/* parse_label_var returns the depth counting up (so 0 is the topmost
+ block of this function). We want the depth counting down (so 0 is the most
+ recent block). */
+static int parse_break_depth(WasmParser* parser, WasmFunction* function) {
+  return function->label_bindings.size - parse_label_var(parser, function);
 }
 
 static void parse_type(WasmParser* parser, WasmType* type) {
@@ -1411,26 +1431,33 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
+    case WASM_OP_BR_IF: {
+      if (!parser->options->br_if)
+        unexpected_token(parser, t);
+
+      int depth = parse_break_depth(parser, function);
+      check_break_depth(parser, t.range.start, function, depth);
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_br_if, (depth, parser->user_data));
+      WasmType cond_type = parse_expr(parser, module, function, NULL);
+      check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
+                 " of condition");
+      continuation =
+          WASM_CONTINUATION_BREAK_0 << depth | WASM_CONTINUATION_NORMAL;
+      expect_close(parser, read_token(parser));
+      CALLBACK(parser, after_br_if, (cookie, parser->user_data));
+      break;
+    }
+
     case WASM_OP_BREAK: {
       t = read_token(parser);
       int depth = 0;
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
         rewind_token(parser, t);
-        /* parse_label_var returns the depth counting up (so 0 is the topmost
-         block of this function). We want the depth counting down (so 0 is the
-         most recent block). */
-        depth =
-            function->label_bindings.size - parse_label_var(parser, function);
+        depth = parse_break_depth(parser, function);
         t = read_token(parser);
       }
-      if (depth == 0 && function->label_bindings.size == 0) {
-        FATAL_AT(parser, t.range.start,
-                 "label variable out of range (max 0)\n");
-      } else if (depth > MAX_BREAK_DEPTH) {
-        FATAL_AT(parser, t.range.start,
-                 "break depth %d not supported (max %d)\n", depth,
-                 MAX_BREAK_DEPTH);
-      }
+      check_break_depth(parser, t.range.start, function, depth);
       int with_expr = t.type == WASM_TOKEN_TYPE_OPEN_PAREN;
       WasmParserCookie cookie =
           CALLBACK(parser, before_break, (with_expr, depth, parser->user_data));
@@ -1439,10 +1466,11 @@ static WasmType parse_expr(WasmParser* parser,
         WasmLabel* break_label = &function->labels.data[label_index];
         rewind_token(parser, t);
         WasmType break_type = parse_expr(parser, module, function, NULL);
-        if (parser->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
+        if (parser->options->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
           break_label->type &= break_type;
         } else {
-          assert(parser->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
+          assert(parser->options->type_check ==
+                 WASM_PARSER_TYPE_CHECK_V8_NATIVE);
           if (break_label->type == WASM_TYPE_ALL) {
             break_label->type = break_type;
           } else {
@@ -2387,7 +2415,7 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
 static void init_parser(WasmParser* parser,
                         WasmParserCallbacks* callbacks,
                         WasmSource* source,
-                        WasmParserTypeCheck type_check) {
+                        WasmParserOptions* options) {
   parser->callbacks = callbacks;
   parser->user_data = callbacks->user_data;
   parser->tokenizer.source = *source;
@@ -2395,7 +2423,7 @@ static void init_parser(WasmParser* parser,
   parser->tokenizer.loc.pos = parser->tokenizer.source.start;
   parser->tokenizer.loc.line = 1;
   parser->tokenizer.loc.col = 1;
-  parser->type_check = type_check;
+  parser->options = options;
 }
 
 static void assert_invalid_error(WasmSourceLocation loc,
@@ -2407,10 +2435,10 @@ static void assert_invalid_error(WasmSourceLocation loc,
 
 int wasm_parse_module(WasmSource* source,
                       WasmParserCallbacks* callbacks,
-                      WasmParserTypeCheck type_check) {
+                      WasmParserOptions* options) {
   WasmModule module = {};
   WasmParser parser = {};
-  init_parser(&parser, callbacks, source, type_check);
+  init_parser(&parser, callbacks, source, options);
 
   if (setjmp(parser.jump_buf)) {
     wasm_destroy_module(&module);
@@ -2452,11 +2480,11 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
 
 int wasm_parse_file(WasmSource* source,
                     WasmParserCallbacks* callbacks,
-                    WasmParserTypeCheck type_check) {
+                    WasmParserOptions* options) {
   WasmModule module = {};
   WasmParser parser_object = {};
   WasmParser* parser = &parser_object;
-  init_parser(parser, callbacks, source, type_check);
+  init_parser(parser, callbacks, source, options);
 
   if (setjmp(parser->jump_buf)) {
     /* error */
