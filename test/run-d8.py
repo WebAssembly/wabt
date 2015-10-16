@@ -39,6 +39,7 @@ def main(args):
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--spec', help='run spec tests.', action='store_true')
+  parser.add_argument('--br-if', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -68,6 +69,8 @@ def main(args):
       cmd.append('-v')
     if options.spec:
       cmd.extend(['--multi-module', '--multi-module-verbose'])
+    if options.br_if:
+      cmd.append('--br-if')
     try:
       subprocess.check_call(cmd)
     except OSError as e:

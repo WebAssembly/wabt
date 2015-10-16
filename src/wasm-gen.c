@@ -61,7 +61,15 @@ typedef struct OutputBuffer {
   int log_writes;
 } OutputBuffer;
 
+typedef enum LabelType {
+  LABEL_TYPE_BLOCK,
+  LABEL_TYPE_LABEL,
+  LABEL_TYPE_LOOP_OUTER,
+  LABEL_TYPE_LOOP_INNER,
+} LabelType;
+
 typedef struct LabelInfo {
+  LabelType type;
   struct LabelInfo* next_label;
   uint32_t offset;
   int block_depth;
@@ -515,8 +523,9 @@ static void remap_locals(Context* ctx, WasmFunction* function) {
   }
 }
 
-static LabelInfo* push_label_info(Context* ctx) {
+static LabelInfo* push_label_info(Context* ctx, LabelType type) {
   LabelInfo* label_info = malloc(sizeof(LabelInfo));
+  label_info->type = type;
   label_info->offset = ctx->buf.size;
   label_info->block_depth = ctx->block_depth++;
   label_info->next_label = ctx->top_label;
@@ -600,7 +609,7 @@ static WasmParserCookie before_block(int with_label, void* user_data) {
   WasmParserCookie cookie = 0;
   /* TODO(binji): clean this up, it's a bit hacky right now. */
   if (with_label) {
-    push_label_info(ctx);
+    push_label_info(ctx, LABEL_TYPE_BLOCK);
   } else {
     ctx->block_depth++;
     cookie = (WasmParserCookie)ctx->buf.size;
@@ -629,6 +638,36 @@ static void after_block(WasmType type,
   out_u8_at(&ctx->buf, offset + 1, num_exprs, "FIXUP num expressions");
 }
 
+static LabelInfo* label_info_at_depth(Context* ctx, int label_depth) {
+  LabelInfo* label_info = ctx->top_label;
+  for (; label_depth > 0; label_depth--)
+    label_info = label_info->next_label;
+  return label_info;
+}
+
+static int get_block_depth(Context* ctx, LabelInfo* label_info) {
+  return (ctx->block_depth - 1) - label_info->block_depth;
+}
+
+static WasmParserCookie before_br_if(int label_depth, void* user_data) {
+  Context* ctx = user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_IF);
+  return (WasmParserCookie)label_depth;
+}
+
+static void after_br_if(WasmParserCookie cookie, void* user_data) {
+  Context* ctx = user_data;
+  int label_depth = (WasmParserCookie)cookie;
+  LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
+  WasmOpcode opcode = WASM_OPCODE_BREAK;
+  /* In the br_if proposal, a branch to a loop continues the loop, instead of
+   breaking. */
+  if (ctx->options->br_if && label_info->type == LABEL_TYPE_LOOP_OUTER)
+    opcode = WASM_OPCODE_CONTINUE;
+  out_opcode(&ctx->buf, opcode);
+  out_u8(&ctx->buf, get_block_depth(ctx, label_info), "break depth");
+}
+
 static void before_binary(enum WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, opcode);
@@ -638,13 +677,15 @@ static WasmParserCookie before_break(int with_expr,
                                      int label_depth,
                                      void* user_data) {
   Context* ctx = user_data;
-  out_opcode(&ctx->buf, with_expr ? WASM_OPCODE_EXPR_BREAK : WASM_OPCODE_BREAK);
-  LabelInfo* label_info = ctx->top_label;
-  for (; label_depth > 0; label_depth--)
-    label_info = label_info->next_label;
+  LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
   label_info->with_expr = label_info->with_expr || with_expr;
-  int block_depth = (ctx->block_depth - 1) - label_info->block_depth;
-  out_u8(&ctx->buf, block_depth, "break depth");
+  WasmOpcode opcode = with_expr ? WASM_OPCODE_EXPR_BREAK : WASM_OPCODE_BREAK;
+  /* In the br_if proposal, a branch to a loop continues the loop, instead of
+   breaking. */
+  if (ctx->options->br_if && label_info->type == LABEL_TYPE_LOOP_OUTER)
+    opcode = WASM_OPCODE_CONTINUE;
+  out_opcode(&ctx->buf, opcode);
+  out_u8(&ctx->buf, get_block_depth(ctx, label_info), "break depth");
   return 0;
 }
 
@@ -748,7 +789,7 @@ static void after_if(WasmType type,
 
 static WasmParserCookie before_label(void* user_data) {
   Context* ctx = user_data;
-  push_label_info(ctx);
+  push_label_info(ctx, LABEL_TYPE_LABEL);
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 1, "num expressions");
   return 0;
@@ -789,12 +830,12 @@ static WasmParserCookie before_loop(int with_inner_label,
   if (with_inner_label || with_outer_label) {
     /* The outer label must be defined if the inner label is defined */
     assert(with_outer_label);
-    push_label_info(ctx);
+    push_label_info(ctx, LABEL_TYPE_LOOP_OUTER);
     if (with_inner_label) {
       /* The loop only has one expression: this nested block */
       out_u8(&ctx->buf, 1, "num expressions");
       out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
-      push_label_info(ctx);
+      push_label_info(ctx, LABEL_TYPE_LOOP_INNER);
       out_u8(&ctx->buf, 0, "num expressions");
       cookie = 1;
     } else {
@@ -812,6 +853,14 @@ static void after_loop(int num_exprs,
                        WasmParserCookie cookie,
                        void* user_data) {
   Context* ctx = user_data;
+  if (ctx->options->br_if) {
+    /* In the br_if proposal, loops don't implicitly branch to the top, so to
+     mimic this behavior we have to break at the end of every loop. */
+    ++num_exprs;
+    out_opcode(&ctx->buf, WASM_OPCODE_BREAK);
+    out_u8(&ctx->buf, 0, "break out of loop");
+  }
+
   if (cookie == 0 || cookie == 1) {
     LabelInfo* label_info = ctx->top_label;
     out_u8_at(&ctx->buf, label_info->offset, num_exprs,
@@ -1262,6 +1311,8 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.after_function = after_function;
   callbacks.before_block = before_block;
   callbacks.after_block = after_block;
+  callbacks.before_br_if = before_br_if;
+  callbacks.after_br_if = after_br_if;
   callbacks.before_binary = before_binary;
   callbacks.before_break = before_break;
   callbacks.after_break = after_break;
