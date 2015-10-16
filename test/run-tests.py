@@ -22,7 +22,7 @@ import time
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
-DEFAULT_TIMEOUT = 2 # seconds
+DEFAULT_TIMEOUT = 10 # seconds
 SLOW_TIMEOUT_MULTIPLIER = 2
 
 
