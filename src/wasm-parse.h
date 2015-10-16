@@ -64,8 +64,9 @@ typedef struct WasmParserCallbacks {
                    WasmParserCookie cookie,
                    void* user_data);
   void (*before_load)(enum WasmOpcode opcode,
-                      uint8_t access,
+                      WasmMemType mem_type,
                       uint32_t alignment,
+                      int is_signed,
                       void* user_data);
   void (*after_load_global)(int index, void* user_data);
   void (*after_memory_size)(void* user_data);
@@ -76,7 +77,7 @@ typedef struct WasmParserCallbacks {
   void (*after_return)(WasmType type, void* user_data);
   void (*before_set_local)(int index, void* user_data);
   void (*before_store)(enum WasmOpcode opcode,
-                       uint8_t access,
+                       WasmMemType mem_type,
                        uint32_t alignment,
                        void* user_data);
   void (*before_store_global)(int index, void* user_data);

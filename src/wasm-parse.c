@@ -24,16 +24,6 @@
   if (!p)                           \
     fatal_at(parser, loc, "allocation of " #p " failed");
 
-typedef enum WasmMemType {
-  WASM_MEM_TYPE_I8,
-  WASM_MEM_TYPE_I16,
-  WASM_MEM_TYPE_I32,
-  WASM_MEM_TYPE_I64,
-  WASM_MEM_TYPE_F32,
-  WASM_MEM_TYPE_F64,
-  WASM_NUM_MEM_TYPES,
-} WasmMemType;
-
 typedef enum WasmOpType {
   WASM_OP_NONE,
   WASM_OP_ASSERT_INVALID,
@@ -1622,10 +1612,12 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_LOAD: {
       check_opcode(parser, t.range.start, op_info->opcode);
       uint32_t alignment = parse_alignment(parser);
+      WasmMemType mem_type = op_info->type2;
       if (!alignment)
-        alignment = s_native_mem_type_alignment[op_info->type2];
-      CALLBACK(parser, before_load, (op_info->opcode, op_info->access,
-                                     alignment, parser->user_data));
+        alignment = s_native_mem_type_alignment[mem_type];
+      CALLBACK(parser, before_load,
+               (op_info->opcode, mem_type, alignment, op_info->is_signed_load,
+                parser->user_data));
       WasmType index_type = parse_expr(parser, module, function, NULL);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of load index");
@@ -1740,11 +1732,12 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_STORE: {
       check_opcode(parser, t.range.start, op_info->opcode);
+      WasmMemType mem_type = op_info->type2;
       uint32_t alignment = parse_alignment(parser);
       if (!alignment)
-        alignment = s_native_mem_type_alignment[op_info->type2];
-      CALLBACK(parser, before_store, (op_info->opcode, op_info->access,
-                                      alignment, parser->user_data));
+        alignment = s_native_mem_type_alignment[mem_type];
+      CALLBACK(parser, before_store,
+               (op_info->opcode, mem_type, alignment, parser->user_data));
       WasmType index_type = parse_expr(parser, module, function, NULL);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of store index");

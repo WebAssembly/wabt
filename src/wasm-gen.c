@@ -807,11 +807,32 @@ static void after_label(WasmType type,
 }
 
 static void before_load(enum WasmOpcode opcode,
-                        uint8_t access,
+                        WasmMemType mem_type,
                         uint32_t alignment,
+                        int is_signed,
                         void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, opcode);
+  uint8_t access = 0;
+  switch (mem_type) {
+    case WASM_MEM_TYPE_I8:
+      access = is_signed ? 4 : 0;
+      break;
+    case WASM_MEM_TYPE_I16:
+      access = is_signed ? 5 : 1;
+      break;
+    case WASM_MEM_TYPE_I32:
+      if (opcode == WASM_OPCODE_I64_LOAD_I32)
+        access = is_signed ? 6 : 2;
+      else
+        access = 6;
+      break;
+    case WASM_MEM_TYPE_I64:
+      access = 7;
+      break;
+    default:
+      break;
+  }
   out_u8(&ctx->buf, access, "load access byte");
 }
 
@@ -916,11 +937,28 @@ static void before_set_local(int index, void* user_data) {
 }
 
 static void before_store(enum WasmOpcode opcode,
-                         uint8_t access,
+                         WasmMemType mem_type,
                          uint32_t alignment,
                          void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, opcode);
+  uint8_t access = 0;
+  switch (mem_type) {
+    case WASM_MEM_TYPE_I8:
+      access = 4;
+      break;
+    case WASM_MEM_TYPE_I16:
+      access = 5;
+      break;
+    case WASM_MEM_TYPE_I32:
+      access = 6;
+      break;
+    case WASM_MEM_TYPE_I64:
+      access = 7;
+      break;
+    default:
+      break;
+  }
   out_u8(&ctx->buf, access, "store access byte");
 }
 

@@ -19,6 +19,16 @@ typedef enum WasmType {
   WASM_TYPE_ALL = 15,
 } WasmType;
 
+typedef enum WasmMemType {
+  WASM_MEM_TYPE_I8,
+  WASM_MEM_TYPE_I16,
+  WASM_MEM_TYPE_I32,
+  WASM_MEM_TYPE_I64,
+  WASM_MEM_TYPE_F32,
+  WASM_MEM_TYPE_F64,
+  WASM_NUM_MEM_TYPES,
+} WasmMemType;
+
 #define OPCODES(V)             \
   V(NOP, 0x00)                 \
   V(IF, 0x01)                  \

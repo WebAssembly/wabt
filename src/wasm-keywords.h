@@ -36,7 +36,7 @@ struct OpInfo {
   int opcode;
   int type;
   int type2;
-  int access;
+  int is_signed_load;
 };
 
 #define TOTAL_KEYWORDS 183
@@ -166,7 +166,7 @@ in_word_set (str, len)
       {"i32.ge_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SGE, WASM_TYPE_I32},
       {""}, {""},
 #line 162 "src/wasm-keywords.gperf"
-      {"i64.store16", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 5},
+      {"i64.store16", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16},
 #line 52 "src/wasm-keywords.gperf"
       {"f64.add", WASM_OP_BINARY, WASM_OPCODE_F64_ADD, WASM_TYPE_F64},
       {""},
@@ -174,7 +174,7 @@ in_word_set (str, len)
       {"i64.rem_s", WASM_OP_BINARY, WASM_OPCODE_I64_SREM, WASM_TYPE_I64},
       {""},
 #line 116 "src/wasm-keywords.gperf"
-      {"i32.store16", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 5},
+      {"i32.store16", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16},
 #line 22 "src/wasm-keywords.gperf"
       {"f32.add", WASM_OP_BINARY, WASM_OPCODE_F32_ADD, WASM_TYPE_F32},
       {""},
@@ -188,7 +188,7 @@ in_word_set (str, len)
 #line 150 "src/wasm-keywords.gperf"
       {"i64.lt_s", WASM_OP_COMPARE, WASM_OPCODE_I64_SLT, WASM_TYPE_I64},
 #line 165 "src/wasm-keywords.gperf"
-      {"i64.store", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 7},
+      {"i64.store", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64},
 #line 191 "src/wasm-keywords.gperf"
       {"table", WASM_OP_TABLE},
 #line 34 "src/wasm-keywords.gperf"
@@ -198,7 +198,7 @@ in_word_set (str, len)
 #line 103 "src/wasm-keywords.gperf"
       {"i32.lt_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SLT, WASM_TYPE_I32},
 #line 118 "src/wasm-keywords.gperf"
-      {"i32.store", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 6},
+      {"i32.store", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32},
 #line 16 "src/wasm-keywords.gperf"
       {"br_if", WASM_OP_BR_IF},
 #line 67 "src/wasm-keywords.gperf"
@@ -208,7 +208,7 @@ in_word_set (str, len)
 #line 141 "src/wasm-keywords.gperf"
       {"i64.le_s", WASM_OP_COMPARE, WASM_OPCODE_I64_SLE, WASM_TYPE_I64},
 #line 77 "src/wasm-keywords.gperf"
-      {"f64.store", WASM_OP_STORE, WASM_OPCODE_F64_STORE_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64, 0},
+      {"f64.store", WASM_OP_STORE, WASM_OPCODE_F64_STORE_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64},
       {""},
 #line 38 "src/wasm-keywords.gperf"
       {"f32.lt", WASM_OP_COMPARE, WASM_OPCODE_F32_LT, WASM_TYPE_F32},
@@ -217,7 +217,7 @@ in_word_set (str, len)
 #line 96 "src/wasm-keywords.gperf"
       {"i32.le_s", WASM_OP_COMPARE, WASM_OPCODE_I32_SLE, WASM_TYPE_I32},
 #line 47 "src/wasm-keywords.gperf"
-      {"f32.store", WASM_OP_STORE, WASM_OPCODE_F32_STORE_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32, 0},
+      {"f32.store", WASM_OP_STORE, WASM_OPCODE_F32_STORE_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32},
       {""},
 #line 187 "src/wasm-keywords.gperf"
       {"result", WASM_OP_RESULT},
@@ -227,7 +227,7 @@ in_word_set (str, len)
 #line 62 "src/wasm-keywords.gperf"
       {"f64.floor", WASM_OP_UNARY, WASM_OPCODE_F64_FLOOR, WASM_TYPE_F64},
 #line 164 "src/wasm-keywords.gperf"
-      {"i64.store8", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 4},
+      {"i64.store8", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8},
 #line 13 "src/wasm-keywords.gperf"
       {"assert_trap", WASM_OP_ASSERT_TRAP},
 #line 128 "src/wasm-keywords.gperf"
@@ -237,7 +237,7 @@ in_word_set (str, len)
 #line 33 "src/wasm-keywords.gperf"
       {"f32.floor", WASM_OP_UNARY, WASM_OPCODE_F32_FLOOR, WASM_TYPE_F32},
 #line 117 "src/wasm-keywords.gperf"
-      {"i32.store8", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 4},
+      {"i32.store8", WASM_OP_STORE, WASM_OPCODE_I32_STORE_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8},
 #line 65 "src/wasm-keywords.gperf"
       {"f64.le", WASM_OP_COMPARE, WASM_OPCODE_F64_LE, WASM_TYPE_F64},
 #line 85 "src/wasm-keywords.gperf"
@@ -355,13 +355,13 @@ in_word_set (str, len)
       {"i32.eq", WASM_OP_COMPARE, WASM_OPCODE_I32_EQ, WASM_TYPE_I32},
       {""},
 #line 149 "src/wasm-keywords.gperf"
-      {"i64.load", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64, 7},
+      {"i64.load", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I64},
       {""}, {""},
 #line 61 "src/wasm-keywords.gperf"
       {"f64.eq", WASM_OP_COMPARE, WASM_OPCODE_F64_EQ, WASM_TYPE_F64},
       {""},
 #line 102 "src/wasm-keywords.gperf"
-      {"i32.load", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32, 6},
+      {"i32.load", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32},
 #line 179 "src/wasm-keywords.gperf"
       {"loop", WASM_OP_LOOP, WASM_OPCODE_LOOP},
       {""},
@@ -370,7 +370,7 @@ in_word_set (str, len)
 #line 129 "src/wasm-keywords.gperf"
       {"i64.clz", WASM_OP_UNARY, WASM_OPCODE_I64_CLZ, WASM_TYPE_I64},
 #line 66 "src/wasm-keywords.gperf"
-      {"f64.load", WASM_OP_LOAD, WASM_OPCODE_F64_LOAD_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64, 0},
+      {"f64.load", WASM_OP_LOAD, WASM_OPCODE_F64_LOAD_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64},
 #line 19 "src/wasm-keywords.gperf"
       {"call", WASM_OP_CALL, WASM_OPCODE_CALL},
 #line 14 "src/wasm-keywords.gperf"
@@ -380,7 +380,7 @@ in_word_set (str, len)
 #line 86 "src/wasm-keywords.gperf"
       {"i32.clz", WASM_OP_UNARY, WASM_OPCODE_I32_CLZ, WASM_TYPE_I32},
 #line 37 "src/wasm-keywords.gperf"
-      {"f32.load", WASM_OP_LOAD, WASM_OPCODE_F32_LOAD_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32, 0},
+      {"f32.load", WASM_OP_LOAD, WASM_OPCODE_F32_LOAD_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32},
 #line 110 "src/wasm-keywords.gperf"
       {"i32.reinterpret/f32", WASM_OP_CONVERT, WASM_OPCODE_I32_REINTERPRET_F32, WASM_TYPE_I32, WASM_TYPE_F32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""},
@@ -392,12 +392,12 @@ in_word_set (str, len)
       {"f32.reinterpret/i32", WASM_OP_CONVERT, WASM_OPCODE_F32_REINTERPRET_I32, WASM_TYPE_F32, WASM_TYPE_I32},
       {""}, {""},
 #line 145 "src/wasm-keywords.gperf"
-      {"i64.load32_s", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
+      {"i64.load32_s", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 1},
 #line 53 "src/wasm-keywords.gperf"
       {"f64.ceil", WASM_OP_UNARY, WASM_OPCODE_F64_CEIL, WASM_TYPE_F64},
       {""}, {""}, {""},
 #line 143 "src/wasm-keywords.gperf"
-      {"i64.load16_s", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 5},
+      {"i64.load16_s", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 1},
 #line 23 "src/wasm-keywords.gperf"
       {"f32.ceil", WASM_OP_UNARY, WASM_OPCODE_F32_CEIL, WASM_TYPE_F32},
 #line 81 "src/wasm-keywords.gperf"
@@ -407,15 +407,15 @@ in_word_set (str, len)
 #line 20 "src/wasm-keywords.gperf"
       {"export", WASM_OP_EXPORT},
 #line 98 "src/wasm-keywords.gperf"
-      {"i32.load16_s", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 5},
+      {"i32.load16_s", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 1},
       {""}, {""},
 #line 109 "src/wasm-keywords.gperf"
       {"i32.popcnt", WASM_OP_UNARY, WASM_OPCODE_I32_POPCNT, WASM_TYPE_I32},
 #line 147 "src/wasm-keywords.gperf"
-      {"i64.load8_s", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 4},
+      {"i64.load8_s", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 1},
       {""}, {""}, {""}, {""},
 #line 100 "src/wasm-keywords.gperf"
-      {"i32.load8_s", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 4},
+      {"i32.load8_s", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I8, 1},
       {""}, {""}, {""},
 #line 178 "src/wasm-keywords.gperf"
       {"local", WASM_OP_LOCAL},
@@ -439,7 +439,7 @@ in_word_set (str, len)
       {"assert_return", WASM_OP_ASSERT_RETURN},
       {""}, {""},
 #line 163 "src/wasm-keywords.gperf"
-      {"i64.store32", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 6},
+      {"i64.store32", WASM_OP_STORE, WASM_OPCODE_I64_STORE_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32},
 #line 11 "src/wasm-keywords.gperf"
       {"assert_return_nan", WASM_OP_ASSERT_RETURN_NAN},
       {""},
@@ -512,16 +512,16 @@ in_word_set (str, len)
 #line 181 "src/wasm-keywords.gperf"
       {"memory", WASM_OP_MEMORY},
 #line 146 "src/wasm-keywords.gperf"
-      {"i64.load32_u", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 2},
+      {"i64.load32_u", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I32, 0},
       {""}, {""},
 #line 121 "src/wasm-keywords.gperf"
       {"i32.trunc_s/f32", WASM_OP_CONVERT, WASM_OPCODE_I32_SCONVERT_F32, WASM_TYPE_I32, WASM_TYPE_F32},
       {""},
 #line 144 "src/wasm-keywords.gperf"
-      {"i64.load16_u", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 1},
+      {"i64.load16_u", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I16, 0},
       {""}, {""}, {""}, {""},
 #line 99 "src/wasm-keywords.gperf"
-      {"i32.load16_u", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 1},
+      {"i32.load16_u", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I16, 0},
       {""}, {""}, {""},
 #line 148 "src/wasm-keywords.gperf"
       {"i64.load8_u", WASM_OP_LOAD, WASM_OPCODE_I64_LOAD_I32, WASM_TYPE_I64, WASM_MEM_TYPE_I8, 0},
