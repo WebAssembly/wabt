@@ -31,6 +31,7 @@ typedef enum WasmMemType {
   WASM_MEM_TYPE_I64,
   WASM_MEM_TYPE_F32,
   WASM_MEM_TYPE_F64,
+  WASM_NUM_MEM_TYPES,
 } WasmMemType;
 
 typedef enum WasmOpType {
@@ -176,6 +177,16 @@ static const char* s_type_names[] = {
     "i32, i64, f32 or f64",
 };
 STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_TYPE_ALL + 1);
+
+static int s_native_mem_type_alignment[] = {
+    1, /* MEM_TYPE_I8 */
+    2, /* MEM_TYPE_I16 */
+    4, /* MEM_TYPE_I32 */
+    8, /* MEM_TYPE_I64 */
+    4, /* MEM_TYPE_F32 */
+    8, /* MEM_TYPE_F64 */
+};
+STATIC_ASSERT(ARRAY_SIZE(s_native_mem_type_alignment) == WASM_NUM_MEM_TYPES);
 
 static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
@@ -888,50 +899,28 @@ static int match_type(WasmToken t, WasmType* type) {
   return 0;
 }
 
-static int match_load_store_aligned(WasmParser* parser,
-                                    WasmToken t,
-                                    OpInfo* op_info) {
-  /* look for a slash near the end of the string */
-  const char* p = t.range.start.pos;
-  const char* end = t.range.end.pos - 1;
-  while (end > p) {
-    if (*end == '/') {
-      const OpInfo* found = in_word_set(p, (int)(end - p));
-      if (!(found && (found->op_type == WASM_OP_LOAD ||
-                      found->op_type == WASM_OP_STORE)))
-        return 0;
-
-      ++end;
-      uint32_t alignment;
-      if (!read_int32(end, t.range.end.pos, &alignment, 0))
-        return 0;
-
-      /* check that alignment is power-of-two */
-      if (!is_power_of_two(alignment))
-        FATAL_AT(parser, t.range.start, "alignment must be power-of-two\n");
-
-      *op_info = *found;
-#if 0
-  /* TODO(binji): setting the unaligned memory access bit is currently an error
-   in v8-native-prototype. */
-
-      int native_mem_type_alignment[] = {
-          1, /* MEM_TYPE_I8 */
-          2, /* MEM_TYPE_I16 */
-          4, /* MEM_TYPE_I32 */
-          8, /* MEM_TYPE_I64 */
-          4, /* MEM_TYPE_F32 */
-          8, /* MEM_TYPE_F64 */
-      };
-
-      if (alignment && alignment < native_mem_type_alignment[op_info->type2])
-        op_info->access |= 0x8; /* unaligned access */
-#endif
-      return 1;
-    }
-    end--;
+static uint32_t parse_alignment(WasmParser* parser) {
+  const char align_prefix[] = "align=";
+  size_t align_prefix_len = sizeof(align_prefix) - 1;
+  WasmToken t = read_token(parser);
+  if (t.type != WASM_TOKEN_TYPE_ATOM) {
+    rewind_token(parser, t);
+    return 0;
   }
-  return 0;
+  size_t token_len = t.range.end.pos - t.range.start.pos;
+  if (token_len <= align_prefix_len)
+    return 0;
+  const char* p = t.range.start.pos;
+  const char* end = p + align_prefix_len;
+  if (!string_eq(p, end, align_prefix))
+    return 0;
+  uint32_t alignment;
+  if (!read_int32(end, t.range.end.pos, &alignment, 0))
+    return 0;
+  /* check that alignment is power-of-two */
+  if (!is_power_of_two(alignment))
+    FATAL_AT(parser, t.range.start, "alignment must be power-of-two\n");
+  return alignment;
 }
 
 static void check_type(WasmParser* parser,
@@ -1383,14 +1372,8 @@ static WasmType parse_expr(WasmParser* parser,
   WasmToken t = read_token(parser);
   expect_atom(parser, t);
 
-  OpInfo op_info_aligned;
   const OpInfo* op_info = get_op_info(t);
-  if (!op_info) {
-    if (!match_load_store_aligned(parser, t, &op_info_aligned))
-      unexpected_token(parser, t);
-    op_info = &op_info_aligned;
-  }
-  switch (op_info->op_type) {
+  switch (op_info ? op_info->op_type : WASM_OP_NONE) {
     case WASM_OP_BINARY: {
       check_opcode(parser, t.range.start, op_info->opcode);
       CALLBACK(parser, before_binary, (op_info->opcode, parser->user_data));
@@ -1638,8 +1621,11 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_LOAD: {
       check_opcode(parser, t.range.start, op_info->opcode);
-      CALLBACK(parser, before_load,
-               (op_info->opcode, op_info->access, parser->user_data));
+      uint32_t alignment = parse_alignment(parser);
+      if (!alignment)
+        alignment = s_native_mem_type_alignment[op_info->type2];
+      CALLBACK(parser, before_load, (op_info->opcode, op_info->access,
+                                     alignment, parser->user_data));
       WasmType index_type = parse_expr(parser, module, function, NULL);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of load index");
@@ -1754,8 +1740,11 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_STORE: {
       check_opcode(parser, t.range.start, op_info->opcode);
-      CALLBACK(parser, before_store,
-               (op_info->opcode, op_info->access, parser->user_data));
+      uint32_t alignment = parse_alignment(parser);
+      if (!alignment)
+        alignment = s_native_mem_type_alignment[op_info->type2];
+      CALLBACK(parser, before_store, (op_info->opcode, op_info->access,
+                                      alignment, parser->user_data));
       WasmType index_type = parse_expr(parser, module, function, NULL);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of store index");

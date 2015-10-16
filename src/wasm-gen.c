@@ -808,6 +808,7 @@ static void after_label(WasmType type,
 
 static void before_load(enum WasmOpcode opcode,
                         uint8_t access,
+                        uint32_t alignment,
                         void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, opcode);
@@ -916,6 +917,7 @@ static void before_set_local(int index, void* user_data) {
 
 static void before_store(enum WasmOpcode opcode,
                          uint8_t access,
+                         uint32_t alignment,
                          void* user_data) {
   Context* ctx = user_data;
   out_opcode(&ctx->buf, opcode);

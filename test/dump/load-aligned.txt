@@ -1,40 +1,40 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (i32.load8_s/1 (i32.const 0))
-    (i32.load8_s/2 (i32.const 0))
-    (i32.load8_s/4 (i32.const 0))
-    (i32.load8_s/8 (i32.const 0))
+    (i32.load8_s align=1 (i32.const 0))
+    (i32.load8_s align=2 (i32.const 0))
+    (i32.load8_s align=4 (i32.const 0))
+    (i32.load8_s align=8 (i32.const 0))
 
-    (i32.load16_s/1 (i32.const 0))
-    (i32.load16_s/2 (i32.const 0))
-    (i32.load16_s/4 (i32.const 0))
-    (i32.load16_s/8 (i32.const 0))
+    (i32.load16_s align=1 (i32.const 0))
+    (i32.load16_s align=2 (i32.const 0))
+    (i32.load16_s align=4 (i32.const 0))
+    (i32.load16_s align=8 (i32.const 0))
 
-    (i32.load/1 (i32.const 0))
-    (i32.load/2 (i32.const 0))
-    (i32.load/4 (i32.const 0))
-    (i32.load/8 (i32.const 0))
+    (i32.load align=1 (i32.const 0))
+    (i32.load align=2 (i32.const 0))
+    (i32.load align=4 (i32.const 0))
+    (i32.load align=8 (i32.const 0))
 
-    (i64.load/1 (i32.const 0))
-    (i64.load/2 (i32.const 0))
-    (i64.load/4 (i32.const 0))
-    (i64.load/8 (i32.const 0))
+    (i64.load align=1 (i32.const 0))
+    (i64.load align=2 (i32.const 0))
+    (i64.load align=4 (i32.const 0))
+    (i64.load align=8 (i32.const 0))
 
-    (i64.load8_s/1 (i32.const 0))
-    (i64.load8_s/2 (i32.const 0))
-    (i64.load8_s/4 (i32.const 0))
-    (i64.load8_s/8 (i32.const 0))
+    (i64.load8_s align=1 (i32.const 0))
+    (i64.load8_s align=2 (i32.const 0))
+    (i64.load8_s align=4 (i32.const 0))
+    (i64.load8_s align=8 (i32.const 0))
 
-    (i64.load16_s/1 (i32.const 0))
-    (i64.load16_s/2 (i32.const 0))
-    (i64.load16_s/4 (i32.const 0))
-    (i64.load16_s/8 (i32.const 0))
+    (i64.load16_s align=1 (i32.const 0))
+    (i64.load16_s align=2 (i32.const 0))
+    (i64.load16_s align=4 (i32.const 0))
+    (i64.load16_s align=8 (i32.const 0))
 
-    (i64.load32_s/1 (i32.const 0))
-    (i64.load32_s/2 (i32.const 0))
-    (i64.load32_s/4 (i32.const 0))
-    (i64.load32_s/8 (i32.const 0))))
+    (i64.load32_s align=1 (i32.const 0))
+    (i64.load32_s align=2 (i32.const 0))
+    (i64.load32_s align=4 (i32.const 0))
+    (i64.load32_s align=8 (i32.const 0))))
 (;; STDOUT ;;;
 0000000: 00                                         ; mem size log 2
 0000001: 01                                         ; export mem
