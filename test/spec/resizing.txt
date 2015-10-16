@@ -1,17 +1,18 @@
-;;; SKIP: resize_memory renamed to grow_memory
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/resizing.wast
 (;; STDOUT ;;;
-third_party/spec/ml-proto/test/resizing.wast:17: $assert_return_0 failed.
-third_party/spec/ml-proto/test/resizing.wast:20: $assert_trap_3 failed, didn't throw
-third_party/spec/ml-proto/test/resizing.wast:21: $assert_trap_4 failed, didn't throw
-$invoke_5 = undefined
-third_party/spec/ml-proto/test/resizing.wast:23: $assert_return_6 failed.
-third_party/spec/ml-proto/test/resizing.wast:27: $assert_return_10 failed.
-$invoke_11 = undefined
-third_party/spec/ml-proto/test/resizing.wast:29: $assert_return_12 failed.
-third_party/spec/ml-proto/test/resizing.wast:31: $assert_trap_14 failed, didn't throw
-third_party/spec/ml-proto/test/resizing.wast:32: $assert_trap_15 failed, didn't throw
-6/14 tests passed.
+third_party/spec/ml-proto/test/resizing.wast:36: $assert_trap_2 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:37: $assert_trap_3 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:38: $assert_trap_4 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:39: $assert_trap_5 failed, didn't throw
+$invoke_6 = undefined
+third_party/spec/ml-proto/test/resizing.wast:41: $assert_return_7 failed.
+third_party/spec/ml-proto/test/resizing.wast:42: $assert_return_8 failed.
+third_party/spec/ml-proto/test/resizing.wast:45: $assert_trap_11 failed, didn't throw
+third_party/spec/ml-proto/test/resizing.wast:46: $assert_trap_12 failed, didn't throw
+$invoke_13 = undefined
+third_party/spec/ml-proto/test/resizing.wast:48: $assert_return_14 failed.
+third_party/spec/ml-proto/test/resizing.wast:53: $assert_return_19 failed.
+8/18 tests passed.
 ;;; STDOUT ;;)
