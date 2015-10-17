@@ -76,6 +76,17 @@ typedef struct LabelInfo {
   int with_expr;
 } LabelInfo;
 
+typedef struct AssertFunc {
+  char* name;
+  WasmType result_type;
+  int16_t num_local_i32;
+  int16_t num_local_i64;
+  int16_t num_local_f32;
+  int16_t num_local_f64;
+  size_t size;
+  void* data;
+} AssertFunc;
+
 typedef struct Context {
   WasmGenOptions* options;
   OutputBuffer buf;
@@ -90,7 +101,9 @@ typedef struct Context {
   int in_assert;
   int in_js_module;
   int block_depth;
-  int assert_count;
+
+  AssertFunc* assert_funcs;
+  int num_assert_funcs;
 } Context;
 
 static const char* s_opcode_names[] = {
@@ -327,6 +340,15 @@ static void destroy_output_buffer(OutputBuffer* buf) {
   free(buf->start);
 }
 
+static void destroy_assert_funcs(Context* ctx) {
+  int i;
+  for (i = 0; i < ctx->num_assert_funcs; ++i) {
+    free(ctx->assert_funcs[i].name);
+    free(ctx->assert_funcs[i].data);
+  }
+  ctx->num_assert_funcs = 0;
+}
+
 static void destroy_context(Context* ctx) {
   LabelInfo* label = ctx->top_label;
   while (label) {
@@ -340,6 +362,8 @@ static void destroy_context(Context* ctx) {
   free(ctx->remapped_locals);
   free(ctx->function_header_offsets);
   free(ctx->segment_header_offsets);
+  destroy_assert_funcs(ctx);
+  free(ctx->assert_funcs);
 }
 
 static void out_module_header(Context* ctx,
@@ -973,100 +997,36 @@ static void before_unary(enum WasmOpcode opcode, void* user_data) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void js_file_start(Context* ctx) {
-  const char* quiet_str = ctx->options->multi_module_verbose ? "false" : "true";
-  out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
-}
-
-static void js_file_end(Context* ctx) {
-  out_printf(&ctx->js_buf, "end();\n");
-}
-
-static void js_module_start(Context* ctx) {
-  out_printf(&ctx->js_buf, "var tests = function(m) {\n");
-  ctx->in_js_module = 1;
-}
-
-static void js_module_end(Context* ctx) {
-  if (ctx->in_js_module) {
-    ctx->in_js_module = 0;
-    out_printf(&ctx->js_buf, "};\n");
+static void out_module_assert_funcs(Context* ctx) {
+  int i;
+  size_t header_size = ctx->num_assert_funcs * FUNC_HEADER_SIZE(0);
+  size_t data_size = 0;
+  size_t name_size = 0;
+  for (i = 0; i < ctx->num_assert_funcs; ++i) {
+    AssertFunc* assert_func = &ctx->assert_funcs[i];
+    name_size += strlen(assert_func->name) + 1;
+    data_size += assert_func->size;
   }
 
-  if (!ctx->temp_buf.size)
-    return;
-
-  out_printf(&ctx->js_buf, "var m = createModule([\n");
-  OutputBuffer* module_buf = &ctx->temp_buf;
-  const uint8_t* p = module_buf->start;
-  const uint8_t* end = module_buf->start + module_buf->size;
-  while (p < end) {
-    out_printf(&ctx->js_buf, " ");
-    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    for (; p < line_end; ++p)
-      out_printf(&ctx->js_buf, "%4d,", *p);
-    out_printf(&ctx->js_buf, "\n");
-  }
-  out_printf(&ctx->js_buf, "]);\ntests(m);\n");
-}
-
-static void before_module_multi(WasmModule* module, void* user_data) {
-  Context* ctx = user_data;
-  js_module_end(ctx);
-  js_module_start(ctx);
-  before_module(module, user_data);
-}
-
-static void after_module_multi(WasmModule* module, void* user_data) {
-  after_module(module, user_data);
-  /* assert_return writes its commands directly into ctx->buf. This function
-   data will then be added to the previous module. To make this work, we swap
-   ctx->buf with ctx->temp_buf; then the functions above that write to ctx->buf
-   will not modify the module (which will be saved in ctx->temp_buf).
-
-   When the next module is processed, we don't need to swap back, because we
-   don't care about the contents of either buffer */
-  Context* ctx = user_data;
-  OutputBuffer temp = ctx->buf;
-  ctx->buf = ctx->temp_buf;
-  ctx->temp_buf = temp;
-  ctx->assert_count = 0;
-}
-
-static void append_nullary_function(Context* ctx,
-                                    const char* name,
-                                    WasmType result_type,
-                                    int16_t num_local_i32,
-                                    int16_t num_local_i64,
-                                    int16_t num_local_f32,
-                                    int16_t num_local_f64) {
-  /* We assume that the data for the function in ctx->buf. Add this as a
-   new function to ctx->temp_buf. */
-  const size_t header_size = FUNC_HEADER_SIZE(0);
-  const size_t data_size = ctx->buf.size;
-  const size_t name_size = strlen(name) + 1;
-  const size_t total_added_size = header_size + data_size + name_size;
+  size_t total_added_size = header_size + data_size + name_size;
   const size_t new_size = ctx->temp_buf.size + total_added_size;
   const size_t old_size = ctx->temp_buf.size;
-
-  if (ctx->options->verbose)
-    printf("; after %s\n", name);
 
   ensure_output_buffer_capacity(&ctx->temp_buf, new_size);
   ctx->temp_buf.size = new_size;
 
-  /* We need to add a new function header, data and name to the name table:
+  /* We need to add new function headers, data and names to the name table:
    OLD:                 NEW:
    module header        module header
    global headers       global headers
    function headers     function headers
-                        NEW function header
+                        NEW function headers
    segment headers      segment headers
    function data        function data
-                        NEW function data
+                        NEW functions' data
    segment data         segment data
    name table           name table
-                        NEW name
+                        NEW names
    */
 
   const uint16_t num_globals = read_u16_at(&ctx->temp_buf, 2);
@@ -1074,11 +1034,11 @@ static void append_nullary_function(Context* ctx,
   const uint16_t num_segments = read_u16_at(&ctx->temp_buf, 6);
 
   /* fixup the number of functions */
-  out_u16_at(&ctx->temp_buf, 4, read_u16_at(&ctx->temp_buf, 4) + 1,
+  out_u16_at(&ctx->temp_buf, 4,
+             read_u16_at(&ctx->temp_buf, 4) + ctx->num_assert_funcs,
              "FIXUP num functions");
 
   /* fixup the global offsets */
-  int i;
   uint32_t offset = GLOBAL_HEADERS_OFFSET;
   for (i = 0; i < num_globals; ++i) {
     add_u32_at(&ctx->temp_buf, offset + GLOBAL_HEADER_NAME_OFFSET,
@@ -1120,54 +1080,151 @@ static void append_nullary_function(Context* ctx,
   }
 
   /* move everything after the function data down, but leave room for the new
-   function name */
-  move_data(&ctx->temp_buf, old_func_data_end + header_size + data_size,
-            old_func_data_end, old_size - old_func_data_end);
-
-  /* write the new name */
-  const uint32_t new_name_offset = new_size - name_size;
-  out_data(&ctx->temp_buf, new_name_offset, name, name_size, "func name");
-
-  /* write the new function data */
-  const uint32_t new_data_offset = old_func_data_end + header_size;
-  out_data(&ctx->temp_buf, new_data_offset, ctx->buf.start, ctx->buf.size,
-           "func func data");
+   function names */
+  const uint32_t new_func_data_end =
+      old_func_data_end + header_size + data_size;
+  move_data(&ctx->temp_buf, new_func_data_end, old_func_data_end,
+            old_size - old_func_data_end);
 
   /* move everything between the end of the function headers and the end of the
    function data down */
-  move_data(&ctx->temp_buf, old_func_header_end + header_size,
-            old_func_header_end, old_func_data_end - old_func_header_end);
+  const uint32_t new_func_header_end = old_func_header_end + header_size;
+  move_data(&ctx->temp_buf, new_func_header_end, old_func_header_end,
+            old_func_data_end - old_func_header_end);
 
-  /* write the new header */
-  const uint32_t new_header_offset = old_func_header_end;
-  if (ctx->options->verbose) {
-    printf("; clear [%07x,%07x)\n", new_header_offset,
-           new_header_offset + FUNC_HEADER_SIZE(0));
+  /* write the new data */
+  uint32_t header_offset = old_func_header_end;
+  if (ctx->options->verbose)
+    printf("; clear [%07x,%07x)\n", header_offset,
+           (uint32_t)(header_offset + header_size));
+  memset(ctx->temp_buf.start + header_offset, 0, header_size);
+
+  uint32_t data_offset = old_func_data_end + header_size;
+  uint32_t name_offset = new_size - name_size;
+  for (i = 0; i < ctx->num_assert_funcs; ++i) {
+    AssertFunc* assert_func = &ctx->assert_funcs[i];
+    size_t name_size = strlen(assert_func->name) + 1;
+
+    out_u8_at(&ctx->temp_buf, header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
+              wasm_type_to_v8_type(assert_func->result_type),
+              "func result type");
+    out_u32_at(&ctx->temp_buf, header_offset + FUNC_HEADER_NAME_OFFSET(0),
+               name_offset, "func name offset");
+    out_u32_at(&ctx->temp_buf, header_offset + FUNC_HEADER_CODE_START_OFFSET(0),
+               data_offset, "func code start offset");
+    out_u32_at(&ctx->temp_buf, header_offset + FUNC_HEADER_CODE_END_OFFSET(0),
+               data_offset + assert_func->size, "func code end offset");
+    out_u16_at(&ctx->temp_buf,
+               header_offset + FUNC_HEADER_NUM_LOCAL_I32_OFFSET(0),
+               assert_func->num_local_i32, "func num local i32");
+    out_u16_at(&ctx->temp_buf,
+               header_offset + FUNC_HEADER_NUM_LOCAL_I64_OFFSET(0),
+               assert_func->num_local_i64, "func num local i64");
+    out_u16_at(&ctx->temp_buf,
+               header_offset + FUNC_HEADER_NUM_LOCAL_F32_OFFSET(0),
+               assert_func->num_local_f32, "func num local f32");
+    out_u16_at(&ctx->temp_buf,
+               header_offset + FUNC_HEADER_NUM_LOCAL_F64_OFFSET(0),
+               assert_func->num_local_f64, "func num local f64");
+    out_u8_at(&ctx->temp_buf, header_offset + FUNC_HEADER_EXPORTED_OFFSET(0), 1,
+              "func export");
+    out_data(&ctx->temp_buf, data_offset, assert_func->data,
+             assert_func->size, "func func data");
+    out_data(&ctx->temp_buf, name_offset, assert_func->name, name_size,
+             "func name");
+
+    header_offset += FUNC_HEADER_SIZE(0);
+    data_offset += assert_func->size;
+    name_offset += name_size;
   }
-  memset(ctx->temp_buf.start + new_header_offset, 0, FUNC_HEADER_SIZE(0));
-  out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
-            wasm_type_to_v8_type(result_type), "func result type");
-  out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_NAME_OFFSET(0),
-             new_name_offset, "func name offset");
-  out_u32_at(&ctx->temp_buf,
-             new_header_offset + FUNC_HEADER_CODE_START_OFFSET(0),
-             new_data_offset, "func code start offset");
-  out_u32_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_CODE_END_OFFSET(0),
-             new_data_offset + data_size, "func code end offset");
-  out_u16_at(&ctx->temp_buf,
-             new_header_offset + FUNC_HEADER_NUM_LOCAL_I32_OFFSET(0),
-             num_local_i32, "func num local i32");
-  out_u16_at(&ctx->temp_buf,
-             new_header_offset + FUNC_HEADER_NUM_LOCAL_I64_OFFSET(0),
-             num_local_i64, "func num local i64");
-  out_u16_at(&ctx->temp_buf,
-             new_header_offset + FUNC_HEADER_NUM_LOCAL_F32_OFFSET(0),
-             num_local_f32, "func num local f32");
-  out_u16_at(&ctx->temp_buf,
-             new_header_offset + FUNC_HEADER_NUM_LOCAL_F64_OFFSET(0),
-             num_local_f64, "func num local f64");
-  out_u8_at(&ctx->temp_buf, new_header_offset + FUNC_HEADER_EXPORTED_OFFSET(0),
-            1, "func export");
+}
+
+static void js_file_start(Context* ctx) {
+  const char* quiet_str = ctx->options->multi_module_verbose ? "false" : "true";
+  out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
+}
+
+static void js_file_end(Context* ctx) {
+  out_printf(&ctx->js_buf, "end();\n");
+}
+
+static void js_module_start(Context* ctx) {
+  out_printf(&ctx->js_buf, "var tests = function(m) {\n");
+  ctx->in_js_module = 1;
+}
+
+static void js_module_end(Context* ctx) {
+  if (ctx->in_js_module) {
+    out_module_assert_funcs(ctx);
+    destroy_assert_funcs(ctx);
+    ctx->in_js_module = 0;
+    out_printf(&ctx->js_buf, "};\n");
+  }
+
+  if (!ctx->temp_buf.size)
+    return;
+
+  out_printf(&ctx->js_buf, "var m = createModule([\n");
+  OutputBuffer* module_buf = &ctx->temp_buf;
+  const uint8_t* p = module_buf->start;
+  const uint8_t* end = module_buf->start + module_buf->size;
+  while (p < end) {
+    out_printf(&ctx->js_buf, " ");
+    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    for (; p < line_end; ++p)
+      out_printf(&ctx->js_buf, "%4d,", *p);
+    out_printf(&ctx->js_buf, "\n");
+  }
+  out_printf(&ctx->js_buf, "]);\ntests(m);\n");
+}
+
+static void before_module_multi(WasmModule* module, void* user_data) {
+  Context* ctx = user_data;
+  js_module_end(ctx);
+  js_module_start(ctx);
+  before_module(module, user_data);
+}
+
+static void after_module_multi(WasmModule* module, void* user_data) {
+  after_module(module, user_data);
+  /* assert_return writes its commands directly into ctx->buf. This function
+   data will then be added to the previous module. To make this work, we swap
+   ctx->buf with ctx->temp_buf; then the functions above that write to ctx->buf
+   will not modify the module (which will be saved in ctx->temp_buf).
+
+   When the next module is processed, we don't need to swap back, because we
+   don't care about the contents of either buffer */
+  Context* ctx = user_data;
+  OutputBuffer temp = ctx->buf;
+  ctx->buf = ctx->temp_buf;
+  ctx->temp_buf = temp;
+  ctx->num_assert_funcs = 0;
+}
+
+static void append_nullary_function(Context* ctx,
+                                    const char* name,
+                                    WasmType result_type,
+                                    int16_t num_local_i32,
+                                    int16_t num_local_i64,
+                                    int16_t num_local_f32,
+                                    int16_t num_local_f64) {
+  if (ctx->options->verbose)
+    printf("; after %s\n", name);
+
+  ctx->assert_funcs = realloc(ctx->assert_funcs,
+                              (ctx->num_assert_funcs + 1) * sizeof(AssertFunc));
+  AssertFunc* assert_func = &ctx->assert_funcs[ctx->num_assert_funcs++];
+  memset(assert_func, 0, sizeof(*assert_func));
+  assert_func->name = strdup(name);
+  assert_func->result_type = result_type;
+  assert_func->num_local_i32 = num_local_i32;
+  assert_func->num_local_i64 = num_local_i64;
+  assert_func->num_local_f32 = num_local_f32;
+  assert_func->num_local_f64 = num_local_f64;
+  /* We assume that the data for the function in ctx->buf. */
+  assert_func->size = ctx->buf.size;
+  assert_func->data = malloc(ctx->buf.size);
+  memcpy(assert_func->data, ctx->buf.start, assert_func->size);
 }
 
 static WasmParserCookie before_assert_return(WasmSourceLocation loc,
@@ -1175,14 +1232,14 @@ static WasmParserCookie before_assert_return(WasmSourceLocation loc,
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
-    printf("; before assert_return_%d\n", ctx->assert_count);
+    printf("; before assert_return_%d\n", ctx->num_assert_funcs);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
   WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
   out_printf(&ctx->js_buf,
              "  assertReturn(m, \"$assert_return_%d\", \"%s\", %d);\n",
-             ctx->assert_count, loc.source->filename, loc.line);
+             ctx->num_assert_funcs, loc.source->filename, loc.line);
   return cookie;
 }
 
@@ -1220,7 +1277,7 @@ static void after_assert_return(WasmType type,
   out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_return opcode");
 
   char name[256];
-  snprintf(name, 256, "$assert_return_%d", ctx->assert_count++);
+  snprintf(name, 256, "$assert_return_%d", ctx->num_assert_funcs);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, 0, 0);
   ctx->in_assert = 0;
 }
@@ -1230,14 +1287,14 @@ static WasmParserCookie before_assert_return_nan(WasmSourceLocation loc,
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
-    printf("; before assert_return_nan_%d\n", ctx->assert_count);
+    printf("; before assert_return_nan_%d\n", ctx->num_assert_funcs);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
   out_u8(&ctx->buf, 0, "remapped local index");
   out_printf(&ctx->js_buf,
              "  assertReturn(m, \"$assert_return_nan_%d\", \"%s\", %d);\n",
-             ctx->assert_count, loc.source->filename, loc.line);
+             ctx->num_assert_funcs, loc.source->filename, loc.line);
   return 0;
 }
 
@@ -1268,7 +1325,7 @@ static void after_assert_return_nan(WasmType type,
   out_u8(&ctx->buf, 0, "remapped local index");
 
   char name[256];
-  snprintf(name, 256, "$assert_return_nan_%d", ctx->assert_count++);
+  snprintf(name, 256, "$assert_return_nan_%d", ctx->num_assert_funcs);
   append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, num_local_f32,
                           num_local_f64);
   ctx->in_assert = 0;
@@ -1278,18 +1335,18 @@ static void before_assert_trap(WasmSourceLocation loc, void* user_data) {
   Context* ctx = user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
-    printf("; before assert_trap_%d\n", ctx->assert_count);
+    printf("; before assert_trap_%d\n", ctx->num_assert_funcs);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
   out_printf(&ctx->js_buf,
              "  assertTrap(m, \"$assert_trap_%d\", \"%s\", %d);\n",
-             ctx->assert_count, loc.source->filename, loc.line);
+             ctx->num_assert_funcs, loc.source->filename, loc.line);
 }
 
 static void after_assert_trap( void* user_data) {
   Context* ctx = user_data;
   char name[256];
-  snprintf(name, 256, "$assert_trap_%d", ctx->assert_count++);
+  snprintf(name, 256, "$assert_trap_%d", ctx->num_assert_funcs);
   append_nullary_function(ctx, name, WASM_TYPE_VOID, 0, 0, 0, 0);
   ctx->in_assert = 0;
 }
@@ -1301,7 +1358,7 @@ static WasmParserCookie before_invoke(WasmSourceLocation loc,
   Context* ctx = user_data;
   if (!ctx->in_assert) {
     if (ctx->options->verbose)
-      printf("; before invoke_%d\n", ctx->assert_count);
+      printf("; before invoke_%d\n", ctx->num_assert_funcs);
     init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                        ctx->options->verbose);
   }
@@ -1313,7 +1370,7 @@ static WasmParserCookie before_invoke(WasmSourceLocation loc,
 
   if (!ctx->in_assert) {
     out_printf(&ctx->js_buf, "  invoke(m, \"$invoke_%d\");\n",
-               ctx->assert_count);
+               ctx->num_assert_funcs);
   }
 
   return (WasmParserCookie)invoke_function_index;
@@ -1327,7 +1384,7 @@ static void after_invoke(WasmParserCookie cookie, void* user_data) {
   int invoke_function_index = (int)cookie;
   WasmFunction* function = &ctx->module->functions.data[invoke_function_index];
   char name[256];
-  snprintf(name, 256, "$invoke_%d", ctx->assert_count++);
+  snprintf(name, 256, "$invoke_%d", ctx->num_assert_funcs);
   append_nullary_function(ctx, name, function->result_type, 0, 0, 0, 0);
 }
 
