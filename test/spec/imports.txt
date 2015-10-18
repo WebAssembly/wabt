@@ -1,14 +1,12 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/imports.wast
-(;; STDERR ;;;
-
-
-#
-# Fatal error in , line 0
-# unimplemented code
-#
-
-
-;;; STDERR ;;)
+(;; STDOUT ;;;
+13
+14 42
+$invoke_0 = undefined
+24
+25 53
+$invoke_1 = undefined
+0/0 tests passed.
+;;; STDOUT ;;)
