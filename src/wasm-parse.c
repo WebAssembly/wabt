@@ -935,14 +935,6 @@ static void check_type_arg(WasmParser* parser,
   }
 }
 
-static WasmType check_label_type(WasmParser* parser,
-                                 WasmSourceLocation loc,
-                                 WasmLabel* label,
-                                 WasmType type,
-                                 const char* desc) {
-  return type & label->type;
-}
-
 static void check_break_depth(WasmParser* parser,
                               WasmSourceLocation loc,
                               WasmFunction* function,
@@ -1259,8 +1251,7 @@ static WasmType parse_switch(WasmParser* parser,
       break;
   }
   if (label) {
-    type = check_label_type(parser, t.range.start, label, type,
-                            " of switch expression");
+    type &= label->type;
     pop_label(function);
   }
   CALLBACK_COOKIE(parser, after_switch, switch_cookie, (&parser->info));
@@ -1346,8 +1337,7 @@ static WasmType parse_expr(WasmParser* parser,
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs);
       if (label) {
-        type = check_label_type(parser, t.range.start, label, type,
-                                " of block final expression");
+        type &= label->type;
         pop_label(function);
       }
       CALLBACK_COOKIE(parser, after_block, cookie,
@@ -1509,9 +1499,7 @@ static WasmType parse_expr(WasmParser* parser,
         unexpected_token(parser, t);
       }
 
-      type = parse_expr(parser, module, function);
-      type = check_label_type(parser, t.range.start, label, type,
-                              " of final label expression");
+      type = parse_expr(parser, module, function) & label->type;
       pop_label(function);
       expect_close(parser, read_token(parser));
       CALLBACK_COOKIE(parser, after_label, cookie, (&parser->info, type));
@@ -1572,8 +1560,7 @@ static WasmType parse_expr(WasmParser* parser,
       if (inner_label)
         pop_label(function);
       if (outer_label) {
-        type = check_label_type(parser, t.range.start, outer_label,
-                                WASM_TYPE_ALL, " of outer loop block");
+        type = outer_label->type;
         pop_label(function);
       }
       CALLBACK_COOKIE(parser, after_loop, cookie, (&parser->info, num_exprs));
