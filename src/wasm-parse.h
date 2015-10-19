@@ -106,13 +106,7 @@ typedef struct WasmParserCallbacks {
   void (*assert_invalid_error)(WasmParserCallbackInfo* info, const char* msg);
 } WasmParserCallbacks;
 
-typedef enum WasmParserTypeCheck {
-  WASM_PARSER_TYPE_CHECK_SPEC,
-  WASM_PARSER_TYPE_CHECK_V8_NATIVE,
-} WasmParserTypeCheck;
-
 typedef struct WasmParserOptions {
-  WasmParserTypeCheck type_check;
   int br_if;
 } WasmParserOptions;
 

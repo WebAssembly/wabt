@@ -16,8 +16,6 @@ enum {
   FLAG_OUTPUT,
   FLAG_MULTI_MODULE,
   FLAG_MULTI_MODULE_VERBOSE,
-  FLAG_TYPECHECK_SPEC,
-  FLAG_TYPECHECK_V8,
   FLAG_BR_IF,
   NUM_FLAGS
 };
@@ -26,8 +24,6 @@ static const char* s_infile;
 static const char* s_outfile;
 static int s_dump_module;
 static int s_verbose;
-static WasmParserTypeCheck s_parser_type_check =
-    WASM_PARSER_TYPE_CHECK_V8_NATIVE;
 static int s_multi_module;
 static int s_multi_module_verbose;
 static int s_br_if;
@@ -39,8 +35,6 @@ static struct option s_long_options[] = {
     {"output", no_argument, NULL, 'o'},
     {"multi-module", no_argument, NULL, 0},
     {"multi-module-verbose", no_argument, NULL, 0},
-    {"typecheck-spec", no_argument, NULL, 0},
-    {"typecheck-v8", no_argument, NULL, 0},
     {"br-if", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
@@ -138,14 +132,6 @@ static void parse_options(int argc, char** argv) {
             s_multi_module_verbose = 1;
             break;
 
-          case FLAG_TYPECHECK_SPEC:
-            s_parser_type_check = WASM_PARSER_TYPE_CHECK_SPEC;
-            break;
-
-          case FLAG_TYPECHECK_V8:
-            s_parser_type_check = WASM_PARSER_TYPE_CHECK_V8_NATIVE;
-            break;
-
           case FLAG_BR_IF:
             s_br_if = 1;
             break;
@@ -215,7 +201,6 @@ int main(int argc, char** argv) {
   options.verbose = s_verbose;
   options.multi_module = s_multi_module;
   options.multi_module_verbose = s_multi_module_verbose;
-  options.type_check = s_parser_type_check;
   options.br_if = s_br_if;
   int result = wasm_gen_file(&source, &options);
   free(data);

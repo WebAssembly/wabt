@@ -78,15 +78,6 @@ typedef enum WasmOpType {
   WASM_OP_UNARY,
 } WasmOpType;
 
-enum {
-  WASM_CONTINUATION_NORMAL = 1,
-  WASM_CONTINUATION_RETURN = 2,
-  WASM_CONTINUATION_BREAK_0 = 4,
-};
-typedef uint32_t WasmContinuation;
-#define CONTINUATION_BREAK_MASK (~(WasmContinuation)3)
-#define MAX_BREAK_DEPTH 30
-
 #include "wasm-keywords.h"
 
 typedef struct OpInfo OpInfo;
@@ -925,7 +916,7 @@ static void check_type(WasmParser* parser,
                        WasmType actual,
                        WasmType expected,
                        const char* desc) {
-  if (actual != expected) {
+  if (expected != WASM_TYPE_VOID && (actual & expected) == 0) {
     FATAL_AT(parser, loc, "type mismatch%s. got %s, expected %s\n", desc,
              s_type_names[actual], s_type_names[expected]);
   }
@@ -937,7 +928,7 @@ static void check_type_arg(WasmParser* parser,
                            WasmType expected,
                            const char* desc,
                            int arg_index) {
-  if (actual != expected) {
+  if (expected != WASM_TYPE_VOID && (actual & expected) == 0) {
     FATAL_AT(parser, loc,
              "type mismatch for argument %d of %s. got %s, expected %s\n",
              arg_index, desc, s_type_names[actual], s_type_names[expected]);
@@ -948,33 +939,16 @@ static WasmType check_label_type(WasmParser* parser,
                                  WasmSourceLocation loc,
                                  WasmLabel* label,
                                  WasmType type,
-                                 WasmContinuation continuation,
                                  const char* desc) {
-  if (parser->options->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
-    return type & label->type;
-  } else {
-    assert(parser->options->type_check == WASM_PARSER_TYPE_CHECK_V8_NATIVE);
-    if (label->type != WASM_TYPE_ALL) {
-      if (type != WASM_TYPE_VOID || continuation & WASM_CONTINUATION_NORMAL) {
-        check_type(parser, loc, type, label->type, desc);
-      }
-      return label->type;
-    } else {
-      return WASM_TYPE_VOID;
-    }
-  }
+  return type & label->type;
 }
 
 static void check_break_depth(WasmParser* parser,
                               WasmSourceLocation loc,
                               WasmFunction* function,
                               int depth) {
-  if (depth == 0 && function->label_bindings.size == 0) {
+  if (depth == 0 && function->label_bindings.size == 0)
     FATAL_AT(parser, loc, "label variable out of range (max 0)\n");
-  } else if (depth > MAX_BREAK_DEPTH) {
-    FATAL_AT(parser, loc, "break depth %d not supported (max %d)\n", depth,
-             MAX_BREAK_DEPTH);
-  }
 }
 
 static WasmLabel* push_anonymous_label(WasmParser* parser,
@@ -1013,20 +987,6 @@ static void pop_label(WasmFunction* function) {
   free(function->label_bindings.data[function->label_bindings.size - 1].name);
   function->label_bindings.size--;
   function->labels.size--;
-}
-
-static WasmContinuation pop_break_continuation(WasmContinuation continuation) {
-  if (continuation & WASM_CONTINUATION_BREAK_0) {
-    continuation =
-        (continuation & ~WASM_CONTINUATION_BREAK_0) | WASM_CONTINUATION_NORMAL;
-  }
-  /* Shift all of the break depths down by 1, keeping the other
-   continuations. Since we cleared WASM_CONTINUATION_BREAK_0 above if it
-   was set, we don't have to worry about it shifting into a
-   WASM_CONTINUATION_RETURN */
-  continuation = (continuation & ~CONTINUATION_BREAK_MASK) |
-                 ((continuation & CONTINUATION_BREAK_MASK) >> 1);
-  return continuation;
 }
 
 static void parse_generic(WasmParser* parser) {
@@ -1156,35 +1116,16 @@ static void parse_type(WasmParser* parser, WasmType* type) {
 
 static WasmType parse_expr(WasmParser* parser,
                            WasmModule* module,
-                           WasmFunction* function,
-                           WasmContinuation* out_continuation);
+                           WasmFunction* function);
 
 static WasmType parse_block(WasmParser* parser,
                             WasmModule* module,
                             WasmFunction* function,
-                            int* out_num_exprs,
-                            WasmContinuation* out_continuation) {
+                            int* out_num_exprs) {
   int num_exprs = 0;
-  WasmContinuation continuation = WASM_CONTINUATION_NORMAL;
   WasmType type;
   while (1) {
-    WasmContinuation this_continuation;
-    type = parse_expr(parser, module, function, &this_continuation);
-    if (continuation & WASM_CONTINUATION_NORMAL) {
-      /* If the continuation is a power of two, then at this point we've hit a
-       return or break that is forced. A previous return/break is still
-       possible, but a normal continuation is not. */
-      if (this_continuation != WASM_CONTINUATION_NORMAL &&
-          is_power_of_two(this_continuation))
-        continuation =
-            (continuation & ~WASM_CONTINUATION_NORMAL) | this_continuation;
-      else
-        continuation |= this_continuation;
-    } else {
-      /* The current continuation does not include normal, so the current
-       expression will never be executed. */
-      /* TODO(binji): should this raise an error or warning? */
-    }
+    type = parse_expr(parser, module, function);
     ++num_exprs;
     WasmToken t = read_token(parser);
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
@@ -1192,8 +1133,6 @@ static WasmType parse_block(WasmParser* parser,
     rewind_token(parser, t);
   }
   *out_num_exprs = num_exprs;
-  if (out_continuation)
-    *out_continuation = continuation;
   return type;
 }
 
@@ -1249,10 +1188,8 @@ static void parse_literal(WasmParser* parser,
 static WasmType parse_switch(WasmParser* parser,
                              WasmModule* module,
                              WasmFunction* function,
-                             WasmType in_type,
-                             WasmContinuation* out_continuation) {
+                             WasmType in_type) {
   WasmToken t = read_token(parser);
-  WasmContinuation continuation = WASM_CONTINUATION_NORMAL;
   WasmLabel* label = NULL;
   if (t.type == WASM_TOKEN_TYPE_ATOM)
     label = push_label(parser, function, t);
@@ -1262,7 +1199,7 @@ static WasmType parse_switch(WasmParser* parser,
 
   WasmParserCookie switch_cookie =
       CALLBACK(parser, before_switch, (&parser->info, with_label));
-  WasmType cond_type = parse_expr(parser, module, function, NULL);
+  WasmType cond_type = parse_expr(parser, module, function);
   check_type(parser, parser->tokenizer.loc, cond_type, in_type,
              " in switch condition");
   WasmType type = WASM_TYPE_ALL;
@@ -1283,9 +1220,8 @@ static WasmType parse_switch(WasmParser* parser,
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(parser, t);
         WasmType value_type;
-        WasmContinuation case_continuation;
         while (1) {
-          value_type = parse_expr(parser, module, function, &case_continuation);
+          value_type = parse_expr(parser, module, function);
           ++num_exprs;
           t = read_token(parser);
           if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN) {
@@ -1299,11 +1235,8 @@ static WasmType parse_switch(WasmParser* parser,
           rewind_token(parser, t);
         }
 
-        if (fallthrough == 0) {
-          continuation |= case_continuation;
-          if (case_continuation & WASM_CONTINUATION_NORMAL)
-            type &= value_type;
-        }
+        if (fallthrough == 0)
+          type &= value_type;
       } else {
         /* Empty case statement, implicit fallthrough */
         fallthrough = 1;
@@ -1314,13 +1247,9 @@ static WasmType parse_switch(WasmParser* parser,
       /* default case */
       WasmParserCookie cookie =
           CALLBACK(parser, before_switch_default, (&parser->info));
-      WasmContinuation case_continuation;
       rewind_token(parser, open);
-      WasmType value_type =
-          parse_expr(parser, module, function, &case_continuation);
-      continuation |= case_continuation;
-      if (case_continuation & WASM_CONTINUATION_NORMAL)
-        type &= value_type;
+      WasmType value_type = parse_expr(parser, module, function);
+      type &= value_type;
       expect_close(parser, read_token(parser));
       CALLBACK_COOKIE(parser, after_switch_default, cookie, (&parser->info));
       break;
@@ -1330,13 +1259,11 @@ static WasmType parse_switch(WasmParser* parser,
       break;
   }
   if (label) {
-    type = check_label_type(parser, t.range.start, label, type, continuation,
+    type = check_label_type(parser, t.range.start, label, type,
                             " of switch expression");
-    continuation = pop_break_continuation(continuation);
     pop_label(function);
   }
   CALLBACK_COOKIE(parser, after_switch, switch_cookie, (&parser->info));
-  *out_continuation = continuation;
   return type;
 }
 
@@ -1358,7 +1285,7 @@ static void parse_call_args_generic(WasmParser* parser,
                "too many arguments to function. got %d, expected %d\n",
                parsed_args, num_args);
     }
-    WasmType arg_type = parse_expr(parser, module, function, NULL);
+    WasmType arg_type = parse_expr(parser, module, function);
     WasmType expected = args->data[parsed_args - 1].type;
     check_type_arg(parser, t.range.start, arg_type, expected, desc,
                    parsed_args - 1);
@@ -1382,10 +1309,8 @@ static void parse_call_args(WasmParser* parser,
 
 static WasmType parse_expr(WasmParser* parser,
                            WasmModule* module,
-                           WasmFunction* function,
-                           WasmContinuation* out_continuation) {
-  WasmContinuation continuation = WASM_CONTINUATION_NORMAL;
-  WasmType type = WASM_TYPE_VOID;
+                           WasmFunction* function) {
+  WasmType type = WASM_TYPE_ALL;
   expect_open(parser, read_token(parser));
   WasmToken t = read_token(parser);
   expect_atom(parser, t);
@@ -1395,14 +1320,13 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_BINARY: {
       check_opcode(parser, t.range.start, op_info->opcode);
       CALLBACK(parser, before_binary, (&parser->info, op_info->opcode));
-      WasmType value0_type = parse_expr(parser, module, function, NULL);
+      WasmType value0_type = parse_expr(parser, module, function);
       check_type_arg(parser, t.range.start, value0_type, op_info->type,
                      "binary op", 0);
-      WasmType value1_type = parse_expr(parser, module, function, NULL);
+      WasmType value1_type = parse_expr(parser, module, function);
       check_type_arg(parser, t.range.start, value1_type, op_info->type,
                      "binary op", 1);
-      assert(value0_type == value1_type);
-      type = value0_type;
+      type = value0_type & value1_type;
       expect_close(parser, read_token(parser));
       break;
     }
@@ -1420,11 +1344,10 @@ static WasmType parse_expr(WasmParser* parser,
           CALLBACK(parser, before_block, (&parser->info, with_label));
 
       int num_exprs;
-      type = parse_block(parser, module, function, &num_exprs, &continuation);
+      type = parse_block(parser, module, function, &num_exprs);
       if (label) {
         type = check_label_type(parser, t.range.start, label, type,
-                                continuation, " of block final expression");
-        continuation = pop_break_continuation(continuation);
+                                " of block final expression");
         pop_label(function);
       }
       CALLBACK_COOKIE(parser, after_block, cookie,
@@ -1440,11 +1363,9 @@ static WasmType parse_expr(WasmParser* parser,
       check_break_depth(parser, t.range.start, function, depth);
       WasmParserCookie cookie =
           CALLBACK(parser, before_br_if, (&parser->info, depth));
-      WasmType cond_type = parse_expr(parser, module, function, NULL);
+      WasmType cond_type = parse_expr(parser, module, function);
       check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
                  " of condition");
-      continuation =
-          WASM_CONTINUATION_BREAK_0 << depth | WASM_CONTINUATION_NORMAL;
       expect_close(parser, read_token(parser));
       CALLBACK_COOKIE(parser, after_br_if, cookie, (&parser->info));
       break;
@@ -1462,27 +1383,17 @@ static WasmType parse_expr(WasmParser* parser,
       int with_expr = t.type == WASM_TOKEN_TYPE_OPEN_PAREN;
       WasmParserCookie cookie =
           CALLBACK(parser, before_break, (&parser->info, with_expr, depth));
+      int label_index = (function->labels.size - 1) - depth;
+      WasmLabel* break_label = &function->labels.data[label_index];
       if (with_expr) {
-        int label_index = (function->labels.size - 1) - depth;
-        WasmLabel* break_label = &function->labels.data[label_index];
         rewind_token(parser, t);
-        WasmType break_type = parse_expr(parser, module, function, NULL);
-        if (parser->options->type_check == WASM_PARSER_TYPE_CHECK_SPEC) {
-          break_label->type &= break_type;
-        } else {
-          assert(parser->options->type_check ==
-                 WASM_PARSER_TYPE_CHECK_V8_NATIVE);
-          if (break_label->type == WASM_TYPE_ALL) {
-            break_label->type = break_type;
-          } else {
-            check_type(parser, t.range.start, break_type, break_label->type,
-                       " of break expression");
-          }
-        }
+        WasmType break_type = parse_expr(parser, module, function);
+        break_label->type &= break_type;
         t = read_token(parser);
+      } else {
+        break_label->type = WASM_TYPE_VOID;
       }
       expect_close(parser, t);
-      continuation = WASM_CONTINUATION_BREAK_0 << depth;
       CALLBACK_COOKIE(parser, after_break, cookie, (&parser->info));
       break;
     }
@@ -1520,10 +1431,10 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_COMPARE: {
       check_opcode(parser, t.range.start, op_info->opcode);
       CALLBACK(parser, before_compare, (&parser->info, op_info->opcode));
-      WasmType value0_type = parse_expr(parser, module, function, NULL);
+      WasmType value0_type = parse_expr(parser, module, function);
       check_type_arg(parser, t.range.start, value0_type, op_info->type,
                      "compare op", 0);
-      WasmType value1_type = parse_expr(parser, module, function, NULL);
+      WasmType value1_type = parse_expr(parser, module, function);
       check_type_arg(parser, t.range.start, value1_type, op_info->type,
                      "compare op", 1);
       type = WASM_TYPE_I32;
@@ -1545,7 +1456,7 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_CONVERT: {
       check_opcode(parser, t.range.start, op_info->opcode);
       CALLBACK(parser, before_convert, (&parser->info, op_info->opcode));
-      WasmType value_type = parse_expr(parser, module, function, NULL);
+      WasmType value_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, value_type, op_info->type2,
                  " of convert op");
       expect_close(parser, read_token(parser));
@@ -1564,26 +1475,20 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_IF: {
       WasmParserCookie cookie = CALLBACK(parser, before_if, (&parser->info));
-      WasmType cond_type = parse_expr(parser, module, function, NULL);
+      WasmType cond_type = parse_expr(parser, module, function);
       check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
                  " of condition");
-      WasmContinuation true_continuation;
-      WasmType true_type =
-          parse_expr(parser, module, function, &true_continuation);
+      WasmType true_type = parse_expr(parser, module, function);
       t = read_token(parser);
       int with_else = 0;
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
         with_else = 1;
         rewind_token(parser, t);
-        WasmContinuation false_continuation;
-        WasmType false_type =
-            parse_expr(parser, module, function, &false_continuation);
+        WasmType false_type = parse_expr(parser, module, function);
         type = true_type & false_type;
-        continuation = true_continuation | false_continuation;
         expect_close(parser, read_token(parser));
       } else {
         type = WASM_TYPE_VOID;
-        continuation = true_continuation | WASM_CONTINUATION_NORMAL;
       }
       CALLBACK_COOKIE(parser, after_if, cookie,
                       (&parser->info, type, with_else));
@@ -1604,10 +1509,9 @@ static WasmType parse_expr(WasmParser* parser,
         unexpected_token(parser, t);
       }
 
-      type = parse_expr(parser, module, function, &continuation);
-      type = check_label_type(parser, t.range.start, label, type, continuation,
+      type = parse_expr(parser, module, function);
+      type = check_label_type(parser, t.range.start, label, type,
                               " of final label expression");
-      continuation = pop_break_continuation(continuation);
       pop_label(function);
       expect_close(parser, read_token(parser));
       CALLBACK_COOKIE(parser, after_label, cookie, (&parser->info, type));
@@ -1622,7 +1526,7 @@ static WasmType parse_expr(WasmParser* parser,
         alignment = s_native_mem_type_alignment[mem_type];
       CALLBACK(parser, before_load, (&parser->info, op_info->opcode, mem_type,
                                      alignment, op_info->is_signed_load));
-      WasmType index_type = parse_expr(parser, module, function, NULL);
+      WasmType index_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of load index");
       expect_close(parser, read_token(parser));
@@ -1664,19 +1568,12 @@ static WasmType parse_expr(WasmParser* parser,
                    (&parser->info, with_inner_label, with_outer_label));
 
       int num_exprs;
-      type = parse_block(parser, module, function, &num_exprs, &continuation);
-      if (inner_label) {
-        type = check_label_type(parser, t.range.start, inner_label, type,
-                                continuation, " of inner loop block");
-        continuation = pop_break_continuation(continuation);
+      parse_block(parser, module, function, &num_exprs);
+      if (inner_label)
         pop_label(function);
-      }
-      /* Loops are infinite, so there is never a "normal" continuation */
-      continuation &= ~WASM_CONTINUATION_NORMAL;
       if (outer_label) {
-        type = check_label_type(parser, t.range.start, outer_label, type,
-                                continuation, " of outer loop block");
-        continuation = pop_break_continuation(continuation);
+        type = check_label_type(parser, t.range.start, outer_label,
+                                WASM_TYPE_ALL, " of outer loop block");
         pop_label(function);
       }
       CALLBACK_COOKIE(parser, after_loop, cookie, (&parser->info, num_exprs));
@@ -1692,6 +1589,7 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_NOP:
       CALLBACK(parser, after_nop, (&parser->info));
       expect_close(parser, read_token(parser));
+      type = WASM_TYPE_VOID;
       break;
 
     case WASM_OP_PAGE_SIZE:
@@ -1702,7 +1600,7 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_GROW_MEMORY: {
       CALLBACK(parser, before_grow_memory, (&parser->info));
-      type = parse_expr(parser, module, function, NULL);
+      type = parse_expr(parser, module, function);
       expect_close(parser, read_token(parser));
       break;
     }
@@ -1714,13 +1612,11 @@ static WasmType parse_expr(WasmParser* parser,
       t = read_token(parser);
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
         rewind_token(parser, t);
-        result_type = parse_expr(parser, module, function, NULL);
+        result_type = parse_expr(parser, module, function);
         expect_close(parser, read_token(parser));
       }
 
       check_type(parser, t.range.start, result_type, function->result_type, "");
-      type = WASM_TYPE_VOID;
-      continuation = WASM_CONTINUATION_RETURN;
       CALLBACK_COOKIE(parser, after_return, cookie, (&parser->info, type));
       break;
     }
@@ -1729,7 +1625,7 @@ static WasmType parse_expr(WasmParser* parser,
       int index = parse_local_var(parser, function);
       WasmVariable* variable = &function->locals.data[index];
       CALLBACK(parser, before_set_local, (&parser->info, index));
-      type = parse_expr(parser, module, function, NULL);
+      type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, type, variable->type, "");
       expect_close(parser, read_token(parser));
       break;
@@ -1743,10 +1639,10 @@ static WasmType parse_expr(WasmParser* parser,
         alignment = s_native_mem_type_alignment[mem_type];
       CALLBACK(parser, before_store,
                (&parser->info, op_info->opcode, mem_type, alignment));
-      WasmType index_type = parse_expr(parser, module, function, NULL);
+      WasmType index_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of store index");
-      WasmType value_type = parse_expr(parser, module, function, NULL);
+      WasmType value_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, value_type, op_info->type,
                  " of store value");
       expect_close(parser, read_token(parser));
@@ -1758,21 +1654,20 @@ static WasmType parse_expr(WasmParser* parser,
       int index = parse_global_var(parser, module);
       CALLBACK(parser, before_store_global, (&parser->info, index));
       WasmVariable* variable = &module->globals.data[index];
-      type = parse_expr(parser, module, function, NULL);
+      type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, type, variable->type, "");
       expect_close(parser, read_token(parser));
       break;
     }
 
     case WASM_OP_SWITCH:
-      type =
-          parse_switch(parser, module, function, op_info->type, &continuation);
+      type = parse_switch(parser, module, function, op_info->type);
       break;
 
     case WASM_OP_UNARY: {
       check_opcode(parser, t.range.start, op_info->opcode);
       CALLBACK(parser, before_unary, (&parser->info, op_info->opcode));
-      WasmType value_type = parse_expr(parser, module, function, NULL);
+      WasmType value_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, value_type, op_info->type,
                  " of unary op");
       type = value_type;
@@ -1784,8 +1679,6 @@ static WasmType parse_expr(WasmParser* parser,
       unexpected_token(parser, t);
       break;
   }
-  if (out_continuation)
-    *out_continuation = continuation;
   return type;
 }
 
@@ -1800,7 +1693,6 @@ static int parse_func(WasmParser* parser,
 
   int num_exprs = 0;
   WasmType type = WASM_TYPE_VOID;
-  WasmContinuation continuation;
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(parser, t);
     WasmToken open = t;
@@ -1819,15 +1711,14 @@ static int parse_func(WasmParser* parser,
 
       default:
         rewind_token(parser, open);
-        type = parse_expr(parser, module, function, &continuation);
+        type = parse_expr(parser, module, function);
         ++num_exprs;
         break;
     }
     t = read_token(parser);
   }
 
-  if (function->result_type != WASM_TYPE_VOID &&
-      continuation != WASM_CONTINUATION_RETURN)
+  if (function->result_type != WASM_TYPE_VOID)
     check_type(parser, t.range.start, type, function->result_type,
                " in function result");
 
@@ -2509,8 +2400,7 @@ int wasm_parse_file(WasmSource* source,
         WasmFunction dummy_function = {};
         WasmType left_type = parse_invoke(parser, &module);
         if (left_type != WASM_TYPE_VOID) {
-          WasmType right_type =
-              parse_expr(parser, &module, &dummy_function, NULL);
+          WasmType right_type = parse_expr(parser, &module, &dummy_function);
           check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
         }
 

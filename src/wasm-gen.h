@@ -7,7 +7,6 @@ typedef struct WasmGenOptions {
   int verbose;
   int multi_module;
   int multi_module_verbose;
-  enum WasmParserTypeCheck type_check;
   int br_if;
 } WasmGenOptions;
 

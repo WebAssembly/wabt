@@ -1,4 +1,3 @@
-;;; FLAGS: --typecheck-spec
 (module
   (func
     (label

@@ -112,6 +112,10 @@ static const char* s_opcode_names[] = {
 #undef OPCODE
 };
 
+static int is_power_of_two(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
+
 static uint32_t log_two_u32(uint32_t x) {
   if (!x)
     return 0;
@@ -654,7 +658,7 @@ static void after_block(WasmParserCallbackInfo* info,
     ctx->block_depth--;
     offset = (uint32_t)info->cookie;
   }
-  if (type != WASM_TYPE_VOID)
+  if (is_power_of_two(type))
     out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
               "FIXUP OPCODE_EXPR_BLOCK");
   out_u8_at(&ctx->buf, offset + 1, num_exprs, "FIXUP num expressions");
@@ -797,12 +801,12 @@ static void after_if(WasmParserCallbackInfo* info,
     uint32_t offset = (uint32_t)info->cookie;
     WasmOpcode opcode;
     const char* desc;
-    if (type == WASM_TYPE_VOID) {
-      opcode = WASM_OPCODE_IF_THEN;
-      desc = "FIXUP OPCODE_IF_THEN";
-    } else {
+    if (is_power_of_two(type)) {
       opcode = WASM_OPCODE_EXPR_IF;
       desc = "FIXUP OPCODE_EXPR_IF";
+    } else {
+      opcode = WASM_OPCODE_IF_THEN;
+      desc = "FIXUP OPCODE_IF_THEN";
     }
     out_u8_at(&ctx->buf, offset, opcode, desc);
   }
@@ -819,7 +823,7 @@ static void after_label(WasmParserCallbackInfo* info, WasmType type) {
   Context* ctx = info->user_data;
   uint32_t offset = ctx->top_label->offset;
   pop_label_info(ctx);
-  if (type != WASM_TYPE_VOID)
+  if (is_power_of_two(type))
     out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
               "FIXUP OPCODE_EXPR_BLOCK");
 }
@@ -1436,7 +1440,6 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.assert_invalid_error = assert_invalid_error;
 
   WasmParserOptions parser_options = {};
-  parser_options.type_check = options->type_check;
   parser_options.br_if = options->br_if;
 
   int result;

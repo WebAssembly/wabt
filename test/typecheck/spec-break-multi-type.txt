@@ -1,7 +1,0 @@
-;;; FLAGS: --typecheck-spec
-(module
-  (func
-    (block $exit
-      (if (i32.const 1)
-        (break (i32.const 2)))
-      (break (f32.const 3)))))
