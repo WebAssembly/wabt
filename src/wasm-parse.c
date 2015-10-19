@@ -1498,32 +1498,10 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_CALL_IMPORT: {
       int index = parse_import_var(parser, module);
-      CALLBACK(parser, before_call_import, (&parser->info, index));
       WasmImport* callee = &module->imports.data[index];
-
-      int num_args = 0;
-      while (1) {
-        WasmToken t = read_token(parser);
-        if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
-          break;
-        rewind_token(parser, t);
-        if (++num_args > callee->signature.args.size) {
-          FATAL_AT(parser, t.range.start,
-                   "too many arguments to function. got %d, expected %zd\n",
-                   num_args, callee->signature.args.size);
-        }
-        WasmType arg_type = parse_expr(parser, module, function, NULL);
-        WasmType expected = callee->signature.args.data[num_args - 1].type;
-        check_type_arg(parser, t.range.start, arg_type, expected, "call_import",
-                       num_args - 1);
-      }
-
-      if (num_args < callee->signature.args.size) {
-        FATAL_AT(parser, t.range.start,
-                 "too few arguments to function. got %d, expected %zd\n",
-                 num_args, callee->signature.args.size);
-      }
-
+      CALLBACK(parser, before_call_import, (&parser->info, index));
+      parse_call_args_generic(parser, module, function, &callee->signature.args,
+                              callee->signature.args.size, "call_import");
       type = callee->signature.result_type;
       break;
     }
