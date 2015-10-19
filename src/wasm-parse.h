@@ -16,6 +16,8 @@ typedef struct WasmParserCallbackInfo {
   WasmSourceLocation loc;
   WasmModule* module; /* may be NULL */
   WasmFunction* function; /* may be NULL */
+  /* Saved and restored for matching before/after callback pairs */
+  WasmParserCookie cookie;
   void* user_data;
 } WasmParserCallbackInfo;
 
@@ -30,19 +32,16 @@ typedef struct WasmParserCallbacks {
   void (*after_export)(WasmParserCallbackInfo* info, const char* exported_name);
 
   void (*before_binary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
-  WasmParserCookie (*before_block)(WasmParserCallbackInfo* info,
-                                   int with_label);
+  void (*before_block)(WasmParserCallbackInfo* info, int with_label);
   void (*after_block)(WasmParserCallbackInfo* info,
                       WasmType type,
-                      int num_exprs,
-                      WasmParserCookie cookie);
-  WasmParserCookie (*before_break)(WasmParserCallbackInfo* info,
-                                   int with_expr,
-                                   int label_depth);
-  void (*after_break)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
-  WasmParserCookie (*before_br_if)(WasmParserCallbackInfo* info,
-                                   int label_depth);
-  void (*after_br_if)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
+                      int num_exprs);
+  void (*before_break)(WasmParserCallbackInfo* info,
+                       int with_expr,
+                       int label_depth);
+  void (*after_break)(WasmParserCallbackInfo* info);
+  void (*before_br_if)(WasmParserCallbackInfo* info, int label_depth);
+  void (*after_br_if)(WasmParserCallbackInfo* info);
   void (*before_call)(WasmParserCallbackInfo* info, int function_index);
   void (*before_call_import)(WasmParserCallbackInfo* info, int import_index);
   void (*before_call_indirect)(WasmParserCallbackInfo* info,
@@ -53,22 +52,15 @@ typedef struct WasmParserCallbacks {
                       WasmType type,
                       WasmNumber value);
   void (*before_convert)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
-  WasmParserCookie (*before_label)(WasmParserCallbackInfo* info);
-  void (*after_label)(WasmParserCallbackInfo* info,
-                      WasmType type,
-                      WasmParserCookie cookie);
+  void (*before_label)(WasmParserCallbackInfo* info);
+  void (*after_label)(WasmParserCallbackInfo* info, WasmType type);
   void (*after_get_local)(WasmParserCallbackInfo* info, int index);
-  WasmParserCookie (*before_loop)(WasmParserCallbackInfo* info,
-                                  int with_inner_label,
-                                  int with_outer_label);
-  void (*after_loop)(WasmParserCallbackInfo* info,
-                     int num_exprs,
-                     WasmParserCookie cookie);
-  WasmParserCookie (*before_if)(WasmParserCallbackInfo* info);
-  void (*after_if)(WasmParserCallbackInfo* info,
-                   WasmType type,
-                   int with_else,
-                   WasmParserCookie cookie);
+  void (*before_loop)(WasmParserCallbackInfo* info,
+                      int with_inner_label,
+                      int with_outer_label);
+  void (*after_loop)(WasmParserCallbackInfo* info, int num_exprs);
+  void (*before_if)(WasmParserCallbackInfo* info);
+  void (*after_if)(WasmParserCallbackInfo* info, WasmType type, int with_else);
   void (*before_load)(WasmParserCallbackInfo* info,
                       enum WasmOpcode opcode,
                       WasmMemType mem_type,
@@ -87,34 +79,27 @@ typedef struct WasmParserCallbacks {
                        WasmMemType mem_type,
                        uint32_t alignment);
   void (*before_store_global)(WasmParserCallbackInfo* info, int index);
-  WasmParserCookie (*before_switch)(WasmParserCallbackInfo* info);
-  void (*after_switch)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
-  WasmParserCookie (*before_switch_case)(WasmParserCallbackInfo* info,
-                                         WasmNumber number);
+  void (*before_switch)(WasmParserCallbackInfo* info);
+  void (*after_switch)(WasmParserCallbackInfo* info);
+  void (*before_switch_case)(WasmParserCallbackInfo* info, WasmNumber number);
   void (*after_switch_case)(WasmParserCallbackInfo* info,
                             int num_exprs,
-                            int with_fallthrough,
-                            WasmParserCookie cookie);
-  WasmParserCookie (*before_switch_default)(WasmParserCallbackInfo* info);
-  void (*after_switch_default)(WasmParserCallbackInfo* info,
-                               WasmParserCookie cookie);
+                            int with_fallthrough);
+  void (*before_switch_default)(WasmParserCallbackInfo* info);
+  void (*after_switch_default)(WasmParserCallbackInfo* info);
   void (*before_unary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
 
   /* used in spec repo tests */
-  WasmParserCookie (*before_assert_return)(WasmParserCallbackInfo* info);
-  void (*after_assert_return)(WasmParserCallbackInfo* info,
-                              WasmType type,
-                              WasmParserCookie cookie);
-  WasmParserCookie (*before_assert_return_nan)(WasmParserCallbackInfo* info);
-  void (*after_assert_return_nan)(WasmParserCallbackInfo* info,
-                                  WasmType type,
-                                  WasmParserCookie cookie);
+  void (*before_assert_return)(WasmParserCallbackInfo* info);
+  void (*after_assert_return)(WasmParserCallbackInfo* info, WasmType type);
+  void (*before_assert_return_nan)(WasmParserCallbackInfo* info);
+  void (*after_assert_return_nan)(WasmParserCallbackInfo* info, WasmType type);
   void (*before_assert_trap)(WasmParserCallbackInfo* info);
   void (*after_assert_trap)(WasmParserCallbackInfo* info);
-  WasmParserCookie (*before_invoke)(WasmParserCallbackInfo* info,
-                                    const char* invoke_name,
-                                    int invoke_function_index);
-  void (*after_invoke)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
+  void (*before_invoke)(WasmParserCallbackInfo* info,
+                        const char* invoke_name,
+                        int invoke_function_index);
+  void (*after_invoke)(WasmParserCallbackInfo* info);
 
   /* called with the error from the module parsed inside of assert_invalid */
   void (*assert_invalid_error)(WasmParserCallbackInfo* info, const char* msg);

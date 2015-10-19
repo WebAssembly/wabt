@@ -366,8 +366,7 @@ static void destroy_context(Context* ctx) {
   free(ctx->assert_funcs);
 }
 
-static void out_module_header(Context* ctx,
-                              WasmModule* module) {
+static void out_module_header(Context* ctx, WasmModule* module) {
   OutputBuffer* buf = &ctx->buf;
   out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
   out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
@@ -629,34 +628,31 @@ static void after_function(WasmParserCallbackInfo* info, int num_exprs) {
              ctx->buf.size, "FIXUP func code end offset");
 }
 
-static WasmParserCookie before_block(WasmParserCallbackInfo* info,
-                                     int with_label) {
+static void before_block(WasmParserCallbackInfo* info, int with_label) {
   Context* ctx = info->user_data;
-  WasmParserCookie cookie = 0;
   /* TODO(binji): clean this up, it's a bit hacky right now. */
   if (with_label) {
     push_label_info(ctx, LABEL_TYPE_BLOCK);
+    info->cookie = 0;
   } else {
     ctx->block_depth++;
-    cookie = (WasmParserCookie)ctx->buf.size;
+    info->cookie = (WasmParserCookie)ctx->buf.size;
   }
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 0, "num expressions");
-  return cookie;
 }
 
 static void after_block(WasmParserCallbackInfo* info,
                         WasmType type,
-                        int num_exprs,
-                        WasmParserCookie cookie) {
+                        int num_exprs) {
   Context* ctx = info->user_data;
   uint32_t offset;
-  if (cookie == 0) {
+  if (info->cookie == 0) {
     offset = ctx->top_label->offset;
     pop_label_info(ctx);
   } else {
     ctx->block_depth--;
-    offset = (uint32_t)cookie;
+    offset = (uint32_t)info->cookie;
   }
   if (type != WASM_TYPE_VOID)
     out_u8_at(&ctx->buf, offset, WASM_OPCODE_EXPR_BLOCK,
@@ -675,16 +671,15 @@ static int get_block_depth(Context* ctx, LabelInfo* label_info) {
   return (ctx->block_depth - 1) - label_info->block_depth;
 }
 
-static WasmParserCookie before_br_if(WasmParserCallbackInfo* info,
-                                     int label_depth) {
+static void before_br_if(WasmParserCallbackInfo* info, int label_depth) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_IF);
-  return (WasmParserCookie)label_depth;
+  info->cookie = (WasmParserCookie)label_depth;
 }
 
-static void after_br_if(WasmParserCallbackInfo* info, WasmParserCookie cookie) {
+static void after_br_if(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
-  int label_depth = (WasmParserCookie)cookie;
+  int label_depth = (int)info->cookie;
   LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
   WasmOpcode opcode = WASM_OPCODE_BREAK;
   /* In the br_if proposal, a branch to a loop continues the loop, instead of
@@ -701,9 +696,9 @@ static void before_binary(WasmParserCallbackInfo* info,
   out_opcode(&ctx->buf, opcode);
 }
 
-static WasmParserCookie before_break(WasmParserCallbackInfo* info,
-                                     int with_expr,
-                                     int label_depth) {
+static void before_break(WasmParserCallbackInfo* info,
+                         int with_expr,
+                         int label_depth) {
   Context* ctx = info->user_data;
   LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
   label_info->with_expr = label_info->with_expr || with_expr;
@@ -714,7 +709,6 @@ static WasmParserCookie before_break(WasmParserCallbackInfo* info,
     opcode = WASM_OPCODE_CONTINUE;
   out_opcode(&ctx->buf, opcode);
   out_u8(&ctx->buf, get_block_depth(ctx, label_info), "break depth");
-  return 0;
 }
 
 static void before_call(WasmParserCallbackInfo* info, int function_index) {
@@ -788,20 +782,19 @@ static void after_get_local(WasmParserCallbackInfo* info, int index) {
   out_leb128(&ctx->buf, ctx->remapped_locals[index], "remapped local index");
 }
 
-static WasmParserCookie before_if(WasmParserCallbackInfo* info) {
+static void before_if(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   uint32_t offset = ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_IF);
-  return (WasmParserCookie)offset;
+  info->cookie = (WasmParserCookie)offset;
 }
 
 static void after_if(WasmParserCallbackInfo* info,
                      WasmType type,
-                     int with_else,
-                     WasmParserCookie cookie) {
+                     int with_else) {
   Context* ctx = info->user_data;
   if (with_else) {
-    uint32_t offset = (uint32_t)cookie;
+    uint32_t offset = (uint32_t)info->cookie;
     WasmOpcode opcode;
     const char* desc;
     if (type == WASM_TYPE_VOID) {
@@ -815,17 +808,14 @@ static void after_if(WasmParserCallbackInfo* info,
   }
 }
 
-static WasmParserCookie before_label(WasmParserCallbackInfo* info) {
+static void before_label(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   push_label_info(ctx, LABEL_TYPE_LABEL);
   out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
   out_u8(&ctx->buf, 1, "num expressions");
-  return 0;
 }
 
-static void after_label(WasmParserCallbackInfo* info,
-                        WasmType type,
-                        WasmParserCookie cookie) {
+static void after_label(WasmParserCallbackInfo* info, WasmType type) {
   Context* ctx = info->user_data;
   uint32_t offset = ctx->top_label->offset;
   pop_label_info(ctx);
@@ -870,12 +860,11 @@ static void after_load_global(WasmParserCallbackInfo* info, int index) {
   out_leb128(&ctx->buf, index, "global index");
 }
 
-static WasmParserCookie before_loop(WasmParserCallbackInfo* info,
-                                    int with_inner_label,
-                                    int with_outer_label) {
+static void before_loop(WasmParserCallbackInfo* info,
+                        int with_inner_label,
+                        int with_outer_label) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_LOOP);
-  WasmParserCookie cookie = 0;
   /* TODO(binji): clean this up, it's a bit hacky right now. */
   if (with_inner_label || with_outer_label) {
     /* The outer label must be defined if the inner label is defined */
@@ -887,21 +876,19 @@ static WasmParserCookie before_loop(WasmParserCallbackInfo* info,
       out_opcode(&ctx->buf, WASM_OPCODE_BLOCK);
       push_label_info(ctx, LABEL_TYPE_LOOP_INNER);
       out_u8(&ctx->buf, 0, "num expressions");
-      cookie = 1;
+      info->cookie = 1;
     } else {
       out_u8(&ctx->buf, 0, "num expressions");
+      info->cookie = 0;
     }
   } else {
-    cookie = (WasmParserCookie)ctx->buf.size;
+    info->cookie = (WasmParserCookie)ctx->buf.size;
     out_u8(&ctx->buf, 0, "num expressions");
     ctx->block_depth++;
   }
-  return cookie;
 }
 
-static void after_loop(WasmParserCallbackInfo* info,
-                       int num_exprs,
-                       WasmParserCookie cookie) {
+static void after_loop(WasmParserCallbackInfo* info, int num_exprs) {
   Context* ctx = info->user_data;
   if (ctx->options->br_if) {
     /* In the br_if proposal, loops don't implicitly branch to the top, so to
@@ -911,11 +898,11 @@ static void after_loop(WasmParserCallbackInfo* info,
     out_u8(&ctx->buf, 0, "break out of loop");
   }
 
-  if (cookie == 0 || cookie == 1) {
+  if (info->cookie == 0 || info->cookie == 1) {
     LabelInfo* label_info = ctx->top_label;
     out_u8_at(&ctx->buf, label_info->offset, num_exprs,
               "FIXUP num expressions");
-    if (cookie == 1) {
+    if (info->cookie == 1) {
       /* inner and outer label */
       if (label_info->with_expr)
         out_u8_at(&ctx->buf, label_info->offset - 1, WASM_OPCODE_EXPR_BLOCK,
@@ -926,7 +913,7 @@ static void after_loop(WasmParserCallbackInfo* info,
   } else {
     /* no labels */
     ctx->block_depth--;
-    uint32_t offset = (uint32_t)cookie;
+    uint32_t offset = (uint32_t)info->cookie;
     out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
   }
 }
@@ -1132,8 +1119,8 @@ static void out_module_assert_funcs(Context* ctx) {
                assert_func->num_local_f64, "func num local f64");
     out_u8_at(&ctx->temp_buf, header_offset + FUNC_HEADER_EXPORTED_OFFSET(0), 1,
               "func export");
-    out_data(&ctx->temp_buf, data_offset, assert_func->data,
-             assert_func->size, "func func data");
+    out_data(&ctx->temp_buf, data_offset, assert_func->data, assert_func->size,
+             "func func data");
     out_data(&ctx->temp_buf, name_offset, assert_func->name, name_size,
              "func name");
 
@@ -1231,27 +1218,24 @@ static void append_nullary_function(Context* ctx,
   memcpy(assert_func->data, ctx->buf.start, assert_func->size);
 }
 
-static WasmParserCookie before_assert_return(WasmParserCallbackInfo* info) {
+static void before_assert_return(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
     printf("; before assert_return_%d\n", ctx->num_assert_funcs);
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
-  WasmParserCookie cookie = (WasmParserCookie)ctx->buf.size;
+  info->cookie = (WasmParserCookie)ctx->buf.size;
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
   out_printf(&ctx->js_buf,
              "  assertReturn(m, \"$assert_return_%d\", \"%s\", %d);\n",
              ctx->num_assert_funcs, info->loc.source->filename, info->loc.line);
-  return cookie;
 }
 
-static void after_assert_return(WasmParserCallbackInfo* info,
-                                WasmType type,
-                                WasmParserCookie cookie) {
+static void after_assert_return(WasmParserCallbackInfo* info, WasmType type) {
   Context* ctx = info->user_data;
 
-  uint32_t offset = (uint32_t)cookie;
+  uint32_t offset = (uint32_t)info->cookie;
   WasmOpcode opcode;
   switch (type) {
     case WASM_TYPE_I32:
@@ -1285,7 +1269,7 @@ static void after_assert_return(WasmParserCallbackInfo* info,
   ctx->in_assert = 0;
 }
 
-static WasmParserCookie before_assert_return_nan(WasmParserCallbackInfo* info) {
+static void before_assert_return_nan(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   ctx->in_assert = 1;
   if (ctx->options->verbose)
@@ -1297,12 +1281,10 @@ static WasmParserCookie before_assert_return_nan(WasmParserCallbackInfo* info) {
   out_printf(&ctx->js_buf,
              "  assertReturn(m, \"$assert_return_nan_%d\", \"%s\", %d);\n",
              ctx->num_assert_funcs, info->loc.source->filename, info->loc.line);
-  return 0;
 }
 
 static void after_assert_return_nan(WasmParserCallbackInfo* info,
-                                    WasmType type,
-                                    WasmParserCookie cookie) {
+                                    WasmType type) {
   Context* ctx = info->user_data;
 
   int num_local_f32 = 0;
@@ -1353,9 +1335,9 @@ static void after_assert_trap(WasmParserCallbackInfo* info) {
   ctx->in_assert = 0;
 }
 
-static WasmParserCookie before_invoke(WasmParserCallbackInfo* info,
-                                      const char* invoke_name,
-                                      int invoke_function_index) {
+static void before_invoke(WasmParserCallbackInfo* info,
+                          const char* invoke_name,
+                          int invoke_function_index) {
   Context* ctx = info->user_data;
   if (!ctx->in_assert) {
     if (ctx->options->verbose)
@@ -1374,16 +1356,15 @@ static WasmParserCookie before_invoke(WasmParserCallbackInfo* info,
                ctx->num_assert_funcs);
   }
 
-  return (WasmParserCookie)invoke_function_index;
+  info->cookie = (WasmParserCookie)invoke_function_index;
 }
 
-static void after_invoke(WasmParserCallbackInfo* info,
-                         WasmParserCookie cookie) {
+static void after_invoke(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   if (ctx->in_assert)
     return;
 
-  int invoke_function_index = (int)cookie;
+  int invoke_function_index = (int)info->cookie;
   WasmFunction* function = &ctx->module->functions.data[invoke_function_index];
   char name[256];
   snprintf(name, 256, "$invoke_%d", ctx->num_assert_funcs);
@@ -1459,16 +1440,14 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
                          options->verbose);
       js_file_start(&ctx);
     }
-    result =
-        wasm_parse_file(source, &callbacks, &parser_options);
+    result = wasm_parse_file(source, &callbacks, &parser_options);
     if (options->outfile) {
       js_module_end(&ctx);
       js_file_end(&ctx);
       write_output_buffer(&ctx.js_buf, options->outfile);
     }
   } else {
-    result =
-        wasm_parse_module(source, &callbacks, &parser_options);
+    result = wasm_parse_module(source, &callbacks, &parser_options);
     if (result == 0 && options->outfile)
       write_output_buffer(&ctx.buf, options->outfile);
   }

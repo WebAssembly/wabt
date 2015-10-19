@@ -20,10 +20,13 @@
 #define FATAL_AT(parser, loc, ...) fatal_at(parser, loc, __VA_ARGS__)
 #define CALLBACK_LOC(parser, name, loc_, args)                         \
   (((parser)->callbacks->name)                                         \
-       ? ((parser)->info.loc = (loc_), (parser)->callbacks->name args) \
+       ? ((parser)->info.loc = (loc_), (parser)->callbacks->name args, \
+          (parser)->info.cookie)                                       \
        : 0)
 #define CALLBACK(parser, name, args) \
   CALLBACK_LOC(parser, name, (parser)->tokenizer.loc, args)
+#define CALLBACK_COOKIE(parser, name, cookie_, args) \
+  ((parser)->info.cookie = cookie_, CALLBACK(parser, name, args))
 #define CHECK_ALLOC(parser, p, loc) \
   if (!p)                           \
     fatal_at(parser, loc, "allocation of " #p " failed");
@@ -1292,8 +1295,8 @@ static WasmType parse_switch(WasmParser* parser,
         /* Empty case statement, implicit fallthrough */
         fallthrough = 1;
       }
-      CALLBACK(parser, after_switch_case,
-               (&parser->info, num_exprs, fallthrough, cookie));
+      CALLBACK_COOKIE(parser, after_switch_case, cookie,
+                      (&parser->info, num_exprs, fallthrough));
     } else {
       /* default case */
       WasmParserCookie cookie =
@@ -1305,14 +1308,14 @@ static WasmType parse_switch(WasmParser* parser,
       if (case_continuation & WASM_CONTINUATION_NORMAL)
         type &= value_type;
       expect_close(parser, read_token(parser));
-      CALLBACK(parser, after_switch_default, (&parser->info, cookie));
+      CALLBACK_COOKIE(parser, after_switch_default, cookie, (&parser->info));
       break;
     }
     t = read_token(parser);
     if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
       break;
   }
-  CALLBACK(parser, after_switch, (&parser->info, switch_cookie));
+  CALLBACK_COOKIE(parser, after_switch, switch_cookie, (&parser->info));
   return type;
 }
 
@@ -1403,7 +1406,8 @@ static WasmType parse_expr(WasmParser* parser,
         continuation = pop_break_continuation(continuation);
         pop_label(function);
       }
-      CALLBACK(parser, after_block, (&parser->info, type, num_exprs, cookie));
+      CALLBACK_COOKIE(parser, after_block, cookie,
+                      (&parser->info, type, num_exprs));
       break;
     }
 
@@ -1421,7 +1425,7 @@ static WasmType parse_expr(WasmParser* parser,
       continuation =
           WASM_CONTINUATION_BREAK_0 << depth | WASM_CONTINUATION_NORMAL;
       expect_close(parser, read_token(parser));
-      CALLBACK(parser, after_br_if, (&parser->info, cookie));
+      CALLBACK_COOKIE(parser, after_br_if, cookie, (&parser->info));
       break;
     }
 
@@ -1458,7 +1462,7 @@ static WasmType parse_expr(WasmParser* parser,
       }
       expect_close(parser, t);
       continuation = WASM_CONTINUATION_BREAK_0 << depth;
-      CALLBACK(parser, after_break, (&parser->info, cookie));
+      CALLBACK_COOKIE(parser, after_break, cookie, (&parser->info));
       break;
     }
 
@@ -1582,7 +1586,8 @@ static WasmType parse_expr(WasmParser* parser,
         type = WASM_TYPE_VOID;
         continuation = true_continuation | WASM_CONTINUATION_NORMAL;
       }
-      CALLBACK(parser, after_if, (&parser->info, type, with_else, cookie));
+      CALLBACK_COOKIE(parser, after_if, cookie,
+                      (&parser->info, type, with_else));
       break;
     }
 
@@ -1606,7 +1611,7 @@ static WasmType parse_expr(WasmParser* parser,
       continuation = pop_break_continuation(continuation);
       pop_label(function);
       expect_close(parser, read_token(parser));
-      CALLBACK(parser, after_label, (&parser->info, type, cookie));
+      CALLBACK_COOKIE(parser, after_label, cookie, (&parser->info, type));
       break;
     }
 
@@ -1675,7 +1680,7 @@ static WasmType parse_expr(WasmParser* parser,
         continuation = pop_break_continuation(continuation);
         pop_label(function);
       }
-      CALLBACK(parser, after_loop, (&parser->info, num_exprs, cookie));
+      CALLBACK_COOKIE(parser, after_loop, cookie, (&parser->info, num_exprs));
       break;
     }
 
@@ -1704,7 +1709,8 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_RETURN: {
-      CALLBACK(parser, before_return, (&parser->info));
+      WasmParserCookie cookie =
+          CALLBACK(parser, before_return, (&parser->info));
       WasmType result_type = WASM_TYPE_VOID;
       t = read_token(parser);
       if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
@@ -1716,7 +1722,7 @@ static WasmType parse_expr(WasmParser* parser,
       check_type(parser, t.range.start, result_type, function->result_type, "");
       type = WASM_TYPE_VOID;
       continuation = WASM_CONTINUATION_RETURN;
-      CALLBACK(parser, after_return, (&parser->info, type));
+      CALLBACK_COOKIE(parser, after_return, cookie, (&parser->info, type));
       break;
     }
 
@@ -1949,12 +1955,8 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
     STATE_BODY,
   };
   const char* state_name[] = {
-    "function start",
-    "type definition",
-    "param definition",
-    "result definition",
-    "local definition",
-    "function body",
+      "function start",    "type definition",  "param definition",
+      "result definition", "local definition", "function body",
   };
   enum State last_state = STATE_NONE;
   enum State state = STATE_NONE;
@@ -2301,7 +2303,7 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
   expect_atom_op(parser, t, WASM_OP_MODULE, "module");
 
   preparse_module(parser, module);
-  CALLBACK(parser, before_module, (&parser->info));
+  WasmParserCookie cookie = CALLBACK(parser, before_module, (&parser->info));
 
   int seen_table = 0;
   int function_index = 0;
@@ -2316,15 +2318,18 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
       case WASM_OP_FUNC: {
         WasmFunction* function = &module->functions.data[function_index++];
         parser->info.function = function;
-        CALLBACK(parser, before_function, (&parser->info));
+        WasmParserCookie cookie =
+            CALLBACK(parser, before_function, (&parser->info));
         int num_exprs = parse_func(parser, module, function);
-        CALLBACK(parser, after_function, (&parser->info, num_exprs));
+        CALLBACK_COOKIE(parser, after_function, cookie,
+                        (&parser->info, num_exprs));
         parser->info.function = NULL;
         break;
       }
 
       case WASM_OP_EXPORT: {
-        CALLBACK(parser, before_export, (&parser->info));
+        WasmParserCookie cookie =
+            CALLBACK(parser, before_export, (&parser->info));
         t = read_token(parser);
         expect_string(parser, t);
         int index = parse_function_var(parser, module);
@@ -2350,7 +2355,8 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
         }
 
         expect_close(parser, read_token(parser));
-        CALLBACK(parser, after_export, (&parser->info, export_name));
+        CALLBACK_COOKIE(parser, after_export, cookie,
+                        (&parser->info, export_name));
         break;
       }
 
@@ -2387,7 +2393,7 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
     t = read_token(parser);
   }
 
-  CALLBACK(parser, after_module, (&parser->info));
+  CALLBACK_COOKIE(parser, after_module, cookie, (&parser->info));
   parser->info.module = NULL;
 }
 
@@ -2451,7 +2457,7 @@ static WasmType parse_invoke(WasmParser* parser, WasmModule* module) {
   WasmFunction dummy_function = {};
   WasmFunction* invokee = &module->functions.data[function_index];
   parse_call_args(parser, module, &dummy_function, invokee, "invoke");
-  CALLBACK(parser, after_invoke, (&parser->info, cookie));
+  CALLBACK_COOKIE(parser, after_invoke, cookie, (&parser->info));
   return invokee->result_type;
 }
 
@@ -2508,8 +2514,8 @@ int wasm_parse_file(WasmSource* source,
           check_type(parser, parser->tokenizer.loc, right_type, left_type, "");
         }
 
-        CALLBACK(parser, after_assert_return,
-                 (&parser->info, left_type, cookie));
+        CALLBACK_COOKIE(parser, after_assert_return, cookie,
+                        (&parser->info, left_type));
         expect_close(parser, read_token(parser));
         break;
       }
@@ -2532,8 +2538,8 @@ int wasm_parse_file(WasmSource* source,
                    s_type_names[type]);
         }
 
-        CALLBACK(parser, after_assert_return_nan,
-                 (&parser->info, type, cookie));
+        CALLBACK_COOKIE(parser, after_assert_return_nan, cookie,
+                        (&parser->info, type));
         expect_close(parser, read_token(parser));
         break;
       }
@@ -2546,10 +2552,10 @@ int wasm_parse_file(WasmSource* source,
         expect_open(parser, read_token(parser));
         expect_atom_op(parser, read_token(parser), WASM_OP_INVOKE, "invoke");
 
-        CALLBACK_LOC(parser, before_assert_trap, t.range.start,
-                     (&parser->info));
+        WasmParserCookie cookie = CALLBACK_LOC(parser, before_assert_trap,
+                                               t.range.start, (&parser->info));
         parse_invoke(parser, &module);
-        CALLBACK(parser, after_assert_trap, (&parser->info));
+        CALLBACK_COOKIE(parser, after_assert_trap, cookie, (&parser->info));
         /* ignore string, these are error messages that will only match the
            spec repo */
         expect_string(parser, read_token(parser));
