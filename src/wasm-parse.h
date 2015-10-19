@@ -12,109 +12,112 @@ typedef union WasmNumber {
 
 typedef uintptr_t WasmParserCookie;
 
+typedef struct WasmParserCallbackInfo {
+  WasmSourceLocation loc;
+  WasmModule* module; /* may be NULL */
+  WasmFunction* function; /* may be NULL */
+  void* user_data;
+} WasmParserCallbackInfo;
+
 typedef struct WasmParserCallbacks {
   void* user_data;
-  void (*error)(WasmSourceLocation loc, const char* msg, void* user_data);
-  void (*before_module)(struct WasmModule* m, void* user_data);
-  void (*after_module)(struct WasmModule* m, void* user_data);
-  void (*before_function)(struct WasmModule* m,
-                          struct WasmFunction* f,
-                          void* user_data);
-  void (*after_function)(struct WasmModule* m,
-                         struct WasmFunction* f,
-                         int num_exprs,
-                         void* user_data);
-  void (*before_export)(struct WasmModule* m, void* user_data);
-  void (*after_export)(struct WasmModule* m,
-                       struct WasmFunction* f,
-                       const char* exported_name,
-                       void* user_data);
+  void (*error)(WasmParserCallbackInfo* info, const char* msg);
+  void (*before_module)(WasmParserCallbackInfo* info);
+  void (*after_module)(WasmParserCallbackInfo* info);
+  void (*before_function)(WasmParserCallbackInfo* info);
+  void (*after_function)(WasmParserCallbackInfo* info, int num_exprs);
+  void (*before_export)(WasmParserCallbackInfo* info);
+  void (*after_export)(WasmParserCallbackInfo* info, const char* exported_name);
 
-  void (*before_binary)(enum WasmOpcode opcode, void* user_data);
-  WasmParserCookie (*before_block)(int with_label, void* user_data);
-  void (*after_block)(WasmType type,
-                      int num_exprs,
-                      WasmParserCookie cookie,
-                      void* user_data);
-  WasmParserCookie (*before_break)(int with_expr,
-                                   int label_depth,
-                                   void* user_data);
-  void (*after_break)(WasmParserCookie cookie, void* user_data);
-  WasmParserCookie (*before_br_if)(int label_depth, void* user_data);
-  void (*after_br_if)(WasmParserCookie cookie, void* user_data);
-  void (*before_call)(int function_index, void* user_data);
-  void (*before_call_import)(int import_index, void* user_data);
-  void (*before_call_indirect)(int signature_index, void* user_data);
-  void (*before_compare)(enum WasmOpcode opcode, void* user_data);
-  void (*after_const)(enum WasmOpcode opcode,
+  void (*before_binary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
+  WasmParserCookie (*before_block)(WasmParserCallbackInfo* info,
+                                   int with_label);
+  void (*after_block)(WasmParserCallbackInfo* info,
                       WasmType type,
-                      WasmNumber value,
-                      void* user_data);
-  void (*before_convert)(enum WasmOpcode opcode, void* user_data);
-  WasmParserCookie (*before_label)(void* user_data);
-  void (*after_label)(WasmType type, WasmParserCookie cookie, void* user_data);
-  void (*after_get_local)(int index, void* user_data);
-  WasmParserCookie (*before_loop)(int with_inner_label,
-                                  int with_outer_label,
-                                  void* user_data);
-  void (*after_loop)(int num_exprs, WasmParserCookie cookie, void* user_data);
-  WasmParserCookie (*before_if)(void* user_data);
-  void (*after_if)(WasmType type,
+                      int num_exprs,
+                      WasmParserCookie cookie);
+  WasmParserCookie (*before_break)(WasmParserCallbackInfo* info,
+                                   int with_expr,
+                                   int label_depth);
+  void (*after_break)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
+  WasmParserCookie (*before_br_if)(WasmParserCallbackInfo* info,
+                                   int label_depth);
+  void (*after_br_if)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
+  void (*before_call)(WasmParserCallbackInfo* info, int function_index);
+  void (*before_call_import)(WasmParserCallbackInfo* info, int import_index);
+  void (*before_call_indirect)(WasmParserCallbackInfo* info,
+                               int signature_index);
+  void (*before_compare)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
+  void (*after_const)(WasmParserCallbackInfo* info,
+                      enum WasmOpcode opcode,
+                      WasmType type,
+                      WasmNumber value);
+  void (*before_convert)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
+  WasmParserCookie (*before_label)(WasmParserCallbackInfo* info);
+  void (*after_label)(WasmParserCallbackInfo* info,
+                      WasmType type,
+                      WasmParserCookie cookie);
+  void (*after_get_local)(WasmParserCallbackInfo* info, int index);
+  WasmParserCookie (*before_loop)(WasmParserCallbackInfo* info,
+                                  int with_inner_label,
+                                  int with_outer_label);
+  void (*after_loop)(WasmParserCallbackInfo* info,
+                     int num_exprs,
+                     WasmParserCookie cookie);
+  WasmParserCookie (*before_if)(WasmParserCallbackInfo* info);
+  void (*after_if)(WasmParserCallbackInfo* info,
+                   WasmType type,
                    int with_else,
-                   WasmParserCookie cookie,
-                   void* user_data);
-  void (*before_load)(enum WasmOpcode opcode,
+                   WasmParserCookie cookie);
+  void (*before_load)(WasmParserCallbackInfo* info,
+                      enum WasmOpcode opcode,
                       WasmMemType mem_type,
                       uint32_t alignment,
-                      int is_signed,
-                      void* user_data);
-  void (*after_load_global)(int index, void* user_data);
-  void (*after_memory_size)(void* user_data);
-  void (*after_nop)(void* user_data);
-  void (*after_page_size)(void* user_data);
-  void (*before_grow_memory)(void* user_data);
-  void (*before_return)(void* user_data);
-  void (*after_return)(WasmType type, void* user_data);
-  void (*before_set_local)(int index, void* user_data);
-  void (*before_store)(enum WasmOpcode opcode,
+                      int is_signed);
+  void (*after_load_global)(WasmParserCallbackInfo* info, int index);
+  void (*after_memory_size)(WasmParserCallbackInfo* info);
+  void (*after_nop)(WasmParserCallbackInfo* info);
+  void (*after_page_size)(WasmParserCallbackInfo* info);
+  void (*before_grow_memory)(WasmParserCallbackInfo* info);
+  void (*before_return)(WasmParserCallbackInfo* info);
+  void (*after_return)(WasmParserCallbackInfo* info, WasmType type);
+  void (*before_set_local)(WasmParserCallbackInfo* info, int index);
+  void (*before_store)(WasmParserCallbackInfo* info,
+                       enum WasmOpcode opcode,
                        WasmMemType mem_type,
-                       uint32_t alignment,
-                       void* user_data);
-  void (*before_store_global)(int index, void* user_data);
-  WasmParserCookie (*before_switch)(void* user_data);
-  void (*after_switch)(WasmParserCookie cookie, void* user_data);
-  WasmParserCookie (*before_switch_case)(WasmNumber number, void* user_data);
-  void (*after_switch_case)(int num_exprs,
+                       uint32_t alignment);
+  void (*before_store_global)(WasmParserCallbackInfo* info, int index);
+  WasmParserCookie (*before_switch)(WasmParserCallbackInfo* info);
+  void (*after_switch)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
+  WasmParserCookie (*before_switch_case)(WasmParserCallbackInfo* info,
+                                         WasmNumber number);
+  void (*after_switch_case)(WasmParserCallbackInfo* info,
+                            int num_exprs,
                             int with_fallthrough,
-                            WasmParserCookie cookie,
-                            void* user_data);
-  WasmParserCookie (*before_switch_default)(void* user_data);
-  void (*after_switch_default)(WasmParserCookie cookie, void* user_data);
-  void (*before_unary)(enum WasmOpcode opcode, void* user_data);
+                            WasmParserCookie cookie);
+  WasmParserCookie (*before_switch_default)(WasmParserCallbackInfo* info);
+  void (*after_switch_default)(WasmParserCallbackInfo* info,
+                               WasmParserCookie cookie);
+  void (*before_unary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
 
   /* used in spec repo tests */
-  WasmParserCookie (*before_assert_return)(WasmSourceLocation loc,
-                                           void* user_data);
-  void (*after_assert_return)(WasmType type,
-                              WasmParserCookie cookie,
-                              void* user_data);
-  WasmParserCookie (*before_assert_return_nan)(WasmSourceLocation loc,
-                                               void* user_data);
-  void (*after_assert_return_nan)(WasmType type,
-                                  WasmParserCookie cookie,
-                                  void* user_data);
-  void (*before_assert_trap)(WasmSourceLocation loc, void* user_data);
-  void (*after_assert_trap)(void* user_data);
-  WasmParserCookie (*before_invoke)(WasmSourceLocation loc,
+  WasmParserCookie (*before_assert_return)(WasmParserCallbackInfo* info);
+  void (*after_assert_return)(WasmParserCallbackInfo* info,
+                              WasmType type,
+                              WasmParserCookie cookie);
+  WasmParserCookie (*before_assert_return_nan)(WasmParserCallbackInfo* info);
+  void (*after_assert_return_nan)(WasmParserCallbackInfo* info,
+                                  WasmType type,
+                                  WasmParserCookie cookie);
+  void (*before_assert_trap)(WasmParserCallbackInfo* info);
+  void (*after_assert_trap)(WasmParserCallbackInfo* info);
+  WasmParserCookie (*before_invoke)(WasmParserCallbackInfo* info,
                                     const char* invoke_name,
-                                    int invoke_function_index,
-                                    void* user_data);
-  void (*after_invoke)(WasmParserCookie cookie, void* user_data);
+                                    int invoke_function_index);
+  void (*after_invoke)(WasmParserCallbackInfo* info, WasmParserCookie cookie);
 
   /* called with the error from the module parsed inside of assert_invalid */
-  void (*assert_invalid_error)(WasmSourceLocation loc,
-                               const char* msg,
-                               void* user_data);
+  void (*assert_invalid_error)(WasmParserCallbackInfo* info, const char* msg);
 } WasmParserCallbacks;
 
 typedef enum WasmParserTypeCheck {
