@@ -1760,10 +1760,6 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_SWITCH:
-      /* TODO(binji): we won't use the switch opcodes anyway */
-#if 0
-      check_opcode(parser, t.range.start, op_info->opcode);
-#endif
       type = parse_switch(parser, module, function, op_info->type);
       break;
 
