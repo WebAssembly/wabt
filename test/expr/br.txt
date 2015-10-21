@@ -1,0 +1,5 @@
+;;; FLAGS: --br-if
+(module
+  (func
+    (label
+      (br 0))))
