@@ -1,0 +1,57 @@
+;;; FLAGS: -dv
+(module
+  (type (func (param i32)))
+  (type (func (param i64)))
+  (type (func (param f32)))
+  (type (func (param f64)))
+
+  (type (func (result i32)))
+  (type (func (result i64)))
+  (type (func (result f32)))
+  (type (func (result f64)))
+
+  (type (func (param i32) (result f64))))
+(;; STDOUT ;;;
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 09                                         ; num signatures
+; type signature 0
+0000006: 01                                         ; num args
+0000007: 00                                         ; result_type
+0000008: 01                                         ; arg type
+; type signature 1
+0000009: 01                                         ; num args
+000000a: 00                                         ; result_type
+000000b: 02                                         ; arg type
+; type signature 2
+000000c: 01                                         ; num args
+000000d: 00                                         ; result_type
+000000e: 03                                         ; arg type
+; type signature 3
+000000f: 01                                         ; num args
+0000010: 00                                         ; result_type
+0000011: 04                                         ; arg type
+; type signature 4
+0000012: 00                                         ; num args
+0000013: 01                                         ; result_type
+; type signature 5
+0000014: 00                                         ; num args
+0000015: 02                                         ; result_type
+; type signature 6
+0000016: 00                                         ; num args
+0000017: 03                                         ; result_type
+; type signature 7
+0000018: 00                                         ; num args
+0000019: 04                                         ; result_type
+; type signature 8
+000001a: 01                                         ; num args
+000001b: 04                                         ; result_type
+000001c: 01                                         ; arg type
+000001d: 06                                         ; WASM_SECTION_END
+; names
+0000000: 0000 0001 0109 0100 0101 0002 0100 0301  ................
+0000010: 0004 0001 0002 0003 0004 0104 0106       ..............
+;;; STDOUT ;;)
