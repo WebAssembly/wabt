@@ -26,59 +26,57 @@
               (f64.trunc
                 (f64.nearest (f64.const 0))))))))))
 (;; STDOUT ;;;
-0000000: 00                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0100                                       ; num funcs
-0000006: 0000                                       ; num data segments
-; function header 0
-0000008: 00                                         ; func num args
-0000009: 00                                         ; func result type
-000000a: 0000 0000                                  ; func name offset
-000000e: 0000 0000                                  ; func code start offset
-0000012: 0000 0000                                  ; func code end offset
-0000016: 0000                                       ; num local i32
-0000018: 0000                                       ; num local i64
-000001a: 0000                                       ; num local f32
-000001c: 0000                                       ; num local f64
-000001e: 00                                         ; export func
-000001f: 00                                         ; func external
-; function data 0
-000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 5a                                         ; OPCODE_I32_NOT
-0000021: 57                                         ; OPCODE_I32_CLZ
-0000022: 58                                         ; OPCODE_I32_CTZ
-0000023: 59                                         ; OPCODE_I32_POPCNT
-0000024: 10                                         ; OPCODE_I8_CONST
-0000025: 00                                         ; u8 literal
-0000026: 72                                         ; OPCODE_I64_CLZ
-0000027: 73                                         ; OPCODE_I64_CTZ
-0000028: 74                                         ; OPCODE_I64_POPCNT
-0000029: 12                                         ; OPCODE_I64_CONST
-000002a: 0000 0000 0000 0000                        ; u64 literal
-0000032: 7c                                         ; OPCODE_F32_NEG
-0000033: 7b                                         ; OPCODE_F32_ABS
-0000034: 82                                         ; OPCODE_F32_SQRT
-0000035: 7e                                         ; OPCODE_F32_CEIL
-0000036: 7f                                         ; OPCODE_F32_FLOOR
-0000037: 80                                         ; OPCODE_F32_TRUNC
-0000038: 81                                         ; OPCODE_F32_NEAREST
-0000039: 14                                         ; OPCODE_F32_CONST
-000003a: 0000 0000                                  ; f32 literal
-000003e: 90                                         ; OPCODE_F64_NEG
-000003f: 8f                                         ; OPCODE_F64_ABS
-0000040: 96                                         ; OPCODE_F64_SQRT
-0000041: 92                                         ; OPCODE_F64_CEIL
-0000042: 93                                         ; OPCODE_F64_FLOOR
-0000043: 94                                         ; OPCODE_F64_TRUNC
-0000044: 95                                         ; OPCODE_F64_NEAREST
-0000045: 13                                         ; OPCODE_F64_CONST
-0000046: 0000 0000 0000 0000                        ; f64 literal
-0000012: 4e00 0000                                  ; FIXUP func code end offset
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 01                                         ; num signatures
+; function signature 0
+0000006: 00                                         ; num args
+0000007: 00                                         ; result_type
+0000008: 02                                         ; WASM_SECTION_FUNCTIONS
+0000009: 01                                         ; num functions
+; function 0
+000000a: 01                                         ; func flags
+000000b: 0000                                       ; func signature index
+000000d: 0000 0000                                  ; func name offset
+0000011: 0000                                       ; func body size
+0000013: 5a                                         ; OPCODE_I32_NOT
+0000014: 57                                         ; OPCODE_I32_CLZ
+0000015: 58                                         ; OPCODE_I32_CTZ
+0000016: 59                                         ; OPCODE_I32_POPCNT
+0000017: 10                                         ; OPCODE_I8_CONST
+0000018: 00                                         ; u8 literal
+0000019: 72                                         ; OPCODE_I64_CLZ
+000001a: 73                                         ; OPCODE_I64_CTZ
+000001b: 74                                         ; OPCODE_I64_POPCNT
+000001c: 12                                         ; OPCODE_I64_CONST
+000001d: 0000 0000 0000 0000                        ; u64 literal
+0000025: 7c                                         ; OPCODE_F32_NEG
+0000026: 7b                                         ; OPCODE_F32_ABS
+0000027: 82                                         ; OPCODE_F32_SQRT
+0000028: 7e                                         ; OPCODE_F32_CEIL
+0000029: 7f                                         ; OPCODE_F32_FLOOR
+000002a: 80                                         ; OPCODE_F32_TRUNC
+000002b: 81                                         ; OPCODE_F32_NEAREST
+000002c: 14                                         ; OPCODE_F32_CONST
+000002d: 0000 0000                                  ; f32 literal
+0000031: 90                                         ; OPCODE_F64_NEG
+0000032: 8f                                         ; OPCODE_F64_ABS
+0000033: 96                                         ; OPCODE_F64_SQRT
+0000034: 92                                         ; OPCODE_F64_CEIL
+0000035: 93                                         ; OPCODE_F64_FLOOR
+0000036: 94                                         ; OPCODE_F64_TRUNC
+0000037: 95                                         ; OPCODE_F64_NEAREST
+0000038: 13                                         ; OPCODE_F64_CONST
+0000039: 0000 0000 0000 0000                        ; f64 literal
+0000011: 2e00                                       ; FIXUP func body size
+0000041: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 4e00 0000 0000 0000 0000 0000 0000  ..N.............
-0000020: 5a57 5859 1000 7273 7412 0000 0000 0000  ZWXY..rst.......
-0000030: 0000 7c7b 827e 7f80 8114 0000 0000 908f  ..|{.~..........
-0000040: 9692 9394 9513 0000 0000 0000 0000       ..............
+0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
+0000010: 002e 005a 5758 5910 0072 7374 1200 0000  ...ZWXY..rst....
+0000020: 0000 0000 007c 7b82 7e7f 8081 1400 0000  .....|{.~.......
+0000030: 0090 8f96 9293 9495 1300 0000 0000 0000  ................
+0000040: 0006                                     ..
 ;;; STDOUT ;;)

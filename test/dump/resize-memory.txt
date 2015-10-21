@@ -4,32 +4,29 @@
   (func (param i32)
     (grow_memory (get_local 0))))
 (;; STDOUT ;;;
-0000000: 0a                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0100                                       ; num funcs
-0000006: 0000                                       ; num data segments
-; function header 0
-0000008: 01                                         ; func num args
-0000009: 00                                         ; func result type
-000000a: 01                                         ; func arg type
-000000b: 0000 0000                                  ; func name offset
-000000f: 0000 0000                                  ; func code start offset
-0000013: 0000 0000                                  ; func code end offset
-0000017: 0000                                       ; num local i32
-0000019: 0000                                       ; num local i64
-000001b: 0000                                       ; num local f32
-000001d: 0000                                       ; num local f64
-000001f: 00                                         ; export func
-0000020: 00                                         ; func external
-; function data 0
-000000f: 2100 0000                                  ; FIXUP func code start offset
-0000021: 39                                         ; OPCODE_RESIZE_MEMORY_I32
-0000022: 15                                         ; OPCODE_GET_LOCAL
-0000023: 00                                         ; remapped local index
-0000013: 2400 0000                                  ; FIXUP func code end offset
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 08                                         ; min mem size log 2
+0000002: 0a                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 01                                         ; num signatures
+; function signature 0
+0000006: 01                                         ; num args
+0000007: 00                                         ; result_type
+0000008: 01                                         ; arg type
+0000009: 02                                         ; WASM_SECTION_FUNCTIONS
+000000a: 01                                         ; num functions
+; function 0
+000000b: 01                                         ; func flags
+000000c: 0000                                       ; func signature index
+000000e: 0000 0000                                  ; func name offset
+0000012: 0000                                       ; func body size
+0000014: 39                                         ; OPCODE_RESIZE_MEMORY_I32
+0000015: 15                                         ; OPCODE_GET_LOCAL
+0000016: 00                                         ; remapped local index
+0000012: 0300                                       ; FIXUP func body size
+0000017: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0a01 0000 0100 0000 0100 0100 0000 0021  ...............!
-0000010: 0000 0024 0000 0000 0000 0000 0000 0000  ...$............
-0000020: 0039 1500                                .9..
+0000000: 0008 0a01 0101 0100 0102 0101 0000 0000  ................
+0000010: 0000 0300 3915 0006                      ....9...
 ;;; STDOUT ;;)

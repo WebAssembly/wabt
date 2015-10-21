@@ -10,54 +10,45 @@
     ;; first.
     (call 0)))
 (;; STDOUT ;;;
-0000000: 00                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0200                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 02                                         ; num signatures
+; import signature 0
+0000006: 02                                         ; num args
+0000007: 01                                         ; result_type
+0000008: 01                                         ; arg type
+0000009: 03                                         ; arg type
+; function signature 1
+000000a: 00                                         ; num args
+000000b: 01                                         ; result_type
+000000c: 02                                         ; WASM_SECTION_FUNCTIONS
+000000d: 02                                         ; num functions
 ; import header 0
-0000008: 02                                         ; import num args
-0000009: 01                                         ; import result_type
-000000a: 01                                         ; import arg type
-000000b: 03                                         ; import arg type
-000000c: 0000 0000                                  ; import name offset
-0000010: 0000 0000                                  ; import code start offset
-0000014: 0000 0000                                  ; import code end offset
-0000018: 0000                                       ; num local i32
-000001a: 0000                                       ; num local i64
-000001c: 0000                                       ; num local f32
-000001e: 0000                                       ; num local f64
-0000020: 00                                         ; export func
-0000021: 01                                         ; import external
-; function header 0
-0000022: 00                                         ; func num args
-0000023: 01                                         ; func result type
-0000024: 0000 0000                                  ; func name offset
-0000028: 0000 0000                                  ; func code start offset
-000002c: 0000 0000                                  ; func code end offset
-0000030: 0000                                       ; num local i32
-0000032: 0000                                       ; num local i64
-0000034: 0000                                       ; num local f32
-0000036: 0000                                       ; num local f64
-0000038: 00                                         ; export func
-0000039: 00                                         ; func external
-; function data 0
-0000028: 3a00 0000                                  ; FIXUP func code start offset
-000003a: 19                                         ; OPCODE_CALL
-000003b: 00                                         ; import index
-000003c: 10                                         ; OPCODE_I8_CONST
-000003d: 01                                         ; u8 literal
-000003e: 14                                         ; OPCODE_F32_CONST
-000003f: 0000 0040                                  ; f32 literal
-0000043: 19                                         ; OPCODE_CALL
-0000044: 01                                         ; func index
-000002c: 4500 0000                                  ; FIXUP func code end offset
+000000e: 03                                         ; import flags
+000000f: 0000                                       ; import signature index
+0000011: 0000 0000                                  ; import name offset
+; function 0
+0000015: 01                                         ; func flags
+0000016: 0100                                       ; func signature index
+0000018: 0000 0000                                  ; func name offset
+000001c: 0000                                       ; func body size
+000001e: 19                                         ; OPCODE_CALL
+000001f: 00                                         ; import index
+0000020: 10                                         ; OPCODE_I8_CONST
+0000021: 01                                         ; u8 literal
+0000022: 14                                         ; OPCODE_F32_CONST
+0000023: 0000 0040                                  ; f32 literal
+0000027: 19                                         ; OPCODE_CALL
+0000028: 01                                         ; func index
+000001c: 0b00                                       ; FIXUP func body size
+0000029: 06                                         ; WASM_SECTION_END
 ; names
-000000c: 4500 0000                                  ; FIXUP import name offset
-0000045: 6261 7200                                  ; import name
-0000000: 0001 0000 0200 0000 0201 0103 4500 0000  ............E...
-0000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-0000020: 0001 0001 0000 0000 3a00 0000 4500 0000  ........:...E...
-0000030: 0000 0000 0000 0000 0000 1900 1001 1400  ................
-0000040: 0000 4019 0162 6172 00                   ..@..bar.
+0000011: 2a00 0000                                  ; FIXUP import name offset
+000002a: 6261 7200                                  ; import name
+0000000: 0000 0001 0102 0201 0103 0001 0202 0300  ................
+0000010: 002a 0000 0001 0100 0000 0000 0b00 1900  .*..............
+0000020: 1001 1400 0000 4019 0106 6261 7200       ......@...bar.
 ;;; STDOUT ;;)

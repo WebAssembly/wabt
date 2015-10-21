@@ -4,32 +4,104 @@
 (module (memory 512))
 (module (memory 1000))
 (;; STDOUT ;;;
-0000000: 07                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0000                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 07                                         ; min mem size log 2
+0000002: 07                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 05                                         ; num signatures
+; assert signature 0
+0000006: 00                                         ; num args
+0000007: 00                                         ; result_type
+; assert signature 1
+0000008: 00                                         ; num args
+0000009: 01                                         ; result_type
+; assert signature 2
+000000a: 00                                         ; num args
+000000b: 02                                         ; result_type
+; assert signature 3
+000000c: 00                                         ; num args
+000000d: 03                                         ; result_type
+; assert signature 4
+000000e: 00                                         ; num args
+000000f: 04                                         ; result_type
+0000010: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0701 0000 0000 0000                      ........
-0000000: 08                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0000                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 0007 0701 0105 0000 0001 0002 0003 0004  ................
+0000010: 06                                       .
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 08                                         ; min mem size log 2
+0000002: 08                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 05                                         ; num signatures
+; assert signature 0
+0000006: 00                                         ; num args
+0000007: 00                                         ; result_type
+; assert signature 1
+0000008: 00                                         ; num args
+0000009: 01                                         ; result_type
+; assert signature 2
+000000a: 00                                         ; num args
+000000b: 02                                         ; result_type
+; assert signature 3
+000000c: 00                                         ; num args
+000000d: 03                                         ; result_type
+; assert signature 4
+000000e: 00                                         ; num args
+000000f: 04                                         ; result_type
+0000010: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0801 0000 0000 0000                      ........
-0000000: 09                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0000                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 0008 0801 0105 0000 0001 0002 0003 0004  ................
+0000010: 06                                       .
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 09                                         ; min mem size log 2
+0000002: 09                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 05                                         ; num signatures
+; assert signature 0
+0000006: 00                                         ; num args
+0000007: 00                                         ; result_type
+; assert signature 1
+0000008: 00                                         ; num args
+0000009: 01                                         ; result_type
+; assert signature 2
+000000a: 00                                         ; num args
+000000b: 02                                         ; result_type
+; assert signature 3
+000000c: 00                                         ; num args
+000000d: 03                                         ; result_type
+; assert signature 4
+000000e: 00                                         ; num args
+000000f: 04                                         ; result_type
+0000010: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0901 0000 0000 0000                      ........
-0000000: 0a                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0000                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 0009 0901 0105 0000 0001 0002 0003 0004  ................
+0000010: 06                                       .
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 0a                                         ; min mem size log 2
+0000002: 0a                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 05                                         ; num signatures
+; assert signature 0
+0000006: 00                                         ; num args
+0000007: 00                                         ; result_type
+; assert signature 1
+0000008: 00                                         ; num args
+0000009: 01                                         ; result_type
+; assert signature 2
+000000a: 00                                         ; num args
+000000b: 02                                         ; result_type
+; assert signature 3
+000000c: 00                                         ; num args
+000000d: 03                                         ; result_type
+; assert signature 4
+000000e: 00                                         ; num args
+000000f: 04                                         ; result_type
+0000010: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0a01 0000 0000 0000                      ........
+0000000: 000a 0a01 0105 0000 0001 0002 0003 0004  ................
+0000010: 06                                       .
 ;;; STDOUT ;;)

@@ -2,28 +2,33 @@
 (module
   (global i32 i64 f32 f64))
 (;; STDOUT ;;;
-0000000: 00                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0400                                       ; num globals
-0000004: 0000                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 03                                         ; WASM_SECTION_GLOBALS
+0000005: 04                                         ; num globals
 ; global header 0
-0000008: 0000 0000                                  ; global name offset
-000000c: 04                                         ; global mem type
-000000d: 00                                         ; export global
+0000006: 0000 0000                                  ; global name offset
+000000a: 04                                         ; global mem type
+000000b: 00                                         ; export global
 ; global header 1
-000000e: 0000 0000                                  ; global name offset
-0000012: 06                                         ; global mem type
-0000013: 00                                         ; export global
+000000c: 0000 0000                                  ; global name offset
+0000010: 06                                         ; global mem type
+0000011: 00                                         ; export global
 ; global header 2
-0000014: 0000 0000                                  ; global name offset
-0000018: 08                                         ; global mem type
-0000019: 00                                         ; export global
+0000012: 0000 0000                                  ; global name offset
+0000016: 08                                         ; global mem type
+0000017: 00                                         ; export global
 ; global header 3
-000001a: 0000 0000                                  ; global name offset
-000001e: 09                                         ; global mem type
-000001f: 00                                         ; export global
+0000018: 0000 0000                                  ; global name offset
+000001c: 09                                         ; global mem type
+000001d: 00                                         ; export global
+000001e: 01                                         ; WASM_SECTION_SIGNATURES
+000001f: 00                                         ; num signatures
+0000020: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0001 0400 0000 0000 0000 0000 0400 0000  ................
-0000010: 0000 0600 0000 0000 0800 0000 0000 0900  ................
+0000000: 0000 0001 0304 0000 0000 0400 0000 0000  ................
+0000010: 0600 0000 0000 0800 0000 0000 0900 0100  ................
+0000020: 06                                       .
 ;;; STDOUT ;;)

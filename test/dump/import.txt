@@ -4,48 +4,40 @@
   (import "ignored" "test" (param i32 i64 f32 f64))
   (import "ignored" "test2" (param i32) (result i32)))
 (;; STDOUT ;;;
-0000000: 00                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0200                                       ; num funcs
-0000006: 0000                                       ; num data segments
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 02                                         ; num signatures
+; import signature 0
+0000006: 04                                         ; num args
+0000007: 00                                         ; result_type
+0000008: 01                                         ; arg type
+0000009: 02                                         ; arg type
+000000a: 03                                         ; arg type
+000000b: 04                                         ; arg type
+; import signature 1
+000000c: 01                                         ; num args
+000000d: 01                                         ; result_type
+000000e: 01                                         ; arg type
+000000f: 02                                         ; WASM_SECTION_FUNCTIONS
+0000010: 02                                         ; num functions
 ; import header 0
-0000008: 04                                         ; import num args
-0000009: 00                                         ; import result_type
-000000a: 01                                         ; import arg type
-000000b: 02                                         ; import arg type
-000000c: 03                                         ; import arg type
-000000d: 04                                         ; import arg type
-000000e: 0000 0000                                  ; import name offset
-0000012: 0000 0000                                  ; import code start offset
-0000016: 0000 0000                                  ; import code end offset
-000001a: 0000                                       ; num local i32
-000001c: 0000                                       ; num local i64
-000001e: 0000                                       ; num local f32
-0000020: 0000                                       ; num local f64
-0000022: 00                                         ; export func
-0000023: 01                                         ; import external
+0000011: 03                                         ; import flags
+0000012: 0000                                       ; import signature index
+0000014: 0000 0000                                  ; import name offset
 ; import header 1
-0000024: 01                                         ; import num args
-0000025: 01                                         ; import result_type
-0000026: 01                                         ; import arg type
-0000027: 0000 0000                                  ; import name offset
-000002b: 0000 0000                                  ; import code start offset
-000002f: 0000 0000                                  ; import code end offset
-0000033: 0000                                       ; num local i32
-0000035: 0000                                       ; num local i64
-0000037: 0000                                       ; num local f32
-0000039: 0000                                       ; num local f64
-000003b: 00                                         ; export func
-000003c: 01                                         ; import external
+0000018: 03                                         ; import flags
+0000019: 0100                                       ; import signature index
+000001b: 0000 0000                                  ; import name offset
+000001f: 06                                         ; WASM_SECTION_END
 ; names
-000000e: 3d00 0000                                  ; FIXUP import name offset
-000003d: 7465 7374 00                               ; import name
-0000027: 4200 0000                                  ; FIXUP import name offset
-0000042: 7465 7374 3200                             ; import name
-0000000: 0001 0000 0200 0000 0400 0102 0304 3d00  ..............=.
-0000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-0000020: 0000 0001 0101 0142 0000 0000 0000 0000  .......B........
-0000030: 0000 0000 0000 0000 0000 0000 0174 6573  .............tes
-0000040: 7400 7465 7374 3200                      t.test2.
+0000014: 2000 0000                                  ; FIXUP import name offset
+0000020: 7465 7374 00                               ; import name
+000001b: 2500 0000                                  ; FIXUP import name offset
+0000025: 7465 7374 3200                             ; import name
+0000000: 0000 0001 0102 0400 0102 0304 0101 0102  ................
+0000010: 0203 0000 2000 0000 0301 0025 0000 0006  .... ......%....
+0000020: 7465 7374 0074 6573 7432 00              test.test2.
 ;;; STDOUT ;;)

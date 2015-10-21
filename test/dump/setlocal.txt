@@ -15,64 +15,65 @@
     (set_local 6 (f64.const 0))
     (set_local 7 (i64.const 0))))
 (;; STDOUT ;;;
-0000000: 00                                         ; mem size log 2
-0000001: 01                                         ; export mem
-0000002: 0000                                       ; num globals
-0000004: 0100                                       ; num funcs
-0000006: 0000                                       ; num data segments
-; function header 0
-0000008: 00                                         ; func num args
-0000009: 00                                         ; func result type
-000000a: 0000 0000                                  ; func name offset
-000000e: 0000 0000                                  ; func code start offset
-0000012: 0000 0000                                  ; func code end offset
-0000016: 0200                                       ; num local i32
-0000018: 0200                                       ; num local i64
-000001a: 0200                                       ; num local f32
-000001c: 0200                                       ; num local f64
-000001e: 00                                         ; export func
-000001f: 00                                         ; func external
-; function data 0
-000000e: 2000 0000                                  ; FIXUP func code start offset
-0000020: 16                                         ; OPCODE_SET_LOCAL
-0000021: 06                                         ; remapped local index
-0000022: 13                                         ; OPCODE_F64_CONST
-0000023: 0000 0000 0000 0000                        ; f64 literal
-000002b: 16                                         ; OPCODE_SET_LOCAL
-000002c: 04                                         ; remapped local index
-000002d: 14                                         ; OPCODE_F32_CONST
-000002e: 0000 0000                                  ; f32 literal
-0000032: 16                                         ; OPCODE_SET_LOCAL
-0000033: 02                                         ; remapped local index
-0000034: 12                                         ; OPCODE_I64_CONST
-0000035: 0000 0000 0000 0000                        ; u64 literal
-000003d: 16                                         ; OPCODE_SET_LOCAL
-000003e: 00                                         ; remapped local index
-000003f: 10                                         ; OPCODE_I8_CONST
-0000040: 00                                         ; u8 literal
-0000041: 16                                         ; OPCODE_SET_LOCAL
-0000042: 01                                         ; remapped local index
-0000043: 10                                         ; OPCODE_I8_CONST
-0000044: 00                                         ; u8 literal
-0000045: 16                                         ; OPCODE_SET_LOCAL
-0000046: 05                                         ; remapped local index
-0000047: 14                                         ; OPCODE_F32_CONST
-0000048: 0000 0000                                  ; f32 literal
-000004c: 16                                         ; OPCODE_SET_LOCAL
-000004d: 07                                         ; remapped local index
-000004e: 13                                         ; OPCODE_F64_CONST
-000004f: 0000 0000 0000 0000                        ; f64 literal
-0000057: 16                                         ; OPCODE_SET_LOCAL
-0000058: 03                                         ; remapped local index
-0000059: 12                                         ; OPCODE_I64_CONST
-000005a: 0000 0000 0000 0000                        ; u64 literal
-0000012: 6200 0000                                  ; FIXUP func code end offset
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 01                                         ; num signatures
+; function signature 0
+0000006: 00                                         ; num args
+0000007: 00                                         ; result_type
+0000008: 02                                         ; WASM_SECTION_FUNCTIONS
+0000009: 01                                         ; num functions
+; function 0
+000000a: 05                                         ; func flags
+000000b: 0000                                       ; func signature index
+000000d: 0000 0000                                  ; func name offset
+0000011: 0200                                       ; num local i32
+0000013: 0200                                       ; num local i64
+0000015: 0200                                       ; num local f32
+0000017: 0200                                       ; num local f64
+0000019: 0000                                       ; func body size
+000001b: 16                                         ; OPCODE_SET_LOCAL
+000001c: 06                                         ; remapped local index
+000001d: 13                                         ; OPCODE_F64_CONST
+000001e: 0000 0000 0000 0000                        ; f64 literal
+0000026: 16                                         ; OPCODE_SET_LOCAL
+0000027: 04                                         ; remapped local index
+0000028: 14                                         ; OPCODE_F32_CONST
+0000029: 0000 0000                                  ; f32 literal
+000002d: 16                                         ; OPCODE_SET_LOCAL
+000002e: 02                                         ; remapped local index
+000002f: 12                                         ; OPCODE_I64_CONST
+0000030: 0000 0000 0000 0000                        ; u64 literal
+0000038: 16                                         ; OPCODE_SET_LOCAL
+0000039: 00                                         ; remapped local index
+000003a: 10                                         ; OPCODE_I8_CONST
+000003b: 00                                         ; u8 literal
+000003c: 16                                         ; OPCODE_SET_LOCAL
+000003d: 01                                         ; remapped local index
+000003e: 10                                         ; OPCODE_I8_CONST
+000003f: 00                                         ; u8 literal
+0000040: 16                                         ; OPCODE_SET_LOCAL
+0000041: 05                                         ; remapped local index
+0000042: 14                                         ; OPCODE_F32_CONST
+0000043: 0000 0000                                  ; f32 literal
+0000047: 16                                         ; OPCODE_SET_LOCAL
+0000048: 07                                         ; remapped local index
+0000049: 13                                         ; OPCODE_F64_CONST
+000004a: 0000 0000 0000 0000                        ; f64 literal
+0000052: 16                                         ; OPCODE_SET_LOCAL
+0000053: 03                                         ; remapped local index
+0000054: 12                                         ; OPCODE_I64_CONST
+0000055: 0000 0000 0000 0000                        ; u64 literal
+0000019: 4200                                       ; FIXUP func body size
+000005d: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0001 0000 0100 0000 0000 0000 0000 2000  .............. .
-0000010: 0000 6200 0000 0200 0200 0200 0200 0000  ..b.............
-0000020: 1606 1300 0000 0000 0000 0016 0414 0000  ................
-0000030: 0000 1602 1200 0000 0000 0000 0016 0010  ................
-0000040: 0016 0110 0016 0514 0000 0000 1607 1300  ................
-0000050: 0000 0000 0000 0016 0312 0000 0000 0000  ................
-0000060: 0000                                     ..
+0000000: 0000 0001 0101 0000 0201 0500 0000 0000  ................
+0000010: 0002 0002 0002 0002 0042 0016 0613 0000  .........B......
+0000020: 0000 0000 0000 1604 1400 0000 0016 0212  ................
+0000030: 0000 0000 0000 0000 1600 1000 1601 1000  ................
+0000040: 1605 1400 0000 0016 0713 0000 0000 0000  ................
+0000050: 0000 1603 1200 0000 0000 0000 0006       ..............
 ;;; STDOUT ;;)

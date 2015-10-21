@@ -26,6 +26,8 @@ typedef struct WasmParserCallbacks {
   void (*error)(WasmParserCallbackInfo* info, const char* msg);
   void (*before_module)(WasmParserCallbackInfo* info);
   void (*after_module)(WasmParserCallbackInfo* info);
+  /* This will not be called if the module fails to parse. */
+  void (*before_module_destroy)(WasmParserCallbackInfo* info);
   void (*before_function)(WasmParserCallbackInfo* info);
   void (*after_function)(WasmParserCallbackInfo* info, int num_exprs);
   void (*before_export)(WasmParserCallbackInfo* info);

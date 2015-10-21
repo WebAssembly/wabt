@@ -16,34 +16,46 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
-#define GLOBAL_HEADERS_OFFSET 8
-#define GLOBAL_HEADER_SIZE 6
-#define FUNC_HEADERS_OFFSET(num_globals) \
-  (GLOBAL_HEADERS_OFFSET + (num_globals)*GLOBAL_HEADER_SIZE)
-#define FUNC_HEADER_SIZE(num_args) (24 + (num_args))
-#define SEGMENT_HEADER_SIZE 13
+#define SEGMENT_SIZE 13
+#define SEGMENT_ADDRESS_OFFSET 0
+#define SEGMENT_OFFSET_OFFSET 4
+#define SEGMENT_SIZE_OFFSET 8
+#define SEGMENT_INIT_OFFSET 12
 
-/* offsets from the start of a global header */
-#define GLOBAL_HEADER_NAME_OFFSET 0
+#define GLOBAL_SIZE 6
+#define GLOBAL_NAME_OFFSET_OFFSET 0
+#define GLOBAL_MEM_TYPE_OFFSET 4
+#define GLOBAL_EXPORT_OFFSET 5
 
-/* offsets from the start of a function header */
-#define FUNC_SIG_SIZE(num_args) (2 + (num_args))
-#define FUNC_HEADER_RESULT_TYPE_OFFSET 1
-#define FUNC_HEADER_NAME_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 0)
-#define FUNC_HEADER_CODE_START_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 4)
-#define FUNC_HEADER_CODE_END_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 8)
-#define FUNC_HEADER_NUM_LOCAL_I32_OFFSET(num_args) \
-  (FUNC_SIG_SIZE(num_args) + 12)
-#define FUNC_HEADER_NUM_LOCAL_I64_OFFSET(num_args) \
-  (FUNC_SIG_SIZE(num_args) + 14)
-#define FUNC_HEADER_NUM_LOCAL_F32_OFFSET(num_args) \
-  (FUNC_SIG_SIZE(num_args) + 16)
-#define FUNC_HEADER_NUM_LOCAL_F64_OFFSET(num_args) \
-  (FUNC_SIG_SIZE(num_args) + 18)
-#define FUNC_HEADER_EXPORTED_OFFSET(num_args) (FUNC_SIG_SIZE(num_args) + 20)
+#define IMPORT_SIZE 7
+#define IMPORT_FLAGS_OFFSET 0
+#define IMPORT_SIGNATURE_OFFSET 1
+#define IMPORT_NAME_OFFSET 3
 
-/* offsets from the start of a segment header */
-#define SEGMENT_HEADER_DATA_OFFSET 4
+#define FUNCTION_FLAGS_OFFSET 0
+#define FUNCTION_SIGNATURE_OFFSET 1
+#define FUNCTION_NAME_OFFSET 3
+#define FUNCTION_BODY_SIZE_OFFSET(flags)             \
+  (3 + (((flags)&WASM_FUNCTION_FLAG_NAME) ? 4 : 0) + \
+   (((flags)&WASM_FUNCTION_FLAG_LOCALS) ? 8 : 0))
+
+typedef enum WasmSectionType {
+  WASM_SECTION_MEMORY = 0,
+  WASM_SECTION_SIGNATURES = 1,
+  WASM_SECTION_FUNCTIONS = 2,
+  WASM_SECTION_GLOBALS = 3,
+  WASM_SECTION_DATA_SEGMENTS = 4,
+  WASM_SECTION_FUNCTION_TABLE = 5,
+  WASM_SECTION_END = 6,
+} WasmSectionType;
+
+enum {
+  WASM_FUNCTION_FLAG_NAME = 1,
+  WASM_FUNCTION_FLAG_IMPORT = 2,
+  WASM_FUNCTION_FLAG_LOCALS = 4,
+  WASM_FUNCTION_FLAG_EXPORT = 8,
+};
+typedef uint8_t WasmFunctionFlags;
 
 typedef enum WasmTypeV8 {
   WASM_TYPE_V8_VOID,
@@ -78,28 +90,23 @@ typedef struct LabelInfo {
 
 typedef struct AssertFunc {
   char* name;
-  WasmType result_type;
-  int16_t num_local_i32;
-  int16_t num_local_i64;
-  int16_t num_local_f32;
-  int16_t num_local_f64;
-  size_t size;
-  void* data;
+  uint32_t name_offset;
 } AssertFunc;
 
 typedef struct Context {
   WasmGenOptions* options;
   OutputBuffer buf;
-  OutputBuffer temp_buf;
   OutputBuffer js_buf;
   WasmModule* module;
-  /* offset of each function/segment header in buf. */
-  uint32_t* function_header_offsets;
-  uint32_t* segment_header_offsets;
+  uint32_t segment_section_offset;
+  uint32_t global_section_offset;
+  uint32_t signature_section_offset;
+  uint32_t function_pre_section_offset;
+  uint32_t function_section_offset;
+  uint16_t nullary_signature_index[WASM_NUM_V8_TYPES];
   LabelInfo* top_label;
   int* remapped_locals;
   int in_assert;
-  int in_js_module;
   int block_depth;
 
   AssertFunc* assert_funcs;
@@ -134,6 +141,23 @@ static WasmTypeV8 wasm_type_to_v8_type(WasmType type) {
       return WASM_TYPE_V8_F32;
     case WASM_TYPE_F64:
       return WASM_TYPE_V8_F64;
+    default:
+      FATAL("v8-native does not support type %d\n", type);
+  }
+}
+
+static WasmType v8_type_to_wasm_type(WasmTypeV8 type) {
+  switch (type) {
+    case WASM_TYPE_V8_VOID:
+      return WASM_TYPE_VOID;
+    case WASM_TYPE_V8_I32:
+      return WASM_TYPE_I32;
+    case WASM_TYPE_V8_I64:
+      return WASM_TYPE_I64;
+    case WASM_TYPE_V8_F32:
+      return WASM_TYPE_F32;
+    case WASM_TYPE_V8_F64:
+      return WASM_TYPE_F64;
     default:
       FATAL("v8-native does not support type %d\n", type);
   }
@@ -207,13 +231,21 @@ static void move_data(OutputBuffer* buf,
                       size_t dest_offset,
                       size_t src_offset,
                       size_t size) {
-  assert(dest_offset + size <= buf->size);
   assert(src_offset + size <= buf->size);
+  int dest_end = dest_offset + size;
+  ensure_output_buffer_capacity(buf, dest_end);
+  if (dest_end >= buf->size)
+    buf->size = dest_end;
   memmove(buf->start + dest_offset, buf->start + src_offset, size);
   if (buf->log_writes) {
     printf("; move [%07zx,%07zx) -> [%07zx,%07zx)\n", src_offset,
            src_offset + size, dest_offset, dest_offset + size);
   }
+}
+
+static void print_header(Context* ctx, const char* name, int index) {
+  if (ctx->options->verbose)
+    printf("; %s %d\n", name, index);
 }
 
 static size_t out_data(OutputBuffer* buf,
@@ -266,22 +298,27 @@ OUT_AT_TYPE(u32, uint32_t)
 
 READ_AT_TYPE(u8, uint8_t)
 READ_AT_TYPE(u16, uint16_t)
-READ_AT_TYPE(u32, uint32_t)
 
 #undef READ_AT_TYPE
 
-static void add_u32_at(OutputBuffer* buf,
-                       size_t offset,
-                       uint32_t addend,
-                       const char* desc) {
-  out_u32_at(buf, offset, read_u32_at(buf, offset) + addend, desc);
-}
-
-void out_opcode(OutputBuffer* buf, WasmOpcode opcode) {
+static void out_opcode(OutputBuffer* buf, WasmOpcode opcode) {
   out_u8(buf, (uint8_t)opcode, s_opcode_names[opcode]);
 }
 
-void out_leb128(OutputBuffer* buf, uint32_t value, const char* desc) {
+static int leb128_size(uint32_t value) {
+  int len = 0;
+  do {
+    value >>= 7;
+    ++len;
+  } while (value);
+  return len;
+}
+
+/* returns the number of bytes written */
+static int out_leb128_at(OutputBuffer* buf,
+                         size_t offset,
+                         uint32_t value,
+                         const char* desc) {
   uint8_t data[5]; /* max 5 bytes */
   int i = 0;
   do {
@@ -292,7 +329,13 @@ void out_leb128(OutputBuffer* buf, uint32_t value, const char* desc) {
       data[i] |= 0x80;
     ++i;
   } while (value);
-  buf->size = out_data(buf, buf->size, data, i, desc);
+  out_data(buf, offset, data, i, desc);
+  return i;
+}
+
+static void out_leb128(OutputBuffer* buf, uint32_t value, const char* desc) {
+  int num_bytes = out_leb128_at(buf, buf->size, value, desc);
+  buf->size += num_bytes;
 }
 
 static void out_cstr(OutputBuffer* buf, const char* s, const char* desc) {
@@ -346,10 +389,8 @@ static void destroy_output_buffer(OutputBuffer* buf) {
 
 static void destroy_assert_funcs(Context* ctx) {
   int i;
-  for (i = 0; i < ctx->num_assert_funcs; ++i) {
+  for (i = 0; i < ctx->num_assert_funcs; ++i)
     free(ctx->assert_funcs[i].name);
-    free(ctx->assert_funcs[i].data);
-  }
   ctx->num_assert_funcs = 0;
 }
 
@@ -361,96 +402,124 @@ static void destroy_context(Context* ctx) {
     label = next_label;
   }
   destroy_output_buffer(&ctx->buf);
-  destroy_output_buffer(&ctx->temp_buf);
   destroy_output_buffer(&ctx->js_buf);
   free(ctx->remapped_locals);
-  free(ctx->function_header_offsets);
-  free(ctx->segment_header_offsets);
   destroy_assert_funcs(ctx);
   free(ctx->assert_funcs);
 }
 
-static void out_module_header(Context* ctx, WasmModule* module) {
-  OutputBuffer* buf = &ctx->buf;
-  out_u8(buf, log_two_u32(module->max_memory_size), "mem size log 2");
-  out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
-  out_u16(buf, module->globals.size, "num globals");
-  out_u16(buf, module->imports.size + module->functions.size, "num funcs");
-  out_u16(buf, module->segments.size, "num data segments");
-
+static void out_signature_generic(Context* ctx,
+                                  WasmType result_type,
+                                  WasmVariableVector* args,
+                                  int num_args,
+                                  int index,
+                                  const char* desc) {
   int i;
-  for (i = 0; i < module->globals.size; ++i) {
-    WasmVariable* global = &module->globals.data[i];
-    if (ctx->options->verbose)
-      printf("; global header %d\n", i);
-    const uint8_t global_type_codes[WASM_NUM_V8_TYPES] = {-1, 4, 6, 8, 9};
-    out_u32(buf, 0, "global name offset");
-    out_u8(buf, global_type_codes[wasm_type_to_v8_type(global->type)],
-           "global mem type");
-    out_u8(buf, 0, "export global");
+  print_header(ctx, desc, index);
+  out_u8(&ctx->buf, num_args, "num args");
+  out_u8(&ctx->buf, wasm_type_to_v8_type(result_type), "result_type");
+  for (i = 0; i < num_args; ++i)
+    out_u8(&ctx->buf, wasm_type_to_v8_type(args->data[i].type), "arg type");
+}
+
+static void out_signature(Context* ctx,
+                          WasmSignature* signature,
+                          int index,
+                          const char* desc) {
+  out_signature_generic(ctx, signature->result_type, &signature->args,
+                        signature->args.size, index, desc);
+}
+
+static void out_module_header(Context* ctx, WasmModule* module) {
+  int i;
+  OutputBuffer* buf = &ctx->buf;
+
+  out_u8(buf, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
+  out_u8(buf, log_two_u32(module->initial_memory_size), "min mem size log 2");
+  out_u8(buf, log_two_u32(module->max_memory_size), "max mem size log 2");
+  out_u8(buf, DEFAULT_MEMORY_EXPORT, "export mem");
+
+  if (module->segments.size) {
+    out_u8(buf, WASM_SECTION_DATA_SEGMENTS, "WASM_SECTION_DATA_SEGMENTS");
+    out_leb128(buf, module->segments.size, "num data segments");
+    ctx->segment_section_offset = ctx->buf.size;
+    for (i = 0; i < module->segments.size; ++i) {
+      WasmSegment* segment = &module->segments.data[i];
+      print_header(ctx, "segment header", i);
+      out_u32(buf, segment->address, "segment address");
+      out_u32(buf, 0, "segment data offset");
+      out_u32(buf, segment->size, "segment size");
+      out_u8(buf, 1, "segment init");
+    }
   }
 
+  if (module->globals.size) {
+    out_u8(buf, WASM_SECTION_GLOBALS, "WASM_SECTION_GLOBALS");
+    out_leb128(buf, module->globals.size, "num globals");
+    ctx->global_section_offset = ctx->buf.size;
+    for (i = 0; i < module->globals.size; ++i) {
+      WasmVariable* global = &module->globals.data[i];
+      print_header(ctx, "global header", i);
+      const uint8_t global_type_codes[WASM_NUM_V8_TYPES] = {-1, 4, 6, 8, 9};
+      out_u32(buf, 0, "global name offset");
+      out_u8(buf, global_type_codes[wasm_type_to_v8_type(global->type)],
+             "global mem type");
+      out_u8(buf, 0, "export global");
+    }
+  }
+
+  /* TODO(binji): is it worth doing a pass to uniquify these? */
+  uint32_t num_signatures =
+      module->signatures.size + module->imports.size + module->functions.size;
+  if (ctx->options->multi_module)
+    num_signatures += WASM_NUM_V8_TYPES;
+
+  out_u8(buf, WASM_SECTION_SIGNATURES, "WASM_SECTION_SIGNATURES");
+  out_leb128(buf, num_signatures, "num signatures");
+  ctx->signature_section_offset = ctx->buf.size;
+
+  uint32_t signature_index = 0;
+  for (i = 0; i < module->signatures.size; ++i) {
+    out_signature(ctx, &module->signatures.data[i], signature_index++,
+                  "type signature");
+  }
   for (i = 0; i < module->imports.size; ++i) {
-    WasmImport* import = &module->imports.data[i];
-    if (ctx->options->verbose)
-      printf("; import header %d\n", i);
-
-    out_u8(buf, import->signature.args.size, "import num args");
-    out_u8(buf, wasm_type_to_v8_type(import->signature.result_type),
-           "import result_type");
-
-    int j;
-    for (j = 0; j < import->signature.args.size; ++j)
-      out_u8(buf, wasm_type_to_v8_type(import->signature.args.data[j].type),
-             "import arg type");
-
-    out_u32(buf, 0, "import name offset");
-    out_u32(buf, 0, "import code start offset");
-    out_u32(buf, 0, "import code end offset");
-    out_u16(buf, 0, "num local i32");
-    out_u16(buf, 0, "num local i64");
-    out_u16(buf, 0, "num local f32");
-    out_u16(buf, 0, "num local f64");
-    out_u8(buf, 0, "export func");
-    out_u8(buf, 1, "import external");
+    out_signature(ctx, &module->imports.data[i].signature, signature_index++,
+                  "import signature");
   }
-
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
-    if (ctx->options->verbose)
-      printf("; function header %d\n", i);
-
-    out_u8(buf, function->num_args, "func num args");
-    out_u8(buf, wasm_type_to_v8_type(function->result_type),
-           "func result type");
-    int j;
-    for (j = 0; j < function->num_args; ++j)
-      out_u8(buf, wasm_type_to_v8_type(function->locals.data[j].type),
-             "func arg type");
-    out_u32(buf, 0, "func name offset");
-    out_u32(buf, 0, "func code start offset");
-    out_u32(buf, 0, "func code end offset");
-
-    int num_locals[WASM_NUM_V8_TYPES] = {};
-    for (j = function->num_args; j < function->locals.size; ++j)
-      num_locals[wasm_type_to_v8_type(function->locals.data[j].type)]++;
-
-    out_u16(buf, num_locals[WASM_TYPE_V8_I32], "num local i32");
-    out_u16(buf, num_locals[WASM_TYPE_V8_I64], "num local i64");
-    out_u16(buf, num_locals[WASM_TYPE_V8_F32], "num local f32");
-    out_u16(buf, num_locals[WASM_TYPE_V8_F64], "num local f64");
-    out_u8(buf, 0, "export func");
-    out_u8(buf, 0, "func external");
+    out_signature_generic(ctx, function->result_type, &function->locals,
+                          function->num_args, signature_index++,
+                          "function signature");
   }
 
-  for (i = 0; i < module->segments.size; ++i) {
-    WasmSegment* segment = &module->segments.data[i];
-    if (ctx->options->verbose)
-      printf("; segment header %d\n", i);
-    out_u32(buf, segment->address, "segment address");
-    out_u32(buf, 0, "segment data offset");
-    out_u32(buf, segment->size, "segment size");
-    out_u8(buf, 1, "segment init");
+  if (ctx->options->multi_module) {
+    /* Write out the signatures for various assert functions */
+    WasmTypeV8 type;
+    for (type = 0; type < WASM_NUM_V8_TYPES; ++type) {
+      ctx->nullary_signature_index[type] = signature_index;
+      out_signature_generic(ctx, v8_type_to_wasm_type(type), NULL, 0,
+                            signature_index, "assert signature");
+      signature_index++;
+    }
+  }
+
+  int num_functions = module->imports.size + module->functions.size;
+  if (num_functions) {
+    ctx->function_pre_section_offset = ctx->buf.size;
+    out_u8(buf, WASM_SECTION_FUNCTIONS, "WASM_SECTION_FUNCTIONS");
+    out_leb128(buf, num_functions, "num functions");
+    ctx->function_section_offset = ctx->buf.size;
+    for (i = 0; i < module->imports.size; ++i) {
+      print_header(ctx, "import header", i);
+      WasmFunctionFlags flags =
+          WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_IMPORT;
+      out_u8(buf, flags, "import flags");
+      uint16_t signature_index = (uint16_t)(module->signatures.size + i);
+      out_u16(buf, signature_index, "import signature index");
+      out_u32(buf, 0, "import name offset");
+    }
   }
 }
 
@@ -469,45 +538,87 @@ static int has_i64_inputs_or_outputs(WasmFunction* function) {
 }
 
 static void out_module_footer(Context* ctx, WasmModule* module) {
+  int i;
+  size_t offset;
   OutputBuffer* buf = &ctx->buf;
 
-  int i;
-  for (i = 0; i < module->segments.size; ++i) {
+  out_u8(buf, WASM_SECTION_END, "WASM_SECTION_END");
+
+  /* output assert function names. Do this first so we don't have to fixup any
+   name/data offsets if we need to move data down */
+  int num_functions = module->imports.size + module->functions.size;
+  if (ctx->num_assert_funcs) {
     if (ctx->options->verbose)
-      printf("; segment data %d\n", i);
-    WasmSegment* segment = &module->segments.data[i];
-    out_u32_at(buf, ctx->segment_header_offsets[i] + SEGMENT_HEADER_DATA_OFFSET,
-               buf->size, "FIXUP segment data offset");
-    out_segment(buf, segment, "segment data");
+      printf("; assert names\n");
+    /* update the number of functions defined in the module to include the
+     assert funcs */
+    int old_num_functions = num_functions;
+    num_functions = old_num_functions + ctx->num_assert_funcs;
+    int old_leb128_size = leb128_size(old_num_functions);
+    int new_leb128_size = leb128_size(num_functions);
+    int diff_size = new_leb128_size - old_leb128_size;
+    if (diff_size) {
+      /* move everything down to make room for the longer function count */
+      move_data(buf, ctx->function_section_offset + diff_size,
+                ctx->function_section_offset,
+                buf->size - ctx->function_section_offset);
+      ctx->function_section_offset += diff_size;
+    }
+    out_leb128_at(buf, ctx->function_pre_section_offset + 1, num_functions,
+                  "FIXUP num functions");
+
+    for (i = 0; i < ctx->num_assert_funcs; ++i) {
+      AssertFunc* assert_func = &ctx->assert_funcs[i];
+      out_u32_at(buf, assert_func->name_offset + diff_size, buf->size,
+                 "FIXUP func name offset");
+      out_cstr(buf, assert_func->name, "export name");
+    }
+
+    destroy_assert_funcs(ctx);
   }
 
-  /* output name table */
+  /* output segment data */
+  offset = ctx->segment_section_offset;
+  for (i = 0; i < module->segments.size; ++i) {
+    print_header(ctx, "segment data", i);
+    WasmSegment* segment = &module->segments.data[i];
+    out_u32_at(buf, offset + SEGMENT_OFFSET_OFFSET, buf->size,
+               "FIXUP segment data offset");
+    out_segment(buf, segment, "segment data");
+    offset += SEGMENT_SIZE;
+  }
+
+  /* output import names */
   if (ctx->options->verbose)
     printf("; names\n");
-  uint32_t offset = FUNC_HEADERS_OFFSET(module->globals.size);
+  offset = ctx->function_section_offset;
   for (i = 0; i < module->imports.size; ++i) {
     WasmImport* import = &module->imports.data[i];
-    out_u32_at(buf,
-               offset + FUNC_HEADER_NAME_OFFSET(import->signature.args.size),
-               buf->size, "FIXUP import name offset");
+    out_u32_at(buf, offset + IMPORT_NAME_OFFSET, buf->size,
+               "FIXUP import name offset");
     out_cstr(buf, import->func_name, "import name");
-    offset += FUNC_HEADER_SIZE(import->signature.args.size);
+    offset += IMPORT_SIZE;
   }
+
+  /* output function names */
   for (i = 0; i < module->functions.size; ++i) {
     WasmFunction* function = &module->functions.data[i];
+    uint8_t flags = read_u8_at(buf, offset + FUNCTION_FLAGS_OFFSET);
+    size_t body_size_offset = FUNCTION_BODY_SIZE_OFFSET(flags);
+    uint16_t body_size = read_u16_at(buf, offset + body_size_offset);
+
     if (function->exported) {
-      out_u32_at(buf, offset + FUNC_HEADER_NAME_OFFSET(function->num_args),
-                 buf->size, "FIXUP func name offset");
+      out_u32_at(buf, offset + FUNCTION_NAME_OFFSET, buf->size,
+                 "FIXUP func name offset");
 
       /* HACK(binji): v8-native-prototype crashes when you export functions
        that use i64 in the signature. This unfortunately prevents assert_return
        on functions that return i64. For now, don't mark those functions as
        exported in the generated output. */
       if (!has_i64_inputs_or_outputs(function)) {
-        out_u8_at(&ctx->buf,
-                  ctx->function_header_offsets[i] +
-                      FUNC_HEADER_EXPORTED_OFFSET(function->num_args),
-                  1, "FIXUP func exported");
+        flags |= WASM_FUNCTION_FLAG_EXPORT;
+        out_u8_at(buf, offset + FUNCTION_FLAGS_OFFSET, flags,
+                  "FIXUP func exported");
       }
 
       /* TODO(binji): only exporting the first name for now,
@@ -516,7 +627,7 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
        the old one, or by using the same code start/end offsets. */
       out_cstr(buf, function->exported_name.name, "export name");
     }
-    offset += FUNC_HEADER_SIZE(function->num_args);
+    offset += body_size_offset + 2 + body_size;
   }
 }
 
@@ -571,32 +682,10 @@ static void pop_label_info(Context* ctx) {
 
 static void before_module(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
-  WasmModule* module = info->module;
-  ctx->function_header_offsets = realloc(
-      ctx->function_header_offsets, module->functions.size * sizeof(uint32_t));
-  int i;
-  uint32_t offset = FUNC_HEADERS_OFFSET(module->globals.size);
-  /* skip past the import headers */
-  for (i = 0; i < module->imports.size; ++i)
-    offset += FUNC_HEADER_SIZE(module->imports.data[i].signature.args.size);
-
-  for (i = 0; i < module->functions.size; ++i) {
-    WasmFunction* function = &module->functions.data[i];
-    ctx->function_header_offsets[i] = offset;
-    offset += FUNC_HEADER_SIZE(function->num_args);
-  }
-
-  ctx->segment_header_offsets = realloc(
-      ctx->segment_header_offsets, module->segments.size * sizeof(uint32_t));
-  for (i = 0; i < module->segments.size; ++i) {
-    ctx->segment_header_offsets[i] = offset;
-    offset += SEGMENT_HEADER_SIZE;
-  }
-
-  ctx->module = module;
+  ctx->module = info->module;
   init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
                      ctx->options->verbose);
-  out_module_header(ctx, module);
+  out_module_header(ctx, info->module);
 }
 
 static void after_module(WasmParserCallbackInfo* info) {
@@ -615,21 +704,40 @@ static void before_function(WasmParserCallbackInfo* info) {
   remap_locals(ctx, function);
 
   int function_index = function - module->functions.data;
-  if (ctx->options->verbose)
-    printf("; function data %d\n", function_index);
-  out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
-                            FUNC_HEADER_CODE_START_OFFSET(function->num_args),
-             ctx->buf.size, "FIXUP func code start offset");
+  print_header(ctx, "function", function_index);
+  int has_locals = function->locals.size > function->num_args;
+  /* Always write functions with a name. We don't want to have to do this, but
+   if we don't, we won't have the space for the name offset if this function is
+   later exported. */
+  uint8_t flags = WASM_FUNCTION_FLAG_NAME;
+  if (has_locals)
+    flags |= WASM_FUNCTION_FLAG_LOCALS;
+  out_u8(&ctx->buf, flags, "func flags");
+  uint16_t signature_index = (uint16_t)(module->signatures.size +
+                                        module->imports.size + function_index);
+  out_u16(&ctx->buf, signature_index, "func signature index");
+  out_u32(&ctx->buf, 0, "func name offset");
+  if (has_locals) {
+    int num_locals[WASM_NUM_V8_TYPES] = {};
+    int i;
+    for (i = function->num_args; i < function->locals.size; ++i)
+      num_locals[wasm_type_to_v8_type(function->locals.data[i].type)]++;
+
+    out_u16(&ctx->buf, num_locals[WASM_TYPE_V8_I32], "num local i32");
+    out_u16(&ctx->buf, num_locals[WASM_TYPE_V8_I64], "num local i64");
+    out_u16(&ctx->buf, num_locals[WASM_TYPE_V8_F32], "num local f32");
+    out_u16(&ctx->buf, num_locals[WASM_TYPE_V8_F64], "num local f64");
+  }
+
+  info->cookie = (WasmParserCookie)ctx->buf.size;
+  out_u16(&ctx->buf, 0, "func body size");
 }
 
 static void after_function(WasmParserCallbackInfo* info, int num_exprs) {
   Context* ctx = info->user_data;
-  WasmModule* module = info->module;
-  WasmFunction* function = info->function;
-  int function_index = function - module->functions.data;
-  out_u32_at(&ctx->buf, ctx->function_header_offsets[function_index] +
-                            FUNC_HEADER_CODE_END_OFFSET(function->num_args),
-             ctx->buf.size, "FIXUP func code end offset");
+  size_t offset = (size_t)info->cookie;
+  size_t body_size = ctx->buf.size - offset - sizeof(uint16_t);
+  out_u16_at(&ctx->buf, offset, body_size, "FIXUP func body size");
 }
 
 static void before_block(WasmParserCallbackInfo* info, int with_label) {
@@ -1006,148 +1114,6 @@ static void before_unary(WasmParserCallbackInfo* info, enum WasmOpcode opcode) {
   out_opcode(&ctx->buf, opcode);
 }
 
-static void out_module_assert_funcs(Context* ctx) {
-  int i;
-  size_t header_size = ctx->num_assert_funcs * FUNC_HEADER_SIZE(0);
-  size_t data_size = 0;
-  size_t name_size = 0;
-  for (i = 0; i < ctx->num_assert_funcs; ++i) {
-    AssertFunc* assert_func = &ctx->assert_funcs[i];
-    name_size += strlen(assert_func->name) + 1;
-    data_size += assert_func->size;
-  }
-
-  size_t total_added_size = header_size + data_size + name_size;
-  const size_t new_size = ctx->temp_buf.size + total_added_size;
-  const size_t old_size = ctx->temp_buf.size;
-
-  ensure_output_buffer_capacity(&ctx->temp_buf, new_size);
-  ctx->temp_buf.size = new_size;
-
-  /* We need to add new function headers, data and names to the name table:
-   OLD:                 NEW:
-   module header        module header
-   global headers       global headers
-   function headers     function headers
-                        NEW function headers
-   segment headers      segment headers
-   function data        function data
-                        NEW functions' data
-   segment data         segment data
-   name table           name table
-                        NEW names
-   */
-
-  const uint16_t num_globals = read_u16_at(&ctx->temp_buf, 2);
-  const uint16_t num_functions = read_u16_at(&ctx->temp_buf, 4);
-  const uint16_t num_segments = read_u16_at(&ctx->temp_buf, 6);
-
-  /* fixup the number of functions */
-  out_u16_at(&ctx->temp_buf, 4,
-             read_u16_at(&ctx->temp_buf, 4) + ctx->num_assert_funcs,
-             "FIXUP num functions");
-
-  /* fixup the global offsets */
-  uint32_t offset = GLOBAL_HEADERS_OFFSET;
-  for (i = 0; i < num_globals; ++i) {
-    add_u32_at(&ctx->temp_buf, offset + GLOBAL_HEADER_NAME_OFFSET,
-               header_size + data_size, "FIXUP global name offset");
-    offset += GLOBAL_HEADER_SIZE;
-  }
-
-  /* fixup the function offsets */
-  for (i = 0; i < num_functions; ++i) {
-    const uint8_t num_args = read_u8_at(&ctx->temp_buf, offset);
-    add_u32_at(&ctx->temp_buf, offset + FUNC_HEADER_NAME_OFFSET(num_args),
-               header_size + data_size, "FIXUP func name offset");
-    add_u32_at(&ctx->temp_buf, offset + FUNC_HEADER_CODE_START_OFFSET(num_args),
-               header_size, "FIXUP func code start offset");
-    add_u32_at(&ctx->temp_buf, offset + FUNC_HEADER_CODE_END_OFFSET(num_args),
-               header_size, "FIXUP func code end offset");
-    offset += FUNC_HEADER_SIZE(num_args);
-  }
-  uint32_t old_func_header_end = offset;
-
-  /* fixup the segment offsets */
-  for (i = 0; i < num_segments; ++i) {
-    add_u32_at(&ctx->temp_buf, offset + SEGMENT_HEADER_DATA_OFFSET,
-               header_size + data_size, "FIXUP segment data offset");
-    offset += SEGMENT_HEADER_SIZE;
-  }
-
-  /* if there are no functions, then the end of the function data is the end of
-   the headers */
-  uint32_t old_func_data_end = offset;
-  if (num_functions) {
-    /* we don't have to keep track of the number of args of the last function
-     because it will be subtracted out, so we just use 0 */
-    uint32_t last_func_code_end_offset = old_func_header_end -
-                                         FUNC_HEADER_SIZE(0) +
-                                         FUNC_HEADER_CODE_END_OFFSET(0);
-    old_func_data_end =
-        read_u32_at(&ctx->temp_buf, last_func_code_end_offset) - header_size;
-  }
-
-  /* move everything after the function data down, but leave room for the new
-   function names */
-  const uint32_t new_func_data_end =
-      old_func_data_end + header_size + data_size;
-  move_data(&ctx->temp_buf, new_func_data_end, old_func_data_end,
-            old_size - old_func_data_end);
-
-  /* move everything between the end of the function headers and the end of the
-   function data down */
-  const uint32_t new_func_header_end = old_func_header_end + header_size;
-  move_data(&ctx->temp_buf, new_func_header_end, old_func_header_end,
-            old_func_data_end - old_func_header_end);
-
-  /* write the new data */
-  uint32_t header_offset = old_func_header_end;
-  if (ctx->options->verbose)
-    printf("; clear [%07x,%07x)\n", header_offset,
-           (uint32_t)(header_offset + header_size));
-  memset(ctx->temp_buf.start + header_offset, 0, header_size);
-
-  uint32_t data_offset = old_func_data_end + header_size;
-  uint32_t name_offset = new_size - name_size;
-  for (i = 0; i < ctx->num_assert_funcs; ++i) {
-    AssertFunc* assert_func = &ctx->assert_funcs[i];
-    size_t name_size = strlen(assert_func->name) + 1;
-
-    out_u8_at(&ctx->temp_buf, header_offset + FUNC_HEADER_RESULT_TYPE_OFFSET,
-              wasm_type_to_v8_type(assert_func->result_type),
-              "func result type");
-    out_u32_at(&ctx->temp_buf, header_offset + FUNC_HEADER_NAME_OFFSET(0),
-               name_offset, "func name offset");
-    out_u32_at(&ctx->temp_buf, header_offset + FUNC_HEADER_CODE_START_OFFSET(0),
-               data_offset, "func code start offset");
-    out_u32_at(&ctx->temp_buf, header_offset + FUNC_HEADER_CODE_END_OFFSET(0),
-               data_offset + assert_func->size, "func code end offset");
-    out_u16_at(&ctx->temp_buf,
-               header_offset + FUNC_HEADER_NUM_LOCAL_I32_OFFSET(0),
-               assert_func->num_local_i32, "func num local i32");
-    out_u16_at(&ctx->temp_buf,
-               header_offset + FUNC_HEADER_NUM_LOCAL_I64_OFFSET(0),
-               assert_func->num_local_i64, "func num local i64");
-    out_u16_at(&ctx->temp_buf,
-               header_offset + FUNC_HEADER_NUM_LOCAL_F32_OFFSET(0),
-               assert_func->num_local_f32, "func num local f32");
-    out_u16_at(&ctx->temp_buf,
-               header_offset + FUNC_HEADER_NUM_LOCAL_F64_OFFSET(0),
-               assert_func->num_local_f64, "func num local f64");
-    out_u8_at(&ctx->temp_buf, header_offset + FUNC_HEADER_EXPORTED_OFFSET(0), 1,
-              "func export");
-    out_data(&ctx->temp_buf, data_offset, assert_func->data, assert_func->size,
-             "func func data");
-    out_data(&ctx->temp_buf, name_offset, assert_func->name, name_size,
-             "func name");
-
-    header_offset += FUNC_HEADER_SIZE(0);
-    data_offset += assert_func->size;
-    name_offset += name_size;
-  }
-}
-
 static void js_file_start(Context* ctx) {
   const char* quiet_str = ctx->options->multi_module_verbose ? "false" : "true";
   out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
@@ -1157,24 +1123,20 @@ static void js_file_end(Context* ctx) {
   out_printf(&ctx->js_buf, "end();\n");
 }
 
-static void js_module_start(Context* ctx) {
+static void before_module_multi(WasmParserCallbackInfo* info) {
+  Context* ctx = info->user_data;
   out_printf(&ctx->js_buf, "var tests = function(m) {\n");
-  ctx->in_js_module = 1;
+  before_module(info);
 }
 
-static void js_module_end(Context* ctx) {
-  if (ctx->in_js_module) {
-    out_module_assert_funcs(ctx);
-    destroy_assert_funcs(ctx);
-    ctx->in_js_module = 0;
-    out_printf(&ctx->js_buf, "};\n");
-  }
-
-  if (!ctx->temp_buf.size)
+static void before_module_destroy(WasmParserCallbackInfo* info) {
+  Context* ctx = info->user_data;
+  if (!ctx->buf.size)
     return;
 
-  out_printf(&ctx->js_buf, "var m = createModule([\n");
-  OutputBuffer* module_buf = &ctx->temp_buf;
+  after_module(info);
+  out_printf(&ctx->js_buf, "};\nvar m = createModule([\n");
+  OutputBuffer* module_buf = &ctx->buf;
   const uint8_t* p = module_buf->start;
   const uint8_t* end = module_buf->start + module_buf->size;
   while (p < end) {
@@ -1187,73 +1149,44 @@ static void js_module_end(Context* ctx) {
   out_printf(&ctx->js_buf, "]);\ntests(m);\n");
 }
 
-static void before_module_multi(WasmParserCallbackInfo* info) {
-  Context* ctx = info->user_data;
-  js_module_end(ctx);
-  js_module_start(ctx);
-  before_module(info);
-}
-
-static void after_module_multi(WasmParserCallbackInfo* info) {
-  after_module(info);
-  /* assert_return writes its commands directly into ctx->buf. This function
-   data will then be added to the previous module. To make this work, we swap
-   ctx->buf with ctx->temp_buf; then the functions above that write to ctx->buf
-   will not modify the module (which will be saved in ctx->temp_buf).
-
-   When the next module is processed, we don't need to swap back, because we
-   don't care about the contents of either buffer */
-  Context* ctx = info->user_data;
-  OutputBuffer temp = ctx->buf;
-  ctx->buf = ctx->temp_buf;
-  ctx->temp_buf = temp;
-  ctx->num_assert_funcs = 0;
-}
-
-static void append_nullary_function(Context* ctx,
-                                    const char* name,
-                                    WasmType result_type,
-                                    int16_t num_local_i32,
-                                    int16_t num_local_i64,
-                                    int16_t num_local_f32,
-                                    int16_t num_local_f64) {
-  if (ctx->options->verbose)
-    printf("; after %s\n", name);
-
+static void append_assert_function(Context* ctx,
+                                   const char* name,
+                                   uint32_t name_offset) {
   ctx->assert_funcs = realloc(ctx->assert_funcs,
                               (ctx->num_assert_funcs + 1) * sizeof(AssertFunc));
   AssertFunc* assert_func = &ctx->assert_funcs[ctx->num_assert_funcs++];
   memset(assert_func, 0, sizeof(*assert_func));
   assert_func->name = strdup(name);
-  assert_func->result_type = result_type;
-  assert_func->num_local_i32 = num_local_i32;
-  assert_func->num_local_i64 = num_local_i64;
-  assert_func->num_local_f32 = num_local_f32;
-  assert_func->num_local_f64 = num_local_f64;
-  /* We assume that the data for the function in ctx->buf. */
-  assert_func->size = ctx->buf.size;
-  assert_func->data = malloc(ctx->buf.size);
-  memcpy(assert_func->data, ctx->buf.start, assert_func->size);
+  assert_func->name_offset = name_offset;
 }
 
 static void before_assert_return(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   ctx->in_assert = 1;
-  if (ctx->options->verbose)
-    printf("; before assert_return_%d\n", ctx->num_assert_funcs);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
-                     ctx->options->verbose);
-  info->cookie = (WasmParserCookie)ctx->buf.size;
+  print_header(ctx, "assert_return", ctx->num_assert_funcs);
+  out_u8(&ctx->buf, WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_EXPORT,
+         "func flags");
+  out_u16(&ctx->buf, ctx->nullary_signature_index[WASM_TYPE_V8_I32],
+          "func signature index");
+  uint32_t name_offset = ctx->buf.size;
+  out_u32(&ctx->buf, 0, "func name offset");
+
+  uint32_t body_size_offset = ctx->buf.size;
+  out_u16(&ctx->buf, 0, "func body size");
   out_opcode(&ctx->buf, WASM_OPCODE_I32_EQ);
-  out_printf(&ctx->js_buf,
-             "  assertReturn(m, \"$assert_return_%d\", \"%s\", %d);\n",
-             ctx->num_assert_funcs, info->loc.source->filename, info->loc.line);
+
+  char name[256];
+  snprintf(name, 256, "$assert_return_%d", ctx->num_assert_funcs);
+  append_assert_function(ctx, name, name_offset);
+
+  out_printf(&ctx->js_buf, "  assertReturn(m, \"%s\", \"%s\", %d);\n", name,
+             info->loc.source->filename, info->loc.line);
+
+  info->cookie = (WasmParserCookie)body_size_offset;
 }
 
 static void after_assert_return(WasmParserCallbackInfo* info, WasmType type) {
   Context* ctx = info->user_data;
-
-  uint32_t offset = (uint32_t)info->cookie;
   WasmOpcode opcode;
   switch (type) {
     case WASM_TYPE_I32:
@@ -1279,41 +1212,58 @@ static void after_assert_return(WasmParserCallbackInfo* info, WasmType type) {
     }
   }
 
-  out_u8_at(&ctx->buf, offset, opcode, "FIXUP assert_return opcode");
-
-  char name[256];
-  snprintf(name, 256, "$assert_return_%d", ctx->num_assert_funcs);
-  append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, 0, 0);
+  uint32_t body_size_offset = (uint32_t)info->cookie;
+  size_t body_size = ctx->buf.size - body_size_offset - 2;
+  out_u16_at(&ctx->buf, body_size_offset, body_size, "FIXUP body size");
+  out_u8_at(&ctx->buf, body_size_offset + 2, opcode,
+            "FIXUP assert_return opcode");
   ctx->in_assert = 0;
 }
 
 static void before_assert_return_nan(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   ctx->in_assert = 1;
-  if (ctx->options->verbose)
-    printf("; before assert_return_nan_%d\n", ctx->num_assert_funcs);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
-                     ctx->options->verbose);
+  print_header(ctx, "assert_return_nan", ctx->num_assert_funcs);
+  out_u8(&ctx->buf, WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_EXPORT |
+                        WASM_FUNCTION_FLAG_LOCALS,
+         "func flags");
+  out_u16(&ctx->buf, ctx->nullary_signature_index[WASM_TYPE_V8_I32],
+          "func signature index");
+  uint32_t name_offset = ctx->buf.size;
+  out_u32(&ctx->buf, 0, "func name offset");
+  out_u16(&ctx->buf, 0, "func num local i32");
+  out_u16(&ctx->buf, 0, "func num local i64");
+
+  uint32_t num_local_f32_offset = ctx->buf.size;
+  out_u16(&ctx->buf, 0, "func num local f32");
+  out_u16(&ctx->buf, 0, "func num local f64");
+  out_u16(&ctx->buf, 0, "func body size");
+
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
   out_u8(&ctx->buf, 0, "remapped local index");
-  out_printf(&ctx->js_buf,
-             "  assertReturn(m, \"$assert_return_nan_%d\", \"%s\", %d);\n",
-             ctx->num_assert_funcs, info->loc.source->filename, info->loc.line);
+
+  char name[256];
+  snprintf(name, 256, "$assert_return_nan_%d", ctx->num_assert_funcs);
+  append_assert_function(ctx, name, name_offset);
+
+  out_printf(&ctx->js_buf, "  assertReturn(m, \"%s\", \"%s\", %d);\n", name,
+             info->loc.source->filename, info->loc.line);
+
+  info->cookie = (WasmParserCookie)num_local_f32_offset;
 }
 
 static void after_assert_return_nan(WasmParserCallbackInfo* info,
                                     WasmType type) {
   Context* ctx = info->user_data;
 
-  int num_local_f32 = 0;
-  int num_local_f64 = 0;
+  uint32_t num_local_f32_offset = (uint32_t)info->cookie;
   switch (type) {
     case WASM_TYPE_F32:
-      num_local_f32++;
+      out_u8_at(&ctx->buf, num_local_f32_offset, 1, "FIXUP num local f32");
       out_opcode(&ctx->buf, WASM_OPCODE_F32_NE);
       break;
     case WASM_TYPE_F64:
-      num_local_f64++;
+      out_u8_at(&ctx->buf, num_local_f32_offset + 2, 1, "FIXUP num local f32");
       out_opcode(&ctx->buf, WASM_OPCODE_F64_NE);
       break;
     default:
@@ -1326,30 +1276,41 @@ static void after_assert_return_nan(WasmParserCallbackInfo* info,
   out_opcode(&ctx->buf, WASM_OPCODE_GET_LOCAL);
   out_u8(&ctx->buf, 0, "remapped local index");
 
-  char name[256];
-  snprintf(name, 256, "$assert_return_nan_%d", ctx->num_assert_funcs);
-  append_nullary_function(ctx, name, WASM_TYPE_I32, 0, 0, num_local_f32,
-                          num_local_f64);
+  uint32_t body_size_offset = num_local_f32_offset + 4;
+  size_t body_size = ctx->buf.size - body_size_offset - 2;
+  out_u16_at(&ctx->buf, body_size_offset, body_size, "FIXUP body size");
   ctx->in_assert = 0;
 }
 
 static void before_assert_trap(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   ctx->in_assert = 1;
-  if (ctx->options->verbose)
-    printf("; before assert_trap_%d\n", ctx->num_assert_funcs);
-  init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
-                     ctx->options->verbose);
-  out_printf(&ctx->js_buf,
-             "  assertTrap(m, \"$assert_trap_%d\", \"%s\", %d);\n",
-             ctx->num_assert_funcs, info->loc.source->filename, info->loc.line);
+  print_header(ctx, "assert_trap", ctx->num_assert_funcs);
+
+  out_u8(&ctx->buf, WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_EXPORT,
+         "func flags");
+  out_u16(&ctx->buf, ctx->nullary_signature_index[WASM_TYPE_V8_VOID],
+          "func signature index");
+  uint32_t name_offset = ctx->buf.size;
+  out_u32(&ctx->buf, 0, "func name offset");
+  uint32_t body_size_offset = ctx->buf.size;
+  out_u16(&ctx->buf, 0, "func body size");
+
+  char name[256];
+  snprintf(name, 256, "$assert_trap_%d", ctx->num_assert_funcs);
+  append_assert_function(ctx, name, name_offset);
+
+  out_printf(&ctx->js_buf, "  assertTrap(m, \"%s\", \"%s\", %d);\n", name,
+             info->loc.source->filename, info->loc.line);
+
+  info->cookie = (WasmParserCookie)body_size_offset;
 }
 
 static void after_assert_trap(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
-  char name[256];
-  snprintf(name, 256, "$assert_trap_%d", ctx->num_assert_funcs);
-  append_nullary_function(ctx, name, WASM_TYPE_VOID, 0, 0, 0, 0);
+  uint32_t body_size_offset = (uint32_t)info->cookie;
+  size_t body_size = ctx->buf.size - body_size_offset - 2;
+  out_u16_at(&ctx->buf, body_size_offset, body_size, "FIXUP body size");
   ctx->in_assert = 0;
 }
 
@@ -1357,11 +1318,26 @@ static void before_invoke(WasmParserCallbackInfo* info,
                           const char* invoke_name,
                           int invoke_function_index) {
   Context* ctx = info->user_data;
+  char name[256] = {};
+  uint32_t body_size_offset = 0;
+
   if (!ctx->in_assert) {
-    if (ctx->options->verbose)
-      printf("; before invoke_%d\n", ctx->num_assert_funcs);
-    init_output_buffer(&ctx->buf, INITIAL_OUTPUT_BUFFER_CAPACITY,
-                       ctx->options->verbose);
+    WasmFunction* function =
+        &ctx->module->functions.data[invoke_function_index];
+
+    print_header(ctx, "invoke", ctx->num_assert_funcs);
+    out_u8(&ctx->buf, WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_EXPORT,
+           "func flags");
+    out_u16(&ctx->buf, ctx->nullary_signature_index[wasm_type_to_v8_type(
+                           function->result_type)],
+            "func signature index");
+    uint32_t name_offset = ctx->buf.size;
+    out_u32(&ctx->buf, 0, "func name offset");
+    body_size_offset = ctx->buf.size;
+    out_u16(&ctx->buf, 0, "func body size");
+
+    snprintf(name, 256, "$invoke_%d", ctx->num_assert_funcs);
+    append_assert_function(ctx, name, name_offset);
   }
 
   out_opcode(&ctx->buf, WASM_OPCODE_CALL);
@@ -1370,11 +1346,9 @@ static void before_invoke(WasmParserCallbackInfo* info,
              "invoke func index");
 
   if (!ctx->in_assert) {
-    out_printf(&ctx->js_buf, "  invoke(m, \"$invoke_%d\");\n",
-               ctx->num_assert_funcs);
+    out_printf(&ctx->js_buf, "  invoke(m, \"%s\");\n", name);
+    info->cookie = (WasmParserCookie)body_size_offset;
   }
-
-  info->cookie = (WasmParserCookie)invoke_function_index;
 }
 
 static void after_invoke(WasmParserCallbackInfo* info) {
@@ -1382,11 +1356,9 @@ static void after_invoke(WasmParserCallbackInfo* info) {
   if (ctx->in_assert)
     return;
 
-  int invoke_function_index = (int)info->cookie;
-  WasmFunction* function = &ctx->module->functions.data[invoke_function_index];
-  char name[256];
-  snprintf(name, 256, "$invoke_%d", ctx->num_assert_funcs);
-  append_nullary_function(ctx, name, function->result_type, 0, 0, 0, 0);
+  uint32_t body_size_offset = (uint32_t)info->cookie;
+  size_t body_size = ctx->buf.size - body_size_offset - 2;
+  out_u16_at(&ctx->buf, body_size_offset, body_size, "FIXUP body size");
 }
 
 static void assert_invalid_error(WasmParserCallbackInfo* info,
@@ -1446,7 +1418,8 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   if (options->multi_module) {
     if (options->outfile) {
       callbacks.before_module = before_module_multi;
-      callbacks.after_module = after_module_multi;
+      callbacks.after_module = NULL;
+      callbacks.before_module_destroy = before_module_destroy;
       callbacks.before_assert_return = before_assert_return;
       callbacks.after_assert_return = after_assert_return;
       callbacks.before_assert_return_nan = before_assert_return_nan;
@@ -1460,8 +1433,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
       js_file_start(&ctx);
     }
     result = wasm_parse_file(source, &callbacks, &parser_options);
-    if (options->outfile) {
-      js_module_end(&ctx);
+    if (result== 0 && options->outfile) {
       js_file_end(&ctx);
       write_output_buffer(&ctx.js_buf, options->outfile);
     }

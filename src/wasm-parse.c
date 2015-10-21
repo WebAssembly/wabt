@@ -2272,7 +2272,9 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
   }
 
   CALLBACK_COOKIE(parser, after_module, cookie, (&parser->info));
-  parser->info.module = NULL;
+  /* Don't set info->module to NULL. We want to allow callbacks that follow
+   module parsing to continue to use the same module (e.g. invoke,
+   assert_return) */
 }
 
 static void init_parser(WasmParser* parser,
@@ -2312,6 +2314,7 @@ int wasm_parse_module(WasmSource* source,
   WasmToken t = read_token(&parser);
   if (t.type != WASM_TOKEN_TYPE_EOF)
     FATAL_AT(&parser, t.range.start, "expected EOF\n");
+  CALLBACK(&parser, before_module_destroy, (&parser.info));
   wasm_destroy_module(&module);
   return 0;
 }
@@ -2366,6 +2369,7 @@ int wasm_parse_file(WasmSource* source,
       case WASM_OP_MODULE: {
         seen_module = 1;
         rewind_token(parser, open);
+        CALLBACK(parser, before_module_destroy, (&parser->info));
         /* Destroy previous module, if any */
         wasm_destroy_module(&module);
         memset(&module, 0, sizeof(module));
@@ -2496,6 +2500,7 @@ int wasm_parse_file(WasmSource* source,
     t = read_token(parser);
   } while (t.type != WASM_TOKEN_TYPE_EOF);
 
+  CALLBACK(parser, before_module_destroy, (&parser->info));
   wasm_destroy_module(&module);
   return 0;
 }
