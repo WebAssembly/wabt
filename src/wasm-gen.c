@@ -542,6 +542,18 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
   size_t offset;
   OutputBuffer* buf = &ctx->buf;
 
+  /* function table */
+  if (module->function_table.size) {
+    out_u8(buf, WASM_SECTION_FUNCTION_TABLE, "WASM_SECTION_FUNCTION_TABLE");
+    out_leb128(buf, module->function_table.size, "num function table entries");
+    for (i = 0; i < module->function_table.size; ++i) {
+      WasmFunction* function = module->function_table.data[i];
+      int index = function - module->functions.data;
+      assert(index >= 0 && index < module->functions.size);
+      out_u16(buf, index, "function table entry");
+    }
+  }
+
   out_u8(buf, WASM_SECTION_END, "WASM_SECTION_END");
 
   /* output assert function names. Do this first so we don't have to fixup any
