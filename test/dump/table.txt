@@ -1,6 +1,7 @@
 ;;; FLAGS: -dv
 (module
-  (func (param i32))
+  (type $t (func (param i32)))
+  (func (type $t))
   (func (param i32 i64))
   (func (result f64) (f64.const 0))
   (table 0 0 1 2))
@@ -10,51 +11,56 @@
 0000002: 00                                         ; max mem size log 2
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 03                                         ; num signatures
-; function signature 0
+0000005: 04                                         ; num signatures
+; type signature 0
 0000006: 01                                         ; num args
 0000007: 00                                         ; result_type
 0000008: 01                                         ; arg type
 ; function signature 1
-0000009: 02                                         ; num args
+0000009: 01                                         ; num args
 000000a: 00                                         ; result_type
 000000b: 01                                         ; arg type
-000000c: 02                                         ; arg type
 ; function signature 2
-000000d: 00                                         ; num args
-000000e: 04                                         ; result_type
-000000f: 02                                         ; WASM_SECTION_FUNCTIONS
-0000010: 03                                         ; num functions
+000000c: 02                                         ; num args
+000000d: 00                                         ; result_type
+000000e: 01                                         ; arg type
+000000f: 02                                         ; arg type
+; function signature 3
+0000010: 00                                         ; num args
+0000011: 04                                         ; result_type
+0000012: 02                                         ; WASM_SECTION_FUNCTIONS
+0000013: 03                                         ; num functions
 ; function 0
-0000011: 01                                         ; func flags
-0000012: 0000                                       ; func signature index
-0000014: 0000 0000                                  ; func name offset
-0000018: 0000                                       ; func body size
-0000018: 0000                                       ; FIXUP func body size
+0000014: 01                                         ; func flags
+0000015: 0100                                       ; func signature index
+0000017: 0000 0000                                  ; func name offset
+000001b: 0000                                       ; func body size
+000001b: 0000                                       ; FIXUP func body size
 ; function 1
-000001a: 01                                         ; func flags
-000001b: 0100                                       ; func signature index
-000001d: 0000 0000                                  ; func name offset
-0000021: 0000                                       ; func body size
-0000021: 0000                                       ; FIXUP func body size
+000001d: 01                                         ; func flags
+000001e: 0200                                       ; func signature index
+0000020: 0000 0000                                  ; func name offset
+0000024: 0000                                       ; func body size
+0000024: 0000                                       ; FIXUP func body size
 ; function 2
-0000023: 01                                         ; func flags
-0000024: 0200                                       ; func signature index
-0000026: 0000 0000                                  ; func name offset
-000002a: 0000                                       ; func body size
-000002c: 13                                         ; OPCODE_F64_CONST
-000002d: 0000 0000 0000 0000                        ; f64 literal
-000002a: 0900                                       ; FIXUP func body size
-0000035: 05                                         ; WASM_SECTION_FUNCTION_TABLE
-0000036: 04                                         ; num function table entries
-0000037: 0000                                       ; function table entry
-0000039: 0000                                       ; function table entry
-000003b: 0100                                       ; function table entry
-000003d: 0200                                       ; function table entry
-000003f: 06                                         ; WASM_SECTION_END
+0000026: 01                                         ; func flags
+0000027: 0300                                       ; func signature index
+0000029: 0000 0000                                  ; func name offset
+000002d: 0000                                       ; func body size
+000002f: 13                                         ; OPCODE_F64_CONST
+0000030: 0000 0000 0000 0000                        ; f64 literal
+000002d: 0900                                       ; FIXUP func body size
+0000038: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+0000039: 04                                         ; num function table entries
+000003a: 0000                                       ; function table entry
+000003c: 0000                                       ; function table entry
+000003e: 0100                                       ; function table entry
+0000040: 0200                                       ; function table entry
+0000042: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0000 0001 0103 0100 0102 0001 0200 0402  ................
-0000010: 0301 0000 0000 0000 0000 0101 0000 0000  ................
-0000020: 0000 0001 0200 0000 0000 0900 1300 0000  ................
-0000030: 0000 0000 0005 0400 0000 0001 0002 0006  ................
+0000000: 0000 0001 0104 0100 0101 0001 0200 0102  ................
+0000010: 0004 0203 0101 0000 0000 0000 0001 0200  ................
+0000020: 0000 0000 0000 0103 0000 0000 0009 0013  ................
+0000030: 0000 0000 0000 0000 0504 0000 0000 0100  ................
+0000040: 0200 06                                  ...
 ;;; STDOUT ;;)

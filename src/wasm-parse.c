@@ -1811,6 +1811,7 @@ static void check_or_copy_func_signature(WasmParser* parser,
         variable->type = function->signature->args.data[i].type;
       }
       function->result_type = function->signature->result_type;
+      function->num_args = function->signature->args.size;
     }
   }
 }
