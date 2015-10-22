@@ -849,6 +849,13 @@ static void before_call_import(WasmParserCallbackInfo* info, int import_index) {
   out_leb128(&ctx->buf, import_index, "import index");
 }
 
+static void before_call_indirect(WasmParserCallbackInfo* info,
+                                 int signature_index) {
+  Context* ctx = info->user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_CALL_INDIRECT);
+  out_leb128(&ctx->buf, signature_index, "signature index");
+}
+
 static void before_compare(WasmParserCallbackInfo* info,
                            enum WasmOpcode opcode) {
   Context* ctx = info->user_data;
@@ -1398,6 +1405,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.before_break = before_break;
   callbacks.before_call = before_call;
   callbacks.before_call_import = before_call_import;
+  callbacks.before_call_indirect = before_call_indirect;
   callbacks.before_compare = before_compare;
   callbacks.after_const = after_const;
   callbacks.before_convert = before_convert;

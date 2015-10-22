@@ -1,0 +1,41 @@
+;;; FLAGS: -dv
+(module
+  (type $t (func (param i32)))
+  (func $f (type $t)
+    (call_indirect $t (i32.const 0)))
+  (table $f))
+(;; STDOUT ;;;
+0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 00                                         ; min mem size log 2
+0000002: 00                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000005: 02                                         ; num signatures
+; type signature 0
+0000006: 01                                         ; num args
+0000007: 00                                         ; result_type
+0000008: 01                                         ; arg type
+; function signature 1
+0000009: 01                                         ; num args
+000000a: 00                                         ; result_type
+000000b: 01                                         ; arg type
+000000c: 02                                         ; WASM_SECTION_FUNCTIONS
+000000d: 01                                         ; num functions
+; function 0
+000000e: 01                                         ; func flags
+000000f: 0100                                       ; func signature index
+0000011: 0000 0000                                  ; func name offset
+0000015: 0000                                       ; func body size
+0000017: 1a                                         ; OPCODE_CALL_INDIRECT
+0000018: 00                                         ; signature index
+0000019: 10                                         ; OPCODE_I8_CONST
+000001a: 00                                         ; u8 literal
+0000015: 0400                                       ; FIXUP func body size
+000001b: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+000001c: 01                                         ; num function table entries
+000001d: 0000                                       ; function table entry
+000001f: 06                                         ; WASM_SECTION_END
+; names
+0000000: 0000 0001 0102 0100 0101 0001 0201 0101  ................
+0000010: 0000 0000 0004 001a 0010 0005 0100 0006  ................
+;;; STDOUT ;;)
