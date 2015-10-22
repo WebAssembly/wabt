@@ -4,5 +4,5 @@
   (func
     (call_indirect $t (i32.const 0))))
 (;; STDERR ;;;
-expr/bad-callindirect-too-few.txt:5:36: too few arguments to function. got 1, expected 2
+expr/bad-callindirect-too-few.txt:5:36: too few arguments to function. got 0, expected 2
 ;;; STDERR ;;)

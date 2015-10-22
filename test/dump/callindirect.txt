@@ -2,7 +2,7 @@
 (module
   (type $t (func (param i32)))
   (func $f (type $t)
-    (call_indirect $t (i32.const 0)))
+    (call_indirect $t (i32.const 0) (i32.const 0)))
   (table $f))
 (;; STDOUT ;;;
 0000000: 00                                         ; WASM_SECTION_MEMORY
@@ -30,12 +30,15 @@
 0000018: 00                                         ; signature index
 0000019: 10                                         ; OPCODE_I8_CONST
 000001a: 00                                         ; u8 literal
-0000015: 0400                                       ; FIXUP func body size
-000001b: 05                                         ; WASM_SECTION_FUNCTION_TABLE
-000001c: 01                                         ; num function table entries
-000001d: 0000                                       ; function table entry
-000001f: 06                                         ; WASM_SECTION_END
+000001b: 10                                         ; OPCODE_I8_CONST
+000001c: 00                                         ; u8 literal
+0000015: 0600                                       ; FIXUP func body size
+000001d: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+000001e: 01                                         ; num function table entries
+000001f: 0000                                       ; function table entry
+0000021: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0102 0100 0101 0001 0201 0101  ................
-0000010: 0000 0000 0004 001a 0010 0005 0100 0006  ................
+0000010: 0000 0000 0006 001a 0010 0010 0005 0100  ................
+0000020: 0006                                     ..
 ;;; STDOUT ;;)

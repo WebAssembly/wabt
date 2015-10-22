@@ -1412,6 +1412,9 @@ static WasmType parse_expr(WasmParser* parser,
       int index = parse_signature_var(parser, module);
       WasmSignature* sig = &module->signatures.data[index];
       CALLBACK(parser, before_call_indirect, (&parser->info, index));
+      WasmType func_type = parse_expr(parser, module, function);
+      check_type(parser, t.range.start, func_type, WASM_TYPE_I32,
+                 " of function index");
       parse_call_args_generic(parser, module, function, &sig->args,
                               sig->args.size, "call_indirect");
       type = sig->result_type;
