@@ -394,17 +394,23 @@ static void destroy_assert_funcs(Context* ctx) {
   ctx->num_assert_funcs = 0;
 }
 
-static void destroy_context(Context* ctx) {
+static void destroy_module(Context* ctx) {
   LabelInfo* label = ctx->top_label;
   while (label) {
     LabelInfo* next_label = label->next_label;
     free(label);
     label = next_label;
   }
+  ctx->top_label = NULL;
+  destroy_assert_funcs(ctx);
+}
+
+static void destroy_context(Context* ctx) {
   destroy_output_buffer(&ctx->buf);
   destroy_output_buffer(&ctx->js_buf);
-  free(ctx->remapped_locals);
+  destroy_module(ctx);
   destroy_assert_funcs(ctx);
+  free(ctx->remapped_locals);
   free(ctx->assert_funcs);
 }
 
@@ -585,8 +591,6 @@ static void out_module_footer(Context* ctx, WasmModule* module) {
                  "FIXUP func name offset");
       out_cstr(buf, assert_func->name, "export name");
     }
-
-    destroy_assert_funcs(ctx);
   }
 
   /* output segment data */
@@ -705,6 +709,7 @@ static void after_module(WasmParserCallbackInfo* info) {
   out_module_footer(ctx, info->module);
   if (ctx->options->dump_module)
     dump_output_buffer(&ctx->buf);
+  destroy_module(ctx);
 }
 
 static void before_function(WasmParserCallbackInfo* info) {
