@@ -4,11 +4,4 @@
 ;;; STDIN_FILE: third_party/spec/ml-proto/test/i32.wast
 (;; STDERR ;;;
 
-
-#
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 199
-# Unsupported opcode #88:ExprI32Ctz
-#
-
-
 ;;; STDERR ;;)
