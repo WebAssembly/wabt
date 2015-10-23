@@ -286,8 +286,8 @@ typedef struct WasmSegment {
 DECLARE_VECTOR(segment, WasmSegment)
 
 typedef struct WasmModule {
-  WasmSignatureVector signatures;
-  WasmBindingVector signature_bindings;
+  WasmSignatureVector function_types;
+  WasmBindingVector function_type_bindings;
   WasmFunctionVector functions;
   WasmBindingVector function_bindings;
   WasmVariableVector globals;

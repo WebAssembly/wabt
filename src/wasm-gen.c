@@ -475,8 +475,8 @@ static void out_module_header(Context* ctx, WasmModule* module) {
   }
 
   /* TODO(binji): is it worth doing a pass to uniquify these? */
-  uint32_t num_signatures =
-      module->signatures.size + module->imports.size + module->functions.size;
+  uint32_t num_signatures = module->function_types.size + module->imports.size +
+                            module->functions.size;
   if (ctx->options->multi_module)
     num_signatures += WASM_NUM_V8_TYPES;
 
@@ -485,8 +485,8 @@ static void out_module_header(Context* ctx, WasmModule* module) {
   ctx->signature_section_offset = ctx->buf.size;
 
   uint32_t signature_index = 0;
-  for (i = 0; i < module->signatures.size; ++i) {
-    out_signature(ctx, &module->signatures.data[i], signature_index++,
+  for (i = 0; i < module->function_types.size; ++i) {
+    out_signature(ctx, &module->function_types.data[i], signature_index++,
                   "type signature");
   }
   for (i = 0; i < module->imports.size; ++i) {
@@ -522,7 +522,7 @@ static void out_module_header(Context* ctx, WasmModule* module) {
       WasmFunctionFlags flags =
           WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_IMPORT;
       out_u8(buf, flags, "import flags");
-      uint16_t signature_index = (uint16_t)(module->signatures.size + i);
+      uint16_t signature_index = (uint16_t)(module->function_types.size + i);
       out_u16(buf, signature_index, "import signature index");
       out_u32(buf, 0, "import name offset");
     }
@@ -730,7 +730,7 @@ static void before_function(WasmParserCallbackInfo* info) {
   if (has_locals)
     flags |= WASM_FUNCTION_FLAG_LOCALS;
   out_u8(&ctx->buf, flags, "func flags");
-  uint16_t signature_index = (uint16_t)(module->signatures.size +
+  uint16_t signature_index = (uint16_t)(module->function_types.size +
                                         module->imports.size + function_index);
   out_u16(&ctx->buf, signature_index, "func signature index");
   out_u32(&ctx->buf, 0, "func name offset");
