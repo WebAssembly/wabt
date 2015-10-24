@@ -250,6 +250,9 @@ typedef struct WasmSignature {
 } WasmSignature;
 DECLARE_VECTOR(signature, WasmSignature);
 
+typedef int WasmSignatureIndex;
+DECLARE_VECTOR(signature_index, WasmSignatureIndex);
+
 typedef struct WasmFunction {
   WasmType result_type;
   WasmVariableVector locals; /* Includes args, they're at the start */
@@ -257,7 +260,7 @@ typedef struct WasmFunction {
   WasmLabelVector labels;
   WasmBindingVector label_bindings;
   int num_args;
-  WasmSignature* signature; /* May be NULL */
+  WasmSignatureIndex signature_index;
 
   /* exported and exported_name won't be valid until after the before_export
    * callback */
@@ -272,7 +275,7 @@ DECLARE_VECTOR(function_ptr, WasmFunctionPtr)
 typedef struct WasmImport {
   char* module_name;
   char* func_name;
-  WasmSignature signature;
+  WasmSignatureIndex signature_index;
 } WasmImport;
 DECLARE_VECTOR(import, WasmImport)
 
@@ -286,7 +289,8 @@ typedef struct WasmSegment {
 DECLARE_VECTOR(segment, WasmSegment)
 
 typedef struct WasmModule {
-  WasmSignatureVector function_types;
+  WasmSignatureVector signatures;
+  WasmSignatureIndexVector function_types;
   WasmBindingVector function_type_bindings;
   WasmFunctionVector functions;
   WasmBindingVector function_bindings;

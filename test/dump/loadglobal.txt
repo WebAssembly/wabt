@@ -31,7 +31,7 @@
 000001d: 00                                         ; export global
 000001e: 01                                         ; WASM_SECTION_SIGNATURES
 000001f: 01                                         ; num signatures
-; function signature 0
+; signature 0
 0000020: 00                                         ; num args
 0000021: 00                                         ; result_type
 0000022: 02                                         ; WASM_SECTION_FUNCTIONS

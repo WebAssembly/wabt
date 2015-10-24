@@ -9,39 +9,33 @@
 0000002: 00                                         ; max mem size log 2
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 03                                         ; num signatures
-; function signature 0
+0000005: 01                                         ; num signatures
+; signature 0
 0000006: 00                                         ; num args
 0000007: 00                                         ; result_type
-; function signature 1
-0000008: 00                                         ; num args
-0000009: 00                                         ; result_type
-; function signature 2
-000000a: 00                                         ; num args
-000000b: 00                                         ; result_type
-000000c: 02                                         ; WASM_SECTION_FUNCTIONS
-000000d: 03                                         ; num functions
+0000008: 02                                         ; WASM_SECTION_FUNCTIONS
+0000009: 03                                         ; num functions
 ; function 0
-000000e: 01                                         ; func flags
-000000f: 0000                                       ; func signature index
-0000011: 0000 0000                                  ; func name offset
-0000015: 0000                                       ; func body size
-0000015: 0000                                       ; FIXUP func body size
+000000a: 01                                         ; func flags
+000000b: 0000                                       ; func signature index
+000000d: 0000 0000                                  ; func name offset
+0000011: 0000                                       ; func body size
+0000011: 0000                                       ; FIXUP func body size
 ; function 1
-0000017: 01                                         ; func flags
-0000018: 0100                                       ; func signature index
-000001a: 0000 0000                                  ; func name offset
-000001e: 0000                                       ; func body size
-000001e: 0000                                       ; FIXUP func body size
+0000013: 01                                         ; func flags
+0000014: 0000                                       ; func signature index
+0000016: 0000 0000                                  ; func name offset
+000001a: 0000                                       ; func body size
+000001a: 0000                                       ; FIXUP func body size
 ; function 2
-0000020: 01                                         ; func flags
-0000021: 0200                                       ; func signature index
-0000023: 0000 0000                                  ; func name offset
-0000027: 0000                                       ; func body size
-0000027: 0000                                       ; FIXUP func body size
-0000029: 06                                         ; WASM_SECTION_END
+000001c: 01                                         ; func flags
+000001d: 0000                                       ; func signature index
+000001f: 0000 0000                                  ; func name offset
+0000023: 0000                                       ; func body size
+0000023: 0000                                       ; FIXUP func body size
+0000025: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0000 0001 0103 0000 0000 0000 0203 0100  ................
-0000010: 0000 0000 0000 0001 0100 0000 0000 0000  ................
-0000020: 0102 0000 0000 0000 0006                 ..........
+0000000: 0000 0001 0101 0000 0203 0100 0000 0000  ................
+0000010: 0000 0001 0000 0000 0000 0000 0100 0000  ................
+0000020: 0000 0000 0006                           ......
 ;;; STDOUT ;;)

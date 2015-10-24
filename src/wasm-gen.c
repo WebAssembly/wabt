@@ -474,9 +474,7 @@ static void out_module_header(Context* ctx, WasmModule* module) {
     }
   }
 
-  /* TODO(binji): is it worth doing a pass to uniquify these? */
-  uint32_t num_signatures = module->function_types.size + module->imports.size +
-                            module->functions.size;
+  uint32_t num_signatures = module->signatures.size;
   if (ctx->options->multi_module)
     num_signatures += WASM_NUM_V8_TYPES;
 
@@ -484,30 +482,17 @@ static void out_module_header(Context* ctx, WasmModule* module) {
   out_leb128(buf, num_signatures, "num signatures");
   ctx->signature_section_offset = ctx->buf.size;
 
-  uint32_t signature_index = 0;
-  for (i = 0; i < module->function_types.size; ++i) {
-    out_signature(ctx, &module->function_types.data[i], signature_index++,
-                  "type signature");
-  }
-  for (i = 0; i < module->imports.size; ++i) {
-    out_signature(ctx, &module->imports.data[i].signature, signature_index++,
-                  "import signature");
-  }
-  for (i = 0; i < module->functions.size; ++i) {
-    WasmFunction* function = &module->functions.data[i];
-    out_signature_generic(ctx, function->result_type, &function->locals,
-                          function->num_args, signature_index++,
-                          "function signature");
-  }
+  for (i = 0; i < module->signatures.size; ++i)
+    out_signature(ctx, &module->signatures.data[i], i, "signature");
 
   if (ctx->options->multi_module) {
     /* Write out the signatures for various assert functions */
     WasmTypeV8 type;
     for (type = 0; type < WASM_NUM_V8_TYPES; ++type) {
-      ctx->nullary_signature_index[type] = signature_index;
-      out_signature_generic(ctx, v8_type_to_wasm_type(type), NULL, 0,
-                            signature_index, "assert signature");
-      signature_index++;
+      WasmSignatureIndex index = module->signatures.size + type;
+      ctx->nullary_signature_index[type] = index;
+      out_signature_generic(ctx, v8_type_to_wasm_type(type), NULL, 0, index,
+                            "assert signature");
     }
   }
 
@@ -518,12 +503,12 @@ static void out_module_header(Context* ctx, WasmModule* module) {
     out_leb128(buf, num_functions, "num functions");
     ctx->function_section_offset = ctx->buf.size;
     for (i = 0; i < module->imports.size; ++i) {
+      WasmImport* import = &module->imports.data[i];
       print_header(ctx, "import header", i);
       WasmFunctionFlags flags =
           WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_IMPORT;
       out_u8(buf, flags, "import flags");
-      uint16_t signature_index = (uint16_t)(module->function_types.size + i);
-      out_u16(buf, signature_index, "import signature index");
+      out_u16(buf, import->signature_index, "import signature index");
       out_u32(buf, 0, "import name offset");
     }
   }
@@ -730,8 +715,7 @@ static void before_function(WasmParserCallbackInfo* info) {
   if (has_locals)
     flags |= WASM_FUNCTION_FLAG_LOCALS;
   out_u8(&ctx->buf, flags, "func flags");
-  uint16_t signature_index = (uint16_t)(module->function_types.size +
-                                        module->imports.size + function_index);
+  uint16_t signature_index = (uint16_t)function->signature_index;
   out_u16(&ctx->buf, signature_index, "func signature index");
   out_u32(&ctx->buf, 0, "func name offset");
   if (has_locals) {

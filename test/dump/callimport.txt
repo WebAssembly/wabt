@@ -16,12 +16,12 @@
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 02                                         ; num signatures
-; import signature 0
+; signature 0
 0000006: 02                                         ; num args
 0000007: 01                                         ; result_type
 0000008: 01                                         ; arg type
 0000009: 03                                         ; arg type
-; function signature 1
+; signature 1
 000000a: 00                                         ; num args
 000000b: 01                                         ; result_type
 000000c: 02                                         ; WASM_SECTION_FUNCTIONS

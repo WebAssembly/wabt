@@ -10,7 +10,7 @@
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
-; function signature 0
+; signature 0
 0000006: 00                                         ; num args
 0000007: 00                                         ; result_type
 0000008: 02                                         ; WASM_SECTION_FUNCTIONS

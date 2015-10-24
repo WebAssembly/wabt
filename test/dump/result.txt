@@ -11,16 +11,16 @@
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 04                                         ; num signatures
-; function signature 0
+; signature 0
 0000006: 00                                         ; num args
 0000007: 01                                         ; result_type
-; function signature 1
+; signature 1
 0000008: 00                                         ; num args
 0000009: 02                                         ; result_type
-; function signature 2
+; signature 2
 000000a: 00                                         ; num args
 000000b: 03                                         ; result_type
-; function signature 3
+; signature 3
 000000c: 00                                         ; num args
 000000d: 04                                         ; result_type
 000000e: 02                                         ; WASM_SECTION_FUNCTIONS

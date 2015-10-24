@@ -128,6 +128,7 @@ static void* append_element(void** data,
 DEFINE_VECTOR(binding, WasmBinding)
 DEFINE_VECTOR(variable, WasmVariable)
 DEFINE_VECTOR(signature, WasmSignature)
+DEFINE_VECTOR(signature_index, WasmSignatureIndex)
 DEFINE_VECTOR(function, WasmFunction)
 DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
@@ -1400,18 +1401,18 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_CALL_IMPORT: {
       int index = parse_import_var(parser, module);
       WasmImport* callee = &module->imports.data[index];
+      WasmSignature* sig = &module->signatures.data[callee->signature_index];
       CALLBACK(parser, before_call_import, (&parser->info, index));
-      parse_call_args_generic(parser, module, function,
-                              &callee->signature.args,
-                              callee->signature.args.size, "call_import");
-      type = callee->signature.result_type;
+      parse_call_args_generic(parser, module, function, &sig->args,
+                              sig->args.size, "call_import");
+      type = sig->result_type;
       break;
     }
 
     case WASM_OP_CALL_INDIRECT: {
       check_opcode(parser, t.range.start, op_info->opcode);
-      int index = parse_function_type_var(parser, module);
-      WasmSignature* sig = &module->function_types.data[index];
+      WasmSignatureIndex index = parse_function_type_var(parser, module);
+      WasmSignature* sig = &module->signatures.data[index];
       CALLBACK(parser, before_call_indirect, (&parser->info, index));
       WasmType func_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, func_type, WASM_TYPE_I32,
@@ -1782,41 +1783,95 @@ static void preparse_binding_list(WasmParser* parser,
   }
 }
 
+static WasmSignatureIndex find_signature_index(WasmModule* module,
+                                               WasmType result_type,
+                                               WasmVariableVector* args,
+                                               int num_args) {
+  int i;
+  for (i = 0; i < module->signatures.size; ++i) {
+    WasmSignature* sig = &module->signatures.data[i];
+    if (sig->result_type != result_type)
+      continue;
+    if (sig->args.size != num_args)
+      continue;
+    int j;
+    for (j = 0; j < num_args; ++j)
+      if (sig->args.data[j].type != args->data[j].type)
+        break;
+    if (j == num_args)
+      return i;
+  }
+  return -1;
+}
+
+static WasmSignatureIndex get_or_create_signature(WasmParser* parser,
+                                                  WasmSourceLocation loc,
+                                                  WasmModule* module,
+                                                  WasmType result_type,
+                                                  WasmVariableVector* args,
+                                                  int num_args) {
+  WasmSignatureIndex sig_index =
+      find_signature_index(module, result_type, args, num_args);
+  if (sig_index != -1)
+    return sig_index;
+
+  WasmSignature* sig = wasm_append_signature(&module->signatures);
+  CHECK_ALLOC(parser, sig, loc);
+  memset(sig, 0, sizeof(*sig));
+  sig_index = sig - &module->signatures.data[0];
+  sig->result_type = result_type;
+  int i;
+  for (i = 0; i < num_args; ++i) {
+    WasmVariable* variable = wasm_append_variable(&sig->args);
+    CHECK_ALLOC(parser, variable, loc);
+    variable->type = args->data[i].type;
+  }
+  return sig_index;
+}
+
 static void check_or_copy_func_signature(WasmParser* parser,
                                          WasmSourceLocation loc,
+                                         WasmModule* module,
                                          WasmFunction* function,
-                                         int seen_param_or_result) {
+                                         int seen_param_or_result,
+                                         int has_signature) {
   /* Finished the params/result, check it against the specified signature
    if there is one */
-  if (function->signature) {
-    int i;
-    if (seen_param_or_result) {
-      if (function->num_args != function->signature->args.size)
-        FATAL_AT(parser, loc, "expected %d arguments, got %d\n",
-                 function->signature->args.size, function->num_args);
-      if (function->signature->result_type != function->result_type)
-        FATAL_AT(parser, loc, "expected result type to be %s, got %s\n",
-                 s_type_names[function->signature->result_type],
-                 s_type_names[function->result_type]);
+  if (!has_signature) {
+    WasmSignatureIndex sig_index =
+        get_or_create_signature(parser, loc, module, function->result_type,
+                                &function->locals, function->num_args);
+    function->signature_index = sig_index;
+    return;
+  }
 
-      for (i = 0; i < function->num_args; ++i) {
-        if (function->signature->args.data[i].type !=
-            function->locals.data[i].type)
-          FATAL_AT(parser, loc,
-                   "expected argument %d to have type %s, got %s\n", i,
-                   s_type_names[function->signature->args.data[i].type],
-                   s_type_names[function->locals.data[i].type]);
-      }
-    } else {
-      /* Copy args from signature */
-      for (i = 0; i < function->signature->args.size; ++i) {
-        WasmVariable* variable = wasm_append_variable(&function->locals);
-        CHECK_ALLOC(parser, variable, loc);
-        variable->type = function->signature->args.data[i].type;
-      }
-      function->result_type = function->signature->result_type;
-      function->num_args = function->signature->args.size;
+  WasmSignature* sig = &module->signatures.data[function->signature_index];
+  int i;
+  if (seen_param_or_result) {
+    if (function->num_args != sig->args.size)
+      FATAL_AT(parser, loc, "expected %d arguments, got %d\n", sig->args.size,
+               function->num_args);
+    if (sig->result_type != function->result_type)
+      FATAL_AT(parser, loc, "expected result type to be %s, got %s\n",
+               s_type_names[sig->result_type],
+               s_type_names[function->result_type]);
+
+    for (i = 0; i < function->num_args; ++i) {
+      if (sig->args.data[i].type != function->locals.data[i].type)
+        FATAL_AT(parser, loc, "expected argument %d to have type %s, got %s\n",
+                 i, s_type_names[sig->args.data[i].type],
+                 s_type_names[function->locals.data[i].type]);
     }
+  } else {
+    /* Copy args from sig */
+    assert(function->locals.size == 0);
+    for (i = 0; i < sig->args.size; ++i) {
+      WasmVariable* variable = wasm_append_variable(&function->locals);
+      CHECK_ALLOC(parser, variable, loc);
+      variable->type = sig->args.data[i].type;
+    }
+    function->result_type = sig->result_type;
+    function->num_args = sig->args.size;
   }
 }
 
@@ -1846,6 +1901,7 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
 
   int seen_param = 0;
   int seen_result = 0;
+  int has_sig = 0;
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(parser, t);
     t = read_token(parser);
@@ -1856,7 +1912,7 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
       case WASM_OP_TYPE: {
         if (state > STATE_TYPE)
           FATAL_AT(parser, t.range.start, "type signature must be first\n");
-        else if (state == STATE_TYPE && function->signature)
+        else if (state == STATE_TYPE && has_sig)
           FATAL_AT(parser, t.range.start,
                    "type signature cannot be defined twice\n");
         state = STATE_TYPE;
@@ -1897,15 +1953,16 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
     }
 
     if (last_state <= STATE_RESULT && state > STATE_RESULT)
-      check_or_copy_func_signature(parser, t.range.start, function,
-                                   seen_param || seen_result);
+      check_or_copy_func_signature(parser, t.range.start, module, function,
+                                   seen_param || seen_result, has_sig);
 
     switch (state) {
       case STATE_TYPE: {
         int index = parse_function_type_var(parser, module);
         expect_close(parser, read_token(parser));
-        WasmSignature* sig = &module->function_types.data[index];
-        function->signature = sig;
+        WasmSignatureIndex sig_index = module->function_types.data[index];
+        function->signature_index = sig_index;
+        has_sig = 1;
         break;
       }
 
@@ -1946,11 +2003,16 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
   }
 
   if (last_state <= STATE_RESULT)
-    check_or_copy_func_signature(parser, t.range.start, function,
-                                 seen_param || seen_result);
+    check_or_copy_func_signature(parser, t.range.start, module, function,
+                                 seen_param || seen_result, has_sig);
 }
 
-static void preparse_signature(WasmParser* parser, WasmSignature* sig) {
+static WasmSignatureIndex preparse_signature(WasmParser* parser,
+                                             WasmModule* module) {
+  WasmSignature* sig = wasm_append_signature(&module->signatures);
+  CHECK_ALLOC(parser, sig, parser->tokenizer.loc);
+  memset(sig, 0, sizeof(*sig));
+
   WasmToken t = read_token(parser);
   if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(parser, t);
@@ -1983,6 +2045,19 @@ static void preparse_signature(WasmParser* parser, WasmSignature* sig) {
         break;
     }
   }
+
+  /* Check whether the signature already existed. If so, we have to destroy the
+   one we just created and use that instead. We create it on the signatures
+   list in either case so it is cleand up properly if the parsing fails before
+   this point. */
+  WasmSignatureIndex sig_index = find_signature_index(
+      module, sig->result_type, &sig->args, sig->args.size);
+  if (sig_index != module->signatures.size - 1) {
+    wasm_destroy_variable_vector(&sig->args);
+    module->signatures.size--;
+  }
+
+  return sig_index;
 }
 
 static void preparse_module(WasmParser* parser, WasmModule* module) {
@@ -2098,14 +2173,13 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         t = read_token(parser);
         expect_string(parser, t);
         import->func_name = dup_string_contents(t);
-        preparse_signature(parser, &import->signature);
+        import->signature_index = preparse_signature(parser, module);
         break;
       }
 
       case WASM_OP_TYPE: {
-        WasmSignature* sig = wasm_append_signature(&module->function_types);
-        CHECK_ALLOC(parser, sig, t.range.start);
-        memset(sig, 0, sizeof(*sig));
+        WasmSignatureIndex* sig_index = wasm_append_signature_index(&module->function_types);
+        CHECK_ALLOC(parser, sig_index, t.range.start);
 
         preparse_binding_name(parser, &module->function_type_bindings,
                               module->function_types.size - 1, "function type",
@@ -2114,7 +2188,7 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         expect_open(parser, t);
         t = read_token(parser);
         expect_atom_op(parser, t, WASM_OP_FUNC, "func");
-        preparse_signature(parser, sig);
+        *sig_index = preparse_signature(parser, module);
         expect_close(parser, read_token(parser));
         break;
       }
@@ -2165,15 +2239,15 @@ static void wasm_destroy_module(WasmModule* module) {
     WasmImport* import = &module->imports.data[i];
     free(import->module_name);
     free(import->func_name);
-    wasm_destroy_signature(&import->signature);
   }
   wasm_destroy_import_vector(&module->imports);
   for (i = 0; i < module->segments.size; ++i)
     free(module->segments.data[i].data);
   wasm_destroy_segment_vector(&module->segments);
-  for (i = 0; i < module->function_types.size; ++i)
-    wasm_destroy_signature(&module->function_types.data[i]);
-  wasm_destroy_signature_vector(&module->function_types);
+  wasm_destroy_signature_index_vector(&module->function_types);
+  for (i = 0; i < module->signatures.size; ++i)
+    wasm_destroy_signature(&module->signatures.data[i]);
+  wasm_destroy_signature_vector(&module->signatures);
   wasm_destroy_binding_list(&module->function_type_bindings);
   wasm_destroy_function_ptr_vector(&module->function_table);
 }

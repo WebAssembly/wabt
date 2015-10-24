@@ -10,35 +10,30 @@
 0000002: 00                                         ; max mem size log 2
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 02                                         ; num signatures
-; type signature 0
+0000005: 01                                         ; num signatures
+; signature 0
 0000006: 01                                         ; num args
 0000007: 00                                         ; result_type
 0000008: 01                                         ; arg type
-; function signature 1
-0000009: 01                                         ; num args
-000000a: 00                                         ; result_type
-000000b: 01                                         ; arg type
-000000c: 02                                         ; WASM_SECTION_FUNCTIONS
-000000d: 01                                         ; num functions
+0000009: 02                                         ; WASM_SECTION_FUNCTIONS
+000000a: 01                                         ; num functions
 ; function 0
-000000e: 01                                         ; func flags
-000000f: 0100                                       ; func signature index
-0000011: 0000 0000                                  ; func name offset
-0000015: 0000                                       ; func body size
-0000017: 1a                                         ; OPCODE_CALL_INDIRECT
-0000018: 00                                         ; signature index
-0000019: 10                                         ; OPCODE_I8_CONST
-000001a: 00                                         ; u8 literal
-000001b: 10                                         ; OPCODE_I8_CONST
-000001c: 00                                         ; u8 literal
-0000015: 0600                                       ; FIXUP func body size
-000001d: 05                                         ; WASM_SECTION_FUNCTION_TABLE
-000001e: 01                                         ; num function table entries
-000001f: 0000                                       ; function table entry
-0000021: 06                                         ; WASM_SECTION_END
+000000b: 01                                         ; func flags
+000000c: 0000                                       ; func signature index
+000000e: 0000 0000                                  ; func name offset
+0000012: 0000                                       ; func body size
+0000014: 1a                                         ; OPCODE_CALL_INDIRECT
+0000015: 00                                         ; signature index
+0000016: 10                                         ; OPCODE_I8_CONST
+0000017: 00                                         ; u8 literal
+0000018: 10                                         ; OPCODE_I8_CONST
+0000019: 00                                         ; u8 literal
+0000012: 0600                                       ; FIXUP func body size
+000001a: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+000001b: 01                                         ; num function table entries
+000001c: 0000                                       ; function table entry
+000001e: 06                                         ; WASM_SECTION_END
 ; names
-0000000: 0000 0001 0102 0100 0101 0001 0201 0101  ................
-0000010: 0000 0000 0006 001a 0010 0010 0005 0100  ................
-0000020: 0006                                     ..
+0000000: 0000 0001 0101 0100 0102 0101 0000 0000  ................
+0000010: 0000 0600 1a00 1000 1000 0501 0000 06    ...............
 ;;; STDOUT ;;)
