@@ -1411,9 +1411,10 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_CALL_INDIRECT: {
       check_opcode(parser, t.range.start, op_info->opcode);
-      WasmSignatureIndex index = parse_function_type_var(parser, module);
-      WasmSignature* sig = &module->signatures.data[index];
-      CALLBACK(parser, before_call_indirect, (&parser->info, index));
+      int index = parse_function_type_var(parser, module);
+      WasmSignatureIndex sig_index = module->function_types.data[index];
+      WasmSignature* sig = &module->signatures.data[sig_index];
+      CALLBACK(parser, before_call_indirect, (&parser->info, sig_index));
       WasmType func_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, func_type, WASM_TYPE_I32,
                  " of function index");
@@ -2178,7 +2179,8 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
       }
 
       case WASM_OP_TYPE: {
-        WasmSignatureIndex* sig_index = wasm_append_signature_index(&module->function_types);
+        WasmSignatureIndex* sig_index =
+            wasm_append_signature_index(&module->function_types);
         CHECK_ALLOC(parser, sig_index, t.range.start);
 
         preparse_binding_name(parser, &module->function_type_bindings,
