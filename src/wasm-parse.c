@@ -892,24 +892,25 @@ static uint32_t parse_alignment(WasmParser* parser) {
   const char align_prefix[] = "align=";
   size_t align_prefix_len = sizeof(align_prefix) - 1;
   WasmToken t = read_token(parser);
-  if (t.type != WASM_TOKEN_TYPE_ATOM) {
-    rewind_token(parser, t);
-    return 0;
-  }
+  if (t.type != WASM_TOKEN_TYPE_ATOM)
+    goto fail;
   size_t token_len = t.range.end.pos - t.range.start.pos;
   if (token_len <= align_prefix_len)
-    return 0;
+    goto fail;
   const char* p = t.range.start.pos;
   const char* end = p + align_prefix_len;
   if (!string_eq(p, end, align_prefix))
-    return 0;
+    goto fail;
   uint32_t alignment;
   if (!read_int32(end, t.range.end.pos, &alignment, 0))
-    return 0;
+    goto fail;
   /* check that alignment is power-of-two */
   if (!is_power_of_two(alignment))
     FATAL_AT(parser, t.range.start, "alignment must be power-of-two\n");
   return alignment;
+fail:
+  rewind_token(parser, t);
+  return 0;
 }
 
 static void check_type(WasmParser* parser,
