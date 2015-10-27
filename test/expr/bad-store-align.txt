@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-(module (func (storeu.i32.foo (i32.const 0) (i32.const 0))))
+(module (func (i32.store align=foo (i32.const 0) (i32.const 0))))
 (;; STDERR ;;;
-expr/bad-store-align.txt:2:16: unexpected token "storeu.i32.foo"
+expr/bad-store-align.txt:2:26: invalid alignment
 ;;; STDERR ;;)
