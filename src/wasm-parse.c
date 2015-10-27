@@ -903,11 +903,33 @@ static uint32_t parse_alignment(WasmParser* parser) {
     goto fail;
   uint32_t alignment;
   if (!read_int32(end, t.range.end.pos, &alignment, 0))
-    goto fail;
+    FATAL_AT(parser, t.range.start, "invalid alignment\n");
   /* check that alignment is power-of-two */
   if (!is_power_of_two(alignment))
     FATAL_AT(parser, t.range.start, "alignment must be power-of-two\n");
   return alignment;
+fail:
+  rewind_token(parser, t);
+  return 0;
+}
+
+static uint64_t parse_offset(WasmParser* parser) {
+  const char offset_prefix[] = "offset=";
+  size_t offset_prefix_len = sizeof(offset_prefix) - 1;
+  WasmToken t = read_token(parser);
+  if (t.type != WASM_TOKEN_TYPE_ATOM)
+    goto fail;
+  size_t token_len = t.range.end.pos - t.range.start.pos;
+  if (token_len <= offset_prefix_len)
+    goto fail;
+  const char* p = t.range.start.pos;
+  const char* end = p + offset_prefix_len;
+  if (!string_eq(p, end, offset_prefix))
+    goto fail;
+  uint64_t offset;
+  if (!read_uint64(end, t.range.end.pos, &offset))
+    FATAL_AT(parser, t.range.start, "invalid offset\n");
+  return offset;
 fail:
   rewind_token(parser, t);
   return 0;
@@ -1515,12 +1537,14 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_LOAD: {
       check_opcode(parser, t.range.start, op_info->opcode);
+      uint64_t offset = parse_offset(parser);
       uint32_t alignment = parse_alignment(parser);
       WasmMemType mem_type = op_info->type2;
       if (!alignment)
         alignment = s_native_mem_type_alignment[mem_type];
-      CALLBACK(parser, before_load, (&parser->info, op_info->opcode, mem_type,
-                                     alignment, op_info->is_signed_load));
+      CALLBACK(parser, before_load,
+               (&parser->info, op_info->opcode, mem_type, alignment, offset,
+                op_info->is_signed_load));
       WasmType index_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of load index");
@@ -1628,11 +1652,12 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_STORE: {
       check_opcode(parser, t.range.start, op_info->opcode);
       WasmMemType mem_type = op_info->type2;
+      uint64_t offset = parse_offset(parser);
       uint32_t alignment = parse_alignment(parser);
       if (!alignment)
         alignment = s_native_mem_type_alignment[mem_type];
       CALLBACK(parser, before_store,
-               (&parser->info, op_info->opcode, mem_type, alignment));
+               (&parser->info, op_info->opcode, mem_type, alignment, offset));
       WasmType index_type = parse_expr(parser, module, function);
       check_type(parser, t.range.start, index_type, WASM_TYPE_I32,
                  " of store index");
