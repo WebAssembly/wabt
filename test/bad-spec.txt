@@ -3,5 +3,5 @@
 (module)
 (module)
 (;; STDERR ;;;
-bad-spec.txt:4:1: expected EOF
+bad-spec.txt:4:1: expected EOF. Use --spec to parse spec tests.
 ;;; STDERR ;;)

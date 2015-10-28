@@ -2421,7 +2421,8 @@ int wasm_parse_module(WasmSource* source,
   parse_module(&parser, &module);
   WasmToken t = read_token(&parser);
   if (t.type != WASM_TOKEN_TYPE_EOF)
-    FATAL_AT(&parser, t.range.start, "expected EOF\n");
+    FATAL_AT(&parser, t.range.start,
+             "expected EOF. Use --spec to parse spec tests.\n");
   CALLBACK(&parser, before_module_destroy, (&parser.info));
   wasm_destroy_module(&module);
   return 0;
