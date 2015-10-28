@@ -68,7 +68,7 @@ def main(args):
     if options.verbose:
       cmd.append('-v')
     if options.spec:
-      cmd.extend(['--multi-module', '--multi-module-verbose'])
+      cmd.extend(['--spec', '--spec-verbose'])
     if options.br_if:
       cmd.append('--br-if')
     try:

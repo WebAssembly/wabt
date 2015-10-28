@@ -475,7 +475,7 @@ static void out_module_header(Context* ctx, WasmModule* module) {
   }
 
   uint32_t num_signatures = module->signatures.size;
-  if (ctx->options->multi_module)
+  if (ctx->options->spec)
     num_signatures += WASM_NUM_V8_TYPES;
 
   out_u8(buf, WASM_SECTION_SIGNATURES, "WASM_SECTION_SIGNATURES");
@@ -485,7 +485,7 @@ static void out_module_header(Context* ctx, WasmModule* module) {
   for (i = 0; i < module->signatures.size; ++i)
     out_signature(ctx, &module->signatures.data[i], i, "signature");
 
-  if (ctx->options->multi_module) {
+  if (ctx->options->spec) {
     /* Write out the signatures for various assert functions */
     WasmTypeV8 type;
     for (type = 0; type < WASM_NUM_V8_TYPES; ++type) {
@@ -1125,7 +1125,7 @@ static void before_unary(WasmParserCallbackInfo* info, enum WasmOpcode opcode) {
 }
 
 static void js_file_start(Context* ctx) {
-  const char* quiet_str = ctx->options->multi_module_verbose ? "false" : "true";
+  const char* quiet_str = ctx->options->spec_verbose ? "false" : "true";
   out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
 }
 
@@ -1426,7 +1426,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   parser_options.br_if = options->br_if;
 
   int result;
-  if (options->multi_module) {
+  if (options->spec) {
     if (options->outfile) {
       callbacks.before_module = before_module_multi;
       callbacks.after_module = NULL;

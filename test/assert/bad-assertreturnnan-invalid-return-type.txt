@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-;;; FLAGS: --multi-module
+;;; FLAGS: --spec
 (module
   (func $foo (result i32) (i32.const 0))
   (export "foo" $foo))

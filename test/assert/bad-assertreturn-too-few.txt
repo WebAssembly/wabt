@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-;;; FLAGS: --multi-module
+;;; FLAGS: --spec
 (module
   (func $foo (param i32) (result i32) (get_local 0))
   (export "foo" $foo))

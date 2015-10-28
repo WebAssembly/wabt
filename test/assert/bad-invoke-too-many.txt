@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-;;; FLAGS: --multi-module
+;;; FLAGS: --spec
 (module
   (func (param i32))
   (export "foo" 0))

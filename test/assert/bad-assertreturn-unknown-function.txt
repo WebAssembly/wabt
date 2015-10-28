@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-;;; FLAGS: --multi-module
+;;; FLAGS: --spec
 (module)
 (assert_return (invoke "foo") (i32.const 0))
 (;; STDERR ;;;

@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-;;; FLAGS: --multi-module
+;;; FLAGS: --spec
 (assert_invalid
   (module (func (result i32) (i32.const 0)))
   "success")

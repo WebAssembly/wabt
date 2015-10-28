@@ -1,4 +1,4 @@
-;;; FLAGS: -dv --multi-module
+;;; FLAGS: -dv --spec
 (module (memory 128))
 (module (memory 256))
 (module (memory 512))

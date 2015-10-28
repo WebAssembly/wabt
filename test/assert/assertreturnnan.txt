@@ -1,4 +1,4 @@
-;;; FLAGS: --multi-module
+;;; FLAGS: --spec
 (module
   (func $foo (param f32) (result f32)
     (f32.div (get_local 0) (f32.const 0)))

@@ -14,8 +14,8 @@ enum {
   FLAG_HELP,
   FLAG_DUMP_MODULE,
   FLAG_OUTPUT,
-  FLAG_MULTI_MODULE,
-  FLAG_MULTI_MODULE_VERBOSE,
+  FLAG_SPEC,
+  FLAG_SPEC_VERBOSE,
   FLAG_BR_IF,
   NUM_FLAGS
 };
@@ -24,8 +24,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static int s_dump_module;
 static int s_verbose;
-static int s_multi_module;
-static int s_multi_module_verbose;
+static int s_spec;
+static int s_spec_verbose;
 static int s_br_if;
 
 static struct option s_long_options[] = {
@@ -33,8 +33,8 @@ static struct option s_long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"dump-module", no_argument, NULL, 'd'},
     {"output", no_argument, NULL, 'o'},
-    {"multi-module", no_argument, NULL, 0},
-    {"multi-module-verbose", no_argument, NULL, 0},
+    {"spec", no_argument, NULL, 0},
+    {"spec-verbose", no_argument, NULL, 0},
     {"br-if", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
@@ -49,10 +49,9 @@ typedef struct OptionHelp {
 static OptionHelp s_option_help[] = {
     {FLAG_VERBOSE, NULL, "use multiple times for more info"},
     {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
-    {FLAG_MULTI_MODULE, NULL,
+    {FLAG_SPEC, NULL,
      "parse a file with multiple modules and assertions, like the spec tests"},
-    {FLAG_MULTI_MODULE_VERBOSE, NULL,
-     "print logging messages when running multi-module files"},
+    {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
     {FLAG_BR_IF, NULL, "use br_if and loops without explicit branches"},
     {NUM_FLAGS, NULL},
 };
@@ -124,12 +123,12 @@ static void parse_options(int argc, char** argv) {
             assert(0);
             break;
 
-          case FLAG_MULTI_MODULE:
-            s_multi_module = 1;
+          case FLAG_SPEC:
+            s_spec = 1;
             break;
 
-          case FLAG_MULTI_MODULE_VERBOSE:
-            s_multi_module_verbose = 1;
+          case FLAG_SPEC_VERBOSE:
+            s_spec_verbose = 1;
             break;
 
           case FLAG_BR_IF:
@@ -199,8 +198,8 @@ int main(int argc, char** argv) {
   options.outfile = s_outfile;
   options.dump_module = s_dump_module;
   options.verbose = s_verbose;
-  options.multi_module = s_multi_module;
-  options.multi_module_verbose = s_multi_module_verbose;
+  options.spec = s_spec;
+  options.spec_verbose = s_spec_verbose;
   options.br_if = s_br_if;
   int result = wasm_gen_file(&source, &options);
   free(data);

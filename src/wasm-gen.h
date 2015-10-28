@@ -5,8 +5,8 @@ typedef struct WasmGenOptions {
   const char* outfile;
   int dump_module;
   int verbose;
-  int multi_module;
-  int multi_module_verbose;
+  int spec;
+  int spec_verbose;
   int br_if;
 } WasmGenOptions;
 
