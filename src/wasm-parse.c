@@ -2341,8 +2341,10 @@ static void parse_module(WasmParser* parser, WasmModule* module) {
         }
 
         expect_close(parser, read_token(parser));
+        parser->info.function = function;
         CALLBACK_COOKIE(parser, after_export, cookie,
                         (&parser->info, export_name));
+        parser->info.function = NULL;
         break;
       }
 
