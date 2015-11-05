@@ -1,6 +1,10 @@
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/store_retval.wast
+(;; STDERR ;;;
+
+;;; STDERR ;;)
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/store_retval.wast:34:10: type mismatch. got i32, expected i64
@@ -10,19 +14,4 @@ assert_invalid error:
   third_party/testsuite/store_retval.wast:44:10: type mismatch. got f32, expected f64
 assert_invalid error:
   third_party/testsuite/store_retval.wast:49:10: type mismatch. got f64, expected f32
-1
-2
-3
-4
-11
-12
-13
-14
-512
-65536
-512
-65536
-0
-$invoke_0 = undefined
-0/0 tests passed.
 ;;; STDOUT ;;)

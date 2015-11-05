@@ -1,12 +1,7 @@
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
-(;; STDOUT ;;;
-13
-14 42
-$invoke_0 = undefined
-24
-25 53
-$invoke_1 = undefined
-0/0 tests passed.
-;;; STDOUT ;;)
+(;; STDERR ;;;
+
+;;; STDERR ;;)
