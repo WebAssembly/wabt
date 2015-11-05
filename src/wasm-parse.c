@@ -1559,7 +1559,7 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_SELECT: {
-      CALLBACK(parser, before_select, (&parser->info));
+      CALLBACK(parser, before_select, (&parser->info, op_info->opcode));
       WasmType cond_type = parse_expr(parser, module, function);
       check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
                  " of condition");

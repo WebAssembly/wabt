@@ -1080,6 +1080,12 @@ static void before_return(WasmParserCallbackInfo* info) {
     out_opcode(&ctx->buf, WASM_OPCODE_NOP);
 }
 
+static void before_select(WasmParserCallbackInfo* info,
+                          enum WasmOpcode opcode) {
+  Context* ctx = info->user_data;
+  out_opcode(&ctx->buf, opcode);
+}
+
 static void before_set_local(WasmParserCallbackInfo* info, int index) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_SET_LOCAL);
@@ -1414,6 +1420,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.after_page_size = after_page_size;
   callbacks.before_grow_memory = before_grow_memory;
   callbacks.before_return = before_return;
+  callbacks.before_select = before_select;
   callbacks.before_set_local = before_set_local;
   callbacks.before_store = before_store;
   callbacks.before_store_global = before_store_global;

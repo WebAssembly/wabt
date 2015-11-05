@@ -213,7 +213,7 @@ in_word_set (str, len)
 #line 79 "src/wasm-keywords.gperf"
       {"f64.store", WASM_OP_STORE, WASM_OPCODE_F64_STORE_I32, WASM_TYPE_F64, WASM_MEM_TYPE_F64},
 #line 160 "src/wasm-keywords.gperf"
-      {"i64.select", WASM_OP_SELECT, WASM_OPCODE_INVALID, WASM_TYPE_I64},
+      {"i64.select", WASM_OP_SELECT, WASM_OPCODE_SELECT, WASM_TYPE_I64},
 #line 39 "src/wasm-keywords.gperf"
       {"f32.lt", WASM_OP_COMPARE, WASM_OPCODE_F32_LT, WASM_TYPE_F32},
 #line 130 "src/wasm-keywords.gperf"
@@ -223,7 +223,7 @@ in_word_set (str, len)
 #line 49 "src/wasm-keywords.gperf"
       {"f32.store", WASM_OP_STORE, WASM_OPCODE_F32_STORE_I32, WASM_TYPE_F32, WASM_MEM_TYPE_F32},
 #line 114 "src/wasm-keywords.gperf"
-      {"i32.select", WASM_OP_SELECT, WASM_OPCODE_INVALID, WASM_TYPE_I32},
+      {"i32.select", WASM_OP_SELECT, WASM_OPCODE_SELECT, WASM_TYPE_I32},
 #line 188 "src/wasm-keywords.gperf"
       {"result", WASM_OP_RESULT},
 #line 87 "src/wasm-keywords.gperf"
@@ -233,7 +233,7 @@ in_word_set (str, len)
 #line 63 "src/wasm-keywords.gperf"
       {"f64.floor", WASM_OP_UNARY, WASM_OPCODE_F64_FLOOR, WASM_TYPE_F64},
 #line 77 "src/wasm-keywords.gperf"
-      {"f64.select", WASM_OP_SELECT, WASM_OPCODE_INVALID, WASM_TYPE_F64},
+      {"f64.select", WASM_OP_SELECT, WASM_OPCODE_SELECT, WASM_TYPE_F64},
       {""},
 #line 126 "src/wasm-keywords.gperf"
       {"i32.wrap/i64", WASM_OP_CONVERT, WASM_OPCODE_I32_CONVERT_I64, WASM_TYPE_I32, WASM_TYPE_I64},
@@ -242,7 +242,7 @@ in_word_set (str, len)
 #line 34 "src/wasm-keywords.gperf"
       {"f32.floor", WASM_OP_UNARY, WASM_OPCODE_F32_FLOOR, WASM_TYPE_F32},
 #line 47 "src/wasm-keywords.gperf"
-      {"f32.select", WASM_OP_SELECT, WASM_OPCODE_INVALID, WASM_TYPE_F32},
+      {"f32.select", WASM_OP_SELECT, WASM_OPCODE_SELECT, WASM_TYPE_F32},
 #line 66 "src/wasm-keywords.gperf"
       {"f64.le", WASM_OP_COMPARE, WASM_OPCODE_F64_LE, WASM_TYPE_F64},
       {""},
