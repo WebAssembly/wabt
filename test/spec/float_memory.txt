@@ -1,10 +1,10 @@
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
-;;; STDIN_FILE: third_party/spec/ml-proto/test/float_memory.wast
+;;; STDIN_FILE: third_party/testsuite/float_memory.wast
 (;; STDOUT ;;;
-third_party/spec/ml-proto/test/float_memory.wast:26: $assert_return_1 failed.
-third_party/spec/ml-proto/test/float_memory.wast:30: $assert_return_4 failed.
-third_party/spec/ml-proto/test/float_memory.wast:57: $assert_return_1 failed.
-third_party/spec/ml-proto/test/float_memory.wast:61: $assert_return_4 failed.
+third_party/testsuite/float_memory.wast:26: $assert_return_1 failed.
+third_party/testsuite/float_memory.wast:30: $assert_return_4 failed.
+third_party/testsuite/float_memory.wast:57: $assert_return_1 failed.
+third_party/testsuite/float_memory.wast:61: $assert_return_4 failed.
 12/16 tests passed.
 ;;; STDOUT ;;)

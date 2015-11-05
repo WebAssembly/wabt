@@ -1,6 +1,6 @@
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
-;;; STDIN_FILE: third_party/spec/ml-proto/test/forward.wast
+;;; STDIN_FILE: third_party/testsuite/forward.wast
 (;; STDOUT ;;;
 4/4 tests passed.
 ;;; STDOUT ;;)

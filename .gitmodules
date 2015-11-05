@@ -1,6 +1,6 @@
 [submodule "third_party/v8-native-prototype"]
 	path = third_party/v8-native-prototype
 	url = https://github.com/WebAssembly/v8-native-prototype
-[submodule "third_party/spec"]
-	path = third_party/spec
-	url = https://github.com/WebAssembly/spec
+[submodule "third_party/testsuite"]
+	path = third_party/testsuite
+	url = https://github.com/WebAssembly/testsuite

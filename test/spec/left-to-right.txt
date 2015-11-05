@@ -2,4 +2,4 @@
 ;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
-;;; STDIN_FILE: third_party/spec/ml-proto/test/left-to-right.wast
+;;; STDIN_FILE: third_party/testsuite/left-to-right.wast

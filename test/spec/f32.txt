@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
-;;; STDIN_FILE: third_party/spec/ml-proto/test/f32.wast
+;;; STDIN_FILE: third_party/testsuite/f32.wast
 (;; STDERR ;;;
 
 

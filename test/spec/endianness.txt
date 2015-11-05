@@ -1,6 +1,6 @@
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
-;;; STDIN_FILE: third_party/spec/ml-proto/test/endianness.wast
+;;; STDIN_FILE: third_party/testsuite/endianness.wast
 (;; STDOUT ;;;
 68/68 tests passed.
 ;;; STDOUT ;;)
