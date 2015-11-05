@@ -1,0 +1,6 @@
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/testsuite/names.wast
+(;; STDOUT ;;;
+11/11 tests passed.
+;;; STDOUT ;;)
