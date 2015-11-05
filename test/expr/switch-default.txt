@@ -1,5 +1,0 @@
-(module
-  (func
-    (i32.switch (i32.const 0)
-      (case 0 (i32.const 0))
-      (i32.const 100))))

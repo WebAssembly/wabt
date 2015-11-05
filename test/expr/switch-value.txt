@@ -1,7 +1,0 @@
-(module
-  (global i32)
-  (func (param i32)
-    (store_global 0
-      (i32.switch (get_local 0)
-        (case 0 (i32.const 0))
-        (i32.const 1)))))

@@ -1,8 +1,0 @@
-;;; ERROR: 1
-(module
-  (func
-    (i32.switch (f32.const 0)
-      (i32.const 0))))
-(;; STDERR ;;;
-typecheck/bad-switch-cond-type-mismatch.txt:4:30: type mismatch in switch condition. got f32, expected i32
-;;; STDERR ;;)

@@ -1,5 +1,0 @@
-(module
-  (func
-    (i32.switch $exit (i32.const 1)
-      (case 0 (i32.const 0))
-      (case 1 (break $exit)))))

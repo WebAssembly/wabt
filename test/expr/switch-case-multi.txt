@@ -1,4 +1,0 @@
-(module
-  (func
-    (i32.switch (i32.const 0)
-      (case 1 (nop) (nop) (nop)))))

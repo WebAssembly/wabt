@@ -73,7 +73,6 @@ typedef enum WasmOpType {
   WASM_OP_SET_LOCAL,
   WASM_OP_STORE,
   WASM_OP_STORE_GLOBAL,
-  WASM_OP_SWITCH,
   WASM_OP_TABLE,
   WASM_OP_TYPE,
   WASM_OP_UNARY,
@@ -1202,87 +1201,6 @@ static void parse_literal(WasmParser* parser,
   }
 }
 
-static WasmType parse_switch(WasmParser* parser,
-                             WasmModule* module,
-                             WasmFunction* function,
-                             WasmType in_type) {
-  WasmToken t = read_token(parser);
-  WasmLabel* label = NULL;
-  if (t.type == WASM_TOKEN_TYPE_ATOM)
-    label = push_label(parser, function, t);
-  else
-    rewind_token(parser, t);
-  int with_label = label != NULL;
-
-  WasmParserCookie switch_cookie =
-      CALLBACK(parser, before_switch, (&parser->info, with_label));
-  WasmType cond_type = parse_expr(parser, module, function);
-  check_type(parser, parser->tokenizer.loc, cond_type, in_type,
-             " in switch condition");
-  WasmType type = WASM_TYPE_ALL;
-  t = read_token(parser);
-  while (1) {
-    expect_open(parser, t);
-    WasmToken open = t;
-    t = read_token(parser);
-    expect_atom(parser, t);
-    if (match_atom(t, "case")) {
-      WasmNumber number;
-      int fallthrough = 0;
-      int num_exprs = 0;
-      parse_literal(parser, in_type, &number);
-      WasmParserCookie cookie =
-          CALLBACK(parser, before_switch_case, (&parser->info, number));
-      t = read_token(parser);
-      if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-        rewind_token(parser, t);
-        WasmType value_type;
-        while (1) {
-          value_type = parse_expr(parser, module, function);
-          ++num_exprs;
-          t = read_token(parser);
-          if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN) {
-            break;
-          } else if (t.type == WASM_TOKEN_TYPE_ATOM &&
-                     match_atom(t, "fallthrough")) {
-            fallthrough = 1;
-            expect_close(parser, read_token(parser));
-            break;
-          }
-          rewind_token(parser, t);
-        }
-
-        if (fallthrough == 0)
-          type &= value_type;
-      } else {
-        /* Empty case statement, implicit fallthrough */
-        fallthrough = 1;
-      }
-      CALLBACK_COOKIE(parser, after_switch_case, cookie,
-                      (&parser->info, num_exprs, fallthrough));
-    } else {
-      /* default case */
-      WasmParserCookie cookie =
-          CALLBACK(parser, before_switch_default, (&parser->info));
-      rewind_token(parser, open);
-      WasmType value_type = parse_expr(parser, module, function);
-      type &= value_type;
-      expect_close(parser, read_token(parser));
-      CALLBACK_COOKIE(parser, after_switch_default, cookie, (&parser->info));
-      break;
-    }
-    t = read_token(parser);
-    if (t.type == WASM_TOKEN_TYPE_CLOSE_PAREN)
-      break;
-  }
-  if (label) {
-    type &= label->type;
-    pop_label(function);
-  }
-  CALLBACK_COOKIE(parser, after_switch, switch_cookie, (&parser->info));
-  return type;
-}
-
 static void parse_call_args_generic(WasmParser* parser,
                                     WasmModule* module,
                                     WasmFunction* function,
@@ -1695,10 +1613,6 @@ static WasmType parse_expr(WasmParser* parser,
       expect_close(parser, read_token(parser));
       break;
     }
-
-    case WASM_OP_SWITCH:
-      type = parse_switch(parser, module, function, op_info->type);
-      break;
 
     case WASM_OP_UNARY: {
       check_opcode(parser, t.range.start, op_info->opcode);

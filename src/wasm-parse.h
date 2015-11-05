@@ -85,14 +85,6 @@ typedef struct WasmParserCallbacks {
                        uint64_t offset);
 
   void (*before_store_global)(WasmParserCallbackInfo* info, int index);
-  void (*before_switch)(WasmParserCallbackInfo* info, int with_label);
-  void (*after_switch)(WasmParserCallbackInfo* info);
-  void (*before_switch_case)(WasmParserCallbackInfo* info, WasmNumber number);
-  void (*after_switch_case)(WasmParserCallbackInfo* info,
-                            int num_exprs,
-                            int with_fallthrough);
-  void (*before_switch_default)(WasmParserCallbackInfo* info);
-  void (*after_switch_default)(WasmParserCallbackInfo* info);
   void (*before_unary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
 
   /* used in spec repo tests */
