@@ -76,6 +76,7 @@ typedef struct WasmParserCallbacks {
   void (*before_grow_memory)(WasmParserCallbackInfo* info);
   void (*before_return)(WasmParserCallbackInfo* info);
   void (*after_return)(WasmParserCallbackInfo* info, WasmType type);
+  void (*before_select)(WasmParserCallbackInfo* info);
   void (*before_set_local)(WasmParserCallbackInfo* info, int index);
   void (*before_store)(WasmParserCallbackInfo* info,
                        enum WasmOpcode opcode,

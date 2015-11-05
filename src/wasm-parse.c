@@ -69,6 +69,7 @@ typedef enum WasmOpType {
   WASM_OP_GROW_MEMORY,
   WASM_OP_RESULT,
   WASM_OP_RETURN,
+  WASM_OP_SELECT,
   WASM_OP_SET_LOCAL,
   WASM_OP_STORE,
   WASM_OP_STORE_GLOBAL,
@@ -1636,6 +1637,22 @@ static WasmType parse_expr(WasmParser* parser,
 
       check_type(parser, t.range.start, result_type, function->result_type, "");
       CALLBACK_COOKIE(parser, after_return, cookie, (&parser->info, type));
+      break;
+    }
+
+    case WASM_OP_SELECT: {
+      CALLBACK(parser, before_select, (&parser->info));
+      WasmType cond_type = parse_expr(parser, module, function);
+      check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
+                 " of condition");
+      WasmType value0_type = parse_expr(parser, module, function);
+      check_type_arg(parser, parser->tokenizer.loc, value0_type, op_info->type,
+                     "select op", 0);
+      WasmType value1_type = parse_expr(parser, module, function);
+      check_type_arg(parser, parser->tokenizer.loc, value1_type, op_info->type,
+                     "select op", 1);
+      type = value0_type & value1_type;
+      expect_close(parser, read_token(parser));
       break;
     }
 
