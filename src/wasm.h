@@ -31,31 +31,25 @@ typedef enum WasmMemType {
 
 #define OPCODES(V)             \
   V(NOP, 0x00)                 \
-  V(IF, 0x01)                  \
-  V(IF_THEN, 0x02)             \
-  V(BLOCK, 0x03)               \
-  V(SWITCH, 0x04)              \
-  V(SWITCH_NF, 0x05)           \
-  V(LOOP, 0x06)                \
-  V(CONTINUE, 0x07)            \
-  V(BREAK, 0x08)               \
-  V(RETURN, 0x09)              \
-  V(I8_CONST, 0x10)            \
-  V(I32_CONST, 0x11)           \
-  V(I64_CONST, 0x12)           \
-  V(F64_CONST, 0x13)           \
-  V(F32_CONST, 0x14)           \
-  V(GET_LOCAL, 0x15)           \
-  V(SET_LOCAL, 0x16)           \
-  V(GET_GLOBAL, 0x17)          \
-  V(SET_GLOBAL, 0x18)          \
-  V(CALL, 0x19)                \
-  V(CALL_INDIRECT, 0x1a)       \
-  V(EXPR_IF, 0x1b)             \
-  V(COMMA, 0x1c)               \
-  V(EXPR_BLOCK, 0x1d)          \
-  V(EXPR_LOOP, 0x1e)           \
-  V(EXPR_BREAK, 0x1f)          \
+  V(BLOCK, 0x01)               \
+  V(LOOP, 0x02)                \
+  V(IF, 0x03)                  \
+  V(IF_THEN, 0x04)             \
+  V(SELECT, 0x05)              \
+  V(BR, 0x06)                  \
+  V(BR_IF, 0x07)               \
+  V(TABLESWITCH, 0x08)         \
+  V(I8_CONST, 0x09)            \
+  V(I32_CONST, 0x0a)           \
+  V(I64_CONST, 0x0b)           \
+  V(F64_CONST, 0x0c)           \
+  V(F32_CONST, 0x0d)           \
+  V(GET_LOCAL, 0x0e)           \
+  V(SET_LOCAL, 0x0f)           \
+  V(GET_GLOBAL, 0x10)          \
+  V(SET_GLOBAL, 0x11)          \
+  V(CALL, 0x12)                \
+  V(CALL_INDIRECT, 0x13)       \
   V(I32_LOAD_I32, 0x20)        \
   V(I64_LOAD_I32, 0x21)        \
   V(F32_LOAD_I32, 0x22)        \

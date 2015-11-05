@@ -22,11 +22,11 @@
 000000c: 0000                                       ; func signature index
 000000e: 0000 0000                                  ; func name offset
 0000012: 0000                                       ; func body size
-0000014: 1a                                         ; OPCODE_CALL_INDIRECT
+0000014: 13                                         ; OPCODE_CALL_INDIRECT
 0000015: 00                                         ; signature index
-0000016: 10                                         ; OPCODE_I8_CONST
+0000016: 09                                         ; OPCODE_I8_CONST
 0000017: 00                                         ; u8 literal
-0000018: 10                                         ; OPCODE_I8_CONST
+0000018: 09                                         ; OPCODE_I8_CONST
 0000019: 00                                         ; u8 literal
 0000012: 0600                                       ; FIXUP func body size
 000001a: 05                                         ; WASM_SECTION_FUNCTION_TABLE
@@ -35,5 +35,5 @@
 000001e: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0100 0102 0101 0000 0000  ................
-0000010: 0000 0600 1a00 1000 1000 0501 0000 06    ...............
+0000010: 0000 0600 1300 0900 0900 0501 0000 06    ...............
 ;;; STDOUT ;;)

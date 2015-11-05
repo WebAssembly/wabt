@@ -35,22 +35,22 @@
 0000017: 0200                                       ; num local f32
 0000019: 0000                                       ; num local f64
 000001b: 0000                                       ; func body size
-000001d: 15                                         ; OPCODE_GET_LOCAL
+000001d: 0e                                         ; OPCODE_GET_LOCAL
 000001e: 00                                         ; remapped local index
-000001f: 15                                         ; OPCODE_GET_LOCAL
+000001f: 0e                                         ; OPCODE_GET_LOCAL
 0000020: 01                                         ; remapped local index
-0000021: 15                                         ; OPCODE_GET_LOCAL
+0000021: 0e                                         ; OPCODE_GET_LOCAL
 0000022: 03                                         ; remapped local index
-0000023: 15                                         ; OPCODE_GET_LOCAL
+0000023: 0e                                         ; OPCODE_GET_LOCAL
 0000024: 04                                         ; remapped local index
-0000025: 15                                         ; OPCODE_GET_LOCAL
+0000025: 0e                                         ; OPCODE_GET_LOCAL
 0000026: 02                                         ; remapped local index
-0000027: 15                                         ; OPCODE_GET_LOCAL
+0000027: 0e                                         ; OPCODE_GET_LOCAL
 0000028: 05                                         ; remapped local index
 000001b: 0c00                                       ; FIXUP func body size
 0000029: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0200 0103 0201 0500 0000  ................
-0000010: 0000 0001 0001 0002 0000 000c 0015 0015  ................
-0000020: 0115 0315 0415 0215 0506                 ..........
+0000010: 0000 0001 0001 0002 0000 000c 000e 000e  ................
+0000020: 010e 030e 040e 020e 0506                 ..........
 ;;; STDOUT ;;)

@@ -23,20 +23,29 @@
 000000d: 0000                                       ; func signature index
 000000f: 0000 0000                                  ; func name offset
 0000013: 0000                                       ; func body size
-0000015: 09                                         ; OPCODE_RETURN
-0000016: 10                                         ; OPCODE_I8_CONST
-0000017: 2a                                         ; u8 literal
-0000013: 0300                                       ; FIXUP func body size
+0000015: 06                                         ; OPCODE_BR
+0000016: 00                                         ; break depth
+0000017: 09                                         ; OPCODE_I8_CONST
+0000018: 2a                                         ; u8 literal
+; move [0000015,0000019) -> [0000017,000001b)
+0000015: 01                                         ; implicit WASM_OPCODE_BLOCK
+0000016: 01                                         ; num expressions
+0000013: 0600                                       ; FIXUP func body size
 ; function 1
-0000018: 01                                         ; func flags
-0000019: 0100                                       ; func signature index
-000001b: 0000 0000                                  ; func name offset
-000001f: 0000                                       ; func body size
-0000021: 09                                         ; OPCODE_RETURN
-000001f: 0100                                       ; FIXUP func body size
-0000022: 06                                         ; WASM_SECTION_END
+000001b: 01                                         ; func flags
+000001c: 0100                                       ; func signature index
+000001e: 0000 0000                                  ; func name offset
+0000022: 0000                                       ; func body size
+0000024: 06                                         ; OPCODE_BR
+0000025: 00                                         ; break depth
+0000026: 00                                         ; OPCODE_NOP
+; move [0000024,0000027) -> [0000026,0000029)
+0000024: 01                                         ; implicit WASM_OPCODE_BLOCK
+0000025: 01                                         ; num expressions
+0000022: 0500                                       ; FIXUP func body size
+0000029: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0102 0001 0000 0202 0100 0000  ................
-0000010: 0000 0003 0009 102a 0101 0000 0000 0001  .......*........
-0000020: 0009 06                                  ...
+0000010: 0000 0006 0001 0106 0009 2a01 0100 0000  ..........*.....
+0000020: 0000 0500 0101 0600 0006                 ..........
 ;;; STDOUT ;;)

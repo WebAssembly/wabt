@@ -35,45 +35,45 @@
 0000015: 0200                                       ; num local f32
 0000017: 0200                                       ; num local f64
 0000019: 0000                                       ; func body size
-000001b: 16                                         ; OPCODE_SET_LOCAL
+000001b: 0f                                         ; OPCODE_SET_LOCAL
 000001c: 06                                         ; remapped local index
-000001d: 13                                         ; OPCODE_F64_CONST
+000001d: 0c                                         ; OPCODE_F64_CONST
 000001e: 0000 0000 0000 0000                        ; f64 literal
-0000026: 16                                         ; OPCODE_SET_LOCAL
+0000026: 0f                                         ; OPCODE_SET_LOCAL
 0000027: 04                                         ; remapped local index
-0000028: 14                                         ; OPCODE_F32_CONST
+0000028: 0d                                         ; OPCODE_F32_CONST
 0000029: 0000 0000                                  ; f32 literal
-000002d: 16                                         ; OPCODE_SET_LOCAL
+000002d: 0f                                         ; OPCODE_SET_LOCAL
 000002e: 02                                         ; remapped local index
-000002f: 12                                         ; OPCODE_I64_CONST
+000002f: 0b                                         ; OPCODE_I64_CONST
 0000030: 0000 0000 0000 0000                        ; u64 literal
-0000038: 16                                         ; OPCODE_SET_LOCAL
+0000038: 0f                                         ; OPCODE_SET_LOCAL
 0000039: 00                                         ; remapped local index
-000003a: 10                                         ; OPCODE_I8_CONST
+000003a: 09                                         ; OPCODE_I8_CONST
 000003b: 00                                         ; u8 literal
-000003c: 16                                         ; OPCODE_SET_LOCAL
+000003c: 0f                                         ; OPCODE_SET_LOCAL
 000003d: 01                                         ; remapped local index
-000003e: 10                                         ; OPCODE_I8_CONST
+000003e: 09                                         ; OPCODE_I8_CONST
 000003f: 00                                         ; u8 literal
-0000040: 16                                         ; OPCODE_SET_LOCAL
+0000040: 0f                                         ; OPCODE_SET_LOCAL
 0000041: 05                                         ; remapped local index
-0000042: 14                                         ; OPCODE_F32_CONST
+0000042: 0d                                         ; OPCODE_F32_CONST
 0000043: 0000 0000                                  ; f32 literal
-0000047: 16                                         ; OPCODE_SET_LOCAL
+0000047: 0f                                         ; OPCODE_SET_LOCAL
 0000048: 07                                         ; remapped local index
-0000049: 13                                         ; OPCODE_F64_CONST
+0000049: 0c                                         ; OPCODE_F64_CONST
 000004a: 0000 0000 0000 0000                        ; f64 literal
-0000052: 16                                         ; OPCODE_SET_LOCAL
+0000052: 0f                                         ; OPCODE_SET_LOCAL
 0000053: 03                                         ; remapped local index
-0000054: 12                                         ; OPCODE_I64_CONST
+0000054: 0b                                         ; OPCODE_I64_CONST
 0000055: 0000 0000 0000 0000                        ; u64 literal
 0000019: 4200                                       ; FIXUP func body size
 000005d: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0500 0000 0000  ................
-0000010: 0002 0002 0002 0002 0042 0016 0613 0000  .........B......
-0000020: 0000 0000 0000 1604 1400 0000 0016 0212  ................
-0000030: 0000 0000 0000 0000 1600 1000 1601 1000  ................
-0000040: 1605 1400 0000 0016 0713 0000 0000 0000  ................
-0000050: 0000 1603 1200 0000 0000 0000 0006       ..............
+0000010: 0002 0002 0002 0002 0042 000f 060c 0000  .........B......
+0000020: 0000 0000 0000 0f04 0d00 0000 000f 020b  ................
+0000030: 0000 0000 0000 0000 0f00 0900 0f01 0900  ................
+0000040: 0f05 0d00 0000 000f 070c 0000 0000 0000  ................
+0000050: 0000 0f03 0b00 0000 0000 0000 0006       ..............
 ;;; STDOUT ;;)

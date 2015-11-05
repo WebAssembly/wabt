@@ -21,14 +21,17 @@
 000000b: 0000                                       ; func signature index
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
-0000013: 06                                         ; OPCODE_LOOP
+0000013: 02                                         ; OPCODE_LOOP
 0000014: 00                                         ; num expressions
 0000015: 00                                         ; OPCODE_NOP
 0000016: 00                                         ; OPCODE_NOP
-0000014: 02                                         ; FIXUP num expressions
-0000011: 0400                                       ; FIXUP func body size
-0000017: 06                                         ; WASM_SECTION_END
+0000017: 06                                         ; OPCODE_BR
+0000018: 00                                         ; branch to the top of the loop
+0000019: 00                                         ; OPCODE_NOP
+0000014: 03                                         ; FIXUP num expressions
+0000011: 0700                                       ; FIXUP func body size
+000001a: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0004 0006 0200 0006                      ........
+0000010: 0007 0002 0300 0006 0000 06              ...........
 ;;; STDOUT ;;)

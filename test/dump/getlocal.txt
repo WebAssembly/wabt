@@ -35,26 +35,26 @@
 0000015: 0200                                       ; num local f32
 0000017: 0200                                       ; num local f64
 0000019: 0000                                       ; func body size
-000001b: 15                                         ; OPCODE_GET_LOCAL
+000001b: 0e                                         ; OPCODE_GET_LOCAL
 000001c: 06                                         ; remapped local index
-000001d: 15                                         ; OPCODE_GET_LOCAL
+000001d: 0e                                         ; OPCODE_GET_LOCAL
 000001e: 04                                         ; remapped local index
-000001f: 15                                         ; OPCODE_GET_LOCAL
+000001f: 0e                                         ; OPCODE_GET_LOCAL
 0000020: 02                                         ; remapped local index
-0000021: 15                                         ; OPCODE_GET_LOCAL
+0000021: 0e                                         ; OPCODE_GET_LOCAL
 0000022: 00                                         ; remapped local index
-0000023: 15                                         ; OPCODE_GET_LOCAL
+0000023: 0e                                         ; OPCODE_GET_LOCAL
 0000024: 01                                         ; remapped local index
-0000025: 15                                         ; OPCODE_GET_LOCAL
+0000025: 0e                                         ; OPCODE_GET_LOCAL
 0000026: 05                                         ; remapped local index
-0000027: 15                                         ; OPCODE_GET_LOCAL
+0000027: 0e                                         ; OPCODE_GET_LOCAL
 0000028: 07                                         ; remapped local index
-0000029: 15                                         ; OPCODE_GET_LOCAL
+0000029: 0e                                         ; OPCODE_GET_LOCAL
 000002a: 03                                         ; remapped local index
 0000019: 1000                                       ; FIXUP func body size
 000002b: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0500 0000 0000  ................
-0000010: 0002 0002 0002 0002 0010 0015 0615 0415  ................
-0000020: 0215 0015 0115 0515 0715 0306            ............
+0000010: 0002 0002 0002 0002 0010 000e 060e 040e  ................
+0000020: 020e 000e 010e 050e 070e 0306            ............
 ;;; STDOUT ;;)

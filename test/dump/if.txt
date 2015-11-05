@@ -22,35 +22,42 @@
 000000b: 0000                                       ; func signature index
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
-0000013: 01                                         ; OPCODE_IF
-0000014: 10                                         ; OPCODE_I8_CONST
+0000013: 03                                         ; OPCODE_IF
+0000014: 09                                         ; OPCODE_I8_CONST
 0000015: 01                                         ; u8 literal
 0000016: 00                                         ; OPCODE_NOP
-0000017: 01                                         ; OPCODE_IF
-0000018: 10                                         ; OPCODE_I8_CONST
+0000017: 03                                         ; OPCODE_IF
+0000018: 09                                         ; OPCODE_I8_CONST
 0000019: 00                                         ; u8 literal
-000001a: 14                                         ; OPCODE_F32_CONST
+000001a: 0d                                         ; OPCODE_F32_CONST
 000001b: 0000 803f                                  ; f32 literal
-000001f: 14                                         ; OPCODE_F32_CONST
+000001f: 0d                                         ; OPCODE_F32_CONST
 0000020: 0000 0040                                  ; f32 literal
-0000017: 1b                                         ; FIXUP OPCODE_EXPR_IF
+0000017: 04                                         ; FIXUP OPCODE_IF_THEN
 0000011: 1100                                       ; FIXUP func body size
 ; function 1
 0000024: 01                                         ; func flags
 0000025: 0000                                       ; func signature index
 0000027: 0000 0000                                  ; func name offset
 000002b: 0000                                       ; func body size
-000002d: 01                                         ; OPCODE_IF
-000002e: 10                                         ; OPCODE_I8_CONST
+000002d: 03                                         ; OPCODE_IF
+000002e: 09                                         ; OPCODE_I8_CONST
 000002f: 01                                         ; u8 literal
-0000030: 09                                         ; OPCODE_RETURN
-0000031: 09                                         ; OPCODE_RETURN
-000002d: 02                                         ; FIXUP OPCODE_IF_THEN
-000002b: 0500                                       ; FIXUP func body size
-0000032: 06                                         ; WASM_SECTION_END
+0000030: 06                                         ; OPCODE_BR
+0000031: 00                                         ; break depth
+0000032: 00                                         ; OPCODE_NOP
+0000033: 06                                         ; OPCODE_BR
+0000034: 00                                         ; break depth
+0000035: 00                                         ; OPCODE_NOP
+000002d: 04                                         ; FIXUP OPCODE_IF_THEN
+; move [000002d,0000036) -> [000002f,0000038)
+000002d: 01                                         ; implicit WASM_OPCODE_BLOCK
+000002e: 01                                         ; num expressions
+000002b: 0b00                                       ; FIXUP func body size
+0000038: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0202 0100 0000 0000  ................
-0000010: 0011 0001 1001 001b 1000 1400 0080 3f14  ..............?.
-0000020: 0000 0040 0100 0000 0000 0005 0002 1001  ...@............
-0000030: 0909 06                                  ...
+0000010: 0011 0003 0901 0004 0900 0d00 0080 3f0d  ..............?.
+0000020: 0000 0040 0100 0000 0000 000b 0001 0104  ...@............
+0000030: 0901 0600 0006 0000 06                   .........
 ;;; STDOUT ;;)

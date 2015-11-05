@@ -24,22 +24,22 @@
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
 0000013: ad                                         ; OPCODE_F32_REINTERPRET_I32
-0000014: 10                                         ; OPCODE_I8_CONST
+0000014: 09                                         ; OPCODE_I8_CONST
 0000015: 00                                         ; u8 literal
 0000016: b4                                         ; OPCODE_I32_REINTERPRET_F32
-0000017: 14                                         ; OPCODE_F32_CONST
+0000017: 0d                                         ; OPCODE_F32_CONST
 0000018: 0000 0000                                  ; f32 literal
 000001c: b3                                         ; OPCODE_F64_REINTERPRET_I64
-000001d: 12                                         ; OPCODE_I64_CONST
+000001d: 0b                                         ; OPCODE_I64_CONST
 000001e: 0000 0000 0000 0000                        ; u64 literal
 0000026: b5                                         ; OPCODE_I64_REINTERPRET_F64
-0000027: 13                                         ; OPCODE_F64_CONST
+0000027: 0c                                         ; OPCODE_F64_CONST
 0000028: 0000 0000 0000 0000                        ; f64 literal
 0000011: 1d00                                       ; FIXUP func body size
 0000030: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 001d 00ad 1000 b414 0000 0000 b312 0000  ................
-0000020: 0000 0000 0000 b513 0000 0000 0000 0000  ................
+0000010: 001d 00ad 0900 b40d 0000 0000 b30b 0000  ................
+0000020: 0000 0000 0000 b50c 0000 0000 0000 0000  ................
 0000030: 06                                       .
 ;;; STDOUT ;;)

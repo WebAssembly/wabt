@@ -35,13 +35,13 @@
 0000016: 0100                                       ; func signature index
 0000018: 0000 0000                                  ; func name offset
 000001c: 0000                                       ; func body size
-000001e: 19                                         ; OPCODE_CALL
+000001e: 12                                         ; OPCODE_CALL
 000001f: 00                                         ; import index
-0000020: 10                                         ; OPCODE_I8_CONST
+0000020: 09                                         ; OPCODE_I8_CONST
 0000021: 01                                         ; u8 literal
-0000022: 14                                         ; OPCODE_F32_CONST
+0000022: 0d                                         ; OPCODE_F32_CONST
 0000023: 0000 0040                                  ; f32 literal
-0000027: 19                                         ; OPCODE_CALL
+0000027: 12                                         ; OPCODE_CALL
 0000028: 01                                         ; func index
 000001c: 0b00                                       ; FIXUP func body size
 0000029: 06                                         ; WASM_SECTION_END
@@ -49,6 +49,6 @@
 0000011: 2a00 0000                                  ; FIXUP import name offset
 000002a: 6261 7200                                  ; import name
 0000000: 0000 0001 0102 0201 0103 0001 0202 0300  ................
-0000010: 002a 0000 0001 0100 0000 0000 0b00 1900  .*..............
-0000020: 1001 1400 0000 4019 0106 6261 7200       ......@...bar.
+0000010: 002a 0000 0001 0100 0000 0000 0b00 1200  .*..............
+0000020: 0901 0d00 0000 4012 0106 6261 7200       ......@...bar.
 ;;; STDOUT ;;)

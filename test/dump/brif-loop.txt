@@ -22,19 +22,18 @@
 000000b: 0000                                       ; func signature index
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
-0000013: 06                                         ; OPCODE_LOOP
+0000013: 02                                         ; OPCODE_LOOP
 0000014: 00                                         ; num expressions
-0000015: 01                                         ; OPCODE_IF
-0000016: 10                                         ; OPCODE_I8_CONST
+0000015: 03                                         ; OPCODE_IF
+0000016: 09                                         ; OPCODE_I8_CONST
 0000017: 00                                         ; u8 literal
-0000018: 07                                         ; OPCODE_CONTINUE
+0000018: 06                                         ; OPCODE_BR
 0000019: 00                                         ; break depth
-000001a: 08                                         ; OPCODE_BREAK
-000001b: 00                                         ; break out of loop
-0000014: 02                                         ; FIXUP num expressions
-0000011: 0900                                       ; FIXUP func body size
-000001c: 06                                         ; WASM_SECTION_END
+000001a: 00                                         ; OPCODE_NOP
+0000014: 01                                         ; FIXUP num expressions
+0000011: 0800                                       ; FIXUP func body size
+000001b: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0009 0006 0201 1000 0700 0800 06         .............
+0000010: 0008 0002 0103 0900 0600 0006            ............
 ;;; STDOUT ;;)

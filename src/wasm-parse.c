@@ -39,7 +39,7 @@ typedef enum WasmOpType {
   WASM_OP_ASSERT_TRAP,
   WASM_OP_BINARY,
   WASM_OP_BLOCK,
-  WASM_OP_BREAK,
+  WASM_OP_BR,
   WASM_OP_BR_IF,
   WASM_OP_CALL,
   WASM_OP_CALL_IMPORT,
@@ -1304,7 +1304,7 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
-    case WASM_OP_BREAK: {
+    case WASM_OP_BR: {
       t = read_token(parser);
       int depth = 0;
       if (t.type == WASM_TOKEN_TYPE_ATOM) {

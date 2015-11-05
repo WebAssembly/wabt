@@ -30,7 +30,7 @@
 0000011: 0000                                       ; func signature index
 0000013: 0000 0000                                  ; func name offset
 0000017: 0000                                       ; func body size
-0000019: 10                                         ; OPCODE_I8_CONST
+0000019: 09                                         ; OPCODE_I8_CONST
 000001a: 00                                         ; u8 literal
 0000017: 0200                                       ; FIXUP func body size
 ; function 1
@@ -38,7 +38,7 @@
 000001c: 0100                                       ; func signature index
 000001e: 0000 0000                                  ; func name offset
 0000022: 0000                                       ; func body size
-0000024: 12                                         ; OPCODE_I64_CONST
+0000024: 0b                                         ; OPCODE_I64_CONST
 0000025: 0000 0000 0000 0000                        ; u64 literal
 0000022: 0900                                       ; FIXUP func body size
 ; function 2
@@ -46,7 +46,7 @@
 000002e: 0200                                       ; func signature index
 0000030: 0000 0000                                  ; func name offset
 0000034: 0000                                       ; func body size
-0000036: 14                                         ; OPCODE_F32_CONST
+0000036: 0d                                         ; OPCODE_F32_CONST
 0000037: 0000 0000                                  ; f32 literal
 0000034: 0500                                       ; FIXUP func body size
 ; function 3
@@ -54,14 +54,14 @@
 000003c: 0300                                       ; func signature index
 000003e: 0000 0000                                  ; func name offset
 0000042: 0000                                       ; func body size
-0000044: 13                                         ; OPCODE_F64_CONST
+0000044: 0c                                         ; OPCODE_F64_CONST
 0000045: 0000 0000 0000 0000                        ; f64 literal
 0000042: 0900                                       ; FIXUP func body size
 000004d: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0104 0001 0002 0003 0004 0204  ................
-0000010: 0100 0000 0000 0002 0010 0001 0100 0000  ................
-0000020: 0000 0900 1200 0000 0000 0000 0001 0200  ................
-0000030: 0000 0000 0500 1400 0000 0001 0300 0000  ................
-0000040: 0000 0900 1300 0000 0000 0000 0006       ..............
+0000010: 0100 0000 0000 0002 0009 0001 0100 0000  ................
+0000020: 0000 0900 0b00 0000 0000 0000 0001 0200  ................
+0000030: 0000 0000 0500 0d00 0000 0001 0300 0000  ................
+0000040: 0000 0900 0c00 0000 0000 0000 0006       ..............
 ;;; STDOUT ;;)

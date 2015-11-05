@@ -22,11 +22,11 @@
 000000e: 0000 0000                                  ; func name offset
 0000012: 0000                                       ; func body size
 0000014: 39                                         ; OPCODE_RESIZE_MEMORY_I32
-0000015: 15                                         ; OPCODE_GET_LOCAL
+0000015: 0e                                         ; OPCODE_GET_LOCAL
 0000016: 00                                         ; remapped local index
 0000012: 0300                                       ; FIXUP func body size
 0000017: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0008 0a01 0101 0100 0102 0101 0000 0000  ................
-0000010: 0000 0300 3915 0006                      ....9...
+0000010: 0000 0300 390e 0006                      ....9...
 ;;; STDOUT ;;)
