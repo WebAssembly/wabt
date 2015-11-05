@@ -29,13 +29,10 @@
 0000018: 06                                         ; OPCODE_BR
 0000019: 01                                         ; break depth
 000001a: 00                                         ; OPCODE_NOP
-000001b: 06                                         ; OPCODE_BR
-000001c: 00                                         ; branch to the top of the loop
-000001d: 00                                         ; OPCODE_NOP
-0000014: 02                                         ; FIXUP num expressions
-0000011: 0b00                                       ; FIXUP func body size
-000001e: 06                                         ; WASM_SECTION_END
+0000014: 01                                         ; FIXUP num expressions
+0000011: 0800                                       ; FIXUP func body size
+000001b: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 000b 0002 0203 0901 0601 0006 0000 06    ...............
+0000010: 0008 0002 0103 0901 0601 0006            ............
 ;;; STDOUT ;;)

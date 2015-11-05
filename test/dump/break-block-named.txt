@@ -43,15 +43,12 @@
 0000022: 00                                         ; OPCODE_NOP
 000001c: 02                                         ; FIXUP num expressions
 0000018: 02                                         ; FIXUP num expressions
-0000023: 06                                         ; OPCODE_BR
-0000024: 00                                         ; branch to the top of the loop
-0000025: 00                                         ; OPCODE_NOP
-0000016: 02                                         ; FIXUP num expressions
+0000016: 01                                         ; FIXUP num expressions
 0000014: 01                                         ; FIXUP num expressions
-0000011: 1300                                       ; FIXUP func body size
-0000026: 06                                         ; WASM_SECTION_END
+0000011: 1000                                       ; FIXUP func body size
+0000023: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0013 0001 0102 0201 0209 0001 0206 0000  ................
-0000020: 0604 0006 0000 06                        .......
+0000010: 0010 0001 0102 0101 0209 0001 0206 0000  ................
+0000020: 0604 0006                                ....
 ;;; STDOUT ;;)

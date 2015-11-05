@@ -42,14 +42,11 @@
 0000022: 04                                         ; u8 literal
 0000023: 09                                         ; OPCODE_I8_CONST
 0000024: 05                                         ; u8 literal
-0000025: 06                                         ; OPCODE_BR
-0000026: 00                                         ; branch to the top of the loop
-0000027: 00                                         ; OPCODE_NOP
-0000014: 04                                         ; FIXUP num expressions
-0000011: 1500                                       ; FIXUP func body size
-0000028: 06                                         ; WASM_SECTION_END
+0000014: 03                                         ; FIXUP num expressions
+0000011: 1200                                       ; FIXUP func body size
+0000025: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0015 0002 0403 0901 0600 0902 0309 0306  ................
-0000020: 0109 0409 0506 0000 06                   .........
+0000010: 0012 0002 0303 0901 0600 0902 0309 0306  ................
+0000020: 0109 0409 0506                           ......
 ;;; STDOUT ;;)

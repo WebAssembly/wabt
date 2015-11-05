@@ -47,23 +47,13 @@
         (break $exit))
       (if (i32.eq (get_local 0) (i32.const 4))
         (break $cont))
-      (set_local 1 (get_local 0)))
+      (set_local 1 (get_local 0))
+      (br $cont))
     (return (get_local 1)))
-
-  ;; test breaking from a loop with only exit continuation
-  (export "break4" $break4)
-  (func $break4 (result i32)
-    (local i32)
-    (loop $exit
-      (if (i32.eq (get_local 0) (i32.const 3))
-        (break $exit))
-      (set_local 0 (i32.add (get_local 0) (i32.const 1))))
-    (return (get_local 0)))
 )
 (;; STDOUT ;;;
 break0() = 2
 break1() = 3
 break2() = 2
 break3() = 3
-break4() = 3
 ;;; STDOUT ;;)

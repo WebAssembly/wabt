@@ -1,0 +1,15 @@
+;;; EXE: test/run-d8.py
+(module
+  (export "loop" $loop)
+  (func $loop (result i32)
+    (local i32 i32)
+    ;; loop statements now require an explicit branch to the top
+    (loop $exit $cont
+      (set_local 1 (i32.add (get_local 1) (get_local 0)))
+      (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+      (if (i32.lt_s (get_local 0) (i32.const 5))
+        (br $cont)))
+    (get_local 1)))
+(;; STDOUT ;;;
+loop() = 10
+;;; STDOUT ;;)

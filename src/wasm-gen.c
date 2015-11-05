@@ -1020,16 +1020,6 @@ static void before_loop(WasmParserCallbackInfo* info,
 
 static void after_loop(WasmParserCallbackInfo* info, int num_exprs) {
   Context* ctx = info->user_data;
-  /* TODO(binji): Loops don't implicitly branch to the top in v8-native or in
-   the spec repo. This isn't currently handled in any of the tests, so for now,
-   treat them the old way. */
-  if (!ctx->options->br_if) {
-    ++num_exprs;
-    out_opcode(&ctx->buf, WASM_OPCODE_BR);
-    out_u8(&ctx->buf, 0, "branch to the top of the loop");
-    out_opcode(&ctx->buf, WASM_OPCODE_NOP);
-  }
-
   if (info->cookie == 0 || info->cookie == 1) {
     LabelInfo* label_info = ctx->top_label;
     out_u8_at(&ctx->buf, label_info->offset, num_exprs,
