@@ -2131,7 +2131,26 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         t = read_token(parser);
         expect_string(parser, t);
         import->func_name = dup_string_contents(t);
-        import->signature_index = preparse_signature(parser, module);
+        t = read_token(parser);
+        WasmToken sig_start_token = t;
+
+        /* Look for (type <type var>) instead of an explicit signature */
+        int did_parse_type = 0;
+        if (t.type == WASM_TOKEN_TYPE_OPEN_PAREN) {
+          t = read_token(parser);
+          if (match_atom(t, "type")) {
+            int index = parse_function_type_var(parser, module);
+            expect_close(parser, read_token(parser)); // Close type
+            expect_close(parser, read_token(parser)); // Close import
+            import->signature_index = module->function_types.data[index];
+            did_parse_type = 1;
+          }
+        }
+
+        if (!did_parse_type) {
+          rewind_token(parser, sig_start_token);
+          import->signature_index = preparse_signature(parser, module);
+        }
         break;
       }
 
