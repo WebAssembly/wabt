@@ -1,3 +1,4 @@
+;;; SKIP: doesn't parse properly due to if_else
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/forward.wast

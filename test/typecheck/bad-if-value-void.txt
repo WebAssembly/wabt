@@ -3,7 +3,7 @@
   (func (local f32)
     (set_local 0
       (label
-        (if (i32.const 0)
+        (if_else (i32.const 0)
           (break)
           (f32.const 0.0))))))
 (;; STDERR ;;;

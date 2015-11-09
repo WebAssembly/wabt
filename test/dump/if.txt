@@ -2,9 +2,9 @@
 (module
   (func
     (if (i32.const 1) (nop))
-    (if (i32.const 0) (f32.const 1.0) (f32.const 2.0)))
+    (if_else (i32.const 0) (f32.const 1.0) (f32.const 2.0)))
   (func
-    (if (i32.const 1) (return) (return))))
+    (if_else (i32.const 1) (return) (return))))
 (;; STDOUT ;;;
 0000000: 00                                         ; WASM_SECTION_MEMORY
 0000001: 00                                         ; min mem size log 2

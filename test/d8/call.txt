@@ -18,7 +18,7 @@
     (call $fac (i32.const 10)))
 
   (func $fac (param i32) (result i32)
-    (if (i32.gt_s (get_local 0) (i32.const 0))
+    (if_else (i32.gt_s (get_local 0) (i32.const 0))
       (return (i32.mul
                   (get_local 0)
                   (call $fac (i32.sub (get_local 0) (i32.const 1)))))

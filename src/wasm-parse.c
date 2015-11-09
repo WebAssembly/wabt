@@ -53,6 +53,7 @@ typedef enum WasmOpType {
   WASM_OP_GET_LOCAL,
   WASM_OP_GLOBAL,
   WASM_OP_IF,
+  WASM_OP_IF_ELSE,
   WASM_OP_IMPORT,
   WASM_OP_INVOKE,
   WASM_OP_LABEL,
@@ -1416,20 +1417,23 @@ static WasmType parse_expr(WasmParser* parser,
       WasmType cond_type = parse_expr(parser, module, function);
       check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
                  " of condition");
+      parse_expr(parser, module, function);
+      expect_close(parser, read_token(parser));
+      type = WASM_TYPE_VOID;
+      CALLBACK_COOKIE(parser, after_if, cookie, (&parser->info, type, 0));
+      break;
+    }
+
+    case WASM_OP_IF_ELSE: {
+      WasmParserCookie cookie = CALLBACK(parser, before_if, (&parser->info));
+      WasmType cond_type = parse_expr(parser, module, function);
+      check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
+                 " of condition");
       WasmType true_type = parse_expr(parser, module, function);
-      t = read_token(parser);
-      int with_else = 0;
-      if (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-        with_else = 1;
-        rewind_token(parser, t);
-        WasmType false_type = parse_expr(parser, module, function);
-        type = true_type & false_type;
-        expect_close(parser, read_token(parser));
-      } else {
-        type = WASM_TYPE_VOID;
-      }
-      CALLBACK_COOKIE(parser, after_if, cookie,
-                      (&parser->info, type, with_else));
+      WasmType false_type = parse_expr(parser, module, function);
+      type = true_type & false_type;
+      expect_close(parser, read_token(parser));
+      CALLBACK_COOKIE(parser, after_if, cookie, (&parser->info, type, 1));
       break;
     }
 
