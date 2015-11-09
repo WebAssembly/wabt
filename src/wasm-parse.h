@@ -68,7 +68,7 @@ typedef struct WasmParserCallbacks {
                       WasmMemType mem_type,
                       uint32_t alignment,
                       uint32_t offset,
-                      int is_signed);
+                      int is_signed_load);
   void (*after_load_global)(WasmParserCallbackInfo* info, int index);
   void (*after_memory_size)(WasmParserCallbackInfo* info);
   void (*after_nop)(WasmParserCallbackInfo* info);

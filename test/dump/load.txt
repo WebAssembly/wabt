@@ -32,59 +32,59 @@
 000000b: 0000                                       ; func signature index
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
-0000013: 20                                         ; OPCODE_I32_LOAD_I32
-0000014: 06                                         ; load access byte
+0000013: 2a                                         ; OPCODE_I32_LOAD_MEM
+0000014: 00                                         ; load access byte
 0000015: 09                                         ; OPCODE_I8_CONST
 0000016: 00                                         ; u8 literal
-0000017: 20                                         ; OPCODE_I32_LOAD_I32
-0000018: 04                                         ; load access byte
+0000017: 20                                         ; OPCODE_I32_LOAD_MEM8_S
+0000018: 00                                         ; load access byte
 0000019: 09                                         ; OPCODE_I8_CONST
 000001a: 00                                         ; u8 literal
-000001b: 20                                         ; OPCODE_I32_LOAD_I32
-000001c: 05                                         ; load access byte
+000001b: 22                                         ; OPCODE_I32_LOAD_MEM16_S
+000001c: 00                                         ; load access byte
 000001d: 09                                         ; OPCODE_I8_CONST
 000001e: 00                                         ; u8 literal
-000001f: 20                                         ; OPCODE_I32_LOAD_I32
+000001f: 21                                         ; OPCODE_I32_LOAD_MEM8_U
 0000020: 00                                         ; load access byte
 0000021: 09                                         ; OPCODE_I8_CONST
 0000022: 00                                         ; u8 literal
-0000023: 20                                         ; OPCODE_I32_LOAD_I32
-0000024: 01                                         ; load access byte
+0000023: 23                                         ; OPCODE_I32_LOAD_MEM16_U
+0000024: 00                                         ; load access byte
 0000025: 09                                         ; OPCODE_I8_CONST
 0000026: 00                                         ; u8 literal
-0000027: 21                                         ; OPCODE_I64_LOAD_I32
-0000028: 07                                         ; load access byte
+0000027: 2b                                         ; OPCODE_I64_LOAD_MEM
+0000028: 00                                         ; load access byte
 0000029: 09                                         ; OPCODE_I8_CONST
 000002a: 00                                         ; u8 literal
-000002b: 21                                         ; OPCODE_I64_LOAD_I32
-000002c: 04                                         ; load access byte
+000002b: 24                                         ; OPCODE_I64_LOAD_MEM8_S
+000002c: 00                                         ; load access byte
 000002d: 09                                         ; OPCODE_I8_CONST
 000002e: 00                                         ; u8 literal
-000002f: 21                                         ; OPCODE_I64_LOAD_I32
-0000030: 05                                         ; load access byte
+000002f: 26                                         ; OPCODE_I64_LOAD_MEM16_S
+0000030: 00                                         ; load access byte
 0000031: 09                                         ; OPCODE_I8_CONST
 0000032: 00                                         ; u8 literal
-0000033: 21                                         ; OPCODE_I64_LOAD_I32
-0000034: 06                                         ; load access byte
+0000033: 28                                         ; OPCODE_I64_LOAD_MEM32_S
+0000034: 00                                         ; load access byte
 0000035: 09                                         ; OPCODE_I8_CONST
 0000036: 00                                         ; u8 literal
-0000037: 21                                         ; OPCODE_I64_LOAD_I32
+0000037: 25                                         ; OPCODE_I64_LOAD_MEM8_U
 0000038: 00                                         ; load access byte
 0000039: 09                                         ; OPCODE_I8_CONST
 000003a: 00                                         ; u8 literal
-000003b: 21                                         ; OPCODE_I64_LOAD_I32
-000003c: 01                                         ; load access byte
+000003b: 27                                         ; OPCODE_I64_LOAD_MEM16_U
+000003c: 00                                         ; load access byte
 000003d: 09                                         ; OPCODE_I8_CONST
 000003e: 00                                         ; u8 literal
-000003f: 21                                         ; OPCODE_I64_LOAD_I32
-0000040: 02                                         ; load access byte
+000003f: 29                                         ; OPCODE_I64_LOAD_MEM32_U
+0000040: 00                                         ; load access byte
 0000041: 09                                         ; OPCODE_I8_CONST
 0000042: 00                                         ; u8 literal
-0000043: 22                                         ; OPCODE_F32_LOAD_I32
+0000043: 2c                                         ; OPCODE_F32_LOAD_MEM
 0000044: 00                                         ; load access byte
 0000045: 09                                         ; OPCODE_I8_CONST
 0000046: 00                                         ; u8 literal
-0000047: 23                                         ; OPCODE_F64_LOAD_I32
+0000047: 2d                                         ; OPCODE_F64_LOAD_MEM
 0000048: 00                                         ; load access byte
 0000049: 09                                         ; OPCODE_I8_CONST
 000004a: 00                                         ; u8 literal
@@ -92,8 +92,8 @@
 000004b: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0038 0020 0609 0020 0409 0020 0509 0020  .8. ... ... ... 
-0000020: 0009 0020 0109 0021 0709 0021 0409 0021  ... ...!...!...!
-0000030: 0509 0021 0609 0021 0009 0021 0109 0021  ...!...!...!...!
-0000040: 0209 0022 0009 0023 0009 0006            ..."...#....
+0000010: 0038 002a 0009 0020 0009 0022 0009 0021  .8.*... ..."...!
+0000020: 0009 0023 0009 002b 0009 0024 0009 0026  ...#...+...$...&
+0000030: 0009 0028 0009 0025 0009 0027 0009 0029  ...(...%...'...)
+0000040: 0009 002c 0009 002d 0009 0006            ...,...-....
 ;;; STDOUT ;;)

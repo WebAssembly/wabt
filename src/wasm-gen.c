@@ -951,29 +951,19 @@ static void before_load(WasmParserCallbackInfo* info,
                         uint32_t alignment,
                         uint32_t offset,
                         int is_signed) {
+  /* Access byte: 0bAaao0000
+   A = Alignment. If set, access is unaligned
+   a = Atomicity. 0 = None, 1 = SeqCst, 2 = Acq, 3 = Rel
+   o = Offset. If set, offset field follows access byte */
+  /* TODO(binji): support alignment */
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, opcode);
   uint8_t access = 0;
-  switch (mem_type) {
-    case WASM_MEM_TYPE_I8:
-      access = is_signed ? 4 : 0;
-      break;
-    case WASM_MEM_TYPE_I16:
-      access = is_signed ? 5 : 1;
-      break;
-    case WASM_MEM_TYPE_I32:
-      if (opcode == WASM_OPCODE_I64_LOAD_I32)
-        access = is_signed ? 6 : 2;
-      else
-        access = 6;
-      break;
-    case WASM_MEM_TYPE_I64:
-      access = 7;
-      break;
-    default:
-      break;
-  }
+  if (offset)
+    access |= 0x10;
   out_u8(&ctx->buf, access, "load access byte");
+  if (offset)
+    out_leb128(&ctx->buf, (uint32_t)offset, "load offset");
 }
 
 static void after_load_global(WasmParserCallbackInfo* info, int index) {
@@ -1073,24 +1063,13 @@ static void before_store(WasmParserCallbackInfo* info,
                          uint32_t offset) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, opcode);
+  /* See before_load for format of memory access byte */
   uint8_t access = 0;
-  switch (mem_type) {
-    case WASM_MEM_TYPE_I8:
-      access = 4;
-      break;
-    case WASM_MEM_TYPE_I16:
-      access = 5;
-      break;
-    case WASM_MEM_TYPE_I32:
-      access = 6;
-      break;
-    case WASM_MEM_TYPE_I64:
-      access = 7;
-      break;
-    default:
-      break;
-  }
+  if (offset)
+    access |= 0x10;
   out_u8(&ctx->buf, access, "store access byte");
+  if (offset)
+    out_leb128(&ctx->buf, (uint32_t)offset, "store offset");
 }
 
 static void before_store_global(WasmParserCallbackInfo* info, int index) {

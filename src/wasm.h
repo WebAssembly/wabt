@@ -52,22 +52,29 @@ typedef enum WasmMemType {
   V(CALL_INDIRECT, 0x13)       \
   V(RETURN, 0x14)              \
   V(UNREACHABLE, 0x15)         \
-  V(I32_LOAD_I32, 0x20)        \
-  V(I64_LOAD_I32, 0x21)        \
-  V(F32_LOAD_I32, 0x22)        \
-  V(F64_LOAD_I32, 0x23)        \
-  V(I32_LOAD_I64, 0x24)        \
-  V(I64_LOAD_I64, 0x25)        \
-  V(F32_LOAD_I64, 0x26)        \
-  V(F64_LOAD_I64, 0x27)        \
-  V(I32_STORE_I32, 0x30)       \
-  V(I64_STORE_I32, 0x31)       \
-  V(F32_STORE_I32, 0x32)       \
-  V(F64_STORE_I32, 0x33)       \
-  V(I32_STORE_I64, 0x34)       \
-  V(I64_STORE_I64, 0x35)       \
-  V(F32_STORE_I64, 0x36)       \
-  V(F64_STORE_I64, 0x37)       \
+  V(I32_LOAD_MEM8_S, 0x20)     \
+  V(I32_LOAD_MEM8_U, 0x21)     \
+  V(I32_LOAD_MEM16_S, 0x22)    \
+  V(I32_LOAD_MEM16_U, 0x23)    \
+  V(I64_LOAD_MEM8_S, 0x24)     \
+  V(I64_LOAD_MEM8_U, 0x25)     \
+  V(I64_LOAD_MEM16_S, 0x26)    \
+  V(I64_LOAD_MEM16_U, 0x27)    \
+  V(I64_LOAD_MEM32_S, 0x28)    \
+  V(I64_LOAD_MEM32_U, 0x29)    \
+  V(I32_LOAD_MEM, 0x2a)        \
+  V(I64_LOAD_MEM, 0x2b)        \
+  V(F32_LOAD_MEM, 0x2c)        \
+  V(F64_LOAD_MEM, 0x2d)        \
+  V(I32_STORE_MEM8, 0x2e)      \
+  V(I32_STORE_MEM16, 0x2f)     \
+  V(I64_STORE_MEM8, 0x30)      \
+  V(I64_STORE_MEM16, 0x31)     \
+  V(I64_STORE_MEM32, 0x32)     \
+  V(I32_STORE_MEM, 0x33)       \
+  V(I64_STORE_MEM, 0x34)       \
+  V(F32_STORE_MEM, 0x35)       \
+  V(F64_STORE_MEM, 0x36)       \
   V(RESIZE_MEMORY_I32, 0x39)   \
   V(RESIZE_MEMORY_I64, 0x3a)   \
   V(I32_ADD, 0x40)             \
