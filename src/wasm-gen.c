@@ -806,21 +806,18 @@ static int get_block_depth(Context* ctx, LabelInfo* label_info) {
 
 static void before_br_if(WasmParserCallbackInfo* info, int label_depth) {
   Context* ctx = info->user_data;
-  out_opcode(&ctx->buf, WASM_OPCODE_IF);
-  info->cookie = (WasmParserCookie)label_depth;
-}
-
-static void after_br_if(WasmParserCallbackInfo* info) {
-  Context* ctx = info->user_data;
-  int label_depth = (int)info->cookie;
   LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
   int depth = get_block_depth(ctx, label_info);
   /* In the br_if proposal, a branch to a loop continues the loop, instead of
    breaking, so branch to the inner label instead. */
   if (ctx->options->br_if && label_info->type == LABEL_TYPE_LOOP_OUTER)
     depth--;
-  out_opcode(&ctx->buf, WASM_OPCODE_BR);
+  out_opcode(&ctx->buf, WASM_OPCODE_BR_IF);
   out_u8(&ctx->buf, depth, "break depth");
+}
+
+static void after_br_if(WasmParserCallbackInfo* info) {
+  Context* ctx = info->user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_NOP);
 }
 
