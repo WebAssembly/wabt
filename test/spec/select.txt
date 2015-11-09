@@ -4,11 +4,4 @@
 ;;; STDIN_FILE: third_party/testsuite/select.wast
 (;; STDERR ;;;
 
-
-#
-# Fatal error in , line 0
-# unimplemented code
-#
-
-
 ;;; STDERR ;;)
