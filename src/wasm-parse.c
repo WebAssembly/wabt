@@ -77,6 +77,7 @@ typedef enum WasmOpType {
   WASM_OP_TABLE,
   WASM_OP_TYPE,
   WASM_OP_UNARY,
+  WASM_OP_UNREACHABLE,
 } WasmOpType;
 
 #include "wasm-keywords.h"
@@ -1602,6 +1603,11 @@ static WasmType parse_expr(WasmParser* parser,
       expect_close(parser, read_token(parser));
       break;
     }
+
+    case WASM_OP_UNREACHABLE:
+      CALLBACK(parser, before_unreachable, (&parser->info));
+      expect_close(parser, read_token(parser));
+      break;
 
     default:
       unexpected_token(parser, t);

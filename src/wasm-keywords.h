@@ -39,7 +39,7 @@ struct OpInfo {
   int is_signed_load;
 };
 
-#define TOTAL_KEYWORDS 185
+#define TOTAL_KEYWORDS 186
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 19
 #define MIN_HASH_VALUE 16
@@ -543,7 +543,9 @@ in_word_set (str, len)
       {""}, {""}, {""},
 #line 132 "src/wasm-keywords.gperf"
       {"i64.ctz", WASM_OP_UNARY, WASM_OPCODE_I64_CTZ, WASM_TYPE_I64},
-      {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 195 "src/wasm-keywords.gperf"
+      {"unreachable", WASM_OP_UNREACHABLE},
 #line 89 "src/wasm-keywords.gperf"
       {"i32.ctz", WASM_OP_UNARY, WASM_OPCODE_I32_CTZ, WASM_TYPE_I32},
       {""}, {""}, {""}, {""},

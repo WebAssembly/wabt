@@ -86,6 +86,7 @@ typedef struct WasmParserCallbacks {
 
   void (*before_store_global)(WasmParserCallbackInfo* info, int index);
   void (*before_unary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
+  void (*before_unreachable)(WasmParserCallbackInfo* info);
 
   /* used in spec repo tests */
   void (*before_assert_return)(WasmParserCallbackInfo* info);
