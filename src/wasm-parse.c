@@ -389,11 +389,11 @@ static int read_float_nan(const char* s, const char* end, float* out) {
   uint32_t tag;
   if (s != end) {
     tag = 0;
-    if (!string_starts_with(s, end, "(0x"))
+    if (!string_starts_with(s, end, ":0x"))
       return 0;
     s += 3;
 
-    for (; s < end && *s != ')'; ++s) {
+    for (; s < end; ++s) {
       uint32_t digit;
       if (!hexdigit(*s, &digit))
         return 0;
@@ -403,9 +403,6 @@ static int read_float_nan(const char* s, const char* end, float* out) {
       if (tag > max_tag)
         return 0;
     }
-
-    if (s + 1 != end || *s != ')')
-      return 0;
 
     /* NaN cannot have a zero tag, that is reserved for infinity */
     if (tag == 0)
@@ -453,11 +450,11 @@ static int read_double_nan(const char* s, const char* end, double* out) {
   uint64_t tag;
   if (s != end) {
     tag = 0;
-    if (!string_starts_with(s, end, "(0x"))
+    if (!string_starts_with(s, end, ":0x"))
       return 0;
     s += 3;
 
-    for (; s < end && *s != ')'; ++s) {
+    for (; s < end; ++s) {
       uint32_t digit;
       if (!hexdigit(*s, &digit))
         return 0;
@@ -467,9 +464,6 @@ static int read_double_nan(const char* s, const char* end, double* out) {
       if (tag > max_tag)
         return 0;
     }
-
-    if (s + 1 != end || *s != ')')
-      return 0;
 
     /* NaN cannot have a zero tag, that is reserved for infinity */
     if (tag == 0)
@@ -658,51 +652,28 @@ static WasmToken read_token(WasmParser* parser) {
         result.range.end = t->loc;
         return result;
 
-      default: {
-        const char* start = t->loc.pos;
-        int is_nan = 0;
+      default:
         result.type = WASM_TOKEN_TYPE_ATOM;
         result.range.start = t->loc;
         t->loc.col++;
         t->loc.pos++;
         while (t->loc.pos < t->source.end) {
           switch (*t->loc.pos) {
-            case '(': {
-              /* special case for a nan value, e.g. -nan(0xaabb) */
-              const char* end = t->loc.pos;
-              if (string_eq(start, end, "nan") ||
-                  string_eq(start, end, "-nan") ||
-                  string_eq(start, end, "+nan")) {
-                is_nan = 1;
-                goto continue_atom;
-              }
-              /* fallthrough, this is not a nan atom */
-            }
-
             case ' ':
             case '\t':
             case '\n':
+            case '(':
+            case ')':
               result.range.end = t->loc;
               return result;
 
-            continue_atom:
             default:
               t->loc.col++;
               t->loc.pos++;
               break;
-
-            case ')':
-              /* if this is an nan bits atom, keep the closing paren */
-              if (is_nan) {
-                t->loc.col++;
-                t->loc.pos++;
-              }
-              result.range.end = t->loc;
-              return result;
           }
         }
         break;
-      }
     }
   }
 
