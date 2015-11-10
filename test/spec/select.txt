@@ -1,3 +1,4 @@
+;;; SKIP: parse unreachable
 ;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
