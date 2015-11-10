@@ -1459,31 +1459,34 @@ static WasmType parse_expr(WasmParser* parser,
       t = read_token(parser);
       WasmLabel* outer_label = NULL;
       WasmLabel* inner_label = NULL;
+      /* The exit label is first, but default. So:
+       (loop $cont ...)
+       (loop $exit $cont ...)
+
+       Also, the inner label is always created, so:
+       (loop ... (br 0)) */
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
-        /* outer label (i.e. break continuation) */
-        outer_label = push_label(parser, function, t);
+        inner_label = push_label(parser, function, t);
 
         t = read_token(parser);
         if (t.type == WASM_TOKEN_TYPE_ATOM) {
-          /* inner label (i.e. continue continuation) */
+          outer_label = inner_label;
           inner_label = push_label(parser, function, t);
         } else {
           rewind_token(parser, t);
         }
       } else {
         rewind_token(parser, t);
+        inner_label = push_anonymous_label(parser, function, t);
       }
 
-      int with_inner_label = inner_label != NULL;
       int with_outer_label = outer_label != NULL;
       WasmParserCookie cookie =
-          CALLBACK(parser, before_loop,
-                   (&parser->info, with_inner_label, with_outer_label));
+          CALLBACK(parser, before_loop, (&parser->info, 1, with_outer_label));
 
       int num_exprs;
       parse_block(parser, module, function, &num_exprs);
-      if (inner_label)
-        pop_label(function);
+      pop_label(function);
       if (outer_label) {
         type = outer_label->type;
         pop_label(function);

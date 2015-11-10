@@ -807,13 +807,8 @@ static int get_block_depth(Context* ctx, LabelInfo* label_info) {
 static void before_br_if(WasmParserCallbackInfo* info, int label_depth) {
   Context* ctx = info->user_data;
   LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
-  int depth = get_block_depth(ctx, label_info);
-  /* In the br_if proposal, a branch to a loop continues the loop, instead of
-   breaking, so branch to the inner label instead. */
-  if (ctx->options->br_if && label_info->type == LABEL_TYPE_LOOP_OUTER)
-    depth--;
   out_opcode(&ctx->buf, WASM_OPCODE_BR_IF);
-  out_u8(&ctx->buf, depth, "break depth");
+  out_u8(&ctx->buf, get_block_depth(ctx, label_info), "break depth");
 }
 
 static void after_br_if(WasmParserCallbackInfo* info) {
@@ -833,13 +828,8 @@ static void before_break(WasmParserCallbackInfo* info,
   Context* ctx = info->user_data;
   LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
   label_info->with_expr = label_info->with_expr || with_expr;
-  int depth = get_block_depth(ctx, label_info);
-  /* In the br_if proposal, a branch to a loop continues the loop, instead of
-   breaking, so branch to the inner label instead. */
-  if (ctx->options->br_if && label_info->type == LABEL_TYPE_LOOP_OUTER)
-    depth--;
   out_opcode(&ctx->buf, WASM_OPCODE_BR);
-  out_u8(&ctx->buf, depth, "break depth");
+  out_u8(&ctx->buf, get_block_depth(ctx, label_info), "break depth");
   if (!with_expr)
     out_opcode(&ctx->buf, WASM_OPCODE_NOP);
 }
@@ -991,25 +981,19 @@ static void after_load_global(WasmParserCallbackInfo* info, int index) {
 static void before_loop(WasmParserCallbackInfo* info,
                         int with_inner_label,
                         int with_outer_label) {
+  assert(with_inner_label);
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_LOOP);
-  /* TODO(binji): clean this up, it's a bit hacky right now. */
   /* v8-native always generates two block scopes for loops. If we have fewer
    labels, we must account for the new scopes by increasing the block depth */
-  if (with_inner_label || with_outer_label) {
-    /* The outer label must be defined if the inner label is defined */
-    assert(with_outer_label);
+  if (with_outer_label) {
     push_label_info(ctx, LABEL_TYPE_LOOP_OUTER);
-    if (with_inner_label) {
-      push_label_info(ctx, LABEL_TYPE_LOOP_INNER);
-      info->cookie = 1;
-    } else {
-      ctx->block_depth++;
-      info->cookie = 0;
-    }
+    push_label_info(ctx, LABEL_TYPE_LOOP_INNER);
+    info->cookie = 2;
   } else {
-    info->cookie = (WasmParserCookie)ctx->buf.size;
-    ctx->block_depth += 2;
+    ctx->block_depth++;
+    push_label_info(ctx, LABEL_TYPE_LOOP_INNER);
+    info->cookie = 1;
   }
 
   out_u8(&ctx->buf, 0, "num expressions");
@@ -1017,23 +1001,17 @@ static void before_loop(WasmParserCallbackInfo* info,
 
 static void after_loop(WasmParserCallbackInfo* info, int num_exprs) {
   Context* ctx = info->user_data;
-  if (info->cookie == 0 || info->cookie == 1) {
-    LabelInfo* label_info = ctx->top_label;
-    out_u8_at(&ctx->buf, label_info->offset, num_exprs,
-              "FIXUP num expressions");
-    if (info->cookie == 1) {
-      /* inner and outer label */
-      pop_label_info(ctx);
-    } else {
-      /* just an outer label */
-      ctx->block_depth--;
-    }
+  LabelInfo* label_info = ctx->top_label;
+  out_u8_at(&ctx->buf, label_info->offset, num_exprs, "FIXUP num expressions");
+  pop_label_info(ctx);
+
+  if (info->cookie == 2) {
+    /* Inner and outer labels */
     pop_label_info(ctx);
   } else {
-    /* no labels */
-    ctx->block_depth -= 2;
-    uint32_t offset = (uint32_t)info->cookie;
-    out_u8_at(&ctx->buf, offset, num_exprs, "FIXUP num expressions");
+    /* Just an inner label */
+    assert(info->cookie == 1);
+    ctx->block_depth--;
   }
 }
 

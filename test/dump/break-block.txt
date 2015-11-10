@@ -1,14 +1,15 @@
 ;;; FLAGS: -dv
 (module
-  (func
-    (block $outer           ;; 3
-      (loop                 ;; 2
-        (block              ;; 1
+  (func                     ;; spec  v8
+    (block $outer           ;; 2     4
+      (loop                 ;; 1     2 (3 is exit)
+        (block              ;;       1
           (i32.const 0)
-          (block $inner     ;; 0
+          (block $inner     ;; 0     0
             (break)
             (break 0)
-            (break 1)))))))
+            (break 1)
+            (break 2)))))))
 (;; STDOUT ;;;
 0000000: 00                                         ; WASM_SECTION_MEMORY
 0000001: 00                                         ; min mem size log 2
@@ -43,16 +44,19 @@
 0000021: 00                                         ; break depth
 0000022: 00                                         ; OPCODE_NOP
 0000023: 06                                         ; OPCODE_BR
-0000024: 04                                         ; break depth
+0000024: 02                                         ; break depth
 0000025: 00                                         ; OPCODE_NOP
-000001c: 03                                         ; FIXUP num expressions
+0000026: 06                                         ; OPCODE_BR
+0000027: 04                                         ; break depth
+0000028: 00                                         ; OPCODE_NOP
+000001c: 04                                         ; FIXUP num expressions
 0000018: 02                                         ; FIXUP num expressions
 0000016: 01                                         ; FIXUP num expressions
 0000014: 01                                         ; FIXUP num expressions
-0000011: 1300                                       ; FIXUP func body size
-0000026: 06                                         ; WASM_SECTION_END
+0000011: 1600                                       ; FIXUP func body size
+0000029: 06                                         ; WASM_SECTION_END
 ; names
 0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0013 0001 0102 0101 0209 0001 0306 0000  ................
-0000020: 0600 0006 0400 06                        .......
+0000010: 0016 0001 0102 0101 0209 0001 0406 0000  ................
+0000020: 0600 0006 0200 0604 0006                 ..........
 ;;; STDOUT ;;)
