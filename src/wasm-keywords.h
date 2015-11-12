@@ -378,7 +378,7 @@ in_word_set (str, len)
       {"i32.div_s", WASM_OP_BINARY, WASM_OPCODE_I32_SDIV, WASM_TYPE_I32},
       {""},
 #line 190 "src/wasm-keywords.gperf"
-      {"return", WASM_OP_RETURN},
+      {"return", WASM_OP_RETURN, WASM_OPCODE_RETURN},
       {""},
 #line 103 "src/wasm-keywords.gperf"
       {"i32.load", WASM_OP_LOAD, WASM_OPCODE_I32_LOAD_I32, WASM_TYPE_I32, WASM_MEM_TYPE_I32},
@@ -545,7 +545,7 @@ in_word_set (str, len)
       {"i64.ctz", WASM_OP_UNARY, WASM_OPCODE_I64_CTZ, WASM_TYPE_I64},
       {""}, {""}, {""},
 #line 195 "src/wasm-keywords.gperf"
-      {"unreachable", WASM_OP_UNREACHABLE},
+      {"unreachable", WASM_OP_UNREACHABLE, WASM_OPCODE_UNREACHABLE},
 #line 89 "src/wasm-keywords.gperf"
       {"i32.ctz", WASM_OP_UNARY, WASM_OPCODE_I32_CTZ, WASM_TYPE_I32},
       {""}, {""}, {""}, {""},

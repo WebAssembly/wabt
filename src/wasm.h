@@ -50,6 +50,8 @@ typedef enum WasmMemType {
   V(SET_GLOBAL, 0x11)          \
   V(CALL, 0x12)                \
   V(CALL_INDIRECT, 0x13)       \
+  V(RETURN, 0x14)              \
+  V(UNREACHABLE, 0x15)         \
   V(I32_LOAD_I32, 0x20)        \
   V(I64_LOAD_I32, 0x21)        \
   V(F32_LOAD_I32, 0x22)        \

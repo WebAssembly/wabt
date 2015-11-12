@@ -6,8 +6,24 @@ if (arguments.length != 1) {
 var ffi = { print: print };
 var buffer = readbuffer(arguments[0]);
 var module = WASM.instantiateModule(buffer, ffi);
-for (var name in module) {
-  if (module[name] instanceof Function) {
-    print(name + '() = ' + module[name]());
+
+var name;
+var f;
+var result;
+
+for (name in module) {
+  f = module[name];
+  if (!(f instanceof Function))
+    continue;
+
+  if (name.lastIndexOf('trap', 0) === 0) {
+    try {
+      result = f();
+      print('Expected ' + name + '() to trap, instead got: ' + result);
+    } catch (e) {
+      print(name + '() trapped: ' + e.toString());
+    }
+  } else {
+    print(name + '() = ' + f());
   }
 }

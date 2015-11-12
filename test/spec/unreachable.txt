@@ -1,4 +1,4 @@
-;;; SKIP: unreachable not supported in v8-native
+;;; SKIP: v8-native support unreachable, but still fails compile
 ;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec

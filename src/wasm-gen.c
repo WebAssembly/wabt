@@ -1105,6 +1105,11 @@ static void before_unary(WasmParserCallbackInfo* info, enum WasmOpcode opcode) {
   out_opcode(&ctx->buf, opcode);
 }
 
+static void before_unreachable(WasmParserCallbackInfo* info) {
+  Context* ctx = info->user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_UNREACHABLE);
+}
+
 static void js_file_start(Context* ctx) {
   const char* quiet_str = ctx->options->spec_verbose ? "false" : "true";
   out_printf(&ctx->js_buf, "var quiet = %s;\n", quiet_str);
@@ -1400,6 +1405,7 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.before_store = before_store;
   callbacks.before_store_global = before_store_global;
   callbacks.before_unary = before_unary;
+  callbacks.before_unreachable = before_unreachable;
   callbacks.assert_invalid_error = assert_invalid_error;
 
   WasmParserOptions parser_options = {};
