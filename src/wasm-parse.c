@@ -44,10 +44,10 @@ typedef enum WasmOpType {
   WASM_OP_CALL,
   WASM_OP_CALL_IMPORT,
   WASM_OP_CALL_INDIRECT,
+  WASM_OP_CASE,
   WASM_OP_COMPARE,
   WASM_OP_CONST,
   WASM_OP_CONVERT,
-  WASM_OP_DESTRUCT,
   WASM_OP_EXPORT,
   WASM_OP_FUNC,
   WASM_OP_GET_LOCAL,
@@ -74,6 +74,7 @@ typedef enum WasmOpType {
   WASM_OP_STORE,
   WASM_OP_STORE_GLOBAL,
   WASM_OP_TABLE,
+  WASM_OP_TABLESWITCH,
   WASM_OP_TYPE,
   WASM_OP_UNARY,
   WASM_OP_UNREACHABLE,
@@ -114,6 +115,11 @@ typedef struct WasmParser {
   jmp_buf jump_buf;
 } WasmParser;
 
+typedef struct WasmTableswitchCase {
+  int32_t value;
+} WasmTableswitchCase;
+DECLARE_VECTOR(tableswitch_case, WasmTableswitchCase);
+
 static void* append_element(void** data,
                             size_t* size,
                             size_t* capacity,
@@ -135,6 +141,7 @@ DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
 DEFINE_VECTOR(label, WasmLabel)
 DEFINE_VECTOR(function_ptr, WasmFunctionPtr)
+DEFINE_VECTOR(tableswitch_case, WasmTableswitchCase)
 
 typedef struct NameTypePair {
   const char* name;
@@ -1213,6 +1220,95 @@ static void parse_call_args(WasmParser* parser,
                           callee->num_args, desc);
 }
 
+static void preparse_binding_name(WasmParser* parser,
+                                  WasmBindingVector* bindings,
+                                  size_t index,
+                                  const char* desc,
+                                  int required) {
+  WasmToken t = read_token(parser);
+  if (required || t.type == WASM_TOKEN_TYPE_ATOM) {
+    expect_var_name(parser, t);
+    char* name =
+        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
+    if (get_binding_by_name(bindings, name) != -1) {
+      free(name);
+      FATAL_AT(parser, t.range.start, "redefinition of %s \"%.*s\"\n", desc,
+               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
+    }
+
+    WasmBinding* binding = wasm_append_binding(bindings);
+    CHECK_ALLOC(parser, binding, t.range.start);
+    binding->name = name;
+    binding->index = index;
+  } else {
+    rewind_token(parser, t);
+  }
+}
+
+static void preparse_tableswitch(WasmParser* parser,
+                                 WasmModule* module,
+                                 WasmFunction* function,
+                                 WasmBindingVector* bindings,
+                                 WasmTableswitchCaseVector* cases) {
+  /* Skip (table ...) */
+  WasmToken start = read_token(parser);
+  WasmToken t = start;
+  expect_open(parser, t);
+  expect_atom_op(parser, read_token(parser), WASM_OP_TABLE, "table");
+  parse_generic(parser);
+
+  /* Skip default case */
+  expect_open(parser, read_token(parser));
+  parse_generic(parser);
+
+  t = read_token(parser);
+  while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+    expect_open(parser, t);
+    expect_atom_op(parser, read_token(parser), WASM_OP_CASE, "case");
+    WasmTableswitchCase* case_ = wasm_append_tableswitch_case(cases);
+    CHECK_ALLOC(parser, case_, t.range.start);
+    preparse_binding_name(parser, bindings, cases->size - 1, "case", 0);
+    parse_generic(parser);
+    t = read_token(parser);
+  }
+
+  rewind_token(parser, start);
+}
+
+static void parse_tableswitch_case(WasmParser* parser,
+                                   WasmModule* module,
+                                   WasmFunction* function,
+                                   WasmBindingVector* bindings,
+                                   WasmTableswitchCaseVector* cases,
+                                   int32_t value) {
+  expect_open(parser, read_token(parser));
+  WasmToken t = read_token(parser);
+  const OpInfo* op_info = get_op_info(t);
+  switch (op_info ? op_info->op_type : WASM_OP_NONE) {
+    case WASM_OP_CASE: {
+      int index = parse_var(parser, bindings, cases->size, "case");
+      cases->data[index].value = value;
+      break;
+    }
+
+    case WASM_OP_BR:
+      parse_label_var(parser, function);
+      break;
+
+    default:
+      unexpected_token(parser, t);
+  }
+
+  expect_close(parser, read_token(parser));
+}
+
+static void wasm_destroy_binding_list(WasmBindingVector* bindings) {
+  int i;
+  for (i = 0; i < bindings->size; ++i)
+    free(bindings->data[i].name);
+  wasm_destroy_binding_vector(bindings);
+}
+
 static WasmType parse_expr(WasmParser* parser,
                            WasmModule* module,
                            WasmFunction* function) {
@@ -1582,6 +1678,80 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
+    case WASM_OP_TABLESWITCH: {
+      t = read_token(parser);
+      WasmLabel* label = NULL;
+      if (t.type == WASM_TOKEN_TYPE_ATOM) {
+        label = push_label(parser, function, t);
+      } else {
+        rewind_token(parser, t);
+      }
+
+      WasmType cond_type = parse_expr(parser, module, function);
+      check_type(parser, t.range.start, cond_type, WASM_TYPE_I32,
+                 " of condition");
+      WasmBindingVector bindings = {};
+      WasmTableswitchCaseVector cases = {};
+
+      jmp_buf saved_jump_buf;
+      memcpy(saved_jump_buf, parser->jump_buf, sizeof(jmp_buf));
+      if (setjmp(parser->jump_buf)) {
+        memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
+        wasm_destroy_binding_list(&bindings);
+        wasm_destroy_tableswitch_case_vector(&cases);
+        longjmp(parser->jump_buf, 1);
+      }
+
+      preparse_tableswitch(parser, module, function, &bindings, &cases);
+      expect_open(parser, read_token(parser));
+      expect_atom_op(parser, read_token(parser), WASM_OP_TABLE, "table");
+
+      int32_t value = 0;
+      t = read_token(parser);
+      while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+        rewind_token(parser, t);
+        parse_tableswitch_case(parser, module, function, &bindings, &cases,
+                               value);
+        t = read_token(parser);
+        ++value;
+      }
+
+      /* default case */
+      parse_tableswitch_case(parser, module, function, &bindings, &cases, -1);
+
+      /* cleanup now, we don't need the cases or bindings when parsing the
+       targets */
+      memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
+      wasm_destroy_binding_list(&bindings);
+      wasm_destroy_tableswitch_case_vector(&cases);
+
+      /* case targets */
+      t = read_token(parser);
+      while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+        expect_open(parser, t);
+        expect_atom_op(parser, read_token(parser), WASM_OP_CASE, "case");
+        /* skip name, if any */
+        t = read_token(parser);
+        if (t.type != WASM_TOKEN_TYPE_ATOM)
+          rewind_token(parser, t);
+
+        /* parse expression list */
+        t = read_token(parser);
+        while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+          rewind_token(parser, t);
+          type = parse_expr(parser, module, function);
+          t = read_token(parser);
+        }
+
+        t = read_token(parser);
+      }
+      if (label) {
+        type &= label->type;
+        pop_label(function);
+      }
+      break;
+    }
+
     case WASM_OP_UNARY: {
       check_opcode(parser, t.range.start, op_info->opcode);
       CALLBACK(parser, before_unary, (&parser->info, op_info->opcode));
@@ -1668,31 +1838,6 @@ static void parse_type_list(WasmParser* parser,
       break;
     else if (!match_type(t, &type))
       unexpected_token(parser, t);
-  }
-}
-
-static void preparse_binding_name(WasmParser* parser,
-                                  WasmBindingVector* bindings,
-                                  size_t index,
-                                  const char* desc,
-                                  int required) {
-  WasmToken t = read_token(parser);
-  if (required || t.type == WASM_TOKEN_TYPE_ATOM) {
-    expect_var_name(parser, t);
-    char* name =
-        strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-    if (get_binding_by_name(bindings, name) != -1) {
-      free(name);
-      FATAL_AT(parser, t.range.start, "redefinition of %s \"%.*s\"\n", desc,
-               (int)(t.range.end.pos - t.range.start.pos), t.range.start.pos);
-    }
-
-    WasmBinding* binding = wasm_append_binding(bindings);
-    CHECK_ALLOC(parser, binding, t.range.start);
-    binding->name = name;
-    binding->index = index;
-  } else {
-    rewind_token(parser, t);
   }
 }
 
@@ -2156,13 +2301,6 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
     t = read_token(parser);
   }
   rewind_token(parser, first);
-}
-
-static void wasm_destroy_binding_list(WasmBindingVector* bindings) {
-  int i;
-  for (i = 0; i < bindings->size; ++i)
-    free(bindings->data[i].name);
-  wasm_destroy_binding_vector(bindings);
 }
 
 static void wasm_destroy_signature(WasmSignature* sig) {

@@ -3,6 +3,12 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDERR ;;;
-third_party/testsuite/labels.wast:40:10: unexpected token "tableswitch"
 
 ;;; STDERR ;;)
+(;; STDOUT ;;;
+WasmModule::Instantiate(): Compiling WASM function #0:block failed:Result = unreachable code @+6
+
+  var module = WASM.instantiateModule(u8a.buffer, ffi);
+                    ^
+
+;;; STDOUT ;;)

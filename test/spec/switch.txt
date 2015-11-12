@@ -3,6 +3,16 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDERR ;;;
-third_party/testsuite/switch.wast:7:8: unexpected token "tableswitch"
 
 ;;; STDERR ;;)
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/switch.wast:110:72: case variable out of range (max 0)
+assert_invalid error:
+  third_party/testsuite/switch.wast:111:72: case variable out of range (max 1)
+WasmModule::Instantiate(): Compiling WASM function #0:stmt failed:Result = improperly nested branch @+10
+
+  var module = WASM.instantiateModule(u8a.buffer, ffi);
+                    ^
+
+;;; STDOUT ;;)

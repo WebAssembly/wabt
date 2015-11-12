@@ -1,0 +1,10 @@
+;;; ERROR: 1
+(module
+  (func
+    (label
+      (tableswitch (i32.const 0)
+        (table (case 2)) (br 0)
+        (case (nop))))))
+(;; STDERR ;;;
+expr/bad-tableswitch-invalid-case.txt:6:22: case variable out of range (max 1)
+;;; STDERR ;;)
