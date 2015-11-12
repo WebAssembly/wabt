@@ -1,6 +1,4 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
-;; currently broken in v8-native
 (module
   ;; stdio is ignored
   (import $print_i32 "stdio" "print" (param i32))
@@ -11,6 +9,8 @@
     (return (i32.const 1)))
   (export "test" $test)
 )
-(;; STDERR ;;;
-d8 raised signal SIGBUS
-;;; STDERR ;;)
+(;; STDOUT ;;;
+100
+200 300
+test() = 1
+;;; STDOUT ;;)
