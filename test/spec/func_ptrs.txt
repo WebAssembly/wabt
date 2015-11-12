@@ -1,4 +1,13 @@
-;;; SKIP: need to handle type signatures in imports
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/func_ptrs.wast
+(;; STDERR ;;;
+
+;;; STDERR ;;)
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/func_ptrs.wast:33:37: function type variable out of range (max 0)
+assert_invalid error:
+  third_party/testsuite/func_ptrs.wast:34:55: function type variable out of range (max 0)
+;;; STDOUT ;;)
