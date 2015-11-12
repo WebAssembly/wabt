@@ -1,4 +1,5 @@
-;;; SKIP: fac-rec call with large n segfaults
+;;; SKIP: running via `make test` locks machine
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/fac.wast

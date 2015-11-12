@@ -25,14 +25,21 @@ class Error(Exception):
   pass
 
 
-def StripCallStack(stderr):
-  result = ''
-  for line in stderr.splitlines(1):
-    if line.startswith('==== C stack trace'):
-      return result
-    else:
-      result += line
-  return result
+def CleanD8Stdout(stdout):
+  def FixLine(line):
+    idx = line.find('WasmModule::Instantiate()')
+    if idx != -1:
+      return line[idx:]
+    return line
+  lines = [FixLine(line) for line in stdout.splitlines(1)]
+  return ''.join(lines)
+
+
+def CleanD8Stderr(stderr):
+  idx = stderr.find('==== C stack trace')
+  if idx != -1:
+    stderr = stderr[:idx]
+  return stderr.strip()
 
 
 def main(args):
@@ -74,7 +81,10 @@ def main(args):
     if options.spec:
       cmd.extend(['--spec', '--spec-verbose'])
     try:
-      subprocess.check_call(cmd)
+      process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+      _, stderr = process.communicate()
+      if process.returncode != 0:
+        raise Error(stderr)
     except OSError as e:
       raise Error(str(e))
 
@@ -85,10 +95,11 @@ def main(args):
     else:
       cmd = [d8, WASM_JS, '--', generated.name]
     try:
-      process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-      _, stderr = process.communicate()
-
-      msg = StripCallStack(stderr).strip()
+      process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+      stdout, stderr = process.communicate()
+      sys.stdout.write(CleanD8Stdout(stdout))
+      msg = CleanD8Stderr(stderr)
       if process.returncode < 0:
         # Terminated by signal
         signame = SIGNAMES.get(-process.returncode, '<unknown>')
@@ -110,6 +121,6 @@ def main(args):
 if __name__ == '__main__':
   try:
     sys.exit(main(sys.argv[1:]))
-  except (Error, subprocess.CalledProcessError) as e:
+  except Error as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)

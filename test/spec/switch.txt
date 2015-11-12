@@ -1,4 +1,8 @@
-;;; SKIP: switch generation not implemented currently
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
+(;; STDERR ;;;
+third_party/testsuite/switch.wast:9:8: unexpected token "tableswitch"
+
+;;; STDERR ;;)
