@@ -8,12 +8,5 @@ assert_invalid error:
   third_party/testsuite/func_ptrs.wast:34:55: function type variable out of range (max 0)
 83
 $invoke_3 = undefined
-third_party/testsuite/func_ptrs.wast:61: $assert_trap_3 failed, didn't throw
-third_party/testsuite/func_ptrs.wast:62: $assert_trap_4 failed, didn't throw
-third_party/testsuite/func_ptrs.wast:69: $assert_trap_10 failed, didn't throw
-third_party/testsuite/func_ptrs.wast:70: $assert_trap_11 failed, didn't throw
-third_party/testsuite/func_ptrs.wast:71: $assert_trap_12 failed, didn't throw
-third_party/testsuite/func_ptrs.wast:74: $assert_trap_15 failed, didn't throw
-third_party/testsuite/func_ptrs.wast:75: $assert_trap_16 failed, didn't throw
-15/22 tests passed.
+22/22 tests passed.
 ;;; STDOUT ;;)

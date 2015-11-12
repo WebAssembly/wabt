@@ -1939,7 +1939,8 @@ static void preparse_func(WasmParser* parser, WasmModule* module) {
 }
 
 static WasmSignatureIndex preparse_signature(WasmParser* parser,
-                                             WasmModule* module) {
+                                             WasmModule* module,
+                                             int dedupe) {
   WasmSignature* sig = wasm_append_signature(&module->signatures);
   CHECK_ALLOC(parser, sig, parser->tokenizer.loc);
   memset(sig, 0, sizeof(*sig));
@@ -1977,18 +1978,22 @@ static WasmSignatureIndex preparse_signature(WasmParser* parser,
     }
   }
 
-  /* Check whether the signature already existed. If so, we have to destroy the
-   one we just created and use that instead. We create it on the signatures
-   list in either case so it is cleand up properly if the parsing fails before
-   this point. */
-  WasmSignatureIndex sig_index = find_signature_index(
-      module, sig->result_type, &sig->args, sig->args.size);
-  if (sig_index != module->signatures.size - 1) {
-    wasm_destroy_variable_vector(&sig->args);
-    module->signatures.size--;
-  }
+  if (dedupe) {
+    /* Check whether the signature already existed. If so, we have to destroy
+     the one we just created and use that instead. We create it on the
+     signatures list in either case so it is cleand up properly if the parsing
+     fails before this point. */
+    WasmSignatureIndex sig_index = find_signature_index(
+        module, sig->result_type, &sig->args, sig->args.size);
+    if (sig_index != module->signatures.size - 1) {
+      wasm_destroy_variable_vector(&sig->args);
+      module->signatures.size--;
+    }
 
-  return sig_index;
+    return sig_index;
+  } else {
+    return module->signatures.size - 1;
+  }
 }
 
 static void preparse_module(WasmParser* parser, WasmModule* module) {
@@ -2122,7 +2127,7 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
 
         if (!did_parse_type) {
           rewind_token(parser, sig_start_token);
-          import->signature_index = preparse_signature(parser, module);
+          import->signature_index = preparse_signature(parser, module, 1);
         }
         break;
       }
@@ -2139,7 +2144,7 @@ static void preparse_module(WasmParser* parser, WasmModule* module) {
         expect_open(parser, t);
         t = read_token(parser);
         expect_atom_op(parser, t, WASM_OP_FUNC, "func");
-        *sig_index = preparse_signature(parser, module);
+        *sig_index = preparse_signature(parser, module, 0);
         expect_close(parser, read_token(parser));
         break;
       }
