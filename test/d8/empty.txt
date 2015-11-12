@@ -1,0 +1,7 @@
+;;; EXE: test/run-d8.py
+(module
+  (export "f" 0)
+  (func))
+(;; STDOUT ;;;
+f() = undefined
+;;; STDOUT ;;)
