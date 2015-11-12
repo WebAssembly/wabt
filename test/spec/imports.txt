@@ -3,5 +3,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
 (;; STDERR ;;;
-
+d8 raised signal SIGBUS
 ;;; STDERR ;;)

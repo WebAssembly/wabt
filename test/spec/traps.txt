@@ -3,14 +3,12 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/traps.wast
 (;; STDERR ;;;
-
-
 #
 # Fatal error in ../../../../src/wasm/tf-builder.cc, line 210
 # Unsupported opcode #162:ExprI64SConvertF32
 #
 
-
+d8 raised signal SIGILL
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 third_party/testsuite/traps.wast:20: $assert_trap_0 failed, didn't throw

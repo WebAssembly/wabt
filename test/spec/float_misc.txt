@@ -3,12 +3,10 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/float_misc.wast
 (;; STDERR ;;;
-
-
 #
 # Fatal error in ../../../../src/wasm/tf-builder.cc, line 210
 # Unsupported opcode #125:ExprF32CopySign
 #
 
-
+d8 raised signal SIGILL
 ;;; STDERR ;;)

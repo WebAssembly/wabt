@@ -12,5 +12,5 @@
   (export "test" $test)
 )
 (;; STDERR ;;;
-
+d8 raised signal SIGBUS
 ;;; STDERR ;;)

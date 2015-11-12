@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -15,6 +16,10 @@ DOWNLOAD_D8 = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
 
+# Get signal names from numbers in Python
+# http://stackoverflow.com/a/2549950
+SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
+                       if v.startswith('SIG') and not v.startswith('SIG_'))
 
 class Error(Exception):
   pass
@@ -82,8 +87,16 @@ def main(args):
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
       _, stderr = process.communicate()
-      if process.returncode != 0:
-        raise Error(StripCallStack(stderr))
+
+      msg = StripCallStack(stderr).strip()
+      if process.returncode < 0:
+        # Terminated by signal
+        signame = SIGNAMES.get(-process.returncode, '<unknown>')
+        if msg:
+          msg += '\n\n'
+        raise Error(msg + 'd8 raised signal ' + signame)
+      elif process.returncode > 0:
+        raise Error(msg)
     except OSError as e:
       raise Error(str(e))
 

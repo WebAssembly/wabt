@@ -3,5 +3,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/i32.wast
 (;; STDERR ;;;
-
+d8 raised signal SIGFPE
 ;;; STDERR ;;)

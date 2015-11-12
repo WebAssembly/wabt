@@ -3,7 +3,7 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/func_ptrs.wast
 (;; STDERR ;;;
-
+d8 raised signal SIGBUS
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 assert_invalid error:
