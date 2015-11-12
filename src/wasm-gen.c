@@ -1409,7 +1409,6 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.assert_invalid_error = assert_invalid_error;
 
   WasmParserOptions parser_options = {};
-  parser_options.br_if = options->br_if;
 
   int result;
   if (options->spec) {

@@ -1,5 +1,4 @@
 ;;; EXE: test/run-d8.py
-;;; FLAGS: --br-if
 (module
   (func $f (param i32) (result i32)
     (block $exit

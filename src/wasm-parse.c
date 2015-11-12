@@ -1262,9 +1262,6 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_BR_IF: {
-      if (!parser->options->br_if)
-        unexpected_token(parser, t);
-
       int depth = parse_break_depth(parser, function);
       check_break_depth(parser, t.range.start, function, depth);
       WasmParserCookie cookie =

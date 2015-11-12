@@ -105,7 +105,6 @@ typedef struct WasmParserCallbacks {
 } WasmParserCallbacks;
 
 typedef struct WasmParserOptions {
-  int br_if;
 } WasmParserOptions;
 
 EXTERN_C int wasm_parse_module(WasmSource* source,

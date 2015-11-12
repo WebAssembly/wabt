@@ -7,7 +7,6 @@ typedef struct WasmGenOptions {
   int verbose;
   int spec;
   int spec_verbose;
-  int br_if;
 } WasmGenOptions;
 
 int wasm_gen_file(struct WasmSource* source, WasmGenOptions* options);

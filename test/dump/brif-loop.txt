@@ -1,6 +1,4 @@
-;;; FLAGS: -dv --br-if
-;; the br_if proposal currently falls through loops and treats branches to loop
-;; labels as a continue.
+;;; FLAGS: -dv
 (module
   (func
     (loop $cont

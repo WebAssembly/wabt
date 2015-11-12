@@ -1,8 +1,0 @@
-;;; ERROR: 1
-(module
-  (func
-    (block $foo
-      (br_if $foo (i32.const 1)))))
-(;; STDERR ;;;
-expr/bad-brif-no-flag.txt:5:8: unexpected token "br_if"
-;;; STDERR ;;)

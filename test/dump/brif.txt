@@ -1,4 +1,4 @@
-;;; FLAGS: -dv --br-if
+;;; FLAGS: -dv
 (module
   (func
     (block $foo

@@ -26,7 +26,6 @@ static int s_dump_module;
 static int s_verbose;
 static int s_spec;
 static int s_spec_verbose;
-static int s_br_if;
 
 static struct option s_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
@@ -52,7 +51,7 @@ static OptionHelp s_option_help[] = {
     {FLAG_SPEC, NULL,
      "parse a file with multiple modules and assertions, like the spec tests"},
     {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
-    {FLAG_BR_IF, NULL, "use br_if and loops without explicit branches"},
+    {FLAG_BR_IF, NULL, "DEPRECATED: br_if is always supported now"},
     {NUM_FLAGS, NULL},
 };
 
@@ -132,7 +131,7 @@ static void parse_options(int argc, char** argv) {
             break;
 
           case FLAG_BR_IF:
-            s_br_if = 1;
+            printf("--br-if flag is deprecated.\n");
             break;
         }
         break;
@@ -200,7 +199,6 @@ int main(int argc, char** argv) {
   options.verbose = s_verbose;
   options.spec = s_spec;
   options.spec_verbose = s_spec_verbose;
-  options.br_if = s_br_if;
   int result = wasm_gen_file(&source, &options);
   free(data);
   return result;

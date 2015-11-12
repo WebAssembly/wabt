@@ -1,4 +1,3 @@
-;;; FLAGS: --br-if
 (module
   (func
     (label $foo
