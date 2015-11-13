@@ -1,6 +1,6 @@
 .SUFFIXES:
 
-ALL = sexpr-wasm
+ALL = sexpr-wasm lexer
 EVERYHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
 CFLAGS = -Wall -Werror -g
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
@@ -22,6 +22,12 @@ everything: $(addprefix out/,$(EVERYHING))
 
 out/:
 	mkdir $@
+
+src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
+	flex -o src/wasm-lexer.c --header-file=src/wasm-lexer.h $<
+
+out/lexer: src/wasm-lexer.c | out
+	$(CC) $(CFLAGS) -Wno-unused-function -Wno-return-type -o $@ $< -ll
 
 $(OBJS): out/%.o: src/%.c | out
 	$(CC) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
