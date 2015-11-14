@@ -136,6 +136,7 @@ NAME      "$"{ATOM}
 "i64.const"           { TYPE(I64); return TOK(CONST); }
 "f32.const"           { TYPE(F32); return TOK(CONST); }
 "f64.const"           { TYPE(F64); return TOK(CONST); }
+"i32.not"             { TYPE(I32); UNOP(NOT); return TOK(UNARY); }
 "i32.clz"             { TYPE(I32); UNOP(CLZ); return TOK(UNARY); }
 "i64.clz"             { TYPE(I64); UNOP(CLZ); return TOK(UNARY); }
 "i32.ctz"             { TYPE(I32); UNOP(CTZ); return TOK(UNARY); }
@@ -278,6 +279,12 @@ NAME      "$"{ATOM}
 "assert_trap"         { return TOK(ASSERT_TRAP); }
 "invoke"              { return TOK(INVOKE); }
 {NAME}                { return TOK(VAR); }
+
+"break"               { return TOK(BR); }
+"global"              { return TOK(GLOBAL); }
+"load_global"         { return TOK(LOAD_GLOBAL); }
+"store_global"        { return TOK(STORE_GLOBAL); }
+"page_size"           { return TOK(PAGE_SIZE); }
 
 ";;"                  { BEGIN(LINE_COMMENT); }
 <LINE_COMMENT>\n      { COLUMN(yyscanner) = 1; BEGIN(INITIAL); }

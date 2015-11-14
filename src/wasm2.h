@@ -22,6 +22,7 @@ typedef enum WasmSigned {
 } WasmSigned;
 
 typedef enum WasmUnaryOp {
+  WASM_UNARY_OP_NOT,
   WASM_UNARY_OP_CLZ,
   WASM_UNARY_OP_CTZ,
   WASM_UNARY_OP_POPCNT,

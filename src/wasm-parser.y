@@ -24,6 +24,7 @@
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
 %token UNREACHABLE MEMORY_SIZE GROW_MEMORY HAS_FEATURE
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
+%token GLOBAL LOAD_GLOBAL STORE_GLOBAL PAGE_SIZE
 %token EOF 0 "EOF"
 
 %nonassoc LOW
@@ -88,9 +89,10 @@ expr1 :
   | BLOCK labeling expr expr_list
   | IF_ELSE expr expr expr
   | IF expr expr
-  | BR_IF expr var
+  | BR_IF var expr
   | LOOP labeling labeling expr_list
   | LABEL labeling expr
+  | BR expr_opt
   | BR var expr_opt
   | RETURN expr_opt
   | TABLESWITCH labeling expr LPAR TABLE target_list RPAR target case_list
@@ -114,6 +116,9 @@ expr1 :
   | MEMORY_SIZE
   | GROW_MEMORY expr
   | HAS_FEATURE TEXT
+  | LOAD_GLOBAL var
+  | STORE_GLOBAL var expr
+  | PAGE_SIZE
 ;
 expr_opt :
     /* empty */
@@ -199,6 +204,11 @@ export :
     LPAR EXPORT TEXT var RPAR
 ;
 
+global :
+    LPAR GLOBAL value_type_list RPAR
+  | LPAR GLOBAL bind_var VALUE_TYPE RPAR
+;
+
 module_fields :
     /* empty */
   | func module_fields
@@ -207,6 +217,7 @@ module_fields :
   | table module_fields
   | type_def module_fields
   | memory module_fields
+  | global module_fields
 ;
 module :
     LPAR MODULE module_fields RPAR

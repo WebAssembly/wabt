@@ -354,7 +354,7 @@ extern int yylex \
 #undef YY_DECL
 #endif
 
-#line 298 "src/wasm-lexer.l"
+#line 305 "src/wasm-lexer.l"
 
 
 #line 361 "src/wasm-lexer.h"
