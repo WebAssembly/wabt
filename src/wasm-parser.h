@@ -129,6 +129,6 @@ struct YYLTYPE
 
 
 
-int yyparse (void* scanner);
+int yyparse (WasmScanner scanner);
 
 #endif /* !YY_YY_SRC_WASM_PARSER_H_INCLUDED  */

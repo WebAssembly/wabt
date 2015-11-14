@@ -69,13 +69,7 @@
 #include <stdlib.h>
 #include "wasm2.h"
 
-#define YYSTYPE WasmToken
-#define YYLTYPE WasmLocation
-
-int yylex(WasmToken*, WasmLocation*, void*);
-void yyerror(WasmLocation*, void*, const char*, ...);
-
-#line 79 "src/wasm-parser.c" /* yacc.c:339  */
+#line 73 "src/wasm-parser.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -194,13 +188,13 @@ struct YYLTYPE
 
 
 
-int yyparse (void* scanner);
+int yyparse (WasmScanner scanner);
 
 #endif /* !YY_YY_SRC_WASM_PARSER_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 204 "src/wasm-parser.c" /* yacc.c:358  */
+#line 198 "src/wasm-parser.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -505,18 +499,18 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    44,    44,    46,    48,    50,    51,    52,    59,    60,
-      64,    65,    67,    69,    72,    76,    77,    80,    82,    84,
-      86,    90,    93,    94,    95,    96,    97,    98,    99,   100,
-     101,   102,   103,   104,   105,   106,   107,   108,   109,   110,
-     111,   112,   113,   114,   115,   116,   117,   118,   119,   120,
-     121,   122,   124,   126,   128,   130,   134,   135,   137,   139,
-     142,   143,   145,   147,   153,   155,   156,   157,   158,   159,
-     160,   163,   166,   167,   168,   169,   176,   178,   180,   184,
-     185,   189,   190,   194,   198,   199,   200,   201,   205,   208,
-     210,   211,   212,   213,   214,   215,   218,   225,   226,   227,
-     228,   229,   230,   232,   234,   238,   240,   242,   244,   246,
-     250
+       0,    38,    38,    40,    42,    44,    45,    46,    53,    54,
+      58,    59,    61,    63,    66,    70,    71,    74,    76,    78,
+      80,    84,    87,    88,    89,    90,    91,    92,    93,    94,
+      95,    96,    97,    98,    99,   100,   101,   102,   103,   104,
+     105,   106,   107,   108,   109,   110,   111,   112,   113,   114,
+     115,   116,   118,   120,   122,   124,   128,   129,   131,   133,
+     136,   137,   139,   141,   147,   149,   150,   151,   152,   153,
+     154,   157,   160,   161,   162,   163,   170,   172,   174,   178,
+     179,   183,   184,   188,   192,   193,   194,   195,   199,   202,
+     204,   205,   206,   207,   208,   209,   212,   219,   220,   221,
+     222,   223,   224,   226,   228,   232,   234,   236,   238,   240,
+     244
 };
 #endif
 
@@ -947,7 +941,7 @@ do {                                                                      \
 `----------------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, void* scanner)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, WasmScanner scanner)
 {
   FILE *yyo = yyoutput;
   YYUSE (yyo);
@@ -968,7 +962,7 @@ yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvalue
 `--------------------------------*/
 
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, void* scanner)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, WasmScanner scanner)
 {
   YYFPRINTF (yyoutput, "%s %s (",
              yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
@@ -1008,7 +1002,7 @@ do {                                                            \
 `------------------------------------------------*/
 
 static void
-yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, void* scanner)
+yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, WasmScanner scanner)
 {
   unsigned long int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -1288,7 +1282,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 `-----------------------------------------------*/
 
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, void* scanner)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, WasmScanner scanner)
 {
   YYUSE (yyvaluep);
   YYUSE (yylocationp);
@@ -1310,7 +1304,7 @@ yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocatio
 `----------*/
 
 int
-yyparse (void* scanner)
+yyparse (WasmScanner scanner)
 {
 /* The lookahead symbol.  */
 int yychar;
@@ -1584,7 +1578,7 @@ yyreduce:
   switch (yyn)
     {
       
-#line 1588 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1582 "src/wasm-parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1819,10 +1813,10 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 253 "src/wasm-parser.y" /* yacc.c:1906  */
+#line 247 "src/wasm-parser.y" /* yacc.c:1906  */
 
 
-void yyerror(WasmLocation* loc, void* scanner, const char* fmt, ...) {
+void yyerror(WasmLocation* loc, WasmScanner scanner, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   fprintf(stderr, "%d:%d: ", loc->first_line, loc->first_column);

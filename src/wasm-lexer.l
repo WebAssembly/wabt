@@ -2,11 +2,6 @@
 #include "wasm2.h"
 #include "wasm-parser.h"
 
-void yyerror(WasmLocation*, void*, const char*, ...);
-
-#define YYSTYPE WasmToken
-#define YYLTYPE WasmLocation
-
 typedef struct WasmScannerExtra {
   int column;
   int comment_nesting;
@@ -300,8 +295,6 @@ NAME      "$"{ATOM}
 .                     { yyerror(yylloc, &yyscanner, "unexpected char"); }
 
 %%
-
-int yyparse(void* scanner);
 
 int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */

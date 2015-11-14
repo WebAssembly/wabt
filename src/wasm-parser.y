@@ -3,20 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "wasm2.h"
-
-#define YYSTYPE WasmToken
-#define YYLTYPE WasmLocation
-
-int yylex(WasmToken*, WasmLocation*, void*);
-void yyerror(WasmLocation*, void*, const char*, ...);
 %}
 
 %define api.pure true
 %define api.value.type {WasmToken}
 %define api.token.prefix {WASM_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {void* scanner}
-%parse-param {void* scanner}
+%lex-param {WasmScanner scanner}
+%parse-param {WasmScanner scanner}
 %locations
 
 %token LPAR "("
@@ -252,7 +246,7 @@ script :
 
 %%
 
-void yyerror(WasmLocation* loc, void* scanner, const char* fmt, ...) {
+void yyerror(WasmLocation* loc, WasmScanner scanner, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   fprintf(stderr, "%d:%d: ", loc->first_line, loc->first_column);

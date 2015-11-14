@@ -1,5 +1,5 @@
-#ifndef WASM_TOKENS_H_
-#define WASM_TOKENS_H_
+#ifndef WASM2_H_
+#define WASM2_H_
 
 typedef enum WasmType {
   WASM_TYPE_VOID = 0,
@@ -96,4 +96,13 @@ typedef struct WasmLocation {
   int last_column;
 } WasmLocation;
 
-#endif /* WASM_TOKENS_H_ */
+#define YYSTYPE WasmToken
+#define YYLTYPE WasmLocation
+
+typedef void* WasmScanner;
+
+int yylex(WasmToken*, WasmLocation*, void*);
+void yyerror(WasmLocation*, WasmScanner, const char*, ...);
+int yyparse(WasmScanner scanner);
+
+#endif /* WASM2_H_ */
