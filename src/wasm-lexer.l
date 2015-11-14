@@ -3,6 +3,7 @@
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {
+  const char* filename;
   int column;
   int comment_nesting;
 } WasmScannerExtra;
@@ -13,6 +14,7 @@ typedef struct WasmScannerExtra {
 #define YY_USER_ACTION                                 \
   {                                                    \
     WasmScannerExtra* extra = EXTRA(yyscanner);        \
+    yylloc->filename = extra->filename;                \
     yylloc->first_line = yylloc->last_line = yylineno; \
     yylloc->first_column = extra->column;              \
     extra->column += yyleng;                           \
@@ -298,19 +300,18 @@ NAME      "$"{ATOM}
 
 int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */
+  const char* filename = argc > 0 ? argv[0] : "stdin";
   yyscan_t scanner;
   WasmScannerExtra extra = {};
   extra.column = 1;
+  extra.filename = filename;
 
 #if 0
   yydebug = 1;
 #endif
 
   yylex_init(&scanner);
-  if (argc > 0)
-    yyset_in(fopen(argv[0], "r"), scanner);
-  else
-    yyset_in(stdin, scanner);
+  yyset_in(filename ? fopen(filename, "r") : stdin, scanner);
   yyset_extra(&extra, scanner);
   yyparse(scanner);
   yylex_destroy(scanner);

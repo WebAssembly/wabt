@@ -249,7 +249,8 @@ script :
 void yyerror(WasmLocation* loc, WasmScanner scanner, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  fprintf(stderr, "%d:%d: ", loc->first_line, loc->first_column);
+  fprintf(stderr, "%s:%d:%d: ", loc->filename, loc->first_line,
+          loc->first_column);
   vfprintf(stderr, fmt, args);
   fprintf(stderr, "\n");
 }
