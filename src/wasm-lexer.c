@@ -2410,7 +2410,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case YY_STATE_EOF(BLOCK_COMMENT):
 #line 292 "src/wasm-lexer.l"
-{ yyerror(yylloc, &yyscanner, ""); }
+{ yyerror(yylloc, &yyscanner, "unexpected EOF"); }
 	YY_BREAK
 case 204:
 YY_RULE_SETUP
@@ -2435,7 +2435,7 @@ case YY_STATE_EOF(INITIAL):
 case 207:
 YY_RULE_SETUP
 #line 297 "src/wasm-lexer.l"
-{ yyerror(yylloc, &yyscanner, ""); }
+{ yyerror(yylloc, &yyscanner, "unexpected char"); }
 	YY_BREAK
 case 208:
 YY_RULE_SETUP
@@ -3632,11 +3632,17 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 
 
+int yyparse(void* scanner);
+
 int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */
   yyscan_t scanner;
   WasmScannerExtra extra = {};
   extra.column = 1;
+
+#if 0
+  yydebug = 1;
+#endif
 
   yylex_init(&scanner);
   if (argc > 0)
@@ -3644,15 +3650,7 @@ int main(int argc, char **argv) {
   else
     yyset_in(stdin,scanner);
   yyset_extra(&extra,scanner);
-  while (1) {
-    WasmToken token;
-    WasmLocation location;
-    int token_type = yylex(&token,&location,scanner);
-    if (token_type == WASM_TOKEN_TYPE_EOF)
-      break;
-    printf("%d:%d:%d \"%.*s\"\n", location.first_line, location.first_column,
-           token_type, (int)(token.end - token.start), token.start);
-  }
+  yyparse(scanner);
   yylex_destroy(scanner);
 }
 

@@ -289,14 +289,16 @@ NAME      "$"({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
 <BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { COLUMN(yyscanner) = 1; }
-<BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, ""); }
+<BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, "unexpected EOF"); }
 <BLOCK_COMMENT>.
 \n                    { COLUMN(yyscanner) = 1; }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
-.                     { yyerror(yylloc, &yyscanner, ""); }
+.                     { yyerror(yylloc, &yyscanner, "unexpected char"); }
 
 %%
+
+int yyparse(void* scanner);
 
 int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */
@@ -304,20 +306,16 @@ int main(int argc, char **argv) {
   WasmScannerExtra extra = {};
   extra.column = 1;
 
+#if 0
+  yydebug = 1;
+#endif
+
   yylex_init(&scanner);
   if (argc > 0)
     yyset_in(fopen(argv[0], "r"), scanner);
   else
     yyset_in(stdin, scanner);
   yyset_extra(&extra, scanner);
-  while (1) {
-    WasmToken token;
-    WasmLocation location;
-    int token_type = yylex(&token, &location, scanner);
-    if (token_type == WASM_TOKEN_TYPE_EOF)
-      break;
-    printf("%d:%d:%d \"%.*s\"\n", location.first_line, location.first_column,
-           token_type, (int)(token.end - token.start), token.start);
-  }
+  yyparse(scanner);
   yylex_destroy(scanner);
 }
