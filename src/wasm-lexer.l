@@ -2,7 +2,7 @@
 #include "wasm-tokens.h"
 #include "wasm-parser.h"
 
-void yyerror(WasmLocation*, void*, const char*);
+void yyerror(WasmLocation*, void*, const char*, ...);
 
 #define YYSTYPE WasmToken
 #define YYLTYPE WasmLocation
@@ -80,7 +80,8 @@ INFINITY  {SIGN}"infinity"
 NAN       {SIGN}"nan"|{SIGN}"nan:0x"{HEXDIGIT}+
 FLOAT     {FLOAT0}|{FLOAT1}|{HEXFLOAT}|{INFINITY}|{NAN}
 TEXT      "\""{CHARACTER}*"\""
-NAME      "$"({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
+ATOM      ({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
+NAME      "$"{ATOM}
 
 %%
 
@@ -294,6 +295,8 @@ NAME      "$"({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
 \n                    { COLUMN(yyscanner) = 1; }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
+{ATOM}                { yyerror(yylloc, &yyscanner, "unexpected token \"%.*s\"",
+                                yyleng, yytext); }
 .                     { yyerror(yylloc, &yyscanner, "unexpected char"); }
 
 %%

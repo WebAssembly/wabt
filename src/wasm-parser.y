@@ -115,6 +115,7 @@ expr1 :
   | SELECT expr expr expr
   | COMPARE expr expr
   | CONVERT expr
+  | CAST expr
   | UNREACHABLE
   | MEMORY_SIZE
   | GROW_MEMORY expr
