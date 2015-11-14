@@ -43,7 +43,7 @@ void yyerror(WasmLocation*, void*, const char*, ...);
 
 value_type_list :
     /* empty */
-  | VALUE_TYPE value_type_list
+  | value_type_list VALUE_TYPE
 ;
 func_type :
     /* empty */
@@ -66,7 +66,7 @@ var :
 ;
 var_list :
     /* empty */
-  | var var_list
+  | var_list var
 ;
 bind_var :
     VAR
@@ -127,7 +127,7 @@ expr_opt :
 ;
 expr_list :
     /* empty */
-  | expr expr_list
+  | expr_list expr
 ;
 
 target :
@@ -136,7 +136,7 @@ target :
 ;
 target_list :
     /* empty */
-  | target target_list
+  | target_list target
 ;
 case :
     LPAR CASE expr_list RPAR
@@ -144,14 +144,15 @@ case :
 ;
 case_list :
     /* empty */
-  | case case_list
+  | case_list case
 ;
 
 
 /* Functions */
 
 func_fields :
-    expr_list
+    /* empty */
+  | expr expr_list
   | LPAR PARAM value_type_list RPAR func_fields
   | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields  /* Sugar */
   | LPAR RESULT VALUE_TYPE RPAR func_fields
@@ -176,7 +177,7 @@ segment :
 ;
 segment_list :
     /* empty */
-  | segment segment_list
+  | segment_list segment
 ;
 
 memory :
@@ -230,7 +231,7 @@ cmd :
 ;
 cmd_list :
     /* empty */
-  | cmd cmd_list
+  | cmd_list cmd
 ;
 
 const :
@@ -242,7 +243,7 @@ const_opt :
 ;
 const_list :
     /* empty */
-  | const const_list
+  | const_list const
 ;
 
 script :
