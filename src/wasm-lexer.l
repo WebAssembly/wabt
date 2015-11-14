@@ -1,17 +1,44 @@
 %{
 #include "wasm-tokens.h"
 
-typedef struct extra_t {
+#define YYSTYPE WasmToken
+#define YYLTYPE WasmLocation
+
+typedef struct WasmToken {
+  const char* start;
+  const char* end;
+} WasmToken;
+
+typedef struct WasmLocation {
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} WasmLocation;
+
+typedef struct WasmScannerExtra {
   int column;
   int comment_nesting;
-} extra_t;
+} WasmScannerExtra;
 
-#define COMMENT_NESTING(scanner) \
-    (((extra_t*)yyget_extra(scanner))->comment_nesting)
-#define COLUMN(scanner) (((extra_t*)yyget_extra(scanner))->column)
-#define YY_USER_ACTION COLUMN(yyscanner) += yyget_leng(yyscanner);
+#define EXTRA(scanner) ((WasmScannerExtra*)yyget_extra(scanner))
+#define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
+#define COLUMN(scanner) (EXTRA(scanner)->column)
+#define YY_USER_ACTION                                 \
+  {                                                    \
+    WasmScannerExtra* extra = EXTRA(yyscanner);        \
+    yylloc->first_line = yylloc->last_line = yylineno; \
+    yylloc->first_column = extra->column;              \
+    extra->column += yyleng;                           \
+    yylloc->last_column = extra->column;               \
+    yylval->start = yytext;                            \
+    yylval->end = yytext + yyleng;                     \
+  }
+
 %}
 
+%option bison-bridge
+%option bison-locations
 %option yylineno
 %option reentrant
 
@@ -247,8 +274,8 @@ NAME      "$"({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
 <BLOCK_COMMENT><<EOF>> { return WASM_TOKEN_TYPE_ERROR; }
 <BLOCK_COMMENT>.
 \n                    { COLUMN(yyscanner) = 1; }
+[ \t\r]
 <<EOF>>               { return WASM_TOKEN_TYPE_EOF; }
-[ \t\n\r]
 .                     { return WASM_TOKEN_TYPE_ERROR; }
 
 %%
@@ -259,14 +286,10 @@ static const char* s_token_names[] = {
 #undef V
 };
 
-static void printloc(yyscan_t scanner) {
-  printf("%d:%d:", yyget_lineno(scanner), COLUMN(scanner));
-}
-
 int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */
   yyscan_t scanner;
-  extra_t extra = {};
+  WasmScannerExtra extra = {};
   extra.column = 1;
 
   yylex_init(&scanner);
@@ -276,11 +299,13 @@ int main(int argc, char **argv) {
     yyset_in(stdin, scanner);
   yyset_extra(&extra, scanner);
   while (1) {
-    WasmTokenType type = yylex(scanner);
+    WasmToken token;
+    WasmLocation location;
+    WasmTokenType type = yylex(&token, &location, scanner);
     if (type == WASM_TOKEN_TYPE_EOF || type == WASM_TOKEN_TYPE_ERROR)
       break;
-    printloc(scanner);
-    printf("%s\n", s_token_names[type]);
+    printf("%d:%d:%s \"%.*s\"\n", location.first_line, location.first_column,
+           s_token_names[type], (int)(token.end - token.start), token.start);
   }
   yylex_destroy(scanner);
 }
