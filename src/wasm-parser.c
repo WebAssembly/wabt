@@ -67,7 +67,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "wasm-tokens.h"
+#include "wasm2.h"
 
 #define YYSTYPE WasmToken
 #define YYLTYPE WasmLocation

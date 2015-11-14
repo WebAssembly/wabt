@@ -1,5 +1,5 @@
 %{
-#include "wasm-tokens.h"
+#include "wasm2.h"
 #include "wasm-parser.h"
 
 void yyerror(WasmLocation*, void*, const char*, ...);

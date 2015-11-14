@@ -14,6 +14,9 @@ ASAN_OBJS = $(addprefix out/,$(patsubst %.c,%.asan.o,$(SRCS)))
 MSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.msan.o,$(SRCS)))
 LSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.lsan.o,$(SRCS)))
 
+PARSER_SRCS = wasm-parser.c wasm-lexer.c
+PARSER_OBJS = $(addprefix out/,$(patsubst %.c,%.o,$(PARSER_SRCS)))
+
 .PHONY: all
 all: $(addprefix out/,$(ALL))
 
@@ -29,13 +32,15 @@ src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
 src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
 	bison -o src/wasm-parser.c --defines=src/wasm-parser.h $<
 
-out/parser: src/wasm-lexer.c src/wasm-parser.c | out
-	$(CC) $(CFLAGS) -Wno-unused-function -Wno-return-type -o $@ $^ -ll
-
 $(OBJS): out/%.o: src/%.c | out
 	$(CC) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
 out/sexpr-wasm: $(OBJS) | out
 	$(CC) -o $@ $^
+
+$(PARSER_OBJS): out/%.o: src/%.c | out
+	$(CC) $(CFLAGS) -Wno-unused-function -Wno-return-type -c -o $@ $(DEPEND_FLAGS) $<
+out/parser: $(PARSER_OBJS) | out
+	$(CC) -o $@ $^ -ll
 
 # ASAN
 $(ASAN_OBJS): out/%.asan.o: src/%.c | out
@@ -59,6 +64,7 @@ src/wasm-keywords.h: src/wasm-keywords.gperf
 	gperf --compare-strncmp --readonly-tables --struct-type $< --output-file $@
 
 -include $(OBJS:.o=.d) $(ASAN_OBJS:.o=.d) $(MSAN_OBJS:.o=.d) $(LSAN_OBJS:.o=.d)
+-include $(PARSER_OBJS:.o=.d)
 
 #### TESTS ####
 .PHONY: test
