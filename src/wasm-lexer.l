@@ -1,20 +1,11 @@
 %{
 #include "wasm-tokens.h"
+#include "wasm-parser.h"
+
+void yyerror(WasmLocation*, void*, const char*);
 
 #define YYSTYPE WasmToken
 #define YYLTYPE WasmLocation
-
-typedef struct WasmToken {
-  const char* start;
-  const char* end;
-} WasmToken;
-
-typedef struct WasmLocation {
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-} WasmLocation;
 
 typedef struct WasmScannerExtra {
   int column;
@@ -34,6 +25,30 @@ typedef struct WasmScannerExtra {
     yylval->start = yytext;                            \
     yylval->end = yytext + yyleng;                     \
   }
+
+#define TYPE(name) yylval->type = WASM_TYPE_##name
+#define SIGN(struct_, sign_) \
+  yylval->struct_.sign = sign_ ? WASM_SIGNED : WASM_UNSIGNED
+#define MEMSIZE(size_) yylval->mem.size = WASM_MEM_SIZE_##size_
+#define MEMSIZESIGN(size_, sign_) \
+  MEMSIZE(size_);                 \
+  SIGN(mem, sign_)
+#define UNOP(name) yylval->unary.op = WASM_UNARY_OP_##name
+#define BINOP(name) yylval->binary.op = WASM_BINARY_OP_##name
+#define BINOPSIGN(name, sign_) \
+  BINOP(name);                 \
+  SIGN(binary, sign_)
+#define CMPOP(name) yylval->compare.op = WASM_COMPARE_OP_##name
+#define CMPOPSIGN(name, sign_) \
+  CMPOP(name);                 \
+  SIGN(compare, sign_)
+#define CONVTYPE(type) yylval->convert.type2 = WASM_TYPE_##type
+#define CONVTYPESIGN(type, sign_) \
+  CONVTYPE(type);                 \
+  SIGN(convert, sign_)
+#define CASTTYPE(type) yylval->cast.type2 = WASM_TYPE_##type
+
+#define TOK(name) WASM_TOKEN_TYPE_##name
 
 %}
 
@@ -69,222 +84,219 @@ NAME      "$"({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
 
 %%
 
-"("                   { return WASM_TOKEN_TYPE_LPAR; }
-")"                   { return WASM_TOKEN_TYPE_RPAR; }
-{INT}                 { return WASM_TOKEN_TYPE_INT; }
-{FLOAT}               { return WASM_TOKEN_TYPE_FLOAT; }
-{TEXT}                { return WASM_TOKEN_TYPE_TEXT; }
-"i32"                 { return WASM_TOKEN_TYPE_I32; }
-"i64"                 { return WASM_TOKEN_TYPE_I64; }
-"f32"                 { return WASM_TOKEN_TYPE_F32; }
-"f64"                 { return WASM_TOKEN_TYPE_F64; }
-"nop"                 { return WASM_TOKEN_TYPE_NOP; }
-"block"               { return WASM_TOKEN_TYPE_BLOCK; }
-"if"                  { return WASM_TOKEN_TYPE_IF; }
-"if_else"             { return WASM_TOKEN_TYPE_IF_ELSE; }
-"loop"                { return WASM_TOKEN_TYPE_LOOP; }
-"label"               { return WASM_TOKEN_TYPE_LABEL; }
-"br"                  { return WASM_TOKEN_TYPE_BR; }
-"br_if"               { return WASM_TOKEN_TYPE_BR_IF; }
-"tableswitch"         { return WASM_TOKEN_TYPE_TABLESWITCH; }
-"case"                { return WASM_TOKEN_TYPE_CASE; }
-"call"                { return WASM_TOKEN_TYPE_CALL; }
-"call_import"         { return WASM_TOKEN_TYPE_CALL_IMPORT; }
-"call_indirect"       { return WASM_TOKEN_TYPE_CALL_INDIRECT; }
-"return"              { return WASM_TOKEN_TYPE_RETURN; }
-"get_local"           { return WASM_TOKEN_TYPE_GET_LOCAL; }
-"set_local"           { return WASM_TOKEN_TYPE_SET_LOCAL; }
-"i32.load"            { return WASM_TOKEN_TYPE_I32_LOAD; }
-"i64.load"            { return WASM_TOKEN_TYPE_I64_LOAD; }
-"f32.load"            { return WASM_TOKEN_TYPE_F32_LOAD; }
-"f64.load"            { return WASM_TOKEN_TYPE_F64_LOAD; }
-"i32.store"           { return WASM_TOKEN_TYPE_I32_STORE; }
-"i64.store"           { return WASM_TOKEN_TYPE_I64_STORE; }
-"f32.store"           { return WASM_TOKEN_TYPE_F32_STORE; }
-"f64.store"           { return WASM_TOKEN_TYPE_F64_STORE; }
-"i32.load8_s"         { return WASM_TOKEN_TYPE_I32_LOAD8_S; }
-"i64.load8_s"         { return WASM_TOKEN_TYPE_I64_LOAD8_S; }
-"i32.load8_u"         { return WASM_TOKEN_TYPE_I32_LOAD8_U; }
-"i64.load8_u"         { return WASM_TOKEN_TYPE_I64_LOAD8_U; }
-"i32.load16_s"        { return WASM_TOKEN_TYPE_I32_LOAD16_S; }
-"i64.load16_s"        { return WASM_TOKEN_TYPE_I64_LOAD16_S; }
-"i32.load16_u"        { return WASM_TOKEN_TYPE_I32_LOAD16_U; }
-"i64.load16_u"        { return WASM_TOKEN_TYPE_I64_LOAD16_U; }
-"i32.store8"          { return WASM_TOKEN_TYPE_I32_STORE8; }
-"i64.store8"          { return WASM_TOKEN_TYPE_I64_STORE8; }
-"i32.store16"         { return WASM_TOKEN_TYPE_I32_STORE16; }
-"i64.store16"         { return WASM_TOKEN_TYPE_I64_STORE16; }
-"offset="{DIGITS}     { return WASM_TOKEN_TYPE_OFFSET; }
-"align="{DIGITS}      { return WASM_TOKEN_TYPE_ALIGN; }
-"i32.const"           { return WASM_TOKEN_TYPE_I32_CONST; }
-"i64.const"           { return WASM_TOKEN_TYPE_I64_CONST; }
-"f32.const"           { return WASM_TOKEN_TYPE_F32_CONST; }
-"f64.const"           { return WASM_TOKEN_TYPE_F64_CONST; }
-"i32.clz"             { return WASM_TOKEN_TYPE_I32_CLZ; }
-"i64.clz"             { return WASM_TOKEN_TYPE_I64_CLZ; }
-"i32.ctz"             { return WASM_TOKEN_TYPE_I32_CTZ; }
-"i64.ctz"             { return WASM_TOKEN_TYPE_I64_CTZ; }
-"i32.popcnt"          { return WASM_TOKEN_TYPE_I32_POPCNT; }
-"i64.popcnt"          { return WASM_TOKEN_TYPE_I64_POPCNT; }
-"f32.neg"             { return WASM_TOKEN_TYPE_F32_NEG; }
-"f64.neg"             { return WASM_TOKEN_TYPE_F64_NEG; }
-"f32.abs"             { return WASM_TOKEN_TYPE_F32_ABS; }
-"f64.abs"             { return WASM_TOKEN_TYPE_F64_ABS; }
-"f32.sqrt"            { return WASM_TOKEN_TYPE_F32_SQRT; }
-"f64.sqrt"            { return WASM_TOKEN_TYPE_F64_SQRT; }
-"f32.ceil"            { return WASM_TOKEN_TYPE_F32_CEIL; }
-"f64.ceil"            { return WASM_TOKEN_TYPE_F64_CEIL; }
-"f32.floor"           { return WASM_TOKEN_TYPE_F32_FLOOR; }
-"f64.floor"           { return WASM_TOKEN_TYPE_F64_FLOOR; }
-"f32.trunc"           { return WASM_TOKEN_TYPE_F32_TRUNC; }
-"f64.trunc"           { return WASM_TOKEN_TYPE_F64_TRUNC; }
-"f32.nearest"         { return WASM_TOKEN_TYPE_F32_NEAREST; }
-"f64.nearest"         { return WASM_TOKEN_TYPE_F64_NEAREST; }
-"i32.add"             { return WASM_TOKEN_TYPE_I32_ADD; }
-"i64.add"             { return WASM_TOKEN_TYPE_I64_ADD; }
-"i32.sub"             { return WASM_TOKEN_TYPE_I32_SUB; }
-"i64.sub"             { return WASM_TOKEN_TYPE_I64_SUB; }
-"i32.mul"             { return WASM_TOKEN_TYPE_I32_MUL; }
-"i64.mul"             { return WASM_TOKEN_TYPE_I64_MUL; }
-"i32.div_s"           { return WASM_TOKEN_TYPE_I32_DIV_S; }
-"i64.div_s"           { return WASM_TOKEN_TYPE_I64_DIV_S; }
-"i32.div_u"           { return WASM_TOKEN_TYPE_I32_DIV_U; }
-"i64.div_u"           { return WASM_TOKEN_TYPE_I64_DIV_U; }
-"i32.rem_s"           { return WASM_TOKEN_TYPE_I32_REM_S; }
-"i64.rem_s"           { return WASM_TOKEN_TYPE_I64_REM_S; }
-"i32.rem_u"           { return WASM_TOKEN_TYPE_I32_REM_U; }
-"i64.rem_u"           { return WASM_TOKEN_TYPE_I64_REM_U; }
-"i32.and"             { return WASM_TOKEN_TYPE_I32_AND; }
-"i64.and"             { return WASM_TOKEN_TYPE_I64_AND; }
-"i32.or"              { return WASM_TOKEN_TYPE_I32_OR; }
-"i64.or"              { return WASM_TOKEN_TYPE_I64_OR; }
-"i32.xor"             { return WASM_TOKEN_TYPE_I32_XOR; }
-"i64.xor"             { return WASM_TOKEN_TYPE_I64_XOR; }
-"i32.shl"             { return WASM_TOKEN_TYPE_I32_SHL; }
-"i64.shl"             { return WASM_TOKEN_TYPE_I64_SHL; }
-"i32.shr_s"           { return WASM_TOKEN_TYPE_I32_SHR_S; }
-"i64.shr_s"           { return WASM_TOKEN_TYPE_I64_SHR_S; }
-"i32.shr_u"           { return WASM_TOKEN_TYPE_I32_SHR_U; }
-"i64.shr_u"           { return WASM_TOKEN_TYPE_I64_SHR_U; }
-"f32.add"             { return WASM_TOKEN_TYPE_F32_ADD; }
-"f64.add"             { return WASM_TOKEN_TYPE_F64_ADD; }
-"f32.sub"             { return WASM_TOKEN_TYPE_F32_SUB; }
-"f64.sub"             { return WASM_TOKEN_TYPE_F64_SUB; }
-"f32.mul"             { return WASM_TOKEN_TYPE_F32_MUL; }
-"f64.mul"             { return WASM_TOKEN_TYPE_F64_MUL; }
-"f32.div"             { return WASM_TOKEN_TYPE_F32_DIV; }
-"f64.div"             { return WASM_TOKEN_TYPE_F64_DIV; }
-"f32.min"             { return WASM_TOKEN_TYPE_F32_MIN; }
-"f64.min"             { return WASM_TOKEN_TYPE_F64_MIN; }
-"f32.max"             { return WASM_TOKEN_TYPE_F32_MAX; }
-"f64.max"             { return WASM_TOKEN_TYPE_F64_MAX; }
-"f32.copysign"        { return WASM_TOKEN_TYPE_F32_COPYSIGN; }
-"f64.copysign"        { return WASM_TOKEN_TYPE_F64_COPYSIGN; }
-"i32.eq"              { return WASM_TOKEN_TYPE_I32_EQ; }
-"i64.eq"              { return WASM_TOKEN_TYPE_I64_EQ; }
-"i32.ne"              { return WASM_TOKEN_TYPE_I32_NE; }
-"i64.ne"              { return WASM_TOKEN_TYPE_I64_NE; }
-"i32.lt_s"            { return WASM_TOKEN_TYPE_I32_LT_S; }
-"i64.lt_s"            { return WASM_TOKEN_TYPE_I64_LT_S; }
-"i32.lt_u"            { return WASM_TOKEN_TYPE_I32_LT_U; }
-"i64.lt_u"            { return WASM_TOKEN_TYPE_I64_LT_U; }
-"i32.le_s"            { return WASM_TOKEN_TYPE_I32_LE_S; }
-"i64.le_s"            { return WASM_TOKEN_TYPE_I64_LE_S; }
-"i32.le_u"            { return WASM_TOKEN_TYPE_I32_LE_U; }
-"i64.le_u"            { return WASM_TOKEN_TYPE_I64_LE_U; }
-"i32.gt_s"            { return WASM_TOKEN_TYPE_I32_GT_S; }
-"i64.gt_s"            { return WASM_TOKEN_TYPE_I64_GT_S; }
-"i32.gt_u"            { return WASM_TOKEN_TYPE_I32_GT_U; }
-"i64.gt_u"            { return WASM_TOKEN_TYPE_I64_GT_U; }
-"i32.ge_s"            { return WASM_TOKEN_TYPE_I32_GE_S; }
-"i64.ge_s"            { return WASM_TOKEN_TYPE_I64_GE_S; }
-"i32.ge_u"            { return WASM_TOKEN_TYPE_I32_GE_U; }
-"i64.ge_u"            { return WASM_TOKEN_TYPE_I64_GE_U; }
-"f32.eq"              { return WASM_TOKEN_TYPE_F32_EQ; }
-"f64.eq"              { return WASM_TOKEN_TYPE_F64_EQ; }
-"f32.ne"              { return WASM_TOKEN_TYPE_F32_NE; }
-"f64.ne"              { return WASM_TOKEN_TYPE_F64_NE; }
-"f32.lt"              { return WASM_TOKEN_TYPE_F32_LT; }
-"f64.lt"              { return WASM_TOKEN_TYPE_F64_LT; }
-"f32.le"              { return WASM_TOKEN_TYPE_F32_LE; }
-"f64.le"              { return WASM_TOKEN_TYPE_F64_LE; }
-"f32.gt"              { return WASM_TOKEN_TYPE_F32_GT; }
-"f64.gt"              { return WASM_TOKEN_TYPE_F64_GT; }
-"f32.ge"              { return WASM_TOKEN_TYPE_F32_GE; }
-"f64.ge"              { return WASM_TOKEN_TYPE_F64_GE; }
-"i64.extend_s/i32"    { return WASM_TOKEN_TYPE_I64_EXTEND_S_I32; }
-"i64.extend_u/i32"    { return WASM_TOKEN_TYPE_I64_EXTEND_U_I32; }
-"i32.wrap/i64"        { return WASM_TOKEN_TYPE_I32_WRAP_I64; }
-"i32.trunc_s/f32"     { return WASM_TOKEN_TYPE_I32_TRUNC_S_F32; }
-"i64.trunc_s/f32"     { return WASM_TOKEN_TYPE_I64_TRUNC_U_F32; }
-"i32.trunc_s/f64"     { return WASM_TOKEN_TYPE_I32_TRUNC_S_F64; }
-"i64.trunc_s/f64"     { return WASM_TOKEN_TYPE_I64_TRUNC_U_F64; }
-"i32.trunc_u/f32"     { return WASM_TOKEN_TYPE_I32_TRUNC_U_F32; }
-"i64.trunc_u/f32"     { return WASM_TOKEN_TYPE_I64_TRUNC_U_F32; }
-"i32.trunc_u/f64"     { return WASM_TOKEN_TYPE_I32_TRUNC_U_F64; }
-"i64.trunc_u/f64"     { return WASM_TOKEN_TYPE_I64_TRUNC_U_F64; }
-"f32.convert_s/i32"   { return WASM_TOKEN_TYPE_F32_CONVERT_S_I32; }
-"f64.convert_s/i32"   { return WASM_TOKEN_TYPE_F64_CONVERT_U_I32; }
-"f32.convert_s/i64"   { return WASM_TOKEN_TYPE_F32_CONVERT_S_I64; }
-"f64.convert_s/i64"   { return WASM_TOKEN_TYPE_F64_CONVERT_U_I64; }
-"f32.convert_u/i32"   { return WASM_TOKEN_TYPE_F32_CONVERT_U_I32; }
-"f64.convert_u/i32"   { return WASM_TOKEN_TYPE_F64_CONVERT_U_I32; }
-"f32.convert_u/i64"   { return WASM_TOKEN_TYPE_F32_CONVERT_U_I64; }
-"f64.convert_u/i64"   { return WASM_TOKEN_TYPE_F64_CONVERT_U_I64; }
-"f64.promote/f32"     { return WASM_TOKEN_TYPE_F64_PROMOTE_F32; }
-"f32.demote/f64"      { return WASM_TOKEN_TYPE_F32_DEMOTE_F64; }
-"f32.reinterpret/i32" { return WASM_TOKEN_TYPE_F32_REINTPRET_I32; }
-"i32.reinterpret/f32" { return WASM_TOKEN_TYPE_I32_REINTPRET_F32; }
-"f64.reinterpret/i64" { return WASM_TOKEN_TYPE_F64_REINTPRET_I64; }
-"i64.reinterpret/f64" { return WASM_TOKEN_TYPE_I64_REINTPRET_F64; }
-"i32.select"          { return WASM_TOKEN_TYPE_I32_SELECT; }
-"i64.select"          { return WASM_TOKEN_TYPE_I64_SELECT; }
-"f32.select"          { return WASM_TOKEN_TYPE_F32_SELECT; }
-"f64.select"          { return WASM_TOKEN_TYPE_F64_SELECT; }
-"unreachable"         { return WASM_TOKEN_TYPE_UNREACHABLE; }
-"memory_size"         { return WASM_TOKEN_TYPE_MEMORY_SIZE; }
-"grow_memory"         { return WASM_TOKEN_TYPE_GROW_MEMORY; }
-"has_feature"         { return WASM_TOKEN_TYPE_HAS_FEATURE; }
-"type"                { return WASM_TOKEN_TYPE_TYPE; }
-"func"                { return WASM_TOKEN_TYPE_FUNC; }
-"param"               { return WASM_TOKEN_TYPE_PARAM; }
-"result"              { return WASM_TOKEN_TYPE_RESULT; }
-"local"               { return WASM_TOKEN_TYPE_LOCAL; }
-"module"              { return WASM_TOKEN_TYPE_MODULE; }
-"memory"              { return WASM_TOKEN_TYPE_MEMORY; }
-"segment"             { return WASM_TOKEN_TYPE_SEGMENT; }
-"import"              { return WASM_TOKEN_TYPE_IMPORT; }
-"export"              { return WASM_TOKEN_TYPE_EXPORT; }
-"table"               { return WASM_TOKEN_TYPE_TABLE; }
-"assert_invalid"      { return WASM_TOKEN_TYPE_ASSERT_INVALID; }
-"assert_return"       { return WASM_TOKEN_TYPE_ASSERT_RETURN; }
-"assert_return_nan"   { return WASM_TOKEN_TYPE_ASSERT_RETURN_NAN; }
-"assert_trap"         { return WASM_TOKEN_TYPE_ASSERT_TRAP; }
-"invoke"              { return WASM_TOKEN_TYPE_INVOKE; }
-{NAME}                { return WASM_TOKEN_TYPE_NAME; }
+"("                   { return TOK(LPAR); }
+")"                   { return TOK(RPAR); }
+{INT}                 { return TOK(INT); }
+{FLOAT}               { return TOK(FLOAT); }
+{TEXT}                { return TOK(TEXT); }
+"i32"                 { TYPE(I32); return TOK(VALUE_TYPE); }
+"i64"                 { TYPE(I64); return TOK(VALUE_TYPE); }
+"f32"                 { TYPE(F32); return TOK(VALUE_TYPE); }
+"f64"                 { TYPE(F64); return TOK(VALUE_TYPE); }
+"nop"                 { return TOK(NOP); }
+"block"               { return TOK(BLOCK); }
+"if"                  { return TOK(IF); }
+"if_else"             { return TOK(IF_ELSE); }
+"loop"                { return TOK(LOOP); }
+"label"               { return TOK(LABEL); }
+"br"                  { return TOK(BR); }
+"br_if"               { return TOK(BR_IF); }
+"tableswitch"         { return TOK(TABLESWITCH); }
+"case"                { return TOK(CASE); }
+"call"                { return TOK(CALL); }
+"call_import"         { return TOK(CALL_IMPORT); }
+"call_indirect"       { return TOK(CALL_INDIRECT); }
+"return"              { return TOK(RETURN); }
+"get_local"           { return TOK(GET_LOCAL); }
+"set_local"           { return TOK(SET_LOCAL); }
+"i32.load"            { TYPE(I32); return TOK(LOAD); }
+"i64.load"            { TYPE(I64); return TOK(LOAD); }
+"f32.load"            { TYPE(F32); return TOK(LOAD); }
+"f64.load"            { TYPE(F64); return TOK(LOAD); }
+"i32.store"           { TYPE(I32); return TOK(STORE); }
+"i64.store"           { TYPE(I64); return TOK(STORE); }
+"f32.store"           { TYPE(F32); return TOK(STORE); }
+"f64.store"           { TYPE(F64); return TOK(STORE); }
+"i32.load8_s"         { TYPE(I32); MEMSIZESIGN(8, 1); return TOK(LOAD_EXTEND); }
+"i64.load8_s"         { TYPE(I64); MEMSIZESIGN(8, 1); return TOK(LOAD_EXTEND); }
+"i32.load8_u"         { TYPE(I32); MEMSIZESIGN(8, 0); return TOK(LOAD_EXTEND); }
+"i64.load8_u"         { TYPE(I64); MEMSIZESIGN(8, 0); return TOK(LOAD_EXTEND); }
+"i32.load16_s"        { TYPE(I32); MEMSIZESIGN(16, 1); return TOK(LOAD_EXTEND); }
+"i64.load16_s"        { TYPE(I64); MEMSIZESIGN(16, 1); return TOK(LOAD_EXTEND); }
+"i32.load16_u"        { TYPE(I32); MEMSIZESIGN(16, 0); return TOK(LOAD_EXTEND); }
+"i64.load16_u"        { TYPE(I64); MEMSIZESIGN(16, 0); return TOK(LOAD_EXTEND); }
+"i64.load32_s"        { TYPE(I64); MEMSIZESIGN(32, 1); return TOK(LOAD_EXTEND); }
+"i64.load32_u"        { TYPE(I64); MEMSIZESIGN(32, 0); return TOK(LOAD_EXTEND); }
+"i32.store8"          { TYPE(I32); MEMSIZE(8); return TOK(STORE_WRAP); }
+"i64.store8"          { TYPE(I64); MEMSIZE(8); return TOK(STORE_WRAP); }
+"i32.store16"         { TYPE(I32); MEMSIZE(16); return TOK(STORE_WRAP); }
+"i64.store16"         { TYPE(I64); MEMSIZE(16); return TOK(STORE_WRAP); }
+"i64.store32"         { TYPE(I64); MEMSIZE(32); return TOK(STORE_WRAP); }
+"offset="{DIGITS}     { return TOK(OFFSET); }
+"align="{DIGITS}      { return TOK(ALIGN); }
+"i32.const"           { TYPE(I32); return TOK(CONST); }
+"i64.const"           { TYPE(I64); return TOK(CONST); }
+"f32.const"           { TYPE(F32); return TOK(CONST); }
+"f64.const"           { TYPE(F64); return TOK(CONST); }
+"i32.clz"             { TYPE(I32); UNOP(CLZ); return TOK(UNARY); }
+"i64.clz"             { TYPE(I64); UNOP(CLZ); return TOK(UNARY); }
+"i32.ctz"             { TYPE(I32); UNOP(CTZ); return TOK(UNARY); }
+"i64.ctz"             { TYPE(I64); UNOP(CTZ); return TOK(UNARY); }
+"i32.popcnt"          { TYPE(I32); UNOP(POPCNT); return TOK(UNARY); }
+"i64.popcnt"          { TYPE(I64); UNOP(POPCNT); return TOK(UNARY); }
+"f32.neg"             { TYPE(F32); UNOP(NEG); return TOK(UNARY); }
+"f64.neg"             { TYPE(F64); UNOP(NEG); return TOK(UNARY); }
+"f32.abs"             { TYPE(F32); UNOP(ABS); return TOK(UNARY); }
+"f64.abs"             { TYPE(F64); UNOP(ABS); return TOK(UNARY); }
+"f32.sqrt"            { TYPE(F32); UNOP(SQRT); return TOK(UNARY); }
+"f64.sqrt"            { TYPE(F64); UNOP(SQRT); return TOK(UNARY); }
+"f32.ceil"            { TYPE(F32); UNOP(CEIL); return TOK(UNARY); }
+"f64.ceil"            { TYPE(F64); UNOP(CEIL); return TOK(UNARY); }
+"f32.floor"           { TYPE(F32); UNOP(FLOOR); return TOK(UNARY); }
+"f64.floor"           { TYPE(F64); UNOP(FLOOR); return TOK(UNARY); }
+"f32.trunc"           { TYPE(F32); UNOP(TRUNC); return TOK(UNARY); }
+"f64.trunc"           { TYPE(F64); UNOP(TRUNC); return TOK(UNARY); }
+"f32.nearest"         { TYPE(F32); UNOP(NEAREST); return TOK(UNARY); }
+"f64.nearest"         { TYPE(F64); UNOP(NEAREST); return TOK(UNARY); }
+"i32.add"             { TYPE(I32); BINOP(ADD); return TOK(BINARY); }
+"i64.add"             { TYPE(I64); BINOP(ADD); return TOK(BINARY); }
+"i32.sub"             { TYPE(I32); BINOP(SUB); return TOK(BINARY); }
+"i64.sub"             { TYPE(I64); BINOP(SUB); return TOK(BINARY); }
+"i32.mul"             { TYPE(I32); BINOP(MUL); return TOK(BINARY); }
+"i64.mul"             { TYPE(I64); BINOP(MUL); return TOK(BINARY); }
+"i32.div_s"           { TYPE(I32); BINOPSIGN(DIV, 1); return TOK(BINARY); }
+"i64.div_s"           { TYPE(I64); BINOPSIGN(DIV, 1); return TOK(BINARY); }
+"i32.div_u"           { TYPE(I32); BINOPSIGN(DIV, 0); return TOK(BINARY); }
+"i64.div_u"           { TYPE(I64); BINOPSIGN(DIV, 0); return TOK(BINARY); }
+"i32.rem_s"           { TYPE(I32); BINOPSIGN(REM, 1); return TOK(BINARY); }
+"i64.rem_s"           { TYPE(I64); BINOPSIGN(REM, 1); return TOK(BINARY); }
+"i32.rem_u"           { TYPE(I32); BINOPSIGN(REM, 0); return TOK(BINARY); }
+"i64.rem_u"           { TYPE(I64); BINOPSIGN(REM, 0); return TOK(BINARY); }
+"i32.and"             { TYPE(I32); BINOP(AND); return TOK(BINARY); }
+"i64.and"             { TYPE(I64); BINOP(AND); return TOK(BINARY); }
+"i32.or"              { TYPE(I32); BINOP(OR); return TOK(BINARY); }
+"i64.or"              { TYPE(I64); BINOP(OR); return TOK(BINARY); }
+"i32.xor"             { TYPE(I32); BINOP(XOR); return TOK(BINARY); }
+"i64.xor"             { TYPE(I64); BINOP(XOR); return TOK(BINARY); }
+"i32.shl"             { TYPE(I32); BINOP(SHL); return TOK(BINARY); }
+"i64.shl"             { TYPE(I64); BINOP(SHL); return TOK(BINARY); }
+"i32.shr_s"           { TYPE(I32); BINOPSIGN(SHR, 1); return TOK(BINARY); }
+"i64.shr_s"           { TYPE(I64); BINOPSIGN(SHR, 1); return TOK(BINARY); }
+"i32.shr_u"           { TYPE(I32); BINOPSIGN(SHR, 0); return TOK(BINARY); }
+"i64.shr_u"           { TYPE(I64); BINOPSIGN(SHR, 0); return TOK(BINARY); }
+"f32.add"             { TYPE(F32); BINOP(ADD); return TOK(BINARY); }
+"f64.add"             { TYPE(F64); BINOP(ADD); return TOK(BINARY); }
+"f32.sub"             { TYPE(F32); BINOP(SUB); return TOK(BINARY); }
+"f64.sub"             { TYPE(F64); BINOP(SUB); return TOK(BINARY); }
+"f32.mul"             { TYPE(F32); BINOP(MUL); return TOK(BINARY); }
+"f64.mul"             { TYPE(F64); BINOP(MUL); return TOK(BINARY); }
+"f32.div"             { TYPE(F32); BINOP(DIV); return TOK(BINARY); }
+"f64.div"             { TYPE(F64); BINOP(DIV); return TOK(BINARY); }
+"f32.min"             { TYPE(F32); BINOP(MIN); return TOK(BINARY); }
+"f64.min"             { TYPE(F64); BINOP(MIN); return TOK(BINARY); }
+"f32.max"             { TYPE(F32); BINOP(MAX); return TOK(BINARY); }
+"f64.max"             { TYPE(F64); BINOP(MAX); return TOK(BINARY); }
+"f32.copysign"        { TYPE(F32); BINOP(COPYSIGN); return TOK(BINARY); }
+"f64.copysign"        { TYPE(F64); BINOP(COPYSIGN); return TOK(BINARY); }
+"i32.eq"              { TYPE(I32); CMPOP(EQ); return TOK(COMPARE); }
+"i64.eq"              { TYPE(I64); CMPOP(EQ); return TOK(COMPARE); }
+"i32.ne"              { TYPE(I32); CMPOP(EQ); return TOK(COMPARE); }
+"i64.ne"              { TYPE(I64); CMPOP(EQ); return TOK(COMPARE); }
+"i32.lt_s"            { TYPE(I32); CMPOPSIGN(LT, 1); return TOK(COMPARE); }
+"i64.lt_s"            { TYPE(I64); CMPOPSIGN(LT, 1); return TOK(COMPARE); }
+"i32.lt_u"            { TYPE(I32); CMPOPSIGN(LT, 0); return TOK(COMPARE); }
+"i64.lt_u"            { TYPE(I64); CMPOPSIGN(LT, 0); return TOK(COMPARE); }
+"i32.le_s"            { TYPE(I32); CMPOPSIGN(LE, 1); return TOK(COMPARE); }
+"i64.le_s"            { TYPE(I64); CMPOPSIGN(LE, 1); return TOK(COMPARE); }
+"i32.le_u"            { TYPE(I32); CMPOPSIGN(LE, 0); return TOK(COMPARE); }
+"i64.le_u"            { TYPE(I64); CMPOPSIGN(LE, 0); return TOK(COMPARE); }
+"i32.gt_s"            { TYPE(I32); CMPOPSIGN(GT, 1); return TOK(COMPARE); }
+"i64.gt_s"            { TYPE(I64); CMPOPSIGN(GT, 1); return TOK(COMPARE); }
+"i32.gt_u"            { TYPE(I32); CMPOPSIGN(GT, 0); return TOK(COMPARE); }
+"i64.gt_u"            { TYPE(I64); CMPOPSIGN(GT, 0); return TOK(COMPARE); }
+"i32.ge_s"            { TYPE(I32); CMPOPSIGN(GE, 1); return TOK(COMPARE); }
+"i64.ge_s"            { TYPE(I64); CMPOPSIGN(GE, 1); return TOK(COMPARE); }
+"i32.ge_u"            { TYPE(I32); CMPOPSIGN(GE, 0); return TOK(COMPARE); }
+"i64.ge_u"            { TYPE(I64); CMPOPSIGN(GE, 0); return TOK(COMPARE); }
+"f32.eq"              { TYPE(F32); CMPOP(EQ); return TOK(COMPARE); }
+"f64.eq"              { TYPE(F64); CMPOP(EQ); return TOK(COMPARE); }
+"f32.ne"              { TYPE(F32); CMPOP(NE); return TOK(COMPARE); }
+"f64.ne"              { TYPE(F64); CMPOP(NE); return TOK(COMPARE); }
+"f32.lt"              { TYPE(F32); CMPOP(LT); return TOK(COMPARE); }
+"f64.lt"              { TYPE(F64); CMPOP(LT); return TOK(COMPARE); }
+"f32.le"              { TYPE(F32); CMPOP(LE); return TOK(COMPARE); }
+"f64.le"              { TYPE(F64); CMPOP(LE); return TOK(COMPARE); }
+"f32.gt"              { TYPE(F32); CMPOP(GT); return TOK(COMPARE); }
+"f64.gt"              { TYPE(F64); CMPOP(GT); return TOK(COMPARE); }
+"f32.ge"              { TYPE(F32); CMPOP(GE); return TOK(COMPARE); }
+"f64.ge"              { TYPE(F64); CMPOP(GE); return TOK(COMPARE); }
+"i64.extend_s/i32"    { TYPE(I64); CONVTYPESIGN(I32, 1); return TOK(CONVERT); }
+"i64.extend_u/i32"    { TYPE(I64); CONVTYPESIGN(I32, 0); return TOK(CONVERT); }
+"i32.wrap/i64"        { TYPE(I32); CONVTYPE(I64); return TOK(CONVERT); }
+"i32.trunc_s/f32"     { TYPE(I32); CONVTYPESIGN(F32, 1); return TOK(CONVERT); }
+"i64.trunc_s/f32"     { TYPE(I64); CONVTYPESIGN(F32, 1); return TOK(CONVERT); }
+"i32.trunc_s/f64"     { TYPE(I32); CONVTYPESIGN(F64, 1); return TOK(CONVERT); }
+"i64.trunc_s/f64"     { TYPE(I64); CONVTYPESIGN(F64, 1); return TOK(CONVERT); }
+"i32.trunc_u/f32"     { TYPE(I32); CONVTYPESIGN(F32, 0); return TOK(CONVERT); }
+"i64.trunc_u/f32"     { TYPE(I64); CONVTYPESIGN(F32, 0); return TOK(CONVERT); }
+"i32.trunc_u/f64"     { TYPE(I32); CONVTYPESIGN(F64, 0); return TOK(CONVERT); }
+"i64.trunc_u/f64"     { TYPE(I64); CONVTYPESIGN(F64, 0); return TOK(CONVERT); }
+"f32.convert_s/i32"   { TYPE(F32); CONVTYPESIGN(I32, 1); return TOK(CONVERT); }
+"f64.convert_s/i32"   { TYPE(F64); CONVTYPESIGN(I32, 1); return TOK(CONVERT); }
+"f32.convert_s/i64"   { TYPE(F32); CONVTYPESIGN(I64, 1); return TOK(CONVERT); }
+"f64.convert_s/i64"   { TYPE(F64); CONVTYPESIGN(I64, 1); return TOK(CONVERT); }
+"f32.convert_u/i32"   { TYPE(F32); CONVTYPESIGN(I32, 0); return TOK(CONVERT); }
+"f64.convert_u/i32"   { TYPE(F64); CONVTYPESIGN(I32, 0); return TOK(CONVERT); }
+"f32.convert_u/i64"   { TYPE(F32); CONVTYPESIGN(I64, 0); return TOK(CONVERT); }
+"f64.convert_u/i64"   { TYPE(F64); CONVTYPESIGN(I64, 0); return TOK(CONVERT); }
+"f64.promote/f32"     { TYPE(F64); CONVTYPE(F32); return TOK(CONVERT); }
+"f32.demote/f64"      { TYPE(F32); CONVTYPE(F64); return TOK(CONVERT); }
+"f32.reinterpret/i32" { TYPE(F32); CASTTYPE(I32); return TOK(CAST); }
+"i32.reinterpret/f32" { TYPE(I32); CASTTYPE(F32); return TOK(CAST); }
+"f64.reinterpret/i64" { TYPE(F64); CASTTYPE(I64); return TOK(CAST); }
+"i64.reinterpret/f64" { TYPE(I64); CASTTYPE(F64); return TOK(CAST); }
+"i32.select"          { TYPE(I32); return TOK(SELECT); }
+"i64.select"          { TYPE(I64); return TOK(SELECT); }
+"f32.select"          { TYPE(F32); return TOK(SELECT); }
+"f64.select"          { TYPE(F64); return TOK(SELECT); }
+"unreachable"         { return TOK(UNREACHABLE); }
+"memory_size"         { return TOK(MEMORY_SIZE); }
+"grow_memory"         { return TOK(GROW_MEMORY); }
+"has_feature"         { return TOK(HAS_FEATURE); }
+"type"                { return TOK(TYPE); }
+"func"                { return TOK(FUNC); }
+"param"               { return TOK(PARAM); }
+"result"              { return TOK(RESULT); }
+"local"               { return TOK(LOCAL); }
+"module"              { return TOK(MODULE); }
+"memory"              { return TOK(MEMORY); }
+"segment"             { return TOK(SEGMENT); }
+"import"              { return TOK(IMPORT); }
+"export"              { return TOK(EXPORT); }
+"table"               { return TOK(TABLE); }
+"assert_invalid"      { return TOK(ASSERT_INVALID); }
+"assert_return"       { return TOK(ASSERT_RETURN); }
+"assert_return_nan"   { return TOK(ASSERT_RETURN_NAN); }
+"assert_trap"         { return TOK(ASSERT_TRAP); }
+"invoke"              { return TOK(INVOKE); }
+{NAME}                { return TOK(VAR); }
 
 ";;"                  { BEGIN(LINE_COMMENT); }
 <LINE_COMMENT>\n      { COLUMN(yyscanner) = 1; BEGIN(INITIAL); }
-<LINE_COMMENT><<EOF>> { return WASM_TOKEN_TYPE_EOF; }
+<LINE_COMMENT><<EOF>> { return TOK(EOF); }
 <LINE_COMMENT>.
 "(;"                  { BEGIN(BLOCK_COMMENT); COMMENT_NESTING(yyscanner) = 1; }
 <BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { COLUMN(yyscanner) = 1; }
-<BLOCK_COMMENT><<EOF>> { return WASM_TOKEN_TYPE_ERROR; }
+<BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, ""); }
 <BLOCK_COMMENT>.
 \n                    { COLUMN(yyscanner) = 1; }
 [ \t\r]
-<<EOF>>               { return WASM_TOKEN_TYPE_EOF; }
-.                     { return WASM_TOKEN_TYPE_ERROR; }
+<<EOF>>               { return TOK(EOF); }
+.                     { yyerror(yylloc, &yyscanner, ""); }
 
 %%
-
-static const char* s_token_names[] = {
-#define V(name) #name,
-  WASM_TOKEN_TYPES(V)
-#undef V
-};
 
 int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */
@@ -301,11 +313,11 @@ int main(int argc, char **argv) {
   while (1) {
     WasmToken token;
     WasmLocation location;
-    WasmTokenType type = yylex(&token, &location, scanner);
-    if (type == WASM_TOKEN_TYPE_EOF || type == WASM_TOKEN_TYPE_ERROR)
+    int token_type = yylex(&token, &location, scanner);
+    if (token_type == WASM_TOKEN_TYPE_EOF)
       break;
-    printf("%d:%d:%s \"%.*s\"\n", location.first_line, location.first_column,
-           s_token_names[type], (int)(token.end - token.start), token.start);
+    printf("%d:%d:%d \"%.*s\"\n", location.first_line, location.first_column,
+           token_type, (int)(token.end - token.start), token.start);
   }
   yylex_destroy(scanner);
 }

@@ -1,6 +1,6 @@
 .SUFFIXES:
 
-ALL = sexpr-wasm lexer
+ALL = sexpr-wasm parser
 EVERYHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
 CFLAGS = -Wall -Werror -g
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
@@ -26,8 +26,11 @@ out/:
 src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
 	flex -o src/wasm-lexer.c --header-file=src/wasm-lexer.h $<
 
-out/lexer: src/wasm-lexer.c | out
-	$(CC) $(CFLAGS) -Wno-unused-function -Wno-return-type -o $@ $< -ll
+src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
+	bison -o src/wasm-parser.c --defines=src/wasm-parser.h $<
+
+out/parser: src/wasm-lexer.c src/wasm-parser.c | out
+	$(CC) $(CFLAGS) -Wno-unused-function -Wno-return-type -o $@ $^ -ll
 
 $(OBJS): out/%.o: src/%.c | out
 	$(CC) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
