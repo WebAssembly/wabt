@@ -1,47 +1,8 @@
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/address.wast
-(;; STDOUT ;;;
-97
-97
-97
-97
-25185
-25185
-25185
-25185
-1684234849
-1684234849
-1684234849
-1684234849
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-third_party/testsuite/address.wast:31: $assert_trap_2 failed, didn't throw
-third_party/testsuite/address.wast:32: $assert_trap_3 failed, didn't throw
-third_party/testsuite/address.wast:33: $assert_trap_4 failed, didn't throw
-third_party/testsuite/address.wast:34: $assert_trap_5 failed, didn't throw
-third_party/testsuite/address.wast:35: $assert_trap_6 failed, didn't throw
-2/7 tests passed.
-;;; STDOUT ;;)
+(;; STDERR ;;;
+third_party/testsuite/address.wast:33:24: expected module to be invalid
+
+;;; STDERR ;;)

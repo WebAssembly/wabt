@@ -1,14 +1,18 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/resizing.wast
-(;; STDERR ;;;
-
-;;; STDERR ;;)
 (;; STDOUT ;;;
-WasmModule::Instantiate(): Compiling WASM function #0:power_of_two failed:Result = Invalid opcode @+1
-
-  var module = WASM.instantiateModule(u8a.buffer, ffi);
-                    ^
-
+third_party/testsuite/resizing.wast:36: $assert_trap_2 failed, didn't throw
+third_party/testsuite/resizing.wast:37: $assert_trap_3 failed, didn't throw
+third_party/testsuite/resizing.wast:38: $assert_trap_4 failed, didn't throw
+third_party/testsuite/resizing.wast:39: $assert_trap_5 failed, didn't throw
+$invoke_6 = undefined
+third_party/testsuite/resizing.wast:41: $assert_return_7 failed.
+third_party/testsuite/resizing.wast:42: $assert_return_8 failed.
+third_party/testsuite/resizing.wast:45: $assert_trap_11 failed, didn't throw
+third_party/testsuite/resizing.wast:46: $assert_trap_12 failed, didn't throw
+$invoke_13 = undefined
+third_party/testsuite/resizing.wast:48: $assert_return_14 failed.
+third_party/testsuite/resizing.wast:53: $assert_return_19 failed.
+8/18 tests passed.
 ;;; STDOUT ;;)
