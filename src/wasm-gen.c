@@ -945,7 +945,7 @@ static void before_load(WasmParserCallbackInfo* info,
                         enum WasmOpcode opcode,
                         WasmMemType mem_type,
                         uint32_t alignment,
-                        uint64_t offset,
+                        uint32_t offset,
                         int is_signed) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, opcode);
@@ -1066,7 +1066,7 @@ static void before_store(WasmParserCallbackInfo* info,
                          enum WasmOpcode opcode,
                          WasmMemType mem_type,
                          uint32_t alignment,
-                         uint64_t offset) {
+                         uint32_t offset) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, opcode);
   uint8_t access = 0;

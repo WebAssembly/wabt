@@ -885,7 +885,7 @@ fail:
   return 0;
 }
 
-static uint64_t parse_offset(WasmParser* parser) {
+static uint32_t parse_offset(WasmParser* parser) {
   const char offset_prefix[] = "offset=";
   size_t offset_prefix_len = sizeof(offset_prefix) - 1;
   WasmToken t = read_token(parser);
@@ -898,8 +898,8 @@ static uint64_t parse_offset(WasmParser* parser) {
   const char* end = p + offset_prefix_len;
   if (!string_eq(p, end, offset_prefix))
     goto fail;
-  uint64_t offset;
-  if (!read_uint64(end, t.range.end.pos, &offset))
+  uint32_t offset;
+  if (!read_int32(end, t.range.end.pos, &offset, 0))
     FATAL_AT(parser, t.range.start, "invalid offset\n");
   return offset;
 fail:
@@ -1428,7 +1428,7 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_LOAD: {
       check_opcode(parser, t.range.start, op_info->opcode);
-      uint64_t offset = parse_offset(parser);
+      uint32_t offset = parse_offset(parser);
       uint32_t alignment = parse_alignment(parser);
       WasmMemType mem_type = op_info->type2;
       if (!alignment)
@@ -1556,7 +1556,7 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_STORE: {
       check_opcode(parser, t.range.start, op_info->opcode);
       WasmMemType mem_type = op_info->type2;
-      uint64_t offset = parse_offset(parser);
+      uint32_t offset = parse_offset(parser);
       uint32_t alignment = parse_alignment(parser);
       if (!alignment)
         alignment = s_native_mem_type_alignment[mem_type];

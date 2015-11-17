@@ -67,7 +67,7 @@ typedef struct WasmParserCallbacks {
                       enum WasmOpcode opcode,
                       WasmMemType mem_type,
                       uint32_t alignment,
-                      uint64_t offset,
+                      uint32_t offset,
                       int is_signed);
   void (*after_load_global)(WasmParserCallbackInfo* info, int index);
   void (*after_memory_size)(WasmParserCallbackInfo* info);
@@ -81,7 +81,7 @@ typedef struct WasmParserCallbacks {
                        enum WasmOpcode opcode,
                        WasmMemType mem_type,
                        uint32_t alignment,
-                       uint64_t offset);
+                       uint32_t offset);
 
   void (*before_store_global)(WasmParserCallbackInfo* info, int index);
   void (*before_unary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
