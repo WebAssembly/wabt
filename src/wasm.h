@@ -68,7 +68,6 @@ typedef enum WasmMemType {
   V(I64_STORE_I64, 0x35)       \
   V(F32_STORE_I64, 0x36)       \
   V(F64_STORE_I64, 0x37)       \
-  V(PAGE_SIZE, 0x38)           \
   V(RESIZE_MEMORY_I32, 0x39)   \
   V(RESIZE_MEMORY_I64, 0x3a)   \
   V(I32_ADD, 0x40)             \

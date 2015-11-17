@@ -65,7 +65,6 @@ typedef enum WasmOpType {
   WASM_OP_MEMORY_SIZE,
   WASM_OP_MODULE,
   WASM_OP_NOP,
-  WASM_OP_PAGE_SIZE,
   WASM_OP_PARAM,
   WASM_OP_GROW_MEMORY,
   WASM_OP_RESULT,
@@ -1503,12 +1502,6 @@ static WasmType parse_expr(WasmParser* parser,
       CALLBACK(parser, after_nop, (&parser->info));
       expect_close(parser, read_token(parser));
       type = WASM_TYPE_VOID;
-      break;
-
-    case WASM_OP_PAGE_SIZE:
-      CALLBACK(parser, after_page_size, (&parser->info));
-      expect_close(parser, read_token(parser));
-      type = WASM_TYPE_I32;
       break;
 
     case WASM_OP_GROW_MEMORY: {

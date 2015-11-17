@@ -1027,11 +1027,6 @@ static void after_nop(WasmParserCallbackInfo* info) {
   out_opcode(&ctx->buf, WASM_OPCODE_NOP);
 }
 
-static void after_page_size(WasmParserCallbackInfo* info) {
-  Context* ctx = info->user_data;
-  out_opcode(&ctx->buf, WASM_OPCODE_PAGE_SIZE);
-}
-
 static void before_grow_memory(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, WASM_OPCODE_RESIZE_MEMORY_I32);
@@ -1397,7 +1392,6 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.after_loop = after_loop;
   callbacks.after_memory_size = after_memory_size;
   callbacks.after_nop = after_nop;
-  callbacks.after_page_size = after_page_size;
   callbacks.before_grow_memory = before_grow_memory;
   callbacks.before_return = before_return;
   callbacks.before_select = before_select;

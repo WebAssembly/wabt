@@ -72,7 +72,6 @@ typedef struct WasmParserCallbacks {
   void (*after_load_global)(WasmParserCallbackInfo* info, int index);
   void (*after_memory_size)(WasmParserCallbackInfo* info);
   void (*after_nop)(WasmParserCallbackInfo* info);
-  void (*after_page_size)(WasmParserCallbackInfo* info);
   void (*before_grow_memory)(WasmParserCallbackInfo* info);
   void (*before_return)(WasmParserCallbackInfo* info);
   void (*after_return)(WasmParserCallbackInfo* info, WasmType type);
