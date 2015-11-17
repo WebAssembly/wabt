@@ -1261,15 +1261,14 @@ static WasmType parse_expr(WasmParser* parser,
     }
 
     case WASM_OP_BR_IF: {
-      int depth = parse_break_depth(parser, function);
-      check_break_depth(parser, t.range.start, function, depth);
-      WasmParserCookie cookie =
-          CALLBACK(parser, before_br_if, (&parser->info, depth));
+      WasmParserCookie cookie = CALLBACK(parser, before_br_if, (&parser->info));
       WasmType cond_type = parse_expr(parser, module, function);
       check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
                  " of condition");
+      int depth = parse_break_depth(parser, function);
+      check_break_depth(parser, t.range.start, function, depth);
       expect_close(parser, read_token(parser));
-      CALLBACK_COOKIE(parser, after_br_if, cookie, (&parser->info));
+      CALLBACK_COOKIE(parser, after_br_if, cookie, (&parser->info, depth));
       break;
     }
 

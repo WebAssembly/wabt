@@ -804,15 +804,19 @@ static int get_block_depth(Context* ctx, LabelInfo* label_info) {
   return (ctx->block_depth - 1) - label_info->block_depth;
 }
 
-static void before_br_if(WasmParserCallbackInfo* info, int label_depth) {
+static void before_br_if(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
-  LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
   out_opcode(&ctx->buf, WASM_OPCODE_BR_IF);
-  out_u8(&ctx->buf, get_block_depth(ctx, label_info), "break depth");
+  info->cookie = (WasmParserCookie)ctx->buf.size;
+  out_u8(&ctx->buf, 0, "break depth");
 }
 
-static void after_br_if(WasmParserCallbackInfo* info) {
+static void after_br_if(WasmParserCallbackInfo* info, int label_depth) {
   Context* ctx = info->user_data;
+  uint32_t offset = (uint32_t)info->cookie;
+  LabelInfo* label_info = label_info_at_depth(ctx, label_depth);
+  out_u8_at(&ctx->buf, offset, get_block_depth(ctx, label_info),
+            "FIXUP break depth");
   out_opcode(&ctx->buf, WASM_OPCODE_NOP);
 }
 

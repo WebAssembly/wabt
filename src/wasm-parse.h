@@ -42,8 +42,8 @@ typedef struct WasmParserCallbacks {
                        int with_expr,
                        int label_depth);
   void (*after_break)(WasmParserCallbackInfo* info);
-  void (*before_br_if)(WasmParserCallbackInfo* info, int label_depth);
-  void (*after_br_if)(WasmParserCallbackInfo* info);
+  void (*before_br_if)(WasmParserCallbackInfo* info);
+  void (*after_br_if)(WasmParserCallbackInfo* info, int label_depth);
   void (*before_call)(WasmParserCallbackInfo* info, int function_index);
   void (*before_call_import)(WasmParserCallbackInfo* info, int import_index);
   void (*before_call_indirect)(WasmParserCallbackInfo* info,
