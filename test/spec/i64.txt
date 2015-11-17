@@ -3,10 +3,12 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/i64.wast
 (;; STDERR ;;;
-#
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 210
-# Unsupported opcode #114:ExprI64Clz
-#
 
-d8 raised signal SIGILL
 ;;; STDERR ;;)
+(;; STDOUT ;;;
+WasmModule::Instantiate(): Compiling WASM function #13:clz failed:Result = ImplicitReturn[0] expected type int64, found ExprI64Clz of type int32 @+3
+
+  var module = WASM.instantiateModule(u8a.buffer, ffi);
+                    ^
+
+;;; STDOUT ;;)
