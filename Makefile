@@ -4,6 +4,7 @@ ALL = sexpr-wasm
 EVERYHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
 CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
+LIBS = -ll
 ASAN_FLAGS = -fsanitize=address
 MSAN_FLAGS = -fsanitize=memory
 LSAN_FLAGS = -fsanitize=leak
@@ -32,28 +33,25 @@ src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
 $(OBJS): out/%.o: src/%.c | out
 	$(CC) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
 out/sexpr-wasm: $(OBJS) | out
-	$(CC) -o $@ $^ -ll
+	$(CC) -o $@ $^ ${LIBS}
 
 # ASAN
 $(ASAN_OBJS): out/%.asan.o: src/%.c | out
 	clang $(ASAN_FLAGS) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
 out/sexpr-wasm-asan: $(ASAN_OBJS) | out
-	clang $(ASAN_FLAGS) -o $@ $^
+	clang $(ASAN_FLAGS) -o $@ $^ ${LIBS}
 
 # MSAN
 $(MSAN_OBJS): out/%.msan.o: src/%.c | out
 	clang $(MSAN_FLAGS) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
 out/sexpr-wasm-msan: $(MSAN_OBJS) | out
-	clang $(MSAN_FLAGS) -o $@ $^
+	clang $(MSAN_FLAGS) -o $@ $^ ${LIBS}
 
 # LSAN
 $(LSAN_OBJS): out/%.lsan.o: src/%.c | out
 	clang $(LSAN_FLAGS) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
 out/sexpr-wasm-lsan: $(LSAN_OBJS) | out
-	clang $(LSAN_FLAGS) -o $@ $^
-
-src/wasm-keywords.h: src/wasm-keywords.gperf
-	gperf --compare-strncmp --readonly-tables --struct-type $< --output-file $@
+	clang $(LSAN_FLAGS) -o $@ $^ ${LIBS}
 
 -include $(OBJS:.o=.d) $(ASAN_OBJS:.o=.d) $(MSAN_OBJS:.o=.d) $(LSAN_OBJS:.o=.d)
 

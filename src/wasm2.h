@@ -45,14 +45,14 @@ typedef struct WasmStringSlice {
   int length;
 } WasmStringSlice;
 
-typedef enum WasmType {
+enum WasmType {
   WASM_TYPE_VOID = 0,
   WASM_TYPE_I32 = 1,
   WASM_TYPE_I64 = 2,
   WASM_TYPE_F32 = 4,
   WASM_TYPE_F64 = 8,
   WASM_TYPE_ALL = 15,
-} WasmType;
+};
 
 typedef enum WasmMemSize {
   WASM_MEM_SIZE_8 = 8,
@@ -144,32 +144,32 @@ typedef enum WasmVarType {
   WASM_VAR_TYPE_NAME,
 } WasmVarType;
 
-typedef struct WasmVar {
+struct WasmVar {
   WasmVarType type;
   union {
     int index;
     WasmStringSlice name;
   };
-} WasmVar;
+};
 
 typedef enum WasmTargetType {
   WASM_TARGET_TYPE_CASE,
   WASM_TARGET_TYPE_BR,
 } WasmTargetType;
 
-typedef struct WasmTarget {
+struct WasmTarget {
   WasmTargetType type;
   WasmVar var;
-} WasmTarget;
+};
 
 typedef WasmStringSlice WasmLabel;
 
-typedef struct WasmCase {
+struct WasmCase {
   WasmLabel label;
   WasmExprPtrVector exprs;
-} WasmCase;
+};
 
-typedef struct WasmConst {
+struct WasmConst {
   WasmType type;
   union {
     uint32_t u32;
@@ -177,7 +177,7 @@ typedef struct WasmConst {
     float f32;
     double f64;
   };
-} WasmConst;
+};
 
 typedef enum WasmExprType {
   WASM_EXPR_TYPE_BINARY,
@@ -262,10 +262,10 @@ struct WasmExpr {
   };
 };
 
-typedef struct WasmBinding {
+struct WasmBinding {
   WasmStringSlice name;
   int index;
-} WasmBinding;
+};
 
 typedef struct WasmTypeBindings {
   WasmTypeVector types;
@@ -281,11 +281,11 @@ typedef struct WasmFunc {
   WasmExprPtrVector exprs;
 } WasmFunc;
 
-typedef struct WasmSegment {
+struct WasmSegment {
   uint32_t addr;
   void* data;
   size_t size;
-} WasmSegment;
+};
 
 typedef struct WasmMemory {
   uint32_t initial_size;
@@ -332,7 +332,7 @@ typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_GLOBAL,
 } WasmModuleFieldType;
 
-typedef struct WasmModuleField {
+struct WasmModuleField {
   WasmModuleFieldType type;
   union {
     WasmFunc func;
@@ -343,7 +343,7 @@ typedef struct WasmModuleField {
     WasmMemory memory;
     WasmTypeBindings global;
   };
-} WasmModuleField;
+};
 
 typedef struct WasmModule {
   WasmModuleFieldVector fields;
@@ -363,7 +363,7 @@ typedef struct WasmCommandInvoke {
   WasmConstVector args;
 } WasmCommandInvoke;
 
-typedef struct WasmCommand {
+struct WasmCommand {
   WasmCommandType type;
   union {
     WasmModule module;
@@ -373,7 +373,7 @@ typedef struct WasmCommand {
     struct { WasmCommandInvoke invoke; WasmStringSlice text; } assert_trap;
     struct { WasmModule module; WasmStringSlice text; } assert_invalid;
   };
-} WasmCommand;
+};
 
 typedef struct WasmScript {
   WasmCommandVector commands;
