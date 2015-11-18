@@ -19,40 +19,20 @@
   EXTERN_C type* wasm_append_##name(type##Vector* vec);          \
   EXTERN_C int wasm_extend_##name##s(type##Vector* dst, type##Vector* src);
 
-typedef enum WasmType WasmType;
-typedef struct WasmExpr* WasmExprPtr;
-typedef struct WasmVar WasmVar;
-typedef struct WasmTarget WasmTarget;
-typedef struct WasmCase WasmCase;
-typedef struct WasmConst WasmConst;
-typedef struct WasmBinding WasmBinding;
-typedef struct WasmSegment WasmSegment;
-typedef struct WasmModuleField WasmModuleField;
-typedef struct WasmCommand WasmCommand;
-DECLARE_VECTOR(type, WasmType)
-DECLARE_VECTOR(expr_ptr, WasmExprPtr);
-DECLARE_VECTOR(var, WasmVar);
-DECLARE_VECTOR(target, WasmTarget);
-DECLARE_VECTOR(case, WasmCase);
-DECLARE_VECTOR(const, WasmConst);
-DECLARE_VECTOR(binding, WasmBinding);
-DECLARE_VECTOR(segment, WasmSegment);
-DECLARE_VECTOR(module_field, WasmModuleField);
-DECLARE_VECTOR(command, WasmCommand);
-
 typedef struct WasmStringSlice {
   const char* start;
   int length;
 } WasmStringSlice;
 
-enum WasmType {
+typedef enum WasmType {
   WASM_TYPE_VOID = 0,
   WASM_TYPE_I32 = 1,
   WASM_TYPE_I64 = 2,
   WASM_TYPE_F32 = 4,
   WASM_TYPE_F64 = 8,
   WASM_TYPE_ALL = 15,
-};
+} WasmType;
+DECLARE_VECTOR(type, WasmType)
 
 typedef enum WasmMemSize {
   WASM_MEM_SIZE_8 = 8,
@@ -144,32 +124,38 @@ typedef enum WasmVarType {
   WASM_VAR_TYPE_NAME,
 } WasmVarType;
 
-struct WasmVar {
+typedef struct WasmVar {
   WasmVarType type;
   union {
     int index;
     WasmStringSlice name;
   };
-};
+} WasmVar;
+DECLARE_VECTOR(var, WasmVar);
 
 typedef enum WasmTargetType {
   WASM_TARGET_TYPE_CASE,
   WASM_TARGET_TYPE_BR,
 } WasmTargetType;
 
-struct WasmTarget {
+typedef struct WasmTarget {
   WasmTargetType type;
   WasmVar var;
-};
+} WasmTarget;
+DECLARE_VECTOR(target, WasmTarget);
 
 typedef WasmStringSlice WasmLabel;
 
-struct WasmCase {
+typedef struct WasmExpr* WasmExprPtr;
+DECLARE_VECTOR(expr_ptr, WasmExprPtr);
+
+typedef struct WasmCase {
   WasmLabel label;
   WasmExprPtrVector exprs;
-};
+} WasmCase;
+DECLARE_VECTOR(case, WasmCase);
 
-struct WasmConst {
+typedef struct WasmConst {
   WasmType type;
   union {
     uint32_t u32;
@@ -177,7 +163,8 @@ struct WasmConst {
     float f32;
     double f64;
   };
-};
+} WasmConst;
+DECLARE_VECTOR(const, WasmConst);
 
 typedef enum WasmExprType {
   WASM_EXPR_TYPE_BINARY,
@@ -262,10 +249,11 @@ struct WasmExpr {
   };
 };
 
-struct WasmBinding {
+typedef struct WasmBinding {
   WasmStringSlice name;
   int index;
-};
+} WasmBinding;
+DECLARE_VECTOR(binding, WasmBinding);
 
 typedef struct WasmTypeBindings {
   WasmTypeVector types;
@@ -281,11 +269,12 @@ typedef struct WasmFunc {
   WasmExprPtrVector exprs;
 } WasmFunc;
 
-struct WasmSegment {
+typedef struct WasmSegment {
   uint32_t addr;
   void* data;
   size_t size;
-};
+} WasmSegment;
+DECLARE_VECTOR(segment, WasmSegment);
 
 typedef struct WasmMemory {
   uint32_t initial_size;
@@ -332,7 +321,7 @@ typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_GLOBAL,
 } WasmModuleFieldType;
 
-struct WasmModuleField {
+typedef struct WasmModuleField {
   WasmModuleFieldType type;
   union {
     WasmFunc func;
@@ -343,7 +332,8 @@ struct WasmModuleField {
     WasmMemory memory;
     WasmTypeBindings global;
   };
-};
+} WasmModuleField;
+DECLARE_VECTOR(module_field, WasmModuleField);
 
 typedef struct WasmModule {
   WasmModuleFieldVector fields;
@@ -363,7 +353,7 @@ typedef struct WasmCommandInvoke {
   WasmConstVector args;
 } WasmCommandInvoke;
 
-struct WasmCommand {
+typedef struct WasmCommand {
   WasmCommandType type;
   union {
     WasmModule module;
@@ -373,7 +363,8 @@ struct WasmCommand {
     struct { WasmCommandInvoke invoke; WasmStringSlice text; } assert_trap;
     struct { WasmModule module; WasmStringSlice text; } assert_invalid;
   };
-};
+} WasmCommand;
+DECLARE_VECTOR(command, WasmCommand);
 
 typedef struct WasmScript {
   WasmCommandVector commands;
