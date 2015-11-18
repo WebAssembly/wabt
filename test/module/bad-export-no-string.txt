@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (nop)) (export nop nop))
 (;; STDERR ;;;
-module/bad-export-no-string.txt:2:30: expected STRING, not "nop"
+module/bad-export-no-string.txt:2:30: syntax error, unexpected NOP, expecting TEXT
 ;;; STDERR ;;)

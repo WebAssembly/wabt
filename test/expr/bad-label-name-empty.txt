@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (label $foo)))
 (;; STDERR ;;;
-expr/bad-label-name-empty.txt:2:26: expected '(', not ")"
+expr/bad-label-name-empty.txt:2:26: syntax error, unexpected ), expecting (
 ;;; STDERR ;;)

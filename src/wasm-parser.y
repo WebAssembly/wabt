@@ -1061,6 +1061,7 @@ void yyerror(WasmLocation* loc,
           loc->first_column);
   vfprintf(stderr, fmt, args);
   fprintf(stderr, "\n");
+  parser->errors++;
 }
 
 static int hexdigit(char c, uint32_t* out) {

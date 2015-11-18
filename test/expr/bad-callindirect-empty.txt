@@ -4,5 +4,5 @@
   (func
     (call_indirect $t)))
 (;; STDERR ;;;
-expr/bad-callindirect-empty.txt:5:22: expected '(', not ")"
+expr/bad-callindirect-empty.txt:5:22: syntax error, unexpected ), expecting (
 ;;; STDERR ;;)

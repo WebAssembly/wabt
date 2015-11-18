@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module
 (;; STDERR ;;;
-module/bad-module-no-close.txt:3:1: unexpected EOF
+module/bad-module-no-close.txt:3:8: syntax error, unexpected EOF, expecting ( or )
 ;;; STDERR ;;)

@@ -451,6 +451,7 @@ typedef void* WasmScanner;
 typedef struct WasmParser {
   WasmScanner scanner;
   WasmScript script;
+  int errors;
 } WasmParser;
 
 int yylex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);

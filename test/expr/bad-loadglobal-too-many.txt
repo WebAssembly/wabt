@@ -2,5 +2,5 @@
 (module (global i32)
   (func (load_global 0 (nop))))
 (;; STDERR ;;;
-expr/bad-loadglobal-too-many.txt:3:24: expected ')', not "("
+expr/bad-loadglobal-too-many.txt:3:24: syntax error, unexpected (, expecting )
 ;;; STDERR ;;)

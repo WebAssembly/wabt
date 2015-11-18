@@ -2,5 +2,5 @@
 (module
   (func foo))
 (;; STDERR ;;;
-func/bad-func-name.txt:3:9: expected name to begin with $
+func/bad-func-name.txt:3:9: unexpected token "foo"
 ;;; STDERR ;;)

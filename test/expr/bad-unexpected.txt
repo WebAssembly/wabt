@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (module)))
 (;; STDERR ;;;
-expr/bad-unexpected.txt:2:16: unexpected token "module"
+expr/bad-unexpected.txt:2:16: syntax error, unexpected MODULE
 ;;; STDERR ;;)

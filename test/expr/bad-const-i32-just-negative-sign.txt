@@ -2,5 +2,6 @@
 (module
   (func (i32.const -)))
 (;; STDERR ;;;
-expr/bad-const-i32-just-negative-sign.txt:3:20: invalid i32 literal "-"
+expr/bad-const-i32-just-negative-sign.txt:3:20: unexpected token "-"
+expr/bad-const-i32-just-negative-sign.txt:3:21: syntax error, unexpected ), expecting INT or FLOAT
 ;;; STDERR ;;)

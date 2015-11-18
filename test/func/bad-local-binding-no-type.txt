@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (local $n)))
 (;; STDERR ;;;
-func/bad-local-binding-no-type.txt:2:24: expected type
+func/bad-local-binding-no-type.txt:2:24: syntax error, unexpected ), expecting VALUE_TYPE
 ;;; STDERR ;;)

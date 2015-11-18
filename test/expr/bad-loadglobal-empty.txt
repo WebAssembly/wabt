@@ -2,5 +2,5 @@
 (module (global $n i32)
   (func (load_global)))
 (;; STDERR ;;;
-expr/bad-loadglobal-empty.txt:3:21: expected ATOM, not ")"
+expr/bad-loadglobal-empty.txt:3:21: syntax error, unexpected ), expecting INT or VAR
 ;;; STDERR ;;)

@@ -1,5 +1,6 @@
 ;;; ERROR: 1
 (module (export "foo" foo))
 (;; STDERR ;;;
-module/bad-export-name.txt:2:23: invalid var index
+module/bad-export-name.txt:2:23: unexpected token "foo"
+module/bad-export-name.txt:2:26: syntax error, unexpected ), expecting INT or VAR
 ;;; STDERR ;;)

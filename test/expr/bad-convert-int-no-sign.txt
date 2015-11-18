@@ -2,4 +2,5 @@
 (module (func (i32.convert.i32 (i32.const))))
 (;; STDERR ;;;
 expr/bad-convert-int-no-sign.txt:2:16: unexpected token "i32.convert.i32"
+expr/bad-convert-int-no-sign.txt:2:32: syntax error, unexpected (
 ;;; STDERR ;;)

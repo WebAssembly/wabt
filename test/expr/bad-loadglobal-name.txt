@@ -2,5 +2,6 @@
 (module (global $n f32)
   (func (load_global n)))
 (;; STDERR ;;;
-expr/bad-loadglobal-name.txt:3:22: invalid var index
+expr/bad-loadglobal-name.txt:3:22: unexpected token "n"
+expr/bad-loadglobal-name.txt:3:23: syntax error, unexpected ), expecting INT or VAR
 ;;; STDERR ;;)

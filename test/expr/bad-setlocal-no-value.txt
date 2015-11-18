@@ -3,5 +3,5 @@
   (local i32)
   (set_local 0)))
 (;; STDERR ;;;
-expr/bad-setlocal-no-value.txt:4:15: expected '(', not ")"
+expr/bad-setlocal-no-value.txt:4:15: syntax error, unexpected ), expecting (
 ;;; STDERR ;;)

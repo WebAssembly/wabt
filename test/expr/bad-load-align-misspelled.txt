@@ -3,5 +3,5 @@
   (func
     (i32.load aline=64 (i32.const 0))))
 (;; STDERR ;;;
-expr/bad-load-align-misspelled.txt:4:15: expected '(', not "aline=64"
+expr/bad-load-align-misspelled.txt:4:15: unexpected token "aline=64"
 ;;; STDERR ;;)

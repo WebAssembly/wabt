@@ -2,5 +2,5 @@
 (module (func (local $foo f64)
   (get_local $foo (nop))))
 (;; STDERR ;;;
-expr/bad-getlocal-too-many.txt:3:19: expected ')', not "("
+expr/bad-getlocal-too-many.txt:3:19: syntax error, unexpected (, expecting )
 ;;; STDERR ;;)

@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (local $foo $bar)))
 (;; STDERR ;;;
-func/bad-local-binding.txt:2:27: expected type
+func/bad-local-binding.txt:2:27: syntax error, unexpected VAR, expecting VALUE_TYPE
 ;;; STDERR ;;)

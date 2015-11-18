@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (f32.neg)))
 (;; STDERR ;;;
-expr/bad-unary-empty.txt:2:23: expected '(', not ")"
+expr/bad-unary-empty.txt:2:23: syntax error, unexpected ), expecting (
 ;;; STDERR ;;)

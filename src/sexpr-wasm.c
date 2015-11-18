@@ -173,8 +173,9 @@ int main(int argc, char** argv) {
   if (!scanner) {
     FATAL("unable to read %s\n", s_infile);
   }
-  WasmParser parser;
+  WasmParser parser = {};
   int result = yyparse(scanner, &parser);
+  result = result || parser.errors;
   free_scanner(scanner);
 
   return result;

@@ -1,5 +1,6 @@
 ;;; ERROR: 1
 (module (func (local $f f32) (get_local f)))
 (;; STDERR ;;;
-expr/bad-getlocal-name.txt:2:41: invalid var index
+expr/bad-getlocal-name.txt:2:41: unexpected token "f"
+expr/bad-getlocal-name.txt:2:42: syntax error, unexpected ), expecting INT or VAR
 ;;; STDERR ;;)

@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (local i32) (get_local)))
 (;; STDERR ;;;
-expr/bad-getlocal-empty.txt:2:37: expected ATOM, not ")"
+expr/bad-getlocal-empty.txt:2:37: syntax error, unexpected ), expecting INT or VAR
 ;;; STDERR ;;)

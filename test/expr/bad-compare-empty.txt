@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (i32.eq)))
 (;; STDERR ;;;
-expr/bad-compare-empty.txt:2:22: expected '(', not ")"
+expr/bad-compare-empty.txt:2:22: syntax error, unexpected ), expecting (
 ;;; STDERR ;;)
