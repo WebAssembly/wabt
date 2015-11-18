@@ -55,9 +55,10 @@ typedef enum WasmType {
 } WasmType;
 
 typedef enum WasmMemSize {
-  WASM_MEM_SIZE_8,
-  WASM_MEM_SIZE_16,
-  WASM_MEM_SIZE_32,
+  WASM_MEM_SIZE_8 = 8,
+  WASM_MEM_SIZE_16 = 16,
+  WASM_MEM_SIZE_32 = 32,
+  WASM_MEM_SIZE_64 = 64,
 } WasmMemSize;
 
 typedef enum WasmSigned {
@@ -386,6 +387,7 @@ typedef union WasmToken {
   WasmMemOp mem;
 
   /* non-terminals */
+  uint32_t u32;
   WasmTypeVector types;
   WasmVar var;
   WasmVarVector vars;

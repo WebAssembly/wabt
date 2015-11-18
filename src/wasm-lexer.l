@@ -25,6 +25,9 @@ typedef struct WasmScannerExtra {
 #define TEXT                   \
   yylval->text.start = yytext; \
   yylval->text.length = yyleng
+#define TEXT_AT(offset) \
+  yylval->text.start = yytext + offset; \
+  yylval->text.length = yyleng - offset
 #define TYPE(name) yylval->type = WASM_TYPE_##name
 #define SIGN(struct_, sign_) \
   yylval->struct_.sign = sign_ ? WASM_SIGNED : WASM_UNSIGNED
@@ -109,14 +112,14 @@ NAME      "$"{ATOM}
 "return"              { return TOK(RETURN); }
 "get_local"           { return TOK(GET_LOCAL); }
 "set_local"           { return TOK(SET_LOCAL); }
-"i32.load"            { TYPE(I32); return TOK(LOAD); }
-"i64.load"            { TYPE(I64); return TOK(LOAD); }
-"f32.load"            { TYPE(F32); return TOK(LOAD); }
-"f64.load"            { TYPE(F64); return TOK(LOAD); }
-"i32.store"           { TYPE(I32); return TOK(STORE); }
-"i64.store"           { TYPE(I64); return TOK(STORE); }
-"f32.store"           { TYPE(F32); return TOK(STORE); }
-"f64.store"           { TYPE(F64); return TOK(STORE); }
+"i32.load"            { TYPE(I32); MEMSIZE(32); return TOK(LOAD); }
+"i64.load"            { TYPE(I64); MEMSIZE(64); return TOK(LOAD); }
+"f32.load"            { TYPE(F32); MEMSIZE(32); return TOK(LOAD); }
+"f64.load"            { TYPE(F64); MEMSIZE(64); return TOK(LOAD); }
+"i32.store"           { TYPE(I32); MEMSIZE(32); return TOK(STORE); }
+"i64.store"           { TYPE(I64); MEMSIZE(64); return TOK(STORE); }
+"f32.store"           { TYPE(F32); MEMSIZE(32); return TOK(STORE); }
+"f64.store"           { TYPE(F64); MEMSIZE(64); return TOK(STORE); }
 "i32.load8_s"         { TYPE(I32); MEMSIZESIGN(8, 1); return TOK(LOAD_EXTEND); }
 "i64.load8_s"         { TYPE(I64); MEMSIZESIGN(8, 1); return TOK(LOAD_EXTEND); }
 "i32.load8_u"         { TYPE(I32); MEMSIZESIGN(8, 0); return TOK(LOAD_EXTEND); }
@@ -132,8 +135,8 @@ NAME      "$"{ATOM}
 "i32.store16"         { TYPE(I32); MEMSIZE(16); return TOK(STORE_WRAP); }
 "i64.store16"         { TYPE(I64); MEMSIZE(16); return TOK(STORE_WRAP); }
 "i64.store32"         { TYPE(I64); MEMSIZE(32); return TOK(STORE_WRAP); }
-"offset="{DIGITS}     { TEXT; return TOK(OFFSET); }
-"align="{DIGITS}      { TEXT; return TOK(ALIGN); }
+"offset="{DIGITS}     { TEXT_AT(7); return TOK(OFFSET); }
+"align="{DIGITS}      { TEXT_AT(6); return TOK(ALIGN); }
 "i32.const"           { TYPE(I32); return TOK(CONST); }
 "i64.const"           { TYPE(I64); return TOK(CONST); }
 "f32.const"           { TYPE(F32); return TOK(CONST); }

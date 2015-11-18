@@ -1,4 +1,7 @@
 %{
+#include <assert.h>
+#include <errno.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,10 +20,18 @@ static WasmExprPtr wasm_new_expr(WasmExprType type) {
   return result;
 }
 
+static int is_power_of_two(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
+
 static int read_int32(const char* s, const char* end, uint32_t* out,
                       int allow_signed);
 static int read_int64(const char* s, const char* end, uint64_t* out);
 static int read_uint64(const char* s, const char* end, uint64_t* out);
+static int read_float(const char* s, const char* end, float* out);
+static int read_double(const char* s, const char* end, double* out);
+static int read_const(WasmType type, const char* s, const char* end,
+                      WasmConst* out);
 
 %}
 
@@ -53,7 +64,7 @@ static int read_uint64(const char* s, const char* end, uint64_t* out);
 %type<mem> LOAD STORE LOAD_EXTEND STORE_WRAP
 %type<text> ALIGN FLOAT INT OFFSET TEXT VAR
 %type<type> SELECT
-%type<type> VALUE_TYPE
+%type<type> CONST VALUE_TYPE
 %type<unary> UNARY
 
 %type<case_> case
@@ -72,6 +83,7 @@ static int read_uint64(const char* s, const char* end, uint64_t* out);
 %type<memory> memory
 %type<module> module
 %type<module_fields> module_fields
+%type<u32> align offset
 %type<segment> segment
 %type<segments> segment_list
 %type<type_bindings> global local_list param_list
@@ -148,12 +160,22 @@ labeling :
 ;
 
 offset :
-    /* empty */
-  | OFFSET
+    /* empty */ { $$ = 0; }
+  | OFFSET {
+      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+        yyerror(&@1, scanner, "invalid offset \"%.*s\"", $1.length, $1.start);
+    }
 ;
 align :
-    /* empty */
-  | ALIGN
+    /* empty */ { $$ = 0; }
+  | ALIGN {
+      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+        yyerror(&@1, scanner, "invalid alignment \"%.*s\"", $1.length,
+                $1.start);
+
+      if (!is_power_of_two($$))
+        yyerror(&@1, scanner, "alignment must be power-of-two");
+    }
 ;
 
 expr :
@@ -247,33 +269,39 @@ expr1 :
     }
   | LOAD offset align expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD);
-      /* TODO(binji): offset, align */
       $$->load.op = $1;
+      $$->load.offset = $2;
+      $$->load.align = $3;
       $$->load.addr = $4;
     }
   | STORE offset align expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE);
-      /* TODO(binji): offset, align */
       $$->store.op = $1;
+      $$->store.offset = $2;
+      $$->store.align = $3;
       $$->store.addr = $4;
       $$->store.value = $5;
     }
   | LOAD_EXTEND offset align expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD_EXTEND);
-      /* TODO(binji): offset, align */
       $$->load.op = $1;
+      $$->load.offset = $2;
+      $$->load.align = $3;
       $$->load.addr = $4;
     }
   | STORE_WRAP offset align expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE_WRAP);
-      /* TODO(binji): offset, align */
       $$->store.op = $1;
+      $$->store.offset = $2;
+      $$->store.align = $3;
       $$->store.addr = $4;
       $$->store.value = $5;
     }
   | CONST literal {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CONST);
-      /* TODO(binji): parse literal */
+      /* TODO(binji): check for error */
+      read_const($1, $2.start, $2.start + $2.length, &$$->const_);
+      free((char*)$2.start);
     }
   | UNARY expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_UNARY);
@@ -940,7 +968,9 @@ cmd_list :
 
 const :
     LPAR CONST literal RPAR {
-      /* TODO(binji): parse literal */
+      /* TODO(binji): check for error */
+      read_const($2, $3.start, $3.start + $3.length, &$$);
+      free((char*)$3.start);
     }
 ;
 const_opt :
@@ -1041,6 +1071,20 @@ static int hexdigit(char c, uint32_t* out) {
   return 0;
 }
 
+/* return 1 if the non-NULL-terminated string starting with |start| and ending
+ with |end| starts with the NULL-terminated string |prefix|. */
+static int string_starts_with(const char* start,
+                              const char* end,
+                              const char* prefix) {
+  while (start < end && *prefix) {
+    if (*start != *prefix)
+      return 0;
+    start++;
+    prefix++;
+  }
+  return *prefix == 0;
+}
+
 static int read_uint64(const char* s, const char* end, uint64_t* out) {
   if (s == end)
     return 0;
@@ -1119,4 +1163,147 @@ static int read_int32(const char* s,
   }
   *out = (uint32_t)value;
   return 1;
+}
+
+static int read_float_nan(const char* s, const char* end, float* out) {
+  int is_neg = 0;
+  if (*s == '-') {
+    is_neg = 1;
+    s++;
+  } else if (*s == '+') {
+    s++;
+  }
+  if (!string_starts_with(s, end, "nan"))
+    return 0;
+  s += 3;
+
+  uint32_t tag;
+  if (s != end) {
+    tag = 0;
+    if (!string_starts_with(s, end, ":0x"))
+      return 0;
+    s += 3;
+
+    for (; s < end; ++s) {
+      uint32_t digit;
+      if (!hexdigit(*s, &digit))
+        return 0;
+      tag = tag * 16 + digit;
+      /* check for overflow */
+      const uint32_t max_tag = 0x7fffff;
+      if (tag > max_tag)
+        return 0;
+    }
+
+    /* NaN cannot have a zero tag, that is reserved for infinity */
+    if (tag == 0)
+      return 0;
+  } else {
+    /* normal quiet NaN */
+    tag = 0x400000;
+  }
+
+  uint32_t bits = 0x7f800000 | tag;
+  if (is_neg)
+    bits |= 0x80000000U;
+  memcpy(out, &bits, sizeof(*out));
+  return 1;
+}
+
+static int read_float(const char* s, const char* end, float* out) {
+  if (read_float_nan(s, end, out))
+    return 1;
+
+  errno = 0;
+  char* endptr;
+  float value;
+  value = strtof(s, &endptr);
+  if (endptr != end ||
+      ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) && errno != 0))
+    return 0;
+
+  *out = value;
+  return 1;
+}
+
+static int read_double_nan(const char* s, const char* end, double* out) {
+  int is_neg = 0;
+  if (*s == '-') {
+    is_neg = 1;
+    s++;
+  } else if (*s == '+') {
+    s++;
+  }
+  if (!string_starts_with(s, end, "nan"))
+    return 0;
+  s += 3;
+
+  uint64_t tag;
+  if (s != end) {
+    tag = 0;
+    if (!string_starts_with(s, end, ":0x"))
+      return 0;
+    s += 3;
+
+    for (; s < end; ++s) {
+      uint32_t digit;
+      if (!hexdigit(*s, &digit))
+        return 0;
+      tag = tag * 16 + digit;
+      /* check for overflow */
+      const uint64_t max_tag = 0xfffffffffffffULL;
+      if (tag > max_tag)
+        return 0;
+    }
+
+    /* NaN cannot have a zero tag, that is reserved for infinity */
+    if (tag == 0)
+      return 0;
+  } else {
+    /* normal quiet NaN */
+    tag = 0x8000000000000ULL;
+  }
+
+  uint64_t bits = 0x7ff0000000000000ULL | tag;
+  if (is_neg)
+    bits |= 0x8000000000000000ULL;
+  memcpy(out, &bits, sizeof(*out));
+  return 1;
+}
+
+static int read_double(const char* s, const char* end, double* out) {
+  if (read_double_nan(s, end, out))
+    return 1;
+
+  errno = 0;
+  char* endptr;
+  double value;
+  value = strtod(s, &endptr);
+  if (endptr != end ||
+      ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) && errno != 0))
+    return 0;
+
+  *out = value;
+  return 1;
+}
+
+static int read_const(WasmType type,
+                      const char* s,
+                      const char* end,
+                      WasmConst* out) {
+  out->type = type;
+  switch (type) {
+    case WASM_TYPE_I32:
+      return read_int32(s, end, &out->u32, 0);
+    case WASM_TYPE_I64:
+      return read_int64(s, end, &out->u64);
+    case WASM_TYPE_F32:
+      return read_float(s, end, &out->f32);
+    case WASM_TYPE_F64:
+      return read_double(s, end, &out->f64);
+    default:
+      assert(0);
+      break;
+  }
+  return 0;
 }
