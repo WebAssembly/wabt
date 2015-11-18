@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm2.h"
+#include "wasm.h"
 #include "wasm-internal.h"
 
 enum {

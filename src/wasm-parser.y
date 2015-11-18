@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#include "wasm2.h"
+#include "wasm.h"
 
 #define ZEROMEM(var) memset(&(var), 0, sizeof(var));
 #define DUPTEXT(dst, src)                           \

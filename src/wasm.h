@@ -1,7 +1,6 @@
-#ifndef WASM_H
-#define WASM_H
+#ifndef WASM_H_
+#define WASM_H_
 
-#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -9,6 +8,21 @@
 #else
 #define EXTERN_C
 #endif
+
+#define DECLARE_VECTOR(name, type)                               \
+  typedef struct type##Vector {                                  \
+    type* data;                                                  \
+    size_t size;                                                 \
+    size_t capacity;                                             \
+  } type##Vector;                                                \
+  EXTERN_C void wasm_destroy_##name##_vector(type##Vector* vec); \
+  EXTERN_C type* wasm_append_##name(type##Vector* vec);          \
+  EXTERN_C int wasm_extend_##name##s(type##Vector* dst, type##Vector* src);
+
+typedef struct WasmStringSlice {
+  const char* start;
+  int length;
+} WasmStringSlice;
 
 typedef enum WasmType {
   WASM_TYPE_VOID = 0,
@@ -18,291 +32,408 @@ typedef enum WasmType {
   WASM_TYPE_F64 = 8,
   WASM_TYPE_ALL = 15,
 } WasmType;
+DECLARE_VECTOR(type, WasmType)
 
-typedef enum WasmMemType {
-  WASM_MEM_TYPE_I8,
-  WASM_MEM_TYPE_I16,
-  WASM_MEM_TYPE_I32,
-  WASM_MEM_TYPE_I64,
-  WASM_MEM_TYPE_F32,
-  WASM_MEM_TYPE_F64,
-  WASM_NUM_MEM_TYPES,
-} WasmMemType;
+typedef enum WasmMemSize {
+  WASM_MEM_SIZE_8 = 8,
+  WASM_MEM_SIZE_16 = 16,
+  WASM_MEM_SIZE_32 = 32,
+  WASM_MEM_SIZE_64 = 64,
+} WasmMemSize;
 
-#define OPCODES(V)             \
-  V(NOP, 0x00)                 \
-  V(BLOCK, 0x01)               \
-  V(LOOP, 0x02)                \
-  V(IF, 0x03)                  \
-  V(IF_THEN, 0x04)             \
-  V(SELECT, 0x05)              \
-  V(BR, 0x06)                  \
-  V(BR_IF, 0x07)               \
-  V(TABLESWITCH, 0x08)         \
-  V(I8_CONST, 0x09)            \
-  V(I32_CONST, 0x0a)           \
-  V(I64_CONST, 0x0b)           \
-  V(F64_CONST, 0x0c)           \
-  V(F32_CONST, 0x0d)           \
-  V(GET_LOCAL, 0x0e)           \
-  V(SET_LOCAL, 0x0f)           \
-  V(GET_GLOBAL, 0x10)          \
-  V(SET_GLOBAL, 0x11)          \
-  V(CALL, 0x12)                \
-  V(CALL_INDIRECT, 0x13)       \
-  V(RETURN, 0x14)              \
-  V(UNREACHABLE, 0x15)         \
-  V(I32_LOAD_MEM8_S, 0x20)     \
-  V(I32_LOAD_MEM8_U, 0x21)     \
-  V(I32_LOAD_MEM16_S, 0x22)    \
-  V(I32_LOAD_MEM16_U, 0x23)    \
-  V(I64_LOAD_MEM8_S, 0x24)     \
-  V(I64_LOAD_MEM8_U, 0x25)     \
-  V(I64_LOAD_MEM16_S, 0x26)    \
-  V(I64_LOAD_MEM16_U, 0x27)    \
-  V(I64_LOAD_MEM32_S, 0x28)    \
-  V(I64_LOAD_MEM32_U, 0x29)    \
-  V(I32_LOAD_MEM, 0x2a)        \
-  V(I64_LOAD_MEM, 0x2b)        \
-  V(F32_LOAD_MEM, 0x2c)        \
-  V(F64_LOAD_MEM, 0x2d)        \
-  V(I32_STORE_MEM8, 0x2e)      \
-  V(I32_STORE_MEM16, 0x2f)     \
-  V(I64_STORE_MEM8, 0x30)      \
-  V(I64_STORE_MEM16, 0x31)     \
-  V(I64_STORE_MEM32, 0x32)     \
-  V(I32_STORE_MEM, 0x33)       \
-  V(I64_STORE_MEM, 0x34)       \
-  V(F32_STORE_MEM, 0x35)       \
-  V(F64_STORE_MEM, 0x36)       \
-  V(RESIZE_MEMORY_I32, 0x39)   \
-  V(RESIZE_MEMORY_I64, 0x3a)   \
-  V(I32_ADD, 0x40)             \
-  V(I32_SUB, 0x41)             \
-  V(I32_MUL, 0x42)             \
-  V(I32_SDIV, 0x43)            \
-  V(I32_UDIV, 0x44)            \
-  V(I32_SREM, 0x45)            \
-  V(I32_UREM, 0x46)            \
-  V(I32_AND, 0x47)             \
-  V(I32_OR, 0x48)              \
-  V(I32_XOR, 0x49)             \
-  V(I32_SHL, 0x4a)             \
-  V(I32_SHR, 0x4b)             \
-  V(I32_SAR, 0x4c)             \
-  V(I32_EQ, 0x4d)              \
-  V(I32_NE, 0x4e)              \
-  V(I32_SLT, 0x4f)             \
-  V(I32_SLE, 0x50)             \
-  V(I32_ULT, 0x51)             \
-  V(I32_ULE, 0x52)             \
-  V(I32_SGT, 0x53)             \
-  V(I32_SGE, 0x54)             \
-  V(I32_UGT, 0x55)             \
-  V(I32_UGE, 0x56)             \
-  V(I32_CLZ, 0x57)             \
-  V(I32_CTZ, 0x58)             \
-  V(I32_POPCNT, 0x59)          \
-  V(I32_NOT, 0x5a)             \
-  V(I64_ADD, 0x5b)             \
-  V(I64_SUB, 0x5c)             \
-  V(I64_MUL, 0x5d)             \
-  V(I64_SDIV, 0x5e)            \
-  V(I64_UDIV, 0x5f)            \
-  V(I64_SREM, 0x60)            \
-  V(I64_UREM, 0x61)            \
-  V(I64_AND, 0x62)             \
-  V(I64_OR, 0x63)              \
-  V(I64_XOR, 0x64)             \
-  V(I64_SHL, 0x65)             \
-  V(I64_SHR, 0x66)             \
-  V(I64_SAR, 0x67)             \
-  V(I64_EQ, 0x68)              \
-  V(I64_NE, 0x69)              \
-  V(I64_SLT, 0x6a)             \
-  V(I64_SLE, 0x6b)             \
-  V(I64_ULT, 0x6c)             \
-  V(I64_ULE, 0x6d)             \
-  V(I64_SGT, 0x6e)             \
-  V(I64_SGE, 0x6f)             \
-  V(I64_UGT, 0x70)             \
-  V(I64_UGE, 0x71)             \
-  V(I64_CLZ, 0x72)             \
-  V(I64_CTZ, 0x73)             \
-  V(I64_POPCNT, 0x74)          \
-  V(F32_ADD, 0x75)             \
-  V(F32_SUB, 0x76)             \
-  V(F32_MUL, 0x77)             \
-  V(F32_DIV, 0x78)             \
-  V(F32_MIN, 0x79)             \
-  V(F32_MAX, 0x7a)             \
-  V(F32_ABS, 0x7b)             \
-  V(F32_NEG, 0x7c)             \
-  V(F32_COPYSIGN, 0x7d)        \
-  V(F32_CEIL, 0x7e)            \
-  V(F32_FLOOR, 0x7f)           \
-  V(F32_TRUNC, 0x80)           \
-  V(F32_NEAREST, 0x81)         \
-  V(F32_SQRT, 0x82)            \
-  V(F32_EQ, 0x83)              \
-  V(F32_NE, 0x84)              \
-  V(F32_LT, 0x85)              \
-  V(F32_LE, 0x86)              \
-  V(F32_GT, 0x87)              \
-  V(F32_GE, 0x88)              \
-  V(F64_ADD, 0x89)             \
-  V(F64_SUB, 0x8a)             \
-  V(F64_MUL, 0x8b)             \
-  V(F64_DIV, 0x8c)             \
-  V(F64_MIN, 0x8d)             \
-  V(F64_MAX, 0x8e)             \
-  V(F64_ABS, 0x8f)             \
-  V(F64_NEG, 0x90)             \
-  V(F64_COPYSIGN, 0x91)        \
-  V(F64_CEIL, 0x92)            \
-  V(F64_FLOOR, 0x93)           \
-  V(F64_TRUNC, 0x94)           \
-  V(F64_NEAREST, 0x95)         \
-  V(F64_SQRT, 0x96)            \
-  V(F64_EQ, 0x97)              \
-  V(F64_NE, 0x98)              \
-  V(F64_LT, 0x99)              \
-  V(F64_LE, 0x9a)              \
-  V(F64_GT, 0x9b)              \
-  V(F64_GE, 0x9c)              \
-  V(I32_SCONVERT_F32, 0x9d)    \
-  V(I32_SCONVERT_F64, 0x9e)    \
-  V(I32_UCONVERT_F32, 0x9f)    \
-  V(I32_UCONVERT_F64, 0xa0)    \
-  V(I32_CONVERT_I64, 0xa1)     \
-  V(I64_SCONVERT_F32, 0xa2)    \
-  V(I64_SCONVERT_F64, 0xa3)    \
-  V(I64_UCONVERT_F32, 0xa4)    \
-  V(I64_UCONVERT_F64, 0xa5)    \
-  V(I64_SCONVERT_I32, 0xa6)    \
-  V(I64_UCONVERT_I32, 0xa7)    \
-  V(F32_SCONVERT_I32, 0xa8)    \
-  V(F32_UCONVERT_I32, 0xa9)    \
-  V(F32_SCONVERT_I64, 0xaa)    \
-  V(F32_UCONVERT_I64, 0xab)    \
-  V(F32_CONVERT_F64, 0xac)     \
-  V(F32_REINTERPRET_I32, 0xad) \
-  V(F64_SCONVERT_I32, 0xae)    \
-  V(F64_UCONVERT_I32, 0xaf)    \
-  V(F64_SCONVERT_I64, 0xb0)    \
-  V(F64_UCONVERT_I64, 0xb1)    \
-  V(F64_CONVERT_F32, 0xb2)     \
-  V(F64_REINTERPRET_I64, 0xb3) \
-  V(I32_REINTERPRET_F32, 0xb4) \
-  V(I64_REINTERPRET_F64, 0xb5)
+typedef enum WasmSigned {
+  WASM_SIGNED,
+  WASM_UNSIGNED,
+} WasmSigned;
 
-typedef enum WasmOpcode {
-  WASM_OPCODE_INVALID = -1,
-#define OPCODE(name, code) WASM_OPCODE_##name = code,
-  OPCODES(OPCODE)
-#undef OPCODE
-} WasmOpcode;
+typedef enum WasmUnaryOpType {
+  WASM_UNARY_OP_TYPE_NOT,
+  WASM_UNARY_OP_TYPE_CLZ,
+  WASM_UNARY_OP_TYPE_CTZ,
+  WASM_UNARY_OP_TYPE_POPCNT,
+  WASM_UNARY_OP_TYPE_NEG,
+  WASM_UNARY_OP_TYPE_ABS,
+  WASM_UNARY_OP_TYPE_SQRT,
+  WASM_UNARY_OP_TYPE_CEIL,
+  WASM_UNARY_OP_TYPE_FLOOR,
+  WASM_UNARY_OP_TYPE_TRUNC,
+  WASM_UNARY_OP_TYPE_NEAREST,
+} WasmUnaryOpType;
 
-typedef struct WasmSource {
-  const char* filename;
-  const char* start;
-  const char* end;
-} WasmSource;
+typedef enum WasmBinaryOpType {
+  WASM_BINARY_OP_TYPE_ADD,
+  WASM_BINARY_OP_TYPE_SUB,
+  WASM_BINARY_OP_TYPE_MUL,
+  WASM_BINARY_OP_TYPE_DIV,
+  WASM_BINARY_OP_TYPE_REM,
+  WASM_BINARY_OP_TYPE_AND,
+  WASM_BINARY_OP_TYPE_OR,
+  WASM_BINARY_OP_TYPE_XOR,
+  WASM_BINARY_OP_TYPE_SHL,
+  WASM_BINARY_OP_TYPE_SHR,
+  WASM_BINARY_OP_TYPE_MIN,
+  WASM_BINARY_OP_TYPE_MAX,
+  WASM_BINARY_OP_TYPE_COPYSIGN,
+} WasmBinaryOpType;
 
-typedef struct WasmSourceLocation {
-  WasmSource* source;
-  const char* pos;
-  int line;
-  int col;
-} WasmSourceLocation;
+typedef enum WasmCompareOpType {
+  WASM_COMPARE_OP_TYPE_EQ,
+  WASM_COMPARE_OP_TYPE_NE,
+  WASM_COMPARE_OP_TYPE_LT,
+  WASM_COMPARE_OP_TYPE_LE,
+  WASM_COMPARE_OP_TYPE_GT,
+  WASM_COMPARE_OP_TYPE_GE,
+} WasmCompareOpType;
 
-#define DECLARE_VECTOR(name, type)                               \
-  typedef struct type##Vector {                                  \
-    type* data;                                                  \
-    size_t size;                                                 \
-    size_t capacity;                                             \
-  } type##Vector;                                                \
-  EXTERN_C void wasm_destroy_##name##_vector(type##Vector* vec); \
-  EXTERN_C type* wasm_append_##name(type##Vector* vec);
+typedef struct WasmUnaryOp {
+  WasmType type;
+  WasmUnaryOpType op_type;
+} WasmUnaryOp;
+
+typedef struct WasmBinaryOp {
+  WasmType type;
+  WasmBinaryOpType op_type;
+  WasmSigned sign;
+} WasmBinaryOp;
+
+typedef struct WasmCompareOp {
+  WasmType type;
+  WasmCompareOpType op_type;
+  WasmSigned sign;
+} WasmCompareOp;
+
+typedef struct WasmConvertOp {
+  WasmType type;
+  WasmType type2;
+  WasmSigned sign;
+} WasmConvertOp;
+
+typedef struct WasmCastOp {
+  WasmType type;
+  WasmType type2;
+} WasmCastOp;
+
+typedef struct WasmMemOp {
+  WasmType type;
+  WasmMemSize size;
+  WasmSigned sign;
+} WasmMemOp;
+
+typedef enum WasmVarType {
+  WASM_VAR_TYPE_INDEX,
+  WASM_VAR_TYPE_NAME,
+} WasmVarType;
+
+typedef struct WasmVar {
+  WasmVarType type;
+  union {
+    int index;
+    WasmStringSlice name;
+  };
+} WasmVar;
+DECLARE_VECTOR(var, WasmVar);
+
+typedef enum WasmTargetType {
+  WASM_TARGET_TYPE_CASE,
+  WASM_TARGET_TYPE_BR,
+} WasmTargetType;
+
+typedef struct WasmTarget {
+  WasmTargetType type;
+  WasmVar var;
+} WasmTarget;
+DECLARE_VECTOR(target, WasmTarget);
+
+typedef WasmStringSlice WasmLabel;
+
+typedef struct WasmExpr* WasmExprPtr;
+DECLARE_VECTOR(expr_ptr, WasmExprPtr);
+
+typedef struct WasmCase {
+  WasmLabel label;
+  WasmExprPtrVector exprs;
+} WasmCase;
+DECLARE_VECTOR(case, WasmCase);
+
+typedef struct WasmConst {
+  WasmType type;
+  union {
+    uint32_t u32;
+    uint64_t u64;
+    float f32;
+    double f64;
+  };
+} WasmConst;
+DECLARE_VECTOR(const, WasmConst);
+
+typedef enum WasmExprType {
+  WASM_EXPR_TYPE_BINARY,
+  WASM_EXPR_TYPE_BLOCK,
+  WASM_EXPR_TYPE_BR,
+  WASM_EXPR_TYPE_BR_IF,
+  WASM_EXPR_TYPE_CALL,
+  WASM_EXPR_TYPE_CALL_IMPORT,
+  WASM_EXPR_TYPE_CALL_INDIRECT,
+  WASM_EXPR_TYPE_CAST,
+  WASM_EXPR_TYPE_COMPARE,
+  WASM_EXPR_TYPE_CONST,
+  WASM_EXPR_TYPE_CONVERT,
+  WASM_EXPR_TYPE_GET_LOCAL,
+  WASM_EXPR_TYPE_GROW_MEMORY,
+  WASM_EXPR_TYPE_HAS_FEATURE,
+  WASM_EXPR_TYPE_IF,
+  WASM_EXPR_TYPE_IF_ELSE,
+  WASM_EXPR_TYPE_LABEL,
+  WASM_EXPR_TYPE_LOAD,
+  WASM_EXPR_TYPE_LOAD_EXTEND,
+  WASM_EXPR_TYPE_LOAD_GLOBAL,
+  WASM_EXPR_TYPE_LOOP,
+  WASM_EXPR_TYPE_MEMORY_SIZE,
+  WASM_EXPR_TYPE_NOP,
+  WASM_EXPR_TYPE_PAGE_SIZE,
+  WASM_EXPR_TYPE_RETURN,
+  WASM_EXPR_TYPE_SELECT,
+  WASM_EXPR_TYPE_SET_LOCAL,
+  WASM_EXPR_TYPE_STORE,
+  WASM_EXPR_TYPE_STORE_GLOBAL,
+  WASM_EXPR_TYPE_STORE_WRAP,
+  WASM_EXPR_TYPE_TABLESWITCH,
+  WASM_EXPR_TYPE_UNARY,
+  WASM_EXPR_TYPE_UNREACHABLE,
+} WasmExprType;
+
+typedef struct WasmExpr WasmExpr;
+struct WasmExpr {
+  WasmExprType type;
+  union {
+    struct { WasmLabel label; WasmExprPtrVector exprs; } block;
+    struct { WasmExprPtr cond, true_, false_; } if_else;
+    struct { WasmExprPtr cond, true_; } if_;
+    struct { WasmVar var; WasmExprPtr cond; } br_if;
+    struct { WasmLabel inner, outer; WasmExprPtrVector exprs; } loop;
+    struct { WasmLabel label; WasmExprPtr expr; } label;
+    struct { WasmVar var; WasmExprPtr expr; } br;
+    struct { WasmExprPtr expr; } return_;
+    struct {
+      WasmLabel label;
+      WasmExprPtr expr;
+      WasmTargetVector targets;
+      WasmTarget default_target;
+      WasmCaseVector cases;
+    } tableswitch;
+    struct { WasmVar var; WasmExprPtrVector args; } call;
+    struct {
+      WasmVar var;
+      WasmExprPtr expr;
+      WasmExprPtrVector args;
+    } call_indirect;
+    struct { WasmVar var; } get_local;
+    struct { WasmVar var; WasmExprPtr expr; } set_local;
+    struct { WasmMemOp op; uint32_t offset, align; WasmExprPtr addr; } load;
+    struct {
+      WasmMemOp op;
+      uint32_t offset, align;
+      WasmExprPtr addr, value;
+    } store;
+    WasmConst const_;
+    struct { WasmUnaryOp op; WasmExprPtr expr; } unary;
+    struct { WasmBinaryOp op; WasmExprPtr left, right; } binary;
+    struct { WasmType type; WasmExprPtr cond, true_, false_; } select;
+    struct { WasmCompareOp op; WasmExprPtr left, right; } compare;
+    struct { WasmConvertOp op; WasmExprPtr expr; } convert;
+    struct { WasmCastOp op; WasmExprPtr expr; } cast;
+    struct { WasmExprPtr expr; } grow_memory;
+    struct { WasmStringSlice text; } has_feature;
+    struct { WasmVar var; } load_global;
+    struct { WasmVar var; WasmExprPtr expr; } store_global;
+  };
+};
 
 typedef struct WasmBinding {
-  char* name;
+  WasmStringSlice name;
   int index;
 } WasmBinding;
-DECLARE_VECTOR(binding, WasmBinding)
+DECLARE_VECTOR(binding, WasmBinding);
 
-typedef struct WasmVariable {
-  WasmType type;
-} WasmVariable;
-DECLARE_VECTOR(variable, WasmVariable)
+typedef struct WasmTypeBindings {
+  WasmTypeVector types;
+  WasmBindingVector bindings;
+} WasmTypeBindings;
 
-typedef struct WasmLabel {
-  char* name;
-  WasmType type;
-  struct WasmLabel* next;
-} WasmLabel;
-
-typedef struct WasmExportedNameList {
-  char* name;
-  struct WasmExportedNameList* next;
-} WasmExportedNameList;
-
-typedef struct WasmSignature {
+typedef struct WasmFunc {
+  WasmStringSlice name;
+  WasmVar type_var;
+  WasmTypeBindings params;
   WasmType result_type;
-  WasmVariableVector args;
-} WasmSignature;
-DECLARE_VECTOR(signature, WasmSignature);
-
-typedef int WasmSignatureIndex;
-DECLARE_VECTOR(signature_index, WasmSignatureIndex);
-
-typedef struct WasmFunction {
-  WasmType result_type;
-  WasmVariableVector locals; /* Includes args, they're at the start */
-  WasmBindingVector local_bindings;
-  int num_args;
-  WasmSignatureIndex signature_index;
-
-  /* exported and exported_name won't be valid until after the before_export
-   * callback */
-  WasmExportedNameList exported_name;
-  int exported;
-} WasmFunction;
-DECLARE_VECTOR(function, WasmFunction)
-
-typedef WasmFunction* WasmFunctionPtr;
-DECLARE_VECTOR(function_ptr, WasmFunctionPtr)
-
-typedef struct WasmImport {
-  char* module_name;
-  char* func_name;
-  WasmSignatureIndex signature_index;
-} WasmImport;
-DECLARE_VECTOR(import, WasmImport)
-
-typedef void* WasmSegmentData;
+  WasmTypeBindings locals;
+  WasmExprPtrVector exprs;
+} WasmFunc;
 
 typedef struct WasmSegment {
+  uint32_t addr;
+  void* data;
   size_t size;
-  uint32_t address;
-  WasmSegmentData data; /* don't access directly; call wasm_copy_segment_data */
 } WasmSegment;
-DECLARE_VECTOR(segment, WasmSegment)
+DECLARE_VECTOR(segment, WasmSegment);
+
+typedef struct WasmMemory {
+  uint32_t initial_size;
+  uint32_t max_size;
+  WasmSegmentVector segments;
+} WasmMemory;
+
+typedef struct WasmFuncSignature {
+  WasmType result_type;
+  WasmTypeVector param_types;
+} WasmFuncSignature;
+
+typedef struct WasmFuncType {
+  WasmStringSlice name;
+  WasmFuncSignature sig;
+} WasmFuncType;
+
+typedef enum WasmImportType {
+  WASM_IMPORT_HAS_TYPE,
+  WASM_IMPORT_HAS_FUNC_SIGNATURE,
+} WasmImportType;
+
+typedef struct WasmImport {
+  WasmImportType import_type;
+  WasmStringSlice name;
+  WasmStringSlice module_name;
+  WasmStringSlice func_name;
+  WasmVar type_var;
+  WasmFuncSignature func_sig;
+} WasmImport;
+
+typedef struct WasmExport {
+  WasmStringSlice name;
+  WasmVar var;
+} WasmExport;
+
+typedef enum WasmModuleFieldType {
+  WASM_MODULE_FIELD_TYPE_FUNC,
+  WASM_MODULE_FIELD_TYPE_IMPORT,
+  WASM_MODULE_FIELD_TYPE_EXPORT,
+  WASM_MODULE_FIELD_TYPE_TABLE,
+  WASM_MODULE_FIELD_TYPE_FUNC_TYPE,
+  WASM_MODULE_FIELD_TYPE_MEMORY,
+  WASM_MODULE_FIELD_TYPE_GLOBAL,
+} WasmModuleFieldType;
+
+typedef struct WasmModuleField {
+  WasmModuleFieldType type;
+  union {
+    WasmFunc func;
+    WasmImport import;
+    WasmExport export;
+    WasmVarVector table;
+    WasmFuncType func_type;
+    WasmMemory memory;
+    WasmTypeBindings global;
+  };
+} WasmModuleField;
+DECLARE_VECTOR(module_field, WasmModuleField);
 
 typedef struct WasmModule {
-  WasmSignatureVector signatures;
-  WasmSignatureIndexVector function_types;
-  WasmBindingVector function_type_bindings;
-  WasmFunctionVector functions;
-  WasmBindingVector function_bindings;
-  WasmVariableVector globals;
-  WasmBindingVector global_bindings;
-  WasmImportVector imports;
-  WasmBindingVector import_bindings;
-  WasmSegmentVector segments;
-  WasmFunctionPtrVector function_table;
-  uint32_t initial_memory_size;
-  uint32_t max_memory_size;
+  WasmModuleFieldVector fields;
 } WasmModule;
 
-#endif /* WASM_H */
+typedef enum WasmCommandType {
+  WASM_COMMAND_TYPE_MODULE,
+  WASM_COMMAND_TYPE_INVOKE,
+  WASM_COMMAND_TYPE_ASSERT_INVALID,
+  WASM_COMMAND_TYPE_ASSERT_RETURN,
+  WASM_COMMAND_TYPE_ASSERT_RETURN_NAN,
+  WASM_COMMAND_TYPE_ASSERT_RETURN_TRAP,
+} WasmCommandType;
+
+typedef struct WasmCommandInvoke {
+  WasmStringSlice name;
+  WasmConstVector args;
+} WasmCommandInvoke;
+
+typedef struct WasmCommand {
+  WasmCommandType type;
+  union {
+    WasmModule module;
+    WasmCommandInvoke invoke;
+    struct { WasmCommandInvoke invoke; WasmConst expected; } assert_return;
+    struct { WasmCommandInvoke invoke; } assert_return_nan;
+    struct { WasmCommandInvoke invoke; WasmStringSlice text; } assert_trap;
+    struct { WasmModule module; WasmStringSlice text; } assert_invalid;
+  };
+} WasmCommand;
+DECLARE_VECTOR(command, WasmCommand);
+
+typedef struct WasmScript {
+  WasmCommandVector commands;
+} WasmScript;
+
+typedef union WasmToken {
+  /* terminals */
+  WasmStringSlice text;
+  WasmType type;
+  WasmUnaryOp unary;
+  WasmBinaryOp binary;
+  WasmCompareOp compare;
+  WasmConvertOp convert;
+  WasmCastOp cast;
+  WasmMemOp mem;
+
+  /* non-terminals */
+  uint32_t u32;
+  WasmTypeVector types;
+  WasmVar var;
+  WasmVarVector vars;
+  WasmExprPtr expr;
+  WasmExprPtrVector exprs;
+  WasmTarget target;
+  WasmTargetVector targets;
+  WasmCase case_;
+  WasmCaseVector cases;
+  WasmTypeBindings type_bindings;
+  WasmFunc func;
+  WasmSegment segment;
+  WasmSegmentVector segments;
+  WasmMemory memory;
+  WasmFuncSignature func_sig;
+  WasmFuncType func_type;
+  WasmImport import;
+  WasmExport export;
+  WasmModuleFieldVector module_fields;
+  WasmModule module;
+  WasmConst const_;
+  WasmConstVector consts;
+  WasmCommand command;
+  WasmCommandVector commands;
+  WasmScript script;
+} WasmToken;
+
+typedef struct WasmLocation {
+  const char* filename;
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} WasmLocation;
+
+#define YYSTYPE WasmToken
+#define YYLTYPE WasmLocation
+
+typedef void* WasmScanner;
+
+typedef struct WasmParser {
+  WasmScanner scanner;
+  WasmScript script;
+  int errors;
+} WasmParser;
+
+int yylex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
+void yyerror(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
+int yyparse(WasmScanner scanner, WasmParser* parser);
+
+WasmScanner new_scanner(const char* filename);
+void free_scanner(WasmScanner scanner);
+
+#endif /* WASM_H_ */

@@ -1187,7 +1187,7 @@ static yyconst flex_int32_t yy_rule_can_match_eol[216] =
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "src/wasm-lexer.l"
 #line 2 "src/wasm-lexer.l"
-#include "wasm2.h"
+#include "wasm.h"
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {

@@ -1,5 +1,5 @@
 %{
-#include "wasm2.h"
+#include "wasm.h"
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {
