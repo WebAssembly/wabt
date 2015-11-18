@@ -11,6 +11,7 @@ typedef struct WasmScannerExtra {
 #define EXTRA(scanner) ((WasmScannerExtra*)yyget_extra(scanner))
 #define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
 #define COLUMN(scanner) (EXTRA(scanner)->column)
+#define RESET_COLUMN(scanner) EXTRA(scanner)->column = 1
 #define YY_USER_ACTION                                 \
   {                                                    \
     WasmScannerExtra* extra = EXTRA(yyscanner);        \
@@ -19,10 +20,11 @@ typedef struct WasmScannerExtra {
     yylloc->first_column = extra->column;              \
     extra->column += yyleng;                           \
     yylloc->last_column = extra->column;               \
-    yylval->start = yytext;                            \
-    yylval->end = yytext + yyleng;                     \
   }
 
+#define TEXT                   \
+  yylval->text.start = yytext; \
+  yylval->text.length = yyleng
 #define TYPE(name) yylval->type = WASM_TYPE_##name
 #define SIGN(struct_, sign_) \
   yylval->struct_.sign = sign_ ? WASM_SIGNED : WASM_UNSIGNED
@@ -30,12 +32,12 @@ typedef struct WasmScannerExtra {
 #define MEMSIZESIGN(size_, sign_) \
   MEMSIZE(size_);                 \
   SIGN(mem, sign_)
-#define UNOP(name) yylval->unary.op = WASM_UNARY_OP_##name
-#define BINOP(name) yylval->binary.op = WASM_BINARY_OP_##name
+#define UNOP(name) yylval->unary.op_type = WASM_UNARY_OP_TYPE_##name
+#define BINOP(name) yylval->binary.op_type = WASM_BINARY_OP_TYPE_##name
 #define BINOPSIGN(name, sign_) \
   BINOP(name);                 \
   SIGN(binary, sign_)
-#define CMPOP(name) yylval->compare.op = WASM_COMPARE_OP_##name
+#define CMPOP(name) yylval->compare.op_type = WASM_COMPARE_OP_TYPE_##name
 #define CMPOPSIGN(name, sign_) \
   CMPOP(name);                 \
   SIGN(compare, sign_)
@@ -84,9 +86,9 @@ NAME      "$"{ATOM}
 
 "("                   { return TOK(LPAR); }
 ")"                   { return TOK(RPAR); }
-{INT}                 { return TOK(INT); }
-{FLOAT}               { return TOK(FLOAT); }
-{TEXT}                { return TOK(TEXT); }
+{INT}                 { TEXT; return TOK(INT); }
+{FLOAT}               { TEXT; return TOK(FLOAT); }
+{TEXT}                { TEXT; return TOK(TEXT); }
 "i32"                 { TYPE(I32); return TOK(VALUE_TYPE); }
 "i64"                 { TYPE(I64); return TOK(VALUE_TYPE); }
 "f32"                 { TYPE(F32); return TOK(VALUE_TYPE); }
@@ -130,8 +132,8 @@ NAME      "$"{ATOM}
 "i32.store16"         { TYPE(I32); MEMSIZE(16); return TOK(STORE_WRAP); }
 "i64.store16"         { TYPE(I64); MEMSIZE(16); return TOK(STORE_WRAP); }
 "i64.store32"         { TYPE(I64); MEMSIZE(32); return TOK(STORE_WRAP); }
-"offset="{DIGITS}     { return TOK(OFFSET); }
-"align="{DIGITS}      { return TOK(ALIGN); }
+"offset="{DIGITS}     { TEXT; return TOK(OFFSET); }
+"align="{DIGITS}      { TEXT; return TOK(ALIGN); }
 "i32.const"           { TYPE(I32); return TOK(CONST); }
 "i64.const"           { TYPE(I64); return TOK(CONST); }
 "f32.const"           { TYPE(F32); return TOK(CONST); }
@@ -278,7 +280,7 @@ NAME      "$"{ATOM}
 "assert_return_nan"   { return TOK(ASSERT_RETURN_NAN); }
 "assert_trap"         { return TOK(ASSERT_TRAP); }
 "invoke"              { return TOK(INVOKE); }
-{NAME}                { return TOK(VAR); }
+{NAME}                { TEXT; return TOK(VAR); }
 
 "break"               { return TOK(BR); }
 "global"              { return TOK(GLOBAL); }
@@ -287,16 +289,16 @@ NAME      "$"{ATOM}
 "page_size"           { return TOK(PAGE_SIZE); }
 
 ";;"                  { BEGIN(LINE_COMMENT); }
-<LINE_COMMENT>\n      { COLUMN(yyscanner) = 1; BEGIN(INITIAL); }
+<LINE_COMMENT>\n      { RESET_COLUMN(yyscanner); BEGIN(INITIAL); }
 <LINE_COMMENT><<EOF>> { return TOK(EOF); }
 <LINE_COMMENT>.
 "(;"                  { BEGIN(BLOCK_COMMENT); COMMENT_NESTING(yyscanner) = 1; }
 <BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
-<BLOCK_COMMENT>\n     { COLUMN(yyscanner) = 1; }
+<BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
 <BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, "unexpected EOF"); }
 <BLOCK_COMMENT>.
-\n                    { COLUMN(yyscanner) = 1; }
+\n                    { RESET_COLUMN(yyscanner); }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
 {ATOM}                { yyerror(yylloc, &yyscanner, "unexpected token \"%.*s\"",
