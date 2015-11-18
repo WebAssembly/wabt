@@ -1,21 +1,18 @@
 .SUFFIXES:
 
-ALL = sexpr-wasm parser
+ALL = sexpr-wasm
 EVERYHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
-CFLAGS = -Wall -Werror -g
+CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
 ASAN_FLAGS = -fsanitize=address
 MSAN_FLAGS = -fsanitize=memory
 LSAN_FLAGS = -fsanitize=leak
 
-SRCS = sexpr-wasm.c wasm-parse.c wasm-gen.c
+SRCS = sexpr-wasm.c wasm-parser.c wasm-lexer.c
 OBJS = $(addprefix out/,$(patsubst %.c,%.o,$(SRCS)))
 ASAN_OBJS = $(addprefix out/,$(patsubst %.c,%.asan.o,$(SRCS)))
 MSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.msan.o,$(SRCS)))
 LSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.lsan.o,$(SRCS)))
-
-PARSER_SRCS = wasm-parser.c wasm-lexer.c
-PARSER_OBJS = $(addprefix out/,$(patsubst %.c,%.o,$(PARSER_SRCS)))
 
 .PHONY: all
 all: $(addprefix out/,$(ALL))
@@ -35,11 +32,6 @@ src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
 $(OBJS): out/%.o: src/%.c | out
 	$(CC) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
 out/sexpr-wasm: $(OBJS) | out
-	$(CC) -o $@ $^
-
-$(PARSER_OBJS): out/%.o: src/%.c | out
-	$(CC) $(CFLAGS) -Wno-unused-function -Wno-return-type -c -o $@ $(DEPEND_FLAGS) $<
-out/parser: $(PARSER_OBJS) | out
 	$(CC) -o $@ $^ -ll
 
 # ASAN
@@ -64,7 +56,6 @@ src/wasm-keywords.h: src/wasm-keywords.gperf
 	gperf --compare-strncmp --readonly-tables --struct-type $< --output-file $@
 
 -include $(OBJS:.o=.d) $(ASAN_OBJS:.o=.d) $(MSAN_OBJS:.o=.d) $(LSAN_OBJS:.o=.d)
--include $(PARSER_OBJS:.o=.d)
 
 #### TESTS ####
 .PHONY: test

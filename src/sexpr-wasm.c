@@ -4,10 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm.h"
+#include "wasm2.h"
 #include "wasm-internal.h"
-#include "wasm-parse.h"
-#include "wasm-gen.h"
 
 enum {
   FLAG_VERBOSE,
@@ -171,35 +169,13 @@ static void parse_options(int argc, char** argv) {
 int main(int argc, char** argv) {
   parse_options(argc, argv);
 
-  FILE* f = fopen(s_infile, "rb");
-  if (!f) {
+  WasmScanner scanner = new_scanner(s_infile);
+  if (!scanner) {
     FATAL("unable to read %s\n", s_infile);
   }
+  WasmParser parser;
+  int result = yyparse(scanner, &parser);
+  free_scanner(scanner);
 
-  fseek(f, 0, SEEK_END);
-  size_t fsize = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  void* data = malloc(fsize);
-  if (!data) {
-    FATAL("unable to alloc %zd bytes\n", fsize);
-  }
-  if (fread(data, 1, fsize, f) != fsize) {
-    FATAL("unable to read %zd bytes from %s\n", fsize, s_infile);
-  }
-  fclose(f);
-
-  WasmSource source;
-  source.filename = s_infile;
-  source.start = data;
-  source.end = data + fsize;
-
-  WasmGenOptions options = {};
-  options.outfile = s_outfile;
-  options.dump_module = s_dump_module;
-  options.verbose = s_verbose;
-  options.spec = s_spec;
-  options.spec_verbose = s_spec_verbose;
-  int result = wasm_gen_file(&source, &options);
-  free(data);
   return result;
 }

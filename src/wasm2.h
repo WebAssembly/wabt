@@ -457,4 +457,7 @@ int yylex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
 void yyerror(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
 int yyparse(WasmScanner scanner, WasmParser* parser);
 
+WasmScanner new_scanner(const char* filename);
+void free_scanner(WasmScanner scanner);
+
 #endif /* WASM2_H_ */
