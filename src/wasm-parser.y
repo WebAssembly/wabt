@@ -39,8 +39,8 @@ static int read_const(WasmType type, const char* s, const char* end,
 %define api.value.type {WasmToken}
 %define api.token.prefix {WASM_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {WasmScanner scanner}
-%parse-param {WasmScanner scanner}
+%lex-param {WasmScanner scanner} {WasmParser* parser}
+%parse-param {WasmScanner scanner} {WasmParser* parser}
 %locations
 
 %token LPAR "("
@@ -83,7 +83,7 @@ static int read_const(WasmType type, const char* s, const char* end,
 %type<memory> memory
 %type<module> module
 %type<module_fields> module_fields
-%type<u32> align offset
+%type<script> script
 %type<segment> segment
 %type<segments> segment_list
 %type<type_bindings> global local_list param_list
@@ -92,6 +92,7 @@ static int read_const(WasmType type, const char* s, const char* end,
 %type<text> bind_var labeling literal
 %type<type> result
 %type<types> value_type_list
+%type<u32> align offset
 %type<vars> table var_list
 %type<var> type_use var
 
@@ -163,18 +164,19 @@ offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
-        yyerror(&@1, scanner, "invalid offset \"%.*s\"", $1.length, $1.start);
+        yyerror(&@1, scanner, parser, "invalid offset \"%.*s\"", $1.length,
+                $1.start);
     }
 ;
 align :
     /* empty */ { $$ = 0; }
   | ALIGN {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
-        yyerror(&@1, scanner, "invalid alignment \"%.*s\"", $1.length,
+        yyerror(&@1, scanner, parser, "invalid alignment \"%.*s\"", $1.length,
                 $1.start);
 
       if (!is_power_of_two($$))
-        yyerror(&@1, scanner, "alignment must be power-of-two");
+        yyerror(&@1, scanner, parser, "alignment must be power-of-two");
     }
 ;
 
@@ -983,7 +985,7 @@ const_list :
 ;
 
 script :
-    cmd_list
+    cmd_list { $$.commands = $1; parser->script = $$; }
 ;
 
 %%
@@ -1048,7 +1050,11 @@ DEFINE_VECTOR(module_field, WasmModuleField);
 DEFINE_VECTOR(const, WasmConst);
 DEFINE_VECTOR(command, WasmCommand);
 
-void yyerror(WasmLocation* loc, WasmScanner scanner, const char* fmt, ...) {
+void yyerror(WasmLocation* loc,
+             WasmScanner scanner,
+             WasmParser* parser,
+             const char* fmt,
+             ...) {
   va_list args;
   va_start(args, fmt);
   fprintf(stderr, "%s:%d:%d: ", loc->filename, loc->first_line,

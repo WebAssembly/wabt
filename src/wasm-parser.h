@@ -133,6 +133,6 @@ struct YYLTYPE
 
 
 
-int yyparse (WasmScanner scanner);
+int yyparse (WasmScanner scanner, WasmParser* parser);
 
 #endif /* !YY_YY_SRC_WASM_PARSER_H_INCLUDED  */

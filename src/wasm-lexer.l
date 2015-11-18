@@ -8,6 +8,10 @@ typedef struct WasmScannerExtra {
   int comment_nesting;
 } WasmScannerExtra;
 
+#define YY_DECL                                                               \
+  int yylex(YYSTYPE* yylval_param, YYLTYPE* yylloc_param, yyscan_t yyscanner, \
+            WasmParser* parser)
+
 #define EXTRA(scanner) ((WasmScannerExtra*)yyget_extra(scanner))
 #define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
 #define COLUMN(scanner) (EXTRA(scanner)->column)
@@ -299,14 +303,16 @@ NAME      "$"{ATOM}
 <BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
-<BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, "unexpected EOF"); }
+<BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, parser,
+                                 "unexpected EOF"); }
 <BLOCK_COMMENT>.
 \n                    { RESET_COLUMN(yyscanner); }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
-{ATOM}                { yyerror(yylloc, &yyscanner, "unexpected token \"%.*s\"",
-                                yyleng, yytext); }
-.                     { yyerror(yylloc, &yyscanner, "unexpected char"); }
+{ATOM}                { yyerror(yylloc, &yyscanner, parser,
+                                "unexpected token \"%.*s\"", yyleng, yytext); }
+.                     { yyerror(yylloc, &yyscanner, parser,
+                                "unexpected char"); }
 
 %%
 
@@ -314,9 +320,12 @@ int main(int argc, char **argv) {
   ++argv, --argc; /* skip over program name */
   const char* filename = argc > 0 ? argv[0] : "stdin";
   yyscan_t scanner;
+
   WasmScannerExtra extra = {};
   extra.column = 1;
   extra.filename = filename;
+
+  WasmParser parser;
 
 #if 0
   yydebug = 1;
@@ -325,6 +334,6 @@ int main(int argc, char **argv) {
   yylex_init(&scanner);
   yyset_in(filename ? fopen(filename, "r") : stdin, scanner);
   yyset_extra(&extra, scanner);
-  yyparse(scanner);
+  yyparse(scanner, &parser);
   yylex_destroy(scanner);
 }

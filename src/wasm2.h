@@ -375,6 +375,10 @@ typedef struct WasmCommand {
   };
 } WasmCommand;
 
+typedef struct WasmScript {
+  WasmCommandVector commands;
+} WasmScript;
+
 typedef union WasmToken {
   /* terminals */
   WasmStringSlice text;
@@ -412,6 +416,7 @@ typedef union WasmToken {
   WasmConstVector consts;
   WasmCommand command;
   WasmCommandVector commands;
+  WasmScript script;
 } WasmToken;
 
 typedef struct WasmLocation {
@@ -443,8 +448,13 @@ typedef struct WasmLocation {
 
 typedef void* WasmScanner;
 
-int yylex(WasmToken*, WasmLocation*, void*);
-void yyerror(WasmLocation*, WasmScanner, const char*, ...);
-int yyparse(WasmScanner scanner);
+typedef struct WasmParser {
+  WasmScanner scanner;
+  WasmScript script;
+} WasmParser;
+
+int yylex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
+void yyerror(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
+int yyparse(WasmScanner scanner, WasmParser* parser);
 
 #endif /* WASM2_H_ */
