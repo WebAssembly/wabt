@@ -153,9 +153,9 @@ literal :
 var :
     INT {
       $$.type = WASM_VAR_TYPE_INDEX;
-      /* TODO(binji): check for int error */
       uint32_t index;
-      read_int32($1.start, $1.start + $1.length, &index, 0);
+      if (!read_int32($1.start, $1.start + $1.length, &index, 0))
+        yyerror(&@1, scanner, parser, "invalid int %.*s", $1.length, $1.start);
       $$.index = index;
     }
   | VAR {
@@ -317,8 +317,9 @@ expr1 :
     }
   | CONST literal {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CONST);
-      /* TODO(binji): check for error */
-      read_const($1, $2.start, $2.start + $2.length, &$$->const_);
+      if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
+        yyerror(&@2, scanner, parser, "invalid literal \"%.*s\"", $2.length,
+                $2.start);
       free((char*)$2.start);
     }
   | UNARY expr {
@@ -802,8 +803,9 @@ func :
 segment :
     LPAR SEGMENT INT TEXT RPAR {
       /* TODO(binji): copy data */
-      /* TODO(binji): check for int error */
-      read_int32($3.start, $3.start + $3.length, &$$.addr, 0);
+      if (!read_int32($3.start, $3.start + $3.length, &$$.addr, 0))
+        yyerror(&@3, scanner, parser, "invalid memory segment address \"%.*s\"",
+                $3.length, $3.start);
       $$.data = NULL;
       $$.size = 0;
     }
@@ -815,14 +817,18 @@ segment_list :
 
 memory :
     LPAR MEMORY INT INT segment_list RPAR {
-      /* TODO(binji): check for int error */
-      read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0);
-      read_int32($4.start, $4.start + $4.length, &$$.max_size, 0);
+      if (!read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0))
+        yyerror(&@3, scanner, parser, "invalid initial memory size \"%.*s\"",
+                $3.length, $3.start);
+      if (!read_int32($4.start, $4.start + $4.length, &$$.max_size, 0))
+        yyerror(&@4, scanner, parser, "invalid max memory size \"%.*s\"",
+                $4.length, $4.start);
       $$.segments = $5;
     }
   | LPAR MEMORY INT segment_list RPAR {
-      /* TODO(binji): check for int error */
-      read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0);
+      if (!read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0))
+        yyerror(&@3, scanner, parser, "invalid initial memory size \"%.*s\"",
+                $3.length, $3.start);
       $$.max_size = $$.initial_size;
       $$.segments = $4;
     }
@@ -986,8 +992,9 @@ cmd_list :
 
 const :
     LPAR CONST literal RPAR {
-      /* TODO(binji): check for error */
-      read_const($2, $3.start, $3.start + $3.length, &$$);
+      if (!read_const($2, $3.start, $3.start + $3.length, &$$))
+        yyerror(&@3, scanner, parser, "invalid literal \"%.*s\"",
+                $3.length, $3.start);
       free((char*)$3.start);
     }
 ;
@@ -1317,7 +1324,7 @@ static int read_const(WasmType type,
   out->type = type;
   switch (type) {
     case WASM_TYPE_I32:
-      return read_int32(s, end, &out->u32, 0);
+      return read_int32(s, end, &out->u32, 1);
     case WASM_TYPE_I64:
       return read_int64(s, end, &out->u64);
     case WASM_TYPE_F32:

@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (memory -100))
 (;; STDERR ;;;
-module/bad-memory-init-size-negative.txt:2:17: invalid initial memory size
+module/bad-memory-init-size-negative.txt:2:17: invalid initial memory size "-100"
 ;;; STDERR ;;)

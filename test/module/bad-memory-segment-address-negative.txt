@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (memory 100 (segment -1 "foo")))
 (;; STDERR ;;;
-module/bad-memory-segment-address-negative.txt:2:30: invalid memory segment address
+module/bad-memory-segment-address-negative.txt:2:30: invalid memory segment address "-1"
 ;;; STDERR ;;)
