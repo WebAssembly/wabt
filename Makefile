@@ -25,7 +25,7 @@ out/:
 	mkdir $@
 
 src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
-	flex -o src/wasm-lexer.c --header-file=src/wasm-lexer.h $<
+	flex -o src/wasm-lexer.c $<
 
 src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
 	bison -o src/wasm-parser.c --defines=src/wasm-parser.h $<
