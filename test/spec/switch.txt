@@ -3,6 +3,6 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDERR ;;;
-third_party/testsuite/switch.wast:9:8: unexpected token "tableswitch"
+third_party/testsuite/switch.wast:7:8: unexpected token "tableswitch"
 
 ;;; STDERR ;;)
