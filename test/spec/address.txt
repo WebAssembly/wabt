@@ -1,47 +1,4 @@
+;;; SKIP: v8 reads out of bounds, which produces an inconsistent value.
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/address.wast
-(;; STDOUT ;;;
-assert_invalid error:
-  third_party/testsuite/address.wast:33:76: invalid offset
-97
-98
-99
-122
-25185
-25442
-25699
-122
-1684234849
-1701077858
-1717920867
-122
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-1744830464
-third_party/testsuite/address.wast:29: $assert_trap_2 failed, didn't throw
-third_party/testsuite/address.wast:30: $assert_trap_3 failed, didn't throw
-third_party/testsuite/address.wast:31: $assert_trap_4 failed, didn't throw
-2/5 tests passed.
-;;; STDOUT ;;)
