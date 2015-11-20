@@ -84,6 +84,15 @@ typedef struct WasmParserCallbacks {
                        uint32_t offset);
 
   void (*before_store_global)(WasmParserCallbackInfo* info, int index);
+  void (*before_tableswitch)(WasmParserCallbackInfo* info, int with_label);
+  void (*before_tableswitch_case)(WasmParserCallbackInfo* info, int index);
+  void (*before_tableswitch_br)(WasmParserCallbackInfo* info, int label_depth);
+  void (*after_tableswitch_table)(WasmParserCallbackInfo* info, int num_cases);
+  void (*before_tableswitch_key)(WasmParserCallbackInfo* info);
+  void (*before_tableswitch_targets)(WasmParserCallbackInfo* info);
+  void (*before_tableswitch_target)(WasmParserCallbackInfo* info);
+  void (*after_tableswitch_target)(WasmParserCallbackInfo* info, int num_exprs);
+  void (*after_tableswitch)(WasmParserCallbackInfo* info, int num_targets);
   void (*before_unary)(WasmParserCallbackInfo* info, enum WasmOpcode opcode);
   void (*before_unreachable)(WasmParserCallbackInfo* info);
 

@@ -1265,12 +1265,15 @@ static void parse_tableswitch_case(WasmParser* parser,
     case WASM_OP_CASE: {
       int index = parse_var(parser, bindings, cases->size, "case");
       cases->data[index].value = value;
+      CALLBACK(parser, before_tableswitch_case, (&parser->info, index));
       break;
     }
 
-    case WASM_OP_BR:
-      parse_label_var(parser, function);
+    case WASM_OP_BR: {
+      int label_depth = parse_break_depth(parser, function);
+      CALLBACK(parser, before_tableswitch_br, (&parser->info, label_depth));
       break;
+    }
 
     default:
       unexpected_token(parser, t);
@@ -1290,6 +1293,9 @@ static WasmType parse_tableswitch(WasmParser* parser,
   } else {
     rewind_token(parser, t);
   }
+
+  WasmParserCookie cookie =
+      CALLBACK(parser, before_tableswitch, (&parser->info, label != NULL));
 
   WasmBindingVector bindings = {};
   WasmTableswitchCaseVector cases = {};
@@ -1334,18 +1340,21 @@ static WasmType parse_tableswitch(WasmParser* parser,
 
   /* go back and validate the case/br labels */
   rewind_token(parser, table_start);
-  int32_t value = 0;
+  int32_t num_cases = 0;
   t = read_token(parser);
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     rewind_token(parser, t);
     parse_tableswitch_case(parser, module, function, &bindings, &cases,
-                           value);
+                           num_cases);
     t = read_token(parser);
-    ++value;
+    ++num_cases;
   }
 
   /* default case */
-  parse_tableswitch_case(parser, module, function, &bindings, &cases, -1);
+  parse_tableswitch_case(parser, module, function, &bindings, &cases,
+                         -1);
+
+  CALLBACK(parser, after_tableswitch_table, (&parser->info, num_cases + 1));
 
   /* destroy binding and case vectors, they're not needed anymore */
   memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
@@ -1353,12 +1362,15 @@ static WasmType parse_tableswitch(WasmParser* parser,
   wasm_destroy_tableswitch_case_vector(&cases);
 
   /* parse key */
+  CALLBACK(parser, before_tableswitch_key, (&parser->info));
   rewind_token(parser, key_start);
   WasmType key_type = parse_expr(parser, module, function);
   check_type(parser, t.range.start, key_type, WASM_TYPE_I32, " of key");
 
   /* targets */
+  CALLBACK(parser, before_tableswitch_targets, (&parser->info));
   rewind_token(parser, target_start);
+  int num_targets = 0;
   t = read_token(parser);
   while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
     expect_open(parser, t);
@@ -1369,19 +1381,28 @@ static WasmType parse_tableswitch(WasmParser* parser,
       rewind_token(parser, t);
 
     /* parse expression list */
+    WasmParserCookie target_cookie =
+        CALLBACK(parser, before_tableswitch_target, (&parser->info));
+    int num_exprs = 0;
     t = read_token(parser);
     while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
       rewind_token(parser, t);
       result_type = parse_expr(parser, module, function);
       t = read_token(parser);
+      ++num_exprs;
     }
+    CALLBACK_COOKIE(parser, after_tableswitch_target, target_cookie,
+                    (&parser->info, num_exprs));
 
     t = read_token(parser);
+    ++num_targets;
   }
   if (label) {
     result_type &= label->type;
     pop_label(function);
   }
+  CALLBACK_COOKIE(parser, after_tableswitch, cookie,
+                  (&parser->info, num_targets));
 
   return result_type;
 }

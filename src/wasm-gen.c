@@ -77,6 +77,7 @@ typedef enum LabelType {
   LABEL_TYPE_FUNCTION,
   LABEL_TYPE_BLOCK,
   LABEL_TYPE_LABEL,
+  LABEL_TYPE_TABLESWITCH,
   LABEL_TYPE_LOOP_OUTER,
   LABEL_TYPE_LOOP_INNER,
 } LabelType;
@@ -1046,6 +1047,72 @@ static void before_store_global(WasmParserCallbackInfo* info, int index) {
   out_leb128(&ctx->buf, index, "global index");
 }
 
+static void before_tableswitch(WasmParserCallbackInfo* info, int with_label) {
+  Context* ctx = info->user_data;
+  out_opcode(&ctx->buf, WASM_OPCODE_TABLESWITCH);
+  if (with_label) {
+    push_label_info(ctx, LABEL_TYPE_TABLESWITCH);
+    info->cookie = 0;
+  } else {
+    ctx->block_depth++;
+    info->cookie = (WasmParserCookie)ctx->buf.size;
+  }
+  out_u16(&ctx->buf, 0, "num targets");
+  out_u16(&ctx->buf, 0, "num cases");
+}
+
+static void before_tableswitch_case(WasmParserCallbackInfo* info, int index) {
+  Context* ctx = info->user_data;
+  out_u16(&ctx->buf, index, "case index");
+}
+
+static void before_tableswitch_br(WasmParserCallbackInfo* info,
+                                  int label_depth) {
+  Context* ctx = info->user_data;
+  out_u16(&ctx->buf, label_depth | 0x8000, "br depth");
+}
+
+static void after_tableswitch_table(WasmParserCallbackInfo* info,
+                                    int num_cases) {
+  Context* ctx = info->user_data;
+  int with_label = (int)info->cookie == 0;
+  uint32_t offset =
+      with_label ? ctx->top_label->offset : (uint32_t)info->cookie;
+  out_u16_at(&ctx->buf, offset + 2, num_cases, "FIXUP num cases");
+}
+
+static void before_tableswitch_target(WasmParserCallbackInfo* info) {
+  Context* ctx = info->user_data;
+  info->cookie = (WasmParserCookie)ctx->buf.size;
+}
+
+static void after_tableswitch_target(WasmParserCallbackInfo* info,
+                                     int num_exprs) {
+  Context* ctx = info->user_data;
+  if (num_exprs == 0) {
+    out_u8(&ctx->buf, WASM_OPCODE_NOP, "WASM_OPCODE_NOP for fallthrough");
+  } else if (num_exprs > 1) {
+    uint32_t offset = (uint32_t)info->cookie;
+    move_data(&ctx->buf, offset + 2, offset, ctx->buf.size - offset);
+    out_u8_at(&ctx->buf, offset, WASM_OPCODE_BLOCK, "WASM_OPCODE_BLOCK");
+    out_u8_at(&ctx->buf, offset + 1, num_exprs, "num exprs");
+  }
+}
+
+static void after_tableswitch(WasmParserCallbackInfo* info, int num_targets) {
+  Context* ctx = info->user_data;
+  int with_label = (int)info->cookie == 0;
+  uint32_t offset;
+  if (with_label) {
+    offset = ctx->top_label->offset;
+    pop_label_info(ctx);
+  } else {
+    ctx->block_depth--;
+    offset = (uint32_t)info->cookie;
+  }
+  out_u16_at(&ctx->buf, offset, num_targets, "FIXUP num targets");
+}
+
 static void before_unary(WasmParserCallbackInfo* info, enum WasmOpcode opcode) {
   Context* ctx = info->user_data;
   out_opcode(&ctx->buf, opcode);
@@ -1349,6 +1416,13 @@ int wasm_gen_file(WasmSource* source, WasmGenOptions* options) {
   callbacks.before_set_local = before_set_local;
   callbacks.before_store = before_store;
   callbacks.before_store_global = before_store_global;
+  callbacks.before_tableswitch = before_tableswitch;
+  callbacks.before_tableswitch_case = before_tableswitch_case;
+  callbacks.before_tableswitch_br = before_tableswitch_br;
+  callbacks.after_tableswitch_table = after_tableswitch_table;
+  callbacks.before_tableswitch_target = before_tableswitch_target;
+  callbacks.after_tableswitch_target = after_tableswitch_target;
+  callbacks.after_tableswitch = after_tableswitch;
   callbacks.before_unary = before_unary;
   callbacks.before_unreachable = before_unreachable;
   callbacks.assert_invalid_error = assert_invalid_error;
