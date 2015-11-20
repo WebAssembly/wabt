@@ -1245,34 +1245,11 @@ static void preparse_binding_name(WasmParser* parser,
   }
 }
 
-static void preparse_tableswitch(WasmParser* parser,
-                                 WasmModule* module,
-                                 WasmFunction* function,
-                                 WasmBindingVector* bindings,
-                                 WasmTableswitchCaseVector* cases) {
-  /* Skip (table ...) */
-  WasmToken start = read_token(parser);
-  WasmToken t = start;
-  expect_open(parser, t);
-  expect_atom_op(parser, read_token(parser), WASM_OP_TABLE, "table");
-  parse_generic(parser);
-
-  /* Skip default case */
-  expect_open(parser, read_token(parser));
-  parse_generic(parser);
-
-  t = read_token(parser);
-  while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-    expect_open(parser, t);
-    expect_atom_op(parser, read_token(parser), WASM_OP_CASE, "case");
-    WasmTableswitchCase* case_ = wasm_append_tableswitch_case(cases);
-    CHECK_ALLOC(parser, case_, t.range.start);
-    preparse_binding_name(parser, bindings, cases->size - 1, "case", 0);
-    parse_generic(parser);
-    t = read_token(parser);
-  }
-
-  rewind_token(parser, start);
+static void wasm_destroy_binding_list(WasmBindingVector* bindings) {
+  int i;
+  for (i = 0; i < bindings->size; ++i)
+    free(bindings->data[i].name);
+  wasm_destroy_binding_vector(bindings);
 }
 
 static void parse_tableswitch_case(WasmParser* parser,
@@ -1302,11 +1279,111 @@ static void parse_tableswitch_case(WasmParser* parser,
   expect_close(parser, read_token(parser));
 }
 
-static void wasm_destroy_binding_list(WasmBindingVector* bindings) {
-  int i;
-  for (i = 0; i < bindings->size; ++i)
-    free(bindings->data[i].name);
-  wasm_destroy_binding_vector(bindings);
+static WasmType parse_tableswitch(WasmParser* parser,
+                                  WasmModule* module,
+                                  WasmFunction* function) {
+  WasmType result_type = WASM_TYPE_ALL;
+  WasmToken t = read_token(parser);
+  WasmLabel* label = NULL;
+  if (t.type == WASM_TOKEN_TYPE_ATOM) {
+    label = push_label(parser, function, t);
+  } else {
+    rewind_token(parser, t);
+  }
+
+  WasmBindingVector bindings = {};
+  WasmTableswitchCaseVector cases = {};
+
+  jmp_buf saved_jump_buf;
+  memcpy(saved_jump_buf, parser->jump_buf, sizeof(jmp_buf));
+  if (setjmp(parser->jump_buf)) {
+    memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
+    wasm_destroy_binding_list(&bindings);
+    wasm_destroy_tableswitch_case_vector(&cases);
+    longjmp(parser->jump_buf, 1);
+  }
+
+  /* skip key */
+  WasmToken key_start = read_token(parser);
+  expect_open(parser, key_start);
+  parse_generic(parser);
+
+  /* skip (table ...) */
+  expect_open(parser, read_token(parser));
+  expect_atom_op(parser, read_token(parser), WASM_OP_TABLE, "table");
+  WasmToken table_start = read_token(parser);
+  rewind_token(parser, table_start);
+  parse_generic(parser);
+
+  /* skip default case */
+  expect_open(parser, read_token(parser));
+  parse_generic(parser);
+
+  /* read target names */
+  WasmToken target_start = read_token(parser);
+  t = target_start;
+  while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+    expect_open(parser, t);
+    expect_atom_op(parser, read_token(parser), WASM_OP_CASE, "case");
+    WasmTableswitchCase* case_ = wasm_append_tableswitch_case(&cases);
+    CHECK_ALLOC(parser, case_, t.range.start);
+    preparse_binding_name(parser, &bindings, cases.size - 1, "case", 0);
+    parse_generic(parser);
+    t = read_token(parser);
+  }
+
+  /* go back and validate the case/br labels */
+  rewind_token(parser, table_start);
+  int32_t value = 0;
+  t = read_token(parser);
+  while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+    rewind_token(parser, t);
+    parse_tableswitch_case(parser, module, function, &bindings, &cases,
+                           value);
+    t = read_token(parser);
+    ++value;
+  }
+
+  /* default case */
+  parse_tableswitch_case(parser, module, function, &bindings, &cases, -1);
+
+  /* destroy binding and case vectors, they're not needed anymore */
+  memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
+  wasm_destroy_binding_list(&bindings);
+  wasm_destroy_tableswitch_case_vector(&cases);
+
+  /* parse key */
+  rewind_token(parser, key_start);
+  WasmType key_type = parse_expr(parser, module, function);
+  check_type(parser, t.range.start, key_type, WASM_TYPE_I32, " of key");
+
+  /* targets */
+  rewind_token(parser, target_start);
+  t = read_token(parser);
+  while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+    expect_open(parser, t);
+    expect_atom_op(parser, read_token(parser), WASM_OP_CASE, "case");
+    /* skip name, if any */
+    t = read_token(parser);
+    if (t.type != WASM_TOKEN_TYPE_ATOM)
+      rewind_token(parser, t);
+
+    /* parse expression list */
+    t = read_token(parser);
+    while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
+      rewind_token(parser, t);
+      result_type = parse_expr(parser, module, function);
+      t = read_token(parser);
+    }
+
+    t = read_token(parser);
+  }
+  if (label) {
+    result_type &= label->type;
+    pop_label(function);
+  }
+
+  return result_type;
 }
 
 static WasmType parse_expr(WasmParser* parser,
@@ -1678,79 +1755,9 @@ static WasmType parse_expr(WasmParser* parser,
       break;
     }
 
-    case WASM_OP_TABLESWITCH: {
-      t = read_token(parser);
-      WasmLabel* label = NULL;
-      if (t.type == WASM_TOKEN_TYPE_ATOM) {
-        label = push_label(parser, function, t);
-      } else {
-        rewind_token(parser, t);
-      }
-
-      WasmType cond_type = parse_expr(parser, module, function);
-      check_type(parser, t.range.start, cond_type, WASM_TYPE_I32,
-                 " of condition");
-      WasmBindingVector bindings = {};
-      WasmTableswitchCaseVector cases = {};
-
-      jmp_buf saved_jump_buf;
-      memcpy(saved_jump_buf, parser->jump_buf, sizeof(jmp_buf));
-      if (setjmp(parser->jump_buf)) {
-        memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
-        wasm_destroy_binding_list(&bindings);
-        wasm_destroy_tableswitch_case_vector(&cases);
-        longjmp(parser->jump_buf, 1);
-      }
-
-      preparse_tableswitch(parser, module, function, &bindings, &cases);
-      expect_open(parser, read_token(parser));
-      expect_atom_op(parser, read_token(parser), WASM_OP_TABLE, "table");
-
-      int32_t value = 0;
-      t = read_token(parser);
-      while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-        rewind_token(parser, t);
-        parse_tableswitch_case(parser, module, function, &bindings, &cases,
-                               value);
-        t = read_token(parser);
-        ++value;
-      }
-
-      /* default case */
-      parse_tableswitch_case(parser, module, function, &bindings, &cases, -1);
-
-      /* cleanup now, we don't need the cases or bindings when parsing the
-       targets */
-      memcpy(parser->jump_buf, saved_jump_buf, sizeof(jmp_buf));
-      wasm_destroy_binding_list(&bindings);
-      wasm_destroy_tableswitch_case_vector(&cases);
-
-      /* case targets */
-      t = read_token(parser);
-      while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-        expect_open(parser, t);
-        expect_atom_op(parser, read_token(parser), WASM_OP_CASE, "case");
-        /* skip name, if any */
-        t = read_token(parser);
-        if (t.type != WASM_TOKEN_TYPE_ATOM)
-          rewind_token(parser, t);
-
-        /* parse expression list */
-        t = read_token(parser);
-        while (t.type != WASM_TOKEN_TYPE_CLOSE_PAREN) {
-          rewind_token(parser, t);
-          type = parse_expr(parser, module, function);
-          t = read_token(parser);
-        }
-
-        t = read_token(parser);
-      }
-      if (label) {
-        type &= label->type;
-        pop_label(function);
-      }
+    case WASM_OP_TABLESWITCH:
+      type = parse_tableswitch(parser, module, function);
       break;
-    }
 
     case WASM_OP_UNARY: {
       check_opcode(parser, t.range.start, op_info->opcode);
