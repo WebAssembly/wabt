@@ -566,8 +566,8 @@ static const yytype_uint16 yyrline[] =
      777,   782,   786,   789,   793,   798,   798,   804,   814,   815,
      819,   828,   838,   842,   849,   853,   860,   868,   875,   886,
      893,   897,   907,   908,   914,   920,   926,   932,   938,   944,
-     952,   959,   960,   965,   970,   976,   981,   989,   990,   994,
-    1002,  1003,  1006,  1007,  1011
+     952,   998,   999,  1004,  1009,  1015,  1020,  1028,  1029,  1033,
+    1041,  1042,  1045,  1046,  1050
 };
 #endif
 
@@ -3317,117 +3317,156 @@ yyreduce:
 
   case 170:
 #line 952 "src/wasm-parser.y" /* yacc.c:1646  */
-    { (yyval.module).fields = (yyvsp[-1].module_fields); }
-#line 3322 "src/wasm-parser.c" /* yacc.c:1646  */
+    {
+      (yyval.module).fields = (yyvsp[-1].module_fields);
+
+      /* cache values */
+      int i;
+      for (i = 0; i < (yyval.module).fields.size; ++i) {
+        WasmModuleField* field = &(yyval.module).fields.data[i];
+        switch (field->type) {
+          case WASM_MODULE_FIELD_TYPE_FUNC:
+            *wasm_append_func_ptr(&(yyval.module).funcs) = &field->func;
+            break;
+          case WASM_MODULE_FIELD_TYPE_IMPORT:
+            *wasm_append_import_ptr(&(yyval.module).imports) = &field->import;
+            break;
+          case WASM_MODULE_FIELD_TYPE_EXPORT:
+            *wasm_append_export_ptr(&(yyval.module).exports) = &field->export;
+            break;
+          case WASM_MODULE_FIELD_TYPE_TABLE:
+            (yyval.module).table = &field->table;
+            break;
+          case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
+            *wasm_append_func_type_ptr(&(yyval.module).func_types) = &field->func_type;
+            break;
+          case WASM_MODULE_FIELD_TYPE_MEMORY:
+            (yyval.module).memory = &field->memory;
+            break;
+          case WASM_MODULE_FIELD_TYPE_GLOBAL: {
+            int last_type = (yyval.module).globals.types.size;
+            int last_binding = (yyval.module).globals.bindings.size;
+            wasm_extend_types(&(yyval.module).globals.types, &field->global.types);
+            wasm_extend_bindings(&(yyval.module).globals.bindings, &field->global.bindings);
+            /* fixup the binding indexes */
+            int j;
+            for (j = last_binding; j < (yyval.module).globals.bindings.size; ++j)
+              (yyval.module).globals.bindings.data[j].index += last_type;
+            break;
+          }
+        }
+      }
+    }
+#line 3361 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 171:
-#line 959 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 998 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.command).type = WASM_COMMAND_TYPE_MODULE; (yyval.command).module = (yyvsp[0].module); }
-#line 3328 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3367 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 172:
-#line 960 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 999 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_INVOKE;
       (yyval.command).invoke.name = (yyvsp[-2].text);
       (yyval.command).invoke.args = (yyvsp[-1].consts);
     }
-#line 3338 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3377 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 173:
-#line 965 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1004 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_INVALID;
       (yyval.command).assert_invalid.module = (yyvsp[-2].module);
       (yyval.command).assert_invalid.text = (yyvsp[-1].text);
     }
-#line 3348 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3387 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 174:
-#line 970 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1009 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_RETURN;
       (yyval.command).assert_return.invoke.name = (yyvsp[-4].text);
       (yyval.command).assert_return.invoke.args = (yyvsp[-3].consts);
       (yyval.command).assert_return.expected = (yyvsp[-1].const_);
     }
-#line 3359 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3398 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 175:
-#line 976 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1015 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
       (yyval.command).assert_return_nan.invoke.name = (yyvsp[-3].text);
       (yyval.command).assert_return_nan.invoke.args = (yyvsp[-2].consts);
     }
-#line 3369 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3408 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 176:
-#line 981 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1020 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_RETURN_TRAP;
       (yyval.command).assert_trap.invoke.name = (yyvsp[-4].text);
       (yyval.command).assert_trap.invoke.args = (yyvsp[-3].consts);
       (yyval.command).assert_trap.text = (yyvsp[-1].text);
     }
-#line 3380 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3419 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 177:
-#line 989 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1028 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.commands)); }
-#line 3386 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3425 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 178:
-#line 990 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1029 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.commands) = (yyvsp[-1].commands); *wasm_append_command(&(yyval.commands)) = (yyvsp[0].command); }
-#line 3392 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3431 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 179:
-#line 994 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1033 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       if (!read_const((yyvsp[-2].type), (yyvsp[-1].text).start, (yyvsp[-1].text).start + (yyvsp[-1].text).length, &(yyval.const_)))
         yyerror(&(yylsp[-1]), scanner, parser, "invalid literal \"%.*s\"",
                 (yyvsp[-1].text).length, (yyvsp[-1].text).start);
       free((char*)(yyvsp[-1].text).start);
     }
-#line 3403 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3442 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 180:
-#line 1002 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1041 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.const_).type = WASM_TYPE_VOID; }
-#line 3409 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3448 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 182:
-#line 1006 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1045 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.consts)); }
-#line 3415 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3454 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 183:
-#line 1007 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1046 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.consts) = (yyvsp[-1].consts); *wasm_append_const(&(yyval.consts)) = (yyvsp[0].const_); }
-#line 3421 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3460 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 184:
-#line 1011 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1050 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.script).commands = (yyvsp[0].commands); parser->script = (yyval.script); }
-#line 3427 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3466 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
 
-#line 3431 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3470 "src/wasm-parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -3662,7 +3701,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1014 "src/wasm-parser.y" /* yacc.c:1906  */
+#line 1053 "src/wasm-parser.y" /* yacc.c:1906  */
 
 
 DEFINE_VECTOR(type, WasmType)
@@ -3671,7 +3710,11 @@ DEFINE_VECTOR(expr_ptr, WasmExprPtr);
 DEFINE_VECTOR(target, WasmTarget);
 DEFINE_VECTOR(case, WasmCase);
 DEFINE_VECTOR(binding, WasmBinding);
+DEFINE_VECTOR(func_ptr, WasmFuncPtr);
 DEFINE_VECTOR(segment, WasmSegment);
+DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
+DEFINE_VECTOR(import_ptr, WasmImportPtr);
+DEFINE_VECTOR(export_ptr, WasmExportPtr);
 DEFINE_VECTOR(module_field, WasmModuleField);
 DEFINE_VECTOR(const, WasmConst);
 DEFINE_VECTOR(command, WasmCommand);

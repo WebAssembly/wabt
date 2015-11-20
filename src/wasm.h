@@ -259,6 +259,8 @@ typedef struct WasmFunc {
   WasmTypeBindings locals;
   WasmExprPtrVector exprs;
 } WasmFunc;
+typedef WasmFunc* WasmFuncPtr;
+DECLARE_VECTOR(func_ptr, WasmFuncPtr);
 
 typedef struct WasmSegment {
   uint32_t addr;
@@ -282,6 +284,8 @@ typedef struct WasmFuncType {
   WasmStringSlice name;
   WasmFuncSignature sig;
 } WasmFuncType;
+typedef WasmFuncType* WasmFuncTypePtr;
+DECLARE_VECTOR(func_type_ptr, WasmFuncTypePtr);
 
 typedef enum WasmImportType {
   WASM_IMPORT_HAS_TYPE,
@@ -296,11 +300,15 @@ typedef struct WasmImport {
   WasmVar type_var;
   WasmFuncSignature func_sig;
 } WasmImport;
+typedef WasmImport* WasmImportPtr;
+DECLARE_VECTOR(import_ptr, WasmImportPtr);
 
 typedef struct WasmExport {
   WasmStringSlice name;
   WasmVar var;
 } WasmExport;
+typedef WasmExport* WasmExportPtr;
+DECLARE_VECTOR(export_ptr, WasmExportPtr);
 
 typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_FUNC,
@@ -328,6 +336,15 @@ DECLARE_VECTOR(module_field, WasmModuleField);
 
 typedef struct WasmModule {
   WasmModuleFieldVector fields;
+
+  /* cached for convenience */
+  WasmFuncPtrVector funcs;
+  WasmImportPtrVector imports;
+  WasmExportPtrVector exports;
+  WasmFuncTypePtrVector func_types;
+  WasmTypeBindings globals;
+  WasmVarVector* table;
+  WasmMemory* memory;
 } WasmModule;
 
 typedef enum WasmCommandType {

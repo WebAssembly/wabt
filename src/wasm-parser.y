@@ -949,7 +949,46 @@ module_fields :
     }
 ;
 module :
-    LPAR MODULE module_fields RPAR { $$.fields = $3; }
+    LPAR MODULE module_fields RPAR {
+      $$.fields = $3;
+
+      /* cache values */
+      int i;
+      for (i = 0; i < $$.fields.size; ++i) {
+        WasmModuleField* field = &$$.fields.data[i];
+        switch (field->type) {
+          case WASM_MODULE_FIELD_TYPE_FUNC:
+            *wasm_append_func_ptr(&$$.funcs) = &field->func;
+            break;
+          case WASM_MODULE_FIELD_TYPE_IMPORT:
+            *wasm_append_import_ptr(&$$.imports) = &field->import;
+            break;
+          case WASM_MODULE_FIELD_TYPE_EXPORT:
+            *wasm_append_export_ptr(&$$.exports) = &field->export;
+            break;
+          case WASM_MODULE_FIELD_TYPE_TABLE:
+            $$.table = &field->table;
+            break;
+          case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
+            *wasm_append_func_type_ptr(&$$.func_types) = &field->func_type;
+            break;
+          case WASM_MODULE_FIELD_TYPE_MEMORY:
+            $$.memory = &field->memory;
+            break;
+          case WASM_MODULE_FIELD_TYPE_GLOBAL: {
+            int last_type = $$.globals.types.size;
+            int last_binding = $$.globals.bindings.size;
+            wasm_extend_types(&$$.globals.types, &field->global.types);
+            wasm_extend_bindings(&$$.globals.bindings, &field->global.bindings);
+            /* fixup the binding indexes */
+            int j;
+            for (j = last_binding; j < $$.globals.bindings.size; ++j)
+              $$.globals.bindings.data[j].index += last_type;
+            break;
+          }
+        }
+      }
+    }
 ;
 
 
@@ -1019,7 +1058,11 @@ DEFINE_VECTOR(expr_ptr, WasmExprPtr);
 DEFINE_VECTOR(target, WasmTarget);
 DEFINE_VECTOR(case, WasmCase);
 DEFINE_VECTOR(binding, WasmBinding);
+DEFINE_VECTOR(func_ptr, WasmFuncPtr);
 DEFINE_VECTOR(segment, WasmSegment);
+DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
+DEFINE_VECTOR(import_ptr, WasmImportPtr);
+DEFINE_VECTOR(export_ptr, WasmExportPtr);
 DEFINE_VECTOR(module_field, WasmModuleField);
 DEFINE_VECTOR(const, WasmConst);
 DEFINE_VECTOR(command, WasmCommand);
