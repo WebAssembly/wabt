@@ -109,7 +109,6 @@ typedef struct Context {
   int* remapped_locals;
   int in_assert;
   int block_depth;
-  int seen_return;
 
   AssertFunc* assert_funcs;
   int num_assert_funcs;
@@ -734,12 +733,6 @@ static void before_function(WasmParserCallbackInfo* info) {
 
   info->cookie = (WasmParserCookie)ctx->buf.size;
   out_u16(&ctx->buf, 0, "func body size");
-
-  /* There isn't a return opcode anymore, so create an implicit label at
-   beginning of the function to emulate it. If we see a return opcode later,
-   we'll shift the code down to add an implicit block. */
-  push_label_info(ctx, LABEL_TYPE_FUNCTION);
-  ctx->seen_return = 0;
 }
 
 static void after_function(WasmParserCallbackInfo* info, int num_exprs) {
@@ -747,18 +740,6 @@ static void after_function(WasmParserCallbackInfo* info, int num_exprs) {
   size_t func_size_offset = (size_t)info->cookie;
   size_t func_start = func_size_offset + sizeof(uint16_t);
   size_t body_size = ctx->buf.size - func_start;
-  pop_label_info(ctx);
-  if (ctx->seen_return) {
-    /* There was a return in this function, which means that we need to add an
-     implicit block at top of the function. */
-    size_t block_op_size = 2;
-    move_data(&ctx->buf, func_start + block_op_size, func_start, body_size);
-    out_u8_at(&ctx->buf, func_start, WASM_OPCODE_BLOCK,
-              "implicit WASM_OPCODE_BLOCK");
-    out_u8_at(&ctx->buf, func_start + 1, num_exprs, "num expressions");
-    body_size += block_op_size;
-  }
-
   out_u16_at(&ctx->buf, func_size_offset, body_size, "FIXUP func body size");
 }
 
@@ -1028,20 +1009,7 @@ static void before_grow_memory(WasmParserCallbackInfo* info) {
 
 static void before_return(WasmParserCallbackInfo* info) {
   Context* ctx = info->user_data;
-  ctx->seen_return = 1;
-  /* Get the current label depth */
-  int depth = 0;
-  LabelInfo* label_info = ctx->top_label;
-  while (label_info->type != LABEL_TYPE_FUNCTION) {
-    ++depth;
-    label_info = label_info->next_label;
-  }
-
-  out_opcode(&ctx->buf, WASM_OPCODE_BR);
-  out_u8(&ctx->buf, depth, "break depth");
-
-  if (info->function->result_type == WASM_TYPE_VOID)
-    out_opcode(&ctx->buf, WASM_OPCODE_NOP);
+  out_opcode(&ctx->buf, WASM_OPCODE_RETURN);
 }
 
 static void before_select(WasmParserCallbackInfo* info,
