@@ -2,22 +2,13 @@
 #define WASM_H_
 
 #include <stdint.h>
+#include "wasm-vector.h"
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
 #else
 #define EXTERN_C
 #endif
-
-#define DECLARE_VECTOR(name, type)                               \
-  typedef struct type##Vector {                                  \
-    type* data;                                                  \
-    size_t size;                                                 \
-    size_t capacity;                                             \
-  } type##Vector;                                                \
-  EXTERN_C void wasm_destroy_##name##_vector(type##Vector* vec); \
-  EXTERN_C type* wasm_append_##name(type##Vector* vec);          \
-  EXTERN_C int wasm_extend_##name##s(type##Vector* dst, type##Vector* src);
 
 typedef struct WasmStringSlice {
   const char* start;
