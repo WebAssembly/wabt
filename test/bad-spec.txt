@@ -1,7 +1,0 @@
-;;; ERROR: 1
-;; illegal to parse multiple modules without --spec
-(module)
-(module)
-(;; STDERR ;;;
-bad-spec.txt:4:1: expected EOF. Use --spec to parse spec tests.
-;;; STDERR ;;)

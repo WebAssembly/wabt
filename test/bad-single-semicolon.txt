@@ -2,5 +2,7 @@
 ; foo bar
 (module)
 (;; STDERR ;;;
-bad-single-semicolon.txt:2:1: unexpected semicolon
+bad-single-semicolon.txt:2:1: unexpected char
+bad-single-semicolon.txt:2:3: unexpected token "foo"
+bad-single-semicolon.txt:2:7: unexpected token "bar"
 ;;; STDERR ;;)

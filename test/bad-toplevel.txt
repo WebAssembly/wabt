@@ -1,5 +1,7 @@
 ;;; ERROR: 1
 (foo bar)
 (;; STDERR ;;;
-bad-toplevel.txt:2:2: expected "module"
+bad-toplevel.txt:2:2: unexpected token "foo"
+bad-toplevel.txt:2:6: unexpected token "bar"
+bad-toplevel.txt:2:9: syntax error, unexpected )
 ;;; STDERR ;;)
