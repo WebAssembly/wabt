@@ -12,6 +12,11 @@
 #define EXTERN_C
 #endif
 
+typedef enum WasmResult {
+  WASM_OK,
+  WASM_ERROR,
+} WasmResult;
+
 typedef struct WasmStringSlice {
   const char* start;
   int length;
@@ -24,11 +29,6 @@ typedef struct WasmLocation {
   int last_line;
   int last_column;
 } WasmLocation;
-
-enum {
-  WASM_OK,
-  WASM_ERROR,
-};
 
 typedef enum WasmType {
   WASM_TYPE_VOID = 0,
@@ -432,6 +432,6 @@ typedef struct WasmParser {
 
 WasmScanner wasm_new_scanner(const char* filename);
 void wasm_free_scanner(WasmScanner scanner);
-int wasm_check_script(WasmScript*);
+WasmResult wasm_check_script(WasmScript*);
 
 #endif /* WASM_H_ */
