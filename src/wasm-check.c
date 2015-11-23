@@ -504,7 +504,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_COMPARE: {
       WasmType type = expr->convert.op.type;
-      result |= check_type(ctx, &expr->loc, type, expected_type, desc);
+      result |= check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->compare.left, type,
                            " of argument 0 of compare op");
       result |= check_expr(ctx, module, func, expr->compare.right, type,
