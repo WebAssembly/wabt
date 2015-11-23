@@ -9,7 +9,7 @@ ASAN_FLAGS = -fsanitize=address
 MSAN_FLAGS = -fsanitize=memory
 LSAN_FLAGS = -fsanitize=leak
 
-SRCS = sexpr-wasm.c wasm-parser.c wasm-lexer.c wasm-vector.c
+SRCS = sexpr-wasm.c wasm-parser.c wasm-lexer.c wasm-vector.c wasm-check.c
 OBJS = $(addprefix out/,$(patsubst %.c,%.o,$(SRCS)))
 ASAN_OBJS = $(addprefix out/,$(patsubst %.c,%.asan.o,$(SRCS)))
 MSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.msan.o,$(SRCS)))

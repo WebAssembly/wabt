@@ -5,5 +5,5 @@
   (export "foo" 0))
 (assert_return (invoke "foo" (i32.const 0)) (f32.const 0))
 (;; STDERR ;;;
-typecheck/bad-assertreturn-type-mismatch.txt:6:58: type mismatch. got f32, expected i32
+typecheck/bad-assertreturn-type-mismatch.txt:6:17: type mismatch. got i32, expected f32
 ;;; STDERR ;;)

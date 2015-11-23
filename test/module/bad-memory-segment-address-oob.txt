@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (memory 100 (segment 200 "hi")))
 (;; STDERR ;;;
-module/bad-memory-segment-address-oob.txt:2:30: address (200) greater than initial memory size (100)
+module/bad-memory-segment-address-oob.txt:2:22: address (200) greater than initial memory size (100)
 ;;; STDERR ;;)

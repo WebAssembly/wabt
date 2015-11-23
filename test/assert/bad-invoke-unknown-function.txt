@@ -6,5 +6,5 @@
 
 (invoke "bar")
 (;; STDERR ;;;
-assert/bad-invoke-unknown-function.txt:7:9: unknown function export "bar"
+assert/bad-invoke-unknown-function.txt:7:2: unknown function export "bar"
 ;;; STDERR ;;)

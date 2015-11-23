@@ -30,30 +30,43 @@ typedef struct WasmScannerExtra {
 #define TEXT                   \
   yylval->text.start = yytext; \
   yylval->text.length = yyleng
-#define TEXT_AT(offset) \
+#define TEXT_AT(offset)                 \
   yylval->text.start = yytext + offset; \
   yylval->text.length = yyleng - offset
-#define TYPE(name) yylval->type = WASM_TYPE_##name
+#define TYPE(type_) yylval->type = WASM_TYPE_##type_
+#define TYPE_STRUCT(struct_, type_) yylval->struct_.type = WASM_TYPE_##type_
 #define SIGN(struct_, sign_) \
   yylval->struct_.sign = sign_ ? WASM_SIGNED : WASM_UNSIGNED
-#define MEMSIZE(size_) yylval->mem.size = WASM_MEM_SIZE_##size_
-#define MEMSIZESIGN(size_, sign_) \
-  MEMSIZE(size_);                 \
+#define MEMOP(type_, size_) \
+  TYPE_STRUCT(mem, type_);  \
+  yylval->mem.size = WASM_MEM_SIZE_##size_
+#define MEMOPSIGN(type_, size_, sign_) \
+  MEMOP(type_, size_);                 \
   SIGN(mem, sign_)
-#define UNOP(name) yylval->unary.op_type = WASM_UNARY_OP_TYPE_##name
-#define BINOP(name) yylval->binary.op_type = WASM_BINARY_OP_TYPE_##name
-#define BINOPSIGN(name, sign_) \
-  BINOP(name);                 \
+#define UNOP(type_, name)    \
+  TYPE_STRUCT(unary, type_); \
+  yylval->unary.op_type = WASM_UNARY_OP_TYPE_##name
+#define BINOP(type_, name)    \
+  TYPE_STRUCT(binary, type_); \
+  yylval->binary.op_type = WASM_BINARY_OP_TYPE_##name
+#define BINOPSIGN(type_, name, sign_) \
+  BINOP(type_, name);                 \
   SIGN(binary, sign_)
-#define CMPOP(name) yylval->compare.op_type = WASM_COMPARE_OP_TYPE_##name
-#define CMPOPSIGN(name, sign_) \
-  CMPOP(name);                 \
+#define CMPOP(type_, name)     \
+  TYPE_STRUCT(compare, type_); \
+  yylval->compare.op_type = WASM_COMPARE_OP_TYPE_##name
+#define CMPOPSIGN(type_, name, sign_) \
+  CMPOP(type_, name);                 \
   SIGN(compare, sign_)
-#define CONVTYPE(type) yylval->convert.type2 = WASM_TYPE_##type
-#define CONVTYPESIGN(type, sign_) \
-  CONVTYPE(type);                 \
+#define CONVTYPE(type_, type2_) \
+  TYPE_STRUCT(convert, type_);  \
+  yylval->convert.type2 = WASM_TYPE_##type2_
+#define CONVTYPESIGN(type_, type2_, sign_) \
+  CONVTYPE(type_, type2_);                 \
   SIGN(convert, sign_)
-#define CASTTYPE(type) yylval->cast.type2 = WASM_TYPE_##type
+#define CASTTYPE(type_, type2_) \
+  TYPE_STRUCT(cast, type_);     \
+  yylval->cast.type2 = WASM_TYPE_##type2_
 
 #define TOK(name) WASM_TOKEN_TYPE_##name
 
@@ -117,153 +130,153 @@ NAME      "$"{ATOM}
 "return"              { return TOK(RETURN); }
 "get_local"           { return TOK(GET_LOCAL); }
 "set_local"           { return TOK(SET_LOCAL); }
-"i32.load"            { TYPE(I32); MEMSIZE(32); return TOK(LOAD); }
-"i64.load"            { TYPE(I64); MEMSIZE(64); return TOK(LOAD); }
-"f32.load"            { TYPE(F32); MEMSIZE(32); return TOK(LOAD); }
-"f64.load"            { TYPE(F64); MEMSIZE(64); return TOK(LOAD); }
-"i32.store"           { TYPE(I32); MEMSIZE(32); return TOK(STORE); }
-"i64.store"           { TYPE(I64); MEMSIZE(64); return TOK(STORE); }
-"f32.store"           { TYPE(F32); MEMSIZE(32); return TOK(STORE); }
-"f64.store"           { TYPE(F64); MEMSIZE(64); return TOK(STORE); }
-"i32.load8_s"         { TYPE(I32); MEMSIZESIGN(8, 1); return TOK(LOAD_EXTEND); }
-"i64.load8_s"         { TYPE(I64); MEMSIZESIGN(8, 1); return TOK(LOAD_EXTEND); }
-"i32.load8_u"         { TYPE(I32); MEMSIZESIGN(8, 0); return TOK(LOAD_EXTEND); }
-"i64.load8_u"         { TYPE(I64); MEMSIZESIGN(8, 0); return TOK(LOAD_EXTEND); }
-"i32.load16_s"        { TYPE(I32); MEMSIZESIGN(16, 1); return TOK(LOAD_EXTEND); }
-"i64.load16_s"        { TYPE(I64); MEMSIZESIGN(16, 1); return TOK(LOAD_EXTEND); }
-"i32.load16_u"        { TYPE(I32); MEMSIZESIGN(16, 0); return TOK(LOAD_EXTEND); }
-"i64.load16_u"        { TYPE(I64); MEMSIZESIGN(16, 0); return TOK(LOAD_EXTEND); }
-"i64.load32_s"        { TYPE(I64); MEMSIZESIGN(32, 1); return TOK(LOAD_EXTEND); }
-"i64.load32_u"        { TYPE(I64); MEMSIZESIGN(32, 0); return TOK(LOAD_EXTEND); }
-"i32.store8"          { TYPE(I32); MEMSIZE(8); return TOK(STORE_WRAP); }
-"i64.store8"          { TYPE(I64); MEMSIZE(8); return TOK(STORE_WRAP); }
-"i32.store16"         { TYPE(I32); MEMSIZE(16); return TOK(STORE_WRAP); }
-"i64.store16"         { TYPE(I64); MEMSIZE(16); return TOK(STORE_WRAP); }
-"i64.store32"         { TYPE(I64); MEMSIZE(32); return TOK(STORE_WRAP); }
+"i32.load"            { MEMOP(I32, 32); return TOK(LOAD); }
+"i64.load"            { MEMOP(I64, 64); return TOK(LOAD); }
+"f32.load"            { MEMOP(F32, 32); return TOK(LOAD); }
+"f64.load"            { MEMOP(F64, 64); return TOK(LOAD); }
+"i32.store"           { MEMOP(I32, 32); return TOK(STORE); }
+"i64.store"           { MEMOP(I64, 64); return TOK(STORE); }
+"f32.store"           { MEMOP(F32, 32); return TOK(STORE); }
+"f64.store"           { MEMOP(F64, 64); return TOK(STORE); }
+"i32.load8_s"         { MEMOPSIGN(I32, 8, 1); return TOK(LOAD_EXTEND); }
+"i64.load8_s"         { MEMOPSIGN(I64, 8, 1); return TOK(LOAD_EXTEND); }
+"i32.load8_u"         { MEMOPSIGN(I32, 8, 0); return TOK(LOAD_EXTEND); }
+"i64.load8_u"         { MEMOPSIGN(I64, 8, 0); return TOK(LOAD_EXTEND); }
+"i32.load16_s"        { MEMOPSIGN(I32, 16, 1); return TOK(LOAD_EXTEND); }
+"i64.load16_s"        { MEMOPSIGN(I64, 16, 1); return TOK(LOAD_EXTEND); }
+"i32.load16_u"        { MEMOPSIGN(I32, 16, 0); return TOK(LOAD_EXTEND); }
+"i64.load16_u"        { MEMOPSIGN(I64, 16, 0); return TOK(LOAD_EXTEND); }
+"i64.load32_s"        { MEMOPSIGN(I64, 32, 1); return TOK(LOAD_EXTEND); }
+"i64.load32_u"        { MEMOPSIGN(I64, 32, 0); return TOK(LOAD_EXTEND); }
+"i32.store8"          { MEMOP(I32, 8); return TOK(STORE_WRAP); }
+"i64.store8"          { MEMOP(I64, 8); return TOK(STORE_WRAP); }
+"i32.store16"         { MEMOP(I32, 16); return TOK(STORE_WRAP); }
+"i64.store16"         { MEMOP(I64, 16); return TOK(STORE_WRAP); }
+"i64.store32"         { MEMOP(I64, 32); return TOK(STORE_WRAP); }
 "offset="{DIGITS}     { TEXT_AT(7); return TOK(OFFSET); }
 "align="{DIGITS}      { TEXT_AT(6); return TOK(ALIGN); }
 "i32.const"           { TYPE(I32); return TOK(CONST); }
 "i64.const"           { TYPE(I64); return TOK(CONST); }
 "f32.const"           { TYPE(F32); return TOK(CONST); }
 "f64.const"           { TYPE(F64); return TOK(CONST); }
-"i32.not"             { TYPE(I32); UNOP(NOT); return TOK(UNARY); }
-"i32.clz"             { TYPE(I32); UNOP(CLZ); return TOK(UNARY); }
-"i64.clz"             { TYPE(I64); UNOP(CLZ); return TOK(UNARY); }
-"i32.ctz"             { TYPE(I32); UNOP(CTZ); return TOK(UNARY); }
-"i64.ctz"             { TYPE(I64); UNOP(CTZ); return TOK(UNARY); }
-"i32.popcnt"          { TYPE(I32); UNOP(POPCNT); return TOK(UNARY); }
-"i64.popcnt"          { TYPE(I64); UNOP(POPCNT); return TOK(UNARY); }
-"f32.neg"             { TYPE(F32); UNOP(NEG); return TOK(UNARY); }
-"f64.neg"             { TYPE(F64); UNOP(NEG); return TOK(UNARY); }
-"f32.abs"             { TYPE(F32); UNOP(ABS); return TOK(UNARY); }
-"f64.abs"             { TYPE(F64); UNOP(ABS); return TOK(UNARY); }
-"f32.sqrt"            { TYPE(F32); UNOP(SQRT); return TOK(UNARY); }
-"f64.sqrt"            { TYPE(F64); UNOP(SQRT); return TOK(UNARY); }
-"f32.ceil"            { TYPE(F32); UNOP(CEIL); return TOK(UNARY); }
-"f64.ceil"            { TYPE(F64); UNOP(CEIL); return TOK(UNARY); }
-"f32.floor"           { TYPE(F32); UNOP(FLOOR); return TOK(UNARY); }
-"f64.floor"           { TYPE(F64); UNOP(FLOOR); return TOK(UNARY); }
-"f32.trunc"           { TYPE(F32); UNOP(TRUNC); return TOK(UNARY); }
-"f64.trunc"           { TYPE(F64); UNOP(TRUNC); return TOK(UNARY); }
-"f32.nearest"         { TYPE(F32); UNOP(NEAREST); return TOK(UNARY); }
-"f64.nearest"         { TYPE(F64); UNOP(NEAREST); return TOK(UNARY); }
-"i32.add"             { TYPE(I32); BINOP(ADD); return TOK(BINARY); }
-"i64.add"             { TYPE(I64); BINOP(ADD); return TOK(BINARY); }
-"i32.sub"             { TYPE(I32); BINOP(SUB); return TOK(BINARY); }
-"i64.sub"             { TYPE(I64); BINOP(SUB); return TOK(BINARY); }
-"i32.mul"             { TYPE(I32); BINOP(MUL); return TOK(BINARY); }
-"i64.mul"             { TYPE(I64); BINOP(MUL); return TOK(BINARY); }
-"i32.div_s"           { TYPE(I32); BINOPSIGN(DIV, 1); return TOK(BINARY); }
-"i64.div_s"           { TYPE(I64); BINOPSIGN(DIV, 1); return TOK(BINARY); }
-"i32.div_u"           { TYPE(I32); BINOPSIGN(DIV, 0); return TOK(BINARY); }
-"i64.div_u"           { TYPE(I64); BINOPSIGN(DIV, 0); return TOK(BINARY); }
-"i32.rem_s"           { TYPE(I32); BINOPSIGN(REM, 1); return TOK(BINARY); }
-"i64.rem_s"           { TYPE(I64); BINOPSIGN(REM, 1); return TOK(BINARY); }
-"i32.rem_u"           { TYPE(I32); BINOPSIGN(REM, 0); return TOK(BINARY); }
-"i64.rem_u"           { TYPE(I64); BINOPSIGN(REM, 0); return TOK(BINARY); }
-"i32.and"             { TYPE(I32); BINOP(AND); return TOK(BINARY); }
-"i64.and"             { TYPE(I64); BINOP(AND); return TOK(BINARY); }
-"i32.or"              { TYPE(I32); BINOP(OR); return TOK(BINARY); }
-"i64.or"              { TYPE(I64); BINOP(OR); return TOK(BINARY); }
-"i32.xor"             { TYPE(I32); BINOP(XOR); return TOK(BINARY); }
-"i64.xor"             { TYPE(I64); BINOP(XOR); return TOK(BINARY); }
-"i32.shl"             { TYPE(I32); BINOP(SHL); return TOK(BINARY); }
-"i64.shl"             { TYPE(I64); BINOP(SHL); return TOK(BINARY); }
-"i32.shr_s"           { TYPE(I32); BINOPSIGN(SHR, 1); return TOK(BINARY); }
-"i64.shr_s"           { TYPE(I64); BINOPSIGN(SHR, 1); return TOK(BINARY); }
-"i32.shr_u"           { TYPE(I32); BINOPSIGN(SHR, 0); return TOK(BINARY); }
-"i64.shr_u"           { TYPE(I64); BINOPSIGN(SHR, 0); return TOK(BINARY); }
-"f32.add"             { TYPE(F32); BINOP(ADD); return TOK(BINARY); }
-"f64.add"             { TYPE(F64); BINOP(ADD); return TOK(BINARY); }
-"f32.sub"             { TYPE(F32); BINOP(SUB); return TOK(BINARY); }
-"f64.sub"             { TYPE(F64); BINOP(SUB); return TOK(BINARY); }
-"f32.mul"             { TYPE(F32); BINOP(MUL); return TOK(BINARY); }
-"f64.mul"             { TYPE(F64); BINOP(MUL); return TOK(BINARY); }
-"f32.div"             { TYPE(F32); BINOP(DIV); return TOK(BINARY); }
-"f64.div"             { TYPE(F64); BINOP(DIV); return TOK(BINARY); }
-"f32.min"             { TYPE(F32); BINOP(MIN); return TOK(BINARY); }
-"f64.min"             { TYPE(F64); BINOP(MIN); return TOK(BINARY); }
-"f32.max"             { TYPE(F32); BINOP(MAX); return TOK(BINARY); }
-"f64.max"             { TYPE(F64); BINOP(MAX); return TOK(BINARY); }
-"f32.copysign"        { TYPE(F32); BINOP(COPYSIGN); return TOK(BINARY); }
-"f64.copysign"        { TYPE(F64); BINOP(COPYSIGN); return TOK(BINARY); }
-"i32.eq"              { TYPE(I32); CMPOP(EQ); return TOK(COMPARE); }
-"i64.eq"              { TYPE(I64); CMPOP(EQ); return TOK(COMPARE); }
-"i32.ne"              { TYPE(I32); CMPOP(EQ); return TOK(COMPARE); }
-"i64.ne"              { TYPE(I64); CMPOP(EQ); return TOK(COMPARE); }
-"i32.lt_s"            { TYPE(I32); CMPOPSIGN(LT, 1); return TOK(COMPARE); }
-"i64.lt_s"            { TYPE(I64); CMPOPSIGN(LT, 1); return TOK(COMPARE); }
-"i32.lt_u"            { TYPE(I32); CMPOPSIGN(LT, 0); return TOK(COMPARE); }
-"i64.lt_u"            { TYPE(I64); CMPOPSIGN(LT, 0); return TOK(COMPARE); }
-"i32.le_s"            { TYPE(I32); CMPOPSIGN(LE, 1); return TOK(COMPARE); }
-"i64.le_s"            { TYPE(I64); CMPOPSIGN(LE, 1); return TOK(COMPARE); }
-"i32.le_u"            { TYPE(I32); CMPOPSIGN(LE, 0); return TOK(COMPARE); }
-"i64.le_u"            { TYPE(I64); CMPOPSIGN(LE, 0); return TOK(COMPARE); }
-"i32.gt_s"            { TYPE(I32); CMPOPSIGN(GT, 1); return TOK(COMPARE); }
-"i64.gt_s"            { TYPE(I64); CMPOPSIGN(GT, 1); return TOK(COMPARE); }
-"i32.gt_u"            { TYPE(I32); CMPOPSIGN(GT, 0); return TOK(COMPARE); }
-"i64.gt_u"            { TYPE(I64); CMPOPSIGN(GT, 0); return TOK(COMPARE); }
-"i32.ge_s"            { TYPE(I32); CMPOPSIGN(GE, 1); return TOK(COMPARE); }
-"i64.ge_s"            { TYPE(I64); CMPOPSIGN(GE, 1); return TOK(COMPARE); }
-"i32.ge_u"            { TYPE(I32); CMPOPSIGN(GE, 0); return TOK(COMPARE); }
-"i64.ge_u"            { TYPE(I64); CMPOPSIGN(GE, 0); return TOK(COMPARE); }
-"f32.eq"              { TYPE(F32); CMPOP(EQ); return TOK(COMPARE); }
-"f64.eq"              { TYPE(F64); CMPOP(EQ); return TOK(COMPARE); }
-"f32.ne"              { TYPE(F32); CMPOP(NE); return TOK(COMPARE); }
-"f64.ne"              { TYPE(F64); CMPOP(NE); return TOK(COMPARE); }
-"f32.lt"              { TYPE(F32); CMPOP(LT); return TOK(COMPARE); }
-"f64.lt"              { TYPE(F64); CMPOP(LT); return TOK(COMPARE); }
-"f32.le"              { TYPE(F32); CMPOP(LE); return TOK(COMPARE); }
-"f64.le"              { TYPE(F64); CMPOP(LE); return TOK(COMPARE); }
-"f32.gt"              { TYPE(F32); CMPOP(GT); return TOK(COMPARE); }
-"f64.gt"              { TYPE(F64); CMPOP(GT); return TOK(COMPARE); }
-"f32.ge"              { TYPE(F32); CMPOP(GE); return TOK(COMPARE); }
-"f64.ge"              { TYPE(F64); CMPOP(GE); return TOK(COMPARE); }
-"i64.extend_s/i32"    { TYPE(I64); CONVTYPESIGN(I32, 1); return TOK(CONVERT); }
-"i64.extend_u/i32"    { TYPE(I64); CONVTYPESIGN(I32, 0); return TOK(CONVERT); }
-"i32.wrap/i64"        { TYPE(I32); CONVTYPE(I64); return TOK(CONVERT); }
-"i32.trunc_s/f32"     { TYPE(I32); CONVTYPESIGN(F32, 1); return TOK(CONVERT); }
-"i64.trunc_s/f32"     { TYPE(I64); CONVTYPESIGN(F32, 1); return TOK(CONVERT); }
-"i32.trunc_s/f64"     { TYPE(I32); CONVTYPESIGN(F64, 1); return TOK(CONVERT); }
-"i64.trunc_s/f64"     { TYPE(I64); CONVTYPESIGN(F64, 1); return TOK(CONVERT); }
-"i32.trunc_u/f32"     { TYPE(I32); CONVTYPESIGN(F32, 0); return TOK(CONVERT); }
-"i64.trunc_u/f32"     { TYPE(I64); CONVTYPESIGN(F32, 0); return TOK(CONVERT); }
-"i32.trunc_u/f64"     { TYPE(I32); CONVTYPESIGN(F64, 0); return TOK(CONVERT); }
-"i64.trunc_u/f64"     { TYPE(I64); CONVTYPESIGN(F64, 0); return TOK(CONVERT); }
-"f32.convert_s/i32"   { TYPE(F32); CONVTYPESIGN(I32, 1); return TOK(CONVERT); }
-"f64.convert_s/i32"   { TYPE(F64); CONVTYPESIGN(I32, 1); return TOK(CONVERT); }
-"f32.convert_s/i64"   { TYPE(F32); CONVTYPESIGN(I64, 1); return TOK(CONVERT); }
-"f64.convert_s/i64"   { TYPE(F64); CONVTYPESIGN(I64, 1); return TOK(CONVERT); }
-"f32.convert_u/i32"   { TYPE(F32); CONVTYPESIGN(I32, 0); return TOK(CONVERT); }
-"f64.convert_u/i32"   { TYPE(F64); CONVTYPESIGN(I32, 0); return TOK(CONVERT); }
-"f32.convert_u/i64"   { TYPE(F32); CONVTYPESIGN(I64, 0); return TOK(CONVERT); }
-"f64.convert_u/i64"   { TYPE(F64); CONVTYPESIGN(I64, 0); return TOK(CONVERT); }
-"f64.promote/f32"     { TYPE(F64); CONVTYPE(F32); return TOK(CONVERT); }
-"f32.demote/f64"      { TYPE(F32); CONVTYPE(F64); return TOK(CONVERT); }
-"f32.reinterpret/i32" { TYPE(F32); CASTTYPE(I32); return TOK(CAST); }
-"i32.reinterpret/f32" { TYPE(I32); CASTTYPE(F32); return TOK(CAST); }
-"f64.reinterpret/i64" { TYPE(F64); CASTTYPE(I64); return TOK(CAST); }
-"i64.reinterpret/f64" { TYPE(I64); CASTTYPE(F64); return TOK(CAST); }
+"i32.not"             { UNOP(I32, NOT); return TOK(UNARY); }
+"i32.clz"             { UNOP(I32, CLZ); return TOK(UNARY); }
+"i64.clz"             { UNOP(I64, CLZ); return TOK(UNARY); }
+"i32.ctz"             { UNOP(I32, CTZ); return TOK(UNARY); }
+"i64.ctz"             { UNOP(I64, CTZ); return TOK(UNARY); }
+"i32.popcnt"          { UNOP(I32, POPCNT); return TOK(UNARY); }
+"i64.popcnt"          { UNOP(I64, POPCNT); return TOK(UNARY); }
+"f32.neg"             { UNOP(F32, NEG); return TOK(UNARY); }
+"f64.neg"             { UNOP(F64, NEG); return TOK(UNARY); }
+"f32.abs"             { UNOP(F32, ABS); return TOK(UNARY); }
+"f64.abs"             { UNOP(F64, ABS); return TOK(UNARY); }
+"f32.sqrt"            { UNOP(F32, SQRT); return TOK(UNARY); }
+"f64.sqrt"            { UNOP(F64, SQRT); return TOK(UNARY); }
+"f32.ceil"            { UNOP(F32, CEIL); return TOK(UNARY); }
+"f64.ceil"            { UNOP(F64, CEIL); return TOK(UNARY); }
+"f32.floor"           { UNOP(F32, FLOOR); return TOK(UNARY); }
+"f64.floor"           { UNOP(F64, FLOOR); return TOK(UNARY); }
+"f32.trunc"           { UNOP(F32, TRUNC); return TOK(UNARY); }
+"f64.trunc"           { UNOP(F64, TRUNC); return TOK(UNARY); }
+"f32.nearest"         { UNOP(F32, NEAREST); return TOK(UNARY); }
+"f64.nearest"         { UNOP(F64, NEAREST); return TOK(UNARY); }
+"i32.add"             { BINOP(I32, ADD); return TOK(BINARY); }
+"i64.add"             { BINOP(I64, ADD); return TOK(BINARY); }
+"i32.sub"             { BINOP(I32, SUB); return TOK(BINARY); }
+"i64.sub"             { BINOP(I64, SUB); return TOK(BINARY); }
+"i32.mul"             { BINOP(I32, MUL); return TOK(BINARY); }
+"i64.mul"             { BINOP(I64, MUL); return TOK(BINARY); }
+"i32.div_s"           { BINOPSIGN(I32, DIV, 1); return TOK(BINARY); }
+"i64.div_s"           { BINOPSIGN(I64, DIV, 1); return TOK(BINARY); }
+"i32.div_u"           { BINOPSIGN(I32, DIV, 0); return TOK(BINARY); }
+"i64.div_u"           { BINOPSIGN(I64, DIV, 0); return TOK(BINARY); }
+"i32.rem_s"           { BINOPSIGN(I32, REM, 1); return TOK(BINARY); }
+"i64.rem_s"           { BINOPSIGN(I64, REM, 1); return TOK(BINARY); }
+"i32.rem_u"           { BINOPSIGN(I32, REM, 0); return TOK(BINARY); }
+"i64.rem_u"           { BINOPSIGN(I64, REM, 0); return TOK(BINARY); }
+"i32.and"             { BINOP(I32, AND); return TOK(BINARY); }
+"i64.and"             { BINOP(I64, AND); return TOK(BINARY); }
+"i32.or"              { BINOP(I32, OR); return TOK(BINARY); }
+"i64.or"              { BINOP(I64, OR); return TOK(BINARY); }
+"i32.xor"             { BINOP(I32, XOR); return TOK(BINARY); }
+"i64.xor"             { BINOP(I64, XOR); return TOK(BINARY); }
+"i32.shl"             { BINOP(I32, SHL); return TOK(BINARY); }
+"i64.shl"             { BINOP(I64, SHL); return TOK(BINARY); }
+"i32.shr_s"           { BINOPSIGN(I32, SHR, 1); return TOK(BINARY); }
+"i64.shr_s"           { BINOPSIGN(I64, SHR, 1); return TOK(BINARY); }
+"i32.shr_u"           { BINOPSIGN(I32, SHR, 0); return TOK(BINARY); }
+"i64.shr_u"           { BINOPSIGN(I64, SHR, 0); return TOK(BINARY); }
+"f32.add"             { BINOP(F32, ADD); return TOK(BINARY); }
+"f64.add"             { BINOP(F64, ADD); return TOK(BINARY); }
+"f32.sub"             { BINOP(F32, SUB); return TOK(BINARY); }
+"f64.sub"             { BINOP(F64, SUB); return TOK(BINARY); }
+"f32.mul"             { BINOP(F32, MUL); return TOK(BINARY); }
+"f64.mul"             { BINOP(F64, MUL); return TOK(BINARY); }
+"f32.div"             { BINOP(F32, DIV); return TOK(BINARY); }
+"f64.div"             { BINOP(F64, DIV); return TOK(BINARY); }
+"f32.min"             { BINOP(F32, MIN); return TOK(BINARY); }
+"f64.min"             { BINOP(F64, MIN); return TOK(BINARY); }
+"f32.max"             { BINOP(F32, MAX); return TOK(BINARY); }
+"f64.max"             { BINOP(F64, MAX); return TOK(BINARY); }
+"f32.copysign"        { BINOP(F32, COPYSIGN); return TOK(BINARY); }
+"f64.copysign"        { BINOP(F64, COPYSIGN); return TOK(BINARY); }
+"i32.eq"              { CMPOP(I32, EQ); return TOK(COMPARE); }
+"i64.eq"              { CMPOP(I64, EQ); return TOK(COMPARE); }
+"i32.ne"              { CMPOP(I32, EQ); return TOK(COMPARE); }
+"i64.ne"              { CMPOP(I64, EQ); return TOK(COMPARE); }
+"i32.lt_s"            { CMPOPSIGN(I32, LT, 1); return TOK(COMPARE); }
+"i64.lt_s"            { CMPOPSIGN(I64, LT, 1); return TOK(COMPARE); }
+"i32.lt_u"            { CMPOPSIGN(I32, LT, 0); return TOK(COMPARE); }
+"i64.lt_u"            { CMPOPSIGN(I64, LT, 0); return TOK(COMPARE); }
+"i32.le_s"            { CMPOPSIGN(I32, LE, 1); return TOK(COMPARE); }
+"i64.le_s"            { CMPOPSIGN(I64, LE, 1); return TOK(COMPARE); }
+"i32.le_u"            { CMPOPSIGN(I32, LE, 0); return TOK(COMPARE); }
+"i64.le_u"            { CMPOPSIGN(I64, LE, 0); return TOK(COMPARE); }
+"i32.gt_s"            { CMPOPSIGN(I32, GT, 1); return TOK(COMPARE); }
+"i64.gt_s"            { CMPOPSIGN(I64, GT, 1); return TOK(COMPARE); }
+"i32.gt_u"            { CMPOPSIGN(I32, GT, 0); return TOK(COMPARE); }
+"i64.gt_u"            { CMPOPSIGN(I64, GT, 0); return TOK(COMPARE); }
+"i32.ge_s"            { CMPOPSIGN(I32, GE, 1); return TOK(COMPARE); }
+"i64.ge_s"            { CMPOPSIGN(I64, GE, 1); return TOK(COMPARE); }
+"i32.ge_u"            { CMPOPSIGN(I32, GE, 0); return TOK(COMPARE); }
+"i64.ge_u"            { CMPOPSIGN(I64, GE, 0); return TOK(COMPARE); }
+"f32.eq"              { CMPOP(F32, EQ); return TOK(COMPARE); }
+"f64.eq"              { CMPOP(F64, EQ); return TOK(COMPARE); }
+"f32.ne"              { CMPOP(F32, NE); return TOK(COMPARE); }
+"f64.ne"              { CMPOP(F64, NE); return TOK(COMPARE); }
+"f32.lt"              { CMPOP(F32, LT); return TOK(COMPARE); }
+"f64.lt"              { CMPOP(F64, LT); return TOK(COMPARE); }
+"f32.le"              { CMPOP(F32, LE); return TOK(COMPARE); }
+"f64.le"              { CMPOP(F64, LE); return TOK(COMPARE); }
+"f32.gt"              { CMPOP(F32, GT); return TOK(COMPARE); }
+"f64.gt"              { CMPOP(F64, GT); return TOK(COMPARE); }
+"f32.ge"              { CMPOP(F32, GE); return TOK(COMPARE); }
+"f64.ge"              { CMPOP(F64, GE); return TOK(COMPARE); }
+"i64.extend_s/i32"    { CONVTYPESIGN(I64, I32, 1); return TOK(CONVERT); }
+"i64.extend_u/i32"    { CONVTYPESIGN(I64, I32, 0); return TOK(CONVERT); }
+"i32.wrap/i64"        { CONVTYPE(I32, I64); return TOK(CONVERT); }
+"i32.trunc_s/f32"     { CONVTYPESIGN(I32, F32, 1); return TOK(CONVERT); }
+"i64.trunc_s/f32"     { CONVTYPESIGN(I64, F32, 1); return TOK(CONVERT); }
+"i32.trunc_s/f64"     { CONVTYPESIGN(I32, F64, 1); return TOK(CONVERT); }
+"i64.trunc_s/f64"     { CONVTYPESIGN(I64, F64, 1); return TOK(CONVERT); }
+"i32.trunc_u/f32"     { CONVTYPESIGN(I32, F32, 0); return TOK(CONVERT); }
+"i64.trunc_u/f32"     { CONVTYPESIGN(I64, F32, 0); return TOK(CONVERT); }
+"i32.trunc_u/f64"     { CONVTYPESIGN(I32, F64, 0); return TOK(CONVERT); }
+"i64.trunc_u/f64"     { CONVTYPESIGN(I64, F64, 0); return TOK(CONVERT); }
+"f32.convert_s/i32"   { CONVTYPESIGN(F32, I32, 1); return TOK(CONVERT); }
+"f64.convert_s/i32"   { CONVTYPESIGN(F64, I32, 1); return TOK(CONVERT); }
+"f32.convert_s/i64"   { CONVTYPESIGN(F32, I64, 1); return TOK(CONVERT); }
+"f64.convert_s/i64"   { CONVTYPESIGN(F64, I64, 1); return TOK(CONVERT); }
+"f32.convert_u/i32"   { CONVTYPESIGN(F32, I32, 0); return TOK(CONVERT); }
+"f64.convert_u/i32"   { CONVTYPESIGN(F64, I32, 0); return TOK(CONVERT); }
+"f32.convert_u/i64"   { CONVTYPESIGN(F32, I64, 0); return TOK(CONVERT); }
+"f64.convert_u/i64"   { CONVTYPESIGN(F64, I64, 0); return TOK(CONVERT); }
+"f64.promote/f32"     { CONVTYPE(F64, F32); return TOK(CONVERT); }
+"f32.demote/f64"      { CONVTYPE(F32, F64); return TOK(CONVERT); }
+"f32.reinterpret/i32" { CASTTYPE(F32, I32); return TOK(CAST); }
+"i32.reinterpret/f32" { CASTTYPE(I32, F32); return TOK(CAST); }
+"f64.reinterpret/i64" { CASTTYPE(F64, I64); return TOK(CAST); }
+"i64.reinterpret/f64" { CASTTYPE(I64, F64); return TOK(CAST); }
 "i32.select"          { TYPE(I32); return TOK(SELECT); }
 "i64.select"          { TYPE(I64); return TOK(SELECT); }
 "f32.select"          { TYPE(F32); return TOK(SELECT); }

@@ -5,5 +5,5 @@
       (f32.const 0)
       (i32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-if-type-mismatch.txt:6:21: type mismatch in function result. got void, expected i32
+typecheck/bad-if-type-mismatch.txt:5:7: type mismatch of if branch. got f32, expected i32
 ;;; STDERR ;;)

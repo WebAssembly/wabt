@@ -3,5 +3,5 @@
   (import $foo "bar" "baz" (param i32))
   (import $foo "quux" "blorf" (param f32)))
 (;; STDERR ;;;
-module/bad-import-redefinition.txt:4:11: redefinition of import "$foo"
+module/bad-import-redefinition.txt:4:3: redefinition of import "$foo"
 ;;; STDERR ;;)

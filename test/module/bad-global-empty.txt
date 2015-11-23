@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (global))
-(;; STDERR ;;;
-module/bad-global-empty.txt:2:16: expected ATOM, not ")"
-;;; STDERR ;;)

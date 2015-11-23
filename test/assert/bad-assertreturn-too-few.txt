@@ -5,5 +5,5 @@
   (export "foo" $foo))
 (assert_return (invoke "foo") (i32.const 0))
 (;; STDERR ;;;
-assert/bad-assertreturn-too-few.txt:6:29: too few arguments to function. got 0, expected 1
+assert/bad-assertreturn-too-few.txt:6:17: too few parameters to function. got 0, expected 1
 ;;; STDERR ;;)

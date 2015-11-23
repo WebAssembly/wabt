@@ -3,5 +3,5 @@
   (func
     (i32.trunc_s/f32 (i32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-convert-type-mismatch.txt:4:6: type mismatch of convert op. got i32, expected f32
+typecheck/bad-convert-type-mismatch.txt:4:22: type mismatch of convert op. got i32, expected f32
 ;;; STDERR ;;)

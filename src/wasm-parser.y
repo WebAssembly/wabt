@@ -13,6 +13,9 @@
 #define DUPTEXT(dst, src)                           \
   (dst).start = strndup((src).start, (src).length); \
   (dst).length = (src).length
+#define DUPQUOTEDTEXT(dst, src)                             \
+  (dst).start = strndup((src).start + 1, (src).length - 2); \
+  (dst).length = (src).length - 2
 
 #define YYLLOC_DEFAULT(Current, Rhs, N)                                        \
   do                                                                           \
@@ -48,6 +51,9 @@ static int read_float(const char* s, const char* end, float* out);
 static int read_double(const char* s, const char* end, double* out);
 static int read_const(WasmType type, const char* s, const char* end,
                       WasmConst* out);
+static void dup_string_contents(WasmStringSlice * text, void** out_data,
+                                size_t* out_size);
+static void extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src);
 
 %}
 
@@ -152,6 +158,7 @@ literal :
 
 var :
     INT {
+      $$.loc = @1;
       $$.type = WASM_VAR_TYPE_INDEX;
       uint32_t index;
       if (!read_int32($1.start, $1.start + $1.length, &index, 0))
@@ -159,6 +166,7 @@ var :
       $$.index = index;
     }
   | VAR {
+      $$.loc = @1;
       $$.type = WASM_VAR_TYPE_NAME;
       DUPTEXT($$.name, $1);
     }
@@ -197,7 +205,7 @@ align :
 ;
 
 expr :
-    LPAR expr1 RPAR { $$ = $2; }
+    LPAR expr1 RPAR { $$ = $2; $$->loc = @1; }
 ;
 expr1 :
     NOP { $$ = wasm_new_expr(WASM_EXPR_TYPE_NOP); }
@@ -239,6 +247,7 @@ expr1 :
     }
   | BR expr_opt {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR);
+      $$->br.var.loc = @1;
       $$->br.var.type = WASM_VAR_TYPE_INDEX;
       $$->br.var.index = 0;
       $$->br.expr = $2;
@@ -259,6 +268,18 @@ expr1 :
       $$->tableswitch.targets = $6;
       $$->tableswitch.default_target = $8;
       $$->tableswitch.cases = $9;
+
+      int i;
+      for (i = 0; i < $$->tableswitch.cases.size; ++i) {
+        WasmCase* case_ = &$$->tableswitch.cases.data[i];
+        if (case_->label.start) {
+          WasmBinding* binding =
+              wasm_append_binding(&$$->tableswitch.case_bindings);
+          binding->loc = case_->loc;
+          binding->name = case_->label;
+          binding->index = i;
+        }
+      }
     }
   | CALL var expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL);
@@ -317,6 +338,7 @@ expr1 :
     }
   | CONST literal {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CONST);
+      $$->const_.loc = @1;
       if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
         yyerror(&@2, scanner, parser, "invalid literal \"%.*s\"", $2.length,
                 $2.start);
@@ -425,6 +447,7 @@ param_list :
   | LPAR PARAM bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      binding->loc = @2;
       binding->name = $3;
       binding->index = $$.types.size;
       *wasm_append_type(&$$.types) = $4;
@@ -437,6 +460,7 @@ param_list :
   | param_list LPAR PARAM bind_var VALUE_TYPE RPAR {
       $$ = $1;
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      binding->loc = @3;
       binding->name = $4;
       binding->index = $$.types.size;
       *wasm_append_type(&$$.types) = $5;
@@ -454,6 +478,7 @@ local_list :
   | LPAR LOCAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      binding->loc = @2;
       binding->name = $3;
       binding->index = $$.types.size;
       *wasm_append_type(&$$.types) = $4;
@@ -466,6 +491,7 @@ local_list :
   | local_list LPAR LOCAL bind_var VALUE_TYPE RPAR {
       $$ = $1;
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      binding->loc = @3;
       binding->name = $4;
       binding->index = $$.types.size;
       *wasm_append_type(&$$.types) = $5;
@@ -477,24 +503,29 @@ type_use :
 func_info :
     /* empty */ {}
   | bind_var {
+      $$.flags = 0;
       $$.name = $1;
     }
   | bind_var type_use {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.name = $1;
       $$.type_var = $2;
     }
   | bind_var type_use param_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
     }
   | bind_var type_use param_list result {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
       $$.result_type = $4;
     }
   | bind_var type_use param_list result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
@@ -502,6 +533,7 @@ func_info :
       $$.locals = $5;
     }
   | bind_var type_use param_list result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
@@ -510,6 +542,7 @@ func_info :
       $$.exprs = $6;
     }
   | bind_var type_use param_list result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
@@ -517,35 +550,41 @@ func_info :
       $$.exprs = $5;
     }
   | bind_var type_use param_list local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
       $$.locals = $4;
     }
   | bind_var type_use param_list local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
       $$.locals = $4;
     }
   | bind_var type_use param_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.params = $3;
       $$.exprs = $4;
     }
   | bind_var type_use result {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.result_type = $3;
     }
   | bind_var type_use result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.result_type = $3;
       $$.locals = $4;
     }
   | bind_var type_use result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.result_type = $3;
@@ -553,23 +592,27 @@ func_info :
       $$.exprs = $5;
     }
   | bind_var type_use result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.type_var = $2;
       $$.result_type = $3;
       $$.exprs = $4;
     }
   | bind_var type_use local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.name = $1;
       $$.type_var = $2;
       $$.locals = $3;
     }
   | bind_var type_use local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.name = $1;
       $$.type_var = $2;
       $$.locals = $3;
       $$.exprs = $4;
     }
   | bind_var type_use non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.name = $1;
       $$.type_var = $2;
       $$.exprs = $3;
@@ -584,21 +627,25 @@ func_info :
       $$.exprs = $3;
     }
   | bind_var param_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
     }
   | bind_var param_list result {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.result_type = $3;
     }
   | bind_var param_list result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.result_type = $3;
       $$.locals = $4;
     }
   | bind_var param_list result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.result_type = $3;
@@ -606,43 +653,51 @@ func_info :
       $$.exprs = $5;
     }
   | bind_var param_list result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.result_type = $3;
       $$.exprs = $4;
     }
   | bind_var param_list local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.locals = $3;
     }
   | bind_var param_list local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.locals = $3;
       $$.exprs = $4;
     }
   | bind_var param_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.params = $2;
       $$.exprs = $3;
     }
   | bind_var result {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.result_type = $2;
     }
   | bind_var result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.result_type = $2;
       $$.locals = $3;
     }
   | bind_var result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.result_type = $2;
       $$.locals = $3;
       $$.exprs = $4;
     }
   | bind_var result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.result_type = $2;
       $$.exprs = $3;
@@ -652,24 +707,29 @@ func_info :
       $$.exprs = $2;
     }
   | type_use {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.type_var = $1;
     }
   | type_use param_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
     }
   | type_use param_list result {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.result_type = $3;
     }
   | type_use param_list result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.result_type = $3;
       $$.locals = $4;
     }
   | type_use param_list result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.result_type = $3;
@@ -677,109 +737,132 @@ func_info :
       $$.exprs = $5;
     }
   | type_use param_list result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.result_type = $3;
       $$.exprs = $4;
     }
   | type_use param_list local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.locals = $3;
     }
   | type_use param_list local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.locals = $3;
       $$.exprs = $4;
     }
   | type_use param_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.params = $2;
       $$.exprs = $3;
     }
   | type_use result {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.result_type = $2;
     }
   | type_use result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.result_type = $2;
       $$.locals = $3;
     }
   | type_use result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.result_type = $2;
       $$.locals = $3;
       $$.exprs = $4;
     }
   | type_use result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.type_var = $1;
       $$.result_type = $2;
       $$.exprs = $3;
     }
   | type_use local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.type_var = $1;
       $$.locals = $2;
     }
   | type_use local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.type_var = $1;
       $$.locals = $2;
       $$.exprs = $3;
     }
   | type_use non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$.type_var = $1;
       $$.exprs = $2;
     }
   | param_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
     }
   | param_list result {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.result_type = $2;
     }
   | param_list result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.result_type = $2;
       $$.locals = $3;
     }
   | param_list result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.result_type = $2;
       $$.locals = $3;
       $$.exprs = $4;
     }
   | param_list result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.result_type = $2;
       $$.exprs = $3;
     }
   | param_list local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.locals = $2;
     }
   | param_list local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.locals = $2;
       $$.exprs = $3;
     }
   | param_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.params = $1;
       $$.exprs = $2;
     }
   | result {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.result_type = $1;
     }
   | result local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.result_type = $1;
       $$.locals = $2;
     }
   | result local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.result_type = $1;
       $$.locals = $2;
       $$.exprs = $3;
     }
   | result non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.result_type = $1;
       $$.exprs = $2;
     }
@@ -795,19 +878,23 @@ func_info :
     }
 ;
 func :
-    LPAR FUNC { ZEROMEM($<func>$); } func_info RPAR { $$ = $4; }
+    LPAR FUNC { ZEROMEM($<func>$); } func_info RPAR {
+      $$ = $4;
+      $$.loc = @2;
+      extend_type_bindings(&$$.params_and_locals, &$$.params);
+      extend_type_bindings(&$$.params_and_locals, &$$.locals);
+    }
 ;
 
 /* Modules */
 
 segment :
     LPAR SEGMENT INT TEXT RPAR {
-      /* TODO(binji): copy data */
+      $$.loc = @2;
       if (!read_int32($3.start, $3.start + $3.length, &$$.addr, 0))
         yyerror(&@3, scanner, parser, "invalid memory segment address \"%.*s\"",
                 $3.length, $3.start);
-      $$.data = NULL;
-      $$.size = 0;
+      dup_string_contents(&$4, &$$.data, &$$.size);
     }
 ;
 segment_list :
@@ -817,6 +904,7 @@ segment_list :
 
 memory :
     LPAR MEMORY INT INT segment_list RPAR {
+      $$.loc = @2;
       if (!read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0))
         yyerror(&@3, scanner, parser, "invalid initial memory size \"%.*s\"",
                 $3.length, $3.start);
@@ -826,6 +914,7 @@ memory :
       $$.segments = $5;
     }
   | LPAR MEMORY INT segment_list RPAR {
+      $$.loc = @2;
       if (!read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0))
         yyerror(&@3, scanner, parser, "invalid initial memory size \"%.*s\"",
                 $3.length, $3.start);
@@ -884,7 +973,7 @@ import :
 
 export :
     LPAR EXPORT TEXT var RPAR {
-      DUPTEXT($$.name, $3);
+      DUPQUOTEDTEXT($$.name, $3);
       $$.var = $4;
     }
 ;
@@ -897,6 +986,7 @@ global :
   | LPAR GLOBAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      binding->loc = @2;
       binding->name = $3;
       binding->index = 0;
       *wasm_append_type(&$$.types) = $4;
@@ -908,48 +998,56 @@ module_fields :
   | module_fields func {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
       field->func = $2;
     }
   | module_fields import {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
       field->import = $2;
     }
   | module_fields export {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
       field->export = $2;
     }
   | module_fields table {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_TABLE;
       field->table = $2;
     }
   | module_fields type_def {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
       field->func_type = $2;
     }
   | module_fields memory {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
       field->memory = $2;
     }
   | module_fields global {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
       field->global = $2;
     }
 ;
 module :
     LPAR MODULE module_fields RPAR {
+      $$.loc = @2;
       $$.fields = $3;
 
       /* cache values */
@@ -959,33 +1057,50 @@ module :
         switch (field->type) {
           case WASM_MODULE_FIELD_TYPE_FUNC:
             *wasm_append_func_ptr(&$$.funcs) = &field->func;
+            if (field->func.name.start) {
+              WasmBinding* binding = wasm_append_binding(&$$.func_bindings);
+              binding->loc = field->loc;
+              binding->name = field->func.name;
+              binding->index = $$.funcs.size - 1;
+            }
             break;
           case WASM_MODULE_FIELD_TYPE_IMPORT:
             *wasm_append_import_ptr(&$$.imports) = &field->import;
+            if (field->import.name.start) {
+              WasmBinding* binding = wasm_append_binding(&$$.import_bindings);
+              binding->loc = field->loc;
+              binding->name = field->import.name;
+              binding->index = $$.imports.size - 1;
+            }
             break;
           case WASM_MODULE_FIELD_TYPE_EXPORT:
             *wasm_append_export_ptr(&$$.exports) = &field->export;
+            if (field->export.name.start) {
+              WasmBinding* binding = wasm_append_binding(&$$.export_bindings);
+              binding->loc = field->loc;
+              binding->name = field->export.name;
+              binding->index = $$.exports.size - 1;
+            }
             break;
           case WASM_MODULE_FIELD_TYPE_TABLE:
             $$.table = &field->table;
             break;
           case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
             *wasm_append_func_type_ptr(&$$.func_types) = &field->func_type;
+            if (field->func_type.name.start) {
+              WasmBinding* binding =
+                  wasm_append_binding(&$$.func_type_bindings);
+              binding->loc = field->loc;
+              binding->name = field->func_type.name;
+              binding->index = $$.func_types.size - 1;
+            }
             break;
           case WASM_MODULE_FIELD_TYPE_MEMORY:
             $$.memory = &field->memory;
             break;
-          case WASM_MODULE_FIELD_TYPE_GLOBAL: {
-            int last_type = $$.globals.types.size;
-            int last_binding = $$.globals.bindings.size;
-            wasm_extend_types(&$$.globals.types, &field->global.types);
-            wasm_extend_bindings(&$$.globals.bindings, &field->global.bindings);
-            /* fixup the binding indexes */
-            int j;
-            for (j = last_binding; j < $$.globals.bindings.size; ++j)
-              $$.globals.bindings.data[j].index += last_type;
+          case WASM_MODULE_FIELD_TYPE_GLOBAL:
+            extend_type_bindings(&$$.globals, &field->global);
             break;
-          }
         }
       }
     }
@@ -998,7 +1113,8 @@ cmd :
     module { $$.type = WASM_COMMAND_TYPE_MODULE; $$.module = $1; }
   | LPAR INVOKE TEXT const_list RPAR {
       $$.type = WASM_COMMAND_TYPE_INVOKE;
-      $$.invoke.name = $3;
+      $$.invoke.loc = @2;
+      DUPQUOTEDTEXT($$.invoke.name, $3);
       $$.invoke.args = $4;
     }
   | LPAR ASSERT_INVALID module TEXT RPAR {
@@ -1008,18 +1124,21 @@ cmd :
     }
   | LPAR ASSERT_RETURN LPAR INVOKE TEXT const_list RPAR const_opt RPAR {
       $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN;
-      $$.assert_return.invoke.name = $5;
+      $$.assert_return.invoke.loc = @4;
+      DUPQUOTEDTEXT($$.assert_return.invoke.name, $5);
       $$.assert_return.invoke.args = $6;
       $$.assert_return.expected = $8;
     }
   | LPAR ASSERT_RETURN_NAN LPAR INVOKE TEXT const_list RPAR RPAR {
       $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
-      $$.assert_return_nan.invoke.name = $5;
+      $$.assert_return_nan.invoke.loc = @4;
+      DUPQUOTEDTEXT($$.assert_return_nan.invoke.name, $5);
       $$.assert_return_nan.invoke.args = $6;
     }
   | LPAR ASSERT_TRAP LPAR INVOKE TEXT const_list RPAR TEXT RPAR {
-      $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN_TRAP;
-      $$.assert_trap.invoke.name = $5;
+      $$.type = WASM_COMMAND_TYPE_ASSERT_TRAP;
+      $$.assert_trap.invoke.loc = @4;
+      DUPQUOTEDTEXT($$.assert_trap.invoke.name, $5);
       $$.assert_trap.invoke.args = $6;
       $$.assert_trap.text = $8;
     }
@@ -1031,6 +1150,7 @@ cmd_list :
 
 const :
     LPAR CONST literal RPAR {
+      $$.loc = @2;
       if (!read_const($2, $3.start, $3.start + $3.length, &$$))
         yyerror(&@3, scanner, parser, "invalid literal \"%.*s\"",
                 $3.length, $3.start);
@@ -1330,4 +1450,78 @@ static int read_const(WasmType type,
       break;
   }
   return 0;
+}
+
+static size_t copy_string_contents(WasmStringSlice* text,
+                                   char* dest,
+                                   size_t size) {
+  const char* src = text->start + 1;
+  const char* end = text->start + text->length - 1;
+
+  char* dest_start = dest;
+
+  while (src < end) {
+    if (*src == '\\') {
+      src++;
+      switch (*src) {
+        case 'n':
+          *dest++ = '\n';
+          break;
+        case 't':
+          *dest++ = '\t';
+          break;
+        case '\\':
+          *dest++ = '\\';
+          break;
+        case '\'':
+          *dest++ = '\'';
+          break;
+        case '\"':
+          *dest++ = '\"';
+          break;
+        default: {
+          /* The string should be validated already, so we know this is a hex
+           * sequence */
+          uint32_t hi;
+          uint32_t lo;
+          if (!hexdigit(src[0], &hi) || !hexdigit(src[1], &lo))
+            assert(0);
+          *dest++ = (hi << 4) | lo;
+          src++;
+          break;
+        }
+      }
+      src++;
+    } else {
+      *dest++ = *src++;
+    }
+  }
+  /* return the data length */
+  return dest - dest_start;
+}
+
+static void dup_string_contents(WasmStringSlice* text,
+                                void** out_data,
+                                size_t* out_size) {
+  const char* src = text->start + 1;
+  const char* end = text->start + text->length - 1;
+  /* Always allocate enough space for the entire string including the escape
+   * characters. It will only get shorter, and this way we only have to iterate
+   * through the string once. */
+  size_t size = end - src;
+  char* result = malloc(size);
+  size_t actual_size = copy_string_contents(text, result, size);
+  *out_data = result;
+  *out_size = actual_size;
+}
+
+static void extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src) {
+  int last_type = dst->types.size;
+  int last_binding = dst->bindings.size;
+  wasm_extend_types(&dst->types, &src->types);
+  wasm_extend_bindings(&dst->bindings, &src->bindings);
+  /* fixup the binding indexes */
+  int i;
+  for (i = last_binding; i < dst->bindings.size; ++i)
+    dst->bindings.data[i].index += last_type;
 }

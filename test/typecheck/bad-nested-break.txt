@@ -13,5 +13,5 @@
     ;; return statement here.
   ))
 (;; STDERR ;;;
-typecheck/bad-nested-break.txt:14:3: type mismatch in function result. got void, expected i32
+typecheck/bad-nested-break.txt:9:15: type mismatch of label. got void, expected i32
 ;;; STDERR ;;)

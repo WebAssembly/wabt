@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (local)))
-(;; STDERR ;;;
-func/bad-local-empty.txt:2:21: expected ATOM, not ")"
-;;; STDERR ;;)

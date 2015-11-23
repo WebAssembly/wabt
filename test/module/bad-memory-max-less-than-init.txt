@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (memory 100 50))
 (;; STDERR ;;;
-module/bad-memory-max-less-than-init.txt:2:21: max size (50) must be greater than or equal to initial size (100)
+module/bad-memory-max-less-than-init.txt:2:10: max size (50) must be greater than or equal to initial size (100)
 ;;; STDERR ;;)

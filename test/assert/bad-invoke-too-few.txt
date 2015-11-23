@@ -5,5 +5,5 @@
   (export "foo" 0))
 (invoke "foo")
 (;; STDERR ;;;
-assert/bad-invoke-too-few.txt:6:14: too few arguments to function. got 0, expected 1
+assert/bad-invoke-too-few.txt:6:2: too few parameters to function. got 0, expected 1
 ;;; STDERR ;;)

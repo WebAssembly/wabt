@@ -178,5 +178,9 @@ int main(int argc, char** argv) {
   result = result || parser.errors;
   free_scanner(scanner);
 
+  if (result == WASM_OK) {
+    result |= wasm_check_script(&parser.script);
+  }
+
   return result;
 }

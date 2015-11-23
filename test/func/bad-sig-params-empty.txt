@@ -3,5 +3,5 @@
   (type $t (func))
   (func (type $t) (param i32)))
 (;; STDERR ;;;
-func/bad-sig-params-empty.txt:4:30: expected 0 arguments, got 1
+func/bad-sig-params-empty.txt:4:4: expected 0 parameters, got 1
 ;;; STDERR ;;)

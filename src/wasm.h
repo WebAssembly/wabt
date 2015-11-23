@@ -2,6 +2,8 @@
 #define WASM_H_
 
 #include <stdint.h>
+#include <stdlib.h>
+
 #include "wasm-vector.h"
 
 #ifdef __cplusplus
@@ -14,6 +16,19 @@ typedef struct WasmStringSlice {
   const char* start;
   int length;
 } WasmStringSlice;
+
+typedef struct WasmLocation {
+  const char* filename;
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} WasmLocation;
+
+enum {
+  WASM_OK,
+  WASM_ERROR,
+};
 
 typedef enum WasmType {
   WASM_TYPE_VOID = 0,
@@ -116,6 +131,7 @@ typedef enum WasmVarType {
 } WasmVarType;
 
 typedef struct WasmVar {
+  WasmLocation loc;
   WasmVarType type;
   union {
     int index;
@@ -141,12 +157,14 @@ typedef struct WasmExpr* WasmExprPtr;
 DECLARE_VECTOR(expr_ptr, WasmExprPtr);
 
 typedef struct WasmCase {
+  WasmLocation loc;
   WasmLabel label;
   WasmExprPtrVector exprs;
 } WasmCase;
 DECLARE_VECTOR(case, WasmCase);
 
 typedef struct WasmConst {
+  WasmLocation loc;
   WasmType type;
   union {
     uint32_t u32;
@@ -193,8 +211,16 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_UNREACHABLE,
 } WasmExprType;
 
+typedef struct WasmBinding {
+  WasmLocation loc;
+  WasmStringSlice name;
+  int index;
+} WasmBinding;
+DECLARE_VECTOR(binding, WasmBinding);
+
 typedef struct WasmExpr WasmExpr;
 struct WasmExpr {
+  WasmLocation loc;
   WasmExprType type;
   union {
     struct { WasmLabel label; WasmExprPtrVector exprs; } block;
@@ -210,6 +236,7 @@ struct WasmExpr {
       WasmExprPtr expr;
       WasmTargetVector targets;
       WasmTarget default_target;
+      WasmBindingVector case_bindings;
       WasmCaseVector cases;
     } tableswitch;
     struct { WasmVar var; WasmExprPtrVector args; } call;
@@ -240,29 +267,36 @@ struct WasmExpr {
   };
 };
 
-typedef struct WasmBinding {
-  WasmStringSlice name;
-  int index;
-} WasmBinding;
-DECLARE_VECTOR(binding, WasmBinding);
-
 typedef struct WasmTypeBindings {
   WasmTypeVector types;
   WasmBindingVector bindings;
 } WasmTypeBindings;
 
+enum {
+  WASM_FUNC_FLAG_HAS_FUNC_TYPE = 1,
+  WASM_FUNC_FLAG_HAS_SIGNATURE = 2,
+};
+typedef uint32_t WasmFuncFlags;
+
 typedef struct WasmFunc {
+  WasmLocation loc;
+  WasmFuncFlags flags;
   WasmStringSlice name;
   WasmVar type_var;
   WasmTypeBindings params;
   WasmType result_type;
   WasmTypeBindings locals;
   WasmExprPtrVector exprs;
+
+  /* combined from params and locals; the binding names share memory with the
+   originals */
+  WasmTypeBindings params_and_locals;
 } WasmFunc;
 typedef WasmFunc* WasmFuncPtr;
 DECLARE_VECTOR(func_ptr, WasmFuncPtr);
 
 typedef struct WasmSegment {
+  WasmLocation loc;
   uint32_t addr;
   void* data;
   size_t size;
@@ -270,6 +304,7 @@ typedef struct WasmSegment {
 DECLARE_VECTOR(segment, WasmSegment);
 
 typedef struct WasmMemory {
+  WasmLocation loc;
   uint32_t initial_size;
   uint32_t max_size;
   WasmSegmentVector segments;
@@ -293,6 +328,7 @@ typedef enum WasmImportType {
 } WasmImportType;
 
 typedef struct WasmImport {
+  WasmLocation loc;
   WasmImportType import_type;
   WasmStringSlice name;
   WasmStringSlice module_name;
@@ -321,6 +357,7 @@ typedef enum WasmModuleFieldType {
 } WasmModuleFieldType;
 
 typedef struct WasmModuleField {
+  WasmLocation loc;
   WasmModuleFieldType type;
   union {
     WasmFunc func;
@@ -335,6 +372,7 @@ typedef struct WasmModuleField {
 DECLARE_VECTOR(module_field, WasmModuleField);
 
 typedef struct WasmModule {
+  WasmLocation loc;
   WasmModuleFieldVector fields;
 
   /* cached for convenience */
@@ -345,6 +383,11 @@ typedef struct WasmModule {
   WasmTypeBindings globals;
   WasmVarVector* table;
   WasmMemory* memory;
+
+  WasmBindingVector func_bindings;
+  WasmBindingVector import_bindings;
+  WasmBindingVector export_bindings;
+  WasmBindingVector func_type_bindings;
 } WasmModule;
 
 typedef enum WasmCommandType {
@@ -353,10 +396,11 @@ typedef enum WasmCommandType {
   WASM_COMMAND_TYPE_ASSERT_INVALID,
   WASM_COMMAND_TYPE_ASSERT_RETURN,
   WASM_COMMAND_TYPE_ASSERT_RETURN_NAN,
-  WASM_COMMAND_TYPE_ASSERT_RETURN_TRAP,
+  WASM_COMMAND_TYPE_ASSERT_TRAP,
 } WasmCommandType;
 
 typedef struct WasmCommandInvoke {
+  WasmLocation loc;
   WasmStringSlice name;
   WasmConstVector args;
 } WasmCommandInvoke;
@@ -418,14 +462,6 @@ typedef union WasmToken {
   WasmScript script;
 } WasmToken;
 
-typedef struct WasmLocation {
-  const char* filename;
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-} WasmLocation;
-
 #define YYSTYPE WasmToken
 #define YYLTYPE WasmLocation
 
@@ -443,5 +479,7 @@ int yyparse(WasmScanner scanner, WasmParser* parser);
 
 WasmScanner new_scanner(const char* filename);
 void free_scanner(WasmScanner scanner);
+
+int wasm_check_script(WasmScript*);
 
 #endif /* WASM_H_ */

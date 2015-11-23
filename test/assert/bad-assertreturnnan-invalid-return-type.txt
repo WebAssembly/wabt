@@ -6,5 +6,5 @@
 
 (assert_return_nan (invoke "foo"))
 (;; STDERR ;;;
-assert/bad-assertreturnnan-invalid-return-type.txt:7:34: type mismatch. got i32, expected f32 or f64
+assert/bad-assertreturnnan-invalid-return-type.txt:7:21: type mismatch. got i32, expected f32 or f64
 ;;; STDERR ;;)

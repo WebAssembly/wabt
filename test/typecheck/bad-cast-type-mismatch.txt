@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module (func (f32.reinterpret/i32 (f32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-cast-type-mismatch.txt:2:16: type mismatch of convert op. got f32, expected i32
+typecheck/bad-cast-type-mismatch.txt:2:36: type mismatch of cast op. got f32, expected i32
 ;;; STDERR ;;)

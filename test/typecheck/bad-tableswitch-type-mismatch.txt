@@ -6,5 +6,5 @@
       (case (return (i32.const 1)))
       (case (f32.const 2)))))
 (;; STDERR ;;;
-typecheck/bad-tableswitch-type-mismatch.txt:7:28: type mismatch in function result. got f32, expected i32
+typecheck/bad-tableswitch-type-mismatch.txt:7:13: type mismatch of tableswitch case. got f32, expected i32
 ;;; STDERR ;;)
