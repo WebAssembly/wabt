@@ -169,14 +169,14 @@ static void parse_options(int argc, char** argv) {
 int main(int argc, char** argv) {
   parse_options(argc, argv);
 
-  WasmScanner scanner = new_scanner(s_infile);
+  WasmScanner scanner = wasm_new_scanner(s_infile);
   if (!scanner) {
     FATAL("unable to read %s\n", s_infile);
   }
   WasmParser parser = {};
   int result = yyparse(scanner, &parser);
   result = result || parser.errors;
-  free_scanner(scanner);
+  wasm_free_scanner(scanner);
 
   if (result == WASM_OK) {
     result |= wasm_check_script(&parser.script);

@@ -422,49 +422,6 @@ typedef struct WasmScript {
   WasmCommandVector commands;
 } WasmScript;
 
-typedef union WasmToken {
-  /* terminals */
-  WasmStringSlice text;
-  WasmType type;
-  WasmUnaryOp unary;
-  WasmBinaryOp binary;
-  WasmCompareOp compare;
-  WasmConvertOp convert;
-  WasmCastOp cast;
-  WasmMemOp mem;
-
-  /* non-terminals */
-  uint32_t u32;
-  WasmTypeVector types;
-  WasmVar var;
-  WasmVarVector vars;
-  WasmExprPtr expr;
-  WasmExprPtrVector exprs;
-  WasmTarget target;
-  WasmTargetVector targets;
-  WasmCase case_;
-  WasmCaseVector cases;
-  WasmTypeBindings type_bindings;
-  WasmFunc func;
-  WasmSegment segment;
-  WasmSegmentVector segments;
-  WasmMemory memory;
-  WasmFuncSignature func_sig;
-  WasmFuncType func_type;
-  WasmImport import;
-  WasmExport export;
-  WasmModuleFieldVector module_fields;
-  WasmModule module;
-  WasmConst const_;
-  WasmConstVector consts;
-  WasmCommand command;
-  WasmCommandVector commands;
-  WasmScript script;
-} WasmToken;
-
-#define YYSTYPE WasmToken
-#define YYLTYPE WasmLocation
-
 typedef void* WasmScanner;
 
 typedef struct WasmParser {
@@ -473,13 +430,8 @@ typedef struct WasmParser {
   int errors;
 } WasmParser;
 
-int yylex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
-void yyerror(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
-int yyparse(WasmScanner scanner, WasmParser* parser);
-
-WasmScanner new_scanner(const char* filename);
-void free_scanner(WasmScanner scanner);
-
+WasmScanner wasm_new_scanner(const char* filename);
+void wasm_free_scanner(WasmScanner scanner);
 int wasm_check_script(WasmScript*);
 
 #endif /* WASM_H_ */

@@ -1195,6 +1195,7 @@ static yyconst flex_int32_t yy_rule_can_match_eol[222] =
 #line 1 "src/wasm-lexer.l"
 #line 2 "src/wasm-lexer.l"
 #include "wasm.h"
+#include "wasm-internal.h"
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {
@@ -1268,7 +1269,7 @@ typedef struct WasmScannerExtra {
 
 
 
-#line 1272 "src/wasm-lexer.c"
+#line 1273 "src/wasm-lexer.c"
 
 #define INITIAL 0
 #define LINE_COMMENT 1
@@ -1552,10 +1553,10 @@ YY_DECL
 		}
 
 	{
-#line 107 "src/wasm-lexer.l"
+#line 108 "src/wasm-lexer.l"
 
 
-#line 1559 "src/wasm-lexer.c"
+#line 1560 "src/wasm-lexer.c"
 
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
@@ -1626,1141 +1627,1141 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 109 "src/wasm-lexer.l"
+#line 110 "src/wasm-lexer.l"
 { return TOK(LPAR); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 110 "src/wasm-lexer.l"
+#line 111 "src/wasm-lexer.l"
 { return TOK(RPAR); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 111 "src/wasm-lexer.l"
+#line 112 "src/wasm-lexer.l"
 { TEXT; return TOK(INT); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 112 "src/wasm-lexer.l"
+#line 113 "src/wasm-lexer.l"
 { TEXT; return TOK(FLOAT); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 113 "src/wasm-lexer.l"
+#line 114 "src/wasm-lexer.l"
 { TEXT; return TOK(TEXT); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 114 "src/wasm-lexer.l"
+#line 115 "src/wasm-lexer.l"
 { BEGIN(BAD_TEXT); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 115 "src/wasm-lexer.l"
+#line 116 "src/wasm-lexer.l"
 {}
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 116 "src/wasm-lexer.l"
+#line 117 "src/wasm-lexer.l"
 { BEGIN(INITIAL);
                         RESET_COLUMN(yyscanner);
                         yyerror(yylloc, &yyscanner, parser,
                                 "newline in string"); }
 	YY_BREAK
 case YY_STATE_EOF(BAD_TEXT):
-#line 120 "src/wasm-lexer.l"
+#line 121 "src/wasm-lexer.l"
 { yyerror(yylloc, &yyscanner, parser, "unexpected EOF");
                         return TOK(EOF); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 122 "src/wasm-lexer.l"
+#line 123 "src/wasm-lexer.l"
 { yyerror(yylloc, &yyscanner, parser,
                                 "bad escape \"%.*s\"", yyleng, yytext); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 124 "src/wasm-lexer.l"
+#line 125 "src/wasm-lexer.l"
 { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 125 "src/wasm-lexer.l"
+#line 126 "src/wasm-lexer.l"
 { yyerror(yylloc, &yyscanner, parser,
                                 "illegal character in string"); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 127 "src/wasm-lexer.l"
+#line 128 "src/wasm-lexer.l"
 { TYPE(I32); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 128 "src/wasm-lexer.l"
+#line 129 "src/wasm-lexer.l"
 { TYPE(I64); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 129 "src/wasm-lexer.l"
+#line 130 "src/wasm-lexer.l"
 { TYPE(F32); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 130 "src/wasm-lexer.l"
+#line 131 "src/wasm-lexer.l"
 { TYPE(F64); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 131 "src/wasm-lexer.l"
+#line 132 "src/wasm-lexer.l"
 { return TOK(NOP); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 132 "src/wasm-lexer.l"
+#line 133 "src/wasm-lexer.l"
 { return TOK(BLOCK); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 133 "src/wasm-lexer.l"
+#line 134 "src/wasm-lexer.l"
 { return TOK(IF); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 134 "src/wasm-lexer.l"
+#line 135 "src/wasm-lexer.l"
 { return TOK(IF_ELSE); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 135 "src/wasm-lexer.l"
+#line 136 "src/wasm-lexer.l"
 { return TOK(LOOP); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 136 "src/wasm-lexer.l"
+#line 137 "src/wasm-lexer.l"
 { return TOK(LABEL); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 137 "src/wasm-lexer.l"
+#line 138 "src/wasm-lexer.l"
 { return TOK(BR); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 138 "src/wasm-lexer.l"
+#line 139 "src/wasm-lexer.l"
 { return TOK(BR_IF); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 139 "src/wasm-lexer.l"
+#line 140 "src/wasm-lexer.l"
 { return TOK(TABLESWITCH); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 140 "src/wasm-lexer.l"
+#line 141 "src/wasm-lexer.l"
 { return TOK(CASE); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 141 "src/wasm-lexer.l"
+#line 142 "src/wasm-lexer.l"
 { return TOK(CALL); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 142 "src/wasm-lexer.l"
+#line 143 "src/wasm-lexer.l"
 { return TOK(CALL_IMPORT); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 143 "src/wasm-lexer.l"
+#line 144 "src/wasm-lexer.l"
 { return TOK(CALL_INDIRECT); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 144 "src/wasm-lexer.l"
+#line 145 "src/wasm-lexer.l"
 { return TOK(RETURN); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 145 "src/wasm-lexer.l"
+#line 146 "src/wasm-lexer.l"
 { return TOK(GET_LOCAL); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 146 "src/wasm-lexer.l"
+#line 147 "src/wasm-lexer.l"
 { return TOK(SET_LOCAL); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 147 "src/wasm-lexer.l"
+#line 148 "src/wasm-lexer.l"
 { MEMOP(I32, 32); return TOK(LOAD); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 148 "src/wasm-lexer.l"
+#line 149 "src/wasm-lexer.l"
 { MEMOP(I64, 64); return TOK(LOAD); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 149 "src/wasm-lexer.l"
+#line 150 "src/wasm-lexer.l"
 { MEMOP(F32, 32); return TOK(LOAD); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 150 "src/wasm-lexer.l"
+#line 151 "src/wasm-lexer.l"
 { MEMOP(F64, 64); return TOK(LOAD); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 151 "src/wasm-lexer.l"
+#line 152 "src/wasm-lexer.l"
 { MEMOP(I32, 32); return TOK(STORE); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 152 "src/wasm-lexer.l"
+#line 153 "src/wasm-lexer.l"
 { MEMOP(I64, 64); return TOK(STORE); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 153 "src/wasm-lexer.l"
+#line 154 "src/wasm-lexer.l"
 { MEMOP(F32, 32); return TOK(STORE); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 154 "src/wasm-lexer.l"
+#line 155 "src/wasm-lexer.l"
 { MEMOP(F64, 64); return TOK(STORE); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 155 "src/wasm-lexer.l"
+#line 156 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, 8, 1); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 156 "src/wasm-lexer.l"
+#line 157 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, 8, 1); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 157 "src/wasm-lexer.l"
+#line 158 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, 8, 0); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 158 "src/wasm-lexer.l"
+#line 159 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, 8, 0); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 159 "src/wasm-lexer.l"
+#line 160 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, 16, 1); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 160 "src/wasm-lexer.l"
+#line 161 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, 16, 1); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 161 "src/wasm-lexer.l"
+#line 162 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, 16, 0); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 162 "src/wasm-lexer.l"
+#line 163 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, 16, 0); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 163 "src/wasm-lexer.l"
+#line 164 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, 32, 1); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 164 "src/wasm-lexer.l"
+#line 165 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, 32, 0); return TOK(LOAD_EXTEND); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 165 "src/wasm-lexer.l"
+#line 166 "src/wasm-lexer.l"
 { MEMOP(I32, 8); return TOK(STORE_WRAP); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 166 "src/wasm-lexer.l"
+#line 167 "src/wasm-lexer.l"
 { MEMOP(I64, 8); return TOK(STORE_WRAP); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 167 "src/wasm-lexer.l"
+#line 168 "src/wasm-lexer.l"
 { MEMOP(I32, 16); return TOK(STORE_WRAP); }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 168 "src/wasm-lexer.l"
+#line 169 "src/wasm-lexer.l"
 { MEMOP(I64, 16); return TOK(STORE_WRAP); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 169 "src/wasm-lexer.l"
+#line 170 "src/wasm-lexer.l"
 { MEMOP(I64, 32); return TOK(STORE_WRAP); }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 170 "src/wasm-lexer.l"
+#line 171 "src/wasm-lexer.l"
 { TEXT_AT(7); return TOK(OFFSET); }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 171 "src/wasm-lexer.l"
+#line 172 "src/wasm-lexer.l"
 { TEXT_AT(6); return TOK(ALIGN); }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 172 "src/wasm-lexer.l"
+#line 173 "src/wasm-lexer.l"
 { TYPE(I32); return TOK(CONST); }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 173 "src/wasm-lexer.l"
+#line 174 "src/wasm-lexer.l"
 { TYPE(I64); return TOK(CONST); }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 174 "src/wasm-lexer.l"
+#line 175 "src/wasm-lexer.l"
 { TYPE(F32); return TOK(CONST); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 175 "src/wasm-lexer.l"
+#line 176 "src/wasm-lexer.l"
 { TYPE(F64); return TOK(CONST); }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 176 "src/wasm-lexer.l"
+#line 177 "src/wasm-lexer.l"
 { UNOP(I32, NOT); return TOK(UNARY); }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 177 "src/wasm-lexer.l"
+#line 178 "src/wasm-lexer.l"
 { UNOP(I32, CLZ); return TOK(UNARY); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 178 "src/wasm-lexer.l"
+#line 179 "src/wasm-lexer.l"
 { UNOP(I64, CLZ); return TOK(UNARY); }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 179 "src/wasm-lexer.l"
+#line 180 "src/wasm-lexer.l"
 { UNOP(I32, CTZ); return TOK(UNARY); }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 180 "src/wasm-lexer.l"
+#line 181 "src/wasm-lexer.l"
 { UNOP(I64, CTZ); return TOK(UNARY); }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 181 "src/wasm-lexer.l"
+#line 182 "src/wasm-lexer.l"
 { UNOP(I32, POPCNT); return TOK(UNARY); }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 182 "src/wasm-lexer.l"
+#line 183 "src/wasm-lexer.l"
 { UNOP(I64, POPCNT); return TOK(UNARY); }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 183 "src/wasm-lexer.l"
+#line 184 "src/wasm-lexer.l"
 { UNOP(F32, NEG); return TOK(UNARY); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 184 "src/wasm-lexer.l"
+#line 185 "src/wasm-lexer.l"
 { UNOP(F64, NEG); return TOK(UNARY); }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 185 "src/wasm-lexer.l"
+#line 186 "src/wasm-lexer.l"
 { UNOP(F32, ABS); return TOK(UNARY); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 186 "src/wasm-lexer.l"
+#line 187 "src/wasm-lexer.l"
 { UNOP(F64, ABS); return TOK(UNARY); }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 187 "src/wasm-lexer.l"
+#line 188 "src/wasm-lexer.l"
 { UNOP(F32, SQRT); return TOK(UNARY); }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 188 "src/wasm-lexer.l"
+#line 189 "src/wasm-lexer.l"
 { UNOP(F64, SQRT); return TOK(UNARY); }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 189 "src/wasm-lexer.l"
+#line 190 "src/wasm-lexer.l"
 { UNOP(F32, CEIL); return TOK(UNARY); }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 190 "src/wasm-lexer.l"
+#line 191 "src/wasm-lexer.l"
 { UNOP(F64, CEIL); return TOK(UNARY); }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 191 "src/wasm-lexer.l"
+#line 192 "src/wasm-lexer.l"
 { UNOP(F32, FLOOR); return TOK(UNARY); }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 192 "src/wasm-lexer.l"
+#line 193 "src/wasm-lexer.l"
 { UNOP(F64, FLOOR); return TOK(UNARY); }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 193 "src/wasm-lexer.l"
+#line 194 "src/wasm-lexer.l"
 { UNOP(F32, TRUNC); return TOK(UNARY); }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 194 "src/wasm-lexer.l"
+#line 195 "src/wasm-lexer.l"
 { UNOP(F64, TRUNC); return TOK(UNARY); }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 195 "src/wasm-lexer.l"
+#line 196 "src/wasm-lexer.l"
 { UNOP(F32, NEAREST); return TOK(UNARY); }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 196 "src/wasm-lexer.l"
+#line 197 "src/wasm-lexer.l"
 { UNOP(F64, NEAREST); return TOK(UNARY); }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 197 "src/wasm-lexer.l"
+#line 198 "src/wasm-lexer.l"
 { BINOP(I32, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 198 "src/wasm-lexer.l"
+#line 199 "src/wasm-lexer.l"
 { BINOP(I64, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 199 "src/wasm-lexer.l"
+#line 200 "src/wasm-lexer.l"
 { BINOP(I32, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 200 "src/wasm-lexer.l"
+#line 201 "src/wasm-lexer.l"
 { BINOP(I64, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 201 "src/wasm-lexer.l"
+#line 202 "src/wasm-lexer.l"
 { BINOP(I32, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 202 "src/wasm-lexer.l"
+#line 203 "src/wasm-lexer.l"
 { BINOP(I64, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 203 "src/wasm-lexer.l"
+#line 204 "src/wasm-lexer.l"
 { BINOPSIGN(I32, DIV, 1); return TOK(BINARY); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 204 "src/wasm-lexer.l"
+#line 205 "src/wasm-lexer.l"
 { BINOPSIGN(I64, DIV, 1); return TOK(BINARY); }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 205 "src/wasm-lexer.l"
+#line 206 "src/wasm-lexer.l"
 { BINOPSIGN(I32, DIV, 0); return TOK(BINARY); }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 206 "src/wasm-lexer.l"
+#line 207 "src/wasm-lexer.l"
 { BINOPSIGN(I64, DIV, 0); return TOK(BINARY); }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 207 "src/wasm-lexer.l"
+#line 208 "src/wasm-lexer.l"
 { BINOPSIGN(I32, REM, 1); return TOK(BINARY); }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 208 "src/wasm-lexer.l"
+#line 209 "src/wasm-lexer.l"
 { BINOPSIGN(I64, REM, 1); return TOK(BINARY); }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 209 "src/wasm-lexer.l"
+#line 210 "src/wasm-lexer.l"
 { BINOPSIGN(I32, REM, 0); return TOK(BINARY); }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 210 "src/wasm-lexer.l"
+#line 211 "src/wasm-lexer.l"
 { BINOPSIGN(I64, REM, 0); return TOK(BINARY); }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 211 "src/wasm-lexer.l"
+#line 212 "src/wasm-lexer.l"
 { BINOP(I32, AND); return TOK(BINARY); }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 212 "src/wasm-lexer.l"
+#line 213 "src/wasm-lexer.l"
 { BINOP(I64, AND); return TOK(BINARY); }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 213 "src/wasm-lexer.l"
+#line 214 "src/wasm-lexer.l"
 { BINOP(I32, OR); return TOK(BINARY); }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 214 "src/wasm-lexer.l"
+#line 215 "src/wasm-lexer.l"
 { BINOP(I64, OR); return TOK(BINARY); }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 215 "src/wasm-lexer.l"
+#line 216 "src/wasm-lexer.l"
 { BINOP(I32, XOR); return TOK(BINARY); }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 216 "src/wasm-lexer.l"
+#line 217 "src/wasm-lexer.l"
 { BINOP(I64, XOR); return TOK(BINARY); }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 217 "src/wasm-lexer.l"
+#line 218 "src/wasm-lexer.l"
 { BINOP(I32, SHL); return TOK(BINARY); }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 218 "src/wasm-lexer.l"
+#line 219 "src/wasm-lexer.l"
 { BINOP(I64, SHL); return TOK(BINARY); }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 219 "src/wasm-lexer.l"
+#line 220 "src/wasm-lexer.l"
 { BINOPSIGN(I32, SHR, 1); return TOK(BINARY); }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 220 "src/wasm-lexer.l"
+#line 221 "src/wasm-lexer.l"
 { BINOPSIGN(I64, SHR, 1); return TOK(BINARY); }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 221 "src/wasm-lexer.l"
+#line 222 "src/wasm-lexer.l"
 { BINOPSIGN(I32, SHR, 0); return TOK(BINARY); }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 222 "src/wasm-lexer.l"
+#line 223 "src/wasm-lexer.l"
 { BINOPSIGN(I64, SHR, 0); return TOK(BINARY); }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 223 "src/wasm-lexer.l"
+#line 224 "src/wasm-lexer.l"
 { BINOP(F32, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 224 "src/wasm-lexer.l"
+#line 225 "src/wasm-lexer.l"
 { BINOP(F64, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 225 "src/wasm-lexer.l"
+#line 226 "src/wasm-lexer.l"
 { BINOP(F32, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 226 "src/wasm-lexer.l"
+#line 227 "src/wasm-lexer.l"
 { BINOP(F64, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 227 "src/wasm-lexer.l"
+#line 228 "src/wasm-lexer.l"
 { BINOP(F32, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 228 "src/wasm-lexer.l"
+#line 229 "src/wasm-lexer.l"
 { BINOP(F64, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 229 "src/wasm-lexer.l"
+#line 230 "src/wasm-lexer.l"
 { BINOP(F32, DIV); return TOK(BINARY); }
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 230 "src/wasm-lexer.l"
+#line 231 "src/wasm-lexer.l"
 { BINOP(F64, DIV); return TOK(BINARY); }
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 231 "src/wasm-lexer.l"
+#line 232 "src/wasm-lexer.l"
 { BINOP(F32, MIN); return TOK(BINARY); }
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 232 "src/wasm-lexer.l"
+#line 233 "src/wasm-lexer.l"
 { BINOP(F64, MIN); return TOK(BINARY); }
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 233 "src/wasm-lexer.l"
+#line 234 "src/wasm-lexer.l"
 { BINOP(F32, MAX); return TOK(BINARY); }
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 234 "src/wasm-lexer.l"
+#line 235 "src/wasm-lexer.l"
 { BINOP(F64, MAX); return TOK(BINARY); }
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 235 "src/wasm-lexer.l"
+#line 236 "src/wasm-lexer.l"
 { BINOP(F32, COPYSIGN); return TOK(BINARY); }
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 236 "src/wasm-lexer.l"
+#line 237 "src/wasm-lexer.l"
 { BINOP(F64, COPYSIGN); return TOK(BINARY); }
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 237 "src/wasm-lexer.l"
+#line 238 "src/wasm-lexer.l"
 { CMPOP(I32, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 238 "src/wasm-lexer.l"
+#line 239 "src/wasm-lexer.l"
 { CMPOP(I64, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 239 "src/wasm-lexer.l"
+#line 240 "src/wasm-lexer.l"
 { CMPOP(I32, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 240 "src/wasm-lexer.l"
+#line 241 "src/wasm-lexer.l"
 { CMPOP(I64, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 241 "src/wasm-lexer.l"
+#line 242 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, LT, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 242 "src/wasm-lexer.l"
+#line 243 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, LT, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 243 "src/wasm-lexer.l"
+#line 244 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, LT, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 244 "src/wasm-lexer.l"
+#line 245 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, LT, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 245 "src/wasm-lexer.l"
+#line 246 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, LE, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 246 "src/wasm-lexer.l"
+#line 247 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, LE, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 247 "src/wasm-lexer.l"
+#line 248 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, LE, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 248 "src/wasm-lexer.l"
+#line 249 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, LE, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 249 "src/wasm-lexer.l"
+#line 250 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, GT, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 250 "src/wasm-lexer.l"
+#line 251 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, GT, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 251 "src/wasm-lexer.l"
+#line 252 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, GT, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 252 "src/wasm-lexer.l"
+#line 253 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, GT, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 253 "src/wasm-lexer.l"
+#line 254 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, GE, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 254 "src/wasm-lexer.l"
+#line 255 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, GE, 1); return TOK(COMPARE); }
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 255 "src/wasm-lexer.l"
+#line 256 "src/wasm-lexer.l"
 { CMPOPSIGN(I32, GE, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 256 "src/wasm-lexer.l"
+#line 257 "src/wasm-lexer.l"
 { CMPOPSIGN(I64, GE, 0); return TOK(COMPARE); }
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 257 "src/wasm-lexer.l"
+#line 258 "src/wasm-lexer.l"
 { CMPOP(F32, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 258 "src/wasm-lexer.l"
+#line 259 "src/wasm-lexer.l"
 { CMPOP(F64, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 259 "src/wasm-lexer.l"
+#line 260 "src/wasm-lexer.l"
 { CMPOP(F32, NE); return TOK(COMPARE); }
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 260 "src/wasm-lexer.l"
+#line 261 "src/wasm-lexer.l"
 { CMPOP(F64, NE); return TOK(COMPARE); }
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 261 "src/wasm-lexer.l"
+#line 262 "src/wasm-lexer.l"
 { CMPOP(F32, LT); return TOK(COMPARE); }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 262 "src/wasm-lexer.l"
+#line 263 "src/wasm-lexer.l"
 { CMPOP(F64, LT); return TOK(COMPARE); }
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 263 "src/wasm-lexer.l"
+#line 264 "src/wasm-lexer.l"
 { CMPOP(F32, LE); return TOK(COMPARE); }
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 264 "src/wasm-lexer.l"
+#line 265 "src/wasm-lexer.l"
 { CMPOP(F64, LE); return TOK(COMPARE); }
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 265 "src/wasm-lexer.l"
+#line 266 "src/wasm-lexer.l"
 { CMPOP(F32, GT); return TOK(COMPARE); }
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 266 "src/wasm-lexer.l"
+#line 267 "src/wasm-lexer.l"
 { CMPOP(F64, GT); return TOK(COMPARE); }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 267 "src/wasm-lexer.l"
+#line 268 "src/wasm-lexer.l"
 { CMPOP(F32, GE); return TOK(COMPARE); }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
-#line 268 "src/wasm-lexer.l"
+#line 269 "src/wasm-lexer.l"
 { CMPOP(F64, GE); return TOK(COMPARE); }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 269 "src/wasm-lexer.l"
+#line 270 "src/wasm-lexer.l"
 { CONVTYPESIGN(I64, I32, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 270 "src/wasm-lexer.l"
+#line 271 "src/wasm-lexer.l"
 { CONVTYPESIGN(I64, I32, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
-#line 271 "src/wasm-lexer.l"
+#line 272 "src/wasm-lexer.l"
 { CONVTYPE(I32, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
-#line 272 "src/wasm-lexer.l"
+#line 273 "src/wasm-lexer.l"
 { CONVTYPESIGN(I32, F32, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 158:
 YY_RULE_SETUP
-#line 273 "src/wasm-lexer.l"
+#line 274 "src/wasm-lexer.l"
 { CONVTYPESIGN(I64, F32, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
-#line 274 "src/wasm-lexer.l"
+#line 275 "src/wasm-lexer.l"
 { CONVTYPESIGN(I32, F64, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 275 "src/wasm-lexer.l"
+#line 276 "src/wasm-lexer.l"
 { CONVTYPESIGN(I64, F64, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 276 "src/wasm-lexer.l"
+#line 277 "src/wasm-lexer.l"
 { CONVTYPESIGN(I32, F32, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 277 "src/wasm-lexer.l"
+#line 278 "src/wasm-lexer.l"
 { CONVTYPESIGN(I64, F32, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 278 "src/wasm-lexer.l"
+#line 279 "src/wasm-lexer.l"
 { CONVTYPESIGN(I32, F64, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 279 "src/wasm-lexer.l"
+#line 280 "src/wasm-lexer.l"
 { CONVTYPESIGN(I64, F64, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
-#line 280 "src/wasm-lexer.l"
+#line 281 "src/wasm-lexer.l"
 { CONVTYPESIGN(F32, I32, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 281 "src/wasm-lexer.l"
+#line 282 "src/wasm-lexer.l"
 { CONVTYPESIGN(F64, I32, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 282 "src/wasm-lexer.l"
+#line 283 "src/wasm-lexer.l"
 { CONVTYPESIGN(F32, I64, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
-#line 283 "src/wasm-lexer.l"
+#line 284 "src/wasm-lexer.l"
 { CONVTYPESIGN(F64, I64, 1); return TOK(CONVERT); }
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
-#line 284 "src/wasm-lexer.l"
+#line 285 "src/wasm-lexer.l"
 { CONVTYPESIGN(F32, I32, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
-#line 285 "src/wasm-lexer.l"
+#line 286 "src/wasm-lexer.l"
 { CONVTYPESIGN(F64, I32, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
-#line 286 "src/wasm-lexer.l"
+#line 287 "src/wasm-lexer.l"
 { CONVTYPESIGN(F32, I64, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 172:
 YY_RULE_SETUP
-#line 287 "src/wasm-lexer.l"
+#line 288 "src/wasm-lexer.l"
 { CONVTYPESIGN(F64, I64, 0); return TOK(CONVERT); }
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
-#line 288 "src/wasm-lexer.l"
+#line 289 "src/wasm-lexer.l"
 { CONVTYPE(F64, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 174:
 YY_RULE_SETUP
-#line 289 "src/wasm-lexer.l"
+#line 290 "src/wasm-lexer.l"
 { CONVTYPE(F32, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 175:
 YY_RULE_SETUP
-#line 290 "src/wasm-lexer.l"
+#line 291 "src/wasm-lexer.l"
 { CASTTYPE(F32, I32); return TOK(CAST); }
 	YY_BREAK
 case 176:
 YY_RULE_SETUP
-#line 291 "src/wasm-lexer.l"
+#line 292 "src/wasm-lexer.l"
 { CASTTYPE(I32, F32); return TOK(CAST); }
 	YY_BREAK
 case 177:
 YY_RULE_SETUP
-#line 292 "src/wasm-lexer.l"
+#line 293 "src/wasm-lexer.l"
 { CASTTYPE(F64, I64); return TOK(CAST); }
 	YY_BREAK
 case 178:
 YY_RULE_SETUP
-#line 293 "src/wasm-lexer.l"
+#line 294 "src/wasm-lexer.l"
 { CASTTYPE(I64, F64); return TOK(CAST); }
 	YY_BREAK
 case 179:
 YY_RULE_SETUP
-#line 294 "src/wasm-lexer.l"
+#line 295 "src/wasm-lexer.l"
 { TYPE(I32); return TOK(SELECT); }
 	YY_BREAK
 case 180:
 YY_RULE_SETUP
-#line 295 "src/wasm-lexer.l"
+#line 296 "src/wasm-lexer.l"
 { TYPE(I64); return TOK(SELECT); }
 	YY_BREAK
 case 181:
 YY_RULE_SETUP
-#line 296 "src/wasm-lexer.l"
+#line 297 "src/wasm-lexer.l"
 { TYPE(F32); return TOK(SELECT); }
 	YY_BREAK
 case 182:
 YY_RULE_SETUP
-#line 297 "src/wasm-lexer.l"
+#line 298 "src/wasm-lexer.l"
 { TYPE(F64); return TOK(SELECT); }
 	YY_BREAK
 case 183:
 YY_RULE_SETUP
-#line 298 "src/wasm-lexer.l"
+#line 299 "src/wasm-lexer.l"
 { return TOK(UNREACHABLE); }
 	YY_BREAK
 case 184:
 YY_RULE_SETUP
-#line 299 "src/wasm-lexer.l"
+#line 300 "src/wasm-lexer.l"
 { return TOK(MEMORY_SIZE); }
 	YY_BREAK
 case 185:
 YY_RULE_SETUP
-#line 300 "src/wasm-lexer.l"
+#line 301 "src/wasm-lexer.l"
 { return TOK(GROW_MEMORY); }
 	YY_BREAK
 case 186:
 YY_RULE_SETUP
-#line 301 "src/wasm-lexer.l"
+#line 302 "src/wasm-lexer.l"
 { return TOK(HAS_FEATURE); }
 	YY_BREAK
 case 187:
 YY_RULE_SETUP
-#line 302 "src/wasm-lexer.l"
+#line 303 "src/wasm-lexer.l"
 { return TOK(TYPE); }
 	YY_BREAK
 case 188:
 YY_RULE_SETUP
-#line 303 "src/wasm-lexer.l"
+#line 304 "src/wasm-lexer.l"
 { return TOK(FUNC); }
 	YY_BREAK
 case 189:
 YY_RULE_SETUP
-#line 304 "src/wasm-lexer.l"
+#line 305 "src/wasm-lexer.l"
 { return TOK(PARAM); }
 	YY_BREAK
 case 190:
 YY_RULE_SETUP
-#line 305 "src/wasm-lexer.l"
+#line 306 "src/wasm-lexer.l"
 { return TOK(RESULT); }
 	YY_BREAK
 case 191:
 YY_RULE_SETUP
-#line 306 "src/wasm-lexer.l"
+#line 307 "src/wasm-lexer.l"
 { return TOK(LOCAL); }
 	YY_BREAK
 case 192:
 YY_RULE_SETUP
-#line 307 "src/wasm-lexer.l"
+#line 308 "src/wasm-lexer.l"
 { return TOK(MODULE); }
 	YY_BREAK
 case 193:
 YY_RULE_SETUP
-#line 308 "src/wasm-lexer.l"
+#line 309 "src/wasm-lexer.l"
 { return TOK(MEMORY); }
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
-#line 309 "src/wasm-lexer.l"
+#line 310 "src/wasm-lexer.l"
 { return TOK(SEGMENT); }
 	YY_BREAK
 case 195:
 YY_RULE_SETUP
-#line 310 "src/wasm-lexer.l"
+#line 311 "src/wasm-lexer.l"
 { return TOK(IMPORT); }
 	YY_BREAK
 case 196:
 YY_RULE_SETUP
-#line 311 "src/wasm-lexer.l"
+#line 312 "src/wasm-lexer.l"
 { return TOK(EXPORT); }
 	YY_BREAK
 case 197:
 YY_RULE_SETUP
-#line 312 "src/wasm-lexer.l"
+#line 313 "src/wasm-lexer.l"
 { return TOK(TABLE); }
 	YY_BREAK
 case 198:
 YY_RULE_SETUP
-#line 313 "src/wasm-lexer.l"
+#line 314 "src/wasm-lexer.l"
 { return TOK(ASSERT_INVALID); }
 	YY_BREAK
 case 199:
 YY_RULE_SETUP
-#line 314 "src/wasm-lexer.l"
+#line 315 "src/wasm-lexer.l"
 { return TOK(ASSERT_RETURN); }
 	YY_BREAK
 case 200:
 YY_RULE_SETUP
-#line 315 "src/wasm-lexer.l"
+#line 316 "src/wasm-lexer.l"
 { return TOK(ASSERT_RETURN_NAN); }
 	YY_BREAK
 case 201:
 YY_RULE_SETUP
-#line 316 "src/wasm-lexer.l"
+#line 317 "src/wasm-lexer.l"
 { return TOK(ASSERT_TRAP); }
 	YY_BREAK
 case 202:
 YY_RULE_SETUP
-#line 317 "src/wasm-lexer.l"
+#line 318 "src/wasm-lexer.l"
 { return TOK(INVOKE); }
 	YY_BREAK
 case 203:
 YY_RULE_SETUP
-#line 318 "src/wasm-lexer.l"
+#line 319 "src/wasm-lexer.l"
 { TEXT; return TOK(VAR); }
 	YY_BREAK
 case 204:
 YY_RULE_SETUP
-#line 320 "src/wasm-lexer.l"
+#line 321 "src/wasm-lexer.l"
 { return TOK(BR); }
 	YY_BREAK
 case 205:
 YY_RULE_SETUP
-#line 321 "src/wasm-lexer.l"
+#line 322 "src/wasm-lexer.l"
 { return TOK(GLOBAL); }
 	YY_BREAK
 case 206:
 YY_RULE_SETUP
-#line 322 "src/wasm-lexer.l"
+#line 323 "src/wasm-lexer.l"
 { return TOK(LOAD_GLOBAL); }
 	YY_BREAK
 case 207:
 YY_RULE_SETUP
-#line 323 "src/wasm-lexer.l"
+#line 324 "src/wasm-lexer.l"
 { return TOK(STORE_GLOBAL); }
 	YY_BREAK
 case 208:
 YY_RULE_SETUP
-#line 324 "src/wasm-lexer.l"
+#line 325 "src/wasm-lexer.l"
 { return TOK(PAGE_SIZE); }
 	YY_BREAK
 case 209:
 YY_RULE_SETUP
-#line 326 "src/wasm-lexer.l"
+#line 327 "src/wasm-lexer.l"
 { BEGIN(LINE_COMMENT); }
 	YY_BREAK
 case 210:
 /* rule 210 can match eol */
 YY_RULE_SETUP
-#line 327 "src/wasm-lexer.l"
+#line 328 "src/wasm-lexer.l"
 { RESET_COLUMN(yyscanner); BEGIN(INITIAL); }
 	YY_BREAK
 case YY_STATE_EOF(LINE_COMMENT):
-#line 328 "src/wasm-lexer.l"
+#line 329 "src/wasm-lexer.l"
 { return TOK(EOF); }
 	YY_BREAK
 case 211:
 YY_RULE_SETUP
-#line 329 "src/wasm-lexer.l"
+#line 330 "src/wasm-lexer.l"
 
 	YY_BREAK
 case 212:
 YY_RULE_SETUP
-#line 330 "src/wasm-lexer.l"
+#line 331 "src/wasm-lexer.l"
 { BEGIN(BLOCK_COMMENT); COMMENT_NESTING(yyscanner) = 1; }
 	YY_BREAK
 case 213:
 YY_RULE_SETUP
-#line 331 "src/wasm-lexer.l"
+#line 332 "src/wasm-lexer.l"
 { COMMENT_NESTING(yyscanner)++; }
 	YY_BREAK
 case 214:
 YY_RULE_SETUP
-#line 332 "src/wasm-lexer.l"
+#line 333 "src/wasm-lexer.l"
 { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 	YY_BREAK
 case 215:
 /* rule 215 can match eol */
 YY_RULE_SETUP
-#line 333 "src/wasm-lexer.l"
+#line 334 "src/wasm-lexer.l"
 { RESET_COLUMN(yyscanner); }
 	YY_BREAK
 case YY_STATE_EOF(BLOCK_COMMENT):
-#line 334 "src/wasm-lexer.l"
+#line 335 "src/wasm-lexer.l"
 { yyerror(yylloc, &yyscanner, parser,
                                  "unexpected EOF");
                          return TOK(EOF); }
 	YY_BREAK
 case 216:
 YY_RULE_SETUP
-#line 337 "src/wasm-lexer.l"
+#line 338 "src/wasm-lexer.l"
 
 	YY_BREAK
 case 217:
 /* rule 217 can match eol */
 YY_RULE_SETUP
-#line 338 "src/wasm-lexer.l"
+#line 339 "src/wasm-lexer.l"
 { RESET_COLUMN(yyscanner); }
 	YY_BREAK
 case 218:
 YY_RULE_SETUP
-#line 339 "src/wasm-lexer.l"
+#line 340 "src/wasm-lexer.l"
 
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 340 "src/wasm-lexer.l"
+#line 341 "src/wasm-lexer.l"
 { return TOK(EOF); }
 	YY_BREAK
 case 219:
 YY_RULE_SETUP
-#line 341 "src/wasm-lexer.l"
+#line 342 "src/wasm-lexer.l"
 { yyerror(yylloc, &yyscanner, parser,
                                 "unexpected token \"%.*s\"", yyleng, yytext); }
 	YY_BREAK
 case 220:
 YY_RULE_SETUP
-#line 343 "src/wasm-lexer.l"
+#line 344 "src/wasm-lexer.l"
 { yyerror(yylloc, &yyscanner, parser,
                                 "unexpected char"); }
 	YY_BREAK
 case 221:
 YY_RULE_SETUP
-#line 346 "src/wasm-lexer.l"
+#line 347 "src/wasm-lexer.l"
 ECHO;
 	YY_BREAK
-#line 2764 "src/wasm-lexer.c"
+#line 2765 "src/wasm-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3946,11 +3947,11 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 345 "src/wasm-lexer.l"
+#line 346 "src/wasm-lexer.l"
 
 
 
-WasmScanner new_scanner(const char* filename) {
+WasmScanner wasm_new_scanner(const char* filename) {
   WasmScannerExtra* extra = malloc(sizeof(WasmScannerExtra));
   extra->column = 1;
   extra->filename = filename;
@@ -3968,7 +3969,7 @@ WasmScanner new_scanner(const char* filename) {
   return scanner;
 }
 
-void free_scanner(WasmScanner scanner) {
+void wasm_free_scanner(WasmScanner scanner) {
   WasmScannerExtra* extra = yyget_extra(scanner);
   fclose(extra->file);
   free(extra);

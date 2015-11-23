@@ -1,5 +1,6 @@
 %{
 #include "wasm.h"
+#include "wasm-internal.h"
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {
@@ -345,7 +346,7 @@ NAME      \${ATOM}
 
 %%
 
-WasmScanner new_scanner(const char* filename) {
+WasmScanner wasm_new_scanner(const char* filename) {
   WasmScannerExtra* extra = malloc(sizeof(WasmScannerExtra));
   extra->column = 1;
   extra->filename = filename;
@@ -363,7 +364,7 @@ WasmScanner new_scanner(const char* filename) {
   return scanner;
 }
 
-void free_scanner(WasmScanner scanner) {
+void wasm_free_scanner(WasmScanner scanner) {
   WasmScannerExtra* extra = yyget_extra(scanner);
   fclose(extra->file);
   free(extra);

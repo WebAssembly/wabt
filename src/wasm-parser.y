@@ -8,6 +8,7 @@
 #include <memory.h>
 
 #include "wasm.h"
+#include "wasm-internal.h"
 
 #define ZEROMEM(var) memset(&(var), 0, sizeof(var));
 #define DUPTEXT(dst, src)                           \
