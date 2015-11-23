@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "wasm.h"
+#include "wasm-internal.h"
 
 static const char* s_type_names[] = {
     "void",
@@ -23,7 +24,7 @@ static const char* s_type_names[] = {
     "i64, f32 or f64",
     "i32, i64, f32 or f64",
 };
-/* STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_TYPE_ALL + 1); */
+STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_TYPE_ALL + 1);
 
 typedef struct WasmLabelNode {
   WasmLabel* label;

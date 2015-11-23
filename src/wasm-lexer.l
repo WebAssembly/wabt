@@ -79,6 +79,7 @@ typedef struct WasmScannerExtra {
 
 %x LINE_COMMENT
 %x BLOCK_COMMENT
+%x BAD_TEXT
 
 SPACE     [ \t]
 DIGIT     [0-9]
@@ -86,22 +87,22 @@ DIGITS    [0-9]+
 HEXDIGIT  [0-9a-fA-F]
 LETTER    [a-zA-Z]
 SYMBOL    [+\-*/\\\^~=<>!?@#$%&|:`.]
-TICK      "`"
+TICK      `
 ESCAPE    [nt\\'"]
-CHARACTER [^"\\\x00-\x1f\x7f]|"\"{ESCAPE}|"\"{HEXDIGIT}{HEXDIGIT}
+CHARACTER [^"\\\x00-\x1f\x7f]|\\{ESCAPE}|\\{HEXDIGIT}{HEXDIGIT}
 SIGN      [+-]?
 NUM       {SIGN}{DIGIT}+
 HEXNUM    {SIGN}"0x"{HEXDIGIT}+
 INT       {NUM}|{HEXNUM}
-FLOAT0    {NUM}"."{DIGIT}+
-FLOAT1    {NUM}("."{DIGIT}+)?[eE]{NUM}
-HEXFLOAT  {SIGN}"0x"{HEXDIGIT}+"."?{HEXDIGIT}*"p"{SIGN}{DIGIT}+
+FLOAT0    {NUM}\.{DIGIT}+
+FLOAT1    {NUM}(\.{DIGIT}+)?[eE]{NUM}
+HEXFLOAT  {SIGN}"0x"{HEXDIGIT}+\.?{HEXDIGIT}*p{SIGN}{DIGIT}+
 INFINITY  {SIGN}"infinity"
 NAN       {SIGN}"nan"|{SIGN}"nan:0x"{HEXDIGIT}+
 FLOAT     {FLOAT0}|{FLOAT1}|{HEXFLOAT}|{INFINITY}|{NAN}
-TEXT      "\""{CHARACTER}*"\""
-ATOM      ({LETTER}|{DIGIT}|"_"|{TICK}|{SYMBOL})+
-NAME      "$"{ATOM}
+TEXT      \"{CHARACTER}*\"
+ATOM      ({LETTER}|{DIGIT}|_|{TICK}|{SYMBOL})+
+NAME      \${ATOM}
 
 %%
 
@@ -110,6 +111,19 @@ NAME      "$"{ATOM}
 {INT}                 { TEXT; return TOK(INT); }
 {FLOAT}               { TEXT; return TOK(FLOAT); }
 {TEXT}                { TEXT; return TOK(TEXT); }
+\"                    { BEGIN(BAD_TEXT); }
+<BAD_TEXT>{CHARACTER} {}
+<BAD_TEXT>\n          { BEGIN(INITIAL);
+                        RESET_COLUMN(yyscanner);
+                        yyerror(yylloc, &yyscanner, parser,
+                                "newline in string"); }
+<BAD_TEXT><<EOF>>     { yyerror(yylloc, &yyscanner, parser, "unexpected EOF");
+                        return TOK(EOF); }
+<BAD_TEXT>\\.         { yyerror(yylloc, &yyscanner, parser,
+                                "bad escape \"%.*s\"", yyleng, yytext); }
+<BAD_TEXT>\"          { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
+<BAD_TEXT>[^\\]       { yyerror(yylloc, &yyscanner, parser,
+                                "illegal character in string"); }
 "i32"                 { TYPE(I32); return TOK(VALUE_TYPE); }
 "i64"                 { TYPE(I64); return TOK(VALUE_TYPE); }
 "f32"                 { TYPE(F32); return TOK(VALUE_TYPE); }
@@ -318,7 +332,8 @@ NAME      "$"{ATOM}
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
 <BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, parser,
-                                 "unexpected EOF"); }
+                                 "unexpected EOF");
+                         return TOK(EOF); }
 <BLOCK_COMMENT>.
 \n                    { RESET_COLUMN(yyscanner); }
 [ \t\r]
