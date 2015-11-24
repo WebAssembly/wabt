@@ -78,29 +78,64 @@ static int get_index_from_var(WasmBindingVector* bindings, WasmVar* var) {
   return var->index;
 }
 
-#define DEFINE_GET_ITEM_BY_NAME(NAME, TYPE)                          \
-  static TYPE##Ptr get_##NAME##_by_name(WasmBindingVector* bindings, \
-                                        TYPE##PtrVector* items,      \
-                                        WasmStringSlice* name) {     \
-    int index = find_binding_index_by_name(bindings, name);          \
-    if (index == -1)                                                 \
-      return NULL;                                                   \
-    return items->data[index];                                       \
-  }
-DEFINE_GET_ITEM_BY_NAME(func, WasmFunc)
-DEFINE_GET_ITEM_BY_NAME(func_type, WasmFuncType)
-DEFINE_GET_ITEM_BY_NAME(export, WasmExport)
+static WasmExportPtr get_export_by_name(WasmModule* module,
+                                        WasmStringSlice* name) {
+  int index = find_binding_index_by_name(&module->export_bindings, name);
+  if (index == -1)
+    return NULL;
+  return module->exports.data[index];
+}
 
-#define DEFINE_GET_ITEM_BY_VAR(NAME, TYPE)                                     \
-  static TYPE##Ptr get_##NAME##_by_var(WasmBindingVector* bindings,            \
-                                       TYPE##PtrVector* items, WasmVar* var) { \
-    int index = get_index_from_var(bindings, var);                             \
-    if (index < 0 || index >= items->size)                                     \
-      return NULL;                                                             \
-    return items->data[index];                                                 \
+int wasm_func_is_exported(WasmModule* module, WasmFunc* func) {
+  int i;
+  for (i = 0; i < module->exports.size; ++i) {
+    WasmExport* export = module->exports.data[i];
+    if (export->var.type == WASM_VAR_TYPE_NAME) {
+      if (string_slices_are_equal(&export->var.name, &func->name))
+        return 1;
+    } else {
+      assert(export->var.type == WASM_VAR_TYPE_INDEX);
+      int index = export->var.index;
+      if (index >= 0 && index < module->funcs.size &&
+          module->funcs.data[index] == func)
+        return 1;
+    }
   }
-DEFINE_GET_ITEM_BY_VAR(func, WasmFunc)
-DEFINE_GET_ITEM_BY_VAR(func_type, WasmFuncType)
+  return 0;
+}
+
+int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var) {
+  return get_index_from_var(&module->func_bindings, var);
+}
+
+int wasm_get_func_type_index_by_var(WasmModule* module, WasmVar* var) {
+  return get_index_from_var(&module->func_type_bindings, var);
+}
+
+int wasm_get_import_index_by_var(WasmModule* module, WasmVar* var) {
+  return get_index_from_var(&module->import_bindings, var);
+}
+
+WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var) {
+  int index = get_index_from_var(&module->func_bindings, var);
+  if (index < 0 || index >= module->funcs.size)
+    return NULL;
+  return module->funcs.data[index];
+}
+
+WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var) {
+  int index = get_index_from_var(&module->func_type_bindings, var);
+  if (index < 0 || index >= module->func_types.size)
+    return NULL;
+  return module->func_types.data[index];
+}
+
+WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var) {
+  int index = get_index_from_var(&module->import_bindings, var);
+  if (index < 0 || index >= module->imports.size)
+    return NULL;
+  return module->imports.data[index];
+}
 
 static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
                                            WasmBindingVector* bindings,
@@ -881,17 +916,14 @@ static WasmResult check_invoke(WasmCheckContext* ctx,
     return WASM_ERROR;
   }
 
-  WasmExport* export =
-      get_export_by_name(&ctx->last_module->export_bindings,
-                         &ctx->last_module->exports, &invoke->name);
+  WasmExport* export = get_export_by_name(ctx->last_module, &invoke->name);
   if (!export) {
     print_error(ctx, &invoke->loc, "unknown function export \"%.*s\"",
                 invoke->name.length, invoke->name.start);
     return WASM_ERROR;
   }
 
-  WasmFunc* func = get_func_by_var(&ctx->last_module->func_bindings,
-                                   &ctx->last_module->funcs, &export->var);
+  WasmFunc* func = wasm_get_func_by_var(ctx->last_module, &export->var);
   if (!func) {
     /* this error will have already been reported, just skip it */
     return WASM_ERROR;

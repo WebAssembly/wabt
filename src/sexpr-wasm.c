@@ -180,6 +180,11 @@ int main(int argc, char** argv) {
 
   if (result == WASM_OK) {
     result |= wasm_check_script(&parser.script);
+
+    if (result == WASM_OK) {
+      WasmBinaryWriter writer;
+      result |= wasm_write_binary(&writer, &parser.script);
+    }
   }
 
   return result;

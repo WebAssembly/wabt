@@ -28,6 +28,9 @@ typedef struct WasmScannerExtra {
     yylloc->last_column = extra->column;               \
   }
 
+#define WASM_SIGN_S WASM_SIGNED
+#define WASM_SIGN_U WASM_UNSIGNED
+
 #define TEXT                   \
   yylval->text.start = yytext; \
   yylval->text.length = yyleng
@@ -36,35 +39,26 @@ typedef struct WasmScannerExtra {
   yylval->text.length = yyleng - offset
 #define TYPE(type_) yylval->type = WASM_TYPE_##type_
 #define TYPE_STRUCT(struct_, type_) yylval->struct_.type = WASM_TYPE_##type_
-#define SIGN(struct_, sign_) \
-  yylval->struct_.sign = sign_ ? WASM_SIGNED : WASM_UNSIGNED
-#define MEMOP(type_, size_) \
-  TYPE_STRUCT(mem, type_);  \
+#define MEMOP(type_, name, size_)                          \
+  TYPE_STRUCT(mem, type_);                                 \
+  yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name; \
   yylval->mem.size = WASM_MEM_SIZE_##size_
-#define MEMOPSIGN(type_, size_, sign_) \
-  MEMOP(type_, size_);                 \
-  SIGN(mem, sign_)
-#define UNOP(type_, name)    \
-  TYPE_STRUCT(unary, type_); \
-  yylval->unary.op_type = WASM_UNARY_OP_TYPE_##name
+#define MEMOPSIGN(type_, name, size_, sign_)                                \
+  TYPE_STRUCT(mem, type_);                                                  \
+  yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name##size_##_##sign_; \
+  yylval->mem.size = WASM_MEM_SIZE_##size_
+#define UNOP(type_, name) TYPE_STRUCT(unary, type_); \
+  yylval->unary.op_type = WASM_UNARY_OP_TYPE_##type_##_##name
 #define BINOP(type_, name)    \
   TYPE_STRUCT(binary, type_); \
-  yylval->binary.op_type = WASM_BINARY_OP_TYPE_##name
-#define BINOPSIGN(type_, name, sign_) \
-  BINOP(type_, name);                 \
-  SIGN(binary, sign_)
+  yylval->binary.op_type = WASM_BINARY_OP_TYPE_##type_##_##name
 #define CMPOP(type_, name)     \
   TYPE_STRUCT(compare, type_); \
-  yylval->compare.op_type = WASM_COMPARE_OP_TYPE_##name
-#define CMPOPSIGN(type_, name, sign_) \
-  CMPOP(type_, name);                 \
-  SIGN(compare, sign_)
-#define CONVTYPE(type_, type2_) \
-  TYPE_STRUCT(convert, type_);  \
+  yylval->compare.op_type = WASM_COMPARE_OP_TYPE_##type_##_##name
+#define CONVTYPE(type_, name, type2_)                                         \
+  TYPE_STRUCT(convert, type_);                                                \
+  yylval->convert.op_type = WASM_CONVERT_OP_TYPE_##type_##_##name##_##type2_; \
   yylval->convert.type2 = WASM_TYPE_##type2_
-#define CONVTYPESIGN(type_, type2_, sign_) \
-  CONVTYPE(type_, type2_);                 \
-  SIGN(convert, sign_)
 #define CASTTYPE(type_, type2_) \
   TYPE_STRUCT(cast, type_);     \
   yylval->cast.type2 = WASM_TYPE_##type2_
@@ -145,29 +139,29 @@ NAME      \${ATOM}
 "return"              { return TOK(RETURN); }
 "get_local"           { return TOK(GET_LOCAL); }
 "set_local"           { return TOK(SET_LOCAL); }
-"i32.load"            { MEMOP(I32, 32); return TOK(LOAD); }
-"i64.load"            { MEMOP(I64, 64); return TOK(LOAD); }
-"f32.load"            { MEMOP(F32, 32); return TOK(LOAD); }
-"f64.load"            { MEMOP(F64, 64); return TOK(LOAD); }
-"i32.store"           { MEMOP(I32, 32); return TOK(STORE); }
-"i64.store"           { MEMOP(I64, 64); return TOK(STORE); }
-"f32.store"           { MEMOP(F32, 32); return TOK(STORE); }
-"f64.store"           { MEMOP(F64, 64); return TOK(STORE); }
-"i32.load8_s"         { MEMOPSIGN(I32, 8, 1); return TOK(LOAD_EXTEND); }
-"i64.load8_s"         { MEMOPSIGN(I64, 8, 1); return TOK(LOAD_EXTEND); }
-"i32.load8_u"         { MEMOPSIGN(I32, 8, 0); return TOK(LOAD_EXTEND); }
-"i64.load8_u"         { MEMOPSIGN(I64, 8, 0); return TOK(LOAD_EXTEND); }
-"i32.load16_s"        { MEMOPSIGN(I32, 16, 1); return TOK(LOAD_EXTEND); }
-"i64.load16_s"        { MEMOPSIGN(I64, 16, 1); return TOK(LOAD_EXTEND); }
-"i32.load16_u"        { MEMOPSIGN(I32, 16, 0); return TOK(LOAD_EXTEND); }
-"i64.load16_u"        { MEMOPSIGN(I64, 16, 0); return TOK(LOAD_EXTEND); }
-"i64.load32_s"        { MEMOPSIGN(I64, 32, 1); return TOK(LOAD_EXTEND); }
-"i64.load32_u"        { MEMOPSIGN(I64, 32, 0); return TOK(LOAD_EXTEND); }
-"i32.store8"          { MEMOP(I32, 8); return TOK(STORE_WRAP); }
-"i64.store8"          { MEMOP(I64, 8); return TOK(STORE_WRAP); }
-"i32.store16"         { MEMOP(I32, 16); return TOK(STORE_WRAP); }
-"i64.store16"         { MEMOP(I64, 16); return TOK(STORE_WRAP); }
-"i64.store32"         { MEMOP(I64, 32); return TOK(STORE_WRAP); }
+"i32.load"            { MEMOP(I32, LOAD, 32); return TOK(LOAD); }
+"i64.load"            { MEMOP(I64, LOAD, 64); return TOK(LOAD); }
+"f32.load"            { MEMOP(F32, LOAD, 32); return TOK(LOAD); }
+"f64.load"            { MEMOP(F64, LOAD, 64); return TOK(LOAD); }
+"i32.store"           { MEMOP(I32, STORE, 32); return TOK(STORE); }
+"i64.store"           { MEMOP(I64, STORE, 64); return TOK(STORE); }
+"f32.store"           { MEMOP(F32, STORE, 32); return TOK(STORE); }
+"f64.store"           { MEMOP(F64, STORE, 64); return TOK(STORE); }
+"i32.load8_s"         { MEMOPSIGN(I32, LOAD, 8, S); return TOK(LOAD_EXTEND); }
+"i64.load8_s"         { MEMOPSIGN(I64, LOAD, 8, S); return TOK(LOAD_EXTEND); }
+"i32.load8_u"         { MEMOPSIGN(I32, LOAD, 8, U); return TOK(LOAD_EXTEND); }
+"i64.load8_u"         { MEMOPSIGN(I64, LOAD, 8, U); return TOK(LOAD_EXTEND); }
+"i32.load16_s"        { MEMOPSIGN(I32, LOAD, 16, S); return TOK(LOAD_EXTEND); }
+"i64.load16_s"        { MEMOPSIGN(I64, LOAD, 16, S); return TOK(LOAD_EXTEND); }
+"i32.load16_u"        { MEMOPSIGN(I32, LOAD, 16, U); return TOK(LOAD_EXTEND); }
+"i64.load16_u"        { MEMOPSIGN(I64, LOAD, 16, U); return TOK(LOAD_EXTEND); }
+"i64.load32_s"        { MEMOPSIGN(I64, LOAD, 32, S); return TOK(LOAD_EXTEND); }
+"i64.load32_u"        { MEMOPSIGN(I64, LOAD, 32, U); return TOK(LOAD_EXTEND); }
+"i32.store8"          { MEMOP(I32, STORE, 8); return TOK(STORE_WRAP); }
+"i64.store8"          { MEMOP(I64, STORE, 8); return TOK(STORE_WRAP); }
+"i32.store16"         { MEMOP(I32, STORE, 16); return TOK(STORE_WRAP); }
+"i64.store16"         { MEMOP(I64, STORE, 16); return TOK(STORE_WRAP); }
+"i64.store32"         { MEMOP(I64, STORE, 32); return TOK(STORE_WRAP); }
 "offset="{DIGITS}     { TEXT_AT(7); return TOK(OFFSET); }
 "align="{DIGITS}      { TEXT_AT(6); return TOK(ALIGN); }
 "i32.const"           { TYPE(I32); return TOK(CONST); }
@@ -201,14 +195,14 @@ NAME      \${ATOM}
 "i64.sub"             { BINOP(I64, SUB); return TOK(BINARY); }
 "i32.mul"             { BINOP(I32, MUL); return TOK(BINARY); }
 "i64.mul"             { BINOP(I64, MUL); return TOK(BINARY); }
-"i32.div_s"           { BINOPSIGN(I32, DIV, 1); return TOK(BINARY); }
-"i64.div_s"           { BINOPSIGN(I64, DIV, 1); return TOK(BINARY); }
-"i32.div_u"           { BINOPSIGN(I32, DIV, 0); return TOK(BINARY); }
-"i64.div_u"           { BINOPSIGN(I64, DIV, 0); return TOK(BINARY); }
-"i32.rem_s"           { BINOPSIGN(I32, REM, 1); return TOK(BINARY); }
-"i64.rem_s"           { BINOPSIGN(I64, REM, 1); return TOK(BINARY); }
-"i32.rem_u"           { BINOPSIGN(I32, REM, 0); return TOK(BINARY); }
-"i64.rem_u"           { BINOPSIGN(I64, REM, 0); return TOK(BINARY); }
+"i32.div_s"           { BINOP(I32, DIV_S); return TOK(BINARY); }
+"i64.div_s"           { BINOP(I64, DIV_S); return TOK(BINARY); }
+"i32.div_u"           { BINOP(I32, DIV_U); return TOK(BINARY); }
+"i64.div_u"           { BINOP(I64, DIV_U); return TOK(BINARY); }
+"i32.rem_s"           { BINOP(I32, REM_S); return TOK(BINARY); }
+"i64.rem_s"           { BINOP(I64, REM_S); return TOK(BINARY); }
+"i32.rem_u"           { BINOP(I32, REM_U); return TOK(BINARY); }
+"i64.rem_u"           { BINOP(I64, REM_U); return TOK(BINARY); }
 "i32.and"             { BINOP(I32, AND); return TOK(BINARY); }
 "i64.and"             { BINOP(I64, AND); return TOK(BINARY); }
 "i32.or"              { BINOP(I32, OR); return TOK(BINARY); }
@@ -217,10 +211,10 @@ NAME      \${ATOM}
 "i64.xor"             { BINOP(I64, XOR); return TOK(BINARY); }
 "i32.shl"             { BINOP(I32, SHL); return TOK(BINARY); }
 "i64.shl"             { BINOP(I64, SHL); return TOK(BINARY); }
-"i32.shr_s"           { BINOPSIGN(I32, SHR, 1); return TOK(BINARY); }
-"i64.shr_s"           { BINOPSIGN(I64, SHR, 1); return TOK(BINARY); }
-"i32.shr_u"           { BINOPSIGN(I32, SHR, 0); return TOK(BINARY); }
-"i64.shr_u"           { BINOPSIGN(I64, SHR, 0); return TOK(BINARY); }
+"i32.shr_s"           { BINOP(I32, SHR_S); return TOK(BINARY); }
+"i64.shr_s"           { BINOP(I64, SHR_S); return TOK(BINARY); }
+"i32.shr_u"           { BINOP(I32, SHR_U); return TOK(BINARY); }
+"i64.shr_u"           { BINOP(I64, SHR_U); return TOK(BINARY); }
 "f32.add"             { BINOP(F32, ADD); return TOK(BINARY); }
 "f64.add"             { BINOP(F64, ADD); return TOK(BINARY); }
 "f32.sub"             { BINOP(F32, SUB); return TOK(BINARY); }
@@ -237,24 +231,24 @@ NAME      \${ATOM}
 "f64.copysign"        { BINOP(F64, COPYSIGN); return TOK(BINARY); }
 "i32.eq"              { CMPOP(I32, EQ); return TOK(COMPARE); }
 "i64.eq"              { CMPOP(I64, EQ); return TOK(COMPARE); }
-"i32.ne"              { CMPOP(I32, EQ); return TOK(COMPARE); }
-"i64.ne"              { CMPOP(I64, EQ); return TOK(COMPARE); }
-"i32.lt_s"            { CMPOPSIGN(I32, LT, 1); return TOK(COMPARE); }
-"i64.lt_s"            { CMPOPSIGN(I64, LT, 1); return TOK(COMPARE); }
-"i32.lt_u"            { CMPOPSIGN(I32, LT, 0); return TOK(COMPARE); }
-"i64.lt_u"            { CMPOPSIGN(I64, LT, 0); return TOK(COMPARE); }
-"i32.le_s"            { CMPOPSIGN(I32, LE, 1); return TOK(COMPARE); }
-"i64.le_s"            { CMPOPSIGN(I64, LE, 1); return TOK(COMPARE); }
-"i32.le_u"            { CMPOPSIGN(I32, LE, 0); return TOK(COMPARE); }
-"i64.le_u"            { CMPOPSIGN(I64, LE, 0); return TOK(COMPARE); }
-"i32.gt_s"            { CMPOPSIGN(I32, GT, 1); return TOK(COMPARE); }
-"i64.gt_s"            { CMPOPSIGN(I64, GT, 1); return TOK(COMPARE); }
-"i32.gt_u"            { CMPOPSIGN(I32, GT, 0); return TOK(COMPARE); }
-"i64.gt_u"            { CMPOPSIGN(I64, GT, 0); return TOK(COMPARE); }
-"i32.ge_s"            { CMPOPSIGN(I32, GE, 1); return TOK(COMPARE); }
-"i64.ge_s"            { CMPOPSIGN(I64, GE, 1); return TOK(COMPARE); }
-"i32.ge_u"            { CMPOPSIGN(I32, GE, 0); return TOK(COMPARE); }
-"i64.ge_u"            { CMPOPSIGN(I64, GE, 0); return TOK(COMPARE); }
+"i32.ne"              { CMPOP(I32, NE); return TOK(COMPARE); }
+"i64.ne"              { CMPOP(I64, NE); return TOK(COMPARE); }
+"i32.lt_s"            { CMPOP(I32, LT_S); return TOK(COMPARE); }
+"i64.lt_s"            { CMPOP(I64, LT_S); return TOK(COMPARE); }
+"i32.lt_u"            { CMPOP(I32, LT_U); return TOK(COMPARE); }
+"i64.lt_u"            { CMPOP(I64, LT_U); return TOK(COMPARE); }
+"i32.le_s"            { CMPOP(I32, LE_S); return TOK(COMPARE); }
+"i64.le_s"            { CMPOP(I64, LE_S); return TOK(COMPARE); }
+"i32.le_u"            { CMPOP(I32, LE_U); return TOK(COMPARE); }
+"i64.le_u"            { CMPOP(I64, LE_U); return TOK(COMPARE); }
+"i32.gt_s"            { CMPOP(I32, GT_S); return TOK(COMPARE); }
+"i64.gt_s"            { CMPOP(I64, GT_S); return TOK(COMPARE); }
+"i32.gt_u"            { CMPOP(I32, GT_U); return TOK(COMPARE); }
+"i64.gt_u"            { CMPOP(I64, GT_U); return TOK(COMPARE); }
+"i32.ge_s"            { CMPOP(I32, GE_S); return TOK(COMPARE); }
+"i64.ge_s"            { CMPOP(I64, GE_S); return TOK(COMPARE); }
+"i32.ge_u"            { CMPOP(I32, GE_U); return TOK(COMPARE); }
+"i64.ge_u"            { CMPOP(I64, GE_U); return TOK(COMPARE); }
 "f32.eq"              { CMPOP(F32, EQ); return TOK(COMPARE); }
 "f64.eq"              { CMPOP(F64, EQ); return TOK(COMPARE); }
 "f32.ne"              { CMPOP(F32, NE); return TOK(COMPARE); }
@@ -267,27 +261,27 @@ NAME      \${ATOM}
 "f64.gt"              { CMPOP(F64, GT); return TOK(COMPARE); }
 "f32.ge"              { CMPOP(F32, GE); return TOK(COMPARE); }
 "f64.ge"              { CMPOP(F64, GE); return TOK(COMPARE); }
-"i64.extend_s/i32"    { CONVTYPESIGN(I64, I32, 1); return TOK(CONVERT); }
-"i64.extend_u/i32"    { CONVTYPESIGN(I64, I32, 0); return TOK(CONVERT); }
-"i32.wrap/i64"        { CONVTYPE(I32, I64); return TOK(CONVERT); }
-"i32.trunc_s/f32"     { CONVTYPESIGN(I32, F32, 1); return TOK(CONVERT); }
-"i64.trunc_s/f32"     { CONVTYPESIGN(I64, F32, 1); return TOK(CONVERT); }
-"i32.trunc_s/f64"     { CONVTYPESIGN(I32, F64, 1); return TOK(CONVERT); }
-"i64.trunc_s/f64"     { CONVTYPESIGN(I64, F64, 1); return TOK(CONVERT); }
-"i32.trunc_u/f32"     { CONVTYPESIGN(I32, F32, 0); return TOK(CONVERT); }
-"i64.trunc_u/f32"     { CONVTYPESIGN(I64, F32, 0); return TOK(CONVERT); }
-"i32.trunc_u/f64"     { CONVTYPESIGN(I32, F64, 0); return TOK(CONVERT); }
-"i64.trunc_u/f64"     { CONVTYPESIGN(I64, F64, 0); return TOK(CONVERT); }
-"f32.convert_s/i32"   { CONVTYPESIGN(F32, I32, 1); return TOK(CONVERT); }
-"f64.convert_s/i32"   { CONVTYPESIGN(F64, I32, 1); return TOK(CONVERT); }
-"f32.convert_s/i64"   { CONVTYPESIGN(F32, I64, 1); return TOK(CONVERT); }
-"f64.convert_s/i64"   { CONVTYPESIGN(F64, I64, 1); return TOK(CONVERT); }
-"f32.convert_u/i32"   { CONVTYPESIGN(F32, I32, 0); return TOK(CONVERT); }
-"f64.convert_u/i32"   { CONVTYPESIGN(F64, I32, 0); return TOK(CONVERT); }
-"f32.convert_u/i64"   { CONVTYPESIGN(F32, I64, 0); return TOK(CONVERT); }
-"f64.convert_u/i64"   { CONVTYPESIGN(F64, I64, 0); return TOK(CONVERT); }
-"f64.promote/f32"     { CONVTYPE(F64, F32); return TOK(CONVERT); }
-"f32.demote/f64"      { CONVTYPE(F32, F64); return TOK(CONVERT); }
+"i64.extend_s/i32"    { CONVTYPE(I64, EXTEND_S, I32); return TOK(CONVERT); }
+"i64.extend_u/i32"    { CONVTYPE(I64, EXTEND_U, I32); return TOK(CONVERT); }
+"i32.wrap/i64"        { CONVTYPE(I32, WRAP, I64); return TOK(CONVERT); }
+"i32.trunc_s/f32"     { CONVTYPE(I32, TRUNC_S, F32); return TOK(CONVERT); }
+"i64.trunc_s/f32"     { CONVTYPE(I64, TRUNC_S, F32); return TOK(CONVERT); }
+"i32.trunc_s/f64"     { CONVTYPE(I32, TRUNC_S, F64); return TOK(CONVERT); }
+"i64.trunc_s/f64"     { CONVTYPE(I64, TRUNC_S, F64); return TOK(CONVERT); }
+"i32.trunc_u/f32"     { CONVTYPE(I32, TRUNC_U, F32); return TOK(CONVERT); }
+"i64.trunc_u/f32"     { CONVTYPE(I64, TRUNC_U, F32); return TOK(CONVERT); }
+"i32.trunc_u/f64"     { CONVTYPE(I32, TRUNC_U, F64); return TOK(CONVERT); }
+"i64.trunc_u/f64"     { CONVTYPE(I64, TRUNC_U, F64); return TOK(CONVERT); }
+"f32.convert_s/i32"   { CONVTYPE(F32, CONVERT_S, I32); return TOK(CONVERT); }
+"f64.convert_s/i32"   { CONVTYPE(F64, CONVERT_S, I32); return TOK(CONVERT); }
+"f32.convert_s/i64"   { CONVTYPE(F32, CONVERT_S, I64); return TOK(CONVERT); }
+"f64.convert_s/i64"   { CONVTYPE(F64, CONVERT_S, I64); return TOK(CONVERT); }
+"f32.convert_u/i32"   { CONVTYPE(F32, CONVERT_U, I32); return TOK(CONVERT); }
+"f64.convert_u/i32"   { CONVTYPE(F64, CONVERT_U, I32); return TOK(CONVERT); }
+"f32.convert_u/i64"   { CONVTYPE(F32, CONVERT_U, I64); return TOK(CONVERT); }
+"f64.convert_u/i64"   { CONVTYPE(F64, CONVERT_U, I64); return TOK(CONVERT); }
+"f64.promote/f32"     { CONVTYPE(F64, PROMOTE, F32); return TOK(CONVERT); }
+"f32.demote/f64"      { CONVTYPE(F32, DEMOTE, F64); return TOK(CONVERT); }
 "f32.reinterpret/i32" { CASTTYPE(F32, I32); return TOK(CAST); }
 "i32.reinterpret/f32" { CASTTYPE(I32, F32); return TOK(CAST); }
 "f64.reinterpret/i64" { CASTTYPE(F64, I64); return TOK(CAST); }

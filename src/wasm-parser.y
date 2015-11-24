@@ -504,7 +504,7 @@ type_use :
 func_info :
     /* empty */ {}
   | bind_var {
-      $$.flags = 0;
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
     }
   | bind_var type_use {
@@ -619,10 +619,12 @@ func_info :
       $$.exprs = $3;
     }
   | bind_var local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.locals = $2;
     }
   | bind_var local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.locals = $2;
       $$.exprs = $3;
@@ -704,6 +706,7 @@ func_info :
       $$.exprs = $3;
     }
   | bind_var non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
       $$.exprs = $2;
     }
@@ -868,13 +871,16 @@ func_info :
       $$.exprs = $2;
     }
   | local_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.locals = $1;
     }
   | local_list non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.locals = $1;
       $$.exprs = $2;
     }
   | non_empty_expr_list {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.exprs = $1;
     }
 ;
