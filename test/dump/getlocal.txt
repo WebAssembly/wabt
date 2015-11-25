@@ -22,7 +22,7 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num args
+0000006: 00                                         ; num params
 0000007: 00                                         ; result_type
 0000008: 02                                         ; WASM_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
@@ -53,8 +53,4 @@
 000002a: 03                                         ; remapped local index
 0000019: 1000                                       ; FIXUP func body size
 000002b: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0101 0000 0201 0500 0000 0000  ................
-0000010: 0002 0002 0002 0002 0010 000e 060e 040e  ................
-0000020: 020e 000e 010e 050e 070e 0306            ............
 ;;; STDOUT ;;)

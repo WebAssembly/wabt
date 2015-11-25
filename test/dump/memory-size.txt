@@ -11,7 +11,7 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num args
+0000006: 00                                         ; num params
 0000007: 01                                         ; result_type
 0000008: 02                                         ; WASM_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
@@ -20,11 +20,7 @@
 000000b: 0000                                       ; func signature index
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
-0000013: 09                                         ; OPCODE_I8_CONST
-0000014: 00                                         ; zero
-0000011: 0200                                       ; FIXUP func body size
-0000015: 06                                         ; WASM_SECTION_END
-; names
-0000000: 000a 0a01 0101 0001 0201 0100 0000 0000  ................
-0000010: 0002 0009 0006                           ......
+0000013: 3b                                         ; OPCODE_MEMORY_SIZE
+0000011: 0100                                       ; FIXUP func body size
+0000014: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

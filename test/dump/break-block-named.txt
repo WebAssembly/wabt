@@ -16,7 +16,7 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num args
+0000006: 00                                         ; num params
 0000007: 00                                         ; result_type
 0000008: 02                                         ; WASM_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
@@ -26,29 +26,21 @@
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
 0000013: 01                                         ; OPCODE_BLOCK
-0000014: 00                                         ; num expressions
+0000014: 01                                         ; num expressions
 0000015: 02                                         ; OPCODE_LOOP
-0000016: 00                                         ; num expressions
+0000016: 01                                         ; num expressions
 0000017: 01                                         ; OPCODE_BLOCK
-0000018: 00                                         ; num expressions
+0000018: 02                                         ; num expressions
 0000019: 09                                         ; OPCODE_I8_CONST
 000001a: 00                                         ; u8 literal
 000001b: 01                                         ; OPCODE_BLOCK
-000001c: 00                                         ; num expressions
+000001c: 02                                         ; num expressions
 000001d: 06                                         ; OPCODE_BR
 000001e: 00                                         ; break depth
 000001f: 00                                         ; OPCODE_NOP
 0000020: 06                                         ; OPCODE_BR
 0000021: 04                                         ; break depth
 0000022: 00                                         ; OPCODE_NOP
-000001c: 02                                         ; FIXUP num expressions
-0000018: 02                                         ; FIXUP num expressions
-0000016: 01                                         ; FIXUP num expressions
-0000014: 01                                         ; FIXUP num expressions
 0000011: 1000                                       ; FIXUP func body size
 0000023: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0010 0001 0102 0101 0209 0001 0206 0000  ................
-0000020: 0604 0006                                ....
 ;;; STDOUT ;;)

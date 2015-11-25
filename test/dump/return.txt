@@ -11,10 +11,10 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 02                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num args
+0000006: 00                                         ; num params
 0000007: 01                                         ; result_type
 ; signature 1
-0000008: 00                                         ; num args
+0000008: 00                                         ; num params
 0000009: 00                                         ; result_type
 000000a: 02                                         ; WASM_SECTION_FUNCTIONS
 000000b: 02                                         ; num functions
@@ -35,8 +35,4 @@
 0000021: 14                                         ; OPCODE_RETURN
 000001f: 0100                                       ; FIXUP func body size
 0000022: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0102 0001 0000 0202 0100 0000  ................
-0000010: 0000 0003 0014 092a 0101 0000 0000 0001  .......*........
-0000020: 0014 06                                  ...
 ;;; STDOUT ;;)

@@ -31,36 +31,57 @@ typedef struct WasmScannerExtra {
 #define WASM_SIGN_S WASM_SIGNED
 #define WASM_SIGN_U WASM_UNSIGNED
 
+/* aliases for non-wrapping/extending loads/stores */
+#define WASM_MEM_OP_TYPE_F32_LOAD32 WASM_MEM_OP_TYPE_F32_LOAD
+#define WASM_MEM_OP_TYPE_F32_STORE32 WASM_MEM_OP_TYPE_F32_STORE
+#define WASM_MEM_OP_TYPE_F64_LOAD64 WASM_MEM_OP_TYPE_F64_LOAD
+#define WASM_MEM_OP_TYPE_F64_STORE64 WASM_MEM_OP_TYPE_F64_STORE
+#define WASM_MEM_OP_TYPE_I32_LOAD32 WASM_MEM_OP_TYPE_I32_LOAD
+#define WASM_MEM_OP_TYPE_I32_STORE32 WASM_MEM_OP_TYPE_I32_STORE
+#define WASM_MEM_OP_TYPE_I64_LOAD64 WASM_MEM_OP_TYPE_I64_LOAD
+#define WASM_MEM_OP_TYPE_I64_STORE64 WASM_MEM_OP_TYPE_I64_STORE
+
 #define TEXT                   \
   yylval->text.start = yytext; \
   yylval->text.length = yyleng
+
 #define TEXT_AT(offset)                 \
   yylval->text.start = yytext + offset; \
   yylval->text.length = yyleng - offset
+
 #define TYPE(type_) yylval->type = WASM_TYPE_##type_
+
 #define TYPE_STRUCT(struct_, type_) yylval->struct_.type = WASM_TYPE_##type_
-#define MEMOP(type_, name, size_)                          \
-  TYPE_STRUCT(mem, type_);                                 \
-  yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name; \
+
+#define MEMOP(type_, name, size_)                                 \
+  TYPE_STRUCT(mem, type_);                                        \
+  yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name##size_; \
   yylval->mem.size = WASM_MEM_SIZE_##size_
+
 #define MEMOPSIGN(type_, name, size_, sign_)                                \
   TYPE_STRUCT(mem, type_);                                                  \
   yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name##size_##_##sign_; \
   yylval->mem.size = WASM_MEM_SIZE_##size_
+
 #define UNOP(type_, name) TYPE_STRUCT(unary, type_); \
   yylval->unary.op_type = WASM_UNARY_OP_TYPE_##type_##_##name
+
 #define BINOP(type_, name)    \
   TYPE_STRUCT(binary, type_); \
   yylval->binary.op_type = WASM_BINARY_OP_TYPE_##type_##_##name
+
 #define CMPOP(type_, name)     \
   TYPE_STRUCT(compare, type_); \
   yylval->compare.op_type = WASM_COMPARE_OP_TYPE_##type_##_##name
+
 #define CONVTYPE(type_, name, type2_)                                         \
   TYPE_STRUCT(convert, type_);                                                \
   yylval->convert.op_type = WASM_CONVERT_OP_TYPE_##type_##_##name##_##type2_; \
   yylval->convert.type2 = WASM_TYPE_##type2_
-#define CASTTYPE(type_, type2_) \
-  TYPE_STRUCT(cast, type_);     \
+
+#define CASTTYPE(type_, type2_)                                            \
+  TYPE_STRUCT(cast, type_);                                                \
+  yylval->cast.op_type = WASM_CAST_OP_TYPE_##type_##_REINTERPRET_##type2_; \
   yylval->cast.type2 = WASM_TYPE_##type2_
 
 #define TOK(name) WASM_TOKEN_TYPE_##name

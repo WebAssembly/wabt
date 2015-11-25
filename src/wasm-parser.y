@@ -235,7 +235,13 @@ expr1 :
       $$->br_if.var = $2;
       $$->br_if.cond = $3;
     }
-  | LOOP labeling labeling expr_list {
+  | LOOP labeling expr_list {
+      $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
+      ZEROMEM($$->loop.outer);
+      $$->loop.inner = $2;
+      $$->loop.exprs = $3;
+    }
+  | LOOP bind_var bind_var expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
       $$->loop.outer = $2;
       $$->loop.inner = $3;
@@ -502,7 +508,9 @@ type_use :
     LPAR TYPE var RPAR { $$ = $3; }
 ;
 func_info :
-    /* empty */ {}
+    /* empty */ {
+      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+    }
   | bind_var {
       $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$.name = $1;
@@ -949,31 +957,31 @@ import :
     LPAR IMPORT TEXT TEXT type_use RPAR {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_TYPE;
-      DUPTEXT($$.module_name, $3);
-      DUPTEXT($$.func_name, $4);
+      DUPQUOTEDTEXT($$.module_name, $3);
+      DUPQUOTEDTEXT($$.func_name, $4);
       $$.type_var = $5;
     }
   | LPAR IMPORT bind_var TEXT TEXT type_use RPAR /* Sugar */ {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_TYPE;
       $$.name = $3;
-      DUPTEXT($$.module_name, $4);
-      DUPTEXT($$.func_name, $5);
+      DUPQUOTEDTEXT($$.module_name, $4);
+      DUPQUOTEDTEXT($$.func_name, $5);
       $$.type_var = $6;
     }
   | LPAR IMPORT TEXT TEXT func_type RPAR  /* Sugar */ {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
-      DUPTEXT($$.module_name, $3);
-      DUPTEXT($$.func_name, $4);
+      DUPQUOTEDTEXT($$.module_name, $3);
+      DUPQUOTEDTEXT($$.func_name, $4);
       $$.func_sig = $5;
     }
   | LPAR IMPORT bind_var TEXT TEXT func_type RPAR  /* Sugar */ {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
       $$.name = $3;
-      DUPTEXT($$.module_name, $4);
-      DUPTEXT($$.func_name, $5);
+      DUPQUOTEDTEXT($$.module_name, $4);
+      DUPQUOTEDTEXT($$.func_name, $5);
       $$.func_sig = $6;
     }
 ;

@@ -17,12 +17,12 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 02                                         ; num signatures
 ; signature 0
-0000006: 02                                         ; num args
+0000006: 02                                         ; num params
 0000007: 01                                         ; result_type
-0000008: 01                                         ; arg type
-0000009: 03                                         ; arg type
+0000008: 01                                         ; param type
+0000009: 03                                         ; param type
 ; signature 1
-000000a: 00                                         ; num args
+000000a: 00                                         ; num params
 000000b: 01                                         ; result_type
 000000c: 02                                         ; WASM_SECTION_FUNCTIONS
 000000d: 02                                         ; num functions
@@ -35,20 +35,18 @@
 0000016: 0100                                       ; func signature index
 0000018: 0000 0000                                  ; func name offset
 000001c: 0000                                       ; func body size
-000001e: 12                                         ; OPCODE_CALL
+000001e: 12                                         ; OPCODE_CALL_FUNCTION
 000001f: 00                                         ; import index
 0000020: 09                                         ; OPCODE_I8_CONST
 0000021: 01                                         ; u8 literal
 0000022: 0d                                         ; OPCODE_F32_CONST
 0000023: 0000 0040                                  ; f32 literal
-0000027: 12                                         ; OPCODE_CALL
+0000027: 12                                         ; OPCODE_CALL_FUNCTION
 0000028: 01                                         ; func index
 000001c: 0b00                                       ; FIXUP func body size
 0000029: 06                                         ; WASM_SECTION_END
-; names
+; import 0
 0000011: 2a00 0000                                  ; FIXUP import name offset
-000002a: 6261 7200                                  ; import name
-0000000: 0000 0001 0102 0201 0103 0001 0202 0300  ................
-0000010: 002a 0000 0001 0100 0000 0000 0b00 1200  .*..............
-0000020: 0901 0d00 0000 4012 0106 6261 7200       ......@...bar.
+000002a: 6261 72                                    ; import name
+000002d: 00                                         ; \0
 ;;; STDOUT ;;)

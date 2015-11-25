@@ -199,6 +199,13 @@ typedef enum WasmConvertOpType {
   WASM_CONVERT_OP_TYPE_I64_TRUNC_U_F64,
 } WasmConvertOpType;
 
+typedef enum WasmCastOpType {
+  WASM_CAST_OP_TYPE_F32_REINTERPRET_I32,
+  WASM_CAST_OP_TYPE_F64_REINTERPRET_I64,
+  WASM_CAST_OP_TYPE_I32_REINTERPRET_F32,
+  WASM_CAST_OP_TYPE_I64_REINTERPRET_F64,
+} WasmCastOpType;
+
 typedef struct WasmUnaryOp {
   WasmType type;
   WasmUnaryOpType op_type;
@@ -222,6 +229,7 @@ typedef struct WasmConvertOp {
 
 typedef struct WasmCastOp {
   WasmType type;
+  WasmCastOpType op_type;
   WasmType type2;
 } WasmCastOp;
 
@@ -550,9 +558,12 @@ void wasm_free_scanner(WasmScanner scanner);
 WasmResult wasm_check_script(WasmScript*);
 WasmResult wasm_write_binary(WasmBinaryWriter*, WasmScript*);
 
+int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var);
 int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var);
 int wasm_get_func_type_index_by_var(WasmModule* module, WasmVar* var);
+int wasm_get_global_index_by_var(WasmModule* module, WasmVar* var);
 int wasm_get_import_index_by_var(WasmModule* module, WasmVar* var);
+int wasm_get_local_index_by_var(WasmFunc* func, WasmVar* var);
 
 WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var);

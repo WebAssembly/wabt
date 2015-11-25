@@ -182,7 +182,9 @@ int main(int argc, char** argv) {
     result |= wasm_check_script(&parser.script);
 
     if (result == WASM_OK) {
-      WasmBinaryWriter writer;
+      WasmBinaryWriter writer = {};
+      if (s_verbose)
+        writer.log_writes = 1;
       result |= wasm_write_binary(&writer, &parser.script);
     }
   }

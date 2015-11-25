@@ -14,14 +14,8 @@
 000000a: 0000 0000                                  ; segment data offset
 000000e: 0b00 0000                                  ; segment size
 0000012: 01                                         ; segment init
-0000013: 01                                         ; WASM_SECTION_SIGNATURES
-0000014: 00                                         ; num signatures
-0000015: 06                                         ; WASM_SECTION_END
+0000013: 06                                         ; WASM_SECTION_END
 ; segment data 0
-000000a: 1600 0000                                  ; FIXUP segment data offset
-0000016: 0001 0203 0405 0607 0809 0a              ...........  ; segment data
-; names
-0000000: 0007 0701 0401 0000 0000 1600 0000 0b00  ................
-0000010: 0000 0101 0006 0001 0203 0405 0607 0809  ................
-0000020: 0a                                       .
+000000a: 1400 0000                                  ; FIXUP segment data offset
+0000014: 0001 0203 0405 0607 0809 0a                ; segment data
 ;;; STDOUT ;;)

@@ -11,9 +11,9 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 01                                         ; num args
+0000006: 01                                         ; num params
 0000007: 02                                         ; result_type
-0000008: 01                                         ; arg type
+0000008: 01                                         ; param type
 0000009: 02                                         ; WASM_SECTION_FUNCTIONS
 000000a: 02                                         ; num functions
 ; import header 0
@@ -29,10 +29,8 @@
 000001c: 0000 0000 0000 0000                        ; u64 literal
 0000019: 0900                                       ; FIXUP func body size
 0000024: 06                                         ; WASM_SECTION_END
-; names
+; import 0
 000000e: 2500 0000                                  ; FIXUP import name offset
-0000025: 6261 7200                                  ; import name
-0000000: 0000 0001 0101 0102 0102 0203 0000 2500  ..............%.
-0000010: 0000 0100 0000 0000 0009 000b 0000 0000  ................
-0000020: 0000 0000 0662 6172 00                   .....bar.
+0000025: 6261 72                                    ; import name
+0000028: 00                                         ; \0
 ;;; STDOUT ;;)

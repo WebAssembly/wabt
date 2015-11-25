@@ -24,11 +24,5 @@
 0000018: 0000 0000                                  ; global name offset
 000001c: 09                                         ; global mem type
 000001d: 00                                         ; export global
-000001e: 01                                         ; WASM_SECTION_SIGNATURES
-000001f: 00                                         ; num signatures
-0000020: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0304 0000 0000 0400 0000 0000  ................
-0000010: 0600 0000 0000 0800 0000 0000 0900 0100  ................
-0000020: 06                                       .
+000001e: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

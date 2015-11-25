@@ -12,9 +12,9 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 01                                         ; num args
+0000006: 01                                         ; num params
 0000007: 00                                         ; result_type
-0000008: 01                                         ; arg type
+0000008: 01                                         ; param type
 0000009: 02                                         ; WASM_SECTION_FUNCTIONS
 000000a: 01                                         ; num functions
 ; function 0
@@ -33,7 +33,4 @@
 000001b: 01                                         ; num function table entries
 000001c: 0000                                       ; function table entry
 000001e: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0101 0100 0102 0101 0000 0000  ................
-0000010: 0000 0600 1300 0900 0900 0501 0000 06    ...............
 ;;; STDOUT ;;)

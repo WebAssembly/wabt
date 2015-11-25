@@ -19,39 +19,36 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 09                                         ; num signatures
 ; signature 0
-0000006: 01                                         ; num args
+0000006: 01                                         ; num params
 0000007: 00                                         ; result_type
-0000008: 01                                         ; arg type
+0000008: 01                                         ; param type
 ; signature 1
-0000009: 01                                         ; num args
+0000009: 01                                         ; num params
 000000a: 00                                         ; result_type
-000000b: 02                                         ; arg type
+000000b: 02                                         ; param type
 ; signature 2
-000000c: 01                                         ; num args
+000000c: 01                                         ; num params
 000000d: 00                                         ; result_type
-000000e: 03                                         ; arg type
+000000e: 03                                         ; param type
 ; signature 3
-000000f: 01                                         ; num args
+000000f: 01                                         ; num params
 0000010: 00                                         ; result_type
-0000011: 04                                         ; arg type
+0000011: 04                                         ; param type
 ; signature 4
-0000012: 00                                         ; num args
+0000012: 00                                         ; num params
 0000013: 01                                         ; result_type
 ; signature 5
-0000014: 00                                         ; num args
+0000014: 00                                         ; num params
 0000015: 02                                         ; result_type
 ; signature 6
-0000016: 00                                         ; num args
+0000016: 00                                         ; num params
 0000017: 03                                         ; result_type
 ; signature 7
-0000018: 00                                         ; num args
+0000018: 00                                         ; num params
 0000019: 04                                         ; result_type
 ; signature 8
-000001a: 01                                         ; num args
+000001a: 01                                         ; num params
 000001b: 04                                         ; result_type
-000001c: 01                                         ; arg type
+000001c: 01                                         ; param type
 000001d: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0109 0100 0101 0002 0100 0301  ................
-0000010: 0004 0001 0002 0003 0004 0104 0106       ..............
 ;;; STDOUT ;;)

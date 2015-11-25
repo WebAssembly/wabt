@@ -18,17 +18,11 @@
 0000017: 0000 0000                                  ; segment data offset
 000001b: 0700 0000                                  ; segment size
 000001f: 01                                         ; segment init
-0000020: 01                                         ; WASM_SECTION_SIGNATURES
-0000021: 00                                         ; num signatures
-0000022: 06                                         ; WASM_SECTION_END
+0000020: 06                                         ; WASM_SECTION_END
 ; segment data 0
-000000a: 2300 0000                                  ; FIXUP segment data offset
-0000023: 6865 6c6c 6f                             hello  ; segment data
+000000a: 2100 0000                                  ; FIXUP segment data offset
+0000021: 6865 6c6c 6f                               ; segment data
 ; segment data 1
-0000017: 2800 0000                                  ; FIXUP segment data offset
-0000028: 676f 6f64 6279 65                        goodbye  ; segment data
-; names
-0000000: 0007 0701 0402 0a00 0000 2300 0000 0500  ..........#.....
-0000010: 0000 0114 0000 0028 0000 0007 0000 0001  .......(........
-0000020: 0100 0668 656c 6c6f 676f 6f64 6279 65    ...hellogoodbye
+0000017: 2600 0000                                  ; FIXUP segment data offset
+0000026: 676f 6f64 6279 65                          ; segment data
 ;;; STDOUT ;;)

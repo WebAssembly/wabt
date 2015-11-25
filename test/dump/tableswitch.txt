@@ -15,7 +15,7 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num args
+0000006: 00                                         ; num params
 0000007: 00                                         ; result_type
 0000008: 02                                         ; WASM_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
@@ -27,29 +27,22 @@
 0000013: 01                                         ; OPCODE_BLOCK
 0000014: 01                                         ; num expressions
 0000015: 08                                         ; OPCODE_TABLESWITCH
-0000016: 0000                                       ; num targets
-0000018: 0000                                       ; num cases
+0000016: 0300                                       ; num targets
+0000018: 0300                                       ; num cases
 000001a: 0000                                       ; case index
 000001c: 0100                                       ; case index
 000001e: 0080                                       ; br depth
-0000018: 0300                                       ; FIXUP num cases
 0000020: 09                                         ; OPCODE_I8_CONST
 0000021: 00                                         ; u8 literal
-0000022: 09                                         ; OPCODE_I8_CONST
-0000023: 01                                         ; u8 literal
+0000022: 01                                         ; OPCODE_BLOCK
+0000023: 02                                         ; num expressions
 0000024: 09                                         ; OPCODE_I8_CONST
-0000025: 02                                         ; u8 literal
-; move [0000022,0000026) -> [0000024,0000028)
-0000022: 01                                         ; WASM_OPCODE_BLOCK
-0000023: 02                                         ; num exprs
+0000025: 01                                         ; u8 literal
+0000026: 09                                         ; OPCODE_I8_CONST
+0000027: 02                                         ; u8 literal
 0000028: 00                                         ; WASM_OPCODE_NOP for fallthrough
 0000029: 09                                         ; OPCODE_I8_CONST
 000002a: 03                                         ; u8 literal
-0000016: 0300                                       ; FIXUP num targets
 0000011: 1800                                       ; FIXUP func body size
 000002b: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 0018 0001 0108 0300 0300 0000 0100 0080  ................
-0000020: 0900 0102 0901 0902 0009 0306            ............
 ;;; STDOUT ;;)

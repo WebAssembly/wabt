@@ -20,10 +20,10 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 02                                         ; num args
+0000006: 02                                         ; num params
 0000007: 00                                         ; result_type
-0000008: 01                                         ; arg type
-0000009: 03                                         ; arg type
+0000008: 01                                         ; param type
+0000009: 03                                         ; param type
 000000a: 02                                         ; WASM_SECTION_FUNCTIONS
 000000b: 01                                         ; num functions
 ; function 0
@@ -61,10 +61,4 @@
 0000041: 0000 0000                                  ; f32 literal
 000001b: 2800                                       ; FIXUP func body size
 0000045: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0101 0200 0103 0201 0500 0000  ................
-0000010: 0000 0001 0001 0002 0000 0028 000f 0009  ...........(....
-0000020: 000f 010d 0000 0000 0f03 0b00 0000 0000  ................
-0000030: 0000 000f 040d 0000 0000 0f02 0900 0f05  ................
-0000040: 0d00 0000 0006                           ......
 ;;; STDOUT ;;)

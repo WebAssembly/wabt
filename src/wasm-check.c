@@ -28,7 +28,6 @@ STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_TYPE_ALL + 1);
 
 typedef struct WasmLabelNode {
   WasmLabel* label;
-  int depth;
   WasmType expected_type;
   const char* desc;
   struct WasmLabelNode* next;
@@ -38,6 +37,7 @@ typedef struct WasmCheckContext {
   WasmModule* last_module;
   WasmLabelNode* top_label;
   int in_assert_invalid;
+  int max_depth;
 } WasmCheckContext;
 
 static void print_error(WasmCheckContext* ctx,
@@ -72,7 +72,7 @@ static int find_binding_index_by_name(WasmBindingVector* bindings,
   return -1;
 }
 
-static int get_index_from_var(WasmBindingVector* bindings, WasmVar* var) {
+int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
     return find_binding_index_by_name(bindings, &var->name);
   return var->index;
@@ -105,33 +105,41 @@ int wasm_func_is_exported(WasmModule* module, WasmFunc* func) {
 }
 
 int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var) {
-  return get_index_from_var(&module->func_bindings, var);
+  return wasm_get_index_from_var(&module->func_bindings, var);
 }
 
 int wasm_get_func_type_index_by_var(WasmModule* module, WasmVar* var) {
-  return get_index_from_var(&module->func_type_bindings, var);
+  return wasm_get_index_from_var(&module->func_type_bindings, var);
+}
+
+int wasm_get_global_index_by_var(WasmModule* module, WasmVar* var) {
+  return wasm_get_index_from_var(&module->globals.bindings, var);
 }
 
 int wasm_get_import_index_by_var(WasmModule* module, WasmVar* var) {
-  return get_index_from_var(&module->import_bindings, var);
+  return wasm_get_index_from_var(&module->import_bindings, var);
+}
+
+int wasm_get_local_index_by_var(WasmFunc* func, WasmVar* var) {
+  return wasm_get_index_from_var(&func->params_and_locals.bindings, var);
 }
 
 WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var) {
-  int index = get_index_from_var(&module->func_bindings, var);
+  int index = wasm_get_index_from_var(&module->func_bindings, var);
   if (index < 0 || index >= module->funcs.size)
     return NULL;
   return module->funcs.data[index];
 }
 
 WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var) {
-  int index = get_index_from_var(&module->func_type_bindings, var);
+  int index = wasm_get_index_from_var(&module->func_type_bindings, var);
   if (index < 0 || index >= module->func_types.size)
     return NULL;
   return module->func_types.data[index];
 }
 
 WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var) {
-  int index = get_index_from_var(&module->import_bindings, var);
+  int index = wasm_get_index_from_var(&module->import_bindings, var);
   if (index < 0 || index >= module->imports.size)
     return NULL;
   return module->imports.data[index];
@@ -162,7 +170,7 @@ static WasmResult check_var(WasmCheckContext* ctx,
                             WasmVar* var,
                             const char* desc,
                             int* out_index) {
-  int index = get_index_from_var(bindings, var);
+  int index = wasm_get_index_from_var(bindings, var);
   if (index >= 0 && index < max_index) {
     if (out_index)
       *out_index = index;
@@ -328,7 +336,7 @@ static WasmResult check_label_var(WasmCheckContext* ctx,
                 var->name.length, var->name.start);
   else
     print_error(ctx, &var->loc, "label variable out of range (max %d)",
-                top_label ? top_label->depth + 1 : 0);
+                ctx->max_depth);
   return WASM_ERROR;
 }
 
@@ -347,14 +355,15 @@ static WasmResult push_label(WasmCheckContext* ctx,
   }
   node->label = label;
   node->next = ctx->top_label;
-  node->depth = ctx->top_label ? ctx->top_label->depth + 1 : 0;
   node->expected_type = expected_type;
   node->desc = desc;
   ctx->top_label = node;
+  ctx->max_depth++;
   return result;
 }
 
 static void pop_label(WasmCheckContext* ctx) {
+  ctx->max_depth--;
   ctx->top_label = ctx->top_label->next;
 }
 

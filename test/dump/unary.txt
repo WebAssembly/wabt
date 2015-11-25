@@ -33,7 +33,7 @@
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num args
+0000006: 00                                         ; num params
 0000007: 00                                         ; result_type
 0000008: 02                                         ; WASM_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
@@ -42,7 +42,7 @@
 000000b: 0000                                       ; func signature index
 000000d: 0000 0000                                  ; func name offset
 0000011: 0000                                       ; func body size
-0000013: 5a                                         ; OPCODE_I32_NOT
+0000013: 5a                                         ; OPCODE_BOOL_NOT
 0000014: 57                                         ; OPCODE_I32_CLZ
 0000015: 58                                         ; OPCODE_I32_CTZ
 0000016: 59                                         ; OPCODE_I32_POPCNT
@@ -59,7 +59,7 @@
 0000028: 7e                                         ; OPCODE_F32_CEIL
 0000029: 7f                                         ; OPCODE_F32_FLOOR
 000002a: 80                                         ; OPCODE_F32_TRUNC
-000002b: 81                                         ; OPCODE_F32_NEAREST
+000002b: 81                                         ; OPCODE_F32_NEAREST_INT
 000002c: 0d                                         ; OPCODE_F32_CONST
 000002d: 0000 0000                                  ; f32 literal
 0000031: 90                                         ; OPCODE_F64_NEG
@@ -68,15 +68,9 @@
 0000034: 92                                         ; OPCODE_F64_CEIL
 0000035: 93                                         ; OPCODE_F64_FLOOR
 0000036: 94                                         ; OPCODE_F64_TRUNC
-0000037: 95                                         ; OPCODE_F64_NEAREST
+0000037: 95                                         ; OPCODE_F64_NEAREST_INT
 0000038: 0c                                         ; OPCODE_F64_CONST
 0000039: 0000 0000 0000 0000                        ; f64 literal
 0000011: 2e00                                       ; FIXUP func body size
 0000041: 06                                         ; WASM_SECTION_END
-; names
-0000000: 0000 0001 0101 0000 0201 0100 0000 0000  ................
-0000010: 002e 005a 5758 5909 0072 7374 0b00 0000  ...ZWXY..rst....
-0000020: 0000 0000 007c 7b82 7e7f 8081 0d00 0000  .....|{.~.......
-0000030: 0090 8f96 9293 9495 0c00 0000 0000 0000  ................
-0000040: 0006                                     ..
 ;;; STDOUT ;;)
