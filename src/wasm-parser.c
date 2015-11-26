@@ -119,10 +119,9 @@ static int read_const(WasmType type, const char* s, const char* end,
                       WasmConst* out);
 static void dup_string_contents(WasmStringSlice * text, void** out_data,
                                 size_t* out_size);
-static void extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src);
 
 
-#line 126 "src/wasm-parser.c" /* yacc.c:339  */
+#line 125 "src/wasm-parser.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -251,7 +250,7 @@ int yyparse (WasmScanner scanner, WasmParser* parser);
 
 /* Copy the second part of user declarations.  */
 
-#line 255 "src/wasm-parser.c" /* yacc.c:358  */
+#line 254 "src/wasm-parser.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -556,25 +555,25 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   136,   136,   137,   140,   141,   145,   149,   156,   157,
-     161,   169,   176,   177,   180,   184,   185,   189,   190,   197,
-     198,   209,   212,   213,   217,   222,   228,   233,   238,   244,
-     250,   255,   262,   267,   271,   291,   296,   301,   307,   311,
-     316,   323,   331,   338,   346,   354,   359,   365,   372,   378,
-     383,   388,   389,   390,   394,   398,   402,   407,   410,   411,
-     414,   415,   418,   419,   423,   427,   433,   434,   437,   438,
-     441,   442,   449,   454,   462,   467,   477,   480,   485,   493,
-     498,   508,   511,   514,   518,   523,   529,   536,   544,   553,
-     561,   568,   575,   582,   588,   595,   603,   610,   616,   623,
-     629,   634,   640,   645,   651,   658,   666,   673,   679,   686,
-     692,   697,   703,   710,   716,   721,   725,   730,   736,   743,
-     751,   758,   764,   771,   777,   782,   788,   795,   801,   806,
-     812,   817,   821,   826,   832,   839,   845,   850,   856,   861,
-     865,   870,   876,   881,   885,   890,   896,   896,   907,   916,
-     917,   921,   931,   942,   946,   953,   957,   964,   972,   979,
-     990,   997,  1001,  1012,  1013,  1020,  1027,  1034,  1041,  1048,
-    1055,  1064,  1128,  1129,  1135,  1140,  1147,  1153,  1162,  1163,
-    1167,  1176,  1177,  1180,  1181,  1185
+       0,   135,   135,   136,   139,   140,   144,   148,   155,   156,
+     160,   168,   175,   176,   179,   183,   184,   188,   189,   196,
+     197,   208,   211,   212,   216,   221,   227,   232,   237,   243,
+     249,   254,   261,   266,   270,   290,   295,   300,   306,   310,
+     315,   322,   330,   337,   345,   353,   358,   364,   371,   377,
+     382,   387,   388,   389,   393,   397,   401,   406,   409,   410,
+     413,   414,   417,   418,   422,   426,   432,   433,   436,   437,
+     440,   441,   448,   453,   461,   466,   476,   479,   484,   492,
+     497,   507,   510,   513,   517,   522,   528,   535,   543,   552,
+     560,   567,   574,   581,   587,   594,   602,   609,   615,   622,
+     628,   633,   639,   644,   650,   657,   665,   672,   678,   685,
+     691,   696,   702,   709,   715,   720,   724,   729,   735,   742,
+     750,   757,   763,   770,   776,   781,   787,   794,   800,   805,
+     811,   816,   820,   825,   831,   838,   844,   849,   855,   860,
+     864,   869,   875,   880,   884,   889,   895,   895,   901,   910,
+     911,   915,   925,   936,   940,   947,   951,   958,   966,   973,
+     984,   991,   995,  1006,  1007,  1014,  1021,  1028,  1035,  1042,
+    1049,  1058,  1122,  1123,  1129,  1134,  1141,  1147,  1156,  1157,
+    1161,  1170,  1171,  1174,  1175,  1179
 };
 #endif
 
@@ -1762,61 +1761,61 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 136 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 135 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.types)); }
-#line 1768 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1767 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 137 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 136 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.types) = (yyvsp[-1].types); *wasm_append_type(&(yyval.types)) = (yyvsp[0].type); }
-#line 1774 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1773 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 140 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 139 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.func_sig)); }
-#line 1780 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1779 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 141 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 140 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_sig).result_type = WASM_TYPE_VOID;
       (yyval.func_sig).param_types = (yyvsp[-1].types);
     }
-#line 1789 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1788 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 145 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 144 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_sig).result_type = (yyvsp[-1].type);
       (yyval.func_sig).param_types = (yyvsp[-5].types);
     }
-#line 1798 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1797 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 149 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 148 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.func_sig).result_type = (yyvsp[-1].type); }
-#line 1804 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1803 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 156 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 155 "src/wasm-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 1810 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1809 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 157 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 156 "src/wasm-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 1816 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1815 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 161 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 160 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
       (yyval.var).type = WASM_VAR_TYPE_INDEX;
@@ -1825,73 +1824,73 @@ yyreduce:
         yyerror(&(yylsp[0]), scanner, parser, "invalid int %.*s", (yyvsp[0].text).length, (yyvsp[0].text).start);
       (yyval.var).index = index;
     }
-#line 1829 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1828 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 169 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 168 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
       (yyval.var).type = WASM_VAR_TYPE_NAME;
       DUPTEXT((yyval.var).name, (yyvsp[0].text));
     }
-#line 1839 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1838 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 176 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 175 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.vars)); }
-#line 1845 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1844 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 177 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 176 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.vars) = (yyvsp[-1].vars); *wasm_append_var(&(yyval.vars)) = (yyvsp[0].var); }
-#line 1851 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1850 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 180 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 179 "src/wasm-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 1857 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1856 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 184 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 183 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.text)); }
-#line 1863 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1862 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 185 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 184 "src/wasm-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 1869 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1868 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 189 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 188 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.u32) = 0; }
-#line 1875 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1874 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 190 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 189 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       if (!read_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32), 0))
         yyerror(&(yylsp[0]), scanner, parser, "invalid offset \"%.*s\"", (yyvsp[0].text).length,
                 (yyvsp[0].text).start);
     }
-#line 1885 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1884 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 197 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 196 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.u32) = 0; }
-#line 1891 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1890 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 198 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 197 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       if (!read_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32), 0))
         yyerror(&(yylsp[0]), scanner, parser, "invalid alignment \"%.*s\"", (yyvsp[0].text).length,
@@ -1900,105 +1899,105 @@ yyreduce:
       if (!is_power_of_two((yyval.u32)))
         yyerror(&(yylsp[0]), scanner, parser, "alignment must be power-of-two");
     }
-#line 1904 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1903 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 209 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 208 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.expr) = (yyvsp[-1].expr); (yyval.expr)->loc = (yylsp[-2]); }
-#line 1910 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1909 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 212 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 211 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_NOP); }
-#line 1916 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1915 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 213 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 212 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_BLOCK);
       (yyval.expr)->block.label = (yyvsp[0].text);
     }
-#line 1925 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1924 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 217 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 216 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_BLOCK);
       (yyval.expr)->block.label = (yyvsp[-1].text);
       (yyval.expr)->block.exprs = (yyvsp[0].exprs);
     }
-#line 1935 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1934 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 222 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 221 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_IF_ELSE);
       (yyval.expr)->if_else.cond = (yyvsp[-2].expr);
       (yyval.expr)->if_else.true_ = (yyvsp[-1].expr);
       (yyval.expr)->if_else.false_ = (yyvsp[0].expr);
     }
-#line 1946 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1945 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 228 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 227 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_IF);
       (yyval.expr)->if_else.cond = (yyvsp[-1].expr);
       (yyval.expr)->if_else.true_ = (yyvsp[0].expr);
     }
-#line 1956 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1955 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 233 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 232 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_BR_IF);
       (yyval.expr)->br_if.var = (yyvsp[-1].var);
       (yyval.expr)->br_if.cond = (yyvsp[0].expr);
     }
-#line 1966 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1965 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 238 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 237 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
       ZEROMEM((yyval.expr)->loop.outer);
       (yyval.expr)->loop.inner = (yyvsp[-1].text);
       (yyval.expr)->loop.exprs = (yyvsp[0].exprs);
     }
-#line 1977 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1976 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 244 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 243 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
       (yyval.expr)->loop.outer = (yyvsp[-2].text);
       (yyval.expr)->loop.inner = (yyvsp[-1].text);
       (yyval.expr)->loop.exprs = (yyvsp[0].exprs);
     }
-#line 1988 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1987 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 250 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 249 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_LABEL);
       (yyval.expr)->label.label = (yyvsp[-1].text);
       (yyval.expr)->label.expr = (yyvsp[0].expr);
     }
-#line 1998 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 1997 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 255 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 254 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_BR);
       (yyval.expr)->br.var.loc = (yylsp[-1]);
@@ -2006,30 +2005,30 @@ yyreduce:
       (yyval.expr)->br.var.index = 0;
       (yyval.expr)->br.expr = (yyvsp[0].expr);
     }
-#line 2010 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2009 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 262 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 261 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_BR);
       (yyval.expr)->br.var = (yyvsp[-1].var);
       (yyval.expr)->br.expr = (yyvsp[0].expr);
     }
-#line 2020 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2019 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 267 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 266 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_RETURN);
       (yyval.expr)->return_.expr = (yyvsp[0].expr);
     }
-#line 2029 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2028 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 271 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 270 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_TABLESWITCH);
       (yyval.expr)->tableswitch.label = (yyvsp[-7].text);
@@ -2050,61 +2049,61 @@ yyreduce:
         }
       }
     }
-#line 2054 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2053 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 291 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 290 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_CALL);
       (yyval.expr)->call.var = (yyvsp[-1].var);
       (yyval.expr)->call.args = (yyvsp[0].exprs);
     }
-#line 2064 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2063 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 296 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 295 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_CALL_IMPORT);
       (yyval.expr)->call.var = (yyvsp[-1].var);
       (yyval.expr)->call.args = (yyvsp[0].exprs);
     }
-#line 2074 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2073 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 301 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 300 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_CALL_INDIRECT);
       (yyval.expr)->call_indirect.var = (yyvsp[-2].var);
       (yyval.expr)->call_indirect.expr = (yyvsp[-1].expr);
       (yyval.expr)->call_indirect.args = (yyvsp[0].exprs);
     }
-#line 2085 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2084 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 307 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 306 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_GET_LOCAL);
       (yyval.expr)->get_local.var = (yyvsp[0].var);
     }
-#line 2094 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2093 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 311 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 310 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_SET_LOCAL);
       (yyval.expr)->set_local.var = (yyvsp[-1].var);
       (yyval.expr)->set_local.expr = (yyvsp[0].expr);
     }
-#line 2104 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2103 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 316 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 315 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_LOAD);
       (yyval.expr)->load.op = (yyvsp[-3].mem);
@@ -2112,11 +2111,11 @@ yyreduce:
       (yyval.expr)->load.align = (yyvsp[-1].u32);
       (yyval.expr)->load.addr = (yyvsp[0].expr);
     }
-#line 2116 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2115 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 323 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 322 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_STORE);
       (yyval.expr)->store.op = (yyvsp[-4].mem);
@@ -2125,11 +2124,11 @@ yyreduce:
       (yyval.expr)->store.addr = (yyvsp[-1].expr);
       (yyval.expr)->store.value = (yyvsp[0].expr);
     }
-#line 2129 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2128 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 331 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 330 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_LOAD_EXTEND);
       (yyval.expr)->load.op = (yyvsp[-3].mem);
@@ -2137,11 +2136,11 @@ yyreduce:
       (yyval.expr)->load.align = (yyvsp[-1].u32);
       (yyval.expr)->load.addr = (yyvsp[0].expr);
     }
-#line 2141 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2140 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 338 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 337 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_STORE_WRAP);
       (yyval.expr)->store.op = (yyvsp[-4].mem);
@@ -2150,11 +2149,11 @@ yyreduce:
       (yyval.expr)->store.addr = (yyvsp[-1].expr);
       (yyval.expr)->store.value = (yyvsp[0].expr);
     }
-#line 2154 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2153 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 346 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 345 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_CONST);
       (yyval.expr)->const_.loc = (yylsp[-1]);
@@ -2163,32 +2162,32 @@ yyreduce:
                 (yyvsp[0].text).start);
       free((char*)(yyvsp[0].text).start);
     }
-#line 2167 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2166 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 354 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 353 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_UNARY);
       (yyval.expr)->unary.op = (yyvsp[-1].unary);
       (yyval.expr)->unary.expr = (yyvsp[0].expr);
     }
-#line 2177 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2176 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 359 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 358 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_BINARY);
       (yyval.expr)->binary.op = (yyvsp[-2].binary);
       (yyval.expr)->binary.left = (yyvsp[-1].expr);
       (yyval.expr)->binary.right = (yyvsp[0].expr);
     }
-#line 2188 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2187 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 365 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 364 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_SELECT);
       (yyval.expr)->select.type = (yyvsp[-3].type);
@@ -2196,185 +2195,185 @@ yyreduce:
       (yyval.expr)->select.true_ = (yyvsp[-1].expr);
       (yyval.expr)->select.false_ = (yyvsp[0].expr);
     }
-#line 2200 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2199 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 372 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 371 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_COMPARE);
       (yyval.expr)->compare.op = (yyvsp[-2].compare);
       (yyval.expr)->compare.left = (yyvsp[-1].expr);
       (yyval.expr)->compare.right = (yyvsp[0].expr);
     }
-#line 2211 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2210 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 378 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 377 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_CONVERT);
       (yyval.expr)->convert.op = (yyvsp[-1].convert);
       (yyval.expr)->convert.expr = (yyvsp[0].expr);
     }
-#line 2221 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2220 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 383 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 382 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_CAST);
       (yyval.expr)->cast.op = (yyvsp[-1].cast);
       (yyval.expr)->cast.expr = (yyvsp[0].expr);
     }
-#line 2231 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2230 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 388 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 387 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_UNREACHABLE); }
-#line 2237 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2236 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 389 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 388 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_MEMORY_SIZE); }
-#line 2243 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2242 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 390 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 389 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_GROW_MEMORY);
       (yyval.expr)->grow_memory.expr = (yyvsp[0].expr);
     }
-#line 2252 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2251 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 394 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 393 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_HAS_FEATURE);
       (yyval.expr)->has_feature.text = (yyvsp[0].text);
     }
-#line 2261 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2260 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 398 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 397 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_LOAD_GLOBAL);
       (yyval.expr)->load_global.var = (yyvsp[0].var);
     }
-#line 2270 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2269 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 402 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 401 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_STORE_GLOBAL);
       (yyval.expr)->store_global.var = (yyvsp[-1].var);
       (yyval.expr)->store_global.expr = (yyvsp[0].expr);
     }
-#line 2280 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2279 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 407 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 406 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_PAGE_SIZE); }
-#line 2286 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2285 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 410 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 409 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.expr) = NULL; }
-#line 2292 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2291 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 414 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 413 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.exprs)); *wasm_append_expr_ptr(&(yyval.exprs)) = (yyvsp[0].expr); }
-#line 2298 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2297 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 415 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 414 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.exprs) = (yyvsp[-1].exprs); *wasm_append_expr_ptr(&(yyval.exprs)) = (yyvsp[0].expr); }
-#line 2304 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2303 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 418 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 417 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.exprs)); }
-#line 2310 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2309 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 423 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 422 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.target).type = WASM_TARGET_TYPE_CASE;
       (yyval.target).var = (yyvsp[-1].var);
     }
-#line 2319 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2318 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 427 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 426 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.target).type = WASM_TARGET_TYPE_BR;
       (yyval.target).var = (yyvsp[-1].var);
     }
-#line 2328 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2327 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 433 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 432 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.targets)); }
-#line 2334 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2333 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 434 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 433 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.targets) = (yyvsp[-1].targets); *wasm_append_target(&(yyval.targets)) = (yyvsp[0].target); }
-#line 2340 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2339 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 437 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 436 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.case_).label); (yyval.case_).exprs = (yyvsp[-1].exprs); }
-#line 2346 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2345 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 438 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 437 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.case_).label = (yyvsp[-2].text); (yyval.case_).exprs = (yyvsp[-1].exprs); }
-#line 2352 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2351 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 441 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 440 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.cases)); }
-#line 2358 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2357 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 442 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 441 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.cases) = (yyvsp[-1].cases); *wasm_append_case(&(yyval.cases)) = (yyvsp[0].case_); }
-#line 2364 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2363 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 449 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 448 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.type_bindings));
       wasm_extend_types(&(yyval.type_bindings).types, &(yyvsp[-1].types));
       wasm_destroy_type_vector(&(yyvsp[-1].types));
     }
-#line 2374 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2373 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 454 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 453 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.type_bindings));
       WasmBinding* binding = wasm_append_binding(&(yyval.type_bindings).bindings);
@@ -2383,21 +2382,21 @@ yyreduce:
       binding->index = (yyval.type_bindings).types.size;
       *wasm_append_type(&(yyval.type_bindings).types) = (yyvsp[-1].type);
     }
-#line 2387 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2386 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 462 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 461 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.type_bindings) = (yyvsp[-4].type_bindings);
       wasm_extend_types(&(yyval.type_bindings).types, &(yyvsp[-1].types));
       wasm_destroy_type_vector(&(yyvsp[-1].types));
     }
-#line 2397 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2396 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 467 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 466 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.type_bindings) = (yyvsp[-5].type_bindings);
       WasmBinding* binding = wasm_append_binding(&(yyval.type_bindings).bindings);
@@ -2406,27 +2405,27 @@ yyreduce:
       binding->index = (yyval.type_bindings).types.size;
       *wasm_append_type(&(yyval.type_bindings).types) = (yyvsp[-1].type);
     }
-#line 2410 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2409 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 477 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 476 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.type) = (yyvsp[-1].type); }
-#line 2416 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2415 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 480 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 479 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.type_bindings));
       wasm_extend_types(&(yyval.type_bindings).types, &(yyvsp[-1].types));
       wasm_destroy_type_vector(&(yyvsp[-1].types));
     }
-#line 2426 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2425 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 485 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 484 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.type_bindings));
       WasmBinding* binding = wasm_append_binding(&(yyval.type_bindings).bindings);
@@ -2435,21 +2434,21 @@ yyreduce:
       binding->index = (yyval.type_bindings).types.size;
       *wasm_append_type(&(yyval.type_bindings).types) = (yyvsp[-1].type);
     }
-#line 2439 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2438 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 493 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 492 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.type_bindings) = (yyvsp[-4].type_bindings);
       wasm_extend_types(&(yyval.type_bindings).types, &(yyvsp[-1].types));
       wasm_destroy_type_vector(&(yyvsp[-1].types));
     }
-#line 2449 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2448 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 498 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 497 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.type_bindings) = (yyvsp[-5].type_bindings);
       WasmBinding* binding = wasm_append_binding(&(yyval.type_bindings).bindings);
@@ -2458,55 +2457,55 @@ yyreduce:
       binding->index = (yyval.type_bindings).types.size;
       *wasm_append_type(&(yyval.type_bindings).types) = (yyvsp[-1].type);
     }
-#line 2462 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2461 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 508 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 507 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.var) = (yyvsp[-1].var); }
-#line 2468 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2467 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 511 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 510 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
     }
-#line 2476 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2475 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 514 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 513 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[0].text);
     }
-#line 2485 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2484 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 518 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 517 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).name = (yyvsp[-1].text);
       (yyval.func).type_var = (yyvsp[0].var);
     }
-#line 2495 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2494 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 523 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 522 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).params = (yyvsp[0].type_bindings);
     }
-#line 2506 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2505 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 529 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 528 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2514,11 +2513,11 @@ yyreduce:
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 2518 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2517 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 536 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 535 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-4].text);
@@ -2527,11 +2526,11 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2531 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2530 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 544 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 543 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-5].text);
@@ -2541,11 +2540,11 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2545 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2544 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 553 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 552 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-4].text);
@@ -2554,11 +2553,11 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2558 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2557 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 561 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 560 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2566,11 +2565,11 @@ yyreduce:
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2570 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2569 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 568 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 567 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-4].text);
@@ -2578,11 +2577,11 @@ yyreduce:
       (yyval.func).params = (yyvsp[-2].type_bindings);
       (yyval.func).locals = (yyvsp[-1].type_bindings);
     }
-#line 2582 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2581 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 575 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 574 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2590,22 +2589,22 @@ yyreduce:
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2594 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2593 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 582 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 581 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 2605 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2604 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 588 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 587 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2613,11 +2612,11 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2617 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2616 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 595 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 594 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-4].text);
@@ -2626,11 +2625,11 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2630 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2629 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 603 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 602 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2638,22 +2637,22 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2642 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2641 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 610 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 609 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2653 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2652 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 616 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 615 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2661,64 +2660,64 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2665 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2664 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 623 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 622 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2676 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2675 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 629 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 628 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-1].text);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2686 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2685 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 634 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 633 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2697 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2696 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 640 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 639 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-1].text);
       (yyval.func).params = (yyvsp[0].type_bindings);
     }
-#line 2707 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2706 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 645 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 644 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 2718 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2717 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 651 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 650 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2726,11 +2725,11 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2730 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2729 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 658 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 657 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-4].text);
@@ -2739,11 +2738,11 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2743 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2742 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 666 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 665 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2751,22 +2750,22 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2755 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2754 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 673 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 672 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2766 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2765 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 679 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 678 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2774,43 +2773,43 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2778 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2777 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 686 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 685 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2789 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2788 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 692 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 691 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-1].text);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 2799 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2798 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 697 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 696 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2810 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2809 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 703 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 702 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-3].text);
@@ -2818,62 +2817,62 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2822 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2821 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 710 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 709 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-2].text);
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2833 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2832 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 716 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 715 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).name = (yyvsp[-1].text);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2843 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2842 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 721 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 720 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).type_var = (yyvsp[0].var);
     }
-#line 2852 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2851 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 725 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 724 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).params = (yyvsp[0].type_bindings);
     }
-#line 2862 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2861 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 730 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 729 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-2].var);
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 2873 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2872 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 736 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 735 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-3].var);
@@ -2881,11 +2880,11 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2885 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2884 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 743 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 742 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-4].var);
@@ -2894,11 +2893,11 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2898 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2897 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 751 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 750 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-3].var);
@@ -2906,22 +2905,22 @@ yyreduce:
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2910 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2909 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 758 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 757 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-2].var);
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2921 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2920 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 764 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 763 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-3].var);
@@ -2929,43 +2928,43 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2933 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2932 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 771 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 770 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-2].var);
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2944 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2943 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 777 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 776 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 2954 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2953 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 782 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 781 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-2].var);
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2965 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2964 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 788 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 787 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-3].var);
@@ -2973,83 +2972,83 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2977 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2976 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 795 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 794 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).type_var = (yyvsp[-2].var);
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 2988 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2987 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 801 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 800 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 2998 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 2997 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 806 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 805 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).type_var = (yyvsp[-2].var);
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3009 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3008 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 812 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 811 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       (yyval.func).type_var = (yyvsp[-1].var);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3019 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3018 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 817 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 816 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[0].type_bindings);
     }
-#line 3028 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3027 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 821 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 820 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 3038 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3037 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 826 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 825 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-2].type_bindings);
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 3049 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3048 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 832 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 831 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-3].type_bindings);
@@ -3057,138 +3056,133 @@ yyreduce:
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3061 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3060 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 839 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 838 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-2].type_bindings);
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3072 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3071 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 845 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 844 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 3082 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3081 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 850 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 849 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-2].type_bindings);
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3093 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3092 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 856 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 855 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).params = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3103 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3102 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 861 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 860 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).result_type = (yyvsp[0].type);
     }
-#line 3112 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3111 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 865 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 864 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 3122 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3121 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 870 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 869 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).result_type = (yyvsp[-2].type);
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3133 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3132 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 876 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 875 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).result_type = (yyvsp[-1].type);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3143 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3142 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 881 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 880 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).locals = (yyvsp[0].type_bindings);
     }
-#line 3152 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3151 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 885 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 884 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).locals = (yyvsp[-1].type_bindings);
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3162 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3161 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 890 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 889 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func).flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       (yyval.func).exprs = (yyvsp[0].exprs);
     }
-#line 3171 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3170 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 896 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 895 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.func)); }
-#line 3177 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3176 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 896 "src/wasm-parser.y" /* yacc.c:1646  */
-    {
-      (yyval.func) = (yyvsp[-1].func);
-      (yyval.func).loc = (yylsp[-3]);
-      extend_type_bindings(&(yyval.func).params_and_locals, &(yyval.func).params);
-      extend_type_bindings(&(yyval.func).params_and_locals, &(yyval.func).locals);
-    }
-#line 3188 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 895 "src/wasm-parser.y" /* yacc.c:1646  */
+    { (yyval.func) = (yyvsp[-1].func); (yyval.func).loc = (yylsp[-3]); }
+#line 3182 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 907 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 901 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.segment).loc = (yylsp[-3]);
       if (!read_int32((yyvsp[-2].text).start, (yyvsp[-2].text).start + (yyvsp[-2].text).length, &(yyval.segment).addr, 0))
@@ -3196,23 +3190,23 @@ yyreduce:
                 (yyvsp[-2].text).length, (yyvsp[-2].text).start);
       dup_string_contents(&(yyvsp[-1].text), &(yyval.segment).data, &(yyval.segment).size);
     }
-#line 3200 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3194 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 916 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 910 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.segments)); }
-#line 3206 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3200 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 917 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 911 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.segments) = (yyvsp[-1].segments); *wasm_append_segment(&(yyval.segments)) = (yyvsp[0].segment); }
-#line 3212 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3206 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 921 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 915 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.memory).loc = (yylsp[-4]);
       if (!read_int32((yyvsp[-3].text).start, (yyvsp[-3].text).start + (yyvsp[-3].text).length, &(yyval.memory).initial_size, 0))
@@ -3223,11 +3217,11 @@ yyreduce:
                 (yyvsp[-2].text).length, (yyvsp[-2].text).start);
       (yyval.memory).segments = (yyvsp[-1].segments);
     }
-#line 3227 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3221 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 931 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 925 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.memory).loc = (yylsp[-3]);
       if (!read_int32((yyvsp[-2].text).start, (yyvsp[-2].text).start + (yyvsp[-2].text).length, &(yyval.memory).initial_size, 0))
@@ -3236,35 +3230,35 @@ yyreduce:
       (yyval.memory).max_size = (yyval.memory).initial_size;
       (yyval.memory).segments = (yyvsp[-1].segments);
     }
-#line 3240 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3234 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 942 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 936 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.func_type));
       (yyval.func_type).sig = (yyvsp[-2].func_sig);
     }
-#line 3249 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3243 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 946 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 940 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_type).name = (yyvsp[-5].text);
       (yyval.func_type).sig = (yyvsp[-2].func_sig);
     }
-#line 3258 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3252 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 953 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 947 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.vars) = (yyvsp[-1].vars); }
-#line 3264 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3258 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 957 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 951 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.import));
       (yyval.import).import_type = WASM_IMPORT_HAS_TYPE;
@@ -3272,11 +3266,11 @@ yyreduce:
       DUPQUOTEDTEXT((yyval.import).func_name, (yyvsp[-2].text));
       (yyval.import).type_var = (yyvsp[-1].var);
     }
-#line 3276 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3270 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 964 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 958 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.import));
       (yyval.import).import_type = WASM_IMPORT_HAS_TYPE;
@@ -3285,11 +3279,11 @@ yyreduce:
       DUPQUOTEDTEXT((yyval.import).func_name, (yyvsp[-2].text));
       (yyval.import).type_var = (yyvsp[-1].var);
     }
-#line 3289 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3283 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 972 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 966 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.import));
       (yyval.import).import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
@@ -3297,11 +3291,11 @@ yyreduce:
       DUPQUOTEDTEXT((yyval.import).func_name, (yyvsp[-2].text));
       (yyval.import).func_sig = (yyvsp[-1].func_sig);
     }
-#line 3301 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3295 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 979 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 973 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.import));
       (yyval.import).import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
@@ -3310,29 +3304,29 @@ yyreduce:
       DUPQUOTEDTEXT((yyval.import).func_name, (yyvsp[-2].text));
       (yyval.import).func_sig = (yyvsp[-1].func_sig);
     }
-#line 3314 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3308 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 990 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 984 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       DUPQUOTEDTEXT((yyval.export).name, (yyvsp[-2].text));
       (yyval.export).var = (yyvsp[-1].var);
     }
-#line 3323 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3317 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 997 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 991 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.type_bindings));
       (yyval.type_bindings).types = (yyvsp[-1].types);
     }
-#line 3332 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3326 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 162:
-#line 1001 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 995 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       ZEROMEM((yyval.type_bindings));
       WasmBinding* binding = wasm_append_binding(&(yyval.type_bindings).bindings);
@@ -3341,17 +3335,17 @@ yyreduce:
       binding->index = 0;
       *wasm_append_type(&(yyval.type_bindings).types) = (yyvsp[-1].type);
     }
-#line 3345 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3339 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 163:
-#line 1012 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1006 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.module_fields)); }
-#line 3351 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3345 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 1013 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1007 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3359,11 +3353,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
       field->func = (yyvsp[0].func);
     }
-#line 3363 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3357 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1020 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1014 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3371,11 +3365,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
       field->import = (yyvsp[0].import);
     }
-#line 3375 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3369 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 1027 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1021 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3383,11 +3377,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
       field->export = (yyvsp[0].export);
     }
-#line 3387 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3381 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 1034 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1028 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3395,11 +3389,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_TABLE;
       field->table = (yyvsp[0].vars);
     }
-#line 3399 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3393 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 1041 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1035 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3407,11 +3401,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
       field->func_type = (yyvsp[0].func_type);
     }
-#line 3411 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3405 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 1048 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1042 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3419,11 +3413,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
       field->memory = (yyvsp[0].memory);
     }
-#line 3423 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3417 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 170:
-#line 1055 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1049 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       WasmModuleField* field = wasm_append_module_field(&(yyval.module_fields));
@@ -3431,11 +3425,11 @@ yyreduce:
       field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
       field->global = (yyvsp[0].type_bindings);
     }
-#line 3435 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3429 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 171:
-#line 1064 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1058 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.module).loc = (yylsp[-2]);
       (yyval.module).fields = (yyvsp[-1].module_fields);
@@ -3489,43 +3483,43 @@ yyreduce:
             (yyval.module).memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_GLOBAL:
-            extend_type_bindings(&(yyval.module).globals, &field->global);
+            wasm_extend_type_bindings(&(yyval.module).globals, &field->global);
             break;
         }
       }
     }
-#line 3498 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3492 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 172:
-#line 1128 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1122 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.command).type = WASM_COMMAND_TYPE_MODULE; (yyval.command).module = (yyvsp[0].module); }
-#line 3504 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3498 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 173:
-#line 1129 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1123 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_INVOKE;
       (yyval.command).invoke.loc = (yylsp[-3]);
       DUPQUOTEDTEXT((yyval.command).invoke.name, (yyvsp[-2].text));
       (yyval.command).invoke.args = (yyvsp[-1].consts);
     }
-#line 3515 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3509 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 174:
-#line 1135 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1129 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_INVALID;
       (yyval.command).assert_invalid.module = (yyvsp[-2].module);
       (yyval.command).assert_invalid.text = (yyvsp[-1].text);
     }
-#line 3525 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3519 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 175:
-#line 1140 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1134 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_RETURN;
       (yyval.command).assert_return.invoke.loc = (yylsp[-5]);
@@ -3533,22 +3527,22 @@ yyreduce:
       (yyval.command).assert_return.invoke.args = (yyvsp[-3].consts);
       (yyval.command).assert_return.expected = (yyvsp[-1].const_);
     }
-#line 3537 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3531 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 176:
-#line 1147 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1141 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
       (yyval.command).assert_return_nan.invoke.loc = (yylsp[-4]);
       DUPQUOTEDTEXT((yyval.command).assert_return_nan.invoke.name, (yyvsp[-3].text));
       (yyval.command).assert_return_nan.invoke.args = (yyvsp[-2].consts);
     }
-#line 3548 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3542 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 177:
-#line 1153 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1147 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.command).type = WASM_COMMAND_TYPE_ASSERT_TRAP;
       (yyval.command).assert_trap.invoke.loc = (yylsp[-5]);
@@ -3556,23 +3550,23 @@ yyreduce:
       (yyval.command).assert_trap.invoke.args = (yyvsp[-3].consts);
       (yyval.command).assert_trap.text = (yyvsp[-1].text);
     }
-#line 3560 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3554 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 178:
-#line 1162 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1156 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.commands)); }
-#line 3566 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3560 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 179:
-#line 1163 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1157 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.commands) = (yyvsp[-1].commands); *wasm_append_command(&(yyval.commands)) = (yyvsp[0].command); }
-#line 3572 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3566 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 180:
-#line 1167 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1161 "src/wasm-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
       if (!read_const((yyvsp[-2].type), (yyvsp[-1].text).start, (yyvsp[-1].text).start + (yyvsp[-1].text).length, &(yyval.const_)))
@@ -3580,35 +3574,35 @@ yyreduce:
                 (yyvsp[-1].text).length, (yyvsp[-1].text).start);
       free((char*)(yyvsp[-1].text).start);
     }
-#line 3584 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3578 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 181:
-#line 1176 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1170 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.const_).type = WASM_TYPE_VOID; }
-#line 3590 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3584 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 183:
-#line 1180 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1174 "src/wasm-parser.y" /* yacc.c:1646  */
     { ZEROMEM((yyval.consts)); }
-#line 3596 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3590 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 184:
-#line 1181 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1175 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.consts) = (yyvsp[-1].consts); *wasm_append_const(&(yyval.consts)) = (yyvsp[0].const_); }
-#line 3602 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3596 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
   case 185:
-#line 1185 "src/wasm-parser.y" /* yacc.c:1646  */
+#line 1179 "src/wasm-parser.y" /* yacc.c:1646  */
     { (yyval.script).commands = (yyvsp[0].commands); parser->script = (yyval.script); }
-#line 3608 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3602 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 
 
-#line 3612 "src/wasm-parser.c" /* yacc.c:1646  */
+#line 3606 "src/wasm-parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -3843,7 +3837,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1188 "src/wasm-parser.y" /* yacc.c:1906  */
+#line 1182 "src/wasm-parser.y" /* yacc.c:1906  */
 
 
 DEFINE_VECTOR(type, WasmType)
@@ -4187,15 +4181,4 @@ static void dup_string_contents(WasmStringSlice* text,
   size_t actual_size = copy_string_contents(text, result, size);
   *out_data = result;
   *out_size = actual_size;
-}
-
-static void extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src) {
-  int last_type = dst->types.size;
-  int last_binding = dst->bindings.size;
-  wasm_extend_types(&dst->types, &src->types);
-  wasm_extend_bindings(&dst->bindings, &src->bindings);
-  /* fixup the binding indexes */
-  int i;
-  for (i = last_binding; i < dst->bindings.size; ++i)
-    dst->bindings.data[i].index += last_type;
 }

@@ -54,7 +54,6 @@ static int read_const(WasmType type, const char* s, const char* end,
                       WasmConst* out);
 static void dup_string_contents(WasmStringSlice * text, void** out_data,
                                 size_t* out_size);
-static void extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src);
 
 %}
 
@@ -893,12 +892,7 @@ func_info :
     }
 ;
 func :
-    LPAR FUNC { ZEROMEM($<func>$); } func_info RPAR {
-      $$ = $4;
-      $$.loc = @2;
-      extend_type_bindings(&$$.params_and_locals, &$$.params);
-      extend_type_bindings(&$$.params_and_locals, &$$.locals);
-    }
+    LPAR FUNC { ZEROMEM($<func>$); } func_info RPAR { $$ = $4; $$.loc = @2; }
 ;
 
 /* Modules */
@@ -1114,7 +1108,7 @@ module :
             $$.memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_GLOBAL:
-            extend_type_bindings(&$$.globals, &field->global);
+            wasm_extend_type_bindings(&$$.globals, &field->global);
             break;
         }
       }
@@ -1528,15 +1522,4 @@ static void dup_string_contents(WasmStringSlice* text,
   size_t actual_size = copy_string_contents(text, result, size);
   *out_data = result;
   *out_size = actual_size;
-}
-
-static void extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src) {
-  int last_type = dst->types.size;
-  int last_binding = dst->bindings.size;
-  wasm_extend_types(&dst->types, &src->types);
-  wasm_extend_bindings(&dst->bindings, &src->bindings);
-  /* fixup the binding indexes */
-  int i;
-  for (i = last_binding; i < dst->bindings.size; ++i)
-    dst->bindings.data[i].index += last_type;
 }

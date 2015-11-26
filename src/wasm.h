@@ -569,6 +569,8 @@ WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var);
 WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var);
 
+void wasm_extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src);
+
 int wasm_func_is_exported(WasmModule* module, WasmFunc* func);
 
 #endif /* WASM_H_ */

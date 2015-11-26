@@ -164,6 +164,17 @@ static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
   return result;
 }
 
+void wasm_extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src) {
+  int last_type = dst->types.size;
+  int last_binding = dst->bindings.size;
+  wasm_extend_types(&dst->types, &src->types);
+  wasm_extend_bindings(&dst->bindings, &src->bindings);
+  /* fixup the binding indexes */
+  int i;
+  for (i = last_binding; i < dst->bindings.size; ++i)
+    dst->bindings.data[i].index += last_type;
+}
+
 static WasmResult check_var(WasmCheckContext* ctx,
                             WasmBindingVector* bindings,
                             int max_index,
@@ -790,6 +801,10 @@ static WasmResult check_func(WasmCheckContext* ctx,
                       func_type->sig.param_types.size, func->params.types.size);
           result = WASM_ERROR;
         }
+      } else {
+        /* copy signature from type var */
+        func->result_type = func_type->sig.result_type;
+        wasm_extend_types(&func->params.types, &func_type->sig.param_types);
       }
     } else {
       result = WASM_ERROR;
@@ -798,8 +813,13 @@ static WasmResult check_func(WasmCheckContext* ctx,
 
   result |= check_duplicate_bindings(ctx, &func->params.bindings, "parameter");
   result |= check_duplicate_bindings(ctx, &func->locals.bindings, "local");
+
+  wasm_extend_type_bindings(&func->params_and_locals, &func->params);
+  wasm_extend_type_bindings(&func->params_and_locals, &func->locals);
+
   result |= check_exprs(ctx, module, func, &func->exprs, func->result_type,
                         " of function result");
+
   return result;
 }
 
