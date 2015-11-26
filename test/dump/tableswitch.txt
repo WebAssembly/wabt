@@ -27,8 +27,8 @@
 0000013: 01                                         ; OPCODE_BLOCK
 0000014: 01                                         ; num expressions
 0000015: 08                                         ; OPCODE_TABLESWITCH
-0000016: 0300                                       ; num targets
-0000018: 0300                                       ; num cases
+0000016: 0300                                       ; num cases
+0000018: 0300                                       ; num targets
 000001a: 0000                                       ; case index
 000001c: 0100                                       ; case index
 000001e: 0080                                       ; br depth

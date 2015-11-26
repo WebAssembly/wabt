@@ -950,8 +950,8 @@ static WasmResult write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_TABLESWITCH: {
       WasmLabelNode node;
       out_opcode(ctx, WASM_OPCODE_TABLESWITCH);
-      out_u16(ctx, expr->tableswitch.targets.size + 1, "num targets");
       out_u16(ctx, expr->tableswitch.cases.size, "num cases");
+      out_u16(ctx, expr->tableswitch.targets.size + 1, "num targets");
       int i;
       for (i = 0; i < expr->tableswitch.targets.size; ++i) {
         WasmTarget* target = &expr->tableswitch.targets.data[i];
