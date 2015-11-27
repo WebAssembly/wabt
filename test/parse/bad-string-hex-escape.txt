@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func) (export "foo\az" 0))
+(;; STDERR ;;;
+parse/bad-string-hex-escape.txt:2:28: bad escape "\a"
+;;; STDERR ;;)

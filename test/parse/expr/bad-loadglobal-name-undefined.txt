@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (load_global $n)))
+(;; STDERR ;;;
+parse/expr/bad-loadglobal-name-undefined.txt:2:28: undefined global variable "$n"
+;;; STDERR ;;)

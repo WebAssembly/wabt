@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (local foo)))
-(;; STDERR ;;;
-func/bad-local-type.txt:2:22: unexpected token "foo"
-;;; STDERR ;;)

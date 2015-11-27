@@ -1,0 +1,6 @@
+;;; ERROR: 1
+(module
+  (func foo))
+(;; STDERR ;;;
+parse/func/bad-func-name.txt:3:9: unexpected token "foo"
+;;; STDERR ;;)

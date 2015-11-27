@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module
-  (type $t (func (param i32) (result f32)))
-  (func (type $t) (param i32) (result i64)))
-(;; STDERR ;;;
-func/bad-sig-result-type-mistmatch.txt:4:4: type mismatch. got i64, expected f32
-;;; STDERR ;;)

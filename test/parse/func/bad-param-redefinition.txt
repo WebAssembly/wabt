@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (param $n i32) (param $n f32)))
+(;; STDERR ;;;
+parse/func/bad-param-redefinition.txt:2:31: redefinition of parameter "$n"
+;;; STDERR ;;)

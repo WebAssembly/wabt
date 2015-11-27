@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module
-  (func (result i32)
-    (return)))
-(;; STDERR ;;;
-expr/bad-return-too-few.txt:4:5: type mismatch of function result. got void, expected i32
-;;; STDERR ;;)

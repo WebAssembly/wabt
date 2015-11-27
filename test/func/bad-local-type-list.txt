@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (local i32 i64 foo f32)))
-(;; STDERR ;;;
-func/bad-local-type-list.txt:2:30: unexpected token "foo"
-;;; STDERR ;;)

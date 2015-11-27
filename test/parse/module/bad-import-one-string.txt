@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (import "foo" (param i32)))
+(;; STDERR ;;;
+parse/module/bad-import-one-string.txt:2:23: syntax error, unexpected (, expecting TEXT
+;;; STDERR ;;)

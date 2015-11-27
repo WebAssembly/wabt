@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (import "foo" "bar" (parump i32)))
-(;; STDERR ;;;
-module/bad-import-not-param.txt:2:30: unexpected token "parump"
-module/bad-import-not-param.txt:2:37: syntax error, unexpected VALUE_TYPE, expecting TYPE or PARAM or RESULT
-;;; STDERR ;;)

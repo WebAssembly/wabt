@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (label foo (nop))))
-(;; STDERR ;;;
-expr/bad-label-name.txt:2:22: unexpected token "foo"
-;;; STDERR ;;)

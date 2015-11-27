@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func) (export "foobar\r\n" 0))
-(;; STDERR ;;;
-bad-string-escape.txt:2:31: bad escape "\r"
-;;; STDERR ;;)

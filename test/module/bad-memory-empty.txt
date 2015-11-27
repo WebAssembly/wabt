@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (memory))
-(;; STDERR ;;;
-module/bad-memory-empty.txt:2:16: syntax error, unexpected ), expecting INT
-;;; STDERR ;;)

@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (param foo)))
-(;; STDERR ;;;
-func/bad-param.txt:2:22: unexpected token "foo"
-;;; STDERR ;;)

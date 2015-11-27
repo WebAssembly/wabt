@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module
-  (func (result i32 i32)
-    (return (i32.const 0) (i32.const 0) (i32.const 0))))
-(;; STDERR ;;;
-expr/bad-return-too-many.txt:3:21: syntax error, unexpected VALUE_TYPE, expecting )
-;;; STDERR ;;)

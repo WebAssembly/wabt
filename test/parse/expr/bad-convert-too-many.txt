@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (i32.trunc_s/f32 (f32.const 0) (nop))))
+(;; STDERR ;;;
+parse/expr/bad-convert-too-many.txt:2:46: syntax error, unexpected (, expecting )
+;;; STDERR ;;)

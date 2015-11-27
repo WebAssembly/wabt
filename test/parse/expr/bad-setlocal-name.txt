@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module (func
+  (local $n i32)
+  (set_local n (i32.const 0))))
+(;; STDERR ;;;
+parse/expr/bad-setlocal-name.txt:4:14: unexpected token "n"
+parse/expr/bad-setlocal-name.txt:4:16: syntax error, unexpected (, expecting INT or VAR
+;;; STDERR ;;)

@@ -1,0 +1,8 @@
+;;; ERROR: 1
+; foo bar
+(module)
+(;; STDERR ;;;
+parse/bad-single-semicolon.txt:2:1: unexpected char
+parse/bad-single-semicolon.txt:2:3: unexpected token "foo"
+parse/bad-single-semicolon.txt:2:7: unexpected token "bar"
+;;; STDERR ;;)

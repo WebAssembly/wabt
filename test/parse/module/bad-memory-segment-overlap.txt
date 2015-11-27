@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (memory 100 (segment 0 "hello") (segment 3 "hi")))
+(;; STDERR ;;;
+parse/module/bad-memory-segment-overlap.txt:2:42: address (3) less than end of previous segment (5)
+;;; STDERR ;;)

@@ -1,0 +1,6 @@
+;;; ERROR: 1
+(module (func (load.x32 (i32.const 0))))
+(;; STDERR ;;;
+parse/expr/bad-load-type.txt:2:16: unexpected token "load.x32"
+parse/expr/bad-load-type.txt:2:25: syntax error, unexpected (
+;;; STDERR ;;)

@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (param 0 i32)))
+(;; STDERR ;;;
+parse/func/bad-param-name.txt:2:22: syntax error, unexpected INT, expecting ) or VALUE_TYPE
+;;; STDERR ;;)

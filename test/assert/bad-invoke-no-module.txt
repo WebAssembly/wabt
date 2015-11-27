@@ -1,6 +1,0 @@
-;;; ERROR: 1
-;;; FLAGS: --spec
-(invoke "foo")
-(;; STDERR ;;;
-assert/bad-invoke-no-module.txt:3:2: invoke must occur after a module definition
-;;; STDERR ;;)

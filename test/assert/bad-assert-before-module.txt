@@ -1,6 +1,0 @@
-;;; FLAGS: --spec
-;;; ERROR: 1
-(assert_return (invoke "f") (i32.const 0))
-(;; STDERR ;;;
-assert/bad-assert-before-module.txt:3:17: invoke must occur after a module definition
-;;; STDERR ;;)

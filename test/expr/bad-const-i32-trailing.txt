@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (func (i32.const 100x)))
-(;; STDERR ;;;
-expr/bad-const-i32-trailing.txt:2:26: unexpected token "100x"
-expr/bad-const-i32-trailing.txt:2:30: syntax error, unexpected ), expecting INT or FLOAT
-;;; STDERR ;;)

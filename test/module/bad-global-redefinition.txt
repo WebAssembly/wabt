@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (global $n i32) (global $n f32))
-(;; STDERR ;;;
-module/bad-global-redefinition.txt:2:26: redefinition of global "$n"
-;;; STDERR ;;)

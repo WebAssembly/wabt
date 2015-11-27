@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (nop foo)))
-(;; STDERR ;;;
-expr/bad-nop.txt:2:20: unexpected token "foo"
-;;; STDERR ;;)

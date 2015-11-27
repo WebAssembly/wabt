@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (f32.neg (f32.const 0) (f32.const 0))))
-(;; STDERR ;;;
-expr/bad-unary-too-many.txt:2:38: syntax error, unexpected (, expecting )
-;;; STDERR ;;)

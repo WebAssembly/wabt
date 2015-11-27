@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (result)))
+(;; STDERR ;;;
+parse/func/bad-result-empty.txt:2:22: syntax error, unexpected ), expecting VALUE_TYPE
+;;; STDERR ;;)

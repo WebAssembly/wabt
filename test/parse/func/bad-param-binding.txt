@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (param $bar $baz)))
+(;; STDERR ;;;
+parse/func/bad-param-binding.txt:2:27: syntax error, unexpected VAR, expecting VALUE_TYPE
+;;; STDERR ;;)

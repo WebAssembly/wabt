@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (global i32)
-  (func (store_global 0)))
-(;; STDERR ;;;
-expr/bad-storeglobal-empty.txt:3:24: syntax error, unexpected ), expecting (
-;;; STDERR ;;)

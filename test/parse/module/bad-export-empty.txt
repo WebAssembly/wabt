@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (export))
+(;; STDERR ;;;
+parse/module/bad-export-empty.txt:2:16: syntax error, unexpected ), expecting TEXT
+;;; STDERR ;;)

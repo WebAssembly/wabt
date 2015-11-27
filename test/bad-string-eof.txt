@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (func) (export "
-(;; STDERR ;;;
-bad-string-eof.txt:3:25: newline in string
-bad-string-eof.txt:3:25: syntax error, unexpected EOF, expecting TEXT
-;;; STDERR ;;)

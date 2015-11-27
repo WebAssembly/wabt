@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (i32.add (i32.const 0))))
+(;; STDERR ;;;
+parse/expr/bad-binary-one-expr.txt:2:37: syntax error, unexpected ), expecting (
+;;; STDERR ;;)

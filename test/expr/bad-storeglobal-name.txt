@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module (global $n i32)
-  (func (store_global n (i32.const 0))))
-(;; STDERR ;;;
-expr/bad-storeglobal-name.txt:3:23: unexpected token "n"
-expr/bad-storeglobal-name.txt:3:25: syntax error, unexpected (, expecting INT or VAR
-;;; STDERR ;;)

@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (memory 10 (segment 5 "56789a")))
-(;; STDERR ;;;
-module/bad-memory-segment-end-oob.txt:2:21: segment ends past the end of initial memory size (10)
-;;; STDERR ;;)

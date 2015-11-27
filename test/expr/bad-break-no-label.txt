@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (break)))
-(;; STDERR ;;;
-expr/bad-break-no-label.txt:2:16: label variable out of range (max 0)
-;;; STDERR ;;)

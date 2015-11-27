@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (if (i32.const 0))))
+(;; STDERR ;;;
+parse/expr/bad-if-no-then.txt:2:32: syntax error, unexpected ), expecting (
+;;; STDERR ;;)

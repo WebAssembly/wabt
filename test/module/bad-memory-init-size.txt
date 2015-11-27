@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (memory foo))
-(;; STDERR ;;;
-module/bad-memory-init-size.txt:2:17: unexpected token "foo"
-module/bad-memory-init-size.txt:2:20: syntax error, unexpected ), expecting INT
-;;; STDERR ;;)

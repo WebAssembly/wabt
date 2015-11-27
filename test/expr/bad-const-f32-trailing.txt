@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (func (f32.const 1234.5678foo)))
-(;; STDERR ;;;
-expr/bad-const-f32-trailing.txt:2:26: unexpected token "1234.5678foo"
-expr/bad-const-f32-trailing.txt:2:38: syntax error, unexpected ), expecting INT or FLOAT
-;;; STDERR ;;)

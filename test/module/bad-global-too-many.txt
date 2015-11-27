@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (global $n i32 i32))
-(;; STDERR ;;;
-module/bad-global-too-many.txt:2:24: syntax error, unexpected VALUE_TYPE, expecting )
-;;; STDERR ;;)

@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(foo bar)
+(;; STDERR ;;;
+parse/bad-toplevel.txt:2:2: unexpected token "foo"
+parse/bad-toplevel.txt:2:6: unexpected token "bar"
+parse/bad-toplevel.txt:2:9: syntax error, unexpected )
+;;; STDERR ;;)

@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (result i32 i64)))
+(;; STDERR ;;;
+parse/func/bad-result-multi.txt:2:27: syntax error, unexpected VALUE_TYPE, expecting )
+;;; STDERR ;;)

@@ -1,9 +1,0 @@
-;;; ERROR: 1
-;;; FLAGS: --spec
-(module
-  (func $foo (param i32) (result f32) (f32.const 0))
-  (export "foo" $foo))
-(assert_return_nan (invoke "foo"))
-(;; STDERR ;;;
-assert/bad-assertreturnnan-too-few.txt:6:21: too few parameters to function. got 0, expected 1
-;;; STDERR ;;)

@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (global i32 i32 foo))
-(;; STDERR ;;;
-module/bad-global-type-list.txt:2:25: unexpected token "foo"
-;;; STDERR ;;)

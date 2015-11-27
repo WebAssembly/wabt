@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (label $foo (break foo))))
-(;; STDERR ;;;
-expr/bad-break-name.txt:2:34: unexpected token "foo"
-;;; STDERR ;;)

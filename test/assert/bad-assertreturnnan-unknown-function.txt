@@ -1,7 +1,0 @@
-;;; ERROR: 1
-;;; FLAGS: --spec
-(module)
-(assert_return_nan (invoke "foo"))
-(;; STDERR ;;;
-assert/bad-assertreturnnan-unknown-function.txt:4:21: unknown function export "foo"
-;;; STDERR ;;)

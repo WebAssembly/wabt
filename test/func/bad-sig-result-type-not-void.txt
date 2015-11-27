@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module
-  (type $t (func (param i32)))
-  (func (type $t) (param i32) (result f32)))
-(;; STDERR ;;;
-func/bad-sig-result-type-not-void.txt:4:4: type mismatch. got f32, expected void
-;;; STDERR ;;)

@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (i32.store align=foo (i32.const 0) (i32.const 0))))
-(;; STDERR ;;;
-expr/bad-store-align.txt:2:26: unexpected token "align=foo"
-;;; STDERR ;;)

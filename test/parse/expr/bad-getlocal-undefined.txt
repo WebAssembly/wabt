@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (get_local 0)))
+(;; STDERR ;;;
+parse/expr/bad-getlocal-undefined.txt:2:26: local variable out of range (max 0)
+;;; STDERR ;;)

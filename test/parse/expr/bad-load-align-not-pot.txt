@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (i32.load align=3 (i32.const 0))))
+(;; STDERR ;;;
+parse/expr/bad-load-align-not-pot.txt:2:25: alignment must be power-of-two
+;;; STDERR ;;)

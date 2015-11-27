@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (func (store.float32 (i32.const 0) (f32.const 0))))
-(;; STDERR ;;;
-expr/bad-store-type.txt:2:16: unexpected token "store.float32"
-expr/bad-store-type.txt:2:30: syntax error, unexpected (
-;;; STDERR ;;)

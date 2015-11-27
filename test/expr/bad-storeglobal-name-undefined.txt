@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (store_global $n (i32.const 0))))
-(;; STDERR ;;;
-expr/bad-storeglobal-name-undefined.txt:2:29: undefined global variable "$n"
-;;; STDERR ;;)

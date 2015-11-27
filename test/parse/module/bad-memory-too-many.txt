@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module
+  (memory 100)
+  (memory 1000))
+(;; STDERR ;;;
+parse/module/bad-memory-too-many.txt:4:3: only one memory block allowed
+;;; STDERR ;;)

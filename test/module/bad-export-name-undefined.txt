@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (export "foo" $foo))
-(;; STDERR ;;;
-module/bad-export-name-undefined.txt:2:23: undefined function variable "$foo"
-;;; STDERR ;;)

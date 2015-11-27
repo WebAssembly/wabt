@@ -1,6 +1,0 @@
-;;; ERROR: 1
-(module (memory 100 (segment foo)))
-(;; STDERR ;;;
-module/bad-memory-segment-address.txt:2:30: unexpected token "foo"
-module/bad-memory-segment-address.txt:2:33: syntax error, unexpected ), expecting INT
-;;; STDERR ;;)

@@ -1,0 +1,6 @@
+;;; ERROR: 1
+(module (func (result foo)))
+(;; STDERR ;;;
+parse/func/bad-result-type.txt:2:23: unexpected token "foo"
+parse/func/bad-result-type.txt:2:26: syntax error, unexpected ), expecting VALUE_TYPE
+;;; STDERR ;;)

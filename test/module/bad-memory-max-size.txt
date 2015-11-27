@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (memory 100 foo))
-(;; STDERR ;;;
-module/bad-memory-max-size.txt:2:21: unexpected token "foo"
-;;; STDERR ;;)

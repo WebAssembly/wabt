@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (i32.lt_s (i32.const 0))))
+(;; STDERR ;;;
+parse/expr/bad-compare-one-expr.txt:2:38: syntax error, unexpected ), expecting (
+;;; STDERR ;;)

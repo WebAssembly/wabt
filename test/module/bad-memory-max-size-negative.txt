@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (memory 100 -5))
-(;; STDERR ;;;
-module/bad-memory-max-size-negative.txt:2:21: invalid max memory size "-5"
-;;; STDERR ;;)
