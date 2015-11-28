@@ -4,18 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "wasm-common.h"
 #include "wasm-vector.h"
-
-#ifdef __cplusplus
-#define EXTERN_C extern "C"
-#else
-#define EXTERN_C
-#endif
-
-typedef enum WasmResult {
-  WASM_OK,
-  WASM_ERROR,
-} WasmResult;
+#include "wasm-writer.h"
 
 typedef struct WasmStringSlice {
   const char* start;
@@ -544,19 +535,10 @@ typedef struct WasmParser {
   int errors;
 } WasmParser;
 
-typedef struct WasmBinaryWriter {
-  void* user_data;
-  void (*write_data)(size_t offset,
-                     const void* data,
-                     size_t size,
-                     void* user_data);
-  int log_writes;
-} WasmBinaryWriter;
-
 WasmScanner wasm_new_scanner(const char* filename);
 void wasm_free_scanner(WasmScanner scanner);
 WasmResult wasm_check_script(WasmScript*);
-WasmResult wasm_write_binary(WasmBinaryWriter*, WasmScript*);
+WasmResult wasm_write_binary(WasmWriter*, WasmScript*);
 
 int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var);
 int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var);

@@ -323,7 +323,7 @@ typedef struct WasmLabelNode {
 } WasmLabelNode;
 
 typedef struct WasmWriteContext {
-  WasmBinaryWriter* writer;
+  WasmWriter* writer;
   size_t offset;
   WasmLabelNode* top_label;
   int max_depth;
@@ -1208,7 +1208,7 @@ static WasmResult write_command(WasmWriteContext* ctx, WasmCommand* command) {
   }
 }
 
-WasmResult wasm_write_binary(WasmBinaryWriter* writer, WasmScript* script) {
+WasmResult wasm_write_binary(WasmWriter* writer, WasmScript* script) {
   WasmWriteContext ctx = {};
   ctx.writer = writer;
   WasmResult result = WASM_OK;

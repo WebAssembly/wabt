@@ -166,42 +166,6 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
-typedef struct WasmFileInfo {
-  FILE* file;
-  size_t offset;
-} WasmFileInfo;
-
-static void write_binary_file(size_t offset,
-                              const void* data,
-                              size_t size,
-                              void* user_data) {
-  WasmFileInfo* info = user_data;
-  if (offset != info->offset) {
-    fseek(info->file, offset, SEEK_SET);
-    info->offset = offset;
-  }
-  fwrite(data, size, 1, info->file);
-  info->offset += size;
-}
-
-static WasmResult open_binary_file(WasmBinaryWriter* writer,
-                                   WasmFileInfo* info,
-                                   const char* filename) {
-  info->file = fopen(filename, "wb");
-  if (!info->file)
-    return WASM_ERROR;
-
-  info->offset = 0;
-  writer->user_data = info;
-  writer->write_data = write_binary_file;
-  return WASM_OK;
-}
-
-static void close_binary_file(WasmBinaryWriter* writer) {
-  WasmFileInfo* info = writer->user_data;
-  fclose(info->file);
-}
-
 int main(int argc, char** argv) {
   parse_options(argc, argv);
 
@@ -218,19 +182,18 @@ int main(int argc, char** argv) {
     result |= wasm_check_script(&parser.script);
 
     if (result == WASM_OK) {
-      WasmBinaryWriter writer = {};
-      WasmFileInfo info = {};
+      WasmFileWriter writer = {};
       if (s_verbose)
-        writer.log_writes = 1;
+        writer.base.log_writes = 1;
 
       if (s_outfile) {
-        if (open_binary_file(&writer, &info, s_outfile) == WASM_OK) {
-          result |= wasm_write_binary(&writer, &parser.script);
-          close_binary_file(&writer);
+        if (wasm_init_file_writer(&writer, s_outfile) == WASM_OK) {
+          result |= wasm_write_binary(&writer.base, &parser.script);
+          wasm_close_file_writer(&writer);
         }
       } else if (s_verbose) {
         /* don't write file output, but we still write the verbose output */
-        result |= wasm_write_binary(&writer, &parser.script);
+        result |= wasm_write_binary(&writer.base, &parser.script);
       }
     }
   }
