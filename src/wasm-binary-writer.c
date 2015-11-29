@@ -221,9 +221,7 @@ typedef enum WasmOpcode {
 } WasmOpcode;
 
 #define V(name, code) [code] = "OPCODE_" #name,
-static const char* s_opcode_names[] = {
-  FOREACH_OPCODE(V)
-};
+static const char* s_opcode_names[] = {FOREACH_OPCODE(V)};
 #undef V
 
 static uint8_t s_binary_opcodes[] = {
@@ -277,29 +275,18 @@ static uint8_t s_convert_opcodes[] = {
 };
 
 static uint8_t s_mem_opcodes[] = {
-  WASM_OPCODE_F32_LOAD_MEM,
-  WASM_OPCODE_F32_STORE_MEM,
-  WASM_OPCODE_F64_LOAD_MEM,
-  WASM_OPCODE_F64_STORE_MEM,
-  WASM_OPCODE_I32_LOAD_MEM,
-  WASM_OPCODE_I32_LOAD_MEM8_S,
-  WASM_OPCODE_I32_LOAD_MEM8_U,
-  WASM_OPCODE_I32_LOAD_MEM16_S,
-  WASM_OPCODE_I32_LOAD_MEM16_U,
-  WASM_OPCODE_I32_STORE_MEM,
-  WASM_OPCODE_I32_STORE_MEM8,
-  WASM_OPCODE_I32_STORE_MEM16,
-  WASM_OPCODE_I64_LOAD_MEM,
-  WASM_OPCODE_I64_LOAD_MEM8_S,
-  WASM_OPCODE_I64_LOAD_MEM8_U,
-  WASM_OPCODE_I64_LOAD_MEM16_S,
-  WASM_OPCODE_I64_LOAD_MEM16_U,
-  WASM_OPCODE_I64_LOAD_MEM32_S,
-  WASM_OPCODE_I64_LOAD_MEM32_U,
-  WASM_OPCODE_I64_STORE_MEM,
-  WASM_OPCODE_I64_STORE_MEM8,
-  WASM_OPCODE_I64_STORE_MEM16,
-  WASM_OPCODE_I64_STORE_MEM32,
+    WASM_OPCODE_F32_LOAD_MEM,     WASM_OPCODE_F32_STORE_MEM,
+    WASM_OPCODE_F64_LOAD_MEM,     WASM_OPCODE_F64_STORE_MEM,
+    WASM_OPCODE_I32_LOAD_MEM,     WASM_OPCODE_I32_LOAD_MEM8_S,
+    WASM_OPCODE_I32_LOAD_MEM8_U,  WASM_OPCODE_I32_LOAD_MEM16_S,
+    WASM_OPCODE_I32_LOAD_MEM16_U, WASM_OPCODE_I32_STORE_MEM,
+    WASM_OPCODE_I32_STORE_MEM8,   WASM_OPCODE_I32_STORE_MEM16,
+    WASM_OPCODE_I64_LOAD_MEM,     WASM_OPCODE_I64_LOAD_MEM8_S,
+    WASM_OPCODE_I64_LOAD_MEM8_U,  WASM_OPCODE_I64_LOAD_MEM16_S,
+    WASM_OPCODE_I64_LOAD_MEM16_U, WASM_OPCODE_I64_LOAD_MEM32_S,
+    WASM_OPCODE_I64_LOAD_MEM32_U, WASM_OPCODE_I64_STORE_MEM,
+    WASM_OPCODE_I64_STORE_MEM8,   WASM_OPCODE_I64_STORE_MEM16,
+    WASM_OPCODE_I64_STORE_MEM32,
 };
 
 static uint8_t s_unary_opcodes[] = {
@@ -327,6 +314,7 @@ typedef struct WasmWriteContext {
   size_t offset;
   WasmLabelNode* top_label;
   int max_depth;
+  WasmResult result;
 
   int* import_sig_indexes;
   int* func_sig_indexes;
@@ -408,18 +396,21 @@ static void out_data(WasmWriteContext* ctx,
                      const void* src,
                      size_t size,
                      const char* desc) {
+  if (ctx->result != WASM_OK)
+    return;
   if (ctx->writer->log_writes)
     dump_memory(src, size, offset, 0, desc);
   if (ctx->writer->write_data)
-    ctx->writer->write_data(offset, src, size, ctx->writer->user_data);
+    ctx->result =
+        ctx->writer->write_data(offset, src, size, ctx->writer->user_data);
 }
 
 /* TODO(binji): endianness */
-#define OUT_TYPE(name, ctype)                                   \
-  static void out_##name(WasmWriteContext* ctx, ctype value,    \
-                         const char* desc) {                    \
+#define OUT_TYPE(name, ctype)                                \
+  static void out_##name(WasmWriteContext* ctx, ctype value, \
+                         const char* desc) {                 \
     out_data(ctx, ctx->offset, &value, sizeof(value), desc); \
-    ctx->offset += sizeof(value);                               \
+    ctx->offset += sizeof(value);                            \
   }
 
 OUT_TYPE(u8, uint8_t)
@@ -691,49 +682,45 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   }
 }
 
-static WasmResult write_tableswitch_target(WasmWriteContext* ctx,
-                                           WasmBindingVector* case_bindings,
-                                           WasmCaseVector* cases,
-                                           WasmTarget* target) {
+static void write_tableswitch_target(WasmWriteContext* ctx,
+                                     WasmBindingVector* case_bindings,
+                                     WasmCaseVector* cases,
+                                     WasmTarget* target) {
   switch (target->type) {
     case WASM_TARGET_TYPE_CASE: {
       int index = wasm_get_index_from_var(case_bindings, &target->var);
       assert(index >= 0 && index < cases->size);
       out_u16(ctx, index, "case index");
-      break;
     }
 
     case WASM_TARGET_TYPE_BR: {
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &target->var);
       out_u16(ctx, 0x8000 | (ctx->max_depth - node->depth - 1), "br depth");
-      break;
     }
   }
-  return WASM_OK;
 }
 
-static WasmResult write_expr_list(WasmWriteContext* ctx,
-                                  WasmModule* module,
-                                  WasmFunc* func,
-                                  WasmExprPtrVector* exprs);
+static void write_expr_list(WasmWriteContext* ctx,
+                            WasmModule* module,
+                            WasmFunc* func,
+                            WasmExprPtrVector* exprs);
 
-static WasmResult write_expr(WasmWriteContext* ctx,
-                             WasmModule* module,
-                             WasmFunc* func,
-                             WasmExpr* expr) {
-  WasmResult result = WASM_OK;
+static void write_expr(WasmWriteContext* ctx,
+                       WasmModule* module,
+                       WasmFunc* func,
+                       WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
       out_opcode(ctx, binary_opcode(&expr->binary.op));
-      result |= write_expr(ctx, module, func, expr->binary.left);
-      result |= write_expr(ctx, module, func, expr->binary.right);
+      write_expr(ctx, module, func, expr->binary.left);
+      write_expr(ctx, module, func, expr->binary.right);
       break;
     case WASM_EXPR_TYPE_BLOCK: {
       WasmLabelNode node;
       push_label(ctx, &node, &expr->block.label, WASM_NO_FORCE_LABEL);
       out_opcode(ctx, WASM_OPCODE_BLOCK);
       out_u8(ctx, expr->block.exprs.size, "num expressions");
-      result |= write_expr_list(ctx, module, func, &expr->block.exprs);
+      write_expr_list(ctx, module, func, &expr->block.exprs);
       pop_label(ctx, &expr->block.label);
       break;
     }
@@ -743,7 +730,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       out_opcode(ctx, WASM_OPCODE_BR);
       out_u8(ctx, ctx->max_depth - node->depth - 1, "break depth");
       if (expr->br.expr)
-        result |= write_expr(ctx, module, func, expr->br.expr);
+        write_expr(ctx, module, func, expr->br.expr);
       else
         out_opcode(ctx, WASM_OPCODE_NOP);
       break;
@@ -753,7 +740,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       assert(node);
       out_opcode(ctx, WASM_OPCODE_BR_IF);
       out_u8(ctx, ctx->max_depth - node->depth - 1, "break depth");
-      result |= write_expr(ctx, module, func, expr->br_if.cond);
+      write_expr(ctx, module, func, expr->br_if.cond);
       /* TODO(binji): support br_if expression */
       out_opcode(ctx, WASM_OPCODE_NOP);
       break;
@@ -764,7 +751,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       out_opcode(ctx, WASM_OPCODE_CALL_FUNCTION);
       /* defined functions are always after all imports */
       out_leb128(ctx, module->imports.size + index, "func index");
-      result |= write_expr_list(ctx, module, func, &expr->call.args);
+      write_expr_list(ctx, module, func, &expr->call.args);
       break;
     }
     case WASM_EXPR_TYPE_CALL_IMPORT: {
@@ -773,7 +760,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       out_opcode(ctx, WASM_OPCODE_CALL_FUNCTION);
       /* imports are always first */
       out_leb128(ctx, index, "import index");
-      result |= write_expr_list(ctx, module, func, &expr->call.args);
+      write_expr_list(ctx, module, func, &expr->call.args);
       break;
     }
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
@@ -782,18 +769,18 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       assert(index >= 0 && index < module->func_types.size);
       out_opcode(ctx, WASM_OPCODE_CALL_INDIRECT);
       out_leb128(ctx, index, "signature index");
-      result |= write_expr(ctx, module, func, expr->call_indirect.expr);
-      result |= write_expr_list(ctx, module, func, &expr->call_indirect.args);
+      write_expr(ctx, module, func, expr->call_indirect.expr);
+      write_expr_list(ctx, module, func, &expr->call_indirect.args);
       break;
     }
     case WASM_EXPR_TYPE_CAST:
       out_opcode(ctx, cast_opcode(&expr->cast.op));
-      result |= write_expr(ctx, module, func, expr->cast.expr);
+      write_expr(ctx, module, func, expr->cast.expr);
       break;
     case WASM_EXPR_TYPE_COMPARE:
       out_opcode(ctx, compare_opcode(&expr->compare.op));
-      result |= write_expr(ctx, module, func, expr->compare.left);
-      result |= write_expr(ctx, module, func, expr->compare.right);
+      write_expr(ctx, module, func, expr->compare.left);
+      write_expr(ctx, module, func, expr->compare.right);
       break;
     case WASM_EXPR_TYPE_CONST:
       switch (expr->const_.type) {
@@ -827,7 +814,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_CONVERT:
       out_opcode(ctx, convert_opcode(&expr->convert.op));
-      result |= write_expr(ctx, module, func, expr->convert.expr);
+      write_expr(ctx, module, func, expr->convert.expr);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
@@ -838,7 +825,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
     }
     case WASM_EXPR_TYPE_GROW_MEMORY:
       out_opcode(ctx, WASM_OPCODE_RESIZE_MEM_L);
-      result |= write_expr(ctx, module, func, expr->grow_memory.expr);
+      write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
     case WASM_EXPR_TYPE_HAS_FEATURE:
       /* TODO(binji): add when supported by v8-native */
@@ -847,21 +834,21 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_IF:
       out_opcode(ctx, WASM_OPCODE_IF);
-      result |= write_expr(ctx, module, func, expr->if_.cond);
-      result |= write_expr(ctx, module, func, expr->if_.true_);
+      write_expr(ctx, module, func, expr->if_.cond);
+      write_expr(ctx, module, func, expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
       out_opcode(ctx, WASM_OPCODE_IF_THEN);
-      result |= write_expr(ctx, module, func, expr->if_else.cond);
-      result |= write_expr(ctx, module, func, expr->if_else.true_);
-      result |= write_expr(ctx, module, func, expr->if_else.false_);
+      write_expr(ctx, module, func, expr->if_else.cond);
+      write_expr(ctx, module, func, expr->if_else.true_);
+      write_expr(ctx, module, func, expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LABEL: {
       WasmLabelNode node;
       push_label(ctx, &node, &expr->label.label, WASM_FORCE_LABEL);
       out_opcode(ctx, WASM_OPCODE_BLOCK);
       out_u8(ctx, 1, "num expressions");
-      result |= write_expr(ctx, module, func, expr->label.expr);
+      write_expr(ctx, module, func, expr->label.expr);
       pop_label(ctx, &expr->label.label);
       break;
     }
@@ -879,7 +866,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       out_u8(ctx, access, "load access byte");
       if (expr->load.offset)
         out_leb128(ctx, (uint32_t)expr->load.offset, "load offset");
-      result |= write_expr(ctx, module, func, expr->load.addr);
+      write_expr(ctx, module, func, expr->load.addr);
       break;
     }
     case WASM_EXPR_TYPE_LOAD_GLOBAL: {
@@ -895,7 +882,7 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       push_label(ctx, &inner, &expr->loop.inner, WASM_FORCE_LABEL);
       out_opcode(ctx, WASM_OPCODE_LOOP);
       out_u8(ctx, expr->loop.exprs.size, "num expressions");
-      result |= write_expr_list(ctx, module, func, &expr->loop.exprs);
+      write_expr_list(ctx, module, func, &expr->loop.exprs);
       pop_label(ctx, &expr->loop.inner);
       pop_label(ctx, &expr->loop.outer);
       break;
@@ -911,19 +898,19 @@ static WasmResult write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_RETURN:
       out_opcode(ctx, WASM_OPCODE_RETURN);
       if (expr->return_.expr)
-        result |= write_expr(ctx, module, func, expr->return_.expr);
+        write_expr(ctx, module, func, expr->return_.expr);
       break;
     case WASM_EXPR_TYPE_SELECT:
       out_opcode(ctx, WASM_OPCODE_SELECT);
-      result |= write_expr(ctx, module, func, expr->select.cond);
-      result |= write_expr(ctx, module, func, expr->select.true_);
-      result |= write_expr(ctx, module, func, expr->select.false_);
+      write_expr(ctx, module, func, expr->select.cond);
+      write_expr(ctx, module, func, expr->select.true_);
+      write_expr(ctx, module, func, expr->select.false_);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       out_opcode(ctx, WASM_OPCODE_SET_LOCAL);
       out_leb128(ctx, ctx->remapped_locals[index], "remapped local index");
-      result |= write_expr(ctx, module, func, expr->set_local.expr);
+      write_expr(ctx, module, func, expr->set_local.expr);
       break;
     }
     case WASM_EXPR_TYPE_STORE:
@@ -936,15 +923,15 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       out_u8(ctx, access, "store access byte");
       if (expr->store.offset)
         out_leb128(ctx, (uint32_t)expr->store.offset, "store offset");
-      result |= write_expr(ctx, module, func, expr->store.addr);
-      result |= write_expr(ctx, module, func, expr->store.value);
+      write_expr(ctx, module, func, expr->store.addr);
+      write_expr(ctx, module, func, expr->store.value);
       break;
     }
     case WASM_EXPR_TYPE_STORE_GLOBAL: {
       out_opcode(ctx, WASM_OPCODE_STORE_GLOBAL);
       int index = wasm_get_global_index_by_var(module, &expr->load_global.var);
       out_leb128(ctx, index, "global index");
-      result |= write_expr(ctx, module, func, expr->store_global.expr);
+      write_expr(ctx, module, func, expr->store_global.expr);
       break;
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
@@ -955,24 +942,23 @@ static WasmResult write_expr(WasmWriteContext* ctx,
       int i;
       for (i = 0; i < expr->tableswitch.targets.size; ++i) {
         WasmTarget* target = &expr->tableswitch.targets.data[i];
-        result |=
-            write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
-                                     &expr->tableswitch.cases, target);
+        write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
+                                 &expr->tableswitch.cases, target);
       }
-      result |= write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
-                                         &expr->tableswitch.cases,
-                                         &expr->tableswitch.default_target);
+      write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
+                               &expr->tableswitch.cases,
+                               &expr->tableswitch.default_target);
       push_label(ctx, &node, &expr->tableswitch.label, WASM_NO_FORCE_LABEL);
-      result |= write_expr(ctx, module, func, expr->tableswitch.expr);
+      write_expr(ctx, module, func, expr->tableswitch.expr);
       for (i = 0; i < expr->tableswitch.cases.size; ++i) {
         WasmCase* case_ = &expr->tableswitch.cases.data[i];
         if (case_->exprs.size) {
           if (case_->exprs.size > 1) {
             out_opcode(ctx, WASM_OPCODE_BLOCK);
             out_u8(ctx, case_->exprs.size, "num expressions");
-            result |= write_expr_list(ctx, module, func, &case_->exprs);
+            write_expr_list(ctx, module, func, &case_->exprs);
           } else {
-            result |= write_expr(ctx, module, func, case_->exprs.data[0]);
+            write_expr(ctx, module, func, case_->exprs.data[0]);
           }
         } else {
           out_u8(ctx, WASM_OPCODE_NOP, "WASM_OPCODE_NOP for fallthrough");
@@ -983,41 +969,37 @@ static WasmResult write_expr(WasmWriteContext* ctx,
     }
     case WASM_EXPR_TYPE_UNARY:
       out_opcode(ctx, unary_opcode(&expr->unary.op));
-      result |= write_expr(ctx, module, func, expr->unary.expr);
+      write_expr(ctx, module, func, expr->unary.expr);
       break;
     case WASM_EXPR_TYPE_UNREACHABLE:
       out_opcode(ctx, WASM_OPCODE_UNREACHABLE);
       break;
   }
-  return result;
 }
 
-static WasmResult write_expr_list(WasmWriteContext* ctx,
-                                  WasmModule* module,
-                                  WasmFunc* func,
-                                  WasmExprPtrVector* exprs) {
-  WasmResult result = WASM_OK;
+static void write_expr_list(WasmWriteContext* ctx,
+                            WasmModule* module,
+                            WasmFunc* func,
+                            WasmExprPtrVector* exprs) {
   int i;
   for (i = 0; i < exprs->size; ++i)
-    result |= write_expr(ctx, module, func, exprs->data[i]);
-  return result;
+    write_expr(ctx, module, func, exprs->data[i]);
 }
 
-static WasmResult write_func(WasmWriteContext* ctx,
-                             WasmModule* module,
-                             WasmFunc* func) {
-  return write_expr_list(ctx, module, func, &func->exprs);
+static void write_func(WasmWriteContext* ctx,
+                       WasmModule* module,
+                       WasmFunc* func) {
+  write_expr_list(ctx, module, func, &func->exprs);
 }
 
-static WasmResult write_module(WasmWriteContext* ctx, WasmModule* module) {
-  WasmResult result = WASM_OK;
+static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   int i;
-
   ctx->offset = 0;
   size_t segments_offset;
   if (module->memory) {
     out_u8(ctx, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
-    out_u8(ctx, log_two_u32(module->memory->initial_size), "min mem size log 2");
+    out_u8(ctx, log_two_u32(module->memory->initial_size),
+           "min mem size log 2");
     out_u8(ctx, log_two_u32(module->memory->max_size), "max mem size log 2");
     out_u8(ctx, DEFAULT_MEMORY_EXPORT, "export mem");
 
@@ -1100,7 +1082,7 @@ static WasmResult write_module(WasmWriteContext* ctx, WasmModule* module) {
 
       int is_exported = wasm_func_is_exported(module, func);
       /* TODO(binji): remove? */
-      int has_name = 1;  /* is_exported */
+      int has_name = 1; /* is_exported */
       int has_locals = func->locals.types.size > 0;
       uint8_t flags = 0;
       if (has_name)
@@ -1183,14 +1165,13 @@ static WasmResult write_module(WasmWriteContext* ctx, WasmModule* module) {
                "FIXUP func name offset");
     out_str(ctx, export->name.start, export->name.length, "export name");
   }
-
-  return result;
 }
 
-static WasmResult write_command(WasmWriteContext* ctx, WasmCommand* command) {
+static void write_command(WasmWriteContext* ctx, WasmCommand* command) {
   switch (command->type) {
     case WASM_COMMAND_TYPE_MODULE:
-      return write_module(ctx, &command->module);
+      write_module(ctx, &command->module);
+      break;
 #if 0
     case WASM_COMMAND_TYPE_INVOKE:
       return write_invoke(writer, &command->invoke, WASM_TYPE_VOID);
@@ -1204,16 +1185,16 @@ static WasmResult write_command(WasmWriteContext* ctx, WasmCommand* command) {
       return write_invoke(writer, &command->assert_trap.invoke, WASM_TYPE_VOID);
 #endif
     default:
-      return WASM_OK;
+      break;
   }
 }
 
 WasmResult wasm_write_binary(WasmWriter* writer, WasmScript* script) {
   WasmWriteContext ctx = {};
+  ctx.result = WASM_OK;
   ctx.writer = writer;
-  WasmResult result = WASM_OK;
   int i;
   for (i = 0; i < script->commands.size; ++i)
-    result |= write_command(&ctx, &script->commands.data[i]);
-  return result;
+    write_command(&ctx, &script->commands.data[i]);
+  return ctx.result;
 }

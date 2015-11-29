@@ -170,32 +170,34 @@ int main(int argc, char** argv) {
   parse_options(argc, argv);
 
   WasmScanner scanner = wasm_new_scanner(s_infile);
-  if (!scanner) {
+  if (!scanner)
     FATAL("unable to read %s\n", s_infile);
-  }
+
   WasmParser parser = {};
   WasmResult result = yyparse(scanner, &parser);
   result = result || parser.errors;
   wasm_free_scanner(scanner);
 
-  if (result == WASM_OK) {
-    result |= wasm_check_script(&parser.script);
+  if (result != WASM_OK)
+    return result;
 
-    if (result == WASM_OK) {
-      WasmFileWriter writer = {};
-      if (s_verbose)
-        writer.base.log_writes = 1;
+  result = wasm_check_script(&parser.script);
+  if (result != WASM_OK)
+    return result;
 
-      if (s_outfile) {
-        if (wasm_init_file_writer(&writer, s_outfile) == WASM_OK) {
-          result |= wasm_write_binary(&writer.base, &parser.script);
-          wasm_close_file_writer(&writer);
-        }
-      } else if (s_verbose) {
-        /* don't write file output, but we still write the verbose output */
-        result |= wasm_write_binary(&writer.base, &parser.script);
-      }
-    }
+  WasmFileWriter writer = {};
+  if (s_verbose)
+    writer.base.log_writes = 1;
+
+  if (s_outfile) {
+    if (wasm_init_file_writer(&writer, s_outfile) != WASM_OK)
+      FATAL("unable to open %s for writing\n", s_outfile);
+
+    result = wasm_write_binary(&writer.base, &parser.script);
+    wasm_close_file_writer(&writer);
+  } else if (s_verbose) {
+    /* don't write file output, but we still write the verbose output */
+    result = wasm_write_binary(&writer.base, &parser.script);
   }
 
   return result;

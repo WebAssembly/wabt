@@ -7,10 +7,10 @@
 
 typedef struct WasmWriter {
   void* user_data;
-  void (*write_data)(size_t offset,
-                     const void* data,
-                     size_t size,
-                     void* user_data);
+  WasmResult (*write_data)(size_t offset,
+                           const void* data,
+                           size_t size,
+                           void* user_data);
   int log_writes;
 } WasmWriter;
 
