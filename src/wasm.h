@@ -535,10 +535,14 @@ typedef struct WasmParser {
   int errors;
 } WasmParser;
 
+typedef struct WasmWriteBinaryOptions {
+  int log_writes;
+} WasmWriteBinaryOptions;
+
 WasmScanner wasm_new_scanner(const char* filename);
 void wasm_free_scanner(WasmScanner scanner);
 WasmResult wasm_check_script(WasmScript*);
-WasmResult wasm_write_binary(WasmWriter*, WasmScript*);
+WasmResult wasm_write_binary(WasmWriter*, WasmScript*, WasmWriteBinaryOptions*);
 
 int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var);
 int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var);

@@ -311,6 +311,7 @@ typedef struct WasmLabelNode {
 
 typedef struct WasmWriteContext {
   WasmWriter* writer;
+  WasmWriteBinaryOptions* options;
   size_t offset;
   WasmLabelNode* top_label;
   int max_depth;
@@ -387,7 +388,7 @@ static void dump_memory(const void* start,
 }
 
 static void print_header(WasmWriteContext* ctx, const char* name, int index) {
-  if (ctx->writer->log_writes)
+  if (ctx->options->log_writes)
     printf("; %s %d\n", name, index);
 }
 
@@ -398,7 +399,7 @@ static void out_data(WasmWriteContext* ctx,
                      const char* desc) {
   if (ctx->result != WASM_OK)
     return;
-  if (ctx->writer->log_writes)
+  if (ctx->options->log_writes)
     dump_memory(src, size, offset, 0, desc);
   if (ctx->writer->write_data)
     ctx->result =
@@ -1189,10 +1190,13 @@ static void write_command(WasmWriteContext* ctx, WasmCommand* command) {
   }
 }
 
-WasmResult wasm_write_binary(WasmWriter* writer, WasmScript* script) {
+WasmResult wasm_write_binary(WasmWriter* writer,
+                             WasmScript* script,
+                             WasmWriteBinaryOptions* options) {
   WasmWriteContext ctx = {};
   ctx.result = WASM_OK;
   ctx.writer = writer;
+  ctx.options = options;
   int i;
   for (i = 0; i < script->commands.size; ++i)
     write_command(&ctx, &script->commands.data[i]);

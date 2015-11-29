@@ -11,7 +11,6 @@ typedef struct WasmWriter {
                            const void* data,
                            size_t size,
                            void* user_data);
-  int log_writes;
 } WasmWriter;
 
 typedef struct WasmOutputBuffer {

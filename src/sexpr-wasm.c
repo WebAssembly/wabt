@@ -186,18 +186,19 @@ int main(int argc, char** argv) {
     return result;
 
   WasmFileWriter writer = {};
+  WasmWriteBinaryOptions options = {};
   if (s_verbose)
-    writer.base.log_writes = 1;
+    options.log_writes = 1;
 
   if (s_outfile) {
     if (wasm_init_file_writer(&writer, s_outfile) != WASM_OK)
       FATAL("unable to open %s for writing\n", s_outfile);
 
-    result = wasm_write_binary(&writer.base, &parser.script);
+    result = wasm_write_binary(&writer.base, &parser.script, &options);
     wasm_close_file_writer(&writer);
   } else if (s_verbose) {
     /* don't write file output, but we still write the verbose output */
-    result = wasm_write_binary(&writer.base, &parser.script);
+    result = wasm_write_binary(&writer.base, &parser.script, &options);
   }
 
   return result;
