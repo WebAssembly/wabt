@@ -4,19 +4,9 @@
 ;;; STDIN_FILE: third_party/testsuite/traps.wast
 (;; STDERR ;;;
 #
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 210
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 370
 # Unsupported opcode #162:ExprI64SConvertF32
 #
 
 d8 raised signal SIGILL
 ;;; STDERR ;;)
-(;; STDOUT ;;;
-third_party/testsuite/traps.wast:20: $assert_trap_0 failed, didn't throw
-third_party/testsuite/traps.wast:21: $assert_trap_1 failed, didn't throw
-third_party/testsuite/traps.wast:22: $assert_trap_2 failed, didn't throw
-third_party/testsuite/traps.wast:23: $assert_trap_3 failed, didn't throw
-third_party/testsuite/traps.wast:40: $assert_trap_0 failed, didn't throw
-third_party/testsuite/traps.wast:41: $assert_trap_1 failed, didn't throw
-third_party/testsuite/traps.wast:42: $assert_trap_2 failed, didn't throw
-third_party/testsuite/traps.wast:43: $assert_trap_3 failed, didn't throw
-;;; STDOUT ;;)

@@ -5,8 +5,8 @@
 ;;; STDIN_FILE: third_party/testsuite/f64.wast
 (;; STDERR ;;;
 #
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 210
-# Unsupported opcode #141:ExprF64Min
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 366
+# Unsupported opcode #141:ExprF64Min reported as supported
 #
 
 d8 raised signal SIGILL

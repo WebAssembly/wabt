@@ -1,7 +1,6 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/i64.wast
-(;; STDERR ;;;
-d8 raised signal SIGFPE
-;;; STDERR ;;)
+(;; STDOUT ;;;
+310/310 tests passed.
+;;; STDOUT ;;)

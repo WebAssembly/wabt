@@ -4,8 +4,8 @@
 ;;; STDIN_FILE: third_party/testsuite/left-to-right.wast
 (;; STDERR ;;;
 #
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 210
-# Unsupported opcode #125:ExprF32CopySign
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 366
+# Unsupported opcode #121:ExprF32Min reported as supported
 #
 
 d8 raised signal SIGILL

@@ -6,7 +6,7 @@
 
 ;;; STDERR ;;)
 (;; STDOUT ;;;
-WasmModule::Instantiate(): Compiling WASM function #2:if failed:Result = unreachable code @+4
+WasmModule::Instantiate(): Compiling WASM function #2:if failed:Result = ImplicitReturn[0] expected type float32, found ExprIfThen of type <stmt> @+9
 
   var module = WASM.instantiateModule(u8a.buffer, ffi);
                     ^
