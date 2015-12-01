@@ -187,6 +187,8 @@ int main(int argc, char** argv) {
 
   WasmFileWriter writer = {};
   WasmWriteBinaryOptions options = {};
+  if (s_spec)
+    options.spec = 1;
   if (s_verbose)
     options.log_writes = 1;
 

@@ -78,8 +78,8 @@ int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var) {
   return var->index;
 }
 
-static WasmExportPtr get_export_by_name(WasmModule* module,
-                                        WasmStringSlice* name) {
+WasmExportPtr wasm_get_export_by_name(WasmModule* module,
+                                      WasmStringSlice* name) {
   int index = find_binding_index_by_name(&module->export_bindings, name);
   if (index == -1)
     return NULL;
@@ -945,7 +945,7 @@ static WasmResult check_invoke(WasmCheckContext* ctx,
     return WASM_ERROR;
   }
 
-  WasmExport* export = get_export_by_name(ctx->last_module, &invoke->name);
+  WasmExport* export = wasm_get_export_by_name(ctx->last_module, &invoke->name);
   if (!export) {
     print_error(ctx, &invoke->loc, "unknown function export \"%.*s\"",
                 invoke->name.length, invoke->name.start);

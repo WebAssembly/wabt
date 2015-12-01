@@ -1,6 +1,8 @@
+#include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
 #include <memory.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -309,13 +311,20 @@ typedef struct WasmLabelNode {
   struct WasmLabelNode* next;
 } WasmLabelNode;
 
-typedef struct WasmWriteContext {
+typedef struct WasmWriterState {
   WasmWriter* writer;
-  WasmWriteBinaryOptions* options;
   size_t offset;
+  WasmResult result;
+  int log_writes;
+} WasmWriterState;
+
+typedef struct WasmWriteContext {
+  WasmWriterState writer_state;
+  WasmWriterState spec_writer_state;
+  WasmWriteBinaryOptions* options;
+  WasmMemoryWriter* mem_writer;
   WasmLabelNode* top_label;
   int max_depth;
-  WasmResult result;
 
   int* import_sig_indexes;
   int* func_sig_indexes;
@@ -392,26 +401,27 @@ static void print_header(WasmWriteContext* ctx, const char* name, int index) {
     printf("; %s %d\n", name, index);
 }
 
-static void out_data(WasmWriteContext* ctx,
-                     size_t offset,
-                     const void* src,
-                     size_t size,
-                     const char* desc) {
-  if (ctx->result != WASM_OK)
+static void out_data_at(WasmWriterState* writer_state,
+                        size_t offset,
+                        const void* src,
+                        size_t size,
+                        const char* desc) {
+  if (writer_state->result != WASM_OK)
     return;
-  if (ctx->options->log_writes)
+  if (writer_state->log_writes)
     dump_memory(src, size, offset, 0, desc);
-  if (ctx->writer->write_data)
-    ctx->result =
-        ctx->writer->write_data(offset, src, size, ctx->writer->user_data);
+  if (writer_state->writer->write_data)
+    writer_state->result = writer_state->writer->write_data(
+        offset, src, size, writer_state->writer->user_data);
 }
 
 /* TODO(binji): endianness */
-#define OUT_TYPE(name, ctype)                                \
-  static void out_##name(WasmWriteContext* ctx, ctype value, \
-                         const char* desc) {                 \
-    out_data(ctx, ctx->offset, &value, sizeof(value), desc); \
-    ctx->offset += sizeof(value);                            \
+#define OUT_TYPE(name, ctype)                                              \
+  static void out_##name(WasmWriterState* writer_state, ctype value,       \
+                         const char* desc) {                               \
+    out_data_at(writer_state, writer_state->offset, &value, sizeof(value), \
+                desc);                                                     \
+    writer_state->offset += sizeof(value);                                 \
   }
 
 OUT_TYPE(u8, uint8_t)
@@ -423,10 +433,10 @@ OUT_TYPE(f64, double)
 
 #undef OUT_TYPE
 
-#define OUT_AT_TYPE(name, ctype)                                      \
-  static void out_##name##_at(WasmWriteContext* ctx, uint32_t offset, \
-                              ctype value, const char* desc) {        \
-    out_data(ctx, offset, &value, sizeof(value), desc);               \
+#define OUT_AT_TYPE(name, ctype)                                              \
+  static void out_##name##_at(WasmWriterState* writer_state, uint32_t offset, \
+                              ctype value, const char* desc) {                \
+    out_data_at(writer_state, offset, &value, sizeof(value), desc);           \
   }
 
 OUT_AT_TYPE(u8, uint8_t)
@@ -436,7 +446,7 @@ OUT_AT_TYPE(u32, uint32_t)
 #undef OUT_AT_TYPE
 
 /* returns the number of bytes written */
-static int out_leb128_at(WasmWriteContext* ctx,
+static int out_leb128_at(WasmWriterState* writer_state,
                          size_t offset,
                          uint32_t value,
                          const char* desc) {
@@ -450,27 +460,44 @@ static int out_leb128_at(WasmWriteContext* ctx,
       data[i] |= 0x80;
     ++i;
   } while (value);
-  out_data(ctx, offset, data, i, desc);
+  out_data_at(writer_state, offset, data, i, desc);
   return i;
 }
 
-static void out_leb128(WasmWriteContext* ctx,
+static void out_leb128(WasmWriterState* writer_state,
                        uint32_t value,
                        const char* desc) {
-  ctx->offset += out_leb128_at(ctx, ctx->offset, value, desc);
+  writer_state->offset +=
+      out_leb128_at(writer_state, writer_state->offset, value, desc);
 }
 
-static void out_str(WasmWriteContext* ctx,
+static void out_str(WasmWriterState* writer_state,
                     const char* s,
                     size_t length,
                     const char* desc) {
-  out_data(ctx, ctx->offset, s, length, desc);
-  ctx->offset += length;
-  out_u8(ctx, 0, "\\0");
+  out_data_at(writer_state, writer_state->offset, s, length, desc);
+  writer_state->offset += length;
+  out_u8(writer_state, 0, "\\0");
 }
 
-static void out_opcode(WasmWriteContext* ctx, uint8_t opcode) {
-  out_u8(ctx, opcode, s_opcode_names[opcode]);
+static void out_opcode(WasmWriterState* writer_state, uint8_t opcode) {
+  out_u8(writer_state, opcode, s_opcode_names[opcode]);
+}
+
+static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
+  va_list args;
+  va_list args_copy;
+  va_start(args, format);
+  va_copy(args_copy, args);
+  /* + 1 to account for the \0 that will be added automatically by vsnprintf */
+  int len = vsnprintf(NULL, 0, format, args) + 1;
+  va_end(args);
+  char* buffer = alloca(len);
+  vsnprintf(buffer, len, format, args_copy);
+  va_end(args_copy);
+  /* - 1 to remove the trailing \0 that was added by vsnprintf */
+  out_data_at(writer_state, writer_state->offset, buffer, len - 1, "");
+  writer_state->offset += len - 1;
 }
 
 static uint8_t binary_opcode(WasmBinaryOp* op) {
@@ -691,12 +718,16 @@ static void write_tableswitch_target(WasmWriteContext* ctx,
     case WASM_TARGET_TYPE_CASE: {
       int index = wasm_get_index_from_var(case_bindings, &target->var);
       assert(index >= 0 && index < cases->size);
-      out_u16(ctx, index, "case index");
+      out_u16(&ctx->writer_state, index, "case index");
+      break;
     }
 
     case WASM_TARGET_TYPE_BR: {
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &target->var);
-      out_u16(ctx, 0x8000 | (ctx->max_depth - node->depth - 1), "br depth");
+      assert(node);
+      out_u16(&ctx->writer_state, 0x8000 | (ctx->max_depth - node->depth - 1),
+              "br depth");
+      break;
     }
   }
 }
@@ -710,17 +741,18 @@ static void write_expr(WasmWriteContext* ctx,
                        WasmModule* module,
                        WasmFunc* func,
                        WasmExpr* expr) {
+  WasmWriterState* ws = &ctx->writer_state;
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      out_opcode(ctx, binary_opcode(&expr->binary.op));
+      out_opcode(ws, binary_opcode(&expr->binary.op));
       write_expr(ctx, module, func, expr->binary.left);
       write_expr(ctx, module, func, expr->binary.right);
       break;
     case WASM_EXPR_TYPE_BLOCK: {
       WasmLabelNode node;
       push_label(ctx, &node, &expr->block.label, WASM_NO_FORCE_LABEL);
-      out_opcode(ctx, WASM_OPCODE_BLOCK);
-      out_u8(ctx, expr->block.exprs.size, "num expressions");
+      out_opcode(ws, WASM_OPCODE_BLOCK);
+      out_u8(ws, expr->block.exprs.size, "num expressions");
       write_expr_list(ctx, module, func, &expr->block.exprs);
       pop_label(ctx, &expr->block.label);
       break;
@@ -728,39 +760,39 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_BR: {
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br.var);
       assert(node);
-      out_opcode(ctx, WASM_OPCODE_BR);
-      out_u8(ctx, ctx->max_depth - node->depth - 1, "break depth");
+      out_opcode(ws, WASM_OPCODE_BR);
+      out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
       if (expr->br.expr)
         write_expr(ctx, module, func, expr->br.expr);
       else
-        out_opcode(ctx, WASM_OPCODE_NOP);
+        out_opcode(ws, WASM_OPCODE_NOP);
       break;
     }
     case WASM_EXPR_TYPE_BR_IF: {
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br_if.var);
       assert(node);
-      out_opcode(ctx, WASM_OPCODE_BR_IF);
-      out_u8(ctx, ctx->max_depth - node->depth - 1, "break depth");
+      out_opcode(ws, WASM_OPCODE_BR_IF);
+      out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
       write_expr(ctx, module, func, expr->br_if.cond);
       /* TODO(binji): support br_if expression */
-      out_opcode(ctx, WASM_OPCODE_NOP);
+      out_opcode(ws, WASM_OPCODE_NOP);
       break;
     }
     case WASM_EXPR_TYPE_CALL: {
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
       assert(index >= 0 && index < module->funcs.size);
-      out_opcode(ctx, WASM_OPCODE_CALL_FUNCTION);
+      out_opcode(ws, WASM_OPCODE_CALL_FUNCTION);
       /* defined functions are always after all imports */
-      out_leb128(ctx, module->imports.size + index, "func index");
+      out_leb128(ws, module->imports.size + index, "func index");
       write_expr_list(ctx, module, func, &expr->call.args);
       break;
     }
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       int index = wasm_get_import_index_by_var(module, &expr->call.var);
       assert(index >= 0 && index < module->imports.size);
-      out_opcode(ctx, WASM_OPCODE_CALL_FUNCTION);
+      out_opcode(ws, WASM_OPCODE_CALL_FUNCTION);
       /* imports are always first */
-      out_leb128(ctx, index, "import index");
+      out_leb128(ws, index, "import index");
       write_expr_list(ctx, module, func, &expr->call.args);
       break;
     }
@@ -768,18 +800,18 @@ static void write_expr(WasmWriteContext* ctx,
       int index =
           wasm_get_func_type_index_by_var(module, &expr->call_indirect.var);
       assert(index >= 0 && index < module->func_types.size);
-      out_opcode(ctx, WASM_OPCODE_CALL_INDIRECT);
-      out_leb128(ctx, index, "signature index");
+      out_opcode(ws, WASM_OPCODE_CALL_INDIRECT);
+      out_leb128(ws, index, "signature index");
       write_expr(ctx, module, func, expr->call_indirect.expr);
       write_expr_list(ctx, module, func, &expr->call_indirect.args);
       break;
     }
     case WASM_EXPR_TYPE_CAST:
-      out_opcode(ctx, cast_opcode(&expr->cast.op));
+      out_opcode(ws, cast_opcode(&expr->cast.op));
       write_expr(ctx, module, func, expr->cast.expr);
       break;
     case WASM_EXPR_TYPE_COMPARE:
-      out_opcode(ctx, compare_opcode(&expr->compare.op));
+      out_opcode(ws, compare_opcode(&expr->compare.op));
       write_expr(ctx, module, func, expr->compare.left);
       write_expr(ctx, module, func, expr->compare.right);
       break;
@@ -789,57 +821,57 @@ static void write_expr(WasmWriteContext* ctx,
           int32_t i32;
           memcpy(&i32, &expr->const_.u32, sizeof(i32));
           if (i32 >= -128 && i32 <= 127) {
-            out_opcode(ctx, WASM_OPCODE_I8_CONST);
-            out_u8(ctx, expr->const_.u32, "u8 literal");
+            out_opcode(ws, WASM_OPCODE_I8_CONST);
+            out_u8(ws, expr->const_.u32, "u8 literal");
           } else {
-            out_opcode(ctx, WASM_OPCODE_I32_CONST);
-            out_u32(ctx, expr->const_.u32, "u32 literal");
+            out_opcode(ws, WASM_OPCODE_I32_CONST);
+            out_u32(ws, expr->const_.u32, "u32 literal");
           }
           break;
         }
         case WASM_TYPE_I64:
-          out_opcode(ctx, WASM_OPCODE_I64_CONST);
-          out_u64(ctx, expr->const_.u64, "u64 literal");
+          out_opcode(ws, WASM_OPCODE_I64_CONST);
+          out_u64(ws, expr->const_.u64, "u64 literal");
           break;
         case WASM_TYPE_F32:
-          out_opcode(ctx, WASM_OPCODE_F32_CONST);
-          out_f32(ctx, expr->const_.f32, "f32 literal");
+          out_opcode(ws, WASM_OPCODE_F32_CONST);
+          out_f32(ws, expr->const_.f32, "f32 literal");
           break;
         case WASM_TYPE_F64:
-          out_opcode(ctx, WASM_OPCODE_F64_CONST);
-          out_f64(ctx, expr->const_.f64, "f64 literal");
+          out_opcode(ws, WASM_OPCODE_F64_CONST);
+          out_f64(ws, expr->const_.f64, "f64 literal");
           break;
         default:
           assert(0);
       }
       break;
     case WASM_EXPR_TYPE_CONVERT:
-      out_opcode(ctx, convert_opcode(&expr->convert.op));
+      out_opcode(ws, convert_opcode(&expr->convert.op));
       write_expr(ctx, module, func, expr->convert.expr);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       assert(index >= 0 && index < func->params_and_locals.types.size);
-      out_opcode(ctx, WASM_OPCODE_GET_LOCAL);
-      out_leb128(ctx, ctx->remapped_locals[index], "remapped local index");
+      out_opcode(ws, WASM_OPCODE_GET_LOCAL);
+      out_leb128(ws, ctx->remapped_locals[index], "remapped local index");
       break;
     }
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      out_opcode(ctx, WASM_OPCODE_RESIZE_MEM_L);
+      out_opcode(ws, WASM_OPCODE_RESIZE_MEM_L);
       write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
     case WASM_EXPR_TYPE_HAS_FEATURE:
       /* TODO(binji): add when supported by v8-native */
-      out_u8(ctx, WASM_OPCODE_I8_CONST, "has_feature not supported");
-      out_u8(ctx, 0, "");
+      out_u8(ws, WASM_OPCODE_I8_CONST, "has_feature not supported");
+      out_u8(ws, 0, "");
       break;
     case WASM_EXPR_TYPE_IF:
-      out_opcode(ctx, WASM_OPCODE_IF);
+      out_opcode(ws, WASM_OPCODE_IF);
       write_expr(ctx, module, func, expr->if_.cond);
       write_expr(ctx, module, func, expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
-      out_opcode(ctx, WASM_OPCODE_IF_THEN);
+      out_opcode(ws, WASM_OPCODE_IF_THEN);
       write_expr(ctx, module, func, expr->if_else.cond);
       write_expr(ctx, module, func, expr->if_else.true_);
       write_expr(ctx, module, func, expr->if_else.false_);
@@ -847,8 +879,8 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_LABEL: {
       WasmLabelNode node;
       push_label(ctx, &node, &expr->label.label, WASM_FORCE_LABEL);
-      out_opcode(ctx, WASM_OPCODE_BLOCK);
-      out_u8(ctx, 1, "num expressions");
+      out_opcode(ws, WASM_OPCODE_BLOCK);
+      out_u8(ws, 1, "num expressions");
       write_expr(ctx, module, func, expr->label.expr);
       pop_label(ctx, &expr->label.label);
       break;
@@ -860,20 +892,20 @@ static void write_expr(WasmWriteContext* ctx,
        a = Atomicity. 0 = None, 1 = SeqCst, 2 = Acq, 3 = Rel
        o = Offset. If set, offset field follows access byte */
       /* TODO(binji): support alignment */
-      out_opcode(ctx, mem_opcode(&expr->load.op));
+      out_opcode(ws, mem_opcode(&expr->load.op));
       uint8_t access = 0;
       if (expr->load.offset)
         access |= 0x10;
-      out_u8(ctx, access, "load access byte");
+      out_u8(ws, access, "load access byte");
       if (expr->load.offset)
-        out_leb128(ctx, (uint32_t)expr->load.offset, "load offset");
+        out_leb128(ws, (uint32_t)expr->load.offset, "load offset");
       write_expr(ctx, module, func, expr->load.addr);
       break;
     }
     case WASM_EXPR_TYPE_LOAD_GLOBAL: {
-      out_opcode(ctx, WASM_OPCODE_LOAD_GLOBAL);
+      out_opcode(ws, WASM_OPCODE_LOAD_GLOBAL);
       int index = wasm_get_global_index_by_var(module, &expr->load_global.var);
-      out_leb128(ctx, index, "global index");
+      out_leb128(ws, index, "global index");
       break;
     }
     case WASM_EXPR_TYPE_LOOP: {
@@ -881,65 +913,65 @@ static void write_expr(WasmWriteContext* ctx,
       WasmLabelNode inner;
       push_label(ctx, &outer, &expr->loop.outer, WASM_NO_FORCE_LABEL);
       push_label(ctx, &inner, &expr->loop.inner, WASM_FORCE_LABEL);
-      out_opcode(ctx, WASM_OPCODE_LOOP);
-      out_u8(ctx, expr->loop.exprs.size, "num expressions");
+      out_opcode(ws, WASM_OPCODE_LOOP);
+      out_u8(ws, expr->loop.exprs.size, "num expressions");
       write_expr_list(ctx, module, func, &expr->loop.exprs);
       pop_label(ctx, &expr->loop.inner);
       pop_label(ctx, &expr->loop.outer);
       break;
     }
     case WASM_EXPR_TYPE_MEMORY_SIZE:
-      out_opcode(ctx, WASM_OPCODE_MEMORY_SIZE);
+      out_opcode(ws, WASM_OPCODE_MEMORY_SIZE);
       break;
     case WASM_EXPR_TYPE_NOP:
-      out_opcode(ctx, WASM_OPCODE_NOP);
+      out_opcode(ws, WASM_OPCODE_NOP);
       break;
     case WASM_EXPR_TYPE_PAGE_SIZE:
       break;
     case WASM_EXPR_TYPE_RETURN:
-      out_opcode(ctx, WASM_OPCODE_RETURN);
+      out_opcode(ws, WASM_OPCODE_RETURN);
       if (expr->return_.expr)
         write_expr(ctx, module, func, expr->return_.expr);
       break;
     case WASM_EXPR_TYPE_SELECT:
-      out_opcode(ctx, WASM_OPCODE_SELECT);
+      out_opcode(ws, WASM_OPCODE_SELECT);
       write_expr(ctx, module, func, expr->select.cond);
       write_expr(ctx, module, func, expr->select.true_);
       write_expr(ctx, module, func, expr->select.false_);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
-      out_opcode(ctx, WASM_OPCODE_SET_LOCAL);
-      out_leb128(ctx, ctx->remapped_locals[index], "remapped local index");
+      out_opcode(ws, WASM_OPCODE_SET_LOCAL);
+      out_leb128(ws, ctx->remapped_locals[index], "remapped local index");
       write_expr(ctx, module, func, expr->set_local.expr);
       break;
     }
     case WASM_EXPR_TYPE_STORE:
     case WASM_EXPR_TYPE_STORE_WRAP: {
       /* See LOAD for format of memory access byte */
-      out_opcode(ctx, mem_opcode(&expr->store.op));
+      out_opcode(ws, mem_opcode(&expr->store.op));
       uint8_t access = 0;
       if (expr->store.offset)
         access |= 0x10;
-      out_u8(ctx, access, "store access byte");
+      out_u8(ws, access, "store access byte");
       if (expr->store.offset)
-        out_leb128(ctx, (uint32_t)expr->store.offset, "store offset");
+        out_leb128(ws, (uint32_t)expr->store.offset, "store offset");
       write_expr(ctx, module, func, expr->store.addr);
       write_expr(ctx, module, func, expr->store.value);
       break;
     }
     case WASM_EXPR_TYPE_STORE_GLOBAL: {
-      out_opcode(ctx, WASM_OPCODE_STORE_GLOBAL);
+      out_opcode(ws, WASM_OPCODE_STORE_GLOBAL);
       int index = wasm_get_global_index_by_var(module, &expr->load_global.var);
-      out_leb128(ctx, index, "global index");
+      out_leb128(ws, index, "global index");
       write_expr(ctx, module, func, expr->store_global.expr);
       break;
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
       WasmLabelNode node;
-      out_opcode(ctx, WASM_OPCODE_TABLESWITCH);
-      out_u16(ctx, expr->tableswitch.cases.size, "num cases");
-      out_u16(ctx, expr->tableswitch.targets.size + 1, "num targets");
+      out_opcode(ws, WASM_OPCODE_TABLESWITCH);
+      out_u16(ws, expr->tableswitch.cases.size, "num cases");
+      out_u16(ws, expr->tableswitch.targets.size + 1, "num targets");
       int i;
       for (i = 0; i < expr->tableswitch.targets.size; ++i) {
         WasmTarget* target = &expr->tableswitch.targets.data[i];
@@ -955,25 +987,25 @@ static void write_expr(WasmWriteContext* ctx,
         WasmCase* case_ = &expr->tableswitch.cases.data[i];
         if (case_->exprs.size) {
           if (case_->exprs.size > 1) {
-            out_opcode(ctx, WASM_OPCODE_BLOCK);
-            out_u8(ctx, case_->exprs.size, "num expressions");
+            out_opcode(ws, WASM_OPCODE_BLOCK);
+            out_u8(ws, case_->exprs.size, "num expressions");
             write_expr_list(ctx, module, func, &case_->exprs);
           } else {
             write_expr(ctx, module, func, case_->exprs.data[0]);
           }
         } else {
-          out_u8(ctx, WASM_OPCODE_NOP, "WASM_OPCODE_NOP for fallthrough");
+          out_u8(ws, WASM_OPCODE_NOP, "WASM_OPCODE_NOP for fallthrough");
         }
       }
       pop_label(ctx, &expr->tableswitch.label);
       break;
     }
     case WASM_EXPR_TYPE_UNARY:
-      out_opcode(ctx, unary_opcode(&expr->unary.op));
+      out_opcode(ws, unary_opcode(&expr->unary.op));
       write_expr(ctx, module, func, expr->unary.expr);
       break;
     case WASM_EXPR_TYPE_UNREACHABLE:
-      out_opcode(ctx, WASM_OPCODE_UNREACHABLE);
+      out_opcode(ws, WASM_OPCODE_UNREACHABLE);
       break;
   }
 }
@@ -995,63 +1027,63 @@ static void write_func(WasmWriteContext* ctx,
 
 static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   int i;
-  ctx->offset = 0;
+  WasmWriterState* ws = &ctx->writer_state;
+  ctx->writer_state.offset = 0;
   size_t segments_offset;
   if (module->memory) {
-    out_u8(ctx, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
-    out_u8(ctx, log_two_u32(module->memory->initial_size),
-           "min mem size log 2");
-    out_u8(ctx, log_two_u32(module->memory->max_size), "max mem size log 2");
-    out_u8(ctx, DEFAULT_MEMORY_EXPORT, "export mem");
+    out_u8(ws, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
+    out_u8(ws, log_two_u32(module->memory->initial_size), "min mem size log 2");
+    out_u8(ws, log_two_u32(module->memory->max_size), "max mem size log 2");
+    out_u8(ws, DEFAULT_MEMORY_EXPORT, "export mem");
 
     if (module->memory->segments.size) {
-      out_u8(ctx, WASM_SECTION_DATA_SEGMENTS, "WASM_SECTION_DATA_SEGMENTS");
-      out_leb128(ctx, module->memory->segments.size, "num data segments");
-      segments_offset = ctx->offset;
+      out_u8(ws, WASM_SECTION_DATA_SEGMENTS, "WASM_SECTION_DATA_SEGMENTS");
+      out_leb128(ws, module->memory->segments.size, "num data segments");
+      segments_offset = ctx->writer_state.offset;
       for (i = 0; i < module->memory->segments.size; ++i) {
         WasmSegment* segment = &module->memory->segments.data[i];
         print_header(ctx, "segment header", i);
-        out_u32(ctx, segment->addr, "segment address");
-        out_u32(ctx, 0, "segment data offset");
-        out_u32(ctx, segment->size, "segment size");
-        out_u8(ctx, 1, "segment init");
+        out_u32(ws, segment->addr, "segment address");
+        out_u32(ws, 0, "segment data offset");
+        out_u32(ws, segment->size, "segment size");
+        out_u8(ws, 1, "segment init");
       }
     }
   } else {
     /* TODO(binji): remove? */
-    out_u8(ctx, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
-    out_u8(ctx, 0, "min mem size log 2");
-    out_u8(ctx, 0, "max mem size log 2");
-    out_u8(ctx, DEFAULT_MEMORY_EXPORT, "export mem");
+    out_u8(ws, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
+    out_u8(ws, 0, "min mem size log 2");
+    out_u8(ws, 0, "max mem size log 2");
+    out_u8(ws, DEFAULT_MEMORY_EXPORT, "export mem");
   }
 
   if (module->globals.types.size) {
-    out_u8(ctx, WASM_SECTION_GLOBALS, "WASM_SECTION_GLOBALS");
-    out_leb128(ctx, module->globals.types.size, "num globals");
+    out_u8(ws, WASM_SECTION_GLOBALS, "WASM_SECTION_GLOBALS");
+    out_leb128(ws, module->globals.types.size, "num globals");
     for (i = 0; i < module->globals.types.size; ++i) {
       WasmType global_type = module->globals.types.data[i];
       print_header(ctx, "global header", i);
       const uint8_t global_type_codes[WASM_NUM_V8_TYPES] = {-1, 4, 6, 8, 9};
-      out_u32(ctx, 0, "global name offset");
-      out_u8(ctx, global_type_codes[wasm_type_to_v8_type(global_type)],
+      out_u32(ws, 0, "global name offset");
+      out_u8(ws, global_type_codes[wasm_type_to_v8_type(global_type)],
              "global mem type");
-      out_u8(ctx, 0, "export global");
+      out_u8(ws, 0, "export global");
     }
   }
 
   WasmFuncSignatureVector sigs = {};
   get_func_signatures(ctx, module, &sigs);
   if (sigs.size) {
-    out_u8(ctx, WASM_SECTION_SIGNATURES, "WASM_SECTION_SIGNATURES");
-    out_leb128(ctx, sigs.size, "num signatures");
+    out_u8(ws, WASM_SECTION_SIGNATURES, "WASM_SECTION_SIGNATURES");
+    out_leb128(ws, sigs.size, "num signatures");
     for (i = 0; i < sigs.size; ++i) {
       WasmFuncSignature* sig = &sigs.data[i];
       print_header(ctx, "signature", i);
-      out_u8(ctx, sig->param_types.size, "num params");
-      out_u8(ctx, wasm_type_to_v8_type(sig->result_type), "result_type");
+      out_u8(ws, sig->param_types.size, "num params");
+      out_u8(ws, wasm_type_to_v8_type(sig->result_type), "result_type");
       int j;
       for (j = 0; j < sig->param_types.size; ++j)
-        out_u8(ctx, wasm_type_to_v8_type(sig->param_types.data[j]),
+        out_u8(ws, wasm_type_to_v8_type(sig->param_types.data[j]),
                "param type");
     }
   }
@@ -1059,18 +1091,18 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   size_t imports_offset;
   int num_funcs = module->imports.size + module->funcs.size;
   if (num_funcs) {
-    out_u8(ctx, WASM_SECTION_FUNCTIONS, "WASM_SECTION_FUNCTIONS");
-    out_leb128(ctx, num_funcs, "num functions");
+    out_u8(ws, WASM_SECTION_FUNCTIONS, "WASM_SECTION_FUNCTIONS");
+    out_leb128(ws, num_funcs, "num functions");
 
-    imports_offset = ctx->offset;
+    imports_offset = ctx->writer_state.offset;
     for (i = 0; i < module->imports.size; ++i) {
       // WasmImport* import = module->imports.data[i];
       print_header(ctx, "import header", i);
       WasmFunctionFlags flags =
           WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_IMPORT;
-      out_u8(ctx, flags, "import flags");
-      out_u16(ctx, ctx->import_sig_indexes[i], "import signature index");
-      out_u32(ctx, 0, "import name offset");
+      out_u8(ws, flags, "import flags");
+      out_u16(ws, ctx->import_sig_indexes[i], "import signature index");
+      out_u32(ws, 0, "import name offset");
     }
 
     ctx->func_offsets =
@@ -1078,7 +1110,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->funcs.size; ++i) {
       WasmFunc* func = module->funcs.data[i];
       print_header(ctx, "function", i);
-      ctx->func_offsets[i] = ctx->offset;
+      ctx->func_offsets[i] = ctx->writer_state.offset;
       remap_locals(ctx, func);
 
       int is_exported = wasm_func_is_exported(module, func);
@@ -1092,41 +1124,42 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
         flags |= WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_EXPORT;
       if (has_locals)
         flags |= WASM_FUNCTION_FLAG_LOCALS;
-      out_u8(ctx, flags, "func flags");
-      out_u16(ctx, ctx->func_sig_indexes[i], "func signature index");
+      out_u8(ws, flags, "func flags");
+      out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
       if (has_name)
-        out_u32(ctx, 0, "func name offset");
+        out_u32(ws, 0, "func name offset");
       if (has_locals) {
         int num_locals[WASM_NUM_V8_TYPES] = {};
         int j;
         for (j = 0; j < func->locals.types.size; ++j)
           num_locals[wasm_type_to_v8_type(func->locals.types.data[j])]++;
 
-        out_u16(ctx, num_locals[WASM_TYPE_V8_I32], "num local i32");
-        out_u16(ctx, num_locals[WASM_TYPE_V8_I64], "num local i64");
-        out_u16(ctx, num_locals[WASM_TYPE_V8_F32], "num local f32");
-        out_u16(ctx, num_locals[WASM_TYPE_V8_F64], "num local f64");
+        out_u16(ws, num_locals[WASM_TYPE_V8_I32], "num local i32");
+        out_u16(ws, num_locals[WASM_TYPE_V8_I64], "num local i64");
+        out_u16(ws, num_locals[WASM_TYPE_V8_F32], "num local f32");
+        out_u16(ws, num_locals[WASM_TYPE_V8_F64], "num local f64");
       }
 
-      size_t func_body_offset = ctx->offset;
-      out_u16(ctx, 0, "func body size");
+      size_t func_body_offset = ctx->writer_state.offset;
+      out_u16(ws, 0, "func body size");
       write_func(ctx, module, func);
-      int func_size = ctx->offset - func_body_offset - sizeof(uint16_t);
-      out_u16_at(ctx, func_body_offset, func_size, "FIXUP func body size");
+      int func_size =
+          ctx->writer_state.offset - func_body_offset - sizeof(uint16_t);
+      out_u16_at(ws, func_body_offset, func_size, "FIXUP func body size");
     }
   }
 
   if (module->table && module->table->size) {
-    out_u8(ctx, WASM_SECTION_FUNCTION_TABLE, "WASM_SECTION_FUNCTION_TABLE");
-    out_leb128(ctx, module->table->size, "num function table entries");
+    out_u8(ws, WASM_SECTION_FUNCTION_TABLE, "WASM_SECTION_FUNCTION_TABLE");
+    out_leb128(ws, module->table->size, "num function table entries");
     for (i = 0; i < module->table->size; ++i) {
       int index = wasm_get_func_index_by_var(module, &module->table->data[i]);
       assert(index >= 0 && index < module->funcs.size);
-      out_u16(ctx, index, "function table entry");
+      out_u16(ws, index, "function table entry");
     }
   }
 
-  out_u8(ctx, WASM_SECTION_END, "WASM_SECTION_END");
+  out_u8(ws, WASM_SECTION_END, "WASM_SECTION_END");
 
   /* output segment data */
   size_t offset;
@@ -1135,10 +1168,11 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->memory->segments.size; ++i) {
       print_header(ctx, "segment data", i);
       WasmSegment* segment = &module->memory->segments.data[i];
-      out_u32_at(ctx, offset + SEGMENT_OFFSET_OFFSET, ctx->offset,
+      out_u32_at(ws, offset + SEGMENT_OFFSET_OFFSET, ctx->writer_state.offset,
                  "FIXUP segment data offset");
-      out_data(ctx, ctx->offset, segment->data, segment->size, "segment data");
-      ctx->offset += segment->size;
+      out_data_at(ws, ctx->writer_state.offset, segment->data, segment->size,
+                  "segment data");
+      ctx->writer_state.offset += segment->size;
       offset += SEGMENT_SIZE;
     }
   }
@@ -1148,9 +1182,9 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   for (i = 0; i < module->imports.size; ++i) {
     print_header(ctx, "import", i);
     WasmImport* import = module->imports.data[i];
-    out_u32_at(ctx, offset + IMPORT_NAME_OFFSET, ctx->offset,
+    out_u32_at(ws, offset + IMPORT_NAME_OFFSET, ctx->writer_state.offset,
                "FIXUP import name offset");
-    out_str(ctx, import->func_name.start, import->func_name.length,
+    out_str(ws, import->func_name.start, import->func_name.length,
             "import name");
     offset += IMPORT_SIZE;
   }
@@ -1162,31 +1196,373 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     int func_index = wasm_get_func_index_by_var(module, &export->var);
     assert(func_index >= 0 && func_index < module->funcs.size);
     offset = ctx->func_offsets[func_index];
-    out_u32_at(ctx, offset + FUNC_NAME_OFFSET, ctx->offset,
+    out_u32_at(ws, offset + FUNC_NAME_OFFSET, ctx->writer_state.offset,
                "FIXUP func name offset");
-    out_str(ctx, export->name.start, export->name.length, "export name");
+    out_str(ws, export->name.start, export->name.length, "export name");
   }
 }
 
-static void write_command(WasmWriteContext* ctx, WasmCommand* command) {
-  switch (command->type) {
-    case WASM_COMMAND_TYPE_MODULE:
-      write_module(ctx, &command->module);
+static WasmExpr* new_expr(WasmExprType type) {
+  WasmExpr* expr = calloc(1, sizeof(WasmExpr));
+  expr->type = type;
+  return expr;
+}
+
+static WasmExpr* create_const_expr(WasmConst* const_) {
+  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_CONST);
+  expr->const_ = *const_;
+  return expr;
+}
+
+static WasmExpr* create_invoke_expr(WasmCommandInvoke* invoke, int func_index) {
+  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_CALL);
+  expr->call.var.type = WASM_VAR_TYPE_INDEX;
+  expr->call.var.index = func_index;
+  int i;
+  for (i = 0; i < invoke->args.size; ++i) {
+    WasmConst* arg = &invoke->args.data[i];
+    *wasm_append_expr_ptr(&expr->call.args) = create_const_expr(arg);
+  }
+  return expr;
+}
+
+static WasmExpr* create_eq_expr(WasmType type,
+                                WasmExpr* left,
+                                WasmExpr* right) {
+  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_COMPARE);
+  expr->compare.op.type = type;
+  switch (type) {
+    case WASM_TYPE_I32:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I32_EQ;
       break;
-#if 0
-    case WASM_COMMAND_TYPE_INVOKE:
-      return write_invoke(writer, &command->invoke, WASM_TYPE_VOID);
-    case WASM_COMMAND_TYPE_ASSERT_RETURN:
-      return write_invoke(writer, &command->assert_return.invoke,
-                          command->assert_return.expected.type);
-    case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-      return write_invoke(writer, &command->assert_return_nan.invoke,
-                          WASM_TYPE_F32 | WASM_TYPE_F64);
-    case WASM_COMMAND_TYPE_ASSERT_TRAP:
-      return write_invoke(writer, &command->assert_trap.invoke, WASM_TYPE_VOID);
-#endif
+    case WASM_TYPE_I64:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I64_EQ;
+      break;
+    case WASM_TYPE_F32:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F32_EQ;
+      break;
+    case WASM_TYPE_F64:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F64_EQ;
+      break;
     default:
+      assert(0);
+  }
+  expr->compare.left = left;
+  expr->compare.right = right;
+  return expr;
+}
+
+static WasmExpr* create_ne_expr(WasmType type,
+                                WasmExpr* left,
+                                WasmExpr* right) {
+  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_COMPARE);
+  expr->compare.op.type = type;
+  switch (type) {
+    case WASM_TYPE_I32:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I32_NE;
       break;
+    case WASM_TYPE_I64:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I64_NE;
+      break;
+    case WASM_TYPE_F32:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F32_NE;
+      break;
+    case WASM_TYPE_F64:
+      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F64_NE;
+      break;
+    default:
+      assert(0);
+  }
+  expr->compare.left = left;
+  expr->compare.right = right;
+  return expr;
+}
+
+static WasmExpr* create_set_local_expr(int index, WasmExpr* value) {
+  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_SET_LOCAL);
+  expr->set_local.var.type = WASM_VAR_TYPE_INDEX;
+  expr->set_local.var.index = index;
+  expr->set_local.expr = value;
+  return expr;
+}
+
+static WasmExpr* create_get_local_expr(int index) {
+  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_GET_LOCAL);
+  expr->get_local.var.type = WASM_VAR_TYPE_INDEX;
+  expr->get_local.var.index = index;
+  return expr;
+}
+
+static WasmModuleField* append_module_field_and_fixup(
+    WasmModule* module,
+    WasmModuleFieldType module_field_type) {
+  WasmModuleField* first_field = &module->fields.data[0];
+  WasmModuleField* result = wasm_append_module_field(&module->fields);
+  memset(result, 0, sizeof(*result));
+  result->type = module_field_type;
+
+  /* make space for the new entry, it will be assigned twice, once here, once
+   below. It is easier to do this than check below whether the new value was
+   already assigned. */
+  switch (module_field_type) {
+    case WASM_MODULE_FIELD_TYPE_FUNC:
+      *wasm_append_func_ptr(&module->funcs) = &result->func;
+      break;
+    case WASM_MODULE_FIELD_TYPE_IMPORT:
+      *wasm_append_import_ptr(&module->imports) = &result->import;
+      break;
+    case WASM_MODULE_FIELD_TYPE_EXPORT:
+      *wasm_append_export_ptr(&module->exports) = &result->export;
+      break;
+    case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
+      *wasm_append_func_type_ptr(&module->func_types) = &result->func_type;
+      break;
+
+    case WASM_MODULE_FIELD_TYPE_TABLE:
+    case WASM_MODULE_FIELD_TYPE_MEMORY:
+    case WASM_MODULE_FIELD_TYPE_GLOBAL:
+      /* not supported */
+      assert(0);
+      break;
+  }
+
+  if (first_field == &module->fields.data[0])
+    return result;
+
+  /* the first element moved, so we need to fixup all the pointers */
+  int i;
+  int num_funcs = 0;
+  int num_imports = 0;
+  int num_exports = 0;
+  int num_func_types = 0;
+  for (i = 0; i < module->fields.size; ++i) {
+    WasmModuleField* field = &module->fields.data[i];
+    switch (field->type) {
+      case WASM_MODULE_FIELD_TYPE_FUNC:
+        assert(num_funcs < module->funcs.size);
+        module->funcs.data[num_funcs++] = &field->func;
+        break;
+      case WASM_MODULE_FIELD_TYPE_IMPORT:
+        assert(num_imports < module->imports.size);
+        module->imports.data[num_imports++] = &field->import;
+        break;
+      case WASM_MODULE_FIELD_TYPE_EXPORT:
+        assert(num_exports < module->exports.size);
+        module->exports.data[num_exports++] = &field->export;
+        break;
+      case WASM_MODULE_FIELD_TYPE_TABLE:
+        module->table = &field->table;
+        break;
+      case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
+        assert(num_func_types < module->func_types.size);
+        module->func_types.data[num_func_types++] = &field->func_type;
+        break;
+      case WASM_MODULE_FIELD_TYPE_MEMORY:
+        module->memory = &field->memory;
+        break;
+      case WASM_MODULE_FIELD_TYPE_GLOBAL:
+        /* not pointers, so they don't need to be fixed */
+        break;
+    }
+  }
+
+  return result;
+}
+
+static WasmStringSlice create_assert_func_name(const char* format,
+                                               int format_index) {
+  WasmStringSlice name;
+  char buffer[256];
+  int buffer_len = snprintf(buffer, 256, format, format_index);
+  name.start = strdup(buffer);
+  name.length = buffer_len;
+  return name;
+}
+
+static WasmFunc* append_nullary_func(WasmModule* module,
+                                     WasmType result_type,
+                                     WasmStringSlice export_name) {
+  WasmModuleField* func_field =
+      append_module_field_and_fixup(module, WASM_MODULE_FIELD_TYPE_FUNC);
+  WasmFunc* func = &func_field->func;
+  func->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+  func->result_type = result_type;
+  int func_index = module->funcs.size - 1;
+  /* invalidated by append_module_field_and_fixup below */
+  func_field = NULL;
+  func = NULL;
+
+  WasmModuleField* export_field =
+      append_module_field_and_fixup(module, WASM_MODULE_FIELD_TYPE_EXPORT);
+  WasmExport* export = &export_field->export;
+  export->var.type = WASM_VAR_TYPE_INDEX;
+  export->var.index = func_index;
+  export->name = export_name;
+  return module->funcs.data[func_index];
+}
+
+static void write_header_spec(WasmWriteContext* ctx) {
+  /* TODO(binji): support spec verbosity */
+  out_printf(&ctx->spec_writer_state, "var quiet = false;\n");
+}
+
+static void write_footer_spec(WasmWriteContext* ctx) {
+  out_printf(&ctx->spec_writer_state, "end();\n");
+}
+
+static void write_module_header_spec(WasmWriteContext* ctx) {
+  out_printf(&ctx->spec_writer_state, "var tests = function(m) {\n");
+}
+
+static void write_module_spec(WasmWriteContext* ctx, WasmModule* module) {
+  /* reset the memory writer in case it's already been used */
+  ctx->mem_writer->buf.size = 0;
+  ctx->writer_state.offset = 0;
+
+  write_module(ctx, module);
+  /* copy the written module from the output buffer */
+  out_printf(&ctx->spec_writer_state, "};\nvar m = createModule([\n");
+  WasmOutputBuffer* module_buf = &ctx->mem_writer->buf;
+  const uint8_t* p = module_buf->start;
+  const uint8_t* end = module_buf->start + module_buf->size;
+  while (p < end) {
+    out_printf(&ctx->spec_writer_state, " ");
+    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    for (; p < line_end; ++p)
+      out_printf(&ctx->spec_writer_state, "%4d,", *p);
+    out_printf(&ctx->spec_writer_state, "\n");
+  }
+  out_printf(&ctx->spec_writer_state, "]);\ntests(m);\n");
+}
+
+static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
+  int i;
+  WasmModule* last_module = NULL;
+  int num_assert_funcs = 0;
+  for (i = 0; i < script->commands.size; ++i) {
+    WasmCommand* command = &script->commands.data[i];
+    if (command->type == WASM_COMMAND_TYPE_MODULE) {
+      if (last_module)
+        write_module_spec(ctx, last_module);
+      write_module_header_spec(ctx);
+      last_module = &command->module;
+    } else {
+      const char* js_call = NULL;
+      const char* format = NULL;
+      WasmCommandInvoke* invoke = NULL;
+      switch (command->type) {
+        case WASM_COMMAND_TYPE_INVOKE:
+          js_call = "invoke";
+          format = "$invoke_%d";
+          invoke = &command->invoke;
+          break;
+        case WASM_COMMAND_TYPE_ASSERT_RETURN:
+          js_call = "assertReturn";
+          format = "$assert_return_%d";
+          invoke = &command->assert_return.invoke;
+          break;
+        case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
+          js_call = "assertReturn";
+          format = "$assert_return_nan_%d";
+          invoke = &command->assert_return_nan.invoke;
+          break;
+        case WASM_COMMAND_TYPE_ASSERT_TRAP:
+          js_call = "assertTrap";
+          format = "$assert_trap_%d";
+          invoke = &command->assert_trap.invoke;
+          break;
+        default:
+          continue;
+      }
+
+      WasmExport* export = wasm_get_export_by_name(last_module, &invoke->name);
+      assert(export);
+      int func_index = wasm_get_func_index_by_var(last_module, &export->var);
+      assert(func_index >= 0 && func_index < last_module->funcs.size);
+      WasmFunc* callee = last_module->funcs.data[func_index];
+      WasmType result_type = callee->result_type;
+      /* these pointers will be invalidated later, so we can't use them */
+      export = NULL;
+      callee = NULL;
+
+      WasmStringSlice name =
+          create_assert_func_name(format, num_assert_funcs++);
+      out_printf(&ctx->spec_writer_state, "  %s(m, \"%.*s\", \"%s\", %d);\n",
+                 js_call, name.length, name.start, invoke->loc.filename,
+                 invoke->loc.first_line);
+
+      switch (command->type) {
+        case WASM_COMMAND_TYPE_INVOKE: {
+          WasmFunc* caller =
+              append_nullary_func(last_module, result_type, name);
+          *wasm_append_expr_ptr(&caller->exprs) =
+              create_invoke_expr(&command->invoke, func_index);
+          break;
+        }
+
+        case WASM_COMMAND_TYPE_ASSERT_RETURN: {
+          WasmFunc* caller =
+              append_nullary_func(last_module, WASM_TYPE_I32, name);
+
+          if (result_type == WASM_TYPE_VOID) {
+            /* The return type of the assert_return function is i32, but this
+             invoked function has a return type of void, so we have nothing to
+             compare to. Just return 1 to the caller, signifying everything is
+             OK. */
+            *wasm_append_expr_ptr(&caller->exprs) =
+                create_invoke_expr(&command->assert_return.invoke, func_index);
+            WasmConst const_;
+            const_.type = WASM_TYPE_I32;
+            const_.u32 = 1;
+            *wasm_append_expr_ptr(&caller->exprs) = create_const_expr(&const_);
+          } else {
+            *wasm_append_expr_ptr(&caller->exprs) = create_eq_expr(
+                result_type,
+                create_invoke_expr(&command->assert_return.invoke, func_index),
+                create_const_expr(&command->assert_return.expected));
+          }
+          break;
+        }
+
+        case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN: {
+          WasmFunc* caller =
+              append_nullary_func(last_module, WASM_TYPE_I32, name);
+          *wasm_append_type(&caller->locals.types) = result_type;
+          *wasm_append_type(&caller->params_and_locals.types) = result_type;
+          *wasm_append_expr_ptr(&caller->exprs) = create_set_local_expr(
+              0, create_invoke_expr(&command->assert_return_nan.invoke,
+                                    func_index));
+          /* x != x is true iff x is NaN */
+          *wasm_append_expr_ptr(&caller->exprs) = create_ne_expr(
+              result_type, create_get_local_expr(0), create_get_local_expr(0));
+          break;
+        }
+
+        case WASM_COMMAND_TYPE_ASSERT_TRAP: {
+          WasmFunc* caller =
+              append_nullary_func(last_module, result_type, name);
+          *wasm_append_expr_ptr(&caller->exprs) =
+              create_invoke_expr(&command->invoke, func_index);
+          break;
+        }
+
+        default:
+          assert(0);
+      }
+    }
+  }
+  if (last_module)
+    write_module_spec(ctx, last_module);
+}
+
+static void write_commands_no_spec(WasmWriteContext* ctx, WasmScript* script) {
+  int i;
+  for (i = 0; i < script->commands.size; ++i) {
+    WasmCommand* command = &script->commands.data[i];
+    if (command->type != WASM_COMMAND_TYPE_MODULE)
+      continue;
+
+    write_module(ctx, &command->module);
   }
 }
 
@@ -1194,11 +1570,30 @@ WasmResult wasm_write_binary(WasmWriter* writer,
                              WasmScript* script,
                              WasmWriteBinaryOptions* options) {
   WasmWriteContext ctx = {};
-  ctx.result = WASM_OK;
-  ctx.writer = writer;
   ctx.options = options;
-  int i;
-  for (i = 0; i < script->commands.size; ++i)
-    write_command(&ctx, &script->commands.data[i]);
-  return ctx.result;
+
+  if (options->spec) {
+    WasmMemoryWriter mem_writer = {};
+    WasmResult result = wasm_init_mem_writer(&mem_writer);
+    if (result != WASM_OK)
+      return result;
+
+    ctx.spec_writer_state.writer = writer;
+    ctx.spec_writer_state.result = WASM_OK;
+    ctx.writer_state.writer = &mem_writer.base;
+    ctx.writer_state.result = WASM_OK;
+    ctx.writer_state.log_writes = options->log_writes;
+    ctx.mem_writer = &mem_writer;
+    write_header_spec(&ctx);
+    write_commands_spec(&ctx, script);
+    write_footer_spec(&ctx);
+    wasm_close_mem_writer(&mem_writer);
+    return ctx.spec_writer_state.result;
+  } else {
+    ctx.writer_state.writer = writer;
+    ctx.writer_state.result = WASM_OK;
+    ctx.writer_state.log_writes = options->log_writes;
+    write_commands_no_spec(&ctx, script);
+    return ctx.writer_state.result;
+  }
 }

@@ -536,6 +536,7 @@ typedef struct WasmParser {
 } WasmParser;
 
 typedef struct WasmWriteBinaryOptions {
+  int spec;
   int log_writes;
 } WasmWriteBinaryOptions;
 
@@ -554,6 +555,8 @@ int wasm_get_local_index_by_var(WasmFunc* func, WasmVar* var);
 WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var);
 WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var);
+WasmExportPtr wasm_get_export_by_name(WasmModule* module,
+                                      WasmStringSlice* name);
 
 void wasm_extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src);
 
