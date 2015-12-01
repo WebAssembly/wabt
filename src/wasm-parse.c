@@ -111,6 +111,7 @@ typedef struct WasmParser {
   WasmParserCallbacks* callbacks;
   WasmParserOptions* options;
   WasmParserCallbackInfo info;
+  WasmLabel* top_label;
   WasmTokenizer tokenizer;
   jmp_buf jump_buf;
 } WasmParser;
@@ -139,7 +140,6 @@ DEFINE_VECTOR(signature_index, WasmSignatureIndex)
 DEFINE_VECTOR(function, WasmFunction)
 DEFINE_VECTOR(import, WasmImport)
 DEFINE_VECTOR(segment, WasmSegment)
-DEFINE_VECTOR(label, WasmLabel)
 DEFINE_VECTOR(function_ptr, WasmFunctionPtr)
 DEFINE_VECTOR(tableswitch_case, WasmTableswitchCase)
 
@@ -938,50 +938,26 @@ static void check_type_arg(WasmParser* parser,
   }
 }
 
-static void check_break_depth(WasmParser* parser,
-                              WasmSourceLocation loc,
-                              WasmFunction* function,
-                              int depth) {
-  if (depth == 0 && function->label_bindings.size == 0)
-    FATAL_AT(parser, loc, "label variable out of range (max 0)\n");
-}
-
-static WasmLabel* push_anonymous_label(WasmParser* parser,
-                                       WasmFunction* function,
-                                       WasmToken t) {
-  WasmBinding* binding = wasm_append_binding(&function->label_bindings);
-  CHECK_ALLOC(parser, binding, t.range.start);
-  binding->name = NULL;
-  binding->index = function->label_bindings.size;
-
-  WasmLabel* label = wasm_append_label(&function->labels);
-  CHECK_ALLOC(parser, label, t.range.start);
+static void push_anonymous_label(WasmParser* parser, WasmLabel* label) {
+  label->name = NULL;
   label->type = WASM_TYPE_ALL;
-  return label;
+  label->next = parser->top_label;
+  parser->top_label = label;
 }
 
-static WasmLabel* push_label(WasmParser* parser,
-                             WasmFunction* function,
-                             WasmToken t) {
+static void push_label(WasmParser* parser, WasmLabel* label, WasmToken t) {
   expect_var_name(parser, t);
-  WasmBinding* binding = wasm_append_binding(&function->label_bindings);
-  CHECK_ALLOC(parser, binding, t.range.start);
-  binding->name =
+  label->name =
       strndup(t.range.start.pos, t.range.end.pos - t.range.start.pos);
-  binding->index = function->label_bindings.size;
-
-  WasmLabel* label = wasm_append_label(&function->labels);
-  CHECK_ALLOC(parser, label, t.range.start);
   label->type = WASM_TYPE_ALL;
-  return label;
+  label->next = parser->top_label;
+  parser->top_label = label;
 }
 
-static void pop_label(WasmFunction* function) {
-  assert(function->label_bindings.size > 0);
-  assert(function->labels.size > 0);
-  free(function->label_bindings.data[function->label_bindings.size - 1].name);
-  function->label_bindings.size--;
-  function->labels.size--;
+static void pop_label(WasmParser* parser) {
+  WasmLabel* label = parser->top_label;
+  free(label->name);
+  parser->top_label = label->next;
 }
 
 static void parse_generic(WasmParser* parser) {
@@ -1058,9 +1034,9 @@ static int parse_function_type_var(WasmParser* parser, WasmModule* module) {
                    module->function_types.size, "function type");
 }
 
-/* Labels are indexed in reverse order (0 is the most recent, etc.), so handle
- * them separately */
-static int parse_label_var(WasmParser* parser, WasmFunction* function) {
+static int parse_break_depth(WasmParser* parser,
+                             WasmFunction* function,
+                             WasmLabel** out_label) {
   WasmToken t = read_token(parser);
   expect_atom(parser, t);
 
@@ -1068,39 +1044,40 @@ static int parse_label_var(WasmParser* parser, WasmFunction* function) {
   const char* end = t.range.end.pos;
   if (end - p >= 1 && p[0] == '$') {
     /* var name */
-    int i;
-    for (i = 0; i < function->label_bindings.size; ++i) {
-      WasmBinding* binding = &function->label_bindings.data[i];
-      if (binding->name && string_eq(p, end, binding->name))
-        /* index is actually the current label depth */
-        return binding->index;
+    int depth = 0;
+    WasmLabel* label = parser->top_label;
+    while (label) {
+      if (label->name && string_eq(p, end, label->name)) {
+        if (out_label)
+          *out_label = label;
+        return depth;
+      }
+      ++depth;
+      label = label->next;
     }
     FATAL_AT(parser, t.range.start, "undefined label variable \"%.*s\"\n",
              (int)(end - p), p);
   } else {
     /* var index */
-    uint32_t index;
-    if (!read_int32(p, t.range.end.pos, &index, 0)) {
-      FATAL_AT(parser, t.range.start, "invalid var index\n");
+    uint32_t depth;
+    if (!read_int32(p, t.range.end.pos, &depth, 0)) {
+      FATAL_AT(parser, t.range.start, "invalid label depth\n");
     }
 
-    if (index >= function->label_bindings.size) {
+    WasmLabel* label = parser->top_label;
+    int i;
+    for (i = 0; label && i < depth; ++i)
+      label = label->next;
+
+    if (!label) {
       FATAL_AT(parser, t.range.start, "label variable out of range (max %zd)\n",
-               function->label_bindings.size);
+               i);
     }
 
-    /* Index in reverse, so 0 is the most recent label. The stored "index" is
-     * actually the label depth, so return that instead */
-    index = (function->label_bindings.size - 1) - index;
-    return function->label_bindings.data[index].index;
+    if (out_label)
+      *out_label = label;
+    return depth;
   }
-}
-
-/* parse_label_var returns the depth counting up (so 0 is the topmost
- block of this function). We want the depth counting down (so 0 is the most
- recent block). */
-static int parse_break_depth(WasmParser* parser, WasmFunction* function) {
-  return function->label_bindings.size - parse_label_var(parser, function);
 }
 
 static void parse_type(WasmParser* parser, WasmType* type) {
@@ -1270,8 +1247,8 @@ static void parse_tableswitch_case(WasmParser* parser,
     }
 
     case WASM_OP_BR: {
-      int label_depth = parse_break_depth(parser, function);
-      CALLBACK(parser, before_tableswitch_br, (&parser->info, label_depth));
+      int depth = parse_break_depth(parser, function, NULL);
+      CALLBACK(parser, before_tableswitch_br, (&parser->info, depth));
       break;
     }
 
@@ -1287,15 +1264,17 @@ static WasmType parse_tableswitch(WasmParser* parser,
                                   WasmFunction* function) {
   WasmType result_type = WASM_TYPE_ALL;
   WasmToken t = read_token(parser);
-  WasmLabel* label = NULL;
+  WasmLabel label = {};
+  int with_label = 0;
   if (t.type == WASM_TOKEN_TYPE_ATOM) {
-    label = push_label(parser, function, t);
+    push_label(parser, &label, t);
+    with_label = 1;
   } else {
     rewind_token(parser, t);
   }
 
   WasmParserCookie cookie =
-      CALLBACK(parser, before_tableswitch, (&parser->info, label != NULL));
+      CALLBACK(parser, before_tableswitch, (&parser->info, with_label));
 
   WasmBindingVector bindings = {};
   WasmTableswitchCaseVector cases = {};
@@ -1397,9 +1376,9 @@ static WasmType parse_tableswitch(WasmParser* parser,
     t = read_token(parser);
     ++num_targets;
   }
-  if (label) {
-    result_type &= label->type;
-    pop_label(function);
+  if (with_label) {
+    result_type &= label.type;
+    pop_label(parser);
   }
   CALLBACK_COOKIE(parser, after_tableswitch, cookie,
                   (&parser->info, num_targets));
@@ -1433,21 +1412,23 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_BLOCK: {
       t = read_token(parser);
-      WasmLabel* label = NULL;
-      if (t.type == WASM_TOKEN_TYPE_ATOM)
-        label = push_label(parser, function, t);
-      else
+      WasmLabel label = {};
+      int with_label = 0;
+      if (t.type == WASM_TOKEN_TYPE_ATOM) {
+        push_label(parser, &label, t);
+        with_label = 1;
+      } else {
         rewind_token(parser, t);
+      }
 
-      int with_label = label != NULL;
       WasmParserCookie cookie =
           CALLBACK(parser, before_block, (&parser->info, with_label));
 
       int num_exprs;
       type = parse_block(parser, module, function, &num_exprs);
-      if (label) {
-        type &= label->type;
-        pop_label(function);
+      if (with_label) {
+        type &= label.type;
+        pop_label(parser);
       }
       CALLBACK_COOKIE(parser, after_block, cookie,
                       (&parser->info, type, num_exprs));
@@ -1459,8 +1440,7 @@ static WasmType parse_expr(WasmParser* parser,
       WasmType cond_type = parse_expr(parser, module, function);
       check_type(parser, parser->tokenizer.loc, cond_type, WASM_TYPE_I32,
                  " of condition");
-      int depth = parse_break_depth(parser, function);
-      check_break_depth(parser, t.range.start, function, depth);
+      int depth = parse_break_depth(parser, function, NULL);
       expect_close(parser, read_token(parser));
       CALLBACK_COOKIE(parser, after_br_if, cookie, (&parser->info, depth));
       break;
@@ -1469,24 +1449,27 @@ static WasmType parse_expr(WasmParser* parser,
     case WASM_OP_BR: {
       t = read_token(parser);
       int depth = 0;
+      WasmLabel* label = parser->top_label;
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
         rewind_token(parser, t);
-        depth = parse_break_depth(parser, function);
+        depth = parse_break_depth(parser, function, &label);
         t = read_token(parser);
+      } else {
+        if (label == NULL) {
+          FATAL_AT(parser, t.range.start,
+                   "label variable out of range (max 0)\n");
+        }
       }
-      check_break_depth(parser, t.range.start, function, depth);
       int with_expr = t.type == WASM_TOKEN_TYPE_OPEN_PAREN;
       WasmParserCookie cookie =
           CALLBACK(parser, before_break, (&parser->info, with_expr, depth));
-      int label_index = (function->labels.size - 1) - depth;
-      WasmLabel* break_label = &function->labels.data[label_index];
       if (with_expr) {
         rewind_token(parser, t);
         WasmType break_type = parse_expr(parser, module, function);
-        break_label->type &= break_type;
+        label->type &= break_type;
         t = read_token(parser);
       } else {
-        break_label->type = WASM_TYPE_VOID;
+        label->type = WASM_TYPE_VOID;
       }
       expect_close(parser, t);
       CALLBACK_COOKIE(parser, after_break, cookie, (&parser->info));
@@ -1602,18 +1585,18 @@ static WasmType parse_expr(WasmParser* parser,
       WasmParserCookie cookie = CALLBACK(parser, before_label, (&parser->info));
 
       t = read_token(parser);
-      WasmLabel* label = NULL;
+      WasmLabel label = {};
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
-        label = push_label(parser, function, t);
+        push_label(parser, &label, t);
       } else if (t.type == WASM_TOKEN_TYPE_OPEN_PAREN) {
-        label = push_anonymous_label(parser, function, t);
+        push_anonymous_label(parser, &label);
         rewind_token(parser, t);
       } else {
         unexpected_token(parser, t);
       }
 
-      type = parse_expr(parser, module, function) & label->type;
-      pop_label(function);
+      type = parse_expr(parser, module, function) & label.type;
+      pop_label(parser);
       expect_close(parser, read_token(parser));
       CALLBACK_COOKIE(parser, after_label, cookie, (&parser->info, type));
       break;
@@ -1647,8 +1630,9 @@ static WasmType parse_expr(WasmParser* parser,
 
     case WASM_OP_LOOP: {
       t = read_token(parser);
-      WasmLabel* outer_label = NULL;
-      WasmLabel* inner_label = NULL;
+      WasmLabel outer_label = {};
+      WasmLabel inner_label = {};
+      int with_outer_label = 0;
       /* The exit label is first, but default. So:
        (loop $cont ...)
        (loop $exit $cont ...)
@@ -1656,30 +1640,32 @@ static WasmType parse_expr(WasmParser* parser,
        Also, the inner label is always created, so:
        (loop ... (br 0)) */
       if (t.type == WASM_TOKEN_TYPE_ATOM) {
-        inner_label = push_label(parser, function, t);
+        WasmToken inner_t = t;
+        push_label(parser, &inner_label, t);
 
         t = read_token(parser);
         if (t.type == WASM_TOKEN_TYPE_ATOM) {
-          outer_label = inner_label;
-          inner_label = push_label(parser, function, t);
+          pop_label(parser);
+          push_label(parser, &outer_label, inner_t);
+          push_label(parser, &inner_label, t);
+          with_outer_label = 1;
         } else {
           rewind_token(parser, t);
         }
       } else {
         rewind_token(parser, t);
-        inner_label = push_anonymous_label(parser, function, t);
+        push_anonymous_label(parser, &inner_label);
       }
 
-      int with_outer_label = outer_label != NULL;
       WasmParserCookie cookie =
           CALLBACK(parser, before_loop, (&parser->info, 1, with_outer_label));
 
       int num_exprs;
       parse_block(parser, module, function, &num_exprs);
-      pop_label(function);
-      if (outer_label) {
-        type = outer_label->type;
-        pop_label(function);
+      pop_label(parser);
+      if (with_outer_label) {
+        type = outer_label.type;
+        pop_label(parser);
       }
       CALLBACK_COOKIE(parser, after_loop, cookie, (&parser->info, num_exprs));
       break;
@@ -2341,8 +2327,6 @@ static void wasm_destroy_module(WasmModule* module) {
     WasmFunction* function = &module->functions.data[i];
     wasm_destroy_variable_vector(&function->locals);
     wasm_destroy_binding_list(&function->local_bindings);
-    wasm_destroy_label_vector(&function->labels);
-    wasm_destroy_binding_list(&function->label_bindings);
     free(function->exported_name.name);
     WasmExportedNameList* node = function->exported_name.next;
     while (node) {
@@ -2372,6 +2356,14 @@ static void wasm_destroy_module(WasmModule* module) {
   wasm_destroy_signature_vector(&module->signatures);
   wasm_destroy_binding_list(&module->function_type_bindings);
   wasm_destroy_function_ptr_vector(&module->function_table);
+}
+
+static void wasm_destroy_parser(WasmParser* parser) {
+  WasmLabel* label = parser->top_label;
+  while (label) {
+    free(label->name);
+    label = label->next;
+  }
 }
 
 static void parse_module(WasmParser* parser, WasmModule* module) {
@@ -2510,6 +2502,7 @@ int wasm_parse_module(WasmSource* source,
 
   if (setjmp(parser.jump_buf)) {
     wasm_destroy_module(&module);
+    wasm_destroy_parser(&parser);
     /* error */
     return 1;
   }
@@ -2521,6 +2514,7 @@ int wasm_parse_module(WasmSource* source,
              "expected EOF. Use --spec to parse spec tests.\n");
   CALLBACK(&parser, before_module_destroy, (&parser.info));
   wasm_destroy_module(&module);
+  wasm_destroy_parser(&parser);
   return 0;
 }
 
@@ -2558,6 +2552,7 @@ int wasm_parse_file(WasmSource* source,
   if (setjmp(parser->jump_buf)) {
     /* error */
     wasm_destroy_module(&module);
+    wasm_destroy_parser(parser);
     return 1;
   }
 
@@ -2577,6 +2572,7 @@ int wasm_parse_file(WasmSource* source,
         CALLBACK(parser, before_module_destroy, (&parser->info));
         /* Destroy previous module, if any */
         wasm_destroy_module(&module);
+        wasm_destroy_parser(parser);
         memset(&module, 0, sizeof(module));
         parse_module(parser, &module);
         break;
@@ -2675,6 +2671,7 @@ int wasm_parse_file(WasmSource* source,
             parse_module(&parser2, &module2);
           }
           wasm_destroy_module(&module2);
+          wasm_destroy_parser(&parser2);
 
           if (result == 0)
             FATAL_AT(parser, parser->tokenizer.loc,
@@ -2707,5 +2704,6 @@ int wasm_parse_file(WasmSource* source,
 
   CALLBACK(parser, before_module_destroy, (&parser->info));
   wasm_destroy_module(&module);
+  wasm_destroy_parser(parser);
   return 0;
 }

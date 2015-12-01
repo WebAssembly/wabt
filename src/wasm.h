@@ -237,9 +237,10 @@ typedef struct WasmVariable {
 DECLARE_VECTOR(variable, WasmVariable)
 
 typedef struct WasmLabel {
+  char* name;
   WasmType type;
+  struct WasmLabel* next;
 } WasmLabel;
-DECLARE_VECTOR(label, WasmLabel)
 
 typedef struct WasmExportedNameList {
   char* name;
@@ -259,8 +260,6 @@ typedef struct WasmFunction {
   WasmType result_type;
   WasmVariableVector locals; /* Includes args, they're at the start */
   WasmBindingVector local_bindings;
-  WasmLabelVector labels;
-  WasmBindingVector label_bindings;
   int num_args;
   WasmSignatureIndex signature_index;
 
