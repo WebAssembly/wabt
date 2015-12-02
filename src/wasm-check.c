@@ -326,10 +326,11 @@ static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
                                          WasmStringSlice* name) {
   WasmLabelNode* node = top_label;
   while (node) {
-    if (node->label && string_slices_are_equal(node->label, name))
+    if (string_slices_are_equal(node->label, name))
       return node;
     node = node->next;
   }
+  return NULL;
 }
 
 static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
@@ -372,7 +373,7 @@ static WasmResult push_label(WasmCheckContext* ctx,
                              WasmType expected_type,
                              const char* desc) {
   WasmResult result = WASM_OK;
-  if (label && find_label_by_name(ctx->top_label, label)) {
+  if (label->start && find_label_by_name(ctx->top_label, label)) {
     print_error(ctx, loc, "redefinition of label \"%.*s\"", label->length,
                 label->start);
     /* add it anyway */
@@ -481,8 +482,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       int has_label = expr->block.label.start != NULL;
       WasmLabelNode node;
       if (has_label)
-        push_label(ctx, &expr->loc, &node, &expr->block.label, expected_type,
-                   "block");
+        result |= push_label(ctx, &expr->loc, &node, &expr->block.label,
+                             expected_type, "block");
       result |= check_exprs(ctx, module, func, &expr->block.exprs,
                             expected_type, " of block");
       if (has_label)
@@ -625,8 +626,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     case WASM_EXPR_TYPE_LABEL: {
       WasmLabelNode node;
-      push_label(ctx, &expr->loc, &node, &expr->label.label, expected_type,
-                 "label");
+      result |= push_label(ctx, &expr->loc, &node, &expr->label.label,
+                           expected_type, "label");
       result |= check_expr(ctx, module, func, expr->label.expr, expected_type,
                            " of label");
       pop_label(ctx);
@@ -659,13 +660,13 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer_node;
-      push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer, expected_type,
-                 "loop outer label");
+      result |= push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer,
+                           expected_type, "loop outer label");
       int has_inner_label = expr->loop.inner.start != NULL;
       if (has_inner_label) {
         WasmLabelNode inner_node;
-        push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
-                   WASM_TYPE_VOID, "loop inner label");
+        result |= push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
+                             WASM_TYPE_VOID, "loop inner label");
       }
       result |= check_exprs(ctx, module, func, &expr->loop.exprs, expected_type,
                             " of loop");
@@ -755,8 +756,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       WasmLabelNode node;
       int has_label = expr->tableswitch.label.start != NULL;
       if (has_label)
-        push_label(ctx, &expr->loc, &node, &expr->tableswitch.label,
-                   expected_type, "tableswitch");
+        result |= push_label(ctx, &expr->loc, &node, &expr->tableswitch.label,
+                             expected_type, "tableswitch");
       result |= check_expr(ctx, module, func, expr->tableswitch.expr,
                            WASM_TYPE_I32, " of key");
       int i;
