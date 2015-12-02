@@ -38,6 +38,8 @@ typedef enum WasmMemSize {
   WASM_MEM_SIZE_64 = 64,
 } WasmMemSize;
 
+enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
+
 typedef enum WasmUnaryOpType {
   WASM_UNARY_OP_TYPE_F32_ABS,
   WASM_UNARY_OP_TYPE_F32_CEIL,

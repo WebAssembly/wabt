@@ -31,7 +31,7 @@
 0000018: 0300                                       ; num targets
 000001a: 0000                                       ; case index
 000001c: 0100                                       ; case index
-000001e: 0080                                       ; br depth
+000001e: 0180                                       ; br depth
 0000020: 09                                         ; OPCODE_I8_CONST
 0000021: 00                                         ; u8 literal
 0000022: 01                                         ; OPCODE_BLOCK

@@ -3,26 +3,26 @@
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/memory.wast:11:21: max size (0) must be greater than or equal to initial size (1)
+  third_party/testsuite/memory.wast:11:12: max size (0) must be greater than or equal to initial size (1)
 assert_invalid error:
-  third_party/testsuite/memory.wast:15:34: segment ends past the end of the initial memory size (0)
+  third_party/testsuite/memory.wast:15:24: segment ends past the end of initial memory size (0)
 assert_invalid error:
-  third_party/testsuite/memory.wast:19:53: address (500) greater than initial memory size (100)
+  third_party/testsuite/memory.wast:19:45: address (500) greater than initial memory size (100)
 assert_invalid error:
-  third_party/testsuite/memory.wast:23:55: address (0) less than end of previous segment (3)
+  third_party/testsuite/memory.wast:23:47: address (0) less than end of previous segment (3)
 assert_invalid error:
-  third_party/testsuite/memory.wast:27:54: address (0) less than end of previous segment (5)
+  third_party/testsuite/memory.wast:27:46: address (0) less than end of previous segment (5)
 assert_invalid error:
-  third_party/testsuite/memory.wast:31:69: address (1) less than end of previous segment (3)
+  third_party/testsuite/memory.wast:31:61: address (1) less than end of previous segment (3)
 assert_invalid error:
-  third_party/testsuite/memory.wast:42:38: alignment must be power-of-two
+  third_party/testsuite/memory.wast:42:28: alignment must be power-of-two
 assert_invalid error:
-  third_party/testsuite/memory.wast:46:38: alignment must be power-of-two
+  third_party/testsuite/memory.wast:46:28: alignment must be power-of-two
 assert_invalid error:
-  third_party/testsuite/memory.wast:50:38: alignment must be power-of-two
+  third_party/testsuite/memory.wast:50:28: alignment must be power-of-two
 assert_invalid error:
-  third_party/testsuite/memory.wast:54:38: alignment must be power-of-two
+  third_party/testsuite/memory.wast:54:28: alignment must be power-of-two
 assert_invalid error:
-  third_party/testsuite/memory.wast:58:38: alignment must be power-of-two
+  third_party/testsuite/memory.wast:58:28: alignment must be power-of-two
 24/24 tests passed.
 ;;; STDOUT ;;)

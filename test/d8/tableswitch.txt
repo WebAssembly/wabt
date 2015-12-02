@@ -1,8 +1,11 @@
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 (module
   (func $f (param i32) (result i32)
     (label
       (tableswitch (get_local 0)
+        ;; v8-native doesn't currently push a new break scope at the right
+        ;; place, so (br 0) fails.
         (table (case 0) (br 0) (case 1)) (case 2)
           (case (return (i32.const 0)))     ;; 0
           (case)                            ;; 2, fallthrough
@@ -20,9 +23,13 @@
 
   (export "test3" $test3)
   (func $test3 (result i32) (call $f (i32.const 3))))
+(;; STDERR ;;;
+
+;;; STDERR ;;)
 (;; STDOUT ;;;
-test0() = 0
-test1() = 1
-test2() = 2
-test3() = 2
+WasmModule::Instantiate(): Compiling WASM function #0:<?> failed:Result = improper branch in tableswitch @+9
+
+var module = WASM.instantiateModule(buffer, ffi);
+                  ^
+
 ;;; STDOUT ;;)

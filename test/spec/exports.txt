@@ -5,8 +5,8 @@
 assert_invalid error:
   third_party/testsuite/exports.wast:5:44: function variable out of range (max 1)
 assert_invalid error:
-  third_party/testsuite/exports.wast:8:76: duplicate function export "a"
+  third_party/testsuite/exports.wast:8:68: redefinition of export "a"
 assert_invalid error:
-  third_party/testsuite/exports.wast:11:55: duplicate function export "a"
+  third_party/testsuite/exports.wast:11:47: redefinition of export "a"
 1/1 tests passed.
 ;;; STDOUT ;;)

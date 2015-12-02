@@ -58,6 +58,10 @@ static void print_error(WasmCheckContext* ctx,
   fprintf(out, "\n");
 }
 
+static int is_power_of_two(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
+
 static int string_slices_are_equal(WasmStringSlice* a, WasmStringSlice* b) {
   return a->start && b->start && a->length == b->length &&
          memcmp(a->start, b->start, a->length) == 0;
@@ -264,6 +268,16 @@ static WasmResult check_global_var(WasmCheckContext* ctx,
 
   if (out_type)
     *out_type = module->globals.types.data[index];
+  return WASM_OK;
+}
+
+static WasmResult check_align(WasmCheckContext* ctx,
+                              WasmLocation* loc,
+                              uint32_t alignment) {
+  if (alignment != WASM_USE_NATURAL_ALIGNMENT && !is_power_of_two(alignment)) {
+    print_error(ctx, loc, "alignment must be power-of-two");
+    return WASM_ERROR;
+  }
   return WASM_OK;
 }
 
@@ -499,11 +513,11 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |= check_label_var(ctx, ctx->top_label, &expr->br_if.var, NULL);
       break;
     case WASM_EXPR_TYPE_CALL: {
-      WasmFunc* func;
-      if (check_func_var(ctx, module, &expr->call.var, &func) == WASM_OK) {
-        result |= check_call(ctx, &expr->loc, module, func, &func->params.types,
-                             func->result_type, &expr->call.args, expected_type,
-                             "call");
+      WasmFunc* callee;
+      if (check_func_var(ctx, module, &expr->call.var, &callee) == WASM_OK) {
+        result |= check_call(ctx, &expr->loc, module, func,
+                             &callee->params.types, callee->result_type,
+                             &expr->call.args, expected_type, "call");
       } else {
         result = WASM_ERROR;
       }
@@ -620,6 +634,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_LOAD: {
       WasmType type = expr->load.op.type;
+      result |= check_align(ctx, &expr->loc, expr->load.align);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->load.addr, WASM_TYPE_I32,
                            " of load index");
@@ -627,6 +642,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_LOAD_EXTEND: {
       WasmType type = expr->load.op.type;
+      result |= check_align(ctx, &expr->loc, expr->load.align);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->load.addr, WASM_TYPE_I32,
                            " of load index");
@@ -702,6 +718,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_STORE: {
       WasmType type = expr->store.op.type;
+      result |= check_align(ctx, &expr->loc, expr->store.align);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->store.addr, WASM_TYPE_I32,
                            " of store index");
@@ -723,6 +740,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_STORE_WRAP: {
       WasmType type = expr->store.op.type;
+      result |= check_align(ctx, &expr->loc, expr->store.align);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->store.addr, WASM_TYPE_I32,
                            " of store index");
@@ -830,7 +848,7 @@ static WasmResult check_import(WasmCheckContext* ctx,
   if (import->import_type != WASM_IMPORT_HAS_TYPE)
     return WASM_OK;
 
-  return check_import_var(ctx, module, &import->type_var, NULL);
+  return check_func_type_var(ctx, module, &import->type_var, NULL);
 }
 
 static WasmResult check_export(WasmCheckContext* ctx,
@@ -870,12 +888,12 @@ static WasmResult check_memory(WasmCheckContext* ctx,
                   segment->addr, last_end);
       result = WASM_ERROR;
     }
-    if (segment->addr >= memory->initial_size) {
+    if (segment->addr > memory->initial_size) {
       print_error(ctx, &segment->loc,
                   "address (%u) greater than initial memory size (%u)",
                   segment->addr, memory->initial_size);
       result = WASM_ERROR;
-    } else if (segment->addr + segment->size >= memory->initial_size) {
+    } else if (segment->addr + segment->size > memory->initial_size) {
       print_error(ctx, &segment->loc,
                   "segment ends past the end of initial memory size (%u)",
                   memory->initial_size);

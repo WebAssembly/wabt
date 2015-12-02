@@ -2,6 +2,7 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/resizing.wast
 (;; STDOUT ;;;
+third_party/testsuite/resizing.wast:34: $assert_return_0 failed.
 third_party/testsuite/resizing.wast:36: $assert_trap_2 failed, didn't throw
 third_party/testsuite/resizing.wast:37: $assert_trap_3 failed, didn't throw
 third_party/testsuite/resizing.wast:38: $assert_trap_4 failed, didn't throw
@@ -14,5 +15,5 @@ third_party/testsuite/resizing.wast:46: $assert_trap_12 failed, didn't throw
 $invoke_13 = undefined
 third_party/testsuite/resizing.wast:48: $assert_return_14 failed.
 third_party/testsuite/resizing.wast:53: $assert_return_19 failed.
-8/18 tests passed.
+7/18 tests passed.
 ;;; STDOUT ;;)

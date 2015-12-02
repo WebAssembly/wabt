@@ -40,10 +40,6 @@ static WasmExprPtr wasm_new_expr(WasmExprType type) {
   return result;
 }
 
-static int is_power_of_two(uint32_t x) {
-  return x && ((x & (x - 1)) == 0);
-}
-
 static int read_int32(const char* s, const char* end, uint32_t* out,
                       int allow_signed);
 static int read_int64(const char* s, const char* end, uint64_t* out);
@@ -106,12 +102,12 @@ static void dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<module> module
 %type<module_fields> module_fields
 %type<script> script
-%type<segment> segment
+%type<segment> segment string_contents
 %type<segments> segment_list
 %type<type_bindings> global local_list param_list
 %type<targets> target_list
 %type<target> target
-%type<text> bind_var labeling literal
+%type<text> bind_var labeling literal quoted_text text
 %type<type> result
 %type<types> value_type_list
 %type<u32> align offset
@@ -179,6 +175,18 @@ bind_var :
     VAR { DUPTEXT($$, $1); }
 ;
 
+text :
+    TEXT { DUPTEXT($$, $1); }
+;
+
+quoted_text :
+    TEXT { DUPQUOTEDTEXT($$, $1); }
+;
+
+string_contents :
+    TEXT { dup_string_contents(&$1, &$$.data, &$$.size); }
+;
+
 labeling :
     /* empty */ %prec LOW { ZEROMEM($$); }
   | bind_var { DUPTEXT($$, $1); }
@@ -193,14 +201,11 @@ offset :
     }
 ;
 align :
-    /* empty */ { $$ = 0; }
+    /* empty */ { $$ = WASM_USE_NATURAL_ALIGNMENT; }
   | ALIGN {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
         yyerror(&@1, scanner, parser, "invalid alignment \"%.*s\"", $1.length,
                 $1.start);
-
-      if (!is_power_of_two($$))
-        yyerror(&@1, scanner, parser, "alignment must be power-of-two");
     }
 ;
 
@@ -390,7 +395,7 @@ expr1 :
       $$ = wasm_new_expr(WASM_EXPR_TYPE_GROW_MEMORY);
       $$->grow_memory.expr = $2;
     }
-  | HAS_FEATURE TEXT {
+  | HAS_FEATURE text {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_HAS_FEATURE);
       $$->has_feature.text = $2;
     }
@@ -898,12 +903,13 @@ func :
 /* Modules */
 
 segment :
-    LPAR SEGMENT INT TEXT RPAR {
+    LPAR SEGMENT INT string_contents RPAR {
       $$.loc = @2;
+      $$.data = $4.data;
+      $$.size = $4.size;
       if (!read_int32($3.start, $3.start + $3.length, &$$.addr, 0))
         yyerror(&@3, scanner, parser, "invalid memory segment address \"%.*s\"",
                 $3.length, $3.start);
-      dup_string_contents(&$4, &$$.data, &$$.size);
     }
 ;
 segment_list :
@@ -948,41 +954,41 @@ table :
 ;
 
 import :
-    LPAR IMPORT TEXT TEXT type_use RPAR {
+    LPAR IMPORT quoted_text quoted_text type_use RPAR {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_TYPE;
-      DUPQUOTEDTEXT($$.module_name, $3);
-      DUPQUOTEDTEXT($$.func_name, $4);
+      $$.module_name = $3;
+      $$.func_name = $4;
       $$.type_var = $5;
     }
-  | LPAR IMPORT bind_var TEXT TEXT type_use RPAR /* Sugar */ {
+  | LPAR IMPORT bind_var quoted_text quoted_text type_use RPAR /* Sugar */ {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_TYPE;
       $$.name = $3;
-      DUPQUOTEDTEXT($$.module_name, $4);
-      DUPQUOTEDTEXT($$.func_name, $5);
+      $$.module_name = $4;
+      $$.func_name = $5;
       $$.type_var = $6;
     }
-  | LPAR IMPORT TEXT TEXT func_type RPAR  /* Sugar */ {
+  | LPAR IMPORT quoted_text quoted_text func_type RPAR  /* Sugar */ {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
-      DUPQUOTEDTEXT($$.module_name, $3);
-      DUPQUOTEDTEXT($$.func_name, $4);
+      $$.module_name = $3;
+      $$.func_name = $4;
       $$.func_sig = $5;
     }
-  | LPAR IMPORT bind_var TEXT TEXT func_type RPAR  /* Sugar */ {
+  | LPAR IMPORT bind_var quoted_text quoted_text func_type RPAR  /* Sugar */ {
       ZEROMEM($$);
       $$.import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
       $$.name = $3;
-      DUPQUOTEDTEXT($$.module_name, $4);
-      DUPQUOTEDTEXT($$.func_name, $5);
+      $$.module_name = $4;
+      $$.func_name = $5;
       $$.func_sig = $6;
     }
 ;
 
 export :
-    LPAR EXPORT TEXT var RPAR {
-      DUPQUOTEDTEXT($$.name, $3);
+    LPAR EXPORT quoted_text var RPAR {
+      $$.name = $3;
       $$.var = $4;
     }
 ;
@@ -1120,34 +1126,34 @@ module :
 
 cmd :
     module { $$.type = WASM_COMMAND_TYPE_MODULE; $$.module = $1; }
-  | LPAR INVOKE TEXT const_list RPAR {
+  | LPAR INVOKE quoted_text const_list RPAR {
       $$.type = WASM_COMMAND_TYPE_INVOKE;
       $$.invoke.loc = @2;
-      DUPQUOTEDTEXT($$.invoke.name, $3);
+      $$.invoke.name = $3;
       $$.invoke.args = $4;
     }
-  | LPAR ASSERT_INVALID module TEXT RPAR {
+  | LPAR ASSERT_INVALID module quoted_text RPAR {
       $$.type = WASM_COMMAND_TYPE_ASSERT_INVALID;
       $$.assert_invalid.module = $3;
       $$.assert_invalid.text = $4;
     }
-  | LPAR ASSERT_RETURN LPAR INVOKE TEXT const_list RPAR const_opt RPAR {
+  | LPAR ASSERT_RETURN LPAR INVOKE quoted_text const_list RPAR const_opt RPAR {
       $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN;
       $$.assert_return.invoke.loc = @4;
-      DUPQUOTEDTEXT($$.assert_return.invoke.name, $5);
+      $$.assert_return.invoke.name = $5;
       $$.assert_return.invoke.args = $6;
       $$.assert_return.expected = $8;
     }
-  | LPAR ASSERT_RETURN_NAN LPAR INVOKE TEXT const_list RPAR RPAR {
+  | LPAR ASSERT_RETURN_NAN LPAR INVOKE quoted_text const_list RPAR RPAR {
       $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
       $$.assert_return_nan.invoke.loc = @4;
-      DUPQUOTEDTEXT($$.assert_return_nan.invoke.name, $5);
+      $$.assert_return_nan.invoke.name = $5;
       $$.assert_return_nan.invoke.args = $6;
     }
-  | LPAR ASSERT_TRAP LPAR INVOKE TEXT const_list RPAR TEXT RPAR {
+  | LPAR ASSERT_TRAP LPAR INVOKE quoted_text const_list RPAR quoted_text RPAR {
       $$.type = WASM_COMMAND_TYPE_ASSERT_TRAP;
       $$.assert_trap.invoke.loc = @4;
-      DUPQUOTEDTEXT($$.assert_trap.invoke.name, $5);
+      $$.assert_trap.invoke.name = $5;
       $$.assert_trap.invoke.args = $6;
       $$.assert_trap.text = $8;
     }

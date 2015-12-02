@@ -657,11 +657,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
     WasmFunc* func = module->funcs.data[i];
     int index;
     if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
-      WasmFuncType* func_type =
-          wasm_get_func_type_by_var(module, &func->type_var);
-      assert(func_type);
-      index = find_func_signature(sigs, func_type->sig.result_type,
-                                  &func_type->sig.param_types);
+      index = wasm_get_func_type_index_by_var(module, &func->type_var);
       assert(index != -1);
     } else {
       assert(func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE);
@@ -969,6 +965,7 @@ static void write_expr(WasmWriteContext* ctx,
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
       WasmLabelNode node;
+      push_label(ctx, &node, &expr->tableswitch.label, WASM_NO_FORCE_LABEL);
       out_opcode(ws, WASM_OPCODE_TABLESWITCH);
       out_u16(ws, expr->tableswitch.cases.size, "num cases");
       out_u16(ws, expr->tableswitch.targets.size + 1, "num targets");
@@ -981,7 +978,6 @@ static void write_expr(WasmWriteContext* ctx,
       write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
                                &expr->tableswitch.cases,
                                &expr->tableswitch.default_target);
-      push_label(ctx, &node, &expr->tableswitch.label, WASM_NO_FORCE_LABEL);
       write_expr(ctx, module, func, expr->tableswitch.expr);
       for (i = 0; i < expr->tableswitch.cases.size; ++i) {
         WasmCase* case_ = &expr->tableswitch.cases.data[i];
@@ -1446,6 +1442,7 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
         write_module_spec(ctx, last_module);
       write_module_header_spec(ctx);
       last_module = &command->module;
+      num_assert_funcs = 0;
     } else {
       const char* js_call = NULL;
       const char* format = NULL;

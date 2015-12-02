@@ -2,7 +2,6 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/memory_trap.wast
 (;; STDOUT ;;;
-third_party/testsuite/memory_trap.wast:20: $assert_return_1 failed.
 third_party/testsuite/memory_trap.wast:21: $assert_trap_2 failed, didn't throw
 third_party/testsuite/memory_trap.wast:22: $assert_trap_3 failed, didn't throw
 third_party/testsuite/memory_trap.wast:23: $assert_trap_4 failed, didn't throw
@@ -15,5 +14,5 @@ third_party/testsuite/memory_trap.wast:29: $assert_trap_10 failed, didn't throw
 third_party/testsuite/memory_trap.wast:30: $assert_trap_11 failed, didn't throw
 third_party/testsuite/memory_trap.wast:31: $assert_trap_12 failed, didn't throw
 third_party/testsuite/memory_trap.wast:32: $assert_trap_13 failed, didn't throw
-1/14 tests passed.
+2/14 tests passed.
 ;;; STDOUT ;;)
