@@ -242,11 +242,13 @@ static uint8_t s_binary_opcodes[] = {
     WASM_OPCODE_I64_SHR_S, WASM_OPCODE_I64_SHR_U,    WASM_OPCODE_I64_SUB,
     WASM_OPCODE_I64_XOR,
 };
+STATIC_ASSERT(ARRAY_SIZE(s_binary_opcodes) == WASM_NUM_BINARY_OP_TYPES);
 
 static uint8_t s_cast_opcodes[] = {
     WASM_OPCODE_F32_REINTERPRET_I32, WASM_OPCODE_F64_REINTERPRET_I64,
     WASM_OPCODE_I32_REINTERPRET_F32, WASM_OPCODE_I64_REINTERPRET_F64,
 };
+STATIC_ASSERT(ARRAY_SIZE(s_cast_opcodes) == WASM_NUM_CAST_OP_TYPES);
 
 static uint8_t s_compare_opcodes[] = {
     WASM_OPCODE_F32_EQ,   WASM_OPCODE_F32_GE,   WASM_OPCODE_F32_GT,
@@ -261,6 +263,7 @@ static uint8_t s_compare_opcodes[] = {
     WASM_OPCODE_I64_LE_S, WASM_OPCODE_I64_LE_U, WASM_OPCODE_I64_LT_S,
     WASM_OPCODE_I64_LT_U, WASM_OPCODE_I64_NE,
 };
+STATIC_ASSERT(ARRAY_SIZE(s_compare_opcodes) == WASM_NUM_COMPARE_OP_TYPES);
 
 static uint8_t s_convert_opcodes[] = {
     WASM_OPCODE_F32_SCONVERT_I32, WASM_OPCODE_F32_SCONVERT_I64,
@@ -275,6 +278,7 @@ static uint8_t s_convert_opcodes[] = {
     WASM_OPCODE_I64_SCONVERT_F64, WASM_OPCODE_I64_UCONVERT_F32,
     WASM_OPCODE_I64_UCONVERT_F64,
 };
+STATIC_ASSERT(ARRAY_SIZE(s_convert_opcodes) == WASM_NUM_CONVERT_OP_TYPES);
 
 static uint8_t s_mem_opcodes[] = {
     WASM_OPCODE_F32_LOAD_MEM,     WASM_OPCODE_F32_STORE_MEM,
@@ -290,6 +294,7 @@ static uint8_t s_mem_opcodes[] = {
     WASM_OPCODE_I64_STORE_MEM8,   WASM_OPCODE_I64_STORE_MEM16,
     WASM_OPCODE_I64_STORE_MEM32,
 };
+STATIC_ASSERT(ARRAY_SIZE(s_mem_opcodes) == WASM_NUM_MEM_OP_TYPES);
 
 static uint8_t s_unary_opcodes[] = {
     WASM_OPCODE_F32_ABS,         WASM_OPCODE_F32_CEIL,
@@ -304,6 +309,7 @@ static uint8_t s_unary_opcodes[] = {
     WASM_OPCODE_I64_CLZ,         WASM_OPCODE_I64_CTZ,
     WASM_OPCODE_I64_POPCNT,
 };
+STATIC_ASSERT(ARRAY_SIZE(s_unary_opcodes) == WASM_NUM_UNARY_OP_TYPES);
 
 typedef struct WasmLabelNode {
   WasmLabel* label;
@@ -498,36 +504,6 @@ static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
   /* - 1 to remove the trailing \0 that was added by vsnprintf */
   out_data_at(writer_state, writer_state->offset, buffer, len - 1, "");
   writer_state->offset += len - 1;
-}
-
-static uint8_t binary_opcode(WasmBinaryOp* op) {
-  assert(op->op_type >= 0 && op->op_type < ARRAY_SIZE(s_binary_opcodes));
-  return s_binary_opcodes[op->op_type];
-}
-
-static uint8_t cast_opcode(WasmCastOp* op) {
-  assert(op->op_type >= 0 && op->op_type < ARRAY_SIZE(s_cast_opcodes));
-  return s_cast_opcodes[op->op_type];
-}
-
-static uint8_t compare_opcode(WasmCompareOp* op) {
-  assert(op->op_type >= 0 && op->op_type < ARRAY_SIZE(s_compare_opcodes));
-  return s_compare_opcodes[op->op_type];
-}
-
-static uint8_t convert_opcode(WasmConvertOp* op) {
-  assert(op->op_type >= 0 && op->op_type < ARRAY_SIZE(s_convert_opcodes));
-  return s_convert_opcodes[op->op_type];
-}
-
-static uint8_t mem_opcode(WasmMemOp* op) {
-  assert(op->op_type >= 0 && op->op_type < ARRAY_SIZE(s_mem_opcodes));
-  return s_mem_opcodes[op->op_type];
-}
-
-static uint8_t unary_opcode(WasmUnaryOp* op) {
-  assert(op->op_type >= 0 && op->op_type < ARRAY_SIZE(s_unary_opcodes));
-  return s_unary_opcodes[op->op_type];
 }
 
 /* TODO(binji): share with wasm-check.c */
@@ -740,7 +716,7 @@ static void write_expr(WasmWriteContext* ctx,
   WasmWriterState* ws = &ctx->writer_state;
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      out_opcode(ws, binary_opcode(&expr->binary.op));
+      out_opcode(ws, s_binary_opcodes[expr->binary.op.op_type]);
       write_expr(ctx, module, func, expr->binary.left);
       write_expr(ctx, module, func, expr->binary.right);
       break;
@@ -803,11 +779,11 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_CAST:
-      out_opcode(ws, cast_opcode(&expr->cast.op));
+      out_opcode(ws, s_cast_opcodes[expr->cast.op.op_type]);
       write_expr(ctx, module, func, expr->cast.expr);
       break;
     case WASM_EXPR_TYPE_COMPARE:
-      out_opcode(ws, compare_opcode(&expr->compare.op));
+      out_opcode(ws, s_compare_opcodes[expr->compare.op.op_type]);
       write_expr(ctx, module, func, expr->compare.left);
       write_expr(ctx, module, func, expr->compare.right);
       break;
@@ -842,7 +818,7 @@ static void write_expr(WasmWriteContext* ctx,
       }
       break;
     case WASM_EXPR_TYPE_CONVERT:
-      out_opcode(ws, convert_opcode(&expr->convert.op));
+      out_opcode(ws, s_convert_opcodes[expr->convert.op.op_type]);
       write_expr(ctx, module, func, expr->convert.expr);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL: {
@@ -888,7 +864,7 @@ static void write_expr(WasmWriteContext* ctx,
        a = Atomicity. 0 = None, 1 = SeqCst, 2 = Acq, 3 = Rel
        o = Offset. If set, offset field follows access byte */
       /* TODO(binji): support alignment */
-      out_opcode(ws, mem_opcode(&expr->load.op));
+      out_opcode(ws, s_mem_opcodes[expr->load.op.op_type]);
       uint8_t access = 0;
       if (expr->load.offset)
         access |= 0x10;
@@ -945,7 +921,7 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_STORE:
     case WASM_EXPR_TYPE_STORE_WRAP: {
       /* See LOAD for format of memory access byte */
-      out_opcode(ws, mem_opcode(&expr->store.op));
+      out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
       uint8_t access = 0;
       if (expr->store.offset)
         access |= 0x10;
@@ -997,7 +973,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_UNARY:
-      out_opcode(ws, unary_opcode(&expr->unary.op));
+      out_opcode(ws, s_unary_opcodes[expr->unary.op.op_type]);
       write_expr(ctx, module, func, expr->unary.expr);
       break;
     case WASM_EXPR_TYPE_UNREACHABLE:

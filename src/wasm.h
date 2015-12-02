@@ -62,6 +62,7 @@ typedef enum WasmUnaryOpType {
   WASM_UNARY_OP_TYPE_I64_CLZ,
   WASM_UNARY_OP_TYPE_I64_CTZ,
   WASM_UNARY_OP_TYPE_I64_POPCNT,
+  WASM_NUM_UNARY_OP_TYPES,
 } WasmUnaryOpType;
 
 typedef enum WasmBinaryOpType {
@@ -105,6 +106,7 @@ typedef enum WasmBinaryOpType {
   WASM_BINARY_OP_TYPE_I64_SHR_U,
   WASM_BINARY_OP_TYPE_I64_SUB,
   WASM_BINARY_OP_TYPE_I64_XOR,
+  WASM_NUM_BINARY_OP_TYPES,
 } WasmBinaryOpType;
 
 typedef enum WasmCompareOpType {
@@ -140,6 +142,7 @@ typedef enum WasmCompareOpType {
   WASM_COMPARE_OP_TYPE_I64_LT_S,
   WASM_COMPARE_OP_TYPE_I64_LT_U,
   WASM_COMPARE_OP_TYPE_I64_NE,
+  WASM_NUM_COMPARE_OP_TYPES,
 } WasmCompareOpType;
 
 typedef enum WasmMemOpType {
@@ -166,6 +169,7 @@ typedef enum WasmMemOpType {
   WASM_MEM_OP_TYPE_I64_STORE8,
   WASM_MEM_OP_TYPE_I64_STORE16,
   WASM_MEM_OP_TYPE_I64_STORE32,
+  WASM_NUM_MEM_OP_TYPES,
 } WasmMemOpType;
 
 typedef enum WasmConvertOpType {
@@ -190,6 +194,7 @@ typedef enum WasmConvertOpType {
   WASM_CONVERT_OP_TYPE_I64_TRUNC_S_F64,
   WASM_CONVERT_OP_TYPE_I64_TRUNC_U_F32,
   WASM_CONVERT_OP_TYPE_I64_TRUNC_U_F64,
+  WASM_NUM_CONVERT_OP_TYPES,
 } WasmConvertOpType;
 
 typedef enum WasmCastOpType {
@@ -197,6 +202,7 @@ typedef enum WasmCastOpType {
   WASM_CAST_OP_TYPE_F64_REINTERPRET_I64,
   WASM_CAST_OP_TYPE_I32_REINTERPRET_F32,
   WASM_CAST_OP_TYPE_I64_REINTERPRET_F64,
+  WASM_NUM_CAST_OP_TYPES,
 } WasmCastOpType;
 
 typedef struct WasmUnaryOp {
