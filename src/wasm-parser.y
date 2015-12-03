@@ -141,7 +141,7 @@ func_type :
       $$.result_type = $7;
       $$.param_types = $3;
     }
-  | LPAR RESULT VALUE_TYPE RPAR { $$.result_type = $3; }
+  | LPAR RESULT VALUE_TYPE RPAR { ZEROMEM($$); $$.result_type = $3; }
 ;
 
 

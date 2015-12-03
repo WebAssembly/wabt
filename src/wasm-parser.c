@@ -1788,7 +1788,7 @@ yyreduce:
 
   case 7:
 #line 144 "src/wasm-parser.y" /* yacc.c:1646  */
-    { (yyval.func_sig).result_type = (yyvsp[-1].type); }
+    { ZEROMEM((yyval.func_sig)); (yyval.func_sig).result_type = (yyvsp[-1].type); }
 #line 1793 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
 

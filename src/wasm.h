@@ -349,6 +349,7 @@ struct WasmExpr {
       WasmExprPtr expr;
       WasmTargetVector targets;
       WasmTarget default_target;
+      /* the binding names' memory is shared with cases */
       WasmBindingVector case_bindings;
       WasmCaseVector cases;
     } tableswitch;
@@ -552,6 +553,7 @@ WasmScanner wasm_new_scanner(const char* filename);
 void wasm_free_scanner(WasmScanner scanner);
 WasmResult wasm_check_script(WasmScript*);
 WasmResult wasm_write_binary(WasmWriter*, WasmScript*, WasmWriteBinaryOptions*);
+void wasm_destroy_script(WasmScript* script);
 
 int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var);
 int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var);

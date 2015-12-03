@@ -193,8 +193,10 @@ int main(int argc, char** argv) {
     options.log_writes = 1;
 
   if (s_outfile) {
-    if (wasm_init_file_writer(&writer, s_outfile) != WASM_OK)
+    if (wasm_init_file_writer(&writer, s_outfile) != WASM_OK) {
+      wasm_destroy_script(&parser.script);
       FATAL("unable to open %s for writing\n", s_outfile);
+    }
 
     result = wasm_write_binary(&writer.base, &parser.script, &options);
     wasm_close_file_writer(&writer);
@@ -203,5 +205,6 @@ int main(int argc, char** argv) {
     result = wasm_write_binary(&writer.base, &parser.script, &options);
   }
 
+  wasm_destroy_script(&parser.script);
   return result;
 }
