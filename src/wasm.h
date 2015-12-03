@@ -554,6 +554,8 @@ void wasm_free_scanner(WasmScanner scanner);
 WasmResult wasm_check_script(WasmScript*);
 WasmResult wasm_write_binary(WasmWriter*, WasmScript*, WasmWriteBinaryOptions*);
 
+int wasm_string_slices_are_equal(WasmStringSlice*, WasmStringSlice*);
+
 void wasm_destroy_case_vector_and_elements(WasmCaseVector*);
 void wasm_destroy_case(WasmCase*);
 void wasm_destroy_command_vector_and_elements(WasmCommandVector*);

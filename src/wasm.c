@@ -1,6 +1,121 @@
 #include "wasm.h"
 
+#include <assert.h>
+#include <memory.h>
 #include <stdlib.h>
+
+DEFINE_VECTOR(type, WasmType)
+DEFINE_VECTOR(var, WasmVar);
+DEFINE_VECTOR(expr_ptr, WasmExprPtr);
+DEFINE_VECTOR(target, WasmTarget);
+DEFINE_VECTOR(case, WasmCase);
+DEFINE_VECTOR(binding, WasmBinding);
+DEFINE_VECTOR(func_ptr, WasmFuncPtr);
+DEFINE_VECTOR(segment, WasmSegment);
+DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
+DEFINE_VECTOR(import_ptr, WasmImportPtr);
+DEFINE_VECTOR(export_ptr, WasmExportPtr);
+DEFINE_VECTOR(module_field, WasmModuleField);
+DEFINE_VECTOR(const, WasmConst);
+DEFINE_VECTOR(command, WasmCommand);
+
+int wasm_string_slices_are_equal(WasmStringSlice* a, WasmStringSlice* b) {
+  return a->start && b->start && a->length == b->length &&
+         memcmp(a->start, b->start, a->length) == 0;
+}
+
+static int find_binding_index_by_name(WasmBindingVector* bindings,
+                                      WasmStringSlice* name) {
+  int i;
+  for (i = 0; i < bindings->size; ++i)
+    if (wasm_string_slices_are_equal(name, &bindings->data[i].name))
+      return bindings->data[i].index;
+  return -1;
+}
+
+int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var) {
+  if (var->type == WASM_VAR_TYPE_NAME)
+    return find_binding_index_by_name(bindings, &var->name);
+  return var->index;
+}
+
+WasmExportPtr wasm_get_export_by_name(WasmModule* module,
+                                      WasmStringSlice* name) {
+  int index = find_binding_index_by_name(&module->export_bindings, name);
+  if (index == -1)
+    return NULL;
+  return module->exports.data[index];
+}
+
+int wasm_func_is_exported(WasmModule* module, WasmFunc* func) {
+  int i;
+  for (i = 0; i < module->exports.size; ++i) {
+    WasmExport* export = module->exports.data[i];
+    if (export->var.type == WASM_VAR_TYPE_NAME) {
+      if (wasm_string_slices_are_equal(&export->var.name, &func->name))
+        return 1;
+    } else {
+      assert(export->var.type == WASM_VAR_TYPE_INDEX);
+      int index = export->var.index;
+      if (index >= 0 && index < module->funcs.size &&
+          module->funcs.data[index] == func)
+        return 1;
+    }
+  }
+  return 0;
+}
+
+int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var) {
+  return wasm_get_index_from_var(&module->func_bindings, var);
+}
+
+int wasm_get_func_type_index_by_var(WasmModule* module, WasmVar* var) {
+  return wasm_get_index_from_var(&module->func_type_bindings, var);
+}
+
+int wasm_get_global_index_by_var(WasmModule* module, WasmVar* var) {
+  return wasm_get_index_from_var(&module->globals.bindings, var);
+}
+
+int wasm_get_import_index_by_var(WasmModule* module, WasmVar* var) {
+  return wasm_get_index_from_var(&module->import_bindings, var);
+}
+
+int wasm_get_local_index_by_var(WasmFunc* func, WasmVar* var) {
+  return wasm_get_index_from_var(&func->params_and_locals.bindings, var);
+}
+
+WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->func_bindings, var);
+  if (index < 0 || index >= module->funcs.size)
+    return NULL;
+  return module->funcs.data[index];
+}
+
+WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->func_type_bindings, var);
+  if (index < 0 || index >= module->func_types.size)
+    return NULL;
+  return module->func_types.data[index];
+}
+
+WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->import_bindings, var);
+  if (index < 0 || index >= module->imports.size)
+    return NULL;
+  return module->imports.data[index];
+}
+
+void wasm_extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src) {
+  int last_type = dst->types.size;
+  int last_binding = dst->bindings.size;
+  wasm_extend_types(&dst->types, &src->types);
+  wasm_extend_bindings(&dst->bindings, &src->bindings);
+  /* fixup the binding indexes */
+  int i;
+  for (i = last_binding; i < dst->bindings.size; ++i)
+    dst->bindings.data[i].index += last_type;
+}
 
 void wasm_destroy_string_slice(WasmStringSlice* str) {
   free((char*)str->start);

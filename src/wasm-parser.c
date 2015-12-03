@@ -4132,21 +4132,6 @@ yyreturn:
 #line 1281 "src/wasm-parser.y" /* yacc.c:1906  */
 
 
-DEFINE_VECTOR(type, WasmType)
-DEFINE_VECTOR(var, WasmVar);
-DEFINE_VECTOR(expr_ptr, WasmExprPtr);
-DEFINE_VECTOR(target, WasmTarget);
-DEFINE_VECTOR(case, WasmCase);
-DEFINE_VECTOR(binding, WasmBinding);
-DEFINE_VECTOR(func_ptr, WasmFuncPtr);
-DEFINE_VECTOR(segment, WasmSegment);
-DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
-DEFINE_VECTOR(import_ptr, WasmImportPtr);
-DEFINE_VECTOR(export_ptr, WasmExportPtr);
-DEFINE_VECTOR(module_field, WasmModuleField);
-DEFINE_VECTOR(const, WasmConst);
-DEFINE_VECTOR(command, WasmCommand);
-
 void yyerror(WasmLocation* loc,
              WasmScanner scanner,
              WasmParser* parser,
