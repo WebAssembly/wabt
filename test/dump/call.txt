@@ -12,14 +12,13 @@
 0000005: 02                                         ; WASM_SECTION_FUNCTIONS
 0000006: 01                                         ; num functions
 ; function 0
-0000007: 01                                         ; func flags
+0000007: 00                                         ; func flags
 0000008: 0000                                       ; func signature index
-000000a: 0000 0000                                  ; func name offset
-000000e: 0000                                       ; func body size
-0000010: 12                                         ; OPCODE_CALL_FUNCTION
-0000011: 00                                         ; func index
-0000012: 09                                         ; OPCODE_I8_CONST
-0000013: 01                                         ; u8 literal
-000000e: 0400                                       ; FIXUP func body size
-0000014: 06                                         ; WASM_SECTION_END
+000000a: 0000                                       ; func body size
+000000c: 12                                         ; OPCODE_CALL_FUNCTION
+000000d: 00                                         ; func index
+000000e: 09                                         ; OPCODE_I8_CONST
+000000f: 01                                         ; u8 literal
+000000a: 0400                                       ; FIXUP func body size
+0000010: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

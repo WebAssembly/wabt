@@ -16,29 +16,28 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 01                                         ; func flags
+0000006: 00                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0000                                       ; func body size
-000000f: 01                                         ; OPCODE_BLOCK
-0000010: 01                                         ; num expressions
-0000011: 08                                         ; OPCODE_TABLESWITCH
-0000012: 0300                                       ; num cases
-0000014: 0300                                       ; num targets
-0000016: 0000                                       ; case index
-0000018: 0100                                       ; case index
-000001a: 0180                                       ; br depth
+0000009: 0000                                       ; func body size
+000000b: 01                                         ; OPCODE_BLOCK
+000000c: 01                                         ; num expressions
+000000d: 08                                         ; OPCODE_TABLESWITCH
+000000e: 0300                                       ; num cases
+0000010: 0300                                       ; num targets
+0000012: 0000                                       ; case index
+0000014: 0100                                       ; case index
+0000016: 0180                                       ; br depth
+0000018: 09                                         ; OPCODE_I8_CONST
+0000019: 00                                         ; u8 literal
+000001a: 01                                         ; OPCODE_BLOCK
+000001b: 02                                         ; num expressions
 000001c: 09                                         ; OPCODE_I8_CONST
-000001d: 00                                         ; u8 literal
-000001e: 01                                         ; OPCODE_BLOCK
-000001f: 02                                         ; num expressions
-0000020: 09                                         ; OPCODE_I8_CONST
-0000021: 01                                         ; u8 literal
-0000022: 09                                         ; OPCODE_I8_CONST
-0000023: 02                                         ; u8 literal
-0000024: 00                                         ; WASM_OPCODE_NOP for fallthrough
-0000025: 09                                         ; OPCODE_I8_CONST
-0000026: 03                                         ; u8 literal
-000000d: 1800                                       ; FIXUP func body size
-0000027: 06                                         ; WASM_SECTION_END
+000001d: 01                                         ; u8 literal
+000001e: 09                                         ; OPCODE_I8_CONST
+000001f: 02                                         ; u8 literal
+0000020: 00                                         ; WASM_OPCODE_NOP for fallthrough
+0000021: 09                                         ; OPCODE_I8_CONST
+0000022: 03                                         ; u8 literal
+0000009: 1800                                       ; FIXUP func body size
+0000023: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

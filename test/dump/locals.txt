@@ -10,14 +10,13 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 05                                         ; func flags
+0000006: 04                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0100                                       ; num local i32
-000000f: 0200                                       ; num local i64
-0000011: 0300                                       ; num local f32
-0000013: 0400                                       ; num local f64
-0000015: 0000                                       ; func body size
-0000015: 0000                                       ; FIXUP func body size
-0000017: 06                                         ; WASM_SECTION_END
+0000009: 0100                                       ; num local i32
+000000b: 0200                                       ; num local i64
+000000d: 0300                                       ; num local f32
+000000f: 0400                                       ; num local f64
+0000011: 0000                                       ; func body size
+0000011: 0000                                       ; FIXUP func body size
+0000013: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

@@ -1075,8 +1075,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       remap_locals(ctx, func);
 
       int is_exported = wasm_func_is_exported(module, func);
-      /* TODO(binji): remove? */
-      int has_name = 1; /* is_exported */
+      int has_name = is_exported;
       int has_locals = func->locals.types.size > 0;
       uint8_t flags = 0;
       if (has_name)

@@ -16,28 +16,27 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 01                                         ; func flags
+0000006: 00                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0000                                       ; func body size
-000000f: 02                                         ; OPCODE_LOOP
-0000010: 03                                         ; num expressions
-0000011: 03                                         ; OPCODE_IF
+0000009: 0000                                       ; func body size
+000000b: 02                                         ; OPCODE_LOOP
+000000c: 03                                         ; num expressions
+000000d: 03                                         ; OPCODE_IF
+000000e: 09                                         ; OPCODE_I8_CONST
+000000f: 01                                         ; u8 literal
+0000010: 06                                         ; OPCODE_BR
+0000011: 00                                         ; break depth
 0000012: 09                                         ; OPCODE_I8_CONST
-0000013: 01                                         ; u8 literal
-0000014: 06                                         ; OPCODE_BR
-0000015: 00                                         ; break depth
-0000016: 09                                         ; OPCODE_I8_CONST
-0000017: 02                                         ; u8 literal
-0000018: 03                                         ; OPCODE_IF
+0000013: 02                                         ; u8 literal
+0000014: 03                                         ; OPCODE_IF
+0000015: 09                                         ; OPCODE_I8_CONST
+0000016: 03                                         ; u8 literal
+0000017: 06                                         ; OPCODE_BR
+0000018: 01                                         ; break depth
 0000019: 09                                         ; OPCODE_I8_CONST
-000001a: 03                                         ; u8 literal
-000001b: 06                                         ; OPCODE_BR
-000001c: 01                                         ; break depth
-000001d: 09                                         ; OPCODE_I8_CONST
-000001e: 04                                         ; u8 literal
-000001f: 09                                         ; OPCODE_I8_CONST
-0000020: 05                                         ; u8 literal
-000000d: 1200                                       ; FIXUP func body size
-0000021: 06                                         ; WASM_SECTION_END
+000001a: 04                                         ; u8 literal
+000001b: 09                                         ; OPCODE_I8_CONST
+000001c: 05                                         ; u8 literal
+0000009: 1200                                       ; FIXUP func body size
+000001d: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

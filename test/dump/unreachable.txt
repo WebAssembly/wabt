@@ -11,11 +11,10 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 01                                         ; func flags
+0000006: 00                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0000                                       ; func body size
-000000f: 15                                         ; OPCODE_UNREACHABLE
-000000d: 0100                                       ; FIXUP func body size
-0000010: 06                                         ; WASM_SECTION_END
+0000009: 0000                                       ; func body size
+000000b: 15                                         ; OPCODE_UNREACHABLE
+0000009: 0100                                       ; FIXUP func body size
+000000c: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

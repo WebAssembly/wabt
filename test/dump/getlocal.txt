@@ -23,30 +23,29 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 05                                         ; func flags
+0000006: 04                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0200                                       ; num local i32
-000000f: 0200                                       ; num local i64
-0000011: 0200                                       ; num local f32
-0000013: 0200                                       ; num local f64
-0000015: 0000                                       ; func body size
+0000009: 0200                                       ; num local i32
+000000b: 0200                                       ; num local i64
+000000d: 0200                                       ; num local f32
+000000f: 0200                                       ; num local f64
+0000011: 0000                                       ; func body size
+0000013: 0e                                         ; OPCODE_GET_LOCAL
+0000014: 06                                         ; remapped local index
+0000015: 0e                                         ; OPCODE_GET_LOCAL
+0000016: 04                                         ; remapped local index
 0000017: 0e                                         ; OPCODE_GET_LOCAL
-0000018: 06                                         ; remapped local index
+0000018: 02                                         ; remapped local index
 0000019: 0e                                         ; OPCODE_GET_LOCAL
-000001a: 04                                         ; remapped local index
+000001a: 00                                         ; remapped local index
 000001b: 0e                                         ; OPCODE_GET_LOCAL
-000001c: 02                                         ; remapped local index
+000001c: 01                                         ; remapped local index
 000001d: 0e                                         ; OPCODE_GET_LOCAL
-000001e: 00                                         ; remapped local index
+000001e: 05                                         ; remapped local index
 000001f: 0e                                         ; OPCODE_GET_LOCAL
-0000020: 01                                         ; remapped local index
+0000020: 07                                         ; remapped local index
 0000021: 0e                                         ; OPCODE_GET_LOCAL
-0000022: 05                                         ; remapped local index
-0000023: 0e                                         ; OPCODE_GET_LOCAL
-0000024: 07                                         ; remapped local index
-0000025: 0e                                         ; OPCODE_GET_LOCAL
-0000026: 03                                         ; remapped local index
-0000015: 1000                                       ; FIXUP func body size
-0000027: 06                                         ; WASM_SECTION_END
+0000022: 03                                         ; remapped local index
+0000011: 1000                                       ; FIXUP func body size
+0000023: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

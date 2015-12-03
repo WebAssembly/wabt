@@ -17,16 +17,15 @@
 0000008: 0000                                       ; import signature index
 000000a: 0000 0000                                  ; import name offset
 ; function 0
-000000e: 01                                         ; func flags
+000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
-0000011: 0000 0000                                  ; func name offset
-0000015: 0000                                       ; func body size
-0000017: 0b                                         ; OPCODE_I64_CONST
-0000018: 0000 0000 0000 0000                        ; u64 literal
-0000015: 0900                                       ; FIXUP func body size
-0000020: 06                                         ; WASM_SECTION_END
+0000011: 0000                                       ; func body size
+0000013: 0b                                         ; OPCODE_I64_CONST
+0000014: 0000 0000 0000 0000                        ; u64 literal
+0000011: 0900                                       ; FIXUP func body size
+000001c: 06                                         ; WASM_SECTION_END
 ; import 0
-000000a: 2100 0000                                  ; FIXUP import name offset
-0000021: 6261 72                                    ; import name
-0000024: 00                                         ; \0
+000000a: 1d00 0000                                  ; FIXUP import name offset
+000001d: 6261 72                                    ; import name
+0000020: 00                                         ; \0
 ;;; STDOUT ;;)

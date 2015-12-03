@@ -15,20 +15,18 @@
 0000006: 02                                         ; WASM_SECTION_FUNCTIONS
 0000007: 02                                         ; num functions
 ; function 0
-0000008: 01                                         ; func flags
+0000008: 00                                         ; func flags
 0000009: 0000                                       ; func signature index
-000000b: 0000 0000                                  ; func name offset
-000000f: 0000                                       ; func body size
-0000011: 14                                         ; OPCODE_RETURN
-0000012: 09                                         ; OPCODE_I8_CONST
-0000013: 2a                                         ; u8 literal
-000000f: 0300                                       ; FIXUP func body size
+000000b: 0000                                       ; func body size
+000000d: 14                                         ; OPCODE_RETURN
+000000e: 09                                         ; OPCODE_I8_CONST
+000000f: 2a                                         ; u8 literal
+000000b: 0300                                       ; FIXUP func body size
 ; function 1
-0000014: 01                                         ; func flags
-0000015: 0100                                       ; func signature index
-0000017: 0000 0000                                  ; func name offset
-000001b: 0000                                       ; func body size
-000001d: 14                                         ; OPCODE_RETURN
-000001b: 0100                                       ; FIXUP func body size
-000001e: 06                                         ; WASM_SECTION_END
+0000010: 00                                         ; func flags
+0000011: 0100                                       ; func signature index
+0000013: 0000                                       ; func body size
+0000015: 14                                         ; OPCODE_RETURN
+0000013: 0100                                       ; FIXUP func body size
+0000016: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

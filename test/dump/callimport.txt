@@ -27,22 +27,21 @@
 000000b: 0000                                       ; import signature index
 000000d: 0000 0000                                  ; import name offset
 ; function 0
-0000011: 01                                         ; func flags
+0000011: 00                                         ; func flags
 0000012: 0100                                       ; func signature index
-0000014: 0000 0000                                  ; func name offset
-0000018: 0000                                       ; func body size
-000001a: 12                                         ; OPCODE_CALL_FUNCTION
-000001b: 00                                         ; import index
-000001c: 09                                         ; OPCODE_I8_CONST
-000001d: 01                                         ; u8 literal
-000001e: 0d                                         ; OPCODE_F32_CONST
-000001f: 0000 0040                                  ; f32 literal
-0000023: 12                                         ; OPCODE_CALL_FUNCTION
-0000024: 01                                         ; func index
-0000018: 0b00                                       ; FIXUP func body size
-0000025: 06                                         ; WASM_SECTION_END
+0000014: 0000                                       ; func body size
+0000016: 12                                         ; OPCODE_CALL_FUNCTION
+0000017: 00                                         ; import index
+0000018: 09                                         ; OPCODE_I8_CONST
+0000019: 01                                         ; u8 literal
+000001a: 0d                                         ; OPCODE_F32_CONST
+000001b: 0000 0040                                  ; f32 literal
+000001f: 12                                         ; OPCODE_CALL_FUNCTION
+0000020: 01                                         ; func index
+0000014: 0b00                                       ; FIXUP func body size
+0000021: 06                                         ; WASM_SECTION_END
 ; import 0
-000000d: 2600 0000                                  ; FIXUP import name offset
-0000026: 6261 72                                    ; import name
-0000029: 00                                         ; \0
+000000d: 2200 0000                                  ; FIXUP import name offset
+0000022: 6261 72                                    ; import name
+0000025: 00                                         ; \0
 ;;; STDOUT ;;)

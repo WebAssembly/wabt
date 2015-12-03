@@ -13,14 +13,13 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 01                                         ; func flags
+0000006: 00                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0000                                       ; func body size
-000000f: 02                                         ; OPCODE_LOOP
-0000010: 02                                         ; num expressions
-0000011: 00                                         ; OPCODE_NOP
-0000012: 00                                         ; OPCODE_NOP
-000000d: 0400                                       ; FIXUP func body size
-0000013: 06                                         ; WASM_SECTION_END
+0000009: 0000                                       ; func body size
+000000b: 02                                         ; OPCODE_LOOP
+000000c: 02                                         ; num expressions
+000000d: 00                                         ; OPCODE_NOP
+000000e: 00                                         ; OPCODE_NOP
+0000009: 0400                                       ; FIXUP func body size
+000000f: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

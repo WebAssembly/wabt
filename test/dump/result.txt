@@ -22,36 +22,32 @@
 000000a: 02                                         ; WASM_SECTION_FUNCTIONS
 000000b: 04                                         ; num functions
 ; function 0
-000000c: 01                                         ; func flags
+000000c: 00                                         ; func flags
 000000d: 0000                                       ; func signature index
-000000f: 0000 0000                                  ; func name offset
-0000013: 0000                                       ; func body size
-0000015: 09                                         ; OPCODE_I8_CONST
-0000016: 00                                         ; u8 literal
-0000013: 0200                                       ; FIXUP func body size
+000000f: 0000                                       ; func body size
+0000011: 09                                         ; OPCODE_I8_CONST
+0000012: 00                                         ; u8 literal
+000000f: 0200                                       ; FIXUP func body size
 ; function 1
-0000017: 01                                         ; func flags
-0000018: 0100                                       ; func signature index
-000001a: 0000 0000                                  ; func name offset
-000001e: 0000                                       ; func body size
-0000020: 0b                                         ; OPCODE_I64_CONST
-0000021: 0000 0000 0000 0000                        ; u64 literal
-000001e: 0900                                       ; FIXUP func body size
+0000013: 00                                         ; func flags
+0000014: 0100                                       ; func signature index
+0000016: 0000                                       ; func body size
+0000018: 0b                                         ; OPCODE_I64_CONST
+0000019: 0000 0000 0000 0000                        ; u64 literal
+0000016: 0900                                       ; FIXUP func body size
 ; function 2
-0000029: 01                                         ; func flags
-000002a: 0200                                       ; func signature index
-000002c: 0000 0000                                  ; func name offset
-0000030: 0000                                       ; func body size
-0000032: 0d                                         ; OPCODE_F32_CONST
-0000033: 0000 0000                                  ; f32 literal
-0000030: 0500                                       ; FIXUP func body size
+0000021: 00                                         ; func flags
+0000022: 0200                                       ; func signature index
+0000024: 0000                                       ; func body size
+0000026: 0d                                         ; OPCODE_F32_CONST
+0000027: 0000 0000                                  ; f32 literal
+0000024: 0500                                       ; FIXUP func body size
 ; function 3
-0000037: 01                                         ; func flags
-0000038: 0300                                       ; func signature index
-000003a: 0000 0000                                  ; func name offset
-000003e: 0000                                       ; func body size
-0000040: 0c                                         ; OPCODE_F64_CONST
-0000041: 0000 0000 0000 0000                        ; f64 literal
-000003e: 0900                                       ; FIXUP func body size
-0000049: 06                                         ; WASM_SECTION_END
+000002b: 00                                         ; func flags
+000002c: 0300                                       ; func signature index
+000002e: 0000                                       ; func body size
+0000030: 0c                                         ; OPCODE_F64_CONST
+0000031: 0000 0000 0000 0000                        ; f64 literal
+000002e: 0900                                       ; FIXUP func body size
+0000039: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

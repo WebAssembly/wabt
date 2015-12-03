@@ -33,18 +33,17 @@
 000001e: 02                                         ; WASM_SECTION_FUNCTIONS
 000001f: 01                                         ; num functions
 ; function 0
-0000020: 01                                         ; func flags
+0000020: 00                                         ; func flags
 0000021: 0000                                       ; func signature index
-0000023: 0000 0000                                  ; func name offset
-0000027: 0000                                       ; func body size
+0000023: 0000                                       ; func body size
+0000025: 10                                         ; OPCODE_LOAD_GLOBAL
+0000026: 00                                         ; global index
+0000027: 10                                         ; OPCODE_LOAD_GLOBAL
+0000028: 01                                         ; global index
 0000029: 10                                         ; OPCODE_LOAD_GLOBAL
-000002a: 00                                         ; global index
+000002a: 02                                         ; global index
 000002b: 10                                         ; OPCODE_LOAD_GLOBAL
-000002c: 01                                         ; global index
-000002d: 10                                         ; OPCODE_LOAD_GLOBAL
-000002e: 02                                         ; global index
-000002f: 10                                         ; OPCODE_LOAD_GLOBAL
-0000030: 03                                         ; global index
-0000027: 0800                                       ; FIXUP func body size
-0000031: 06                                         ; WASM_SECTION_END
+000002c: 03                                         ; global index
+0000023: 0800                                       ; FIXUP func body size
+000002d: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

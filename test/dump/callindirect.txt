@@ -14,19 +14,18 @@
 0000005: 02                                         ; WASM_SECTION_FUNCTIONS
 0000006: 01                                         ; num functions
 ; function 0
-0000007: 01                                         ; func flags
+0000007: 00                                         ; func flags
 0000008: 0000                                       ; func signature index
-000000a: 0000 0000                                  ; func name offset
-000000e: 0000                                       ; func body size
-0000010: 13                                         ; OPCODE_CALL_INDIRECT
-0000011: 00                                         ; signature index
-0000012: 09                                         ; OPCODE_I8_CONST
-0000013: 00                                         ; u8 literal
-0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 00                                         ; u8 literal
-000000e: 0600                                       ; FIXUP func body size
-0000016: 05                                         ; WASM_SECTION_FUNCTION_TABLE
-0000017: 01                                         ; num function table entries
-0000018: 0000                                       ; function table entry
-000001a: 06                                         ; WASM_SECTION_END
+000000a: 0000                                       ; func body size
+000000c: 13                                         ; OPCODE_CALL_INDIRECT
+000000d: 00                                         ; signature index
+000000e: 09                                         ; OPCODE_I8_CONST
+000000f: 00                                         ; u8 literal
+0000010: 09                                         ; OPCODE_I8_CONST
+0000011: 00                                         ; u8 literal
+000000a: 0600                                       ; FIXUP func body size
+0000012: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+0000013: 01                                         ; num function table entries
+0000014: 0000                                       ; function table entry
+0000016: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

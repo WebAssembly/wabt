@@ -23,30 +23,27 @@
 000000b: 02                                         ; WASM_SECTION_FUNCTIONS
 000000c: 03                                         ; num functions
 ; function 0
-000000d: 01                                         ; func flags
+000000d: 00                                         ; func flags
 000000e: 0000                                       ; func signature index
-0000010: 0000 0000                                  ; func name offset
-0000014: 0000                                       ; func body size
-0000014: 0000                                       ; FIXUP func body size
+0000010: 0000                                       ; func body size
+0000010: 0000                                       ; FIXUP func body size
 ; function 1
-0000016: 01                                         ; func flags
-0000017: 0100                                       ; func signature index
-0000019: 0000 0000                                  ; func name offset
-000001d: 0000                                       ; func body size
-000001d: 0000                                       ; FIXUP func body size
+0000012: 00                                         ; func flags
+0000013: 0100                                       ; func signature index
+0000015: 0000                                       ; func body size
+0000015: 0000                                       ; FIXUP func body size
 ; function 2
-000001f: 01                                         ; func flags
-0000020: 0200                                       ; func signature index
-0000022: 0000 0000                                  ; func name offset
-0000026: 0000                                       ; func body size
-0000028: 0c                                         ; OPCODE_F64_CONST
-0000029: 0000 0000 0000 0000                        ; f64 literal
-0000026: 0900                                       ; FIXUP func body size
-0000031: 05                                         ; WASM_SECTION_FUNCTION_TABLE
-0000032: 04                                         ; num function table entries
-0000033: 0000                                       ; function table entry
-0000035: 0000                                       ; function table entry
-0000037: 0100                                       ; function table entry
-0000039: 0200                                       ; function table entry
-000003b: 06                                         ; WASM_SECTION_END
+0000017: 00                                         ; func flags
+0000018: 0200                                       ; func signature index
+000001a: 0000                                       ; func body size
+000001c: 0c                                         ; OPCODE_F64_CONST
+000001d: 0000 0000 0000 0000                        ; f64 literal
+000001a: 0900                                       ; FIXUP func body size
+0000025: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+0000026: 04                                         ; num function table entries
+0000027: 0000                                       ; function table entry
+0000029: 0000                                       ; function table entry
+000002b: 0100                                       ; function table entry
+000002d: 0200                                       ; function table entry
+000002f: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

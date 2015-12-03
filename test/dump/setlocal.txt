@@ -23,46 +23,45 @@
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 05                                         ; func flags
+0000006: 04                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0200                                       ; num local i32
-000000f: 0200                                       ; num local i64
-0000011: 0200                                       ; num local f32
-0000013: 0200                                       ; num local f64
-0000015: 0000                                       ; func body size
-0000017: 0f                                         ; OPCODE_SET_LOCAL
-0000018: 06                                         ; remapped local index
-0000019: 0c                                         ; OPCODE_F64_CONST
-000001a: 0000 0000 0000 0000                        ; f64 literal
-0000022: 0f                                         ; OPCODE_SET_LOCAL
-0000023: 04                                         ; remapped local index
-0000024: 0d                                         ; OPCODE_F32_CONST
-0000025: 0000 0000                                  ; f32 literal
-0000029: 0f                                         ; OPCODE_SET_LOCAL
-000002a: 02                                         ; remapped local index
-000002b: 0b                                         ; OPCODE_I64_CONST
-000002c: 0000 0000 0000 0000                        ; u64 literal
+0000009: 0200                                       ; num local i32
+000000b: 0200                                       ; num local i64
+000000d: 0200                                       ; num local f32
+000000f: 0200                                       ; num local f64
+0000011: 0000                                       ; func body size
+0000013: 0f                                         ; OPCODE_SET_LOCAL
+0000014: 06                                         ; remapped local index
+0000015: 0c                                         ; OPCODE_F64_CONST
+0000016: 0000 0000 0000 0000                        ; f64 literal
+000001e: 0f                                         ; OPCODE_SET_LOCAL
+000001f: 04                                         ; remapped local index
+0000020: 0d                                         ; OPCODE_F32_CONST
+0000021: 0000 0000                                  ; f32 literal
+0000025: 0f                                         ; OPCODE_SET_LOCAL
+0000026: 02                                         ; remapped local index
+0000027: 0b                                         ; OPCODE_I64_CONST
+0000028: 0000 0000 0000 0000                        ; u64 literal
+0000030: 0f                                         ; OPCODE_SET_LOCAL
+0000031: 00                                         ; remapped local index
+0000032: 09                                         ; OPCODE_I8_CONST
+0000033: 00                                         ; u8 literal
 0000034: 0f                                         ; OPCODE_SET_LOCAL
-0000035: 00                                         ; remapped local index
+0000035: 01                                         ; remapped local index
 0000036: 09                                         ; OPCODE_I8_CONST
 0000037: 00                                         ; u8 literal
 0000038: 0f                                         ; OPCODE_SET_LOCAL
-0000039: 01                                         ; remapped local index
-000003a: 09                                         ; OPCODE_I8_CONST
-000003b: 00                                         ; u8 literal
-000003c: 0f                                         ; OPCODE_SET_LOCAL
-000003d: 05                                         ; remapped local index
-000003e: 0d                                         ; OPCODE_F32_CONST
-000003f: 0000 0000                                  ; f32 literal
-0000043: 0f                                         ; OPCODE_SET_LOCAL
-0000044: 07                                         ; remapped local index
-0000045: 0c                                         ; OPCODE_F64_CONST
-0000046: 0000 0000 0000 0000                        ; f64 literal
-000004e: 0f                                         ; OPCODE_SET_LOCAL
-000004f: 03                                         ; remapped local index
-0000050: 0b                                         ; OPCODE_I64_CONST
-0000051: 0000 0000 0000 0000                        ; u64 literal
-0000015: 4200                                       ; FIXUP func body size
-0000059: 06                                         ; WASM_SECTION_END
+0000039: 05                                         ; remapped local index
+000003a: 0d                                         ; OPCODE_F32_CONST
+000003b: 0000 0000                                  ; f32 literal
+000003f: 0f                                         ; OPCODE_SET_LOCAL
+0000040: 07                                         ; remapped local index
+0000041: 0c                                         ; OPCODE_F64_CONST
+0000042: 0000 0000 0000 0000                        ; f64 literal
+000004a: 0f                                         ; OPCODE_SET_LOCAL
+000004b: 03                                         ; remapped local index
+000004c: 0b                                         ; OPCODE_I64_CONST
+000004d: 0000 0000 0000 0000                        ; u64 literal
+0000011: 4200                                       ; FIXUP func body size
+0000055: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)
