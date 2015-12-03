@@ -10,40 +10,36 @@
     (block
       (i32.const 1))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 02                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 02                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num params
-0000007: 00                                         ; result_type
+0000002: 00                                         ; num params
+0000003: 00                                         ; result_type
 ; signature 1
-0000008: 00                                         ; num params
-0000009: 01                                         ; result_type
-000000a: 02                                         ; WASM_SECTION_FUNCTIONS
-000000b: 02                                         ; num functions
+0000004: 00                                         ; num params
+0000005: 01                                         ; result_type
+0000006: 02                                         ; WASM_SECTION_FUNCTIONS
+0000007: 02                                         ; num functions
 ; function 0
-000000c: 01                                         ; func flags
-000000d: 0000                                       ; func signature index
-000000f: 0000 0000                                  ; func name offset
-0000013: 0000                                       ; func body size
-0000015: 01                                         ; OPCODE_BLOCK
-0000016: 03                                         ; num expressions
-0000017: 00                                         ; OPCODE_NOP
-0000018: 00                                         ; OPCODE_NOP
-0000019: 00                                         ; OPCODE_NOP
-0000013: 0500                                       ; FIXUP func body size
+0000008: 01                                         ; func flags
+0000009: 0000                                       ; func signature index
+000000b: 0000 0000                                  ; func name offset
+000000f: 0000                                       ; func body size
+0000011: 01                                         ; OPCODE_BLOCK
+0000012: 03                                         ; num expressions
+0000013: 00                                         ; OPCODE_NOP
+0000014: 00                                         ; OPCODE_NOP
+0000015: 00                                         ; OPCODE_NOP
+000000f: 0500                                       ; FIXUP func body size
 ; function 1
-000001a: 01                                         ; func flags
-000001b: 0100                                       ; func signature index
-000001d: 0000 0000                                  ; func name offset
-0000021: 0000                                       ; func body size
-0000023: 01                                         ; OPCODE_BLOCK
-0000024: 01                                         ; num expressions
-0000025: 09                                         ; OPCODE_I8_CONST
-0000026: 01                                         ; u8 literal
-0000021: 0400                                       ; FIXUP func body size
-0000027: 06                                         ; WASM_SECTION_END
+0000016: 01                                         ; func flags
+0000017: 0100                                       ; func signature index
+0000019: 0000 0000                                  ; func name offset
+000001d: 0000                                       ; func body size
+000001f: 01                                         ; OPCODE_BLOCK
+0000020: 01                                         ; num expressions
+0000021: 09                                         ; OPCODE_I8_CONST
+0000022: 01                                         ; u8 literal
+000001d: 0400                                       ; FIXUP func body size
+0000023: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

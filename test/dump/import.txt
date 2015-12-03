@@ -4,40 +4,36 @@
   (import "ignored" "test" (param i32 i64 f32 f64))
   (import "ignored" "test2" (param i32) (result i32)))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 02                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 02                                         ; num signatures
 ; signature 0
-0000006: 04                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 01                                         ; param type
-0000009: 02                                         ; param type
-000000a: 03                                         ; param type
-000000b: 04                                         ; param type
+0000002: 04                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 01                                         ; param type
+0000005: 02                                         ; param type
+0000006: 03                                         ; param type
+0000007: 04                                         ; param type
 ; signature 1
-000000c: 01                                         ; num params
-000000d: 01                                         ; result_type
-000000e: 01                                         ; param type
-000000f: 02                                         ; WASM_SECTION_FUNCTIONS
-0000010: 02                                         ; num functions
+0000008: 01                                         ; num params
+0000009: 01                                         ; result_type
+000000a: 01                                         ; param type
+000000b: 02                                         ; WASM_SECTION_FUNCTIONS
+000000c: 02                                         ; num functions
 ; import header 0
-0000011: 03                                         ; import flags
-0000012: 0000                                       ; import signature index
-0000014: 0000 0000                                  ; import name offset
+000000d: 03                                         ; import flags
+000000e: 0000                                       ; import signature index
+0000010: 0000 0000                                  ; import name offset
 ; import header 1
-0000018: 03                                         ; import flags
-0000019: 0100                                       ; import signature index
-000001b: 0000 0000                                  ; import name offset
-000001f: 06                                         ; WASM_SECTION_END
+0000014: 03                                         ; import flags
+0000015: 0100                                       ; import signature index
+0000017: 0000 0000                                  ; import name offset
+000001b: 06                                         ; WASM_SECTION_END
 ; import 0
-0000014: 2000 0000                                  ; FIXUP import name offset
-0000020: 7465 7374                                  ; import name
-0000024: 00                                         ; \0
+0000010: 1c00 0000                                  ; FIXUP import name offset
+000001c: 7465 7374                                  ; import name
+0000020: 00                                         ; \0
 ; import 1
-000001b: 2500 0000                                  ; FIXUP import name offset
-0000025: 7465 7374 32                               ; import name
-000002a: 00                                         ; \0
+0000017: 2100 0000                                  ; FIXUP import name offset
+0000021: 7465 7374 32                               ; import name
+0000026: 00                                         ; \0
 ;;; STDOUT ;;)

@@ -8,40 +8,36 @@
         (break $exit (i32.const 4)))
       (i32.const 5))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 01                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 02                                         ; WASM_SECTION_FUNCTIONS
-0000009: 01                                         ; num functions
+0000002: 00                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000005: 01                                         ; num functions
 ; function 0
-000000a: 01                                         ; func flags
-000000b: 0000                                       ; func signature index
-000000d: 0000 0000                                  ; func name offset
-0000011: 0000                                       ; func body size
-0000013: 02                                         ; OPCODE_LOOP
-0000014: 03                                         ; num expressions
-0000015: 03                                         ; OPCODE_IF
+0000006: 01                                         ; func flags
+0000007: 0000                                       ; func signature index
+0000009: 0000 0000                                  ; func name offset
+000000d: 0000                                       ; func body size
+000000f: 02                                         ; OPCODE_LOOP
+0000010: 03                                         ; num expressions
+0000011: 03                                         ; OPCODE_IF
+0000012: 09                                         ; OPCODE_I8_CONST
+0000013: 01                                         ; u8 literal
+0000014: 06                                         ; OPCODE_BR
+0000015: 00                                         ; break depth
 0000016: 09                                         ; OPCODE_I8_CONST
-0000017: 01                                         ; u8 literal
-0000018: 06                                         ; OPCODE_BR
-0000019: 00                                         ; break depth
-000001a: 09                                         ; OPCODE_I8_CONST
-000001b: 02                                         ; u8 literal
-000001c: 03                                         ; OPCODE_IF
+0000017: 02                                         ; u8 literal
+0000018: 03                                         ; OPCODE_IF
+0000019: 09                                         ; OPCODE_I8_CONST
+000001a: 03                                         ; u8 literal
+000001b: 06                                         ; OPCODE_BR
+000001c: 01                                         ; break depth
 000001d: 09                                         ; OPCODE_I8_CONST
-000001e: 03                                         ; u8 literal
-000001f: 06                                         ; OPCODE_BR
-0000020: 01                                         ; break depth
-0000021: 09                                         ; OPCODE_I8_CONST
-0000022: 04                                         ; u8 literal
-0000023: 09                                         ; OPCODE_I8_CONST
-0000024: 05                                         ; u8 literal
-0000011: 1200                                       ; FIXUP func body size
-0000025: 06                                         ; WASM_SECTION_END
+000001e: 04                                         ; u8 literal
+000001f: 09                                         ; OPCODE_I8_CONST
+0000020: 05                                         ; u8 literal
+000000d: 1200                                       ; FIXUP func body size
+0000021: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

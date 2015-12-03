@@ -7,34 +7,30 @@
     (f64.reinterpret/i64 (i64.const 0))
     (i64.reinterpret/f64 (f64.const 0))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 01                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 02                                         ; WASM_SECTION_FUNCTIONS
-0000009: 01                                         ; num functions
+0000002: 00                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000005: 01                                         ; num functions
 ; function 0
-000000a: 01                                         ; func flags
-000000b: 0000                                       ; func signature index
-000000d: 0000 0000                                  ; func name offset
-0000011: 0000                                       ; func body size
-0000013: ad                                         ; OPCODE_F32_REINTERPRET_I32
-0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 00                                         ; u8 literal
-0000016: b4                                         ; OPCODE_I32_REINTERPRET_F32
-0000017: 0d                                         ; OPCODE_F32_CONST
-0000018: 0000 0000                                  ; f32 literal
-000001c: b3                                         ; OPCODE_F64_REINTERPRET_I64
-000001d: 0b                                         ; OPCODE_I64_CONST
-000001e: 0000 0000 0000 0000                        ; u64 literal
-0000026: b5                                         ; OPCODE_I64_REINTERPRET_F64
-0000027: 0c                                         ; OPCODE_F64_CONST
-0000028: 0000 0000 0000 0000                        ; f64 literal
-0000011: 1d00                                       ; FIXUP func body size
-0000030: 06                                         ; WASM_SECTION_END
+0000006: 01                                         ; func flags
+0000007: 0000                                       ; func signature index
+0000009: 0000 0000                                  ; func name offset
+000000d: 0000                                       ; func body size
+000000f: ad                                         ; OPCODE_F32_REINTERPRET_I32
+0000010: 09                                         ; OPCODE_I8_CONST
+0000011: 00                                         ; u8 literal
+0000012: b4                                         ; OPCODE_I32_REINTERPRET_F32
+0000013: 0d                                         ; OPCODE_F32_CONST
+0000014: 0000 0000                                  ; f32 literal
+0000018: b3                                         ; OPCODE_F64_REINTERPRET_I64
+0000019: 0b                                         ; OPCODE_I64_CONST
+000001a: 0000 0000 0000 0000                        ; u64 literal
+0000022: b5                                         ; OPCODE_I64_REINTERPRET_F64
+0000023: 0c                                         ; OPCODE_F64_CONST
+0000024: 0000 0000 0000 0000                        ; f64 literal
+000000d: 1d00                                       ; FIXUP func body size
+000002c: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

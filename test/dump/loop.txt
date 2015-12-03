@@ -5,26 +5,22 @@
       (nop)
       (nop))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 01                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 02                                         ; WASM_SECTION_FUNCTIONS
-0000009: 01                                         ; num functions
+0000002: 00                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000005: 01                                         ; num functions
 ; function 0
-000000a: 01                                         ; func flags
-000000b: 0000                                       ; func signature index
-000000d: 0000 0000                                  ; func name offset
-0000011: 0000                                       ; func body size
-0000013: 02                                         ; OPCODE_LOOP
-0000014: 02                                         ; num expressions
-0000015: 00                                         ; OPCODE_NOP
-0000016: 00                                         ; OPCODE_NOP
-0000011: 0400                                       ; FIXUP func body size
-0000017: 06                                         ; WASM_SECTION_END
+0000006: 01                                         ; func flags
+0000007: 0000                                       ; func signature index
+0000009: 0000 0000                                  ; func name offset
+000000d: 0000                                       ; func body size
+000000f: 02                                         ; OPCODE_LOOP
+0000010: 02                                         ; num expressions
+0000011: 00                                         ; OPCODE_NOP
+0000012: 00                                         ; OPCODE_NOP
+000000d: 0400                                       ; FIXUP func body size
+0000013: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

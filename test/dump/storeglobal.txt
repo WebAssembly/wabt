@@ -7,56 +7,52 @@
     (store_global 2 (f32.const 2))
     (store_global 3 (f64.const 3))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 03                                         ; WASM_SECTION_GLOBALS
-0000005: 04                                         ; num globals
+0000000: 03                                         ; WASM_SECTION_GLOBALS
+0000001: 04                                         ; num globals
 ; global header 0
-0000006: 0000 0000                                  ; global name offset
-000000a: 04                                         ; global mem type
-000000b: 00                                         ; export global
+0000002: 0000 0000                                  ; global name offset
+0000006: 04                                         ; global mem type
+0000007: 00                                         ; export global
 ; global header 1
-000000c: 0000 0000                                  ; global name offset
-0000010: 06                                         ; global mem type
-0000011: 00                                         ; export global
+0000008: 0000 0000                                  ; global name offset
+000000c: 06                                         ; global mem type
+000000d: 00                                         ; export global
 ; global header 2
-0000012: 0000 0000                                  ; global name offset
-0000016: 08                                         ; global mem type
-0000017: 00                                         ; export global
+000000e: 0000 0000                                  ; global name offset
+0000012: 08                                         ; global mem type
+0000013: 00                                         ; export global
 ; global header 3
-0000018: 0000 0000                                  ; global name offset
-000001c: 09                                         ; global mem type
-000001d: 00                                         ; export global
-000001e: 01                                         ; WASM_SECTION_SIGNATURES
-000001f: 01                                         ; num signatures
+0000014: 0000 0000                                  ; global name offset
+0000018: 09                                         ; global mem type
+0000019: 00                                         ; export global
+000001a: 01                                         ; WASM_SECTION_SIGNATURES
+000001b: 01                                         ; num signatures
 ; signature 0
-0000020: 00                                         ; num params
-0000021: 00                                         ; result_type
-0000022: 02                                         ; WASM_SECTION_FUNCTIONS
-0000023: 01                                         ; num functions
+000001c: 00                                         ; num params
+000001d: 00                                         ; result_type
+000001e: 02                                         ; WASM_SECTION_FUNCTIONS
+000001f: 01                                         ; num functions
 ; function 0
-0000024: 01                                         ; func flags
-0000025: 0000                                       ; func signature index
-0000027: 0000 0000                                  ; func name offset
-000002b: 0000                                       ; func body size
+0000020: 01                                         ; func flags
+0000021: 0000                                       ; func signature index
+0000023: 0000 0000                                  ; func name offset
+0000027: 0000                                       ; func body size
+0000029: 11                                         ; OPCODE_STORE_GLOBAL
+000002a: 00                                         ; global index
+000002b: 09                                         ; OPCODE_I8_CONST
+000002c: 00                                         ; u8 literal
 000002d: 11                                         ; OPCODE_STORE_GLOBAL
-000002e: 00                                         ; global index
-000002f: 09                                         ; OPCODE_I8_CONST
-0000030: 00                                         ; u8 literal
-0000031: 11                                         ; OPCODE_STORE_GLOBAL
-0000032: 01                                         ; global index
-0000033: 0b                                         ; OPCODE_I64_CONST
-0000034: 0100 0000 0000 0000                        ; u64 literal
-000003c: 11                                         ; OPCODE_STORE_GLOBAL
-000003d: 02                                         ; global index
-000003e: 0d                                         ; OPCODE_F32_CONST
-000003f: 0000 0040                                  ; f32 literal
-0000043: 11                                         ; OPCODE_STORE_GLOBAL
-0000044: 03                                         ; global index
-0000045: 0c                                         ; OPCODE_F64_CONST
-0000046: 0000 0000 0000 0840                        ; f64 literal
-000002b: 2100                                       ; FIXUP func body size
-000004e: 06                                         ; WASM_SECTION_END
+000002e: 01                                         ; global index
+000002f: 0b                                         ; OPCODE_I64_CONST
+0000030: 0100 0000 0000 0000                        ; u64 literal
+0000038: 11                                         ; OPCODE_STORE_GLOBAL
+0000039: 02                                         ; global index
+000003a: 0d                                         ; OPCODE_F32_CONST
+000003b: 0000 0040                                  ; f32 literal
+000003f: 11                                         ; OPCODE_STORE_GLOBAL
+0000040: 03                                         ; global index
+0000041: 0c                                         ; OPCODE_F64_CONST
+0000042: 0000 0000 0000 0840                        ; f64 literal
+0000027: 2100                                       ; FIXUP func body size
+000004a: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

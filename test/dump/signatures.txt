@@ -12,43 +12,39 @@
 
   (type (func (param i32) (result f64))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 09                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 09                                         ; num signatures
 ; signature 0
-0000006: 01                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 01                                         ; param type
+0000002: 01                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 01                                         ; param type
 ; signature 1
-0000009: 01                                         ; num params
-000000a: 00                                         ; result_type
-000000b: 02                                         ; param type
+0000005: 01                                         ; num params
+0000006: 00                                         ; result_type
+0000007: 02                                         ; param type
 ; signature 2
-000000c: 01                                         ; num params
-000000d: 00                                         ; result_type
-000000e: 03                                         ; param type
+0000008: 01                                         ; num params
+0000009: 00                                         ; result_type
+000000a: 03                                         ; param type
 ; signature 3
-000000f: 01                                         ; num params
-0000010: 00                                         ; result_type
-0000011: 04                                         ; param type
+000000b: 01                                         ; num params
+000000c: 00                                         ; result_type
+000000d: 04                                         ; param type
 ; signature 4
-0000012: 00                                         ; num params
-0000013: 01                                         ; result_type
+000000e: 00                                         ; num params
+000000f: 01                                         ; result_type
 ; signature 5
-0000014: 00                                         ; num params
-0000015: 02                                         ; result_type
+0000010: 00                                         ; num params
+0000011: 02                                         ; result_type
 ; signature 6
-0000016: 00                                         ; num params
-0000017: 03                                         ; result_type
+0000012: 00                                         ; num params
+0000013: 03                                         ; result_type
 ; signature 7
-0000018: 00                                         ; num params
-0000019: 04                                         ; result_type
+0000014: 00                                         ; num params
+0000015: 04                                         ; result_type
 ; signature 8
-000001a: 01                                         ; num params
-000001b: 04                                         ; result_type
-000001c: 01                                         ; param type
-000001d: 06                                         ; WASM_SECTION_END
+0000016: 01                                         ; num params
+0000017: 04                                         ; result_type
+0000018: 01                                         ; param type
+0000019: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

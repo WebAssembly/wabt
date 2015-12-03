@@ -1016,12 +1016,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
         out_u8(ws, 1, "segment init");
       }
     }
-  } else {
-    /* TODO(binji): remove? */
-    out_u8(ws, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
-    out_u8(ws, 0, "min mem size log 2");
-    out_u8(ws, 0, "max mem size log 2");
-    out_u8(ws, DEFAULT_MEMORY_EXPORT, "export mem");
   }
 
   if (module->globals.types.size) {

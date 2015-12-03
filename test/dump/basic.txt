@@ -6,46 +6,42 @@
     (i32.add (get_local 0) (get_local 1)))
   (export "f" $f))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 03                                         ; WASM_SECTION_GLOBALS
-0000005: 01                                         ; num globals
+0000000: 03                                         ; WASM_SECTION_GLOBALS
+0000001: 01                                         ; num globals
 ; global header 0
-0000006: 0000 0000                                  ; global name offset
-000000a: 04                                         ; global mem type
-000000b: 00                                         ; export global
-000000c: 01                                         ; WASM_SECTION_SIGNATURES
-000000d: 01                                         ; num signatures
+0000002: 0000 0000                                  ; global name offset
+0000006: 04                                         ; global mem type
+0000007: 00                                         ; export global
+0000008: 01                                         ; WASM_SECTION_SIGNATURES
+0000009: 01                                         ; num signatures
 ; signature 0
-000000e: 02                                         ; num params
-000000f: 01                                         ; result_type
-0000010: 01                                         ; param type
-0000011: 01                                         ; param type
-0000012: 02                                         ; WASM_SECTION_FUNCTIONS
-0000013: 01                                         ; num functions
+000000a: 02                                         ; num params
+000000b: 01                                         ; result_type
+000000c: 01                                         ; param type
+000000d: 01                                         ; param type
+000000e: 02                                         ; WASM_SECTION_FUNCTIONS
+000000f: 01                                         ; num functions
 ; function 0
-0000014: 09                                         ; func flags
-0000015: 0000                                       ; func signature index
-0000017: 0000 0000                                  ; func name offset
-000001b: 0000                                       ; func body size
-000001d: 11                                         ; OPCODE_STORE_GLOBAL
-000001e: 00                                         ; global index
-000001f: 40                                         ; OPCODE_I32_ADD
-0000020: 10                                         ; OPCODE_LOAD_GLOBAL
-0000021: 00                                         ; global index
-0000022: 09                                         ; OPCODE_I8_CONST
-0000023: 01                                         ; u8 literal
-0000024: 40                                         ; OPCODE_I32_ADD
-0000025: 0e                                         ; OPCODE_GET_LOCAL
-0000026: 00                                         ; remapped local index
-0000027: 0e                                         ; OPCODE_GET_LOCAL
-0000028: 01                                         ; remapped local index
-000001b: 0c00                                       ; FIXUP func body size
-0000029: 06                                         ; WASM_SECTION_END
+0000010: 09                                         ; func flags
+0000011: 0000                                       ; func signature index
+0000013: 0000 0000                                  ; func name offset
+0000017: 0000                                       ; func body size
+0000019: 11                                         ; OPCODE_STORE_GLOBAL
+000001a: 00                                         ; global index
+000001b: 40                                         ; OPCODE_I32_ADD
+000001c: 10                                         ; OPCODE_LOAD_GLOBAL
+000001d: 00                                         ; global index
+000001e: 09                                         ; OPCODE_I8_CONST
+000001f: 01                                         ; u8 literal
+0000020: 40                                         ; OPCODE_I32_ADD
+0000021: 0e                                         ; OPCODE_GET_LOCAL
+0000022: 00                                         ; remapped local index
+0000023: 0e                                         ; OPCODE_GET_LOCAL
+0000024: 01                                         ; remapped local index
+0000017: 0c00                                       ; FIXUP func body size
+0000025: 06                                         ; WASM_SECTION_END
 ; export 0
-0000017: 2a00 0000                                  ; FIXUP func name offset
-000002a: 66                                         ; export name
-000002b: 00                                         ; \0
+0000013: 2600 0000                                  ; FIXUP func name offset
+0000026: 66                                         ; export name
+0000027: 00                                         ; \0
 ;;; STDOUT ;;)

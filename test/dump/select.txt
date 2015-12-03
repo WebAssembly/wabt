@@ -6,50 +6,46 @@
     (f32.select (i32.const 1) (f32.const 2) (f32.const 3))
     (f64.select (i32.const 1) (f64.const 2) (f64.const 3))))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 01                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 01                                         ; num signatures
 ; signature 0
-0000006: 00                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 02                                         ; WASM_SECTION_FUNCTIONS
-0000009: 01                                         ; num functions
+0000002: 00                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000005: 01                                         ; num functions
 ; function 0
-000000a: 01                                         ; func flags
-000000b: 0000                                       ; func signature index
-000000d: 0000 0000                                  ; func name offset
-0000011: 0000                                       ; func body size
-0000013: 05                                         ; OPCODE_SELECT
+0000006: 01                                         ; func flags
+0000007: 0000                                       ; func signature index
+0000009: 0000 0000                                  ; func name offset
+000000d: 0000                                       ; func body size
+000000f: 05                                         ; OPCODE_SELECT
+0000010: 09                                         ; OPCODE_I8_CONST
+0000011: 01                                         ; u8 literal
+0000012: 09                                         ; OPCODE_I8_CONST
+0000013: 02                                         ; u8 literal
 0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 01                                         ; u8 literal
-0000016: 09                                         ; OPCODE_I8_CONST
-0000017: 02                                         ; u8 literal
-0000018: 09                                         ; OPCODE_I8_CONST
-0000019: 03                                         ; u8 literal
-000001a: 05                                         ; OPCODE_SELECT
-000001b: 09                                         ; OPCODE_I8_CONST
-000001c: 01                                         ; u8 literal
-000001d: 0b                                         ; OPCODE_I64_CONST
-000001e: 0200 0000 0000 0000                        ; u64 literal
-0000026: 0b                                         ; OPCODE_I64_CONST
-0000027: 0300 0000 0000 0000                        ; u64 literal
-000002f: 05                                         ; OPCODE_SELECT
-0000030: 09                                         ; OPCODE_I8_CONST
-0000031: 01                                         ; u8 literal
-0000032: 0d                                         ; OPCODE_F32_CONST
-0000033: 0000 0040                                  ; f32 literal
-0000037: 0d                                         ; OPCODE_F32_CONST
-0000038: 0000 4040                                  ; f32 literal
-000003c: 05                                         ; OPCODE_SELECT
-000003d: 09                                         ; OPCODE_I8_CONST
-000003e: 01                                         ; u8 literal
-000003f: 0c                                         ; OPCODE_F64_CONST
-0000040: 0000 0000 0000 0040                        ; f64 literal
-0000048: 0c                                         ; OPCODE_F64_CONST
-0000049: 0000 0000 0000 0840                        ; f64 literal
-0000011: 3e00                                       ; FIXUP func body size
-0000051: 06                                         ; WASM_SECTION_END
+0000015: 03                                         ; u8 literal
+0000016: 05                                         ; OPCODE_SELECT
+0000017: 09                                         ; OPCODE_I8_CONST
+0000018: 01                                         ; u8 literal
+0000019: 0b                                         ; OPCODE_I64_CONST
+000001a: 0200 0000 0000 0000                        ; u64 literal
+0000022: 0b                                         ; OPCODE_I64_CONST
+0000023: 0300 0000 0000 0000                        ; u64 literal
+000002b: 05                                         ; OPCODE_SELECT
+000002c: 09                                         ; OPCODE_I8_CONST
+000002d: 01                                         ; u8 literal
+000002e: 0d                                         ; OPCODE_F32_CONST
+000002f: 0000 0040                                  ; f32 literal
+0000033: 0d                                         ; OPCODE_F32_CONST
+0000034: 0000 4040                                  ; f32 literal
+0000038: 05                                         ; OPCODE_SELECT
+0000039: 09                                         ; OPCODE_I8_CONST
+000003a: 01                                         ; u8 literal
+000003b: 0c                                         ; OPCODE_F64_CONST
+000003c: 0000 0000 0000 0040                        ; f64 literal
+0000044: 0c                                         ; OPCODE_F64_CONST
+0000045: 0000 0000 0000 0840                        ; f64 literal
+000000d: 3e00                                       ; FIXUP func body size
+000004d: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)

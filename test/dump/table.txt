@@ -6,51 +6,47 @@
   (func (result f64) (f64.const 0))
   (table 0 0 1 2))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 00                                         ; min mem size log 2
-0000002: 00                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
-0000005: 03                                         ; num signatures
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 03                                         ; num signatures
 ; signature 0
-0000006: 01                                         ; num params
-0000007: 00                                         ; result_type
-0000008: 01                                         ; param type
+0000002: 01                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 01                                         ; param type
 ; signature 1
-0000009: 02                                         ; num params
-000000a: 00                                         ; result_type
-000000b: 01                                         ; param type
-000000c: 02                                         ; param type
+0000005: 02                                         ; num params
+0000006: 00                                         ; result_type
+0000007: 01                                         ; param type
+0000008: 02                                         ; param type
 ; signature 2
-000000d: 00                                         ; num params
-000000e: 04                                         ; result_type
-000000f: 02                                         ; WASM_SECTION_FUNCTIONS
-0000010: 03                                         ; num functions
+0000009: 00                                         ; num params
+000000a: 04                                         ; result_type
+000000b: 02                                         ; WASM_SECTION_FUNCTIONS
+000000c: 03                                         ; num functions
 ; function 0
-0000011: 01                                         ; func flags
-0000012: 0000                                       ; func signature index
-0000014: 0000 0000                                  ; func name offset
-0000018: 0000                                       ; func body size
-0000018: 0000                                       ; FIXUP func body size
+000000d: 01                                         ; func flags
+000000e: 0000                                       ; func signature index
+0000010: 0000 0000                                  ; func name offset
+0000014: 0000                                       ; func body size
+0000014: 0000                                       ; FIXUP func body size
 ; function 1
-000001a: 01                                         ; func flags
-000001b: 0100                                       ; func signature index
-000001d: 0000 0000                                  ; func name offset
-0000021: 0000                                       ; func body size
-0000021: 0000                                       ; FIXUP func body size
+0000016: 01                                         ; func flags
+0000017: 0100                                       ; func signature index
+0000019: 0000 0000                                  ; func name offset
+000001d: 0000                                       ; func body size
+000001d: 0000                                       ; FIXUP func body size
 ; function 2
-0000023: 01                                         ; func flags
-0000024: 0200                                       ; func signature index
-0000026: 0000 0000                                  ; func name offset
-000002a: 0000                                       ; func body size
-000002c: 0c                                         ; OPCODE_F64_CONST
-000002d: 0000 0000 0000 0000                        ; f64 literal
-000002a: 0900                                       ; FIXUP func body size
-0000035: 05                                         ; WASM_SECTION_FUNCTION_TABLE
-0000036: 04                                         ; num function table entries
-0000037: 0000                                       ; function table entry
-0000039: 0000                                       ; function table entry
-000003b: 0100                                       ; function table entry
-000003d: 0200                                       ; function table entry
-000003f: 06                                         ; WASM_SECTION_END
+000001f: 01                                         ; func flags
+0000020: 0200                                       ; func signature index
+0000022: 0000 0000                                  ; func name offset
+0000026: 0000                                       ; func body size
+0000028: 0c                                         ; OPCODE_F64_CONST
+0000029: 0000 0000 0000 0000                        ; f64 literal
+0000026: 0900                                       ; FIXUP func body size
+0000031: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+0000032: 04                                         ; num function table entries
+0000033: 0000                                       ; function table entry
+0000035: 0000                                       ; function table entry
+0000037: 0100                                       ; function table entry
+0000039: 0200                                       ; function table entry
+000003b: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)
