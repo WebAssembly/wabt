@@ -30,20 +30,28 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_SRC_WASM_PARSER_H_INCLUDED
-# define YY_YY_SRC_WASM_PARSER_H_INCLUDED
+#ifndef YY_WASM_SRC_WASM_PARSER_H_INCLUDED
+# define YY_WASM_SRC_WASM_PARSER_H_INCLUDED
 /* Debug traces.  */
-#ifndef YYDEBUG
-# define YYDEBUG 0
-#endif
+#ifndef WASM_DEBUG
+# if defined YYDEBUG
 #if YYDEBUG
-extern int yydebug;
+#   define WASM_DEBUG 1
+#  else
+#   define WASM_DEBUG 0
+#  endif
+# else /* ! defined YYDEBUG */
+#  define WASM_DEBUG 0
+# endif /* ! defined YYDEBUG */
+#endif  /* ! defined WASM_DEBUG */
+#if WASM_DEBUG
+extern int wasm_debug;
 #endif
 
 /* Token type.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
+#ifndef WASM_TOKENTYPE
+# define WASM_TOKENTYPE
+  enum wasm_tokentype
   {
     WASM_TOKEN_TYPE_EOF = 0,
     WASM_TOKEN_TYPE_LPAR = 258,
@@ -111,28 +119,28 @@ extern int yydebug;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef WasmToken YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+#if ! defined WASM_STYPE && ! defined WASM_STYPE_IS_DECLARED
+typedef WasmToken WASM_STYPE;
+# define WASM_STYPE_IS_TRIVIAL 1
+# define WASM_STYPE_IS_DECLARED 1
 #endif
 
 /* Location type.  */
-#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
-typedef struct YYLTYPE YYLTYPE;
-struct YYLTYPE
+#if ! defined WASM_LTYPE && ! defined WASM_LTYPE_IS_DECLARED
+typedef struct WASM_LTYPE WASM_LTYPE;
+struct WASM_LTYPE
 {
   int first_line;
   int first_column;
   int last_line;
   int last_column;
 };
-# define YYLTYPE_IS_DECLARED 1
-# define YYLTYPE_IS_TRIVIAL 1
+# define WASM_LTYPE_IS_DECLARED 1
+# define WASM_LTYPE_IS_TRIVIAL 1
 #endif
 
 
 
-int yyparse (WasmScanner scanner, WasmParser* parser);
+int wasm_parse (WasmScanner scanner, WasmParser* parser);
 
-#endif /* !YY_YY_SRC_WASM_PARSER_H_INCLUDED  */
+#endif /* !YY_WASM_SRC_WASM_PARSER_H_INCLUDED  */

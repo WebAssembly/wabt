@@ -4,7 +4,7 @@ ALL = sexpr-wasm
 EVERYHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
 CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
-LIBS = -ll
+LIBS =
 ASAN_FLAGS = -fsanitize=address
 MSAN_FLAGS = -fsanitize=memory
 LSAN_FLAGS = -fsanitize=leak

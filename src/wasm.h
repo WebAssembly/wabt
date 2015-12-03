@@ -551,6 +551,8 @@ typedef struct WasmWriteBinaryOptions {
 
 WasmScanner wasm_new_scanner(const char* filename);
 void wasm_free_scanner(WasmScanner scanner);
+void wasm_error(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
+int wasm_parse(WasmScanner scanner, WasmParser* parser);
 WasmResult wasm_check_script(WasmScript*);
 WasmResult wasm_write_binary(WasmWriter*, WasmScript*, WasmWriteBinaryOptions*);
 

@@ -49,11 +49,11 @@ typedef union WasmToken {
   WasmScript script;
 } WasmToken;
 
-#define YYSTYPE WasmToken
-#define YYLTYPE WasmLocation
+#define WASM_STYPE WasmToken
+#define WASM_LTYPE WasmLocation
+#define YYSTYPE WASM_STYPE
+#define YYLTYPE WASM_LTYPE
 
-int yylex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
-void yyerror(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
-int yyparse(WasmScanner scanner, WasmParser* parser);
+int wasm_lex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
 
 #endif /* WASM_INTERNAL_H */

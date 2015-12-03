@@ -10,11 +10,11 @@ typedef struct WasmScannerExtra {
   int comment_nesting;
 } WasmScannerExtra;
 
-#define YY_DECL                                                               \
-  int yylex(YYSTYPE* yylval_param, YYLTYPE* yylloc_param, yyscan_t yyscanner, \
-            WasmParser* parser)
+#define YY_DECL                                                    \
+  int wasm_lex(WASM_STYPE* yylval_param, WASM_LTYPE* yylloc_param, \
+               yyscan_t yyscanner, WasmParser* parser)
 
-#define EXTRA(scanner) ((WasmScannerExtra*)yyget_extra(scanner))
+#define EXTRA(scanner) ((WasmScannerExtra*)wasm_get_extra(scanner))
 #define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
 #define COLUMN(scanner) (EXTRA(scanner)->column)
 #define RESET_COLUMN(scanner) EXTRA(scanner)->column = 1
@@ -41,11 +41,11 @@ typedef struct WasmScannerExtra {
 #define WASM_MEM_OP_TYPE_I64_LOAD64 WASM_MEM_OP_TYPE_I64_LOAD
 #define WASM_MEM_OP_TYPE_I64_STORE64 WASM_MEM_OP_TYPE_I64_STORE
 
-#define TEXT                   \
+#define TEXT                      \
   yylval->text.start = yytext; \
   yylval->text.length = yyleng
 
-#define TEXT_AT(offset)                 \
+#define TEXT_AT(offset)                    \
   yylval->text.start = yytext + offset; \
   yylval->text.length = yyleng - offset
 
@@ -63,7 +63,8 @@ typedef struct WasmScannerExtra {
   yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name##size_##_##sign_; \
   yylval->mem.size = WASM_MEM_SIZE_##size_
 
-#define UNOP(type_, name) TYPE_STRUCT(unary, type_); \
+#define UNOP(type_, name)    \
+  TYPE_STRUCT(unary, type_); \
   yylval->unary.op_type = WASM_UNARY_OP_TYPE_##type_##_##name
 
 #define BINOP(type_, name)    \
@@ -88,6 +89,7 @@ typedef struct WasmScannerExtra {
 
 %}
 
+%option prefix="wasm_"
 %option bison-bridge
 %option bison-locations
 %option yylineno
@@ -131,14 +133,15 @@ NAME      \${ATOM}
 <BAD_TEXT>{CHARACTER} {}
 <BAD_TEXT>\n          { BEGIN(INITIAL);
                         RESET_COLUMN(yyscanner);
-                        yyerror(yylloc, &yyscanner, parser,
+                        wasm_error(yylloc, &yyscanner, parser,
                                 "newline in string"); }
-<BAD_TEXT><<EOF>>     { yyerror(yylloc, &yyscanner, parser, "unexpected EOF");
+<BAD_TEXT><<EOF>>     { wasm_error(yylloc, &yyscanner, parser,
+                                   "unexpected EOF");
                         return TOK(EOF); }
-<BAD_TEXT>\\.         { yyerror(yylloc, &yyscanner, parser,
+<BAD_TEXT>\\.         { wasm_error(yylloc, &yyscanner, parser,
                                 "bad escape \"%.*s\"", yyleng, yytext); }
 <BAD_TEXT>\"          { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
-<BAD_TEXT>[^\\]       { yyerror(yylloc, &yyscanner, parser,
+<BAD_TEXT>[^\\]       { wasm_error(yylloc, &yyscanner, parser,
                                 "illegal character in string"); }
 "i32"                 { TYPE(I32); return TOK(VALUE_TYPE); }
 "i64"                 { TYPE(I64); return TOK(VALUE_TYPE); }
@@ -347,19 +350,24 @@ NAME      \${ATOM}
 <BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
-<BLOCK_COMMENT><<EOF>> { yyerror(yylloc, &yyscanner, parser,
+<BLOCK_COMMENT><<EOF>> { wasm_error(yylloc, &yyscanner, parser,
                                  "unexpected EOF");
                          return TOK(EOF); }
 <BLOCK_COMMENT>.
 \n                    { RESET_COLUMN(yyscanner); }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
-{ATOM}                { yyerror(yylloc, &yyscanner, parser,
-                                "unexpected token \"%.*s\"", yyleng, yytext); }
-.                     { yyerror(yylloc, &yyscanner, parser,
-                                "unexpected char"); }
+{ATOM}                { wasm_error(yylloc, &yyscanner, parser,
+                                   "unexpected token \"%.*s\"", yyleng,
+                                   yytext); }
+.                     { wasm_error(yylloc, &yyscanner, parser,
+                                   "unexpected char"); }
 
 %%
+
+int wasm_wrap(yyscan_t yyscanner) {
+  return 1;
+}
 
 WasmScanner wasm_new_scanner(const char* filename) {
   WasmScannerExtra* extra = malloc(sizeof(WasmScannerExtra));
