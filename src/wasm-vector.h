@@ -24,6 +24,14 @@
                            (const void**)&src->data, src->size, sizeof(type)); \
   }
 
+#define DESTROY_VECTOR_AND_ELEMENTS(V, name) \
+  {                                          \
+    int i;                                   \
+    for (i = 0; i < (V).size; ++i)           \
+      wasm_destroy_##name(&((V).data[i]));   \
+    wasm_destroy_##name##_vector(&(V));      \
+  }
+
 void* append_element(void** data,
                      size_t* size,
                      size_t* capacity,

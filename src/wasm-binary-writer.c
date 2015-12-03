@@ -341,6 +341,11 @@ typedef struct WasmWriteContext {
 DECLARE_VECTOR(func_signature, WasmFuncSignature);
 DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
+static void wasm_destroy_func_signature_vector_and_elements(
+    WasmFuncSignatureVector* sigs) {
+  DESTROY_VECTOR_AND_ELEMENTS(*sigs, func_signature);
+}
+
 static uint32_t log_two_u32(uint32_t x) {
   if (!x)
     return 0;
@@ -1172,6 +1177,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
                "FIXUP func name offset");
     out_str(ws, export->name.start, export->name.length, "export name");
   }
+
+  wasm_destroy_func_signature_vector_and_elements(&sigs);
 }
 
 static WasmExpr* new_expr(WasmExprType type) {
@@ -1539,6 +1546,13 @@ static void write_commands_no_spec(WasmWriteContext* ctx, WasmScript* script) {
   }
 }
 
+static void cleanup_context(WasmWriteContext* ctx) {
+  free(ctx->import_sig_indexes);
+  free(ctx->func_sig_indexes);
+  free(ctx->remapped_locals);
+  free(ctx->func_offsets);
+}
+
 WasmResult wasm_write_binary(WasmWriter* writer,
                              WasmScript* script,
                              WasmWriteBinaryOptions* options) {
@@ -1561,12 +1575,14 @@ WasmResult wasm_write_binary(WasmWriter* writer,
     write_commands_spec(&ctx, script);
     write_footer_spec(&ctx);
     wasm_close_mem_writer(&mem_writer);
+    cleanup_context(&ctx);
     return ctx.spec_writer_state.result;
   } else {
     ctx.writer_state.writer = writer;
     ctx.writer_state.result = WASM_OK;
     ctx.writer_state.log_writes = options->log_writes;
     write_commands_no_spec(&ctx, script);
+    cleanup_context(&ctx);
     return ctx.writer_state.result;
   }
 }

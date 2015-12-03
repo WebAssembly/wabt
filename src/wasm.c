@@ -2,14 +2,6 @@
 
 #include <stdlib.h>
 
-#define DESTROY_VECTOR_AND_ELEMENTS(V, name) \
-  {                                          \
-    int i;                                   \
-    for (i = 0; i < (V).size; ++i)           \
-      wasm_destroy_##name(&((V).data[i]));   \
-    wasm_destroy_##name##_vector(&(V));      \
-  }
-
 void wasm_destroy_string_slice(WasmStringSlice* str) {
   free((char*)str->start);
 }
