@@ -546,6 +546,7 @@ typedef struct WasmParser {
 
 typedef struct WasmWriteBinaryOptions {
   int spec;
+  int spec_verbose;
   int log_writes;
 } WasmWriteBinaryOptions;
 

@@ -1364,8 +1364,8 @@ static WasmFunc* append_nullary_func(WasmModule* module,
 }
 
 static void write_header_spec(WasmWriteContext* ctx) {
-  /* TODO(binji): support spec verbosity */
-  out_printf(&ctx->spec_writer_state, "var quiet = false;\n");
+  out_printf(&ctx->spec_writer_state, "var quiet = %s;\n",
+             ctx->options->spec_verbose ? "false" : "true");
 }
 
 static void write_footer_spec(WasmWriteContext* ctx) {

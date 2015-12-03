@@ -193,6 +193,8 @@ int main(int argc, char** argv) {
   WasmWriteBinaryOptions options = {};
   if (s_spec)
     options.spec = 1;
+  if (s_spec_verbose)
+    options.spec_verbose = 1;
   if (s_verbose)
     options.log_writes = 1;
 
