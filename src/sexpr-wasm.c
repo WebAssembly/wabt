@@ -178,12 +178,16 @@ int main(int argc, char** argv) {
   result = result || parser.errors;
   wasm_free_scanner(scanner);
 
-  if (result != WASM_OK)
+  if (result != WASM_OK) {
+    wasm_destroy_script(&parser.script);
     return result;
+  }
 
   result = wasm_check_script(&parser.script);
-  if (result != WASM_OK)
+  if (result != WASM_OK) {
+    wasm_destroy_script(&parser.script);
     return result;
+  }
 
   WasmFileWriter writer = {};
   WasmWriteBinaryOptions options = {};

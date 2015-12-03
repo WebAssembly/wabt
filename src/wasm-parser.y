@@ -114,14 +114,36 @@ static void dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<vars> table var_list
 %type<var> type_use var
 
-/*
-%destructor { wasm_destroy_type_vector($$); } value_type_list
-*/
+%destructor { wasm_destroy_string_slice(&$$); } bind_var labeling literal quoted_text text
+%destructor { wasm_destroy_type_vector(&$$); } value_type_list
+%destructor { wasm_destroy_var(&$$); } var
+%destructor { wasm_destroy_var_vector_and_elements(&$$); } table var_list
+%destructor { wasm_destroy_expr_ptr(&$$); } expr expr1 expr_opt
+%destructor { wasm_destroy_expr_ptr_vector_and_elements(&$$); } expr_list non_empty_expr_list
+%destructor { wasm_destroy_target(&$$); } target
+%destructor { wasm_destroy_target_vector_and_elements(&$$); } target_list
+%destructor { wasm_destroy_case(&$$); } case
+%destructor { wasm_destroy_case_vector_and_elements(&$$); } case_list
+%destructor { wasm_destroy_type_bindings(&$$); } global local_list param_list
+%destructor { wasm_destroy_func(&$$); } func func_info
+%destructor { wasm_destroy_segment(&$$); } segment string_contents
+%destructor { wasm_destroy_segment_vector_and_elements(&$$); } segment_list
+%destructor { wasm_destroy_memory(&$$); } memory
+%destructor { wasm_destroy_func_signature(&$$); } func_type
+%destructor { wasm_destroy_func_type(&$$); } type_def
+%destructor { wasm_destroy_import(&$$); } import
+%destructor { wasm_destroy_export(&$$); } export
+%destructor { wasm_destroy_module_field_vector_and_elements(&$$); } module_fields
+%destructor { wasm_destroy_module(&$$); } module
+%destructor { wasm_destroy_const_vector(&$$); } const_list
+%destructor { wasm_destroy_command(&$$); } cmd
+%destructor { wasm_destroy_command_vector_and_elements(&$$); } cmd_list
+%destructor { wasm_destroy_script(&$$); } script
 
 %nonassoc LOW
 %nonassoc VAR
 
-%start script
+%start start
 
 %%
 
@@ -189,7 +211,7 @@ string_contents :
 
 labeling :
     /* empty */ %prec LOW { ZEROMEM($$); }
-  | bind_var { DUPTEXT($$, $1); }
+  | bind_var { $$ = $1; }
 ;
 
 offset :
@@ -585,6 +607,7 @@ func_info :
       $$.type_var = $2;
       $$.params = $3;
       $$.locals = $4;
+      $$.exprs = $5;
     }
   | bind_var type_use param_list non_empty_expr_list {
       ZEROMEM($$);
@@ -1247,6 +1270,12 @@ const_list :
 
 script :
     cmd_list { $$.commands = $1; parser->script = $$; }
+;
+
+/* bison destroys the start symbol even on a successful parse. We want to keep
+ script from being destroyed, so create a dummy start symbol. */
+start :
+    script
 ;
 
 %%
