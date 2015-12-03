@@ -511,24 +511,16 @@ static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
   writer_state->offset += len - 1;
 }
 
-/* TODO(binji): share with wasm-check.c */
-static int string_slices_are_equal(WasmStringSlice* a, WasmStringSlice* b) {
-  return a->start && b->start && a->length == b->length &&
-         memcmp(a->start, b->start, a->length) == 0;
-}
-
-/* TODO(binji): share with wasm-check.c */
 static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
                                          WasmStringSlice* name) {
   WasmLabelNode* node = top_label;
   while (node) {
-    if (node->label && string_slices_are_equal(node->label, name))
+    if (wasm_string_slices_are_equal(node->label, name))
       return node;
     node = node->next;
   }
 }
 
-/* TODO(binji): share with wasm-check.c */
 static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
                                         WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
@@ -548,7 +540,6 @@ typedef enum WasmForceLabel {
   WASM_FORCE_LABEL,
 } WasmForceLabel;
 
-/* TODO(binji): share with wasm-check.c */
 static void push_label(WasmWriteContext* ctx,
                        WasmLabelNode* node,
                        WasmLabel* label,
@@ -562,7 +553,6 @@ static void push_label(WasmWriteContext* ctx,
   ctx->max_depth++;
 }
 
-/* TODO(binji): share with wasm-check.c */
 static void pop_label(WasmWriteContext* ctx, WasmLabel* label) {
   ctx->max_depth--;
   if (ctx->top_label && ctx->top_label->label == label)
