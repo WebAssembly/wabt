@@ -183,6 +183,16 @@ static WasmResult check_align(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
+static WasmResult check_offset(WasmCheckContext* ctx,
+                               WasmLocation* loc,
+                               uint64_t offset) {
+  if (offset > UINT32_MAX) {
+    print_error(ctx, loc, "offset must be less than or equal to 0xffffffff");
+    return WASM_ERROR;
+  }
+  return WASM_OK;
+}
+
 static WasmResult check_type(WasmCheckContext* ctx,
                              WasmLocation* loc,
                              WasmType actual,
@@ -561,6 +571,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_LOAD: {
       WasmType type = expr->load.op.type;
       result |= check_align(ctx, &expr->loc, expr->load.align);
+      result |= check_offset(ctx, &expr->loc, expr->load.offset);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->load.addr, WASM_TYPE_I32,
                            " of load index");
@@ -569,6 +580,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_LOAD_EXTEND: {
       WasmType type = expr->load.op.type;
       result |= check_align(ctx, &expr->loc, expr->load.align);
+      result |= check_offset(ctx, &expr->loc, expr->load.offset);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->load.addr, WASM_TYPE_I32,
                            " of load index");
@@ -644,6 +656,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_STORE: {
       WasmType type = expr->store.op.type;
       result |= check_align(ctx, &expr->loc, expr->store.align);
+      result |= check_offset(ctx, &expr->loc, expr->store.offset);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->store.addr, WASM_TYPE_I32,
                            " of store index");
@@ -666,6 +679,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_STORE_WRAP: {
       WasmType type = expr->store.op.type;
       result |= check_align(ctx, &expr->loc, expr->store.align);
+      result |= check_offset(ctx, &expr->loc, expr->store.offset);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->store.addr, WASM_TYPE_I32,
                            " of store index");

@@ -22,6 +22,7 @@ typedef union WasmToken {
 
   /* non-terminals */
   uint32_t u32;
+  uint64_t u64;
   WasmTypeVector types;
   WasmVar var;
   WasmVarVector vars;

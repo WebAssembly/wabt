@@ -129,7 +129,8 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<text> bind_var labeling literal quoted_text text
 %type<type> result
 %type<types> value_type_list
-%type<u32> align offset
+%type<u32> align
+%type<u64> offset
 %type<vars> table var_list
 %type<var> type_use var
 
@@ -241,7 +242,7 @@ labeling :
 offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
-      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+      if (!read_int64($1.start, $1.start + $1.length, &$$))
         wasm_error(&@1, scanner, parser, "invalid offset \"%.*s\"", $1.length,
                    $1.start);
     }

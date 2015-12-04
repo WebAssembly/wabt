@@ -361,10 +361,16 @@ struct WasmExpr {
     } call_indirect;
     struct { WasmVar var; } get_local;
     struct { WasmVar var; WasmExprPtr expr; } set_local;
-    struct { WasmMemOp op; uint32_t offset, align; WasmExprPtr addr; } load;
     struct {
       WasmMemOp op;
-      uint32_t offset, align;
+      uint32_t align;
+      uint64_t offset;
+      WasmExprPtr addr;
+    } load;
+    struct {
+      WasmMemOp op;
+      uint32_t align;
+      uint64_t offset;
       WasmExprPtr addr, value;
     } store;
     WasmConst const_;
