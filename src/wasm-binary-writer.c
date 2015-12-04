@@ -1,6 +1,7 @@
 #include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
+#include <math.h>
 #include <memory.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -1336,6 +1337,30 @@ static WasmExpr* create_get_local_expr(int index) {
   return expr;
 }
 
+static WasmExpr* create_reinterpret_expr(WasmType type, WasmExpr* expr) {
+  if (!expr) {
+    wasm_destroy_expr_ptr(&expr);
+    return NULL;
+  }
+
+  WasmExpr* result = new_expr(WASM_EXPR_TYPE_CAST);
+  if (!result)
+    return NULL;
+  switch (type) {
+    case WASM_TYPE_F32:
+      result->cast.op.op_type = WASM_CAST_OP_TYPE_I32_REINTERPRET_F32;
+      break;
+    case WASM_TYPE_F64:
+      result->cast.op.op_type = WASM_CAST_OP_TYPE_I64_REINTERPRET_F64;
+      break;
+    default:
+      assert(0);
+      break;
+  }
+  result->cast.expr = expr;
+  return result;
+}
+
 static WasmModuleField* append_module_field_and_fixup(
     WasmModule* module,
     WasmModuleFieldType module_field_type) {
@@ -1581,16 +1606,19 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
               append_nullary_func(last_module, WASM_TYPE_I32, name);
           CHECK_ALLOC_NULL(caller);
 
+          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+
+          WasmExpr* invoke_expr =
+              create_invoke_expr(&command->assert_return.invoke, func_index);
+          CHECK_ALLOC_NULL(invoke_expr);
+
           if (result_type == WASM_TYPE_VOID) {
             /* The return type of the assert_return function is i32, but this
              invoked function has a return type of void, so we have nothing to
              compare to. Just return 1 to the caller, signifying everything is
              OK. */
-            expr_ptr = wasm_append_expr_ptr(&caller->exprs);
-            CHECK_ALLOC_NULL(expr_ptr);
-            *expr_ptr =
-                create_invoke_expr(&command->assert_return.invoke, func_index);
-            CHECK_ALLOC_NULL(*expr_ptr);
+            *expr_ptr = invoke_expr;
             WasmConst const_;
             const_.type = WASM_TYPE_I32;
             const_.u32 = 1;
@@ -1599,13 +1627,27 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
             *expr_ptr = create_const_expr(&const_);
             CHECK_ALLOC_NULL(*expr_ptr);
           } else {
-            expr_ptr = wasm_append_expr_ptr(&caller->exprs);
-            CHECK_ALLOC_NULL(expr_ptr);
-            *expr_ptr = create_eq_expr(
-                result_type,
-                create_invoke_expr(&command->assert_return.invoke, func_index),
-                create_const_expr(&command->assert_return.expected));
-            CHECK_ALLOC_NULL(*expr_ptr);
+            WasmConst* expected = &command->assert_return.expected;
+            WasmExpr* const_expr = create_const_expr(expected);
+            CHECK_ALLOC_NULL(const_expr);
+
+            if (expected->type == WASM_TYPE_F32 && isnan(expected->f32)) {
+              *expr_ptr = create_eq_expr(
+                  WASM_TYPE_I32,
+                  create_reinterpret_expr(WASM_TYPE_F32, invoke_expr),
+                  create_reinterpret_expr(WASM_TYPE_F32, const_expr));
+              CHECK_ALLOC_NULL(*expr_ptr);
+            } else if (expected->type == WASM_TYPE_F64 &&
+                       isnan(expected->f64)) {
+              *expr_ptr = create_eq_expr(
+                  WASM_TYPE_I64,
+                  create_reinterpret_expr(WASM_TYPE_F64, invoke_expr),
+                  create_reinterpret_expr(WASM_TYPE_F64, const_expr));
+              CHECK_ALLOC_NULL(*expr_ptr);
+            } else {
+              *expr_ptr = create_eq_expr(result_type, invoke_expr, const_expr);
+              CHECK_ALLOC_NULL(*expr_ptr);
+            }
           }
           break;
         }
