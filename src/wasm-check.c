@@ -725,7 +725,8 @@ static WasmResult check_func(WasmCheckContext* ctx,
       } else {
         /* copy signature from type var */
         func->result_type = func_type->sig.result_type;
-        wasm_extend_types(&func->params.types, &func_type->sig.param_types);
+        result |=
+            wasm_extend_types(&func->params.types, &func_type->sig.param_types);
       }
     } else {
       result = WASM_ERROR;
@@ -735,8 +736,8 @@ static WasmResult check_func(WasmCheckContext* ctx,
   result |= check_duplicate_bindings(ctx, &func->params.bindings, "parameter");
   result |= check_duplicate_bindings(ctx, &func->locals.bindings, "local");
 
-  wasm_extend_type_bindings(&func->params_and_locals, &func->params);
-  wasm_extend_type_bindings(&func->params_and_locals, &func->locals);
+  result |= wasm_extend_type_bindings(&func->params_and_locals, &func->params);
+  result |= wasm_extend_type_bindings(&func->params_and_locals, &func->locals);
 
   result |= check_exprs(ctx, module, func, &func->exprs, func->result_type,
                         " of function result");

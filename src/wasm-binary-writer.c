@@ -21,6 +21,21 @@
 
 #define FUNC_NAME_OFFSET 3
 
+#define ALLOC_FAILURE \
+  fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
+
+#define CHECK_ALLOC_(cond)      \
+  do {                          \
+    if ((cond)) {               \
+      ALLOC_FAILURE;            \
+      ctx->result = WASM_ERROR; \
+      return;                   \
+    }                           \
+  } while (0)
+
+#define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
+#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
+
 typedef enum WasmSectionType {
   WASM_SECTION_MEMORY = 0,
   WASM_SECTION_SIGNATURES = 1,
@@ -320,7 +335,7 @@ typedef struct WasmLabelNode {
 typedef struct WasmWriterState {
   WasmWriter* writer;
   size_t offset;
-  WasmResult result;
+  WasmResult* result;
   int log_writes;
 } WasmWriterState;
 
@@ -331,6 +346,7 @@ typedef struct WasmWriteContext {
   WasmMemoryWriter* mem_writer;
   WasmLabelNode* top_label;
   int max_depth;
+  WasmResult result;
 
   int* import_sig_indexes;
   int* func_sig_indexes;
@@ -417,12 +433,12 @@ static void out_data_at(WasmWriterState* writer_state,
                         const void* src,
                         size_t size,
                         const char* desc) {
-  if (writer_state->result != WASM_OK)
+  if (*writer_state->result != WASM_OK)
     return;
   if (writer_state->log_writes)
     dump_memory(src, size, offset, 0, desc);
   if (writer_state->writer->write_data)
-    writer_state->result = writer_state->writer->write_data(
+    *writer_state->result = writer_state->writer->write_data(
         offset, src, size, writer_state->writer->user_data);
 }
 
@@ -589,13 +605,17 @@ static void get_func_signatures(WasmWriteContext* ctx,
   for (i = 0; i < module->func_types.size; ++i) {
     WasmFuncType* func_type = module->func_types.data[i];
     WasmFuncSignature* sig = wasm_append_func_signature(sigs);
+    CHECK_ALLOC_NULL(sig);
     sig->result_type = func_type->sig.result_type;
     memset(&sig->param_types, 0, sizeof(sig->param_types));
-    wasm_extend_types(&sig->param_types, &func_type->sig.param_types);
+    CHECK_ALLOC(
+        wasm_extend_types(&sig->param_types, &func_type->sig.param_types));
   }
 
   ctx->import_sig_indexes =
       realloc(ctx->import_sig_indexes, module->imports.size * sizeof(int));
+  if (module->imports.size)
+    CHECK_ALLOC_NULL(ctx->import_sig_indexes);
   for (i = 0; i < module->imports.size; ++i) {
     WasmImport* import = module->imports.data[i];
     int index;
@@ -605,9 +625,11 @@ static void get_func_signatures(WasmWriteContext* ctx,
       if (index == -1) {
         index = sigs->size;
         WasmFuncSignature* sig = wasm_append_func_signature(sigs);
+        CHECK_ALLOC_NULL(sig);
         sig->result_type = import->func_sig.result_type;
         memset(&sig->param_types, 0, sizeof(sig->param_types));
-        wasm_extend_types(&sig->param_types, &import->func_sig.param_types);
+        CHECK_ALLOC(wasm_extend_types(&sig->param_types,
+                                      &import->func_sig.param_types));
       }
     } else {
       assert(import->import_type == WASM_IMPORT_HAS_TYPE);
@@ -624,6 +646,8 @@ static void get_func_signatures(WasmWriteContext* ctx,
 
   ctx->func_sig_indexes =
       realloc(ctx->func_sig_indexes, module->funcs.size * sizeof(int));
+  if (module->funcs.size)
+    CHECK_ALLOC_NULL(ctx->func_sig_indexes);
   for (i = 0; i < module->funcs.size; ++i) {
     WasmFunc* func = module->funcs.data[i];
     int index;
@@ -636,9 +660,10 @@ static void get_func_signatures(WasmWriteContext* ctx,
       if (index == -1) {
         index = sigs->size;
         WasmFuncSignature* sig = wasm_append_func_signature(sigs);
+        CHECK_ALLOC_NULL(sig);
         sig->result_type = func->result_type;
         memset(&sig->param_types, 0, sizeof(sig->param_types));
-        wasm_extend_types(&sig->param_types, &func->params.types);
+        CHECK_ALLOC(wasm_extend_types(&sig->param_types, &func->params.types));
       }
     }
 
@@ -649,8 +674,11 @@ static void get_func_signatures(WasmWriteContext* ctx,
 static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   int num_params = func->params.types.size;
   int num_locals = func->locals.types.size;
+  int num_params_and_locals = num_params + num_locals;
   ctx->remapped_locals =
-      realloc(ctx->remapped_locals, (num_params + num_locals) * sizeof(int));
+      realloc(ctx->remapped_locals, num_params_and_locals * sizeof(int));
+  if (num_params_and_locals)
+    CHECK_ALLOC_NULL(ctx->remapped_locals);
 
   int max[WASM_NUM_V8_TYPES] = {};
   int i;
@@ -1068,6 +1096,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
     ctx->func_offsets =
         realloc(ctx->func_offsets, module->funcs.size * sizeof(size_t));
+    if (module->funcs.size)
+      CHECK_ALLOC_NULL(ctx->func_offsets);
     for (i = 0; i < module->funcs.size; ++i) {
       WasmFunc* func = module->funcs.data[i];
       print_header(ctx, "function", i);
@@ -1166,32 +1196,56 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
 static WasmExpr* new_expr(WasmExprType type) {
   WasmExpr* expr = calloc(1, sizeof(WasmExpr));
+  if (!expr)
+    return NULL;
   expr->type = type;
   return expr;
 }
 
 static WasmExpr* create_const_expr(WasmConst* const_) {
   WasmExpr* expr = new_expr(WASM_EXPR_TYPE_CONST);
+  if (!expr)
+    return NULL;
   expr->const_ = *const_;
   return expr;
 }
 
 static WasmExpr* create_invoke_expr(WasmCommandInvoke* invoke, int func_index) {
   WasmExpr* expr = new_expr(WASM_EXPR_TYPE_CALL);
+  if (!expr)
+    return NULL;
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
   expr->call.var.index = func_index;
   int i;
   for (i = 0; i < invoke->args.size; ++i) {
     WasmConst* arg = &invoke->args.data[i];
-    *wasm_append_expr_ptr(&expr->call.args) = create_const_expr(arg);
+    WasmExprPtr* expr_ptr = wasm_append_expr_ptr(&expr->call.args);
+    if (!expr_ptr)
+      goto fail;
+    *expr_ptr = create_const_expr(arg);
+    if (!*expr_ptr)
+      goto fail;
   }
   return expr;
+fail:
+  for (i = 0; i < invoke->args.size; ++i)
+    wasm_destroy_expr_ptr(&expr->call.args.data[i]);
+  free(expr);
+  return NULL;
 }
 
 static WasmExpr* create_eq_expr(WasmType type,
                                 WasmExpr* left,
                                 WasmExpr* right) {
+  if (!left || !right) {
+    wasm_destroy_expr_ptr(&left);
+    wasm_destroy_expr_ptr(&right);
+    return NULL;
+  }
+
   WasmExpr* expr = new_expr(WASM_EXPR_TYPE_COMPARE);
+  if (!expr)
+    return NULL;
   expr->compare.op.type = type;
   switch (type) {
     case WASM_TYPE_I32:
@@ -1217,7 +1271,15 @@ static WasmExpr* create_eq_expr(WasmType type,
 static WasmExpr* create_ne_expr(WasmType type,
                                 WasmExpr* left,
                                 WasmExpr* right) {
+  if (!left || !right) {
+    wasm_destroy_expr_ptr(&left);
+    wasm_destroy_expr_ptr(&right);
+    return NULL;
+  }
+
   WasmExpr* expr = new_expr(WASM_EXPR_TYPE_COMPARE);
+  if (!expr)
+    return NULL;
   expr->compare.op.type = type;
   switch (type) {
     case WASM_TYPE_I32:
@@ -1241,7 +1303,14 @@ static WasmExpr* create_ne_expr(WasmType type,
 }
 
 static WasmExpr* create_set_local_expr(int index, WasmExpr* value) {
+  if (!value) {
+    wasm_destroy_expr_ptr(&value);
+    return NULL;
+  }
+
   WasmExpr* expr = new_expr(WASM_EXPR_TYPE_SET_LOCAL);
+  if (!expr)
+    return NULL;
   expr->set_local.var.type = WASM_VAR_TYPE_INDEX;
   expr->set_local.var.index = index;
   expr->set_local.expr = value;
@@ -1250,6 +1319,8 @@ static WasmExpr* create_set_local_expr(int index, WasmExpr* value) {
 
 static WasmExpr* create_get_local_expr(int index) {
   WasmExpr* expr = new_expr(WASM_EXPR_TYPE_GET_LOCAL);
+  if (!expr)
+    return NULL;
   expr->get_local.var.type = WASM_VAR_TYPE_INDEX;
   expr->get_local.var.index = index;
   return expr;
@@ -1260,6 +1331,8 @@ static WasmModuleField* append_module_field_and_fixup(
     WasmModuleFieldType module_field_type) {
   WasmModuleField* first_field = &module->fields.data[0];
   WasmModuleField* result = wasm_append_module_field(&module->fields);
+  if (!result)
+    return NULL;
   memset(result, 0, sizeof(*result));
   result->type = module_field_type;
 
@@ -1267,18 +1340,35 @@ static WasmModuleField* append_module_field_and_fixup(
    below. It is easier to do this than check below whether the new value was
    already assigned. */
   switch (module_field_type) {
-    case WASM_MODULE_FIELD_TYPE_FUNC:
-      *wasm_append_func_ptr(&module->funcs) = &result->func;
+    case WASM_MODULE_FIELD_TYPE_FUNC: {
+      WasmFuncPtr* func_ptr = wasm_append_func_ptr(&module->funcs);
+      if (!func_ptr)
+        goto fail;
+      *func_ptr = &result->func;
       break;
-    case WASM_MODULE_FIELD_TYPE_IMPORT:
-      *wasm_append_import_ptr(&module->imports) = &result->import;
+    }
+    case WASM_MODULE_FIELD_TYPE_IMPORT: {
+      WasmImportPtr* import_ptr = wasm_append_import_ptr(&module->imports);
+      if (!import_ptr)
+        goto fail;
+      *import_ptr = &result->import;
       break;
-    case WASM_MODULE_FIELD_TYPE_EXPORT:
-      *wasm_append_export_ptr(&module->exports) = &result->export;
+    }
+    case WASM_MODULE_FIELD_TYPE_EXPORT: {
+      WasmExportPtr* export_ptr = wasm_append_export_ptr(&module->exports);
+      if (!export_ptr)
+        goto fail;
+      *export_ptr = &result->export;
       break;
-    case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
-      *wasm_append_func_type_ptr(&module->func_types) = &result->func_type;
+    }
+    case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
+      WasmFuncTypePtr* func_type_ptr =
+          wasm_append_func_type_ptr(&module->func_types);
+      if (!func_type_ptr)
+        goto fail;
+      *func_type_ptr = &result->func_type;
       break;
+    }
 
     case WASM_MODULE_FIELD_TYPE_TABLE:
     case WASM_MODULE_FIELD_TYPE_MEMORY:
@@ -1329,6 +1419,9 @@ static WasmModuleField* append_module_field_and_fixup(
   }
 
   return result;
+fail:
+  module->fields.size--;
+  return NULL;
 }
 
 static WasmStringSlice create_assert_func_name(const char* format,
@@ -1346,6 +1439,8 @@ static WasmFunc* append_nullary_func(WasmModule* module,
                                      WasmStringSlice export_name) {
   WasmModuleField* func_field =
       append_module_field_and_fixup(module, WASM_MODULE_FIELD_TYPE_FUNC);
+  if (!func_field)
+    return NULL;
   WasmFunc* func = &func_field->func;
   func->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
   func->result_type = result_type;
@@ -1356,6 +1451,10 @@ static WasmFunc* append_nullary_func(WasmModule* module,
 
   WasmModuleField* export_field =
       append_module_field_and_fixup(module, WASM_MODULE_FIELD_TYPE_EXPORT);
+  if (!export_field) {
+    /* leave the func field, it will be cleaned up later */
+    return NULL;
+  }
   WasmExport* export = &export_field->export;
   export->var.type = WASM_VAR_TYPE_INDEX;
   export->var.index = func_index;
@@ -1454,35 +1553,49 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
                  js_call, name.length, name.start, invoke->loc.filename,
                  invoke->loc.first_line);
 
+      WasmExprPtr* expr_ptr;
       switch (command->type) {
         case WASM_COMMAND_TYPE_INVOKE: {
           WasmFunc* caller =
               append_nullary_func(last_module, result_type, name);
-          *wasm_append_expr_ptr(&caller->exprs) =
-              create_invoke_expr(&command->invoke, func_index);
+          CHECK_ALLOC_NULL(caller);
+          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = create_invoke_expr(&command->invoke, func_index);
+          CHECK_ALLOC_NULL(*expr_ptr);
           break;
         }
 
         case WASM_COMMAND_TYPE_ASSERT_RETURN: {
           WasmFunc* caller =
               append_nullary_func(last_module, WASM_TYPE_I32, name);
+          CHECK_ALLOC_NULL(caller);
 
           if (result_type == WASM_TYPE_VOID) {
             /* The return type of the assert_return function is i32, but this
              invoked function has a return type of void, so we have nothing to
              compare to. Just return 1 to the caller, signifying everything is
              OK. */
-            *wasm_append_expr_ptr(&caller->exprs) =
+            expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+            CHECK_ALLOC_NULL(expr_ptr);
+            *expr_ptr =
                 create_invoke_expr(&command->assert_return.invoke, func_index);
+            CHECK_ALLOC_NULL(*expr_ptr);
             WasmConst const_;
             const_.type = WASM_TYPE_I32;
             const_.u32 = 1;
-            *wasm_append_expr_ptr(&caller->exprs) = create_const_expr(&const_);
+            expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+            CHECK_ALLOC_NULL(expr_ptr);
+            *expr_ptr = create_const_expr(&const_);
+            CHECK_ALLOC_NULL(*expr_ptr);
           } else {
-            *wasm_append_expr_ptr(&caller->exprs) = create_eq_expr(
+            expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+            CHECK_ALLOC_NULL(expr_ptr);
+            *expr_ptr = create_eq_expr(
                 result_type,
                 create_invoke_expr(&command->assert_return.invoke, func_index),
                 create_const_expr(&command->assert_return.expected));
+            CHECK_ALLOC_NULL(*expr_ptr);
           }
           break;
         }
@@ -1490,22 +1603,34 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
         case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN: {
           WasmFunc* caller =
               append_nullary_func(last_module, WASM_TYPE_I32, name);
-          *wasm_append_type(&caller->locals.types) = result_type;
-          *wasm_append_type(&caller->params_and_locals.types) = result_type;
-          *wasm_append_expr_ptr(&caller->exprs) = create_set_local_expr(
+          CHECK_ALLOC_NULL(caller);
+          CHECK_ALLOC(
+              wasm_append_type_value(&caller->locals.types, &result_type));
+          CHECK_ALLOC(wasm_append_type_value(&caller->params_and_locals.types,
+                                             &result_type));
+          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = create_set_local_expr(
               0, create_invoke_expr(&command->assert_return_nan.invoke,
                                     func_index));
+          CHECK_ALLOC_NULL(*expr_ptr);
           /* x != x is true iff x is NaN */
-          *wasm_append_expr_ptr(&caller->exprs) = create_ne_expr(
-              result_type, create_get_local_expr(0), create_get_local_expr(0));
+          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = create_ne_expr(result_type, create_get_local_expr(0),
+                                     create_get_local_expr(0));
+          CHECK_ALLOC_NULL(*expr_ptr);
           break;
         }
 
         case WASM_COMMAND_TYPE_ASSERT_TRAP: {
           WasmFunc* caller =
               append_nullary_func(last_module, result_type, name);
-          *wasm_append_expr_ptr(&caller->exprs) =
-              create_invoke_expr(&command->invoke, func_index);
+          CHECK_ALLOC_NULL(caller);
+          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = create_invoke_expr(&command->invoke, func_index);
+          CHECK_ALLOC_NULL(*expr_ptr);
           break;
         }
 
@@ -1541,6 +1666,7 @@ WasmResult wasm_write_binary(WasmWriter* writer,
                              WasmWriteBinaryOptions* options) {
   WasmWriteContext ctx = {};
   ctx.options = options;
+  ctx.result = WASM_OK;
 
   if (options->spec) {
     WasmMemoryWriter mem_writer = {};
@@ -1549,23 +1675,22 @@ WasmResult wasm_write_binary(WasmWriter* writer,
       return result;
 
     ctx.spec_writer_state.writer = writer;
-    ctx.spec_writer_state.result = WASM_OK;
+    ctx.spec_writer_state.result = &ctx.result;
     ctx.writer_state.writer = &mem_writer.base;
-    ctx.writer_state.result = WASM_OK;
+    ctx.writer_state.result = &ctx.result;
     ctx.writer_state.log_writes = options->log_writes;
     ctx.mem_writer = &mem_writer;
     write_header_spec(&ctx);
     write_commands_spec(&ctx, script);
     write_footer_spec(&ctx);
     wasm_close_mem_writer(&mem_writer);
-    cleanup_context(&ctx);
-    return ctx.spec_writer_state.result;
   } else {
     ctx.writer_state.writer = writer;
-    ctx.writer_state.result = WASM_OK;
+    ctx.writer_state.result = &ctx.result;
     ctx.writer_state.log_writes = options->log_writes;
     write_commands_no_spec(&ctx, script);
-    cleanup_context(&ctx);
-    return ctx.writer_state.result;
   }
+
+  cleanup_context(&ctx);
+  return ctx.result;
 }

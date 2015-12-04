@@ -7,6 +7,8 @@
 #define EXTERN_C
 #endif
 
+#define WARN_UNUSED __attribute__ ((warn_unused_result))
+
 typedef enum WasmResult {
   WASM_OK,
   WASM_ERROR,

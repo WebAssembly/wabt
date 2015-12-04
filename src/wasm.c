@@ -106,15 +106,22 @@ WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var) {
   return module->imports.data[index];
 }
 
-void wasm_extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src) {
+WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
+                                     WasmTypeBindings* src) {
+  WasmResult result = WASM_OK;
   int last_type = dst->types.size;
   int last_binding = dst->bindings.size;
-  wasm_extend_types(&dst->types, &src->types);
-  wasm_extend_bindings(&dst->bindings, &src->bindings);
+  result = wasm_extend_types(&dst->types, &src->types);
+  if (result != WASM_OK)
+    return result;
+  result = wasm_extend_bindings(&dst->bindings, &src->bindings);
+  if (result != WASM_OK)
+    return result;
   /* fixup the binding indexes */
   int i;
   for (i = last_binding; i < dst->bindings.size; ++i)
     dst->bindings.data[i].index += last_type;
+  return result;
 }
 
 void wasm_destroy_string_slice(WasmStringSlice* str) {

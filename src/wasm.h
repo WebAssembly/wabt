@@ -596,7 +596,8 @@ WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var);
 WasmExportPtr wasm_get_export_by_name(WasmModule* module,
                                       WasmStringSlice* name);
 
-void wasm_extend_type_bindings(WasmTypeBindings* dst, WasmTypeBindings* src);
+WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
+                                     WasmTypeBindings* src) WARN_UNUSED;
 
 int wasm_func_is_exported(WasmModule* module, WasmFunc* func);
 

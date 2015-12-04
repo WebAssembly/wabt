@@ -371,6 +371,8 @@ int wasm_wrap(yyscan_t yyscanner) {
 
 WasmScanner wasm_new_scanner(const char* filename) {
   WasmScannerExtra* extra = malloc(sizeof(WasmScannerExtra));
+  if (!extra)
+    return NULL;
   extra->column = 1;
   extra->filename = filename;
   extra->file = fopen(filename, "r");

@@ -11,12 +11,28 @@
 #include "wasm-internal.h"
 
 #define ZEROMEM(var) memset(&(var), 0, sizeof(var));
+
 #define DUPTEXT(dst, src)                           \
   (dst).start = strndup((src).start, (src).length); \
   (dst).length = (src).length
+
 #define DUPQUOTEDTEXT(dst, src)                             \
   (dst).start = strndup((src).start + 1, (src).length - 2); \
   (dst).length = (src).length - 2
+
+#define CHECK_ALLOC_(cond)                                  \
+  if ((cond)) {                                             \
+    WasmLocation loc;                                       \
+    loc.filename = __FILE__;                                \
+    loc.first_line = loc.last_line = __LINE__;              \
+    loc.first_column = loc.last_column = 0;                 \
+    wasm_error(&loc, scanner, parser, "allocation failed"); \
+    YYERROR;                                                \
+  }
+
+#define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
+#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
+#define CHECK_ALLOC_STR(s) CHECK_ALLOC_(!(s).start)
 
 #define YYLLOC_DEFAULT(Current, Rhs, N)                                        \
   do                                                                           \
@@ -36,6 +52,8 @@
 
 static WasmExprPtr wasm_new_expr(WasmExprType type) {
   WasmExprPtr result = calloc(1, sizeof(WasmExpr));
+  if (!result)
+    return NULL;
   result->type = type;
   return result;
 }
@@ -48,8 +66,8 @@ static int read_float(const char* s, const char* end, float* out);
 static int read_double(const char* s, const char* end, double* out);
 static int read_const(WasmType type, const char* s, const char* end,
                       WasmConst* out);
-static void dup_string_contents(WasmStringSlice * text, void** out_data,
-                                size_t* out_size);
+static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
+                                      size_t* out_size);
 
 %}
 
@@ -152,7 +170,10 @@ static void dup_string_contents(WasmStringSlice * text, void** out_data,
 
 value_type_list :
     /* empty */ { ZEROMEM($$); }
-  | value_type_list VALUE_TYPE { $$ = $1; *wasm_append_type(&$$) = $2; }
+  | value_type_list VALUE_TYPE {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_type_value(&$$, &$2));
+    }
 ;
 func_type :
     /* empty */ { ZEROMEM($$); }
@@ -171,8 +192,8 @@ func_type :
 /* Expressions */
 
 literal :
-    INT { DUPTEXT($$, $1); }
-  | FLOAT { DUPTEXT($$, $1); }
+    INT { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
+  | FLOAT { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
 ;
 
 var :
@@ -189,26 +210,27 @@ var :
       $$.loc = @1;
       $$.type = WASM_VAR_TYPE_NAME;
       DUPTEXT($$.name, $1);
+      CHECK_ALLOC_STR($$.name);
     }
 ;
 var_list :
     /* empty */ { ZEROMEM($$); }
-  | var_list var { $$ = $1; *wasm_append_var(&$$) = $2; }
+  | var_list var { $$ = $1; CHECK_ALLOC(wasm_append_var_value(&$$, &$2)); }
 ;
 bind_var :
-    VAR { DUPTEXT($$, $1); }
+    VAR { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
 ;
 
 text :
-    TEXT { DUPTEXT($$, $1); }
+    TEXT { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
 ;
 
 quoted_text :
-    TEXT { DUPQUOTEDTEXT($$, $1); }
+    TEXT { DUPQUOTEDTEXT($$, $1); CHECK_ALLOC_STR($$); }
 ;
 
 string_contents :
-    TEXT { dup_string_contents(&$1, &$$.data, &$$.size); }
+    TEXT { CHECK_ALLOC(dup_string_contents(&$1, &$$.data, &$$.size)); }
 ;
 
 labeling :
@@ -237,51 +259,63 @@ expr :
     LPAR expr1 RPAR { $$ = $2; $$->loc = @1; }
 ;
 expr1 :
-    NOP { $$ = wasm_new_expr(WASM_EXPR_TYPE_NOP); }
+    NOP {
+      $$ = wasm_new_expr(WASM_EXPR_TYPE_NOP);
+      CHECK_ALLOC_NULL($$);
+    }
   | BLOCK labeling {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BLOCK);
+      CHECK_ALLOC_NULL($$);
       $$->block.label = $2;
     }
   | BLOCK labeling non_empty_expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BLOCK);
+      CHECK_ALLOC_NULL($$);
       $$->block.label = $2;
       $$->block.exprs = $3;
     }
   | IF_ELSE expr expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_IF_ELSE);
+      CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
       $$->if_else.false_ = $4;
     }
   | IF expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_IF);
+      CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
     }
   | BR_IF var expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR_IF);
+      CHECK_ALLOC_NULL($$);
       $$->br_if.var = $2;
       $$->br_if.cond = $3;
     }
   | LOOP labeling expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
+      CHECK_ALLOC_NULL($$);
       ZEROMEM($$->loop.outer);
       $$->loop.inner = $2;
       $$->loop.exprs = $3;
     }
   | LOOP bind_var bind_var expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
+      CHECK_ALLOC_NULL($$);
       $$->loop.outer = $2;
       $$->loop.inner = $3;
       $$->loop.exprs = $4;
     }
   | LABEL labeling expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LABEL);
+      CHECK_ALLOC_NULL($$);
       $$->label.label = $2;
       $$->label.expr = $3;
     }
   | BR expr_opt {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR);
+      CHECK_ALLOC_NULL($$);
       $$->br.var.loc = @1;
       $$->br.var.type = WASM_VAR_TYPE_INDEX;
       $$->br.var.index = 0;
@@ -289,15 +323,18 @@ expr1 :
     }
   | BR var expr_opt {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR);
+      CHECK_ALLOC_NULL($$);
       $$->br.var = $2;
       $$->br.expr = $3;
     }
   | RETURN expr_opt {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_RETURN);
+      CHECK_ALLOC_NULL($$);
       $$->return_.expr = $2;
     }
   | TABLESWITCH labeling expr LPAR TABLE target_list RPAR target case_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_TABLESWITCH);
+      CHECK_ALLOC_NULL($$);
       $$->tableswitch.label = $2;
       $$->tableswitch.expr = $3;
       $$->tableswitch.targets = $6;
@@ -310,6 +347,7 @@ expr1 :
         if (case_->label.start) {
           WasmBinding* binding =
               wasm_append_binding(&$$->tableswitch.case_bindings);
+          CHECK_ALLOC_NULL(binding);
           binding->loc = case_->loc;
           binding->name = case_->label;
           binding->index = i;
@@ -318,31 +356,37 @@ expr1 :
     }
   | CALL var expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL);
+      CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
       $$->call.args = $3;
     }
   | CALL_IMPORT var expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL_IMPORT);
+      CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
       $$->call.args = $3;
     }
   | CALL_INDIRECT var expr expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL_INDIRECT);
+      CHECK_ALLOC_NULL($$);
       $$->call_indirect.var = $2;
       $$->call_indirect.expr = $3;
       $$->call_indirect.args = $4;
     }
   | GET_LOCAL var {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_GET_LOCAL);
+      CHECK_ALLOC_NULL($$);
       $$->get_local.var = $2;
     }
   | SET_LOCAL var expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_SET_LOCAL);
+      CHECK_ALLOC_NULL($$);
       $$->set_local.var = $2;
       $$->set_local.expr = $3;
     }
   | LOAD offset align expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD);
+      CHECK_ALLOC_NULL($$);
       $$->load.op = $1;
       $$->load.offset = $2;
       $$->load.align = $3;
@@ -350,6 +394,7 @@ expr1 :
     }
   | STORE offset align expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE);
+      CHECK_ALLOC_NULL($$);
       $$->store.op = $1;
       $$->store.offset = $2;
       $$->store.align = $3;
@@ -358,6 +403,7 @@ expr1 :
     }
   | LOAD_EXTEND offset align expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD_EXTEND);
+      CHECK_ALLOC_NULL($$);
       $$->load.op = $1;
       $$->load.offset = $2;
       $$->load.align = $3;
@@ -365,6 +411,7 @@ expr1 :
     }
   | STORE_WRAP offset align expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE_WRAP);
+      CHECK_ALLOC_NULL($$);
       $$->store.op = $1;
       $$->store.offset = $2;
       $$->store.align = $3;
@@ -373,6 +420,7 @@ expr1 :
     }
   | CONST literal {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CONST);
+      CHECK_ALLOC_NULL($$);
       $$->const_.loc = @1;
       if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
         wasm_error(&@2, scanner, parser, "invalid literal \"%.*s\"", $2.length,
@@ -381,17 +429,20 @@ expr1 :
     }
   | UNARY expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_UNARY);
+      CHECK_ALLOC_NULL($$);
       $$->unary.op = $1;
       $$->unary.expr = $2;
     }
   | BINARY expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BINARY);
+      CHECK_ALLOC_NULL($$);
       $$->binary.op = $1;
       $$->binary.left = $2;
       $$->binary.right = $3;
     }
   | SELECT expr expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_SELECT);
+      CHECK_ALLOC_NULL($$);
       $$->select.type = $1;
       $$->select.cond = $2;
       $$->select.true_ = $3;
@@ -399,48 +450,70 @@ expr1 :
     }
   | COMPARE expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_COMPARE);
+      CHECK_ALLOC_NULL($$);
       $$->compare.op = $1;
       $$->compare.left = $2;
       $$->compare.right = $3;
     }
   | CONVERT expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CONVERT);
+      CHECK_ALLOC_NULL($$);
       $$->convert.op = $1;
       $$->convert.expr = $2;
     }
   | CAST expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_CAST);
+      CHECK_ALLOC_NULL($$);
       $$->cast.op = $1;
       $$->cast.expr = $2;
     }
-  | UNREACHABLE { $$ = wasm_new_expr(WASM_EXPR_TYPE_UNREACHABLE); }
-  | MEMORY_SIZE { $$ = wasm_new_expr(WASM_EXPR_TYPE_MEMORY_SIZE); }
+  | UNREACHABLE {
+      $$ = wasm_new_expr(WASM_EXPR_TYPE_UNREACHABLE);
+      CHECK_ALLOC_NULL($$);
+    }
+  | MEMORY_SIZE {
+      $$ = wasm_new_expr(WASM_EXPR_TYPE_MEMORY_SIZE);
+      CHECK_ALLOC_NULL($$);
+    }
   | GROW_MEMORY expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_GROW_MEMORY);
+      CHECK_ALLOC_NULL($$);
       $$->grow_memory.expr = $2;
     }
   | HAS_FEATURE text {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_HAS_FEATURE);
+      CHECK_ALLOC_NULL($$);
       $$->has_feature.text = $2;
     }
   | LOAD_GLOBAL var {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD_GLOBAL);
+      CHECK_ALLOC_NULL($$);
       $$->load_global.var = $2;
     }
   | STORE_GLOBAL var expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE_GLOBAL);
+      CHECK_ALLOC_NULL($$);
       $$->store_global.var = $2;
       $$->store_global.expr = $3;
     }
-  | PAGE_SIZE { $$ = wasm_new_expr(WASM_EXPR_TYPE_PAGE_SIZE); }
+  | PAGE_SIZE {
+      $$ = wasm_new_expr(WASM_EXPR_TYPE_PAGE_SIZE);
+      CHECK_ALLOC_NULL($$);
+    }
 ;
 expr_opt :
     /* empty */ { $$ = NULL; }
   | expr
 ;
 non_empty_expr_list :
-    expr { ZEROMEM($$); *wasm_append_expr_ptr(&$$) = $1; }
-  | non_empty_expr_list expr { $$ = $1; *wasm_append_expr_ptr(&$$) = $2; }
+    expr {
+      ZEROMEM($$);
+      CHECK_ALLOC(wasm_append_expr_ptr_value(&$$, &$1));
+    }
+  | non_empty_expr_list expr {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_expr_ptr_value(&$$, &$2));
+    }
 ;
 expr_list :
     /* empty */ { ZEROMEM($$); }
@@ -459,7 +532,10 @@ target :
 ;
 target_list :
     /* empty */ { ZEROMEM($$); }
-  | target_list target { $$ = $1; *wasm_append_target(&$$) = $2; }
+  | target_list target {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_target_value(&$$, &$2));
+    }
 ;
 case :
     LPAR CASE expr_list RPAR { ZEROMEM($$.label); $$.exprs = $3; }
@@ -467,7 +543,10 @@ case :
 ;
 case_list :
     /* empty */ { ZEROMEM($$); }
-  | case_list case { $$ = $1; *wasm_append_case(&$$) = $2; }
+  | case_list case {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_case_value(&$$, &$2));
+    }
 ;
 
 
@@ -476,29 +555,31 @@ case_list :
 param_list :
     LPAR PARAM value_type_list RPAR {
       ZEROMEM($$);
-      wasm_extend_types(&$$.types, &$3);
+      CHECK_ALLOC(wasm_extend_types(&$$.types, &$3));
       wasm_destroy_type_vector(&$3);
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
       binding->name = $3;
       binding->index = $$.types.size;
-      *wasm_append_type(&$$.types) = $4;
+      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
     }
   | param_list LPAR PARAM value_type_list RPAR {
       $$ = $1;
-      wasm_extend_types(&$$.types, &$4);
+      CHECK_ALLOC(wasm_extend_types(&$$.types, &$4));
       wasm_destroy_type_vector(&$4);
     }
   | param_list LPAR PARAM bind_var VALUE_TYPE RPAR {
       $$ = $1;
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      CHECK_ALLOC_NULL(binding);
       binding->loc = @3;
       binding->name = $4;
       binding->index = $$.types.size;
-      *wasm_append_type(&$$.types) = $5;
+      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$5));
     }
 ;
 result :
@@ -507,29 +588,31 @@ result :
 local_list :
     LPAR LOCAL value_type_list RPAR {
       ZEROMEM($$);
-      wasm_extend_types(&$$.types, &$3);
+      CHECK_ALLOC(wasm_extend_types(&$$.types, &$3));
       wasm_destroy_type_vector(&$3);
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
       binding->name = $3;
       binding->index = $$.types.size;
-      *wasm_append_type(&$$.types) = $4;
+      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
     }
   | local_list LPAR LOCAL value_type_list RPAR {
       $$ = $1;
-      wasm_extend_types(&$$.types, &$4);
+      CHECK_ALLOC(wasm_extend_types(&$$.types, &$4));
       wasm_destroy_type_vector(&$4);
     }
   | local_list LPAR LOCAL bind_var VALUE_TYPE RPAR {
       $$ = $1;
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      CHECK_ALLOC_NULL(binding);
       binding->loc = @3;
       binding->name = $4;
       binding->index = $$.types.size;
-      *wasm_append_type(&$$.types) = $5;
+      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$5));
     }
 ;
 type_use :
@@ -1004,7 +1087,10 @@ segment :
 ;
 segment_list :
     /* empty */ { ZEROMEM($$); }
-  | segment_list segment { $$ = $1; *wasm_append_segment(&$$) = $2; }
+  | segment_list segment {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_segment_value(&$$, &$2));
+    }
 ;
 
 memory :
@@ -1091,10 +1177,11 @@ global :
   | LPAR GLOBAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
       WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
       binding->name = $3;
       binding->index = 0;
-      *wasm_append_type(&$$.types) = $4;
+      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
     }
 ;
 
@@ -1103,6 +1190,7 @@ module_fields :
   | module_fields func {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
       field->func = $2;
@@ -1110,6 +1198,7 @@ module_fields :
   | module_fields import {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
       field->import = $2;
@@ -1117,6 +1206,7 @@ module_fields :
   | module_fields export {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
       field->export = $2;
@@ -1124,6 +1214,7 @@ module_fields :
   | module_fields table {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_TABLE;
       field->table = $2;
@@ -1131,6 +1222,7 @@ module_fields :
   | module_fields type_def {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
       field->func_type = $2;
@@ -1138,6 +1230,7 @@ module_fields :
   | module_fields memory {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
       field->memory = $2;
@@ -1145,6 +1238,7 @@ module_fields :
   | module_fields global {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
       field->global = $2;
@@ -1160,51 +1254,64 @@ module :
       for (i = 0; i < $$.fields.size; ++i) {
         WasmModuleField* field = &$$.fields.data[i];
         switch (field->type) {
-          case WASM_MODULE_FIELD_TYPE_FUNC:
-            *wasm_append_func_ptr(&$$.funcs) = &field->func;
+          case WASM_MODULE_FIELD_TYPE_FUNC: {
+            WasmFuncPtr func_ptr = &field->func;
+            CHECK_ALLOC(wasm_append_func_ptr_value(&$$.funcs, &func_ptr));
             if (field->func.name.start) {
               WasmBinding* binding = wasm_append_binding(&$$.func_bindings);
+              CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->name = field->func.name;
               binding->index = $$.funcs.size - 1;
             }
             break;
-          case WASM_MODULE_FIELD_TYPE_IMPORT:
-            *wasm_append_import_ptr(&$$.imports) = &field->import;
+          }
+          case WASM_MODULE_FIELD_TYPE_IMPORT: {
+            WasmImportPtr import_ptr = &field->import;
+            CHECK_ALLOC(wasm_append_import_ptr_value(&$$.imports, &import_ptr));
             if (field->import.name.start) {
               WasmBinding* binding = wasm_append_binding(&$$.import_bindings);
+              CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->name = field->import.name;
               binding->index = $$.imports.size - 1;
             }
             break;
-          case WASM_MODULE_FIELD_TYPE_EXPORT:
-            *wasm_append_export_ptr(&$$.exports) = &field->export;
+          }
+          case WASM_MODULE_FIELD_TYPE_EXPORT: {
+            WasmExportPtr export_ptr = &field->export;
+            CHECK_ALLOC(wasm_append_export_ptr_value(&$$.exports, &export_ptr));
             if (field->export.name.start) {
               WasmBinding* binding = wasm_append_binding(&$$.export_bindings);
+              CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->name = field->export.name;
               binding->index = $$.exports.size - 1;
             }
             break;
+          }
           case WASM_MODULE_FIELD_TYPE_TABLE:
             $$.table = &field->table;
             break;
-          case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
-            *wasm_append_func_type_ptr(&$$.func_types) = &field->func_type;
+          case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
+            WasmFuncTypePtr func_type_ptr = &field->func_type;
+            CHECK_ALLOC(wasm_append_func_type_ptr_value(&$$.func_types,
+                                                        &func_type_ptr));
             if (field->func_type.name.start) {
               WasmBinding* binding =
                   wasm_append_binding(&$$.func_type_bindings);
+              CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->name = field->func_type.name;
               binding->index = $$.func_types.size - 1;
             }
             break;
+          }
           case WASM_MODULE_FIELD_TYPE_MEMORY:
             $$.memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_GLOBAL:
-            wasm_extend_type_bindings(&$$.globals, &field->global);
+            CHECK_ALLOC(wasm_extend_type_bindings(&$$.globals, &field->global));
             break;
         }
       }
@@ -1250,7 +1357,10 @@ cmd :
 ;
 cmd_list :
     /* empty */ { ZEROMEM($$); }
-  | cmd_list cmd { $$ = $1; *wasm_append_command(&$$) = $2; }
+  | cmd_list cmd {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_command_value(&$$, &$2));
+    }
 ;
 
 const :
@@ -1268,7 +1378,10 @@ const_opt :
 ;
 const_list :
     /* empty */ { ZEROMEM($$); }
-  | const_list const { $$ = $1; *wasm_append_const(&$$) = $2; }
+  | const_list const {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_const_value(&$$, &$2));
+    }
 ;
 
 script :
@@ -1596,9 +1709,9 @@ static size_t copy_string_contents(WasmStringSlice* text,
   return dest - dest_start;
 }
 
-static void dup_string_contents(WasmStringSlice* text,
-                                void** out_data,
-                                size_t* out_size) {
+static WasmResult dup_string_contents(WasmStringSlice* text,
+                                      void** out_data,
+                                      size_t* out_size) {
   const char* src = text->start + 1;
   const char* end = text->start + text->length - 1;
   /* Always allocate enough space for the entire string including the escape
@@ -1606,7 +1719,10 @@ static void dup_string_contents(WasmStringSlice* text,
    * through the string once. */
   size_t size = end - src;
   char* result = malloc(size);
+  if (!result)
+    return WASM_ERROR;
   size_t actual_size = copy_string_contents(text, result, size);
   *out_data = result;
   *out_size = actual_size;
+  return WASM_OK;
 }
