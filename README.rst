@@ -285,7 +285,7 @@ that the expected stdout has been added::
 Sanitizers
 ----------
 
-To build with the `LLVM sanitizers <https://github.com/google/sanitizers>`,
+To build with the `LLVM sanitizers <https://github.com/google/sanitizers>`_,
 append the sanitizer name to sexpr-wasm::
 
   $ make out/sexpr-wasm-asan
