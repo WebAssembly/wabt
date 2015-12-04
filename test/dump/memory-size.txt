@@ -5,8 +5,8 @@
     (memory_size)))
 (;; STDOUT ;;;
 0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 0a                                         ; min mem size log 2
-0000002: 0a                                         ; max mem size log 2
+0000001: 0b                                         ; min mem size log 2
+0000002: 0b                                         ; max mem size log 2
 0000003: 01                                         ; export mem
 0000004: 01                                         ; WASM_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures

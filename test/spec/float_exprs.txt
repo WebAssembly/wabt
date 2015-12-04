@@ -4,7 +4,7 @@
 ;;; STDIN_FILE: third_party/testsuite/float_exprs.wast
 (;; STDERR ;;;
 #
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 370
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 317
 # Unsupported opcode #163:ExprI64SConvertF64
 #
 

@@ -4,7 +4,7 @@
 ;;; STDIN_FILE: third_party/testsuite/traps.wast
 (;; STDERR ;;;
 #
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 370
+# Fatal error in ../../../../src/wasm/tf-builder.cc, line 317
 # Unsupported opcode #162:ExprI64SConvertF32
 #
 

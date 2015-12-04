@@ -1,13 +1,71 @@
 ;;; SLOW:
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/f32.wast
-(;; STDERR ;;;
-#
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 366
-# Unsupported opcode #121:ExprF32Min reported as supported
-#
-
-d8 raised signal SIGILL
-;;; STDERR ;;)
+(;; STDOUT ;;;
+third_party/testsuite/f32.wast:1617: $assert_return_nan_1584 failed.
+third_party/testsuite/f32.wast:1618: $assert_return_nan_1585 failed.
+third_party/testsuite/f32.wast:1619: $assert_return_nan_1586 failed.
+third_party/testsuite/f32.wast:1620: $assert_return_nan_1587 failed.
+third_party/testsuite/f32.wast:1621: $assert_return_nan_1588 failed.
+third_party/testsuite/f32.wast:1622: $assert_return_nan_1589 failed.
+third_party/testsuite/f32.wast:1623: $assert_return_nan_1590 failed.
+third_party/testsuite/f32.wast:1624: $assert_return_nan_1591 failed.
+third_party/testsuite/f32.wast:1625: $assert_return_nan_1592 failed.
+third_party/testsuite/f32.wast:1626: $assert_return_nan_1593 failed.
+third_party/testsuite/f32.wast:1627: $assert_return_nan_1594 failed.
+third_party/testsuite/f32.wast:1628: $assert_return_nan_1595 failed.
+third_party/testsuite/f32.wast:1629: $assert_return_nan_1596 failed.
+third_party/testsuite/f32.wast:1630: $assert_return_nan_1597 failed.
+third_party/testsuite/f32.wast:1631: $assert_return_nan_1598 failed.
+third_party/testsuite/f32.wast:1632: $assert_return_nan_1599 failed.
+third_party/testsuite/f32.wast:1633: $assert_return_nan_1600 failed.
+third_party/testsuite/f32.wast:1634: $assert_return_nan_1601 failed.
+third_party/testsuite/f32.wast:1635: $assert_return_nan_1602 failed.
+third_party/testsuite/f32.wast:1636: $assert_return_nan_1603 failed.
+third_party/testsuite/f32.wast:1637: $assert_return_nan_1604 failed.
+third_party/testsuite/f32.wast:1638: $assert_return_nan_1605 failed.
+third_party/testsuite/f32.wast:1639: $assert_return_nan_1606 failed.
+third_party/testsuite/f32.wast:1640: $assert_return_nan_1607 failed.
+third_party/testsuite/f32.wast:1641: $assert_return_nan_1608 failed.
+third_party/testsuite/f32.wast:1642: $assert_return_nan_1609 failed.
+third_party/testsuite/f32.wast:1643: $assert_return_nan_1610 failed.
+third_party/testsuite/f32.wast:1644: $assert_return_nan_1611 failed.
+third_party/testsuite/f32.wast:1645: $assert_return_nan_1612 failed.
+third_party/testsuite/f32.wast:1646: $assert_return_nan_1613 failed.
+third_party/testsuite/f32.wast:1647: $assert_return_nan_1614 failed.
+third_party/testsuite/f32.wast:1648: $assert_return_nan_1615 failed.
+third_party/testsuite/f32.wast:1941: $assert_return_nan_1908 failed.
+third_party/testsuite/f32.wast:1942: $assert_return_nan_1909 failed.
+third_party/testsuite/f32.wast:1943: $assert_return_nan_1910 failed.
+third_party/testsuite/f32.wast:1944: $assert_return_nan_1911 failed.
+third_party/testsuite/f32.wast:1945: $assert_return_nan_1912 failed.
+third_party/testsuite/f32.wast:1946: $assert_return_nan_1913 failed.
+third_party/testsuite/f32.wast:1947: $assert_return_nan_1914 failed.
+third_party/testsuite/f32.wast:1948: $assert_return_nan_1915 failed.
+third_party/testsuite/f32.wast:1949: $assert_return_nan_1916 failed.
+third_party/testsuite/f32.wast:1950: $assert_return_nan_1917 failed.
+third_party/testsuite/f32.wast:1951: $assert_return_nan_1918 failed.
+third_party/testsuite/f32.wast:1952: $assert_return_nan_1919 failed.
+third_party/testsuite/f32.wast:1953: $assert_return_nan_1920 failed.
+third_party/testsuite/f32.wast:1954: $assert_return_nan_1921 failed.
+third_party/testsuite/f32.wast:1955: $assert_return_nan_1922 failed.
+third_party/testsuite/f32.wast:1956: $assert_return_nan_1923 failed.
+third_party/testsuite/f32.wast:1957: $assert_return_nan_1924 failed.
+third_party/testsuite/f32.wast:1958: $assert_return_nan_1925 failed.
+third_party/testsuite/f32.wast:1959: $assert_return_nan_1926 failed.
+third_party/testsuite/f32.wast:1960: $assert_return_nan_1927 failed.
+third_party/testsuite/f32.wast:1961: $assert_return_nan_1928 failed.
+third_party/testsuite/f32.wast:1962: $assert_return_nan_1929 failed.
+third_party/testsuite/f32.wast:1963: $assert_return_nan_1930 failed.
+third_party/testsuite/f32.wast:1964: $assert_return_nan_1931 failed.
+third_party/testsuite/f32.wast:1965: $assert_return_nan_1932 failed.
+third_party/testsuite/f32.wast:1966: $assert_return_nan_1933 failed.
+third_party/testsuite/f32.wast:1967: $assert_return_nan_1934 failed.
+third_party/testsuite/f32.wast:1968: $assert_return_nan_1935 failed.
+third_party/testsuite/f32.wast:1969: $assert_return_nan_1936 failed.
+third_party/testsuite/f32.wast:1970: $assert_return_nan_1937 failed.
+third_party/testsuite/f32.wast:1971: $assert_return_nan_1938 failed.
+third_party/testsuite/f32.wast:1972: $assert_return_nan_1939 failed.
+2330/2394 tests passed.
+;;; STDOUT ;;)

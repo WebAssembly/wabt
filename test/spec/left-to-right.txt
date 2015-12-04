@@ -1,12 +1,6 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/left-to-right.wast
-(;; STDERR ;;;
-#
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 366
-# Unsupported opcode #121:ExprF32Min reported as supported
-#
-
-d8 raised signal SIGILL
-;;; STDERR ;;)
+(;; STDOUT ;;;
+85/85 tests passed.
+;;; STDOUT ;;)

@@ -1,19 +1,4 @@
+;;; SKIP: v8-native throws memory access out of bounds
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/resizing.wast
-(;; STDOUT ;;;
-third_party/testsuite/resizing.wast:34: $assert_return_0 failed.
-third_party/testsuite/resizing.wast:36: $assert_trap_2 failed, didn't throw
-third_party/testsuite/resizing.wast:37: $assert_trap_3 failed, didn't throw
-third_party/testsuite/resizing.wast:38: $assert_trap_4 failed, didn't throw
-third_party/testsuite/resizing.wast:39: $assert_trap_5 failed, didn't throw
-$invoke_6 = undefined
-third_party/testsuite/resizing.wast:41: $assert_return_7 failed.
-third_party/testsuite/resizing.wast:42: $assert_return_8 failed.
-third_party/testsuite/resizing.wast:45: $assert_trap_11 failed, didn't throw
-third_party/testsuite/resizing.wast:46: $assert_trap_12 failed, didn't throw
-$invoke_13 = undefined
-third_party/testsuite/resizing.wast:48: $assert_return_14 failed.
-third_party/testsuite/resizing.wast:53: $assert_return_19 failed.
-7/18 tests passed.
-;;; STDOUT ;;)
