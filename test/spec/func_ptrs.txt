@@ -5,7 +5,7 @@
 assert_invalid error:
   third_party/testsuite/func_ptrs.wast:33:37: function type variable out of range (max 0)
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:34:55: function type variable out of range (max 0)
+  third_party/testsuite/func_ptrs.wast:34:58: function type variable out of range (max 0)
 83
 $invoke_3 = undefined
 22/22 tests passed.
