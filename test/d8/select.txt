@@ -20,7 +20,7 @@
 
   (func $test_i32_l (result i32) (call $i32 (i32.const 0)))
   (func $test_i32_r (result i32) (call $i32 (i32.const 1)))
-  ;; v8-native-prototype currently crashes if you try to return an i64, so
+  ;; v8-native-prototype currently truncates if you try to return an i64, so
   ;; we'll do a comparison against the expected value instead.
   (func $test_i64_l (result i32)
     (i64.eq (call $i64 (i32.const 0)) (i64.const 2)))

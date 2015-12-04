@@ -11,7 +11,7 @@
   (export "load_f32" $load_f32)
   (func $load_f32 (result f32) (load_global 1))
 
-  ;; v8-native-prototype currently crashes if you try to return an i64, so
+  ;; v8-native-prototype currently truncates if you try to return an i64, so
   ;; we'll do a comparison against the expected value instead.
   (export "store_i64" $store_i64)
   (func $store_i64 (store_global 2 (i64.const 3)))

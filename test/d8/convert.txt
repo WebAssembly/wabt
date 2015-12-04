@@ -14,7 +14,7 @@
   (func $i32_trunc_u_f64 (result i32) (i32.trunc_u/f64 (f64.const 3e9)))
 
   ;; i64
-  ;; v8-native-prototype currently crashes if you try to return an i64, so
+  ;; v8-native-prototype currently truncates if you try to return an i64, so
   ;; we'll do a comparison against the expected value instead.
   (export "i64_extend_u_i32" $i64_extend_u_i32)
   (func $i64_extend_u_i32 (result i32)
@@ -46,13 +46,10 @@
   (func $f32_convert_u_i32 (result f32) (f32.convert_u/i32 (i32.const -1)))
   (export "f32_demote_f64" $f32_demote_f64)
   (func $f32_demote_f64 (result f32) (f32.demote/f64 (f64.const 12345678.9)))
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "f32_convert_s_i64" $f32_convert_s_i64)
-    (func $f32_convert_s_i64 (result f32) (f32.convert_s/i64 (i64.const 0)))
-    (export "f32_convert_u_i64" $f32_convert_u_i64)
-    (func $f32_convert_u_i64 (result f32) (f32.convert_u/i64 (i64.const 0)))
-  ;)
+  (export "f32_convert_s_i64" $f32_convert_s_i64)
+  (func $f32_convert_s_i64 (result f32) (f32.convert_s/i64 (i64.const 0)))
+  (export "f32_convert_u_i64" $f32_convert_u_i64)
+  (func $f32_convert_u_i64 (result f32) (f32.convert_u/i64 (i64.const 0)))
 
   ;; f64
   (export "f64_convert_s_i32" $f64_convert_s_i32)
@@ -61,13 +58,10 @@
   (func $f64_convert_u_i32 (result f64) (f64.convert_u/i32 (i32.const -1)))
   (export "f64_demote_f32" $f64_demote_f32)
   (func $f64_demote_f32 (result f64) (f64.promote/f32 (f32.const 12345678.9)))
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "f64_convert_s_i64" $f64_convert_s_i64)
-    (func $f64_convert_s_i64 (result f64) (f64.convert_s/i64 (i64.const 0)))
-    (export "f64_convert_u_i64" $f64_convert_u_i64)
-    (func $f64_convert_u_i64 (result f64) (f64.convert_u/i64 (i64.const 0)))
-  ;)
+  (export "f64_convert_s_i64" $f64_convert_s_i64)
+  (func $f64_convert_s_i64 (result f64) (f64.convert_s/i64 (i64.const 0)))
+  (export "f64_convert_u_i64" $f64_convert_u_i64)
+  (func $f64_convert_u_i64 (result f64) (f64.convert_u/i64 (i64.const 0)))
 )
 (;; STDOUT ;;;
 i32_wrap_i64() = -1
@@ -80,7 +74,11 @@ i64_extend_s_i32() = 1
 f32_convert_s_i32() = -1
 f32_convert_u_i32() = 4294967296
 f32_demote_f64() = 12345679
+f32_convert_s_i64() = 0
+f32_convert_u_i64() = 0
 f64_convert_s_i32() = -1
 f64_convert_u_i32() = 4294967295
 f64_demote_f32() = 12345679
+f64_convert_s_i64() = 0
+f64_convert_u_i64() = 0
 ;;; STDOUT ;;)

@@ -5,26 +5,20 @@
   (func $i32_not_100 (result i32) (i32.not (i32.const 100)))
   (export "i32_not_0" $i32_not_0)
   (func $i32_not_0 (result i32) (i32.not (i32.const 0)))
-  (;
-    currently unsupported in v8-native-prototype
-    (export "i32_clz" $i32_clz)
-    (func $i32_clz (result i32) (i32.clz (i32.const 128)))
-    (export "i32_ctz" $i32_ctz)
-    (func $i32_ctz (result i32) (i32.ctz (i32.const 128)))
-    (export "i32_popcnt" $i32_popcnt)
-    (func $i32_popcnt (result i32) (i32.popcnt (i32.const 128)))
-  ;)
+  (export "i32_clz" $i32_clz)
+  (func $i32_clz (result i32) (i32.clz (i32.const 128)))
+  (export "i32_ctz" $i32_ctz)
+  (func $i32_ctz (result i32) (i32.ctz (i32.const 128)))
+  (export "i32_popcnt" $i32_popcnt)
+  (func $i32_popcnt (result i32) (i32.popcnt (i32.const 128)))
 
   ;; i64
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "i64_clz" $i64_clz)
-    (func $i64_clz (result i64) (i64.clz (i64.const 128)))
-    (export "i64_ctz" $i64_ctz)
-    (func $i64_ctz (result i64) (i64.ctz (i64.const 128)))
-    (export "i64_popcnt" $i64_popcnt)
-    (func $i64_popcnt (result i64) (i64.popcnt (i64.const 128)))
-  ;)
+  (export "i64_clz" $i64_clz)
+  (func $i64_clz (result i64) (i64.clz (i64.const 128)))
+  (export "i64_ctz" $i64_ctz)
+  (func $i64_ctz (result i64) (i64.ctz (i64.const 128)))
+  (export "i64_popcnt" $i64_popcnt)
+  (func $i64_popcnt (result i64) (i64.popcnt (i64.const 128)))
 
   ;; f32
   (export "f32_neg" $f32_neg)
@@ -35,19 +29,16 @@
   (func $f32_sqrt_neg (result f32) (f32.sqrt (f32.const -100)))
   (export "f32_sqrt_100" $f32_sqrt_100)
   (func $f32_sqrt_100 (result f32) (f32.sqrt (f32.const 100)))
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "f32_ceil" $f32_ceil)
-    (func $f32_ceil (result f32) (f32.ceil (f32.const -0.75)))
-    (export "f32_floor" $f32_floor)
-    (func $f32_floor (result f32) (f32.floor (f32.const -0.75)))
-    (export "f32_trunc" $f32_trunc)
-    (func $f32_trunc (result f32) (f32.trunc (f32.const -0.75)))
-    (export "f32_nearest_lo" $f32_nearest_lo)
-    (func $f32_nearest_lo (result f32) (f32.nearest (f32.const 1.25)))
-    (export "f32_nearest_hi" $f32_nearest_hi)
-    (func $f32_nearest_hi (result f32) (f32.nearest (f32.const 1.75)))
-  ;)
+  (export "f32_ceil" $f32_ceil)
+  (func $f32_ceil (result f32) (f32.ceil (f32.const -0.75)))
+  (export "f32_floor" $f32_floor)
+  (func $f32_floor (result f32) (f32.floor (f32.const -0.75)))
+  (export "f32_trunc" $f32_trunc)
+  (func $f32_trunc (result f32) (f32.trunc (f32.const -0.75)))
+  (export "f32_nearest_lo" $f32_nearest_lo)
+  (func $f32_nearest_lo (result f32) (f32.nearest (f32.const 1.25)))
+  (export "f32_nearest_hi" $f32_nearest_hi)
+  (func $f32_nearest_hi (result f32) (f32.nearest (f32.const 1.75)))
 
   ;; f64
   (export "f64_neg" $f64_neg)
@@ -58,29 +49,42 @@
   (func $f64_sqrt_neg (result f64) (f64.sqrt (f64.const -100)))
   (export "f64_sqrt_100" $f64_sqrt_100)
   (func $f64_sqrt_100 (result f64) (f64.sqrt (f64.const 100)))
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "f64_ceil" $f64_ceil)
-    (func $f64_ceil (result f64) (f64.ceil (f64.const -0.75)))
-    (export "f64_floor" $f64_floor)
-    (func $f64_floor (result f64) (f64.floor (f64.const -0.75)))
-    (export "f64_trunc" $f64_trunc)
-    (func $f64_trunc (result f64) (f64.trunc (f64.const -0.75)))
-    (export "f64_nearest_lo" $f64_nearest_lo)
-    (func $f64_nearest_lo (result f64) (f64.nearest (f64.const 1.25)))
-    (export "f64_nearest_hi" $f64_nearest_hi)
-    (func $f64_nearest_hi (result f64) (f64.nearest (f64.const 1.75)))
-  ;)
+  (export "f64_ceil" $f64_ceil)
+  (func $f64_ceil (result f64) (f64.ceil (f64.const -0.75)))
+  (export "f64_floor" $f64_floor)
+  (func $f64_floor (result f64) (f64.floor (f64.const -0.75)))
+  (export "f64_trunc" $f64_trunc)
+  (func $f64_trunc (result f64) (f64.trunc (f64.const -0.75)))
+  (export "f64_nearest_lo" $f64_nearest_lo)
+  (func $f64_nearest_lo (result f64) (f64.nearest (f64.const 1.25)))
+  (export "f64_nearest_hi" $f64_nearest_hi)
+  (func $f64_nearest_hi (result f64) (f64.nearest (f64.const 1.75)))
 )
 (;; STDOUT ;;;
 i32_not_100() = 0
 i32_not_0() = 1
+i32_clz() = 24
+i32_ctz() = 7
+i32_popcnt() = 1
+i64_clz() = 56
+i64_ctz() = 7
+i64_popcnt() = 1
 f32_neg() = -100
 f32_abs() = 100
 f32_sqrt_neg() = NaN
 f32_sqrt_100() = 10
+f32_ceil() = 0
+f32_floor() = -1
+f32_trunc() = 0
+f32_nearest_lo() = 1
+f32_nearest_hi() = 2
 f64_neg() = -100
 f64_abs() = 100
 f64_sqrt_neg() = NaN
 f64_sqrt_100() = 10
+f64_ceil() = 0
+f64_floor() = -1
+f64_trunc() = 0
+f64_nearest_lo() = 1
+f64_nearest_hi() = 2
 ;;; STDOUT ;;)

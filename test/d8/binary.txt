@@ -29,7 +29,7 @@
   (func $i32_shr_s (result i32) (i32.shr_s (i32.const -100) (i32.const 3)))
 
   ;; i64
-  ;; v8-native-prototype currently crashes if you try to return an i64, so
+  ;; v8-native-prototype currently truncates if you try to return an i64, so
   ;; we'll do a comparison against the expected value instead.
   (export "i64_add" $i64_add)
   (func $i64_add (result i32) (i64.eq (i64.add (i64.const 1) (i64.const 2))
@@ -81,15 +81,12 @@
   (func $f32_mul (result f32) (f32.mul (f32.const 1234.5) (f32.const -6.875)))
   (export "f32_div" $f32_div)
   (func $f32_div (result f32) (f32.div (f32.const 1e14) (f32.const -2e5)))
-  (;
-    currently unsupported in v8-native-prototype
-    (export "f32_min" $f32_min)
-    (func $f32_min (result f32) (f32.min (f32.const 0) (f32.const 0)))
-    (export "f32_max" $f32_max)
-    (func $f32_max (result f32) (f32.max (f32.const 0) (f32.const 0)))
-    (export "f32_copysign" $f32_copysign)
-    (func $f32_copysign (result f32) (f32.copysign (f32.const 0) (f32.const 0)))
-  ;)
+  (export "f32_min" $f32_min)
+  (func $f32_min (result f32) (f32.min (f32.const 0) (f32.const 0)))
+  (export "f32_max" $f32_max)
+  (func $f32_max (result f32) (f32.max (f32.const 0) (f32.const 0)))
+  (export "f32_copysign" $f32_copysign)
+  (func $f32_copysign (result f32) (f32.copysign (f32.const 0) (f32.const 0)))
 
   ;; f64
   (export "f64_add" $f64_add)
@@ -103,15 +100,12 @@
   (func $f64_mul (result f64) (f64.mul (f64.const -123e4) (f64.const 12341234)))
   (export "f64_div" $f64_div)
   (func $f64_div (result f64) (f64.div (f64.const 1e200) (f64.const 1e50)))
-  (;
-    currently unsupported in v8-native-prototype
-    (export "f64_min" $f64_min)
-    (func $f64_min (result f64) (f64.min (f64.const 0) (f64.const 0)))
-    (export "f64_max" $f64_max)
-    (func $f64_max (result f64) (f64.max (f64.const 0) (f64.const 0)))
-    (export "f64_copysign" $f64_copysign)
-    (func $f64_copysign (result f64) (f64.copysign (f64.const 0) (f64.const 0)))
-  ;)
+  (export "f64_min" $f64_min)
+  (func $f64_min (result f64) (f64.min (f64.const 0) (f64.const 0)))
+  (export "f64_max" $f64_max)
+  (func $f64_max (result f64) (f64.max (f64.const 0) (f64.const 0)))
+  (export "f64_copysign" $f64_copysign)
+  (func $f64_copysign (result f64) (f64.copysign (f64.const 0) (f64.const 0)))
   )
 (;; STDOUT ;;;
 i32_add() = 3
@@ -144,8 +138,14 @@ f32_add() = 5
 f32_sub() = -9995.5
 f32_mul() = -8487.1875
 f32_div() = -500000000
+f32_min() = 0
+f32_max() = 0
+f32_copysign() = 0
 f64_add() = 1111111110
 f64_sub() = 1.234e+59
 f64_mul() = -15179717820000
 f64_div() = 1e+150
+f64_min() = 0
+f64_max() = 0
+f64_copysign() = 0
 ;;; STDOUT ;;)
