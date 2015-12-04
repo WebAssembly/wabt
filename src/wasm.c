@@ -187,6 +187,8 @@ static void wasm_destroy_expr(WasmExpr* expr) {
     case WASM_EXPR_TYPE_BR_IF:
       wasm_destroy_var(&expr->br_if.var);
       wasm_destroy_expr_ptr(&expr->br_if.cond);
+      if (expr->br_if.expr)
+        wasm_destroy_expr_ptr(&expr->br_if.expr);
       break;
     case WASM_EXPR_TYPE_CALL:
     case WASM_EXPR_TYPE_CALL_IMPORT:

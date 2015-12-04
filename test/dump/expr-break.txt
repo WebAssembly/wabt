@@ -1,6 +1,6 @@
 ;;; FLAGS: -dv
 (module
-  (func
+  (func (result i32)
     (label
       (break 0 (i32.const 1)))))
 (;; STDOUT ;;;
@@ -8,7 +8,7 @@
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
-0000003: 00                                         ; result_type
+0000003: 01                                         ; result_type
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0

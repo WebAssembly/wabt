@@ -777,8 +777,10 @@ static void write_expr(WasmWriteContext* ctx,
       out_opcode(ws, WASM_OPCODE_BR_IF);
       out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
       write_expr(ctx, module, func, expr->br_if.cond);
-      /* TODO(binji): support br_if expression */
-      out_opcode(ws, WASM_OPCODE_NOP);
+      if (expr->br_if.expr)
+        write_expr(ctx, module, func, expr->br_if.expr);
+      else
+        out_opcode(ws, WASM_OPCODE_NOP);
       break;
     }
     case WASM_EXPR_TYPE_CALL: {

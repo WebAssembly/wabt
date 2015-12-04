@@ -339,7 +339,7 @@ struct WasmExpr {
     struct { WasmLabel label; WasmExprPtrVector exprs; } block;
     struct { WasmExprPtr cond, true_, false_; } if_else;
     struct { WasmExprPtr cond, true_; } if_;
-    struct { WasmVar var; WasmExprPtr cond; } br_if;
+    struct { WasmVar var; WasmExprPtr cond, expr; } br_if;
     struct { WasmLabel inner, outer; WasmExprPtrVector exprs; } loop;
     struct { WasmLabel label; WasmExprPtr expr; } label;
     struct { WasmVar var; WasmExprPtr expr; } br;

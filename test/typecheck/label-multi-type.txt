@@ -1,7 +1,0 @@
-(module
-  (func
-    (label
-      (block
-        (if (i32.const 1)
-          (break (i32.const 2)))
-        (f32.const 3)))))

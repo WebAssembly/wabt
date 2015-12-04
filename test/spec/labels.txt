@@ -1,8 +1,12 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
-(;; STDERR ;;;
-third_party/testsuite/labels.wast:90:16: syntax error, unexpected (, expecting INT or VAR
-
-;;; STDERR ;;)
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/labels.wast:128:40: arity mismatch of br value. label expects void, but br value is non-empty
+assert_invalid error:
+  third_party/testsuite/labels.wast:129:50: type mismatch of unary op. got void, expected f32
+assert_invalid error:
+  third_party/testsuite/labels.wast:130:54: type mismatch of block. got void, expected f32
+15/15 tests passed.
+;;; STDOUT ;;)

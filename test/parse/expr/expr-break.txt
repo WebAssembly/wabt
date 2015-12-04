@@ -1,6 +1,5 @@
 (module
-  (func
-    (label
-      (break (i32.const 0)))
-    (label
+  (func (result i32)
+    (block $exit
+      (break (i32.const 0))
       (break 0 (i32.const 0)))))

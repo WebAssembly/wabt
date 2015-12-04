@@ -302,6 +302,38 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                              WasmType expected_type,
                              const char* desc);
 
+static WasmResult check_br(WasmCheckContext* ctx,
+                           WasmLocation* loc,
+                           WasmModule* module,
+                           WasmFunc* func,
+                           WasmVar* var,
+                           WasmExpr* expr,
+                           const char* desc) {
+  WasmLabelNode* node;
+  if (check_label_var(ctx, ctx->top_label, var, &node) != WASM_OK)
+    return WASM_ERROR;
+
+  if (node->expected_type != WASM_TYPE_VOID) {
+    if (expr) {
+      return check_expr(ctx, module, func, expr, node->expected_type, desc);
+    } else {
+      print_error(
+          ctx, loc,
+          "arity mismatch%s. label expects non-void, but br value is empty",
+          desc);
+      return WASM_ERROR;
+    }
+  } else if (expr) {
+    print_error(
+        ctx, loc,
+        "arity mismatch%s. label expects void, but br value is non-empty",
+        desc);
+    return WASM_ERROR;
+  } else {
+    return WASM_OK;
+  }
+}
+
 static WasmResult check_call(WasmCheckContext* ctx,
                              WasmLocation* loc,
                              WasmModule* module,
@@ -393,28 +425,19 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_BR: {
-      WasmLabelNode* node;
-      if (check_label_var(ctx, ctx->top_label, &expr->br.var, &node) ==
-          WASM_OK) {
-        if (expr->br.expr) {
-          result |= check_expr(ctx, module, func, expr->br.expr,
-                               node->expected_type, " of br value");
-        } else {
-          char buffer[100];
-          snprintf(buffer, 100, " of %s", node->desc);
-          result |= check_type(ctx, &expr->loc, WASM_TYPE_VOID,
-                               node->expected_type, buffer);
-        }
-      } else {
-        result = WASM_ERROR;
-      }
+      result |= check_br(ctx, &expr->loc, module, func, &expr->br.var,
+                         expr->br.expr, " of br value");
       break;
     }
-    case WASM_EXPR_TYPE_BR_IF:
+    case WASM_EXPR_TYPE_BR_IF: {
+      result |=
+          check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
+      result |= check_br(ctx, &expr->loc, module, func, &expr->br_if.var,
+                         expr->br_if.expr, " of br_if value");
       result |= check_expr(ctx, module, func, expr->br_if.cond, WASM_TYPE_I32,
                            " of br_if condition");
-      result |= check_label_var(ctx, ctx->top_label, &expr->br_if.var, NULL);
       break;
+    }
     case WASM_EXPR_TYPE_CALL: {
       WasmFunc* callee;
       if (check_func_var(ctx, module, &expr->call.var, &callee) == WASM_OK) {
@@ -562,19 +585,18 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     }
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer_node;
-      result |= push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer,
-                           expected_type, "loop outer label");
-      int has_inner_label = expr->loop.inner.start != NULL;
-      if (has_inner_label) {
-        WasmLabelNode inner_node;
-        result |= push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
-                             WASM_TYPE_VOID, "loop inner label");
-      }
+      WasmLabelNode inner_node;
+      int has_outer_label = expr->loop.inner.start != NULL;
+      if (has_outer_label)
+        result |= push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer,
+                             expected_type, "loop outer label");
+      result |= push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
+                           WASM_TYPE_VOID, "loop inner label");
       result |= check_exprs(ctx, module, func, &expr->loop.exprs, expected_type,
                             " of loop");
-      if (has_inner_label)
-        pop_label(ctx);
       pop_label(ctx);
+      if (has_outer_label)
+        pop_label(ctx);
       break;
     }
     case WASM_EXPR_TYPE_MEMORY_SIZE:

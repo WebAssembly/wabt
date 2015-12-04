@@ -1,9 +1,9 @@
 ;;; FLAGS: -dv
 (module
-  (func
-    (loop $exit $count
+  (func (result i32)
+    (loop $exit $cont
       (if (i32.const 1)
-        (break $count (i32.const 2)))
+        (break $cont))
       (if (i32.const 3)
         (break $exit (i32.const 4)))
       (i32.const 5))))
@@ -12,7 +12,7 @@
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
-0000003: 00                                         ; result_type
+0000003: 01                                         ; result_type
 0000004: 02                                         ; WASM_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
@@ -26,17 +26,16 @@
 000000f: 01                                         ; u8 literal
 0000010: 06                                         ; OPCODE_BR
 0000011: 00                                         ; break depth
-0000012: 09                                         ; OPCODE_I8_CONST
-0000013: 02                                         ; u8 literal
-0000014: 03                                         ; OPCODE_IF
-0000015: 09                                         ; OPCODE_I8_CONST
-0000016: 03                                         ; u8 literal
-0000017: 06                                         ; OPCODE_BR
-0000018: 01                                         ; break depth
-0000019: 09                                         ; OPCODE_I8_CONST
-000001a: 04                                         ; u8 literal
-000001b: 09                                         ; OPCODE_I8_CONST
-000001c: 05                                         ; u8 literal
-0000009: 1200                                       ; FIXUP func body size
-000001d: 06                                         ; WASM_SECTION_END
+0000012: 00                                         ; OPCODE_NOP
+0000013: 03                                         ; OPCODE_IF
+0000014: 09                                         ; OPCODE_I8_CONST
+0000015: 03                                         ; u8 literal
+0000016: 06                                         ; OPCODE_BR
+0000017: 01                                         ; break depth
+0000018: 09                                         ; OPCODE_I8_CONST
+0000019: 04                                         ; u8 literal
+000001a: 09                                         ; OPCODE_I8_CONST
+000001b: 05                                         ; u8 literal
+0000009: 1100                                       ; FIXUP func body size
+000001c: 06                                         ; WASM_SECTION_END
 ;;; STDOUT ;;)
