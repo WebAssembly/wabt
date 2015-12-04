@@ -17,8 +17,8 @@ Clone as normal, but don't forget to update/init submodules as well::
   $ git clone https://github.com/WebAssembly/sexpr-wasm-prototype
   $ git submodule update --init
 
-This will fetch the v8-native-prototype and spec repos, which are needed for
-some tests.
+This will fetch the v8-native-prototype and testsuite repos, which are needed
+for some tests.
 
 Building
 --------
@@ -27,19 +27,34 @@ Building just sexpr-wasm::
 
   $ make
   mkdir out
-  cc -Wall -Werror -g -c -o out/sexpr-wasm.o src/sexpr-wasm.c
-  cc -Wall -Werror -g -c -o out/wasm-parse.o src/wasm-parse.c
-  cc -Wall -Werror -g -c -o out/wasm-gen.o src/wasm-gen.c
-  cc -o out/sexpr-wasm out/sexpr-wasm.o out/wasm-parse.o out/wasm-gen.o
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.o -MMD -MP -MF out/wasm.d src/wasm.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/sexpr-wasm.o -MMD -MP -MF out/sexpr-wasm.d src/sexpr-wasm.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-parser.o -MMD -MP -MF out/wasm-parser.d src/wasm-parser.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-lexer.o -MMD -MP -MF out/wasm-lexer.d src/wasm-lexer.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-vector.o -MMD -MP -MF out/wasm-vector.d src/wasm-vector.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-check.o -MMD -MP -MF out/wasm-check.d src/wasm-check.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-writer.o -MMD -MP -MF out/wasm-writer.d src/wasm-writer.c
+  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-binary-writer.o -MMD -MP -MF out/wasm-binary-writer.d src/wasm-binary-writer.c
+  cc -o out/sexpr-wasm out/wasm.o out/sexpr-wasm.o out/wasm-parser.o out/wasm-lexer.o out/wasm-vector.o out/wasm-check.o out/wasm-writer.o out/wasm-binary-writer.o
 
-If you make changes to src/wasm-keywords.gperf, you'll need to install gperf as
+If you make changes to src/wasm-parser.y, you'll need to install bison as
 well. On Debian-based systems::
 
-  $ sudo apt-get install gperf
+  $ sudo apt-get install bison
   ...
-  $ touch src/wasm-keywords.gperf
+  $ touch src/wasm-parser.y
   $ make
-  gperf --compare-strncmp --readonly-tables --struct-type src/wasm-keywords.gperf --output-file src/wasm-keywords.h
+  bison -o src/wasm-parser.c --defines=src/wasm-parser.h src/wasm-parser.y
+  ...
+
+If you make changes to src/wasm-lexer.l, you'll need to install flex as well.
+On Debian-based systems::
+
+  $ sudo apt-get install flex
+  ...
+  $ touch src/wasm-lexer.l
+  $ make
+  flex -o src/wasm-lexer.c src/wasm-lexer.l
   ...
 
 Building v8-native-prototype
@@ -116,67 +131,79 @@ Tests
 To run tests::
 
   $ make test
-  [+251|-0|%100] (0.55s)
+  [+420|-0|%100] (1.95s)
 
-In this case, there were 251 passed tests and no failed tests, which took .55
+In this case, there were 420 passed tests and no failed tests, which took 1.95
 seconds to run.
 
 You can also run the Python test runner script directly::
 
   $ test/run-tests.py
-  [+251|-0|%100] (0.40s)
+  [+420|-0|%100] (1.99s)
 
   $ test/run-tests.py -v
-  + bad-string-escape.txt (0.002s)
-  + bad-string-hex-escape.txt (0.004s)
-  + bad-string-eof.txt (0.005s)
-  + bad-toplevel.txt (0.003s)
+  . spec/address.txt (skipped)
+  . spec/fac.txt (skipped)
+  . spec/runaway-recursion.txt (skipped)
+  + d8/assertreturn-complex-module.txt (0.044s)
+  + d8/assertreturn-invoke-ordering.txt (0.063s)
+  + d8/assertreturn-failed.txt (0.068s)
+  + d8/assertreturn-types.txt (0.077s)
+  + d8/basic.txt (0.060s)
+  + d8/assertreturn.txt (0.089s)
+  + d8/assertreturnnan.txt (0.069s)
   ...
 
 To run a subset of the tests, use a glob-like syntax::
 
-  $ test/run-tests.py const -v
-  + dump/const.txt (0.003s)
-  + expr/bad-const-i32-garbage.txt (0.002s)
-  + expr/bad-const-f32-trailing.txt (0.004s)
-  + expr/bad-const-i32-overflow.txt (0.003s)
-  + expr/bad-const-i32-trailing.txt (0.002s)
-  + expr/bad-const-i32-just-negative-sign.txt (0.003s)
-  + expr/const.txt (0.003s)
-  + expr/bad-const-i32-underflow.txt (0.004s)
-  + expr/bad-const-i64-overflow.txt (0.005s)
-  [+9|-0|%100] (0.02s)
+  + dump/const.txt (0.002s)
+  + parse/expr/bad-const-f32-trailing.txt (0.002s)
+  + parse/assert/bad-assertreturn-non-const.txt (0.004s)
+  + parse/expr/bad-const-i32-garbage.txt (0.003s)
+  + parse/expr/bad-const-i32-trailing.txt (0.003s)
+  + parse/expr/bad-const-i32-overflow.txt (0.004s)
+  + parse/expr/bad-const-i32-underflow.txt (0.002s)
+  + parse/expr/bad-const-i32-just-negative-sign.txt (0.006s)
+  + parse/expr/bad-const-i64-overflow.txt (0.002s)
+  + parse/expr/const.txt (0.002s)
+  [+10|-0|%100] (0.01s)
 
   $ test/run-tests.py expr*const*i32 -v
-  + expr/bad-const-i32-garbage.txt (0.004s)
-  + expr/bad-const-i32-overflow.txt (0.002s)
-  + expr/bad-const-i32-trailing.txt (0.002s)
-  + expr/bad-const-i32-just-negative-sign.txt (0.002s)
-  + expr/bad-const-i32-underflow.txt (0.002s)
+  + parse/expr/bad-const-i32-garbage.txt (0.003s)
+  + parse/expr/bad-const-i32-underflow.txt (0.003s)
+  + parse/expr/bad-const-i32-overflow.txt (0.005s)
+  + parse/expr/bad-const-i32-just-negative-sign.txt (0.005s)
+  + parse/expr/bad-const-i32-trailing.txt (0.005s)
   [+5|-0|%100] (0.01s)
 
 When tests are broken, they will give you the expected stdout/stderr as a diff::
 
-  $ <introduce bug in wasm-gen.c>
-  $ test/run-tests.py store
+  $ <introduce bug in wasm-binary-writer.c>
+  $ test/run-tests.py d8/store
   - d8/store.txt
     STDOUT MISMATCH:
     --- expected
     +++ actual
-    @@ -1,6 +1,6 @@
-    -i32_store8() = -16909061
+    @@ -1,9 +1,9 @@
+     i32_store8() = -16909061
     -i32_store16() = -859059511
     -i32_store() = -123456
-    +i32_store8() = 1050144
-    +i32_store16() = 1050144
-    +i32_store() = 1
-     i64_store() = 1
-     f32_store() = 1069547520
-     f64_store() = -1064352256
+    +i32_store16() = -16909061
+    +i32_store() = -16909120
+     i64_store8() = -16909061
+     i64_store16() = -859059511
+    -i64_store32() = -123456
+    -i64_store() = 1
+    -f32_store() = 1069547520
+    -f64_store() = -1064352256
+    +i64_store32() = -859059511
+    +i64_store() = 0
+    +f32_store() = -859059699
+    +f64_store() = 61166
 
   **** FAILED ******************************************************************
   - d8/store.txt
-  [+18|-1|%100] (0.06s)
+  [+0|-1|%100] (0.03s)
 
 Writing New Tests
 -----------------
@@ -209,9 +236,11 @@ argument to the executable (which by default is out/sexpr-wasm).
 The currently supported list of keys:
 
 - EXE: the executable to run, defaults to out/sexpr-wasm
+- STDIN_FILE: the file to use for STDIN instead of the contents of this file.
 - FLAGS: additional flags to pass to the executable
 - ERROR: the expected return value from the executable, defaults to 0
 - SLOW: if defined, this test's timeout is doubled.
+- SKIP: if defined, this test is not run. You can use the value as a comment.
 
 When you first write a test, it's easiest if you omit the expected stdout and
 stderr. You can have the test harness fill it in for you automatically. First
@@ -224,38 +253,72 @@ let's write our test::
     (export "add2" 0)
     (func (param i32) (result i32)
       (i32.add (get_local 0) (i32.const 2))))
-  (assert_eq (invoke "add2" (i32.const 4)) (i32.const 6))
-  (assert_eq (invoke "add2" (i32.const -2)) (i32.const 0))
+  (assert_return (invoke "add2" (i32.const 4)) (i32.const 6))
+  (assert_return (invoke "add2" (i32.const -2)) (i32.const 0))
   HERE
 
 If we run it, it will fail::
 
-  $ test/run-tests.py awesome
   - my-awesome-test.txt
     STDOUT MISMATCH:
     --- expected
     +++ actual
-    @@ -0,0 +1,4 @@
-    +instantiating module
-    +$assert_eq_0 OK
-    +$assert_eq_1 OK
+    @@ -0,0 +1 @@
     +2/2 tests passed.
 
   **** FAILED ******************************************************************
   - my-awesome-test.txt
-  [+0|-1|%100] (0.05s)
+  [+0|-1|%100] (0.03s)
 
 We can rebase it automatically with the `-r` flag. Running the test again shows
 that the expected stdout has been added::
 
-  $ test/run-tests.py awesome -r
-  [+1|-0|%100] (0.05s)
-  $ test/run-tests.py awesome
-  [+1|-0|%100] (0.05s)
-  $ tail -n 6 test/my-awesome-test.txt
+  $ test/run-tests.py my-awesome-test -r
+  [+1|-0|%100] (0.03s)
+  $ test/run-tests.py my-awesome-test
+  [+1|-0|%100] (0.03s)
+  $ tail -n 3 test/my-awesome-test.txt
   (;; STDOUT ;;;
-  instantiating module
-  $assert_eq_0 OK
-  $assert_eq_1 OK
   2/2 tests passed.
   ;;; STDOUT ;;)
+
+Sanitizers
+----------
+
+To build with the `LLVM sanitizers <https://github.com/google/sanitizers>`,
+append the sanitizer name to sexpr-wasm::
+
+  $ make out/sexpr-wasm-asan
+  clang -fsanitize=address -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.asan.o -MMD -MP -MF out/wasm.asan.d src/wasm.c
+  ...
+  $ make out/sexpr-wasm-msan
+  clang -fsanitize=memory -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.msan.o -MMD -MP -MF out/wasm.msan.d src/wasm.c
+  ...
+  $ make out/sexpr-wasm-lsan
+  clang -fsanitize=leak -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.lsan.o -MMD -MP -MF out/wasm.lsan.d src/wasm.c
+  ...
+
+There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
+(MSAN) and Leak Sanitizer (LSAN). You can read about the behaviors of the
+sanitizers in the link above, but essentially the Address Sanitizer finds
+invalid memory accesses (use after free, access out-of-bounds, etc.), Memory
+Sanitizer finds uses of uninitialized memory, and the Leak Sanitizer finds
+memory leaks.
+
+Typically, you'll just want to run all the tests for a given sanitizer::
+
+  $ make test-asan
+  [+420|-0|%100] (12.59s)
+  $ make test-msan
+  [+420|-0|%100] (4.69s)
+  $ make test-lsan
+  [+420|-0|%100] (5.41s)
+
+The Travis bots run all of these tests. Before you land a change, you should
+run them too. One easy way is to use the ``test-everything`` target::
+
+  $ make test-everything
+  [+420|-0|%100] (1.71s)
+  [+420|-0|%100] (12.20s)
+  [+420|-0|%100] (4.71s)
+  [+420|-0|%100] (5.52s)
