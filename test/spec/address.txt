@@ -39,7 +39,5 @@ assert_invalid error:
 0
 0
 0
-0
-third_party/testsuite/address.wast:29: $assert_trap_2 failed, didn't throw
-4/5 tests passed.
+5/5 tests passed.
 ;;; STDOUT ;;)

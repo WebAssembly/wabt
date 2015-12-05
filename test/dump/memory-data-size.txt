@@ -5,6 +5,11 @@
 (module (memory 1000))
 (;; STDOUT ;;;
 0000000: 00                                         ; WASM_SECTION_MEMORY
+0000001: 07                                         ; min mem size log 2
+0000002: 07                                         ; max mem size log 2
+0000003: 01                                         ; export mem
+0000004: 06                                         ; WASM_SECTION_END
+0000000: 00                                         ; WASM_SECTION_MEMORY
 0000001: 08                                         ; min mem size log 2
 0000002: 08                                         ; max mem size log 2
 0000003: 01                                         ; export mem
@@ -12,11 +17,6 @@
 0000000: 00                                         ; WASM_SECTION_MEMORY
 0000001: 09                                         ; min mem size log 2
 0000002: 09                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 06                                         ; WASM_SECTION_END
-0000000: 00                                         ; WASM_SECTION_MEMORY
-0000001: 0a                                         ; min mem size log 2
-0000002: 0a                                         ; max mem size log 2
 0000003: 01                                         ; export mem
 0000004: 06                                         ; WASM_SECTION_END
 0000000: 00                                         ; WASM_SECTION_MEMORY

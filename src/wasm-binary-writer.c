@@ -370,10 +370,6 @@ static int is_power_of_two(uint32_t x) {
 static uint32_t log_two_u32(uint32_t x) {
   if (!x)
     return 0;
-  /* TODO(binji): v8-native is giving "out of bounds" errors when the memory
-   size is exactly a power of two. Bump it to the next power of two, for now */
-  if (is_power_of_two(x))
-    x++;
   return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
 }
 
