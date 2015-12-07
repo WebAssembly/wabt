@@ -4,7 +4,7 @@
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
 (;; STDERR ;;;
 #
-# Fatal error in ../../../../src/wasm/tf-builder.cc, line 317
+# Fatal error in ../../../../src/wasm/wasm-compiler.cc, line 326
 # Unsupported opcode #162:ExprI64SConvertF32
 #
 

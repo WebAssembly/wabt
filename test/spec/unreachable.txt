@@ -1,14 +1,6 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/unreachable.wast
-(;; STDERR ;;;
-
-;;; STDERR ;;)
 (;; STDOUT ;;;
-WasmModule::Instantiate(): Compiling WASM function #2:if failed:Result = ImplicitReturn[0] expected type f32, found ExprIfElse of type <stmt> @+9
-
-  var module = WASM.instantiateModule(u8a.buffer, ffi);
-                    ^
-
+7/7 tests passed.
 ;;; STDOUT ;;)
