@@ -2,6 +2,8 @@
 set -o nounset
 set -o errexit
 
+V8_REV=e8adbe7821be5be02ef187912a74dde1152eefb1
+
 sync=YES
 config=Release
 
@@ -51,7 +53,7 @@ if [[ ${sync} = "YES" ]]; then
   fi
 
   pushd v8
-  gclient update
+  gclient update --revision=${V8_REV}
   popd
 fi
 
