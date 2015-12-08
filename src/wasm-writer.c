@@ -1,10 +1,14 @@
 #include "wasm-writer.h"
 
+#include <errno.h>
+#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
 
 #include "wasm-internal.h"
+
+#define ERROR(fmt, ...) \
+  fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 
 #define INITIAL_OUTPUT_BUFFER_CAPACITY (64 * 1024)
 
@@ -12,14 +16,20 @@ static WasmResult write_data_to_file(size_t offset,
                                      const void* data,
                                      size_t size,
                                      void* user_data) {
+  if (size == 0)
+    return WASM_OK;
   WasmFileWriter* writer = user_data;
   if (offset != writer->offset) {
-    if (fseek(writer->file, offset, SEEK_SET) != 0)
+    if (fseek(writer->file, offset, SEEK_SET) != 0) {
+      ERROR("fseek offset=%zd failed, errno=%d\n", size, errno);
       return WASM_ERROR;
+    }
     writer->offset = offset;
   }
-  if (fwrite(data, size, 1, writer->file) != 1)
+  if (fwrite(data, size, 1, writer->file) != 1) {
+    ERROR("fwrite size=%zd failed, errno=%d\n", size, errno);
     return WASM_ERROR;
+  }
   writer->offset += size;
   return WASM_OK;
 }
@@ -27,8 +37,10 @@ static WasmResult write_data_to_file(size_t offset,
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
   memset(writer, 0, sizeof(*writer));
   writer->file = fopen(filename, "wb");
-  if (!writer->file)
+  if (!writer->file) {
+    ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
     return WASM_ERROR;
+  }
 
   writer->offset = 0;
   writer->base.user_data = writer;
@@ -43,8 +55,10 @@ void wasm_close_file_writer(WasmFileWriter* writer) {
 static WasmResult init_output_buffer(WasmOutputBuffer* buf,
                                      size_t initial_capacity) {
   buf->start = malloc(initial_capacity);
-  if (!buf->start)
+  if (!buf->start) {
+    ERROR("allocation size=%zd failed\n", initial_capacity);
     return WASM_ERROR;
+  }
   buf->size = 0;
   buf->capacity = initial_capacity;
   return WASM_OK;
@@ -57,8 +71,10 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
     buf->start = realloc(buf->start, new_capacity);
-    if (!buf->start)
+    if (!buf->start) {
+      ERROR("allocation size=%zd failed\n", new_capacity);
       return WASM_ERROR;
+    }
     buf->capacity = new_capacity;
   }
   return WASM_OK;

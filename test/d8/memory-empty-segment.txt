@@ -1,0 +1,2 @@
+;;; EXE: test/run-d8.py
+(module (memory 100 (segment 0 "")))
