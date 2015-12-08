@@ -7,7 +7,6 @@ addons:
       - bison
 script:
   - scripts/download-d8.sh
-  - rm src/wasm-parser.c src/wasm-lexer.c
   - make everything
   - test/run-tests.py
   - test/run-tests.py -e out/sexpr-wasm-asan --timeout=10
