@@ -1,12 +1,41 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
-(;; STDERR ;;;
-#
-# Fatal error in ../../../../src/wasm/wasm-compiler.cc, line 326
-# Unsupported opcode #162:ExprI64SConvertF32
-#
-
-d8 raised signal SIGILL
-;;; STDERR ;;)
+(;; STDOUT ;;;
+third_party/testsuite/conversions.wast:119: $assert_trap_38 failed, didn't throw
+third_party/testsuite/conversions.wast:120: $assert_trap_39 failed, didn't throw
+third_party/testsuite/conversions.wast:121: $assert_trap_40 failed, didn't throw
+third_party/testsuite/conversions.wast:122: $assert_trap_41 failed, didn't throw
+third_party/testsuite/conversions.wast:123: $assert_trap_42 failed, didn't throw
+third_party/testsuite/conversions.wast:137: $assert_trap_55 failed, didn't throw
+third_party/testsuite/conversions.wast:138: $assert_trap_56 failed, didn't throw
+third_party/testsuite/conversions.wast:139: $assert_trap_57 failed, didn't throw
+third_party/testsuite/conversions.wast:140: $assert_trap_58 failed, didn't throw
+third_party/testsuite/conversions.wast:141: $assert_trap_59 failed, didn't throw
+third_party/testsuite/conversions.wast:157: $assert_trap_74 failed, didn't throw
+third_party/testsuite/conversions.wast:158: $assert_trap_75 failed, didn't throw
+third_party/testsuite/conversions.wast:159: $assert_trap_76 failed, didn't throw
+third_party/testsuite/conversions.wast:160: $assert_trap_77 failed, didn't throw
+third_party/testsuite/conversions.wast:161: $assert_trap_78 failed, didn't throw
+third_party/testsuite/conversions.wast:176: $assert_trap_92 failed, didn't throw
+third_party/testsuite/conversions.wast:177: $assert_trap_93 failed, didn't throw
+third_party/testsuite/conversions.wast:178: $assert_trap_94 failed, didn't throw
+third_party/testsuite/conversions.wast:179: $assert_trap_95 failed, didn't throw
+third_party/testsuite/conversions.wast:180: $assert_trap_96 failed, didn't throw
+third_party/testsuite/conversions.wast:181: $assert_trap_97 failed, didn't throw
+third_party/testsuite/conversions.wast:182: $assert_trap_98 failed, didn't throw
+third_party/testsuite/conversions.wast:183: $assert_trap_99 failed, didn't throw
+third_party/testsuite/conversions.wast:200: $assert_return_115 unexpectedly threw: integer result unrepresentable
+third_party/testsuite/conversions.wast:200: $assert_return_115 failed.
+third_party/testsuite/conversions.wast:210: $assert_return_124 unexpectedly threw: integer result unrepresentable
+third_party/testsuite/conversions.wast:210: $assert_return_124 failed.
+third_party/testsuite/conversions.wast:216: $assert_return_130 unexpectedly threw: integer result unrepresentable
+third_party/testsuite/conversions.wast:216: $assert_return_130 failed.
+third_party/testsuite/conversions.wast:238: $assert_return_151 unexpectedly threw: integer result unrepresentable
+third_party/testsuite/conversions.wast:238: $assert_return_151 failed.
+third_party/testsuite/conversions.wast:248: $assert_return_160 unexpectedly threw: integer result unrepresentable
+third_party/testsuite/conversions.wast:248: $assert_return_160 failed.
+third_party/testsuite/conversions.wast:255: $assert_return_167 unexpectedly threw: integer result unrepresentable
+third_party/testsuite/conversions.wast:255: $assert_return_167 failed.
+261/290 tests passed.
+;;; STDOUT ;;)

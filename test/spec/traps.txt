@@ -1,12 +1,10 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/traps.wast
-(;; STDERR ;;;
-#
-# Fatal error in ../../../../src/wasm/wasm-compiler.cc, line 326
-# Unsupported opcode #162:ExprI64SConvertF32
-#
-
-d8 raised signal SIGILL
-;;; STDERR ;;)
+(;; STDOUT ;;;
+third_party/testsuite/traps.wast:65: $assert_trap_0 failed, didn't throw
+third_party/testsuite/traps.wast:66: $assert_trap_1 failed, didn't throw
+third_party/testsuite/traps.wast:67: $assert_trap_2 failed, didn't throw
+third_party/testsuite/traps.wast:68: $assert_trap_3 failed, didn't throw
+16/20 tests passed.
+;;; STDOUT ;;)

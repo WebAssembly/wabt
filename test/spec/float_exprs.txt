@@ -1,12 +1,6 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/float_exprs.wast
-(;; STDERR ;;;
-#
-# Fatal error in ../../../../src/wasm/wasm-compiler.cc, line 326
-# Unsupported opcode #163:ExprI64SConvertF64
-#
-
-d8 raised signal SIGILL
-;;; STDERR ;;)
+(;; STDOUT ;;;
+144/144 tests passed.
+;;; STDOUT ;;)
