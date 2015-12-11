@@ -44,4 +44,8 @@
 0000020: 05                                         ; remapped local index
 0000013: 0c00                                       ; FIXUP func body size
 0000021: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0200 0103 0201 0400 0001 0001 0002  
+0000010: 0000 000c 000e 000e 010e 030e 040e 020e  
+0000020: 0506                                     
 ;;; STDOUT ;;)

@@ -545,7 +545,6 @@ typedef struct WasmScript {
 typedef void* WasmScanner;
 
 typedef struct WasmParser {
-  WasmScanner scanner;
   WasmScript script;
   int errors;
 } WasmParser;

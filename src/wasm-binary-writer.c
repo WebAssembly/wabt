@@ -1,6 +1,5 @@
 #include <alloca.h>
 #include <assert.h>
-#include <ctype.h>
 #include <math.h>
 #include <memory.h>
 #include <stdarg.h>
@@ -12,7 +11,6 @@
 
 #define DEFAULT_MEMORY_EXPORT 1
 #define DUMP_OCTETS_PER_LINE 16
-#define DUMP_OCTETS_PER_GROUP 2
 
 #define SEGMENT_SIZE 13
 #define SEGMENT_OFFSET_OFFSET 4
@@ -390,44 +388,6 @@ static WasmTypeV8 wasm_type_to_v8_type(WasmType type) {
   }
 }
 
-static void dump_memory(const void* start,
-                        size_t size,
-                        size_t offset,
-                        int print_chars,
-                        const char* desc) {
-  /* mimic xxd output */
-  const uint8_t* p = start;
-  const uint8_t* end = p + size;
-  while (p < end) {
-    const uint8_t* line = p;
-    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07x: ", (int)((void*)p - start + offset));
-    while (p < line_end) {
-      int i;
-      for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
-        if (p < end) {
-          printf("%02x", *p);
-        } else {
-          putchar(' ');
-          putchar(' ');
-        }
-      }
-      putchar(' ');
-    }
-
-    putchar(' ');
-    p = line;
-    int i;
-    for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
-      if (print_chars)
-        printf("%c", isprint(*p) ? *p : '.');
-    /* if there are multiple lines, only print the desc on the last one */
-    if (p >= end && desc)
-      printf("  ; %s", desc);
-    putchar('\n');
-  }
-}
-
 static void print_header(WasmWriteContext* ctx, const char* name, int index) {
   if (ctx->options->log_writes)
     printf("; %s %d\n", name, index);
@@ -441,7 +401,7 @@ static void out_data_at(WasmWriterState* writer_state,
   if (*writer_state->result != WASM_OK)
     return;
   if (writer_state->log_writes)
-    dump_memory(src, size, offset, 0, desc);
+    wasm_print_memory(src, size, offset, 0, desc);
   if (writer_state->writer->write_data)
     *writer_state->result = writer_state->writer->write_data(
         offset, src, size, writer_state->writer->user_data);

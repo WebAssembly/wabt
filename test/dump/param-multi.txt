@@ -19,4 +19,6 @@
 000000d: 0000                                       ; func body size
 000000d: 0000                                       ; FIXUP func body size
 000000f: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0400 0102 0304 0201 0000 0000 0006  
 ;;; STDOUT ;;)

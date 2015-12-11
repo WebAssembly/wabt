@@ -29,4 +29,7 @@
 0000015: 14                                         ; OPCODE_RETURN
 0000013: 0100                                       ; FIXUP func body size
 0000016: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0102 0001 0000 0202 0000 0003 0014 092a  
+0000010: 0001 0001 0014 06                        
 ;;; STDOUT ;;)

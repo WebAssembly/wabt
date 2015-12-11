@@ -22,4 +22,7 @@
 000000f: 3b                                         ; OPCODE_MEMORY_SIZE
 000000d: 0100                                       ; FIXUP func body size
 0000010: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 000a 0a01 0101 0001 0201 0000 0001 003b  
+0000010: 06                                       
 ;;; STDOUT ;;)

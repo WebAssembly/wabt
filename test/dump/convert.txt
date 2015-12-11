@@ -65,4 +65,8 @@
 0000025: 0000 0000                                  ; f32 literal
 0000009: 1e00                                       ; FIXUP func body size
 0000029: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0000 0201 0000 001e 00a1 a79d a89f  
+0000010: a99e aea0 af09 00a2 aaa4 aba3 b0a5 b1a6  
+0000020: 0900 acb2 0d00 0000 0006                 
 ;;; STDOUT ;;)

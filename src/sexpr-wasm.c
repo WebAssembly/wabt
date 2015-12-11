@@ -158,6 +158,9 @@ static void parse_options(int argc, char** argv) {
     }
   }
 
+  if (s_dump_module && s_spec)
+    FATAL("--dump-module flag incompatible with --spec flag\n");
+
   if (optind < argc) {
     s_infile = argv[optind];
   } else {
@@ -178,18 +181,25 @@ int main(int argc, char** argv) {
   result = result || parser.errors;
   wasm_free_scanner(scanner);
 
+  WasmScript* script = &parser.script;
+
   if (result != WASM_OK) {
-    wasm_destroy_script(&parser.script);
+    wasm_destroy_script(script);
     return result;
   }
 
-  result = wasm_check_script(&parser.script);
+  result = wasm_check_script(script);
   if (result != WASM_OK) {
-    wasm_destroy_script(&parser.script);
+    wasm_destroy_script(script);
     return result;
   }
 
-  WasmFileWriter writer = {};
+  WasmMemoryWriter writer = {};
+  if (wasm_init_mem_writer(&writer) != WASM_OK) {
+    wasm_destroy_script(script);
+    FATAL("unable to open memory writer for writing\n");
+  }
+
   WasmWriteBinaryOptions options = {};
   if (s_spec)
     options.spec = 1;
@@ -198,19 +208,35 @@ int main(int argc, char** argv) {
   if (s_verbose)
     options.log_writes = 1;
 
+  result = wasm_write_binary(&writer.base, script, &options);
+  wasm_destroy_script(script);
+
+  if (result != WASM_OK) {
+    wasm_close_mem_writer(&writer);
+    return result;
+  }
+
+  if (s_dump_module) {
+    if (s_verbose)
+      printf(";; dump\n");
+    wasm_print_memory(writer.buf.start, writer.buf.size, 0, 0, NULL);
+  }
+
   if (s_outfile) {
-    if (wasm_init_file_writer(&writer, s_outfile) != WASM_OK) {
-      wasm_destroy_script(&parser.script);
+    FILE* f = fopen(s_outfile, "wb");
+    if (!f) {
+      wasm_close_mem_writer(&writer);
       FATAL("unable to open %s for writing\n", s_outfile);
     }
 
-    result = wasm_write_binary(&writer.base, &parser.script, &options);
-    wasm_close_file_writer(&writer);
-  } else if (s_verbose) {
-    /* don't write file output, but we still write the verbose output */
-    result = wasm_write_binary(&writer.base, &parser.script, &options);
+    ssize_t bytes = fwrite(writer.buf.start, 1, writer.buf.size, f);
+    if (bytes != writer.buf.size) {
+      wasm_close_mem_writer(&writer);
+      FATAL("failed to write %zd bytes to %s\n", writer.buf.size, s_outfile);
+    }
+    fclose(f);
   }
 
-  wasm_destroy_script(&parser.script);
+  wasm_close_mem_writer(&writer);
   return result;
 }

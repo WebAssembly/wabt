@@ -17,4 +17,6 @@
 000000b: 15                                         ; OPCODE_UNREACHABLE
 0000009: 0100                                       ; FIXUP func body size
 000000c: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0000 0201 0000 0001 0015 06         
 ;;; STDOUT ;;)

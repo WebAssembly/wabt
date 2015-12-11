@@ -28,4 +28,7 @@
 0000013: 01                                         ; num function table entries
 0000014: 0000                                       ; function table entry
 0000016: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0100 0102 0100 0000 0600 1300 0900  
+0000010: 0900 0501 0000 06                        
 ;;; STDOUT ;;)

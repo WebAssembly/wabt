@@ -28,4 +28,7 @@
 0000014: 1d                                         ; u8 literal
 0000009: 0a00                                       ; FIXUP func body size
 0000015: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0001 0201 0000 000a 0001 0207 0009  
+0000010: 0009 2a09 1d06                           
 ;;; STDOUT ;;)

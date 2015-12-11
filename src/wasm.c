@@ -1,8 +1,12 @@
 #include "wasm.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <memory.h>
 #include <stdlib.h>
+
+#define DUMP_OCTETS_PER_LINE 16
+#define DUMP_OCTETS_PER_GROUP 2
 
 DEFINE_VECTOR(type, WasmType)
 DEFINE_VECTOR(var, WasmVar);
@@ -421,4 +425,42 @@ void wasm_destroy_command_vector_and_elements(WasmCommandVector* commands) {
 
 void wasm_destroy_script(WasmScript* script) {
   DESTROY_VECTOR_AND_ELEMENTS(script->commands, command);
+}
+
+void wasm_print_memory(const void* start,
+                       size_t size,
+                       size_t offset,
+                       int print_chars,
+                       const char* desc) {
+  /* mimic xxd output */
+  const uint8_t* p = start;
+  const uint8_t* end = p + size;
+  while (p < end) {
+    const uint8_t* line = p;
+    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    printf("%07x: ", (int)((void*)p - start + offset));
+    while (p < line_end) {
+      int i;
+      for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
+        if (p < end) {
+          printf("%02x", *p);
+        } else {
+          putchar(' ');
+          putchar(' ');
+        }
+      }
+      putchar(' ');
+    }
+
+    putchar(' ');
+    p = line;
+    int i;
+    for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
+      if (print_chars)
+        printf("%c", isprint(*p) ? *p : '.');
+    /* if there are multiple lines, only print the desc on the last one */
+    if (p >= end && desc)
+      printf("  ; %s", desc);
+    putchar('\n');
+  }
 }
