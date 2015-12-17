@@ -4,7 +4,7 @@ set -o errexit
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
-V8_DIR="${ROOT_DIR}/third_party/v8-native-prototype"
+V8_DIR="${ROOT_DIR}/third_party/v8/v8"
 OUT_DIR="${ROOT_DIR}/out"
 
 V8_SHA=$(cd ${V8_DIR} && git rev-parse HEAD)
