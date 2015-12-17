@@ -2,13 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/float_misc.wast
 (;; STDOUT ;;;
-third_party/testsuite/float_misc.wast:271: $assert_return_125 failed.
-third_party/testsuite/float_misc.wast:272: $assert_return_126 failed.
-third_party/testsuite/float_misc.wast:273: $assert_return_127 failed.
-third_party/testsuite/float_misc.wast:274: $assert_return_128 failed.
-third_party/testsuite/float_misc.wast:276: $assert_return_129 failed.
-third_party/testsuite/float_misc.wast:277: $assert_return_130 failed.
-third_party/testsuite/float_misc.wast:278: $assert_return_131 failed.
-third_party/testsuite/float_misc.wast:279: $assert_return_132 failed.
-155/163 tests passed.
+163/163 tests passed.
 ;;; STDOUT ;;)

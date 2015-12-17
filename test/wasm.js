@@ -13,7 +13,7 @@ var result;
 
 for (name in module) {
   f = module[name];
-  if (!(f instanceof Function))
+  if (typeof f !== 'function')
     continue;
 
   if (name.lastIndexOf('trap', 0) === 0) {

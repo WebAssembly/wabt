@@ -1,1 +1,3 @@
+.gclient_entries
 /out
+/third_party/v8/depot_tools

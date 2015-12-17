@@ -10,9 +10,10 @@ import tempfile
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
-BUILT_D8 = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8-native-prototype',
-                        'v8', 'v8', 'out', 'Release', 'd8')
+BUILT_D8 = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8', 'v8', 'out',
+                        'Release', 'd8')
 DOWNLOAD_D8 = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
+EXPOSE_WASM = '--expose-wasm'
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
 
@@ -91,9 +92,9 @@ def main(args):
     # Now run the generated file
     if options.spec:
       # The generated file is JavaScript, so run it directly.
-      cmd = [d8, SPEC_JS, generated.name]
+      cmd = [d8, EXPOSE_WASM, SPEC_JS, generated.name]
     else:
-      cmd = [d8, WASM_JS, '--', generated.name]
+      cmd = [d8, EXPOSE_WASM, WASM_JS, '--', generated.name]
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)

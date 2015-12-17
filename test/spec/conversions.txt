@@ -25,17 +25,5 @@ third_party/testsuite/conversions.wast:180: $assert_trap_96 failed, didn't throw
 third_party/testsuite/conversions.wast:181: $assert_trap_97 failed, didn't throw
 third_party/testsuite/conversions.wast:182: $assert_trap_98 failed, didn't throw
 third_party/testsuite/conversions.wast:183: $assert_trap_99 failed, didn't throw
-third_party/testsuite/conversions.wast:200: $assert_return_115 unexpectedly threw: integer result unrepresentable
-third_party/testsuite/conversions.wast:200: $assert_return_115 failed.
-third_party/testsuite/conversions.wast:210: $assert_return_124 unexpectedly threw: integer result unrepresentable
-third_party/testsuite/conversions.wast:210: $assert_return_124 failed.
-third_party/testsuite/conversions.wast:216: $assert_return_130 unexpectedly threw: integer result unrepresentable
-third_party/testsuite/conversions.wast:216: $assert_return_130 failed.
-third_party/testsuite/conversions.wast:238: $assert_return_151 unexpectedly threw: integer result unrepresentable
-third_party/testsuite/conversions.wast:238: $assert_return_151 failed.
-third_party/testsuite/conversions.wast:248: $assert_return_160 unexpectedly threw: integer result unrepresentable
-third_party/testsuite/conversions.wast:248: $assert_return_160 failed.
-third_party/testsuite/conversions.wast:255: $assert_return_167 unexpectedly threw: integer result unrepresentable
-third_party/testsuite/conversions.wast:255: $assert_return_167 failed.
-261/290 tests passed.
+267/290 tests passed.
 ;;; STDOUT ;;)
