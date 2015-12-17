@@ -888,8 +888,6 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_NOP:
       out_opcode(ws, WASM_OPCODE_NOP);
       break;
-    case WASM_EXPR_TYPE_PAGE_SIZE:
-      break;
     case WASM_EXPR_TYPE_RETURN:
       out_opcode(ws, WASM_OPCODE_RETURN);
       if (expr->return_.expr)

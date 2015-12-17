@@ -339,7 +339,6 @@ NAME      \${ATOM}
 "global"              { return TOK(GLOBAL); }
 "load_global"         { return TOK(LOAD_GLOBAL); }
 "store_global"        { return TOK(STORE_GLOBAL); }
-"page_size"           { return TOK(PAGE_SIZE); }
 
 ";;"                  { BEGIN(LINE_COMMENT); }
 <LINE_COMMENT>\n      { RESET_COLUMN(yyscanner); BEGIN(INITIAL); }

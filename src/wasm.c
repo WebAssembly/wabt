@@ -287,7 +287,6 @@ static void wasm_destroy_expr(WasmExpr* expr) {
     case WASM_EXPR_TYPE_CONST:
     case WASM_EXPR_TYPE_MEMORY_SIZE:
     case WASM_EXPR_TYPE_NOP:
-    case WASM_EXPR_TYPE_PAGE_SIZE:
       break;
   }
 }

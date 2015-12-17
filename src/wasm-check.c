@@ -619,10 +619,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |=
           check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, " in nop");
       break;
-    case WASM_EXPR_TYPE_PAGE_SIZE:
-      result |= check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type,
-                           " in page_size");
-      break;
     case WASM_EXPR_TYPE_RETURN:
       if (expr->return_.expr) {
         result |= check_expr(ctx, module, func, expr->return_.expr,

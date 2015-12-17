@@ -91,7 +91,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
 %token UNREACHABLE MEMORY_SIZE GROW_MEMORY HAS_FEATURE
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
-%token GLOBAL LOAD_GLOBAL STORE_GLOBAL PAGE_SIZE
+%token GLOBAL LOAD_GLOBAL STORE_GLOBAL
 %token EOF 0 "EOF"
 
 %type<binary> BINARY
@@ -503,10 +503,6 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       $$->store_global.var = $2;
       $$->store_global.expr = $3;
-    }
-  | PAGE_SIZE {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_PAGE_SIZE);
-      CHECK_ALLOC_NULL($$);
     }
 ;
 expr_opt :
