@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (break $n)))
-(;; STDERR ;;;
-parse/expr/bad-break-name-undefined.txt:2:22: undefined label variable "$n"
-;;; STDERR ;;)

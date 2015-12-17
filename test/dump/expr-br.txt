@@ -2,7 +2,7 @@
 (module
   (func (result i32)
     (label
-      (break 0 (i32.const 1)))))
+      (br 0 (i32.const 1)))))
 (;; STDOUT ;;;
 0000000: 01                                         ; WASM_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures

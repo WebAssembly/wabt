@@ -1,0 +1,5 @@
+;;; ERROR: 1
+(module (func (label $foo (br foo))))
+(;; STDERR ;;;
+parse/expr/bad-br-name.txt:2:31: unexpected token "foo"
+;;; STDERR ;;)

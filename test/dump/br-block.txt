@@ -1,13 +1,15 @@
 ;;; FLAGS: -dv
 (module
-  (func
-    (block $outer           ;; 3
-      (loop                 ;; 2
-        (block              ;; 1
+  (func                     ;; spec  v8
+    (block $outer           ;; 2     4
+      (loop                 ;; 1     2 (3 is exit)
+        (block              ;;       1
           (i32.const 0)
-          (block $inner     ;; 0
-            (break $inner)
-            (break $outer)))))))
+          (block $inner     ;; 0     0
+            (br)
+            (br 0)
+            (br 1)
+            (br 2)))))))
 (;; STDOUT ;;;
 0000000: 01                                         ; WASM_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
@@ -29,16 +31,23 @@
 0000011: 09                                         ; OPCODE_I8_CONST
 0000012: 00                                         ; u8 literal
 0000013: 01                                         ; OPCODE_BLOCK
-0000014: 02                                         ; num expressions
+0000014: 04                                         ; num expressions
 0000015: 06                                         ; OPCODE_BR
 0000016: 00                                         ; break depth
 0000017: 00                                         ; OPCODE_NOP
 0000018: 06                                         ; OPCODE_BR
-0000019: 04                                         ; break depth
+0000019: 00                                         ; break depth
 000001a: 00                                         ; OPCODE_NOP
-0000009: 1000                                       ; FIXUP func body size
-000001b: 06                                         ; WASM_SECTION_END
+000001b: 06                                         ; OPCODE_BR
+000001c: 02                                         ; break depth
+000001d: 00                                         ; OPCODE_NOP
+000001e: 06                                         ; OPCODE_BR
+000001f: 04                                         ; break depth
+0000020: 00                                         ; OPCODE_NOP
+0000009: 1600                                       ; FIXUP func body size
+0000021: 06                                         ; WASM_SECTION_END
 ;; dump
-0000000: 0101 0000 0201 0000 0010 0001 0102 0101  
-0000010: 0209 0001 0206 0000 0604 0006            
+0000000: 0101 0000 0201 0000 0016 0001 0102 0101  
+0000010: 0209 0001 0406 0000 0600 0006 0200 0604  
+0000020: 0006                                     
 ;;; STDOUT ;;)

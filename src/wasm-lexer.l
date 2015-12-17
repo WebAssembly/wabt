@@ -336,7 +336,6 @@ NAME      \${ATOM}
 "invoke"              { return TOK(INVOKE); }
 {NAME}                { TEXT; return TOK(VAR); }
 
-"break"               { return TOK(BR); }
 "global"              { return TOK(GLOBAL); }
 "load_global"         { return TOK(LOAD_GLOBAL); }
 "store_global"        { return TOK(STORE_GLOBAL); }

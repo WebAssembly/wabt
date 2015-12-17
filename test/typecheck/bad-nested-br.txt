@@ -1,0 +1,17 @@
+;;; ERROR: 1
+(module
+  (func (result i32)
+    (label $outer
+      (block
+        (label $inner
+          (loop
+            (if (i32.const 1)
+              (br $outer))
+            (br $inner)))
+        (return (i32.const 2))))
+    ;; the existence of the (br $outer) statement requires there to be a
+    ;; return statement here, or a value returned from (br $outer).
+  ))
+(;; STDERR ;;;
+typecheck/bad-nested-br.txt:9:15: arity mismatch of br value. label expects non-void, but br value is empty
+;;; STDERR ;;)

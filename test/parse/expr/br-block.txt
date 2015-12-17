@@ -1,6 +1,6 @@
 (module
   (func
     (block $exit1
-      (break 0))
+      (br 0))
     (block $exit2
-      (break $exit2))))
+      (br $exit2))))

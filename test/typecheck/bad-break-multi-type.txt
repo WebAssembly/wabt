@@ -1,9 +1,0 @@
-;;; ERROR: 1
-(module
-  (func (result f32)
-    (block $exit
-      (break 0 (i32.const 1))
-      (f32.const 2))))
-(;; STDERR ;;;
-typecheck/bad-break-multi-type.txt:5:16: type mismatch of br value. got i32, expected f32
-;;; STDERR ;;)

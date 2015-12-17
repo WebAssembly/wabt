@@ -3,7 +3,7 @@
   (func
     (loop $cont
       (if (i32.const 1)
-        (break $cont)))))
+        (br $cont)))))
 (;; STDOUT ;;;
 0000000: 01                                         ; WASM_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures

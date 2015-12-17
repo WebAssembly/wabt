@@ -2,5 +2,5 @@
   (func
     (label
       (if_else (i32.const 0)
-        (break)
+        (br)
         (i32.const 10)))))

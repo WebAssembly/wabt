@@ -1,0 +1,7 @@
+(module
+  (func
+    (loop $exit
+      (br $exit))
+    (loop $outer $inner
+      (br $inner)
+      (br $outer))))
