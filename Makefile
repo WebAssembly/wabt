@@ -17,26 +17,40 @@
 .SUFFIXES:
 
 ALL = sexpr-wasm
-EVERYHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
+EVERYTHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
 CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
 LIBS =
-ASAN_FLAGS = -fsanitize=address
-MSAN_FLAGS = -fsanitize=memory
-LSAN_FLAGS = -fsanitize=leak
 
-SRCS = wasm.c sexpr-wasm.c wasm-parser.c wasm-lexer.c wasm-vector.c \
-			 wasm-check.c wasm-writer.c wasm-binary-writer.c
-OBJS = $(addprefix out/,$(patsubst %.c,%.o,$(SRCS)))
-ASAN_OBJS = $(addprefix out/,$(patsubst %.c,%.asan.o,$(SRCS)))
-MSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.msan.o,$(SRCS)))
-LSAN_OBJS = $(addprefix out/,$(patsubst %.c,%.lsan.o,$(SRCS)))
+SEXPR_WASM_CC := $(CC)
+SEXPR_WASM_CFLAGS := $(CFLAGS)
+SEXPR_WASM_SRCS := \
+	wasm.c sexpr-wasm.c wasm-parser.c wasm-lexer.c wasm-vector.c wasm-check.c \
+	wasm-writer.c wasm-binary-writer.c
+
+ASAN_FLAGS := -fsanitize=address
+SEXPR_WASM_ASAN_CC := clang
+SEXPR_WASM_ASAN_CFLAGS := $(ASAN_FLAGS) $(CFLAGS)
+SEXPR_WASM_ASAN_LDFLAGS := $(ASAN_FLAGS)
+SEXPR_WASM_ASAN_SRCS := $(SEXPR_WASM_SRCS)
+
+MSAN_FLAGS := -fsanitize=memory
+SEXPR_WASM_MSAN_CC := clang
+SEXPR_WASM_MSAN_CFLAGS := $(MSAN_FLAGS) $(CFLAGS)
+SEXPR_WASM_MSAN_LDFLAGS := $(MSAN_FLAGS)
+SEXPR_WASM_MSAN_SRCS := $(SEXPR_WASM_SRCS)
+
+LSAN_FLAGS := -fsanitize=leak
+SEXPR_WASM_LSAN_CC := clang
+SEXPR_WASM_LSAN_CFLAGS := $(LSAN_FLAGS) $(CFLAGS)
+SEXPR_WASM_LSAN_LDFLAGS := $(LSAN_FLAGS)
+SEXPR_WASM_LSAN_SRCS := $(SEXPR_WASM_SRCS)
 
 .PHONY: all
 all: $(addprefix out/,$(ALL))
 
 .PHONY: everything
-everything: $(addprefix out/,$(EVERYHING))
+everything: $(addprefix out/,$(EVERYTHING))
 
 out:
 	mkdir $@
@@ -47,30 +61,25 @@ src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
 src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
 	bison -o src/wasm-parser.c --defines=src/wasm-parser.h $<
 
-$(OBJS): out/%.o: src/%.c | out
-	$(CC) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
-out/sexpr-wasm: $(OBJS) | out
-	$(CC) -o $@ $^ ${LIBS}
+define EXE
+$(2)_OBJS = $$(patsubst %.c,out/obj/$(1)/%.o,$$($(2)_SRCS))
 
-# ASAN
-$(ASAN_OBJS): out/%.asan.o: src/%.c | out
-	clang $(ASAN_FLAGS) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
-out/sexpr-wasm-asan: $(ASAN_OBJS) | out
-	clang $(ASAN_FLAGS) -o $@ $^ ${LIBS}
+out/obj/$(1):
+	mkdir -p $$@
 
-# MSAN
-$(MSAN_OBJS): out/%.msan.o: src/%.c | out
-	clang $(MSAN_FLAGS) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
-out/sexpr-wasm-msan: $(MSAN_OBJS) | out
-	clang $(MSAN_FLAGS) -o $@ $^ ${LIBS}
+$$($(2)_OBJS): out/obj/$(1)/%.o: src/%.c | out/obj/$(1)
+	$$($(2)_CC) $$($(2)_CFLAGS) -c -o $$@ $$(DEPEND_FLAGS) $$<
 
-# LSAN
-$(LSAN_OBJS): out/%.lsan.o: src/%.c | out
-	clang $(LSAN_FLAGS) $(CFLAGS) -c -o $@ $(DEPEND_FLAGS) $<
-out/sexpr-wasm-lsan: $(LSAN_OBJS) | out
-	clang $(LSAN_FLAGS) -o $@ $^ ${LIBS}
+out/$(1): $$($(2)_OBJS) | out
+	$$($(2)_CC) $$($(2)_LDFLAGS) -o $$@ $$^ $${LIBS}
 
--include $(OBJS:.o=.d) $(ASAN_OBJS:.o=.d) $(MSAN_OBJS:.o=.d) $(LSAN_OBJS:.o=.d)
+-include $$($(2)_OBJS:.o=.d)
+endef
+
+$(eval $(call EXE,sexpr-wasm,SEXPR_WASM))
+$(eval $(call EXE,sexpr-wasm-asan,SEXPR_WASM_ASAN))
+$(eval $(call EXE,sexpr-wasm-msan,SEXPR_WASM_MSAN))
+$(eval $(call EXE,sexpr-wasm-lsan,SEXPR_WASM_LSAN))
 
 #### TESTS ####
 .PHONY: test
