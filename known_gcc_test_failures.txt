@@ -14,7 +14,6 @@
 20010116-1.c.s.wast
 20010518-2.c.s.wast
 20010915-1.c.s.wast
-20010925-1.c.s.wast
 20011024-1.c.s.wast
 20011109-1.c.s.wast
 20011219-1.c.s.wast
@@ -31,7 +30,6 @@
 20030221-1.c.s.wast
 20030222-1.c.s.wast
 20030313-1.c.s.wast
-20030626-2.c.s.wast
 20030714-1.c.s.wast
 20030715-1.c.s.wast
 20030903-1.c.s.wast
@@ -145,7 +143,6 @@ loop-2d.c.s.wast
 loop-2f.c.s.wast
 loop-2g.c.s.wast
 memcpy-1.c.s.wast
-memcpy-2.c.s.wast
 memcpy-bi.c.s.wast
 memset-1.c.s.wast
 memset-2.c.s.wast
@@ -249,6 +246,5 @@ string-opt-5.c.s.wast
 strlen-1.c.s.wast
 strncmp-1.c.s.wast
 struct-aliasing-1.c.s.wast
-struct-cpy-1.c.s.wast
 switch-1.c.s.wast
 usmul.c.s.wast
