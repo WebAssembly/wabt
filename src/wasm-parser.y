@@ -1250,6 +1250,7 @@ module_fields :
 ;
 module :
     LPAR MODULE module_fields RPAR {
+      ZEROMEM($$);
       $$.loc = @2;
       $$.fields = $3;
 
