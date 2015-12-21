@@ -2,28 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
 (;; STDOUT ;;;
-third_party/testsuite/conversions.wast:119: $assert_trap_38 failed, didn't throw
-third_party/testsuite/conversions.wast:120: $assert_trap_39 failed, didn't throw
-third_party/testsuite/conversions.wast:121: $assert_trap_40 failed, didn't throw
-third_party/testsuite/conversions.wast:122: $assert_trap_41 failed, didn't throw
-third_party/testsuite/conversions.wast:123: $assert_trap_42 failed, didn't throw
-third_party/testsuite/conversions.wast:137: $assert_trap_55 failed, didn't throw
-third_party/testsuite/conversions.wast:138: $assert_trap_56 failed, didn't throw
-third_party/testsuite/conversions.wast:139: $assert_trap_57 failed, didn't throw
-third_party/testsuite/conversions.wast:140: $assert_trap_58 failed, didn't throw
-third_party/testsuite/conversions.wast:141: $assert_trap_59 failed, didn't throw
-third_party/testsuite/conversions.wast:157: $assert_trap_74 failed, didn't throw
-third_party/testsuite/conversions.wast:158: $assert_trap_75 failed, didn't throw
-third_party/testsuite/conversions.wast:159: $assert_trap_76 failed, didn't throw
-third_party/testsuite/conversions.wast:160: $assert_trap_77 failed, didn't throw
-third_party/testsuite/conversions.wast:161: $assert_trap_78 failed, didn't throw
-third_party/testsuite/conversions.wast:176: $assert_trap_92 failed, didn't throw
-third_party/testsuite/conversions.wast:177: $assert_trap_93 failed, didn't throw
-third_party/testsuite/conversions.wast:178: $assert_trap_94 failed, didn't throw
-third_party/testsuite/conversions.wast:179: $assert_trap_95 failed, didn't throw
-third_party/testsuite/conversions.wast:180: $assert_trap_96 failed, didn't throw
-third_party/testsuite/conversions.wast:181: $assert_trap_97 failed, didn't throw
-third_party/testsuite/conversions.wast:182: $assert_trap_98 failed, didn't throw
-third_party/testsuite/conversions.wast:183: $assert_trap_99 failed, didn't throw
-267/290 tests passed.
+290/290 tests passed.
 ;;; STDOUT ;;)
