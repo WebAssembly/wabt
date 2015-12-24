@@ -22,7 +22,7 @@ all: $(addprefix out/,$(ALL))
 .PHONY: everything
 everything: $(addprefix out/,$(EVERYHING))
 
-out/:
+out:
 	mkdir $@
 
 src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
