@@ -1,6 +1,12 @@
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
+(;; STDERR ;;;
+third_party/testsuite/memory.wast:99:15: label variable out of range (max 1)
+third_party/testsuite/memory.wast:123:15: label variable out of range (max 1)
+
+;;; STDERR ;;)
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/memory.wast:11:12: max size (0) must be greater than or equal to initial size (1)
@@ -24,5 +30,4 @@ assert_invalid error:
   third_party/testsuite/memory.wast:54:28: alignment must be power-of-two
 assert_invalid error:
   third_party/testsuite/memory.wast:58:28: alignment must be power-of-two
-24/24 tests passed.
 ;;; STDOUT ;;)
