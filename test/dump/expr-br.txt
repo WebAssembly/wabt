@@ -1,7 +1,7 @@
 ;;; FLAGS: -dv
 (module
   (func (result i32)
-    (label
+    (block
       (br 0 (i32.const 1)))))
 (;; STDOUT ;;;
 0000000: 01                                         ; WASM_SECTION_SIGNATURES

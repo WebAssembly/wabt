@@ -1,6 +1,6 @@
 (module
   (func
-    (label
+    (block
       (tableswitch (i32.const 0)
         (table (br 0)) (case 0)
         (case (nop))))))

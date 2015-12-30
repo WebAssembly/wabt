@@ -152,7 +152,6 @@ NAME      \${ATOM}
 "if"                  { return TOK(IF); }
 "if_else"             { return TOK(IF_ELSE); }
 "loop"                { return TOK(LOOP); }
-"label"               { return TOK(LABEL); }
 "br"                  { return TOK(BR); }
 "br_if"               { return TOK(BR_IF); }
 "tableswitch"         { return TOK(TABLESWITCH); }

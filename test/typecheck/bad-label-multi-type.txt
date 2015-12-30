@@ -1,11 +1,10 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (label
-      (block
-        (if (i32.const 1)
-          (br (i32.const 2)))
-        (f32.const 3)))))
+    (block
+      (if (i32.const 1)
+        (br (i32.const 2)))
+      (f32.const 3))))
 (;; STDERR ;;;
-typecheck/bad-label-multi-type.txt:8:9: type mismatch of block. got f32, expected i32
+typecheck/bad-label-multi-type.txt:7:7: type mismatch of block. got f32, expected i32
 ;;; STDERR ;;)

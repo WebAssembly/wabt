@@ -1,5 +1,0 @@
-;;; ERROR: 1
-(module (func (label)))
-(;; STDERR ;;;
-parse/expr/bad-label.txt:2:21: syntax error, unexpected ), expecting (
-;;; STDERR ;;)

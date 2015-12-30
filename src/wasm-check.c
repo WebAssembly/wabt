@@ -423,15 +423,12 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_BLOCK: {
-      int has_label = expr->block.label.start != NULL;
       WasmLabelNode node;
-      if (has_label)
-        result |= push_label(ctx, &expr->loc, &node, &expr->block.label,
-                             expected_type, "block");
+      result |= push_label(ctx, &expr->loc, &node, &expr->block.label,
+                           expected_type, "block");
       result |= check_exprs(ctx, module, func, &expr->block.exprs,
                             expected_type, " of block");
-      if (has_label)
-        pop_label(ctx);
+      pop_label(ctx);
       break;
     }
     case WASM_EXPR_TYPE_BR: {
@@ -559,15 +556,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |= check_expr(ctx, module, func, expr->if_else.false_,
                            expected_type, " of if branch");
       break;
-    case WASM_EXPR_TYPE_LABEL: {
-      WasmLabelNode node;
-      result |= push_label(ctx, &expr->loc, &node, &expr->label.label,
-                           expected_type, "label");
-      result |= check_expr(ctx, module, func, expr->label.expr, expected_type,
-                           " of label");
-      pop_label(ctx);
-      break;
-    }
     case WASM_EXPR_TYPE_LOAD: {
       WasmType type = expr->load.op.type;
       result |= check_align(ctx, &expr->loc, expr->load.align);

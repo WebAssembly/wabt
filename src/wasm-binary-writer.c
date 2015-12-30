@@ -710,7 +710,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_BLOCK: {
       WasmLabelNode node;
-      push_label(ctx, &node, &expr->block.label, WASM_NO_FORCE_LABEL);
+      push_label(ctx, &node, &expr->block.label, WASM_FORCE_LABEL);
       out_opcode(ws, WASM_OPCODE_BLOCK);
       out_u8(ws, expr->block.exprs.size, "num expressions");
       write_expr_list(ctx, module, func, &expr->block.exprs);
@@ -838,15 +838,6 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->if_else.true_);
       write_expr(ctx, module, func, expr->if_else.false_);
       break;
-    case WASM_EXPR_TYPE_LABEL: {
-      WasmLabelNode node;
-      push_label(ctx, &node, &expr->label.label, WASM_FORCE_LABEL);
-      out_opcode(ws, WASM_OPCODE_BLOCK);
-      out_u8(ws, 1, "num expressions");
-      write_expr(ctx, module, func, expr->label.expr);
-      pop_label(ctx, &expr->label.label);
-      break;
-    }
     case WASM_EXPR_TYPE_LOAD:
     case WASM_EXPR_TYPE_LOAD_EXTEND: {
       /* Access byte: 0bAaao0000

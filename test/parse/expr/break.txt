@@ -1,3 +1,0 @@
-(module (func
-  (label
-    (br 0))))

@@ -1,16 +1,10 @@
-;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
-(;; STDERR ;;;
-third_party/testsuite/switch.wast:13:76: label variable out of range (max 0)
-third_party/testsuite/switch.wast:14:22: label variable out of range (max 0)
-third_party/testsuite/switch.wast:15:53: label variable out of range (max 0)
-
-;;; STDERR ;;)
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/switch.wast:110:72: case variable out of range (max 0)
 assert_invalid error:
   third_party/testsuite/switch.wast:111:72: case variable out of range (max 1)
+18/18 tests passed.
 ;;; STDOUT ;;)

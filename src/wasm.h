@@ -305,7 +305,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_HAS_FEATURE,
   WASM_EXPR_TYPE_IF,
   WASM_EXPR_TYPE_IF_ELSE,
-  WASM_EXPR_TYPE_LABEL,
   WASM_EXPR_TYPE_LOAD,
   WASM_EXPR_TYPE_LOAD_EXTEND,
   WASM_EXPR_TYPE_LOAD_GLOBAL,
@@ -340,7 +339,6 @@ struct WasmExpr {
     struct { WasmExprPtr cond, true_; } if_;
     struct { WasmVar var; WasmExprPtr cond, expr; } br_if;
     struct { WasmLabel inner, outer; WasmExprPtrVector exprs; } loop;
-    struct { WasmLabel label; WasmExprPtr expr; } label;
     struct { WasmVar var; WasmExprPtr expr; } br;
     struct { WasmExprPtr expr; } return_;
     struct {

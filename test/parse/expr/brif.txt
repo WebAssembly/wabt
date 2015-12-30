@@ -1,4 +1,4 @@
 (module
   (func
-    (label $foo
+    (block $foo
       (br_if (i32.const 1) 0))))

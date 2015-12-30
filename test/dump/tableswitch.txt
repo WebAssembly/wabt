@@ -1,7 +1,7 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (label
+    (block
       (tableswitch (i32.const 0)
         (table (case 0) (case 1)) (br 0)
         (case (i32.const 1) (i32.const 2))  ;; expression list

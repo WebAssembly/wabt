@@ -1,8 +1,8 @@
 ;;; ERROR: 1
 (module
   (func
-    (label   ;; 1
-      (label ;; 0
+    (block   ;; 1
+      (block ;; 0
         (br 2)))))
 (;; STDERR ;;;
 parse/expr/bad-br-bad-depth.txt:6:13: label variable out of range (max 2)

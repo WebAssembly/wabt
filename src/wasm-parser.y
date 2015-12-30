@@ -83,7 +83,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %token LPAR "("
 %token RPAR ")"
 %token INT FLOAT TEXT VAR VALUE_TYPE
-%token NOP BLOCK IF IF_ELSE LOOP LABEL BR BR_IF TABLESWITCH CASE
+%token NOP BLOCK IF IF_ELSE LOOP BR BR_IF TABLESWITCH CASE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE LOAD_EXTEND STORE_WRAP OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT CAST SELECT
@@ -314,12 +314,6 @@ expr1 :
       $$->loop.outer = $2;
       $$->loop.inner = $3;
       $$->loop.exprs = $4;
-    }
-  | LABEL labeling expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_LABEL);
-      CHECK_ALLOC_NULL($$);
-      $$->label.label = $2;
-      $$->label.expr = $3;
     }
   | BR expr_opt {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR);

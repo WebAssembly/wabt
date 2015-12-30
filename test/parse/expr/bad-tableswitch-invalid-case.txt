@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module
   (func
-    (label
+    (block
       (tableswitch (i32.const 0)
         (table (case 2)) (br 0)
         (case (nop))))))

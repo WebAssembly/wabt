@@ -1,7 +1,7 @@
 ;;; EXE: test/run-d8.py
 (module
   (func $f (param i32) (result i32)
-    (label
+    (block
       (tableswitch (get_local 0)
         (table (case 0) (br 0) (case 1)) (case 2)
           (case (return (i32.const 0)))     ;; 0

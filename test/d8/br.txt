@@ -12,7 +12,7 @@
         (i32.eq (get_local 0) (i32.const 0))
         (i32.eq (get_local 1) (i32.const 1)))))
 
-  ;; test bring with a depth > 0
+  ;; test br-ing with a depth > 0
   (export "br1" $br1)
   (func $br1 (result i32)
     (local i32 i32 i32)
@@ -27,17 +27,17 @@
                          (i32.eq (get_local 1) (i32.const 0)))
                 (i32.eq (get_local 2) (i32.const 1)))))
 
-  ;; test bring to a label
+  ;; test br-ing to a label
   (export "br2" $br2)
   (func $br2 (result i32)
-    (label $exit
+    (block $exit
       (block
         (if (i32.const 1)
           (br $exit))
         (return (i32.const 1))))  ;; not executed
     (return (i32.const 2)))
 
-  ;; test bring in a loop with an exit and continue continuation
+  ;; test br-ing in a loop with an exit and continue continuation
   (export "br3" $br3)
   (func $br3 (result i32)
     (local i32 i32)

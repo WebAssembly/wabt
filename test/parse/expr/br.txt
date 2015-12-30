@@ -1,4 +1,4 @@
 (module
   (func
-    (label
+    (block
       (br 0))))
