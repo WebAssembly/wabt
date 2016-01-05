@@ -3,8 +3,12 @@
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
+#define EXTERN_C_BEGIN extern "C" {
+#define EXTERN_C_END }
 #else
 #define EXTERN_C
+#define EXTERN_C_BEGIN
+#define EXTERN_C_END
 #endif
 
 #define WARN_UNUSED __attribute__ ((warn_unused_result))

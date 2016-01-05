@@ -823,7 +823,7 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
         result |= check_import(ctx, module, &field->loc, &field->import);
         break;
       case WASM_MODULE_FIELD_TYPE_EXPORT:
-        result |= check_export(ctx, module, &field->export);
+        result |= check_export(ctx, module, &field->export_);
         break;
       case WASM_MODULE_FIELD_TYPE_TABLE:
         if (seen_table) {
