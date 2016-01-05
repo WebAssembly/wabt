@@ -479,7 +479,7 @@ typedef struct WasmModuleField {
   union {
     WasmFunc func;
     WasmImport import;
-    WasmExport wasm_export;
+    WasmExport export_;
     WasmVarVector table;
     WasmFuncType func_type;
     WasmMemory memory;

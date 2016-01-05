@@ -1338,7 +1338,7 @@ static WasmModuleField* append_module_field_and_fixup(
       WasmExportPtr* export_ptr = wasm_append_export_ptr(&module->exports);
       if (!export_ptr)
         goto fail;
-      *export_ptr = &result->wasm_export;
+      *export_ptr = &result->export_;
       break;
     }
     case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
@@ -1380,7 +1380,7 @@ static WasmModuleField* append_module_field_and_fixup(
         break;
       case WASM_MODULE_FIELD_TYPE_EXPORT:
         assert(num_exports < module->exports.size);
-        module->exports.data[num_exports++] = &field->wasm_export;
+        module->exports.data[num_exports++] = &field->export_;
         break;
       case WASM_MODULE_FIELD_TYPE_TABLE:
         module->table = &field->table;
@@ -1435,7 +1435,7 @@ static WasmFunc* append_nullary_func(WasmModule* module,
     /* leave the func field, it will be cleaned up later */
     return NULL;
   }
-  WasmExport* export = &export_field->wasm_export;
+  WasmExport* export = &export_field->export_;
   export->var.type = WASM_VAR_TYPE_INDEX;
   export->var.index = func_index;
   export->name = export_name;
