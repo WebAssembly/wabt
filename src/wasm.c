@@ -346,7 +346,7 @@ static void wasm_destroy_module_field(WasmModuleField* field) {
       wasm_destroy_import(&field->import);
       break;
     case WASM_MODULE_FIELD_TYPE_EXPORT:
-      wasm_destroy_export(&field->export);
+      wasm_destroy_export(&field->wasm_export);
       break;
     case WASM_MODULE_FIELD_TYPE_TABLE:
       DESTROY_VECTOR_AND_ELEMENTS(field->table, var);

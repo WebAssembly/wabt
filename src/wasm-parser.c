@@ -3761,7 +3761,7 @@ yyreduce:
       CHECK_ALLOC_NULL(field);
       field->loc = (yylsp[0]);
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
-      field->export = (yyvsp[0].export);
+      field->wasm_export = (yyvsp[0].export);
     }
 #line 3767 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
@@ -3855,13 +3855,13 @@ yyreduce:
             break;
           }
           case WASM_MODULE_FIELD_TYPE_EXPORT: {
-            WasmExportPtr export_ptr = &field->export;
+            WasmExportPtr export_ptr = &field->wasm_export;
             CHECK_ALLOC(wasm_append_export_ptr_value(&(yyval.module).exports, &export_ptr));
-            if (field->export.name.start) {
+            if (field->wasm_export.name.start) {
               WasmBinding* binding = wasm_append_binding(&(yyval.module).export_bindings);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->name = field->export.name;
+              binding->name = field->wasm_export.name;
               binding->index = (yyval.module).exports.size - 1;
             }
             break;

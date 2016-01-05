@@ -479,7 +479,7 @@ typedef struct WasmModuleField {
   union {
     WasmFunc func;
     WasmImport import;
-    WasmExport export;
+    WasmExport wasm_export;
     WasmVarVector table;
     WasmFuncType func_type;
     WasmMemory memory;
@@ -552,6 +552,7 @@ typedef struct WasmWriteBinaryOptions {
   int log_writes;
 } WasmWriteBinaryOptions;
 
+EXTERN_C_BEGIN
 WasmScanner wasm_new_scanner(const char* filename);
 void wasm_free_scanner(WasmScanner scanner);
 void wasm_error(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
@@ -602,5 +603,6 @@ WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
                                      WasmTypeBindings* src) WARN_UNUSED;
 
 int wasm_func_is_exported(WasmModule* module, WasmFunc* func);
+EXTERN_C_END
 
 #endif /* WASM_H_ */
