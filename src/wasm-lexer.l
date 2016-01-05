@@ -170,21 +170,21 @@ NAME      \${ATOM}
 "i64.store"           { MEMOP(I64, STORE, 64); return TOK(STORE); }
 "f32.store"           { MEMOP(F32, STORE, 32); return TOK(STORE); }
 "f64.store"           { MEMOP(F64, STORE, 64); return TOK(STORE); }
-"i32.load8_s"         { MEMOPSIGN(I32, LOAD, 8, S); return TOK(LOAD_EXTEND); }
-"i64.load8_s"         { MEMOPSIGN(I64, LOAD, 8, S); return TOK(LOAD_EXTEND); }
-"i32.load8_u"         { MEMOPSIGN(I32, LOAD, 8, U); return TOK(LOAD_EXTEND); }
-"i64.load8_u"         { MEMOPSIGN(I64, LOAD, 8, U); return TOK(LOAD_EXTEND); }
-"i32.load16_s"        { MEMOPSIGN(I32, LOAD, 16, S); return TOK(LOAD_EXTEND); }
-"i64.load16_s"        { MEMOPSIGN(I64, LOAD, 16, S); return TOK(LOAD_EXTEND); }
-"i32.load16_u"        { MEMOPSIGN(I32, LOAD, 16, U); return TOK(LOAD_EXTEND); }
-"i64.load16_u"        { MEMOPSIGN(I64, LOAD, 16, U); return TOK(LOAD_EXTEND); }
-"i64.load32_s"        { MEMOPSIGN(I64, LOAD, 32, S); return TOK(LOAD_EXTEND); }
-"i64.load32_u"        { MEMOPSIGN(I64, LOAD, 32, U); return TOK(LOAD_EXTEND); }
-"i32.store8"          { MEMOP(I32, STORE, 8); return TOK(STORE_WRAP); }
-"i64.store8"          { MEMOP(I64, STORE, 8); return TOK(STORE_WRAP); }
-"i32.store16"         { MEMOP(I32, STORE, 16); return TOK(STORE_WRAP); }
-"i64.store16"         { MEMOP(I64, STORE, 16); return TOK(STORE_WRAP); }
-"i64.store32"         { MEMOP(I64, STORE, 32); return TOK(STORE_WRAP); }
+"i32.load8_s"         { MEMOPSIGN(I32, LOAD, 8, S); return TOK(LOAD); }
+"i64.load8_s"         { MEMOPSIGN(I64, LOAD, 8, S); return TOK(LOAD); }
+"i32.load8_u"         { MEMOPSIGN(I32, LOAD, 8, U); return TOK(LOAD); }
+"i64.load8_u"         { MEMOPSIGN(I64, LOAD, 8, U); return TOK(LOAD); }
+"i32.load16_s"        { MEMOPSIGN(I32, LOAD, 16, S); return TOK(LOAD); }
+"i64.load16_s"        { MEMOPSIGN(I64, LOAD, 16, S); return TOK(LOAD); }
+"i32.load16_u"        { MEMOPSIGN(I32, LOAD, 16, U); return TOK(LOAD); }
+"i64.load16_u"        { MEMOPSIGN(I64, LOAD, 16, U); return TOK(LOAD); }
+"i64.load32_s"        { MEMOPSIGN(I64, LOAD, 32, S); return TOK(LOAD); }
+"i64.load32_u"        { MEMOPSIGN(I64, LOAD, 32, U); return TOK(LOAD); }
+"i32.store8"          { MEMOP(I32, STORE, 8); return TOK(STORE); }
+"i64.store8"          { MEMOP(I64, STORE, 8); return TOK(STORE); }
+"i32.store16"         { MEMOP(I32, STORE, 16); return TOK(STORE); }
+"i64.store16"         { MEMOP(I64, STORE, 16); return TOK(STORE); }
+"i64.store32"         { MEMOP(I64, STORE, 32); return TOK(STORE); }
 "offset="{DIGITS}     { TEXT_AT(7); return TOK(OFFSET); }
 "align="{DIGITS}      { TEXT_AT(6); return TOK(ALIGN); }
 "i32.const"           { TYPE(I32); return TOK(CONST); }

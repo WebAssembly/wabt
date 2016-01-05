@@ -1834,77 +1834,77 @@ YY_RULE_SETUP
 case 39:
 YY_RULE_SETUP
 #line 173 "src/wasm-lexer.l"
-{ MEMOPSIGN(I32, LOAD, 8, S); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I32, LOAD, 8, S); return TOK(LOAD); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
 #line 174 "src/wasm-lexer.l"
-{ MEMOPSIGN(I64, LOAD, 8, S); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I64, LOAD, 8, S); return TOK(LOAD); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 175 "src/wasm-lexer.l"
-{ MEMOPSIGN(I32, LOAD, 8, U); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I32, LOAD, 8, U); return TOK(LOAD); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 176 "src/wasm-lexer.l"
-{ MEMOPSIGN(I64, LOAD, 8, U); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I64, LOAD, 8, U); return TOK(LOAD); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 177 "src/wasm-lexer.l"
-{ MEMOPSIGN(I32, LOAD, 16, S); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I32, LOAD, 16, S); return TOK(LOAD); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 178 "src/wasm-lexer.l"
-{ MEMOPSIGN(I64, LOAD, 16, S); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I64, LOAD, 16, S); return TOK(LOAD); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 179 "src/wasm-lexer.l"
-{ MEMOPSIGN(I32, LOAD, 16, U); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I32, LOAD, 16, U); return TOK(LOAD); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 180 "src/wasm-lexer.l"
-{ MEMOPSIGN(I64, LOAD, 16, U); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I64, LOAD, 16, U); return TOK(LOAD); }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
 #line 181 "src/wasm-lexer.l"
-{ MEMOPSIGN(I64, LOAD, 32, S); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I64, LOAD, 32, S); return TOK(LOAD); }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
 #line 182 "src/wasm-lexer.l"
-{ MEMOPSIGN(I64, LOAD, 32, U); return TOK(LOAD_EXTEND); }
+{ MEMOPSIGN(I64, LOAD, 32, U); return TOK(LOAD); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 183 "src/wasm-lexer.l"
-{ MEMOP(I32, STORE, 8); return TOK(STORE_WRAP); }
+{ MEMOP(I32, STORE, 8); return TOK(STORE); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 184 "src/wasm-lexer.l"
-{ MEMOP(I64, STORE, 8); return TOK(STORE_WRAP); }
+{ MEMOP(I64, STORE, 8); return TOK(STORE); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
 #line 185 "src/wasm-lexer.l"
-{ MEMOP(I32, STORE, 16); return TOK(STORE_WRAP); }
+{ MEMOP(I32, STORE, 16); return TOK(STORE); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
 #line 186 "src/wasm-lexer.l"
-{ MEMOP(I64, STORE, 16); return TOK(STORE_WRAP); }
+{ MEMOP(I64, STORE, 16); return TOK(STORE); }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
 #line 187 "src/wasm-lexer.l"
-{ MEMOP(I64, STORE, 32); return TOK(STORE_WRAP); }
+{ MEMOP(I64, STORE, 32); return TOK(STORE); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP

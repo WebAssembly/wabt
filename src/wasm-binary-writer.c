@@ -838,8 +838,7 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->if_else.true_);
       write_expr(ctx, module, func, expr->if_else.false_);
       break;
-    case WASM_EXPR_TYPE_LOAD:
-    case WASM_EXPR_TYPE_LOAD_EXTEND: {
+    case WASM_EXPR_TYPE_LOAD: {
       /* Access byte: 0bAaao0000
        A = Alignment. If set, access is unaligned
        a = Atomicity. 0 = None, 1 = SeqCst, 2 = Acq, 3 = Rel
@@ -897,8 +896,7 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->set_local.expr);
       break;
     }
-    case WASM_EXPR_TYPE_STORE:
-    case WASM_EXPR_TYPE_STORE_WRAP: {
+    case WASM_EXPR_TYPE_STORE: {
       /* See LOAD for format of memory access byte */
       out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
       uint8_t access = 0;

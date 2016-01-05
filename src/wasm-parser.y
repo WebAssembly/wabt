@@ -85,7 +85,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %token INT FLOAT TEXT VAR VALUE_TYPE
 %token NOP BLOCK IF IF_ELSE LOOP BR BR_IF TABLESWITCH CASE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
-%token GET_LOCAL SET_LOCAL LOAD STORE LOAD_EXTEND STORE_WRAP OFFSET ALIGN
+%token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT CAST SELECT
 %token FUNC TYPE PARAM RESULT LOCAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
@@ -98,7 +98,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<cast> CAST
 %type<compare> COMPARE
 %type<convert> CONVERT
-%type<mem> LOAD STORE LOAD_EXTEND STORE_WRAP
+%type<mem> LOAD STORE
 %type<text> ALIGN FLOAT INT OFFSET TEXT VAR
 %type<type> SELECT
 %type<type> CONST VALUE_TYPE
@@ -396,23 +396,6 @@ expr1 :
     }
   | STORE offset align expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE);
-      CHECK_ALLOC_NULL($$);
-      $$->store.op = $1;
-      $$->store.offset = $2;
-      $$->store.align = $3;
-      $$->store.addr = $4;
-      $$->store.value = $5;
-    }
-  | LOAD_EXTEND offset align expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD_EXTEND);
-      CHECK_ALLOC_NULL($$);
-      $$->load.op = $1;
-      $$->load.offset = $2;
-      $$->load.align = $3;
-      $$->load.addr = $4;
-    }
-  | STORE_WRAP offset align expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE_WRAP);
       CHECK_ALLOC_NULL($$);
       $$->store.op = $1;
       $$->store.offset = $2;

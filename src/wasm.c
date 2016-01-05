@@ -233,7 +233,6 @@ static void wasm_destroy_expr(WasmExpr* expr) {
       wasm_destroy_expr_ptr(&expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LOAD:
-    case WASM_EXPR_TYPE_LOAD_EXTEND:
       wasm_destroy_expr_ptr(&expr->load.addr);
       break;
     case WASM_EXPR_TYPE_LOAD_GLOBAL:
@@ -258,7 +257,6 @@ static void wasm_destroy_expr(WasmExpr* expr) {
       wasm_destroy_expr_ptr(&expr->set_local.expr);
       break;
     case WASM_EXPR_TYPE_STORE:
-    case WASM_EXPR_TYPE_STORE_WRAP:
       wasm_destroy_expr_ptr(&expr->store.addr);
       wasm_destroy_expr_ptr(&expr->store.value);
       break;

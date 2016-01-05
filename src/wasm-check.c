@@ -565,15 +565,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                            " of load index");
       break;
     }
-    case WASM_EXPR_TYPE_LOAD_EXTEND: {
-      WasmType type = expr->load.op.type;
-      result |= check_align(ctx, &expr->loc, expr->load.align);
-      result |= check_offset(ctx, &expr->loc, expr->load.offset);
-      result |= check_type(ctx, &expr->loc, type, expected_type, desc);
-      result |= check_expr(ctx, module, func, expr->load.addr, WASM_TYPE_I32,
-                           " of load index");
-      break;
-    }
     case WASM_EXPR_TYPE_LOAD_GLOBAL: {
       WasmType type;
       if (check_global_var(ctx, module, &expr->load_global.var, &type) ==
@@ -658,17 +649,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       } else {
         result = WASM_ERROR;
       }
-      break;
-    }
-    case WASM_EXPR_TYPE_STORE_WRAP: {
-      WasmType type = expr->store.op.type;
-      result |= check_align(ctx, &expr->loc, expr->store.align);
-      result |= check_offset(ctx, &expr->loc, expr->store.offset);
-      result |= check_type(ctx, &expr->loc, type, expected_type, desc);
-      result |= check_expr(ctx, module, func, expr->store.addr, WASM_TYPE_I32,
-                           " of store index");
-      result |= check_expr(ctx, module, func, expr->store.value, type,
-                           " of store value");
       break;
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
