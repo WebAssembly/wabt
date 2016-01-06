@@ -3,5 +3,5 @@
   (func (param i32 i64)
     (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
 (;; STDERR ;;;
-parse/expr/bad-call-too-many.txt:4:5: too many parameters to function. got 3, expected 2
+parse/expr/bad-call-too-many.txt:4:5: too many parameters to function in call. got 3, expected 2
 ;;; STDERR ;;)

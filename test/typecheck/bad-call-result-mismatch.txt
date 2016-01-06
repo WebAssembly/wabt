@@ -1,0 +1,16 @@
+;;; ERROR: 1
+(module
+  (import $import "foo" "bar" (result f32))
+  (func $direct (result i64) (i64.const 0))
+  (type $indirect (func (result i64)))
+  (table $direct)
+
+  (func
+    (if (call $direct) (nop))
+    (if (call_import $import) (nop))
+    (if (call_indirect $indirect (i32.const 0)) (nop))))
+(;; STDERR ;;;
+typecheck/bad-call-result-mismatch.txt:9:9: type mismatch of call result. got i64, expected i32
+typecheck/bad-call-result-mismatch.txt:10:9: type mismatch of call_import result. got f32, expected i32
+typecheck/bad-call-result-mismatch.txt:11:9: type mismatch of call_indirect result. got i64, expected i32
+;;; STDERR ;;)

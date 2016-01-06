@@ -373,8 +373,9 @@ static WasmResult check_call(WasmCheckContext* ctx,
   int actual_args = args->size;
   int expected_args = param_types->size;
   if (expected_args == actual_args) {
-    result |= check_type(ctx, loc, result_type, expected_type, "");
     char buffer[100];
+    snprintf(buffer, 100, " of %s result", desc);
+    result |= check_type(ctx, loc, result_type, expected_type, buffer);
     int i;
     for (i = 0; i < actual_args; ++i) {
       snprintf(buffer, 100, " of argument %d of %s", i, desc);
@@ -382,8 +383,9 @@ static WasmResult check_call(WasmCheckContext* ctx,
                            param_types->data[i], buffer);
     }
   } else {
-    print_error(ctx, loc, "too %s parameters to function. got %d, expected %d",
-                actual_args > expected_args ? "many" : "few", actual_args,
+    print_error(ctx, loc,
+                "too %s parameters to function in %s. got %d, expected %d",
+                actual_args > expected_args ? "many" : "few", desc, actual_args,
                 expected_args);
     result = WASM_ERROR;
   }
