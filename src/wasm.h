@@ -558,7 +558,8 @@ int wasm_parse(WasmScanner scanner, WasmParser* parser);
 WasmResult wasm_check_script(WasmScript*);
 WasmResult wasm_write_binary(WasmWriter*, WasmScript*, WasmWriteBinaryOptions*);
 
-int wasm_string_slices_are_equal(WasmStringSlice*, WasmStringSlice*);
+int wasm_string_slices_are_equal(const WasmStringSlice*,
+                                 const WasmStringSlice*);
 
 void wasm_destroy_case_vector_and_elements(WasmCaseVector*);
 void wasm_destroy_case(WasmCase*);
@@ -584,23 +585,27 @@ void wasm_destroy_type_bindings(WasmTypeBindings*);
 void wasm_destroy_var_vector_and_elements(WasmVarVector*);
 void wasm_destroy_var(WasmVar*);
 
-int wasm_get_index_from_var(WasmBindingVector* bindings, WasmVar* var);
-int wasm_get_func_index_by_var(WasmModule* module, WasmVar* var);
-int wasm_get_func_type_index_by_var(WasmModule* module, WasmVar* var);
-int wasm_get_global_index_by_var(WasmModule* module, WasmVar* var);
-int wasm_get_import_index_by_var(WasmModule* module, WasmVar* var);
-int wasm_get_local_index_by_var(WasmFunc* func, WasmVar* var);
+int wasm_get_index_from_var(const WasmBindingVector* bindings,
+                            const WasmVar* var);
+int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
+int wasm_get_func_type_index_by_var(const WasmModule* module,
+                                    const WasmVar* var);
+int wasm_get_global_index_by_var(const WasmModule* module, const WasmVar* var);
+int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
+int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
 
-WasmFuncPtr wasm_get_func_by_var(WasmModule* module, WasmVar* var);
-WasmFuncTypePtr wasm_get_func_type_by_var(WasmModule* module, WasmVar* var);
-WasmImportPtr wasm_get_import_by_var(WasmModule* module, WasmVar* var);
-WasmExportPtr wasm_get_export_by_name(WasmModule* module,
-                                      WasmStringSlice* name);
+WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
+WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
+                                          const WasmVar* var);
+WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
+                                     const WasmVar* var);
+WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
+                                      const WasmStringSlice* name);
 
 WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
                                      WasmTypeBindings* src) WARN_UNUSED;
 
-int wasm_func_is_exported(WasmModule* module, WasmFunc* func);
+int wasm_func_is_exported(const WasmModule* module, const WasmFunc* func);
 EXTERN_C_END
 
 #endif /* WASM_H_ */
