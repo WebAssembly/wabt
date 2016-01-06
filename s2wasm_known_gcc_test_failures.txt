@@ -779,6 +779,20 @@ wchar_t-1.c.s.wast
 zero-struct-1.c.s.wast
 zero-struct-2.c.s.wast
 zerolen-1.c.s.wast
+20020402-3.c.s.wast
+20030717-1.c.s.wast
+20050125-1.c.s.wast
+20050613-1.c.s.wast
+20090527-1.c.s.wast
+20100708-1.c.s.wast
+loop-13.c.s.wast
+loop-2e.c.s.wast
+pr15262.c.s.wast
+pr33669.c.s.wast
+pr43560.c.s.wast
+pr53084.c.s.wast
+pr63209.c.s.wast
+restrict-1.c.s.wast
 
 # Unknown
 20011109-1.c.s.wast
