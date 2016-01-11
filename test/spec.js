@@ -41,7 +41,7 @@ function createModule(a) {
     print: print,
     write: function(offset, count) { wasmWrite(memory, offset, count); }
   };
-  var module = WASM.instantiateModule(u8a.buffer, ffi);
+  var module = _WASMEXP_.instantiateModule(u8a.buffer, ffi);
   memory = module.memory;
   return module;
 }
