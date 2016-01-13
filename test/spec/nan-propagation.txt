@@ -2,11 +2,6 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/nan-propagation.wast
 (;; STDOUT ;;;
-third_party/testsuite/nan-propagation.wast:33: $assert_return_0 failed.
-third_party/testsuite/nan-propagation.wast:40: $assert_return_6 failed.
-third_party/testsuite/nan-propagation.wast:47: $assert_return_12 failed.
-third_party/testsuite/nan-propagation.wast:54: $assert_return_18 failed.
-third_party/testsuite/nan-propagation.wast:61: $assert_return_24 failed.
 third_party/testsuite/nan-propagation.wast:65: $assert_return_27 failed.
 third_party/testsuite/nan-propagation.wast:66: $assert_return_28 failed.
 third_party/testsuite/nan-propagation.wast:67: $assert_return_29 failed.
@@ -17,11 +12,6 @@ third_party/testsuite/nan-propagation.wast:72: $assert_return_33 failed.
 third_party/testsuite/nan-propagation.wast:73: $assert_return_34 failed.
 third_party/testsuite/nan-propagation.wast:74: $assert_return_35 failed.
 third_party/testsuite/nan-propagation.wast:75: $assert_return_36 failed.
-third_party/testsuite/nan-propagation.wast:132: $assert_return_0 failed.
-third_party/testsuite/nan-propagation.wast:139: $assert_return_6 failed.
-third_party/testsuite/nan-propagation.wast:146: $assert_return_12 failed.
-third_party/testsuite/nan-propagation.wast:153: $assert_return_18 failed.
-third_party/testsuite/nan-propagation.wast:160: $assert_return_24 failed.
 third_party/testsuite/nan-propagation.wast:164: $assert_return_27 failed.
 third_party/testsuite/nan-propagation.wast:165: $assert_return_28 failed.
 third_party/testsuite/nan-propagation.wast:166: $assert_return_29 failed.
@@ -32,5 +22,5 @@ third_party/testsuite/nan-propagation.wast:171: $assert_return_33 failed.
 third_party/testsuite/nan-propagation.wast:172: $assert_return_34 failed.
 third_party/testsuite/nan-propagation.wast:173: $assert_return_35 failed.
 third_party/testsuite/nan-propagation.wast:174: $assert_return_36 failed.
-80/110 tests passed.
+90/110 tests passed.
 ;;; STDOUT ;;)
