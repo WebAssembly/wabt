@@ -21,7 +21,7 @@ if (arguments.length != 1) {
 
 var ffi = { print: print };
 var buffer = readbuffer(arguments[0]);
-var module = WASM.instantiateModule(buffer, ffi);
+var module = _WASMEXP_.instantiateModule(buffer, ffi);
 
 var name;
 var f;

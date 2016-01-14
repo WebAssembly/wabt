@@ -7,7 +7,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 WasmModule::Instantiate(): 
-  var module = WASM.instantiateModule(u8a.buffer, ffi);
-                    ^
+  var module = _WASMEXP_.instantiateModule(u8a.buffer, ffi);
+                         ^
 
 ;;; STDOUT ;;)
