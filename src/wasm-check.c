@@ -147,6 +147,22 @@ static WasmResult check_import_var(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
+static WasmResult check_import_or_func_var(WasmCheckContext* ctx,
+                                           WasmModule* module,
+                                           WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->import_bindings, var);
+  if (index >= 0 && index < module->imports.size)
+    return WASM_OK;
+
+  index = wasm_get_index_from_var(&module->func_bindings, var);
+  if (index >= 0 && index < module->funcs.size)
+    return WASM_OK;
+
+  print_error(ctx, &var->loc, "import or function variable out of range (max %d)",
+              module->funcs.size);
+  return WASM_ERROR;
+}
+
 static WasmResult check_func_type_var(WasmCheckContext* ctx,
                                       WasmModule* module,
                                       WasmVar* var,
@@ -781,7 +797,7 @@ static WasmResult check_table(WasmCheckContext* ctx,
   WasmResult result = WASM_OK;
   int i;
   for (i = 0; i < table->size; ++i)
-    result |= check_func_var(ctx, module, &table->data[i], NULL);
+    result |= check_import_or_func_var(ctx, module, &table->data[i]);
   return result;
 }
 

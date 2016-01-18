@@ -55,7 +55,7 @@
 000001b: 0900                                       ; FIXUP func body size
 0000026: 05                                         ; WASM_SECTION_FUNCTION_TABLE
 0000027: 01                                         ; num function table entries
-0000028: 0100                                       ; function table entry
+0000028: 0100                                       ; function table entry, function
 000002a: 06                                         ; WASM_SECTION_END
 ; import 0
 000000e: 2b00 0000                                  ; FIXUP import name offset
