@@ -629,7 +629,7 @@ static const char *const yytname[] =
   "expr1", "expr_opt", "non_empty_expr_list", "expr_list", "target",
   "target_list", "case", "case_list", "param_list", "result", "local_list",
   "type_use", "func_info", "func", "start", "segment_address", "segment",
-  "segment_list", "initial_size", "max_size", "memory", "type_def",
+  "segment_list", "initial_pages", "max_pages", "memory", "type_def",
   "table", "import", "export", "export_memory", "module_fields", "module",
   "cmd", "cmd_list", "const", "const_opt", "const_list", "script",
   "script_start", YY_NULLPTR
@@ -3507,7 +3507,7 @@ yyreduce:
     {
       if (!read_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32), 0))
         wasm_parser_error(&(yylsp[0]), lexer, parser,
-                          "invalid initial memory size \"%.*s\"", (yyvsp[0].text).length,
+                          "invalid initial memory pages \"%.*s\"", (yyvsp[0].text).length,
                           (yyvsp[0].text).start);
     }
 #line 3514 "src/wasm-bison-parser.c" /* yacc.c:1646  */
@@ -3518,7 +3518,7 @@ yyreduce:
     {
       if (!read_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32), 0))
         wasm_parser_error(&(yylsp[0]), lexer, parser,
-                          "invalid max memory size \"%.*s\"", (yyvsp[0].text).length,
+                          "invalid max memory pages \"%.*s\"", (yyvsp[0].text).length,
                           (yyvsp[0].text).start);
     }
 #line 3525 "src/wasm-bison-parser.c" /* yacc.c:1646  */
@@ -3528,8 +3528,8 @@ yyreduce:
 #line 1110 "src/wasm-bison-parser.y" /* yacc.c:1646  */
     {
       (yyval.memory).loc = (yylsp[-4]);
-      (yyval.memory).initial_size = (yyvsp[-3].u32);
-      (yyval.memory).max_size = (yyvsp[-2].u32);
+      (yyval.memory).initial_pages = (yyvsp[-3].u32);
+      (yyval.memory).max_pages = (yyvsp[-2].u32);
       (yyval.memory).segments = (yyvsp[-1].segments);
     }
 #line 3536 "src/wasm-bison-parser.c" /* yacc.c:1646  */
@@ -3539,8 +3539,8 @@ yyreduce:
 #line 1116 "src/wasm-bison-parser.y" /* yacc.c:1646  */
     {
       (yyval.memory).loc = (yylsp[-3]);
-      (yyval.memory).initial_size = (yyvsp[-2].u32);
-      (yyval.memory).max_size = (yyval.memory).initial_size;
+      (yyval.memory).initial_pages = (yyvsp[-2].u32);
+      (yyval.memory).max_pages = (yyval.memory).initial_pages;
       (yyval.memory).segments = (yyvsp[-1].segments);
     }
 #line 3547 "src/wasm-bison-parser.c" /* yacc.c:1646  */

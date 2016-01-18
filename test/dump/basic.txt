@@ -1,6 +1,6 @@
 ;;; FLAGS: -dv
 (module
-  (memory 4)
+  (memory 1)
   (func $f (param i32 i32) (result i32)
     (i32.store (i32.const 0) (i32.add (i32.load (i32.const 0)) (i32.const 1)))
     (i32.add (get_local 0) (get_local 1)))
@@ -9,8 +9,8 @@
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
-0000009: 02                                         ; min mem size log 2
-000000a: 02                                         ; max mem size log 2
+0000009: 01                                         ; min mem pages
+000000a: 01                                         ; max mem pages
 000000b: 01                                         ; export mem
 000000c: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 000000d: 01                                         ; num signatures
@@ -52,7 +52,7 @@
 0000032: 66                                         ; export name
 0000033: 00                                         ; \0
 ;; dump
-0000000: 0061 736d 0a00 0000 0002 0201 0101 0201  
+0000000: 0061 736d 0a00 0000 0001 0101 0101 0201  
 0000010: 0101 0201 0000 0010 0033 0009 0040 2a00  
 0000020: 0900 0901 400e 000e 0109 0100 0032 0000  
 0000030: 0006 6600                                

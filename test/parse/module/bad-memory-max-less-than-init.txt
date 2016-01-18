@@ -1,7 +1,7 @@
 ;;; ERROR: 1
-(module (memory 100 50))
+(module (memory 2 1))
 (;; STDERR ;;;
-parse/module/bad-memory-max-less-than-init.txt:2:10: max size (50) must be greater than or equal to initial size (100)
-(module (memory 100 50))
+parse/module/bad-memory-max-less-than-init.txt:2:10: max pages (1) must be greater than or equal to initial pages (2)
+(module (memory 2 1))
          ^^^^^^
 ;;; STDERR ;;)

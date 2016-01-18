@@ -807,11 +807,11 @@ static WasmResult check_memory(WasmCheckContext* ctx,
                                WasmModule* module,
                                WasmMemory* memory) {
   WasmResult result = WASM_OK;
-  if (memory->max_size < memory->initial_size) {
+  if (memory->max_pages < memory->initial_pages) {
     print_error(
         ctx, &memory->loc,
-        "max size (%u) must be greater than or equal to initial size (%u)",
-        memory->max_size, memory->initial_size);
+        "max pages (%u) must be greater than or equal to initial pages (%u)",
+        memory->max_pages, memory->initial_pages);
     result = WASM_ERROR;
   }
   int i;
@@ -824,15 +824,15 @@ static WasmResult check_memory(WasmCheckContext* ctx,
                   segment->addr, last_end);
       result = WASM_ERROR;
     }
-    if (segment->addr > memory->initial_size) {
+    if (segment->addr > memory->initial_pages * 65536) {
       print_error(ctx, &segment->loc,
                   "address (%u) greater than initial memory size (%u)",
-                  segment->addr, memory->initial_size);
+                  segment->addr, memory->initial_pages * 65536);
       result = WASM_ERROR;
-    } else if (segment->addr + segment->size > memory->initial_size) {
+    } else if (segment->addr + segment->size > memory->initial_pages * 65536) {
       print_error(ctx, &segment->loc,
                   "segment ends past the end of initial memory size (%u)",
-                  memory->initial_size);
+                  memory->initial_pages * 65536);
       result = WASM_ERROR;
     }
     last_end = segment->addr + segment->size;

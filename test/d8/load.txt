@@ -1,6 +1,6 @@
 ;;; EXE: test/run-d8.py
 (module
-  (memory 128
+  (memory 1
       (segment 0 "\ff\ff\ff\ff")
       (segment 4 "\00\00\ce\41")
       (segment 8 "\00\00\00\00\00\ff\8f\40")

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
-(module (memory 100 (segment 200 "hi")))
+(module (memory 1 (segment 80000 "hi")))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-address-oob.txt:2:22: address (200) greater than initial memory size (100)
-(module (memory 100 (segment 200 "hi")))
-                     ^^^^^^^
+parse/module/bad-memory-segment-address-oob.txt:2:20: address (80000) greater than initial memory size (65536)
+(module (memory 1 (segment 80000 "hi")))
+                   ^^^^^^^
 ;;; STDERR ;;)

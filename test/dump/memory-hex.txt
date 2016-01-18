@@ -1,13 +1,13 @@
 ;;; FLAGS: -dv
 (module
-  (memory 100
+  (memory 1
     (segment 0 "\00\01\02\03\04\05\06\07\08\09\0a")))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
-0000009: 07                                         ; min mem size log 2
-000000a: 07                                         ; max mem size log 2
+0000009: 01                                         ; min mem pages
+000000a: 01                                         ; max mem pages
 000000b: 01                                         ; export mem
 000000c: 04                                         ; WASM_BINARY_SECTION_DATA_SEGMENTS
 000000d: 01                                         ; num data segments
@@ -21,7 +21,7 @@
 0000012: 1c00 0000                                  ; FIXUP segment data offset
 000001c: 0001 0203 0405 0607 0809 0a                ; segment data
 ;; dump
-0000000: 0061 736d 0a00 0000 0007 0701 0401 0000  
+0000000: 0061 736d 0a00 0000 0001 0101 0401 0000  
 0000010: 0000 1c00 0000 0b00 0000 0106 0001 0203  
 0000020: 0405 0607 0809 0a                        
 ;;; STDOUT ;;)

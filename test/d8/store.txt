@@ -1,6 +1,6 @@
 ;;; EXE: test/run-d8.py
 (module
-  (memory 128)
+  (memory 1)
 
   (export "i32_store8" $i32_store8)
   (func $i32_store8 (result i32)

@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/memory.wast:11:12: max size (0) must be greater than or equal to initial size (1)
+  third_party/testsuite/memory.wast:11:12: max pages (0) must be greater than or equal to initial pages (1)
   (module (memory 1 0))
            ^^^^^^
 assert_invalid error:
@@ -11,21 +11,21 @@ assert_invalid error:
   (module (memory 0 0 (segment 0 "a")))
                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:19:45: address (500) greater than initial memory size (100)
-  (module (memory 100 1000 (segment 0 "a") (segment 500 "b")))
-                                            ^^^^^^^
+  third_party/testsuite/memory.wast:19:40: address (98304) greater than initial memory size (65536)
+  (module (memory 1 2 (segment 0 "a") (segment 98304 "b")))
+                                       ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:23:47: address (0) less than end of previous segment (3)
-  (module (memory 100 1000 (segment 0 "abc") (segment 0 "def")))
-                                              ^^^^^^^
+  third_party/testsuite/memory.wast:23:42: address (0) less than end of previous segment (3)
+  (module (memory 1 2 (segment 0 "abc") (segment 0 "def")))
+                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:27:46: address (0) less than end of previous segment (5)
-  (module (memory 100 1000 (segment 3 "ab") (segment 0 "de")))
-                                             ^^^^^^^
+  third_party/testsuite/memory.wast:27:41: address (0) less than end of previous segment (5)
+  (module (memory 1 2 (segment 3 "ab") (segment 0 "de")))
+                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:31:61: address (1) less than end of previous segment (3)
-  (module (memory 100 1000 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
-                                                            ^^^^^^^
+  third_party/testsuite/memory.wast:31:56: address (1) less than end of previous segment (3)
+  (module (memory 1 2 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
+                                                       ^^^^^^^
 assert_invalid error:
   third_party/testsuite/memory.wast:42:28: alignment must be power-of-two
   (module (memory 0) (func (i64.load align=0 (i32.const 0))))

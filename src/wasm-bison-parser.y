@@ -155,7 +155,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<text> bind_var labeling literal quoted_text
 %type<type> result
 %type<types> value_type_list
-%type<u32> align initial_size max_size segment_address
+%type<u32> align initial_pages max_pages segment_address
 %type<u64> offset
 %type<vars> table var_list
 %type<var> start type_use var
@@ -1088,35 +1088,35 @@ segment_list :
     }
 ;
 
-initial_size :
+initial_pages :
     INT {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid initial memory size \"%.*s\"", $1.length,
+                          "invalid initial memory pages \"%.*s\"", $1.length,
                           $1.start);
     }
 ;
 
-max_size :
+max_pages :
     INT {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid max memory size \"%.*s\"", $1.length,
+                          "invalid max memory pages \"%.*s\"", $1.length,
                           $1.start);
     }
 ;
 
 memory :
-    LPAR MEMORY initial_size max_size segment_list RPAR {
+    LPAR MEMORY initial_pages max_pages segment_list RPAR {
       $$.loc = @2;
-      $$.initial_size = $3;
-      $$.max_size = $4;
+      $$.initial_pages = $3;
+      $$.max_pages = $4;
       $$.segments = $5;
     }
-  | LPAR MEMORY initial_size segment_list RPAR {
+  | LPAR MEMORY initial_pages segment_list RPAR {
       $$.loc = @2;
-      $$.initial_size = $3;
-      $$.max_size = $$.initial_size;
+      $$.initial_pages = $3;
+      $$.max_pages = $$.initial_pages;
       $$.segments = $4;
     }
 ;
