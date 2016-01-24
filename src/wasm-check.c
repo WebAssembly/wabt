@@ -339,25 +339,10 @@ static WasmResult check_br(WasmCheckContext* ctx,
   if (check_label_var(ctx, ctx->top_label, var, &node) != WASM_OK)
     return WASM_ERROR;
 
-  if (node->expected_type != WASM_TYPE_VOID) {
-    if (expr) {
-      return check_expr(ctx, module, func, expr, node->expected_type, desc);
-    } else {
-      print_error(
-          ctx, loc,
-          "arity mismatch%s. label expects non-void, but br value is empty",
-          desc);
-      return WASM_ERROR;
-    }
-  } else if (expr) {
-    print_error(
-        ctx, loc,
-        "arity mismatch%s. label expects void, but br value is non-empty",
-        desc);
-    return WASM_ERROR;
-  } else {
-    return WASM_OK;
-  }
+  if (expr)
+    return check_expr(ctx, module, func, expr, node->expected_type, desc);
+
+  return check_type(ctx, loc, WASM_TYPE_VOID, node->expected_type, desc);
 }
 
 static WasmResult check_call(WasmCheckContext* ctx,

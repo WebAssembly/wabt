@@ -2,10 +2,10 @@
 (module
   (func (local f32)
     (set_local 0
-      (block
+      (block $1
         (if_else (i32.const 0)
-          (br)
+          (br $1)
           (f32.const 0.0))))))
 (;; STDERR ;;;
-typecheck/bad-if-value-void.txt:7:11: arity mismatch of br value. label expects non-void, but br value is empty
+typecheck/bad-if-value-void.txt:7:11: type mismatch of br value. got void, expected f32
 ;;; STDERR ;;)

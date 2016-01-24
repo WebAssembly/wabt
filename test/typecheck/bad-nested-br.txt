@@ -12,5 +12,5 @@
     ;; return statement here, or a value returned from (br $outer).
   ))
 (;; STDERR ;;;
-typecheck/bad-nested-br.txt:8:13: arity mismatch of br value. label expects non-void, but br value is empty
+typecheck/bad-nested-br.txt:8:13: type mismatch of br value. got void, expected i32
 ;;; STDERR ;;)
