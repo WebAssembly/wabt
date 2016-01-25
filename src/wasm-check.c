@@ -301,12 +301,6 @@ static WasmResult push_label(WasmCheckContext* ctx,
                              WasmType expected_type,
                              const char* desc) {
   WasmResult result = WASM_OK;
-  if (label->start && find_label_by_name(ctx->top_label, label)) {
-    print_error(ctx, loc, "redefinition of label \"%.*s\"", label->length,
-                label->start);
-    /* add it anyway */
-    result = WASM_ERROR;
-  }
   node->label = label;
   node->next = ctx->top_label;
   node->expected_type = expected_type;
