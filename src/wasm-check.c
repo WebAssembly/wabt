@@ -612,8 +612,15 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     case WASM_EXPR_TYPE_RETURN:
       if (expr->return_.expr) {
-        result |= check_expr(ctx, module, func, expr->return_.expr,
-                             func->result_type, " of return");
+        if (func->result_type == WASM_TYPE_VOID) {
+          print_error(ctx, &expr->loc,
+                      "arity mismatch of return. function expects void, but "
+                      "return value is non-empty");
+          result = WASM_ERROR;
+        } else {
+          result |= check_expr(ctx, module, func, expr->return_.expr,
+                               func->result_type, " of return");
+        }
       } else {
         result |= check_type(ctx, &expr->loc, WASM_TYPE_VOID, func->result_type,
                              desc);
