@@ -145,7 +145,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<text> bind_var labeling literal quoted_text text
 %type<type> result
 %type<types> value_type_list
-%type<u32> align
+%type<u32> align initial_size max_size segment_address
 %type<u64> offset
 %type<vars> table var_list
 %type<var> type_use var
@@ -1071,15 +1071,21 @@ func :
 
 /* Modules */
 
+segment_address :
+    INT {
+      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+        wasm_error(&@1, scanner, parser,
+                   "invalid memory segment address \"%.*s\"", $1.length,
+                   $1.start);
+    }
+;
+
 segment :
-    LPAR SEGMENT INT string_contents RPAR {
+    LPAR SEGMENT segment_address string_contents RPAR {
       $$.loc = @2;
       $$.data = $4.data;
       $$.size = $4.size;
-      if (!read_int32($3.start, $3.start + $3.length, &$$.addr, 0))
-        wasm_error(&@3, scanner, parser,
-                   "invalid memory segment address \"%.*s\"", $3.length,
-                   $3.start);
+      $$.addr = $3;
     }
 ;
 segment_list :
@@ -1090,22 +1096,32 @@ segment_list :
     }
 ;
 
+initial_size :
+    INT {
+      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+        wasm_error(&@1, scanner, parser, "invalid initial memory size \"%.*s\"",
+                   $1.length, $1.start);
+    }
+;
+
+max_size :
+    INT {
+      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+        wasm_error(&@1, scanner, parser, "invalid max memory size \"%.*s\"",
+                   $1.length, $1.start);
+    }
+;
+
 memory :
-    LPAR MEMORY INT INT segment_list RPAR {
+    LPAR MEMORY initial_size max_size segment_list RPAR {
       $$.loc = @2;
-      if (!read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0))
-        wasm_error(&@3, scanner, parser, "invalid initial memory size \"%.*s\"",
-                   $3.length, $3.start);
-      if (!read_int32($4.start, $4.start + $4.length, &$$.max_size, 0))
-        wasm_error(&@4, scanner, parser, "invalid max memory size \"%.*s\"",
-                   $4.length, $4.start);
+      $$.initial_size = $3;
+      $$.max_size = $4;
       $$.segments = $5;
     }
-  | LPAR MEMORY INT segment_list RPAR {
+  | LPAR MEMORY initial_size segment_list RPAR {
       $$.loc = @2;
-      if (!read_int32($3.start, $3.start + $3.length, &$$.initial_size, 0))
-        wasm_error(&@3, scanner, parser, "invalid initial memory size \"%.*s\"",
-                   $3.length, $3.start);
+      $$.initial_size = $3;
       $$.max_size = $$.initial_size;
       $$.segments = $4;
     }
