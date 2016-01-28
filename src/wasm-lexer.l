@@ -128,8 +128,8 @@ SIGN      [+-]?
 NUM       {SIGN}{DIGIT}+
 HEXNUM    {SIGN}"0x"{HEXDIGIT}+
 INT       {NUM}|{HEXNUM}
-FLOAT0    {NUM}\.{DIGIT}+
-FLOAT1    {NUM}(\.{DIGIT}+)?[eE]{NUM}
+FLOAT0    {NUM}\.{DIGIT}*
+FLOAT1    {NUM}(\.{DIGIT}*)?[eE]{NUM}
 HEXFLOAT  {SIGN}"0x"{HEXDIGIT}+\.?{HEXDIGIT}*p{SIGN}{DIGIT}+
 INFINITY  {SIGN}"infinity"
 NAN       {SIGN}"nan"|{SIGN}"nan:0x"{HEXDIGIT}+

@@ -13,6 +13,7 @@
     (i64.const 0xffffffffffffffff)
 
     (f32.const 0.0)
+    (f32.const 1.e15)
     (f32.const 1e23)
     (f32.const 1.234567e-5)
     (f32.const nan)
@@ -28,6 +29,7 @@
     (f32.const 0x1.921fb6p+2)
 
     (f64.const 0.0)
+    (f64.const 1.e300)
     (f64.const -0.987654321)
     (f64.const 6.283185307179586)
     (f64.const nan)
