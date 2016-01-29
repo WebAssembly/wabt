@@ -859,9 +859,14 @@ static void write_expr(WasmWriteContext* ctx,
        A = Alignment. If set, access is unaligned
        a = Atomicity. 0 = None, 1 = SeqCst, 2 = Acq, 3 = Rel
        o = Offset. If set, offset field follows access byte */
-      /* TODO(binji): support alignment */
       out_opcode(ws, s_mem_opcodes[expr->load.op.op_type]);
+      uint32_t natural_align = expr->load.op.size >> 3;
+      uint32_t align = expr->load.align;
       uint8_t access = 0;
+      if (align == WASM_USE_NATURAL_ALIGNMENT)
+        align = natural_align;
+      if (align != natural_align)
+        access |= 0x80;
       if (expr->load.offset)
         access |= 0x10;
       out_u8(ws, access, "load access byte");
@@ -915,7 +920,13 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_STORE: {
       /* See LOAD for format of memory access byte */
       out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
+      uint32_t natural_align = expr->load.op.size >> 3;
+      uint32_t align = expr->load.align;
       uint8_t access = 0;
+      if (align == WASM_USE_NATURAL_ALIGNMENT)
+        align = natural_align;
+      if (align != natural_align)
+        access |= 0x80;
       if (expr->store.offset)
         access |= 0x10;
       out_u8(ws, access, "store access byte");
