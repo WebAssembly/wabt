@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <alloca.h>
 #include <assert.h>
 #include <memory.h>
 #include <stdarg.h>
@@ -377,10 +378,17 @@ static WasmResult check_call(WasmCheckContext* ctx,
                            param_types->data[i], buffer);
     }
   } else {
+    char* func_name = "";
+    if (func->name.start) {
+      char length = func->name.length + 10;
+      func_name = alloca(length);
+      snprintf(func_name, length, " \"%.*s\"", func->name.length,
+               func->name.start);
+    }
     print_error(ctx, loc,
-                "too %s parameters to function in %s. got %d, expected %d",
-                actual_args > expected_args ? "many" : "few", desc, actual_args,
-                expected_args);
+                "too %s parameters to function%s in %s. got %d, expected %d",
+                actual_args > expected_args ? "many" : "few", func_name, desc,
+                actual_args, expected_args);
     result = WASM_ERROR;
   }
   return result;

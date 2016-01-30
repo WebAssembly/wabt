@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module
+  (import "foo" "bar" (param i32 i32))
+  (func $quux
+    (call_import 0 (i32.const 0) (i32.const 1) (i32.const 2))))
+(;; STDERR ;;;
+parse/expr/bad-callimport-too-many-named.txt:5:5: too many parameters to function "$quux" in call_import. got 3, expected 2
+;;; STDERR ;;)
