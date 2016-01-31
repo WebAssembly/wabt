@@ -6,7 +6,8 @@
 
 ;;; STDERR ;;)
 (;; STDOUT ;;;
-WasmModule::Instantiate(): 
+WasmModule::Instantiate(): Compiling WASM function #4:select_trap_l failed:Result = ExprSelect[2] expected type <end>, found ExprI8Const of type i32 @+0
+
   var module = _WASMEXP_.instantiateModule(u8a.buffer, ffi);
                          ^
 
