@@ -1,0 +1,349 @@
+;;; FLAGS: -dv
+(module
+  (func
+    (loop $outer $inner
+      ;; 1..64
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+
+      ;; 65..128
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+
+      ;; 129..192
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+
+      ;; 193..256
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+
+      ;; 257..258
+      (br $outer)
+      (br $inner))))
+(;; STDOUT ;;;
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 01                                         ; num signatures
+; signature 0
+0000002: 00                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000005: 01                                         ; num functions
+; function 0
+0000006: 00                                         ; func flags
+0000007: 0000                                       ; func signature index
+0000009: 0000                                       ; func body size
+000000b: 02                                         ; OPCODE_LOOP
+000000c: 02                                         ; num expressions (byte 1)
+000000d: 01                                         ; OPCODE_BLOCK
+000000e: ff                                         ; num expressions (byte 0)
+000000f: 00                                         ; OPCODE_NOP
+0000010: 00                                         ; OPCODE_NOP
+0000011: 00                                         ; OPCODE_NOP
+0000012: 00                                         ; OPCODE_NOP
+0000013: 00                                         ; OPCODE_NOP
+0000014: 00                                         ; OPCODE_NOP
+0000015: 00                                         ; OPCODE_NOP
+0000016: 00                                         ; OPCODE_NOP
+0000017: 00                                         ; OPCODE_NOP
+0000018: 00                                         ; OPCODE_NOP
+0000019: 00                                         ; OPCODE_NOP
+000001a: 00                                         ; OPCODE_NOP
+000001b: 00                                         ; OPCODE_NOP
+000001c: 00                                         ; OPCODE_NOP
+000001d: 00                                         ; OPCODE_NOP
+000001e: 00                                         ; OPCODE_NOP
+000001f: 00                                         ; OPCODE_NOP
+0000020: 00                                         ; OPCODE_NOP
+0000021: 00                                         ; OPCODE_NOP
+0000022: 00                                         ; OPCODE_NOP
+0000023: 00                                         ; OPCODE_NOP
+0000024: 00                                         ; OPCODE_NOP
+0000025: 00                                         ; OPCODE_NOP
+0000026: 00                                         ; OPCODE_NOP
+0000027: 00                                         ; OPCODE_NOP
+0000028: 00                                         ; OPCODE_NOP
+0000029: 00                                         ; OPCODE_NOP
+000002a: 00                                         ; OPCODE_NOP
+000002b: 00                                         ; OPCODE_NOP
+000002c: 00                                         ; OPCODE_NOP
+000002d: 00                                         ; OPCODE_NOP
+000002e: 00                                         ; OPCODE_NOP
+000002f: 00                                         ; OPCODE_NOP
+0000030: 00                                         ; OPCODE_NOP
+0000031: 00                                         ; OPCODE_NOP
+0000032: 00                                         ; OPCODE_NOP
+0000033: 00                                         ; OPCODE_NOP
+0000034: 00                                         ; OPCODE_NOP
+0000035: 00                                         ; OPCODE_NOP
+0000036: 00                                         ; OPCODE_NOP
+0000037: 00                                         ; OPCODE_NOP
+0000038: 00                                         ; OPCODE_NOP
+0000039: 00                                         ; OPCODE_NOP
+000003a: 00                                         ; OPCODE_NOP
+000003b: 00                                         ; OPCODE_NOP
+000003c: 00                                         ; OPCODE_NOP
+000003d: 00                                         ; OPCODE_NOP
+000003e: 00                                         ; OPCODE_NOP
+000003f: 00                                         ; OPCODE_NOP
+0000040: 00                                         ; OPCODE_NOP
+0000041: 00                                         ; OPCODE_NOP
+0000042: 00                                         ; OPCODE_NOP
+0000043: 00                                         ; OPCODE_NOP
+0000044: 00                                         ; OPCODE_NOP
+0000045: 00                                         ; OPCODE_NOP
+0000046: 00                                         ; OPCODE_NOP
+0000047: 00                                         ; OPCODE_NOP
+0000048: 00                                         ; OPCODE_NOP
+0000049: 00                                         ; OPCODE_NOP
+000004a: 00                                         ; OPCODE_NOP
+000004b: 00                                         ; OPCODE_NOP
+000004c: 00                                         ; OPCODE_NOP
+000004d: 00                                         ; OPCODE_NOP
+000004e: 00                                         ; OPCODE_NOP
+000004f: 00                                         ; OPCODE_NOP
+0000050: 00                                         ; OPCODE_NOP
+0000051: 00                                         ; OPCODE_NOP
+0000052: 00                                         ; OPCODE_NOP
+0000053: 00                                         ; OPCODE_NOP
+0000054: 00                                         ; OPCODE_NOP
+0000055: 00                                         ; OPCODE_NOP
+0000056: 00                                         ; OPCODE_NOP
+0000057: 00                                         ; OPCODE_NOP
+0000058: 00                                         ; OPCODE_NOP
+0000059: 00                                         ; OPCODE_NOP
+000005a: 00                                         ; OPCODE_NOP
+000005b: 00                                         ; OPCODE_NOP
+000005c: 00                                         ; OPCODE_NOP
+000005d: 00                                         ; OPCODE_NOP
+000005e: 00                                         ; OPCODE_NOP
+000005f: 00                                         ; OPCODE_NOP
+0000060: 00                                         ; OPCODE_NOP
+0000061: 00                                         ; OPCODE_NOP
+0000062: 00                                         ; OPCODE_NOP
+0000063: 00                                         ; OPCODE_NOP
+0000064: 00                                         ; OPCODE_NOP
+0000065: 00                                         ; OPCODE_NOP
+0000066: 00                                         ; OPCODE_NOP
+0000067: 00                                         ; OPCODE_NOP
+0000068: 00                                         ; OPCODE_NOP
+0000069: 00                                         ; OPCODE_NOP
+000006a: 00                                         ; OPCODE_NOP
+000006b: 00                                         ; OPCODE_NOP
+000006c: 00                                         ; OPCODE_NOP
+000006d: 00                                         ; OPCODE_NOP
+000006e: 00                                         ; OPCODE_NOP
+000006f: 00                                         ; OPCODE_NOP
+0000070: 00                                         ; OPCODE_NOP
+0000071: 00                                         ; OPCODE_NOP
+0000072: 00                                         ; OPCODE_NOP
+0000073: 00                                         ; OPCODE_NOP
+0000074: 00                                         ; OPCODE_NOP
+0000075: 00                                         ; OPCODE_NOP
+0000076: 00                                         ; OPCODE_NOP
+0000077: 00                                         ; OPCODE_NOP
+0000078: 00                                         ; OPCODE_NOP
+0000079: 00                                         ; OPCODE_NOP
+000007a: 00                                         ; OPCODE_NOP
+000007b: 00                                         ; OPCODE_NOP
+000007c: 00                                         ; OPCODE_NOP
+000007d: 00                                         ; OPCODE_NOP
+000007e: 00                                         ; OPCODE_NOP
+000007f: 00                                         ; OPCODE_NOP
+0000080: 00                                         ; OPCODE_NOP
+0000081: 00                                         ; OPCODE_NOP
+0000082: 00                                         ; OPCODE_NOP
+0000083: 00                                         ; OPCODE_NOP
+0000084: 00                                         ; OPCODE_NOP
+0000085: 00                                         ; OPCODE_NOP
+0000086: 00                                         ; OPCODE_NOP
+0000087: 00                                         ; OPCODE_NOP
+0000088: 00                                         ; OPCODE_NOP
+0000089: 00                                         ; OPCODE_NOP
+000008a: 00                                         ; OPCODE_NOP
+000008b: 00                                         ; OPCODE_NOP
+000008c: 00                                         ; OPCODE_NOP
+000008d: 00                                         ; OPCODE_NOP
+000008e: 00                                         ; OPCODE_NOP
+000008f: 00                                         ; OPCODE_NOP
+0000090: 00                                         ; OPCODE_NOP
+0000091: 00                                         ; OPCODE_NOP
+0000092: 00                                         ; OPCODE_NOP
+0000093: 00                                         ; OPCODE_NOP
+0000094: 00                                         ; OPCODE_NOP
+0000095: 00                                         ; OPCODE_NOP
+0000096: 00                                         ; OPCODE_NOP
+0000097: 00                                         ; OPCODE_NOP
+0000098: 00                                         ; OPCODE_NOP
+0000099: 00                                         ; OPCODE_NOP
+000009a: 00                                         ; OPCODE_NOP
+000009b: 00                                         ; OPCODE_NOP
+000009c: 00                                         ; OPCODE_NOP
+000009d: 00                                         ; OPCODE_NOP
+000009e: 00                                         ; OPCODE_NOP
+000009f: 00                                         ; OPCODE_NOP
+00000a0: 00                                         ; OPCODE_NOP
+00000a1: 00                                         ; OPCODE_NOP
+00000a2: 00                                         ; OPCODE_NOP
+00000a3: 00                                         ; OPCODE_NOP
+00000a4: 00                                         ; OPCODE_NOP
+00000a5: 00                                         ; OPCODE_NOP
+00000a6: 00                                         ; OPCODE_NOP
+00000a7: 00                                         ; OPCODE_NOP
+00000a8: 00                                         ; OPCODE_NOP
+00000a9: 00                                         ; OPCODE_NOP
+00000aa: 00                                         ; OPCODE_NOP
+00000ab: 00                                         ; OPCODE_NOP
+00000ac: 00                                         ; OPCODE_NOP
+00000ad: 00                                         ; OPCODE_NOP
+00000ae: 00                                         ; OPCODE_NOP
+00000af: 00                                         ; OPCODE_NOP
+00000b0: 00                                         ; OPCODE_NOP
+00000b1: 00                                         ; OPCODE_NOP
+00000b2: 00                                         ; OPCODE_NOP
+00000b3: 00                                         ; OPCODE_NOP
+00000b4: 00                                         ; OPCODE_NOP
+00000b5: 00                                         ; OPCODE_NOP
+00000b6: 00                                         ; OPCODE_NOP
+00000b7: 00                                         ; OPCODE_NOP
+00000b8: 00                                         ; OPCODE_NOP
+00000b9: 00                                         ; OPCODE_NOP
+00000ba: 00                                         ; OPCODE_NOP
+00000bb: 00                                         ; OPCODE_NOP
+00000bc: 00                                         ; OPCODE_NOP
+00000bd: 00                                         ; OPCODE_NOP
+00000be: 00                                         ; OPCODE_NOP
+00000bf: 00                                         ; OPCODE_NOP
+00000c0: 00                                         ; OPCODE_NOP
+00000c1: 00                                         ; OPCODE_NOP
+00000c2: 00                                         ; OPCODE_NOP
+00000c3: 00                                         ; OPCODE_NOP
+00000c4: 00                                         ; OPCODE_NOP
+00000c5: 00                                         ; OPCODE_NOP
+00000c6: 00                                         ; OPCODE_NOP
+00000c7: 00                                         ; OPCODE_NOP
+00000c8: 00                                         ; OPCODE_NOP
+00000c9: 00                                         ; OPCODE_NOP
+00000ca: 00                                         ; OPCODE_NOP
+00000cb: 00                                         ; OPCODE_NOP
+00000cc: 00                                         ; OPCODE_NOP
+00000cd: 00                                         ; OPCODE_NOP
+00000ce: 00                                         ; OPCODE_NOP
+00000cf: 00                                         ; OPCODE_NOP
+00000d0: 00                                         ; OPCODE_NOP
+00000d1: 00                                         ; OPCODE_NOP
+00000d2: 00                                         ; OPCODE_NOP
+00000d3: 00                                         ; OPCODE_NOP
+00000d4: 00                                         ; OPCODE_NOP
+00000d5: 00                                         ; OPCODE_NOP
+00000d6: 00                                         ; OPCODE_NOP
+00000d7: 00                                         ; OPCODE_NOP
+00000d8: 00                                         ; OPCODE_NOP
+00000d9: 00                                         ; OPCODE_NOP
+00000da: 00                                         ; OPCODE_NOP
+00000db: 00                                         ; OPCODE_NOP
+00000dc: 00                                         ; OPCODE_NOP
+00000dd: 00                                         ; OPCODE_NOP
+00000de: 00                                         ; OPCODE_NOP
+00000df: 00                                         ; OPCODE_NOP
+00000e0: 00                                         ; OPCODE_NOP
+00000e1: 00                                         ; OPCODE_NOP
+00000e2: 00                                         ; OPCODE_NOP
+00000e3: 00                                         ; OPCODE_NOP
+00000e4: 00                                         ; OPCODE_NOP
+00000e5: 00                                         ; OPCODE_NOP
+00000e6: 00                                         ; OPCODE_NOP
+00000e7: 00                                         ; OPCODE_NOP
+00000e8: 00                                         ; OPCODE_NOP
+00000e9: 00                                         ; OPCODE_NOP
+00000ea: 00                                         ; OPCODE_NOP
+00000eb: 00                                         ; OPCODE_NOP
+00000ec: 00                                         ; OPCODE_NOP
+00000ed: 00                                         ; OPCODE_NOP
+00000ee: 00                                         ; OPCODE_NOP
+00000ef: 00                                         ; OPCODE_NOP
+00000f0: 00                                         ; OPCODE_NOP
+00000f1: 00                                         ; OPCODE_NOP
+00000f2: 00                                         ; OPCODE_NOP
+00000f3: 00                                         ; OPCODE_NOP
+00000f4: 00                                         ; OPCODE_NOP
+00000f5: 00                                         ; OPCODE_NOP
+00000f6: 00                                         ; OPCODE_NOP
+00000f7: 00                                         ; OPCODE_NOP
+00000f8: 00                                         ; OPCODE_NOP
+00000f9: 00                                         ; OPCODE_NOP
+00000fa: 00                                         ; OPCODE_NOP
+00000fb: 00                                         ; OPCODE_NOP
+00000fc: 00                                         ; OPCODE_NOP
+00000fd: 00                                         ; OPCODE_NOP
+00000fe: 00                                         ; OPCODE_NOP
+00000ff: 00                                         ; OPCODE_NOP
+0000100: 00                                         ; OPCODE_NOP
+0000101: 00                                         ; OPCODE_NOP
+0000102: 00                                         ; OPCODE_NOP
+0000103: 00                                         ; OPCODE_NOP
+0000104: 00                                         ; OPCODE_NOP
+0000105: 00                                         ; OPCODE_NOP
+0000106: 00                                         ; OPCODE_NOP
+0000107: 00                                         ; OPCODE_NOP
+0000108: 00                                         ; OPCODE_NOP
+0000109: 00                                         ; OPCODE_NOP
+000010a: 00                                         ; OPCODE_NOP
+000010b: 00                                         ; OPCODE_NOP
+000010c: 00                                         ; OPCODE_NOP
+000010d: 00                                         ; OPCODE_NOP
+000010e: 01                                         ; OPCODE_BLOCK
+000010f: 03                                         ; num expressions (byte 0)
+0000110: 00                                         ; OPCODE_NOP
+0000111: 06                                         ; OPCODE_BR
+0000112: 02                                         ; break depth
+0000113: 00                                         ; OPCODE_NOP
+0000114: 06                                         ; OPCODE_BR
+0000115: 01                                         ; break depth
+0000116: 00                                         ; OPCODE_NOP
+0000009: 0c01                                       ; FIXUP func body size
+0000117: 06                                         ; WASM_SECTION_END
+;; dump
+0000000: 0101 0000 0201 0000 000c 0102 0201 ff00  
+0000010: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000020: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000030: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000040: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000050: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000060: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000070: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000080: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000090: 0000 0000 0000 0000 0000 0000 0000 0000  
+00000a0: 0000 0000 0000 0000 0000 0000 0000 0000  
+00000b0: 0000 0000 0000 0000 0000 0000 0000 0000  
+00000c0: 0000 0000 0000 0000 0000 0000 0000 0000  
+00000d0: 0000 0000 0000 0000 0000 0000 0000 0000  
+00000e0: 0000 0000 0000 0000 0000 0000 0000 0000  
+00000f0: 0000 0000 0000 0000 0000 0000 0000 0000  
+0000100: 0000 0000 0000 0000 0000 0000 0000 0103  
+0000110: 0006 0200 0601 0006                      
+;;; STDOUT ;;)

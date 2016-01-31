@@ -423,33 +423,79 @@ static void out_data_at(WasmWriterState* writer_state,
         offset, src, size, writer_state->writer->user_data);
 }
 
+static void out_u8(WasmWriterState* writer_state,
+                   uint32_t value,
+                   const char* desc) {
+  assert(value <= UINT8_MAX);
+  uint8_t value8 = value;
+  out_data_at(writer_state, writer_state->offset, &value8, sizeof(value8),
+              desc);
+  writer_state->offset += sizeof(value8);
+}
+
 /* TODO(binji): endianness */
-#define OUT_TYPE(name, ctype)                                              \
-  static void out_##name(WasmWriterState* writer_state, ctype value,       \
-                         const char* desc) {                               \
-    out_data_at(writer_state, writer_state->offset, &value, sizeof(value), \
-                desc);                                                     \
-    writer_state->offset += sizeof(value);                                 \
-  }
+static void out_u16(WasmWriterState* writer_state,
+                   uint32_t value,
+                   const char* desc) {
+  assert(value <= UINT16_MAX);
+  uint16_t value16 = value;
+  out_data_at(writer_state, writer_state->offset, &value16, sizeof(value16),
+              desc);
+  writer_state->offset += sizeof(value16);
+}
 
-OUT_TYPE(u8, uint8_t)
-OUT_TYPE(u16, uint16_t)
-OUT_TYPE(u32, uint32_t)
-OUT_TYPE(u64, uint64_t)
-OUT_TYPE(f32, float)
-OUT_TYPE(f64, double)
+static void out_u32(WasmWriterState* writer_state,
+                   uint32_t value,
+                   const char* desc) {
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  writer_state->offset += sizeof(value);
+}
 
-#undef OUT_TYPE
+static void out_u64(WasmWriterState* writer_state,
+                   uint64_t value,
+                   const char* desc) {
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  writer_state->offset += sizeof(value);
+}
 
-#define OUT_AT_TYPE(name, ctype)                                              \
-  static void out_##name##_at(WasmWriterState* writer_state, uint32_t offset, \
-                              ctype value, const char* desc) {                \
-    out_data_at(writer_state, offset, &value, sizeof(value), desc);           \
-  }
+static void out_f32(WasmWriterState* writer_state,
+                      float value,
+                      const char* desc) {
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  writer_state->offset += sizeof(value);
+}
 
-OUT_AT_TYPE(u8, uint8_t)
-OUT_AT_TYPE(u16, uint16_t)
-OUT_AT_TYPE(u32, uint32_t)
+static void out_f64(WasmWriterState* writer_state,
+                    double value,
+                    const char* desc) {
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  writer_state->offset += sizeof(value);
+}
+
+static void out_u8_at(WasmWriterState* writer_state,
+                      uint32_t offset,
+                      uint32_t value,
+                      const char* desc) {
+  assert(value <= UINT8_MAX);
+  uint8_t value8 = value;
+  out_data_at(writer_state, offset, &value8, sizeof(value8), desc);
+}
+
+static void out_u16_at(WasmWriterState* writer_state,
+                       uint32_t offset,
+                       uint32_t value,
+                       const char* desc) {
+  assert(value <= UINT16_MAX);
+  uint16_t value16 = value;
+  out_data_at(writer_state, offset, &value16, sizeof(value16), desc);
+}
+
+static void out_u32_at(WasmWriterState* writer_state,
+                       uint32_t offset,
+                       uint32_t value,
+                       const char* desc) {
+  out_data_at(writer_state, offset, &value, sizeof(value), desc);
+}
 
 #undef OUT_AT_TYPE
 
@@ -512,7 +558,7 @@ static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
                                          WasmStringSlice* name) {
   WasmLabelNode* node = top_label;
   while (node) {
-    if (wasm_string_slices_are_equal(node->label, name))
+    if (node->label && wasm_string_slices_are_equal(node->label, name))
       return node;
     node = node->next;
   }
@@ -541,7 +587,7 @@ static void push_label(WasmWriteContext* ctx,
                        WasmLabelNode* node,
                        WasmLabel* label,
                        WasmForceLabel force_label) {
-  if (label->start || force_label) {
+  if ((label && label->start) || force_label) {
     node->label = label;
     node->next = ctx->top_label;
     node->depth = ctx->max_depth;
@@ -713,6 +759,11 @@ static void write_expr_list(WasmWriteContext* ctx,
                             WasmFunc* func,
                             WasmExprPtrVector* exprs);
 
+static void write_expr_list_with_count(WasmWriteContext* ctx,
+                                       WasmModule* module,
+                                       WasmFunc* func,
+                                       WasmExprPtrVector* exprs);
+
 static void write_expr(WasmWriteContext* ctx,
                        WasmModule* module,
                        WasmFunc* func,
@@ -728,8 +779,7 @@ static void write_expr(WasmWriteContext* ctx,
       WasmLabelNode node;
       push_label(ctx, &node, &expr->block.label, WASM_FORCE_LABEL);
       out_opcode(ws, WASM_OPCODE_BLOCK);
-      out_u8(ws, expr->block.exprs.size, "num expressions");
-      write_expr_list(ctx, module, func, &expr->block.exprs);
+      write_expr_list_with_count(ctx, module, func, &expr->block.exprs);
       pop_label(ctx, &expr->block.label);
       break;
     }
@@ -800,7 +850,7 @@ static void write_expr(WasmWriteContext* ctx,
           memcpy(&i32, &expr->const_.u32, sizeof(i32));
           if (i32 >= -128 && i32 <= 127) {
             out_opcode(ws, WASM_OPCODE_I8_CONST);
-            out_u8(ws, expr->const_.u32, "u8 literal");
+            out_u8(ws, (uint8_t)expr->const_.u32, "u8 literal");
           } else {
             out_opcode(ws, WASM_OPCODE_I32_CONST);
             out_u32(ws, expr->const_.u32, "u32 literal");
@@ -887,8 +937,7 @@ static void write_expr(WasmWriteContext* ctx,
       push_label(ctx, &outer, &expr->loop.outer, WASM_NO_FORCE_LABEL);
       push_label(ctx, &inner, &expr->loop.inner, WASM_FORCE_LABEL);
       out_opcode(ws, WASM_OPCODE_LOOP);
-      out_u8(ws, expr->loop.exprs.size, "num expressions");
-      write_expr_list(ctx, module, func, &expr->loop.exprs);
+      write_expr_list_with_count(ctx, module, func, &expr->loop.exprs);
       pop_label(ctx, &expr->loop.inner);
       pop_label(ctx, &expr->loop.outer);
       break;
@@ -964,8 +1013,7 @@ static void write_expr(WasmWriteContext* ctx,
         if (case_->exprs.size) {
           if (case_->exprs.size > 1) {
             out_opcode(ws, WASM_OPCODE_BLOCK);
-            out_u8(ws, case_->exprs.size, "num expressions");
-            write_expr_list(ctx, module, func, &case_->exprs);
+            write_expr_list_with_count(ctx, module, func, &case_->exprs);
           } else {
             write_expr(ctx, module, func, case_->exprs.data[0]);
           }
@@ -994,6 +1042,117 @@ static void write_expr_list(WasmWriteContext* ctx,
   for (i = 0; i < exprs->size; ++i)
     write_expr(ctx, module, func, exprs->data[i]);
 }
+
+typedef enum WasmWriteBlockOpcode {
+  WASM_DONT_WRITE_BLOCK_OPCODE,
+  WASM_WRITE_BLOCK_OPCODE,
+} WasmWriteBlockOpcode;
+
+static void write_expr_list_block_with_max_count_256(
+    WasmWriteContext* ctx,
+    WasmModule* module,
+    WasmFunc* func,
+    uint32_t count,
+    WasmExprPtr* exprs,
+    WasmWriteBlockOpcode write_block_opcode) {
+  assert(count < 256);
+  WasmWriterState* ws = &ctx->writer_state;
+  WasmLabelNode node;
+  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
+    out_opcode(ws, WASM_OPCODE_BLOCK);
+    push_label(ctx, &node, NULL, WASM_FORCE_LABEL);
+  }
+  out_u8(ws, count, "num expressions (byte 0)");
+  int i;
+  for (i = 0; i < count; ++i) {
+    write_expr(ctx, module, func, *exprs);
+    exprs++;
+  }
+  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
+    pop_label(ctx, NULL);
+}
+
+static void write_expr_list_block_with_max_count_65536(
+    WasmWriteContext* ctx,
+    WasmModule* module,
+    WasmFunc* func,
+    uint32_t count,
+    WasmExprPtr* exprs,
+    WasmWriteBlockOpcode write_block_opcode) {
+  assert(count < 65536);
+  WasmWriterState* ws = &ctx->writer_state;
+  uint8_t byte1 = (count + UINT8_MAX) >> 8;  /* round up. */
+  WasmLabelNode node;
+  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
+    out_opcode(ws, WASM_OPCODE_BLOCK);
+    push_label(ctx, &node, NULL, WASM_FORCE_LABEL);
+  }
+  out_u8(ws, byte1, "num expressions (byte 1)");
+  int i;
+  for (i = 0; i < byte1; ++i) {
+    uint8_t byte0 = (count > UINT8_MAX ? UINT8_MAX : count) & 255;
+    write_expr_list_block_with_max_count_256(ctx, module, func, byte0, exprs,
+                                             WASM_WRITE_BLOCK_OPCODE);
+    exprs += byte0;
+    count -= byte0;
+  }
+  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
+    pop_label(ctx, NULL);
+  assert(count == 0);
+}
+
+static void write_expr_list_block_with_max_count_16777216(
+    WasmWriteContext* ctx,
+    WasmModule* module,
+    WasmFunc* func,
+    uint32_t count,
+    WasmExprPtr* exprs,
+    WasmWriteBlockOpcode write_block_opcode) {
+  assert(count < 16777216);
+  WasmWriterState* ws = &ctx->writer_state;
+  uint8_t byte2 = (count + UINT16_MAX) >> 16;  /* round up. */
+  WasmLabelNode node;
+  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
+    out_opcode(ws, WASM_OPCODE_BLOCK);
+    push_label(ctx, &node, NULL, WASM_FORCE_LABEL);
+  }
+  out_u8(ws, byte2, "num expressions (byte 2)");
+  int i;
+  for (i = 0; i < byte2; ++i) {
+    uint16_t bytes10 = count > UINT16_MAX ? UINT16_MAX : count;
+    write_expr_list_block_with_max_count_65536(ctx, module, func, bytes10,
+                                               exprs, WASM_WRITE_BLOCK_OPCODE);
+    exprs += bytes10;
+    count -= bytes10;
+  }
+  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
+    pop_label(ctx, NULL);
+  assert(count == 0);
+}
+
+static void write_expr_list_with_count(WasmWriteContext* ctx,
+                                       WasmModule* module,
+                                       WasmFunc* func,
+                                       WasmExprPtrVector* exprs) {
+  /* The current v8 binary format only uses u8 for the number of expressions.
+   * If the value is greater than that, we need to nest blocks. */
+  WasmWriterState* ws = &ctx->writer_state;
+  uint32_t count = exprs->size;
+  WasmExprPtr* expr_ptr = exprs->data;
+  if (count < UINT8_MAX) {
+    out_u8(ws, count, "num expressions");
+    write_expr_list(ctx, module, func, exprs);
+  } else if (count < UINT16_MAX) {
+    write_expr_list_block_with_max_count_65536(
+        ctx, module, func, count, expr_ptr, WASM_DONT_WRITE_BLOCK_OPCODE);
+  } else if (count < 256*256*256) {
+    write_expr_list_block_with_max_count_16777216(
+        ctx, module, func, count, expr_ptr, WASM_DONT_WRITE_BLOCK_OPCODE);
+  } else {
+    assert(0);  /* 2**24 expressions? really? */
+  }
+}
+
 
 static void write_func(WasmWriteContext* ctx,
                        WasmModule* module,
