@@ -1285,7 +1285,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->table->size; ++i) {
       int index = wasm_get_func_index_by_var(module, &module->table->data[i]);
       assert(index >= 0 && index < module->funcs.size);
-      out_u16(ws, index, "function table entry");
+      out_u16(ws, index + module->imports.size, "function table entry");
     }
   }
 

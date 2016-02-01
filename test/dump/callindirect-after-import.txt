@@ -1,0 +1,68 @@
+;;; FLAGS: -dv
+
+;; Make sure the function table entries skip over the imported functions.
+(module
+  (type $f_v (func (param f32)))
+
+  ;; function 0
+  (import $imported "foo" "bar" (result i32))
+
+  ;; function 1
+  (func $indirect (param f32)
+    (nop))
+
+  ;; function 2
+  (func $caller
+    (call_indirect $f_v (i32.const 0) (f32.const 1.0)))
+
+  ;; should be function 1.
+  (table $indirect))
+(;; STDOUT ;;;
+0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000001: 03                                         ; num signatures
+; signature 0
+0000002: 01                                         ; num params
+0000003: 00                                         ; result_type
+0000004: 03                                         ; param type
+; signature 1
+0000005: 00                                         ; num params
+0000006: 01                                         ; result_type
+; signature 2
+0000007: 00                                         ; num params
+0000008: 00                                         ; result_type
+0000009: 02                                         ; WASM_SECTION_FUNCTIONS
+000000a: 03                                         ; num functions
+; import header 0
+000000b: 03                                         ; import flags
+000000c: 0100                                       ; import signature index
+000000e: 0000 0000                                  ; import name offset
+; function 0
+0000012: 00                                         ; func flags
+0000013: 0000                                       ; func signature index
+0000015: 0000                                       ; func body size
+0000017: 00                                         ; OPCODE_NOP
+0000015: 0100                                       ; FIXUP func body size
+; function 1
+0000018: 00                                         ; func flags
+0000019: 0200                                       ; func signature index
+000001b: 0000                                       ; func body size
+000001d: 13                                         ; OPCODE_CALL_INDIRECT
+000001e: 00                                         ; signature index
+000001f: 09                                         ; OPCODE_I8_CONST
+0000020: 00                                         ; u8 literal
+0000021: 0d                                         ; OPCODE_F32_CONST
+0000022: 0000 803f                                  ; f32 literal
+000001b: 0900                                       ; FIXUP func body size
+0000026: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+0000027: 01                                         ; num function table entries
+0000028: 0100                                       ; function table entry
+000002a: 06                                         ; WASM_SECTION_END
+; import 0
+000000e: 2b00 0000                                  ; FIXUP import name offset
+000002b: 6261 72                                    ; import name
+000002e: 00                                         ; \0
+;; dump
+0000000: 0103 0100 0300 0100 0002 0303 0100 2b00  
+0000010: 0000 0000 0001 0000 0002 0009 0013 0009  
+0000020: 000d 0000 803f 0501 0100 0662 6172 00    
+;;; STDOUT ;;)
