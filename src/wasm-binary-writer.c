@@ -915,7 +915,7 @@ static void write_expr(WasmWriteContext* ctx,
       uint8_t access = 0;
       if (align == WASM_USE_NATURAL_ALIGNMENT)
         align = natural_align;
-      if (align != natural_align)
+      if (align < natural_align)
         access |= 0x80;
       if (expr->load.offset)
         access |= 0x10;
@@ -974,7 +974,7 @@ static void write_expr(WasmWriteContext* ctx,
       uint8_t access = 0;
       if (align == WASM_USE_NATURAL_ALIGNMENT)
         align = natural_align;
-      if (align != natural_align)
+      if (align < natural_align)
         access |= 0x80;
       if (expr->store.offset)
         access |= 0x10;
