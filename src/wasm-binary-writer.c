@@ -274,12 +274,6 @@ static uint8_t s_binary_opcodes[] = {
 };
 STATIC_ASSERT(ARRAY_SIZE(s_binary_opcodes) == WASM_NUM_BINARY_OP_TYPES);
 
-static uint8_t s_cast_opcodes[] = {
-    WASM_OPCODE_F32_REINTERPRET_I32, WASM_OPCODE_F64_REINTERPRET_I64,
-    WASM_OPCODE_I32_REINTERPRET_F32, WASM_OPCODE_I64_REINTERPRET_F64,
-};
-STATIC_ASSERT(ARRAY_SIZE(s_cast_opcodes) == WASM_NUM_CAST_OP_TYPES);
-
 static uint8_t s_compare_opcodes[] = {
     WASM_OPCODE_F32_EQ,   WASM_OPCODE_F32_GE,   WASM_OPCODE_F32_GT,
     WASM_OPCODE_F32_LE,   WASM_OPCODE_F32_LT,   WASM_OPCODE_F32_NE,
@@ -296,17 +290,19 @@ static uint8_t s_compare_opcodes[] = {
 STATIC_ASSERT(ARRAY_SIZE(s_compare_opcodes) == WASM_NUM_COMPARE_OP_TYPES);
 
 static uint8_t s_convert_opcodes[] = {
-    WASM_OPCODE_F32_SCONVERT_I32, WASM_OPCODE_F32_SCONVERT_I64,
-    WASM_OPCODE_F32_UCONVERT_I32, WASM_OPCODE_F32_UCONVERT_I64,
-    WASM_OPCODE_F32_CONVERT_F64,  WASM_OPCODE_F64_SCONVERT_I32,
-    WASM_OPCODE_F64_SCONVERT_I64, WASM_OPCODE_F64_UCONVERT_I32,
-    WASM_OPCODE_F64_UCONVERT_I64, WASM_OPCODE_F64_CONVERT_F32,
-    WASM_OPCODE_I32_SCONVERT_F32, WASM_OPCODE_I32_SCONVERT_F64,
-    WASM_OPCODE_I32_UCONVERT_F32, WASM_OPCODE_I32_UCONVERT_F64,
-    WASM_OPCODE_I32_CONVERT_I64,  WASM_OPCODE_I64_SCONVERT_I32,
-    WASM_OPCODE_I64_UCONVERT_I32, WASM_OPCODE_I64_SCONVERT_F32,
-    WASM_OPCODE_I64_SCONVERT_F64, WASM_OPCODE_I64_UCONVERT_F32,
-    WASM_OPCODE_I64_UCONVERT_F64,
+    WASM_OPCODE_F32_SCONVERT_I32,    WASM_OPCODE_F32_SCONVERT_I64,
+    WASM_OPCODE_F32_UCONVERT_I32,    WASM_OPCODE_F32_UCONVERT_I64,
+    WASM_OPCODE_F32_CONVERT_F64,     WASM_OPCODE_F64_SCONVERT_I32,
+    WASM_OPCODE_F64_SCONVERT_I64,    WASM_OPCODE_F64_UCONVERT_I32,
+    WASM_OPCODE_F64_UCONVERT_I64,    WASM_OPCODE_F64_CONVERT_F32,
+    WASM_OPCODE_I32_SCONVERT_F32,    WASM_OPCODE_I32_SCONVERT_F64,
+    WASM_OPCODE_I32_UCONVERT_F32,    WASM_OPCODE_I32_UCONVERT_F64,
+    WASM_OPCODE_I32_CONVERT_I64,     WASM_OPCODE_I64_SCONVERT_I32,
+    WASM_OPCODE_I64_UCONVERT_I32,    WASM_OPCODE_I64_SCONVERT_F32,
+    WASM_OPCODE_I64_SCONVERT_F64,    WASM_OPCODE_I64_UCONVERT_F32,
+    WASM_OPCODE_I64_UCONVERT_F64,    WASM_OPCODE_F32_REINTERPRET_I32,
+    WASM_OPCODE_F64_REINTERPRET_I64, WASM_OPCODE_I32_REINTERPRET_F32,
+    WASM_OPCODE_I64_REINTERPRET_F64,
 };
 STATIC_ASSERT(ARRAY_SIZE(s_convert_opcodes) == WASM_NUM_CONVERT_OP_TYPES);
 
@@ -834,10 +830,6 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr_list(ctx, module, func, &expr->call_indirect.args);
       break;
     }
-    case WASM_EXPR_TYPE_CAST:
-      out_opcode(ws, s_cast_opcodes[expr->cast.op.op_type]);
-      write_expr(ctx, module, func, expr->cast.expr);
-      break;
     case WASM_EXPR_TYPE_COMPARE:
       out_opcode(ws, s_compare_opcodes[expr->compare.op.op_type]);
       write_expr(ctx, module, func, expr->compare.left);
@@ -1472,21 +1464,21 @@ static WasmExpr* create_reinterpret_expr(WasmType type, WasmExpr* expr) {
     return NULL;
   }
 
-  WasmExpr* result = new_expr(WASM_EXPR_TYPE_CAST);
+  WasmExpr* result = new_expr(WASM_EXPR_TYPE_CONVERT);
   if (!result)
     return NULL;
   switch (type) {
     case WASM_TYPE_F32:
-      result->cast.op.op_type = WASM_CAST_OP_TYPE_I32_REINTERPRET_F32;
+      result->convert.op.op_type = WASM_CONVERT_OP_TYPE_I32_REINTERPRET_F32;
       break;
     case WASM_TYPE_F64:
-      result->cast.op.op_type = WASM_CAST_OP_TYPE_I64_REINTERPRET_F64;
+      result->convert.op.op_type = WASM_CONVERT_OP_TYPE_I64_REINTERPRET_F64;
       break;
     default:
       assert(0);
       break;
   }
-  result->cast.expr = expr;
+  result->convert.expr = expr;
   return result;
 }
 

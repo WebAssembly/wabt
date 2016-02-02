@@ -225,9 +225,6 @@ static void wasm_destroy_expr(WasmExpr* expr) {
       wasm_destroy_expr_ptr(&expr->call_indirect.expr);
       DESTROY_VECTOR_AND_ELEMENTS(expr->call_indirect.args, expr_ptr);
       break;
-    case WASM_EXPR_TYPE_CAST:
-      wasm_destroy_expr_ptr(&expr->cast.expr);
-      break;
     case WASM_EXPR_TYPE_COMPARE:
       wasm_destroy_expr_ptr(&expr->compare.left);
       wasm_destroy_expr_ptr(&expr->compare.right);

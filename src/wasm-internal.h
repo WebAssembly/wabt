@@ -33,7 +33,6 @@ typedef union WasmToken {
   WasmBinaryOp binary;
   WasmCompareOp compare;
   WasmConvertOp convert;
-  WasmCastOp cast;
   WasmMemOp mem;
 
   /* non-terminals */

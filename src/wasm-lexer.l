@@ -96,11 +96,6 @@ typedef struct WasmScannerExtra {
   yylval->convert.op_type = WASM_CONVERT_OP_TYPE_##type_##_##name##_##type2_; \
   yylval->convert.type2 = WASM_TYPE_##type2_
 
-#define CASTTYPE(type_, type2_)                                            \
-  TYPE_STRUCT(cast, type_);                                                \
-  yylval->cast.op_type = WASM_CAST_OP_TYPE_##type_##_REINTERPRET_##type2_; \
-  yylval->cast.type2 = WASM_TYPE_##type2_
-
 #define TOK(name) WASM_TOKEN_TYPE_##name
 
 %}
@@ -321,10 +316,10 @@ NAME      \${ATOM}
 "f64.convert_u/i64"   { CONVTYPE(F64, CONVERT_U, I64); return TOK(CONVERT); }
 "f64.promote/f32"     { CONVTYPE(F64, PROMOTE, F32); return TOK(CONVERT); }
 "f32.demote/f64"      { CONVTYPE(F32, DEMOTE, F64); return TOK(CONVERT); }
-"f32.reinterpret/i32" { CASTTYPE(F32, I32); return TOK(CAST); }
-"i32.reinterpret/f32" { CASTTYPE(I32, F32); return TOK(CAST); }
-"f64.reinterpret/i64" { CASTTYPE(F64, I64); return TOK(CAST); }
-"i64.reinterpret/f64" { CASTTYPE(I64, F64); return TOK(CAST); }
+"f32.reinterpret/i32" { CONVTYPE(F32, REINTERPRET, I32); return TOK(CONVERT); }
+"i32.reinterpret/f32" { CONVTYPE(I32, REINTERPRET, F32); return TOK(CONVERT); }
+"f64.reinterpret/i64" { CONVTYPE(F64, REINTERPRET, I64); return TOK(CONVERT); }
+"i64.reinterpret/f64" { CONVTYPE(I64, REINTERPRET, F64); return TOK(CONVERT); }
 "i32.select"          { TYPE(I32); return TOK(SELECT); }
 "i64.select"          { TYPE(I64); return TOK(SELECT); }
 "f32.select"          { TYPE(F32); return TOK(SELECT); }

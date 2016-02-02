@@ -102,7 +102,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %token NOP BLOCK IF IF_ELSE LOOP BR BR_IF TABLESWITCH CASE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
-%token CONST UNARY BINARY COMPARE CONVERT CAST SELECT
+%token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token FUNC TYPE PARAM RESULT LOCAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
 %token UNREACHABLE MEMORY_SIZE GROW_MEMORY HAS_FEATURE
@@ -111,7 +111,6 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %token EOF 0 "EOF"
 
 %type<binary> BINARY
-%type<cast> CAST
 %type<compare> COMPARE
 %type<convert> CONVERT
 %type<mem> LOAD STORE
@@ -461,12 +460,6 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       $$->convert.op = $1;
       $$->convert.expr = $2;
-    }
-  | CAST expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_CAST);
-      CHECK_ALLOC_NULL($$);
-      $$->cast.op = $1;
-      $$->cast.expr = $2;
     }
   | UNREACHABLE {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_UNREACHABLE);

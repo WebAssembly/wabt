@@ -210,16 +210,12 @@ typedef enum WasmConvertOpType {
   WASM_CONVERT_OP_TYPE_I64_TRUNC_S_F64,
   WASM_CONVERT_OP_TYPE_I64_TRUNC_U_F32,
   WASM_CONVERT_OP_TYPE_I64_TRUNC_U_F64,
+  WASM_CONVERT_OP_TYPE_F32_REINTERPRET_I32,
+  WASM_CONVERT_OP_TYPE_F64_REINTERPRET_I64,
+  WASM_CONVERT_OP_TYPE_I32_REINTERPRET_F32,
+  WASM_CONVERT_OP_TYPE_I64_REINTERPRET_F64,
   WASM_NUM_CONVERT_OP_TYPES,
 } WasmConvertOpType;
-
-typedef enum WasmCastOpType {
-  WASM_CAST_OP_TYPE_F32_REINTERPRET_I32,
-  WASM_CAST_OP_TYPE_F64_REINTERPRET_I64,
-  WASM_CAST_OP_TYPE_I32_REINTERPRET_F32,
-  WASM_CAST_OP_TYPE_I64_REINTERPRET_F64,
-  WASM_NUM_CAST_OP_TYPES,
-} WasmCastOpType;
 
 typedef struct WasmUnaryOp {
   WasmType type;
@@ -241,12 +237,6 @@ typedef struct WasmConvertOp {
   WasmConvertOpType op_type;
   WasmType type2;
 } WasmConvertOp;
-
-typedef struct WasmCastOp {
-  WasmType type;
-  WasmCastOpType op_type;
-  WasmType type2;
-} WasmCastOp;
 
 typedef struct WasmMemOp {
   WasmType type;
@@ -312,7 +302,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_CALL,
   WASM_EXPR_TYPE_CALL_IMPORT,
   WASM_EXPR_TYPE_CALL_INDIRECT,
-  WASM_EXPR_TYPE_CAST,
   WASM_EXPR_TYPE_COMPARE,
   WASM_EXPR_TYPE_CONST,
   WASM_EXPR_TYPE_CONVERT,
@@ -390,7 +379,6 @@ struct WasmExpr {
     struct { WasmType type; WasmExprPtr cond, true_, false_; } select;
     struct { WasmCompareOp op; WasmExprPtr left, right; } compare;
     struct { WasmConvertOp op; WasmExprPtr expr; } convert;
-    struct { WasmCastOp op; WasmExprPtr expr; } cast;
     struct { WasmExprPtr expr; } grow_memory;
     struct { WasmStringSlice text; } has_feature;
     struct { WasmVar var; } load_global;

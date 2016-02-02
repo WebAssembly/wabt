@@ -517,13 +517,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       }
       break;
     }
-    case WASM_EXPR_TYPE_CAST: {
-      WasmType type = expr->cast.op.type;
-      result |= check_type(ctx, &expr->loc, type, expected_type, desc);
-      result |= check_expr(ctx, module, func, expr->cast.expr,
-                           expr->cast.op.type2, " of cast op");
-      break;
-    }
     case WASM_EXPR_TYPE_COMPARE: {
       WasmType type = expr->convert.op.type;
       result |= check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type, desc);
