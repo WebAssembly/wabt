@@ -2,5 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/functions.wast
 (;; STDOUT ;;;
-1/1 tests passed.
+2/2 tests passed.
 ;;; STDOUT ;;)

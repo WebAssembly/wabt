@@ -2,5 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/float_literals.wast
 (;; STDOUT ;;;
-42/42 tests passed.
+44/44 tests passed.
 ;;; STDOUT ;;)

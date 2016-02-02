@@ -2,5 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/left-to-right.wast
 (;; STDOUT ;;;
-85/85 tests passed.
+93/93 tests passed.
 ;;; STDOUT ;;)
