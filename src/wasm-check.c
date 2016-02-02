@@ -590,17 +590,14 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer_node;
       WasmLabelNode inner_node;
-      int has_outer_label = expr->loop.inner.start != NULL;
-      if (has_outer_label)
-        result |= push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer,
-                             expected_type, "loop outer label");
+      result |= push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer,
+                           expected_type, "loop outer label");
       result |= push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
                            WASM_TYPE_VOID, "loop inner label");
       result |= check_exprs(ctx, module, func, &expr->loop.exprs, expected_type,
                             " of loop");
       pop_label(ctx);
-      if (has_outer_label)
-        pop_label(ctx);
+      pop_label(ctx);
       break;
     }
     case WASM_EXPR_TYPE_MEMORY_SIZE:

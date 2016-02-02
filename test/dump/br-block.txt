@@ -1,11 +1,11 @@
 ;;; FLAGS: -dv
 (module
-  (func                     ;; spec  v8
-    (block $outer           ;; 3     4
-      (loop                 ;; 2     2 (3 is exit)
-        (block              ;; 1     1
+  (func                     ;; depth
+    (block $outer           ;; 4
+      (loop                 ;; 2 loop, 3 exit
+        (block              ;; 1
           (i32.const 0)
-          (block $inner     ;; 0     0
+          (block $inner     ;; 0
             (br)
             (br 0)
             (br 1)
@@ -46,12 +46,12 @@
 000001f: 02                                         ; break depth
 0000020: 00                                         ; OPCODE_NOP
 0000021: 06                                         ; OPCODE_BR
-0000022: 04                                         ; break depth
+0000022: 03                                         ; break depth
 0000023: 00                                         ; OPCODE_NOP
 0000009: 1900                                       ; FIXUP func body size
 0000024: 06                                         ; WASM_SECTION_END
 ;; dump
 0000000: 0101 0000 0201 0000 0019 0001 0102 0101  
 0000010: 0209 0001 0506 0000 0600 0006 0100 0602  
-0000020: 0006 0400 06                             
+0000020: 0006 0300 06                             
 ;;; STDOUT ;;)

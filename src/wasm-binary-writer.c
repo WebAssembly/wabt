@@ -926,7 +926,7 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer;
       WasmLabelNode inner;
-      push_label(ctx, &outer, &expr->loop.outer, WASM_NO_FORCE_LABEL);
+      push_label(ctx, &outer, &expr->loop.outer, WASM_FORCE_LABEL);
       push_label(ctx, &inner, &expr->loop.inner, WASM_FORCE_LABEL);
       out_opcode(ws, WASM_OPCODE_LOOP);
       write_expr_list_with_count(ctx, module, func, &expr->loop.exprs);
