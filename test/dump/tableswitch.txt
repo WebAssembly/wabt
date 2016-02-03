@@ -1,12 +1,11 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (block
-      (tableswitch (i32.const 0)
-        (table (case 0) (case 1)) (br 0)
-        (case (i32.const 1) (i32.const 2))  ;; expression list
-        (case)  ;; fallthrough
-        (case (i32.const 3))))))
+    (tableswitch (i32.const 0)
+      (table (case 0) (case 1)) (br 0)
+      (case (i32.const 1) (i32.const 2))  ;; expression list
+      (case)  ;; fallthrough
+      (case (i32.const 3)))))
 (;; STDOUT ;;;
 0000000: 01                                         ; WASM_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
@@ -19,29 +18,27 @@
 0000006: 00                                         ; func flags
 0000007: 0000                                       ; func signature index
 0000009: 0000                                       ; func body size
-000000b: 01                                         ; OPCODE_BLOCK
-000000c: 01                                         ; num expressions
-000000d: 08                                         ; OPCODE_TABLESWITCH
-000000e: 0300                                       ; num cases
-0000010: 0300                                       ; num targets
-0000012: 0000                                       ; case index
-0000014: 0100                                       ; case index
-0000016: 0180                                       ; br depth
-0000018: 09                                         ; OPCODE_I8_CONST
-0000019: 00                                         ; u8 literal
-000001a: 01                                         ; OPCODE_BLOCK
-000001b: 02                                         ; num expressions
+000000b: 08                                         ; OPCODE_TABLESWITCH
+000000c: 0300                                       ; num cases
+000000e: 0300                                       ; num targets
+0000010: 0000                                       ; case index
+0000012: 0100                                       ; case index
+0000014: 0080                                       ; br depth
+0000016: 09                                         ; OPCODE_I8_CONST
+0000017: 00                                         ; u8 literal
+0000018: 01                                         ; OPCODE_BLOCK
+0000019: 02                                         ; num expressions
+000001a: 09                                         ; OPCODE_I8_CONST
+000001b: 01                                         ; u8 literal
 000001c: 09                                         ; OPCODE_I8_CONST
-000001d: 01                                         ; u8 literal
-000001e: 09                                         ; OPCODE_I8_CONST
-000001f: 02                                         ; u8 literal
-0000020: 00                                         ; WASM_OPCODE_NOP for fallthrough
-0000021: 09                                         ; OPCODE_I8_CONST
-0000022: 03                                         ; u8 literal
-0000009: 1800                                       ; FIXUP func body size
-0000023: 06                                         ; WASM_SECTION_END
+000001d: 02                                         ; u8 literal
+000001e: 00                                         ; WASM_OPCODE_NOP for fallthrough
+000001f: 09                                         ; OPCODE_I8_CONST
+0000020: 03                                         ; u8 literal
+0000009: 1600                                       ; FIXUP func body size
+0000021: 06                                         ; WASM_SECTION_END
 ;; dump
-0000000: 0101 0000 0201 0000 0018 0001 0108 0300  
-0000010: 0300 0000 0100 0180 0900 0102 0901 0902  
-0000020: 0009 0306                                
+0000000: 0101 0000 0201 0000 0016 0008 0300 0300  
+0000010: 0000 0100 0080 0900 0102 0901 0902 0009  
+0000020: 0306                                     
 ;;; STDOUT ;;)

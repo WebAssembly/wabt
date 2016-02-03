@@ -574,21 +574,14 @@ static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
   return node;
 }
 
-typedef enum WasmForceLabel {
-  WASM_NO_FORCE_LABEL,
-  WASM_FORCE_LABEL,
-} WasmForceLabel;
-
 static void push_label(WasmWriteContext* ctx,
                        WasmLabelNode* node,
-                       WasmLabel* label,
-                       WasmForceLabel force_label) {
-  if ((label && label->start) || force_label) {
-    node->label = label;
-    node->next = ctx->top_label;
-    node->depth = ctx->max_depth;
-    ctx->top_label = node;
-  }
+                       WasmLabel* label) {
+  assert(label);
+  node->label = label;
+  node->next = ctx->top_label;
+  node->depth = ctx->max_depth;
+  ctx->top_label = node;
   ctx->max_depth++;
 }
 
@@ -596,6 +589,14 @@ static void pop_label(WasmWriteContext* ctx, WasmLabel* label) {
   ctx->max_depth--;
   if (ctx->top_label && ctx->top_label->label == label)
     ctx->top_label = ctx->top_label->next;
+}
+
+static void push_implicit_block(WasmWriteContext* ctx) {
+  ctx->max_depth++;
+}
+
+static void pop_implicit_block(WasmWriteContext* ctx) {
+  ctx->max_depth--;
 }
 
 static int find_func_signature(WasmFuncSignatureVector* sigs,
@@ -773,7 +774,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_BLOCK: {
       WasmLabelNode node;
-      push_label(ctx, &node, &expr->block.label, WASM_FORCE_LABEL);
+      push_label(ctx, &node, &expr->block.label);
       out_opcode(ws, WASM_OPCODE_BLOCK);
       write_expr_list_with_count(ctx, module, func, &expr->block.exprs);
       pop_label(ctx, &expr->block.label);
@@ -926,8 +927,8 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer;
       WasmLabelNode inner;
-      push_label(ctx, &outer, &expr->loop.outer, WASM_FORCE_LABEL);
-      push_label(ctx, &inner, &expr->loop.inner, WASM_FORCE_LABEL);
+      push_label(ctx, &outer, &expr->loop.outer);
+      push_label(ctx, &inner, &expr->loop.inner);
       out_opcode(ws, WASM_OPCODE_LOOP);
       write_expr_list_with_count(ctx, module, func, &expr->loop.exprs);
       pop_label(ctx, &expr->loop.inner);
@@ -986,7 +987,7 @@ static void write_expr(WasmWriteContext* ctx,
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
       WasmLabelNode node;
-      push_label(ctx, &node, &expr->tableswitch.label, WASM_NO_FORCE_LABEL);
+      push_label(ctx, &node, &expr->tableswitch.label);
       out_opcode(ws, WASM_OPCODE_TABLESWITCH);
       out_u16(ws, expr->tableswitch.cases.size, "num cases");
       out_u16(ws, expr->tableswitch.targets.size + 1, "num targets");
@@ -1004,8 +1005,10 @@ static void write_expr(WasmWriteContext* ctx,
         WasmCase* case_ = &expr->tableswitch.cases.data[i];
         if (case_->exprs.size) {
           if (case_->exprs.size > 1) {
+            push_implicit_block(ctx);
             out_opcode(ws, WASM_OPCODE_BLOCK);
             write_expr_list_with_count(ctx, module, func, &case_->exprs);
+            pop_implicit_block(ctx);
           } else {
             write_expr(ctx, module, func, case_->exprs.data[0]);
           }
@@ -1049,10 +1052,9 @@ static void write_expr_list_block_with_max_count_256(
     WasmWriteBlockOpcode write_block_opcode) {
   assert(count < 256);
   WasmWriterState* ws = &ctx->writer_state;
-  WasmLabelNode node;
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
+    push_implicit_block(ctx);
     out_opcode(ws, WASM_OPCODE_BLOCK);
-    push_label(ctx, &node, NULL, WASM_FORCE_LABEL);
   }
   out_u8(ws, count, "num expressions (byte 0)");
   int i;
@@ -1061,7 +1063,7 @@ static void write_expr_list_block_with_max_count_256(
     exprs++;
   }
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
-    pop_label(ctx, NULL);
+    pop_implicit_block(ctx);
 }
 
 static void write_expr_list_block_with_max_count_65536(
@@ -1074,10 +1076,9 @@ static void write_expr_list_block_with_max_count_65536(
   assert(count < 65536);
   WasmWriterState* ws = &ctx->writer_state;
   uint8_t byte1 = (count + UINT8_MAX) >> 8;  /* round up. */
-  WasmLabelNode node;
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
+    push_implicit_block(ctx);
     out_opcode(ws, WASM_OPCODE_BLOCK);
-    push_label(ctx, &node, NULL, WASM_FORCE_LABEL);
   }
   out_u8(ws, byte1, "num expressions (byte 1)");
   int i;
@@ -1089,7 +1090,7 @@ static void write_expr_list_block_with_max_count_65536(
     count -= byte0;
   }
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
-    pop_label(ctx, NULL);
+    pop_implicit_block(ctx);
   assert(count == 0);
 }
 
@@ -1103,10 +1104,9 @@ static void write_expr_list_block_with_max_count_16777216(
   assert(count < 16777216);
   WasmWriterState* ws = &ctx->writer_state;
   uint8_t byte2 = (count + UINT16_MAX) >> 16;  /* round up. */
-  WasmLabelNode node;
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
+    push_implicit_block(ctx);
     out_opcode(ws, WASM_OPCODE_BLOCK);
-    push_label(ctx, &node, NULL, WASM_FORCE_LABEL);
   }
   out_u8(ws, byte2, "num expressions (byte 2)");
   int i;
@@ -1118,7 +1118,7 @@ static void write_expr_list_block_with_max_count_16777216(
     count -= bytes10;
   }
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
-    pop_label(ctx, NULL);
+    pop_implicit_block(ctx);
   assert(count == 0);
 }
 

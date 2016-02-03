@@ -673,10 +673,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                                          "case");
 
       WasmLabelNode node;
-      int has_label = expr->tableswitch.label.start != NULL;
-      if (has_label)
-        result |= push_label(ctx, &expr->loc, &node, &expr->tableswitch.label,
-                             expected_type, "tableswitch");
+      result |= push_label(ctx, &expr->loc, &node, &expr->tableswitch.label,
+                           expected_type, "tableswitch");
       result |= check_expr(ctx, module, func, expr->tableswitch.expr,
                            WASM_TYPE_I32, " of key");
       int i;
@@ -698,8 +696,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
         result |= check_exprs(ctx, module, func, &case_->exprs, expected_type,
                               " of tableswitch case");
       }
-      if (has_label)
-        pop_label(ctx);
+      pop_label(ctx);
       break;
     }
     case WASM_EXPR_TYPE_UNARY: {
