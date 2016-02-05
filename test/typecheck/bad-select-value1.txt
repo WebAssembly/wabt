@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-(module (func (i64.select (i32.const 0) (i64.const 0) (f32.const 0))))
+(module (func (i64.select (i64.const 0) (f32.const 0) (i32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-select-value1.txt:2:55: type mismatch of argment 1 of select op. got f32, expected i64
+typecheck/bad-select-value1.txt:2:41: type mismatch of argment 1 of select op. got f32, expected i64
 ;;; STDERR ;;)

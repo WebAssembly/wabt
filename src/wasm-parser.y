@@ -444,9 +444,9 @@ expr1 :
       $$ = wasm_new_expr(WASM_EXPR_TYPE_SELECT);
       CHECK_ALLOC_NULL($$);
       $$->select.type = $1;
-      $$->select.cond = $2;
-      $$->select.true_ = $3;
-      $$->select.false_ = $4;
+      $$->select.true_ = $2;
+      $$->select.false_ = $3;
+      $$->select.cond = $4;
     }
   | COMPARE expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_COMPARE);

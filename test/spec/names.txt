@@ -2,5 +2,8 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/names.wast
 (;; STDOUT ;;;
+42
+123
+$invoke_0 = undefined
 14/14 tests passed.
 ;;; STDOUT ;;)

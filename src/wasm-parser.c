@@ -2454,9 +2454,9 @@ yyreduce:
       (yyval.expr) = wasm_new_expr(WASM_EXPR_TYPE_SELECT);
       CHECK_ALLOC_NULL((yyval.expr));
       (yyval.expr)->select.type = (yyvsp[-3].type);
-      (yyval.expr)->select.cond = (yyvsp[-2].expr);
-      (yyval.expr)->select.true_ = (yyvsp[-1].expr);
-      (yyval.expr)->select.false_ = (yyvsp[0].expr);
+      (yyval.expr)->select.true_ = (yyvsp[-2].expr);
+      (yyval.expr)->select.false_ = (yyvsp[-1].expr);
+      (yyval.expr)->select.cond = (yyvsp[0].expr);
     }
 #line 2462 "src/wasm-parser.c" /* yacc.c:1646  */
     break;
