@@ -303,18 +303,18 @@ expr1 :
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
     }
-  | BR_IF expr var {
+  | BR_IF var expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR_IF);
       CHECK_ALLOC_NULL($$);
-      $$->br_if.cond = $2;
-      $$->br_if.var = $3;
+      $$->br_if.var = $2;
+      $$->br_if.cond = $3;
     }
-  | BR_IF expr var expr {
+  | BR_IF var expr expr {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_BR_IF);
       CHECK_ALLOC_NULL($$);
-      $$->br_if.cond = $2;
-      $$->br_if.var = $3;
-      $$->br_if.expr = $4;
+      $$->br_if.var = $2;
+      $$->br_if.expr = $3;
+      $$->br_if.cond = $4;
     }
   | LOOP labeling expr_list {
       $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);

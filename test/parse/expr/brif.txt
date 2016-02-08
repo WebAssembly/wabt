@@ -1,4 +1,4 @@
 (module
   (func
     (block $foo
-      (br_if (i32.const 1) 0))))
+      (br_if 0 (i32.const 1)))))

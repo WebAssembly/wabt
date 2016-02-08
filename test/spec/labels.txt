@@ -3,10 +3,31 @@
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/labels.wast:150:40: arity mismatch of br value. label expects void, but br value is non-empty
+  third_party/testsuite/labels.wast:179:40: arity mismatch of br value. label expects void, but br value is non-empty
 assert_invalid error:
-  third_party/testsuite/labels.wast:151:50: type mismatch of unary op. got void, expected f32
+  third_party/testsuite/labels.wast:180:50: type mismatch of unary op. got void, expected f32
 assert_invalid error:
-  third_party/testsuite/labels.wast:152:54: type mismatch of block. got void, expected f32
-18/18 tests passed.
+  third_party/testsuite/labels.wast:182:54: type mismatch of block. got void, expected f32
+assert_invalid error:
+  third_party/testsuite/labels.wast:183:54: type mismatch of block. got void, expected i32
+assert_invalid error:
+  third_party/testsuite/labels.wast:183:64: type mismatch of br_if value. got f32, expected i32
+assert_invalid error:
+  third_party/testsuite/labels.wast:184:50: type mismatch of unary op. got void, expected f32
+assert_invalid error:
+  third_party/testsuite/labels.wast:184:50: arity mismatch of br_if value. label expects void, but br value is non-empty
+assert_invalid error:
+  third_party/testsuite/labels.wast:185:66: type mismatch of block. got f32, expected i32
+assert_invalid error:
+  third_party/testsuite/labels.wast:185:75: type mismatch of unary op. got void, expected f32
+assert_invalid error:
+  third_party/testsuite/labels.wast:185:85: type mismatch of br_if value. got f32, expected i32
+assert_invalid error:
+  third_party/testsuite/labels.wast:187:32: type mismatch of block. got void, expected f32
+assert_invalid error:
+  third_party/testsuite/labels.wast:189:42: arity mismatch of br_if value. label expects void, but br value is non-empty
+assert_invalid error:
+  third_party/testsuite/labels.wast:195:25: arity mismatch of br value. label expects void, but br value is non-empty
+third_party/testsuite/labels.wast:175: $assert_return_18 failed.
+20/21 tests passed.
 ;;; STDOUT ;;)

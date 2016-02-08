@@ -2,7 +2,7 @@
 (module
   (func (param i32) (result i32)
     (block $exit
-      (br_if (get_local 0) $exit (i32.const 42))
+      (br_if $exit (i32.const 42) (get_local 0))
       (i32.const 29)))
 
   (export "test1" $test1)

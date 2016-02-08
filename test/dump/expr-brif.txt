@@ -2,7 +2,7 @@
 (module
   (func (result i32)
     (block $exit
-      (br_if (i32.const 0) $exit (i32.const 42))
+      (br_if $exit (i32.const 42) (i32.const 0))
       (i32.const 29))))
 (;; STDOUT ;;;
 0000000: 01                                         ; WASM_SECTION_SIGNATURES
