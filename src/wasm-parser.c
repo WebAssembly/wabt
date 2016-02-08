@@ -4338,7 +4338,7 @@ static int read_int64(const char* s, const char* end, uint64_t* out) {
     has_sign = 1;
     s++;
   }
-  uint64_t value;
+  uint64_t value = 0;
   int result = read_uint64(s, end, &value);
   if (has_sign) {
     if (value > (uint64_t)INT64_MAX + 1) /* abs(INT64_MIN) == INT64_MAX + 1 */

@@ -1156,7 +1156,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   int i;
   WasmWriterState* ws = &ctx->writer_state;
   ctx->writer_state.offset = 0;
-  size_t segments_offset;
+  size_t segments_offset = 0;
   if (module->memory) {
     out_u8(ws, WASM_SECTION_MEMORY, "WASM_SECTION_MEMORY");
     out_u8(ws, log_two_u32(module->memory->initial_size), "min mem size log 2");
@@ -1209,7 +1209,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
   }
 
-  size_t imports_offset;
+  size_t imports_offset = 0;
   int num_funcs = module->imports.size + module->funcs.size;
   if (num_funcs) {
     out_u8(ws, WASM_SECTION_FUNCTIONS, "WASM_SECTION_FUNCTIONS");

@@ -22,6 +22,9 @@ CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
 LIBS =
 
+AFL_DIR ?= ~/dev/afl/afl-1.83b
+AFL_CC := $(AFL_DIR)/afl-gcc
+
 SEXPR_WASM_CC := $(CC)
 SEXPR_WASM_CFLAGS := $(CFLAGS)
 SEXPR_WASM_SRCS := \
@@ -45,6 +48,11 @@ SEXPR_WASM_LSAN_CC := clang
 SEXPR_WASM_LSAN_CFLAGS := $(LSAN_FLAGS) $(CFLAGS)
 SEXPR_WASM_LSAN_LDFLAGS := $(LSAN_FLAGS)
 SEXPR_WASM_LSAN_SRCS := $(SEXPR_WASM_SRCS)
+
+SEXPR_WASM_FUZZ_CC := $(AFL_CC)
+SEXPR_WASM_FUZZ_CFLAGS := -O3 $(CFLAGS)
+SEXPR_WASM_FUZZ_LDFLAGS :=
+SEXPR_WASM_FUZZ_SRCS := $(SEXPR_WASM_SRCS)
 
 .PHONY: all
 all: $(addprefix out/,$(ALL))
@@ -80,6 +88,7 @@ $(eval $(call EXE,sexpr-wasm,SEXPR_WASM))
 $(eval $(call EXE,sexpr-wasm-asan,SEXPR_WASM_ASAN))
 $(eval $(call EXE,sexpr-wasm-msan,SEXPR_WASM_MSAN))
 $(eval $(call EXE,sexpr-wasm-lsan,SEXPR_WASM_LSAN))
+$(eval $(call EXE,sexpr-wasm-fuzz,SEXPR_WASM_FUZZ))
 
 #### TESTS ####
 .PHONY: test
@@ -100,6 +109,15 @@ test-lsan: out/sexpr-wasm-lsan
 
 .PHONY: test-everything
 test-everything: test test-asan test-msan test-lsan
+
+#### FUZZ ####
+
+FUZZ_IN = fuzz-in
+FUZZ_OUT = fuzz-out
+
+.PHONY: fuzz
+fuzz: out/sexpr-wasm-fuzz
+	$(AFL_DIR)/afl-fuzz -i $(FUZZ_IN) -o $(FUZZ_OUT) -x wasm.dict -- $^ @@
 
 #### CLEAN ####
 .PHONY: clean

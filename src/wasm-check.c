@@ -880,16 +880,18 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
           print_error(ctx, &field->loc, "only one start function allowed");
           result |= WASM_ERROR;
         }
-        WasmFunc* start_func;
+        WasmFunc* start_func = NULL;
         result |= check_func_var(ctx, module, &field->start, &start_func);
-        if (start_func->params.types.size != 0) {
-          print_error(ctx, &field->loc, "start function must be nullary");
-          result |= WASM_ERROR;
-        }
-        if (start_func->result_type != WASM_TYPE_VOID) {
-          print_error(ctx, &field->loc,
-                      "start function must not return anything");
-          result |= WASM_ERROR;
+        if (start_func) {
+          if (start_func->params.types.size != 0) {
+            print_error(ctx, &field->loc, "start function must be nullary");
+            result |= WASM_ERROR;
+          }
+          if (start_func->result_type != WASM_TYPE_VOID) {
+            print_error(ctx, &field->loc,
+                        "start function must not return anything");
+            result |= WASM_ERROR;
+          }
         }
         seen_start = 1;
         break;
