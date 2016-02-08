@@ -378,7 +378,7 @@ static int is_power_of_two(uint32_t x) {
 }
 
 static uint32_t log_two_u32(uint32_t x) {
-  if (!x)
+  if (x <= 1)
     return 0;
   return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
 }
