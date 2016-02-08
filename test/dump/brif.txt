@@ -19,12 +19,12 @@
 000000c: 01                                         ; num expressions
 000000d: 07                                         ; OPCODE_BR_IF
 000000e: 00                                         ; break depth
-000000f: 09                                         ; OPCODE_I8_CONST
-0000010: 01                                         ; u8 literal
-0000011: 00                                         ; OPCODE_NOP
+000000f: 00                                         ; OPCODE_NOP
+0000010: 09                                         ; OPCODE_I8_CONST
+0000011: 01                                         ; u8 literal
 0000009: 0700                                       ; FIXUP func body size
 0000012: 06                                         ; WASM_SECTION_END
 ;; dump
-0000000: 0101 0000 0201 0000 0007 0001 0107 0009  
-0000010: 0100 06                                  
+0000000: 0101 0000 0201 0000 0007 0001 0107 0000  
+0000010: 0901 06                                  
 ;;; STDOUT ;;)

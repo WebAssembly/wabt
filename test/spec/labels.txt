@@ -28,6 +28,5 @@ assert_invalid error:
   third_party/testsuite/labels.wast:189:42: arity mismatch of br_if value. label expects void, but br value is non-empty
 assert_invalid error:
   third_party/testsuite/labels.wast:195:25: arity mismatch of br value. label expects void, but br value is non-empty
-third_party/testsuite/labels.wast:175: $assert_return_18 failed.
-20/21 tests passed.
+21/21 tests passed.
 ;;; STDOUT ;;)

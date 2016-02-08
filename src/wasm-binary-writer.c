@@ -796,11 +796,11 @@ static void write_expr(WasmWriteContext* ctx,
       assert(node);
       out_opcode(ws, WASM_OPCODE_BR_IF);
       out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
-      write_expr(ctx, module, func, expr->br_if.cond);
       if (expr->br_if.expr)
         write_expr(ctx, module, func, expr->br_if.expr);
       else
         out_opcode(ws, WASM_OPCODE_NOP);
+      write_expr(ctx, module, func, expr->br_if.cond);
       break;
     }
     case WASM_EXPR_TYPE_CALL: {
