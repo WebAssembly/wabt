@@ -948,9 +948,9 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_SELECT:
       out_opcode(ws, WASM_OPCODE_SELECT);
-      write_expr(ctx, module, func, expr->select.cond);
       write_expr(ctx, module, func, expr->select.true_);
       write_expr(ctx, module, func, expr->select.false_);
+      write_expr(ctx, module, func, expr->select.cond);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);

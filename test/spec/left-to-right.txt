@@ -2,9 +2,5 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/left-to-right.wast
 (;; STDOUT ;;;
-third_party/testsuite/left-to-right.wast:240: $assert_return_57 failed.
-third_party/testsuite/left-to-right.wast:240: $assert_return_58 failed.
-third_party/testsuite/left-to-right.wast:259: $assert_return_91 failed.
-third_party/testsuite/left-to-right.wast:259: $assert_return_92 failed.
-89/93 tests passed.
+93/93 tests passed.
 ;;; STDOUT ;;)
