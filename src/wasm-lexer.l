@@ -336,6 +336,7 @@ NAME      \${ATOM}
 "module"              { return TOK(MODULE); }
 "memory"              { return TOK(MEMORY); }
 "segment"             { return TOK(SEGMENT); }
+"start"               { return TOK(START); }
 "import"              { return TOK(IMPORT); }
 "export"              { return TOK(EXPORT); }
 "table"               { return TOK(TABLE); }

@@ -103,7 +103,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
-%token FUNC TYPE PARAM RESULT LOCAL
+%token FUNC START TYPE PARAM RESULT LOCAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
 %token UNREACHABLE MEMORY_SIZE GROW_MEMORY HAS_FEATURE
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
@@ -147,7 +147,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<u32> align initial_size max_size segment_address
 %type<u64> offset
 %type<vars> table var_list
-%type<var> type_use var
+%type<var> start type_use var
 
 %destructor { wasm_destroy_string_slice(&$$); } bind_var labeling literal quoted_text text
 %destructor { wasm_destroy_type_vector(&$$); } value_type_list
@@ -178,7 +178,7 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %nonassoc LOW
 %nonassoc VAR
 
-%start start
+%start script_start
 
 %%
 
@@ -1064,6 +1064,10 @@ func :
 
 /* Modules */
 
+start :
+    LPAR START var RPAR { $$ = $3; }
+;
+
 segment_address :
     INT {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
@@ -1249,6 +1253,14 @@ module_fields :
       field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
       field->global = $2;
     }
+  | module_fields start {
+      $$ = $1;
+      WasmModuleField* field = wasm_append_module_field(&$$);
+      CHECK_ALLOC_NULL(field);
+      field->loc = @2;
+      field->type = WASM_MODULE_FIELD_TYPE_START;
+      field->start = $2;
+    }
 ;
 module :
     LPAR MODULE module_fields RPAR {
@@ -1319,6 +1331,9 @@ module :
             break;
           case WASM_MODULE_FIELD_TYPE_GLOBAL:
             CHECK_ALLOC(wasm_extend_type_bindings(&$$.globals, &field->global));
+            break;
+          case WASM_MODULE_FIELD_TYPE_START:
+            $$.start = field->start;
             break;
         }
       }
@@ -1397,7 +1412,7 @@ script :
 
 /* bison destroys the start symbol even on a successful parse. We want to keep
  script from being destroyed, so create a dummy start symbol. */
-start :
+script_start :
     script
 ;
 

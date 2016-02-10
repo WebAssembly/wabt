@@ -1,0 +1,9 @@
+;;; ERROR: 1
+(module
+  (start 0)
+  (start 1)
+  (func)
+  (func))
+(;; STDERR ;;;
+parse/module/bad-start-too-many.txt:4:3: only one start function allowed
+;;; STDERR ;;)

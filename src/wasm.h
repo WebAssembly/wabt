@@ -473,6 +473,7 @@ typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_FUNC_TYPE,
   WASM_MODULE_FIELD_TYPE_MEMORY,
   WASM_MODULE_FIELD_TYPE_GLOBAL,
+  WASM_MODULE_FIELD_TYPE_START,
 } WasmModuleFieldType;
 
 typedef struct WasmModuleField {
@@ -486,6 +487,7 @@ typedef struct WasmModuleField {
     WasmFuncType func_type;
     WasmMemory memory;
     WasmTypeBindings global;
+    WasmVar start;
   };
 } WasmModuleField;
 DECLARE_VECTOR(module_field, WasmModuleField);
@@ -502,6 +504,7 @@ typedef struct WasmModule {
   WasmTypeBindings globals;
   WasmVarVector* table;
   WasmMemory* memory;
+  WasmVar start;
 
   WasmBindingVector func_bindings;
   WasmBindingVector import_bindings;

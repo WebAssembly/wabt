@@ -827,6 +827,7 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
   int i;
   int seen_memory = 0;
   int seen_table = 0;
+  int seen_start = 0;
   for (i = 0; i < module->fields.size; ++i) {
     WasmModuleField* field = &module->fields.data[i];
     switch (field->type) {
@@ -859,6 +860,25 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
       case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
       case WASM_MODULE_FIELD_TYPE_GLOBAL:
         break;
+      case WASM_MODULE_FIELD_TYPE_START: {
+        if (seen_start) {
+          print_error(ctx, &field->loc, "only one start function allowed");
+          result |= WASM_ERROR;
+        }
+        WasmFunc* start_func;
+        result |= check_func_var(ctx, module, &field->start, &start_func);
+        if (start_func->params.types.size != 0) {
+          print_error(ctx, &field->loc, "start function must be nullary");
+          result |= WASM_ERROR;
+        }
+        if (start_func->result_type != WASM_TYPE_VOID) {
+          print_error(ctx, &field->loc,
+                      "start function must not return anything");
+          result |= WASM_ERROR;
+        }
+        seen_start = 1;
+        break;
+      }
     }
   }
 

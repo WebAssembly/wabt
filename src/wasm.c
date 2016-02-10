@@ -376,6 +376,9 @@ static void wasm_destroy_module_field(WasmModuleField* field) {
     case WASM_MODULE_FIELD_TYPE_GLOBAL:
       wasm_destroy_type_bindings(&field->global);
       break;
+    case WASM_MODULE_FIELD_TYPE_START:
+      wasm_destroy_var(&field->start);
+      break;
   }
 }
 

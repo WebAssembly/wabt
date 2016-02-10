@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module
+  (start 0)
+  (func (result i32)))
+(;; STDERR ;;;
+parse/module/bad-start-not-void.txt:3:3: start function must not return anything
+;;; STDERR ;;)

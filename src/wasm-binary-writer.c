@@ -1217,7 +1217,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
     imports_offset = ctx->writer_state.offset;
     for (i = 0; i < module->imports.size; ++i) {
-      // WasmImport* import = module->imports.data[i];
       print_header(ctx, "import header", i);
       WasmFunctionFlags flags =
           WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_IMPORT;
@@ -1240,6 +1239,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       int has_name = is_exported;
       int has_locals = func->locals.types.size > 0;
       uint8_t flags = 0;
+      /* TODO(binji): add flag for start function (when added to the binary
+       format) */
       if (has_name)
         flags |= WASM_FUNCTION_FLAG_NAME;
       if (is_exported)
@@ -1529,6 +1530,7 @@ static WasmModuleField* append_module_field_and_fixup(
     case WASM_MODULE_FIELD_TYPE_TABLE:
     case WASM_MODULE_FIELD_TYPE_MEMORY:
     case WASM_MODULE_FIELD_TYPE_GLOBAL:
+    case WASM_MODULE_FIELD_TYPE_START:
       /* not supported */
       assert(0);
       break;
@@ -1569,6 +1571,7 @@ static WasmModuleField* append_module_field_and_fixup(
         module->memory = &field->memory;
         break;
       case WASM_MODULE_FIELD_TYPE_GLOBAL:
+      case WASM_MODULE_FIELD_TYPE_START:
         /* not pointers, so they don't need to be fixed */
         break;
     }
