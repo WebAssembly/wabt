@@ -41,10 +41,10 @@
 000001a: 0900                                       ; FIXUP func body size
 0000025: 05                                         ; WASM_SECTION_FUNCTION_TABLE
 0000026: 04                                         ; num function table entries
-0000027: 0000                                       ; function table entry
-0000029: 0000                                       ; function table entry
-000002b: 0100                                       ; function table entry
-000002d: 0200                                       ; function table entry
+0000027: 0000                                       ; function table entry, function
+0000029: 0000                                       ; function table entry, function
+000002b: 0100                                       ; function table entry, function
+000002d: 0200                                       ; function table entry, function
 000002f: 06                                         ; WASM_SECTION_END
 ;; dump
 0000000: 0103 0100 0102 0001 0200 0402 0300 0000  
