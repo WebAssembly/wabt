@@ -362,11 +362,10 @@ expr1 :
       for (i = 0; i < $$->tableswitch.cases.size; ++i) {
         WasmCase* case_ = &$$->tableswitch.cases.data[i];
         if (case_->label.start) {
-          WasmBinding* binding =
-              wasm_append_binding(&$$->tableswitch.case_bindings);
+          WasmBinding* binding = wasm_insert_binding(
+              &$$->tableswitch.case_bindings, &case_->label);
           CHECK_ALLOC_NULL(binding);
           binding->loc = case_->loc;
-          binding->name = case_->label;
           binding->index = i;
         }
       }
@@ -550,10 +549,9 @@ param_list :
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
-      WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
-      binding->name = $3;
       binding->index = $$.types.size;
       CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
     }
@@ -564,10 +562,9 @@ param_list :
     }
   | param_list LPAR PARAM bind_var VALUE_TYPE RPAR {
       $$ = $1;
-      WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$4);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @3;
-      binding->name = $4;
       binding->index = $$.types.size;
       CHECK_ALLOC(wasm_append_type_value(&$$.types, &$5));
     }
@@ -583,10 +580,9 @@ local_list :
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
-      WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
-      binding->name = $3;
       binding->index = $$.types.size;
       CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
     }
@@ -597,10 +593,9 @@ local_list :
     }
   | local_list LPAR LOCAL bind_var VALUE_TYPE RPAR {
       $$ = $1;
-      WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$4);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @3;
-      binding->name = $4;
       binding->index = $$.types.size;
       CHECK_ALLOC(wasm_append_type_value(&$$.types, &$5));
     }
@@ -1186,10 +1181,9 @@ global :
     }
   | LPAR GLOBAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
-      WasmBinding* binding = wasm_append_binding(&$$.bindings);
+      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
-      binding->name = $3;
       binding->index = 0;
       CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
     }
@@ -1277,10 +1271,10 @@ module :
             WasmFuncPtr func_ptr = &field->func;
             CHECK_ALLOC(wasm_append_func_ptr_value(&$$.funcs, &func_ptr));
             if (field->func.name.start) {
-              WasmBinding* binding = wasm_append_binding(&$$.func_bindings);
+              WasmBinding* binding =
+                  wasm_insert_binding(&$$.func_bindings, &field->func.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->name = field->func.name;
               binding->index = $$.funcs.size - 1;
             }
             break;
@@ -1289,10 +1283,10 @@ module :
             WasmImportPtr import_ptr = &field->import;
             CHECK_ALLOC(wasm_append_import_ptr_value(&$$.imports, &import_ptr));
             if (field->import.name.start) {
-              WasmBinding* binding = wasm_append_binding(&$$.import_bindings);
+              WasmBinding* binding =
+                  wasm_insert_binding(&$$.import_bindings, &field->import.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->name = field->import.name;
               binding->index = $$.imports.size - 1;
             }
             break;
@@ -1301,10 +1295,10 @@ module :
             WasmExportPtr export_ptr = &field->export_;
             CHECK_ALLOC(wasm_append_export_ptr_value(&$$.exports, &export_ptr));
             if (field->export_.name.start) {
-              WasmBinding* binding = wasm_append_binding(&$$.export_bindings);
+              WasmBinding* binding = wasm_insert_binding(&$$.export_bindings,
+                                                         &field->export_.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->name = field->export_.name;
               binding->index = $$.exports.size - 1;
             }
             break;
@@ -1317,11 +1311,10 @@ module :
             CHECK_ALLOC(wasm_append_func_type_ptr_value(&$$.func_types,
                                                         &func_type_ptr));
             if (field->func_type.name.start) {
-              WasmBinding* binding =
-                  wasm_append_binding(&$$.func_type_bindings);
+              WasmBinding* binding = wasm_insert_binding(
+                  &$$.func_type_bindings, &field->func_type.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->name = field->func_type.name;
               binding->index = $$.func_types.size - 1;
             }
             break;

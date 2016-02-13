@@ -80,18 +80,33 @@ static int is_power_of_two(uint32_t x) {
 }
 
 static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
-                                           WasmBindingVector* bindings,
+                                           WasmBindingHash* bindings,
                                            const char* desc) {
-  int i, j;
   WasmResult result = WASM_OK;
-  for (i = 1; i < bindings->size; ++i) {
-    WasmBinding* ib = &bindings->data[i];
-    for (j = 0; j < i; ++j) {
-      WasmBinding* jb = &bindings->data[j];
-      if (wasm_string_slices_are_equal(&ib->name, &jb->name)) {
-        print_error(ctx, &ib->loc, "redefinition of %s \"%.*s\"", desc,
-                    ib->name.length, ib->name.start);
-        result = WASM_ERROR;
+  int i;
+  for (i = 0; i < bindings->entries.capacity; ++i) {
+    WasmBindingHashEntry* entry = &bindings->entries.data[i];
+    if (wasm_hash_entry_is_free(entry))
+      continue;
+
+    /* only follow the chain if this is the first entry in the chain */
+    if (entry->prev != NULL)
+      continue;
+
+    WasmBindingHashEntry* a = entry;
+    for (; a; a = a->next) {
+      WasmBindingHashEntry* b = a->next;
+      for (; b; b = b->next) {
+        if (wasm_string_slices_are_equal(&a->binding.name, &b->binding.name)) {
+          /* choose the location that is later in the file */
+          WasmLocation* a_loc = &a->binding.loc;
+          WasmLocation* b_loc = &b->binding.loc;
+          WasmLocation* loc =
+              a_loc->first_line > b_loc->first_line ? a_loc : b_loc;
+          print_error(ctx, loc, "redefinition of %s \"%.*s\"", desc,
+                      a->binding.name.length, a->binding.name.start);
+          result = WASM_ERROR;
+        }
       }
     }
   }
@@ -99,7 +114,7 @@ static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
 }
 
 static WasmResult check_var(WasmCheckContext* ctx,
-                            WasmBindingVector* bindings,
+                            WasmBindingHash* bindings,
                             int max_index,
                             WasmVar* var,
                             const char* desc,
@@ -395,7 +410,7 @@ static WasmResult check_call(WasmCheckContext* ctx,
 }
 
 static WasmResult check_target(WasmCheckContext* ctx,
-                               WasmBindingVector* bindings,
+                               WasmBindingHash* bindings,
                                int num_cases,
                                WasmTarget* target) {
   switch (target->type) {

@@ -730,7 +730,7 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
 }
 
 static void write_tableswitch_target(WasmWriteContext* ctx,
-                                     WasmBindingVector* case_bindings,
+                                     WasmBindingHash* case_bindings,
                                      WasmCaseVector* cases,
                                      WasmTarget* target) {
   switch (target->type) {

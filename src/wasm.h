@@ -330,7 +330,18 @@ typedef struct WasmBinding {
   WasmStringSlice name;
   int index;
 } WasmBinding;
-DECLARE_VECTOR(binding, WasmBinding);
+
+typedef struct WasmBindingHashEntry {
+  WasmBinding binding;
+  struct WasmBindingHashEntry* next;
+  struct WasmBindingHashEntry* prev; /* only valid when this entry is unused */
+} WasmBindingHashEntry;
+DECLARE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
+
+typedef struct WasmBindingHash {
+  WasmBindingHashEntryVector entries;
+  WasmBindingHashEntry* free_head;
+} WasmBindingHash;
 
 typedef struct WasmExpr WasmExpr;
 struct WasmExpr {
@@ -350,7 +361,7 @@ struct WasmExpr {
       WasmTargetVector targets;
       WasmTarget default_target;
       /* the binding names' memory is shared with cases */
-      WasmBindingVector case_bindings;
+      WasmBindingHash case_bindings;
       WasmCaseVector cases;
     } tableswitch;
     struct { WasmVar var; WasmExprPtrVector args; } call;
@@ -388,7 +399,7 @@ struct WasmExpr {
 
 typedef struct WasmTypeBindings {
   WasmTypeVector types;
-  WasmBindingVector bindings;
+  WasmBindingHash bindings;
 } WasmTypeBindings;
 
 enum {
@@ -506,10 +517,10 @@ typedef struct WasmModule {
   WasmMemory* memory;
   WasmVar start;
 
-  WasmBindingVector func_bindings;
-  WasmBindingVector import_bindings;
-  WasmBindingVector export_bindings;
-  WasmBindingVector func_type_bindings;
+  WasmBindingHash func_bindings;
+  WasmBindingHash import_bindings;
+  WasmBindingHash export_bindings;
+  WasmBindingHash func_type_bindings;
 } WasmModule;
 
 typedef enum WasmCommandType {
@@ -567,6 +578,8 @@ WasmResult wasm_write_binary(WasmWriter*, WasmScript*, WasmWriteBinaryOptions*);
 
 int wasm_string_slices_are_equal(const WasmStringSlice*,
                                  const WasmStringSlice*);
+WasmBinding* wasm_insert_binding(WasmBindingHash*, const WasmStringSlice*);
+int wasm_hash_entry_is_free(WasmBindingHashEntry*);
 
 void wasm_destroy_case_vector_and_elements(WasmCaseVector*);
 void wasm_destroy_case(WasmCase*);
@@ -592,7 +605,7 @@ void wasm_destroy_type_bindings(WasmTypeBindings*);
 void wasm_destroy_var_vector_and_elements(WasmVarVector*);
 void wasm_destroy_var(WasmVar*);
 
-int wasm_get_index_from_var(const WasmBindingVector* bindings,
+int wasm_get_index_from_var(const WasmBindingHash* bindings,
                             const WasmVar* var);
 int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_func_type_index_by_var(const WasmModule* module,

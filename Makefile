@@ -53,7 +53,7 @@ all: $(addprefix out/,$(ALL))
 everything: $(addprefix out/,$(EVERYTHING))
 
 out:
-	mkdir $@
+	mkdir -p $@
 
 src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
 	flex -o src/wasm-lexer.c $<
