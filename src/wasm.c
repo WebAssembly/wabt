@@ -187,7 +187,7 @@ static int find_binding_index_by_name(const WasmBindingHash* hash,
       return entry->binding.index;
 
     entry = entry->next;
-  } while (!wasm_hash_entry_is_free(entry));
+  } while (entry && !wasm_hash_entry_is_free(entry));
   return -1;
 }
 

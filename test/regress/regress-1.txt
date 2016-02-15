@@ -1,0 +1,3 @@
+(module
+  (func(call $i32 ))
+  (func $UemoOy_size ))
