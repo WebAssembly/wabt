@@ -26,7 +26,7 @@
 
 typedef struct WasmStringSlice {
   const char* start;
-  int length;
+  size_t length;
 } WasmStringSlice;
 
 typedef struct WasmLocation {

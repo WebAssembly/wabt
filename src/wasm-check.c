@@ -395,9 +395,9 @@ static WasmResult check_call(WasmCheckContext* ctx,
   } else {
     char* func_name = "";
     if (func->name.start) {
-      char length = func->name.length + 10;
+      size_t length = func->name.length + 10;
       func_name = alloca(length);
-      snprintf(func_name, length, " \"%.*s\"", func->name.length,
+      snprintf(func_name, length, " \"%.*s\"", (int)func->name.length,
                func->name.start);
     }
     print_error(ctx, loc,
