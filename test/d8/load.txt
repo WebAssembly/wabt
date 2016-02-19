@@ -18,8 +18,8 @@
   (export "i32_load16_u" $i32_load16_u)
   (func $i32_load16_u (result i32) (i32.load16_u (i32.const 0)))
 
-  ;; v8-native-prototype currently truncates if you try to return an i64, so
-  ;; we'll do a comparison against the expected value instead.
+  ;; The JavaScript host truncates if you try to return an i64, so we'll do a
+  ;; comparison against the expected value instead.
 
   (export "i64_load8_s" $i64_load8_s)
   (func $i64_load8_s (result i32) (i64.eq (i64.load8_s (i32.const 0))

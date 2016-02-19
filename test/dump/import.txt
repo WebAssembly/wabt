@@ -1,6 +1,7 @@
 ;;; FLAGS: -dv
 (module
-  ;; v8-native-prototype doesn't support module name, so just use the func name
+  ;; The binary encoding currently doesn't support the module name, so just use
+  ;; the func name
   (import "ignored" "test" (param i32 i64 f32 f64))
   (import "ignored" "test2" (param i32) (result i32)))
 (;; STDOUT ;;;

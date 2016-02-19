@@ -40,8 +40,8 @@
       (i64.store32 (i32.const 0) (i64.const -123456))
       (i32.load (i32.const 0)))
 
-  ;; v8-native-prototype currently truncates if you try to return an i64, so
-  ;; we'll do a comparison against the expected value instead.
+  ;; The JavaScript host truncates if you try to return an i64, so we'll do a
+  ;; comparison against the expected value instead.
   (export "i64_store" $i64_store)
   (func $i64_store (result i32)
       (i64.store (i32.const 0) (i64.const 0xbaddc0de600dd00d))

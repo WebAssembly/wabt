@@ -14,8 +14,8 @@
   (func $i32_trunc_u_f64 (result i32) (i32.trunc_u/f64 (f64.const 3e9)))
 
   ;; i64
-  ;; v8-native-prototype currently truncates if you try to return an i64, so
-  ;; we'll do a comparison against the expected value instead.
+  ;; The JavaScript host truncates if you try to return an i64, so we'll do
+  ;; a comparison against the expected value instead.
   (export "i64_extend_u_i32" $i64_extend_u_i32)
   (func $i64_extend_u_i32 (result i32)
       (i64.eq (i64.extend_u/i32 (i32.const -1)) (i64.const 4294967295)))
@@ -23,21 +23,19 @@
   (func $i64_extend_s_i32 (result i32)
       (i64.eq (i64.extend_s/i32 (i32.const -1))
               (i64.const 18446744073709551615)))
-  (;
-    ;; currently unsupported in v8-native-prototype
-    (export "i64_trunc_s_f32" $i64_trunc_s_f32)
-    (func $i64_trunc_s_f32 (result i32)
-        (i64.eq (i64.trunc_s/f32 (f32.const -100.12345)) (i64.const 0)))
-    (export "i64_trunc_u_f32" $i64_trunc_u_f32)
-    (func $i64_trunc_u_f32 (result i32)
-        (i64.eq (i64.trunc_u/f32 (f32.const 3e9)) (i64.const 0)))
-    (export "i64_trunc_s_f64" $i64_trunc_s_f64)
-    (func $i64_trunc_s_f64 (result i32)
-        (i64.eq (i64.trunc_s/f64 (f64.const -100.12345)) (i64.const 0)))
-    (export "i64_trunc_u_f64" $i64_trunc_u_f64)
-    (func $i64_trunc_u_f64 (result i32)
-        (i64.eq (i64.trunc_u/f64 (f64.const 3e9)) (i64.const 0)))
-  ;)
+
+  (export "i64_trunc_s_f32" $i64_trunc_s_f32)
+  (func $i64_trunc_s_f32 (result i32)
+      (i64.eq (i64.trunc_s/f32 (f32.const -100.12345)) (i64.const -100)))
+  (export "i64_trunc_u_f32" $i64_trunc_u_f32)
+  (func $i64_trunc_u_f32 (result i32)
+      (i64.eq (i64.trunc_u/f32 (f32.const 3e9)) (i64.const 3000000000)))
+  (export "i64_trunc_s_f64" $i64_trunc_s_f64)
+  (func $i64_trunc_s_f64 (result i32)
+      (i64.eq (i64.trunc_s/f64 (f64.const -100.12345)) (i64.const -100)))
+  (export "i64_trunc_u_f64" $i64_trunc_u_f64)
+  (func $i64_trunc_u_f64 (result i32)
+      (i64.eq (i64.trunc_u/f64 (f64.const 3e9)) (i64.const 3000000000)))
 
   ;; f32
   (export "f32_convert_s_i32" $f32_convert_s_i32)
@@ -71,6 +69,10 @@ i32_trunc_s_f64() = -100
 i32_trunc_u_f64() = -1294967296
 i64_extend_u_i32() = 1
 i64_extend_s_i32() = 1
+i64_trunc_s_f32() = 1
+i64_trunc_u_f32() = 1
+i64_trunc_s_f64() = 1
+i64_trunc_u_f64() = 1
 f32_convert_s_i32() = -1
 f32_convert_u_i32() = 4294967296
 f32_demote_f64() = 12345679

@@ -29,8 +29,8 @@
   (func $i32_shr_s (result i32) (i32.shr_s (i32.const -100) (i32.const 3)))
 
   ;; i64
-  ;; v8-native-prototype currently truncates if you try to return an i64, so
-  ;; we'll do a comparison against the expected value instead.
+  ;; The JavaScript host truncates if you try to return an i64, so we'll do a
+  ;; comparison against the expected value instead.
   (export "i64_add" $i64_add)
   (func $i64_add (result i32) (i64.eq (i64.add (i64.const 1) (i64.const 2))
                                       (i64.const 3)))

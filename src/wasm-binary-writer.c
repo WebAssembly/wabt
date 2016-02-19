@@ -69,14 +69,14 @@ enum {
 };
 typedef uint8_t WasmFunctionFlags;
 
-typedef enum WasmTypeV8 {
-  WASM_TYPE_V8_VOID,
-  WASM_TYPE_V8_I32,
-  WASM_TYPE_V8_I64,
-  WASM_TYPE_V8_F32,
-  WASM_TYPE_V8_F64,
-  WASM_NUM_V8_TYPES,
-} WasmTypeV8;
+typedef enum WasmBinaryType {
+  WASM_BINARY_TYPE_VOID,
+  WASM_BINARY_TYPE_I32,
+  WASM_BINARY_TYPE_I64,
+  WASM_BINARY_TYPE_F32,
+  WASM_BINARY_TYPE_F64,
+  WASM_NUM_BINARY_TYPES,
+} WasmBinaryType;
 
 #define FOREACH_OPCODE(V)      \
   V(NOP, 0x00)                 \
@@ -383,20 +383,20 @@ static uint32_t log_two_u32(uint32_t x) {
   return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
 }
 
-static WasmTypeV8 wasm_type_to_v8_type(WasmType type) {
+static WasmBinaryType wasm_type_to_binary_type(WasmType type) {
   switch (type) {
     case WASM_TYPE_VOID:
-      return WASM_TYPE_V8_VOID;
+      return WASM_BINARY_TYPE_VOID;
     case WASM_TYPE_I32:
-      return WASM_TYPE_V8_I32;
+      return WASM_BINARY_TYPE_I32;
     case WASM_TYPE_I64:
-      return WASM_TYPE_V8_I64;
+      return WASM_BINARY_TYPE_I64;
     case WASM_TYPE_F32:
-      return WASM_TYPE_V8_F32;
+      return WASM_BINARY_TYPE_F32;
     case WASM_TYPE_F64:
-      return WASM_TYPE_V8_F64;
+      return WASM_BINARY_TYPE_F64;
     default:
-      FATAL("v8-native does not support type %d\n", type);
+      FATAL("binary format does not support type %d\n", type);
   }
 }
 
@@ -704,28 +704,32 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   if (num_params_and_locals)
     CHECK_ALLOC_NULL(ctx->remapped_locals);
 
-  int max[WASM_NUM_V8_TYPES] = {};
+  int max[WASM_NUM_BINARY_TYPES] = {};
   int i;
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
-    max[wasm_type_to_v8_type(type)]++;
+    max[wasm_type_to_binary_type(type)]++;
   }
 
   /* params don't need remapping */
   for (i = 0; i < num_params; ++i)
     ctx->remapped_locals[i] = i;
 
-  int start[WASM_NUM_V8_TYPES];
-  start[WASM_TYPE_V8_I32] = num_params;
-  start[WASM_TYPE_V8_I64] = start[WASM_TYPE_V8_I32] + max[WASM_TYPE_V8_I32];
-  start[WASM_TYPE_V8_F32] = start[WASM_TYPE_V8_I64] + max[WASM_TYPE_V8_I64];
-  start[WASM_TYPE_V8_F64] = start[WASM_TYPE_V8_F32] + max[WASM_TYPE_V8_F32];
+  int start[WASM_NUM_BINARY_TYPES];
+  start[WASM_BINARY_TYPE_I32] = num_params;
+  start[WASM_BINARY_TYPE_I64] =
+      start[WASM_BINARY_TYPE_I32] + max[WASM_BINARY_TYPE_I32];
+  start[WASM_BINARY_TYPE_F32] =
+      start[WASM_BINARY_TYPE_I64] + max[WASM_BINARY_TYPE_I64];
+  start[WASM_BINARY_TYPE_F64] =
+      start[WASM_BINARY_TYPE_F32] + max[WASM_BINARY_TYPE_F32];
 
-  int seen[WASM_NUM_V8_TYPES] = {};
+  int seen[WASM_NUM_BINARY_TYPES] = {};
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
-    WasmTypeV8 v8_type = wasm_type_to_v8_type(type);
-    ctx->remapped_locals[num_params + i] = start[v8_type] + seen[v8_type]++;
+    WasmBinaryType binary_type = wasm_type_to_binary_type(type);
+    ctx->remapped_locals[num_params + i] =
+        start[binary_type] + seen[binary_type]++;
   }
 }
 
@@ -882,7 +886,7 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
     case WASM_EXPR_TYPE_HAS_FEATURE:
-      /* TODO(binji): add when supported by v8-native */
+      /* TODO(binji): add when supported by the binary encoding */
       out_u8(ws, WASM_OPCODE_I8_CONST, "has_feature not supported");
       out_u8(ws, 0, "");
       break;
@@ -1126,8 +1130,8 @@ static void write_expr_list_with_count(WasmWriteContext* ctx,
                                        WasmModule* module,
                                        WasmFunc* func,
                                        WasmExprPtrVector* exprs) {
-  /* The current v8 binary format only uses u8 for the number of expressions.
-   * If the value is greater than that, we need to nest blocks. */
+  /* The current binary format only uses u8 for the number of expressions. If
+   * the value is greater than that, we need to nest blocks. */
   WasmWriterState* ws = &ctx->writer_state;
   uint32_t count = exprs->size;
   WasmExprPtr* expr_ptr = exprs->data;
@@ -1184,9 +1188,9 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->globals.types.size; ++i) {
       WasmType global_type = module->globals.types.data[i];
       print_header(ctx, "global header", i);
-      const uint8_t global_type_codes[WASM_NUM_V8_TYPES] = {-1, 4, 6, 8, 9};
+      const uint8_t global_type_codes[WASM_NUM_BINARY_TYPES] = {-1, 4, 6, 8, 9};
       out_u32(ws, 0, "global name offset");
-      out_u8(ws, global_type_codes[wasm_type_to_v8_type(global_type)],
+      out_u8(ws, global_type_codes[wasm_type_to_binary_type(global_type)],
              "global mem type");
       out_u8(ws, 0, "export global");
     }
@@ -1201,10 +1205,10 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       WasmFuncSignature* sig = &sigs.data[i];
       print_header(ctx, "signature", i);
       out_u8(ws, sig->param_types.size, "num params");
-      out_u8(ws, wasm_type_to_v8_type(sig->result_type), "result_type");
+      out_u8(ws, wasm_type_to_binary_type(sig->result_type), "result_type");
       int j;
       for (j = 0; j < sig->param_types.size; ++j)
-        out_u8(ws, wasm_type_to_v8_type(sig->param_types.data[j]),
+        out_u8(ws, wasm_type_to_binary_type(sig->param_types.data[j]),
                "param type");
     }
   }
@@ -1252,15 +1256,15 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       if (has_name)
         out_u32(ws, 0, "func name offset");
       if (has_locals) {
-        int num_locals[WASM_NUM_V8_TYPES] = {};
+        int num_locals[WASM_NUM_BINARY_TYPES] = {};
         int j;
         for (j = 0; j < func->locals.types.size; ++j)
-          num_locals[wasm_type_to_v8_type(func->locals.types.data[j])]++;
+          num_locals[wasm_type_to_binary_type(func->locals.types.data[j])]++;
 
-        out_u16(ws, num_locals[WASM_TYPE_V8_I32], "num local i32");
-        out_u16(ws, num_locals[WASM_TYPE_V8_I64], "num local i64");
-        out_u16(ws, num_locals[WASM_TYPE_V8_F32], "num local f32");
-        out_u16(ws, num_locals[WASM_TYPE_V8_F64], "num local f64");
+        out_u16(ws, num_locals[WASM_BINARY_TYPE_I32], "num local i32");
+        out_u16(ws, num_locals[WASM_BINARY_TYPE_I64], "num local i64");
+        out_u16(ws, num_locals[WASM_BINARY_TYPE_F32], "num local f32");
+        out_u16(ws, num_locals[WASM_BINARY_TYPE_F64], "num local f64");
       }
 
       size_t func_body_offset = ctx->writer_state.offset;

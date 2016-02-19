@@ -12,8 +12,8 @@
   (func $f64_reinterpret_i64 (result f64)
     (f64.reinterpret/i64 (i64.const 0x405f480000000000)))
 
-  ;; v8-native-prototype currently truncates if you try to return an i64, so
-  ;; we'll do a comparison against the expected value instead.
+  ;; The JavaScript host truncates if you try to return an i64, so we'll do a
+  ;; comparison against the expected value instead.
   (export "i64_reinterpret_f64" $i64_reinterpret_f64)
   (func $i64_reinterpret_f64 (result i32)
     (i64.eq
