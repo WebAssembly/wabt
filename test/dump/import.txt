@@ -18,27 +18,34 @@
 0000008: 01                                         ; num params
 0000009: 01                                         ; result_type
 000000a: 01                                         ; param type
-000000b: 02                                         ; WASM_SECTION_FUNCTIONS
-000000c: 02                                         ; num functions
+000000b: 08                                         ; WASM_SECTION_IMPORTS
+000000c: 02                                         ; num imports
 ; import header 0
-000000d: 03                                         ; import flags
-000000e: 0000                                       ; import signature index
-0000010: 0000 0000                                  ; import name offset
+000000d: 0000                                       ; import signature index
+000000f: 0000 0000                                  ; import module name offset
+0000013: 0000 0000                                  ; import function name offset
 ; import header 1
-0000014: 03                                         ; import flags
-0000015: 0100                                       ; import signature index
-0000017: 0000 0000                                  ; import name offset
-000001b: 06                                         ; WASM_SECTION_END
+0000017: 0100                                       ; import signature index
+0000019: 0000 0000                                  ; import module name offset
+000001d: 0000 0000                                  ; import function name offset
+0000021: 06                                         ; WASM_SECTION_END
 ; import 0
-0000010: 1c00 0000                                  ; FIXUP import name offset
-000001c: 7465 7374                                  ; import name
-0000020: 00                                         ; \0
+000000f: 2200 0000                                  ; FIXUP import module name offset
+0000022: 6967 6e6f 7265 64                          ; import module name
+0000029: 00                                         ; \0
+0000013: 2a00 0000                                  ; FIXUP import function name offset
+000002a: 7465 7374                                  ; import function name
+000002e: 00                                         ; \0
 ; import 1
-0000017: 2100 0000                                  ; FIXUP import name offset
-0000021: 7465 7374 32                               ; import name
-0000026: 00                                         ; \0
+0000019: 2f00 0000                                  ; FIXUP import module name offset
+000002f: 6967 6e6f 7265 64                          ; import module name
+0000036: 00                                         ; \0
+000001d: 3700 0000                                  ; FIXUP import function name offset
+0000037: 7465 7374 32                               ; import function name
+000003c: 00                                         ; \0
 ;; dump
-0000000: 0102 0400 0102 0304 0101 0102 0203 0000  
-0000010: 1c00 0000 0301 0021 0000 0006 7465 7374  
-0000020: 0074 6573 7432 00                        
+0000000: 0102 0400 0102 0304 0101 0108 0200 0022  
+0000010: 0000 002a 0000 0001 002f 0000 0037 0000  
+0000020: 0006 6967 6e6f 7265 6400 7465 7374 0069  
+0000030: 676e 6f72 6564 0074 6573 7432 00         
 ;;; STDOUT ;;)

@@ -31,8 +31,9 @@
 #define SEGMENT_SIZE 13
 #define SEGMENT_OFFSET_OFFSET 4
 
-#define IMPORT_SIZE 7
-#define IMPORT_NAME_OFFSET 3
+#define IMPORT_SIZE 10
+#define IMPORT_MODULE_NAME_OFFSET 2
+#define IMPORT_FUNCTION_NAME_OFFSET 6
 
 #define FUNC_NAME_OFFSET 3
 
@@ -59,6 +60,8 @@ typedef enum WasmSectionType {
   WASM_SECTION_DATA_SEGMENTS = 4,
   WASM_SECTION_FUNCTION_TABLE = 5,
   WASM_SECTION_END = 6,
+  WASM_SECTION_START = 7,
+  WASM_SECTION_IMPORTS = 8,
 } WasmSectionType;
 
 enum {
@@ -101,6 +104,7 @@ typedef enum WasmBinaryType {
   V(STORE_GLOBAL, 0x11)        \
   V(CALL_FUNCTION, 0x12)       \
   V(CALL_INDIRECT, 0x13)       \
+  V(CALL_IMPORT, 0x1f)         \
   V(I32_LOAD_MEM8_S, 0x20)     \
   V(I32_LOAD_MEM8_U, 0x21)     \
   V(I32_LOAD_MEM16_S, 0x22)    \
@@ -811,16 +815,14 @@ static void write_expr(WasmWriteContext* ctx,
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
       assert(index >= 0 && index < module->funcs.size);
       out_opcode(ws, WASM_OPCODE_CALL_FUNCTION);
-      /* defined functions are always after all imports */
-      out_leb128(ws, module->imports.size + index, "func index");
+      out_leb128(ws, index, "func index");
       write_expr_list(ctx, module, func, &expr->call.args);
       break;
     }
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       int index = wasm_get_import_index_by_var(module, &expr->call.var);
       assert(index >= 0 && index < module->imports.size);
-      out_opcode(ws, WASM_OPCODE_CALL_FUNCTION);
-      /* imports are always first */
+      out_opcode(ws, WASM_OPCODE_CALL_IMPORT);
       out_leb128(ws, index, "import index");
       write_expr_list(ctx, module, func, &expr->call.args);
       break;
@@ -1214,20 +1216,22 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   size_t imports_offset = 0;
-  int num_funcs = module->imports.size + module->funcs.size;
-  if (num_funcs) {
-    out_u8(ws, WASM_SECTION_FUNCTIONS, "WASM_SECTION_FUNCTIONS");
-    out_leb128(ws, num_funcs, "num functions");
+  if (module->imports.size) {
+    out_u8(ws, WASM_SECTION_IMPORTS, "WASM_SECTION_IMPORTS");
+    out_leb128(ws, module->imports.size, "num imports");
 
     imports_offset = ctx->writer_state.offset;
     for (i = 0; i < module->imports.size; ++i) {
       print_header(ctx, "import header", i);
-      WasmFunctionFlags flags =
-          WASM_FUNCTION_FLAG_NAME | WASM_FUNCTION_FLAG_IMPORT;
-      out_u8(ws, flags, "import flags");
       out_u16(ws, ctx->import_sig_indexes[i], "import signature index");
-      out_u32(ws, 0, "import name offset");
+      out_u32(ws, 0, "import module name offset");
+      out_u32(ws, 0, "import function name offset");
     }
+  }
+
+  if (module->funcs.size) {
+    out_u8(ws, WASM_SECTION_FUNCTIONS, "WASM_SECTION_FUNCTIONS");
+    out_leb128(ws, module->funcs.size, "num functions");
 
     ctx->func_offsets =
         realloc(ctx->func_offsets, module->funcs.size * sizeof(size_t));
@@ -1282,7 +1286,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->table->size; ++i) {
       int index = wasm_get_func_index_by_var(module, &module->table->data[i]);
       assert(index >= 0 && index < module->funcs.size);
-      out_u16(ws, index + module->imports.size, "function table entry");
+      out_u16(ws, index, "function table entry");
     }
   }
 
@@ -1309,10 +1313,14 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   for (i = 0; i < module->imports.size; ++i) {
     print_header(ctx, "import", i);
     WasmImport* import = module->imports.data[i];
-    out_u32_at(ws, offset + IMPORT_NAME_OFFSET, ctx->writer_state.offset,
-               "FIXUP import name offset");
+    out_u32_at(ws, offset + IMPORT_MODULE_NAME_OFFSET, ctx->writer_state.offset,
+               "FIXUP import module name offset");
+    out_str(ws, import->module_name.start, import->module_name.length,
+            "import module name");
+    out_u32_at(ws, offset + IMPORT_FUNCTION_NAME_OFFSET,
+               ctx->writer_state.offset, "FIXUP import function name offset");
     out_str(ws, import->func_name.start, import->func_name.length,
-            "import name");
+            "import function name");
     offset += IMPORT_SIZE;
   }
 

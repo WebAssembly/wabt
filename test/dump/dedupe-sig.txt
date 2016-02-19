@@ -10,26 +10,31 @@
 0000002: 01                                         ; num params
 0000003: 02                                         ; result_type
 0000004: 01                                         ; param type
-0000005: 02                                         ; WASM_SECTION_FUNCTIONS
-0000006: 02                                         ; num functions
+0000005: 08                                         ; WASM_SECTION_IMPORTS
+0000006: 01                                         ; num imports
 ; import header 0
-0000007: 03                                         ; import flags
-0000008: 0000                                       ; import signature index
-000000a: 0000 0000                                  ; import name offset
+0000007: 0000                                       ; import signature index
+0000009: 0000 0000                                  ; import module name offset
+000000d: 0000 0000                                  ; import function name offset
+0000011: 02                                         ; WASM_SECTION_FUNCTIONS
+0000012: 01                                         ; num functions
 ; function 0
-000000e: 00                                         ; func flags
-000000f: 0000                                       ; func signature index
-0000011: 0000                                       ; func body size
-0000013: 0b                                         ; OPCODE_I64_CONST
-0000014: 0000 0000 0000 0000                        ; u64 literal
-0000011: 0900                                       ; FIXUP func body size
-000001c: 06                                         ; WASM_SECTION_END
+0000013: 00                                         ; func flags
+0000014: 0000                                       ; func signature index
+0000016: 0000                                       ; func body size
+0000018: 0b                                         ; OPCODE_I64_CONST
+0000019: 0000 0000 0000 0000                        ; u64 literal
+0000016: 0900                                       ; FIXUP func body size
+0000021: 06                                         ; WASM_SECTION_END
 ; import 0
-000000a: 1d00 0000                                  ; FIXUP import name offset
-000001d: 6261 72                                    ; import name
-0000020: 00                                         ; \0
+0000009: 2200 0000                                  ; FIXUP import module name offset
+0000022: 666f 6f                                    ; import module name
+0000025: 00                                         ; \0
+000000d: 2600 0000                                  ; FIXUP import function name offset
+0000026: 6261 72                                    ; import function name
+0000029: 00                                         ; \0
 ;; dump
-0000000: 0101 0102 0102 0203 0000 1d00 0000 0000  
-0000010: 0009 000b 0000 0000 0000 0000 0662 6172  
-0000020: 00                                       
+0000000: 0101 0102 0108 0100 0022 0000 0026 0000  
+0000010: 0002 0100 0000 0900 0b00 0000 0000 0000  
+0000020: 0006 666f 6f00 6261 7200                 
 ;;; STDOUT ;;)
