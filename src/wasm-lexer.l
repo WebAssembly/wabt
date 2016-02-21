@@ -20,17 +20,18 @@
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {
+  WasmAllocator* allocator;
   FILE* file;
   const char* filename;
   int column;
   int comment_nesting;
 } WasmScannerExtra;
 
-#define YY_DECL                                                    \
-  int wasm_lex(WASM_STYPE* yylval_param, WASM_LTYPE* yylloc_param, \
-               yyscan_t yyscanner, WasmParser* parser)
+#define YY_DECL                                                          \
+  int wasm_lexer_lex(WASM_STYPE* yylval_param, WASM_LTYPE* yylloc_param, \
+                     yyscan_t yyscanner, WasmParser* parser)
 
-#define EXTRA(scanner) ((WasmScannerExtra*)wasm_get_extra(scanner))
+#define EXTRA(scanner) ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))
 #define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
 #define COLUMN(scanner) (EXTRA(scanner)->column)
 #define RESET_COLUMN(scanner) EXTRA(scanner)->column = 1
@@ -100,11 +101,14 @@ typedef struct WasmScannerExtra {
 
 %}
 
-%option prefix="wasm_"
+%option prefix="wasm_lexer_"
 %option bison-bridge
 %option bison-locations
 %option yylineno
 %option reentrant
+%option noyyalloc
+%option noyyrealloc
+%option noyyfree
 
 %x LINE_COMMENT
 %x BLOCK_COMMENT
@@ -145,12 +149,12 @@ NAME      \${ATOM}
 <BAD_TEXT>\n          { BEGIN(INITIAL);
                         RESET_COLUMN(yyscanner);
                         wasm_error(yylloc, &yyscanner, parser,
-                                "newline in string"); }
+                                   "newline in string"); }
 <BAD_TEXT><<EOF>>     { wasm_error(yylloc, &yyscanner, parser,
                                    "unexpected EOF");
                         return TOK(EOF); }
 <BAD_TEXT>\\.         { wasm_error(yylloc, &yyscanner, parser,
-                                "bad escape \"%.*s\"", yyleng, yytext); }
+                                   "bad escape \"%.*s\"", yyleng, yytext); }
 <BAD_TEXT>\"          { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
 <BAD_TEXT>[^\\]       { wasm_error(yylloc, &yyscanner, parser,
                                 "illegal character in string"); }
@@ -374,33 +378,59 @@ NAME      \${ATOM}
 
 %%
 
-int wasm_wrap(yyscan_t yyscanner) {
+int wasm_lexer_wrap(yyscan_t yyscanner) {
   return 1;
 }
 
-WasmScanner wasm_new_scanner(const char* filename) {
-  WasmScannerExtra* extra = malloc(sizeof(WasmScannerExtra));
+static WasmAllocator* s_scanner_allocator;
+
+WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
+  WasmScannerExtra* extra =
+      allocator->alloc(allocator, sizeof(WasmScannerExtra), WASM_DEFAULT_ALIGN);
   if (!extra)
     return NULL;
+  extra->allocator = allocator;
   extra->column = 1;
   extra->filename = filename;
   extra->file = fopen(filename, "r");
 
   if (!extra->file) {
-    free(extra);
+    allocator->free(allocator, extra);
     return NULL;
   }
 
+  /* when the scanner is created in yylex_init, it uses wasm_lexer_alloc before
+   extra has been set, so we have to use a static variable here. */
+  s_scanner_allocator = allocator;
   yyscan_t scanner;
   yylex_init(&scanner);
   yyset_in(extra->file, scanner);
   yyset_extra(extra, scanner);
+  s_scanner_allocator = NULL;
   return scanner;
 }
 
 void wasm_free_scanner(WasmScanner scanner) {
-  WasmScannerExtra* extra = yyget_extra(scanner);
+  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
   fclose(extra->file);
-  free(extra);
-  yylex_destroy((yyscan_t)scanner);
+  extra->allocator->free(extra->allocator, extra);
+  wasm_lexer_lex_destroy((yyscan_t)scanner);
+}
+
+void* wasm_lexer_alloc(size_t bytes, WasmScanner scanner) {
+  WasmAllocator* allocator =
+      scanner ? ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))->allocator
+              : s_scanner_allocator;
+  return allocator->alloc(allocator, bytes, WASM_DEFAULT_ALIGN);
+}
+
+void* wasm_lexer_realloc(void* ptr, size_t bytes, WasmScanner scanner) {
+  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+  return extra->allocator->realloc(extra->allocator, ptr, bytes,
+                                   WASM_DEFAULT_ALIGN);
+}
+
+void wasm_lexer_free(void* ptr, WasmScanner scanner) {
+  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+  extra->allocator->free(extra->allocator, ptr);
 }

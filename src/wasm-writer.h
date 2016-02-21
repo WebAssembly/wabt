@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 
+#include "wasm-allocator.h"
 #include "wasm-common.h"
 
 typedef struct WasmWriter {
@@ -30,6 +31,7 @@ typedef struct WasmWriter {
 } WasmWriter;
 
 typedef struct WasmOutputBuffer {
+  WasmAllocator* allocator;
   void* start;
   size_t size;
   size_t capacity;
@@ -48,7 +50,8 @@ typedef struct WasmFileWriter {
 
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename);
 void wasm_close_file_writer(WasmFileWriter* writer);
-WasmResult wasm_init_mem_writer(WasmMemoryWriter* writer);
+WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
+                                WasmMemoryWriter* writer);
 void wasm_close_mem_writer(WasmMemoryWriter* writer);
 
 #endif /* WASM_WRITER_H_ */

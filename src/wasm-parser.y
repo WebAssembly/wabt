@@ -28,12 +28,13 @@
 
 #define ZEROMEM(var) memset(&(var), 0, sizeof(var));
 
-#define DUPTEXT(dst, src)                           \
-  (dst).start = strndup((src).start, (src).length); \
+#define DUPTEXT(dst, src)                                                   \
+  (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
   (dst).length = (src).length
 
-#define DUPQUOTEDTEXT(dst, src)                             \
-  (dst).start = strndup((src).start + 1, (src).length - 2); \
+#define DUPQUOTEDTEXT(dst, src)                                           \
+  (dst).start =                                                           \
+      wasm_strndup(parser->allocator, (src).start + 1, (src).length - 2); \
   (dst).length = (src).length - 2
 
 #define CHECK_ALLOC_(cond)                                  \
@@ -66,28 +67,34 @@
     }                                                                          \
   while (0)
 
-static WasmExprPtr new_expr(WasmExprType type) {
-  WasmExprPtr result = calloc(1, sizeof(WasmExpr));
+#define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
+#define YYFREE(p) wasm_free(parser->allocator, p)
+
+static WasmExprPtr new_expr(WasmAllocator* allocator, WasmExprType type) {
+  WasmExprPtr result =
+      wasm_alloc_zero(allocator, sizeof(WasmExpr), WASM_DEFAULT_ALIGN);
   if (!result)
     return NULL;
   result->type = type;
   return result;
 }
 
-static WasmFunc* new_func(void) {
-  return calloc(1, sizeof(WasmFunc));
+#define NEW_EXPR(type) new_expr(parser->allocator, type)
+
+static WasmFunc* new_func(WasmAllocator* allocator) {
+  return wasm_alloc_zero(allocator, sizeof(WasmFunc), WASM_DEFAULT_ALIGN);
 }
 
-static WasmCommand* new_command(void) {
-  return calloc(1, sizeof(WasmCommand));
+static WasmCommand* new_command(WasmAllocator* allocator) {
+  return wasm_alloc_zero(allocator, sizeof(WasmCommand), WASM_DEFAULT_ALIGN);
 }
 
-static WasmModule* new_module(void) {
-  return calloc(1, sizeof(WasmModule));
+static WasmModule* new_module(WasmAllocator* allocator) {
+  return wasm_alloc_zero(allocator, sizeof(WasmModule), WASM_DEFAULT_ALIGN);
 }
 
-static WasmImport* new_import(void) {
-  return calloc(1, sizeof(WasmImport));
+static WasmImport* new_import(WasmAllocator* allocator) {
+  return wasm_alloc_zero(allocator, sizeof(WasmImport), WASM_DEFAULT_ALIGN);
 }
 
 static int read_int32(const char* s, const char* end, uint32_t* out,
@@ -98,8 +105,10 @@ static int read_float(const char* s, const char* end, float* out);
 static int read_double(const char* s, const char* end, double* out);
 static int read_const(WasmType type, const char* s, const char* end,
                       WasmConst* out);
-static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
-                                      size_t* out_size);
+static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
+                                      void** out_data, size_t* out_size);
+
+#define wasm_lex wasm_lexer_lex
 
 %}
 
@@ -165,31 +174,31 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %type<vars> table var_list
 %type<var> start type_use var
 
-%destructor { wasm_destroy_string_slice(&$$); } bind_var labeling literal quoted_text text
-%destructor { wasm_destroy_type_vector(&$$); } value_type_list
-%destructor { wasm_destroy_var(&$$); } var
-%destructor { wasm_destroy_var_vector_and_elements(&$$); } table var_list
-%destructor { wasm_destroy_expr_ptr(&$$); } expr expr1 expr_opt
-%destructor { wasm_destroy_expr_ptr_vector_and_elements(&$$); } expr_list non_empty_expr_list
-%destructor { wasm_destroy_target(&$$); } target
-%destructor { wasm_destroy_target_vector_and_elements(&$$); } target_list
-%destructor { wasm_destroy_case(&$$); } case
-%destructor { wasm_destroy_case_vector_and_elements(&$$); } case_list
-%destructor { wasm_destroy_type_bindings(&$$); } global local_list param_list
-%destructor { wasm_destroy_func($$); free($$); } func func_info
-%destructor { wasm_destroy_segment(&$$); } segment string_contents
-%destructor { wasm_destroy_segment_vector_and_elements(&$$); } segment_list
-%destructor { wasm_destroy_memory(&$$); } memory
-%destructor { wasm_destroy_func_signature(&$$); } func_type
-%destructor { wasm_destroy_func_type(&$$); } type_def
-%destructor { wasm_destroy_import($$); free($$); } import
-%destructor { wasm_destroy_export(&$$); } export
-%destructor { wasm_destroy_module_field_vector_and_elements(&$$); } module_fields
-%destructor { wasm_destroy_module($$); free($$); } module
-%destructor { wasm_destroy_const_vector(&$$); } const_list
-%destructor { wasm_destroy_command($$); free($$); } cmd
-%destructor { wasm_destroy_command_vector_and_elements(&$$); } cmd_list
-%destructor { wasm_destroy_script(&$$); } script
+%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling literal quoted_text text
+%destructor { wasm_destroy_type_vector(parser->allocator, &$$); } value_type_list
+%destructor { wasm_destroy_var(parser->allocator, &$$); } var
+%destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
+%destructor { wasm_destroy_expr_ptr(parser->allocator, &$$); } expr expr1 expr_opt
+%destructor { wasm_destroy_expr_ptr_vector_and_elements(parser->allocator, &$$); } expr_list non_empty_expr_list
+%destructor { wasm_destroy_target(parser->allocator, &$$); } target
+%destructor { wasm_destroy_target_vector_and_elements(parser->allocator, &$$); } target_list
+%destructor { wasm_destroy_case(parser->allocator, &$$); } case
+%destructor { wasm_destroy_case_vector_and_elements(parser->allocator, &$$); } case_list
+%destructor { wasm_destroy_type_bindings(parser->allocator, &$$); } global local_list param_list
+%destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
+%destructor { wasm_destroy_segment(parser->allocator, &$$); } segment string_contents
+%destructor { wasm_destroy_segment_vector_and_elements(parser->allocator, &$$); } segment_list
+%destructor { wasm_destroy_memory(parser->allocator, &$$); } memory
+%destructor { wasm_destroy_func_signature(parser->allocator, &$$); } func_type
+%destructor { wasm_destroy_func_type(parser->allocator, &$$); } type_def
+%destructor { wasm_destroy_import(parser->allocator, $$); wasm_free(parser->allocator, $$); } import
+%destructor { wasm_destroy_export(parser->allocator, &$$); } export
+%destructor { wasm_destroy_module_field_vector_and_elements(parser->allocator, &$$); } module_fields
+%destructor { wasm_destroy_module(parser->allocator, $$); wasm_free(parser->allocator, $$); } module
+%destructor { wasm_destroy_const_vector(parser->allocator, &$$); } const_list
+%destructor { wasm_destroy_command(parser->allocator, $$); wasm_free(parser->allocator, $$); } cmd
+%destructor { wasm_destroy_command_vector_and_elements(parser->allocator, &$$); } cmd_list
+%destructor { wasm_destroy_script(parser->allocator, &$$); } script
 
 %nonassoc LOW
 %nonassoc VAR
@@ -204,7 +213,7 @@ value_type_list :
     /* empty */ { ZEROMEM($$); }
   | value_type_list VALUE_TYPE {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_type_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$, &$2));
     }
 ;
 func_type :
@@ -247,7 +256,10 @@ var :
 ;
 var_list :
     /* empty */ { ZEROMEM($$); }
-  | var_list var { $$ = $1; CHECK_ALLOC(wasm_append_var_value(&$$, &$2)); }
+  | var_list var {
+      $$ = $1;
+      CHECK_ALLOC(wasm_append_var_value(parser->allocator, &$$, &$2));
+    }
 ;
 bind_var :
     VAR { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
@@ -262,7 +274,10 @@ quoted_text :
 ;
 
 string_contents :
-    TEXT { CHECK_ALLOC(dup_string_contents(&$1, &$$.data, &$$.size)); }
+    TEXT {
+      CHECK_ALLOC(dup_string_contents(parser->allocator, &$1, &$$.data,
+                                      &$$.size));
+    }
 ;
 
 labeling :
@@ -292,62 +307,62 @@ expr :
 ;
 expr1 :
     NOP {
-      $$ = new_expr(WASM_EXPR_TYPE_NOP);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_NOP);
       CHECK_ALLOC_NULL($$);
     }
   | BLOCK labeling {
-      $$ = new_expr(WASM_EXPR_TYPE_BLOCK);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BLOCK);
       CHECK_ALLOC_NULL($$);
       $$->block.label = $2;
     }
   | BLOCK labeling non_empty_expr_list {
-      $$ = new_expr(WASM_EXPR_TYPE_BLOCK);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BLOCK);
       CHECK_ALLOC_NULL($$);
       $$->block.label = $2;
       $$->block.exprs = $3;
     }
   | IF_ELSE expr expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_IF_ELSE);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_IF_ELSE);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
       $$->if_else.false_ = $4;
     }
   | IF expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_IF);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_IF);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
     }
   | BR_IF var expr {
-      $$ = new_expr(WASM_EXPR_TYPE_BR_IF);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BR_IF);
       CHECK_ALLOC_NULL($$);
       $$->br_if.var = $2;
       $$->br_if.cond = $3;
     }
   | BR_IF var expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_BR_IF);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BR_IF);
       CHECK_ALLOC_NULL($$);
       $$->br_if.var = $2;
       $$->br_if.expr = $3;
       $$->br_if.cond = $4;
     }
   | LOOP labeling expr_list {
-      $$ = new_expr(WASM_EXPR_TYPE_LOOP);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_LOOP);
       CHECK_ALLOC_NULL($$);
       ZEROMEM($$->loop.outer);
       $$->loop.inner = $2;
       $$->loop.exprs = $3;
     }
   | LOOP bind_var bind_var expr_list {
-      $$ = new_expr(WASM_EXPR_TYPE_LOOP);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_LOOP);
       CHECK_ALLOC_NULL($$);
       $$->loop.outer = $2;
       $$->loop.inner = $3;
       $$->loop.exprs = $4;
     }
   | BR expr_opt {
-      $$ = new_expr(WASM_EXPR_TYPE_BR);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BR);
       CHECK_ALLOC_NULL($$);
       $$->br.var.loc = @1;
       $$->br.var.type = WASM_VAR_TYPE_INDEX;
@@ -355,18 +370,18 @@ expr1 :
       $$->br.expr = $2;
     }
   | BR var expr_opt {
-      $$ = new_expr(WASM_EXPR_TYPE_BR);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BR);
       CHECK_ALLOC_NULL($$);
       $$->br.var = $2;
       $$->br.expr = $3;
     }
   | RETURN expr_opt {
-      $$ = new_expr(WASM_EXPR_TYPE_RETURN);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_RETURN);
       CHECK_ALLOC_NULL($$);
       $$->return_.expr = $2;
     }
   | TABLESWITCH labeling expr LPAR TABLE target_list RPAR target case_list {
-      $$ = new_expr(WASM_EXPR_TYPE_TABLESWITCH);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_TABLESWITCH);
       CHECK_ALLOC_NULL($$);
       $$->tableswitch.label = $2;
       $$->tableswitch.expr = $3;
@@ -379,7 +394,7 @@ expr1 :
         WasmCase* case_ = &$$->tableswitch.cases.data[i];
         if (case_->label.start) {
           WasmBinding* binding = wasm_insert_binding(
-              &$$->tableswitch.case_bindings, &case_->label);
+              parser->allocator, &$$->tableswitch.case_bindings, &case_->label);
           CHECK_ALLOC_NULL(binding);
           binding->loc = case_->loc;
           binding->index = i;
@@ -387,37 +402,37 @@ expr1 :
       }
     }
   | CALL var expr_list {
-      $$ = new_expr(WASM_EXPR_TYPE_CALL);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_CALL);
       CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
       $$->call.args = $3;
     }
   | CALL_IMPORT var expr_list {
-      $$ = new_expr(WASM_EXPR_TYPE_CALL_IMPORT);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_CALL_IMPORT);
       CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
       $$->call.args = $3;
     }
   | CALL_INDIRECT var expr expr_list {
-      $$ = new_expr(WASM_EXPR_TYPE_CALL_INDIRECT);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_CALL_INDIRECT);
       CHECK_ALLOC_NULL($$);
       $$->call_indirect.var = $2;
       $$->call_indirect.expr = $3;
       $$->call_indirect.args = $4;
     }
   | GET_LOCAL var {
-      $$ = new_expr(WASM_EXPR_TYPE_GET_LOCAL);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_GET_LOCAL);
       CHECK_ALLOC_NULL($$);
       $$->get_local.var = $2;
     }
   | SET_LOCAL var expr {
-      $$ = new_expr(WASM_EXPR_TYPE_SET_LOCAL);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_SET_LOCAL);
       CHECK_ALLOC_NULL($$);
       $$->set_local.var = $2;
       $$->set_local.expr = $3;
     }
   | LOAD offset align expr {
-      $$ = new_expr(WASM_EXPR_TYPE_LOAD);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_LOAD);
       CHECK_ALLOC_NULL($$);
       $$->load.op = $1;
       $$->load.offset = $2;
@@ -425,7 +440,7 @@ expr1 :
       $$->load.addr = $4;
     }
   | STORE offset align expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_STORE);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_STORE);
       CHECK_ALLOC_NULL($$);
       $$->store.op = $1;
       $$->store.offset = $2;
@@ -434,29 +449,29 @@ expr1 :
       $$->store.value = $5;
     }
   | CONST literal {
-      $$ = new_expr(WASM_EXPR_TYPE_CONST);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_CONST);
       CHECK_ALLOC_NULL($$);
       $$->const_.loc = @1;
       if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
         wasm_error(&@2, scanner, parser, "invalid literal \"%.*s\"", $2.length,
                    $2.start);
-      free((char*)$2.start);
+      wasm_free(parser->allocator, (char*)$2.start);
     }
   | UNARY expr {
-      $$ = new_expr(WASM_EXPR_TYPE_UNARY);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_UNARY);
       CHECK_ALLOC_NULL($$);
       $$->unary.op = $1;
       $$->unary.expr = $2;
     }
   | BINARY expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_BINARY);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_BINARY);
       CHECK_ALLOC_NULL($$);
       $$->binary.op = $1;
       $$->binary.left = $2;
       $$->binary.right = $3;
     }
   | SELECT expr expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_SELECT);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_SELECT);
       CHECK_ALLOC_NULL($$);
       $$->select.type = $1;
       $$->select.true_ = $2;
@@ -464,43 +479,43 @@ expr1 :
       $$->select.cond = $4;
     }
   | COMPARE expr expr {
-      $$ = new_expr(WASM_EXPR_TYPE_COMPARE);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_COMPARE);
       CHECK_ALLOC_NULL($$);
       $$->compare.op = $1;
       $$->compare.left = $2;
       $$->compare.right = $3;
     }
   | CONVERT expr {
-      $$ = new_expr(WASM_EXPR_TYPE_CONVERT);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_CONVERT);
       CHECK_ALLOC_NULL($$);
       $$->convert.op = $1;
       $$->convert.expr = $2;
     }
   | UNREACHABLE {
-      $$ = new_expr(WASM_EXPR_TYPE_UNREACHABLE);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_UNREACHABLE);
       CHECK_ALLOC_NULL($$);
     }
   | MEMORY_SIZE {
-      $$ = new_expr(WASM_EXPR_TYPE_MEMORY_SIZE);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_MEMORY_SIZE);
       CHECK_ALLOC_NULL($$);
     }
   | GROW_MEMORY expr {
-      $$ = new_expr(WASM_EXPR_TYPE_GROW_MEMORY);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_GROW_MEMORY);
       CHECK_ALLOC_NULL($$);
       $$->grow_memory.expr = $2;
     }
   | HAS_FEATURE text {
-      $$ = new_expr(WASM_EXPR_TYPE_HAS_FEATURE);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_HAS_FEATURE);
       CHECK_ALLOC_NULL($$);
       $$->has_feature.text = $2;
     }
   | LOAD_GLOBAL var {
-      $$ = new_expr(WASM_EXPR_TYPE_LOAD_GLOBAL);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_LOAD_GLOBAL);
       CHECK_ALLOC_NULL($$);
       $$->load_global.var = $2;
     }
   | STORE_GLOBAL var expr {
-      $$ = new_expr(WASM_EXPR_TYPE_STORE_GLOBAL);
+      $$ = NEW_EXPR(WASM_EXPR_TYPE_STORE_GLOBAL);
       CHECK_ALLOC_NULL($$);
       $$->store_global.var = $2;
       $$->store_global.expr = $3;
@@ -513,11 +528,11 @@ expr_opt :
 non_empty_expr_list :
     expr {
       ZEROMEM($$);
-      CHECK_ALLOC(wasm_append_expr_ptr_value(&$$, &$1));
+      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator, &$$, &$1));
     }
   | non_empty_expr_list expr {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_expr_ptr_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator, &$$, &$2));
     }
 ;
 expr_list :
@@ -539,7 +554,7 @@ target_list :
     /* empty */ { ZEROMEM($$); }
   | target_list target {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_target_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_target_value(parser->allocator, &$$, &$2));
     }
 ;
 case :
@@ -550,7 +565,7 @@ case_list :
     /* empty */ { ZEROMEM($$); }
   | case_list case {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_case_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_case_value(parser->allocator, &$$, &$2));
     }
 ;
 
@@ -560,29 +575,31 @@ case_list :
 param_list :
     LPAR PARAM value_type_list RPAR {
       ZEROMEM($$);
-      CHECK_ALLOC(wasm_extend_types(&$$.types, &$3));
-      wasm_destroy_type_vector(&$3);
+      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$3));
+      wasm_destroy_type_vector(parser->allocator, &$3);
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
-      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$3);
+      WasmBinding* binding =
+          wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
       binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
+      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$4));
     }
   | param_list LPAR PARAM value_type_list RPAR {
       $$ = $1;
-      CHECK_ALLOC(wasm_extend_types(&$$.types, &$4));
-      wasm_destroy_type_vector(&$4);
+      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$4));
+      wasm_destroy_type_vector(parser->allocator, &$4);
     }
   | param_list LPAR PARAM bind_var VALUE_TYPE RPAR {
       $$ = $1;
-      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$4);
+      WasmBinding* binding =
+          wasm_insert_binding(parser->allocator, &$$.bindings, &$4);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @3;
       binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$5));
+      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$5));
     }
 ;
 result :
@@ -591,29 +608,31 @@ result :
 local_list :
     LPAR LOCAL value_type_list RPAR {
       ZEROMEM($$);
-      CHECK_ALLOC(wasm_extend_types(&$$.types, &$3));
-      wasm_destroy_type_vector(&$3);
+      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$3));
+      wasm_destroy_type_vector(parser->allocator, &$3);
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
-      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$3);
+      WasmBinding* binding =
+          wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
       binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
+      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$4));
     }
   | local_list LPAR LOCAL value_type_list RPAR {
       $$ = $1;
-      CHECK_ALLOC(wasm_extend_types(&$$.types, &$4));
-      wasm_destroy_type_vector(&$4);
+      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$4));
+      wasm_destroy_type_vector(parser->allocator, &$4);
     }
   | local_list LPAR LOCAL bind_var VALUE_TYPE RPAR {
       $$ = $1;
-      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$4);
+      WasmBinding* binding =
+          wasm_insert_binding(parser->allocator, &$$.bindings, &$4);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @3;
       binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$5));
+      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$5));
     }
 ;
 type_use :
@@ -621,29 +640,29 @@ type_use :
 ;
 func_info :
     /* empty */ {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
     }
   | bind_var {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
     }
   | bind_var type_use {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->name = $1;
       $$->type_var = $2;
     }
   | bind_var type_use param_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
       $$->params = $3;
     }
   | bind_var type_use param_list result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -651,7 +670,7 @@ func_info :
       $$->result_type = $4;
     }
   | bind_var type_use param_list result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -660,7 +679,7 @@ func_info :
       $$->locals = $5;
     }
   | bind_var type_use param_list result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -670,7 +689,7 @@ func_info :
       $$->exprs = $6;
     }
   | bind_var type_use param_list result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -679,7 +698,7 @@ func_info :
       $$->exprs = $5;
     }
   | bind_var type_use param_list local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -687,7 +706,7 @@ func_info :
       $$->locals = $4;
     }
   | bind_var type_use param_list local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -696,7 +715,7 @@ func_info :
       $$->exprs = $5;
     }
   | bind_var type_use param_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -704,14 +723,14 @@ func_info :
       $$->exprs = $4;
     }
   | bind_var type_use result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
       $$->result_type = $3;
     }
   | bind_var type_use result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -719,7 +738,7 @@ func_info :
       $$->locals = $4;
     }
   | bind_var type_use result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -728,7 +747,7 @@ func_info :
       $$->exprs = $5;
     }
   | bind_var type_use result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->type_var = $2;
@@ -736,14 +755,14 @@ func_info :
       $$->exprs = $4;
     }
   | bind_var type_use local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->name = $1;
       $$->type_var = $2;
       $$->locals = $3;
     }
   | bind_var type_use local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->name = $1;
       $$->type_var = $2;
@@ -751,40 +770,40 @@ func_info :
       $$->exprs = $4;
     }
   | bind_var type_use non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->name = $1;
       $$->type_var = $2;
       $$->exprs = $3;
     }
   | bind_var local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->locals = $2;
     }
   | bind_var local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->locals = $2;
       $$->exprs = $3;
     }
   | bind_var param_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
     }
   | bind_var param_list result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
       $$->result_type = $3;
     }
   | bind_var param_list result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
@@ -792,7 +811,7 @@ func_info :
       $$->locals = $4;
     }
   | bind_var param_list result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
@@ -801,7 +820,7 @@ func_info :
       $$->exprs = $5;
     }
   | bind_var param_list result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
@@ -809,14 +828,14 @@ func_info :
       $$->exprs = $4;
     }
   | bind_var param_list local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
       $$->locals = $3;
     }
   | bind_var param_list local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
@@ -824,27 +843,27 @@ func_info :
       $$->exprs = $4;
     }
   | bind_var param_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->params = $2;
       $$->exprs = $3;
     }
   | bind_var result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->result_type = $2;
     }
   | bind_var result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->result_type = $2;
       $$->locals = $3;
     }
   | bind_var result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->result_type = $2;
@@ -852,38 +871,38 @@ func_info :
       $$->exprs = $4;
     }
   | bind_var result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->result_type = $2;
       $$->exprs = $3;
     }
   | bind_var non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->name = $1;
       $$->exprs = $2;
     }
   | type_use {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->type_var = $1;
     }
   | type_use param_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
     }
   | type_use param_list result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
       $$->result_type = $3;
     }
   | type_use param_list result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
@@ -891,7 +910,7 @@ func_info :
       $$->locals = $4;
     }
   | type_use param_list result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
@@ -900,7 +919,7 @@ func_info :
       $$->exprs = $5;
     }
   | type_use param_list result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
@@ -908,14 +927,14 @@ func_info :
       $$->exprs = $4;
     }
   | type_use param_list local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
       $$->locals = $3;
     }
   | type_use param_list local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
@@ -923,27 +942,27 @@ func_info :
       $$->exprs = $4;
     }
   | type_use param_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->params = $2;
       $$->exprs = $3;
     }
   | type_use result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->result_type = $2;
     }
   | type_use result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->result_type = $2;
       $$->locals = $3;
     }
   | type_use result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->result_type = $2;
@@ -951,51 +970,51 @@ func_info :
       $$->exprs = $4;
     }
   | type_use result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->type_var = $1;
       $$->result_type = $2;
       $$->exprs = $3;
     }
   | type_use local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->type_var = $1;
       $$->locals = $2;
     }
   | type_use local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->type_var = $1;
       $$->locals = $2;
       $$->exprs = $3;
     }
   | type_use non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
       $$->type_var = $1;
       $$->exprs = $2;
     }
   | param_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
     }
   | param_list result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->result_type = $2;
     }
   | param_list result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->result_type = $2;
       $$->locals = $3;
     }
   | param_list result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->result_type = $2;
@@ -1003,68 +1022,68 @@ func_info :
       $$->exprs = $4;
     }
   | param_list result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->result_type = $2;
       $$->exprs = $3;
     }
   | param_list local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->locals = $2;
     }
   | param_list local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->locals = $2;
       $$->exprs = $3;
     }
   | param_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->params = $1;
       $$->exprs = $2;
     }
   | result {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->result_type = $1;
     }
   | result local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->result_type = $1;
       $$->locals = $2;
     }
   | result local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->result_type = $1;
       $$->locals = $2;
       $$->exprs = $3;
     }
   | result non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->result_type = $1;
       $$->exprs = $2;
     }
   | local_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->locals = $1;
     }
   | local_list non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->locals = $1;
       $$->exprs = $2;
     }
   | non_empty_expr_list {
-      $$ = new_func();
+      $$ = new_func(parser->allocator);
       $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
       $$->exprs = $1;
     }
@@ -1100,7 +1119,7 @@ segment_list :
     /* empty */ { ZEROMEM($$); }
   | segment_list segment {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_segment_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_segment_value(parser->allocator, &$$, &$2));
     }
 ;
 
@@ -1152,14 +1171,14 @@ table :
 
 import :
     LPAR IMPORT quoted_text quoted_text type_use RPAR {
-      $$ = new_import();
+      $$ = new_import(parser->allocator);
       $$->import_type = WASM_IMPORT_HAS_TYPE;
       $$->module_name = $3;
       $$->func_name = $4;
       $$->type_var = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text type_use RPAR /* Sugar */ {
-      $$ = new_import();
+      $$ = new_import(parser->allocator);
       $$->import_type = WASM_IMPORT_HAS_TYPE;
       $$->name = $3;
       $$->module_name = $4;
@@ -1167,14 +1186,14 @@ import :
       $$->type_var = $6;
     }
   | LPAR IMPORT quoted_text quoted_text func_type RPAR  /* Sugar */ {
-      $$ = new_import();
+      $$ = new_import(parser->allocator);
       $$->import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
       $$->module_name = $3;
       $$->func_name = $4;
       $$->func_sig = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text func_type RPAR  /* Sugar */ {
-      $$ = new_import();
+      $$ = new_import(parser->allocator);
       $$->import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
       $$->name = $3;
       $$->module_name = $4;
@@ -1197,11 +1216,12 @@ global :
     }
   | LPAR GLOBAL bind_var VALUE_TYPE RPAR {
       ZEROMEM($$);
-      WasmBinding* binding = wasm_insert_binding(&$$.bindings, &$3);
+      WasmBinding* binding =
+          wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
       binding->loc = @2;
       binding->index = 0;
-      CHECK_ALLOC(wasm_append_type_value(&$$.types, &$4));
+      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$4));
     }
 ;
 
@@ -1209,25 +1229,25 @@ module_fields :
     /* empty */ { ZEROMEM($$); }
   | module_fields func {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
       field->func = *$2;
-      free($2);
+      wasm_free(parser->allocator, $2);
     }
   | module_fields import {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
       field->import = *$2;
-      free($2);
+      wasm_free(parser->allocator, $2);
     }
   | module_fields export {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
@@ -1235,7 +1255,7 @@ module_fields :
     }
   | module_fields table {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_TABLE;
@@ -1243,7 +1263,7 @@ module_fields :
     }
   | module_fields type_def {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
@@ -1251,7 +1271,7 @@ module_fields :
     }
   | module_fields memory {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
@@ -1259,7 +1279,7 @@ module_fields :
     }
   | module_fields global {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
@@ -1267,7 +1287,7 @@ module_fields :
     }
   | module_fields start {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(&$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_START;
@@ -1276,7 +1296,7 @@ module_fields :
 ;
 module :
     LPAR MODULE module_fields RPAR {
-      $$ = new_module();
+      $$ = new_module(parser->allocator);
       $$->loc = @2;
       $$->fields = $3;
       /* clear the start function */
@@ -1290,10 +1310,11 @@ module :
         switch (field->type) {
           case WASM_MODULE_FIELD_TYPE_FUNC: {
             WasmFuncPtr func_ptr = &field->func;
-            CHECK_ALLOC(wasm_append_func_ptr_value(&$$->funcs, &func_ptr));
+            CHECK_ALLOC(wasm_append_func_ptr_value(parser->allocator,
+                                                   &$$->funcs, &func_ptr));
             if (field->func.name.start) {
-              WasmBinding* binding =
-                  wasm_insert_binding(&$$->func_bindings, &field->func.name);
+              WasmBinding* binding = wasm_insert_binding(
+                  parser->allocator, &$$->func_bindings, &field->func.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->index = $$->funcs.size - 1;
@@ -1302,11 +1323,11 @@ module :
           }
           case WASM_MODULE_FIELD_TYPE_IMPORT: {
             WasmImportPtr import_ptr = &field->import;
-            CHECK_ALLOC(
-                wasm_append_import_ptr_value(&$$->imports, &import_ptr));
+            CHECK_ALLOC(wasm_append_import_ptr_value(
+                parser->allocator, &$$->imports, &import_ptr));
             if (field->import.name.start) {
-              WasmBinding* binding = wasm_insert_binding(&$$->import_bindings,
-                                                         &field->import.name);
+              WasmBinding* binding = wasm_insert_binding(
+                  parser->allocator, &$$->import_bindings, &field->import.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->index = $$->imports.size - 1;
@@ -1315,11 +1336,12 @@ module :
           }
           case WASM_MODULE_FIELD_TYPE_EXPORT: {
             WasmExportPtr export_ptr = &field->export_;
-            CHECK_ALLOC(
-                wasm_append_export_ptr_value(&$$->exports, &export_ptr));
+            CHECK_ALLOC(wasm_append_export_ptr_value(
+                parser->allocator, &$$->exports, &export_ptr));
             if (field->export_.name.start) {
-              WasmBinding* binding = wasm_insert_binding(&$$->export_bindings,
-                                                         &field->export_.name);
+              WasmBinding* binding =
+                  wasm_insert_binding(parser->allocator, &$$->export_bindings,
+                                      &field->export_.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->index = $$->exports.size - 1;
@@ -1331,11 +1353,12 @@ module :
             break;
           case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
             WasmFuncTypePtr func_type_ptr = &field->func_type;
-            CHECK_ALLOC(wasm_append_func_type_ptr_value(&$$->func_types,
-                                                        &func_type_ptr));
+            CHECK_ALLOC(wasm_append_func_type_ptr_value(
+                parser->allocator, &$$->func_types, &func_type_ptr));
             if (field->func_type.name.start) {
               WasmBinding* binding = wasm_insert_binding(
-                  &$$->func_type_bindings, &field->func_type.name);
+                  parser->allocator, &$$->func_type_bindings,
+                  &field->func_type.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
               binding->index = $$->func_types.size - 1;
@@ -1346,8 +1369,8 @@ module :
             $$->memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_GLOBAL:
-            CHECK_ALLOC(
-                wasm_extend_type_bindings(&$$->globals, &field->global));
+            CHECK_ALLOC(wasm_extend_type_bindings(
+                parser->allocator, &$$->globals, &field->global));
             break;
           case WASM_MODULE_FIELD_TYPE_START:
             $$->start = field->start;
@@ -1362,27 +1385,27 @@ module :
 
 cmd :
     module {
-      $$ = new_command();
+      $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_MODULE;
       $$->module = *$1;
-      free($1);
+      wasm_free(parser->allocator, $1);
     }
   | LPAR INVOKE quoted_text const_list RPAR {
-      $$ = new_command();
+      $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_INVOKE;
       $$->invoke.loc = @2;
       $$->invoke.name = $3;
       $$->invoke.args = $4;
     }
   | LPAR ASSERT_INVALID module quoted_text RPAR {
-      $$ = new_command();
+      $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_INVALID;
       $$->assert_invalid.module = *$3;
       $$->assert_invalid.text = $4;
-      free($3);
+      wasm_free(parser->allocator, $3);
     }
   | LPAR ASSERT_RETURN LPAR INVOKE quoted_text const_list RPAR const_opt RPAR {
-      $$ = new_command();
+      $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN;
       $$->assert_return.invoke.loc = @4;
       $$->assert_return.invoke.name = $5;
@@ -1390,14 +1413,14 @@ cmd :
       $$->assert_return.expected = $8;
     }
   | LPAR ASSERT_RETURN_NAN LPAR INVOKE quoted_text const_list RPAR RPAR {
-      $$ = new_command();
+      $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
       $$->assert_return_nan.invoke.loc = @4;
       $$->assert_return_nan.invoke.name = $5;
       $$->assert_return_nan.invoke.args = $6;
     }
   | LPAR ASSERT_TRAP LPAR INVOKE quoted_text const_list RPAR quoted_text RPAR {
-      $$ = new_command();
+      $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_TRAP;
       $$->assert_trap.invoke.loc = @4;
       $$->assert_trap.invoke.name = $5;
@@ -1409,8 +1432,8 @@ cmd_list :
     /* empty */ { ZEROMEM($$); }
   | cmd_list cmd {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_command_value(&$$, $2));
-      free($2);
+      CHECK_ALLOC(wasm_append_command_value(parser->allocator, &$$, $2));
+      wasm_free(parser->allocator, $2);
     }
 ;
 
@@ -1420,7 +1443,7 @@ const :
       if (!read_const($2, $3.start, $3.start + $3.length, &$$))
         wasm_error(&@3, scanner, parser, "invalid literal \"%.*s\"", $3.length,
                    $3.start);
-      free((char*)$3.start);
+      wasm_free(parser->allocator, (char*)$3.start);
     }
 ;
 const_opt :
@@ -1431,7 +1454,7 @@ const_list :
     /* empty */ { ZEROMEM($$); }
   | const_list const {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_const_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_const_value(parser->allocator, &$$, &$2));
     }
 ;
 
@@ -1760,7 +1783,8 @@ static size_t copy_string_contents(WasmStringSlice* text,
   return dest - dest_start;
 }
 
-static WasmResult dup_string_contents(WasmStringSlice* text,
+static WasmResult dup_string_contents(WasmAllocator* allocator,
+                                      WasmStringSlice* text,
                                       void** out_data,
                                       size_t* out_size) {
   const char* src = text->start + 1;
@@ -1769,7 +1793,7 @@ static WasmResult dup_string_contents(WasmStringSlice* text,
    * characters. It will only get shorter, and this way we only have to iterate
    * through the string once. */
   size_t size = end - src;
-  char* result = malloc(size);
+  char* result = wasm_alloc(allocator, size, 1);
   if (!result)
     return WASM_ERROR;
   size_t actual_size = copy_string_contents(text, result, size);

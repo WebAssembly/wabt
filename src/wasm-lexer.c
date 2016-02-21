@@ -153,7 +153,7 @@ typedef void* yyscan_t;
 #define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
 
 /* Special action meaning "start processing a new file". */
-#define YY_NEW_FILE wasm_restart(yyin ,yyscanner )
+#define YY_NEW_FILE wasm_lexer_restart(yyin ,yyscanner )
 
 #define YY_END_OF_BUFFER_CHAR 0
 
@@ -190,7 +190,7 @@ typedef size_t yy_size_t;
 
     /* Note: We specifically omit the test for yy_rule_can_match_eol because it requires
      *       access to the local variable yy_act. Since yyless() is a macro, it would break
-     *       existing scanners that call yyless() from OUTSIDE wasm_lex. 
+     *       existing scanners that call yyless() from OUTSIDE wasm_lexer_lex. 
      *       One obvious solution it to make yy_act a global. I tried that, and saw
      *       a 5% performance hit in a non-yylineno scanner, because yy_act is
      *       normally declared as a register variable-- so it is not worth it.
@@ -283,7 +283,7 @@ struct yy_buffer_state
 	 * possible backing-up.
 	 *
 	 * When we actually see the EOF, we change the status to "new"
-	 * (via wasm_restart()), so that the user can continue scanning by
+	 * (via wasm_lexer_restart()), so that the user can continue scanning by
 	 * just pointing yyin at a new input file.
 	 */
 #define YY_BUFFER_EOF_PENDING 2
@@ -306,36 +306,36 @@ struct yy_buffer_state
  */
 #define YY_CURRENT_BUFFER_LVALUE yyg->yy_buffer_stack[yyg->yy_buffer_stack_top]
 
-void wasm_restart (FILE *input_file ,yyscan_t yyscanner );
-void wasm__switch_to_buffer (YY_BUFFER_STATE new_buffer ,yyscan_t yyscanner );
-YY_BUFFER_STATE wasm__create_buffer (FILE *file,int size ,yyscan_t yyscanner );
-void wasm__delete_buffer (YY_BUFFER_STATE b ,yyscan_t yyscanner );
-void wasm__flush_buffer (YY_BUFFER_STATE b ,yyscan_t yyscanner );
-void wasm_push_buffer_state (YY_BUFFER_STATE new_buffer ,yyscan_t yyscanner );
-void wasm_pop_buffer_state (yyscan_t yyscanner );
+void wasm_lexer_restart (FILE *input_file ,yyscan_t yyscanner );
+void wasm_lexer__switch_to_buffer (YY_BUFFER_STATE new_buffer ,yyscan_t yyscanner );
+YY_BUFFER_STATE wasm_lexer__create_buffer (FILE *file,int size ,yyscan_t yyscanner );
+void wasm_lexer__delete_buffer (YY_BUFFER_STATE b ,yyscan_t yyscanner );
+void wasm_lexer__flush_buffer (YY_BUFFER_STATE b ,yyscan_t yyscanner );
+void wasm_lexer_push_buffer_state (YY_BUFFER_STATE new_buffer ,yyscan_t yyscanner );
+void wasm_lexer_pop_buffer_state (yyscan_t yyscanner );
 
-static void wasm_ensure_buffer_stack (yyscan_t yyscanner );
-static void wasm__load_buffer_state (yyscan_t yyscanner );
-static void wasm__init_buffer (YY_BUFFER_STATE b,FILE *file ,yyscan_t yyscanner );
+static void wasm_lexer_ensure_buffer_stack (yyscan_t yyscanner );
+static void wasm_lexer__load_buffer_state (yyscan_t yyscanner );
+static void wasm_lexer__init_buffer (YY_BUFFER_STATE b,FILE *file ,yyscan_t yyscanner );
 
-#define YY_FLUSH_BUFFER wasm__flush_buffer(YY_CURRENT_BUFFER ,yyscanner)
+#define YY_FLUSH_BUFFER wasm_lexer__flush_buffer(YY_CURRENT_BUFFER ,yyscanner)
 
-YY_BUFFER_STATE wasm__scan_buffer (char *base,yy_size_t size ,yyscan_t yyscanner );
-YY_BUFFER_STATE wasm__scan_string (yyconst char *yy_str ,yyscan_t yyscanner );
-YY_BUFFER_STATE wasm__scan_bytes (yyconst char *bytes,yy_size_t len ,yyscan_t yyscanner );
+YY_BUFFER_STATE wasm_lexer__scan_buffer (char *base,yy_size_t size ,yyscan_t yyscanner );
+YY_BUFFER_STATE wasm_lexer__scan_string (yyconst char *yy_str ,yyscan_t yyscanner );
+YY_BUFFER_STATE wasm_lexer__scan_bytes (yyconst char *bytes,yy_size_t len ,yyscan_t yyscanner );
 
-void *wasm_alloc (yy_size_t ,yyscan_t yyscanner );
-void *wasm_realloc (void *,yy_size_t ,yyscan_t yyscanner );
-void wasm_free (void * ,yyscan_t yyscanner );
+void *wasm_lexer_alloc (yy_size_t ,yyscan_t yyscanner );
+void *wasm_lexer_realloc (void *,yy_size_t ,yyscan_t yyscanner );
+void wasm_lexer_free (void * ,yyscan_t yyscanner );
 
-#define yy_new_buffer wasm__create_buffer
+#define yy_new_buffer wasm_lexer__create_buffer
 
 #define yy_set_interactive(is_interactive) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){ \
-        wasm_ensure_buffer_stack (yyscanner); \
+        wasm_lexer_ensure_buffer_stack (yyscanner); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            wasm__create_buffer(yyin,YY_BUF_SIZE ,yyscanner); \
+            wasm_lexer__create_buffer(yyin,YY_BUF_SIZE ,yyscanner); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_is_interactive = is_interactive; \
 	}
@@ -343,9 +343,9 @@ void wasm_free (void * ,yyscan_t yyscanner );
 #define yy_set_bol(at_bol) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){\
-        wasm_ensure_buffer_stack (yyscanner); \
+        wasm_lexer_ensure_buffer_stack (yyscanner); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            wasm__create_buffer(yyin,YY_BUF_SIZE ,yyscanner); \
+            wasm_lexer__create_buffer(yyin,YY_BUF_SIZE ,yyscanner); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = at_bol; \
 	}
@@ -1205,17 +1205,18 @@ static yyconst flex_int32_t yy_rule_can_match_eol[220] =
 #include "wasm-parser.h"
 
 typedef struct WasmScannerExtra {
+  WasmAllocator* allocator;
   FILE* file;
   const char* filename;
   int column;
   int comment_nesting;
 } WasmScannerExtra;
 
-#define YY_DECL                                                    \
-  int wasm_lex(WASM_STYPE* yylval_param, WASM_LTYPE* yylloc_param, \
-               yyscan_t yyscanner, WasmParser* parser)
+#define YY_DECL                                                          \
+  int wasm_lexer_lex(WASM_STYPE* yylval_param, WASM_LTYPE* yylloc_param, \
+                     yyscan_t yyscanner, WasmParser* parser)
 
-#define EXTRA(scanner) ((WasmScannerExtra*)wasm_get_extra(scanner))
+#define EXTRA(scanner) ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))
 #define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
 #define COLUMN(scanner) (EXTRA(scanner)->column)
 #define RESET_COLUMN(scanner) EXTRA(scanner)->column = 1
@@ -1286,7 +1287,7 @@ typedef struct WasmScannerExtra {
 
 
 
-#line 1290 "src/wasm-lexer.c"
+#line 1291 "src/wasm-lexer.c"
 
 #define INITIAL 0
 #define LINE_COMMENT 1
@@ -1351,50 +1352,50 @@ static int yy_init_globals (yyscan_t yyscanner );
     
     #    define yylloc yyg->yylloc_r
     
-int wasm_lex_init (yyscan_t* scanner);
+int wasm_lexer_lex_init (yyscan_t* scanner);
 
-int wasm_lex_init_extra (YY_EXTRA_TYPE user_defined,yyscan_t* scanner);
+int wasm_lexer_lex_init_extra (YY_EXTRA_TYPE user_defined,yyscan_t* scanner);
 
 /* Accessor methods to globals.
    These are made visible to non-reentrant scanners for convenience. */
 
-int wasm_lex_destroy (yyscan_t yyscanner );
+int wasm_lexer_lex_destroy (yyscan_t yyscanner );
 
-int wasm_get_debug (yyscan_t yyscanner );
+int wasm_lexer_get_debug (yyscan_t yyscanner );
 
-void wasm_set_debug (int debug_flag ,yyscan_t yyscanner );
+void wasm_lexer_set_debug (int debug_flag ,yyscan_t yyscanner );
 
-YY_EXTRA_TYPE wasm_get_extra (yyscan_t yyscanner );
+YY_EXTRA_TYPE wasm_lexer_get_extra (yyscan_t yyscanner );
 
-void wasm_set_extra (YY_EXTRA_TYPE user_defined ,yyscan_t yyscanner );
+void wasm_lexer_set_extra (YY_EXTRA_TYPE user_defined ,yyscan_t yyscanner );
 
-FILE *wasm_get_in (yyscan_t yyscanner );
+FILE *wasm_lexer_get_in (yyscan_t yyscanner );
 
-void wasm_set_in  (FILE * in_str ,yyscan_t yyscanner );
+void wasm_lexer_set_in  (FILE * in_str ,yyscan_t yyscanner );
 
-FILE *wasm_get_out (yyscan_t yyscanner );
+FILE *wasm_lexer_get_out (yyscan_t yyscanner );
 
-void wasm_set_out  (FILE * out_str ,yyscan_t yyscanner );
+void wasm_lexer_set_out  (FILE * out_str ,yyscan_t yyscanner );
 
-yy_size_t wasm_get_leng (yyscan_t yyscanner );
+yy_size_t wasm_lexer_get_leng (yyscan_t yyscanner );
 
-char *wasm_get_text (yyscan_t yyscanner );
+char *wasm_lexer_get_text (yyscan_t yyscanner );
 
-int wasm_get_lineno (yyscan_t yyscanner );
+int wasm_lexer_get_lineno (yyscan_t yyscanner );
 
-void wasm_set_lineno (int line_number ,yyscan_t yyscanner );
+void wasm_lexer_set_lineno (int line_number ,yyscan_t yyscanner );
 
-int wasm_get_column  (yyscan_t yyscanner );
+int wasm_lexer_get_column  (yyscan_t yyscanner );
 
-void wasm_set_column (int column_no ,yyscan_t yyscanner );
+void wasm_lexer_set_column (int column_no ,yyscan_t yyscanner );
 
-YYSTYPE * wasm_get_lval (yyscan_t yyscanner );
+YYSTYPE * wasm_lexer_get_lval (yyscan_t yyscanner );
 
-void wasm_set_lval (YYSTYPE * yylval_param ,yyscan_t yyscanner );
+void wasm_lexer_set_lval (YYSTYPE * yylval_param ,yyscan_t yyscanner );
 
-       YYLTYPE *wasm_get_lloc (yyscan_t yyscanner );
+       YYLTYPE *wasm_lexer_get_lloc (yyscan_t yyscanner );
     
-        void wasm_set_lloc (YYLTYPE * yylloc_param ,yyscan_t yyscanner );
+        void wasm_lexer_set_lloc (YYLTYPE * yylloc_param ,yyscan_t yyscanner );
     
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1402,9 +1403,9 @@ void wasm_set_lval (YYSTYPE * yylval_param ,yyscan_t yyscanner );
 
 #ifndef YY_SKIP_YYWRAP
 #ifdef __cplusplus
-extern "C" int wasm_wrap (yyscan_t yyscanner );
+extern "C" int wasm_lexer_wrap (yyscan_t yyscanner );
 #else
-extern int wasm_wrap (yyscan_t yyscanner );
+extern int wasm_lexer_wrap (yyscan_t yyscanner );
 #endif
 #endif
 
@@ -1508,10 +1509,10 @@ static int input (yyscan_t yyscanner );
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
 
-extern int wasm_lex \
+extern int wasm_lexer_lex \
                (YYSTYPE * yylval_param,YYLTYPE * yylloc_param ,yyscan_t yyscanner);
 
-#define YY_DECL int wasm_lex \
+#define YY_DECL int wasm_lexer_lex \
                (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner)
 #endif /* !YY_DECL */
 
@@ -1561,19 +1562,19 @@ YY_DECL
 			yyout = stdout;
 
 		if ( ! YY_CURRENT_BUFFER ) {
-			wasm_ensure_buffer_stack (yyscanner);
+			wasm_lexer_ensure_buffer_stack (yyscanner);
 			YY_CURRENT_BUFFER_LVALUE =
-				wasm__create_buffer(yyin,YY_BUF_SIZE ,yyscanner);
+				wasm_lexer__create_buffer(yyin,YY_BUF_SIZE ,yyscanner);
 		}
 
-		wasm__load_buffer_state(yyscanner );
+		wasm_lexer__load_buffer_state(yyscanner );
 		}
 
 	{
-#line 136 "src/wasm-lexer.l"
+#line 140 "src/wasm-lexer.l"
 
 
-#line 1577 "src/wasm-lexer.c"
+#line 1578 "src/wasm-lexer.c"
 
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
@@ -1644,1133 +1645,1133 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 138 "src/wasm-lexer.l"
+#line 142 "src/wasm-lexer.l"
 { return TOK(LPAR); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 139 "src/wasm-lexer.l"
+#line 143 "src/wasm-lexer.l"
 { return TOK(RPAR); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 140 "src/wasm-lexer.l"
+#line 144 "src/wasm-lexer.l"
 { TEXT; return TOK(INT); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 141 "src/wasm-lexer.l"
+#line 145 "src/wasm-lexer.l"
 { TEXT; return TOK(FLOAT); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 142 "src/wasm-lexer.l"
+#line 146 "src/wasm-lexer.l"
 { TEXT; return TOK(TEXT); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 143 "src/wasm-lexer.l"
+#line 147 "src/wasm-lexer.l"
 { BEGIN(BAD_TEXT); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 144 "src/wasm-lexer.l"
+#line 148 "src/wasm-lexer.l"
 {}
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 145 "src/wasm-lexer.l"
+#line 149 "src/wasm-lexer.l"
 { BEGIN(INITIAL);
                         RESET_COLUMN(yyscanner);
                         wasm_error(yylloc, &yyscanner, parser,
-                                "newline in string"); }
+                                   "newline in string"); }
 	YY_BREAK
 case YY_STATE_EOF(BAD_TEXT):
-#line 149 "src/wasm-lexer.l"
+#line 153 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
                                    "unexpected EOF");
                         return TOK(EOF); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 152 "src/wasm-lexer.l"
+#line 156 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
-                                "bad escape \"%.*s\"", yyleng, yytext); }
+                                   "bad escape \"%.*s\"", yyleng, yytext); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 154 "src/wasm-lexer.l"
+#line 158 "src/wasm-lexer.l"
 { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 155 "src/wasm-lexer.l"
+#line 159 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
                                 "illegal character in string"); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 157 "src/wasm-lexer.l"
+#line 161 "src/wasm-lexer.l"
 { TYPE(I32); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 158 "src/wasm-lexer.l"
+#line 162 "src/wasm-lexer.l"
 { TYPE(I64); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 159 "src/wasm-lexer.l"
+#line 163 "src/wasm-lexer.l"
 { TYPE(F32); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 160 "src/wasm-lexer.l"
+#line 164 "src/wasm-lexer.l"
 { TYPE(F64); return TOK(VALUE_TYPE); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 161 "src/wasm-lexer.l"
+#line 165 "src/wasm-lexer.l"
 { return TOK(NOP); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 162 "src/wasm-lexer.l"
+#line 166 "src/wasm-lexer.l"
 { return TOK(BLOCK); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 163 "src/wasm-lexer.l"
+#line 167 "src/wasm-lexer.l"
 { return TOK(IF); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 164 "src/wasm-lexer.l"
+#line 168 "src/wasm-lexer.l"
 { return TOK(IF_ELSE); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 165 "src/wasm-lexer.l"
+#line 169 "src/wasm-lexer.l"
 { return TOK(LOOP); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 166 "src/wasm-lexer.l"
+#line 170 "src/wasm-lexer.l"
 { return TOK(BR); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 167 "src/wasm-lexer.l"
+#line 171 "src/wasm-lexer.l"
 { return TOK(BR_IF); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 168 "src/wasm-lexer.l"
+#line 172 "src/wasm-lexer.l"
 { return TOK(TABLESWITCH); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 169 "src/wasm-lexer.l"
+#line 173 "src/wasm-lexer.l"
 { return TOK(CASE); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 170 "src/wasm-lexer.l"
+#line 174 "src/wasm-lexer.l"
 { return TOK(CALL); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 171 "src/wasm-lexer.l"
+#line 175 "src/wasm-lexer.l"
 { return TOK(CALL_IMPORT); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 172 "src/wasm-lexer.l"
+#line 176 "src/wasm-lexer.l"
 { return TOK(CALL_INDIRECT); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 173 "src/wasm-lexer.l"
+#line 177 "src/wasm-lexer.l"
 { return TOK(RETURN); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 174 "src/wasm-lexer.l"
+#line 178 "src/wasm-lexer.l"
 { return TOK(GET_LOCAL); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 175 "src/wasm-lexer.l"
+#line 179 "src/wasm-lexer.l"
 { return TOK(SET_LOCAL); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 176 "src/wasm-lexer.l"
+#line 180 "src/wasm-lexer.l"
 { MEMOP(I32, LOAD, 32); return TOK(LOAD); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 177 "src/wasm-lexer.l"
+#line 181 "src/wasm-lexer.l"
 { MEMOP(I64, LOAD, 64); return TOK(LOAD); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 178 "src/wasm-lexer.l"
+#line 182 "src/wasm-lexer.l"
 { MEMOP(F32, LOAD, 32); return TOK(LOAD); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 179 "src/wasm-lexer.l"
+#line 183 "src/wasm-lexer.l"
 { MEMOP(F64, LOAD, 64); return TOK(LOAD); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 180 "src/wasm-lexer.l"
+#line 184 "src/wasm-lexer.l"
 { MEMOP(I32, STORE, 32); return TOK(STORE); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 181 "src/wasm-lexer.l"
+#line 185 "src/wasm-lexer.l"
 { MEMOP(I64, STORE, 64); return TOK(STORE); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 182 "src/wasm-lexer.l"
+#line 186 "src/wasm-lexer.l"
 { MEMOP(F32, STORE, 32); return TOK(STORE); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 183 "src/wasm-lexer.l"
+#line 187 "src/wasm-lexer.l"
 { MEMOP(F64, STORE, 64); return TOK(STORE); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 184 "src/wasm-lexer.l"
+#line 188 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, LOAD, 8, S); return TOK(LOAD); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 185 "src/wasm-lexer.l"
+#line 189 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, LOAD, 8, S); return TOK(LOAD); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 186 "src/wasm-lexer.l"
+#line 190 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, LOAD, 8, U); return TOK(LOAD); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 187 "src/wasm-lexer.l"
+#line 191 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, LOAD, 8, U); return TOK(LOAD); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 188 "src/wasm-lexer.l"
+#line 192 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, LOAD, 16, S); return TOK(LOAD); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 189 "src/wasm-lexer.l"
+#line 193 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, LOAD, 16, S); return TOK(LOAD); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 190 "src/wasm-lexer.l"
+#line 194 "src/wasm-lexer.l"
 { MEMOPSIGN(I32, LOAD, 16, U); return TOK(LOAD); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 191 "src/wasm-lexer.l"
+#line 195 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, LOAD, 16, U); return TOK(LOAD); }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 192 "src/wasm-lexer.l"
+#line 196 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, LOAD, 32, S); return TOK(LOAD); }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 193 "src/wasm-lexer.l"
+#line 197 "src/wasm-lexer.l"
 { MEMOPSIGN(I64, LOAD, 32, U); return TOK(LOAD); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 194 "src/wasm-lexer.l"
+#line 198 "src/wasm-lexer.l"
 { MEMOP(I32, STORE, 8); return TOK(STORE); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 195 "src/wasm-lexer.l"
+#line 199 "src/wasm-lexer.l"
 { MEMOP(I64, STORE, 8); return TOK(STORE); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 196 "src/wasm-lexer.l"
+#line 200 "src/wasm-lexer.l"
 { MEMOP(I32, STORE, 16); return TOK(STORE); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 197 "src/wasm-lexer.l"
+#line 201 "src/wasm-lexer.l"
 { MEMOP(I64, STORE, 16); return TOK(STORE); }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 198 "src/wasm-lexer.l"
+#line 202 "src/wasm-lexer.l"
 { MEMOP(I64, STORE, 32); return TOK(STORE); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 199 "src/wasm-lexer.l"
+#line 203 "src/wasm-lexer.l"
 { TEXT_AT(7); return TOK(OFFSET); }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 200 "src/wasm-lexer.l"
+#line 204 "src/wasm-lexer.l"
 { TEXT_AT(6); return TOK(ALIGN); }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 201 "src/wasm-lexer.l"
+#line 205 "src/wasm-lexer.l"
 { TYPE(I32); return TOK(CONST); }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 202 "src/wasm-lexer.l"
+#line 206 "src/wasm-lexer.l"
 { TYPE(I64); return TOK(CONST); }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 203 "src/wasm-lexer.l"
+#line 207 "src/wasm-lexer.l"
 { TYPE(F32); return TOK(CONST); }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 204 "src/wasm-lexer.l"
+#line 208 "src/wasm-lexer.l"
 { TYPE(F64); return TOK(CONST); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 205 "src/wasm-lexer.l"
+#line 209 "src/wasm-lexer.l"
 { UNOP(I32, NOT); return TOK(UNARY); }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 206 "src/wasm-lexer.l"
+#line 210 "src/wasm-lexer.l"
 { UNOP(I32, CLZ); return TOK(UNARY); }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 207 "src/wasm-lexer.l"
+#line 211 "src/wasm-lexer.l"
 { UNOP(I64, CLZ); return TOK(UNARY); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 208 "src/wasm-lexer.l"
+#line 212 "src/wasm-lexer.l"
 { UNOP(I32, CTZ); return TOK(UNARY); }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 209 "src/wasm-lexer.l"
+#line 213 "src/wasm-lexer.l"
 { UNOP(I64, CTZ); return TOK(UNARY); }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 210 "src/wasm-lexer.l"
+#line 214 "src/wasm-lexer.l"
 { UNOP(I32, POPCNT); return TOK(UNARY); }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 211 "src/wasm-lexer.l"
+#line 215 "src/wasm-lexer.l"
 { UNOP(I64, POPCNT); return TOK(UNARY); }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 212 "src/wasm-lexer.l"
+#line 216 "src/wasm-lexer.l"
 { UNOP(F32, NEG); return TOK(UNARY); }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 213 "src/wasm-lexer.l"
+#line 217 "src/wasm-lexer.l"
 { UNOP(F64, NEG); return TOK(UNARY); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 214 "src/wasm-lexer.l"
+#line 218 "src/wasm-lexer.l"
 { UNOP(F32, ABS); return TOK(UNARY); }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 215 "src/wasm-lexer.l"
+#line 219 "src/wasm-lexer.l"
 { UNOP(F64, ABS); return TOK(UNARY); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 216 "src/wasm-lexer.l"
+#line 220 "src/wasm-lexer.l"
 { UNOP(F32, SQRT); return TOK(UNARY); }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 217 "src/wasm-lexer.l"
+#line 221 "src/wasm-lexer.l"
 { UNOP(F64, SQRT); return TOK(UNARY); }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 218 "src/wasm-lexer.l"
+#line 222 "src/wasm-lexer.l"
 { UNOP(F32, CEIL); return TOK(UNARY); }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 219 "src/wasm-lexer.l"
+#line 223 "src/wasm-lexer.l"
 { UNOP(F64, CEIL); return TOK(UNARY); }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 220 "src/wasm-lexer.l"
+#line 224 "src/wasm-lexer.l"
 { UNOP(F32, FLOOR); return TOK(UNARY); }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 221 "src/wasm-lexer.l"
+#line 225 "src/wasm-lexer.l"
 { UNOP(F64, FLOOR); return TOK(UNARY); }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 222 "src/wasm-lexer.l"
+#line 226 "src/wasm-lexer.l"
 { UNOP(F32, TRUNC); return TOK(UNARY); }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 223 "src/wasm-lexer.l"
+#line 227 "src/wasm-lexer.l"
 { UNOP(F64, TRUNC); return TOK(UNARY); }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 224 "src/wasm-lexer.l"
+#line 228 "src/wasm-lexer.l"
 { UNOP(F32, NEAREST); return TOK(UNARY); }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 225 "src/wasm-lexer.l"
+#line 229 "src/wasm-lexer.l"
 { UNOP(F64, NEAREST); return TOK(UNARY); }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 226 "src/wasm-lexer.l"
+#line 230 "src/wasm-lexer.l"
 { BINOP(I32, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 227 "src/wasm-lexer.l"
+#line 231 "src/wasm-lexer.l"
 { BINOP(I64, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 228 "src/wasm-lexer.l"
+#line 232 "src/wasm-lexer.l"
 { BINOP(I32, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 229 "src/wasm-lexer.l"
+#line 233 "src/wasm-lexer.l"
 { BINOP(I64, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 230 "src/wasm-lexer.l"
+#line 234 "src/wasm-lexer.l"
 { BINOP(I32, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 231 "src/wasm-lexer.l"
+#line 235 "src/wasm-lexer.l"
 { BINOP(I64, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 232 "src/wasm-lexer.l"
+#line 236 "src/wasm-lexer.l"
 { BINOP(I32, DIV_S); return TOK(BINARY); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 233 "src/wasm-lexer.l"
+#line 237 "src/wasm-lexer.l"
 { BINOP(I64, DIV_S); return TOK(BINARY); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 234 "src/wasm-lexer.l"
+#line 238 "src/wasm-lexer.l"
 { BINOP(I32, DIV_U); return TOK(BINARY); }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 235 "src/wasm-lexer.l"
+#line 239 "src/wasm-lexer.l"
 { BINOP(I64, DIV_U); return TOK(BINARY); }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 236 "src/wasm-lexer.l"
+#line 240 "src/wasm-lexer.l"
 { BINOP(I32, REM_S); return TOK(BINARY); }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 237 "src/wasm-lexer.l"
+#line 241 "src/wasm-lexer.l"
 { BINOP(I64, REM_S); return TOK(BINARY); }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 238 "src/wasm-lexer.l"
+#line 242 "src/wasm-lexer.l"
 { BINOP(I32, REM_U); return TOK(BINARY); }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 239 "src/wasm-lexer.l"
+#line 243 "src/wasm-lexer.l"
 { BINOP(I64, REM_U); return TOK(BINARY); }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 240 "src/wasm-lexer.l"
+#line 244 "src/wasm-lexer.l"
 { BINOP(I32, AND); return TOK(BINARY); }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 241 "src/wasm-lexer.l"
+#line 245 "src/wasm-lexer.l"
 { BINOP(I64, AND); return TOK(BINARY); }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 242 "src/wasm-lexer.l"
+#line 246 "src/wasm-lexer.l"
 { BINOP(I32, OR); return TOK(BINARY); }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 243 "src/wasm-lexer.l"
+#line 247 "src/wasm-lexer.l"
 { BINOP(I64, OR); return TOK(BINARY); }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 244 "src/wasm-lexer.l"
+#line 248 "src/wasm-lexer.l"
 { BINOP(I32, XOR); return TOK(BINARY); }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 245 "src/wasm-lexer.l"
+#line 249 "src/wasm-lexer.l"
 { BINOP(I64, XOR); return TOK(BINARY); }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 246 "src/wasm-lexer.l"
+#line 250 "src/wasm-lexer.l"
 { BINOP(I32, SHL); return TOK(BINARY); }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 247 "src/wasm-lexer.l"
+#line 251 "src/wasm-lexer.l"
 { BINOP(I64, SHL); return TOK(BINARY); }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 248 "src/wasm-lexer.l"
+#line 252 "src/wasm-lexer.l"
 { BINOP(I32, SHR_S); return TOK(BINARY); }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 249 "src/wasm-lexer.l"
+#line 253 "src/wasm-lexer.l"
 { BINOP(I64, SHR_S); return TOK(BINARY); }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 250 "src/wasm-lexer.l"
+#line 254 "src/wasm-lexer.l"
 { BINOP(I32, SHR_U); return TOK(BINARY); }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 251 "src/wasm-lexer.l"
+#line 255 "src/wasm-lexer.l"
 { BINOP(I64, SHR_U); return TOK(BINARY); }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 252 "src/wasm-lexer.l"
+#line 256 "src/wasm-lexer.l"
 { BINOP(F32, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 253 "src/wasm-lexer.l"
+#line 257 "src/wasm-lexer.l"
 { BINOP(F64, ADD); return TOK(BINARY); }
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 254 "src/wasm-lexer.l"
+#line 258 "src/wasm-lexer.l"
 { BINOP(F32, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 255 "src/wasm-lexer.l"
+#line 259 "src/wasm-lexer.l"
 { BINOP(F64, SUB); return TOK(BINARY); }
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 256 "src/wasm-lexer.l"
+#line 260 "src/wasm-lexer.l"
 { BINOP(F32, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 257 "src/wasm-lexer.l"
+#line 261 "src/wasm-lexer.l"
 { BINOP(F64, MUL); return TOK(BINARY); }
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 258 "src/wasm-lexer.l"
+#line 262 "src/wasm-lexer.l"
 { BINOP(F32, DIV); return TOK(BINARY); }
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 259 "src/wasm-lexer.l"
+#line 263 "src/wasm-lexer.l"
 { BINOP(F64, DIV); return TOK(BINARY); }
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 260 "src/wasm-lexer.l"
+#line 264 "src/wasm-lexer.l"
 { BINOP(F32, MIN); return TOK(BINARY); }
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 261 "src/wasm-lexer.l"
+#line 265 "src/wasm-lexer.l"
 { BINOP(F64, MIN); return TOK(BINARY); }
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 262 "src/wasm-lexer.l"
+#line 266 "src/wasm-lexer.l"
 { BINOP(F32, MAX); return TOK(BINARY); }
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 263 "src/wasm-lexer.l"
+#line 267 "src/wasm-lexer.l"
 { BINOP(F64, MAX); return TOK(BINARY); }
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 264 "src/wasm-lexer.l"
+#line 268 "src/wasm-lexer.l"
 { BINOP(F32, COPYSIGN); return TOK(BINARY); }
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 265 "src/wasm-lexer.l"
+#line 269 "src/wasm-lexer.l"
 { BINOP(F64, COPYSIGN); return TOK(BINARY); }
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 266 "src/wasm-lexer.l"
+#line 270 "src/wasm-lexer.l"
 { CMPOP(I32, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 267 "src/wasm-lexer.l"
+#line 271 "src/wasm-lexer.l"
 { CMPOP(I64, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 268 "src/wasm-lexer.l"
+#line 272 "src/wasm-lexer.l"
 { CMPOP(I32, NE); return TOK(COMPARE); }
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 269 "src/wasm-lexer.l"
+#line 273 "src/wasm-lexer.l"
 { CMPOP(I64, NE); return TOK(COMPARE); }
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 270 "src/wasm-lexer.l"
+#line 274 "src/wasm-lexer.l"
 { CMPOP(I32, LT_S); return TOK(COMPARE); }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 271 "src/wasm-lexer.l"
+#line 275 "src/wasm-lexer.l"
 { CMPOP(I64, LT_S); return TOK(COMPARE); }
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 272 "src/wasm-lexer.l"
+#line 276 "src/wasm-lexer.l"
 { CMPOP(I32, LT_U); return TOK(COMPARE); }
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 273 "src/wasm-lexer.l"
+#line 277 "src/wasm-lexer.l"
 { CMPOP(I64, LT_U); return TOK(COMPARE); }
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 274 "src/wasm-lexer.l"
+#line 278 "src/wasm-lexer.l"
 { CMPOP(I32, LE_S); return TOK(COMPARE); }
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 275 "src/wasm-lexer.l"
+#line 279 "src/wasm-lexer.l"
 { CMPOP(I64, LE_S); return TOK(COMPARE); }
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 276 "src/wasm-lexer.l"
+#line 280 "src/wasm-lexer.l"
 { CMPOP(I32, LE_U); return TOK(COMPARE); }
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 277 "src/wasm-lexer.l"
+#line 281 "src/wasm-lexer.l"
 { CMPOP(I64, LE_U); return TOK(COMPARE); }
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 278 "src/wasm-lexer.l"
+#line 282 "src/wasm-lexer.l"
 { CMPOP(I32, GT_S); return TOK(COMPARE); }
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 279 "src/wasm-lexer.l"
+#line 283 "src/wasm-lexer.l"
 { CMPOP(I64, GT_S); return TOK(COMPARE); }
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 280 "src/wasm-lexer.l"
+#line 284 "src/wasm-lexer.l"
 { CMPOP(I32, GT_U); return TOK(COMPARE); }
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 281 "src/wasm-lexer.l"
+#line 285 "src/wasm-lexer.l"
 { CMPOP(I64, GT_U); return TOK(COMPARE); }
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 282 "src/wasm-lexer.l"
+#line 286 "src/wasm-lexer.l"
 { CMPOP(I32, GE_S); return TOK(COMPARE); }
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 283 "src/wasm-lexer.l"
+#line 287 "src/wasm-lexer.l"
 { CMPOP(I64, GE_S); return TOK(COMPARE); }
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 284 "src/wasm-lexer.l"
+#line 288 "src/wasm-lexer.l"
 { CMPOP(I32, GE_U); return TOK(COMPARE); }
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 285 "src/wasm-lexer.l"
+#line 289 "src/wasm-lexer.l"
 { CMPOP(I64, GE_U); return TOK(COMPARE); }
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 286 "src/wasm-lexer.l"
+#line 290 "src/wasm-lexer.l"
 { CMPOP(F32, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 287 "src/wasm-lexer.l"
+#line 291 "src/wasm-lexer.l"
 { CMPOP(F64, EQ); return TOK(COMPARE); }
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 288 "src/wasm-lexer.l"
+#line 292 "src/wasm-lexer.l"
 { CMPOP(F32, NE); return TOK(COMPARE); }
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 289 "src/wasm-lexer.l"
+#line 293 "src/wasm-lexer.l"
 { CMPOP(F64, NE); return TOK(COMPARE); }
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 290 "src/wasm-lexer.l"
+#line 294 "src/wasm-lexer.l"
 { CMPOP(F32, LT); return TOK(COMPARE); }
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 291 "src/wasm-lexer.l"
+#line 295 "src/wasm-lexer.l"
 { CMPOP(F64, LT); return TOK(COMPARE); }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 292 "src/wasm-lexer.l"
+#line 296 "src/wasm-lexer.l"
 { CMPOP(F32, LE); return TOK(COMPARE); }
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 293 "src/wasm-lexer.l"
+#line 297 "src/wasm-lexer.l"
 { CMPOP(F64, LE); return TOK(COMPARE); }
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 294 "src/wasm-lexer.l"
+#line 298 "src/wasm-lexer.l"
 { CMPOP(F32, GT); return TOK(COMPARE); }
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 295 "src/wasm-lexer.l"
+#line 299 "src/wasm-lexer.l"
 { CMPOP(F64, GT); return TOK(COMPARE); }
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 296 "src/wasm-lexer.l"
+#line 300 "src/wasm-lexer.l"
 { CMPOP(F32, GE); return TOK(COMPARE); }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 297 "src/wasm-lexer.l"
+#line 301 "src/wasm-lexer.l"
 { CMPOP(F64, GE); return TOK(COMPARE); }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
-#line 298 "src/wasm-lexer.l"
+#line 302 "src/wasm-lexer.l"
 { CONVTYPE(I64, EXTEND_S, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 299 "src/wasm-lexer.l"
+#line 303 "src/wasm-lexer.l"
 { CONVTYPE(I64, EXTEND_U, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 300 "src/wasm-lexer.l"
+#line 304 "src/wasm-lexer.l"
 { CONVTYPE(I32, WRAP, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
-#line 301 "src/wasm-lexer.l"
+#line 305 "src/wasm-lexer.l"
 { CONVTYPE(I32, TRUNC_S, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
-#line 302 "src/wasm-lexer.l"
+#line 306 "src/wasm-lexer.l"
 { CONVTYPE(I64, TRUNC_S, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 158:
 YY_RULE_SETUP
-#line 303 "src/wasm-lexer.l"
+#line 307 "src/wasm-lexer.l"
 { CONVTYPE(I32, TRUNC_S, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
-#line 304 "src/wasm-lexer.l"
+#line 308 "src/wasm-lexer.l"
 { CONVTYPE(I64, TRUNC_S, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 305 "src/wasm-lexer.l"
+#line 309 "src/wasm-lexer.l"
 { CONVTYPE(I32, TRUNC_U, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 306 "src/wasm-lexer.l"
+#line 310 "src/wasm-lexer.l"
 { CONVTYPE(I64, TRUNC_U, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 307 "src/wasm-lexer.l"
+#line 311 "src/wasm-lexer.l"
 { CONVTYPE(I32, TRUNC_U, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 308 "src/wasm-lexer.l"
+#line 312 "src/wasm-lexer.l"
 { CONVTYPE(I64, TRUNC_U, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 309 "src/wasm-lexer.l"
+#line 313 "src/wasm-lexer.l"
 { CONVTYPE(F32, CONVERT_S, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
-#line 310 "src/wasm-lexer.l"
+#line 314 "src/wasm-lexer.l"
 { CONVTYPE(F64, CONVERT_S, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 311 "src/wasm-lexer.l"
+#line 315 "src/wasm-lexer.l"
 { CONVTYPE(F32, CONVERT_S, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 312 "src/wasm-lexer.l"
+#line 316 "src/wasm-lexer.l"
 { CONVTYPE(F64, CONVERT_S, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
-#line 313 "src/wasm-lexer.l"
+#line 317 "src/wasm-lexer.l"
 { CONVTYPE(F32, CONVERT_U, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
-#line 314 "src/wasm-lexer.l"
+#line 318 "src/wasm-lexer.l"
 { CONVTYPE(F64, CONVERT_U, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
-#line 315 "src/wasm-lexer.l"
+#line 319 "src/wasm-lexer.l"
 { CONVTYPE(F32, CONVERT_U, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
-#line 316 "src/wasm-lexer.l"
+#line 320 "src/wasm-lexer.l"
 { CONVTYPE(F64, CONVERT_U, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 172:
 YY_RULE_SETUP
-#line 317 "src/wasm-lexer.l"
+#line 321 "src/wasm-lexer.l"
 { CONVTYPE(F64, PROMOTE, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
-#line 318 "src/wasm-lexer.l"
+#line 322 "src/wasm-lexer.l"
 { CONVTYPE(F32, DEMOTE, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 174:
 YY_RULE_SETUP
-#line 319 "src/wasm-lexer.l"
+#line 323 "src/wasm-lexer.l"
 { CONVTYPE(F32, REINTERPRET, I32); return TOK(CONVERT); }
 	YY_BREAK
 case 175:
 YY_RULE_SETUP
-#line 320 "src/wasm-lexer.l"
+#line 324 "src/wasm-lexer.l"
 { CONVTYPE(I32, REINTERPRET, F32); return TOK(CONVERT); }
 	YY_BREAK
 case 176:
 YY_RULE_SETUP
-#line 321 "src/wasm-lexer.l"
+#line 325 "src/wasm-lexer.l"
 { CONVTYPE(F64, REINTERPRET, I64); return TOK(CONVERT); }
 	YY_BREAK
 case 177:
 YY_RULE_SETUP
-#line 322 "src/wasm-lexer.l"
+#line 326 "src/wasm-lexer.l"
 { CONVTYPE(I64, REINTERPRET, F64); return TOK(CONVERT); }
 	YY_BREAK
 case 178:
 YY_RULE_SETUP
-#line 323 "src/wasm-lexer.l"
+#line 327 "src/wasm-lexer.l"
 { TYPE(I32); return TOK(SELECT); }
 	YY_BREAK
 case 179:
 YY_RULE_SETUP
-#line 324 "src/wasm-lexer.l"
+#line 328 "src/wasm-lexer.l"
 { TYPE(I64); return TOK(SELECT); }
 	YY_BREAK
 case 180:
 YY_RULE_SETUP
-#line 325 "src/wasm-lexer.l"
+#line 329 "src/wasm-lexer.l"
 { TYPE(F32); return TOK(SELECT); }
 	YY_BREAK
 case 181:
 YY_RULE_SETUP
-#line 326 "src/wasm-lexer.l"
+#line 330 "src/wasm-lexer.l"
 { TYPE(F64); return TOK(SELECT); }
 	YY_BREAK
 case 182:
 YY_RULE_SETUP
-#line 327 "src/wasm-lexer.l"
+#line 331 "src/wasm-lexer.l"
 { return TOK(UNREACHABLE); }
 	YY_BREAK
 case 183:
 YY_RULE_SETUP
-#line 328 "src/wasm-lexer.l"
+#line 332 "src/wasm-lexer.l"
 { return TOK(MEMORY_SIZE); }
 	YY_BREAK
 case 184:
 YY_RULE_SETUP
-#line 329 "src/wasm-lexer.l"
+#line 333 "src/wasm-lexer.l"
 { return TOK(GROW_MEMORY); }
 	YY_BREAK
 case 185:
 YY_RULE_SETUP
-#line 330 "src/wasm-lexer.l"
+#line 334 "src/wasm-lexer.l"
 { return TOK(HAS_FEATURE); }
 	YY_BREAK
 case 186:
 YY_RULE_SETUP
-#line 331 "src/wasm-lexer.l"
+#line 335 "src/wasm-lexer.l"
 { return TOK(TYPE); }
 	YY_BREAK
 case 187:
 YY_RULE_SETUP
-#line 332 "src/wasm-lexer.l"
+#line 336 "src/wasm-lexer.l"
 { return TOK(FUNC); }
 	YY_BREAK
 case 188:
 YY_RULE_SETUP
-#line 333 "src/wasm-lexer.l"
+#line 337 "src/wasm-lexer.l"
 { return TOK(PARAM); }
 	YY_BREAK
 case 189:
 YY_RULE_SETUP
-#line 334 "src/wasm-lexer.l"
+#line 338 "src/wasm-lexer.l"
 { return TOK(RESULT); }
 	YY_BREAK
 case 190:
 YY_RULE_SETUP
-#line 335 "src/wasm-lexer.l"
+#line 339 "src/wasm-lexer.l"
 { return TOK(LOCAL); }
 	YY_BREAK
 case 191:
 YY_RULE_SETUP
-#line 336 "src/wasm-lexer.l"
+#line 340 "src/wasm-lexer.l"
 { return TOK(MODULE); }
 	YY_BREAK
 case 192:
 YY_RULE_SETUP
-#line 337 "src/wasm-lexer.l"
+#line 341 "src/wasm-lexer.l"
 { return TOK(MEMORY); }
 	YY_BREAK
 case 193:
 YY_RULE_SETUP
-#line 338 "src/wasm-lexer.l"
+#line 342 "src/wasm-lexer.l"
 { return TOK(SEGMENT); }
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
-#line 339 "src/wasm-lexer.l"
+#line 343 "src/wasm-lexer.l"
 { return TOK(START); }
 	YY_BREAK
 case 195:
 YY_RULE_SETUP
-#line 340 "src/wasm-lexer.l"
+#line 344 "src/wasm-lexer.l"
 { return TOK(IMPORT); }
 	YY_BREAK
 case 196:
 YY_RULE_SETUP
-#line 341 "src/wasm-lexer.l"
+#line 345 "src/wasm-lexer.l"
 { return TOK(EXPORT); }
 	YY_BREAK
 case 197:
 YY_RULE_SETUP
-#line 342 "src/wasm-lexer.l"
+#line 346 "src/wasm-lexer.l"
 { return TOK(TABLE); }
 	YY_BREAK
 case 198:
 YY_RULE_SETUP
-#line 343 "src/wasm-lexer.l"
+#line 347 "src/wasm-lexer.l"
 { return TOK(ASSERT_INVALID); }
 	YY_BREAK
 case 199:
 YY_RULE_SETUP
-#line 344 "src/wasm-lexer.l"
+#line 348 "src/wasm-lexer.l"
 { return TOK(ASSERT_RETURN); }
 	YY_BREAK
 case 200:
 YY_RULE_SETUP
-#line 345 "src/wasm-lexer.l"
+#line 349 "src/wasm-lexer.l"
 { return TOK(ASSERT_RETURN_NAN); }
 	YY_BREAK
 case 201:
 YY_RULE_SETUP
-#line 346 "src/wasm-lexer.l"
+#line 350 "src/wasm-lexer.l"
 { return TOK(ASSERT_TRAP); }
 	YY_BREAK
 case 202:
 YY_RULE_SETUP
-#line 347 "src/wasm-lexer.l"
+#line 351 "src/wasm-lexer.l"
 { return TOK(INVOKE); }
 	YY_BREAK
 case 203:
 YY_RULE_SETUP
-#line 348 "src/wasm-lexer.l"
+#line 352 "src/wasm-lexer.l"
 { TEXT; return TOK(VAR); }
 	YY_BREAK
 case 204:
 YY_RULE_SETUP
-#line 350 "src/wasm-lexer.l"
+#line 354 "src/wasm-lexer.l"
 { return TOK(GLOBAL); }
 	YY_BREAK
 case 205:
 YY_RULE_SETUP
-#line 351 "src/wasm-lexer.l"
+#line 355 "src/wasm-lexer.l"
 { return TOK(LOAD_GLOBAL); }
 	YY_BREAK
 case 206:
 YY_RULE_SETUP
-#line 352 "src/wasm-lexer.l"
+#line 356 "src/wasm-lexer.l"
 { return TOK(STORE_GLOBAL); }
 	YY_BREAK
 case 207:
 YY_RULE_SETUP
-#line 354 "src/wasm-lexer.l"
+#line 358 "src/wasm-lexer.l"
 { BEGIN(LINE_COMMENT); }
 	YY_BREAK
 case 208:
 /* rule 208 can match eol */
 YY_RULE_SETUP
-#line 355 "src/wasm-lexer.l"
+#line 359 "src/wasm-lexer.l"
 { RESET_COLUMN(yyscanner); BEGIN(INITIAL); }
 	YY_BREAK
 case YY_STATE_EOF(LINE_COMMENT):
-#line 356 "src/wasm-lexer.l"
+#line 360 "src/wasm-lexer.l"
 { return TOK(EOF); }
 	YY_BREAK
 case 209:
 YY_RULE_SETUP
-#line 357 "src/wasm-lexer.l"
+#line 361 "src/wasm-lexer.l"
 
 	YY_BREAK
 case 210:
 YY_RULE_SETUP
-#line 358 "src/wasm-lexer.l"
+#line 362 "src/wasm-lexer.l"
 { BEGIN(BLOCK_COMMENT); COMMENT_NESTING(yyscanner) = 1; }
 	YY_BREAK
 case 211:
 YY_RULE_SETUP
-#line 359 "src/wasm-lexer.l"
+#line 363 "src/wasm-lexer.l"
 { COMMENT_NESTING(yyscanner)++; }
 	YY_BREAK
 case 212:
 YY_RULE_SETUP
-#line 360 "src/wasm-lexer.l"
+#line 364 "src/wasm-lexer.l"
 { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 	YY_BREAK
 case 213:
 /* rule 213 can match eol */
 YY_RULE_SETUP
-#line 361 "src/wasm-lexer.l"
+#line 365 "src/wasm-lexer.l"
 { RESET_COLUMN(yyscanner); }
 	YY_BREAK
 case YY_STATE_EOF(BLOCK_COMMENT):
-#line 362 "src/wasm-lexer.l"
+#line 366 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
                                     "unexpected EOF");
                          return TOK(EOF); }
 	YY_BREAK
 case 214:
 YY_RULE_SETUP
-#line 365 "src/wasm-lexer.l"
+#line 369 "src/wasm-lexer.l"
 
 	YY_BREAK
 case 215:
 /* rule 215 can match eol */
 YY_RULE_SETUP
-#line 366 "src/wasm-lexer.l"
+#line 370 "src/wasm-lexer.l"
 { RESET_COLUMN(yyscanner); }
 	YY_BREAK
 case 216:
 YY_RULE_SETUP
-#line 367 "src/wasm-lexer.l"
+#line 371 "src/wasm-lexer.l"
 
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 368 "src/wasm-lexer.l"
+#line 372 "src/wasm-lexer.l"
 { return TOK(EOF); }
 	YY_BREAK
 case 217:
 YY_RULE_SETUP
-#line 369 "src/wasm-lexer.l"
+#line 373 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
                                    "unexpected token \"%.*s\"", yyleng,
                                    yytext); }
 	YY_BREAK
 case 218:
 YY_RULE_SETUP
-#line 372 "src/wasm-lexer.l"
+#line 376 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
                                    "unexpected char"); }
 	YY_BREAK
 case 219:
 YY_RULE_SETUP
-#line 375 "src/wasm-lexer.l"
+#line 379 "src/wasm-lexer.l"
 ECHO;
 	YY_BREAK
-#line 2774 "src/wasm-lexer.c"
+#line 2775 "src/wasm-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2786,7 +2787,7 @@ ECHO;
 			/* We're scanning a new file or input source.  It's
 			 * possible that this happened because the user
 			 * just pointed yyin at a new source and called
-			 * wasm_lex().  If so, then we have to assure
+			 * wasm_lexer_lex().  If so, then we have to assure
 			 * consistency between YY_CURRENT_BUFFER and our
 			 * globals.  Here is the right place to do so, because
 			 * this is the first action (other than possibly a
@@ -2846,7 +2847,7 @@ ECHO;
 				{
 				yyg->yy_did_buffer_switch_on_eof = 0;
 
-				if ( wasm_wrap(yyscanner ) )
+				if ( wasm_lexer_wrap(yyscanner ) )
 					{
 					/* Note: because we've taken care in
 					 * yy_get_next_buffer() to have set up
@@ -2900,7 +2901,7 @@ ECHO;
 	} /* end of action switch */
 		} /* end of scanning one token */
 	} /* end of user's declarations */
-} /* end of wasm_lex */
+} /* end of wasm_lexer_lex */
 
 /* yy_get_next_buffer - try to read in a new buffer
  *
@@ -2979,7 +2980,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 
 				b->yy_ch_buf = (char *)
 					/* Include room in for 2 EOB chars. */
-					wasm_realloc((void *) b->yy_ch_buf,b->yy_buf_size + 2 ,yyscanner );
+					wasm_lexer_realloc((void *) b->yy_ch_buf,b->yy_buf_size + 2 ,yyscanner );
 				}
 			else
 				/* Can't grow it, we don't own it. */
@@ -3011,7 +3012,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 		if ( number_to_move == YY_MORE_ADJ )
 			{
 			ret_val = EOB_ACT_END_OF_FILE;
-			wasm_restart(yyin  ,yyscanner);
+			wasm_lexer_restart(yyin  ,yyscanner);
 			}
 
 		else
@@ -3028,7 +3029,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 	if ((yy_size_t) (yyg->yy_n_chars + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
 		yy_size_t new_size = yyg->yy_n_chars + number_to_move + (yyg->yy_n_chars >> 1);
-		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) wasm_realloc((void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf,new_size ,yyscanner );
+		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) wasm_lexer_realloc((void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf,new_size ,yyscanner );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
 			YY_FATAL_ERROR( "out of dynamic memory in yy_get_next_buffer()" );
 	}
@@ -3186,13 +3187,13 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 					 */
 
 					/* Reset buffer status. */
-					wasm_restart(yyin ,yyscanner);
+					wasm_lexer_restart(yyin ,yyscanner);
 
 					/*FALLTHROUGH*/
 
 				case EOB_ACT_END_OF_FILE:
 					{
-					if ( wasm_wrap(yyscanner ) )
+					if ( wasm_lexer_wrap(yyscanner ) )
 						return EOF;
 
 					if ( ! yyg->yy_did_buffer_switch_on_eof )
@@ -3231,34 +3232,34 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @note This function does not reset the start condition to @c INITIAL .
  */
-    void wasm_restart  (FILE * input_file , yyscan_t yyscanner)
+    void wasm_lexer_restart  (FILE * input_file , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
 	if ( ! YY_CURRENT_BUFFER ){
-        wasm_ensure_buffer_stack (yyscanner);
+        wasm_lexer_ensure_buffer_stack (yyscanner);
 		YY_CURRENT_BUFFER_LVALUE =
-            wasm__create_buffer(yyin,YY_BUF_SIZE ,yyscanner);
+            wasm_lexer__create_buffer(yyin,YY_BUF_SIZE ,yyscanner);
 	}
 
-	wasm__init_buffer(YY_CURRENT_BUFFER,input_file ,yyscanner);
-	wasm__load_buffer_state(yyscanner );
+	wasm_lexer__init_buffer(YY_CURRENT_BUFFER,input_file ,yyscanner);
+	wasm_lexer__load_buffer_state(yyscanner );
 }
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
  * @param yyscanner The scanner object.
  */
-    void wasm__switch_to_buffer  (YY_BUFFER_STATE  new_buffer , yyscan_t yyscanner)
+    void wasm_lexer__switch_to_buffer  (YY_BUFFER_STATE  new_buffer , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
 	/* TODO. We should be able to replace this entire function body
 	 * with
-	 *		wasm_pop_buffer_state();
-	 *		wasm_push_buffer_state(new_buffer);
+	 *		wasm_lexer_pop_buffer_state();
+	 *		wasm_lexer_push_buffer_state(new_buffer);
      */
-	wasm_ensure_buffer_stack (yyscanner);
+	wasm_lexer_ensure_buffer_stack (yyscanner);
 	if ( YY_CURRENT_BUFFER == new_buffer )
 		return;
 
@@ -3271,17 +3272,17 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 		}
 
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
-	wasm__load_buffer_state(yyscanner );
+	wasm_lexer__load_buffer_state(yyscanner );
 
 	/* We don't actually know whether we did this switch during
-	 * EOF (wasm_wrap()) processing, but the only time this flag
-	 * is looked at is after wasm_wrap() is called, so it's safe
+	 * EOF (wasm_lexer_wrap()) processing, but the only time this flag
+	 * is looked at is after wasm_lexer_wrap() is called, so it's safe
 	 * to go ahead and always set it.
 	 */
 	yyg->yy_did_buffer_switch_on_eof = 1;
 }
 
-static void wasm__load_buffer_state  (yyscan_t yyscanner)
+static void wasm_lexer__load_buffer_state  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	yyg->yy_n_chars = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
@@ -3296,35 +3297,35 @@ static void wasm__load_buffer_state  (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @return the allocated buffer state.
  */
-    YY_BUFFER_STATE wasm__create_buffer  (FILE * file, int  size , yyscan_t yyscanner)
+    YY_BUFFER_STATE wasm_lexer__create_buffer  (FILE * file, int  size , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
     
-	b = (YY_BUFFER_STATE) wasm_alloc(sizeof( struct yy_buffer_state ) ,yyscanner );
+	b = (YY_BUFFER_STATE) wasm_lexer_alloc(sizeof( struct yy_buffer_state ) ,yyscanner );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in wasm__create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in wasm_lexer__create_buffer()" );
 
 	b->yy_buf_size = size;
 
 	/* yy_ch_buf has to be 2 characters longer than the size given because
 	 * we need to put in 2 end-of-buffer characters.
 	 */
-	b->yy_ch_buf = (char *) wasm_alloc(b->yy_buf_size + 2 ,yyscanner );
+	b->yy_ch_buf = (char *) wasm_lexer_alloc(b->yy_buf_size + 2 ,yyscanner );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in wasm__create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in wasm_lexer__create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
-	wasm__init_buffer(b,file ,yyscanner);
+	wasm_lexer__init_buffer(b,file ,yyscanner);
 
 	return b;
 }
 
 /** Destroy the buffer.
- * @param b a buffer created with wasm__create_buffer()
+ * @param b a buffer created with wasm_lexer__create_buffer()
  * @param yyscanner The scanner object.
  */
-    void wasm__delete_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
+    void wasm_lexer__delete_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
@@ -3335,28 +3336,28 @@ static void wasm__load_buffer_state  (yyscan_t yyscanner)
 		YY_CURRENT_BUFFER_LVALUE = (YY_BUFFER_STATE) 0;
 
 	if ( b->yy_is_our_buffer )
-		wasm_free((void *) b->yy_ch_buf ,yyscanner );
+		wasm_lexer_free((void *) b->yy_ch_buf ,yyscanner );
 
-	wasm_free((void *) b ,yyscanner );
+	wasm_lexer_free((void *) b ,yyscanner );
 }
 
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
- * such as during a wasm_restart() or at EOF.
+ * such as during a wasm_lexer_restart() or at EOF.
  */
-    static void wasm__init_buffer  (YY_BUFFER_STATE  b, FILE * file , yyscan_t yyscanner)
+    static void wasm_lexer__init_buffer  (YY_BUFFER_STATE  b, FILE * file , yyscan_t yyscanner)
 
 {
 	int oerrno = errno;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
-	wasm__flush_buffer(b ,yyscanner);
+	wasm_lexer__flush_buffer(b ,yyscanner);
 
 	b->yy_input_file = file;
 	b->yy_fill_buffer = 1;
 
-    /* If b is the current buffer, then wasm__init_buffer was _probably_
-     * called from wasm_restart() or through yy_get_next_buffer.
+    /* If b is the current buffer, then wasm_lexer__init_buffer was _probably_
+     * called from wasm_lexer_restart() or through yy_get_next_buffer.
      * In that case, we don't want to reset the lineno or column.
      */
     if (b != YY_CURRENT_BUFFER){
@@ -3373,7 +3374,7 @@ static void wasm__load_buffer_state  (yyscan_t yyscanner)
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
  * @param yyscanner The scanner object.
  */
-    void wasm__flush_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
+    void wasm_lexer__flush_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	if ( ! b )
@@ -3394,7 +3395,7 @@ static void wasm__load_buffer_state  (yyscan_t yyscanner)
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
 	if ( b == YY_CURRENT_BUFFER )
-		wasm__load_buffer_state(yyscanner );
+		wasm_lexer__load_buffer_state(yyscanner );
 }
 
 /** Pushes the new state onto the stack. The new state becomes
@@ -3403,15 +3404,15 @@ static void wasm__load_buffer_state  (yyscan_t yyscanner)
  *  @param new_buffer The new state.
  *  @param yyscanner The scanner object.
  */
-void wasm_push_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
+void wasm_lexer_push_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	if (new_buffer == NULL)
 		return;
 
-	wasm_ensure_buffer_stack(yyscanner);
+	wasm_lexer_ensure_buffer_stack(yyscanner);
 
-	/* This block is copied from wasm__switch_to_buffer. */
+	/* This block is copied from wasm_lexer__switch_to_buffer. */
 	if ( YY_CURRENT_BUFFER )
 		{
 		/* Flush out information for old buffer. */
@@ -3425,8 +3426,8 @@ void wasm_push_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
 		yyg->yy_buffer_stack_top++;
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
 
-	/* copied from wasm__switch_to_buffer. */
-	wasm__load_buffer_state(yyscanner );
+	/* copied from wasm_lexer__switch_to_buffer. */
+	wasm_lexer__load_buffer_state(yyscanner );
 	yyg->yy_did_buffer_switch_on_eof = 1;
 }
 
@@ -3434,19 +3435,19 @@ void wasm_push_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
  *  The next element becomes the new top.
  *  @param yyscanner The scanner object.
  */
-void wasm_pop_buffer_state (yyscan_t yyscanner)
+void wasm_lexer_pop_buffer_state (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	if (!YY_CURRENT_BUFFER)
 		return;
 
-	wasm__delete_buffer(YY_CURRENT_BUFFER ,yyscanner);
+	wasm_lexer__delete_buffer(YY_CURRENT_BUFFER ,yyscanner);
 	YY_CURRENT_BUFFER_LVALUE = NULL;
 	if (yyg->yy_buffer_stack_top > 0)
 		--yyg->yy_buffer_stack_top;
 
 	if (YY_CURRENT_BUFFER) {
-		wasm__load_buffer_state(yyscanner );
+		wasm_lexer__load_buffer_state(yyscanner );
 		yyg->yy_did_buffer_switch_on_eof = 1;
 	}
 }
@@ -3454,7 +3455,7 @@ void wasm_pop_buffer_state (yyscan_t yyscanner)
 /* Allocates the stack if it does not exist.
  *  Guarantees space for at least one push.
  */
-static void wasm_ensure_buffer_stack (yyscan_t yyscanner)
+static void wasm_lexer_ensure_buffer_stack (yyscan_t yyscanner)
 {
 	yy_size_t num_to_alloc;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
@@ -3466,11 +3467,11 @@ static void wasm_ensure_buffer_stack (yyscan_t yyscanner)
 		 * immediate realloc on the next call.
          */
 		num_to_alloc = 1;
-		yyg->yy_buffer_stack = (struct yy_buffer_state**)wasm_alloc
+		yyg->yy_buffer_stack = (struct yy_buffer_state**)wasm_lexer_alloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								, yyscanner);
 		if ( ! yyg->yy_buffer_stack )
-			YY_FATAL_ERROR( "out of dynamic memory in wasm_ensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in wasm_lexer_ensure_buffer_stack()" );
 								  
 		memset(yyg->yy_buffer_stack, 0, num_to_alloc * sizeof(struct yy_buffer_state*));
 				
@@ -3485,12 +3486,12 @@ static void wasm_ensure_buffer_stack (yyscan_t yyscanner)
 		int grow_size = 8 /* arbitrary grow size */;
 
 		num_to_alloc = yyg->yy_buffer_stack_max + grow_size;
-		yyg->yy_buffer_stack = (struct yy_buffer_state**)wasm_realloc
+		yyg->yy_buffer_stack = (struct yy_buffer_state**)wasm_lexer_realloc
 								(yyg->yy_buffer_stack,
 								num_to_alloc * sizeof(struct yy_buffer_state*)
 								, yyscanner);
 		if ( ! yyg->yy_buffer_stack )
-			YY_FATAL_ERROR( "out of dynamic memory in wasm_ensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in wasm_lexer_ensure_buffer_stack()" );
 
 		/* zero only the new slots.*/
 		memset(yyg->yy_buffer_stack + yyg->yy_buffer_stack_max, 0, grow_size * sizeof(struct yy_buffer_state*));
@@ -3504,7 +3505,7 @@ static void wasm_ensure_buffer_stack (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object. 
  */
-YY_BUFFER_STATE wasm__scan_buffer  (char * base, yy_size_t  size , yyscan_t yyscanner)
+YY_BUFFER_STATE wasm_lexer__scan_buffer  (char * base, yy_size_t  size , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
     
@@ -3514,9 +3515,9 @@ YY_BUFFER_STATE wasm__scan_buffer  (char * base, yy_size_t  size , yyscan_t yysc
 		/* They forgot to leave room for the EOB's. */
 		return 0;
 
-	b = (YY_BUFFER_STATE) wasm_alloc(sizeof( struct yy_buffer_state ) ,yyscanner );
+	b = (YY_BUFFER_STATE) wasm_lexer_alloc(sizeof( struct yy_buffer_state ) ,yyscanner );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in wasm__scan_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in wasm_lexer__scan_buffer()" );
 
 	b->yy_buf_size = size - 2;	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
@@ -3528,33 +3529,33 @@ YY_BUFFER_STATE wasm__scan_buffer  (char * base, yy_size_t  size , yyscan_t yysc
 	b->yy_fill_buffer = 0;
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
-	wasm__switch_to_buffer(b ,yyscanner );
+	wasm_lexer__switch_to_buffer(b ,yyscanner );
 
 	return b;
 }
 
-/** Setup the input buffer state to scan a string. The next call to wasm_lex() will
+/** Setup the input buffer state to scan a string. The next call to wasm_lexer_lex() will
  * scan from a @e copy of @a str.
  * @param yystr a NUL-terminated string to scan
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
- *       wasm__scan_bytes() instead.
+ *       wasm_lexer__scan_bytes() instead.
  */
-YY_BUFFER_STATE wasm__scan_string (yyconst char * yystr , yyscan_t yyscanner)
+YY_BUFFER_STATE wasm_lexer__scan_string (yyconst char * yystr , yyscan_t yyscanner)
 {
     
-	return wasm__scan_bytes(yystr,strlen(yystr) ,yyscanner);
+	return wasm_lexer__scan_bytes(yystr,strlen(yystr) ,yyscanner);
 }
 
-/** Setup the input buffer state to scan the given bytes. The next call to wasm_lex() will
+/** Setup the input buffer state to scan the given bytes. The next call to wasm_lexer_lex() will
  * scan from a @e copy of @a bytes.
  * @param yybytes the byte buffer to scan
  * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE wasm__scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len , yyscan_t yyscanner)
+YY_BUFFER_STATE wasm_lexer__scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -3563,18 +3564,18 @@ YY_BUFFER_STATE wasm__scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_l
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
-	buf = (char *) wasm_alloc(n ,yyscanner );
+	buf = (char *) wasm_lexer_alloc(n ,yyscanner );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in wasm__scan_bytes()" );
+		YY_FATAL_ERROR( "out of dynamic memory in wasm_lexer__scan_bytes()" );
 
 	for ( i = 0; i < _yybytes_len; ++i )
 		buf[i] = yybytes[i];
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 
-	b = wasm__scan_buffer(buf,n ,yyscanner);
+	b = wasm_lexer__scan_buffer(buf,n ,yyscanner);
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in wasm__scan_bytes()" );
+		YY_FATAL_ERROR( "bad buffer in wasm_lexer__scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -3616,7 +3617,7 @@ static void yy_fatal_error (yyconst char* msg , yyscan_t yyscanner)
 /** Get the user-defined data for this scanner.
  * @param yyscanner The scanner object.
  */
-YY_EXTRA_TYPE wasm_get_extra  (yyscan_t yyscanner)
+YY_EXTRA_TYPE wasm_lexer_get_extra  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyextra;
@@ -3625,7 +3626,7 @@ YY_EXTRA_TYPE wasm_get_extra  (yyscan_t yyscanner)
 /** Get the current line number.
  * @param yyscanner The scanner object.
  */
-int wasm_get_lineno  (yyscan_t yyscanner)
+int wasm_lexer_get_lineno  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     
@@ -3638,7 +3639,7 @@ int wasm_get_lineno  (yyscan_t yyscanner)
 /** Get the current column number.
  * @param yyscanner The scanner object.
  */
-int wasm_get_column  (yyscan_t yyscanner)
+int wasm_lexer_get_column  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     
@@ -3651,7 +3652,7 @@ int wasm_get_column  (yyscan_t yyscanner)
 /** Get the input stream.
  * @param yyscanner The scanner object.
  */
-FILE *wasm_get_in  (yyscan_t yyscanner)
+FILE *wasm_lexer_get_in  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyin;
@@ -3660,7 +3661,7 @@ FILE *wasm_get_in  (yyscan_t yyscanner)
 /** Get the output stream.
  * @param yyscanner The scanner object.
  */
-FILE *wasm_get_out  (yyscan_t yyscanner)
+FILE *wasm_lexer_get_out  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyout;
@@ -3669,7 +3670,7 @@ FILE *wasm_get_out  (yyscan_t yyscanner)
 /** Get the length of the current token.
  * @param yyscanner The scanner object.
  */
-yy_size_t wasm_get_leng  (yyscan_t yyscanner)
+yy_size_t wasm_lexer_get_leng  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyleng;
@@ -3679,7 +3680,7 @@ yy_size_t wasm_get_leng  (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  */
 
-char *wasm_get_text  (yyscan_t yyscanner)
+char *wasm_lexer_get_text  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yytext;
@@ -3689,7 +3690,7 @@ char *wasm_get_text  (yyscan_t yyscanner)
  * @param user_defined The data to be associated with this scanner.
  * @param yyscanner The scanner object.
  */
-void wasm_set_extra (YY_EXTRA_TYPE  user_defined , yyscan_t yyscanner)
+void wasm_lexer_set_extra (YY_EXTRA_TYPE  user_defined , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yyextra = user_defined ;
@@ -3699,13 +3700,13 @@ void wasm_set_extra (YY_EXTRA_TYPE  user_defined , yyscan_t yyscanner)
  * @param line_number
  * @param yyscanner The scanner object.
  */
-void wasm_set_lineno (int  line_number , yyscan_t yyscanner)
+void wasm_lexer_set_lineno (int  line_number , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
         /* lineno is only valid if an input buffer exists. */
         if (! YY_CURRENT_BUFFER )
-           YY_FATAL_ERROR( "wasm_set_lineno called with no buffer" );
+           YY_FATAL_ERROR( "wasm_lexer_set_lineno called with no buffer" );
     
     yylineno = line_number;
 }
@@ -3714,13 +3715,13 @@ void wasm_set_lineno (int  line_number , yyscan_t yyscanner)
  * @param line_number
  * @param yyscanner The scanner object.
  */
-void wasm_set_column (int  column_no , yyscan_t yyscanner)
+void wasm_lexer_set_column (int  column_no , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
         /* column is only valid if an input buffer exists. */
         if (! YY_CURRENT_BUFFER )
-           YY_FATAL_ERROR( "wasm_set_column called with no buffer" );
+           YY_FATAL_ERROR( "wasm_lexer_set_column called with no buffer" );
     
     yycolumn = column_no;
 }
@@ -3729,27 +3730,27 @@ void wasm_set_column (int  column_no , yyscan_t yyscanner)
  * input buffer.
  * @param in_str A readable stream.
  * @param yyscanner The scanner object.
- * @see wasm__switch_to_buffer
+ * @see wasm_lexer__switch_to_buffer
  */
-void wasm_set_in (FILE *  in_str , yyscan_t yyscanner)
+void wasm_lexer_set_in (FILE *  in_str , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yyin = in_str ;
 }
 
-void wasm_set_out (FILE *  out_str , yyscan_t yyscanner)
+void wasm_lexer_set_out (FILE *  out_str , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yyout = out_str ;
 }
 
-int wasm_get_debug  (yyscan_t yyscanner)
+int wasm_lexer_get_debug  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yy_flex_debug;
 }
 
-void wasm_set_debug (int  bdebug , yyscan_t yyscanner)
+void wasm_lexer_set_debug (int  bdebug , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yy_flex_debug = bdebug ;
@@ -3757,25 +3758,25 @@ void wasm_set_debug (int  bdebug , yyscan_t yyscanner)
 
 /* Accessor methods for yylval and yylloc */
 
-YYSTYPE * wasm_get_lval  (yyscan_t yyscanner)
+YYSTYPE * wasm_lexer_get_lval  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yylval;
 }
 
-void wasm_set_lval (YYSTYPE *  yylval_param , yyscan_t yyscanner)
+void wasm_lexer_set_lval (YYSTYPE *  yylval_param , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yylval = yylval_param;
 }
 
-YYLTYPE *wasm_get_lloc  (yyscan_t yyscanner)
+YYLTYPE *wasm_lexer_get_lloc  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yylloc;
 }
     
-void wasm_set_lloc (YYLTYPE *  yylloc_param , yyscan_t yyscanner)
+void wasm_lexer_set_lloc (YYLTYPE *  yylloc_param , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yylloc = yylloc_param;
@@ -3783,12 +3784,12 @@ void wasm_set_lloc (YYLTYPE *  yylloc_param , yyscan_t yyscanner)
     
 /* User-visible API */
 
-/* wasm_lex_init is special because it creates the scanner itself, so it is
+/* wasm_lexer_lex_init is special because it creates the scanner itself, so it is
  * the ONLY reentrant function that doesn't take the scanner as the last argument.
  * That's why we explicitly handle the declaration, instead of using our macros.
  */
 
-int wasm_lex_init(yyscan_t* ptr_yy_globals)
+int wasm_lexer_lex_init(yyscan_t* ptr_yy_globals)
 
 {
     if (ptr_yy_globals == NULL){
@@ -3796,7 +3797,7 @@ int wasm_lex_init(yyscan_t* ptr_yy_globals)
         return 1;
     }
 
-    *ptr_yy_globals = (yyscan_t) wasm_alloc ( sizeof( struct yyguts_t ), NULL );
+    *ptr_yy_globals = (yyscan_t) wasm_lexer_alloc ( sizeof( struct yyguts_t ), NULL );
 
     if (*ptr_yy_globals == NULL){
         errno = ENOMEM;
@@ -3809,27 +3810,27 @@ int wasm_lex_init(yyscan_t* ptr_yy_globals)
     return yy_init_globals ( *ptr_yy_globals );
 }
 
-/* wasm_lex_init_extra has the same functionality as wasm_lex_init, but follows the
+/* wasm_lexer_lex_init_extra has the same functionality as wasm_lexer_lex_init, but follows the
  * convention of taking the scanner as the last argument. Note however, that
  * this is a *pointer* to a scanner, as it will be allocated by this call (and
  * is the reason, too, why this function also must handle its own declaration).
- * The user defined value in the first argument will be available to wasm_alloc in
+ * The user defined value in the first argument will be available to wasm_lexer_alloc in
  * the yyextra field.
  */
 
-int wasm_lex_init_extra(YY_EXTRA_TYPE yy_user_defined,yyscan_t* ptr_yy_globals )
+int wasm_lexer_lex_init_extra(YY_EXTRA_TYPE yy_user_defined,yyscan_t* ptr_yy_globals )
 
 {
     struct yyguts_t dummy_yyguts;
 
-    wasm_set_extra (yy_user_defined, &dummy_yyguts);
+    wasm_lexer_set_extra (yy_user_defined, &dummy_yyguts);
 
     if (ptr_yy_globals == NULL){
         errno = EINVAL;
         return 1;
     }
 	
-    *ptr_yy_globals = (yyscan_t) wasm_alloc ( sizeof( struct yyguts_t ), &dummy_yyguts );
+    *ptr_yy_globals = (yyscan_t) wasm_lexer_alloc ( sizeof( struct yyguts_t ), &dummy_yyguts );
 	
     if (*ptr_yy_globals == NULL){
         errno = ENOMEM;
@@ -3840,7 +3841,7 @@ int wasm_lex_init_extra(YY_EXTRA_TYPE yy_user_defined,yyscan_t* ptr_yy_globals )
     yy_init_globals. Leave at 0x00 for releases. */
     memset(*ptr_yy_globals,0x00,sizeof(struct yyguts_t));
     
-    wasm_set_extra (yy_user_defined, *ptr_yy_globals);
+    wasm_lexer_set_extra (yy_user_defined, *ptr_yy_globals);
     
     return yy_init_globals ( *ptr_yy_globals );
 }
@@ -3849,7 +3850,7 @@ static int yy_init_globals (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     /* Initialization is the same as for the non-reentrant scanner.
-     * This function is called from wasm_lex_destroy(), so don't allocate here.
+     * This function is called from wasm_lexer_lex_destroy(), so don't allocate here.
      */
 
     yyg->yy_buffer_stack = 0;
@@ -3873,37 +3874,37 @@ static int yy_init_globals (yyscan_t yyscanner)
 #endif
 
     /* For future reference: Set errno on error, since we are called by
-     * wasm_lex_init()
+     * wasm_lexer_lex_init()
      */
     return 0;
 }
 
-/* wasm_lex_destroy is for both reentrant and non-reentrant scanners. */
-int wasm_lex_destroy  (yyscan_t yyscanner)
+/* wasm_lexer_lex_destroy is for both reentrant and non-reentrant scanners. */
+int wasm_lexer_lex_destroy  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
-		wasm__delete_buffer(YY_CURRENT_BUFFER ,yyscanner );
+		wasm_lexer__delete_buffer(YY_CURRENT_BUFFER ,yyscanner );
 		YY_CURRENT_BUFFER_LVALUE = NULL;
-		wasm_pop_buffer_state(yyscanner);
+		wasm_lexer_pop_buffer_state(yyscanner);
 	}
 
 	/* Destroy the stack itself. */
-	wasm_free(yyg->yy_buffer_stack ,yyscanner);
+	wasm_lexer_free(yyg->yy_buffer_stack ,yyscanner);
 	yyg->yy_buffer_stack = NULL;
 
     /* Destroy the start condition stack. */
-        wasm_free(yyg->yy_start_stack ,yyscanner );
+        wasm_lexer_free(yyg->yy_start_stack ,yyscanner );
         yyg->yy_start_stack = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
-     * wasm_lex() is called, initialization will occur. */
+     * wasm_lexer_lex() is called, initialization will occur. */
     yy_init_globals( yyscanner);
 
     /* Destroy the main struct (reentrant only). */
-    wasm_free ( yyscanner , yyscanner );
+    wasm_lexer_free ( yyscanner , yyscanner );
     yyscanner = NULL;
     return 0;
 }
@@ -3932,62 +3933,66 @@ static int yy_flex_strlen (yyconst char * s , yyscan_t yyscanner)
 }
 #endif
 
-void *wasm_alloc (yy_size_t  size , yyscan_t yyscanner)
-{
-	return (void *) malloc( size );
-}
-
-void *wasm_realloc  (void * ptr, yy_size_t  size , yyscan_t yyscanner)
-{
-	/* The cast to (char *) in the following accommodates both
-	 * implementations that use char* generic pointers, and those
-	 * that use void* generic pointers.  It works with the latter
-	 * because both ANSI C and C++ allow castless assignment from
-	 * any pointer type to void*, and deal with argument conversions
-	 * as though doing an assignment.
-	 */
-	return (void *) realloc( (char *) ptr, size );
-}
-
-void wasm_free (void * ptr , yyscan_t yyscanner)
-{
-	free( (char *) ptr );	/* see wasm_realloc() for (char *) cast */
-}
-
 #define YYTABLES_NAME "yytables"
 
-#line 374 "src/wasm-lexer.l"
+#line 378 "src/wasm-lexer.l"
 
 
 
-int wasm_wrap(yyscan_t yyscanner) {
+int wasm_lexer_wrap(yyscan_t yyscanner) {
   return 1;
 }
 
-WasmScanner wasm_new_scanner(const char* filename) {
-  WasmScannerExtra* extra = malloc(sizeof(WasmScannerExtra));
+static WasmAllocator* s_scanner_allocator;
+
+WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
+  WasmScannerExtra* extra =
+      allocator->alloc(allocator, sizeof(WasmScannerExtra), WASM_DEFAULT_ALIGN);
   if (!extra)
     return NULL;
+  extra->allocator = allocator;
   extra->column = 1;
   extra->filename = filename;
   extra->file = fopen(filename, "r");
 
   if (!extra->file) {
-    free(extra);
+    allocator->free(allocator, extra);
     return NULL;
   }
 
+  /* when the scanner is created in wasm_lexer_lex_init, it uses wasm_lexer_alloc before
+   extra has been set, so we have to use a static variable here. */
+  s_scanner_allocator = allocator;
   yyscan_t scanner;
-  wasm_lex_init(&scanner);
-  wasm_set_in(extra->file,scanner);
-  wasm_set_extra(extra,scanner);
+  wasm_lexer_lex_init(&scanner);
+  wasm_lexer_set_in(extra->file,scanner);
+  wasm_lexer_set_extra(extra,scanner);
+  s_scanner_allocator = NULL;
   return scanner;
 }
 
 void wasm_free_scanner(WasmScanner scanner) {
-  WasmScannerExtra* extra = wasm_get_extra(scanner);
+  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
   fclose(extra->file);
-  free(extra);
-  wasm_lex_destroy((yyscan_t)scanner);
+  extra->allocator->free(extra->allocator, extra);
+  wasm_lexer_lex_destroy((yyscan_t)scanner);
+}
+
+void* wasm_lexer_alloc(size_t bytes, WasmScanner scanner) {
+  WasmAllocator* allocator =
+      scanner ? ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))->allocator
+              : s_scanner_allocator;
+  return allocator->alloc(allocator, bytes, WASM_DEFAULT_ALIGN);
+}
+
+void* wasm_lexer_realloc(void* ptr, size_t bytes, WasmScanner scanner) {
+  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+  return extra->allocator->realloc(extra->allocator, ptr, bytes,
+                                   WASM_DEFAULT_ALIGN);
+}
+
+void wasm_lexer_free(void* ptr, WasmScanner scanner) {
+  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+  extra->allocator->free(extra->allocator, ptr);
 }
 

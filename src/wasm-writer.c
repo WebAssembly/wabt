@@ -68,9 +68,12 @@ void wasm_close_file_writer(WasmFileWriter* writer) {
   fclose(writer->file);
 }
 
-static WasmResult init_output_buffer(WasmOutputBuffer* buf,
+static WasmResult init_output_buffer(WasmAllocator* allocator,
+                                     WasmOutputBuffer* buf,
                                      size_t initial_capacity) {
-  buf->start = malloc(initial_capacity);
+  buf->allocator = allocator;
+  buf->start =
+      allocator->alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
   if (!buf->start) {
     ERROR("allocation size=%zd failed\n", initial_capacity);
     return WASM_ERROR;
@@ -86,7 +89,8 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
-    buf->start = realloc(buf->start, new_capacity);
+    buf->start = buf->allocator->realloc(buf->allocator, buf->start,
+                                         new_capacity, WASM_DEFAULT_ALIGN);
     if (!buf->start) {
       ERROR("allocation size=%zd failed\n", new_capacity);
       return WASM_ERROR;
@@ -97,7 +101,7 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
 }
 
 static void free_output_buffer(WasmOutputBuffer* buf) {
-  free(buf->start);
+  buf->allocator->free(buf->allocator, buf->start);
 }
 
 static WasmResult write_data_to_output_buffer(size_t offset,
@@ -114,13 +118,15 @@ static WasmResult write_data_to_output_buffer(size_t offset,
   return WASM_OK;
 }
 
-WasmResult wasm_init_mem_writer(WasmMemoryWriter* writer) {
+WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
+                                WasmMemoryWriter* writer) {
   memset(writer, 0, sizeof(*writer));
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
-  return init_output_buffer(&writer->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  return init_output_buffer(allocator, &writer->buf,
+                            INITIAL_OUTPUT_BUFFER_CAPACITY);
 }
 
 void wasm_close_mem_writer(WasmMemoryWriter* writer) {
-  free(writer->buf.start);
+  writer->buf.allocator->free(writer->buf.allocator, writer->buf.start);
 }

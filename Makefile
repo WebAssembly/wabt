@@ -29,7 +29,7 @@ SEXPR_WASM_CC := $(CC)
 SEXPR_WASM_CFLAGS := $(CFLAGS)
 SEXPR_WASM_SRCS := \
 	wasm.c sexpr-wasm.c wasm-parser.c wasm-lexer.c wasm-vector.c wasm-check.c \
-	wasm-writer.c wasm-binary-writer.c
+	wasm-writer.c wasm-binary-writer.c wasm-allocator.c wasm-stack-allocator.c
 
 ASAN_FLAGS := -fsanitize=address
 SEXPR_WASM_ASAN_CC := clang

@@ -15,12 +15,14 @@
  */
 
 #include "wasm-vector.h"
+#include "wasm-internal.h"
 
 #include <memory.h>
 
 #define INITIAL_VECTOR_CAPACITY 8
 
-WasmResult wasm_ensure_capacity(void** data,
+WasmResult wasm_ensure_capacity(WasmAllocator* allocator,
+                                void** data,
                                 size_t* capacity,
                                 size_t desired_size,
                                 size_t elt_byte_size) {
@@ -29,7 +31,8 @@ WasmResult wasm_ensure_capacity(void** data,
     while (new_capacity < desired_size)
       new_capacity *= 2;
     size_t new_byte_size = new_capacity * elt_byte_size;
-    *data = realloc(*data, new_byte_size);
+    *data =
+        allocator->realloc(allocator, *data, new_byte_size, WASM_DEFAULT_ALIGN);
     if (*data == NULL)
       return WASM_ERROR;
     *capacity = new_capacity;
@@ -37,23 +40,24 @@ WasmResult wasm_ensure_capacity(void** data,
   return WASM_OK;
 }
 
-void* wasm_append_element(void** data,
+void* wasm_append_element(WasmAllocator* allocator, void** data,
                           size_t* size,
                           size_t* capacity,
                           size_t elt_byte_size) {
-  if (wasm_ensure_capacity(data, capacity, *size + 1, elt_byte_size) ==
-      WASM_ERROR)
+  if (wasm_ensure_capacity(allocator, data, capacity, *size + 1,
+                           elt_byte_size) == WASM_ERROR)
     return NULL;
   return *data + (*size)++ * elt_byte_size;
 }
 
-WasmResult wasm_extend_elements(void** dst,
+WasmResult wasm_extend_elements(WasmAllocator* allocator,
+                                void** dst,
                                 size_t* dst_size,
                                 size_t* dst_capacity,
                                 const void** src,
                                 size_t src_size,
                                 size_t elt_byte_size) {
-  WasmResult result = wasm_ensure_capacity(dst, dst_capacity,
+  WasmResult result = wasm_ensure_capacity(allocator, dst, dst_capacity,
                                            *dst_size + src_size, elt_byte_size);
   if (result != WASM_OK)
     return result;

@@ -354,6 +354,7 @@ typedef struct WasmWriterState {
 } WasmWriterState;
 
 typedef struct WasmWriteContext {
+  WasmAllocator* allocator;
   WasmWriterState writer_state;
   WasmWriterState spec_writer_state;
   WasmWriteBinaryOptions* options;
@@ -371,9 +372,10 @@ typedef struct WasmWriteContext {
 DECLARE_VECTOR(func_signature, WasmFuncSignature);
 DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
-static void wasm_destroy_func_signature_vector_and_elements(
+static void destroy_func_signature_vector_and_elements(
+    WasmAllocator* allocator,
     WasmFuncSignatureVector* sigs) {
-  DESTROY_VECTOR_AND_ELEMENTS(*sigs, func_signature);
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *sigs, func_signature);
 }
 
 static int is_power_of_two(uint32_t x) {
@@ -434,8 +436,8 @@ static void out_u8(WasmWriterState* writer_state,
 
 /* TODO(binji): endianness */
 static void out_u16(WasmWriterState* writer_state,
-                   uint32_t value,
-                   const char* desc) {
+                    uint32_t value,
+                    const char* desc) {
   assert(value <= UINT16_MAX);
   uint16_t value16 = value;
   out_data_at(writer_state, writer_state->offset, &value16, sizeof(value16),
@@ -444,22 +446,22 @@ static void out_u16(WasmWriterState* writer_state,
 }
 
 static void out_u32(WasmWriterState* writer_state,
-                   uint32_t value,
-                   const char* desc) {
+                    uint32_t value,
+                    const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
   writer_state->offset += sizeof(value);
 }
 
 static void out_u64(WasmWriterState* writer_state,
-                   uint64_t value,
-                   const char* desc) {
+                    uint64_t value,
+                    const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
   writer_state->offset += sizeof(value);
 }
 
 static void out_f32(WasmWriterState* writer_state,
-                      float value,
-                      const char* desc) {
+                    float value,
+                    const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
   writer_state->offset += sizeof(value);
 }
@@ -631,12 +633,12 @@ static void get_func_signatures(WasmWriteContext* ctx,
   int i;
   for (i = 0; i < module->func_types.size; ++i) {
     WasmFuncType* func_type = module->func_types.data[i];
-    WasmFuncSignature* sig = wasm_append_func_signature(sigs);
+    WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
     CHECK_ALLOC_NULL(sig);
     sig->result_type = func_type->sig.result_type;
     memset(&sig->param_types, 0, sizeof(sig->param_types));
-    CHECK_ALLOC(
-        wasm_extend_types(&sig->param_types, &func_type->sig.param_types));
+    CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
+                                  &func_type->sig.param_types));
   }
 
   ctx->import_sig_indexes =
@@ -651,11 +653,12 @@ static void get_func_signatures(WasmWriteContext* ctx,
                                   &import->func_sig.param_types);
       if (index == -1) {
         index = sigs->size;
-        WasmFuncSignature* sig = wasm_append_func_signature(sigs);
+        WasmFuncSignature* sig =
+            wasm_append_func_signature(ctx->allocator, sigs);
         CHECK_ALLOC_NULL(sig);
         sig->result_type = import->func_sig.result_type;
         memset(&sig->param_types, 0, sizeof(sig->param_types));
-        CHECK_ALLOC(wasm_extend_types(&sig->param_types,
+        CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                       &import->func_sig.param_types));
       }
     } else {
@@ -686,11 +689,13 @@ static void get_func_signatures(WasmWriteContext* ctx,
       index = find_func_signature(sigs, func->result_type, &func->params.types);
       if (index == -1) {
         index = sigs->size;
-        WasmFuncSignature* sig = wasm_append_func_signature(sigs);
+        WasmFuncSignature* sig =
+            wasm_append_func_signature(ctx->allocator, sigs);
         CHECK_ALLOC_NULL(sig);
         sig->result_type = func->result_type;
         memset(&sig->param_types, 0, sizeof(sig->param_types));
-        CHECK_ALLOC(wasm_extend_types(&sig->param_types, &func->params.types));
+        CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
+                                      &func->params.types));
       }
     }
 
@@ -1080,7 +1085,7 @@ static void write_expr_list_block_with_max_count_65536(
     WasmWriteBlockOpcode write_block_opcode) {
   assert(count < 65536);
   WasmWriterState* ws = &ctx->writer_state;
-  uint8_t byte1 = (count + UINT8_MAX) >> 8;  /* round up. */
+  uint8_t byte1 = (count + UINT8_MAX) >> 8; /* round up. */
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
     push_implicit_block(ctx);
     out_opcode(ws, WASM_OPCODE_BLOCK);
@@ -1108,7 +1113,7 @@ static void write_expr_list_block_with_max_count_16777216(
     WasmWriteBlockOpcode write_block_opcode) {
   assert(count < 16777216);
   WasmWriterState* ws = &ctx->writer_state;
-  uint8_t byte2 = (count + UINT16_MAX) >> 16;  /* round up. */
+  uint8_t byte2 = (count + UINT16_MAX) >> 16; /* round up. */
   if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
     push_implicit_block(ctx);
     out_opcode(ws, WASM_OPCODE_BLOCK);
@@ -1142,14 +1147,13 @@ static void write_expr_list_with_count(WasmWriteContext* ctx,
   } else if (count < UINT16_MAX) {
     write_expr_list_block_with_max_count_65536(
         ctx, module, func, count, expr_ptr, WASM_DONT_WRITE_BLOCK_OPCODE);
-  } else if (count < 256*256*256) {
+  } else if (count < 256 * 256 * 256) {
     write_expr_list_block_with_max_count_16777216(
         ctx, module, func, count, expr_ptr, WASM_DONT_WRITE_BLOCK_OPCODE);
   } else {
-    assert(0);  /* 2**24 expressions? really? */
+    assert(0); /* 2**24 expressions? really? */
   }
 }
-
 
 static void write_func(WasmWriteContext* ctx,
                        WasmModule* module,
@@ -1339,27 +1343,32 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     out_str(ws, export->name.start, export->name.length, "export name");
   }
 
-  wasm_destroy_func_signature_vector_and_elements(&sigs);
+  destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
-static WasmExpr* new_expr(WasmExprType type) {
-  WasmExpr* expr = calloc(1, sizeof(WasmExpr));
+static WasmExpr* new_expr(WasmAllocator* allocator, WasmExprType type) {
+  WasmExpr* expr =
+      allocator->alloc(allocator, sizeof(WasmExpr), WASM_DEFAULT_ALIGN);
   if (!expr)
     return NULL;
+  memset(expr, 0, sizeof(WasmExpr));
   expr->type = type;
   return expr;
 }
 
-static WasmExpr* create_const_expr(WasmConst* const_) {
-  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_CONST);
+static WasmExpr* create_const_expr(WasmAllocator* allocator,
+                                   WasmConst* const_) {
+  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_CONST);
   if (!expr)
     return NULL;
   expr->const_ = *const_;
   return expr;
 }
 
-static WasmExpr* create_invoke_expr(WasmCommandInvoke* invoke, int func_index) {
-  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_CALL);
+static WasmExpr* create_invoke_expr(WasmAllocator* allocator,
+                                    WasmCommandInvoke* invoke,
+                                    int func_index) {
+  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_CALL);
   if (!expr)
     return NULL;
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
@@ -1367,31 +1376,32 @@ static WasmExpr* create_invoke_expr(WasmCommandInvoke* invoke, int func_index) {
   int i;
   for (i = 0; i < invoke->args.size; ++i) {
     WasmConst* arg = &invoke->args.data[i];
-    WasmExprPtr* expr_ptr = wasm_append_expr_ptr(&expr->call.args);
+    WasmExprPtr* expr_ptr = wasm_append_expr_ptr(allocator, &expr->call.args);
     if (!expr_ptr)
       goto fail;
-    *expr_ptr = create_const_expr(arg);
+    *expr_ptr = create_const_expr(allocator, arg);
     if (!*expr_ptr)
       goto fail;
   }
   return expr;
 fail:
   for (i = 0; i < invoke->args.size; ++i)
-    wasm_destroy_expr_ptr(&expr->call.args.data[i]);
-  free(expr);
+    wasm_destroy_expr_ptr(allocator, &expr->call.args.data[i]);
+  allocator->free(allocator, expr);
   return NULL;
 }
 
-static WasmExpr* create_eq_expr(WasmType type,
+static WasmExpr* create_eq_expr(WasmAllocator* allocator,
+                                WasmType type,
                                 WasmExpr* left,
                                 WasmExpr* right) {
   if (!left || !right) {
-    wasm_destroy_expr_ptr(&left);
-    wasm_destroy_expr_ptr(&right);
+    wasm_destroy_expr_ptr(allocator, &left);
+    wasm_destroy_expr_ptr(allocator, &right);
     return NULL;
   }
 
-  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_COMPARE);
+  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_COMPARE);
   if (!expr)
     return NULL;
   expr->compare.op.type = type;
@@ -1416,16 +1426,17 @@ static WasmExpr* create_eq_expr(WasmType type,
   return expr;
 }
 
-static WasmExpr* create_ne_expr(WasmType type,
+static WasmExpr* create_ne_expr(WasmAllocator* allocator,
+                                WasmType type,
                                 WasmExpr* left,
                                 WasmExpr* right) {
   if (!left || !right) {
-    wasm_destroy_expr_ptr(&left);
-    wasm_destroy_expr_ptr(&right);
+    wasm_destroy_expr_ptr(allocator, &left);
+    wasm_destroy_expr_ptr(allocator, &right);
     return NULL;
   }
 
-  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_COMPARE);
+  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_COMPARE);
   if (!expr)
     return NULL;
   expr->compare.op.type = type;
@@ -1450,13 +1461,15 @@ static WasmExpr* create_ne_expr(WasmType type,
   return expr;
 }
 
-static WasmExpr* create_set_local_expr(int index, WasmExpr* value) {
+static WasmExpr* create_set_local_expr(WasmAllocator* allocator,
+                                       int index,
+                                       WasmExpr* value) {
   if (!value) {
-    wasm_destroy_expr_ptr(&value);
+    wasm_destroy_expr_ptr(allocator, &value);
     return NULL;
   }
 
-  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_SET_LOCAL);
+  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_SET_LOCAL);
   if (!expr)
     return NULL;
   expr->set_local.var.type = WASM_VAR_TYPE_INDEX;
@@ -1465,8 +1478,8 @@ static WasmExpr* create_set_local_expr(int index, WasmExpr* value) {
   return expr;
 }
 
-static WasmExpr* create_get_local_expr(int index) {
-  WasmExpr* expr = new_expr(WASM_EXPR_TYPE_GET_LOCAL);
+static WasmExpr* create_get_local_expr(WasmAllocator* allocator, int index) {
+  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_GET_LOCAL);
   if (!expr)
     return NULL;
   expr->get_local.var.type = WASM_VAR_TYPE_INDEX;
@@ -1474,13 +1487,15 @@ static WasmExpr* create_get_local_expr(int index) {
   return expr;
 }
 
-static WasmExpr* create_reinterpret_expr(WasmType type, WasmExpr* expr) {
+static WasmExpr* create_reinterpret_expr(WasmAllocator* allocator,
+                                         WasmType type,
+                                         WasmExpr* expr) {
   if (!expr) {
-    wasm_destroy_expr_ptr(&expr);
+    wasm_destroy_expr_ptr(allocator, &expr);
     return NULL;
   }
 
-  WasmExpr* result = new_expr(WASM_EXPR_TYPE_CONVERT);
+  WasmExpr* result = new_expr(allocator, WASM_EXPR_TYPE_CONVERT);
   if (!result)
     return NULL;
   switch (type) {
@@ -1499,10 +1514,12 @@ static WasmExpr* create_reinterpret_expr(WasmType type, WasmExpr* expr) {
 }
 
 static WasmModuleField* append_module_field_and_fixup(
+    WasmAllocator* allocator,
     WasmModule* module,
     WasmModuleFieldType module_field_type) {
   WasmModuleField* first_field = &module->fields.data[0];
-  WasmModuleField* result = wasm_append_module_field(&module->fields);
+  WasmModuleField* result =
+      wasm_append_module_field(allocator, &module->fields);
   if (!result)
     return NULL;
   memset(result, 0, sizeof(*result));
@@ -1513,21 +1530,23 @@ static WasmModuleField* append_module_field_and_fixup(
    already assigned. */
   switch (module_field_type) {
     case WASM_MODULE_FIELD_TYPE_FUNC: {
-      WasmFuncPtr* func_ptr = wasm_append_func_ptr(&module->funcs);
+      WasmFuncPtr* func_ptr = wasm_append_func_ptr(allocator, &module->funcs);
       if (!func_ptr)
         goto fail;
       *func_ptr = &result->func;
       break;
     }
     case WASM_MODULE_FIELD_TYPE_IMPORT: {
-      WasmImportPtr* import_ptr = wasm_append_import_ptr(&module->imports);
+      WasmImportPtr* import_ptr =
+          wasm_append_import_ptr(allocator, &module->imports);
       if (!import_ptr)
         goto fail;
       *import_ptr = &result->import;
       break;
     }
     case WASM_MODULE_FIELD_TYPE_EXPORT: {
-      WasmExportPtr* export_ptr = wasm_append_export_ptr(&module->exports);
+      WasmExportPtr* export_ptr =
+          wasm_append_export_ptr(allocator, &module->exports);
       if (!export_ptr)
         goto fail;
       *export_ptr = &result->export_;
@@ -1535,7 +1554,7 @@ static WasmModuleField* append_module_field_and_fixup(
     }
     case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
       WasmFuncTypePtr* func_type_ptr =
-          wasm_append_func_type_ptr(&module->func_types);
+          wasm_append_func_type_ptr(allocator, &module->func_types);
       if (!func_type_ptr)
         goto fail;
       *func_type_ptr = &result->func_type;
@@ -1598,21 +1617,23 @@ fail:
   return NULL;
 }
 
-static WasmStringSlice create_assert_func_name(const char* format,
+static WasmStringSlice create_assert_func_name(WasmAllocator* allocator,
+                                               const char* format,
                                                int format_index) {
   WasmStringSlice name;
   char buffer[256];
   int buffer_len = snprintf(buffer, 256, format, format_index);
-  name.start = strdup(buffer);
+  name.start = wasm_strndup(allocator, buffer, buffer_len);
   name.length = buffer_len;
   return name;
 }
 
-static WasmFunc* append_nullary_func(WasmModule* module,
+static WasmFunc* append_nullary_func(WasmAllocator* allocator,
+                                     WasmModule* module,
                                      WasmType result_type,
                                      WasmStringSlice export_name) {
-  WasmModuleField* func_field =
-      append_module_field_and_fixup(module, WASM_MODULE_FIELD_TYPE_FUNC);
+  WasmModuleField* func_field = append_module_field_and_fixup(
+      allocator, module, WASM_MODULE_FIELD_TYPE_FUNC);
   if (!func_field)
     return NULL;
   WasmFunc* func = &func_field->func;
@@ -1623,8 +1644,8 @@ static WasmFunc* append_nullary_func(WasmModule* module,
   func_field = NULL;
   func = NULL;
 
-  WasmModuleField* export_field =
-      append_module_field_and_fixup(module, WASM_MODULE_FIELD_TYPE_EXPORT);
+  WasmModuleField* export_field = append_module_field_and_fixup(
+      allocator, module, WASM_MODULE_FIELD_TYPE_EXPORT);
   if (!export_field) {
     /* leave the func field, it will be cleaned up later */
     return NULL;
@@ -1722,7 +1743,7 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
       callee = NULL;
 
       WasmStringSlice name =
-          create_assert_func_name(format, num_assert_funcs++);
+          create_assert_func_name(ctx->allocator, format, num_assert_funcs++);
       out_printf(&ctx->spec_writer_state, "  %s(m, \"%.*s\", \"%s\", %d);\n",
                  js_call, name.length, name.start, invoke->loc.filename,
                  invoke->loc.first_line);
@@ -1730,26 +1751,27 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
       WasmExprPtr* expr_ptr;
       switch (command->type) {
         case WASM_COMMAND_TYPE_INVOKE: {
-          WasmFunc* caller =
-              append_nullary_func(last_module, result_type, name);
+          WasmFunc* caller = append_nullary_func(ctx->allocator, last_module,
+                                                 result_type, name);
           CHECK_ALLOC_NULL(caller);
-          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          expr_ptr = wasm_append_expr_ptr(ctx->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
-          *expr_ptr = create_invoke_expr(&command->invoke, func_index);
+          *expr_ptr =
+              create_invoke_expr(ctx->allocator, &command->invoke, func_index);
           CHECK_ALLOC_NULL(*expr_ptr);
           break;
         }
 
         case WASM_COMMAND_TYPE_ASSERT_RETURN: {
-          WasmFunc* caller =
-              append_nullary_func(last_module, WASM_TYPE_I32, name);
+          WasmFunc* caller = append_nullary_func(ctx->allocator, last_module,
+                                                 WASM_TYPE_I32, name);
           CHECK_ALLOC_NULL(caller);
 
-          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          expr_ptr = wasm_append_expr_ptr(ctx->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
 
-          WasmExpr* invoke_expr =
-              create_invoke_expr(&command->assert_return.invoke, func_index);
+          WasmExpr* invoke_expr = create_invoke_expr(
+              ctx->allocator, &command->assert_return.invoke, func_index);
           CHECK_ALLOC_NULL(invoke_expr);
 
           if (result_type == WASM_TYPE_VOID) {
@@ -1761,30 +1783,35 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
             WasmConst const_;
             const_.type = WASM_TYPE_I32;
             const_.u32 = 1;
-            expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+            expr_ptr = wasm_append_expr_ptr(ctx->allocator, &caller->exprs);
             CHECK_ALLOC_NULL(expr_ptr);
-            *expr_ptr = create_const_expr(&const_);
+            *expr_ptr = create_const_expr(ctx->allocator, &const_);
             CHECK_ALLOC_NULL(*expr_ptr);
           } else {
             WasmConst* expected = &command->assert_return.expected;
-            WasmExpr* const_expr = create_const_expr(expected);
+            WasmExpr* const_expr = create_const_expr(ctx->allocator, expected);
             CHECK_ALLOC_NULL(const_expr);
 
             if (expected->type == WASM_TYPE_F32 && isnan(expected->f32)) {
               *expr_ptr = create_eq_expr(
-                  WASM_TYPE_I32,
-                  create_reinterpret_expr(WASM_TYPE_F32, invoke_expr),
-                  create_reinterpret_expr(WASM_TYPE_F32, const_expr));
+                  ctx->allocator, WASM_TYPE_I32,
+                  create_reinterpret_expr(ctx->allocator, WASM_TYPE_F32,
+                                          invoke_expr),
+                  create_reinterpret_expr(ctx->allocator, WASM_TYPE_F32,
+                                          const_expr));
               CHECK_ALLOC_NULL(*expr_ptr);
             } else if (expected->type == WASM_TYPE_F64 &&
                        isnan(expected->f64)) {
               *expr_ptr = create_eq_expr(
-                  WASM_TYPE_I64,
-                  create_reinterpret_expr(WASM_TYPE_F64, invoke_expr),
-                  create_reinterpret_expr(WASM_TYPE_F64, const_expr));
+                  ctx->allocator, WASM_TYPE_I64,
+                  create_reinterpret_expr(ctx->allocator, WASM_TYPE_F64,
+                                          invoke_expr),
+                  create_reinterpret_expr(ctx->allocator, WASM_TYPE_F64,
+                                          const_expr));
               CHECK_ALLOC_NULL(*expr_ptr);
             } else {
-              *expr_ptr = create_eq_expr(result_type, invoke_expr, const_expr);
+              *expr_ptr = create_eq_expr(ctx->allocator, result_type,
+                                         invoke_expr, const_expr);
               CHECK_ALLOC_NULL(*expr_ptr);
             }
           }
@@ -1792,35 +1819,39 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
         }
 
         case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN: {
-          WasmFunc* caller =
-              append_nullary_func(last_module, WASM_TYPE_I32, name);
+          WasmFunc* caller = append_nullary_func(ctx->allocator, last_module,
+                                                 WASM_TYPE_I32, name);
           CHECK_ALLOC_NULL(caller);
-          CHECK_ALLOC(
-              wasm_append_type_value(&caller->locals.types, &result_type));
-          CHECK_ALLOC(wasm_append_type_value(&caller->params_and_locals.types,
-                                             &result_type));
-          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          CHECK_ALLOC(wasm_append_type_value(
+              ctx->allocator, &caller->locals.types, &result_type));
+          CHECK_ALLOC(wasm_append_type_value(
+              ctx->allocator, &caller->params_and_locals.types, &result_type));
+          expr_ptr = wasm_append_expr_ptr(ctx->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
           *expr_ptr = create_set_local_expr(
-              0, create_invoke_expr(&command->assert_return_nan.invoke,
-                                    func_index));
+              ctx->allocator, 0,
+              create_invoke_expr(ctx->allocator,
+                                 &command->assert_return_nan.invoke,
+                                 func_index));
           CHECK_ALLOC_NULL(*expr_ptr);
           /* x != x is true iff x is NaN */
-          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          expr_ptr = wasm_append_expr_ptr(ctx->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
-          *expr_ptr = create_ne_expr(result_type, create_get_local_expr(0),
-                                     create_get_local_expr(0));
+          *expr_ptr = create_ne_expr(ctx->allocator, result_type,
+                                     create_get_local_expr(ctx->allocator, 0),
+                                     create_get_local_expr(ctx->allocator, 0));
           CHECK_ALLOC_NULL(*expr_ptr);
           break;
         }
 
         case WASM_COMMAND_TYPE_ASSERT_TRAP: {
-          WasmFunc* caller =
-              append_nullary_func(last_module, result_type, name);
+          WasmFunc* caller = append_nullary_func(ctx->allocator, last_module,
+                                                 result_type, name);
           CHECK_ALLOC_NULL(caller);
-          expr_ptr = wasm_append_expr_ptr(&caller->exprs);
+          expr_ptr = wasm_append_expr_ptr(ctx->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
-          *expr_ptr = create_invoke_expr(&command->invoke, func_index);
+          *expr_ptr =
+              create_invoke_expr(ctx->allocator, &command->invoke, func_index);
           CHECK_ALLOC_NULL(*expr_ptr);
           break;
         }
@@ -1852,16 +1883,18 @@ static void cleanup_context(WasmWriteContext* ctx) {
   free(ctx->func_offsets);
 }
 
-WasmResult wasm_write_binary(WasmWriter* writer,
+WasmResult wasm_write_binary(WasmAllocator* allocator,
+                             WasmWriter* writer,
                              WasmScript* script,
                              WasmWriteBinaryOptions* options) {
   WasmWriteContext ctx = {};
+  ctx.allocator = allocator;
   ctx.options = options;
   ctx.result = WASM_OK;
 
   if (options->spec) {
     WasmMemoryWriter mem_writer = {};
-    WasmResult result = wasm_init_mem_writer(&mem_writer);
+    WasmResult result = wasm_init_mem_writer(allocator, &mem_writer);
     if (result != WASM_OK)
       return result;
 

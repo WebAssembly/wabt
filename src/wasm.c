@@ -15,6 +15,7 @@
  */
 
 #include "wasm.h"
+#include "wasm-internal.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -116,13 +117,14 @@ static WasmBindingHashEntry* wasm_hash_new_entry(WasmBindingHash* hash,
   return entry;
 }
 
-static WasmResult wasm_hash_resize(WasmBindingHash* hash,
+static WasmResult wasm_hash_resize(WasmAllocator* allocator,
+                                   WasmBindingHash* hash,
                                    size_t desired_capacity) {
   WasmResult result = WASM_OK;
   WasmBindingHash new_hash = {};
   /* TODO(binji): better plural */
-  result =
-      wasm_reserve_binding_hash_entrys(&new_hash.entries, desired_capacity);
+  result = wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
+                                            desired_capacity);
   if (result != WASM_OK)
     return result;
 
@@ -152,21 +154,23 @@ static WasmResult wasm_hash_resize(WasmBindingHash* hash,
 
   /* we are sharing the WasmStringSlices, so we only need to destroy the old
    * binding vector */
-  wasm_destroy_binding_hash_entry_vector(&hash->entries);
+  wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
   *hash = new_hash;
   return result;
 }
 
-WasmBinding* wasm_insert_binding(WasmBindingHash* hash,
+WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
+                                 WasmBindingHash* hash,
                                  const WasmStringSlice* name) {
   if (hash->entries.size == 0) {
-    if (wasm_hash_resize(hash, INITIAL_HASH_CAPACITY) != WASM_OK)
+    if (wasm_hash_resize(allocator, hash, INITIAL_HASH_CAPACITY) != WASM_OK)
       return NULL;
   }
 
   if (!hash->free_head) {
     /* no more free space, allocate more */
-    if (wasm_hash_resize(hash, hash->entries.capacity * 2) != WASM_OK)
+    if (wasm_hash_resize(allocator, hash, hash->entries.capacity * 2) !=
+        WASM_OK)
       return NULL;
   }
 
@@ -267,11 +271,12 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
   return module->imports.data[index];
 }
 
-WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
+WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
+                                     WasmTypeBindings* dst,
                                      WasmTypeBindings* src) {
   WasmResult result = WASM_OK;
   int last_type = dst->types.size;
-  result = wasm_extend_types(&dst->types, &src->types);
+  result = wasm_extend_types(allocator, &dst->types, &src->types);
   if (result != WASM_OK)
     return result;
 
@@ -281,8 +286,8 @@ WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
     if (wasm_hash_entry_is_free(src_entry))
       continue;
 
-    WasmBinding* dst_binding =
-        wasm_insert_binding(&dst->bindings, &src_entry->binding.name);
+    WasmBinding* dst_binding = wasm_insert_binding(allocator, &dst->bindings,
+                                                   &src_entry->binding.name);
     if (!dst_binding)
       return WASM_ERROR;
 
@@ -292,160 +297,168 @@ WasmResult wasm_extend_type_bindings(WasmTypeBindings* dst,
   return result;
 }
 
-void wasm_destroy_string_slice(WasmStringSlice* str) {
-  free((char*)str->start);
+void wasm_destroy_string_slice(WasmAllocator* allocator, WasmStringSlice* str) {
+  allocator->free(allocator, (void*)str->start);
 }
 
-static void wasm_destroy_binding_hash_entry(WasmBindingHashEntry* entry) {
-  wasm_destroy_string_slice(&entry->binding.name);
+static void wasm_destroy_binding_hash_entry(WasmAllocator* allocator,
+                                            WasmBindingHashEntry* entry) {
+  wasm_destroy_string_slice(allocator, &entry->binding.name);
 }
 
-static void wasm_destroy_binding_hash(WasmBindingHash* hash) {
+static void wasm_destroy_binding_hash(WasmAllocator* allocator,
+                                      WasmBindingHash* hash) {
   /* Can't use DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
    * capacity. */
   int i;
   for (i = 0; i < hash->entries.capacity; ++i)
-    wasm_destroy_binding_hash_entry(&hash->entries.data[i]);
-  wasm_destroy_binding_hash_entry_vector(&hash->entries);
+    wasm_destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
+  wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
 }
 
-void wasm_destroy_type_bindings(WasmTypeBindings* type_bindings) {
-  wasm_destroy_type_vector(&type_bindings->types);
-  wasm_destroy_binding_hash(&type_bindings->bindings);
+void wasm_destroy_type_bindings(WasmAllocator* allocator,
+                                WasmTypeBindings* type_bindings) {
+  wasm_destroy_type_vector(allocator, &type_bindings->types);
+  wasm_destroy_binding_hash(allocator, &type_bindings->bindings);
 }
 
-void wasm_destroy_var(WasmVar* var) {
+void wasm_destroy_var(WasmAllocator* allocator, WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
-    wasm_destroy_string_slice(&var->name);
+    wasm_destroy_string_slice(allocator, &var->name);
 }
 
-void wasm_destroy_var_vector_and_elements(WasmVarVector* vars) {
-  DESTROY_VECTOR_AND_ELEMENTS(*vars, var);
+void wasm_destroy_var_vector_and_elements(WasmAllocator* allocator,
+                                          WasmVarVector* vars) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *vars, var);
 }
 
-void wasm_destroy_func_signature(WasmFuncSignature* sig) {
-  wasm_destroy_type_vector(&sig->param_types);
+void wasm_destroy_func_signature(WasmAllocator* allocator,
+                                 WasmFuncSignature* sig) {
+  wasm_destroy_type_vector(allocator, &sig->param_types);
 }
 
-void wasm_destroy_target(WasmTarget* target) {
-  wasm_destroy_var(&target->var);
+void wasm_destroy_target(WasmAllocator* allocator, WasmTarget* target) {
+  wasm_destroy_var(allocator, &target->var);
 }
 
-void wasm_destroy_target_vector_and_elements(WasmTargetVector* targets) {
-  DESTROY_VECTOR_AND_ELEMENTS(*targets, target);
+void wasm_destroy_target_vector_and_elements(WasmAllocator* allocator,
+                                             WasmTargetVector* targets) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *targets, target);
 }
 
-void wasm_destroy_expr_ptr(WasmExpr** expr);
+void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr);
 
-void wasm_destroy_case(WasmCase* case_) {
-  wasm_destroy_string_slice(&case_->label);
-  DESTROY_VECTOR_AND_ELEMENTS(case_->exprs, expr_ptr);
+void wasm_destroy_case(WasmAllocator* allocator, WasmCase* case_) {
+  wasm_destroy_string_slice(allocator, &case_->label);
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, case_->exprs, expr_ptr);
 }
 
-void wasm_destroy_case_vector_and_elements(WasmCaseVector* cases) {
-  DESTROY_VECTOR_AND_ELEMENTS(*cases, case);
+void wasm_destroy_case_vector_and_elements(WasmAllocator* allocator,
+                                           WasmCaseVector* cases) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *cases, case);
 }
 
-static void wasm_destroy_expr(WasmExpr* expr) {
+static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      wasm_destroy_expr_ptr(&expr->binary.left);
-      wasm_destroy_expr_ptr(&expr->binary.right);
+      wasm_destroy_expr_ptr(allocator, &expr->binary.left);
+      wasm_destroy_expr_ptr(allocator, &expr->binary.right);
       break;
     case WASM_EXPR_TYPE_BLOCK:
-      wasm_destroy_string_slice(&expr->block.label);
-      DESTROY_VECTOR_AND_ELEMENTS(expr->block.exprs, expr_ptr);
+      wasm_destroy_string_slice(allocator, &expr->block.label);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->block.exprs, expr_ptr);
       break;
     case WASM_EXPR_TYPE_BR:
-      wasm_destroy_var(&expr->br.var);
+      wasm_destroy_var(allocator, &expr->br.var);
       if (expr->br.expr)
-        wasm_destroy_expr_ptr(&expr->br.expr);
+        wasm_destroy_expr_ptr(allocator, &expr->br.expr);
       break;
     case WASM_EXPR_TYPE_BR_IF:
-      wasm_destroy_var(&expr->br_if.var);
-      wasm_destroy_expr_ptr(&expr->br_if.cond);
+      wasm_destroy_var(allocator, &expr->br_if.var);
+      wasm_destroy_expr_ptr(allocator, &expr->br_if.cond);
       if (expr->br_if.expr)
-        wasm_destroy_expr_ptr(&expr->br_if.expr);
+        wasm_destroy_expr_ptr(allocator, &expr->br_if.expr);
       break;
     case WASM_EXPR_TYPE_CALL:
     case WASM_EXPR_TYPE_CALL_IMPORT:
-      wasm_destroy_var(&expr->call.var);
-      DESTROY_VECTOR_AND_ELEMENTS(expr->call.args, expr_ptr);
+      wasm_destroy_var(allocator, &expr->call.var);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->call.args, expr_ptr);
       break;
     case WASM_EXPR_TYPE_CALL_INDIRECT:
-      wasm_destroy_var(&expr->call_indirect.var);
-      wasm_destroy_expr_ptr(&expr->call_indirect.expr);
-      DESTROY_VECTOR_AND_ELEMENTS(expr->call_indirect.args, expr_ptr);
+      wasm_destroy_var(allocator, &expr->call_indirect.var);
+      wasm_destroy_expr_ptr(allocator, &expr->call_indirect.expr);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->call_indirect.args,
+                                  expr_ptr);
       break;
     case WASM_EXPR_TYPE_COMPARE:
-      wasm_destroy_expr_ptr(&expr->compare.left);
-      wasm_destroy_expr_ptr(&expr->compare.right);
+      wasm_destroy_expr_ptr(allocator, &expr->compare.left);
+      wasm_destroy_expr_ptr(allocator, &expr->compare.right);
       break;
     case WASM_EXPR_TYPE_CONVERT:
-      wasm_destroy_expr_ptr(&expr->convert.expr);
+      wasm_destroy_expr_ptr(allocator, &expr->convert.expr);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL:
-      wasm_destroy_var(&expr->get_local.var);
+      wasm_destroy_var(allocator, &expr->get_local.var);
       break;
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      wasm_destroy_expr_ptr(&expr->grow_memory.expr);
+      wasm_destroy_expr_ptr(allocator, &expr->grow_memory.expr);
       break;
     case WASM_EXPR_TYPE_HAS_FEATURE:
-      wasm_destroy_string_slice(&expr->has_feature.text);
+      wasm_destroy_string_slice(allocator, &expr->has_feature.text);
       break;
     case WASM_EXPR_TYPE_IF:
-      wasm_destroy_expr_ptr(&expr->if_.cond);
-      wasm_destroy_expr_ptr(&expr->if_.true_);
+      wasm_destroy_expr_ptr(allocator, &expr->if_.cond);
+      wasm_destroy_expr_ptr(allocator, &expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
-      wasm_destroy_expr_ptr(&expr->if_else.cond);
-      wasm_destroy_expr_ptr(&expr->if_else.true_);
-      wasm_destroy_expr_ptr(&expr->if_else.false_);
+      wasm_destroy_expr_ptr(allocator, &expr->if_else.cond);
+      wasm_destroy_expr_ptr(allocator, &expr->if_else.true_);
+      wasm_destroy_expr_ptr(allocator, &expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LOAD:
-      wasm_destroy_expr_ptr(&expr->load.addr);
+      wasm_destroy_expr_ptr(allocator, &expr->load.addr);
       break;
     case WASM_EXPR_TYPE_LOAD_GLOBAL:
-      wasm_destroy_var(&expr->load_global.var);
+      wasm_destroy_var(allocator, &expr->load_global.var);
       break;
     case WASM_EXPR_TYPE_LOOP:
-      wasm_destroy_string_slice(&expr->loop.inner);
-      wasm_destroy_string_slice(&expr->loop.outer);
-      DESTROY_VECTOR_AND_ELEMENTS(expr->loop.exprs, expr_ptr);
+      wasm_destroy_string_slice(allocator, &expr->loop.inner);
+      wasm_destroy_string_slice(allocator, &expr->loop.outer);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->loop.exprs, expr_ptr);
       break;
     case WASM_EXPR_TYPE_RETURN:
       if (expr->return_.expr)
-        wasm_destroy_expr_ptr(&expr->return_.expr);
+        wasm_destroy_expr_ptr(allocator, &expr->return_.expr);
       break;
     case WASM_EXPR_TYPE_SELECT:
-      wasm_destroy_expr_ptr(&expr->select.cond);
-      wasm_destroy_expr_ptr(&expr->select.true_);
-      wasm_destroy_expr_ptr(&expr->select.false_);
+      wasm_destroy_expr_ptr(allocator, &expr->select.cond);
+      wasm_destroy_expr_ptr(allocator, &expr->select.true_);
+      wasm_destroy_expr_ptr(allocator, &expr->select.false_);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL:
-      wasm_destroy_var(&expr->set_local.var);
-      wasm_destroy_expr_ptr(&expr->set_local.expr);
+      wasm_destroy_var(allocator, &expr->set_local.var);
+      wasm_destroy_expr_ptr(allocator, &expr->set_local.expr);
       break;
     case WASM_EXPR_TYPE_STORE:
-      wasm_destroy_expr_ptr(&expr->store.addr);
-      wasm_destroy_expr_ptr(&expr->store.value);
+      wasm_destroy_expr_ptr(allocator, &expr->store.addr);
+      wasm_destroy_expr_ptr(allocator, &expr->store.value);
       break;
     case WASM_EXPR_TYPE_STORE_GLOBAL:
-      wasm_destroy_var(&expr->store_global.var);
-      wasm_destroy_expr_ptr(&expr->store_global.expr);
+      wasm_destroy_var(allocator, &expr->store_global.var);
+      wasm_destroy_expr_ptr(allocator, &expr->store_global.expr);
       break;
     case WASM_EXPR_TYPE_TABLESWITCH:
-      wasm_destroy_string_slice(&expr->tableswitch.label);
-      wasm_destroy_expr_ptr(&expr->tableswitch.expr);
-      DESTROY_VECTOR_AND_ELEMENTS(expr->tableswitch.targets, target);
-      wasm_destroy_target(&expr->tableswitch.default_target);
+      wasm_destroy_string_slice(allocator, &expr->tableswitch.label);
+      wasm_destroy_expr_ptr(allocator, &expr->tableswitch.expr);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->tableswitch.targets, target);
+      wasm_destroy_target(allocator, &expr->tableswitch.default_target);
       /* the binding name memory is shared, so just destroy the vector */
       wasm_destroy_binding_hash_entry_vector(
-          &expr->tableswitch.case_bindings.entries);
-      DESTROY_VECTOR_AND_ELEMENTS(expr->tableswitch.cases, case);
+          allocator, &expr->tableswitch.case_bindings.entries);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->tableswitch.cases, case);
       break;
     case WASM_EXPR_TYPE_UNARY:
-      wasm_destroy_expr_ptr(&expr->unary.expr);
+      wasm_destroy_expr_ptr(allocator, &expr->unary.expr);
       break;
 
     case WASM_EXPR_TYPE_UNREACHABLE:
@@ -456,143 +469,154 @@ static void wasm_destroy_expr(WasmExpr* expr) {
   }
 }
 
-void wasm_destroy_expr_ptr(WasmExpr** expr) {
-  wasm_destroy_expr(*expr);
-  free(*expr);
+void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr) {
+  wasm_destroy_expr(allocator, *expr);
+  allocator->free(allocator, *expr);
 }
 
-void wasm_destroy_expr_ptr_vector_and_elements(WasmExprPtrVector* exprs) {
-  DESTROY_VECTOR_AND_ELEMENTS(*exprs, expr_ptr);
+void wasm_destroy_expr_ptr_vector_and_elements(WasmAllocator* allocator,
+                                               WasmExprPtrVector* exprs) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *exprs, expr_ptr);
 }
 
-void wasm_destroy_func(WasmFunc* func) {
-  wasm_destroy_string_slice(&func->name);
-  wasm_destroy_var(&func->type_var);
-  wasm_destroy_type_bindings(&func->params);
-  wasm_destroy_type_bindings(&func->locals);
+void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
+  wasm_destroy_string_slice(allocator, &func->name);
+  wasm_destroy_var(allocator, &func->type_var);
+  wasm_destroy_type_bindings(allocator, &func->params);
+  wasm_destroy_type_bindings(allocator, &func->locals);
   /* params_and_locals shares binding data with params and locals */
-  wasm_destroy_type_vector(&func->params_and_locals.types);
+  wasm_destroy_type_vector(allocator, &func->params_and_locals.types);
   wasm_destroy_binding_hash_entry_vector(
-      &func->params_and_locals.bindings.entries);
-  DESTROY_VECTOR_AND_ELEMENTS(func->exprs, expr_ptr);
+      allocator, &func->params_and_locals.bindings.entries);
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, func->exprs, expr_ptr);
 }
 
-void wasm_destroy_import(WasmImport* import) {
-  wasm_destroy_string_slice(&import->name);
-  wasm_destroy_string_slice(&import->module_name);
-  wasm_destroy_string_slice(&import->func_name);
-  wasm_destroy_var(&import->type_var);
-  wasm_destroy_func_signature(&import->func_sig);
+void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
+  wasm_destroy_string_slice(allocator, &import->name);
+  wasm_destroy_string_slice(allocator, &import->module_name);
+  wasm_destroy_string_slice(allocator, &import->func_name);
+  wasm_destroy_var(allocator, &import->type_var);
+  wasm_destroy_func_signature(allocator, &import->func_sig);
 }
 
-void wasm_destroy_export(WasmExport* export) {
-  wasm_destroy_string_slice(&export->name);
-  wasm_destroy_var(&export->var);
+void wasm_destroy_export(WasmAllocator* allocator, WasmExport* export) {
+  wasm_destroy_string_slice(allocator, &export->name);
+  wasm_destroy_var(allocator, &export->var);
 }
 
-void wasm_destroy_func_type(WasmFuncType* func_type) {
-  wasm_destroy_string_slice(&func_type->name);
-  wasm_destroy_func_signature(&func_type->sig);
+void wasm_destroy_func_type(WasmAllocator* allocator, WasmFuncType* func_type) {
+  wasm_destroy_string_slice(allocator, &func_type->name);
+  wasm_destroy_func_signature(allocator, &func_type->sig);
 }
 
-void wasm_destroy_segment(WasmSegment* segment) {
-  free(segment->data);
+void wasm_destroy_segment(WasmAllocator* allocator, WasmSegment* segment) {
+  allocator->free(allocator, segment->data);
 }
 
-void wasm_destroy_segment_vector_and_elements(WasmSegmentVector* segments) {
-  DESTROY_VECTOR_AND_ELEMENTS(*segments, segment);
+void wasm_destroy_segment_vector_and_elements(WasmAllocator* allocator,
+                                              WasmSegmentVector* segments) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *segments, segment);
 }
 
-void wasm_destroy_memory(WasmMemory* memory) {
-  DESTROY_VECTOR_AND_ELEMENTS(memory->segments, segment);
+void wasm_destroy_memory(WasmAllocator* allocator, WasmMemory* memory) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, memory->segments, segment);
 }
 
-static void wasm_destroy_module_field(WasmModuleField* field) {
+static void wasm_destroy_module_field(WasmAllocator* allocator,
+                                      WasmModuleField* field) {
   switch (field->type) {
     case WASM_MODULE_FIELD_TYPE_FUNC:
-      wasm_destroy_func(&field->func);
+      wasm_destroy_func(allocator, &field->func);
       break;
     case WASM_MODULE_FIELD_TYPE_IMPORT:
-      wasm_destroy_import(&field->import);
+      wasm_destroy_import(allocator, &field->import);
       break;
     case WASM_MODULE_FIELD_TYPE_EXPORT:
-      wasm_destroy_export(&field->export_);
+      wasm_destroy_export(allocator, &field->export_);
       break;
     case WASM_MODULE_FIELD_TYPE_TABLE:
-      DESTROY_VECTOR_AND_ELEMENTS(field->table, var);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, field->table, var);
       break;
     case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
-      wasm_destroy_func_type(&field->func_type);
+      wasm_destroy_func_type(allocator, &field->func_type);
       break;
     case WASM_MODULE_FIELD_TYPE_MEMORY:
-      wasm_destroy_memory(&field->memory);
+      wasm_destroy_memory(allocator, &field->memory);
       break;
     case WASM_MODULE_FIELD_TYPE_GLOBAL:
-      wasm_destroy_type_bindings(&field->global);
+      wasm_destroy_type_bindings(allocator, &field->global);
       break;
     case WASM_MODULE_FIELD_TYPE_START:
-      wasm_destroy_var(&field->start);
+      wasm_destroy_var(allocator, &field->start);
       break;
   }
 }
 
 void wasm_destroy_module_field_vector_and_elements(
+    WasmAllocator* allocator,
     WasmModuleFieldVector* module_fields) {
-  DESTROY_VECTOR_AND_ELEMENTS(*module_fields, module_field);
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *module_fields, module_field);
 }
 
-void wasm_destroy_module(WasmModule* module) {
-  DESTROY_VECTOR_AND_ELEMENTS(module->fields, module_field);
+void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, module->fields, module_field);
   /* everything that follows shares data with the module_fields above, so we
    only need to destroy the containing vectors */
-  wasm_destroy_func_ptr_vector(&module->funcs);
-  wasm_destroy_import_ptr_vector(&module->imports);
-  wasm_destroy_export_ptr_vector(&module->exports);
-  wasm_destroy_func_type_ptr_vector(&module->func_types);
-  wasm_destroy_type_vector(&module->globals.types);
-  wasm_destroy_binding_hash_entry_vector(&module->globals.bindings.entries);
-  wasm_destroy_binding_hash_entry_vector(&module->func_bindings.entries);
-  wasm_destroy_binding_hash_entry_vector(&module->import_bindings.entries);
-  wasm_destroy_binding_hash_entry_vector(&module->export_bindings.entries);
-  wasm_destroy_binding_hash_entry_vector(&module->func_type_bindings.entries);
+  wasm_destroy_func_ptr_vector(allocator, &module->funcs);
+  wasm_destroy_import_ptr_vector(allocator, &module->imports);
+  wasm_destroy_export_ptr_vector(allocator, &module->exports);
+  wasm_destroy_func_type_ptr_vector(allocator, &module->func_types);
+  wasm_destroy_type_vector(allocator, &module->globals.types);
+  wasm_destroy_binding_hash_entry_vector(allocator,
+                                         &module->globals.bindings.entries);
+  wasm_destroy_binding_hash_entry_vector(allocator,
+                                         &module->func_bindings.entries);
+  wasm_destroy_binding_hash_entry_vector(allocator,
+                                         &module->import_bindings.entries);
+  wasm_destroy_binding_hash_entry_vector(allocator,
+                                         &module->export_bindings.entries);
+  wasm_destroy_binding_hash_entry_vector(allocator,
+                                         &module->func_type_bindings.entries);
 }
 
-static void wasm_destroy_invoke(WasmCommandInvoke* invoke) {
-  wasm_destroy_string_slice(&invoke->name);
-  wasm_destroy_const_vector(&invoke->args);
+static void wasm_destroy_invoke(WasmAllocator* allocator,
+                                WasmCommandInvoke* invoke) {
+  wasm_destroy_string_slice(allocator, &invoke->name);
+  wasm_destroy_const_vector(allocator, &invoke->args);
 }
 
-void wasm_destroy_command(WasmCommand* command) {
+void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
   switch (command->type) {
     case WASM_COMMAND_TYPE_MODULE:
-      wasm_destroy_module(&command->module);
+      wasm_destroy_module(allocator, &command->module);
       break;
     case WASM_COMMAND_TYPE_INVOKE:
-      wasm_destroy_invoke(&command->invoke);
+      wasm_destroy_invoke(allocator, &command->invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
-      wasm_destroy_module(&command->assert_invalid.module);
-      wasm_destroy_string_slice(&command->assert_invalid.text);
+      wasm_destroy_module(allocator, &command->assert_invalid.module);
+      wasm_destroy_string_slice(allocator, &command->assert_invalid.text);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
-      wasm_destroy_invoke(&command->assert_return.invoke);
+      wasm_destroy_invoke(allocator, &command->assert_return.invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-      wasm_destroy_invoke(&command->assert_return_nan.invoke);
+      wasm_destroy_invoke(allocator, &command->assert_return_nan.invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
-      wasm_destroy_invoke(&command->assert_trap.invoke);
-      wasm_destroy_string_slice(&command->assert_trap.text);
+      wasm_destroy_invoke(allocator, &command->assert_trap.invoke);
+      wasm_destroy_string_slice(allocator, &command->assert_trap.text);
       break;
   }
 }
 
-void wasm_destroy_command_vector_and_elements(WasmCommandVector* commands) {
-  DESTROY_VECTOR_AND_ELEMENTS(*commands, command);
+void wasm_destroy_command_vector_and_elements(WasmAllocator* allocator,
+                                              WasmCommandVector* commands) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, *commands, command);
 }
 
-void wasm_destroy_script(WasmScript* script) {
-  DESTROY_VECTOR_AND_ELEMENTS(script->commands, command);
+void wasm_destroy_script(WasmAllocator* allocator, WasmScript* script) {
+  DESTROY_VECTOR_AND_ELEMENTS(allocator, script->commands, command);
 }
 
 void wasm_print_memory(const void* start,

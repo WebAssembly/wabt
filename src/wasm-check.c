@@ -51,6 +51,7 @@ typedef struct WasmLabelNode {
 } WasmLabelNode;
 
 typedef struct WasmCheckContext {
+  WasmAllocator* allocator;
   WasmModule* last_module;
   WasmLabelNode* top_label;
   int in_assert_invalid;
@@ -756,8 +757,8 @@ static WasmResult check_func(WasmCheckContext* ctx,
       } else {
         /* copy signature from type var */
         func->result_type = func_type->sig.result_type;
-        result |=
-            wasm_extend_types(&func->params.types, &func_type->sig.param_types);
+        result |= wasm_extend_types(ctx->allocator, &func->params.types,
+                                    &func_type->sig.param_types);
       }
     } else {
       result = WASM_ERROR;
@@ -767,8 +768,10 @@ static WasmResult check_func(WasmCheckContext* ctx,
   result |= check_duplicate_bindings(ctx, &func->params.bindings, "parameter");
   result |= check_duplicate_bindings(ctx, &func->locals.bindings, "local");
 
-  result |= wasm_extend_type_bindings(&func->params_and_locals, &func->params);
-  result |= wasm_extend_type_bindings(&func->params_and_locals, &func->locals);
+  result |= wasm_extend_type_bindings(ctx->allocator, &func->params_and_locals,
+                                      &func->params);
+  result |= wasm_extend_type_bindings(ctx->allocator, &func->params_and_locals,
+                                      &func->locals);
 
   result |= check_exprs(ctx, module, func, &func->exprs, func->result_type,
                         " of function result");
@@ -983,8 +986,9 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_script(WasmScript* script) {
+WasmResult wasm_check_script(WasmAllocator* allocator, WasmScript* script) {
   WasmCheckContext ctx = {};
+  ctx.allocator = allocator;
   WasmResult result = WASM_OK;
   int i;
   for (i = 0; i < script->commands.size; ++i)

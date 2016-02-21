@@ -72,7 +72,7 @@ typedef union WasmToken {
 #define YYSTYPE WASM_STYPE
 #define YYLTYPE WASM_LTYPE
 
-int wasm_lex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
+int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
 void wasm_print_memory(const void* start,
                        size_t size,
                        size_t offset,

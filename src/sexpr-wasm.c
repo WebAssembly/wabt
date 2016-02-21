@@ -22,6 +22,7 @@
 
 #include "wasm.h"
 #include "wasm-internal.h"
+#include "wasm-stack-allocator.h"
 
 enum {
   FLAG_VERBOSE,
@@ -186,13 +187,22 @@ static void parse_options(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+  WasmStackAllocator stack_allocator;
+#if 0
+  WasmAllocator* allocator = &g_wasm_libc_allocator;
+#else
+  WasmAllocator* allocator = &stack_allocator.allocator;
+#endif
+  wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
+
   parse_options(argc, argv);
 
-  WasmScanner scanner = wasm_new_scanner(s_infile);
+  WasmScanner scanner = wasm_new_scanner(allocator, s_infile);
   if (!scanner)
     FATAL("unable to read %s\n", s_infile);
 
   WasmParser parser = {};
+  parser.allocator = allocator;
   WasmResult result = wasm_parse(scanner, &parser);
   result = result || parser.errors;
   wasm_free_scanner(scanner);
@@ -200,19 +210,23 @@ int main(int argc, char** argv) {
   WasmScript* script = &parser.script;
 
   if (result != WASM_OK) {
-    wasm_destroy_script(script);
+    wasm_destroy_script(allocator, script);
+    wasm_destroy_stack_allocator(&stack_allocator);
     return result;
   }
 
-  result = wasm_check_script(script);
+  /* TODO(binji): check shouldn't need allocator */
+  result = wasm_check_script(allocator, script);
   if (result != WASM_OK) {
-    wasm_destroy_script(script);
+    wasm_destroy_script(allocator, script);
+    wasm_destroy_stack_allocator(&stack_allocator);
     return result;
   }
 
   WasmMemoryWriter writer = {};
-  if (wasm_init_mem_writer(&writer) != WASM_OK) {
-    wasm_destroy_script(script);
+  if (wasm_init_mem_writer(allocator, &writer) != WASM_OK) {
+    wasm_destroy_script(allocator, script);
+    wasm_destroy_stack_allocator(&stack_allocator);
     FATAL("unable to open memory writer for writing\n");
   }
 
@@ -224,11 +238,12 @@ int main(int argc, char** argv) {
   if (s_verbose)
     options.log_writes = 1;
 
-  result = wasm_write_binary(&writer.base, script, &options);
-  wasm_destroy_script(script);
+  result = wasm_write_binary(allocator, &writer.base, script, &options);
+  wasm_destroy_script(allocator, script);
 
   if (result != WASM_OK) {
     wasm_close_mem_writer(&writer);
+    wasm_destroy_stack_allocator(&stack_allocator);
     return result;
   }
 
@@ -254,5 +269,6 @@ int main(int argc, char** argv) {
   }
 
   wasm_close_mem_writer(&writer);
+  wasm_destroy_stack_allocator(&stack_allocator);
   return result;
 }
