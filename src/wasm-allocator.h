@@ -40,8 +40,8 @@ static inline void* wasm_alloc(WasmAllocator* allocator,
 }
 
 static inline void* wasm_alloc_zero(WasmAllocator* allocator,
-                             size_t size,
-                             size_t align) {
+                                    size_t size,
+                                    size_t align) {
   void* result = allocator->alloc(allocator, size, align);
   if (!result)
     return NULL;
@@ -50,9 +50,9 @@ static inline void* wasm_alloc_zero(WasmAllocator* allocator,
 }
 
 static inline void* wasm_realloc(WasmAllocator* allocator,
-                          void* p,
-                          size_t size,
-                          size_t align) {
+                                 void* p,
+                                 size_t size,
+                                 size_t align) {
   return allocator->realloc(allocator, p, size, align);
 }
 
