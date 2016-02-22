@@ -32,6 +32,7 @@ enum {
   FLAG_SPEC,
   FLAG_SPEC_VERBOSE,
   FLAG_BR_IF,
+  FLAG_USE_LIBC_ALLOCATOR,
   NUM_FLAGS
 };
 
@@ -41,6 +42,7 @@ static int s_dump_module;
 static int s_verbose;
 static int s_spec;
 static int s_spec_verbose;
+static int s_use_libc_allocator;
 
 static struct option s_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
@@ -50,6 +52,7 @@ static struct option s_long_options[] = {
     {"spec", no_argument, NULL, 0},
     {"spec-verbose", no_argument, NULL, 0},
     {"br-if", no_argument, NULL, 0},
+    {"use-libc-allocator", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(s_long_options));
@@ -67,6 +70,8 @@ static OptionHelp s_option_help[] = {
      "parse a file with multiple modules and assertions, like the spec tests"},
     {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
     {FLAG_BR_IF, NULL, "DEPRECATED: br_if is always supported now"},
+    {FLAG_USE_LIBC_ALLOCATOR, NULL,
+     "use malloc, free, etc. instead of stack allocator"},
     {NUM_FLAGS, NULL},
 };
 
@@ -148,6 +153,10 @@ static void parse_options(int argc, char** argv) {
           case FLAG_BR_IF:
             printf("--br-if flag is deprecated.\n");
             break;
+
+          case FLAG_USE_LIBC_ALLOCATOR:
+            s_use_libc_allocator = 1;
+            break;
         }
         break;
 
@@ -188,87 +197,72 @@ static void parse_options(int argc, char** argv) {
 
 int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
-#if 0
-  WasmAllocator* allocator = &g_wasm_libc_allocator;
-#else
-  WasmAllocator* allocator = &stack_allocator.allocator;
-#endif
-  wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
+  WasmAllocator* allocator;
 
   parse_options(argc, argv);
+
+  if (s_use_libc_allocator) {
+    allocator = &g_wasm_libc_allocator;
+  } else {
+    wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
+    allocator = &stack_allocator.allocator;
+  }
 
   WasmScanner scanner = wasm_new_scanner(allocator, s_infile);
   if (!scanner)
     FATAL("unable to read %s\n", s_infile);
 
-  WasmParser parser = {};
-  parser.allocator = allocator;
+  WasmParser parser = {allocator};
   WasmResult result = wasm_parse(scanner, &parser);
   result = result || parser.errors;
   wasm_free_scanner(scanner);
 
   WasmScript* script = &parser.script;
 
-  if (result != WASM_OK) {
-    wasm_destroy_script(allocator, script);
-    wasm_destroy_stack_allocator(&stack_allocator);
-    return result;
-  }
+  if (result == WASM_OK) {
+    /* TODO(binji): check shouldn't need allocator */
+    result = wasm_check_script(allocator, script);
+    if (result == WASM_OK) {
+      WasmMemoryWriter writer = {};
+      if (wasm_init_mem_writer(allocator, &writer) != WASM_OK)
+        FATAL("unable to open memory writer for writing\n");
 
-  /* TODO(binji): check shouldn't need allocator */
-  result = wasm_check_script(allocator, script);
-  if (result != WASM_OK) {
-    wasm_destroy_script(allocator, script);
-    wasm_destroy_stack_allocator(&stack_allocator);
-    return result;
-  }
+      WasmWriteBinaryOptions options = {};
+      if (s_spec)
+        options.spec = 1;
+      if (s_spec_verbose)
+        options.spec_verbose = 1;
+      if (s_verbose)
+        options.log_writes = 1;
 
-  WasmMemoryWriter writer = {};
-  if (wasm_init_mem_writer(allocator, &writer) != WASM_OK) {
-    wasm_destroy_script(allocator, script);
-    wasm_destroy_stack_allocator(&stack_allocator);
-    FATAL("unable to open memory writer for writing\n");
-  }
+      result = wasm_write_binary(allocator, &writer.base, script, &options);
+      if (result == WASM_OK) {
+        if (s_dump_module) {
+          if (s_verbose)
+            printf(";; dump\n");
+          wasm_print_memory(writer.buf.start, writer.buf.size, 0, 0, NULL);
+        }
 
-  WasmWriteBinaryOptions options = {};
-  if (s_spec)
-    options.spec = 1;
-  if (s_spec_verbose)
-    options.spec_verbose = 1;
-  if (s_verbose)
-    options.log_writes = 1;
+        if (s_outfile) {
+          FILE* f = fopen(s_outfile, "wb");
+          if (!f)
+            FATAL("unable to open %s for writing\n", s_outfile);
 
-  result = wasm_write_binary(allocator, &writer.base, script, &options);
-  wasm_destroy_script(allocator, script);
-
-  if (result != WASM_OK) {
-    wasm_close_mem_writer(&writer);
-    wasm_destroy_stack_allocator(&stack_allocator);
-    return result;
-  }
-
-  if (s_dump_module) {
-    if (s_verbose)
-      printf(";; dump\n");
-    wasm_print_memory(writer.buf.start, writer.buf.size, 0, 0, NULL);
-  }
-
-  if (s_outfile) {
-    FILE* f = fopen(s_outfile, "wb");
-    if (!f) {
+          ssize_t bytes = fwrite(writer.buf.start, 1, writer.buf.size, f);
+          if (bytes != writer.buf.size)
+            FATAL("failed to write %zd bytes to %s\n", writer.buf.size,
+                  s_outfile);
+          fclose(f);
+        }
+      }
       wasm_close_mem_writer(&writer);
-      FATAL("unable to open %s for writing\n", s_outfile);
     }
-
-    ssize_t bytes = fwrite(writer.buf.start, 1, writer.buf.size, f);
-    if (bytes != writer.buf.size) {
-      wasm_close_mem_writer(&writer);
-      FATAL("failed to write %zd bytes to %s\n", writer.buf.size, s_outfile);
-    }
-    fclose(f);
   }
 
-  wasm_close_mem_writer(&writer);
-  wasm_destroy_stack_allocator(&stack_allocator);
+  if (s_use_libc_allocator)
+    wasm_destroy_script(allocator, script);
+  else
+    wasm_destroy_stack_allocator(&stack_allocator);
+
   return result;
 }

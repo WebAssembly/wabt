@@ -12,6 +12,10 @@ script:
   - test/run-tests.py -e out/sexpr-wasm-asan --timeout=10
   - test/run-tests.py -e out/sexpr-wasm-msan --timeout=10
   - test/run-tests.py -e out/sexpr-wasm-lsan --timeout=10
+  - test/run-tests.py -a=--use-libc-allocator
+  - test/run-tests.py -e out/sexpr-wasm-asan -a=--use-libc-allocator --timeout=10
+  - test/run-tests.py -e out/sexpr-wasm-msan -a=--use-libc-allocator --timeout=10
+  - test/run-tests.py -e out/sexpr-wasm-lsan -a=--use-libc-allocator --timeout=10
 compiler:
   - clang
   - gcc

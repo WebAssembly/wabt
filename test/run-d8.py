@@ -66,6 +66,7 @@ def main(args):
                       help='override d8 executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--spec', help='run spec tests.', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -96,6 +97,8 @@ def main(args):
       cmd.append('-v')
     if options.spec:
       cmd.extend(['--spec', '--spec-verbose'])
+    if options.use_libc_allocator:
+      cmd.extend(['--use-libc-allocator'])
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
       _, stderr = process.communicate()
