@@ -66,12 +66,28 @@
     }                                                                          \
   while (0)
 
-static WasmExprPtr wasm_new_expr(WasmExprType type) {
+static WasmExprPtr new_expr(WasmExprType type) {
   WasmExprPtr result = calloc(1, sizeof(WasmExpr));
   if (!result)
     return NULL;
   result->type = type;
   return result;
+}
+
+static WasmFunc* new_func(void) {
+  return calloc(1, sizeof(WasmFunc));
+}
+
+static WasmCommand* new_command(void) {
+  return calloc(1, sizeof(WasmCommand));
+}
+
+static WasmModule* new_module(void) {
+  return calloc(1, sizeof(WasmModule));
+}
+
+static WasmImport* new_import(void) {
+  return calloc(1, sizeof(WasmImport));
 }
 
 static int read_int32(const char* s, const char* end, uint32_t* out,
@@ -160,18 +176,18 @@ static WasmResult dup_string_contents(WasmStringSlice * text, void** out_data,
 %destructor { wasm_destroy_case(&$$); } case
 %destructor { wasm_destroy_case_vector_and_elements(&$$); } case_list
 %destructor { wasm_destroy_type_bindings(&$$); } global local_list param_list
-%destructor { wasm_destroy_func(&$$); } func func_info
+%destructor { wasm_destroy_func($$); free($$); } func func_info
 %destructor { wasm_destroy_segment(&$$); } segment string_contents
 %destructor { wasm_destroy_segment_vector_and_elements(&$$); } segment_list
 %destructor { wasm_destroy_memory(&$$); } memory
 %destructor { wasm_destroy_func_signature(&$$); } func_type
 %destructor { wasm_destroy_func_type(&$$); } type_def
-%destructor { wasm_destroy_import(&$$); } import
+%destructor { wasm_destroy_import($$); free($$); } import
 %destructor { wasm_destroy_export(&$$); } export
 %destructor { wasm_destroy_module_field_vector_and_elements(&$$); } module_fields
-%destructor { wasm_destroy_module(&$$); } module
+%destructor { wasm_destroy_module($$); free($$); } module
 %destructor { wasm_destroy_const_vector(&$$); } const_list
-%destructor { wasm_destroy_command(&$$); } cmd
+%destructor { wasm_destroy_command($$); free($$); } cmd
 %destructor { wasm_destroy_command_vector_and_elements(&$$); } cmd_list
 %destructor { wasm_destroy_script(&$$); } script
 
@@ -276,62 +292,62 @@ expr :
 ;
 expr1 :
     NOP {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_NOP);
+      $$ = new_expr(WASM_EXPR_TYPE_NOP);
       CHECK_ALLOC_NULL($$);
     }
   | BLOCK labeling {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BLOCK);
+      $$ = new_expr(WASM_EXPR_TYPE_BLOCK);
       CHECK_ALLOC_NULL($$);
       $$->block.label = $2;
     }
   | BLOCK labeling non_empty_expr_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BLOCK);
+      $$ = new_expr(WASM_EXPR_TYPE_BLOCK);
       CHECK_ALLOC_NULL($$);
       $$->block.label = $2;
       $$->block.exprs = $3;
     }
   | IF_ELSE expr expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_IF_ELSE);
+      $$ = new_expr(WASM_EXPR_TYPE_IF_ELSE);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
       $$->if_else.false_ = $4;
     }
   | IF expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_IF);
+      $$ = new_expr(WASM_EXPR_TYPE_IF);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_ = $3;
     }
   | BR_IF var expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BR_IF);
+      $$ = new_expr(WASM_EXPR_TYPE_BR_IF);
       CHECK_ALLOC_NULL($$);
       $$->br_if.var = $2;
       $$->br_if.cond = $3;
     }
   | BR_IF var expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BR_IF);
+      $$ = new_expr(WASM_EXPR_TYPE_BR_IF);
       CHECK_ALLOC_NULL($$);
       $$->br_if.var = $2;
       $$->br_if.expr = $3;
       $$->br_if.cond = $4;
     }
   | LOOP labeling expr_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
+      $$ = new_expr(WASM_EXPR_TYPE_LOOP);
       CHECK_ALLOC_NULL($$);
       ZEROMEM($$->loop.outer);
       $$->loop.inner = $2;
       $$->loop.exprs = $3;
     }
   | LOOP bind_var bind_var expr_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_LOOP);
+      $$ = new_expr(WASM_EXPR_TYPE_LOOP);
       CHECK_ALLOC_NULL($$);
       $$->loop.outer = $2;
       $$->loop.inner = $3;
       $$->loop.exprs = $4;
     }
   | BR expr_opt {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BR);
+      $$ = new_expr(WASM_EXPR_TYPE_BR);
       CHECK_ALLOC_NULL($$);
       $$->br.var.loc = @1;
       $$->br.var.type = WASM_VAR_TYPE_INDEX;
@@ -339,18 +355,18 @@ expr1 :
       $$->br.expr = $2;
     }
   | BR var expr_opt {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BR);
+      $$ = new_expr(WASM_EXPR_TYPE_BR);
       CHECK_ALLOC_NULL($$);
       $$->br.var = $2;
       $$->br.expr = $3;
     }
   | RETURN expr_opt {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_RETURN);
+      $$ = new_expr(WASM_EXPR_TYPE_RETURN);
       CHECK_ALLOC_NULL($$);
       $$->return_.expr = $2;
     }
   | TABLESWITCH labeling expr LPAR TABLE target_list RPAR target case_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_TABLESWITCH);
+      $$ = new_expr(WASM_EXPR_TYPE_TABLESWITCH);
       CHECK_ALLOC_NULL($$);
       $$->tableswitch.label = $2;
       $$->tableswitch.expr = $3;
@@ -371,37 +387,37 @@ expr1 :
       }
     }
   | CALL var expr_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL);
+      $$ = new_expr(WASM_EXPR_TYPE_CALL);
       CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
       $$->call.args = $3;
     }
   | CALL_IMPORT var expr_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL_IMPORT);
+      $$ = new_expr(WASM_EXPR_TYPE_CALL_IMPORT);
       CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
       $$->call.args = $3;
     }
   | CALL_INDIRECT var expr expr_list {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_CALL_INDIRECT);
+      $$ = new_expr(WASM_EXPR_TYPE_CALL_INDIRECT);
       CHECK_ALLOC_NULL($$);
       $$->call_indirect.var = $2;
       $$->call_indirect.expr = $3;
       $$->call_indirect.args = $4;
     }
   | GET_LOCAL var {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_GET_LOCAL);
+      $$ = new_expr(WASM_EXPR_TYPE_GET_LOCAL);
       CHECK_ALLOC_NULL($$);
       $$->get_local.var = $2;
     }
   | SET_LOCAL var expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_SET_LOCAL);
+      $$ = new_expr(WASM_EXPR_TYPE_SET_LOCAL);
       CHECK_ALLOC_NULL($$);
       $$->set_local.var = $2;
       $$->set_local.expr = $3;
     }
   | LOAD offset align expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD);
+      $$ = new_expr(WASM_EXPR_TYPE_LOAD);
       CHECK_ALLOC_NULL($$);
       $$->load.op = $1;
       $$->load.offset = $2;
@@ -409,7 +425,7 @@ expr1 :
       $$->load.addr = $4;
     }
   | STORE offset align expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE);
+      $$ = new_expr(WASM_EXPR_TYPE_STORE);
       CHECK_ALLOC_NULL($$);
       $$->store.op = $1;
       $$->store.offset = $2;
@@ -418,7 +434,7 @@ expr1 :
       $$->store.value = $5;
     }
   | CONST literal {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_CONST);
+      $$ = new_expr(WASM_EXPR_TYPE_CONST);
       CHECK_ALLOC_NULL($$);
       $$->const_.loc = @1;
       if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
@@ -427,20 +443,20 @@ expr1 :
       free((char*)$2.start);
     }
   | UNARY expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_UNARY);
+      $$ = new_expr(WASM_EXPR_TYPE_UNARY);
       CHECK_ALLOC_NULL($$);
       $$->unary.op = $1;
       $$->unary.expr = $2;
     }
   | BINARY expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_BINARY);
+      $$ = new_expr(WASM_EXPR_TYPE_BINARY);
       CHECK_ALLOC_NULL($$);
       $$->binary.op = $1;
       $$->binary.left = $2;
       $$->binary.right = $3;
     }
   | SELECT expr expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_SELECT);
+      $$ = new_expr(WASM_EXPR_TYPE_SELECT);
       CHECK_ALLOC_NULL($$);
       $$->select.type = $1;
       $$->select.true_ = $2;
@@ -448,43 +464,43 @@ expr1 :
       $$->select.cond = $4;
     }
   | COMPARE expr expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_COMPARE);
+      $$ = new_expr(WASM_EXPR_TYPE_COMPARE);
       CHECK_ALLOC_NULL($$);
       $$->compare.op = $1;
       $$->compare.left = $2;
       $$->compare.right = $3;
     }
   | CONVERT expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_CONVERT);
+      $$ = new_expr(WASM_EXPR_TYPE_CONVERT);
       CHECK_ALLOC_NULL($$);
       $$->convert.op = $1;
       $$->convert.expr = $2;
     }
   | UNREACHABLE {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_UNREACHABLE);
+      $$ = new_expr(WASM_EXPR_TYPE_UNREACHABLE);
       CHECK_ALLOC_NULL($$);
     }
   | MEMORY_SIZE {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_MEMORY_SIZE);
+      $$ = new_expr(WASM_EXPR_TYPE_MEMORY_SIZE);
       CHECK_ALLOC_NULL($$);
     }
   | GROW_MEMORY expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_GROW_MEMORY);
+      $$ = new_expr(WASM_EXPR_TYPE_GROW_MEMORY);
       CHECK_ALLOC_NULL($$);
       $$->grow_memory.expr = $2;
     }
   | HAS_FEATURE text {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_HAS_FEATURE);
+      $$ = new_expr(WASM_EXPR_TYPE_HAS_FEATURE);
       CHECK_ALLOC_NULL($$);
       $$->has_feature.text = $2;
     }
   | LOAD_GLOBAL var {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_LOAD_GLOBAL);
+      $$ = new_expr(WASM_EXPR_TYPE_LOAD_GLOBAL);
       CHECK_ALLOC_NULL($$);
       $$->load_global.var = $2;
     }
   | STORE_GLOBAL var expr {
-      $$ = wasm_new_expr(WASM_EXPR_TYPE_STORE_GLOBAL);
+      $$ = new_expr(WASM_EXPR_TYPE_STORE_GLOBAL);
       CHECK_ALLOC_NULL($$);
       $$->store_global.var = $2;
       $$->store_global.expr = $3;
@@ -605,456 +621,456 @@ type_use :
 ;
 func_info :
     /* empty */ {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
     }
   | bind_var {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
     }
   | bind_var type_use {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.name = $1;
-      $$.type_var = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->name = $1;
+      $$->type_var = $2;
     }
   | bind_var type_use param_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
     }
   | bind_var type_use param_list result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.result_type = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->result_type = $4;
     }
   | bind_var type_use param_list result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.result_type = $4;
-      $$.locals = $5;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->result_type = $4;
+      $$->locals = $5;
     }
   | bind_var type_use param_list result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.result_type = $4;
-      $$.locals = $5;
-      $$.exprs = $6;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->result_type = $4;
+      $$->locals = $5;
+      $$->exprs = $6;
     }
   | bind_var type_use param_list result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.result_type = $4;
-      $$.exprs = $5;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->result_type = $4;
+      $$->exprs = $5;
     }
   | bind_var type_use param_list local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.locals = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->locals = $4;
     }
   | bind_var type_use param_list local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.locals = $4;
-      $$.exprs = $5;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->locals = $4;
+      $$->exprs = $5;
     }
   | bind_var type_use param_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.params = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->params = $3;
+      $$->exprs = $4;
     }
   | bind_var type_use result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.result_type = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->result_type = $3;
     }
   | bind_var type_use result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.result_type = $3;
-      $$.locals = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->result_type = $3;
+      $$->locals = $4;
     }
   | bind_var type_use result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.result_type = $3;
-      $$.locals = $4;
-      $$.exprs = $5;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->result_type = $3;
+      $$->locals = $4;
+      $$->exprs = $5;
     }
   | bind_var type_use result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.result_type = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->result_type = $3;
+      $$->exprs = $4;
     }
   | bind_var type_use local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.locals = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->locals = $3;
     }
   | bind_var type_use local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.locals = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->locals = $3;
+      $$->exprs = $4;
     }
   | bind_var type_use non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.name = $1;
-      $$.type_var = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->name = $1;
+      $$->type_var = $2;
+      $$->exprs = $3;
     }
   | bind_var local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.locals = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->locals = $2;
     }
   | bind_var local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.locals = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->locals = $2;
+      $$->exprs = $3;
     }
   | bind_var param_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
     }
   | bind_var param_list result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.result_type = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->result_type = $3;
     }
   | bind_var param_list result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.result_type = $3;
-      $$.locals = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->result_type = $3;
+      $$->locals = $4;
     }
   | bind_var param_list result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.result_type = $3;
-      $$.locals = $4;
-      $$.exprs = $5;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->result_type = $3;
+      $$->locals = $4;
+      $$->exprs = $5;
     }
   | bind_var param_list result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.result_type = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->result_type = $3;
+      $$->exprs = $4;
     }
   | bind_var param_list local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.locals = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->locals = $3;
     }
   | bind_var param_list local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.locals = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->locals = $3;
+      $$->exprs = $4;
     }
   | bind_var param_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.params = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->params = $2;
+      $$->exprs = $3;
     }
   | bind_var result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.result_type = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->result_type = $2;
     }
   | bind_var result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.result_type = $2;
-      $$.locals = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->result_type = $2;
+      $$->locals = $3;
     }
   | bind_var result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.result_type = $2;
-      $$.locals = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->result_type = $2;
+      $$->locals = $3;
+      $$->exprs = $4;
     }
   | bind_var result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.result_type = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->result_type = $2;
+      $$->exprs = $3;
     }
   | bind_var non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.name = $1;
-      $$.exprs = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $1;
+      $$->exprs = $2;
     }
   | type_use {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.type_var = $1;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->type_var = $1;
     }
   | type_use param_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
     }
   | type_use param_list result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.result_type = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->result_type = $3;
     }
   | type_use param_list result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.result_type = $3;
-      $$.locals = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->result_type = $3;
+      $$->locals = $4;
     }
   | type_use param_list result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.result_type = $3;
-      $$.locals = $4;
-      $$.exprs = $5;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->result_type = $3;
+      $$->locals = $4;
+      $$->exprs = $5;
     }
   | type_use param_list result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.result_type = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->result_type = $3;
+      $$->exprs = $4;
     }
   | type_use param_list local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.locals = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->locals = $3;
     }
   | type_use param_list local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.locals = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->locals = $3;
+      $$->exprs = $4;
     }
   | type_use param_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.params = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->params = $2;
+      $$->exprs = $3;
     }
   | type_use result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.result_type = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->result_type = $2;
     }
   | type_use result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.result_type = $2;
-      $$.locals = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->result_type = $2;
+      $$->locals = $3;
     }
   | type_use result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.result_type = $2;
-      $$.locals = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->result_type = $2;
+      $$->locals = $3;
+      $$->exprs = $4;
     }
   | type_use result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.type_var = $1;
-      $$.result_type = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->type_var = $1;
+      $$->result_type = $2;
+      $$->exprs = $3;
     }
   | type_use local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.type_var = $1;
-      $$.locals = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->type_var = $1;
+      $$->locals = $2;
     }
   | type_use local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.type_var = $1;
-      $$.locals = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->type_var = $1;
+      $$->locals = $2;
+      $$->exprs = $3;
     }
   | type_use non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$.type_var = $1;
-      $$.exprs = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->type_var = $1;
+      $$->exprs = $2;
     }
   | param_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
     }
   | param_list result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.result_type = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->result_type = $2;
     }
   | param_list result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.result_type = $2;
-      $$.locals = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->result_type = $2;
+      $$->locals = $3;
     }
   | param_list result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.result_type = $2;
-      $$.locals = $3;
-      $$.exprs = $4;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->result_type = $2;
+      $$->locals = $3;
+      $$->exprs = $4;
     }
   | param_list result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.result_type = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->result_type = $2;
+      $$->exprs = $3;
     }
   | param_list local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.locals = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->locals = $2;
     }
   | param_list local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.locals = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->locals = $2;
+      $$->exprs = $3;
     }
   | param_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.params = $1;
-      $$.exprs = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->params = $1;
+      $$->exprs = $2;
     }
   | result {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.result_type = $1;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->result_type = $1;
     }
   | result local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.result_type = $1;
-      $$.locals = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->result_type = $1;
+      $$->locals = $2;
     }
   | result local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.result_type = $1;
-      $$.locals = $2;
-      $$.exprs = $3;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->result_type = $1;
+      $$->locals = $2;
+      $$->exprs = $3;
     }
   | result non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.result_type = $1;
-      $$.exprs = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->result_type = $1;
+      $$->exprs = $2;
     }
   | local_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.locals = $1;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->locals = $1;
     }
   | local_list non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.locals = $1;
-      $$.exprs = $2;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->locals = $1;
+      $$->exprs = $2;
     }
   | non_empty_expr_list {
-      ZEROMEM($$);
-      $$.flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$.exprs = $1;
+      $$ = new_func();
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->exprs = $1;
     }
 ;
 func :
-    LPAR FUNC func_info RPAR { $$ = $3; $$.loc = @2; }
+    LPAR FUNC func_info RPAR { $$ = $3; $$->loc = @2; }
 ;
 
 /* Modules */
@@ -1136,34 +1152,34 @@ table :
 
 import :
     LPAR IMPORT quoted_text quoted_text type_use RPAR {
-      ZEROMEM($$);
-      $$.import_type = WASM_IMPORT_HAS_TYPE;
-      $$.module_name = $3;
-      $$.func_name = $4;
-      $$.type_var = $5;
+      $$ = new_import();
+      $$->import_type = WASM_IMPORT_HAS_TYPE;
+      $$->module_name = $3;
+      $$->func_name = $4;
+      $$->type_var = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text type_use RPAR /* Sugar */ {
-      ZEROMEM($$);
-      $$.import_type = WASM_IMPORT_HAS_TYPE;
-      $$.name = $3;
-      $$.module_name = $4;
-      $$.func_name = $5;
-      $$.type_var = $6;
+      $$ = new_import();
+      $$->import_type = WASM_IMPORT_HAS_TYPE;
+      $$->name = $3;
+      $$->module_name = $4;
+      $$->func_name = $5;
+      $$->type_var = $6;
     }
   | LPAR IMPORT quoted_text quoted_text func_type RPAR  /* Sugar */ {
-      ZEROMEM($$);
-      $$.import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
-      $$.module_name = $3;
-      $$.func_name = $4;
-      $$.func_sig = $5;
+      $$ = new_import();
+      $$->import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
+      $$->module_name = $3;
+      $$->func_name = $4;
+      $$->func_sig = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text func_type RPAR  /* Sugar */ {
-      ZEROMEM($$);
-      $$.import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
-      $$.name = $3;
-      $$.module_name = $4;
-      $$.func_name = $5;
-      $$.func_sig = $6;
+      $$ = new_import();
+      $$->import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
+      $$->name = $3;
+      $$->module_name = $4;
+      $$->func_name = $5;
+      $$->func_sig = $6;
     }
 ;
 
@@ -1197,7 +1213,8 @@ module_fields :
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
-      field->func = $2;
+      field->func = *$2;
+      free($2);
     }
   | module_fields import {
       $$ = $1;
@@ -1205,7 +1222,8 @@ module_fields :
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
-      field->import = $2;
+      field->import = *$2;
+      free($2);
     }
   | module_fields export {
       $$ = $1;
@@ -1258,75 +1276,78 @@ module_fields :
 ;
 module :
     LPAR MODULE module_fields RPAR {
-      ZEROMEM($$);
-      $$.loc = @2;
-      $$.fields = $3;
+      $$ = new_module();
+      $$->loc = @2;
+      $$->fields = $3;
 
       /* cache values */
       int i;
-      for (i = 0; i < $$.fields.size; ++i) {
-        WasmModuleField* field = &$$.fields.data[i];
+      for (i = 0; i < $$->fields.size; ++i) {
+        WasmModuleField* field = &$$->fields.data[i];
         switch (field->type) {
           case WASM_MODULE_FIELD_TYPE_FUNC: {
             WasmFuncPtr func_ptr = &field->func;
-            CHECK_ALLOC(wasm_append_func_ptr_value(&$$.funcs, &func_ptr));
+            CHECK_ALLOC(wasm_append_func_ptr_value(&$$->funcs, &func_ptr));
             if (field->func.name.start) {
               WasmBinding* binding =
-                  wasm_insert_binding(&$$.func_bindings, &field->func.name);
+                  wasm_insert_binding(&$$->func_bindings, &field->func.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$.funcs.size - 1;
+              binding->index = $$->funcs.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_IMPORT: {
             WasmImportPtr import_ptr = &field->import;
-            CHECK_ALLOC(wasm_append_import_ptr_value(&$$.imports, &import_ptr));
+            CHECK_ALLOC(
+                wasm_append_import_ptr_value(&$$->imports, &import_ptr));
             if (field->import.name.start) {
-              WasmBinding* binding =
-                  wasm_insert_binding(&$$.import_bindings, &field->import.name);
+              WasmBinding* binding = wasm_insert_binding(&$$->import_bindings,
+                                                         &field->import.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$.imports.size - 1;
+              binding->index = $$->imports.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_EXPORT: {
             WasmExportPtr export_ptr = &field->export_;
-            CHECK_ALLOC(wasm_append_export_ptr_value(&$$.exports, &export_ptr));
+            CHECK_ALLOC(
+                wasm_append_export_ptr_value(&$$->exports, &export_ptr));
             if (field->export_.name.start) {
-              WasmBinding* binding = wasm_insert_binding(&$$.export_bindings,
+              WasmBinding* binding = wasm_insert_binding(&$$->export_bindings,
                                                          &field->export_.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$.exports.size - 1;
+              binding->index = $$->exports.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_TABLE:
-            $$.table = &field->table;
+            $$->table = &field->table;
             break;
           case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
             WasmFuncTypePtr func_type_ptr = &field->func_type;
-            CHECK_ALLOC(wasm_append_func_type_ptr_value(&$$.func_types,
+            CHECK_ALLOC(wasm_append_func_type_ptr_value(&$$->func_types,
                                                         &func_type_ptr));
             if (field->func_type.name.start) {
               WasmBinding* binding = wasm_insert_binding(
-                  &$$.func_type_bindings, &field->func_type.name);
+                  &$$->func_type_bindings, &field->func_type.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$.func_types.size - 1;
+              binding->index = $$->func_types.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_MEMORY:
-            $$.memory = &field->memory;
+            $$->memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_GLOBAL:
-            CHECK_ALLOC(wasm_extend_type_bindings(&$$.globals, &field->global));
+            CHECK_ALLOC(
+                wasm_extend_type_bindings(&$$->globals, &field->global));
             break;
           case WASM_MODULE_FIELD_TYPE_START:
-            $$.start = field->start;
+            $$->start = field->start;
             break;
         }
       }
@@ -1337,44 +1358,56 @@ module :
 /* Scripts */
 
 cmd :
-    module { $$.type = WASM_COMMAND_TYPE_MODULE; $$.module = $1; }
+    module {
+      $$ = new_command();
+      $$->type = WASM_COMMAND_TYPE_MODULE;
+      $$->module = *$1;
+      free($1);
+    }
   | LPAR INVOKE quoted_text const_list RPAR {
-      $$.type = WASM_COMMAND_TYPE_INVOKE;
-      $$.invoke.loc = @2;
-      $$.invoke.name = $3;
-      $$.invoke.args = $4;
+      $$ = new_command();
+      $$->type = WASM_COMMAND_TYPE_INVOKE;
+      $$->invoke.loc = @2;
+      $$->invoke.name = $3;
+      $$->invoke.args = $4;
     }
   | LPAR ASSERT_INVALID module quoted_text RPAR {
-      $$.type = WASM_COMMAND_TYPE_ASSERT_INVALID;
-      $$.assert_invalid.module = $3;
-      $$.assert_invalid.text = $4;
+      $$ = new_command();
+      $$->type = WASM_COMMAND_TYPE_ASSERT_INVALID;
+      $$->assert_invalid.module = *$3;
+      $$->assert_invalid.text = $4;
+      free($3);
     }
   | LPAR ASSERT_RETURN LPAR INVOKE quoted_text const_list RPAR const_opt RPAR {
-      $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN;
-      $$.assert_return.invoke.loc = @4;
-      $$.assert_return.invoke.name = $5;
-      $$.assert_return.invoke.args = $6;
-      $$.assert_return.expected = $8;
+      $$ = new_command();
+      $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN;
+      $$->assert_return.invoke.loc = @4;
+      $$->assert_return.invoke.name = $5;
+      $$->assert_return.invoke.args = $6;
+      $$->assert_return.expected = $8;
     }
   | LPAR ASSERT_RETURN_NAN LPAR INVOKE quoted_text const_list RPAR RPAR {
-      $$.type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
-      $$.assert_return_nan.invoke.loc = @4;
-      $$.assert_return_nan.invoke.name = $5;
-      $$.assert_return_nan.invoke.args = $6;
+      $$ = new_command();
+      $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
+      $$->assert_return_nan.invoke.loc = @4;
+      $$->assert_return_nan.invoke.name = $5;
+      $$->assert_return_nan.invoke.args = $6;
     }
   | LPAR ASSERT_TRAP LPAR INVOKE quoted_text const_list RPAR quoted_text RPAR {
-      $$.type = WASM_COMMAND_TYPE_ASSERT_TRAP;
-      $$.assert_trap.invoke.loc = @4;
-      $$.assert_trap.invoke.name = $5;
-      $$.assert_trap.invoke.args = $6;
-      $$.assert_trap.text = $8;
+      $$ = new_command();
+      $$->type = WASM_COMMAND_TYPE_ASSERT_TRAP;
+      $$->assert_trap.invoke.loc = @4;
+      $$->assert_trap.invoke.name = $5;
+      $$->assert_trap.invoke.args = $6;
+      $$->assert_trap.text = $8;
     }
 ;
 cmd_list :
     /* empty */ { ZEROMEM($$); }
   | cmd_list cmd {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_command_value(&$$, &$2));
+      CHECK_ALLOC(wasm_append_command_value(&$$, $2));
+      free($2);
     }
 ;
 

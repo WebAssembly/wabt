@@ -36,6 +36,8 @@ typedef union WasmToken {
   WasmMemOp mem;
 
   /* non-terminals */
+  /* some of these use pointers to keep the size of WasmToken down; copying the
+   tokens is a hotspot when parsing large files. */
   uint32_t u32;
   uint64_t u64;
   WasmTypeVector types;
@@ -48,19 +50,19 @@ typedef union WasmToken {
   WasmCase case_;
   WasmCaseVector cases;
   WasmTypeBindings type_bindings;
-  WasmFunc func;
+  WasmFunc* func;
   WasmSegment segment;
   WasmSegmentVector segments;
   WasmMemory memory;
   WasmFuncSignature func_sig;
   WasmFuncType func_type;
-  WasmImport import;
+  WasmImport* import;
   WasmExport export;
   WasmModuleFieldVector module_fields;
-  WasmModule module;
+  WasmModule* module;
   WasmConst const_;
   WasmConstVector consts;
-  WasmCommand command;
+  WasmCommand* command;
   WasmCommandVector commands;
   WasmScript script;
 } WasmToken;

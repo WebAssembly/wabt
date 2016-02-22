@@ -2729,7 +2729,7 @@ YY_RULE_SETUP
 case YY_STATE_EOF(BLOCK_COMMENT):
 #line 362 "src/wasm-lexer.l"
 { wasm_error(yylloc, &yyscanner, parser,
-                                 "unexpected EOF");
+                                    "unexpected EOF");
                          return TOK(EOF); }
 	YY_BREAK
 case 214:

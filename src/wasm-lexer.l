@@ -360,7 +360,7 @@ NAME      \${ATOM}
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
 <BLOCK_COMMENT><<EOF>> { wasm_error(yylloc, &yyscanner, parser,
-                                 "unexpected EOF");
+                                    "unexpected EOF");
                          return TOK(EOF); }
 <BLOCK_COMMENT>.
 \n                    { RESET_COLUMN(yyscanner); }
