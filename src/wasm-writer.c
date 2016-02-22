@@ -72,8 +72,7 @@ static WasmResult init_output_buffer(WasmAllocator* allocator,
                                      WasmOutputBuffer* buf,
                                      size_t initial_capacity) {
   buf->allocator = allocator;
-  buf->start =
-      allocator->alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
+  buf->start = wasm_alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
   if (!buf->start) {
     ERROR("allocation size=%zd failed\n", initial_capacity);
     return WASM_ERROR;
@@ -89,8 +88,8 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
-    buf->start = buf->allocator->realloc(buf->allocator, buf->start,
-                                         new_capacity, WASM_DEFAULT_ALIGN);
+    buf->start = wasm_realloc(buf->allocator, buf->start, new_capacity,
+                              WASM_DEFAULT_ALIGN);
     if (!buf->start) {
       ERROR("allocation size=%zd failed\n", new_capacity);
       return WASM_ERROR;
@@ -101,7 +100,7 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
 }
 
 static void free_output_buffer(WasmOutputBuffer* buf) {
-  buf->allocator->free(buf->allocator, buf->start);
+  wasm_free(buf->allocator, buf->start);
 }
 
 static WasmResult write_data_to_output_buffer(size_t offset,
@@ -128,5 +127,5 @@ WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
 }
 
 void wasm_close_mem_writer(WasmMemoryWriter* writer) {
-  writer->buf.allocator->free(writer->buf.allocator, writer->buf.start);
+  wasm_free(writer->buf.allocator, writer->buf.start);
 }

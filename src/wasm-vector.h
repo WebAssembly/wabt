@@ -63,7 +63,7 @@
 #define DEFINE_VECTOR(name, type)                                              \
   void wasm_destroy_##name##_vector(WasmAllocator* allocator,                  \
                                     type##Vector* vec) {                       \
-    allocator->free(allocator, vec->data);                                     \
+    wasm_free(allocator, vec->data);                                           \
   }                                                                            \
   WasmResult wasm_reserve_##name##s(WasmAllocator* allocator,                  \
                                     type##Vector* vec, size_t desired) {       \

@@ -298,7 +298,7 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
 }
 
 void wasm_destroy_string_slice(WasmAllocator* allocator, WasmStringSlice* str) {
-  allocator->free(allocator, (void*)str->start);
+  wasm_free(allocator, (void*)str->start);
 }
 
 static void wasm_destroy_binding_hash_entry(WasmAllocator* allocator,
@@ -471,7 +471,7 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
 
 void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr) {
   wasm_destroy_expr(allocator, *expr);
-  allocator->free(allocator, *expr);
+  wasm_free(allocator, *expr);
 }
 
 void wasm_destroy_expr_ptr_vector_and_elements(WasmAllocator* allocator,
@@ -510,7 +510,7 @@ void wasm_destroy_func_type(WasmAllocator* allocator, WasmFuncType* func_type) {
 }
 
 void wasm_destroy_segment(WasmAllocator* allocator, WasmSegment* segment) {
-  allocator->free(allocator, segment->data);
+  wasm_free(allocator, segment->data);
 }
 
 void wasm_destroy_segment_vector_and_elements(WasmAllocator* allocator,

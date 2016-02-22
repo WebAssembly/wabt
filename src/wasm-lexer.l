@@ -386,7 +386,7 @@ static WasmAllocator* s_scanner_allocator;
 
 WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
   WasmScannerExtra* extra =
-      allocator->alloc(allocator, sizeof(WasmScannerExtra), WASM_DEFAULT_ALIGN);
+      wasm_alloc(allocator, sizeof(WasmScannerExtra), WASM_DEFAULT_ALIGN);
   if (!extra)
     return NULL;
   extra->allocator = allocator;
@@ -395,7 +395,7 @@ WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
   extra->file = fopen(filename, "r");
 
   if (!extra->file) {
-    allocator->free(allocator, extra);
+    wasm_free(allocator, extra);
     return NULL;
   }
 
@@ -413,24 +413,23 @@ WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
 void wasm_free_scanner(WasmScanner scanner) {
   WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
   fclose(extra->file);
-  extra->allocator->free(extra->allocator, extra);
   wasm_lexer_lex_destroy((yyscan_t)scanner);
+  wasm_free(extra->allocator, extra);
 }
 
 void* wasm_lexer_alloc(size_t bytes, WasmScanner scanner) {
   WasmAllocator* allocator =
       scanner ? ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))->allocator
               : s_scanner_allocator;
-  return allocator->alloc(allocator, bytes, WASM_DEFAULT_ALIGN);
+  return wasm_alloc(allocator, bytes, WASM_DEFAULT_ALIGN);
 }
 
 void* wasm_lexer_realloc(void* ptr, size_t bytes, WasmScanner scanner) {
   WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
-  return extra->allocator->realloc(extra->allocator, ptr, bytes,
-                                   WASM_DEFAULT_ALIGN);
+  return wasm_realloc(extra->allocator, ptr, bytes, WASM_DEFAULT_ALIGN);
 }
 
 void wasm_lexer_free(void* ptr, WasmScanner scanner) {
   WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
-  extra->allocator->free(extra->allocator, ptr);
+  wasm_free(extra->allocator, ptr);
 }

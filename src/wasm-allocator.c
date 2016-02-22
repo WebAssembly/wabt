@@ -44,6 +44,9 @@ static void* libc_alloc(WasmAllocator* allocator, size_t size, size_t align) {
     align = sizeof(void*);
 
   void* p = malloc(size + sizeof(MemInfo) + align - 1);
+  if (!p)
+    return NULL;
+
   void* aligned = align_up(p + sizeof(MemInfo), align);
   MemInfo* mem_info = (MemInfo*)aligned - 1;
   assert(is_aligned(mem_info, sizeof(void*)));
@@ -69,43 +72,13 @@ static void* libc_realloc(WasmAllocator* allocator,
 
   MemInfo* mem_info = (MemInfo*)p - 1;
   void* new_p = libc_alloc(allocator, size, align);
-  memcpy(new_p, p, mem_info->size);
+  if (!new_p)
+    return NULL;
+
+  size_t copy_size = size > mem_info->size ? mem_info->size : size;
+  memcpy(new_p, p, copy_size);
   free(mem_info->real_pointer);
   return new_p;
 }
 
 WasmAllocator g_wasm_libc_allocator = {libc_alloc, libc_realloc, libc_free};
-
-void* wasm_alloc(WasmAllocator* allocator, size_t size, size_t align) {
-  return allocator->alloc(allocator, size, align);
-}
-
-void* wasm_alloc_zero(WasmAllocator* allocator, size_t size, size_t align) {
-  void* result = allocator->alloc(allocator, size, align);
-  if (!result)
-    return NULL;
-  memset(result, 0, size);
-  return result;
-}
-
-void wasm_free(WasmAllocator* allocator, void* p) {
-  return allocator->free(allocator, p);
-}
-
-char* wasm_strndup(WasmAllocator* allocator, const char* s, size_t len) {
-  size_t real_len = 0;
-  const char* p = s;
-  while (*p && real_len < len) {
-    p++;
-    real_len++;
-  }
-
-  char* new_s = allocator->alloc(allocator, real_len + 1, 1);
-  if (!new_s)
-    return NULL;
-
-  memcpy(new_s, s, real_len);
-  new_s[real_len] = 0;
-  return new_s;
-}
-

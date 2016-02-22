@@ -31,8 +31,7 @@ WasmResult wasm_ensure_capacity(WasmAllocator* allocator,
     while (new_capacity < desired_size)
       new_capacity *= 2;
     size_t new_byte_size = new_capacity * elt_byte_size;
-    *data =
-        allocator->realloc(allocator, *data, new_byte_size, WASM_DEFAULT_ALIGN);
+    *data = wasm_realloc(allocator, *data, new_byte_size, WASM_DEFAULT_ALIGN);
     if (*data == NULL)
       return WASM_ERROR;
     *capacity = new_capacity;

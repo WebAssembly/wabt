@@ -18,6 +18,7 @@
 #define WASM_ALLOCATOR_H_
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "wasm-common.h"
 
@@ -32,10 +33,51 @@ typedef struct WasmAllocator {
 extern WasmAllocator g_wasm_libc_allocator;
 
 EXTERN_C_BEGIN
-void* wasm_alloc(WasmAllocator*, size_t size, size_t align);
-void* wasm_alloc_zero(WasmAllocator*, size_t size, size_t align);
-void wasm_free(WasmAllocator*, void*);
-char* wasm_strndup(WasmAllocator*, const char*, size_t);
+static inline void* wasm_alloc(WasmAllocator* allocator,
+                               size_t size,
+                               size_t align) {
+  return allocator->alloc(allocator, size, align);
+}
+
+static inline void* wasm_alloc_zero(WasmAllocator* allocator,
+                             size_t size,
+                             size_t align) {
+  void* result = allocator->alloc(allocator, size, align);
+  if (!result)
+    return NULL;
+  memset(result, 0, size);
+  return result;
+}
+
+static inline void* wasm_realloc(WasmAllocator* allocator,
+                          void* p,
+                          size_t size,
+                          size_t align) {
+  return allocator->realloc(allocator, p, size, align);
+}
+
+static inline void wasm_free(WasmAllocator* allocator, void* p) {
+  return allocator->free(allocator, p);
+}
+
+static inline char* wasm_strndup(WasmAllocator* allocator,
+                                 const char* s,
+                                 size_t len) {
+  size_t real_len = 0;
+  const char* p = s;
+  while (*p && real_len < len) {
+    p++;
+    real_len++;
+  }
+
+  char* new_s = allocator->alloc(allocator, real_len + 1, 1);
+  if (!new_s)
+    return NULL;
+
+  memcpy(new_s, s, real_len);
+  new_s[real_len] = 0;
+  return new_s;
+}
 EXTERN_C_END
 
 #endif /* WASM_ALLOCATOR_H_ */

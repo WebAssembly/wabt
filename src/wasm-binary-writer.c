@@ -642,7 +642,8 @@ static void get_func_signatures(WasmWriteContext* ctx,
   }
 
   ctx->import_sig_indexes =
-      realloc(ctx->import_sig_indexes, module->imports.size * sizeof(int));
+      wasm_realloc(ctx->allocator, ctx->import_sig_indexes,
+                   module->imports.size * sizeof(int), WASM_DEFAULT_ALIGN);
   if (module->imports.size)
     CHECK_ALLOC_NULL(ctx->import_sig_indexes);
   for (i = 0; i < module->imports.size; ++i) {
@@ -675,7 +676,8 @@ static void get_func_signatures(WasmWriteContext* ctx,
   }
 
   ctx->func_sig_indexes =
-      realloc(ctx->func_sig_indexes, module->funcs.size * sizeof(int));
+      wasm_realloc(ctx->allocator, ctx->func_sig_indexes,
+                   module->funcs.size * sizeof(int), WASM_DEFAULT_ALIGN);
   if (module->funcs.size)
     CHECK_ALLOC_NULL(ctx->func_sig_indexes);
   for (i = 0; i < module->funcs.size; ++i) {
@@ -708,7 +710,8 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   int num_locals = func->locals.types.size;
   int num_params_and_locals = num_params + num_locals;
   ctx->remapped_locals =
-      realloc(ctx->remapped_locals, num_params_and_locals * sizeof(int));
+      wasm_realloc(ctx->allocator, ctx->remapped_locals,
+                   num_params_and_locals * sizeof(int), WASM_DEFAULT_ALIGN);
   if (num_params_and_locals)
     CHECK_ALLOC_NULL(ctx->remapped_locals);
 
@@ -1237,7 +1240,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     out_leb128(ws, module->funcs.size, "num functions");
 
     ctx->func_offsets =
-        realloc(ctx->func_offsets, module->funcs.size * sizeof(size_t));
+        wasm_realloc(ctx->allocator, ctx->func_offsets,
+                     module->funcs.size * sizeof(size_t), WASM_DEFAULT_ALIGN);
     if (module->funcs.size)
       CHECK_ALLOC_NULL(ctx->func_offsets);
     for (i = 0; i < module->funcs.size; ++i) {
@@ -1347,8 +1351,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 }
 
 static WasmExpr* new_expr(WasmAllocator* allocator, WasmExprType type) {
-  WasmExpr* expr =
-      allocator->alloc(allocator, sizeof(WasmExpr), WASM_DEFAULT_ALIGN);
+  WasmExpr* expr = wasm_alloc(allocator, sizeof(WasmExpr), WASM_DEFAULT_ALIGN);
   if (!expr)
     return NULL;
   memset(expr, 0, sizeof(WasmExpr));
@@ -1387,7 +1390,7 @@ static WasmExpr* create_invoke_expr(WasmAllocator* allocator,
 fail:
   for (i = 0; i < invoke->args.size; ++i)
     wasm_destroy_expr_ptr(allocator, &expr->call.args.data[i]);
-  allocator->free(allocator, expr);
+  wasm_free(allocator, expr);
   return NULL;
 }
 
@@ -1877,10 +1880,10 @@ static void write_commands_no_spec(WasmWriteContext* ctx, WasmScript* script) {
 }
 
 static void cleanup_context(WasmWriteContext* ctx) {
-  free(ctx->import_sig_indexes);
-  free(ctx->func_sig_indexes);
-  free(ctx->remapped_locals);
-  free(ctx->func_offsets);
+  wasm_free(ctx->allocator, ctx->import_sig_indexes);
+  wasm_free(ctx->allocator, ctx->func_sig_indexes);
+  wasm_free(ctx->allocator, ctx->remapped_locals);
+  wasm_free(ctx->allocator, ctx->func_offsets);
 }
 
 WasmResult wasm_write_binary(WasmAllocator* allocator,
