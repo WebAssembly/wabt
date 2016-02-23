@@ -34,4 +34,17 @@ typedef enum WasmResult {
   WASM_ERROR,
 } WasmResult;
 
+typedef struct WasmStringSlice {
+  const char* start;
+  size_t length;
+} WasmStringSlice;
+
+typedef struct WasmLocation {
+  const char* filename;
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} WasmLocation;
+
 #endif /* WASM_COMMON_H_ */
