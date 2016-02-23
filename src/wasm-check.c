@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+#include "wasm-check.h"
+
 #include <alloca.h>
 #include <assert.h>
 #include <memory.h>
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wasm.h"
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
 

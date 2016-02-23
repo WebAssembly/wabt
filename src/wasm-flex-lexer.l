@@ -15,7 +15,6 @@
  */
 
 %{
-#include "wasm.h"
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
 #include "wasm-parser.h"

@@ -548,8 +548,9 @@ WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  const WasmStringSlice*);
 int wasm_hash_entry_is_free(WasmBindingHashEntry*);
 
-/* more destruction functions. not needed unless you're creating your own AST
+/* destruction functions. not needed unless you're creating your own AST
  elements */
+void wasm_destroy_script(struct WasmScript*);
 void wasm_destroy_case_vector_and_elements(struct WasmAllocator*,
                                            WasmCaseVector*);
 void wasm_destroy_case(struct WasmAllocator*, WasmCase*);

@@ -20,9 +20,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm.h"
-#include "wasm-parser.h"
+#include "wasm-binary-writer.h"
+#include "wasm-check.h"
 #include "wasm-internal.h"
+#include "wasm-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"
 

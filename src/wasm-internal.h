@@ -17,7 +17,6 @@
 #ifndef WASM_INTERNAL_H
 #define WASM_INTERNAL_H
 
-#include "wasm.h"
 #include "wasm-ast.h"
 #include "wasm-lexer.h"
 
@@ -28,7 +27,6 @@
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
 struct WasmAllocator;
-struct WasmParser;
 
 typedef union WasmToken {
   /* terminals */

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "wasm-binary-writer.h"
+
 #include <alloca.h>
 #include <assert.h>
 #include <math.h>
@@ -22,7 +24,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "wasm.h"
 #include "wasm-internal.h"
 #include "wasm-writer.h"
 
