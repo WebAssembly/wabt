@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_WASM_SRC_WASM_PARSER_H_INCLUDED
-# define YY_WASM_SRC_WASM_PARSER_H_INCLUDED
+#ifndef YY_WASM_SRC_WASM_BISON_PARSER_H_INCLUDED
+# define YY_WASM_SRC_WASM_BISON_PARSER_H_INCLUDED
 /* Debug traces.  */
 #ifndef WASM_DEBUG
 # if defined YYDEBUG
@@ -139,4 +139,4 @@ struct WASM_LTYPE
 
 int wasm_parse (WasmScanner scanner, WasmParser* parser);
 
-#endif /* !YY_WASM_SRC_WASM_PARSER_H_INCLUDED  */
+#endif /* !YY_WASM_SRC_WASM_BISON_PARSER_H_INCLUDED  */

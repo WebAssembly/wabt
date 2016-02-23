@@ -28,9 +28,9 @@ AFL_CC := $(AFL_DIR)/afl-gcc
 SEXPR_WASM_CC := $(CC)
 SEXPR_WASM_CFLAGS := $(CFLAGS)
 SEXPR_WASM_SRCS := \
-	wasm.c sexpr-wasm.c wasm-parser.c wasm-lexer.c wasm-vector.c wasm-check.c \
-	wasm-writer.c wasm-binary-writer.c wasm-allocator.c wasm-stack-allocator.c \
-	wasm-ast.c
+	wasm.c sexpr-wasm.c wasm-bison-parser.c wasm-flex-lexer.c wasm-vector.c \
+	wasm-check.c wasm-writer.c wasm-binary-writer.c wasm-allocator.c \
+	wasm-stack-allocator.c wasm-ast.c
 
 ASAN_FLAGS := -fsanitize=address
 SEXPR_WASM_ASAN_CC := clang
@@ -64,11 +64,11 @@ everything: $(addprefix out/,$(EVERYTHING))
 out:
 	mkdir -p $@
 
-src/wasm-lexer.c src/wasm-lexer.h: src/wasm-lexer.l
-	flex -o src/wasm-lexer.c $<
+src/wasm-flex-lexer.c:  src/wasm-flex-lexer.l
+	flex -o src/wasm-flex-lexer.c $<
 
-src/wasm-parser.c src/wasm-parser.h: src/wasm-parser.y
-	bison -o src/wasm-parser.c --defines=src/wasm-parser.h $<
+src/wasm-bison-parser.c src/wasm-bison-parser.h: src/wasm-bison-parser.y
+	bison -o src/wasm-bison-parser.c --defines=src/wasm-bison-parser.h $<
 
 define EXE
 $(2)_OBJS = $$(patsubst %.c,out/obj/$(1)/%.o,$$($(2)_SRCS))
