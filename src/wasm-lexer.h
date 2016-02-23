@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef WASM_H_
-#define WASM_H_
+#ifndef WASM_LEXER_H_
+#define WASM_LEXER_H_
 
-#include "wasm-common.h"
-#include "wasm-vector.h"
+struct WasmAllocator;
+typedef void* WasmLexer;
 
-struct WasmScript;
-struct WasmWriter;
+EXTERN_C_BEGIN
+WasmLexer wasm_new_lexer(struct WasmAllocator*, const char* filename);
+void wasm_destroy_lexer(WasmLexer);
+EXTERN_C_END
 
-typedef struct WasmWriteBinaryOptions {
-  int spec;
-  int spec_verbose;
-  int log_writes;
-} WasmWriteBinaryOptions;
-
-WasmResult wasm_check_script(struct WasmScript*);
-WasmResult wasm_write_binary(struct WasmAllocator*,
-                             struct WasmWriter*,
-                             struct WasmScript*,
-                             WasmWriteBinaryOptions*);
-void wasm_destroy_script(struct WasmScript*);
-
-#endif /* WASM_H_ */
+#endif /* WASM_LEXER_H_ */

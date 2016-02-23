@@ -21,6 +21,7 @@
 #include <stdlib.h>
 
 #include "wasm.h"
+#include "wasm-parser.h"
 #include "wasm-internal.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"
@@ -209,19 +210,16 @@ int main(int argc, char** argv) {
     allocator = &stack_allocator.allocator;
   }
 
-  WasmScanner scanner = wasm_new_scanner(allocator, s_infile);
-  if (!scanner)
+  WasmLexer lexer = wasm_new_lexer(allocator, s_infile);
+  if (!lexer)
     FATAL("unable to read %s\n", s_infile);
 
-  WasmParser parser = {allocator};
-  WasmResult result = wasm_parser_parse(scanner, &parser);
-  result = result || parser.errors;
-  wasm_destroy_scanner(scanner);
-
-  WasmScript* script = &parser.script;
+  WasmScript script;
+  WasmResult result = wasm_parse(lexer, &script);
+  wasm_destroy_lexer(lexer);
 
   if (result == WASM_OK) {
-    result = wasm_check_script(script);
+    result = wasm_check_script(&script);
     if (result == WASM_OK) {
       WasmMemoryWriter writer = {};
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
@@ -235,7 +233,7 @@ int main(int argc, char** argv) {
       if (s_verbose)
         options.log_writes = 1;
 
-      result = wasm_write_binary(&g_wasm_libc_allocator, &writer.base, script,
+      result = wasm_write_binary(&g_wasm_libc_allocator, &writer.base, &script,
                                  &options);
       if (result == WASM_OK) {
         if (s_dump_module) {
@@ -261,7 +259,7 @@ int main(int argc, char** argv) {
   }
 
   if (s_use_libc_allocator)
-    wasm_destroy_script(script);
+    wasm_destroy_script(&script);
   else
     wasm_destroy_stack_allocator(&stack_allocator);
 

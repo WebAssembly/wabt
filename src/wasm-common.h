@@ -17,6 +17,8 @@
 #ifndef WASM_COMMON_H_
 #define WASM_COMMON_H_
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
 #define EXTERN_C_BEGIN extern "C" {

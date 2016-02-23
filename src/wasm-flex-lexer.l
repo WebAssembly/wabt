@@ -18,28 +18,31 @@
 #include "wasm.h"
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
+#include "wasm-parser.h"
+
+/* must be included after so some typedefs will be defined */
 #include "wasm-bison-parser.h"
 
-typedef struct WasmScannerExtra {
+typedef struct WasmLexerExtra {
   WasmAllocator* allocator;
   FILE* file;
   const char* filename;
   int column;
   int comment_nesting;
-} WasmScannerExtra;
+} WasmLexerExtra;
 
 #define YY_DECL                                                           \
   int wasm_lexer_lex(WASM_PARSER_STYPE* yylval_param,                     \
                      WASM_PARSER_LTYPE* yylloc_param, yyscan_t yyscanner, \
                      WasmParser* parser)
 
-#define EXTRA(scanner) ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))
-#define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
-#define COLUMN(scanner) (EXTRA(scanner)->column)
-#define RESET_COLUMN(scanner) EXTRA(scanner)->column = 1
+#define EXTRA(lexer) ((WasmLexerExtra*)wasm_lexer_get_extra(lexer))
+#define COMMENT_NESTING(lexer) (EXTRA(lexer)->comment_nesting)
+#define COLUMN(lexer) (EXTRA(lexer)->column)
+#define RESET_COLUMN(lexer) EXTRA(lexer)->column = 1
 #define YY_USER_ACTION                                 \
   {                                                    \
-    WasmScannerExtra* extra = EXTRA(yyscanner);        \
+    WasmLexerExtra* extra = EXTRA(yyscanner);          \
     yylloc->filename = extra->filename;                \
     yylloc->first_line = yylloc->last_line = yylineno; \
     yylloc->first_column = extra->column;              \
@@ -385,11 +388,11 @@ int wasm_lexer_wrap(yyscan_t yyscanner) {
   return 1;
 }
 
-static WasmAllocator* s_scanner_allocator;
+static WasmAllocator* s_lexer_allocator;
 
-WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
-  WasmScannerExtra* extra =
-      wasm_alloc(allocator, sizeof(WasmScannerExtra), WASM_DEFAULT_ALIGN);
+WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
+  WasmLexerExtra* extra =
+      wasm_alloc(allocator, sizeof(WasmLexerExtra), WASM_DEFAULT_ALIGN);
   if (!extra)
     return NULL;
   extra->allocator = allocator;
@@ -402,37 +405,42 @@ WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
     return NULL;
   }
 
-  /* when the scanner is created in yylex_init, it uses wasm_lexer_alloc before
+  /* when the lexer is created in yylex_init, it uses wasm_lexer_alloc before
    extra has been set, so we have to use a static variable here. */
-  s_scanner_allocator = allocator;
-  yyscan_t scanner;
-  yylex_init(&scanner);
-  yyset_in(extra->file, scanner);
-  yyset_extra(extra, scanner);
-  s_scanner_allocator = NULL;
-  return scanner;
+  s_lexer_allocator = allocator;
+  yyscan_t lexer;
+  yylex_init(&lexer);
+  yyset_in(extra->file, lexer);
+  yyset_extra(extra, lexer);
+  s_lexer_allocator = NULL;
+  return lexer;
 }
 
-void wasm_destroy_scanner(WasmScanner scanner) {
-  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+void wasm_destroy_lexer(WasmLexer lexer) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   fclose(extra->file);
-  wasm_lexer_lex_destroy((yyscan_t)scanner);
+  wasm_lexer_lex_destroy((yyscan_t)lexer);
   wasm_free(extra->allocator, extra);
 }
 
-void* wasm_lexer_alloc(size_t bytes, WasmScanner scanner) {
+void* wasm_lexer_alloc(size_t bytes, WasmLexer lexer) {
   WasmAllocator* allocator =
-      scanner ? ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))->allocator
-              : s_scanner_allocator;
+      lexer ? ((WasmLexerExtra*)wasm_lexer_get_extra(lexer))->allocator
+              : s_lexer_allocator;
   return wasm_alloc(allocator, bytes, WASM_DEFAULT_ALIGN);
 }
 
-void* wasm_lexer_realloc(void* ptr, size_t bytes, WasmScanner scanner) {
-  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+void* wasm_lexer_realloc(void* ptr, size_t bytes, WasmLexer lexer) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   return wasm_realloc(extra->allocator, ptr, bytes, WASM_DEFAULT_ALIGN);
 }
 
-void wasm_lexer_free(void* ptr, WasmScanner scanner) {
-  WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
+void wasm_lexer_free(void* ptr, WasmLexer lexer) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   wasm_free(extra->allocator, ptr);
+}
+
+WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  return extra->allocator;
 }

@@ -19,6 +19,7 @@
 
 #include "wasm.h"
 #include "wasm-ast.h"
+#include "wasm-lexer.h"
 
 #define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -27,6 +28,7 @@
 #define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
 
 struct WasmAllocator;
+struct WasmParser;
 
 typedef union WasmToken {
   /* terminals */
@@ -70,17 +72,20 @@ typedef union WasmToken {
   WasmScript script;
 } WasmToken;
 
+typedef struct WasmParser {
+  struct WasmAllocator* allocator;
+  WasmScript script;
+  int errors;
+} WasmParser;
+
 #define WASM_PARSER_STYPE WasmToken
 #define WASM_PARSER_LTYPE WasmLocation
 #define YYSTYPE WASM_PARSER_STYPE
 #define YYLTYPE WASM_PARSER_LTYPE
 
-void wasm_parser_error(WasmLocation*,
-                       WasmScanner,
-                       WasmParser*,
-                       const char*,
-                       ...);
-int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
+struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer);
+int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmLexer, WasmParser*);
+void wasm_parser_error(WasmLocation*, WasmLexer, WasmParser*, const char*, ...);
 void wasm_print_memory(const void* start,
                        size_t size,
                        size_t offset,
