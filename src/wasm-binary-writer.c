@@ -129,8 +129,7 @@ typedef enum WasmBinaryType {
   V(F32_STORE_MEM, 0x35)       \
   V(F64_STORE_MEM, 0x36)       \
   V(MEMORY_SIZE, 0x3b)         \
-  V(RESIZE_MEM_L, 0x39)        \
-  V(RESIZE_MEM_H, 0x3a)        \
+  V(GROW_MEMORY, 0x39)         \
   V(I32_ADD, 0x40)             \
   V(I32_SUB, 0x41)             \
   V(I32_MUL, 0x42)             \
@@ -884,7 +883,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      out_opcode(ws, WASM_OPCODE_RESIZE_MEM_L);
+      out_opcode(ws, WASM_OPCODE_GROW_MEMORY);
       write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
     case WASM_EXPR_TYPE_HAS_FEATURE:

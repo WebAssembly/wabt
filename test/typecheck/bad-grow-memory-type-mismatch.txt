@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module
+  (memory 0)
+  (func (result f32)
+    (grow_memory (i32.const 100))))
+(;; STDERR ;;;
+typecheck/bad-grow-memory-type-mismatch.txt:5:5: type mismatch in grow_memory. got i32, expected f32
+;;; STDERR ;;)

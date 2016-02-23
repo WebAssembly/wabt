@@ -561,6 +561,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_GROW_MEMORY:
+      result |= check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type,
+                           " in grow_memory");
       result |= check_expr(ctx, module, func, expr->grow_memory.expr,
                            WASM_TYPE_I32, " of grow_memory");
       break;
