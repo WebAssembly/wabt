@@ -625,7 +625,7 @@ static const yytype_uint16 yyrline[] =
     1121,  1128,  1137,  1146,  1152,  1161,  1165,  1172,  1176,  1183,
     1191,  1198,  1209,  1216,  1220,  1232,  1233,  1242,  1251,  1259,
     1267,  1275,  1283,  1291,  1301,  1390,  1396,  1403,  1410,  1418,
-    1425,  1435,  1436,  1444,  1453,  1454,  1457,  1458,  1465,  1475
+    1425,  1435,  1436,  1444,  1453,  1454,  1457,  1458,  1465,  1474
 };
 #endif
 
@@ -4074,15 +4074,14 @@ yyreduce:
   case 188:
 #line 1465 "src/wasm-bison-parser.y" /* yacc.c:1646  */
     {
-      (yyval.script).allocator = parser->allocator;
       (yyval.script).commands = (yyvsp[0].commands);
       parser->script = (yyval.script);
     }
-#line 4082 "src/wasm-bison-parser.c" /* yacc.c:1646  */
+#line 4081 "src/wasm-bison-parser.c" /* yacc.c:1646  */
     break;
 
 
-#line 4086 "src/wasm-bison-parser.c" /* yacc.c:1646  */
+#line 4085 "src/wasm-bison-parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4317,7 +4316,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1478 "src/wasm-bison-parser.y" /* yacc.c:1906  */
+#line 1477 "src/wasm-bison-parser.y" /* yacc.c:1906  */
 
 
 void wasm_parser_error(WasmLocation* loc,
@@ -4654,8 +4653,10 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
 
 WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script) {
   WasmParser parser = {};
-  parser.allocator = wasm_lexer_get_allocator(lexer);
+  WasmAllocator* allocator = wasm_lexer_get_allocator(lexer);
+  parser.allocator = allocator;
+  out_script->allocator = allocator;
   int result = wasm_parser_parse(lexer, &parser);
-  *out_script = parser.script;
+  out_script->commands = parser.script.commands;
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
 }

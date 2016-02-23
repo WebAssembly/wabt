@@ -1463,7 +1463,6 @@ const_list :
 
 script :
     cmd_list {
-      $$.allocator = parser->allocator;
       $$.commands = $1;
       parser->script = $$;
     }
@@ -1811,8 +1810,10 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
 
 WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script) {
   WasmParser parser = {};
-  parser.allocator = wasm_lexer_get_allocator(lexer);
+  WasmAllocator* allocator = wasm_lexer_get_allocator(lexer);
+  parser.allocator = allocator;
+  out_script->allocator = allocator;
   int result = wasm_parser_parse(lexer, &parser);
-  *out_script = parser.script;
+  out_script->commands = parser.script.commands;
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
 }
