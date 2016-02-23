@@ -24,6 +24,7 @@
 #include <memory.h>
 
 #include "wasm.h"
+#include "wasm-allocator.h"
 #include "wasm-internal.h"
 
 #define ZEROMEM(var) memset(&(var), 0, sizeof(var));
@@ -198,7 +199,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %destructor { wasm_destroy_const_vector(parser->allocator, &$$); } const_list
 %destructor { wasm_destroy_command(parser->allocator, $$); wasm_free(parser->allocator, $$); } cmd
 %destructor { wasm_destroy_command_vector_and_elements(parser->allocator, &$$); } cmd_list
-%destructor { wasm_destroy_script(parser->allocator, &$$); } script
+%destructor { wasm_destroy_script(&$$); } script
 
 %nonassoc LOW
 %nonassoc VAR
@@ -1459,7 +1460,11 @@ const_list :
 ;
 
 script :
-    cmd_list { $$.commands = $1; parser->script = $$; }
+    cmd_list {
+      $$.allocator = parser->allocator;
+      $$.commands = $1;
+      parser->script = $$;
+    }
 ;
 
 /* bison destroys the start symbol even on a successful parse. We want to keep

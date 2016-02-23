@@ -21,6 +21,7 @@
 #include <stdio.h>
 
 #include "wasm.h"
+#include "wasm-allocator.h"
 #include "wasm-internal.h"
 
 static const char* s_type_names[] = {
@@ -986,9 +987,9 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_script(WasmAllocator* allocator, WasmScript* script) {
+WasmResult wasm_check_script(WasmScript* script) {
   WasmCheckContext ctx = {};
-  ctx.allocator = allocator;
+  ctx.allocator = script->allocator;
   WasmResult result = WASM_OK;
   int i;
   for (i = 0; i < script->commands.size; ++i)

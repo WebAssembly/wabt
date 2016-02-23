@@ -16,6 +16,7 @@
 
 %{
 #include "wasm.h"
+#include "wasm-allocator.h"
 #include "wasm-internal.h"
 #include "wasm-parser.h"
 
@@ -410,7 +411,7 @@ WasmScanner wasm_new_scanner(WasmAllocator* allocator, const char* filename) {
   return scanner;
 }
 
-void wasm_free_scanner(WasmScanner scanner) {
+void wasm_destroy_scanner(WasmScanner scanner) {
   WasmScannerExtra* extra = wasm_lexer_get_extra(scanner);
   fclose(extra->file);
   wasm_lexer_lex_destroy((yyscan_t)scanner);

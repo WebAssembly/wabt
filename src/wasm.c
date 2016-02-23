@@ -15,12 +15,15 @@
  */
 
 #include "wasm.h"
+#include "wasm-allocator.h"
 #include "wasm-internal.h"
+#include "wasm-vector.h"
 
 #include <assert.h>
 #include <ctype.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
@@ -615,8 +618,8 @@ void wasm_destroy_command_vector_and_elements(WasmAllocator* allocator,
   DESTROY_VECTOR_AND_ELEMENTS(allocator, *commands, command);
 }
 
-void wasm_destroy_script(WasmAllocator* allocator, WasmScript* script) {
-  DESTROY_VECTOR_AND_ELEMENTS(allocator, script->commands, command);
+void wasm_destroy_script(WasmScript* script) {
+  DESTROY_VECTOR_AND_ELEMENTS(script->allocator, script->commands, command);
 }
 
 void wasm_print_memory(const void* start,

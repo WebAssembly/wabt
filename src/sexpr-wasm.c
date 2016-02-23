@@ -23,6 +23,7 @@
 #include "wasm.h"
 #include "wasm-internal.h"
 #include "wasm-stack-allocator.h"
+#include "wasm-writer.h"
 
 enum {
   FLAG_VERBOSE,
@@ -215,16 +216,15 @@ int main(int argc, char** argv) {
   WasmParser parser = {allocator};
   WasmResult result = wasm_parse(scanner, &parser);
   result = result || parser.errors;
-  wasm_free_scanner(scanner);
+  wasm_destroy_scanner(scanner);
 
   WasmScript* script = &parser.script;
 
   if (result == WASM_OK) {
-    /* TODO(binji): check shouldn't need allocator */
-    result = wasm_check_script(allocator, script);
+    result = wasm_check_script(script);
     if (result == WASM_OK) {
       WasmMemoryWriter writer = {};
-      if (wasm_init_mem_writer(allocator, &writer) != WASM_OK)
+      if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
         FATAL("unable to open memory writer for writing\n");
 
       WasmWriteBinaryOptions options = {};
@@ -235,7 +235,8 @@ int main(int argc, char** argv) {
       if (s_verbose)
         options.log_writes = 1;
 
-      result = wasm_write_binary(allocator, &writer.base, script, &options);
+      result = wasm_write_binary(&g_wasm_libc_allocator, &writer.base, script,
+                                 &options);
       if (result == WASM_OK) {
         if (s_dump_module) {
           if (s_verbose)
@@ -260,7 +261,7 @@ int main(int argc, char** argv) {
   }
 
   if (s_use_libc_allocator)
-    wasm_destroy_script(allocator, script);
+    wasm_destroy_script(script);
   else
     wasm_destroy_stack_allocator(&stack_allocator);
 

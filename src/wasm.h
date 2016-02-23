@@ -18,12 +18,10 @@
 #define WASM_H_
 
 #include <stdint.h>
-#include <stdlib.h>
+#include <stddef.h>
 
-#include "wasm-allocator.h"
 #include "wasm-common.h"
 #include "wasm-vector.h"
-#include "wasm-writer.h"
 
 typedef struct WasmStringSlice {
   const char* start;
@@ -553,13 +551,14 @@ typedef struct WasmCommand {
 DECLARE_VECTOR(command, WasmCommand);
 
 typedef struct WasmScript {
+  struct WasmAllocator* allocator;
   WasmCommandVector commands;
 } WasmScript;
 
 typedef void* WasmScanner;
 
 typedef struct WasmParser {
-  WasmAllocator* allocator;
+  struct WasmAllocator* allocator;
   WasmScript script;
   int errors;
 } WasmParser;
@@ -570,75 +569,18 @@ typedef struct WasmWriteBinaryOptions {
   int log_writes;
 } WasmWriteBinaryOptions;
 
+struct WasmWriter;
+
 EXTERN_C_BEGIN
-WasmScanner wasm_new_scanner(WasmAllocator*, const char* filename);
-void wasm_free_scanner(WasmScanner);
-void wasm_error(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
-int wasm_parse(WasmScanner scanner, WasmParser* parser);
-WasmResult wasm_check_script(WasmAllocator*, WasmScript*);
-WasmResult wasm_write_binary(WasmAllocator*,
-                             WasmWriter*,
-                             WasmScript*,
+WasmScanner wasm_new_scanner(struct WasmAllocator*, const char* filename);
+void wasm_destroy_scanner(WasmScanner);
+int wasm_parse(WasmScanner scanner, struct WasmParser* parser);
+WasmResult wasm_check_script(struct WasmScript*);
+WasmResult wasm_write_binary(struct WasmAllocator*,
+                             struct WasmWriter*,
+                             struct WasmScript*,
                              WasmWriteBinaryOptions*);
-
-int wasm_string_slices_are_equal(const WasmStringSlice*,
-                                 const WasmStringSlice*);
-WasmBinding* wasm_insert_binding(WasmAllocator*,
-                                 WasmBindingHash*,
-                                 const WasmStringSlice*);
-int wasm_hash_entry_is_free(WasmBindingHashEntry*);
-
-void wasm_destroy_case_vector_and_elements(WasmAllocator*, WasmCaseVector*);
-void wasm_destroy_case(WasmAllocator*, WasmCase*);
-void wasm_destroy_command_vector_and_elements(WasmAllocator*,
-                                              WasmCommandVector*);
-void wasm_destroy_command(WasmAllocator*, WasmCommand*);
-void wasm_destroy_export(WasmAllocator*, WasmExport*);
-void wasm_destroy_expr_ptr_vector_and_elements(WasmAllocator*,
-                                               WasmExprPtrVector*);
-void wasm_destroy_expr_ptr(WasmAllocator*, WasmExprPtr*);
-void wasm_destroy_func_signature(WasmAllocator*, WasmFuncSignature*);
-void wasm_destroy_func_type(WasmAllocator*, WasmFuncType*);
-void wasm_destroy_func(WasmAllocator*, WasmFunc*);
-void wasm_destroy_import(WasmAllocator*, WasmImport*);
-void wasm_destroy_memory(WasmAllocator*, WasmMemory*);
-void wasm_destroy_module_field_vector_and_elements(WasmAllocator*,
-                                                   WasmModuleFieldVector*);
-void wasm_destroy_module(WasmAllocator*, WasmModule*);
-void wasm_destroy_script(WasmAllocator*, WasmScript*);
-void wasm_destroy_segment_vector_and_elements(WasmAllocator*,
-                                              WasmSegmentVector*);
-void wasm_destroy_segment(WasmAllocator*, WasmSegment*);
-void wasm_destroy_string_slice(WasmAllocator*, WasmStringSlice*);
-void wasm_destroy_target_vector_and_elements(WasmAllocator*, WasmTargetVector*);
-void wasm_destroy_target(WasmAllocator*, WasmTarget*);
-void wasm_destroy_type_bindings(WasmAllocator*, WasmTypeBindings*);
-void wasm_destroy_var_vector_and_elements(WasmAllocator*, WasmVarVector*);
-void wasm_destroy_var(WasmAllocator*, WasmVar*);
-
-int wasm_get_index_from_var(const WasmBindingHash* bindings,
-                            const WasmVar* var);
-int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_func_type_index_by_var(const WasmModule* module,
-                                    const WasmVar* var);
-int wasm_get_global_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
-
-WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
-WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
-                                          const WasmVar* var);
-WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
-                                     const WasmVar* var);
-WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
-                                      const WasmStringSlice* name);
-
-WasmResult wasm_extend_type_bindings(WasmAllocator*,
-                                     WasmTypeBindings* dst,
-                                     WasmTypeBindings* src) WARN_UNUSED;
-
-int wasm_func_is_exported(const WasmModule* module, const WasmFunc* func);
-
+void wasm_destroy_script(struct WasmScript*);
 EXTERN_C_END
 
 #endif /* WASM_H_ */
