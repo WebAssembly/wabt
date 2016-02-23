@@ -6,7 +6,8 @@ before_install:
   - sudo apt-get install -qq flex bison
 script:
   - scripts/download-d8.sh
-  - rm src/wasm-{lexer,parser}.c
+  - rm src/wasm-flex-lexer.c
+  - rm src/wasm-bison-parser.{c,h}
   - make everything
   - test/run-tests.py
   - test/run-tests.py -e out/sexpr-wasm-asan --timeout=10
