@@ -70,12 +70,16 @@ typedef union WasmToken {
   WasmScript script;
 } WasmToken;
 
-#define WASM_STYPE WasmToken
-#define WASM_LTYPE WasmLocation
-#define YYSTYPE WASM_STYPE
-#define YYLTYPE WASM_LTYPE
+#define WASM_PARSER_STYPE WasmToken
+#define WASM_PARSER_LTYPE WasmLocation
+#define YYSTYPE WASM_PARSER_STYPE
+#define YYLTYPE WASM_PARSER_LTYPE
 
-void wasm_error(WasmLocation*, WasmScanner, WasmParser*, const char*, ...);
+void wasm_parser_error(WasmLocation*,
+                       WasmScanner,
+                       WasmParser*,
+                       const char*,
+                       ...);
 int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmScanner, WasmParser*);
 void wasm_print_memory(const void* start,
                        size_t size,

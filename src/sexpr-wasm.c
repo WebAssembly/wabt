@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
     FATAL("unable to read %s\n", s_infile);
 
   WasmParser parser = {allocator};
-  WasmResult result = wasm_parse(scanner, &parser);
+  WasmResult result = wasm_parser_parse(scanner, &parser);
   result = result || parser.errors;
   wasm_destroy_scanner(scanner);
 

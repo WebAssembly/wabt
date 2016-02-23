@@ -43,7 +43,7 @@ typedef struct WasmWriteBinaryOptions {
 EXTERN_C_BEGIN
 WasmScanner wasm_new_scanner(struct WasmAllocator*, const char* filename);
 void wasm_destroy_scanner(WasmScanner);
-int wasm_parse(WasmScanner scanner, struct WasmParser* parser);
+int wasm_parser_parse(WasmScanner scanner, struct WasmParser* parser);
 WasmResult wasm_check_script(struct WasmScript*);
 WasmResult wasm_write_binary(struct WasmAllocator*,
                              struct WasmWriter*,

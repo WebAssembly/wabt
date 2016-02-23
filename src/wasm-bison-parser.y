@@ -38,14 +38,14 @@
       wasm_strndup(parser->allocator, (src).start + 1, (src).length - 2); \
   (dst).length = (src).length - 2
 
-#define CHECK_ALLOC_(cond)                                  \
-  if ((cond)) {                                             \
-    WasmLocation loc;                                       \
-    loc.filename = __FILE__;                                \
-    loc.first_line = loc.last_line = __LINE__;              \
-    loc.first_column = loc.last_column = 0;                 \
-    wasm_error(&loc, scanner, parser, "allocation failed"); \
-    YYERROR;                                                \
+#define CHECK_ALLOC_(cond)                                         \
+  if ((cond)) {                                                    \
+    WasmLocation loc;                                              \
+    loc.filename = __FILE__;                                       \
+    loc.first_line = loc.last_line = __LINE__;                     \
+    loc.first_column = loc.last_column = 0;                        \
+    wasm_parser_error(&loc, scanner, parser, "allocation failed"); \
+    YYERROR;                                                       \
   }
 
 #define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
@@ -109,11 +109,11 @@ static int read_const(WasmType type, const char* s, const char* end,
 static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
                                       void** out_data, size_t* out_size);
 
-#define wasm_lex wasm_lexer_lex
+#define wasm_parser_lex wasm_lexer_lex
 
 %}
 
-%define api.prefix {wasm_}
+%define api.prefix {wasm_parser_}
 %define api.pure true
 %define api.value.type {WasmToken}
 %define api.token.prefix {WASM_TOKEN_TYPE_}
@@ -244,8 +244,8 @@ var :
       $$.type = WASM_VAR_TYPE_INDEX;
       uint32_t index;
       if (!read_int32($1.start, $1.start + $1.length, &index, 0))
-        wasm_error(&@1, scanner, parser, "invalid int %.*s", $1.length,
-                   $1.start);
+        wasm_parser_error(&@1, scanner, parser, "invalid int %.*s", $1.length,
+                          $1.start);
       $$.index = index;
     }
   | VAR {
@@ -290,16 +290,16 @@ offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
       if (!read_int64($1.start, $1.start + $1.length, &$$))
-        wasm_error(&@1, scanner, parser, "invalid offset \"%.*s\"", $1.length,
-                   $1.start);
+        wasm_parser_error(&@1, scanner, parser, "invalid offset \"%.*s\"",
+                          $1.length, $1.start);
     }
 ;
 align :
     /* empty */ { $$ = WASM_USE_NATURAL_ALIGNMENT; }
   | ALIGN {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
-        wasm_error(&@1, scanner, parser, "invalid alignment \"%.*s\"",
-                   $1.length, $1.start);
+        wasm_parser_error(&@1, scanner, parser, "invalid alignment \"%.*s\"",
+                          $1.length, $1.start);
     }
 ;
 
@@ -454,8 +454,8 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       $$->const_.loc = @1;
       if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
-        wasm_error(&@2, scanner, parser, "invalid literal \"%.*s\"", $2.length,
-                   $2.start);
+        wasm_parser_error(&@2, scanner, parser, "invalid literal \"%.*s\"",
+                          $2.length, $2.start);
       wasm_free(parser->allocator, (char*)$2.start);
     }
   | UNARY expr {
@@ -1102,9 +1102,9 @@ start :
 segment_address :
     INT {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
-        wasm_error(&@1, scanner, parser,
-                   "invalid memory segment address \"%.*s\"", $1.length,
-                   $1.start);
+        wasm_parser_error(&@1, scanner, parser,
+                          "invalid memory segment address \"%.*s\"", $1.length,
+                          $1.start);
     }
 ;
 
@@ -1127,16 +1127,18 @@ segment_list :
 initial_size :
     INT {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
-        wasm_error(&@1, scanner, parser, "invalid initial memory size \"%.*s\"",
-                   $1.length, $1.start);
+        wasm_parser_error(&@1, scanner, parser,
+                          "invalid initial memory size \"%.*s\"", $1.length,
+                          $1.start);
     }
 ;
 
 max_size :
     INT {
       if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
-        wasm_error(&@1, scanner, parser, "invalid max memory size \"%.*s\"",
-                   $1.length, $1.start);
+        wasm_parser_error(&@1, scanner, parser,
+                          "invalid max memory size \"%.*s\"", $1.length,
+                          $1.start);
     }
 ;
 
@@ -1442,8 +1444,8 @@ const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
       if (!read_const($2, $3.start, $3.start + $3.length, &$$))
-        wasm_error(&@3, scanner, parser, "invalid literal \"%.*s\"", $3.length,
-                   $3.start);
+        wasm_parser_error(&@3, scanner, parser, "invalid literal \"%.*s\"",
+                          $3.length, $3.start);
       wasm_free(parser->allocator, (char*)$3.start);
     }
 ;
@@ -1475,11 +1477,11 @@ script_start :
 
 %%
 
-void wasm_error(WasmLocation* loc,
-                WasmScanner scanner,
-                WasmParser* parser,
-                const char* fmt,
-                ...) {
+void wasm_parser_error(WasmLocation* loc,
+                       WasmScanner scanner,
+                       WasmParser* parser,
+                       const char* fmt,
+                       ...) {
   va_list args;
   va_start(args, fmt);
   fprintf(stderr, "%s:%d:%d: ", loc->filename, loc->first_line,

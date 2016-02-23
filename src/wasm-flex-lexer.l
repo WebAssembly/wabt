@@ -28,9 +28,10 @@ typedef struct WasmScannerExtra {
   int comment_nesting;
 } WasmScannerExtra;
 
-#define YY_DECL                                                          \
-  int wasm_lexer_lex(WASM_STYPE* yylval_param, WASM_LTYPE* yylloc_param, \
-                     yyscan_t yyscanner, WasmParser* parser)
+#define YY_DECL                                                           \
+  int wasm_lexer_lex(WASM_PARSER_STYPE* yylval_param,                     \
+                     WASM_PARSER_LTYPE* yylloc_param, yyscan_t yyscanner, \
+                     WasmParser* parser)
 
 #define EXTRA(scanner) ((WasmScannerExtra*)wasm_lexer_get_extra(scanner))
 #define COMMENT_NESTING(scanner) (EXTRA(scanner)->comment_nesting)
@@ -149,16 +150,17 @@ NAME      \${ATOM}
 <BAD_TEXT>{CHARACTER} {}
 <BAD_TEXT>\n          { BEGIN(INITIAL);
                         RESET_COLUMN(yyscanner);
-                        wasm_error(yylloc, &yyscanner, parser,
-                                   "newline in string"); }
-<BAD_TEXT><<EOF>>     { wasm_error(yylloc, &yyscanner, parser,
-                                   "unexpected EOF");
+                        wasm_parser_error(yylloc, &yyscanner, parser,
+                                          "newline in string"); }
+<BAD_TEXT><<EOF>>     { wasm_parser_error(yylloc, &yyscanner, parser,
+                                          "unexpected EOF");
                         return TOK(EOF); }
-<BAD_TEXT>\\.         { wasm_error(yylloc, &yyscanner, parser,
-                                   "bad escape \"%.*s\"", yyleng, yytext); }
+<BAD_TEXT>\\.         { wasm_parser_error(yylloc, &yyscanner, parser,
+                                          "bad escape \"%.*s\"", yyleng,
+                                          yytext); }
 <BAD_TEXT>\"          { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
-<BAD_TEXT>[^\\]       { wasm_error(yylloc, &yyscanner, parser,
-                                "illegal character in string"); }
+<BAD_TEXT>[^\\]       { wasm_parser_error(yylloc, &yyscanner, parser,
+                                          "illegal character in string"); }
 "i32"                 { TYPE(I32); return TOK(VALUE_TYPE); }
 "i64"                 { TYPE(I64); return TOK(VALUE_TYPE); }
 "f32"                 { TYPE(F32); return TOK(VALUE_TYPE); }
@@ -364,18 +366,18 @@ NAME      \${ATOM}
 <BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
 <BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
 <BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
-<BLOCK_COMMENT><<EOF>> { wasm_error(yylloc, &yyscanner, parser,
-                                    "unexpected EOF");
+<BLOCK_COMMENT><<EOF>> { wasm_parser_error(yylloc, &yyscanner, parser,
+                                           "unexpected EOF");
                          return TOK(EOF); }
 <BLOCK_COMMENT>.
 \n                    { RESET_COLUMN(yyscanner); }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
-{ATOM}                { wasm_error(yylloc, &yyscanner, parser,
-                                   "unexpected token \"%.*s\"", yyleng,
-                                   yytext); }
-.                     { wasm_error(yylloc, &yyscanner, parser,
-                                   "unexpected char"); }
+{ATOM}                { wasm_parser_error(yylloc, &yyscanner, parser,
+                                          "unexpected token \"%.*s\"", yyleng,
+                                          yytext); }
+.                     { wasm_parser_error(yylloc, &yyscanner, parser,
+                                          "unexpected char"); }
 
 %%
 
