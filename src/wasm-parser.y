@@ -1279,6 +1279,9 @@ module :
       $$ = new_module();
       $$->loc = @2;
       $$->fields = $3;
+      /* clear the start function */
+      $$->start.type = WASM_VAR_TYPE_INDEX;
+      $$->start.index = -1;
 
       /* cache values */
       int i;

@@ -1247,8 +1247,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       int has_name = is_exported;
       int has_locals = func->locals.types.size > 0;
       uint8_t flags = 0;
-      /* TODO(binji): add flag for start function (when added to the binary
-       format) */
       if (has_name)
         flags |= WASM_FUNCTION_FLAG_NAME;
       if (is_exported)
@@ -1278,6 +1276,12 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
           ctx->writer_state.offset - func_body_offset - sizeof(uint16_t);
       out_u16_at(ws, func_body_offset, func_size, "FIXUP func body size");
     }
+  }
+
+  int start_func_index = wasm_get_func_index_by_var(module, &module->start);
+  if (start_func_index != -1) {
+    out_u8(ws, WASM_SECTION_START, "WASM_SECTION_START");
+    out_leb128(ws, start_func_index, "start func index");
   }
 
   if (module->table && module->table->size) {

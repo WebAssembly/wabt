@@ -1,0 +1,16 @@
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/testsuite/start.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/start.wast:2:39: function variable out of range (max 1)
+assert_invalid error:
+  third_party/testsuite/start.wast:8:5: start function must not return anything
+assert_invalid error:
+  third_party/testsuite/start.wast:15:5: start function must be nullary
+$invoke_1 = undefined
+$invoke_3 = undefined
+$invoke_1 = undefined
+$invoke_3 = undefined
+6/6 tests passed.
+;;; STDOUT ;;)
