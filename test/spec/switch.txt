@@ -3,8 +3,8 @@
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/switch.wast:110:72: case variable out of range (max 0)
+  third_party/testsuite/switch.wast:135:72: case variable out of range (max 0)
 assert_invalid error:
-  third_party/testsuite/switch.wast:111:72: case variable out of range (max 1)
-18/18 tests passed.
+  third_party/testsuite/switch.wast:136:72: case variable out of range (max 1)
+23/23 tests passed.
 ;;; STDOUT ;;)
