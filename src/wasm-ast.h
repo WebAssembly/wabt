@@ -548,6 +548,35 @@ WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  const WasmStringSlice*);
 int wasm_hash_entry_is_free(WasmBindingHashEntry*);
 
+/* WasmExpr creation functions */
+WasmExpr* wasm_new_binary_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_block_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_br_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_br_if_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_call_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_call_import_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_call_indirect_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_compare_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_const_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_convert_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_get_local_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_grow_memory_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_has_feature_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_if_else_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_if_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_load_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_load_global_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_loop_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_return_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_store_global_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_tableswitch_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_unary_expr(struct WasmAllocator*);
+/* for nop, unreachable and memory_size */
+WasmExpr* wasm_new_empty_expr(struct WasmAllocator*, WasmExprType);
+
 /* destruction functions. not needed unless you're creating your own AST
  elements */
 void wasm_destroy_script(struct WasmScript*);

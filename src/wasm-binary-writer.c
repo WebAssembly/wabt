@@ -1352,18 +1352,9 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
-static WasmExpr* new_expr(WasmAllocator* allocator, WasmExprType type) {
-  WasmExpr* expr = wasm_alloc(allocator, sizeof(WasmExpr), WASM_DEFAULT_ALIGN);
-  if (!expr)
-    return NULL;
-  memset(expr, 0, sizeof(WasmExpr));
-  expr->type = type;
-  return expr;
-}
-
 static WasmExpr* create_const_expr(WasmAllocator* allocator,
                                    WasmConst* const_) {
-  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_CONST);
+  WasmExpr* expr = wasm_new_const_expr(allocator);
   if (!expr)
     return NULL;
   expr->const_ = *const_;
@@ -1373,7 +1364,7 @@ static WasmExpr* create_const_expr(WasmAllocator* allocator,
 static WasmExpr* create_invoke_expr(WasmAllocator* allocator,
                                     WasmCommandInvoke* invoke,
                                     int func_index) {
-  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_CALL);
+  WasmExpr* expr = wasm_new_call_expr(allocator);
   if (!expr)
     return NULL;
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
@@ -1406,7 +1397,7 @@ static WasmExpr* create_eq_expr(WasmAllocator* allocator,
     return NULL;
   }
 
-  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_COMPARE);
+  WasmExpr* expr = wasm_new_compare_expr(allocator);
   if (!expr)
     return NULL;
   expr->compare.op.type = type;
@@ -1441,7 +1432,7 @@ static WasmExpr* create_ne_expr(WasmAllocator* allocator,
     return NULL;
   }
 
-  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_COMPARE);
+  WasmExpr* expr = wasm_new_compare_expr(allocator);
   if (!expr)
     return NULL;
   expr->compare.op.type = type;
@@ -1474,7 +1465,7 @@ static WasmExpr* create_set_local_expr(WasmAllocator* allocator,
     return NULL;
   }
 
-  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_SET_LOCAL);
+  WasmExpr* expr = wasm_new_set_local_expr(allocator);
   if (!expr)
     return NULL;
   expr->set_local.var.type = WASM_VAR_TYPE_INDEX;
@@ -1484,7 +1475,7 @@ static WasmExpr* create_set_local_expr(WasmAllocator* allocator,
 }
 
 static WasmExpr* create_get_local_expr(WasmAllocator* allocator, int index) {
-  WasmExpr* expr = new_expr(allocator, WASM_EXPR_TYPE_GET_LOCAL);
+  WasmExpr* expr = wasm_new_get_local_expr(allocator);
   if (!expr)
     return NULL;
   expr->get_local.var.type = WASM_VAR_TYPE_INDEX;
@@ -1500,7 +1491,7 @@ static WasmExpr* create_reinterpret_expr(WasmAllocator* allocator,
     return NULL;
   }
 
-  WasmExpr* result = new_expr(allocator, WASM_EXPR_TYPE_CONVERT);
+  WasmExpr* result = wasm_new_convert_expr(allocator);
   if (!result)
     return NULL;
   switch (type) {

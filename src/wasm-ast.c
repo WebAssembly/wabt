@@ -17,6 +17,7 @@
 #include "wasm-ast.h"
 
 #include <assert.h>
+#include <stddef.h>
 
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
@@ -285,6 +286,58 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
     *dst_binding = src_entry->binding;
     dst_binding->index += last_type; /* fixup the binding index */
   }
+  return result;
+}
+
+#define ALLOC_EXPR_TYPE_ZERO(allocator, member)                                \
+  wasm_alloc_zero(allocator,                                                   \
+                  offsetof(WasmExpr, member) + sizeof(((WasmExpr*)0)->member), \
+                  WASM_DEFAULT_ALIGN)
+
+#define FOREACH_EXPR_TYPE(V)                                    \
+  V(WASM_EXPR_TYPE_BINARY, binary, binary)                      \
+  V(WASM_EXPR_TYPE_BLOCK, block, block)                         \
+  V(WASM_EXPR_TYPE_BR, br, br)                                  \
+  V(WASM_EXPR_TYPE_BR_IF, br_if, br_if)                         \
+  V(WASM_EXPR_TYPE_CALL, call, call)                            \
+  V(WASM_EXPR_TYPE_CALL_IMPORT, call_import, call)              \
+  V(WASM_EXPR_TYPE_CALL_INDIRECT, call_indirect, call_indirect) \
+  V(WASM_EXPR_TYPE_COMPARE, compare, compare)                   \
+  V(WASM_EXPR_TYPE_CONST, const, const_)                        \
+  V(WASM_EXPR_TYPE_CONVERT, convert, convert)                   \
+  V(WASM_EXPR_TYPE_GET_LOCAL, get_local, get_local)             \
+  V(WASM_EXPR_TYPE_GROW_MEMORY, grow_memory, grow_memory)       \
+  V(WASM_EXPR_TYPE_HAS_FEATURE, has_feature, has_feature)       \
+  V(WASM_EXPR_TYPE_IF_ELSE, if_else, if_else)                   \
+  V(WASM_EXPR_TYPE_IF, if, if_)                                 \
+  V(WASM_EXPR_TYPE_LOAD, load, load)                            \
+  V(WASM_EXPR_TYPE_LOAD_GLOBAL, load_global, load_global)       \
+  V(WASM_EXPR_TYPE_LOOP, loop, loop)                            \
+  V(WASM_EXPR_TYPE_RETURN, return, return_)                     \
+  V(WASM_EXPR_TYPE_SELECT, select, select)                      \
+  V(WASM_EXPR_TYPE_SET_LOCAL, set_local, set_local)             \
+  V(WASM_EXPR_TYPE_STORE, store, store)                         \
+  V(WASM_EXPR_TYPE_STORE_GLOBAL, store_global, store_global)    \
+  V(WASM_EXPR_TYPE_TABLESWITCH, tableswitch, tableswitch)       \
+  V(WASM_EXPR_TYPE_UNARY, unary, unary)
+
+#define DEFINE_NEW_EXPR(type_, name, member)                    \
+  WasmExpr* wasm_new_##name##_expr(WasmAllocator* allocator) {  \
+    WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, member); \
+    if (!result)                                                \
+      return NULL;                                              \
+    result->type = type_;                                       \
+    return result;                                              \
+  }
+FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
+#undef DEFINE_NEW_EXPR
+
+WasmExpr* wasm_new_empty_expr(struct WasmAllocator* allocator,
+                              WasmExprType type) {
+  WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, type);
+  if (!result)
+    return NULL;
+  result->type = type;
   return result;
 }
 
