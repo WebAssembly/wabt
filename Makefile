@@ -24,7 +24,7 @@ DEFAULT_BUILD_TYPE = DEBUG
 COMPILERS := GCC GCC_I686 CLANG
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := NO ASAN MSAN LSAN
-EXECUTABLES := sexpr-wasm hexfloat_test
+EXECUTABLES := sexpr-wasm wasm-objdump hexfloat_test
 
 GCC_DEBUG_DIR := out/gcc/Debug
 GCC_DEBUG_NO_FLEX_BISON_DIR := out/gcc/Debug-no-flex-bison

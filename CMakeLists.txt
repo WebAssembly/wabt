@@ -69,7 +69,6 @@ find_package(FLEX)
 find_package(BISON 3.0)
 if (RUN_FLEX_BISON AND FLEX_FOUND AND BISON_FOUND)
   set(BISON_PARSER_C ${SEXPR_WASM_BINARY_DIR}/wasm-bison-parser.c)
-  set(BISON_PARSER_H )
   BISON_TARGET(WASM_BISON_PARSER
     ${SEXPR_WASM_SOURCE_DIR}/src/wasm-bison-parser.y
     ${BISON_PARSER_C}
@@ -115,6 +114,15 @@ set(SEXPR_WASM_SRCS
 add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
 add_dependencies(everything sexpr-wasm)
 
+# wasm-objdump
+set(WASM_OBJDUMP_SRCS
+  src/wasm-binary-reader.c
+  src/wasm-objdump.c
+)
+
+add_executable(wasm-objdump ${WASM_OBJDUMP_SRCS})
+add_dependencies(everything wasm-objdump)
+
 # hexfloat-test
 option(BUILD_TESTS "Build GTest-based tests" ON)
 find_package(Threads)
@@ -148,7 +156,7 @@ find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} -e $<TARGET_FILE:sexpr-wasm>
-  DEPENDS sexpr-wasm
+  DEPENDS sexpr-wasm wasm-objdump
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )
 
@@ -171,12 +179,14 @@ if (COMPILER_IS_CLANG)
     endif ()
 
     add_custom_target(all-${SANITIZER_NAME}
-      DEPENDS sexpr-wasm-${SANITIZER_NAME} hexfloat_test-${SANITIZER_NAME})
+      DEPENDS sexpr-wasm-${SANITIZER_NAME}
+              hexfloat_test-${SANITIZER_NAME}
+              wasm-objdump-${SANITIZER_NAME})
 
     add_custom_target(run-tests-${SANITIZER_NAME}
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
           -e $<TARGET_FILE:sexpr-wasm-${SANITIZER_NAME}>
-      DEPENDS sexpr-wasm-${SANITIZER_NAME}
+      DEPENDS sexpr-wasm-${SANITIZER_NAME} wasm-objdump-${SANITIZER_NAME}
       WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
     )
   endmacro ()

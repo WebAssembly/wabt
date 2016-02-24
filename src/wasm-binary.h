@@ -17,20 +17,30 @@
 #ifndef WASM_BINARY_H_
 #define WASM_BINARY_H_
 
-#include <stdint.h>
-
 #define WASM_BINARY_MAGIC 0x6d736100
 #define WASM_BINARY_VERSION 0x0a
 
-#define WASM_BINARY_SECTION_DATA_SEGMENTS "data_segments"
-#define WASM_BINARY_SECTION_EXPORTS "export_table"
-#define WASM_BINARY_SECTION_FUNCTION_BODIES "function_bodies"
-#define WASM_BINARY_SECTION_FUNCTION_SIGNATURES "function_signatures"
-#define WASM_BINARY_SECTION_FUNCTION_TABLE "function_table"
-#define WASM_BINARY_SECTION_IMPORTS "import_table"
-#define WASM_BINARY_SECTION_MEMORY "memory"
-#define WASM_BINARY_SECTION_NAMES "names"
-#define WASM_BINARY_SECTION_SIGNATURES "signatures"
-#define WASM_BINARY_SECTION_START "start_function"
+#define WASM_SECTION_NAME_SIGNATURES "signatures"
+#define WASM_SECTION_NAME_IMPORT_TABLE "import_table"
+#define WASM_SECTION_NAME_FUNCTION_SIGNATURES "function_signatures"
+#define WASM_SECTION_NAME_FUNCTION_TABLE "function_table"
+#define WASM_SECTION_NAME_MEMORY "memory"
+#define WASM_SECTION_NAME_EXPORT_TABLE "export_table"
+#define WASM_SECTION_NAME_START_FUNCTION "start_function"
+#define WASM_SECTION_NAME_FUNCTION_BODIES "function_bodies"
+#define WASM_SECTION_NAME_DATA_SEGMENTS "data_segments"
+#define WASM_SECTION_NAME_NAMES "names"
+
+#define WASM_FOREACH_SECTION(V) \
+  V(SIGNATURES)                 \
+  V(IMPORT_TABLE)               \
+  V(FUNCTION_SIGNATURES)        \
+  V(FUNCTION_TABLE)             \
+  V(MEMORY)                     \
+  V(EXPORT_TABLE)               \
+  V(START_FUNCTION)             \
+  V(FUNCTION_BODIES)            \
+  V(DATA_SEGMENTS)              \
+  V(NAMES)
 
 #endif /* WASM_BINARY_H_ */

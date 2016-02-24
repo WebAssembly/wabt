@@ -915,7 +915,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   WASM_ZERO_MEMORY(sigs);
   get_func_signatures(ctx, module, &sigs);
   if (sigs.size) {
-    begin_section(ctx, WASM_BINARY_SECTION_SIGNATURES, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_SIGNATURES, leb_size_guess);
     out_u32_leb128(ws, sigs.size, "num signatures");
     for (i = 0; i < sigs.size; ++i) {
       WasmFuncSignature* sig = &sigs.data[i];
@@ -930,7 +930,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   if (module->imports.size) {
-    begin_section(ctx, WASM_BINARY_SECTION_IMPORTS, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_IMPORT_TABLE, leb_size_guess);
     out_u32_leb128(ws, module->imports.size, "num imports");
 
     for (i = 0; i < module->imports.size; ++i) {
@@ -946,7 +946,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   if (module->funcs.size) {
-    begin_section(ctx, WASM_BINARY_SECTION_FUNCTION_SIGNATURES, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_FUNCTION_SIGNATURES, leb_size_guess);
     out_u32_leb128(ws, module->funcs.size, "num functions");
 
     for (i = 0; i < module->funcs.size; ++i) {
@@ -958,7 +958,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   if (module->table && module->table->size) {
-    begin_section(ctx, WASM_BINARY_SECTION_FUNCTION_TABLE, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_FUNCTION_TABLE, leb_size_guess);
     out_u32_leb128(ws, module->table->size, "num function table entries");
     for (i = 0; i < module->table->size; ++i) {
       int index = wasm_get_func_index_by_var(module, &module->table->data[i]);
@@ -970,7 +970,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
   if (module->memory) {
     int export_memory = module->export_memory != NULL;
-    begin_section(ctx, WASM_BINARY_SECTION_MEMORY, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_MEMORY, leb_size_guess);
     out_u32_leb128(ws, module->memory->initial_pages, "min mem pages");
     out_u32_leb128(ws, module->memory->max_pages, "max mem pages");
     out_u8(ws, export_memory, "export mem");
@@ -978,7 +978,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   if (module->exports.size) {
-    begin_section(ctx, WASM_BINARY_SECTION_EXPORTS, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_EXPORT_TABLE, leb_size_guess);
     out_u32_leb128(ws, module->exports.size, "num exports");
 
     for (i = 0; i < module->exports.size; ++i) {
@@ -994,13 +994,13 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
   int start_func_index = wasm_get_func_index_by_var(module, &module->start);
   if (start_func_index != -1) {
-    begin_section(ctx, WASM_BINARY_SECTION_START, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_START_FUNCTION, leb_size_guess);
     out_u32_leb128(ws, start_func_index, "start func index");
     end_section(ctx);
   }
 
   if (module->funcs.size) {
-    begin_section(ctx, WASM_BINARY_SECTION_FUNCTION_BODIES, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_FUNCTION_BODIES, leb_size_guess);
     out_u32_leb128(ws, module->funcs.size, "num functions");
 
     for (i = 0; i < module->funcs.size; ++i) {
@@ -1019,7 +1019,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   if (module->memory && module->memory->segments.size) {
-    begin_section(ctx, WASM_BINARY_SECTION_DATA_SEGMENTS, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_DATA_SEGMENTS, leb_size_guess);
     out_u32_leb128(ws, module->memory->segments.size, "num data segments");
     for (i = 0; i < module->memory->segments.size; ++i) {
       WasmSegment* segment = &module->memory->segments.data[i];
@@ -1034,7 +1034,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
   if (ctx->options->write_debug_names) {
     char desc[100];
-    begin_section(ctx, WASM_BINARY_SECTION_NAMES, leb_size_guess);
+    begin_section(ctx, WASM_SECTION_NAME_NAMES, leb_size_guess);
     out_u32_leb128(ws, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
       WasmFunc* func = module->funcs.data[i];
