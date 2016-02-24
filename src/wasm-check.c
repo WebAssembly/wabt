@@ -29,6 +29,24 @@ static const char* s_type_names[] = {
     "void",
     "i32",
     "i64",
+    "f32",
+    "f64",
+};
+STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+
+typedef enum WasmTypeSet {
+  WASM_TYPE_SET_VOID = 0,
+  WASM_TYPE_SET_I32 = 1 << 0,
+  WASM_TYPE_SET_I64 = 1 << 1,
+  WASM_TYPE_SET_F32 = 1 << 2,
+  WASM_TYPE_SET_F64 = 1 << 3,
+  WASM_TYPE_SET_ALL = (1 << 4) - 1,
+} WasmTypeSet;
+
+static const char* s_type_set_names[] = {
+    "void",
+    "i32",
+    "i64",
     "i32 or i64",
     "f32",
     "i32 or f32",
@@ -43,7 +61,13 @@ static const char* s_type_names[] = {
     "i64, f32 or f64",
     "i32, i64, f32 or f64",
 };
-STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_TYPE_ALL + 1);
+STATIC_ASSERT(ARRAY_SIZE(s_type_set_names) == WASM_TYPE_SET_ALL + 1);
+STATIC_ASSERT((1 << (WASM_TYPE_I32 - 1)) == WASM_TYPE_SET_I32);
+STATIC_ASSERT((1 << (WASM_TYPE_I64 - 1)) == WASM_TYPE_SET_I64);
+STATIC_ASSERT((1 << (WASM_TYPE_F32 - 1)) == WASM_TYPE_SET_F32);
+STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
+
+#define TYPE_TO_TYPE_SET(type) (1 << ((type) - 1))
 
 typedef struct WasmLabelNode {
   WasmLabel* label;
@@ -233,13 +257,28 @@ static WasmResult check_type(WasmCheckContext* ctx,
                              WasmType actual,
                              WasmType expected,
                              const char* desc) {
-  if (expected != WASM_TYPE_VOID && (actual & expected) == 0) {
+  if (expected != WASM_TYPE_VOID && actual != expected) {
     print_error(ctx, loc, "type mismatch%s. got %s, expected %s", desc,
                 s_type_names[actual], s_type_names[expected]);
     return WASM_ERROR;
   }
   return WASM_OK;
 }
+
+static WasmResult check_type_set(WasmCheckContext* ctx,
+                                 WasmLocation* loc,
+                                 WasmType actual,
+                                 WasmTypeSet expected,
+                                 const char* desc) {
+  if (expected != WASM_TYPE_SET_VOID &&
+      (TYPE_TO_TYPE_SET(actual) & expected) == 0) {
+    print_error(ctx, loc, "type mismatch%s. got %s, expected %s", desc,
+                s_type_names[actual], s_type_set_names[expected]);
+    return WASM_ERROR;
+  }
+  return WASM_OK;
+}
+
 
 static WasmResult check_type_exact(WasmCheckContext* ctx,
                                    WasmLocation* loc,
@@ -918,7 +957,7 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
 
 static WasmResult check_invoke(WasmCheckContext* ctx,
                                WasmCommandInvoke* invoke,
-                               WasmType return_type) {
+                               WasmTypeSet return_type) {
   if (!ctx->last_module) {
     print_error(ctx, &invoke->loc,
                 "invoke must occur after a module definition");
@@ -948,7 +987,7 @@ static WasmResult check_invoke(WasmCheckContext* ctx,
     return WASM_ERROR;
   }
   WasmResult result =
-      check_type(ctx, &invoke->loc, func->result_type, return_type, "");
+      check_type_set(ctx, &invoke->loc, func->result_type, return_type, "");
   int i;
   for (i = 0; i < actual_args; ++i) {
     WasmConst* const_ = &invoke->args.data[i];
@@ -964,7 +1003,7 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
       ctx->last_module = &command->module;
       return check_module(ctx, &command->module);
     case WASM_COMMAND_TYPE_INVOKE:
-      return check_invoke(ctx, &command->invoke, WASM_TYPE_VOID);
+      return check_invoke(ctx, &command->invoke, WASM_TYPE_SET_VOID);
     case WASM_COMMAND_TYPE_ASSERT_INVALID: {
       ctx->in_assert_invalid = 1;
       WasmResult module_ok = check_module(ctx, &command->assert_invalid.module);
@@ -978,13 +1017,15 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
       return WASM_OK;
     }
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
-      return check_invoke(ctx, &command->assert_return.invoke,
-                          command->assert_return.expected.type);
+      return check_invoke(
+          ctx, &command->assert_return.invoke,
+          TYPE_TO_TYPE_SET(command->assert_return.expected.type));
     case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
       return check_invoke(ctx, &command->assert_return_nan.invoke,
-                          WASM_TYPE_F32 | WASM_TYPE_F64);
+                          WASM_TYPE_SET_F32 | WASM_TYPE_SET_F64);
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
-      return check_invoke(ctx, &command->assert_trap.invoke, WASM_TYPE_VOID);
+      return check_invoke(ctx, &command->assert_trap.invoke,
+                          WASM_TYPE_SET_VOID);
   }
 }
 
