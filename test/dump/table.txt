@@ -6,7 +6,7 @@
   (func (result f64) (f64.const 0))
   (table 0 0 1 2))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 03                                         ; num signatures
 ; signature 0
 0000002: 01                                         ; num params
@@ -20,7 +20,7 @@
 ; signature 2
 0000009: 00                                         ; num params
 000000a: 04                                         ; result_type
-000000b: 02                                         ; WASM_SECTION_FUNCTIONS
+000000b: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 000000c: 03                                         ; num functions
 ; function 0
 000000d: 00                                         ; func flags
@@ -39,13 +39,13 @@
 000001c: 0c                                         ; OPCODE_F64_CONST
 000001d: 0000 0000 0000 0000                        ; f64 literal
 000001a: 0900                                       ; FIXUP func body size
-0000025: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+0000025: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
 0000026: 04                                         ; num function table entries
 0000027: 0000                                       ; function table entry
 0000029: 0000                                       ; function table entry
 000002b: 0100                                       ; function table entry
 000002d: 0200                                       ; function table entry
-000002f: 06                                         ; WASM_SECTION_END
+000002f: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0103 0100 0102 0001 0200 0402 0300 0000  
 0000010: 0000 0001 0000 0000 0200 0900 0c00 0000  

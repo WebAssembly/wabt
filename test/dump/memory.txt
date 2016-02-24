@@ -2,11 +2,11 @@
 (module
   (memory 100 (segment 10 "hello") (segment 20 "goodbye")))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
+0000000: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000001: 07                                         ; min mem size log 2
 0000002: 07                                         ; max mem size log 2
 0000003: 01                                         ; export mem
-0000004: 04                                         ; WASM_SECTION_DATA_SEGMENTS
+0000004: 04                                         ; WASM_BINARY_SECTION_DATA_SEGMENTS
 0000005: 02                                         ; num data segments
 ; segment header 0
 0000006: 0a00 0000                                  ; segment address
@@ -18,7 +18,7 @@
 0000017: 0000 0000                                  ; segment data offset
 000001b: 0700 0000                                  ; segment size
 000001f: 01                                         ; segment init
-0000020: 06                                         ; WASM_SECTION_END
+0000020: 06                                         ; WASM_BINARY_SECTION_END
 ; segment data 0
 000000a: 2100 0000                                  ; FIXUP segment data offset
 0000021: 6865 6c6c 6f                               ; segment data

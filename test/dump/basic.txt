@@ -6,20 +6,20 @@
     (i32.add (get_local 0) (get_local 1)))
   (export "f" $f))
 (;; STDOUT ;;;
-0000000: 03                                         ; WASM_SECTION_GLOBALS
+0000000: 03                                         ; WASM_BINARY_SECTION_GLOBALS
 0000001: 01                                         ; num globals
 ; global header 0
 0000002: 0000 0000                                  ; global name offset
 0000006: 04                                         ; global mem type
 0000007: 00                                         ; export global
-0000008: 01                                         ; WASM_SECTION_SIGNATURES
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000009: 01                                         ; num signatures
 ; signature 0
 000000a: 02                                         ; num params
 000000b: 01                                         ; result_type
 000000c: 01                                         ; param type
 000000d: 01                                         ; param type
-000000e: 02                                         ; WASM_SECTION_FUNCTIONS
+000000e: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 000000f: 01                                         ; num functions
 ; function 0
 0000010: 09                                         ; func flags
@@ -39,7 +39,7 @@
 0000023: 0e                                         ; OPCODE_GET_LOCAL
 0000024: 01                                         ; remapped local index
 0000017: 0c00                                       ; FIXUP func body size
-0000025: 06                                         ; WASM_SECTION_END
+0000025: 06                                         ; WASM_BINARY_SECTION_END
 ; export 0
 0000013: 2600 0000                                  ; FIXUP func name offset
 0000026: 66                                         ; export name

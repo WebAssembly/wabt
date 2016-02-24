@@ -13,14 +13,14 @@
     (set_local 4 (i32.const 0))
     (set_local 5 (f32.const 0))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 02                                         ; num params
 0000003: 00                                         ; result_type
 0000004: 01                                         ; param type
 0000005: 03                                         ; param type
-0000006: 02                                         ; WASM_SECTION_FUNCTIONS
+0000006: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000007: 01                                         ; num functions
 ; function 0
 0000008: 04                                         ; func flags
@@ -55,7 +55,7 @@
 0000038: 0d                                         ; OPCODE_F32_CONST
 0000039: 0000 0000                                  ; f32 literal
 0000013: 2800                                       ; FIXUP func body size
-000003d: 06                                         ; WASM_SECTION_END
+000003d: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0200 0103 0201 0400 0001 0001 0002  
 0000010: 0000 0028 000f 0009 000f 010d 0000 0000  

@@ -8,12 +8,12 @@
         (br $exit (i32.const 4)))
       (i32.const 5))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
 0000003: 01                                         ; result_type
-0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
 0000006: 00                                         ; func flags
@@ -37,7 +37,7 @@
 000001a: 09                                         ; OPCODE_I8_CONST
 000001b: 05                                         ; u8 literal
 0000009: 1100                                       ; FIXUP func body size
-000001c: 06                                         ; WASM_SECTION_END
+000001c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0001 0201 0000 0011 0002 0303 0901  
 0000010: 0600 0003 0903 0601 0904 0905 06         

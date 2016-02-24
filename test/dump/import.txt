@@ -5,7 +5,7 @@
   (import "ignored" "test" (param i32 i64 f32 f64))
   (import "ignored" "test2" (param i32) (result i32)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 02                                         ; num signatures
 ; signature 0
 0000002: 04                                         ; num params
@@ -18,7 +18,7 @@
 0000008: 01                                         ; num params
 0000009: 01                                         ; result_type
 000000a: 01                                         ; param type
-000000b: 08                                         ; WASM_SECTION_IMPORTS
+000000b: 08                                         ; WASM_BINARY_SECTION_IMPORTS
 000000c: 02                                         ; num imports
 ; import header 0
 000000d: 0000                                       ; import signature index
@@ -28,7 +28,7 @@
 0000017: 0100                                       ; import signature index
 0000019: 0000 0000                                  ; import module name offset
 000001d: 0000 0000                                  ; import function name offset
-0000021: 06                                         ; WASM_SECTION_END
+0000021: 06                                         ; WASM_BINARY_SECTION_END
 ; import 0
 000000f: 2200 0000                                  ; FIXUP import module name offset
 0000022: 6967 6e6f 7265 64                          ; import module name

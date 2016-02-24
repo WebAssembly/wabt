@@ -4,7 +4,7 @@
     (return (i32.const 42)))
   (func (return)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 02                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
@@ -12,7 +12,7 @@
 ; signature 1
 0000004: 00                                         ; num params
 0000005: 00                                         ; result_type
-0000006: 02                                         ; WASM_SECTION_FUNCTIONS
+0000006: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000007: 02                                         ; num functions
 ; function 0
 0000008: 00                                         ; func flags
@@ -28,7 +28,7 @@
 0000013: 0000                                       ; func body size
 0000015: 14                                         ; OPCODE_RETURN
 0000013: 0100                                       ; FIXUP func body size
-0000016: 06                                         ; WASM_SECTION_END
+0000016: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0102 0001 0000 0202 0000 0003 0014 092a  
 0000010: 0001 0001 0014 06                        

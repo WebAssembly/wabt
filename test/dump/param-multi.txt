@@ -2,7 +2,7 @@
 (module
   (func (param i32 i64 f32 f64)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 04                                         ; num params
@@ -11,14 +11,14 @@
 0000005: 02                                         ; param type
 0000006: 03                                         ; param type
 0000007: 04                                         ; param type
-0000008: 02                                         ; WASM_SECTION_FUNCTIONS
+0000008: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
 ; function 0
 000000a: 00                                         ; func flags
 000000b: 0000                                       ; func signature index
 000000d: 0000                                       ; func body size
 000000d: 0000                                       ; FIXUP func body size
-000000f: 06                                         ; WASM_SECTION_END
+000000f: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0400 0102 0304 0201 0000 0000 0006  
 ;;; STDOUT ;;)

@@ -2,7 +2,7 @@
 (module
   (global i32 i64 f32 f64))
 (;; STDOUT ;;;
-0000000: 03                                         ; WASM_SECTION_GLOBALS
+0000000: 03                                         ; WASM_BINARY_SECTION_GLOBALS
 0000001: 04                                         ; num globals
 ; global header 0
 0000002: 0000 0000                                  ; global name offset
@@ -20,7 +20,7 @@
 0000014: 0000 0000                                  ; global name offset
 0000018: 09                                         ; global mem type
 0000019: 00                                         ; export global
-000001a: 06                                         ; WASM_SECTION_END
+000001a: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0304 0000 0000 0400 0000 0000 0600 0000  
 0000010: 0000 0800 0000 0000 0900 06              

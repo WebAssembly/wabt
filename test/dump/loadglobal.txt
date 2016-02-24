@@ -7,7 +7,7 @@
     (load_global 2)
     (load_global 3)))
 (;; STDOUT ;;;
-0000000: 03                                         ; WASM_SECTION_GLOBALS
+0000000: 03                                         ; WASM_BINARY_SECTION_GLOBALS
 0000001: 04                                         ; num globals
 ; global header 0
 0000002: 0000 0000                                  ; global name offset
@@ -25,12 +25,12 @@
 0000014: 0000 0000                                  ; global name offset
 0000018: 09                                         ; global mem type
 0000019: 00                                         ; export global
-000001a: 01                                         ; WASM_SECTION_SIGNATURES
+000001a: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 000001b: 01                                         ; num signatures
 ; signature 0
 000001c: 00                                         ; num params
 000001d: 00                                         ; result_type
-000001e: 02                                         ; WASM_SECTION_FUNCTIONS
+000001e: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 000001f: 01                                         ; num functions
 ; function 0
 0000020: 00                                         ; func flags
@@ -45,7 +45,7 @@
 000002b: 10                                         ; OPCODE_LOAD_GLOBAL
 000002c: 03                                         ; global index
 0000023: 0800                                       ; FIXUP func body size
-000002d: 06                                         ; WASM_SECTION_END
+000002d: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0304 0000 0000 0400 0000 0000 0600 0000  
 0000010: 0000 0800 0000 0000 0900 0101 0000 0201  

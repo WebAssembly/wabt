@@ -12,12 +12,12 @@
             (br 2)
             (br 3)))))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
 0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
 0000006: 00                                         ; func flags
@@ -49,7 +49,7 @@
 0000022: 03                                         ; break depth
 0000023: 00                                         ; OPCODE_NOP
 0000009: 1900                                       ; FIXUP func body size
-0000024: 06                                         ; WASM_SECTION_END
+0000024: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0000 0201 0000 0019 0001 0102 0101  
 0000010: 0209 0001 0506 0000 0600 0006 0100 0602  

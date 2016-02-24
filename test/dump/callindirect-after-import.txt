@@ -18,7 +18,7 @@
   ;; should be function 1.
   (table $indirect))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 03                                         ; num signatures
 ; signature 0
 0000002: 01                                         ; num params
@@ -30,13 +30,13 @@
 ; signature 2
 0000007: 00                                         ; num params
 0000008: 00                                         ; result_type
-0000009: 08                                         ; WASM_SECTION_IMPORTS
+0000009: 08                                         ; WASM_BINARY_SECTION_IMPORTS
 000000a: 01                                         ; num imports
 ; import header 0
 000000b: 0100                                       ; import signature index
 000000d: 0000 0000                                  ; import module name offset
 0000011: 0000 0000                                  ; import function name offset
-0000015: 02                                         ; WASM_SECTION_FUNCTIONS
+0000015: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000016: 02                                         ; num functions
 ; function 0
 0000017: 00                                         ; func flags
@@ -55,10 +55,10 @@
 0000026: 0d                                         ; OPCODE_F32_CONST
 0000027: 0000 803f                                  ; f32 literal
 0000020: 0900                                       ; FIXUP func body size
-000002b: 05                                         ; WASM_SECTION_FUNCTION_TABLE
+000002b: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
 000002c: 01                                         ; num function table entries
 000002d: 0000                                       ; function table entry
-000002f: 06                                         ; WASM_SECTION_END
+000002f: 06                                         ; WASM_BINARY_SECTION_END
 ; import 0
 000000d: 3000 0000                                  ; FIXUP import module name offset
 0000030: 666f 6f                                    ; import module name

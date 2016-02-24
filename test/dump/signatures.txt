@@ -12,7 +12,7 @@
 
   (type (func (param i32) (result f64))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 09                                         ; num signatures
 ; signature 0
 0000002: 01                                         ; num params
@@ -46,7 +46,7 @@
 0000016: 01                                         ; num params
 0000017: 04                                         ; result_type
 0000018: 01                                         ; param type
-0000019: 06                                         ; WASM_SECTION_END
+0000019: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0109 0100 0101 0002 0100 0301 0004 0001  
 0000010: 0002 0003 0004 0104 0106                 

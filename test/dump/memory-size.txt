@@ -4,16 +4,16 @@
   (func (result i32)
     (memory_size)))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_SECTION_MEMORY
+0000000: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000001: 0a                                         ; min mem size log 2
 0000002: 0a                                         ; max mem size log 2
 0000003: 01                                         ; export mem
-0000004: 01                                         ; WASM_SECTION_SIGNATURES
+0000004: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000005: 01                                         ; num signatures
 ; signature 0
 0000006: 00                                         ; num params
 0000007: 01                                         ; result_type
-0000008: 02                                         ; WASM_SECTION_FUNCTIONS
+0000008: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000009: 01                                         ; num functions
 ; function 0
 000000a: 00                                         ; func flags
@@ -21,7 +21,7 @@
 000000d: 0000                                       ; func body size
 000000f: 3b                                         ; OPCODE_MEMORY_SIZE
 000000d: 0100                                       ; FIXUP func body size
-0000010: 06                                         ; WASM_SECTION_END
+0000010: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 000a 0a01 0101 0001 0201 0000 0001 003b  
 0000010: 06                                       

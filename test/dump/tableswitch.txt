@@ -7,12 +7,12 @@
       (case)  ;; fallthrough
       (case (i32.const 3)))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
 0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
 0000006: 00                                         ; func flags
@@ -32,11 +32,11 @@
 000001b: 01                                         ; u8 literal
 000001c: 09                                         ; OPCODE_I8_CONST
 000001d: 02                                         ; u8 literal
-000001e: 00                                         ; WASM_OPCODE_NOP for fallthrough
+000001e: 00                                         ; OPCODE_NOP for fallthrough
 000001f: 09                                         ; OPCODE_I8_CONST
 0000020: 03                                         ; u8 literal
 0000009: 1600                                       ; FIXUP func body size
-0000021: 06                                         ; WASM_SECTION_END
+0000021: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0000 0201 0000 0016 0008 0300 0300  
 0000010: 0000 0100 0080 0900 0102 0901 0902 0009  

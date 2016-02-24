@@ -11,12 +11,12 @@
     (f32.store (i32.const 0) (f32.const 0))
     (f64.store (i32.const 0) (f64.const 0))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
 0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
 0000006: 00                                         ; func flags
@@ -77,7 +77,7 @@
 000005e: 0c                                         ; OPCODE_F64_CONST
 000005f: 0000 0000 0000 0000                        ; f64 literal
 0000009: 5c00                                       ; FIXUP func body size
-0000067: 06                                         ; WASM_SECTION_END
+0000067: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0000 0201 0000 005c 002e 0009 0009  
 0000010: 002f 0009 0009 0033 0009 0009 0034 0009  

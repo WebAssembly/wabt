@@ -7,12 +7,12 @@
       (case $default (nop) (br 0)))  ;; depth 1 (due to implicit block)
 ))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
 0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
 0000006: 00                                         ; func flags
@@ -38,7 +38,7 @@
 0000020: 01                                         ; break depth
 0000021: 00                                         ; OPCODE_NOP
 0000009: 1700                                       ; FIXUP func body size
-0000022: 06                                         ; WASM_SECTION_END
+0000022: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0000 0201 0000 0017 0008 0200 0200  
 0000010: 0000 0100 0900 0102 0006 0100 0102 0006  

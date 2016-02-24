@@ -4,12 +4,12 @@
     (block
       (br 0 (i32.const 1)))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_SECTION_SIGNATURES
+0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 0000001: 01                                         ; num signatures
 ; signature 0
 0000002: 00                                         ; num params
 0000003: 01                                         ; result_type
-0000004: 02                                         ; WASM_SECTION_FUNCTIONS
+0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
 0000006: 00                                         ; func flags
@@ -22,7 +22,7 @@
 000000f: 09                                         ; OPCODE_I8_CONST
 0000010: 01                                         ; u8 literal
 0000009: 0600                                       ; FIXUP func body size
-0000011: 06                                         ; WASM_SECTION_END
+0000011: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0101 0001 0201 0000 0006 0001 0106 0009  
 0000010: 0106                                     
