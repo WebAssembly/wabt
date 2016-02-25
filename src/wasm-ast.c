@@ -307,7 +307,6 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_CONVERT, convert, convert)                   \
   V(WASM_EXPR_TYPE_GET_LOCAL, get_local, get_local)             \
   V(WASM_EXPR_TYPE_GROW_MEMORY, grow_memory, grow_memory)       \
-  V(WASM_EXPR_TYPE_HAS_FEATURE, has_feature, has_feature)       \
   V(WASM_EXPR_TYPE_IF_ELSE, if_else, if_else)                   \
   V(WASM_EXPR_TYPE_IF, if, if_)                                 \
   V(WASM_EXPR_TYPE_LOAD, load, load)                            \
@@ -442,9 +441,6 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       break;
     case WASM_EXPR_TYPE_GROW_MEMORY:
       wasm_destroy_expr_ptr(allocator, &expr->grow_memory.expr);
-      break;
-    case WASM_EXPR_TYPE_HAS_FEATURE:
-      wasm_destroy_string_slice(allocator, &expr->has_feature.text);
       break;
     case WASM_EXPR_TYPE_IF:
       wasm_destroy_expr_ptr(allocator, &expr->if_.cond);

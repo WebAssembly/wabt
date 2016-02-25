@@ -678,11 +678,6 @@ static void write_expr(WasmWriteContext* ctx,
       out_opcode(ws, WASM_OPCODE_GROW_MEMORY);
       write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
-    case WASM_EXPR_TYPE_HAS_FEATURE:
-      /* TODO(binji): add when supported by the binary encoding */
-      out_u8(ws, WASM_OPCODE_I8_CONST, "has_feature not supported");
-      out_u8(ws, 0, "");
-      break;
     case WASM_EXPR_TYPE_IF:
       out_opcode(ws, WASM_OPCODE_IF);
       write_expr(ctx, module, func, expr->if_.cond);

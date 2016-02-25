@@ -117,7 +117,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_CONVERT,
   WASM_EXPR_TYPE_GET_LOCAL,
   WASM_EXPR_TYPE_GROW_MEMORY,
-  WASM_EXPR_TYPE_HAS_FEATURE,
   WASM_EXPR_TYPE_IF,
   WASM_EXPR_TYPE_IF_ELSE,
   WASM_EXPR_TYPE_LOAD,
@@ -201,7 +200,6 @@ struct WasmExpr {
     struct { WasmCompareOp op; WasmExprPtr left, right; } compare;
     struct { WasmConvertOp op; WasmExprPtr expr; } convert;
     struct { WasmExprPtr expr; } grow_memory;
-    struct { WasmStringSlice text; } has_feature;
     struct { WasmVar var; } load_global;
     struct { WasmVar var; WasmExprPtr expr; } store_global;
   };
@@ -392,7 +390,6 @@ WasmExpr* wasm_new_const_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_convert_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_get_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_grow_memory_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_has_feature_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_if_else_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_if_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_load_expr(struct WasmAllocator*);

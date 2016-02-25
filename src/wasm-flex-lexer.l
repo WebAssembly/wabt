@@ -336,7 +336,6 @@ NAME      \${ATOM}
 "unreachable"         { return TOK(UNREACHABLE); }
 "memory_size"         { return TOK(MEMORY_SIZE); }
 "grow_memory"         { return TOK(GROW_MEMORY); }
-"has_feature"         { return TOK(HAS_FEATURE); }
 "type"                { return TOK(TYPE); }
 "func"                { return TOK(FUNC); }
 "param"               { return TOK(PARAM); }

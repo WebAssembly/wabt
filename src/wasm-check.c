@@ -608,10 +608,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |= check_expr(ctx, module, func, expr->grow_memory.expr,
                            WASM_TYPE_I32, " of grow_memory");
       break;
-    case WASM_EXPR_TYPE_HAS_FEATURE:
-      result |= check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type,
-                           " in has_feature");
-      break;
     case WASM_EXPR_TYPE_IF:
       result |= check_expr(ctx, module, func, expr->if_.cond, WASM_TYPE_I32,
                            " of condition");

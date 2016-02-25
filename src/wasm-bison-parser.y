@@ -120,7 +120,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token FUNC START TYPE PARAM RESULT LOCAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
-%token UNREACHABLE MEMORY_SIZE GROW_MEMORY HAS_FEATURE
+%token UNREACHABLE MEMORY_SIZE GROW_MEMORY
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
 %token GLOBAL LOAD_GLOBAL STORE_GLOBAL
 %token EOF 0 "EOF"
@@ -157,7 +157,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<type_bindings> global local_list param_list
 %type<targets> target_list
 %type<target> target
-%type<text> bind_var labeling literal quoted_text text
+%type<text> bind_var labeling literal quoted_text
 %type<type> result
 %type<types> value_type_list
 %type<u32> align initial_size max_size segment_address
@@ -165,7 +165,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<vars> table var_list
 %type<var> start type_use var
 
-%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling literal quoted_text text
+%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling literal quoted_text
 %destructor { wasm_destroy_type_vector(parser->allocator, &$$); } value_type_list
 %destructor { wasm_destroy_var(parser->allocator, &$$); } var
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
@@ -254,10 +254,6 @@ var_list :
 ;
 bind_var :
     VAR { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
-;
-
-text :
-    TEXT { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
 ;
 
 quoted_text :
@@ -494,11 +490,6 @@ expr1 :
       $$ = wasm_new_grow_memory_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->grow_memory.expr = $2;
-    }
-  | HAS_FEATURE text {
-      $$ = wasm_new_has_feature_expr(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      $$->has_feature.text = $2;
     }
   | LOAD_GLOBAL var {
       $$ = wasm_new_load_global_expr(parser->allocator);
