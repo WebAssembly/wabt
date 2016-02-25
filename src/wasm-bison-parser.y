@@ -120,7 +120,6 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
 %token UNREACHABLE MEMORY_SIZE GROW_MEMORY
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
-%token GLOBAL LOAD_GLOBAL STORE_GLOBAL
 %token EOF 0 "EOF"
 
 %type<binary> BINARY
@@ -152,7 +151,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<script> script
 %type<segment> segment string_contents
 %type<segments> segment_list
-%type<type_bindings> global local_list param_list
+%type<type_bindings> local_list param_list
 %type<targets> target_list
 %type<target> target
 %type<text> bind_var labeling literal quoted_text
@@ -173,7 +172,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %destructor { wasm_destroy_target_vector_and_elements(parser->allocator, &$$); } target_list
 %destructor { wasm_destroy_case(parser->allocator, &$$); } case
 %destructor { wasm_destroy_case_vector_and_elements(parser->allocator, &$$); } case_list
-%destructor { wasm_destroy_type_bindings(parser->allocator, &$$); } global local_list param_list
+%destructor { wasm_destroy_type_bindings(parser->allocator, &$$); } local_list param_list
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment string_contents
 %destructor { wasm_destroy_segment_vector_and_elements(parser->allocator, &$$); } segment_list
@@ -488,17 +487,6 @@ expr1 :
       $$ = wasm_new_grow_memory_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->grow_memory.expr = $2;
-    }
-  | LOAD_GLOBAL var {
-      $$ = wasm_new_load_global_expr(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      $$->load_global.var = $2;
-    }
-  | STORE_GLOBAL var expr {
-      $$ = wasm_new_store_global_expr(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      $$->store_global.var = $2;
-      $$->store_global.expr = $3;
     }
 ;
 expr_opt :
@@ -1197,22 +1185,6 @@ export_memory :
     }
 ;
 
-global :
-    LPAR GLOBAL value_type_list RPAR {
-      ZEROMEM($$);
-      $$.types = $3;
-    }
-  | LPAR GLOBAL bind_var VALUE_TYPE RPAR {
-      ZEROMEM($$);
-      WasmBinding* binding =
-          wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
-      CHECK_ALLOC_NULL(binding);
-      binding->loc = @2;
-      binding->index = 0;
-      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$4));
-    }
-;
-
 module_fields :
     /* empty */ { ZEROMEM($$); }
   | module_fields func {
@@ -1272,14 +1244,6 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
       field->memory = $2;
-    }
-  | module_fields global {
-      $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
-      CHECK_ALLOC_NULL(field);
-      field->loc = @2;
-      field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
-      field->global = $2;
     }
   | module_fields start {
       $$ = $1;
@@ -1366,10 +1330,6 @@ module :
           }
           case WASM_MODULE_FIELD_TYPE_MEMORY:
             $$->memory = &field->memory;
-            break;
-          case WASM_MODULE_FIELD_TYPE_GLOBAL:
-            CHECK_ALLOC(wasm_extend_type_bindings(
-                parser->allocator, &$$->globals, &field->global));
             break;
           case WASM_MODULE_FIELD_TYPE_START:
             $$->start = field->start;

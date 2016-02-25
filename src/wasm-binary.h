@@ -26,7 +26,6 @@ typedef enum WasmBinarySectionType {
   WASM_BINARY_SECTION_MEMORY = 0,
   WASM_BINARY_SECTION_SIGNATURES = 1,
   WASM_BINARY_SECTION_FUNCTIONS = 2,
-  WASM_BINARY_SECTION_GLOBALS = 3,
   WASM_BINARY_SECTION_DATA_SEGMENTS = 4,
   WASM_BINARY_SECTION_FUNCTION_TABLE = 5,
   WASM_BINARY_SECTION_END = 6,
@@ -62,8 +61,6 @@ typedef uint8_t WasmBinaryFunctionFlags;
   V(F32_CONST, 0x0d)           \
   V(GET_LOCAL, 0x0e)           \
   V(SET_LOCAL, 0x0f)           \
-  V(LOAD_GLOBAL, 0x10)         \
-  V(STORE_GLOBAL, 0x11)        \
   V(CALL_FUNCTION, 0x12)       \
   V(CALL_INDIRECT, 0x13)       \
   V(CALL_IMPORT, 0x1f)         \

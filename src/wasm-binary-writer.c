@@ -710,12 +710,6 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->load.addr);
       break;
     }
-    case WASM_EXPR_TYPE_LOAD_GLOBAL: {
-      out_opcode(ws, WASM_OPCODE_LOAD_GLOBAL);
-      int index = wasm_get_global_index_by_var(module, &expr->load_global.var);
-      out_leb128(ws, index, "global index");
-      break;
-    }
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer;
       WasmLabelNode inner;
@@ -768,13 +762,6 @@ static void write_expr(WasmWriteContext* ctx,
         out_leb128(ws, (uint32_t)expr->store.offset, "store offset");
       write_expr(ctx, module, func, expr->store.addr);
       write_expr(ctx, module, func, expr->store.value);
-      break;
-    }
-    case WASM_EXPR_TYPE_STORE_GLOBAL: {
-      out_opcode(ws, WASM_OPCODE_STORE_GLOBAL);
-      int index = wasm_get_global_index_by_var(module, &expr->load_global.var);
-      out_leb128(ws, index, "global index");
-      write_expr(ctx, module, func, expr->store_global.expr);
       break;
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
@@ -970,19 +957,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
         out_u32(ws, segment->size, "segment size");
         out_u8(ws, 1, "segment init");
       }
-    }
-  }
-
-  if (module->globals.types.size) {
-    out_u8(ws, WASM_BINARY_SECTION_GLOBALS, "WASM_BINARY_SECTION_GLOBALS");
-    out_leb128(ws, module->globals.types.size, "num globals");
-    for (i = 0; i < module->globals.types.size; ++i) {
-      WasmType global_type = module->globals.types.data[i];
-      print_header(ctx, "global header", i);
-      const uint8_t global_type_codes[WASM_NUM_TYPES] = {-1, 4, 6, 8, 9};
-      out_u32(ws, 0, "global name offset");
-      out_u8(ws, global_type_codes[global_type], "global mem type");
-      out_u8(ws, 0, "export global");
     }
   }
 
@@ -1342,7 +1316,6 @@ static WasmModuleField* append_module_field_and_fixup(
 
     case WASM_MODULE_FIELD_TYPE_TABLE:
     case WASM_MODULE_FIELD_TYPE_MEMORY:
-    case WASM_MODULE_FIELD_TYPE_GLOBAL:
     case WASM_MODULE_FIELD_TYPE_START:
     case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
       /* not supported */
@@ -1387,7 +1360,6 @@ static WasmModuleField* append_module_field_and_fixup(
       case WASM_MODULE_FIELD_TYPE_MEMORY:
         module->memory = &field->memory;
         break;
-      case WASM_MODULE_FIELD_TYPE_GLOBAL:
       case WASM_MODULE_FIELD_TYPE_START:
         /* not pointers, so they don't need to be fixed */
         break;

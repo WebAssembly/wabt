@@ -120,7 +120,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_IF,
   WASM_EXPR_TYPE_IF_ELSE,
   WASM_EXPR_TYPE_LOAD,
-  WASM_EXPR_TYPE_LOAD_GLOBAL,
   WASM_EXPR_TYPE_LOOP,
   WASM_EXPR_TYPE_MEMORY_SIZE,
   WASM_EXPR_TYPE_NOP,
@@ -128,7 +127,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_SELECT,
   WASM_EXPR_TYPE_SET_LOCAL,
   WASM_EXPR_TYPE_STORE,
-  WASM_EXPR_TYPE_STORE_GLOBAL,
   WASM_EXPR_TYPE_TABLESWITCH,
   WASM_EXPR_TYPE_UNARY,
   WASM_EXPR_TYPE_UNREACHABLE,
@@ -200,8 +198,6 @@ struct WasmExpr {
     struct { WasmCompareOp op; WasmExprPtr left, right; } compare;
     struct { WasmConvertOp op; WasmExprPtr expr; } convert;
     struct { WasmExprPtr expr; } grow_memory;
-    struct { WasmVar var; } load_global;
-    struct { WasmVar var; WasmExprPtr expr; } store_global;
   };
 };
 
@@ -296,7 +292,6 @@ typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_TABLE,
   WASM_MODULE_FIELD_TYPE_FUNC_TYPE,
   WASM_MODULE_FIELD_TYPE_MEMORY,
-  WASM_MODULE_FIELD_TYPE_GLOBAL,
   WASM_MODULE_FIELD_TYPE_START,
 } WasmModuleFieldType;
 
@@ -311,7 +306,6 @@ typedef struct WasmModuleField {
     WasmVarVector table;
     WasmFuncType func_type;
     WasmMemory memory;
-    WasmTypeBindings global;
     WasmVar start;
   };
 } WasmModuleField;
@@ -326,7 +320,6 @@ typedef struct WasmModule {
   WasmImportPtrVector imports;
   WasmExportPtrVector exports;
   WasmFuncTypePtrVector func_types;
-  WasmTypeBindings globals;
   WasmVarVector* table;
   WasmMemory* memory;
   WasmVar start;
@@ -393,13 +386,11 @@ WasmExpr* wasm_new_grow_memory_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_if_else_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_if_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_load_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_load_global_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_loop_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_return_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_store_global_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_tableswitch_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_unary_expr(struct WasmAllocator*);
 /* for nop, unreachable and memory_size */
@@ -443,7 +434,6 @@ int wasm_get_index_from_var(const WasmBindingHash* bindings,
 int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var);
-int wasm_get_global_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
 

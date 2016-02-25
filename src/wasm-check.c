@@ -216,20 +216,6 @@ static WasmResult check_local_var(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_global_var(WasmCheckContext* ctx,
-                                   WasmModule* module,
-                                   WasmVar* var,
-                                   WasmType* out_type) {
-  int index;
-  if (check_var(ctx, &module->globals.bindings, module->globals.types.size, var,
-                "global", &index) != WASM_OK)
-    return WASM_ERROR;
-
-  if (out_type)
-    *out_type = module->globals.types.data[index];
-  return WASM_OK;
-}
-
 static WasmResult check_align(WasmCheckContext* ctx,
                               WasmLocation* loc,
                               uint32_t alignment) {
@@ -631,15 +617,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                            " of load index");
       break;
     }
-    case WASM_EXPR_TYPE_LOAD_GLOBAL: {
-      WasmType type;
-      if (check_global_var(ctx, module, &expr->load_global.var, &type) ==
-          WASM_OK)
-        result |= check_type(ctx, &expr->loc, type, expected_type, desc);
-      else
-        result = WASM_ERROR;
-      break;
-    }
     case WASM_EXPR_TYPE_LOOP: {
       WasmLabelNode outer_node;
       WasmLabelNode inner_node;
@@ -707,18 +684,6 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                            " of store index");
       result |= check_expr(ctx, module, func, expr->store.value, type,
                            " of store value");
-      break;
-    }
-    case WASM_EXPR_TYPE_STORE_GLOBAL: {
-      WasmType type;
-      if (check_global_var(ctx, module, &expr->store_global.var, &type) ==
-          WASM_OK) {
-        result |= check_type(ctx, &expr->loc, type, expected_type, desc);
-        result |= check_expr(ctx, module, func, expr->store_global.expr, type,
-                             " of store_global");
-      } else {
-        result = WASM_ERROR;
-      }
       break;
     }
     case WASM_EXPR_TYPE_TABLESWITCH: {
@@ -919,7 +884,6 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
-      case WASM_MODULE_FIELD_TYPE_GLOBAL:
         break;
       case WASM_MODULE_FIELD_TYPE_START: {
         if (seen_start) {
@@ -955,7 +919,6 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
   result |= check_duplicate_bindings(ctx, &module->export_bindings, "export");
   result |= check_duplicate_bindings(ctx, &module->func_type_bindings,
                                      "function type");
-  result |= check_duplicate_bindings(ctx, &module->globals.bindings, "global");
 
   return result;
 }

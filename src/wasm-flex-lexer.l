@@ -371,10 +371,6 @@ NAME      \${ATOM}
 "invoke"              { return TOK(INVOKE); }
 {NAME}                { TEXT; return TOK(VAR); }
 
-"global"              { return TOK(GLOBAL); }
-"load_global"         { return TOK(LOAD_GLOBAL); }
-"store_global"        { return TOK(STORE_GLOBAL); }
-
 ";;"                  { BEGIN(LINE_COMMENT); }
 <LINE_COMMENT>\n      { RESET_COLUMN; BEGIN(INITIAL); }
 <LINE_COMMENT><<EOF>> { return TOK(EOF); }

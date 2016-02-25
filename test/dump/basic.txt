@@ -1,37 +1,39 @@
 ;;; FLAGS: -dv
 (module
-  (global $g i32)
+  (memory 4)
   (func $f (param i32 i32) (result i32)
-    (store_global $g (i32.add (load_global $g) (i32.const 1)))
+    (i32.store (i32.const 0) (i32.add (i32.load (i32.const 0)) (i32.const 1)))
     (i32.add (get_local 0) (get_local 1)))
   (export "f" $f))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-0000008: 03                                         ; WASM_BINARY_SECTION_GLOBALS
-0000009: 01                                         ; num globals
-; global header 0
-000000a: 0000 0000                                  ; global name offset
-000000e: 04                                         ; global mem type
-000000f: 00                                         ; export global
-0000010: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000011: 01                                         ; num signatures
+0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
+0000009: 02                                         ; min mem size log 2
+000000a: 02                                         ; max mem size log 2
+000000b: 01                                         ; export mem
+000000c: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+000000d: 01                                         ; num signatures
 ; signature 0
-0000012: 02                                         ; num params
-0000013: 01                                         ; result_type
-0000014: 01                                         ; param type
-0000015: 01                                         ; param type
-0000016: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
-0000017: 01                                         ; num functions
+000000e: 02                                         ; num params
+000000f: 01                                         ; result_type
+0000010: 01                                         ; param type
+0000011: 01                                         ; param type
+0000012: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+0000013: 01                                         ; num functions
 ; function 0
-0000018: 00                                         ; func flags
-0000019: 0000                                       ; func signature index
-000001b: 0000                                       ; func body size
-000001d: 11                                         ; OPCODE_STORE_GLOBAL
-000001e: 00                                         ; global index
-000001f: 40                                         ; OPCODE_I32_ADD
-0000020: 10                                         ; OPCODE_LOAD_GLOBAL
-0000021: 00                                         ; global index
+0000014: 00                                         ; func flags
+0000015: 0000                                       ; func signature index
+0000017: 0000                                       ; func body size
+0000019: 33                                         ; OPCODE_I32_STORE_MEM
+000001a: 00                                         ; store access byte
+000001b: 09                                         ; OPCODE_I8_CONST
+000001c: 00                                         ; u8 literal
+000001d: 40                                         ; OPCODE_I32_ADD
+000001e: 2a                                         ; OPCODE_I32_LOAD_MEM
+000001f: 00                                         ; load access byte
+0000020: 09                                         ; OPCODE_I8_CONST
+0000021: 00                                         ; u8 literal
 0000022: 09                                         ; OPCODE_I8_CONST
 0000023: 01                                         ; u8 literal
 0000024: 40                                         ; OPCODE_I32_ADD
@@ -39,7 +41,7 @@
 0000026: 00                                         ; remapped local index
 0000027: 0e                                         ; OPCODE_GET_LOCAL
 0000028: 01                                         ; remapped local index
-000001b: 0c00                                       ; FIXUP func body size
+0000017: 1000                                       ; FIXUP func body size
 0000029: 09                                         ; WASM_BINARY_SECTION_EXPORTS
 000002a: 01                                         ; num exports
 000002b: 0000                                       ; export func index
@@ -50,8 +52,8 @@
 0000032: 66                                         ; export name
 0000033: 00                                         ; \0
 ;; dump
-0000000: 0061 736d 0a00 0000 0301 0000 0000 0400  
-0000010: 0101 0201 0101 0201 0000 000c 0011 0040  
-0000020: 1000 0901 400e 000e 0109 0100 0032 0000  
+0000000: 0061 736d 0a00 0000 0002 0201 0101 0201  
+0000010: 0101 0201 0000 0010 0033 0009 0040 2a00  
+0000020: 0900 0901 400e 000e 0109 0100 0032 0000  
 0000030: 0006 6600                                
 ;;; STDOUT ;;)

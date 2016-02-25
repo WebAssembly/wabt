@@ -228,10 +228,6 @@ int wasm_get_func_type_index_by_var(const WasmModule* module,
   return wasm_get_index_from_var(&module->func_type_bindings, var);
 }
 
-int wasm_get_global_index_by_var(const WasmModule* module, const WasmVar* var) {
-  return wasm_get_index_from_var(&module->globals.bindings, var);
-}
-
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var) {
   return wasm_get_index_from_var(&module->import_bindings, var);
 }
@@ -310,13 +306,11 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_IF_ELSE, if_else, if_else)                   \
   V(WASM_EXPR_TYPE_IF, if, if_)                                 \
   V(WASM_EXPR_TYPE_LOAD, load, load)                            \
-  V(WASM_EXPR_TYPE_LOAD_GLOBAL, load_global, load_global)       \
   V(WASM_EXPR_TYPE_LOOP, loop, loop)                            \
   V(WASM_EXPR_TYPE_RETURN, return, return_)                     \
   V(WASM_EXPR_TYPE_SELECT, select, select)                      \
   V(WASM_EXPR_TYPE_SET_LOCAL, set_local, set_local)             \
   V(WASM_EXPR_TYPE_STORE, store, store)                         \
-  V(WASM_EXPR_TYPE_STORE_GLOBAL, store_global, store_global)    \
   V(WASM_EXPR_TYPE_TABLESWITCH, tableswitch, tableswitch)       \
   V(WASM_EXPR_TYPE_UNARY, unary, unary)
 
@@ -454,9 +448,6 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
     case WASM_EXPR_TYPE_LOAD:
       wasm_destroy_expr_ptr(allocator, &expr->load.addr);
       break;
-    case WASM_EXPR_TYPE_LOAD_GLOBAL:
-      wasm_destroy_var(allocator, &expr->load_global.var);
-      break;
     case WASM_EXPR_TYPE_LOOP:
       wasm_destroy_string_slice(allocator, &expr->loop.inner);
       wasm_destroy_string_slice(allocator, &expr->loop.outer);
@@ -478,10 +469,6 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
     case WASM_EXPR_TYPE_STORE:
       wasm_destroy_expr_ptr(allocator, &expr->store.addr);
       wasm_destroy_expr_ptr(allocator, &expr->store.value);
-      break;
-    case WASM_EXPR_TYPE_STORE_GLOBAL:
-      wasm_destroy_var(allocator, &expr->store_global.var);
-      wasm_destroy_expr_ptr(allocator, &expr->store_global.expr);
       break;
     case WASM_EXPR_TYPE_TABLESWITCH:
       wasm_destroy_string_slice(allocator, &expr->tableswitch.label);
@@ -582,9 +569,6 @@ static void wasm_destroy_module_field(WasmAllocator* allocator,
     case WASM_MODULE_FIELD_TYPE_MEMORY:
       wasm_destroy_memory(allocator, &field->memory);
       break;
-    case WASM_MODULE_FIELD_TYPE_GLOBAL:
-      wasm_destroy_type_bindings(allocator, &field->global);
-      break;
     case WASM_MODULE_FIELD_TYPE_START:
       wasm_destroy_var(allocator, &field->start);
       break;
@@ -605,9 +589,6 @@ void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
   wasm_destroy_import_ptr_vector(allocator, &module->imports);
   wasm_destroy_export_ptr_vector(allocator, &module->exports);
   wasm_destroy_func_type_ptr_vector(allocator, &module->func_types);
-  wasm_destroy_type_vector(allocator, &module->globals.types);
-  wasm_destroy_binding_hash_entry_vector(allocator,
-                                         &module->globals.bindings.entries);
   wasm_destroy_binding_hash_entry_vector(allocator,
                                          &module->func_bindings.entries);
   wasm_destroy_binding_hash_entry_vector(allocator,

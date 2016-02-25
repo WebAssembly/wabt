@@ -1,8 +1,0 @@
-;;; ERROR: 1
-(module (global i32)
-  (func (load_global 0 (nop))))
-(;; STDERR ;;;
-parse/expr/bad-loadglobal-too-many.txt:3:24: syntax error, unexpected (, expecting )
-  (func (load_global 0 (nop))))
-                       ^
-;;; STDERR ;;)

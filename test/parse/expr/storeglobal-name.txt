@@ -1,2 +1,0 @@
-(module (global $n i32)
-  (func (store_global $n (i32.const 42))))
