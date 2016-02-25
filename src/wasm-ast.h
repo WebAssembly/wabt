@@ -286,10 +286,15 @@ typedef struct WasmExport {
 typedef WasmExport* WasmExportPtr;
 DECLARE_VECTOR(export_ptr, WasmExportPtr);
 
+typedef struct WasmExportMemory {
+  WasmStringSlice name;
+} WasmExportMemory;
+
 typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_FUNC,
   WASM_MODULE_FIELD_TYPE_IMPORT,
   WASM_MODULE_FIELD_TYPE_EXPORT,
+  WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY,
   WASM_MODULE_FIELD_TYPE_TABLE,
   WASM_MODULE_FIELD_TYPE_FUNC_TYPE,
   WASM_MODULE_FIELD_TYPE_MEMORY,
@@ -304,6 +309,7 @@ typedef struct WasmModuleField {
     WasmFunc func;
     WasmImport import;
     WasmExport export_;
+    WasmExportMemory export_memory;
     WasmVarVector table;
     WasmFuncType func_type;
     WasmMemory memory;
@@ -326,6 +332,7 @@ typedef struct WasmModule {
   WasmVarVector* table;
   WasmMemory* memory;
   WasmVar start;
+  WasmExportMemory* export_memory;
 
   WasmBindingHash func_bindings;
   WasmBindingHash import_bindings;

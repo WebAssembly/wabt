@@ -140,7 +140,8 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<commands> cmd_list
 %type<const_> const const_opt
 %type<consts> const_list
-%type<export> export
+%type<export_> export
+%type<export_memory> export_memory
 %type<expr> expr expr1 expr_opt
 %type<exprs> expr_list non_empty_expr_list
 %type<func> func func_info
@@ -1201,6 +1202,12 @@ export :
     }
 ;
 
+export_memory :
+    LPAR EXPORT quoted_text MEMORY RPAR {
+      $$.name = $3;
+    }
+;
+
 global :
     LPAR GLOBAL value_type_list RPAR {
       ZEROMEM($$);
@@ -1244,6 +1251,14 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
       field->export_ = $2;
+    }
+  | module_fields export_memory {
+      $$ = $1;
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      CHECK_ALLOC_NULL(field);
+      field->loc = @2;
+      field->type = WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY;
+      field->export_memory = $2;
     }
   | module_fields table {
       $$ = $1;
@@ -1340,6 +1355,9 @@ module :
             }
             break;
           }
+          case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
+            $$->export_memory = &field->export_memory;
+            break;
           case WASM_MODULE_FIELD_TYPE_TABLE:
             $$->table = &field->table;
             break;

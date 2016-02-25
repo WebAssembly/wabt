@@ -885,8 +885,10 @@ static WasmResult check_memory(WasmCheckContext* ctx,
 
 static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
   WasmResult result = WASM_OK;
+  WasmLocation* export_memory_loc = NULL;
   int i;
   int seen_memory = 0;
+  int seen_export_memory = 0;
   int seen_table = 0;
   int seen_start = 0;
   for (i = 0; i < module->fields.size; ++i) {
@@ -900,6 +902,10 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
         break;
       case WASM_MODULE_FIELD_TYPE_EXPORT:
         result |= check_export(ctx, module, &field->export_);
+        break;
+      case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
+        seen_export_memory = 1;
+        export_memory_loc = &field->loc;
         break;
       case WASM_MODULE_FIELD_TYPE_TABLE:
         if (seen_table) {
@@ -943,6 +949,11 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
         break;
       }
     }
+  }
+
+  if (seen_export_memory && !seen_memory) {
+    print_error(ctx, export_memory_loc, "no memory to export");
+    result |= WASM_ERROR;
   }
 
   result |= check_duplicate_bindings(ctx, &module->func_bindings, "function");

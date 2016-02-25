@@ -574,6 +574,9 @@ static void wasm_destroy_module_field(WasmAllocator* allocator,
     case WASM_MODULE_FIELD_TYPE_EXPORT:
       wasm_destroy_export(allocator, &field->export_);
       break;
+    case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
+      wasm_destroy_string_slice(allocator, &field->export_memory.name);
+      break;
     case WASM_MODULE_FIELD_TYPE_TABLE:
       DESTROY_VECTOR_AND_ELEMENTS(allocator, field->table, var);
       break;

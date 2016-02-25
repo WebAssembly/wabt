@@ -1345,6 +1345,7 @@ static WasmModuleField* append_module_field_and_fixup(
     case WASM_MODULE_FIELD_TYPE_MEMORY:
     case WASM_MODULE_FIELD_TYPE_GLOBAL:
     case WASM_MODULE_FIELD_TYPE_START:
+    case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
       /* not supported */
       assert(0);
       break;
@@ -1373,6 +1374,9 @@ static WasmModuleField* append_module_field_and_fixup(
       case WASM_MODULE_FIELD_TYPE_EXPORT:
         assert(num_exports < module->exports.size);
         module->exports.data[num_exports++] = &field->export_;
+        break;
+      case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
+        module->export_memory = &field->export_memory;
         break;
       case WASM_MODULE_FIELD_TYPE_TABLE:
         module->table = &field->table;

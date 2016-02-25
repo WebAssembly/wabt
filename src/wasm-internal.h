@@ -60,7 +60,8 @@ typedef union WasmToken {
   WasmFuncSignature func_sig;
   WasmFuncType func_type;
   WasmImport* import;
-  WasmExport export;
+  WasmExport export_;
+  WasmExportMemory export_memory;
   WasmModuleFieldVector module_fields;
   WasmModule* module;
   WasmConst const_;

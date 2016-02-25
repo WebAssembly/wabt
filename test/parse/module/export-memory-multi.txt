@@ -1,0 +1,4 @@
+(module
+  (memory 42)
+  (export "mem1" memory)
+  (export "mem2" memory))

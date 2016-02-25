@@ -2,5 +2,5 @@
 (module (export "foo" foo))
 (;; STDERR ;;;
 parse/module/bad-export-name.txt:2:23: unexpected token "foo"
-parse/module/bad-export-name.txt:2:26: syntax error, unexpected ), expecting INT or VAR
+parse/module/bad-export-name.txt:2:26: syntax error, unexpected ), expecting INT or VAR or MEMORY
 ;;; STDERR ;;)
