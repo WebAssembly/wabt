@@ -1,0 +1,6 @@
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/testsuite/block_comments.wast
+(;; STDOUT ;;;
+0/0 tests passed.
+;;; STDOUT ;;)

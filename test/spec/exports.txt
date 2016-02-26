@@ -8,5 +8,7 @@ assert_invalid error:
   third_party/testsuite/exports.wast:8:68: redefinition of export "a"
 assert_invalid error:
   third_party/testsuite/exports.wast:11:47: redefinition of export "a"
+assert_invalid error:
+  third_party/testsuite/exports.wast:26:25: no memory to export
 1/1 tests passed.
 ;;; STDOUT ;;)
