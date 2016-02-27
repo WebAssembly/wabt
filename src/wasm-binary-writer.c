@@ -38,7 +38,8 @@
 #define IMPORT_MODULE_NAME_OFFSET 2
 #define IMPORT_FUNCTION_NAME_OFFSET 6
 
-#define FUNC_NAME_OFFSET 3
+#define EXPORT_SIZE 6
+#define EXPORT_NAME_OFFSET 2
 
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
@@ -172,7 +173,6 @@ typedef struct WasmWriteContext {
   int* import_sig_indexes;
   int* func_sig_indexes;
   int* remapped_locals;
-  size_t* func_offsets;
 } WasmWriteContext;
 
 DECLARE_VECTOR(func_signature, WasmFuncSignature);
@@ -1018,32 +1018,17 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     out_u8(ws, WASM_BINARY_SECTION_FUNCTIONS, "WASM_BINARY_SECTION_FUNCTIONS");
     out_leb128(ws, module->funcs.size, "num functions");
 
-    ctx->func_offsets =
-        wasm_realloc(ctx->allocator, ctx->func_offsets,
-                     module->funcs.size * sizeof(size_t), WASM_DEFAULT_ALIGN);
-    if (module->funcs.size)
-      CHECK_ALLOC_NULL(ctx->func_offsets);
     for (i = 0; i < module->funcs.size; ++i) {
       WasmFunc* func = module->funcs.data[i];
       print_header(ctx, "function", i);
-      ctx->func_offsets[i] = ctx->writer_state.offset;
       remap_locals(ctx, func);
 
-      int is_exported = wasm_func_is_exported(module, func);
-      int has_name = is_exported;
       int has_locals = func->locals.types.size > 0;
       uint8_t flags = 0;
-      if (has_name)
-        flags |= WASM_BINARY_FUNCTION_FLAG_NAME;
-      if (is_exported)
-        flags |=
-            WASM_BINARY_FUNCTION_FLAG_NAME | WASM_BINARY_FUNCTION_FLAG_EXPORT;
       if (has_locals)
         flags |= WASM_BINARY_FUNCTION_FLAG_LOCALS;
       out_u8(ws, flags, "func flags");
       out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
-      if (has_name)
-        out_u32(ws, 0, "func name offset");
       if (has_locals) {
         int num_locals[WASM_NUM_TYPES] = {};
         int j;
@@ -1062,6 +1047,21 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       int func_size =
           ctx->writer_state.offset - func_body_offset - sizeof(uint16_t);
       out_u16_at(ws, func_body_offset, func_size, "FIXUP func body size");
+    }
+  }
+
+  size_t exports_offset = 0;
+  if (module->exports.size) {
+    out_u8(ws, WASM_BINARY_SECTION_EXPORTS, "WASM_BINARY_SECTION_EXPORTS");
+    out_leb128(ws, module->exports.size, "num exports");
+
+    exports_offset = ctx->writer_state.offset;
+    for (i = 0; i < module->exports.size; ++i) {
+      WasmExport* export = module->exports.data[i];
+      int func_index = wasm_get_func_index_by_var(module, &export->var);
+      assert(func_index >= 0 && func_index < module->funcs.size);
+      out_u16(ws, func_index, "export func index");
+      out_u32(ws, 0, "export name offset");
     }
   }
 
@@ -1117,15 +1117,16 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   /* output exported func names */
+  offset = exports_offset;
   for (i = 0; i < module->exports.size; ++i) {
     print_header(ctx, "export", i);
     WasmExport* export = module->exports.data[i];
     int func_index = wasm_get_func_index_by_var(module, &export->var);
     assert(func_index >= 0 && func_index < module->funcs.size);
-    offset = ctx->func_offsets[func_index];
-    out_u32_at(ws, offset + FUNC_NAME_OFFSET, ctx->writer_state.offset,
+    out_u32_at(ws, offset + EXPORT_NAME_OFFSET, ctx->writer_state.offset,
                "FIXUP func name offset");
     out_str(ws, export->name.start, export->name.length, "export name");
+    offset += EXPORT_SIZE;
   }
 
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
@@ -1662,7 +1663,6 @@ static void cleanup_context(WasmWriteContext* ctx) {
   wasm_free(ctx->allocator, ctx->import_sig_indexes);
   wasm_free(ctx->allocator, ctx->func_sig_indexes);
   wasm_free(ctx->allocator, ctx->remapped_locals);
-  wasm_free(ctx->allocator, ctx->func_offsets);
 }
 
 WasmResult wasm_write_binary(WasmAllocator* allocator,

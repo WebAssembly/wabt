@@ -48,7 +48,7 @@ function createModule(a) {
 
 function assertReturn(m, name, file, line) {
   try {
-    var result = m[name]();
+    var result = m.exports[name]();
   } catch(e) {
     print(file + ":" + line + ": " + name + " unexpectedly threw: " + e);
   }
@@ -64,7 +64,7 @@ function assertReturn(m, name, file, line) {
 function assertTrap(m, name, file, line) {
   var threw = false;
   try {
-    m[name]();
+    m.exports[name]();
   } catch (e) {
     threw = true;
   }
@@ -79,7 +79,7 @@ function assertTrap(m, name, file, line) {
 
 function invoke(m, name) {
   try {
-    var invokeResult = m[name]();
+    var invokeResult = m.exports[name]();
   } catch(e) {
     print(file + ":" + line + ": " + name + " unexpectedly threw: " + e);
   }

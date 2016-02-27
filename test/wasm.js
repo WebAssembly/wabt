@@ -27,8 +27,8 @@ var name;
 var f;
 var result;
 
-for (name in module) {
-  f = module[name];
+for (name in module.exports) {
+  f = module.exports[name];
   if (typeof f !== 'function')
     continue;
 

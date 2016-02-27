@@ -11,17 +11,20 @@
 0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 0000005: 01                                         ; num functions
 ; function 0
-0000006: 09                                         ; func flags
+0000006: 00                                         ; func flags
 0000007: 0000                                       ; func signature index
-0000009: 0000 0000                                  ; func name offset
-000000d: 0000                                       ; func body size
-000000d: 0000                                       ; FIXUP func body size
-000000f: 06                                         ; WASM_BINARY_SECTION_END
+0000009: 0000                                       ; func body size
+0000009: 0000                                       ; FIXUP func body size
+000000b: 09                                         ; WASM_BINARY_SECTION_EXPORTS
+000000c: 01                                         ; num exports
+000000d: 0000                                       ; export func index
+000000f: 0000 0000                                  ; export name offset
+0000013: 06                                         ; WASM_BINARY_SECTION_END
 ; export 0
-0000009: 1000 0000                                  ; FIXUP func name offset
-0000010: 666f 6f                                    ; export name
-0000013: 00                                         ; \0
+000000f: 1400 0000                                  ; FIXUP func name offset
+0000014: 666f 6f                                    ; export name
+0000017: 00                                         ; \0
 ;; dump
-0000000: 0101 0000 0201 0900 0010 0000 0000 0006  
-0000010: 666f 6f00                                
+0000000: 0101 0000 0201 0000 0000 0009 0100 0014  
+0000010: 0000 0006 666f 6f00                      
 ;;; STDOUT ;;)

@@ -29,6 +29,7 @@ typedef enum WasmBinarySectionType {
   WASM_BINARY_SECTION_END = 6,
   WASM_BINARY_SECTION_START = 7,
   WASM_BINARY_SECTION_IMPORTS = 8,
+  WASM_BINARY_SECTION_EXPORTS = 9,
 } WasmBinarySectionType;
 
 enum {
