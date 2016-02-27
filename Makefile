@@ -16,7 +16,7 @@
 
 .SUFFIXES:
 
-ALL = sexpr-wasm
+ALL = sexpr-wasm sexpr-wasm-opt
 EVERYTHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
 CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
 DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
@@ -31,6 +31,11 @@ SEXPR_WASM_SRCS := \
 	wasm.c sexpr-wasm.c wasm-bison-parser.c wasm-flex-lexer.c wasm-vector.c \
 	wasm-check.c wasm-writer.c wasm-binary-writer.c wasm-allocator.c \
 	wasm-stack-allocator.c wasm-ast.c
+
+SEXPR_WASM_OPT_CC := $(CC)
+SEXPR_WASM_OPT_CFLAGS := $(CFLAGS) -O3
+SEXPR_WASM_OPT_LDFLAGS :=
+SEXPR_WASM_OPT_SRCS := $(SEXPR_WASM_SRCS)
 
 ASAN_FLAGS := -fsanitize=address
 SEXPR_WASM_ASAN_CC := clang
@@ -86,6 +91,7 @@ out/$(1): $$($(2)_OBJS) | out
 endef
 
 $(eval $(call EXE,sexpr-wasm,SEXPR_WASM))
+$(eval $(call EXE,sexpr-wasm-opt,SEXPR_WASM_OPT))
 $(eval $(call EXE,sexpr-wasm-asan,SEXPR_WASM_ASAN))
 $(eval $(call EXE,sexpr-wasm-msan,SEXPR_WASM_MSAN))
 $(eval $(call EXE,sexpr-wasm-lsan,SEXPR_WASM_LSAN))
