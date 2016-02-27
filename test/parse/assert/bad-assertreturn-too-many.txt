@@ -6,4 +6,6 @@
 (assert_return (invoke "foo" (i32.const 0)) (i32.const 0))
 (;; STDERR ;;;
 parse/assert/bad-assertreturn-too-many.txt:6:17: too many parameters to function. got 1, expected 0
+(assert_return (invoke "foo" (i32.const 0)) (i32.const 0))
+                ^^^^^^
 ;;; STDERR ;;)

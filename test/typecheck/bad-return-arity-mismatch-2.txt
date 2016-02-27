@@ -3,4 +3,6 @@
   (func (return (i32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-return-arity-mismatch-2.txt:3:9: arity mismatch of return. function expects void, but return value is non-empty
+  (func (return (i32.const 0))))
+        ^
 ;;; STDERR ;;)

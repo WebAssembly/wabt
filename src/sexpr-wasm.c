@@ -217,10 +217,9 @@ int main(int argc, char** argv) {
 
   WasmScript script;
   WasmResult result = wasm_parse(lexer, &script);
-  wasm_destroy_lexer(lexer);
 
   if (result == WASM_OK) {
-    result = wasm_check_script(&script);
+    result = wasm_check_script(lexer, &script);
     if (result == WASM_OK) {
       WasmMemoryWriter writer = {};
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
@@ -258,6 +257,8 @@ int main(int argc, char** argv) {
       wasm_close_mem_writer(&writer);
     }
   }
+
+  wasm_destroy_lexer(lexer);
 
   if (s_use_libc_allocator)
     wasm_destroy_script(&script);

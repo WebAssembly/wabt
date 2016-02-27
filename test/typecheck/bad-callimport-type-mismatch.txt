@@ -4,4 +4,6 @@
   (func (call_import 0 (f32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-callimport-type-mismatch.txt:4:24: type mismatch of argument 0 of call_import. got f32, expected i32
+  (func (call_import 0 (f32.const 0))))
+                       ^
 ;;; STDERR ;;)

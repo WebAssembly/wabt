@@ -2,4 +2,6 @@
 (module (func (f32.store align=3 (i32.const 0) (f32.const 0.0))))
 (;; STDERR ;;;
 parse/expr/bad-store-align-not-pot.txt:2:15: alignment must be power-of-two
+(module (func (f32.store align=3 (i32.const 0) (f32.const 0.0))))
+              ^
 ;;; STDERR ;;)

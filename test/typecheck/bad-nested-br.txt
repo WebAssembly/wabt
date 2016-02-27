@@ -13,4 +13,6 @@
   ))
 (;; STDERR ;;;
 typecheck/bad-nested-br.txt:8:13: arity mismatch of br value. label expects non-void, but br value is empty
+            (br $outer))
+            ^
 ;;; STDERR ;;)

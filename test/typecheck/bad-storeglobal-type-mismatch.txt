@@ -5,4 +5,6 @@
     (store_global 0 (f32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-storeglobal-type-mismatch.txt:5:21: type mismatch of store_global. got f32, expected i32
+    (store_global 0 (f32.const 0))))
+                    ^
 ;;; STDERR ;;)

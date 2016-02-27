@@ -4,4 +4,6 @@
   (func (type $t) (param i32)))
 (;; STDERR ;;;
 parse/func/bad-sig-result-type-void.txt:4:4: type mismatch. got void, expected f32
+  (func (type $t) (param i32)))
+   ^^^^
 ;;; STDERR ;;)

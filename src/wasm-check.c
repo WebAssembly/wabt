@@ -78,6 +78,7 @@ typedef struct WasmLabelNode {
 
 typedef struct WasmCheckContext {
   WasmAllocator* allocator;
+  WasmLexer lexer;
   WasmModule* last_module;
   WasmLabelNode* top_label;
   int in_assert_invalid;
@@ -88,17 +89,16 @@ static void print_error(WasmCheckContext* ctx,
                         WasmLocation* loc,
                         const char* fmt,
                         ...) {
-  va_list args;
-  va_start(args, fmt);
   FILE* out = stderr;
   if (ctx->in_assert_invalid) {
     out = stdout;
     fprintf(out, "assert_invalid error:\n  ");
   }
-  if (loc)
-    fprintf(out, "%s:%d:%d: ", loc->filename, loc->line, loc->first_column);
-  vfprintf(out, fmt, args);
-  fprintf(out, "\n");
+
+  va_list args;
+  va_start(args, fmt);
+  wasm_vfprint_error(out, loc, ctx->lexer, fmt, args);
+  va_end(args);
 }
 
 static int is_power_of_two(uint32_t x) {
@@ -1034,8 +1034,9 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_script(WasmScript* script) {
+WasmResult wasm_check_script(WasmLexer lexer, WasmScript* script) {
   WasmCheckContext ctx = {};
+  ctx.lexer = lexer;
   ctx.allocator = script->allocator;
   WasmResult result = WASM_OK;
   int i;

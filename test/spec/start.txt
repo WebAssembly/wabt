@@ -4,10 +4,16 @@
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/start.wast:2:39: function variable out of range (max 1)
+  (module (func (i32.const 1)) (start 1))
+                                      ^
 assert_invalid error:
   third_party/testsuite/start.wast:8:5: start function must not return anything
+    (start $main)
+    ^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/start.wast:15:5: start function must be nullary
+    (start $main)
+    ^^^^^^^^^^^^^
 $invoke_1 = undefined
 $invoke_3 = undefined
 $invoke_1 = undefined

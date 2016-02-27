@@ -4,4 +4,6 @@
   (block (nop))))
 (;; STDERR ;;;
 parse/expr/bad-br-defined-later.txt:3:7: label variable out of range (max 0)
+  (br 0)
+      ^
 ;;; STDERR ;;)

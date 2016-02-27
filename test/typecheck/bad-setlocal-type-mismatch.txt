@@ -4,4 +4,6 @@
     (set_local 0 (f32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-setlocal-type-mismatch.txt:4:18: type mismatch of set_local. got f32, expected i32
+    (set_local 0 (f32.const 0))))
+                 ^
 ;;; STDERR ;;)

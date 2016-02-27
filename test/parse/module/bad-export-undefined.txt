@@ -2,4 +2,6 @@
 (module (export "foo" 0))
 (;; STDERR ;;;
 parse/module/bad-export-undefined.txt:2:23: function variable out of range (max 0)
+(module (export "foo" 0))
+                      ^
 ;;; STDERR ;;)

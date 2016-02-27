@@ -8,6 +8,10 @@
 (;; STDOUT ;;;
 assert_invalid error:
   parse/assert/assertinvalid.txt:3:46: function variable out of range (max 1)
+  (module (func (i32.const 1)) (export "foo" 1))
+                                             ^
 assert_invalid error:
   parse/assert/assertinvalid.txt:6:30: type mismatch in nop. got void, expected i32
+  (module (func (result i32) (nop)))
+                             ^
 ;;; STDOUT ;;)

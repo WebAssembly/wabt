@@ -4,4 +4,6 @@
     (f32.const 0)))
 (;; STDERR ;;;
 typecheck/bad-function-result-type-mismatch.txt:4:5: type mismatch of function result. got f32, expected i32
+    (f32.const 0)))
+    ^
 ;;; STDERR ;;)

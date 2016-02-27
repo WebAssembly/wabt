@@ -4,4 +4,6 @@
   (func (type $t) (param i32)))
 (;; STDERR ;;;
 parse/func/bad-sig-params-empty.txt:4:4: expected 0 parameters, got 1
+  (func (type $t) (param i32)))
+   ^^^^
 ;;; STDERR ;;)

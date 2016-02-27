@@ -2,4 +2,6 @@
 (module (memory 100 50))
 (;; STDERR ;;;
 parse/module/bad-memory-max-less-than-init.txt:2:10: max size (50) must be greater than or equal to initial size (100)
+(module (memory 100 50))
+         ^^^^^^
 ;;; STDERR ;;)

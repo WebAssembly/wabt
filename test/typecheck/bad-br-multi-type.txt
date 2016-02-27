@@ -6,4 +6,6 @@
       (f32.const 2))))
 (;; STDERR ;;;
 typecheck/bad-br-multi-type.txt:5:13: type mismatch of br value. got i32, expected f32
+      (br 0 (i32.const 1))
+            ^
 ;;; STDERR ;;)

@@ -4,4 +4,6 @@
     (call 0 (i32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-call-too-few-named.txt:4:5: too few parameters to function "$foo" in call. got 1, expected 2
+    (call 0 (i32.const 0))))
+    ^
 ;;; STDERR ;;)

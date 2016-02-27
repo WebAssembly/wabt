@@ -7,4 +7,6 @@
         (i32.const 3)))))
 (;; STDERR ;;;
 typecheck/bad-expr-if.txt:6:7: type mismatch of argument 1 of binary op. got void, expected i32
+      (if (i32.const 2)
+      ^
 ;;; STDERR ;;)

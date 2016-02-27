@@ -4,11 +4,19 @@
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/exports.wast:5:44: function variable out of range (max 1)
+  (module (func (i32.const 1)) (export "a" 1))
+                                           ^
 assert_invalid error:
   third_party/testsuite/exports.wast:8:68: redefinition of export "a"
+...dule (func (i32.const 1)) (func (i32.const 2)) (export "a" 0) (export "a" 1))
+                                                                 ^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/exports.wast:11:47: redefinition of export "a"
+  (module (func (i32.const 1)) (export "a" 0) (export "a" 0))
+                                              ^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/exports.wast:26:25: no memory to export
+(assert_invalid (module (export "a" memory)) "no memory to export")
+                        ^^^^^^^^^^^^^^^^^^^
 1/1 tests passed.
 ;;; STDOUT ;;)

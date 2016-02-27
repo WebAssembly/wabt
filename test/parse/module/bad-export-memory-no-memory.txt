@@ -3,4 +3,6 @@
   (export "mem" memory))
 (;; STDERR ;;;
 parse/module/bad-export-memory-no-memory.txt:3:3: no memory to export
+  (export "mem" memory))
+  ^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

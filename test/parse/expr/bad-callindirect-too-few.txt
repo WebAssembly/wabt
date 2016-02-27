@@ -5,4 +5,6 @@
     (call_indirect $t (i32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-callindirect-too-few.txt:5:5: too few parameters to function in call_indirect. got 0, expected 2
+    (call_indirect $t (i32.const 0))))
+    ^
 ;;; STDERR ;;)

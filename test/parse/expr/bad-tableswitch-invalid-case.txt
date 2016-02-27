@@ -7,4 +7,6 @@
         (case (nop))))))
 (;; STDERR ;;;
 parse/expr/bad-tableswitch-invalid-case.txt:6:22: case variable out of range (max 1)
+        (table (case 2)) (br 0)
+                     ^
 ;;; STDERR ;;)

@@ -2,4 +2,6 @@
 (module (func (br 0)))
 (;; STDERR ;;;
 parse/expr/bad-br-undefined.txt:2:19: label variable out of range (max 0)
+(module (func (br 0)))
+                  ^
 ;;; STDERR ;;)

@@ -91,6 +91,7 @@ FILE* wasm_lexer_get_file(WasmLexer);
 size_t wasm_lexer_get_file_offset_from_line(WasmLexer, int line);
 int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmLexer, WasmParser*);
 void wasm_parser_error(WasmLocation*, WasmLexer, WasmParser*, const char*, ...);
+void wasm_vfprint_error(FILE*, WasmLocation*, WasmLexer, const char*, va_list);
 void wasm_print_memory(const void* start,
                        size_t size,
                        size_t offset,

@@ -6,4 +6,6 @@
   (func))
 (;; STDERR ;;;
 parse/module/bad-start-too-many.txt:4:3: only one start function allowed
+  (start 1)
+  ^^^^^^^^^
 ;;; STDERR ;;)

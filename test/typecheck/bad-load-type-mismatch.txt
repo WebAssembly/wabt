@@ -4,4 +4,6 @@
     (i32.load (f32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-load-type-mismatch.txt:4:15: type mismatch of load index. got f32, expected i32
+    (i32.load (f32.const 0))))
+              ^
 ;;; STDERR ;;)

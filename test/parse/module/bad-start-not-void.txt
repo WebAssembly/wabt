@@ -4,4 +4,6 @@
   (func (result i32)))
 (;; STDERR ;;;
 parse/module/bad-start-not-void.txt:3:3: start function must not return anything
+  (start 0)
+  ^^^^^^^^^
 ;;; STDERR ;;)

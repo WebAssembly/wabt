@@ -8,4 +8,6 @@
           (f32.const 0.0))))))
 (;; STDERR ;;;
 typecheck/bad-if-value-void.txt:7:11: arity mismatch of br value. label expects non-void, but br value is empty
+          (br)
+          ^
 ;;; STDERR ;;)

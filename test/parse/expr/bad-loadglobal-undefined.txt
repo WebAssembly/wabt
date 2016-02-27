@@ -2,4 +2,6 @@
 (module (func (load_global 0)))
 (;; STDERR ;;;
 parse/expr/bad-loadglobal-undefined.txt:2:28: global variable out of range (max 0)
+(module (func (load_global 0)))
+                           ^
 ;;; STDERR ;;)

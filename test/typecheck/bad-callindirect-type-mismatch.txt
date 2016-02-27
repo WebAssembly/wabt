@@ -6,4 +6,6 @@
   (func (call_indirect $t (i32.const 0) (f32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-callindirect-type-mismatch.txt:6:41: type mismatch of argument 0 of call_indirect. got f32, expected i32
+  (func (call_indirect $t (i32.const 0) (f32.const 0))))
+                                        ^
 ;;; STDERR ;;)

@@ -4,4 +4,6 @@
     (if_else (f32.const 0) (i32.const 0) (i32.const 0))))
 (;; STDERR ;;;
 typecheck/bad-if-condition-type-mismatch.txt:4:14: type mismatch of condition. got f32, expected i32
+    (if_else (f32.const 0) (i32.const 0) (i32.const 0))))
+             ^
 ;;; STDERR ;;)

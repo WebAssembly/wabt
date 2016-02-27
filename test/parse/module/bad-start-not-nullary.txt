@@ -4,4 +4,6 @@
   (func (param i32)))
 (;; STDERR ;;;
 parse/module/bad-start-not-nullary.txt:3:3: start function must be nullary
+  (start 0)
+  ^^^^^^^^^
 ;;; STDERR ;;)

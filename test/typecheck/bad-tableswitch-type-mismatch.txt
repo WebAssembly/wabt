@@ -7,4 +7,6 @@
       (case (f32.const 2)))))
 (;; STDERR ;;;
 typecheck/bad-tableswitch-type-mismatch.txt:7:13: type mismatch of tableswitch case. got f32, expected i32
+      (case (f32.const 2)))))
+            ^
 ;;; STDERR ;;)

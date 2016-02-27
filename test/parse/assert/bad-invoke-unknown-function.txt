@@ -7,4 +7,6 @@
 (invoke "bar")
 (;; STDERR ;;;
 parse/assert/bad-invoke-unknown-function.txt:7:2: unknown function export "bar"
+(invoke "bar")
+ ^^^^^^
 ;;; STDERR ;;)

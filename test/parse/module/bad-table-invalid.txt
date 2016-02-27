@@ -3,4 +3,6 @@
   (table 0))
 (;; STDERR ;;;
 parse/module/bad-table-invalid.txt:3:10: function variable out of range (max 0)
+  (table 0))
+         ^
 ;;; STDERR ;;)

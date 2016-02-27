@@ -18,9 +18,10 @@
 #define WASM_CHECK_H_
 
 #include "wasm-common.h"
+#include "wasm-lexer.h"
 
 struct WasmScript;
 
-EXTERN_C WasmResult wasm_check_script(struct WasmScript*);
+EXTERN_C WasmResult wasm_check_script(WasmLexer lexer, struct WasmScript*);
 
 #endif /* WASM_CHECK_H_ */
