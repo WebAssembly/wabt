@@ -10,47 +10,50 @@
     ;; first.
     (call 0)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000001: 02                                         ; num signatures
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 02                                         ; num signatures
 ; signature 0
-0000002: 02                                         ; num params
-0000003: 01                                         ; result_type
-0000004: 01                                         ; param type
-0000005: 03                                         ; param type
+000000a: 02                                         ; num params
+000000b: 01                                         ; result_type
+000000c: 01                                         ; param type
+000000d: 03                                         ; param type
 ; signature 1
-0000006: 00                                         ; num params
-0000007: 01                                         ; result_type
-0000008: 08                                         ; WASM_BINARY_SECTION_IMPORTS
-0000009: 01                                         ; num imports
+000000e: 00                                         ; num params
+000000f: 01                                         ; result_type
+0000010: 08                                         ; WASM_BINARY_SECTION_IMPORTS
+0000011: 01                                         ; num imports
 ; import header 0
-000000a: 0000                                       ; import signature index
-000000c: 0000 0000                                  ; import module name offset
-0000010: 0000 0000                                  ; import function name offset
-0000014: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
-0000015: 01                                         ; num functions
+0000012: 0000                                       ; import signature index
+0000014: 0000 0000                                  ; import module name offset
+0000018: 0000 0000                                  ; import function name offset
+000001c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000001d: 01                                         ; num functions
 ; function 0
-0000016: 00                                         ; func flags
-0000017: 0100                                       ; func signature index
-0000019: 0000                                       ; func body size
-000001b: 1f                                         ; OPCODE_CALL_IMPORT
-000001c: 00                                         ; import index
-000001d: 09                                         ; OPCODE_I8_CONST
-000001e: 01                                         ; u8 literal
-000001f: 0d                                         ; OPCODE_F32_CONST
-0000020: 0000 0040                                  ; f32 literal
-0000024: 12                                         ; OPCODE_CALL_FUNCTION
-0000025: 00                                         ; func index
-0000019: 0b00                                       ; FIXUP func body size
-0000026: 06                                         ; WASM_BINARY_SECTION_END
+000001e: 00                                         ; func flags
+000001f: 0100                                       ; func signature index
+0000021: 0000                                       ; func body size
+0000023: 1f                                         ; OPCODE_CALL_IMPORT
+0000024: 00                                         ; import index
+0000025: 09                                         ; OPCODE_I8_CONST
+0000026: 01                                         ; u8 literal
+0000027: 0d                                         ; OPCODE_F32_CONST
+0000028: 0000 0040                                  ; f32 literal
+000002c: 12                                         ; OPCODE_CALL_FUNCTION
+000002d: 00                                         ; func index
+0000021: 0b00                                       ; FIXUP func body size
+000002e: 06                                         ; WASM_BINARY_SECTION_END
 ; import 0
-000000c: 2700 0000                                  ; FIXUP import module name offset
-0000027: 666f 6f                                    ; import module name
-000002a: 00                                         ; \0
-0000010: 2b00 0000                                  ; FIXUP import function name offset
-000002b: 6261 72                                    ; import function name
-000002e: 00                                         ; \0
+0000014: 2f00 0000                                  ; FIXUP import module name offset
+000002f: 666f 6f                                    ; import module name
+0000032: 00                                         ; \0
+0000018: 3300 0000                                  ; FIXUP import function name offset
+0000033: 6261 72                                    ; import function name
+0000036: 00                                         ; \0
 ;; dump
-0000000: 0102 0201 0103 0001 0801 0000 2700 0000  
-0000010: 2b00 0000 0201 0001 000b 001f 0009 010d  
-0000020: 0000 0040 1200 0666 6f6f 0062 6172 00    
+0000000: 0061 736d 0a00 0000 0102 0201 0103 0001  
+0000010: 0801 0000 2f00 0000 3300 0000 0201 0001  
+0000020: 000b 001f 0009 010d 0000 0040 1200 0666  
+0000030: 6f6f 0062 6172 00                        
 ;;; STDOUT ;;)

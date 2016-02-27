@@ -7,34 +7,37 @@
       (if (i32.const 2)
         (br $cont)))))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000001: 01                                         ; num signatures
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 01                                         ; num signatures
 ; signature 0
-0000002: 00                                         ; num params
-0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
-0000005: 01                                         ; num functions
+000000a: 00                                         ; num params
+000000b: 00                                         ; result_type
+000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000d: 01                                         ; num functions
 ; function 0
-0000006: 00                                         ; func flags
-0000007: 0000                                       ; func signature index
-0000009: 0000                                       ; func body size
-000000b: 02                                         ; OPCODE_LOOP
-000000c: 02                                         ; num expressions
-000000d: 03                                         ; OPCODE_IF
-000000e: 09                                         ; OPCODE_I8_CONST
-000000f: 01                                         ; u8 literal
-0000010: 06                                         ; OPCODE_BR
-0000011: 01                                         ; break depth
-0000012: 00                                         ; OPCODE_NOP
-0000013: 03                                         ; OPCODE_IF
-0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 02                                         ; u8 literal
-0000016: 06                                         ; OPCODE_BR
-0000017: 00                                         ; break depth
-0000018: 00                                         ; OPCODE_NOP
-0000009: 0e00                                       ; FIXUP func body size
-0000019: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 00                                         ; func flags
+000000f: 0000                                       ; func signature index
+0000011: 0000                                       ; func body size
+0000013: 02                                         ; OPCODE_LOOP
+0000014: 02                                         ; num expressions
+0000015: 03                                         ; OPCODE_IF
+0000016: 09                                         ; OPCODE_I8_CONST
+0000017: 01                                         ; u8 literal
+0000018: 06                                         ; OPCODE_BR
+0000019: 01                                         ; break depth
+000001a: 00                                         ; OPCODE_NOP
+000001b: 03                                         ; OPCODE_IF
+000001c: 09                                         ; OPCODE_I8_CONST
+000001d: 02                                         ; u8 literal
+000001e: 06                                         ; OPCODE_BR
+000001f: 00                                         ; break depth
+0000020: 00                                         ; OPCODE_NOP
+0000011: 0e00                                       ; FIXUP func body size
+0000021: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0101 0000 0201 0000 000e 0002 0203 0901  
-0000010: 0601 0003 0902 0600 0006                 
+0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
+0000010: 000e 0002 0203 0901 0601 0003 0902 0600  
+0000020: 0006                                     
 ;;; STDOUT ;;)
