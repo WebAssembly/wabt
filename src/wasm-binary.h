@@ -19,6 +19,9 @@
 
 #include <stdint.h>
 
+#define WASM_BINARY_MAGIC 0x6d736100
+#define WASM_BINARY_VERSION 0x0a
+
 typedef enum WasmBinarySectionType {
   WASM_BINARY_SECTION_MEMORY = 0,
   WASM_BINARY_SECTION_SIGNATURES = 1,

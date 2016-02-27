@@ -2,24 +2,26 @@
 (module
   (func (local i32 i64 i64 f32 f32 f32 f64 f64 f64 f64)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000001: 01                                         ; num signatures
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 01                                         ; num signatures
 ; signature 0
-0000002: 00                                         ; num params
-0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
-0000005: 01                                         ; num functions
+000000a: 00                                         ; num params
+000000b: 00                                         ; result_type
+000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000d: 01                                         ; num functions
 ; function 0
-0000006: 04                                         ; func flags
-0000007: 0000                                       ; func signature index
-0000009: 0100                                       ; num local i32
-000000b: 0200                                       ; num local i64
-000000d: 0300                                       ; num local f32
-000000f: 0400                                       ; num local f64
-0000011: 0000                                       ; func body size
-0000011: 0000                                       ; FIXUP func body size
-0000013: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 04                                         ; func flags
+000000f: 0000                                       ; func signature index
+0000011: 0100                                       ; num local i32
+0000013: 0200                                       ; num local i64
+0000015: 0300                                       ; num local f32
+0000017: 0400                                       ; num local f64
+0000019: 0000                                       ; func body size
+0000019: 0000                                       ; FIXUP func body size
+000001b: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0101 0000 0201 0400 0001 0002 0003 0004  
-0000010: 0000 0006                                
+0000000: 0061 736d 0a00 0000 0101 0000 0201 0400  
+0000010: 0001 0002 0003 0004 0000 0006            
 ;;; STDOUT ;;)
