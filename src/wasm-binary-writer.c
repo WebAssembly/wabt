@@ -947,6 +947,9 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   int i;
   WasmWriterState* ws = &ctx->writer_state;
   ctx->writer_state.offset = 0;
+  out_u32(ws, WASM_BINARY_MAGIC, "WASM_BINARY_MAGIC");
+  out_u32(ws, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
+
   size_t segments_offset = 0;
   if (module->memory) {
     out_u8(ws, WASM_BINARY_SECTION_MEMORY, "WASM_BINARY_SECTION_MEMORY");

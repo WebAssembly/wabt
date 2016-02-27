@@ -3,22 +3,25 @@
   (memory 100
     (segment 0 "\00\01\02\03\04\05\06\07\08\09\0a")))
 (;; STDOUT ;;;
-0000000: 00                                         ; WASM_BINARY_SECTION_MEMORY
-0000001: 07                                         ; min mem size log 2
-0000002: 07                                         ; max mem size log 2
-0000003: 01                                         ; export mem
-0000004: 04                                         ; WASM_BINARY_SECTION_DATA_SEGMENTS
-0000005: 01                                         ; num data segments
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
+0000009: 07                                         ; min mem size log 2
+000000a: 07                                         ; max mem size log 2
+000000b: 01                                         ; export mem
+000000c: 04                                         ; WASM_BINARY_SECTION_DATA_SEGMENTS
+000000d: 01                                         ; num data segments
 ; segment header 0
-0000006: 0000 0000                                  ; segment address
-000000a: 0000 0000                                  ; segment data offset
-000000e: 0b00 0000                                  ; segment size
-0000012: 01                                         ; segment init
-0000013: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 0000 0000                                  ; segment address
+0000012: 0000 0000                                  ; segment data offset
+0000016: 0b00 0000                                  ; segment size
+000001a: 01                                         ; segment init
+000001b: 06                                         ; WASM_BINARY_SECTION_END
 ; segment data 0
-000000a: 1400 0000                                  ; FIXUP segment data offset
-0000014: 0001 0203 0405 0607 0809 0a                ; segment data
+0000012: 1c00 0000                                  ; FIXUP segment data offset
+000001c: 0001 0203 0405 0607 0809 0a                ; segment data
 ;; dump
-0000000: 0007 0701 0401 0000 0000 1400 0000 0b00  
-0000010: 0000 0106 0001 0203 0405 0607 0809 0a    
+0000000: 0061 736d 0a00 0000 0007 0701 0401 0000  
+0000010: 0000 1c00 0000 0b00 0000 0106 0001 0203  
+0000020: 0405 0607 0809 0a                        
 ;;; STDOUT ;;)

@@ -7,40 +7,42 @@
       (case $default (nop) (br 0)))  ;; depth 1 (due to implicit block)
 ))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000001: 01                                         ; num signatures
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 01                                         ; num signatures
 ; signature 0
-0000002: 00                                         ; num params
-0000003: 00                                         ; result_type
-0000004: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
-0000005: 01                                         ; num functions
+000000a: 00                                         ; num params
+000000b: 00                                         ; result_type
+000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000d: 01                                         ; num functions
 ; function 0
-0000006: 00                                         ; func flags
-0000007: 0000                                       ; func signature index
-0000009: 0000                                       ; func body size
-000000b: 08                                         ; OPCODE_TABLESWITCH
-000000c: 0200                                       ; num cases
-000000e: 0200                                       ; num targets
-0000010: 0000                                       ; case index
-0000012: 0100                                       ; case index
-0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 00                                         ; u8 literal
-0000016: 01                                         ; OPCODE_BLOCK
-0000017: 02                                         ; num expressions
-0000018: 00                                         ; OPCODE_NOP
-0000019: 06                                         ; OPCODE_BR
-000001a: 01                                         ; break depth
-000001b: 00                                         ; OPCODE_NOP
-000001c: 01                                         ; OPCODE_BLOCK
-000001d: 02                                         ; num expressions
-000001e: 00                                         ; OPCODE_NOP
-000001f: 06                                         ; OPCODE_BR
-0000020: 01                                         ; break depth
-0000021: 00                                         ; OPCODE_NOP
-0000009: 1700                                       ; FIXUP func body size
-0000022: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 00                                         ; func flags
+000000f: 0000                                       ; func signature index
+0000011: 0000                                       ; func body size
+0000013: 08                                         ; OPCODE_TABLESWITCH
+0000014: 0200                                       ; num cases
+0000016: 0200                                       ; num targets
+0000018: 0000                                       ; case index
+000001a: 0100                                       ; case index
+000001c: 09                                         ; OPCODE_I8_CONST
+000001d: 00                                         ; u8 literal
+000001e: 01                                         ; OPCODE_BLOCK
+000001f: 02                                         ; num expressions
+0000020: 00                                         ; OPCODE_NOP
+0000021: 06                                         ; OPCODE_BR
+0000022: 01                                         ; break depth
+0000023: 00                                         ; OPCODE_NOP
+0000024: 01                                         ; OPCODE_BLOCK
+0000025: 02                                         ; num expressions
+0000026: 00                                         ; OPCODE_NOP
+0000027: 06                                         ; OPCODE_BR
+0000028: 01                                         ; break depth
+0000029: 00                                         ; OPCODE_NOP
+0000011: 1700                                       ; FIXUP func body size
+000002a: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0101 0000 0201 0000 0017 0008 0200 0200  
-0000010: 0000 0100 0900 0102 0006 0100 0102 0006  
-0000020: 0100 06                                  
+0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
+0000010: 0017 0008 0200 0200 0000 0100 0900 0102  
+0000020: 0006 0100 0102 0006 0100 06              
 ;;; STDOUT ;;)

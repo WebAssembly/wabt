@@ -5,54 +5,57 @@
   (func (result f32) (f32.const 0))
   (func (result f64) (f64.const 0)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000001: 04                                         ; num signatures
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 04                                         ; num signatures
 ; signature 0
-0000002: 00                                         ; num params
-0000003: 01                                         ; result_type
+000000a: 00                                         ; num params
+000000b: 01                                         ; result_type
 ; signature 1
-0000004: 00                                         ; num params
-0000005: 02                                         ; result_type
+000000c: 00                                         ; num params
+000000d: 02                                         ; result_type
 ; signature 2
-0000006: 00                                         ; num params
-0000007: 03                                         ; result_type
+000000e: 00                                         ; num params
+000000f: 03                                         ; result_type
 ; signature 3
-0000008: 00                                         ; num params
-0000009: 04                                         ; result_type
-000000a: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
-000000b: 04                                         ; num functions
+0000010: 00                                         ; num params
+0000011: 04                                         ; result_type
+0000012: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+0000013: 04                                         ; num functions
 ; function 0
-000000c: 00                                         ; func flags
-000000d: 0000                                       ; func signature index
-000000f: 0000                                       ; func body size
-0000011: 09                                         ; OPCODE_I8_CONST
-0000012: 00                                         ; u8 literal
-000000f: 0200                                       ; FIXUP func body size
+0000014: 00                                         ; func flags
+0000015: 0000                                       ; func signature index
+0000017: 0000                                       ; func body size
+0000019: 09                                         ; OPCODE_I8_CONST
+000001a: 00                                         ; u8 literal
+0000017: 0200                                       ; FIXUP func body size
 ; function 1
-0000013: 00                                         ; func flags
-0000014: 0100                                       ; func signature index
-0000016: 0000                                       ; func body size
-0000018: 0b                                         ; OPCODE_I64_CONST
-0000019: 0000 0000 0000 0000                        ; u64 literal
-0000016: 0900                                       ; FIXUP func body size
+000001b: 00                                         ; func flags
+000001c: 0100                                       ; func signature index
+000001e: 0000                                       ; func body size
+0000020: 0b                                         ; OPCODE_I64_CONST
+0000021: 0000 0000 0000 0000                        ; u64 literal
+000001e: 0900                                       ; FIXUP func body size
 ; function 2
-0000021: 00                                         ; func flags
-0000022: 0200                                       ; func signature index
-0000024: 0000                                       ; func body size
-0000026: 0d                                         ; OPCODE_F32_CONST
-0000027: 0000 0000                                  ; f32 literal
-0000024: 0500                                       ; FIXUP func body size
+0000029: 00                                         ; func flags
+000002a: 0200                                       ; func signature index
+000002c: 0000                                       ; func body size
+000002e: 0d                                         ; OPCODE_F32_CONST
+000002f: 0000 0000                                  ; f32 literal
+000002c: 0500                                       ; FIXUP func body size
 ; function 3
-000002b: 00                                         ; func flags
-000002c: 0300                                       ; func signature index
-000002e: 0000                                       ; func body size
-0000030: 0c                                         ; OPCODE_F64_CONST
-0000031: 0000 0000 0000 0000                        ; f64 literal
-000002e: 0900                                       ; FIXUP func body size
-0000039: 06                                         ; WASM_BINARY_SECTION_END
+0000033: 00                                         ; func flags
+0000034: 0300                                       ; func signature index
+0000036: 0000                                       ; func body size
+0000038: 0c                                         ; OPCODE_F64_CONST
+0000039: 0000 0000 0000 0000                        ; f64 literal
+0000036: 0900                                       ; FIXUP func body size
+0000041: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0104 0001 0002 0003 0004 0204 0000 0002  
-0000010: 0009 0000 0100 0900 0b00 0000 0000 0000  
-0000020: 0000 0200 0500 0d00 0000 0000 0300 0900  
-0000030: 0c00 0000 0000 0000 0006                 
+0000000: 0061 736d 0a00 0000 0104 0001 0002 0003  
+0000010: 0004 0204 0000 0002 0009 0000 0100 0900  
+0000020: 0b00 0000 0000 0000 0000 0200 0500 0d00  
+0000030: 0000 0000 0300 0900 0c00 0000 0000 0000  
+0000040: 0006                                     
 ;;; STDOUT ;;)

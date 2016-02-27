@@ -5,47 +5,50 @@
   (import "ignored" "test" (param i32 i64 f32 f64))
   (import "ignored" "test2" (param i32) (result i32)))
 (;; STDOUT ;;;
-0000000: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000001: 02                                         ; num signatures
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 02                                         ; num signatures
 ; signature 0
-0000002: 04                                         ; num params
-0000003: 00                                         ; result_type
-0000004: 01                                         ; param type
-0000005: 02                                         ; param type
-0000006: 03                                         ; param type
-0000007: 04                                         ; param type
+000000a: 04                                         ; num params
+000000b: 00                                         ; result_type
+000000c: 01                                         ; param type
+000000d: 02                                         ; param type
+000000e: 03                                         ; param type
+000000f: 04                                         ; param type
 ; signature 1
-0000008: 01                                         ; num params
-0000009: 01                                         ; result_type
-000000a: 01                                         ; param type
-000000b: 08                                         ; WASM_BINARY_SECTION_IMPORTS
-000000c: 02                                         ; num imports
+0000010: 01                                         ; num params
+0000011: 01                                         ; result_type
+0000012: 01                                         ; param type
+0000013: 08                                         ; WASM_BINARY_SECTION_IMPORTS
+0000014: 02                                         ; num imports
 ; import header 0
-000000d: 0000                                       ; import signature index
-000000f: 0000 0000                                  ; import module name offset
-0000013: 0000 0000                                  ; import function name offset
+0000015: 0000                                       ; import signature index
+0000017: 0000 0000                                  ; import module name offset
+000001b: 0000 0000                                  ; import function name offset
 ; import header 1
-0000017: 0100                                       ; import signature index
-0000019: 0000 0000                                  ; import module name offset
-000001d: 0000 0000                                  ; import function name offset
-0000021: 06                                         ; WASM_BINARY_SECTION_END
+000001f: 0100                                       ; import signature index
+0000021: 0000 0000                                  ; import module name offset
+0000025: 0000 0000                                  ; import function name offset
+0000029: 06                                         ; WASM_BINARY_SECTION_END
 ; import 0
-000000f: 2200 0000                                  ; FIXUP import module name offset
-0000022: 6967 6e6f 7265 64                          ; import module name
-0000029: 00                                         ; \0
-0000013: 2a00 0000                                  ; FIXUP import function name offset
-000002a: 7465 7374                                  ; import function name
-000002e: 00                                         ; \0
-; import 1
-0000019: 2f00 0000                                  ; FIXUP import module name offset
-000002f: 6967 6e6f 7265 64                          ; import module name
+0000017: 2a00 0000                                  ; FIXUP import module name offset
+000002a: 6967 6e6f 7265 64                          ; import module name
+0000031: 00                                         ; \0
+000001b: 3200 0000                                  ; FIXUP import function name offset
+0000032: 7465 7374                                  ; import function name
 0000036: 00                                         ; \0
-000001d: 3700 0000                                  ; FIXUP import function name offset
-0000037: 7465 7374 32                               ; import function name
-000003c: 00                                         ; \0
+; import 1
+0000021: 3700 0000                                  ; FIXUP import module name offset
+0000037: 6967 6e6f 7265 64                          ; import module name
+000003e: 00                                         ; \0
+0000025: 3f00 0000                                  ; FIXUP import function name offset
+000003f: 7465 7374 32                               ; import function name
+0000044: 00                                         ; \0
 ;; dump
-0000000: 0102 0400 0102 0304 0101 0108 0200 0022  
-0000010: 0000 002a 0000 0001 002f 0000 0037 0000  
-0000020: 0006 6967 6e6f 7265 6400 7465 7374 0069  
-0000030: 676e 6f72 6564 0074 6573 7432 00         
+0000000: 0061 736d 0a00 0000 0102 0400 0102 0304  
+0000010: 0101 0108 0200 002a 0000 0032 0000 0001  
+0000020: 0037 0000 003f 0000 0006 6967 6e6f 7265  
+0000030: 6400 7465 7374 0069 676e 6f72 6564 0074  
+0000040: 6573 7432 00                             
 ;;; STDOUT ;;)
