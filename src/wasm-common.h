@@ -43,9 +43,8 @@ typedef struct WasmStringSlice {
 
 typedef struct WasmLocation {
   const char* filename;
-  int first_line;
+  int line;
   int first_column;
-  int last_line;
   int last_column;
 } WasmLocation;
 

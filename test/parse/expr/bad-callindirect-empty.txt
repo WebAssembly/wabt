@@ -5,4 +5,6 @@
     (call_indirect $t)))
 (;; STDERR ;;;
 parse/expr/bad-callindirect-empty.txt:5:22: syntax error, unexpected ), expecting (
+    (call_indirect $t)))
+                     ^
 ;;; STDERR ;;)

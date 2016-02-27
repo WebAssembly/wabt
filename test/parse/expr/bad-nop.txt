@@ -2,4 +2,6 @@
 (module (func (nop foo)))
 (;; STDERR ;;;
 parse/expr/bad-nop.txt:2:20: unexpected token "foo"
+(module (func (nop foo)))
+                   ^^^
 ;;; STDERR ;;)

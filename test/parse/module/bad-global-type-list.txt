@@ -2,4 +2,6 @@
 (module (global i32 i32 foo))
 (;; STDERR ;;;
 parse/module/bad-global-type-list.txt:2:25: unexpected token "foo"
+(module (global i32 i32 foo))
+                        ^^^
 ;;; STDERR ;;)

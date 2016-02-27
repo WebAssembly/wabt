@@ -2,4 +2,6 @@
 (module (func (f32.neg (f32.const 0) (f32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-unary-too-many.txt:2:38: syntax error, unexpected (, expecting )
+(module (func (f32.neg (f32.const 0) (f32.const 0))))
+                                     ^
 ;;; STDERR ;;)

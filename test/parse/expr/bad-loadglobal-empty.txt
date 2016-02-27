@@ -3,4 +3,6 @@
   (func (load_global)))
 (;; STDERR ;;;
 parse/expr/bad-loadglobal-empty.txt:3:21: syntax error, unexpected ), expecting INT or VAR
+  (func (load_global)))
+                    ^
 ;;; STDERR ;;)

@@ -96,8 +96,7 @@ static void print_error(WasmCheckContext* ctx,
     fprintf(out, "assert_invalid error:\n  ");
   }
   if (loc)
-    fprintf(out, "%s:%d:%d: ", loc->filename, loc->first_line,
-            loc->first_column);
+    fprintf(out, "%s:%d:%d: ", loc->filename, loc->line, loc->first_column);
   vfprintf(out, fmt, args);
   fprintf(out, "\n");
 }
@@ -128,8 +127,7 @@ static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
           /* choose the location that is later in the file */
           WasmLocation* a_loc = &a->binding.loc;
           WasmLocation* b_loc = &b->binding.loc;
-          WasmLocation* loc =
-              a_loc->first_line > b_loc->first_line ? a_loc : b_loc;
+          WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
           print_error(ctx, loc, "redefinition of %s \"%.*s\"", desc,
                       a->binding.name.length, a->binding.name.start);
           result = WASM_ERROR;

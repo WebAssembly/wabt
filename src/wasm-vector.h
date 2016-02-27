@@ -54,7 +54,8 @@ struct WasmAllocator;
   EXTERN_C type* wasm_append_##name(struct WasmAllocator* allocator,          \
                                     type##Vector* vec) WARN_UNUSED;           \
   EXTERN_C WasmResult wasm_reserve_##name##s(                                 \
-      struct WasmAllocator* allocator, type##Vector* vec, size_t desired);    \
+      struct WasmAllocator* allocator, type##Vector* vec, size_t desired)     \
+      WARN_UNUSED;                                                            \
   EXTERN_C WasmResult wasm_append_##name##_value(                             \
       struct WasmAllocator* allocator, type##Vector* vec, type* value)        \
       WARN_UNUSED;                                                            \

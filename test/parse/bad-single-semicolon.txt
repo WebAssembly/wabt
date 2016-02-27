@@ -3,6 +3,12 @@
 (module)
 (;; STDERR ;;;
 parse/bad-single-semicolon.txt:2:1: unexpected char
+; foo bar
+^
 parse/bad-single-semicolon.txt:2:3: unexpected token "foo"
+; foo bar
+  ^^^
 parse/bad-single-semicolon.txt:2:7: unexpected token "bar"
+; foo bar
+      ^^^
 ;;; STDERR ;;)

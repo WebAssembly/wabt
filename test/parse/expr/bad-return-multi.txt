@@ -3,4 +3,6 @@
   (return (f32.const 0) (f32.const 3.14))))
 (;; STDERR ;;;
 parse/expr/bad-return-multi.txt:2:27: syntax error, unexpected VALUE_TYPE, expecting )
+(module (func (result f32 f32)
+                          ^^^
 ;;; STDERR ;;)

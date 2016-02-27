@@ -2,4 +2,6 @@
 (module (func (i32.load8_s align=-1 (i32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-load-align-negative.txt:2:28: unexpected token "align=-1"
+(module (func (i32.load8_s align=-1 (i32.const 0))))
+                           ^^^^^^^^
 ;;; STDERR ;;)

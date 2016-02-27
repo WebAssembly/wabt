@@ -2,4 +2,6 @@
 (module (memory 100 foo))
 (;; STDERR ;;;
 parse/module/bad-memory-max-size.txt:2:21: unexpected token "foo"
+(module (memory 100 foo))
+                    ^^^
 ;;; STDERR ;;)

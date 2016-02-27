@@ -1525,7 +1525,7 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
                                                      num_assert_funcs++);
       out_printf(&ctx->spec_writer_state, "  %s(m, \"%.*s\", \"%s\", %d);\n",
                  js_call, name.length, name.start, invoke->loc.filename,
-                 invoke->loc.first_line);
+                 invoke->loc.line);
 
       WasmExprPtr* expr_ptr;
       switch (command->type) {

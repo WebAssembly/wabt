@@ -3,4 +3,6 @@
   (get_local $foo (nop))))
 (;; STDERR ;;;
 parse/expr/bad-getlocal-too-many.txt:3:19: syntax error, unexpected (, expecting )
+  (get_local $foo (nop))))
+                  ^
 ;;; STDERR ;;)

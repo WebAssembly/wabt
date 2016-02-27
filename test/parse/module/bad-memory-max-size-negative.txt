@@ -2,4 +2,6 @@
 (module (memory 100 -5))
 (;; STDERR ;;;
 parse/module/bad-memory-max-size-negative.txt:2:21: invalid max memory size "-5"
+(module (memory 100 -5))
+                    ^^
 ;;; STDERR ;;)

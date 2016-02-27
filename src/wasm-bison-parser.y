@@ -21,7 +21,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
 
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
@@ -42,7 +41,7 @@
   if ((cond)) {                                                  \
     WasmLocation loc;                                            \
     loc.filename = __FILE__;                                     \
-    loc.first_line = loc.last_line = __LINE__;                   \
+    loc.line = __LINE__;                                         \
     loc.first_column = loc.last_column = 0;                      \
     wasm_parser_error(&loc, lexer, parser, "allocation failed"); \
     YYERROR;                                                     \
@@ -52,20 +51,19 @@
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
 #define CHECK_ALLOC_STR(s) CHECK_ALLOC_(!(s).start)
 
-#define YYLLOC_DEFAULT(Current, Rhs, N)                                        \
-  do                                                                           \
-    if (N) {                                                                   \
-      (Current).filename = YYRHSLOC(Rhs, 1).filename;                          \
-      (Current).first_line = YYRHSLOC(Rhs, 1).first_line;                      \
-      (Current).first_column = YYRHSLOC(Rhs, 1).first_column;                  \
-      (Current).last_line = YYRHSLOC(Rhs, N).last_line;                        \
-      (Current).last_column = YYRHSLOC(Rhs, N).last_column;                    \
-    } else {                                                                   \
-      (Current).filename = NULL;                                               \
-      (Current).first_line = (Current).last_line = YYRHSLOC(Rhs, 0).last_line; \
-      (Current).first_column = (Current).last_column =                         \
-          YYRHSLOC(Rhs, 0).last_column;                                        \
-    }                                                                          \
+#define YYLLOC_DEFAULT(Current, Rhs, N)                       \
+  do                                                          \
+    if (N) {                                                  \
+      (Current).filename = YYRHSLOC(Rhs, 1).filename;         \
+      (Current).line = YYRHSLOC(Rhs, 1).line;                 \
+      (Current).first_column = YYRHSLOC(Rhs, 1).first_column; \
+      (Current).last_column = YYRHSLOC(Rhs, N).last_column;   \
+    } else {                                                  \
+      (Current).filename = NULL;                              \
+      (Current).line = YYRHSLOC(Rhs, 0).line;                 \
+      (Current).first_column = (Current).last_column =        \
+          YYRHSLOC(Rhs, 0).last_column;                       \
+    }                                                         \
   while (0)
 
 #define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
@@ -1479,13 +1477,106 @@ void wasm_parser_error(WasmLocation* loc,
                        WasmParser* parser,
                        const char* fmt,
                        ...) {
+  parser->errors++;
   va_list args;
   va_start(args, fmt);
-  fprintf(stderr, "%s:%d:%d: ", loc->filename, loc->first_line,
-          loc->first_column);
+  fprintf(stderr, "%s:%d:%d: ", loc->filename, loc->line, loc->first_column);
   vfprintf(stderr, fmt, args);
   fprintf(stderr, "\n");
-  parser->errors++;
+
+  /* print the line and a cute little caret, like clang */
+  size_t line_offset = wasm_lexer_get_file_offset_from_line(lexer, loc->line);
+  FILE* file = wasm_lexer_get_file(lexer);
+  long old_offset = ftell(file);
+  if (old_offset != -1) {
+    size_t next_line_offset =
+        wasm_lexer_get_file_offset_from_line(lexer, loc->line + 1);
+    if (next_line_offset == INVALID_LINE_OFFSET) {
+      /* we haven't gotten to the next line yet. read the file to find it. - 1
+       because columns are 1-based */
+      size_t offset = line_offset + (loc->last_column - 1);
+      next_line_offset = offset;
+      if (fseek(file, offset, SEEK_SET) != -1) {
+        char buffer[256];
+        while (1) {
+          size_t bytes_read = fread(buffer, 1, sizeof(buffer), file);
+          if (bytes_read <= 0)
+            break;
+
+          char* newline = memchr(buffer, '\n', bytes_read);
+          if (newline) {
+            next_line_offset += (newline - buffer);
+            break;
+          } else {
+            next_line_offset += bytes_read;
+          }
+        }
+      }
+    } else {
+      /* don't include the newline */
+      next_line_offset--;
+    }
+
+    const size_t max_line = 80;
+    size_t line_length = next_line_offset - line_offset;
+    size_t column_range = loc->last_column - loc->first_column;
+    size_t start_offset = line_offset;
+    if (line_length > max_line) {
+      line_length = max_line;
+      size_t center_on;
+      if (column_range > max_line) {
+        /* the column range doesn't fit, just center on first_column */
+        center_on = loc->first_column - 1;
+      } else {
+        /* the entire range fits, display it all in the center */
+        center_on = (loc->first_column + loc->last_column) / 2 - 1;
+      }
+      if (center_on > max_line / 2)
+        start_offset = line_offset + center_on - max_line / 2;
+      if (start_offset > next_line_offset - max_line)
+        start_offset = next_line_offset - max_line;
+    }
+
+    const char ellipsis[] = "...";
+    size_t ellipsis_length = sizeof(ellipsis) - 1;
+    const char* line_prefix = "";
+    const char* line_suffix = "";
+    if (start_offset + line_length != next_line_offset) {
+      line_suffix = ellipsis;
+      line_length -= ellipsis_length;
+    }
+
+    if (start_offset != line_offset) {
+      start_offset += ellipsis_length;
+      line_length -= ellipsis_length;
+      line_prefix = ellipsis;
+    }
+
+    if (fseek(file, start_offset, SEEK_SET) != -1) {
+      char buffer[max_line];
+      size_t bytes_read = fread(buffer, 1, line_length, file);
+      if (bytes_read > 0) {
+        fprintf(stderr, "%s%.*s%s\n", line_prefix, (int)bytes_read, buffer,
+                line_suffix);
+
+        /* print the caret */
+        char carets[max_line];
+        memset(carets, '^', sizeof(carets));
+        size_t num_spaces = (loc->first_column - 1) -
+                            (start_offset - line_offset) + strlen(line_prefix);
+        size_t num_carets = column_range;
+        if (num_carets > max_line - num_spaces)
+          num_carets = max_line - num_spaces;
+        fprintf(stderr, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets,
+                carets);
+      }
+    }
+
+    if (fseek(file, old_offset, SEEK_SET) == -1) {
+      /* we're screwed now, blow up. */
+      FATAL("failed to seek.");
+    }
+  }
 }
 
 static int hexdigit(char c, uint32_t* out) {

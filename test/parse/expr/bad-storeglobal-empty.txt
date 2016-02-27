@@ -3,4 +3,6 @@
   (func (store_global 0)))
 (;; STDERR ;;;
 parse/expr/bad-storeglobal-empty.txt:3:24: syntax error, unexpected ), expecting (
+  (func (store_global 0)))
+                       ^
 ;;; STDERR ;;)

@@ -2,5 +2,9 @@
 (module (func (f32.loads (i32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-load-float-sign.txt:2:16: unexpected token "f32.loads"
+(module (func (f32.loads (i32.const 0))))
+               ^^^^^^^^^
 parse/expr/bad-load-float-sign.txt:2:26: syntax error, unexpected (
+(module (func (f32.loads (i32.const 0))))
+                         ^
 ;;; STDERR ;;)

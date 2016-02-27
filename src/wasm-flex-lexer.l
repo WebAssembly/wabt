@@ -15,17 +15,28 @@
  */
 
 %{
+#include <assert.h>
+
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
 #include "wasm-parser.h"
+#include "wasm-vector.h"
 
 /* must be included after so some typedefs will be defined */
 #include "wasm-bison-parser.h"
+
+#define WASM_INITIAL_LINE_OFFSETS 10000
+
+typedef size_t WasmLineOffset;
+DECLARE_VECTOR(line_offset, WasmLineOffset);
+DEFINE_VECTOR(line_offset, WasmLineOffset);
 
 typedef struct WasmLexerExtra {
   WasmAllocator* allocator;
   FILE* file;
   const char* filename;
+  size_t offset;
+  WasmLineOffsetVector line_offsets;
   int column;
   int comment_nesting;
 } WasmLexerExtra;
@@ -35,18 +46,22 @@ typedef struct WasmLexerExtra {
                      WASM_PARSER_LTYPE* yylloc_param, yyscan_t yyscanner, \
                      WasmParser* parser)
 
-#define EXTRA(lexer) ((WasmLexerExtra*)wasm_lexer_get_extra(lexer))
-#define COMMENT_NESTING(lexer) (EXTRA(lexer)->comment_nesting)
-#define COLUMN(lexer) (EXTRA(lexer)->column)
-#define RESET_COLUMN(lexer) EXTRA(lexer)->column = 1
-#define YY_USER_ACTION                                 \
-  {                                                    \
-    WasmLexerExtra* extra = EXTRA(yyscanner);          \
-    yylloc->filename = extra->filename;                \
-    yylloc->first_line = yylloc->last_line = yylineno; \
-    yylloc->first_column = extra->column;              \
-    extra->column += yyleng;                           \
-    yylloc->last_column = extra->column;               \
+#define COMMENT_NESTING (yyextra->comment_nesting)
+#define RESET_COLUMN                                                       \
+  do {                                                                     \
+    yyextra->column = 1;                                                   \
+    *wasm_append_line_offset(yyextra->allocator, &yyextra->line_offsets) = \
+        yyextra->offset;                                                   \
+  } while (0)
+
+#define YY_USER_ACTION                      \
+  {                                         \
+    yylloc->filename = yyextra->filename;   \
+    yylloc->line = yylineno;                \
+    yylloc->first_column = yyextra->column; \
+    yyextra->column += yyleng;              \
+    yylloc->last_column = yyextra->column;  \
+    yyextra->offset += yyleng;              \
   }
 
 #define WASM_SIGN_S WASM_SIGNED
@@ -62,11 +77,11 @@ typedef struct WasmLexerExtra {
 #define WASM_MEM_OP_TYPE_I64_LOAD64 WASM_MEM_OP_TYPE_I64_LOAD
 #define WASM_MEM_OP_TYPE_I64_STORE64 WASM_MEM_OP_TYPE_I64_STORE
 
-#define TEXT                      \
+#define TEXT                   \
   yylval->text.start = yytext; \
   yylval->text.length = yyleng
 
-#define TEXT_AT(offset)                    \
+#define TEXT_AT(offset)                 \
   yylval->text.start = yytext + offset; \
   yylval->text.length = yyleng - offset
 
@@ -113,6 +128,7 @@ typedef struct WasmLexerExtra {
 %option noyyalloc
 %option noyyrealloc
 %option noyyfree
+%option extra-type="WasmLexerExtra*"
 
 %x LINE_COMMENT
 %x BLOCK_COMMENT
@@ -151,17 +167,17 @@ NAME      \${ATOM}
 \"                    { BEGIN(BAD_TEXT); }
 <BAD_TEXT>{CHARACTER} {}
 <BAD_TEXT>\n          { BEGIN(INITIAL);
-                        RESET_COLUMN(yyscanner);
-                        wasm_parser_error(yylloc, &yyscanner, parser,
+                        RESET_COLUMN;
+                        wasm_parser_error(yylloc, yyscanner, parser,
                                           "newline in string"); }
-<BAD_TEXT><<EOF>>     { wasm_parser_error(yylloc, &yyscanner, parser,
+<BAD_TEXT><<EOF>>     { wasm_parser_error(yylloc, yyscanner, parser,
                                           "unexpected EOF");
                         return TOK(EOF); }
-<BAD_TEXT>\\.         { wasm_parser_error(yylloc, &yyscanner, parser,
+<BAD_TEXT>\\.         { wasm_parser_error(yylloc, yyscanner, parser,
                                           "bad escape \"%.*s\"", yyleng,
                                           yytext); }
 <BAD_TEXT>\"          { BEGIN(INITIAL); TEXT; return TOK(TEXT); }
-<BAD_TEXT>[^\\]       { wasm_parser_error(yylloc, &yyscanner, parser,
+<BAD_TEXT>[^\\]       { wasm_parser_error(yylloc, yyscanner, parser,
                                           "illegal character in string"); }
 "i32"                 { TYPE(I32); return TOK(VALUE_TYPE); }
 "i64"                 { TYPE(I64); return TOK(VALUE_TYPE); }
@@ -360,24 +376,24 @@ NAME      \${ATOM}
 "store_global"        { return TOK(STORE_GLOBAL); }
 
 ";;"                  { BEGIN(LINE_COMMENT); }
-<LINE_COMMENT>\n      { RESET_COLUMN(yyscanner); BEGIN(INITIAL); }
+<LINE_COMMENT>\n      { RESET_COLUMN; BEGIN(INITIAL); }
 <LINE_COMMENT><<EOF>> { return TOK(EOF); }
 <LINE_COMMENT>.
-"(;"                  { BEGIN(BLOCK_COMMENT); COMMENT_NESTING(yyscanner) = 1; }
-<BLOCK_COMMENT>"(;"   { COMMENT_NESTING(yyscanner)++; }
-<BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING(yyscanner) == 0) BEGIN(INITIAL); }
-<BLOCK_COMMENT>\n     { RESET_COLUMN(yyscanner); }
-<BLOCK_COMMENT><<EOF>> { wasm_parser_error(yylloc, &yyscanner, parser,
+"(;"                  { BEGIN(BLOCK_COMMENT); COMMENT_NESTING = 1; }
+<BLOCK_COMMENT>"(;"   { COMMENT_NESTING++; }
+<BLOCK_COMMENT>";)"   { if (--COMMENT_NESTING == 0) BEGIN(INITIAL); }
+<BLOCK_COMMENT>\n     { RESET_COLUMN; }
+<BLOCK_COMMENT><<EOF>> { wasm_parser_error(yylloc, yyscanner, parser,
                                            "unexpected EOF");
                          return TOK(EOF); }
 <BLOCK_COMMENT>.
-\n                    { RESET_COLUMN(yyscanner); }
+\n                    { RESET_COLUMN; }
 [ \t\r]
 <<EOF>>               { return TOK(EOF); }
-{ATOM}                { wasm_parser_error(yylloc, &yyscanner, parser,
+{ATOM}                { wasm_parser_error(yylloc, yyscanner, parser,
                                           "unexpected token \"%.*s\"", yyleng,
                                           yytext); }
-.                     { wasm_parser_error(yylloc, &yyscanner, parser,
+.                     { wasm_parser_error(yylloc, yyscanner, parser,
                                           "unexpected char"); }
 
 %%
@@ -390,7 +406,7 @@ static WasmAllocator* s_lexer_allocator;
 
 WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
   WasmLexerExtra* extra =
-      wasm_alloc(allocator, sizeof(WasmLexerExtra), WASM_DEFAULT_ALIGN);
+      wasm_alloc_zero(allocator, sizeof(WasmLexerExtra), WASM_DEFAULT_ALIGN);
   if (!extra)
     return NULL;
   extra->allocator = allocator;
@@ -402,6 +418,18 @@ WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
     wasm_free(allocator, extra);
     return NULL;
   }
+
+  if (wasm_reserve_line_offsets(allocator, &extra->line_offsets,
+                                WASM_INITIAL_LINE_OFFSETS) != WASM_OK) {
+    fclose(extra->file);
+    wasm_free(allocator, extra);
+    return NULL;
+  }
+
+  /* Skip the zeroeth line, and make the first line offset 0 */
+  assert(extra->line_offsets.capacity >= 2);
+  *wasm_append_line_offset(allocator, &extra->line_offsets) = 0;
+  *wasm_append_line_offset(allocator, &extra->line_offsets) = 0;
 
   /* when the lexer is created in yylex_init, it uses wasm_lexer_alloc before
    extra has been set, so we have to use a static variable here. */
@@ -417,14 +445,14 @@ WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
 void wasm_destroy_lexer(WasmLexer lexer) {
   WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   fclose(extra->file);
+  wasm_destroy_line_offset_vector(extra->allocator, &extra->line_offsets);
   wasm_lexer_lex_destroy((yyscan_t)lexer);
   wasm_free(extra->allocator, extra);
 }
 
 void* wasm_lexer_alloc(size_t bytes, WasmLexer lexer) {
   WasmAllocator* allocator =
-      lexer ? ((WasmLexerExtra*)wasm_lexer_get_extra(lexer))->allocator
-              : s_lexer_allocator;
+      lexer ? (wasm_lexer_get_extra(lexer))->allocator : s_lexer_allocator;
   return wasm_alloc(allocator, bytes, WASM_DEFAULT_ALIGN);
 }
 
@@ -441,4 +469,17 @@ void wasm_lexer_free(void* ptr, WasmLexer lexer) {
 WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer) {
   WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   return extra->allocator;
+}
+
+FILE* wasm_lexer_get_file(WasmLexer lexer) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  return extra->file;
+}
+
+size_t wasm_lexer_get_file_offset_from_line(WasmLexer lexer, int line) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  if (line < 0 || line >= extra->line_offsets.size)
+    return INVALID_LINE_OFFSET;
+
+  return extra->line_offsets.data[line];
 }

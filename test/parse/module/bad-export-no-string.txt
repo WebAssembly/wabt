@@ -2,4 +2,6 @@
 (module (func (nop)) (export nop nop))
 (;; STDERR ;;;
 parse/module/bad-export-no-string.txt:2:30: syntax error, unexpected NOP, expecting TEXT
+(module (func (nop)) (export nop nop))
+                             ^^^
 ;;; STDERR ;;)

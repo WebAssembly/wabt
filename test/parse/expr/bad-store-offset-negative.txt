@@ -2,4 +2,6 @@
 (module (func (i32.store8 offset=-1 (i32.const 0) (i32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-store-offset-negative.txt:2:27: unexpected token "offset=-1"
+(module (func (i32.store8 offset=-1 (i32.const 0) (i32.const 0))))
+                          ^^^^^^^^^
 ;;; STDERR ;;)

@@ -4,4 +4,6 @@
   (set_local 0 (i32.const 0) (nop))))
 (;; STDERR ;;;
 parse/expr/bad-setlocal-too-many.txt:4:30: syntax error, unexpected (, expecting )
+  (set_local 0 (i32.const 0) (nop))))
+                             ^
 ;;; STDERR ;;)

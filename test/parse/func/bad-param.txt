@@ -2,4 +2,6 @@
 (module (func (param foo)))
 (;; STDERR ;;;
 parse/func/bad-param.txt:2:22: unexpected token "foo"
+(module (func (param foo)))
+                     ^^^
 ;;; STDERR ;;)

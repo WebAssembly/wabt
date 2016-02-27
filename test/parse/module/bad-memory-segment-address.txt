@@ -2,5 +2,9 @@
 (module (memory 100 (segment foo)))
 (;; STDERR ;;;
 parse/module/bad-memory-segment-address.txt:2:30: unexpected token "foo"
+(module (memory 100 (segment foo)))
+                             ^^^
 parse/module/bad-memory-segment-address.txt:2:33: syntax error, unexpected ), expecting INT
+(module (memory 100 (segment foo)))
+                                ^
 ;;; STDERR ;;)

@@ -2,5 +2,9 @@
 (module (func (f32.converts.f64 (f32.const 0))))
 (;; STDERR ;;;
 parse/expr/bad-convert-float-sign.txt:2:16: unexpected token "f32.converts.f64"
+(module (func (f32.converts.f64 (f32.const 0))))
+               ^^^^^^^^^^^^^^^^
 parse/expr/bad-convert-float-sign.txt:2:33: syntax error, unexpected (
+(module (func (f32.converts.f64 (f32.const 0))))
+                                ^
 ;;; STDERR ;;)

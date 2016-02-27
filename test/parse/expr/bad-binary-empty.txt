@@ -2,4 +2,6 @@
 (module (func (i32.add)))
 (;; STDERR ;;;
 parse/expr/bad-binary-empty.txt:2:23: syntax error, unexpected ), expecting (
+(module (func (i32.add)))
+                      ^
 ;;; STDERR ;;)

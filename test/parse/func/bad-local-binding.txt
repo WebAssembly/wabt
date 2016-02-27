@@ -2,4 +2,6 @@
 (module (func (local $foo $bar)))
 (;; STDERR ;;;
 parse/func/bad-local-binding.txt:2:27: syntax error, unexpected VAR, expecting VALUE_TYPE
+(module (func (local $foo $bar)))
+                          ^^^^
 ;;; STDERR ;;)

@@ -2,5 +2,9 @@
 (module (func (local $f f32) (get_local f)))
 (;; STDERR ;;;
 parse/expr/bad-getlocal-name.txt:2:41: unexpected token "f"
+(module (func (local $f f32) (get_local f)))
+                                        ^
 parse/expr/bad-getlocal-name.txt:2:42: syntax error, unexpected ), expecting INT or VAR
+(module (func (local $f f32) (get_local f)))
+                                         ^
 ;;; STDERR ;;)

@@ -2,4 +2,6 @@
 (module (func (i32.const -2147483649)))
 (;; STDERR ;;;
 parse/expr/bad-const-i32-underflow.txt:2:26: invalid literal "-2147483649"
+(module (func (i32.const -2147483649)))
+                         ^^^^^^^^^^^
 ;;; STDERR ;;)

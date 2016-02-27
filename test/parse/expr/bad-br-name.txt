@@ -2,4 +2,6 @@
 (module (func (block $foo (br foo))))
 (;; STDERR ;;;
 parse/expr/bad-br-name.txt:2:31: unexpected token "foo"
+(module (func (block $foo (br foo))))
+                              ^^^
 ;;; STDERR ;;)

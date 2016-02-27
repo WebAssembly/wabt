@@ -2,4 +2,6 @@
 (module (global $n $foo))
 (;; STDERR ;;;
 parse/module/bad-global-binding.txt:2:20: syntax error, unexpected VAR, expecting VALUE_TYPE
+(module (global $n $foo))
+                   ^^^^
 ;;; STDERR ;;)

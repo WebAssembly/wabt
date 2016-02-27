@@ -2,5 +2,9 @@
 (module (import "foo" "bar" (param i32) (resalt i32)))
 (;; STDERR ;;;
 parse/module/bad-import-not-result.txt:2:42: unexpected token "resalt"
+(module (import "foo" "bar" (param i32) (resalt i32)))
+                                         ^^^^^^
 parse/module/bad-import-not-result.txt:2:49: syntax error, unexpected VALUE_TYPE, expecting RESULT
+(module (import "foo" "bar" (param i32) (resalt i32)))
+                                                ^^^
 ;;; STDERR ;;)

@@ -2,5 +2,9 @@
 (module (func (i32.const one-hundred)))
 (;; STDERR ;;;
 parse/expr/bad-const-i32-garbage.txt:2:26: unexpected token "one-hundred"
+(module (func (i32.const one-hundred)))
+                         ^^^^^^^^^^^
 parse/expr/bad-const-i32-garbage.txt:2:37: syntax error, unexpected ), expecting INT or FLOAT
+(module (func (i32.const one-hundred)))
+                                    ^
 ;;; STDERR ;;)

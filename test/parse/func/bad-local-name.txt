@@ -2,4 +2,6 @@
 (module (func (local 0 i32)))
 (;; STDERR ;;;
 parse/func/bad-local-name.txt:2:22: syntax error, unexpected INT, expecting ) or VALUE_TYPE
+(module (func (local 0 i32)))
+                     ^
 ;;; STDERR ;;)

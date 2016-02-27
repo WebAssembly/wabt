@@ -2,5 +2,9 @@
 (module (memory foo))
 (;; STDERR ;;;
 parse/module/bad-memory-init-size.txt:2:17: unexpected token "foo"
+(module (memory foo))
+                ^^^
 parse/module/bad-memory-init-size.txt:2:20: syntax error, unexpected ), expecting INT
+(module (memory foo))
+                   ^
 ;;; STDERR ;;)

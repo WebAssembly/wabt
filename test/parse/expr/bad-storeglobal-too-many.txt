@@ -3,4 +3,6 @@
   (func (store_global 0 (i32.const 0) (nop))))
 (;; STDERR ;;;
 parse/expr/bad-storeglobal-too-many.txt:3:39: syntax error, unexpected (, expecting )
+  (func (store_global 0 (i32.const 0) (nop))))
+                                      ^
 ;;; STDERR ;;)

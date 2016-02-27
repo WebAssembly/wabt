@@ -2,4 +2,6 @@
 (module (func (if_else (i32.const 0) (nop) (nop) (nop))))
 (;; STDERR ;;;
 parse/expr/bad-if-too-many.txt:2:50: syntax error, unexpected (, expecting )
+(module (func (if_else (i32.const 0) (nop) (nop) (nop))))
+                                                 ^
 ;;; STDERR ;;)

@@ -17,6 +17,8 @@
 #ifndef WASM_INTERNAL_H
 #define WASM_INTERNAL_H
 
+#include <stdio.h>
+
 #include "wasm-ast.h"
 #include "wasm-lexer.h"
 
@@ -82,7 +84,11 @@ typedef struct WasmParser {
 #define YYSTYPE WASM_PARSER_STYPE
 #define YYLTYPE WASM_PARSER_LTYPE
 
+#define INVALID_LINE_OFFSET ((size_t)~0)
+
 struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer);
+FILE* wasm_lexer_get_file(WasmLexer);
+size_t wasm_lexer_get_file_offset_from_line(WasmLexer, int line);
 int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmLexer, WasmParser*);
 void wasm_parser_error(WasmLocation*, WasmLexer, WasmParser*, const char*, ...);
 void wasm_print_memory(const void* start,

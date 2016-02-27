@@ -17,6 +17,8 @@
 #ifndef WASM_LEXER_H_
 #define WASM_LEXER_H_
 
+#include <stddef.h>
+
 struct WasmAllocator;
 typedef void* WasmLexer;
 
