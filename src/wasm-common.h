@@ -29,7 +29,13 @@
 #define EXTERN_C_END
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ >= 4)
 #define WARN_UNUSED __attribute__ ((warn_unused_result))
+#elif defined(_MSC_VER) && (_MSC_VER >= 1700)
+#define WARN_UNUSED _Check_return_
+#else
+#define WARN_UNUSED
+#endif
 
 typedef enum WasmResult {
   WASM_OK,

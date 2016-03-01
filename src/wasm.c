@@ -47,7 +47,7 @@ void wasm_print_memory(const void* start,
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07x: ", (int)((void*)p - start + offset));
+    printf("%07x: ", (int)((size_t)p - (size_t)start + offset));
     while (p < line_end) {
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
@@ -120,7 +120,7 @@ void wasm_vfprint_error(FILE* error_file,
         next_line_offset--;
       }
 
-      const size_t max_line = 80;
+#define max_line 80
       size_t line_length = next_line_offset - line_offset;
       size_t column_range = loc->last_column - loc->first_column;
       size_t start_offset = line_offset;

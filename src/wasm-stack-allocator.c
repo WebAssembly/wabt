@@ -45,9 +45,9 @@ static WasmStackAllocatorChunk* allocate_chunk(
       stack_allocator->fallback, real_size, CHUNK_ALIGN);
   if (!chunk)
     return NULL;
-  void* start = (void*)chunk + sizeof(WasmStackAllocatorChunk);
+  void* start = (void*)(chunk + sizeof(WasmStackAllocatorChunk));
   chunk->current = start;
-  chunk->end = start + max_avail;
+  chunk->end = (void*)((size_t)start + max_avail);
   return chunk;
 }
 
@@ -61,7 +61,7 @@ static void* stack_alloc(WasmAllocator* allocator, size_t size, size_t align) {
     if (!chunk)
       return NULL;
     void* p = align_up(chunk->current, align);
-    assert(p + size <= chunk->end);
+    assert((void*)((size_t)p + size) <= chunk->end);
     chunk->current = chunk->end;
     /* thread this chunk before first. There's no available space, so it's not
      worth considering. */
@@ -73,7 +73,7 @@ static void* stack_alloc(WasmAllocator* allocator, size_t size, size_t align) {
 
   chunk->current = align_up(chunk->current, align);
   void* result;
-  void* new_current = chunk->current + size;
+  void* new_current = (void*)((size_t)chunk->current + size);
   if (new_current < chunk->end) {
     result = chunk->current;
     chunk->current = new_current;
@@ -85,7 +85,7 @@ static void* stack_alloc(WasmAllocator* allocator, size_t size, size_t align) {
     stack_allocator->last = chunk;
     chunk->current = align_up(chunk->current, align);
     result = chunk->current;
-    chunk->current += size;
+    chunk->current = (void*)((size_t)chunk->current + size);
     assert(chunk->current <= chunk->end);
   }
 
@@ -119,7 +119,7 @@ static void* stack_realloc(WasmAllocator* allocator,
    to the end of the chunk. So we can copy at most that many bytes, or the
    new size, whichever is less. Use memmove because the regions may be
    overlapping. */
-  size_t old_max_size = chunk->end - p;
+  size_t old_max_size = (size_t)chunk->end - (size_t)p;
   size_t copy_size = size > old_max_size ? old_max_size : size;
   memmove(result, p, copy_size);
   return result;
@@ -171,7 +171,7 @@ void wasm_reset_stack_allocator(WasmStackAllocator* stack_allocator) {
     chunk = prev;
   }
   stack_allocator->first->current =
-      (void*)stack_allocator->first + sizeof(WasmStackAllocatorChunk);
+      (void*)(stack_allocator->first + sizeof(WasmStackAllocatorChunk));
   stack_allocator->first->prev = NULL;
   stack_allocator->last = stack_allocator->first;
   stack_allocator->last_allocation = NULL;

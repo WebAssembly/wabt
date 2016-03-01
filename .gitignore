@@ -2,3 +2,10 @@
 /out
 /third_party/v8/depot_tools
 /fuzz-out
+
+#Visual Studio Products
+Debug
+Release
+*.VC.opendb
+*.sdf
+*.vcxproj.user
