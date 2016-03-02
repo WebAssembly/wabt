@@ -45,7 +45,7 @@ static WasmStackAllocatorChunk* allocate_chunk(
       stack_allocator->fallback, real_size, CHUNK_ALIGN);
   if (!chunk)
     return NULL;
-  void* start = (void*)(chunk + sizeof(WasmStackAllocatorChunk));
+  void* start = chunk + 1;
   chunk->current = start;
   chunk->end = (void*)((size_t)start + max_avail);
   return chunk;
@@ -171,7 +171,7 @@ void wasm_reset_stack_allocator(WasmStackAllocator* stack_allocator) {
     chunk = prev;
   }
   stack_allocator->first->current =
-      (void*)(stack_allocator->first + sizeof(WasmStackAllocatorChunk));
+      stack_allocator->first + 1;
   stack_allocator->first->prev = NULL;
   stack_allocator->last = stack_allocator->first;
   stack_allocator->last_allocation = NULL;

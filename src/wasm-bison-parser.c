@@ -4541,7 +4541,7 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
 
 WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script) {
   WasmParser parser;
-  memset(&parser, 0, sizeof(WasmParser));
+  ZERO_MEMORY(parser, WasmParser);
   WasmAllocator* allocator = wasm_lexer_get_allocator(lexer);
   parser.allocator = allocator;
   out_script->allocator = allocator;

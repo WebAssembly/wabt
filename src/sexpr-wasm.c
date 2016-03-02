@@ -300,12 +300,12 @@ int main(int argc, char** argv) {
     result = wasm_check_script(lexer, &script);
     if (result == WASM_OK) {
       WasmMemoryWriter writer;
-      memset(&writer, 0, sizeof(WasmMemoryWriter));
+      ZERO_MEMORY(writer, WasmMemoryWriter);
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
         FATAL("unable to open memory writer for writing\n");
 
       WasmWriteBinaryOptions options;
-      memset(&options, 0, sizeof(WasmWriteBinaryOptions));
+      ZERO_MEMORY(options, WasmWriteBinaryOptions);
       if (s_spec)
         options.spec = 1;
       if (s_spec_verbose)

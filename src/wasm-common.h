@@ -37,6 +37,8 @@
 #define WARN_UNUSED
 #endif
 
+#define ZERO_MEMORY(var, type) memset((void*)&var, 0, sizeof(type))
+
 typedef enum WasmResult {
   WASM_OK,
   WASM_ERROR,

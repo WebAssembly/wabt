@@ -973,7 +973,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   WasmFuncSignatureVector sigs;
-  memset(&sigs, 0, sizeof(WasmFuncSignatureVector));
+  ZERO_MEMORY(sigs, WasmFuncSignatureVector);
   get_func_signatures(ctx, module, &sigs);
   if (sigs.size) {
     out_u8(ws, WASM_BINARY_SECTION_SIGNATURES,
@@ -1449,7 +1449,7 @@ static void write_module_spec(WasmWriteContext* ctx, WasmModule* module) {
   out_printf(&ctx->spec_writer_state, "};\nvar m = createModule([\n");
   WasmOutputBuffer* module_buf = &ctx->mem_writer->buf;
   const uint8_t* p = module_buf->start;
-  const uint8_t* end = (uint8_t*)((size_t)module_buf->start + module_buf->size);
+  const uint8_t* end = p + module_buf->size;
   while (p < end) {
     out_printf(&ctx->spec_writer_state, " ");
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
@@ -1659,14 +1659,14 @@ WasmResult wasm_write_binary(WasmAllocator* allocator,
                              WasmScript* script,
                              WasmWriteBinaryOptions* options) {
   WasmWriteContext ctx;
-  memset(&ctx, 0, sizeof(WasmWriteContext));
+  ZERO_MEMORY(ctx, WasmWriteContext);
   ctx.allocator = allocator;
   ctx.options = options;
   ctx.result = WASM_OK;
 
   if (options->spec) {
     WasmMemoryWriter mem_writer;
-    memset(&mem_writer, 0, sizeof(WasmMemoryWriter));
+    ZERO_MEMORY(mem_writer, WasmMemoryWriter);
     WasmResult result = wasm_init_mem_writer(allocator, &mem_writer);
     if (result != WASM_OK)
       return result;
