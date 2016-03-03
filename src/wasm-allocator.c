@@ -47,7 +47,7 @@ static void* libc_alloc(WasmAllocator* allocator, size_t size, size_t align) {
   if (!p)
     return NULL;
 
-  void* aligned = align_up(p + sizeof(MemInfo), align);
+  void* aligned = align_up((void*)((size_t)p + sizeof(MemInfo)), align);
   MemInfo* mem_info = (MemInfo*)aligned - 1;
   assert(is_aligned(mem_info, sizeof(void*)));
   mem_info->real_pointer = p;

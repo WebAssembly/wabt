@@ -15,10 +15,12 @@
  */
 
 #include <assert.h>
-#include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __GNUC__
+#  include <getopt.h>
+#endif
 
 #include "wasm-binary-writer.h"
 #include "wasm-check.h"
@@ -47,18 +49,38 @@ static int s_spec;
 static int s_spec_verbose;
 static int s_use_libc_allocator;
 
+#ifndef __GNUC__
+typedef struct option {
+    const char* name;
+    int has_arg;
+    int* flag;
+    int val;
+} option;
+#define null_argument     0 /*Argument Null*/
+#define no_argument       0 /*Argument Switch Only*/
+#define required_argument 1 /*Argument Required*/
+#define optional_argument 2 /*Argument Optional*/
+
+typedef struct OptionText {
+    char long_name[64];
+    char short_name[64];
+} OptionText;
+#define USE_MIN_PARSER 1
+#endif
+
 static struct option s_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
     {"dump-module", no_argument, NULL, 'd'},
-    {"output", no_argument, NULL, 'o'},
+    {"output", required_argument, NULL, 'o'},
     {"spec", no_argument, NULL, 0},
     {"spec-verbose", no_argument, NULL, 0},
     {"br-if", no_argument, NULL, 0},
     {"use-libc-allocator", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
-STATIC_ASSERT(NUM_FLAGS + 1 == ARRAY_SIZE(s_long_options));
+#define OPTIONS_LENGTH (ARRAY_SIZE(s_long_options) - 1)
+STATIC_ASSERT(NUM_FLAGS == OPTIONS_LENGTH);
 
 typedef struct OptionHelp {
   int flag;
@@ -68,7 +90,9 @@ typedef struct OptionHelp {
 
 static OptionHelp s_option_help[] = {
     {FLAG_VERBOSE, NULL, "use multiple times for more info"},
+    {FLAG_HELP, NULL, "print this help message"},
     {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
+    {FLAG_OUTPUT, NULL, "<filename> file to output the generated binary format"},
     {FLAG_SPEC, NULL,
      "parse a file with multiple modules and assertions, like the spec tests"},
     {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
@@ -77,6 +101,8 @@ static OptionHelp s_option_help[] = {
      "use malloc, free, etc. instead of stack allocator"},
     {NUM_FLAGS, NULL},
 };
+#define OPTIONS_HELP_LENGTH (ARRAY_SIZE(s_option_help) - 1)
+STATIC_ASSERT(NUM_FLAGS == OPTIONS_HELP_LENGTH);
 
 static void usage(const char* prog) {
   printf("usage: %s [option] filename\n", prog);
@@ -121,14 +147,63 @@ static void usage(const char* prog) {
 static void parse_options(int argc, char** argv) {
   int c;
   int option_index = 0;
-
+#ifdef USE_MIN_PARSER
+  const char* optarg = NULL;
+  int optind = 1;
+  OptionText options_text[OPTIONS_LENGTH];
+  int i = 0;
+  for (; i < OPTIONS_LENGTH; i++) {
+      struct option* opt = &s_long_options[i];
+      sprintf(options_text[i].long_name, "--%s", opt->name);
+      if (opt->val) {
+          sprintf(options_text[i].short_name, "-%c", (char)opt->val);
+      }
+  }
+#endif
   while (1) {
+#ifndef USE_MIN_PARSER
     c = getopt_long(argc, argv, "vhdo:", s_long_options, &option_index);
     if (c == -1) {
       break;
     }
 
-  redo_switch:
+#else
+    if (optind >= argc) {
+        break;
+    }
+    optarg = NULL;
+    option_index = -1;
+    const char* in_opt = argv[optind++];
+    i = 0;
+    for (; i < OPTIONS_LENGTH; i++) {        const struct OptionText* optText = &options_text[i];
+        const struct option* opt = &s_long_options[i];
+        if (
+            strcmp(in_opt, optText->long_name) == 0 ||
+            (opt->val && strcmp(in_opt, optText->short_name) == 0)
+        ) {
+            option_index = i;
+            c = opt->val;
+            if (opt->has_arg != no_argument)
+            {
+                if (optind < argc) {
+                    optarg = argv[optind++];
+                } else if (opt->has_arg == required_argument) {
+                    FATAL("Missing argument for option %s.\n", opt->name);
+                    usage(argv[0]);
+                }
+            }
+            break;
+        }
+    }
+
+    // no argument found
+    if (option_index == -1) {
+        --optind;
+        break;
+    }
+#endif
+
+redo_switch:
     switch (c) {
       case 0:
         c = s_long_options[option_index].val;
@@ -221,11 +296,13 @@ int main(int argc, char** argv) {
   if (result == WASM_OK) {
     result = wasm_check_script(lexer, &script);
     if (result == WASM_OK) {
-      WasmMemoryWriter writer = {};
+      WasmMemoryWriter writer;
+      ZERO_MEMORY(writer);
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
         FATAL("unable to open memory writer for writing\n");
 
-      WasmWriteBinaryOptions options = {};
+      WasmWriteBinaryOptions options;
+      ZERO_MEMORY(options);
       if (s_spec)
         options.spec = 1;
       if (s_spec_verbose)

@@ -188,6 +188,16 @@ static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
+#ifdef WIN32
+#include <intrin.h>
+static uint32_t __inline __builtin_clz(uint32_t x)
+{
+    unsigned long r = 0;
+    _BitScanReverse(&r, x);
+    return (31 - r);
+}
+#endif
+
 static uint32_t log_two_u32(uint32_t x) {
   if (x <= 1)
     return 0;
@@ -504,7 +514,8 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   if (num_params_and_locals)
     CHECK_ALLOC_NULL(ctx->remapped_locals);
 
-  int max[WASM_NUM_TYPES] = {};
+  int max[WASM_NUM_TYPES];
+  memset(max, 0, sizeof(int) * WASM_NUM_TYPES);
   int i;
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
@@ -521,7 +532,8 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   start[WASM_TYPE_F32] = start[WASM_TYPE_I64] + max[WASM_TYPE_I64];
   start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
 
-  int seen[WASM_NUM_TYPES] = {};
+  int seen[WASM_NUM_TYPES];
+  memset(seen, 0, sizeof(int) * WASM_NUM_TYPES);
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
     ctx->remapped_locals[num_params + i] = start[type] + seen[type]++;
@@ -960,7 +972,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
   }
 
-  WasmFuncSignatureVector sigs = {};
+  WasmFuncSignatureVector sigs;
+  ZERO_MEMORY(sigs);
   get_func_signatures(ctx, module, &sigs);
   if (sigs.size) {
     out_u8(ws, WASM_BINARY_SECTION_SIGNATURES,
@@ -1007,7 +1020,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       out_u8(ws, flags, "func flags");
       out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
       if (has_locals) {
-        int num_locals[WASM_NUM_TYPES] = {};
+        int num_locals[WASM_NUM_TYPES];
+        memset(num_locals, 0, sizeof(int) * WASM_NUM_TYPES);
         int j;
         for (j = 0; j < func->locals.types.size; ++j)
           num_locals[func->locals.types.data[j]]++;
@@ -1435,7 +1449,7 @@ static void write_module_spec(WasmWriteContext* ctx, WasmModule* module) {
   out_printf(&ctx->spec_writer_state, "};\nvar m = createModule([\n");
   WasmOutputBuffer* module_buf = &ctx->mem_writer->buf;
   const uint8_t* p = module_buf->start;
-  const uint8_t* end = module_buf->start + module_buf->size;
+  const uint8_t* end = p + module_buf->size;
   while (p < end) {
     out_printf(&ctx->spec_writer_state, " ");
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
@@ -1644,13 +1658,15 @@ WasmResult wasm_write_binary(WasmAllocator* allocator,
                              WasmWriter* writer,
                              WasmScript* script,
                              WasmWriteBinaryOptions* options) {
-  WasmWriteContext ctx = {};
+  WasmWriteContext ctx;
+  ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.options = options;
   ctx.result = WASM_OK;
 
   if (options->spec) {
-    WasmMemoryWriter mem_writer = {};
+    WasmMemoryWriter mem_writer;
+    ZERO_MEMORY(mem_writer);
     WasmResult result = wasm_init_mem_writer(allocator, &mem_writer);
     if (result != WASM_OK)
       return result;

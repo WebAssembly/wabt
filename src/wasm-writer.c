@@ -111,7 +111,7 @@ static WasmResult write_data_to_output_buffer(size_t offset,
   size_t end = offset + size;
   if (ensure_output_buffer_capacity(&writer->buf, end) != WASM_OK)
     return WASM_ERROR;
-  memcpy(writer->buf.start + offset, data, size);
+  memcpy((void*)((size_t)writer->buf.start + offset), data, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
   return WASM_OK;

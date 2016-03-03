@@ -41,9 +41,9 @@ well. On Debian-based systems::
 
   $ sudo apt-get install bison
   ...
-  $ touch src/wasm-parser.y
+  $ touch src/wasm-bison-parser.y
   $ make
-  bison -o src/wasm-parser.c --defines=src/wasm-parser.h src/wasm-parser.y
+  bison -o src/wasm-bison-parser.c --defines=src/wasm-bison-parser.h src/wasm-bison-parser.y
   ...
 
 If you make changes to src/wasm-lexer.l, you'll need to install flex as well.
@@ -51,9 +51,9 @@ On Debian-based systems::
 
   $ sudo apt-get install flex
   ...
-  $ touch src/wasm-lexer.l
+  $ touch src/wasm-flex-lexer.l
   $ make
-  flex -o src/wasm-lexer.c src/wasm-lexer.l
+  flex -o src/wasm-flex-lexer.c src/wasm-flex-lexer.l
   ...
 
 Building d8
@@ -92,7 +92,7 @@ First write some WebAssembly s-expressions::
 
 Then run sexpr-wasm to build a binary-encoded file::
 
-  $ out/sexpr-wasm test.wast -o test.wasm
+  $ out/sexpr-wasm -o test.wasm test.wast
 
 This can be loaded into d8 using JavaScript like this::
 

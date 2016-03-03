@@ -47,7 +47,7 @@ void wasm_print_memory(const void* start,
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07x: ", (int)((void*)p - start + offset));
+    printf("%07x: ", (int)((size_t)p - (size_t)start + offset));
     while (p < line_end) {
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
@@ -120,24 +120,24 @@ void wasm_vfprint_error(FILE* error_file,
         next_line_offset--;
       }
 
-      const size_t max_line = 80;
+#define MAX_LINE 80
       size_t line_length = next_line_offset - line_offset;
       size_t column_range = loc->last_column - loc->first_column;
       size_t start_offset = line_offset;
-      if (line_length > max_line) {
-        line_length = max_line;
+      if (line_length > MAX_LINE) {
+        line_length = MAX_LINE;
         size_t center_on;
-        if (column_range > max_line) {
+        if (column_range > MAX_LINE) {
           /* the column range doesn't fit, just center on first_column */
           center_on = loc->first_column - 1;
         } else {
           /* the entire range fits, display it all in the center */
           center_on = (loc->first_column + loc->last_column) / 2 - 1;
         }
-        if (center_on > max_line / 2)
-          start_offset = line_offset + center_on - max_line / 2;
-        if (start_offset > next_line_offset - max_line)
-          start_offset = next_line_offset - max_line;
+        if (center_on > MAX_LINE / 2)
+          start_offset = line_offset + center_on - MAX_LINE / 2;
+        if (start_offset > next_line_offset - MAX_LINE)
+          start_offset = next_line_offset - MAX_LINE;
       }
 
       const char ellipsis[] = "...";
@@ -156,21 +156,21 @@ void wasm_vfprint_error(FILE* error_file,
       }
 
       if (fseek(lexer_file, start_offset, SEEK_SET) != -1) {
-        char buffer[max_line];
+        char buffer[MAX_LINE];
         size_t bytes_read = fread(buffer, 1, line_length, lexer_file);
         if (bytes_read > 0) {
           fprintf(error_file, "%s%.*s%s\n", line_prefix, (int)bytes_read,
                   buffer, line_suffix);
 
           /* print the caret */
-          char carets[max_line];
+          char carets[MAX_LINE];
           memset(carets, '^', sizeof(carets));
           size_t num_spaces = (loc->first_column - 1) -
                               (start_offset - line_offset) +
                               strlen(line_prefix);
           size_t num_carets = column_range;
-          if (num_carets > max_line - num_spaces)
-            num_carets = max_line - num_spaces;
+          if (num_carets > MAX_LINE - num_spaces)
+            num_carets = MAX_LINE - num_spaces;
           fprintf(error_file, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets,
                   carets);
         }
