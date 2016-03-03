@@ -292,12 +292,7 @@ expr1 :
       $$ = wasm_new_empty_expr(parser->allocator, WASM_EXPR_TYPE_NOP);
       CHECK_ALLOC_NULL($$);
     }
-  | BLOCK labeling {
-      $$ = wasm_new_block_expr(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      $$->block.label = $2;
-    }
-  | BLOCK labeling non_empty_expr_list {
+  | BLOCK labeling expr_list {
       $$ = wasm_new_block_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->block.label = $2;

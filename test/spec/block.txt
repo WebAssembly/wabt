@@ -1,0 +1,7 @@
+;;; EXE: test/run-d8.py
+;;; FLAGS: --spec
+;;; STDIN_FILE: third_party/testsuite/block.wast
+(;; STDOUT ;;;
+$invoke_0 = undefined
+3/3 tests passed.
+;;; STDOUT ;;)
