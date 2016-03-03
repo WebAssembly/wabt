@@ -150,14 +150,19 @@ typedef struct WasmBindingHash {
   WasmBindingHashEntry* free_head;
 } WasmBindingHash;
 
+typedef struct WasmBlock {
+  WasmLabel label;
+  WasmExprPtrVector exprs;
+} WasmBlock;
+
 typedef struct WasmExpr WasmExpr;
 struct WasmExpr {
   WasmLocation loc;
   WasmExprType type;
   union {
-    struct { WasmLabel label; WasmExprPtrVector exprs; } block;
-    struct { WasmExprPtr cond, true_, false_; } if_else;
-    struct { WasmExprPtr cond, true_; } if_;
+    WasmBlock block;
+    struct { WasmExprPtr cond; WasmBlock true_, false_; } if_else;
+    struct { WasmExprPtr cond; WasmBlock true_; } if_;
     struct { WasmVar var; WasmExprPtr cond, expr; } br_if;
     struct { WasmLabel inner, outer; WasmExprPtrVector exprs; } loop;
     struct { WasmVar var; WasmExprPtr expr; } br;

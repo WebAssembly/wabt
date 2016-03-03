@@ -1,6 +1,6 @@
 (module
   (func
     (block
-      (if_else (i32.const 0)
+      (if (i32.const 0)
         (br)
         (i32.const 10)))))

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (if_else (i32.const 0)
+    (if (i32.const 0)
       (f32.const 0)
       (i32.const 0))))
 (;; STDERR ;;;

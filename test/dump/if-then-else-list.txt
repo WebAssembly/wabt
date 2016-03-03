@@ -1,0 +1,42 @@
+;;; FLAGS: -dv
+(module
+  (func
+    (if (i32.const 1)
+      (then (i32.const 2) (i32.const 3))
+      (else (i32.const 4) (i32.const 5)))))
+(;; STDOUT ;;;
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
+0000009: 01                                         ; num signatures
+; signature 0
+000000a: 00                                         ; num params
+000000b: 00                                         ; result_type
+000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000d: 01                                         ; num functions
+; function 0
+000000e: 00                                         ; func flags
+000000f: 0000                                       ; func signature index
+0000011: 0000                                       ; func body size
+0000013: 04                                         ; OPCODE_IF_THEN
+0000014: 09                                         ; OPCODE_I8_CONST
+0000015: 01                                         ; u8 literal
+0000016: 01                                         ; OPCODE_BLOCK
+0000017: 02                                         ; num expressions
+0000018: 09                                         ; OPCODE_I8_CONST
+0000019: 02                                         ; u8 literal
+000001a: 09                                         ; OPCODE_I8_CONST
+000001b: 03                                         ; u8 literal
+000001c: 01                                         ; OPCODE_BLOCK
+000001d: 02                                         ; num expressions
+000001e: 09                                         ; OPCODE_I8_CONST
+000001f: 04                                         ; u8 literal
+0000020: 09                                         ; OPCODE_I8_CONST
+0000021: 05                                         ; u8 literal
+0000011: 0f00                                       ; FIXUP func body size
+0000022: 06                                         ; WASM_BINARY_SECTION_END
+;; dump
+0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
+0000010: 000f 0004 0901 0102 0902 0903 0102 0904  
+0000020: 0905 06                                  
+;;; STDOUT ;;)

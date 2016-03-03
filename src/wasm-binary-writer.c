@@ -690,17 +690,33 @@ static void write_expr(WasmWriteContext* ctx,
       out_opcode(ws, WASM_OPCODE_GROW_MEMORY);
       write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
-    case WASM_EXPR_TYPE_IF:
+    case WASM_EXPR_TYPE_IF: {
+      WasmLabelNode node;
       out_opcode(ws, WASM_OPCODE_IF);
       write_expr(ctx, module, func, expr->if_.cond);
-      write_expr(ctx, module, func, expr->if_.true_);
+      push_label(ctx, &node, &expr->if_.true_.label);
+      /* TODO(binji): optimize so block is only included if the expression
+       * count > 1, or if the expression list contains a br/br_if */
+      out_opcode(ws, WASM_OPCODE_BLOCK);
+      write_expr_list_with_count(ctx, module, func, &expr->if_.true_.exprs);
+      pop_label(ctx, &expr->if_.true_.label);
       break;
-    case WASM_EXPR_TYPE_IF_ELSE:
+    }
+    case WASM_EXPR_TYPE_IF_ELSE: {
+      WasmLabelNode true_node, false_node;
       out_opcode(ws, WASM_OPCODE_IF_THEN);
       write_expr(ctx, module, func, expr->if_else.cond);
-      write_expr(ctx, module, func, expr->if_else.true_);
-      write_expr(ctx, module, func, expr->if_else.false_);
+      push_label(ctx, &true_node, &expr->if_else.true_.label);
+      out_opcode(ws, WASM_OPCODE_BLOCK);
+      write_expr_list_with_count(ctx, module, func, &expr->if_else.true_.exprs);
+      pop_label(ctx, &expr->if_else.true_.label);
+      push_label(ctx, &false_node, &expr->if_else.false_.label);
+      out_opcode(ws, WASM_OPCODE_BLOCK);
+      write_expr_list_with_count(ctx, module, func,
+                                 &expr->if_else.false_.exprs);
+      pop_label(ctx, &expr->if_else.false_.label);
       break;
+    }
     case WASM_EXPR_TYPE_LOAD: {
       /* Access byte: 0bAaao0000
        A = Alignment. If set, access is unaligned

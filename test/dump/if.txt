@@ -2,9 +2,9 @@
 (module
   (func
     (if (i32.const 1) (nop))
-    (if_else (i32.const 0) (f32.const 1.0) (f32.const 2.0)))
+    (if (i32.const 0) (f32.const 1.0) (f32.const 2.0)))
   (func
-    (if_else (i32.const 1) (return) (return))))
+    (if (i32.const 1) (return) (return))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
@@ -22,28 +22,39 @@
 0000013: 03                                         ; OPCODE_IF
 0000014: 09                                         ; OPCODE_I8_CONST
 0000015: 01                                         ; u8 literal
-0000016: 00                                         ; OPCODE_NOP
-0000017: 04                                         ; OPCODE_IF_THEN
-0000018: 09                                         ; OPCODE_I8_CONST
-0000019: 00                                         ; u8 literal
-000001a: 0d                                         ; OPCODE_F32_CONST
-000001b: 0000 803f                                  ; f32 literal
-000001f: 0d                                         ; OPCODE_F32_CONST
-0000020: 0000 0040                                  ; f32 literal
-0000011: 1100                                       ; FIXUP func body size
+0000016: 01                                         ; OPCODE_BLOCK
+0000017: 01                                         ; num expressions
+0000018: 00                                         ; OPCODE_NOP
+0000019: 04                                         ; OPCODE_IF_THEN
+000001a: 09                                         ; OPCODE_I8_CONST
+000001b: 00                                         ; u8 literal
+000001c: 01                                         ; OPCODE_BLOCK
+000001d: 01                                         ; num expressions
+000001e: 0d                                         ; OPCODE_F32_CONST
+000001f: 0000 803f                                  ; f32 literal
+0000023: 01                                         ; OPCODE_BLOCK
+0000024: 01                                         ; num expressions
+0000025: 0d                                         ; OPCODE_F32_CONST
+0000026: 0000 0040                                  ; f32 literal
+0000011: 1700                                       ; FIXUP func body size
 ; function 1
-0000024: 00                                         ; func flags
-0000025: 0000                                       ; func signature index
-0000027: 0000                                       ; func body size
-0000029: 04                                         ; OPCODE_IF_THEN
-000002a: 09                                         ; OPCODE_I8_CONST
-000002b: 01                                         ; u8 literal
-000002c: 14                                         ; OPCODE_RETURN
-000002d: 14                                         ; OPCODE_RETURN
-0000027: 0500                                       ; FIXUP func body size
-000002e: 06                                         ; WASM_BINARY_SECTION_END
+000002a: 00                                         ; func flags
+000002b: 0000                                       ; func signature index
+000002d: 0000                                       ; func body size
+000002f: 04                                         ; OPCODE_IF_THEN
+0000030: 09                                         ; OPCODE_I8_CONST
+0000031: 01                                         ; u8 literal
+0000032: 01                                         ; OPCODE_BLOCK
+0000033: 01                                         ; num expressions
+0000034: 14                                         ; OPCODE_RETURN
+0000035: 01                                         ; OPCODE_BLOCK
+0000036: 01                                         ; num expressions
+0000037: 14                                         ; OPCODE_RETURN
+000002d: 0900                                       ; FIXUP func body size
+0000038: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0202 0000  
-0000010: 0011 0003 0901 0004 0900 0d00 0080 3f0d  
-0000020: 0000 0040 0000 0005 0004 0901 1414 06    
+0000010: 0017 0003 0901 0101 0004 0900 0101 0d00  
+0000020: 0080 3f01 010d 0000 0040 0000 0009 0004  
+0000030: 0901 0101 1401 0114 06                   
 ;;; STDOUT ;;)

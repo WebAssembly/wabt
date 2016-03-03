@@ -110,7 +110,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %token LPAR "("
 %token RPAR ")"
 %token INT FLOAT TEXT VAR VALUE_TYPE
-%token NOP BLOCK IF IF_ELSE LOOP BR BR_IF TABLESWITCH CASE
+%token NOP BLOCK IF THEN ELSE LOOP BR BR_IF TABLESWITCH CASE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
@@ -303,18 +303,37 @@ expr1 :
       $$->block.label = $2;
       $$->block.exprs = $3;
     }
-  | IF_ELSE expr expr expr {
-      $$ = wasm_new_if_else_expr(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      $$->if_else.cond = $2;
-      $$->if_else.true_ = $3;
-      $$->if_else.false_ = $4;
-    }
   | IF expr expr {
       $$ = wasm_new_if_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_.cond = $2;
-      $$->if_.true_ = $3;
+      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
+                                             &$$->if_.true_.exprs, &$3));
+    }
+  | IF expr LPAR THEN labeling expr_list RPAR {
+      $$ = wasm_new_if_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->if_.cond = $2;
+      $$->if_.true_.label = $5;
+      $$->if_.true_.exprs = $6;
+    }
+  | IF expr expr expr {
+      $$ = wasm_new_if_else_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->if_else.cond = $2;
+      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
+                                             &$$->if_else.true_.exprs, &$3));
+      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
+                                             &$$->if_else.false_.exprs, &$4));
+    }
+  | IF expr LPAR THEN labeling expr_list RPAR LPAR ELSE labeling expr_list RPAR {
+      $$ = wasm_new_if_else_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->if_else.cond = $2;
+      $$->if_else.true_.label = $5;
+      $$->if_else.true_.exprs = $6;
+      $$->if_else.false_.label = $10;
+      $$->if_else.false_.exprs = $11;
     }
   | BR_IF var expr {
       $$ = wasm_new_br_if_expr(parser->allocator);

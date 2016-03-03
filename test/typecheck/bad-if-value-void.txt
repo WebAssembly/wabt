@@ -3,7 +3,7 @@
   (func (local f32)
     (set_local 0
       (block
-        (if_else (i32.const 0)
+        (if (i32.const 0)
           (br)
           (f32.const 0.0))))))
 (;; STDERR ;;;

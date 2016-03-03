@@ -1,9 +1,9 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (block
+    (block $done
       (if (i32.const 1)
-        (br (i32.const 2)))
+        (br $done (i32.const 2)))
       (f32.const 3))))
 (;; STDERR ;;;
 typecheck/bad-label-multi-type.txt:7:7: type mismatch of block. got f32, expected i32

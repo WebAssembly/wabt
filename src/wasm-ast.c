@@ -439,12 +439,14 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       break;
     case WASM_EXPR_TYPE_IF:
       wasm_destroy_expr_ptr(allocator, &expr->if_.cond);
-      wasm_destroy_expr_ptr(allocator, &expr->if_.true_);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->if_.true_.exprs, expr_ptr);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
       wasm_destroy_expr_ptr(allocator, &expr->if_else.cond);
-      wasm_destroy_expr_ptr(allocator, &expr->if_else.true_);
-      wasm_destroy_expr_ptr(allocator, &expr->if_else.false_);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->if_else.true_.exprs,
+                                  expr_ptr);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->if_else.false_.exprs,
+                                  expr_ptr);
       break;
     case WASM_EXPR_TYPE_LOAD:
       wasm_destroy_expr_ptr(allocator, &expr->load.addr);

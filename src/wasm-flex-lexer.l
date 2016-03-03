@@ -186,7 +186,8 @@ NAME      \${ATOM}
 "nop"                 { return TOK(NOP); }
 "block"               { return TOK(BLOCK); }
 "if"                  { return TOK(IF); }
-"if_else"             { return TOK(IF_ELSE); }
+"then"                { return TOK(THEN); }
+"else"                { return TOK(ELSE); }
 "loop"                { return TOK(LOOP); }
 "br"                  { return TOK(BR); }
 "br_if"               { return TOK(BR_IF); }

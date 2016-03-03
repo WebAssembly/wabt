@@ -1,0 +1,4 @@
+(module
+  (func
+    (if (i32.const 1)
+      (then $then (br $then)))))

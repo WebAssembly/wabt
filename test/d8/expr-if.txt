@@ -1,7 +1,7 @@
 ;;; EXE: test/run-d8.py
 (module
   (func (param i32) (result i32)
-    (if_else (i32.eq (get_local 0) (i32.const 0))
+    (if (i32.eq (get_local 0) (i32.const 0))
       (i32.const 1)
       (i32.const 2)))
 
