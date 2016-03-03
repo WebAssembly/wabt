@@ -194,7 +194,7 @@ struct WasmExpr {
     WasmConst const_;
     struct { WasmUnaryOp op; WasmExprPtr expr; } unary;
     struct { WasmBinaryOp op; WasmExprPtr left, right; } binary;
-    struct { WasmType type; WasmExprPtr cond, true_, false_; } select;
+    struct { WasmExprPtr cond, true_, false_; } select;
     struct { WasmCompareOp op; WasmExprPtr left, right; } compare;
     struct { WasmConvertOp op; WasmExprPtr expr; } convert;
     struct { WasmExprPtr expr; } grow_memory;

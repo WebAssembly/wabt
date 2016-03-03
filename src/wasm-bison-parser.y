@@ -457,7 +457,6 @@ expr1 :
   | SELECT expr expr expr {
       $$ = wasm_new_select_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->select.type = $1;
       $$->select.true_ = $2;
       $$->select.false_ = $3;
       $$->select.cond = $4;

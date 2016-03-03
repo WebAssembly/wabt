@@ -345,10 +345,7 @@ NAME      \${ATOM}
 "i32.reinterpret/f32" { CONVTYPE(I32, REINTERPRET, F32); return TOK(CONVERT); }
 "f64.reinterpret/i64" { CONVTYPE(F64, REINTERPRET, I64); return TOK(CONVERT); }
 "i64.reinterpret/f64" { CONVTYPE(I64, REINTERPRET, F64); return TOK(CONVERT); }
-"i32.select"          { TYPE(I32); return TOK(SELECT); }
-"i64.select"          { TYPE(I64); return TOK(SELECT); }
-"f32.select"          { TYPE(F32); return TOK(SELECT); }
-"f64.select"          { TYPE(F64); return TOK(SELECT); }
+"select"              { return TOK(SELECT); }
 "unreachable"         { return TOK(UNREACHABLE); }
 "memory_size"         { return TOK(MEMORY_SIZE); }
 "grow_memory"         { return TOK(GROW_MEMORY); }

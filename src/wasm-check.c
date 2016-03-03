@@ -655,14 +655,12 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       }
       break;
     case WASM_EXPR_TYPE_SELECT:
-      result |=
-          check_type(ctx, &expr->loc, expr->select.type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->select.cond, WASM_TYPE_I32,
                            " of condition");
       result |= check_expr(ctx, module, func, expr->select.true_,
-                           expr->select.type, " of argument 0 of select op");
+                           expected_type, " of argument 0 of select op");
       result |= check_expr(ctx, module, func, expr->select.false_,
-                           expr->select.type, " of argment 1 of select op");
+                           expected_type, " of argment 1 of select op");
       break;
     case WASM_EXPR_TYPE_SET_LOCAL: {
       WasmType type;

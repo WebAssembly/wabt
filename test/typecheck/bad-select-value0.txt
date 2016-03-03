@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (func (f32.select (f64.const 0) (f32.const 0) (i32.const 0))))
+(module
+  (func (result f32)
+    (select (f64.const 0) (f32.const 0) (i32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-select-value0.txt:2:27: type mismatch of argument 0 of select op. got f64, expected f32
-(module (func (f32.select (f64.const 0) (f32.const 0) (i32.const 0))))
-                          ^
+typecheck/bad-select-value0.txt:4:13: type mismatch of argument 0 of select op. got f64, expected f32
+    (select (f64.const 0) (f32.const 0) (i32.const 0))))
+            ^
 ;;; STDERR ;;)
