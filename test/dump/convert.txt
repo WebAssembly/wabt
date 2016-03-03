@@ -48,8 +48,8 @@
 000001a: ae                                         ; OPCODE_F64_SCONVERT_I32
 000001b: a0                                         ; OPCODE_I32_UCONVERT_F64
 000001c: af                                         ; OPCODE_F64_UCONVERT_I32
-000001d: 09                                         ; OPCODE_I8_CONST
-000001e: 00                                         ; u8 literal
+000001d: 0a                                         ; OPCODE_I32_CONST
+000001e: 00                                         ; i32 literal
 000001f: a2                                         ; OPCODE_I64_SCONVERT_F32
 0000020: aa                                         ; OPCODE_F32_SCONVERT_I64
 0000021: a4                                         ; OPCODE_I64_UCONVERT_F32
@@ -59,8 +59,8 @@
 0000025: a5                                         ; OPCODE_I64_UCONVERT_F64
 0000026: b1                                         ; OPCODE_F64_UCONVERT_I64
 0000027: a6                                         ; OPCODE_I64_SCONVERT_I32
-0000028: 09                                         ; OPCODE_I8_CONST
-0000029: 00                                         ; u8 literal
+0000028: 0a                                         ; OPCODE_I32_CONST
+0000029: 00                                         ; i32 literal
 000002a: ac                                         ; OPCODE_F32_CONVERT_F64
 000002b: b2                                         ; OPCODE_F64_CONVERT_F32
 000002c: 0d                                         ; OPCODE_F32_CONST
@@ -69,7 +69,7 @@
 0000031: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 001e 00a1 a79d a89f a99e aea0 af09 00a2  
-0000020: aaa4 aba3 b0a5 b1a6 0900 acb2 0d00 0000  
+0000010: 001e 00a1 a79d a89f a99e aea0 af0a 00a2  
+0000020: aaa4 aba3 b0a5 b1a6 0a00 acb2 0d00 0000  
 0000030: 0006                                     
 ;;; STDOUT ;;)

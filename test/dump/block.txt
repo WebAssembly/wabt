@@ -38,12 +38,12 @@
 000001d: 0000                                       ; func body size
 000001f: 01                                         ; OPCODE_BLOCK
 0000020: 01                                         ; num expressions
-0000021: 09                                         ; OPCODE_I8_CONST
-0000022: 01                                         ; u8 literal
+0000021: 0a                                         ; OPCODE_I32_CONST
+0000022: 01                                         ; i32 literal
 000001d: 0400                                       ; FIXUP func body size
 0000023: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0102 0000 0001 0202  
 0000010: 0000 0005 0001 0300 0000 0001 0004 0001  
-0000020: 0109 0106                                
+0000020: 010a 0106                                
 ;;; STDOUT ;;)

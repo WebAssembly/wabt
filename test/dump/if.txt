@@ -20,14 +20,14 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: 03                                         ; OPCODE_IF
-0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 01                                         ; u8 literal
+0000014: 0a                                         ; OPCODE_I32_CONST
+0000015: 01                                         ; i32 literal
 0000016: 01                                         ; OPCODE_BLOCK
 0000017: 01                                         ; num expressions
 0000018: 00                                         ; OPCODE_NOP
 0000019: 04                                         ; OPCODE_IF_THEN
-000001a: 09                                         ; OPCODE_I8_CONST
-000001b: 00                                         ; u8 literal
+000001a: 0a                                         ; OPCODE_I32_CONST
+000001b: 00                                         ; i32 literal
 000001c: 01                                         ; OPCODE_BLOCK
 000001d: 01                                         ; num expressions
 000001e: 0d                                         ; OPCODE_F32_CONST
@@ -42,8 +42,8 @@
 000002b: 0000                                       ; func signature index
 000002d: 0000                                       ; func body size
 000002f: 04                                         ; OPCODE_IF_THEN
-0000030: 09                                         ; OPCODE_I8_CONST
-0000031: 01                                         ; u8 literal
+0000030: 0a                                         ; OPCODE_I32_CONST
+0000031: 01                                         ; i32 literal
 0000032: 01                                         ; OPCODE_BLOCK
 0000033: 01                                         ; num expressions
 0000034: 14                                         ; OPCODE_RETURN
@@ -54,7 +54,7 @@
 0000038: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0202 0000  
-0000010: 0017 0003 0901 0101 0004 0900 0101 0d00  
+0000010: 0017 0003 0a01 0101 0004 0a00 0101 0d00  
 0000020: 0080 3f01 010d 0000 0040 0000 0009 0004  
-0000030: 0901 0101 1401 0114 06                   
+0000030: 0a01 0101 1401 0114 06                   
 ;;; STDOUT ;;)

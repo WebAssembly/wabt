@@ -31,8 +31,8 @@
 0000016: 01                                         ; num expressions
 0000017: 01                                         ; OPCODE_BLOCK
 0000018: 02                                         ; num expressions
-0000019: 09                                         ; OPCODE_I8_CONST
-000001a: 00                                         ; u8 literal
+0000019: 0a                                         ; OPCODE_I32_CONST
+000001a: 00                                         ; i32 literal
 000001b: 01                                         ; OPCODE_BLOCK
 000001c: 05                                         ; num expressions
 000001d: 06                                         ; OPCODE_BR
@@ -54,6 +54,6 @@
 000002c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0019 0001 0102 0101 0209 0001 0506 0000  
+0000010: 0019 0001 0102 0101 020a 0001 0506 0000  
 0000020: 0600 0006 0100 0602 0006 0300 06         
 ;;; STDOUT ;;)

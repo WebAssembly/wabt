@@ -21,22 +21,21 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: ad                                         ; OPCODE_F32_REINTERPRET_I32
-0000014: 09                                         ; OPCODE_I8_CONST
-0000015: 00                                         ; u8 literal
+0000014: 0a                                         ; OPCODE_I32_CONST
+0000015: 00                                         ; i32 literal
 0000016: b4                                         ; OPCODE_I32_REINTERPRET_F32
 0000017: 0d                                         ; OPCODE_F32_CONST
 0000018: 0000 0000                                  ; f32 literal
 000001c: b3                                         ; OPCODE_F64_REINTERPRET_I64
 000001d: 0b                                         ; OPCODE_I64_CONST
-000001e: 0000 0000 0000 0000                        ; u64 literal
-0000026: b5                                         ; OPCODE_I64_REINTERPRET_F64
-0000027: 0c                                         ; OPCODE_F64_CONST
-0000028: 0000 0000 0000 0000                        ; f64 literal
-0000011: 1d00                                       ; FIXUP func body size
-0000030: 06                                         ; WASM_BINARY_SECTION_END
+000001e: 00                                         ; i64 literal
+000001f: b5                                         ; OPCODE_I64_REINTERPRET_F64
+0000020: 0c                                         ; OPCODE_F64_CONST
+0000021: 0000 0000 0000 0000                        ; f64 literal
+0000011: 1600                                       ; FIXUP func body size
+0000029: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 001d 00ad 0900 b40d 0000 0000 b30b 0000  
-0000020: 0000 0000 0000 b50c 0000 0000 0000 0000  
-0000030: 06                                       
+0000010: 0016 00ad 0a00 b40d 0000 0000 b30b 00b5  
+0000020: 0c00 0000 0000 0000 0006                 
 ;;; STDOUT ;;)

@@ -19,11 +19,11 @@
 0000012: 0000                                       ; func body size
 0000014: 12                                         ; OPCODE_CALL_FUNCTION
 0000015: 00                                         ; func index
-0000016: 09                                         ; OPCODE_I8_CONST
-0000017: 01                                         ; u8 literal
+0000016: 0a                                         ; OPCODE_I32_CONST
+0000017: 01                                         ; i32 literal
 0000012: 0400                                       ; FIXUP func body size
 0000018: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0100 0102 0100  
-0000010: 0000 0400 1200 0901 06                   
+0000010: 0000 0400 1200 0a01 06                   
 ;;; STDOUT ;;)
