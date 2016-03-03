@@ -140,7 +140,7 @@ static void stack_free(WasmAllocator* allocator, void* p) {
 
 WasmResult wasm_init_stack_allocator(WasmStackAllocator* stack_allocator,
                                      WasmAllocator* fallback) {
-  memset(stack_allocator, 0, sizeof(WasmStackAllocator));
+  ZERO_MEMORY(*stack_allocator);
   stack_allocator->allocator.alloc = stack_alloc;
   stack_allocator->allocator.realloc = stack_realloc;
   stack_allocator->allocator.free = stack_free;

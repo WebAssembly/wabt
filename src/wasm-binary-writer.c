@@ -435,7 +435,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
     CHECK_ALLOC_NULL(sig);
     sig->result_type = func_type->sig.result_type;
-    memset(&sig->param_types, 0, sizeof(sig->param_types));
+    ZERO_MEMORY(sig->param_types);
     CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                   &func_type->sig.param_types));
   }
@@ -457,7 +457,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
             wasm_append_func_signature(ctx->allocator, sigs);
         CHECK_ALLOC_NULL(sig);
         sig->result_type = import->func_sig.result_type;
-        memset(&sig->param_types, 0, sizeof(sig->param_types));
+        ZERO_MEMORY(sig->param_types);
         CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                       &import->func_sig.param_types));
       }
@@ -494,7 +494,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
             wasm_append_func_signature(ctx->allocator, sigs);
         CHECK_ALLOC_NULL(sig);
         sig->result_type = func->result_type;
-        memset(&sig->param_types, 0, sizeof(sig->param_types));
+        ZERO_MEMORY(sig->param_types);
         CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                       &func->params.types));
       }
@@ -515,7 +515,7 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
     CHECK_ALLOC_NULL(ctx->remapped_locals);
 
   int max[WASM_NUM_TYPES];
-  memset(max, 0, sizeof(int) * WASM_NUM_TYPES);
+  ZERO_MEMORY(max);
   int i;
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
@@ -533,7 +533,7 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
 
   int seen[WASM_NUM_TYPES];
-  memset(seen, 0, sizeof(int) * WASM_NUM_TYPES);
+  ZERO_MEMORY(seen);
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
     ctx->remapped_locals[num_params + i] = start[type] + seen[type]++;
@@ -1021,7 +1021,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
       if (has_locals) {
         int num_locals[WASM_NUM_TYPES];
-        memset(num_locals, 0, sizeof(int) * WASM_NUM_TYPES);
+        ZERO_MEMORY(num_locals);
         int j;
         for (j = 0; j < func->locals.types.size; ++j)
           num_locals[func->locals.types.data[j]]++;
@@ -1289,7 +1289,7 @@ static WasmModuleField* append_module_field_and_fixup(
       wasm_append_module_field(allocator, &module->fields);
   if (!result)
     return NULL;
-  memset(result, 0, sizeof(*result));
+  ZERO_MEMORY(*result);
   result->type = module_field_type;
 
   /* make space for the new entry, it will be assigned twice, once here, once

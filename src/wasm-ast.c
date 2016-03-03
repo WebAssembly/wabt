@@ -102,7 +102,7 @@ static WasmBindingHashEntry* wasm_hash_new_entry(WasmBindingHash* hash,
     entry->next = NULL;
   }
 
-  memset(&entry->binding, 0, sizeof(WasmBinding));
+  ZERO_MEMORY(entry->binding);
   entry->binding.name = *name;
   entry->prev = NULL;
   /* entry->next is set above */
@@ -128,7 +128,7 @@ static WasmResult wasm_hash_resize(WasmAllocator* allocator,
     if (new_hash.free_head)
       new_hash.free_head->prev = entry;
 
-    memset(&entry->binding.name, 0, sizeof(WasmStringSlice));
+    ZERO_MEMORY(entry->binding.name);
     entry->next = new_hash.free_head;
     new_hash.free_head = entry;
   }

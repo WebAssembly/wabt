@@ -30,8 +30,6 @@
 #define EXTERN_C_END
 #endif
 
-#define ZERO_MEMORY(var) memset((void*)&var, 0, sizeof(var))
-
 typedef enum WasmResult {
   WASM_OK,
   WASM_ERROR,
