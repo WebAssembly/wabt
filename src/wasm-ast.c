@@ -114,7 +114,7 @@ static WasmResult wasm_hash_resize(WasmAllocator* allocator,
                                    size_t desired_capacity) {
   WasmResult result = WASM_OK;
   WasmBindingHash new_hash;
-  ZERO_MEMORY(new_hash, WasmBindingHash);
+  ZERO_MEMORY(new_hash);
   /* TODO(binji): better plural */
   result = wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
                                             desired_capacity);

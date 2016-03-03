@@ -18,6 +18,7 @@
 #define WASM_COMMON_H_
 
 #include <stddef.h>
+#include "wasm-platform.h"
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
@@ -29,15 +30,7 @@
 #define EXTERN_C_END
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ >= 4)
-#define WARN_UNUSED __attribute__ ((warn_unused_result))
-#elif defined(_MSC_VER) && (_MSC_VER >= 1700)
-#define WARN_UNUSED _Check_return_
-#else
-#define WARN_UNUSED
-#endif
-
-#define ZERO_MEMORY(var, type) memset((void*)&var, 0, sizeof(type))
+#define ZERO_MEMORY(var) memset((void*)&var, 0, sizeof(var))
 
 typedef enum WasmResult {
   WASM_OK,

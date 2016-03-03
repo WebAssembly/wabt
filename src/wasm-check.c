@@ -999,7 +999,7 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
 
 WasmResult wasm_check_script(WasmLexer lexer, WasmScript* script) {
   WasmCheckContext ctx;
-  ZERO_MEMORY(ctx, WasmCheckContext);
+  ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
   ctx.allocator = script->allocator;
   WasmResult result = WASM_OK;

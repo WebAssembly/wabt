@@ -33,7 +33,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\alloca.h" />
-    <ClInclude Include="src\unistd.h" />
     <ClInclude Include="src\wasm-allocator.h" />
     <ClInclude Include="src\wasm-ast.h" />
     <ClInclude Include="src\wasm-binary-writer.h" />
@@ -44,6 +43,7 @@
     <ClInclude Include="src\wasm-internal.h" />
     <ClInclude Include="src\wasm-lexer.h" />
     <ClInclude Include="src\wasm-parser.h" />
+    <ClInclude Include="src\wasm-platform.h" />
     <ClInclude Include="src\wasm-stack-allocator.h" />
     <ClInclude Include="src\wasm-vector.h" />
     <ClInclude Include="src\wasm-writer.h" />

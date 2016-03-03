@@ -89,7 +89,7 @@
     <ClInclude Include="src\wasm-common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\unistd.h">
+    <ClInclude Include="src\wasm-platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\alloca.h">

@@ -20,9 +20,6 @@
 #include <stdlib.h>
 #ifdef __GNUC__
 #  include <getopt.h>
-#elif defined _MSC_VER
-#  include "unistd.h"
-#else
 #endif
 
 #include "wasm-binary-writer.h"
@@ -300,12 +297,12 @@ int main(int argc, char** argv) {
     result = wasm_check_script(lexer, &script);
     if (result == WASM_OK) {
       WasmMemoryWriter writer;
-      ZERO_MEMORY(writer, WasmMemoryWriter);
+      ZERO_MEMORY(writer);
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
         FATAL("unable to open memory writer for writing\n");
 
       WasmWriteBinaryOptions options;
-      ZERO_MEMORY(options, WasmWriteBinaryOptions);
+      ZERO_MEMORY(options);
       if (s_spec)
         options.spec = 1;
       if (s_spec_verbose)
