@@ -1,6 +1,6 @@
 ;;; EXE: test/run-d8.py
 (module
-  (memory 4)
+  (memory 1)
   (func $store_unless (param i32)
     (if (i32.eq (get_local 0) (i32.const 0))
       (return))

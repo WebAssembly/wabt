@@ -1,5 +1,5 @@
 (module
-  (memory 100
+  (memory 1
     (segment 0 "hi")
     (segment 4 "hello")
     (segment 10 "goodbye")

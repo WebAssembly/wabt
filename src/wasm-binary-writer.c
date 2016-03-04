@@ -184,26 +184,6 @@ static void destroy_func_signature_vector_and_elements(
   DESTROY_VECTOR_AND_ELEMENTS(allocator, *sigs, func_signature);
 }
 
-static int is_power_of_two(uint32_t x) {
-  return x && ((x & (x - 1)) == 0);
-}
-
-#ifdef WIN32
-#include <intrin.h>
-static uint32_t __inline __builtin_clz(uint32_t x)
-{
-    unsigned long r = 0;
-    _BitScanReverse(&r, x);
-    return (31 - r);
-}
-#endif
-
-static uint32_t log_two_u32(uint32_t x) {
-  if (x <= 1)
-    return 0;
-  return sizeof(unsigned int) * 8 - __builtin_clz(x - 1);
-}
-
 static void print_header(WasmWriteContext* ctx, const char* name, int index) {
   if (ctx->options->log_writes)
     printf("; %s %d\n", name, index);
@@ -968,8 +948,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   size_t segments_offset = 0;
   if (module->memory) {
     out_u8(ws, WASM_BINARY_SECTION_MEMORY, "WASM_BINARY_SECTION_MEMORY");
-    out_u8(ws, log_two_u32(module->memory->initial_size), "min mem size log 2");
-    out_u8(ws, log_two_u32(module->memory->max_size), "max mem size log 2");
+    out_leb128(ws, module->memory->initial_pages, "min mem pages");
+    out_leb128(ws, module->memory->max_pages, "max mem pages");
     out_u8(ws, DEFAULT_MEMORY_EXPORT, "export mem");
 
     if (module->memory->segments.size) {
