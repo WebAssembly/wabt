@@ -1686,9 +1686,11 @@ static size_t copy_string_contents(WasmStringSlice* text,
            * sequence */
           uint32_t hi;
           uint32_t lo;
-          if (!hexdigit(src[0], &hi) || !hexdigit(src[1], &lo))
+          if (hexdigit(src[0], &hi) && hexdigit(src[1], &lo)) {
+            *dest++ = (hi << 4) | lo;
+          } else {
             assert(0);
-          *dest++ = (hi << 4) | lo;
+          }
           src++;
           break;
         }

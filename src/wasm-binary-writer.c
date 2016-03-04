@@ -15,8 +15,8 @@
  */
 
 #include "wasm-binary-writer.h"
+#include "wasm-config.h"
 
-#include <alloca.h>
 #include <assert.h>
 #include <math.h>
 #include <memory.h>
@@ -253,13 +253,6 @@ static void out_u32(WasmWriterState* writer_state,
   writer_state->offset += sizeof(value);
 }
 
-static void out_u64(WasmWriterState* writer_state,
-                    uint64_t value,
-                    const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
-  writer_state->offset += sizeof(value);
-}
-
 static void out_f32(WasmWriterState* writer_state,
                     float value,
                     const char* desc) {
@@ -272,15 +265,6 @@ static void out_f64(WasmWriterState* writer_state,
                     const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
   writer_state->offset += sizeof(value);
-}
-
-static void out_u8_at(WasmWriterState* writer_state,
-                      uint32_t offset,
-                      uint32_t value,
-                      const char* desc) {
-  assert(value <= UINT8_MAX);
-  uint8_t value8 = value;
-  out_data_at(writer_state, offset, &value8, sizeof(value8), desc);
 }
 
 static void out_u16_at(WasmWriterState* writer_state,
@@ -460,6 +444,7 @@ static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
       return node;
     node = node->next;
   }
+  return NULL;
 }
 
 static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,

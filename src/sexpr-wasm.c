@@ -18,8 +18,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __GNUC__
+#include "wasm-config.h"
+
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#else
+#define USE_MIN_PARSER 1
 #endif
 
 #include "wasm-binary-writer.h"
@@ -49,7 +53,7 @@ static int s_spec;
 static int s_spec_verbose;
 static int s_use_libc_allocator;
 
-#ifndef __GNUC__
+#ifdef USE_MIN_PARSER
 typedef struct option {
   const char* name;
   int has_arg;
@@ -65,8 +69,7 @@ typedef struct OptionText {
   char long_name[64];
   char short_name[64];
 } OptionText;
-#define USE_MIN_PARSER 1
-#endif
+#endif /* HAVE_GETOPT_H */
 
 static struct option s_long_options[] = {
     {"verbose", no_argument, NULL, 'v'},
@@ -159,7 +162,7 @@ static void parse_options(int argc, char** argv) {
       sprintf(options_text[i].short_name, "-%c", (char)opt->val);
     }
   }
-#endif
+#endif /* USE_MIN_PARSER */
   while (1) {
 #ifndef USE_MIN_PARSER
     c = getopt_long(argc, argv, "vhdo:", s_long_options, &option_index);
@@ -199,7 +202,7 @@ static void parse_options(int argc, char** argv) {
       --optind;
       break;
     }
-#endif
+#endif /* USE_MIN_PARSER */
 
   redo_switch:
     switch (c) {

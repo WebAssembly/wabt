@@ -18,7 +18,8 @@
 #define WASM_COMMON_H_
 
 #include <stddef.h>
-#include "wasm-platform.h"
+
+#include "wasm-config.h"
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"

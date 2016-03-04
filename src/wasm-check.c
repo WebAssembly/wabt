@@ -15,8 +15,8 @@
  */
 
 #include "wasm-check.h"
+#include "wasm-config.h"
 
-#include <alloca.h>
 #include <assert.h>
 #include <memory.h>
 #include <stdarg.h>
@@ -983,6 +983,8 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
       return check_invoke(ctx, &command->assert_trap.invoke,
                           WASM_TYPE_SET_VOID);
+    default:
+      return WASM_ERROR;
   }
 }
 

@@ -113,10 +113,6 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
   return WASM_OK;
 }
 
-static void free_output_buffer(WasmOutputBuffer* buf) {
-  wasm_free(buf->allocator, buf->start);
-}
-
 static WasmResult write_data_to_output_buffer(size_t offset,
                                               const void* data,
                                               size_t size,
