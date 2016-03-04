@@ -17,6 +17,8 @@
 %{
 #include <assert.h>
 
+#include "wasm-config.h"
+
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
 #include "wasm-parser.h"
@@ -24,6 +26,18 @@
 
 /* must be included after so some typedefs will be defined */
 #include "wasm-bison-parser.h"
+
+#if !HAVE_UNISTD_H
+#define YY_NO_UNISTD_H
+#if COMPILER_IS_MSVC
+/* unistd.h replacement for Windows */
+#include <stdlib.h>
+#define isatty _isatty
+#define fileno _fileno
+#else
+#error "no unistd.h, but not Windows!"
+#endif /* COMPILER_IS_MSVC */
+#endif /* !HAVE_UNISTD_H */
 
 #define WASM_INITIAL_LINE_OFFSETS 10000
 
