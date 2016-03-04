@@ -4,7 +4,7 @@
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/address.wast:33:63: offset must be less than or equal to 0xffffffff
-...ory 1) (func $bad1 (param $i i32) (i32.load offset=4294967296 (get_loca...
+...memory 1) (func $bad1 (param $i i32) (i32.load offset=4294967296 (get_loca...
                                         ^
 97
 98
