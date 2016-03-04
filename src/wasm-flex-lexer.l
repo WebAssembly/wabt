@@ -186,6 +186,7 @@ NAME      \${ATOM}
 "nop"                 { return TOK(NOP); }
 "block"               { return TOK(BLOCK); }
 "if"                  { return TOK(IF); }
+"if_else"             { return TOK(IF); /* TODO(binji): remove */ }
 "then"                { return TOK(THEN); }
 "else"                { return TOK(ELSE); }
 "loop"                { return TOK(LOOP); }
