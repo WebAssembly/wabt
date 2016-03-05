@@ -47,7 +47,10 @@ define DEFAULT
 .PHONY: $(3)$$($(4)_SUFFIX) test$$($(4)_SUFFIX)
 $(3)$$($(4)_SUFFIX): $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX)
 	ln -sf ../$$($(1)_$(2)_DIR)/$(3)$$($(4)_SUFFIX) out/$(3)$$($(4)_SUFFIX)
+
 test$$($(4)_SUFFIX): test-$$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
+
+test-everything: test$$($(4)_SUFFIX)
 endef
 
 define CMAKE
@@ -72,6 +75,9 @@ endef
 
 .PHONY: all
 all: sexpr-wasm
+
+.PHONY: test-everything
+test-everything:
 
 # defaults with simple names
 $(foreach SANITIZER,$(SANITIZERS), \
