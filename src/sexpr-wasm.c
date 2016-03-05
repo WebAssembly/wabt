@@ -175,35 +175,33 @@ static void parse_options(int argc, char** argv) {
     option_index = -1;
     const char* in_opt = argv[optind++];
     i = 0;
-    for (; i < OPTIONS_LENGTH; i++) {        const struct OptionText* optText = &options_text[i];
+    for (; i < OPTIONS_LENGTH; i++) {
+      const struct OptionText* optText = &options_text[i];
         const struct option* opt = &s_long_options[i];
-        if (
-            strcmp(in_opt, optText->long_name) == 0 ||
-            (opt->val && strcmp(in_opt, optText->short_name) == 0)
-        ) {
-            option_index = i;
-            c = opt->val;
-            if (opt->has_arg != no_argument)
-            {
-                if (optind < argc) {
-                    optarg = argv[optind++];
-                } else if (opt->has_arg == required_argument) {
-                    FATAL("Missing argument for option %s.\n", opt->name);
-                    usage(argv[0]);
-                }
+        if (strcmp(in_opt, optText->long_name) == 0 ||
+            (opt->val && strcmp(in_opt, optText->short_name) == 0)) {
+          option_index = i;
+          c = opt->val;
+          if (opt->has_arg != no_argument) {
+            if (optind < argc) {
+              optarg = argv[optind++];
+            } else if (opt->has_arg == required_argument) {
+              FATAL("Missing argument for option %s.\n", opt->name);
+              usage(argv[0]);
             }
-            break;
+          }
+          break;
         }
     }
 
     // no argument found
     if (option_index == -1) {
-        --optind;
-        break;
+      --optind;
+      break;
     }
 #endif
 
-redo_switch:
+  redo_switch:
     switch (c) {
       case 0:
         c = s_long_options[option_index].val;

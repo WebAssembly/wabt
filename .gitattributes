@@ -1,0 +1,11 @@
+* text=auto
+*.c text
+*.h text
+*.js text
+*.l text
+*.md text
+*.py text
+*.rst text
+*.sh text
+*.txt text
+*.y text
