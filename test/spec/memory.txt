@@ -1,6 +1,14 @@
+;;; TODO: rebase after https://github.com/WebAssembly/spec/pull/209 lands
+;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
+(;; STDERR ;;;
+third_party/testsuite/memory.wast:19:4: expected module to be invalid
+  (module (memory 100 1000 (segment 0 "a") (segment 500 "b")))
+   ^^^^^^
+
+;;; STDERR ;;)
 (;; STDOUT ;;;
 assert_invalid error:
   third_party/testsuite/memory.wast:11:12: max pages (0) must be greater than or equal to initial pages (1)
@@ -11,21 +19,17 @@ assert_invalid error:
   (module (memory 0 0 (segment 0 "a")))
                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:19:40: address (98304) greater than initial memory size (65536)
-  (module (memory 1 2 (segment 0 "a") (segment 98304 "b")))
-                                       ^^^^^^^
+  third_party/testsuite/memory.wast:23:47: address (0) less than end of previous segment (3)
+  (module (memory 100 1000 (segment 0 "abc") (segment 0 "def")))
+                                              ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:23:42: address (0) less than end of previous segment (3)
-  (module (memory 1 2 (segment 0 "abc") (segment 0 "def")))
-                                         ^^^^^^^
+  third_party/testsuite/memory.wast:27:46: address (0) less than end of previous segment (5)
+  (module (memory 100 1000 (segment 3 "ab") (segment 0 "de")))
+                                             ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:27:41: address (0) less than end of previous segment (5)
-  (module (memory 1 2 (segment 3 "ab") (segment 0 "de")))
-                                        ^^^^^^^
-assert_invalid error:
-  third_party/testsuite/memory.wast:31:56: address (1) less than end of previous segment (3)
-  (module (memory 1 2 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
-                                                       ^^^^^^^
+  third_party/testsuite/memory.wast:31:61: address (1) less than end of previous segment (3)
+  (module (memory 100 1000 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
+                                                            ^^^^^^^
 assert_invalid error:
   third_party/testsuite/memory.wast:42:28: alignment must be power-of-two
   (module (memory 0) (func (i64.load align=0 (i32.const 0))))
@@ -46,5 +50,4 @@ assert_invalid error:
   third_party/testsuite/memory.wast:58:28: alignment must be power-of-two
   (module (memory 0) (func (i64.load align=7 (i32.const 0))))
                            ^
-24/24 tests passed.
 ;;; STDOUT ;;)

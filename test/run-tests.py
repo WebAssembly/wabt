@@ -134,6 +134,8 @@ class TestInfo(object):
                 self.slow = True
               elif key == 'SKIP':
                 self.skip = True
+              elif key in ['TODO', 'NOTE']:
+                pass
               else:
                 raise Error('Unknown directive: %s' % key)
             elif state in ('stdout', 'stderr'):

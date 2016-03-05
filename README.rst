@@ -241,6 +241,7 @@ The currently supported list of keys:
 - ERROR: the expected return value from the executable, defaults to 0
 - SLOW: if defined, this test's timeout is doubled.
 - SKIP: if defined, this test is not run. You can use the value as a comment.
+- TODO,NOTE: useful place to put additional info about the test.
 
 When you first write a test, it's easiest if you omit the expected stdout and
 stderr. You can have the test harness fill it in for you automatically. First
