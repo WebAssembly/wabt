@@ -51,7 +51,7 @@ typedef uint8_t WasmBinaryFunctionFlags;
   V(SELECT, 0x05)              \
   V(BR, 0x06)                  \
   V(BR_IF, 0x07)               \
-  V(TABLESWITCH, 0x08)         \
+  V(BR_TABLE, 0x08)            \
   V(RETURN, 0x14)              \
   V(UNREACHABLE, 0x15)         \
   V(I8_CONST, 0x09)            \

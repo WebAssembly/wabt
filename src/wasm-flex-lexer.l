@@ -192,7 +192,7 @@ NAME      \${ATOM}
 "loop"                { return TOK(LOOP); }
 "br"                  { return TOK(BR); }
 "br_if"               { return TOK(BR_IF); }
-"tableswitch"         { return TOK(TABLESWITCH); }
+"br_table"            { return TOK(BR_TABLE); }
 "case"                { return TOK(CASE); }
 "call"                { return TOK(CALL); }
 "call_import"         { return TOK(CALL_IMPORT); }

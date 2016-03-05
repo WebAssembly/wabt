@@ -27,8 +27,6 @@
 DEFINE_VECTOR(type, WasmType)
 DEFINE_VECTOR(var, WasmVar);
 DEFINE_VECTOR(expr_ptr, WasmExprPtr);
-DEFINE_VECTOR(target, WasmTarget);
-DEFINE_VECTOR(case, WasmCase);
 DEFINE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
 DEFINE_VECTOR(func_ptr, WasmFuncPtr);
 DEFINE_VECTOR(segment, WasmSegment);
@@ -296,6 +294,7 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_BLOCK, block, block)                         \
   V(WASM_EXPR_TYPE_BR, br, br)                                  \
   V(WASM_EXPR_TYPE_BR_IF, br_if, br_if)                         \
+  V(WASM_EXPR_TYPE_BR_TABLE, br_table, br_table)                \
   V(WASM_EXPR_TYPE_CALL, call, call)                            \
   V(WASM_EXPR_TYPE_CALL_IMPORT, call_import, call)              \
   V(WASM_EXPR_TYPE_CALL_INDIRECT, call_indirect, call_indirect) \
@@ -312,7 +311,6 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_SELECT, select, select)                      \
   V(WASM_EXPR_TYPE_SET_LOCAL, set_local, set_local)             \
   V(WASM_EXPR_TYPE_STORE, store, store)                         \
-  V(WASM_EXPR_TYPE_TABLESWITCH, tableswitch, tableswitch)       \
   V(WASM_EXPR_TYPE_UNARY, unary, unary)
 
 #define DEFINE_NEW_EXPR(type_, name, member)                    \
@@ -371,26 +369,7 @@ void wasm_destroy_func_signature(WasmAllocator* allocator,
   wasm_destroy_type_vector(allocator, &sig->param_types);
 }
 
-void wasm_destroy_target(WasmAllocator* allocator, WasmTarget* target) {
-  wasm_destroy_var(allocator, &target->var);
-}
-
-void wasm_destroy_target_vector_and_elements(WasmAllocator* allocator,
-                                             WasmTargetVector* targets) {
-  DESTROY_VECTOR_AND_ELEMENTS(allocator, *targets, target);
-}
-
 void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr);
-
-void wasm_destroy_case(WasmAllocator* allocator, WasmCase* case_) {
-  wasm_destroy_string_slice(allocator, &case_->label);
-  DESTROY_VECTOR_AND_ELEMENTS(allocator, case_->exprs, expr_ptr);
-}
-
-void wasm_destroy_case_vector_and_elements(WasmAllocator* allocator,
-                                           WasmCaseVector* cases) {
-  DESTROY_VECTOR_AND_ELEMENTS(allocator, *cases, case);
-}
 
 static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
   switch (expr->type) {
@@ -476,15 +455,10 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       wasm_destroy_expr_ptr(allocator, &expr->store.addr);
       wasm_destroy_expr_ptr(allocator, &expr->store.value);
       break;
-    case WASM_EXPR_TYPE_TABLESWITCH:
-      wasm_destroy_string_slice(allocator, &expr->tableswitch.label);
-      wasm_destroy_expr_ptr(allocator, &expr->tableswitch.expr);
-      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->tableswitch.targets, target);
-      wasm_destroy_target(allocator, &expr->tableswitch.default_target);
-      /* the binding name memory is shared, so just destroy the vector */
-      wasm_destroy_binding_hash_entry_vector(
-          allocator, &expr->tableswitch.case_bindings.entries);
-      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->tableswitch.cases, case);
+    case WASM_EXPR_TYPE_BR_TABLE:
+      wasm_destroy_expr_ptr(allocator, &expr->br_table.expr);
+      DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->br_table.targets, var);
+      wasm_destroy_var(allocator, &expr->br_table.default_target);
       break;
     case WASM_EXPR_TYPE_UNARY:
       wasm_destroy_expr_ptr(allocator, &expr->unary.expr);

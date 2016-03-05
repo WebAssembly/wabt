@@ -1,0 +1,12 @@
+(module
+  (func
+    (block
+      (block
+        (block
+          (block
+            (block (br_table 4 3 2 1 0 (i32.const 0)))
+            (nop))
+          (nop))
+        (nop))
+      (nop))
+    (nop)))

@@ -435,20 +435,6 @@ static WasmResult check_call(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_target(WasmCheckContext* ctx,
-                               WasmBindingHash* bindings,
-                               int num_cases,
-                               WasmTarget* target) {
-  switch (target->type) {
-    case WASM_TARGET_TYPE_CASE:
-      return check_var(ctx, bindings, num_cases, &target->var, "case", NULL);
-    case WASM_TARGET_TYPE_BR:
-      return check_label_var(ctx, ctx->top_label, &target->var, NULL);
-    default:
-      return WASM_ERROR;
-  }
-}
-
 static WasmResult check_exprs(WasmCheckContext* ctx,
                               WasmModule* module,
                               WasmFunc* func,
@@ -694,35 +680,18 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                            " of store value");
       break;
     }
-    case WASM_EXPR_TYPE_TABLESWITCH: {
-      result |= check_duplicate_bindings(ctx, &expr->tableswitch.case_bindings,
-                                         "case");
-
-      WasmLabelNode node;
-      result |= push_label(ctx, &expr->loc, &node, &expr->tableswitch.label,
-                           expected_type, "tableswitch");
-      result |= check_expr(ctx, module, func, expr->tableswitch.expr,
+    case WASM_EXPR_TYPE_BR_TABLE: {
+      result |= check_expr(ctx, module, func, expr->br_table.expr,
                            WASM_TYPE_I32, " of key");
       int i;
-      for (i = 0; i < expr->tableswitch.targets.size; ++i) {
-        WasmTarget* target = &expr->tableswitch.targets.data[i];
-        result |= check_target(ctx, &expr->tableswitch.case_bindings,
-                               expr->tableswitch.cases.size, target);
+      for (i = 0; i < expr->br_table.targets.size; ++i) {
+        result |= check_br(ctx, &expr->loc, module, func,
+                           &expr->br_table.targets.data[i], NULL,
+                           " of br_table target");
       }
-      result |= check_target(ctx, &expr->tableswitch.case_bindings,
-                             expr->tableswitch.cases.size,
-                             &expr->tableswitch.default_target);
-      int num_cases = expr->tableswitch.cases.size;
-      if (num_cases > 0) {
-        WasmCase* case_ = &expr->tableswitch.cases.data[0];
-        for (i = 0; i < num_cases - 1; ++i, ++case_) {
-          result |=
-              check_exprs(ctx, module, func, &case_->exprs, WASM_TYPE_VOID, "");
-        }
-        result |= check_exprs(ctx, module, func, &case_->exprs, expected_type,
-                              " of tableswitch case");
-      }
-      pop_label(ctx);
+      result |= check_br(ctx, &expr->loc, module, func,
+                         &expr->br_table.default_target, NULL,
+                         " of br_table default target");
       break;
     }
     case WASM_EXPR_TYPE_UNARY: {

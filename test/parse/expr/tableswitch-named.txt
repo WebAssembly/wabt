@@ -1,6 +1,0 @@
-(module
-  (func
-    (tableswitch $exit (i32.const 0)
-      (table (case $0) (case $1)) (br $exit)
-      (case $0 (nop))
-      (case $1 (nop)))))

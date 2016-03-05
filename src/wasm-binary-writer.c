@@ -550,28 +550,6 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   }
 }
 
-static void write_tableswitch_target(WasmWriteContext* ctx,
-                                     WasmBindingHash* case_bindings,
-                                     WasmCaseVector* cases,
-                                     WasmTarget* target) {
-  switch (target->type) {
-    case WASM_TARGET_TYPE_CASE: {
-      int index = wasm_get_index_from_var(case_bindings, &target->var);
-      assert(index >= 0 && index < cases->size);
-      out_u16(&ctx->writer_state, index, "case index");
-      break;
-    }
-
-    case WASM_TARGET_TYPE_BR: {
-      WasmLabelNode* node = find_label_by_var(ctx->top_label, &target->var);
-      assert(node);
-      out_u16(&ctx->writer_state, 0x8000 | (ctx->max_depth - node->depth - 1),
-              "br depth");
-      break;
-    }
-  }
-}
-
 static void write_expr_list(WasmWriteContext* ctx,
                             WasmModule* module,
                             WasmFunc* func,
@@ -795,38 +773,19 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->store.value);
       break;
     }
-    case WASM_EXPR_TYPE_TABLESWITCH: {
-      WasmLabelNode node;
-      push_label(ctx, &node, &expr->tableswitch.label);
-      out_opcode(ws, WASM_OPCODE_TABLESWITCH);
-      out_u16(ws, expr->tableswitch.cases.size, "num cases");
-      out_u16(ws, expr->tableswitch.targets.size + 1, "num targets");
+    case WASM_EXPR_TYPE_BR_TABLE: {
+      out_opcode(ws, WASM_OPCODE_BR_TABLE);
+      out_u16(ws, expr->br_table.targets.size, "num targets");
       int i;
-      for (i = 0; i < expr->tableswitch.targets.size; ++i) {
-        WasmTarget* target = &expr->tableswitch.targets.data[i];
-        write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
-                                 &expr->tableswitch.cases, target);
+      WasmLabelNode* node;
+      for (i = 0; i < expr->br_table.targets.size; ++i) {
+        WasmVar* var = &expr->br_table.targets.data[i];
+        node = find_label_by_var(ctx->top_label, var);
+        out_u16(ws, ctx->max_depth - node->depth - 1, "break depth");
       }
-      write_tableswitch_target(ctx, &expr->tableswitch.case_bindings,
-                               &expr->tableswitch.cases,
-                               &expr->tableswitch.default_target);
-      write_expr(ctx, module, func, expr->tableswitch.expr);
-      for (i = 0; i < expr->tableswitch.cases.size; ++i) {
-        WasmCase* case_ = &expr->tableswitch.cases.data[i];
-        if (case_->exprs.size) {
-          if (case_->exprs.size > 1) {
-            push_implicit_block(ctx);
-            out_opcode(ws, WASM_OPCODE_BLOCK);
-            write_expr_list_with_count(ctx, module, func, &case_->exprs);
-            pop_implicit_block(ctx);
-          } else {
-            write_expr(ctx, module, func, case_->exprs.data[0]);
-          }
-        } else {
-          out_u8(ws, WASM_OPCODE_NOP, "OPCODE_NOP for fallthrough");
-        }
-      }
-      pop_label(ctx, &expr->tableswitch.label);
+      node = find_label_by_var(ctx->top_label, &expr->br_table.default_target);
+      out_u16(ws, ctx->max_depth - node->depth - 1, "break depth for default");
+      write_expr(ctx, module, func, expr->br_table.expr);
       break;
     }
     case WASM_EXPR_TYPE_UNARY:

@@ -110,7 +110,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %token LPAR "("
 %token RPAR ")"
 %token INT FLOAT TEXT VAR VALUE_TYPE
-%token NOP BLOCK IF THEN ELSE LOOP BR BR_IF TABLESWITCH CASE
+%token NOP BLOCK IF THEN ELSE LOOP BR BR_IF BR_TABLE CASE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
@@ -129,8 +129,6 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<type> CONST VALUE_TYPE
 %type<unary> UNARY
 
-%type<case_> case
-%type<cases> case_list
 %type<command> cmd
 %type<commands> cmd_list
 %type<const_> const const_opt
@@ -150,8 +148,6 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<segment> segment string_contents
 %type<segments> segment_list
 %type<type_bindings> local_list param_list
-%type<targets> target_list
-%type<target> target
 %type<text> bind_var labeling literal quoted_text
 %type<type> result
 %type<types> value_type_list
@@ -166,10 +162,6 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
 %destructor { wasm_destroy_expr_ptr(parser->allocator, &$$); } expr expr1 expr_opt
 %destructor { wasm_destroy_expr_ptr_vector_and_elements(parser->allocator, &$$); } expr_list non_empty_expr_list
-%destructor { wasm_destroy_target(parser->allocator, &$$); } target
-%destructor { wasm_destroy_target_vector_and_elements(parser->allocator, &$$); } target_list
-%destructor { wasm_destroy_case(parser->allocator, &$$); } case
-%destructor { wasm_destroy_case_vector_and_elements(parser->allocator, &$$); } case_list
 %destructor { wasm_destroy_type_bindings(parser->allocator, &$$); } local_list param_list
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment string_contents
@@ -376,26 +368,12 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       $$->return_.expr = $2;
     }
-  | TABLESWITCH labeling expr LPAR TABLE target_list RPAR target case_list {
-      $$ = wasm_new_tableswitch_expr(parser->allocator);
+  | BR_TABLE var_list var expr {
+      $$ = wasm_new_br_table_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->tableswitch.label = $2;
-      $$->tableswitch.expr = $3;
-      $$->tableswitch.targets = $6;
-      $$->tableswitch.default_target = $8;
-      $$->tableswitch.cases = $9;
-
-      int i;
-      for (i = 0; i < $$->tableswitch.cases.size; ++i) {
-        WasmCase* case_ = &$$->tableswitch.cases.data[i];
-        if (case_->label.start) {
-          WasmBinding* binding = wasm_insert_binding(
-              parser->allocator, &$$->tableswitch.case_bindings, &case_->label);
-          CHECK_ALLOC_NULL(binding);
-          binding->loc = case_->loc;
-          binding->index = i;
-        }
-      }
+      $$->br_table.expr = $4;
+      $$->br_table.targets = $2;
+      $$->br_table.default_target = $3;
     }
   | CALL var expr_list {
       $$ = wasm_new_call_expr(parser->allocator);
@@ -518,36 +496,6 @@ expr_list :
     /* empty */ { ZERO_MEMORY($$); }
   | non_empty_expr_list
 ;
-
-target :
-    LPAR CASE var RPAR {
-      $$.type = WASM_TARGET_TYPE_CASE;
-      $$.var = $3;
-    }
-  | LPAR BR var RPAR {
-      $$.type = WASM_TARGET_TYPE_BR;
-      $$.var = $3;
-    }
-;
-target_list :
-    /* empty */ { ZERO_MEMORY($$); }
-  | target_list target {
-      $$ = $1;
-      CHECK_ALLOC(wasm_append_target_value(parser->allocator, &$$, &$2));
-    }
-;
-case :
-    LPAR CASE expr_list RPAR { ZERO_MEMORY($$.label); $$.exprs = $3; }
-  | LPAR CASE bind_var expr_list RPAR { $$.label = $3; $$.exprs = $4; }
-;
-case_list :
-    /* empty */ { ZERO_MEMORY($$); }
-  | case_list case {
-      $$ = $1;
-      CHECK_ALLOC(wasm_append_case_value(parser->allocator, &$$, &$2));
-    }
-;
-
 
 /* Functions */
 

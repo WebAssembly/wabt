@@ -74,12 +74,6 @@ typedef struct WasmVar {
 } WasmVar;
 DECLARE_VECTOR(var, WasmVar);
 
-typedef struct WasmTarget {
-  WasmTargetType type;
-  WasmVar var;
-} WasmTarget;
-DECLARE_VECTOR(target, WasmTarget);
-
 typedef WasmStringSlice WasmLabel;
 
 typedef struct WasmExpr* WasmExprPtr;
@@ -109,6 +103,7 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_BLOCK,
   WASM_EXPR_TYPE_BR,
   WASM_EXPR_TYPE_BR_IF,
+  WASM_EXPR_TYPE_BR_TABLE,
   WASM_EXPR_TYPE_CALL,
   WASM_EXPR_TYPE_CALL_IMPORT,
   WASM_EXPR_TYPE_CALL_INDIRECT,
@@ -127,7 +122,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_SELECT,
   WASM_EXPR_TYPE_SET_LOCAL,
   WASM_EXPR_TYPE_STORE,
-  WASM_EXPR_TYPE_TABLESWITCH,
   WASM_EXPR_TYPE_UNARY,
   WASM_EXPR_TYPE_UNREACHABLE,
 } WasmExprType;
@@ -168,14 +162,10 @@ struct WasmExpr {
     struct { WasmVar var; WasmExprPtr expr; } br;
     struct { WasmExprPtr expr; } return_;
     struct {
-      WasmLabel label;
       WasmExprPtr expr;
-      WasmTargetVector targets;
-      WasmTarget default_target;
-      /* the binding names' memory is shared with cases */
-      WasmBindingHash case_bindings;
-      WasmCaseVector cases;
-    } tableswitch;
+      WasmVarVector targets;
+      WasmVar default_target;
+    } br_table;
     struct { WasmVar var; WasmExprPtrVector args; } call;
     struct {
       WasmVar var;
@@ -382,6 +372,7 @@ WasmExpr* wasm_new_binary_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_block_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_br_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_br_if_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_br_table_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_call_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_call_import_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_call_indirect_expr(struct WasmAllocator*);
@@ -398,7 +389,6 @@ WasmExpr* wasm_new_return_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_tableswitch_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_unary_expr(struct WasmAllocator*);
 /* for nop, unreachable and memory_size */
 WasmExpr* wasm_new_empty_expr(struct WasmAllocator*, WasmExprType);
@@ -427,9 +417,6 @@ void wasm_destroy_module(struct WasmAllocator*, WasmModule*);
 void wasm_destroy_segment_vector_and_elements(struct WasmAllocator*,
                                               WasmSegmentVector*);
 void wasm_destroy_segment(struct WasmAllocator*, WasmSegment*);
-void wasm_destroy_target_vector_and_elements(struct WasmAllocator*,
-                                             WasmTargetVector*);
-void wasm_destroy_target(struct WasmAllocator*, WasmTarget*);
 void wasm_destroy_type_bindings(struct WasmAllocator*, WasmTypeBindings*);
 void wasm_destroy_var_vector_and_elements(struct WasmAllocator*,
                                           WasmVarVector*);

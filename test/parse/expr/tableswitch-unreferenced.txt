@@ -1,7 +1,0 @@
-(module
-  (func
-    (tableswitch (i32.const 0)
-      (table (case 0)) (case 1)
-      (case (nop))
-      (case (nop))
-      (case (nop)))))
