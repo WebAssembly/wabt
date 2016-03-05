@@ -64,13 +64,13 @@ endef
 define EXE
 .PHONY: $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX)
 $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
-	$$(MAKE) -C $$($(1)_$(2)_DIR) $(3)$$($(4)_SUFFIX)
+	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) $(3)$$($(4)_SUFFIX)
 endef
 
 define TEST
 .PHONY: test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
 test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
-	$$(MAKE) -C $$($(1)_$(2)_DIR) test$$($(3)_SUFFIX)
+	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) test$$($(3)_SUFFIX)
 endef
 
 .PHONY: all

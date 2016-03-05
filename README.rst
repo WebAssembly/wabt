@@ -30,11 +30,10 @@ CMake for you, and put the result in ``out/clang/Debug/`` by default::
   cd out/clang/Debug && cmake ../../.. -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug
   -- The C compiler identification is Clang 3.4.0
   ...
-  make -C out/clang/Debug sexpr-wasm
+  make --no-print-directory -C out/clang/Debug sexpr-wasm
   ...
-  [100%] Building C object CMakeFiles/sexpr-wasm.dir/wasm-flex-lexer.c.o
   Linking C executable sexpr-wasm
-  ...
+  [100%] Built target sexpr-wasm
   ln -sf ../out/clang/Debug/sexpr-wasm out/sexpr-wasm
 
 This will build the default version of sexpr-wasm: a debug build using the
