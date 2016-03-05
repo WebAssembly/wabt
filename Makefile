@@ -79,6 +79,16 @@ all: sexpr-wasm
 .PHONY: test-everything
 test-everything:
 
+.PHONY: update-bison update-flex
+update-bison: src/prebuilt/wasm-bison-parser.c
+update-flex: src/prebuilt/wasm-flex-lexer.c
+
+src/prebuilt/wasm-bison-parser.c: src/wasm-bison-parser.y
+	bison -o $@ $< --defines=src/prebuilt/wasm-bison-parser.h
+
+src/prebuilt/wasm-flex-lexer.c: src/wasm-flex-lexer.l
+	flex -o $@ $<
+
 # defaults with simple names
 $(foreach SANITIZER,$(SANITIZERS), \
 	$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),sexpr-wasm,$(SANITIZER))))

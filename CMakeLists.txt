@@ -67,13 +67,14 @@ if (FLEX_FOUND AND BISON_FOUND)
     ${SEXPR_WASM_SOURCE_DIR}/src/wasm-flex-lexer.l
     ${FLEX_LEXER_C}
   )
-  set_source_files_properties(
-    ${FLEX_LEXER_C} PROPERTIES COMPILE_FLAGS -Wno-unused-function
-  )
 else ()
-  set(BISON_PARSER_C src/wasm-bison-parser.c)
-  set(FLEX_LEXER_C src/wasm-flex-lexer.c)
+  set(BISON_PARSER_C src/prebuilt/wasm-bison-parser.c)
+  set(FLEX_LEXER_C src/prebuilt/wasm-flex-lexer.c)
 endif ()
+
+set_source_files_properties(
+  ${FLEX_LEXER_C} PROPERTIES COMPILE_FLAGS -Wno-unused-function
+)
 
 set(SEXPR_WASM_SRCS
   src/sexpr-wasm.c

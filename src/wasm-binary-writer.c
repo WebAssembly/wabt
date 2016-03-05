@@ -236,16 +236,6 @@ static void out_u8(WasmWriterState* writer_state,
 }
 
 /* TODO(binji): endianness */
-static void out_u16(WasmWriterState* writer_state,
-                    uint32_t value,
-                    const char* desc) {
-  assert(value <= UINT16_MAX);
-  uint16_t value16 = value;
-  out_data_at(writer_state, writer_state->offset, &value16, sizeof(value16),
-              desc);
-  writer_state->offset += sizeof(value16);
-}
-
 static void out_u32(WasmWriterState* writer_state,
                     uint32_t value,
                     const char* desc) {
@@ -265,22 +255,6 @@ static void out_f64(WasmWriterState* writer_state,
                     const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
   writer_state->offset += sizeof(value);
-}
-
-static void out_u16_at(WasmWriterState* writer_state,
-                       uint32_t offset,
-                       uint32_t value,
-                       const char* desc) {
-  assert(value <= UINT16_MAX);
-  uint16_t value16 = value;
-  out_data_at(writer_state, offset, &value16, sizeof(value16), desc);
-}
-
-static void out_u32_at(WasmWriterState* writer_state,
-                       uint32_t offset,
-                       uint32_t value,
-                       const char* desc) {
-  out_data_at(writer_state, offset, &value, sizeof(value), desc);
 }
 
 #undef OUT_AT_TYPE
