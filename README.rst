@@ -25,19 +25,10 @@ Building
 Building just sexpr-wasm::
 
   $ make
-  mkdir out
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.o -MMD -MP -MF out/wasm.d src/wasm.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/sexpr-wasm.o -MMD -MP -MF out/sexpr-wasm.d src/sexpr-wasm.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-parser.o -MMD -MP -MF out/wasm-parser.d src/wasm-parser.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-lexer.o -MMD -MP -MF out/wasm-lexer.d src/wasm-lexer.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-vector.o -MMD -MP -MF out/wasm-vector.d src/wasm-vector.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-check.o -MMD -MP -MF out/wasm-check.d src/wasm-check.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-writer.o -MMD -MP -MF out/wasm-writer.d src/wasm-writer.c
-  cc -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm-binary-writer.o -MMD -MP -MF out/wasm-binary-writer.d src/wasm-binary-writer.c
-  cc -o out/sexpr-wasm out/wasm.o out/sexpr-wasm.o out/wasm-parser.o out/wasm-lexer.o out/wasm-vector.o out/wasm-check.o out/wasm-writer.o out/wasm-binary-writer.o
+  ...
 
-If you make changes to src/wasm-parser.y, you'll need to install bison as
-well. On Debian-based systems::
+If you make changes to ``src/wasm-bison-parser.y``, you'll need to install
+bison as well. On Debian-based systems::
 
   $ sudo apt-get install bison
   ...
@@ -46,8 +37,8 @@ well. On Debian-based systems::
   bison -o src/wasm-bison-parser.c --defines=src/wasm-bison-parser.h src/wasm-bison-parser.y
   ...
 
-If you make changes to src/wasm-lexer.l, you'll need to install flex as well.
-On Debian-based systems::
+If you make changes to ``src/wasm-flex-lexer.l``, you'll need to install flex
+as well. On Debian-based systems::
 
   $ sudo apt-get install flex
   ...
@@ -69,7 +60,7 @@ When it is finished, there will be a d8 executable in the
 ``third_party/v8/v8/out/Release`` directory.
 
 You can also download a prebuilt version (the same one used to test on Travis)
-by running the download-d8.sh script::
+by running the ``download-d8.sh`` script::
 
   $ scripts/download-d8.sh
   ...
@@ -110,7 +101,7 @@ If you just want to run a quick test, you can use the run-d8.py script instead::
   $ test/run-d8.py test.wast
   test() = 3
 
-To run spec-style tests (with assert_eq, invoke, etc.) use the `--spec` flag::
+To run spec-style tests (with assert_eq, invoke, etc.) use the ``--spec`` flag::
 
   $ cat > test2.wast << HERE
   (module
@@ -209,13 +200,13 @@ Writing New Tests
 -----------------
 
 Tests must be placed in the test/ directory, and must have the extension
-`.txt`. The directory structure is mostly for convenience, so for example you
-can type `test/run-tests.py d8` to run all the tests that execute in d8.
+``.txt``. The directory structure is mostly for convenience, so for example you
+can type ``test/run-tests.py d8`` to run all the tests that execute in d8.
 There's otherwise no logic attached to a test being in a given directory.
 
 That being said, try to make the test names self explanatory, and try to test
 only one thing. Also make sure that tests that are expected to fail start with
-`bad-`.
+``bad-``.
 
 The test format is straightforward::
 
@@ -271,8 +262,8 @@ If we run it, it will fail::
   - my-awesome-test.txt
   [+0|-1|%100] (0.03s)
 
-We can rebase it automatically with the `-r` flag. Running the test again shows
-that the expected stdout has been added::
+We can rebase it automatically with the ``-r`` flag. Running the test again
+shows that the expected stdout has been added::
 
   $ test/run-tests.py my-awesome-test -r
   [+1|-0|%100] (0.03s)
