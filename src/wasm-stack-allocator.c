@@ -170,8 +170,7 @@ void wasm_reset_stack_allocator(WasmStackAllocator* stack_allocator) {
     stack_allocator->fallback->free(stack_allocator->fallback, chunk);
     chunk = prev;
   }
-  stack_allocator->first->current =
-      stack_allocator->first + 1;
+  stack_allocator->first->current = stack_allocator->first + 1;
   stack_allocator->first->prev = NULL;
   stack_allocator->last = stack_allocator->first;
   stack_allocator->last_allocation = NULL;

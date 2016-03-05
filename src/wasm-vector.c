@@ -39,7 +39,8 @@ WasmResult wasm_ensure_capacity(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-void* wasm_append_element(WasmAllocator* allocator, void** data,
+void* wasm_append_element(WasmAllocator* allocator,
+                          void** data,
                           size_t* size,
                           size_t* capacity,
                           size_t elt_byte_size) {
@@ -60,7 +61,8 @@ WasmResult wasm_extend_elements(WasmAllocator* allocator,
                                            *dst_size + src_size, elt_byte_size);
   if (result != WASM_OK)
     return result;
-  memcpy((void*)((size_t)*dst + (*dst_size * elt_byte_size)), *src, src_size * elt_byte_size);
+  memcpy((void*)((size_t)*dst + (*dst_size * elt_byte_size)), *src,
+         src_size * elt_byte_size);
   *dst_size += src_size;
   return result;
 }

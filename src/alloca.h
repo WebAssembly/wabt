@@ -18,10 +18,10 @@
 #define WASM_ALLOCA_H_
 
 #ifdef __GNUC__
-# include <alloca.h>
+#include <alloca.h>
 #elif defined _MSC_VER
-# include <malloc.h>
-# define alloca _alloca
+#include <malloc.h>
+#define alloca _alloca
 #endif
 
 #endif

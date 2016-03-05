@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef __GNUC__
-#  include <getopt.h>
+#include <getopt.h>
 #endif
 
 #include "wasm-binary-writer.h"
@@ -51,19 +51,19 @@ static int s_use_libc_allocator;
 
 #ifndef __GNUC__
 typedef struct option {
-    const char* name;
-    int has_arg;
-    int* flag;
-    int val;
+  const char* name;
+  int has_arg;
+  int* flag;
+  int val;
 } option;
-#define null_argument     0 /*Argument Null*/
-#define no_argument       0 /*Argument Switch Only*/
+#define null_argument 0     /*Argument Null*/
+#define no_argument 0       /*Argument Switch Only*/
 #define required_argument 1 /*Argument Required*/
 #define optional_argument 2 /*Argument Optional*/
 
 typedef struct OptionText {
-    char long_name[64];
-    char short_name[64];
+  char long_name[64];
+  char short_name[64];
 } OptionText;
 #define USE_MIN_PARSER 1
 #endif
@@ -92,7 +92,7 @@ static OptionHelp s_option_help[] = {
     {FLAG_VERBOSE, NULL, "use multiple times for more info"},
     {FLAG_HELP, NULL, "print this help message"},
     {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
-    {FLAG_OUTPUT, NULL, "<filename> file to output the generated binary format"},
+    {FLAG_OUTPUT, "FILENAME", "output file for the generated binary format"},
     {FLAG_SPEC, NULL,
      "parse a file with multiple modules and assertions, like the spec tests"},
     {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
@@ -153,11 +153,11 @@ static void parse_options(int argc, char** argv) {
   OptionText options_text[OPTIONS_LENGTH];
   int i = 0;
   for (; i < OPTIONS_LENGTH; i++) {
-      struct option* opt = &s_long_options[i];
-      sprintf(options_text[i].long_name, "--%s", opt->name);
-      if (opt->val) {
-          sprintf(options_text[i].short_name, "-%c", (char)opt->val);
-      }
+    struct option* opt = &s_long_options[i];
+    sprintf(options_text[i].long_name, "--%s", opt->name);
+    if (opt->val) {
+      sprintf(options_text[i].short_name, "-%c", (char)opt->val);
+    }
   }
 #endif
   while (1) {
@@ -169,7 +169,7 @@ static void parse_options(int argc, char** argv) {
 
 #else
     if (optind >= argc) {
-        break;
+      break;
     }
     optarg = NULL;
     option_index = -1;
@@ -177,21 +177,21 @@ static void parse_options(int argc, char** argv) {
     i = 0;
     for (; i < OPTIONS_LENGTH; i++) {
       const struct OptionText* optText = &options_text[i];
-        const struct option* opt = &s_long_options[i];
-        if (strcmp(in_opt, optText->long_name) == 0 ||
-            (opt->val && strcmp(in_opt, optText->short_name) == 0)) {
-          option_index = i;
-          c = opt->val;
-          if (opt->has_arg != no_argument) {
-            if (optind < argc) {
-              optarg = argv[optind++];
-            } else if (opt->has_arg == required_argument) {
-              FATAL("Missing argument for option %s.\n", opt->name);
-              usage(argv[0]);
-            }
+      const struct option* opt = &s_long_options[i];
+      if (strcmp(in_opt, optText->long_name) == 0 ||
+          (opt->val && strcmp(in_opt, optText->short_name) == 0)) {
+        option_index = i;
+        c = opt->val;
+        if (opt->has_arg != no_argument) {
+          if (optind < argc) {
+            optarg = argv[optind++];
+          } else if (opt->has_arg == required_argument) {
+            FATAL("Missing argument for option %s.\n", opt->name);
+            usage(argv[0]);
           }
-          break;
         }
+        break;
+      }
     }
 
     // no argument found
