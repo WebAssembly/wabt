@@ -189,6 +189,15 @@ typedef struct WasmWriteContext {
 DECLARE_VECTOR(func_signature, WasmFuncSignature);
 DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
+static int is_nan_f32(uint32_t bits) {
+  return (bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0;
+}
+
+static int is_nan_f64(uint64_t bits) {
+  return (bits & 0x7ff0000000000000LL) == 0x7ff0000000000000LL &&
+         (bits & 0x000fffffffffffffLL) != 0;
+}
+
 static void destroy_func_signature_vector_and_elements(
     WasmAllocator* allocator,
     WasmFuncSignatureVector* sigs) {
@@ -263,16 +272,8 @@ static void out_u32(WasmWriterState* writer_state,
   writer_state->offset += sizeof(value);
 }
 
-static void out_f32(WasmWriterState* writer_state,
-                    float value,
-                    const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value),
-              DONT_PRINT_CHARS, desc);
-  writer_state->offset += sizeof(value);
-}
-
-static void out_f64(WasmWriterState* writer_state,
-                    double value,
+static void out_u64(WasmWriterState* writer_state,
+                    uint64_t value,
                     const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value),
               DONT_PRINT_CHARS, desc);
@@ -763,11 +764,11 @@ static void write_expr(WasmWriteContext* ctx,
           break;
         case WASM_TYPE_F32:
           out_opcode(ws, WASM_OPCODE_F32_CONST);
-          out_f32(ws, expr->const_.f32, "f32 literal");
+          out_u32(ws, expr->const_.f32_bits, "f32 literal");
           break;
         case WASM_TYPE_F64:
           out_opcode(ws, WASM_OPCODE_F64_CONST);
-          out_f64(ws, expr->const_.f64, "f64 literal");
+          out_u64(ws, expr->const_.f64_bits, "f64 literal");
           break;
         default:
           assert(0);
@@ -1609,7 +1610,8 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
                 create_const_expr(script->allocator, expected);
             CHECK_ALLOC_NULL(const_expr);
 
-            if (expected->type == WASM_TYPE_F32 && isnan(expected->f32)) {
+            if (expected->type == WASM_TYPE_F32 &&
+                is_nan_f32(expected->f32_bits)) {
               *expr_ptr = create_eq_expr(
                   script->allocator, WASM_TYPE_I32,
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F32,
@@ -1618,7 +1620,7 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
                                           const_expr));
               CHECK_ALLOC_NULL(*expr_ptr);
             } else if (expected->type == WASM_TYPE_F64 &&
-                       isnan(expected->f64)) {
+                       is_nan_f64(expected->f64_bits)) {
               *expr_ptr = create_eq_expr(
                   script->allocator, WASM_TYPE_I64,
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F64,
