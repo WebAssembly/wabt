@@ -144,8 +144,8 @@ static int read_int32(const char* s, const char* end, uint32_t* out,
                       int allow_signed);
 static int read_int64(const char* s, const char* end, uint64_t* out);
 static int read_uint64(const char* s, const char* end, uint64_t* out);
-static int read_float(const char* s, const char* end, float* out);
-static int read_double(const char* s, const char* end, double* out);
+static int read_float(const char* s, const char* end, uint32_t* out_bits);
+static int read_double(const char* s, const char* end, uint64_t* out_bits);
 static int read_const(WasmType type, const char* s, const char* end,
                       WasmConst* out);
 static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
@@ -4239,7 +4239,7 @@ static int read_int32(const char* s,
   return 1;
 }
 
-static int read_float_nan(const char* s, const char* end, float* out) {
+static int read_float_nan(const char* s, const char* end, uint32_t* out_bits) {
   int is_neg = 0;
   if (*s == '-') {
     is_neg = 1;
@@ -4280,12 +4280,12 @@ static int read_float_nan(const char* s, const char* end, float* out) {
   uint32_t bits = 0x7f800000 | tag;
   if (is_neg)
     bits |= 0x80000000U;
-  memcpy(out, &bits, sizeof(*out));
+  *out_bits = bits;
   return 1;
 }
 
-static int read_float(const char* s, const char* end, float* out) {
-  if (read_float_nan(s, end, out))
+static int read_float(const char* s, const char* end, uint32_t* out_bits) {
+  if (read_float_nan(s, end, out_bits))
     return 1;
 
   errno = 0;
@@ -4296,11 +4296,11 @@ static int read_float(const char* s, const char* end, float* out) {
       ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) && errno != 0))
     return 0;
 
-  *out = value;
+  memcpy(out_bits, &value, sizeof(value));
   return 1;
 }
 
-static int read_double_nan(const char* s, const char* end, double* out) {
+static int read_double_nan(const char* s, const char* end, uint64_t* out_bits) {
   int is_neg = 0;
   if (*s == '-') {
     is_neg = 1;
@@ -4341,12 +4341,12 @@ static int read_double_nan(const char* s, const char* end, double* out) {
   uint64_t bits = 0x7ff0000000000000ULL | tag;
   if (is_neg)
     bits |= 0x8000000000000000ULL;
-  memcpy(out, &bits, sizeof(*out));
+  *out_bits = bits;
   return 1;
 }
 
-static int read_double(const char* s, const char* end, double* out) {
-  if (read_double_nan(s, end, out))
+static int read_double(const char* s, const char* end, uint64_t* out_bits) {
+  if (read_double_nan(s, end, out_bits))
     return 1;
 
   errno = 0;
@@ -4357,7 +4357,7 @@ static int read_double(const char* s, const char* end, double* out) {
       ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) && errno != 0))
     return 0;
 
-  *out = value;
+  memcpy(out_bits, &value, sizeof(value));
   return 1;
 }
 
@@ -4372,9 +4372,9 @@ static int read_const(WasmType type,
     case WASM_TYPE_I64:
       return read_int64(s, end, &out->u64);
     case WASM_TYPE_F32:
-      return read_float(s, end, &out->f32);
+      return read_float(s, end, &out->f32_bits);
     case WASM_TYPE_F64:
-      return read_double(s, end, &out->f64);
+      return read_double(s, end, &out->f64_bits);
     default:
       assert(0);
       break;

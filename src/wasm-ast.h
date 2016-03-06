@@ -85,8 +85,8 @@ typedef struct WasmConst {
   union {
     uint32_t u32;
     uint64_t u64;
-    float f32;
-    double f64;
+    uint32_t f32_bits;
+    uint64_t f64_bits;
   };
 } WasmConst;
 DECLARE_VECTOR(const, WasmConst);
