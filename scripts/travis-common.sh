@@ -15,19 +15,17 @@
 # limitations under the License.
 #
 
-set -o nounset
-set -o errexit
-
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-source ${SCRIPT_DIR}/travis-common.sh
+ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
+BUILD_TYPES="debug release"
+BUILD_TYPES_UPPER="Debug Release"
+SANITIZERS="-asan -lsan -msan"
 
-for COMPILER in ${COMPILERS}; do
-  for BUILD_TYPE in ${BUILD_TYPES}; do
-    make ${COMPILER}-${BUILD_TYPE}-sexpr-wasm
-    if [ ${COMPILER} = "clang" ]; then
-      for SANITIZER in ${SANITIZERS}; do
-        make ${CC}-${BUILD_TYPE}-sexpr-wasm${SANITIZER}
-      done
-    fi
-  done
-done
+if [ ${CC} = "gcc" ]; then
+  COMPILERS="gcc gcc-i686"
+elif [ ${CC} = "clang" ]; then
+  COMPILERS="clang"
+else
+  echo "unknown compiler: ${CC}"
+  exit 1
+fi

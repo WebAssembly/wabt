@@ -19,9 +19,7 @@ set -o nounset
 set -o errexit
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
-BUILD_TYPES="Debug Release"
-SANITIZERS="-asan -lsan -msan"
+source ${SCRIPT_DIR}/travis-common.sh
 
 log_and_run() {
   echo $*
@@ -36,20 +34,26 @@ run_tests() {
   (cd ${ROOT_DIR} && log_and_run test/run-tests.py -e ${EXE} ${ARG_FLAG-} --timeout=10)
 }
 
-for BUILD_TYPE in ${BUILD_TYPES}; do
-  EXE=out/${CC}/${BUILD_TYPE}/sexpr-wasm
-  if [ -e ${EXE} ]; then
-    run_tests ${EXE}
-    run_tests ${EXE} --use-libc-allocator
-  fi
+for COMPILER in ${COMPILERS}; do
+  for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
+    EXE=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm
+    if [ -e ${EXE} ]; then
+      run_tests ${EXE}
+      run_tests ${EXE} --use-libc-allocator
+    else
+      echo "${EXE} doesn't exist; skipping."
+    fi
 
-  if [ ${CC} = "clang" ]; then
-    for SANITIZER in ${SANITIZERS}; do
-      EXE=out/${CC}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
-      if [ -e ${EXE} ]; then
-        run_tests ${EXE}
-        run_tests ${EXE} --use-libc-allocator
-      fi
-    done
-  fi
+    if [ ${COMPILER} = "clang" ]; then
+      for SANITIZER in ${SANITIZERS}; do
+        EXE=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
+        if [ -e ${EXE} ]; then
+          run_tests ${EXE}
+          run_tests ${EXE} --use-libc-allocator
+        else
+          echo "${EXE} doesn't exist; skipping."
+        fi
+      done
+    fi
+  done
 done
