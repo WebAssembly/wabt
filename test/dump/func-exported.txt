@@ -16,17 +16,20 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000011: 0000                                       ; FIXUP func body size
-0000013: 09                                         ; WASM_BINARY_SECTION_EXPORTS
-0000014: 01                                         ; num exports
-0000015: 0000                                       ; export func index
-0000017: 0000 0000                                  ; export name offset
-000001b: 06                                         ; WASM_BINARY_SECTION_END
+0000013: 00                                         ; local decl count
+0000013: 00                                         ; local decl count
+0000011: 0100                                       ; FIXUP func body size
+0000014: 09                                         ; WASM_BINARY_SECTION_EXPORTS
+0000015: 01                                         ; num exports
+0000016: 0000                                       ; export func index
+0000018: 0000 0000                                  ; export name offset
+000001c: 06                                         ; WASM_BINARY_SECTION_END
 ; export 0
-0000017: 1c00 0000                                  ; FIXUP func name offset
-000001c: 666f 6f                                    ; export name
-000001f: 00                                         ; \0
+0000018: 1d00 0000                                  ; FIXUP func name offset
+000001d: 666f 6f                                    ; export name
+0000020: 00                                         ; \0
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0000 0009 0100 001c 0000 0006 666f 6f00  
+0000010: 0001 0000 0901 0000 1d00 0000 0666 6f6f  
+0000020: 00                                       
 ;;; STDOUT ;;)

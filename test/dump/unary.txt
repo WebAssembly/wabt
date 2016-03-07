@@ -39,40 +39,42 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000013: 5a                                         ; OPCODE_BOOL_NOT
-0000014: 57                                         ; OPCODE_I32_CLZ
-0000015: 58                                         ; OPCODE_I32_CTZ
-0000016: 59                                         ; OPCODE_I32_POPCNT
-0000017: 0a                                         ; OPCODE_I32_CONST
-0000018: 00                                         ; i32 literal
-0000019: 72                                         ; OPCODE_I64_CLZ
-000001a: 73                                         ; OPCODE_I64_CTZ
-000001b: 74                                         ; OPCODE_I64_POPCNT
-000001c: 0b                                         ; OPCODE_I64_CONST
-000001d: 00                                         ; i64 literal
-000001e: 7c                                         ; OPCODE_F32_NEG
-000001f: 7b                                         ; OPCODE_F32_ABS
-0000020: 82                                         ; OPCODE_F32_SQRT
-0000021: 7e                                         ; OPCODE_F32_CEIL
-0000022: 7f                                         ; OPCODE_F32_FLOOR
-0000023: 80                                         ; OPCODE_F32_TRUNC
-0000024: 81                                         ; OPCODE_F32_NEAREST_INT
-0000025: 0d                                         ; OPCODE_F32_CONST
-0000026: 0000 0000                                  ; f32 literal
-000002a: 90                                         ; OPCODE_F64_NEG
-000002b: 8f                                         ; OPCODE_F64_ABS
-000002c: 96                                         ; OPCODE_F64_SQRT
-000002d: 92                                         ; OPCODE_F64_CEIL
-000002e: 93                                         ; OPCODE_F64_FLOOR
-000002f: 94                                         ; OPCODE_F64_TRUNC
-0000030: 95                                         ; OPCODE_F64_NEAREST_INT
-0000031: 0c                                         ; OPCODE_F64_CONST
-0000032: 0000 0000 0000 0000                        ; f64 literal
-0000011: 2700                                       ; FIXUP func body size
-000003a: 06                                         ; WASM_BINARY_SECTION_END
+0000013: 00                                         ; local decl count
+0000013: 00                                         ; local decl count
+0000014: 5a                                         ; OPCODE_BOOL_NOT
+0000015: 57                                         ; OPCODE_I32_CLZ
+0000016: 58                                         ; OPCODE_I32_CTZ
+0000017: 59                                         ; OPCODE_I32_POPCNT
+0000018: 0a                                         ; OPCODE_I32_CONST
+0000019: 00                                         ; i32 literal
+000001a: 72                                         ; OPCODE_I64_CLZ
+000001b: 73                                         ; OPCODE_I64_CTZ
+000001c: 74                                         ; OPCODE_I64_POPCNT
+000001d: 0b                                         ; OPCODE_I64_CONST
+000001e: 00                                         ; i64 literal
+000001f: 7c                                         ; OPCODE_F32_NEG
+0000020: 7b                                         ; OPCODE_F32_ABS
+0000021: 82                                         ; OPCODE_F32_SQRT
+0000022: 7e                                         ; OPCODE_F32_CEIL
+0000023: 7f                                         ; OPCODE_F32_FLOOR
+0000024: 80                                         ; OPCODE_F32_TRUNC
+0000025: 81                                         ; OPCODE_F32_NEAREST_INT
+0000026: 0d                                         ; OPCODE_F32_CONST
+0000027: 0000 0000                                  ; f32 literal
+000002b: 90                                         ; OPCODE_F64_NEG
+000002c: 8f                                         ; OPCODE_F64_ABS
+000002d: 96                                         ; OPCODE_F64_SQRT
+000002e: 92                                         ; OPCODE_F64_CEIL
+000002f: 93                                         ; OPCODE_F64_FLOOR
+0000030: 94                                         ; OPCODE_F64_TRUNC
+0000031: 95                                         ; OPCODE_F64_NEAREST_INT
+0000032: 0c                                         ; OPCODE_F64_CONST
+0000033: 0000 0000 0000 0000                        ; f64 literal
+0000011: 2800                                       ; FIXUP func body size
+000003b: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0027 005a 5758 590a 0072 7374 0b00 7c7b  
-0000020: 827e 7f80 810d 0000 0000 908f 9692 9394  
-0000030: 950c 0000 0000 0000 0000 06              
+0000010: 0028 0000 5a57 5859 0a00 7273 740b 007c  
+0000020: 7b82 7e7f 8081 0d00 0000 0090 8f96 9293  
+0000030: 9495 0c00 0000 0000 0000 0006            
 ;;; STDOUT ;;)

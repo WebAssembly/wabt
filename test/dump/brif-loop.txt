@@ -17,16 +17,18 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000013: 02                                         ; OPCODE_LOOP
-0000014: 01                                         ; num expressions
-0000015: 07                                         ; OPCODE_BR_IF
-0000016: 00                                         ; break depth
-0000017: 00                                         ; OPCODE_NOP
-0000018: 0a                                         ; OPCODE_I32_CONST
-0000019: 00                                         ; i32 literal
-0000011: 0700                                       ; FIXUP func body size
-000001a: 06                                         ; WASM_BINARY_SECTION_END
+0000013: 00                                         ; local decl count
+0000013: 00                                         ; local decl count
+0000014: 02                                         ; OPCODE_LOOP
+0000015: 01                                         ; num expressions
+0000016: 07                                         ; OPCODE_BR_IF
+0000017: 00                                         ; break depth
+0000018: 00                                         ; OPCODE_NOP
+0000019: 0a                                         ; OPCODE_I32_CONST
+000001a: 00                                         ; i32 literal
+0000011: 0800                                       ; FIXUP func body size
+000001b: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0007 0002 0107 0000 0a00 06              
+0000010: 0008 0000 0201 0700 000a 0006            
 ;;; STDOUT ;;)

@@ -21,10 +21,12 @@
 0000012: 00                                         ; func flags
 0000013: 0000                                       ; func signature index
 0000015: 0000                                       ; func body size
-0000017: 3b                                         ; OPCODE_MEMORY_SIZE
-0000015: 0100                                       ; FIXUP func body size
-0000018: 06                                         ; WASM_BINARY_SECTION_END
+0000017: 00                                         ; local decl count
+0000017: 00                                         ; local decl count
+0000018: 3b                                         ; OPCODE_MEMORY_SIZE
+0000015: 0200                                       ; FIXUP func body size
+0000019: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0001 0101 0101 0001  
-0000010: 0201 0000 0001 003b 06                   
+0000010: 0201 0000 0002 0000 3b06                 
 ;;; STDOUT ;;)

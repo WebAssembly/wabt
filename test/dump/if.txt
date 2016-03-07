@@ -19,42 +19,46 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000013: 03                                         ; OPCODE_IF
-0000014: 0a                                         ; OPCODE_I32_CONST
-0000015: 01                                         ; i32 literal
-0000016: 01                                         ; OPCODE_BLOCK
-0000017: 01                                         ; num expressions
-0000018: 00                                         ; OPCODE_NOP
-0000019: 04                                         ; OPCODE_IF_THEN
-000001a: 0a                                         ; OPCODE_I32_CONST
-000001b: 00                                         ; i32 literal
-000001c: 01                                         ; OPCODE_BLOCK
-000001d: 01                                         ; num expressions
-000001e: 0d                                         ; OPCODE_F32_CONST
-000001f: 0000 803f                                  ; f32 literal
-0000023: 01                                         ; OPCODE_BLOCK
-0000024: 01                                         ; num expressions
-0000025: 0d                                         ; OPCODE_F32_CONST
-0000026: 0000 0040                                  ; f32 literal
-0000011: 1700                                       ; FIXUP func body size
+0000013: 00                                         ; local decl count
+0000013: 00                                         ; local decl count
+0000014: 03                                         ; OPCODE_IF
+0000015: 0a                                         ; OPCODE_I32_CONST
+0000016: 01                                         ; i32 literal
+0000017: 01                                         ; OPCODE_BLOCK
+0000018: 01                                         ; num expressions
+0000019: 00                                         ; OPCODE_NOP
+000001a: 04                                         ; OPCODE_IF_THEN
+000001b: 0a                                         ; OPCODE_I32_CONST
+000001c: 00                                         ; i32 literal
+000001d: 01                                         ; OPCODE_BLOCK
+000001e: 01                                         ; num expressions
+000001f: 0d                                         ; OPCODE_F32_CONST
+0000020: 0000 803f                                  ; f32 literal
+0000024: 01                                         ; OPCODE_BLOCK
+0000025: 01                                         ; num expressions
+0000026: 0d                                         ; OPCODE_F32_CONST
+0000027: 0000 0040                                  ; f32 literal
+0000011: 1800                                       ; FIXUP func body size
 ; function 1
-000002a: 00                                         ; func flags
-000002b: 0000                                       ; func signature index
-000002d: 0000                                       ; func body size
-000002f: 04                                         ; OPCODE_IF_THEN
-0000030: 0a                                         ; OPCODE_I32_CONST
-0000031: 01                                         ; i32 literal
-0000032: 01                                         ; OPCODE_BLOCK
-0000033: 01                                         ; num expressions
-0000034: 14                                         ; OPCODE_RETURN
-0000035: 01                                         ; OPCODE_BLOCK
-0000036: 01                                         ; num expressions
-0000037: 14                                         ; OPCODE_RETURN
-000002d: 0900                                       ; FIXUP func body size
-0000038: 06                                         ; WASM_BINARY_SECTION_END
+000002b: 00                                         ; func flags
+000002c: 0000                                       ; func signature index
+000002e: 0000                                       ; func body size
+0000030: 00                                         ; local decl count
+0000030: 00                                         ; local decl count
+0000031: 04                                         ; OPCODE_IF_THEN
+0000032: 0a                                         ; OPCODE_I32_CONST
+0000033: 01                                         ; i32 literal
+0000034: 01                                         ; OPCODE_BLOCK
+0000035: 01                                         ; num expressions
+0000036: 14                                         ; OPCODE_RETURN
+0000037: 01                                         ; OPCODE_BLOCK
+0000038: 01                                         ; num expressions
+0000039: 14                                         ; OPCODE_RETURN
+000002e: 0a00                                       ; FIXUP func body size
+000003a: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0202 0000  
-0000010: 0017 0003 0a01 0101 0004 0a00 0101 0d00  
-0000020: 0080 3f01 010d 0000 0040 0000 0009 0004  
-0000030: 0a01 0101 1401 0114 06                   
+0000010: 0018 0000 030a 0101 0100 040a 0001 010d  
+0000020: 0000 803f 0101 0d00 0000 4000 0000 0a00  
+0000030: 0004 0a01 0101 1401 0114 06              
 ;;; STDOUT ;;)

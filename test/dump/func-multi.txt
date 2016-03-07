@@ -17,19 +17,26 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000011: 0000                                       ; FIXUP func body size
+0000013: 00                                         ; local decl count
+0000013: 00                                         ; local decl count
+0000011: 0100                                       ; FIXUP func body size
 ; function 1
-0000013: 00                                         ; func flags
-0000014: 0000                                       ; func signature index
-0000016: 0000                                       ; func body size
-0000016: 0000                                       ; FIXUP func body size
+0000014: 00                                         ; func flags
+0000015: 0000                                       ; func signature index
+0000017: 0000                                       ; func body size
+0000019: 00                                         ; local decl count
+0000019: 00                                         ; local decl count
+0000017: 0100                                       ; FIXUP func body size
 ; function 2
-0000018: 00                                         ; func flags
-0000019: 0000                                       ; func signature index
-000001b: 0000                                       ; func body size
-000001b: 0000                                       ; FIXUP func body size
-000001d: 06                                         ; WASM_BINARY_SECTION_END
+000001a: 00                                         ; func flags
+000001b: 0000                                       ; func signature index
+000001d: 0000                                       ; func body size
+000001f: 00                                         ; local decl count
+000001f: 00                                         ; local decl count
+000001d: 0100                                       ; FIXUP func body size
+0000020: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0203 0000  
-0000010: 0000 0000 0000 0000 0000 0000 0006       
+0000010: 0001 0000 0000 0001 0000 0000 0001 0000  
+0000020: 06                                       
 ;;; STDOUT ;;)
