@@ -22,7 +22,7 @@ This will fetch the v8 and testsuite repos, which are needed for some tests.
 Building
 --------
 
-You'll need `CMake<https://cmake.org>`_. If you just run ``make``, it will run
+You'll need `CMake <https://cmake.org>`_. If you just run ``make``, it will run
 CMake for you, and put the result in ``out/clang/Debug/`` by default::
 
   $ make
