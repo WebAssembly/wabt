@@ -996,7 +996,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
       int num_locals[WASM_NUM_TYPES];
       ZERO_MEMORY(num_locals);
-      for (int j = 0; j < func->locals.types.size; ++j) {
+      int j;
+      for (j = 0; j < func->locals.types.size; ++j) {
 	num_locals[func->locals.types.data[j]]++;
       }
 
