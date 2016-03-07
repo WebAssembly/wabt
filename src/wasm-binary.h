@@ -206,7 +206,11 @@ typedef uint8_t WasmBinaryFunctionFlags;
   V(F64_CONVERT_F32, 0xb2)     \
   V(F64_REINTERPRET_I64, 0xb3) \
   V(I32_REINTERPRET_F32, 0xb4) \
-  V(I64_REINTERPRET_F64, 0xb5)
+  V(I64_REINTERPRET_F64, 0xb5) \
+  V(I32_ROR, 0xb6)             \
+  V(I32_ROL, 0xb7)             \
+  V(I64_ROR, 0xb8)             \
+  V(I64_ROL, 0xb9)
 
 typedef enum WasmOpcode {
 #define V(name, code) WASM_OPCODE_##name = code,

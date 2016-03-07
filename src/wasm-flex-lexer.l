@@ -276,6 +276,10 @@ NAME      \${ATOM}
 "i64.shr_s"           { BINOP(I64, SHR_S); return TOK(BINARY); }
 "i32.shr_u"           { BINOP(I32, SHR_U); return TOK(BINARY); }
 "i64.shr_u"           { BINOP(I64, SHR_U); return TOK(BINARY); }
+"i32.rotl"            { BINOP(I32, ROTL); return TOK(BINARY); }
+"i64.rotl"            { BINOP(I64, ROTL); return TOK(BINARY); }
+"i32.rotr"            { BINOP(I32, ROTR); return TOK(BINARY); }
+"i64.rotr"            { BINOP(I64, ROTR); return TOK(BINARY); }
 "f32.add"             { BINOP(F32, ADD); return TOK(BINARY); }
 "f64.add"             { BINOP(F64, ADD); return TOK(BINARY); }
 "f32.sub"             { BINOP(F32, SUB); return TOK(BINARY); }

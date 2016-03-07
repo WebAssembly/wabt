@@ -27,6 +27,10 @@
   (func $i32_shr_u (result i32) (i32.shr_u (i32.const -100) (i32.const 3)))
   (export "i32_shr_s" $i32_shr_s)
   (func $i32_shr_s (result i32) (i32.shr_s (i32.const -100) (i32.const 3)))
+  (export "i32_rotl" $i32_rotl)
+  (func $i32_rotl (result i32) (i32.rotl (i32.const -100) (i32.const 3)))
+  (export "i32_rotr" $i32_rotr)
+  (func $i32_rotr (result i32) (i32.rotr (i32.const -100) (i32.const 3)))
 
   ;; i64
   ;; The JavaScript host truncates if you try to return an i64, so we'll do a
@@ -71,6 +75,12 @@
   (export "i64_shr_s" $i64_shr_s)
   (func $i64_shr_s (result i32)
       (i64.eq (i64.shr_s (i64.const -100) (i64.const 3)) (i64.const -13)))
+  (export "i64_rotl" $i64_rotl)
+  (func $i64_rotl (result i32) (i64.eq (i64.rotl (i64.const -100) (i64.const 3))
+                                       (i64.const -793)))
+  (export "i64_rotr" $i64_rotr)
+  (func $i64_rotr (result i32) (i64.eq (i64.rotr (i64.const -100) (i64.const 3))
+                                       (i64.const -6917529027641081869)))
 
   ;; f32
   (export "f32_add" $f32_add)
@@ -121,6 +131,8 @@ i32_xor() = 14
 i32_shl() = -800
 i32_shr_u() = 536870899
 i32_shr_s() = -13
+i32_rotl() = -793
+i32_rotr() = -1610612749
 i64_add() = 1
 i64_sub() = 1
 i64_mul() = 1
@@ -134,6 +146,8 @@ i64_xor() = 1
 i64_shl() = 1
 i64_shr_u() = 1
 i64_shr_s() = 1
+i64_rotl() = 1
+i64_rotr() = 1
 f32_add() = 5
 f32_sub() = -9995.5
 f32_mul() = -8487.1875
