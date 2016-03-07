@@ -51,9 +51,10 @@ include_directories(src ${SEXPR_WASM_BINARY_DIR})
 
 add_definitions(-Wall -Werror -g)
 
+option(RUN_FLEX_BISON "run flex and bison" ON)
 find_package(FLEX)
 find_package(BISON)
-if (FLEX_FOUND AND BISON_FOUND)
+if (RUN_FLEX_BISON AND FLEX_FOUND AND BISON_FOUND)
   set(BISON_PARSER_C ${SEXPR_WASM_BINARY_DIR}/wasm-bison-parser.c)
   set(BISON_PARSER_H )
   BISON_TARGET(WASM_BISON_PARSER

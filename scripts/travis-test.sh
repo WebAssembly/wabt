@@ -34,6 +34,10 @@ run_tests() {
   (cd ${ROOT_DIR} && log_and_run test/run-tests.py -e ${EXE} ${ARG_FLAG-} --timeout=10)
 }
 
+if [ ${CC} = "gcc" ]; then
+  run_tests out/gcc/Debug-no-flex-bison/sexpr-wasm
+fi
+
 for COMPILER in ${COMPILERS}; do
   for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
     EXE=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm
