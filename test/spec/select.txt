@@ -6,7 +6,7 @@
 
 ;;; STDERR ;;)
 (;; STDOUT ;;;
-WasmModule::Instantiate(): Compiling WASM function #4:<?> failed:Result = ExprSelect[1] expected type <end>, found ExprI32Const of type i32 @+0
+WasmModule::Instantiate(): Compiling WASM function #4:<?> failed:Result = ExprSelect[1] expected type <end>, found ExprI32Const of type i32 @+1
 
   var module = _WASMEXP_.instantiateModule(u8a.buffer, ffi);
                          ^

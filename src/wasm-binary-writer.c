@@ -989,29 +989,45 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->funcs.size; ++i) {
       WasmFunc* func = module->funcs.data[i];
       print_header(ctx, "function", i);
+      /* TODO(binji): we're still remapping the locals here, but we may want to
+       have this be an option, now that it is not necessary. */
       remap_locals(ctx, func);
 
-      int has_locals = func->locals.types.size > 0;
       uint8_t flags = 0;
-      if (has_locals)
-        flags |= WASM_BINARY_FUNCTION_FLAG_LOCALS;
       out_u8(ws, flags, "func flags");
       out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
-      if (has_locals) {
-        int num_locals[WASM_NUM_TYPES];
-        ZERO_MEMORY(num_locals);
-        int j;
-        for (j = 0; j < func->locals.types.size; ++j)
-          num_locals[func->locals.types.data[j]]++;
-
-        out_u16(ws, num_locals[WASM_TYPE_I32], "num local i32");
-        out_u16(ws, num_locals[WASM_TYPE_I64], "num local i64");
-        out_u16(ws, num_locals[WASM_TYPE_F32], "num local f32");
-        out_u16(ws, num_locals[WASM_TYPE_F64], "num local f64");
-      }
-
       size_t func_body_offset = ctx->writer_state.offset;
       out_u16(ws, 0, "func body size");
+
+      int num_locals[WASM_NUM_TYPES];
+      ZERO_MEMORY(num_locals);
+      int j;
+      for (j = 0; j < func->locals.types.size; ++j)
+        num_locals[func->locals.types.data[j]]++;
+
+      int num_local_types = 0;
+      for (j = 0; j < WASM_NUM_TYPES; ++j)
+        if (num_locals[j])
+          num_local_types++;
+
+      out_u32_leb128(ws, num_local_types, "local decl count");
+      if (num_locals[WASM_TYPE_I32]) {
+        out_u32_leb128(ws, num_locals[WASM_TYPE_I32], "local i32 count");
+        out_u8(ws, WASM_TYPE_I32, "WASM_TYPE_I32");
+      }
+      if (num_locals[WASM_TYPE_I64]) {
+        out_u32_leb128(ws, num_locals[WASM_TYPE_I64], "local i64 count");
+        out_u8(ws, WASM_TYPE_I64, "WASM_TYPE_I64");
+      }
+      if (num_locals[WASM_TYPE_F32]) {
+        out_u32_leb128(ws, num_locals[WASM_TYPE_F32], "local f32 count");
+        out_u8(ws, WASM_TYPE_F32, "WASM_TYPE_F32");
+      }
+      if (num_locals[WASM_TYPE_F64]) {
+        out_u32_leb128(ws, num_locals[WASM_TYPE_F64], "local f64 count");
+        out_u8(ws, WASM_TYPE_F64, "WASM_TYPE_F64");
+      }
+
       write_func(ctx, module, func);
       int func_size =
           ctx->writer_state.offset - func_body_offset - sizeof(uint16_t);

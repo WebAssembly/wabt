@@ -24,19 +24,20 @@
 000001b: 00                                         ; func flags
 000001c: 0000                                       ; func signature index
 000001e: 0000                                       ; func body size
-0000020: 0b                                         ; OPCODE_I64_CONST
-0000021: 00                                         ; i64 literal
-000001e: 0200                                       ; FIXUP func body size
-0000022: 06                                         ; WASM_BINARY_SECTION_END
+0000020: 00                                         ; local decl count
+0000021: 0b                                         ; OPCODE_I64_CONST
+0000022: 00                                         ; i64 literal
+000001e: 0300                                       ; FIXUP func body size
+0000023: 06                                         ; WASM_BINARY_SECTION_END
 ; import 0
-0000011: 2300 0000                                  ; FIXUP import module name offset
-0000023: 666f 6f                                    ; import module name
-0000026: 00                                         ; \0
-0000015: 2700 0000                                  ; FIXUP import function name offset
-0000027: 6261 72                                    ; import function name
-000002a: 00                                         ; \0
+0000011: 2400 0000                                  ; FIXUP import module name offset
+0000024: 666f 6f                                    ; import module name
+0000027: 00                                         ; \0
+0000015: 2800 0000                                  ; FIXUP import function name offset
+0000028: 6261 72                                    ; import function name
+000002b: 00                                         ; \0
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0102 0108 0100  
-0000010: 0023 0000 0027 0000 0002 0100 0000 0200  
-0000020: 0b00 0666 6f6f 0062 6172 00              
+0000010: 0024 0000 0028 0000 0002 0100 0000 0300  
+0000020: 000b 0006 666f 6f00 6261 7200            
 ;;; STDOUT ;;)

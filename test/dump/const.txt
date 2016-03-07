@@ -56,100 +56,101 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000013: 0a                                         ; OPCODE_I32_CONST
-0000014: 00                                         ; i32 literal
-0000015: 0a                                         ; OPCODE_I32_CONST
-0000016: 8080 8080 78                               ; i32 literal
-000001b: 0a                                         ; OPCODE_I32_CONST
-000001c: 7f                                         ; i32 literal
-000001d: 0a                                         ; OPCODE_I32_CONST
-000001e: 8080 8080 78                               ; i32 literal
-0000023: 0a                                         ; OPCODE_I32_CONST
-0000024: 7f                                         ; i32 literal
-0000025: 0b                                         ; OPCODE_I64_CONST
-0000026: 00                                         ; i64 literal
-0000027: 0b                                         ; OPCODE_I64_CONST
-0000028: 8080 8080 8080 8080 807f                   ; i64 literal
-0000032: 0b                                         ; OPCODE_I64_CONST
-0000033: 7f                                         ; i64 literal
-0000034: 0b                                         ; OPCODE_I64_CONST
-0000035: 8080 8080 8080 8080 807f                   ; i64 literal
-000003f: 0b                                         ; OPCODE_I64_CONST
-0000040: 7f                                         ; i64 literal
-0000041: 0d                                         ; OPCODE_F32_CONST
-0000042: 0000 0000                                  ; f32 literal
-0000046: 0d                                         ; OPCODE_F32_CONST
-0000047: 1668 a965                                  ; f32 literal
-000004b: 0d                                         ; OPCODE_F32_CONST
-000004c: 4020 4f37                                  ; f32 literal
-0000050: 0d                                         ; OPCODE_F32_CONST
-0000051: 0000 c07f                                  ; f32 literal
-0000055: 0d                                         ; OPCODE_F32_CONST
-0000056: 0000 c0ff                                  ; f32 literal
-000005a: 0d                                         ; OPCODE_F32_CONST
-000005b: 0000 c07f                                  ; f32 literal
-000005f: 0d                                         ; OPCODE_F32_CONST
-0000060: bc0a 807f                                  ; f32 literal
-0000064: 0d                                         ; OPCODE_F32_CONST
-0000065: bc0a 80ff                                  ; f32 literal
-0000069: 0d                                         ; OPCODE_F32_CONST
-000006a: bc0a 807f                                  ; f32 literal
-000006e: 0d                                         ; OPCODE_F32_CONST
-000006f: 0000 807f                                  ; f32 literal
-0000073: 0d                                         ; OPCODE_F32_CONST
-0000074: 0000 80ff                                  ; f32 literal
-0000078: 0d                                         ; OPCODE_F32_CONST
-0000079: 0000 807f                                  ; f32 literal
-000007d: 0d                                         ; OPCODE_F32_CONST
-000007e: 0000 00bf                                  ; f32 literal
-0000082: 0d                                         ; OPCODE_F32_CONST
-0000083: db0f c940                                  ; f32 literal
-0000087: 0c                                         ; OPCODE_F64_CONST
-0000088: 0000 0000 0000 0000                        ; f64 literal
-0000090: 0c                                         ; OPCODE_F64_CONST
-0000091: b856 0e3c dd9a efbf                        ; f64 literal
-0000099: 0c                                         ; OPCODE_F64_CONST
-000009a: 182d 4454 fb21 1940                        ; f64 literal
-00000a2: 0c                                         ; OPCODE_F64_CONST
-00000a3: 0000 0000 0000 f87f                        ; f64 literal
-00000ab: 0c                                         ; OPCODE_F64_CONST
-00000ac: 0000 0000 0000 f8ff                        ; f64 literal
-00000b4: 0c                                         ; OPCODE_F64_CONST
-00000b5: 0000 0000 0000 f87f                        ; f64 literal
-00000bd: 0c                                         ; OPCODE_F64_CONST
-00000be: bc0a 0000 0000 f07f                        ; f64 literal
-00000c6: 0c                                         ; OPCODE_F64_CONST
-00000c7: bc0a 0000 0000 f0ff                        ; f64 literal
-00000cf: 0c                                         ; OPCODE_F64_CONST
-00000d0: bc0a 0000 0000 f07f                        ; f64 literal
-00000d8: 0c                                         ; OPCODE_F64_CONST
-00000d9: 0000 0000 0000 f07f                        ; f64 literal
-00000e1: 0c                                         ; OPCODE_F64_CONST
-00000e2: 0000 0000 0000 f0ff                        ; f64 literal
-00000ea: 0c                                         ; OPCODE_F64_CONST
-00000eb: 0000 0000 0000 f07f                        ; f64 literal
-00000f3: 0c                                         ; OPCODE_F64_CONST
-00000f4: 0000 0000 0000 e0bf                        ; f64 literal
-00000fc: 0c                                         ; OPCODE_F64_CONST
-00000fd: 182d 4454 fb21 1940                        ; f64 literal
-0000011: f200                                       ; FIXUP func body size
-0000105: 06                                         ; WASM_BINARY_SECTION_END
+0000013: 00                                         ; local decl count
+0000014: 0a                                         ; OPCODE_I32_CONST
+0000015: 00                                         ; i32 literal
+0000016: 0a                                         ; OPCODE_I32_CONST
+0000017: 8080 8080 78                               ; i32 literal
+000001c: 0a                                         ; OPCODE_I32_CONST
+000001d: 7f                                         ; i32 literal
+000001e: 0a                                         ; OPCODE_I32_CONST
+000001f: 8080 8080 78                               ; i32 literal
+0000024: 0a                                         ; OPCODE_I32_CONST
+0000025: 7f                                         ; i32 literal
+0000026: 0b                                         ; OPCODE_I64_CONST
+0000027: 00                                         ; i64 literal
+0000028: 0b                                         ; OPCODE_I64_CONST
+0000029: 8080 8080 8080 8080 807f                   ; i64 literal
+0000033: 0b                                         ; OPCODE_I64_CONST
+0000034: 7f                                         ; i64 literal
+0000035: 0b                                         ; OPCODE_I64_CONST
+0000036: 8080 8080 8080 8080 807f                   ; i64 literal
+0000040: 0b                                         ; OPCODE_I64_CONST
+0000041: 7f                                         ; i64 literal
+0000042: 0d                                         ; OPCODE_F32_CONST
+0000043: 0000 0000                                  ; f32 literal
+0000047: 0d                                         ; OPCODE_F32_CONST
+0000048: 1668 a965                                  ; f32 literal
+000004c: 0d                                         ; OPCODE_F32_CONST
+000004d: 4020 4f37                                  ; f32 literal
+0000051: 0d                                         ; OPCODE_F32_CONST
+0000052: 0000 c07f                                  ; f32 literal
+0000056: 0d                                         ; OPCODE_F32_CONST
+0000057: 0000 c0ff                                  ; f32 literal
+000005b: 0d                                         ; OPCODE_F32_CONST
+000005c: 0000 c07f                                  ; f32 literal
+0000060: 0d                                         ; OPCODE_F32_CONST
+0000061: bc0a 807f                                  ; f32 literal
+0000065: 0d                                         ; OPCODE_F32_CONST
+0000066: bc0a 80ff                                  ; f32 literal
+000006a: 0d                                         ; OPCODE_F32_CONST
+000006b: bc0a 807f                                  ; f32 literal
+000006f: 0d                                         ; OPCODE_F32_CONST
+0000070: 0000 807f                                  ; f32 literal
+0000074: 0d                                         ; OPCODE_F32_CONST
+0000075: 0000 80ff                                  ; f32 literal
+0000079: 0d                                         ; OPCODE_F32_CONST
+000007a: 0000 807f                                  ; f32 literal
+000007e: 0d                                         ; OPCODE_F32_CONST
+000007f: 0000 00bf                                  ; f32 literal
+0000083: 0d                                         ; OPCODE_F32_CONST
+0000084: db0f c940                                  ; f32 literal
+0000088: 0c                                         ; OPCODE_F64_CONST
+0000089: 0000 0000 0000 0000                        ; f64 literal
+0000091: 0c                                         ; OPCODE_F64_CONST
+0000092: b856 0e3c dd9a efbf                        ; f64 literal
+000009a: 0c                                         ; OPCODE_F64_CONST
+000009b: 182d 4454 fb21 1940                        ; f64 literal
+00000a3: 0c                                         ; OPCODE_F64_CONST
+00000a4: 0000 0000 0000 f87f                        ; f64 literal
+00000ac: 0c                                         ; OPCODE_F64_CONST
+00000ad: 0000 0000 0000 f8ff                        ; f64 literal
+00000b5: 0c                                         ; OPCODE_F64_CONST
+00000b6: 0000 0000 0000 f87f                        ; f64 literal
+00000be: 0c                                         ; OPCODE_F64_CONST
+00000bf: bc0a 0000 0000 f07f                        ; f64 literal
+00000c7: 0c                                         ; OPCODE_F64_CONST
+00000c8: bc0a 0000 0000 f0ff                        ; f64 literal
+00000d0: 0c                                         ; OPCODE_F64_CONST
+00000d1: bc0a 0000 0000 f07f                        ; f64 literal
+00000d9: 0c                                         ; OPCODE_F64_CONST
+00000da: 0000 0000 0000 f07f                        ; f64 literal
+00000e2: 0c                                         ; OPCODE_F64_CONST
+00000e3: 0000 0000 0000 f0ff                        ; f64 literal
+00000eb: 0c                                         ; OPCODE_F64_CONST
+00000ec: 0000 0000 0000 f07f                        ; f64 literal
+00000f4: 0c                                         ; OPCODE_F64_CONST
+00000f5: 0000 0000 0000 e0bf                        ; f64 literal
+00000fd: 0c                                         ; OPCODE_F64_CONST
+00000fe: 182d 4454 fb21 1940                        ; f64 literal
+0000011: f300                                       ; FIXUP func body size
+0000106: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 00f2 000a 000a 8080 8080 780a 7f0a 8080  
-0000020: 8080 780a 7f0b 000b 8080 8080 8080 8080  
-0000030: 807f 0b7f 0b80 8080 8080 8080 8080 7f0b  
-0000040: 7f0d 0000 0000 0d16 68a9 650d 4020 4f37  
-0000050: 0d00 00c0 7f0d 0000 c0ff 0d00 00c0 7f0d  
-0000060: bc0a 807f 0dbc 0a80 ff0d bc0a 807f 0d00  
-0000070: 0080 7f0d 0000 80ff 0d00 0080 7f0d 0000  
-0000080: 00bf 0ddb 0fc9 400c 0000 0000 0000 0000  
-0000090: 0cb8 560e 3cdd 9aef bf0c 182d 4454 fb21  
-00000a0: 1940 0c00 0000 0000 00f8 7f0c 0000 0000  
-00000b0: 0000 f8ff 0c00 0000 0000 00f8 7f0c bc0a  
-00000c0: 0000 0000 f07f 0cbc 0a00 0000 00f0 ff0c  
-00000d0: bc0a 0000 0000 f07f 0c00 0000 0000 00f0  
-00000e0: 7f0c 0000 0000 0000 f0ff 0c00 0000 0000  
-00000f0: 00f0 7f0c 0000 0000 0000 e0bf 0c18 2d44  
-0000100: 54fb 2119 4006                           
+0000010: 00f3 0000 0a00 0a80 8080 8078 0a7f 0a80  
+0000020: 8080 8078 0a7f 0b00 0b80 8080 8080 8080  
+0000030: 8080 7f0b 7f0b 8080 8080 8080 8080 807f  
+0000040: 0b7f 0d00 0000 000d 1668 a965 0d40 204f  
+0000050: 370d 0000 c07f 0d00 00c0 ff0d 0000 c07f  
+0000060: 0dbc 0a80 7f0d bc0a 80ff 0dbc 0a80 7f0d  
+0000070: 0000 807f 0d00 0080 ff0d 0000 807f 0d00  
+0000080: 0000 bf0d db0f c940 0c00 0000 0000 0000  
+0000090: 000c b856 0e3c dd9a efbf 0c18 2d44 54fb  
+00000a0: 2119 400c 0000 0000 0000 f87f 0c00 0000  
+00000b0: 0000 00f8 ff0c 0000 0000 0000 f87f 0cbc  
+00000c0: 0a00 0000 00f0 7f0c bc0a 0000 0000 f0ff  
+00000d0: 0cbc 0a00 0000 00f0 7f0c 0000 0000 0000  
+00000e0: f07f 0c00 0000 0000 00f0 ff0c 0000 0000  
+00000f0: 0000 f07f 0c00 0000 0000 00e0 bf0c 182d  
+0000100: 4454 fb21 1940 06                        
 ;;; STDOUT ;;)

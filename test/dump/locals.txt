@@ -12,16 +12,21 @@
 000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
 000000d: 01                                         ; num functions
 ; function 0
-000000e: 04                                         ; func flags
+000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
-0000011: 0100                                       ; num local i32
-0000013: 0200                                       ; num local i64
-0000015: 0300                                       ; num local f32
-0000017: 0400                                       ; num local f64
-0000019: 0000                                       ; func body size
-0000019: 0000                                       ; FIXUP func body size
-000001b: 06                                         ; WASM_BINARY_SECTION_END
+0000011: 0000                                       ; func body size
+0000013: 04                                         ; local decl count
+0000014: 01                                         ; local i32 count
+0000015: 01                                         ; WASM_TYPE_I32
+0000016: 02                                         ; local i64 count
+0000017: 02                                         ; WASM_TYPE_I64
+0000018: 03                                         ; local f32 count
+0000019: 03                                         ; WASM_TYPE_F32
+000001a: 04                                         ; local f64 count
+000001b: 04                                         ; WASM_TYPE_F64
+0000011: 0900                                       ; FIXUP func body size
+000001c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0101 0000 0201 0400  
-0000010: 0001 0002 0003 0004 0000 0006            
+0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
+0000010: 0009 0004 0101 0202 0303 0404 06         
 ;;; STDOUT ;;)

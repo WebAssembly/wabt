@@ -22,12 +22,13 @@
 0000013: 00                                         ; func flags
 0000014: 0000                                       ; func signature index
 0000016: 0000                                       ; func body size
-0000018: 39                                         ; OPCODE_GROW_MEMORY
-0000019: 0e                                         ; OPCODE_GET_LOCAL
-000001a: 00                                         ; remapped local index
-0000016: 0300                                       ; FIXUP func body size
-000001b: 06                                         ; WASM_BINARY_SECTION_END
+0000018: 00                                         ; local decl count
+0000019: 39                                         ; OPCODE_GROW_MEMORY
+000001a: 0e                                         ; OPCODE_GET_LOCAL
+000001b: 00                                         ; remapped local index
+0000016: 0400                                       ; FIXUP func body size
+000001c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0001 0201 0101 0100  
-0000010: 0102 0100 0000 0300 390e 0006            
+0000010: 0102 0100 0000 0400 0039 0e00 06         
 ;;; STDOUT ;;)

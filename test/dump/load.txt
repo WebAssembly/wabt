@@ -29,68 +29,69 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000013: 2a                                         ; OPCODE_I32_LOAD_MEM
-0000014: 00                                         ; load access byte
-0000015: 0a                                         ; OPCODE_I32_CONST
-0000016: 00                                         ; i32 literal
-0000017: 20                                         ; OPCODE_I32_LOAD_MEM8_S
-0000018: 00                                         ; load access byte
-0000019: 0a                                         ; OPCODE_I32_CONST
-000001a: 00                                         ; i32 literal
-000001b: 22                                         ; OPCODE_I32_LOAD_MEM16_S
-000001c: 00                                         ; load access byte
-000001d: 0a                                         ; OPCODE_I32_CONST
-000001e: 00                                         ; i32 literal
-000001f: 21                                         ; OPCODE_I32_LOAD_MEM8_U
-0000020: 00                                         ; load access byte
-0000021: 0a                                         ; OPCODE_I32_CONST
-0000022: 00                                         ; i32 literal
-0000023: 23                                         ; OPCODE_I32_LOAD_MEM16_U
-0000024: 00                                         ; load access byte
-0000025: 0a                                         ; OPCODE_I32_CONST
-0000026: 00                                         ; i32 literal
-0000027: 2b                                         ; OPCODE_I64_LOAD_MEM
-0000028: 00                                         ; load access byte
-0000029: 0a                                         ; OPCODE_I32_CONST
-000002a: 00                                         ; i32 literal
-000002b: 24                                         ; OPCODE_I64_LOAD_MEM8_S
-000002c: 00                                         ; load access byte
-000002d: 0a                                         ; OPCODE_I32_CONST
-000002e: 00                                         ; i32 literal
-000002f: 26                                         ; OPCODE_I64_LOAD_MEM16_S
-0000030: 00                                         ; load access byte
-0000031: 0a                                         ; OPCODE_I32_CONST
-0000032: 00                                         ; i32 literal
-0000033: 28                                         ; OPCODE_I64_LOAD_MEM32_S
-0000034: 00                                         ; load access byte
-0000035: 0a                                         ; OPCODE_I32_CONST
-0000036: 00                                         ; i32 literal
-0000037: 25                                         ; OPCODE_I64_LOAD_MEM8_U
-0000038: 00                                         ; load access byte
-0000039: 0a                                         ; OPCODE_I32_CONST
-000003a: 00                                         ; i32 literal
-000003b: 27                                         ; OPCODE_I64_LOAD_MEM16_U
-000003c: 00                                         ; load access byte
-000003d: 0a                                         ; OPCODE_I32_CONST
-000003e: 00                                         ; i32 literal
-000003f: 29                                         ; OPCODE_I64_LOAD_MEM32_U
-0000040: 00                                         ; load access byte
-0000041: 0a                                         ; OPCODE_I32_CONST
-0000042: 00                                         ; i32 literal
-0000043: 2c                                         ; OPCODE_F32_LOAD_MEM
-0000044: 00                                         ; load access byte
-0000045: 0a                                         ; OPCODE_I32_CONST
-0000046: 00                                         ; i32 literal
-0000047: 2d                                         ; OPCODE_F64_LOAD_MEM
-0000048: 00                                         ; load access byte
-0000049: 0a                                         ; OPCODE_I32_CONST
-000004a: 00                                         ; i32 literal
-0000011: 3800                                       ; FIXUP func body size
-000004b: 06                                         ; WASM_BINARY_SECTION_END
+0000013: 00                                         ; local decl count
+0000014: 2a                                         ; OPCODE_I32_LOAD_MEM
+0000015: 00                                         ; load access byte
+0000016: 0a                                         ; OPCODE_I32_CONST
+0000017: 00                                         ; i32 literal
+0000018: 20                                         ; OPCODE_I32_LOAD_MEM8_S
+0000019: 00                                         ; load access byte
+000001a: 0a                                         ; OPCODE_I32_CONST
+000001b: 00                                         ; i32 literal
+000001c: 22                                         ; OPCODE_I32_LOAD_MEM16_S
+000001d: 00                                         ; load access byte
+000001e: 0a                                         ; OPCODE_I32_CONST
+000001f: 00                                         ; i32 literal
+0000020: 21                                         ; OPCODE_I32_LOAD_MEM8_U
+0000021: 00                                         ; load access byte
+0000022: 0a                                         ; OPCODE_I32_CONST
+0000023: 00                                         ; i32 literal
+0000024: 23                                         ; OPCODE_I32_LOAD_MEM16_U
+0000025: 00                                         ; load access byte
+0000026: 0a                                         ; OPCODE_I32_CONST
+0000027: 00                                         ; i32 literal
+0000028: 2b                                         ; OPCODE_I64_LOAD_MEM
+0000029: 00                                         ; load access byte
+000002a: 0a                                         ; OPCODE_I32_CONST
+000002b: 00                                         ; i32 literal
+000002c: 24                                         ; OPCODE_I64_LOAD_MEM8_S
+000002d: 00                                         ; load access byte
+000002e: 0a                                         ; OPCODE_I32_CONST
+000002f: 00                                         ; i32 literal
+0000030: 26                                         ; OPCODE_I64_LOAD_MEM16_S
+0000031: 00                                         ; load access byte
+0000032: 0a                                         ; OPCODE_I32_CONST
+0000033: 00                                         ; i32 literal
+0000034: 28                                         ; OPCODE_I64_LOAD_MEM32_S
+0000035: 00                                         ; load access byte
+0000036: 0a                                         ; OPCODE_I32_CONST
+0000037: 00                                         ; i32 literal
+0000038: 25                                         ; OPCODE_I64_LOAD_MEM8_U
+0000039: 00                                         ; load access byte
+000003a: 0a                                         ; OPCODE_I32_CONST
+000003b: 00                                         ; i32 literal
+000003c: 27                                         ; OPCODE_I64_LOAD_MEM16_U
+000003d: 00                                         ; load access byte
+000003e: 0a                                         ; OPCODE_I32_CONST
+000003f: 00                                         ; i32 literal
+0000040: 29                                         ; OPCODE_I64_LOAD_MEM32_U
+0000041: 00                                         ; load access byte
+0000042: 0a                                         ; OPCODE_I32_CONST
+0000043: 00                                         ; i32 literal
+0000044: 2c                                         ; OPCODE_F32_LOAD_MEM
+0000045: 00                                         ; load access byte
+0000046: 0a                                         ; OPCODE_I32_CONST
+0000047: 00                                         ; i32 literal
+0000048: 2d                                         ; OPCODE_F64_LOAD_MEM
+0000049: 00                                         ; load access byte
+000004a: 0a                                         ; OPCODE_I32_CONST
+000004b: 00                                         ; i32 literal
+0000011: 3900                                       ; FIXUP func body size
+000004c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0038 002a 000a 0020 000a 0022 000a 0021  
-0000020: 000a 0023 000a 002b 000a 0024 000a 0026  
-0000030: 000a 0028 000a 0025 000a 0027 000a 0029  
-0000040: 000a 002c 000a 002d 000a 0006            
+0000010: 0039 0000 2a00 0a00 2000 0a00 2200 0a00  
+0000020: 2100 0a00 2300 0a00 2b00 0a00 2400 0a00  
+0000030: 2600 0a00 2800 0a00 2500 0a00 2700 0a00  
+0000040: 2900 0a00 2c00 0a00 2d00 0a00 06         
 ;;; STDOUT ;;)

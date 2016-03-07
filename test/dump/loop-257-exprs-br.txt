@@ -62,11 +62,11 @@
 000000e: 00                                         ; func flags
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
-0000013: 02                                         ; OPCODE_LOOP
-0000014: 02                                         ; num expressions (byte 1)
-0000015: 01                                         ; OPCODE_BLOCK
-0000016: ff                                         ; num expressions (byte 0)
-0000017: 00                                         ; OPCODE_NOP
+0000013: 00                                         ; local decl count
+0000014: 02                                         ; OPCODE_LOOP
+0000015: 02                                         ; num expressions (byte 1)
+0000016: 01                                         ; OPCODE_BLOCK
+0000017: ff                                         ; num expressions (byte 0)
 0000018: 00                                         ; OPCODE_NOP
 0000019: 00                                         ; OPCODE_NOP
 000001a: 00                                         ; OPCODE_NOP
@@ -321,26 +321,27 @@
 0000113: 00                                         ; OPCODE_NOP
 0000114: 00                                         ; OPCODE_NOP
 0000115: 00                                         ; OPCODE_NOP
-0000116: 01                                         ; OPCODE_BLOCK
-0000117: 05                                         ; num expressions (byte 0)
-0000118: 00                                         ; OPCODE_NOP
-0000119: 06                                         ; OPCODE_BR
-000011a: 02                                         ; break depth
-000011b: 00                                         ; OPCODE_NOP
-000011c: 06                                         ; OPCODE_BR
-000011d: 01                                         ; break depth
-000011e: 00                                         ; OPCODE_NOP
-000011f: 06                                         ; OPCODE_BR
-0000120: 02                                         ; break depth
-0000121: 00                                         ; OPCODE_NOP
-0000122: 06                                         ; OPCODE_BR
-0000123: 01                                         ; break depth
-0000124: 00                                         ; OPCODE_NOP
-0000011: 1201                                       ; FIXUP func body size
-0000125: 06                                         ; WASM_BINARY_SECTION_END
+0000116: 00                                         ; OPCODE_NOP
+0000117: 01                                         ; OPCODE_BLOCK
+0000118: 05                                         ; num expressions (byte 0)
+0000119: 00                                         ; OPCODE_NOP
+000011a: 06                                         ; OPCODE_BR
+000011b: 02                                         ; break depth
+000011c: 00                                         ; OPCODE_NOP
+000011d: 06                                         ; OPCODE_BR
+000011e: 01                                         ; break depth
+000011f: 00                                         ; OPCODE_NOP
+0000120: 06                                         ; OPCODE_BR
+0000121: 02                                         ; break depth
+0000122: 00                                         ; OPCODE_NOP
+0000123: 06                                         ; OPCODE_BR
+0000124: 01                                         ; break depth
+0000125: 00                                         ; OPCODE_NOP
+0000011: 1301                                       ; FIXUP func body size
+0000126: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0012 0102 0201 ff00 0000 0000 0000 0000  
+0000010: 0013 0100 0202 01ff 0000 0000 0000 0000  
 0000020: 0000 0000 0000 0000 0000 0000 0000 0000  
 0000030: 0000 0000 0000 0000 0000 0000 0000 0000  
 0000040: 0000 0000 0000 0000 0000 0000 0000 0000  
@@ -356,6 +357,6 @@
 00000e0: 0000 0000 0000 0000 0000 0000 0000 0000  
 00000f0: 0000 0000 0000 0000 0000 0000 0000 0000  
 0000100: 0000 0000 0000 0000 0000 0000 0000 0000  
-0000110: 0000 0000 0000 0105 0006 0200 0601 0006  
-0000120: 0200 0601 0006                           
+0000110: 0000 0000 0000 0001 0500 0602 0006 0100  
+0000120: 0602 0006 0100 06                        
 ;;; STDOUT ;;)
