@@ -23,7 +23,6 @@
 0000014: 0000                                       ; func signature index
 0000016: 0000                                       ; func body size
 0000018: 00                                         ; local decl count
-0000018: 00                                         ; local decl count
 0000019: 39                                         ; OPCODE_GROW_MEMORY
 000001a: 0e                                         ; OPCODE_GET_LOCAL
 000001b: 00                                         ; remapped local index

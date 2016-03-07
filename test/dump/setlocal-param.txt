@@ -28,14 +28,13 @@
 0000010: 00                                         ; func flags
 0000011: 0000                                       ; func signature index
 0000013: 0000                                       ; func body size
-0000015: 00                                         ; local decl count
-0000016: 01                                         ; local i32 count
-0000017: 01                                         ; type i32
-0000018: 01                                         ; local i64 count
-0000019: 02                                         ; type i64
-000001a: 02                                         ; local f32 count
-000001b: 03                                         ; type f32
 0000015: 03                                         ; local decl count
+0000016: 01                                         ; local i32 count
+0000017: 01                                         ; WASM_TYPE_I32
+0000018: 01                                         ; local i64 count
+0000019: 02                                         ; WASM_TYPE_I64
+000001a: 02                                         ; local f32 count
+000001b: 03                                         ; WASM_TYPE_F32
 000001c: 0f                                         ; OPCODE_SET_LOCAL
 000001d: 00                                         ; remapped local index
 000001e: 0a                                         ; OPCODE_I32_CONST

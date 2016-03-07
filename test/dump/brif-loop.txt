@@ -18,7 +18,6 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: 00                                         ; local decl count
-0000013: 00                                         ; local decl count
 0000014: 02                                         ; OPCODE_LOOP
 0000015: 01                                         ; num expressions
 0000016: 07                                         ; OPCODE_BR_IF

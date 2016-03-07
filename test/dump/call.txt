@@ -18,7 +18,6 @@
 0000010: 0000                                       ; func signature index
 0000012: 0000                                       ; func body size
 0000014: 00                                         ; local decl count
-0000014: 00                                         ; local decl count
 0000015: 12                                         ; OPCODE_CALL_FUNCTION
 0000016: 00                                         ; func index
 0000017: 0a                                         ; OPCODE_I32_CONST

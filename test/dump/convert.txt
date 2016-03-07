@@ -39,7 +39,6 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: 00                                         ; local decl count
-0000013: 00                                         ; local decl count
 0000014: a1                                         ; OPCODE_I32_CONVERT_I64
 0000015: a7                                         ; OPCODE_I64_UCONVERT_I32
 0000016: 9d                                         ; OPCODE_I32_SCONVERT_F32

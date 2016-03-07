@@ -18,7 +18,6 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: 00                                         ; local decl count
-0000013: 00                                         ; local decl count
 0000014: 00                                         ; OPCODE_NOP
 0000011: 0200                                       ; FIXUP func body size
 0000015: 09                                         ; WASM_BINARY_SECTION_EXPORTS

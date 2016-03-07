@@ -28,7 +28,6 @@
 0000015: 0000                                       ; func signature index
 0000017: 0000                                       ; func body size
 0000019: 00                                         ; local decl count
-0000019: 00                                         ; local decl count
 000001a: 0a                                         ; OPCODE_I32_CONST
 000001b: 00                                         ; i32 literal
 0000017: 0300                                       ; FIXUP func body size
@@ -36,7 +35,6 @@
 000001c: 00                                         ; func flags
 000001d: 0100                                       ; func signature index
 000001f: 0000                                       ; func body size
-0000021: 00                                         ; local decl count
 0000021: 00                                         ; local decl count
 0000022: 0b                                         ; OPCODE_I64_CONST
 0000023: 00                                         ; i64 literal
@@ -46,7 +44,6 @@
 0000025: 0200                                       ; func signature index
 0000027: 0000                                       ; func body size
 0000029: 00                                         ; local decl count
-0000029: 00                                         ; local decl count
 000002a: 0d                                         ; OPCODE_F32_CONST
 000002b: 0000 0000                                  ; f32 literal
 0000027: 0600                                       ; FIXUP func body size
@@ -54,7 +51,6 @@
 000002f: 00                                         ; func flags
 0000030: 0300                                       ; func signature index
 0000032: 0000                                       ; func body size
-0000034: 00                                         ; local decl count
 0000034: 00                                         ; local decl count
 0000035: 0c                                         ; OPCODE_F64_CONST
 0000036: 0000 0000 0000 0000                        ; f64 literal

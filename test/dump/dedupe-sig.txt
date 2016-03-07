@@ -25,7 +25,6 @@
 000001c: 0000                                       ; func signature index
 000001e: 0000                                       ; func body size
 0000020: 00                                         ; local decl count
-0000020: 00                                         ; local decl count
 0000021: 0b                                         ; OPCODE_I64_CONST
 0000022: 00                                         ; i64 literal
 000001e: 0300                                       ; FIXUP func body size

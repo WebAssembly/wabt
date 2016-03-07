@@ -40,7 +40,6 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: 00                                         ; local decl count
-0000013: 00                                         ; local decl count
 0000014: 5a                                         ; OPCODE_BOOL_NOT
 0000015: 57                                         ; OPCODE_I32_CLZ
 0000016: 58                                         ; OPCODE_I32_CTZ

@@ -50,7 +50,6 @@
 000000f: 0000                                       ; func signature index
 0000011: 0000                                       ; func body size
 0000013: 00                                         ; local decl count
-0000013: 00                                         ; local decl count
 0000014: 2e                                         ; OPCODE_I32_STORE_MEM8
 0000015: 00                                         ; store access byte
 0000016: 0a                                         ; OPCODE_I32_CONST

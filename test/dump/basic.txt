@@ -26,7 +26,6 @@
 0000015: 0000                                       ; func signature index
 0000017: 0000                                       ; func body size
 0000019: 00                                         ; local decl count
-0000019: 00                                         ; local decl count
 000001a: 33                                         ; OPCODE_I32_STORE_MEM
 000001b: 00                                         ; store access byte
 000001c: 0a                                         ; OPCODE_I32_CONST

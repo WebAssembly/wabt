@@ -22,7 +22,6 @@
 0000013: 0000                                       ; func signature index
 0000015: 0000                                       ; func body size
 0000017: 00                                         ; local decl count
-0000017: 00                                         ; local decl count
 0000018: 3b                                         ; OPCODE_MEMORY_SIZE
 0000015: 0200                                       ; FIXUP func body size
 0000019: 06                                         ; WASM_BINARY_SECTION_END

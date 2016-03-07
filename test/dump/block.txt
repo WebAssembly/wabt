@@ -27,7 +27,6 @@
 0000011: 0000                                       ; func signature index
 0000013: 0000                                       ; func body size
 0000015: 00                                         ; local decl count
-0000015: 00                                         ; local decl count
 0000016: 01                                         ; OPCODE_BLOCK
 0000017: 03                                         ; num expressions
 0000018: 00                                         ; OPCODE_NOP
@@ -38,7 +37,6 @@
 000001b: 00                                         ; func flags
 000001c: 0100                                       ; func signature index
 000001e: 0000                                       ; func body size
-0000020: 00                                         ; local decl count
 0000020: 00                                         ; local decl count
 0000021: 01                                         ; OPCODE_BLOCK
 0000022: 01                                         ; num expressions
