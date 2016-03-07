@@ -21,6 +21,11 @@ set -o errexit
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source ${SCRIPT_DIR}/travis-common.sh
 
+# Build without flex/bison to test prebuilt C sources
+if [ ${CC} = "gcc" ]; then
+  make gcc-debug-no-flex-bison-sexpr-wasm
+fi
+
 for COMPILER in ${COMPILERS}; do
   for BUILD_TYPE in ${BUILD_TYPES}; do
     make ${COMPILER}-${BUILD_TYPE}-sexpr-wasm

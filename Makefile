@@ -24,6 +24,7 @@ BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := NO ASAN MSAN LSAN
 
 GCC_DEBUG_DIR := out/gcc/Debug
+GCC_DEBUG_NO_FLEX_BISON_DIR := out/gcc/Debug-no-flex-bison
 GCC_RELEASE_DIR := out/gcc/Release
 GCC_I686_DEBUG_DIR := out/gcc-i686/Debug
 GCC_I686_RELEASE_DIR := out/gcc-i686/Release
@@ -37,6 +38,7 @@ GCC_I686_FLAG := -DCMAKE_C_COMPILER=gcc -DCMAKE_C_FLAGS=-m32
 CLANG_FLAG := -DCMAKE_C_COMPILER=clang
 
 GCC_DEBUG_PREFIX := gcc-debug
+GCC_DEBUG_NO_FLEX_BISON_PREFIX := gcc-debug-no-flex-bison
 GCC_RELEASE_PREFIX := gcc-release
 GCC_I686_DEBUG_PREFIX := gcc-i686-debug
 GCC_I686_RELEASE_PREFIX := gcc-i686-release
@@ -63,7 +65,7 @@ $$($(1)_$(2)_DIR)/:
 	mkdir -p $$($(1)_$(2)_DIR)
 
 $$($(1)_$(2)_DIR)/Makefile: | $$($(1)_$(2)_DIR)/
-	cd $$($(1)_$(2)_DIR) && cmake ../../.. $$($(1)_FLAG) $$($(2)_FLAG)
+	cd $$($(1)_$(2)_DIR) && cmake ../../.. $$($(1)_FLAG) $$($(2)_FLAG) $(3)
 endef
 
 define EXE
@@ -114,3 +116,8 @@ $(foreach SANITIZER,$(SANITIZERS), \
 	$(foreach COMPILER,$(COMPILERS), \
 		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
 			$(eval $(call TEST,$(COMPILER),$(BUILD_TYPE),$(SANITIZER))))))
+
+# One-off build target for running w/out flex + bison
+$(eval $(call CMAKE,GCC,DEBUG_NO_FLEX_BISON,-DRUN_FLEX_BISON=OFF))
+$(eval $(call EXE,GCC,DEBUG_NO_FLEX_BISON,sexpr-wasm,NO))
+$(eval $(call TEST,GCC,DEBUG_NO_FLEX_BISON,NO))
