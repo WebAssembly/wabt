@@ -30,23 +30,24 @@
 0000019: 01                                         ; OPCODE_BLOCK
 000001a: 01                                         ; num expressions
 000001b: 06                                         ; OPCODE_BR
-000001c: 01                                         ; break depth
-000001d: 00                                         ; OPCODE_NOP
+000001c: 00                                         ; break arity
+000001d: 01                                         ; break depth
 000001e: 03                                         ; OPCODE_IF
 000001f: 0a                                         ; OPCODE_I32_CONST
 0000020: 03                                         ; i32 literal
 0000021: 01                                         ; OPCODE_BLOCK
 0000022: 01                                         ; num expressions
 0000023: 06                                         ; OPCODE_BR
-0000024: 02                                         ; break depth
-0000025: 0a                                         ; OPCODE_I32_CONST
-0000026: 04                                         ; i32 literal
-0000027: 0a                                         ; OPCODE_I32_CONST
-0000028: 05                                         ; i32 literal
-0000011: 1600                                       ; FIXUP func body size
-0000029: 06                                         ; WASM_BINARY_SECTION_END
+0000024: 01                                         ; break arity
+0000025: 02                                         ; break depth
+0000026: 0a                                         ; OPCODE_I32_CONST
+0000027: 04                                         ; i32 literal
+0000028: 0a                                         ; OPCODE_I32_CONST
+0000029: 05                                         ; i32 literal
+0000011: 1700                                       ; FIXUP func body size
+000002a: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0001 0201 0000  
-0000010: 0016 0000 0203 030a 0101 0106 0100 030a  
-0000020: 0301 0106 020a 040a 0506                 
+0000010: 0017 0000 0203 030a 0101 0106 0001 030a  
+0000020: 0301 0106 0102 0a04 0a05 06              
 ;;; STDOUT ;;)

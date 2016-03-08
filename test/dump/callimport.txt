@@ -36,25 +36,27 @@
 0000021: 0000                                       ; func body size
 0000023: 00                                         ; local decl count
 0000024: 1f                                         ; OPCODE_CALL_IMPORT
-0000025: 00                                         ; import index
-0000026: 0a                                         ; OPCODE_I32_CONST
-0000027: 01                                         ; i32 literal
-0000028: 0d                                         ; OPCODE_F32_CONST
-0000029: 0000 0040                                  ; f32 literal
-000002d: 12                                         ; OPCODE_CALL_FUNCTION
-000002e: 00                                         ; func index
-0000021: 0c00                                       ; FIXUP func body size
-000002f: 06                                         ; WASM_BINARY_SECTION_END
+0000025: 02                                         ; call arity
+0000026: 00                                         ; import index
+0000027: 0a                                         ; OPCODE_I32_CONST
+0000028: 01                                         ; i32 literal
+0000029: 0d                                         ; OPCODE_F32_CONST
+000002a: 0000 0040                                  ; f32 literal
+000002e: 12                                         ; OPCODE_CALL_FUNCTION
+000002f: 00                                         ; call arity
+0000030: 00                                         ; func index
+0000021: 0e00                                       ; FIXUP func body size
+0000031: 06                                         ; WASM_BINARY_SECTION_END
 ; import 0
-0000014: 3000 0000                                  ; FIXUP import module name offset
-0000030: 666f 6f                                    ; import module name
-0000033: 00                                         ; \0
-0000018: 3400 0000                                  ; FIXUP import function name offset
-0000034: 6261 72                                    ; import function name
-0000037: 00                                         ; \0
+0000014: 3200 0000                                  ; FIXUP import module name offset
+0000032: 666f 6f                                    ; import module name
+0000035: 00                                         ; \0
+0000018: 3600 0000                                  ; FIXUP import function name offset
+0000036: 6261 72                                    ; import function name
+0000039: 00                                         ; \0
 ;; dump
 0000000: 0061 736d 0a00 0000 0102 0201 0103 0001  
-0000010: 0801 0000 3000 0000 3400 0000 0201 0001  
-0000020: 000c 0000 1f00 0a01 0d00 0000 4012 0006  
-0000030: 666f 6f00 6261 7200                      
+0000010: 0801 0000 3200 0000 3600 0000 0201 0001  
+0000020: 000e 0000 1f02 000a 010d 0000 0040 1200  
+0000030: 0006 666f 6f00 6261 7200                 
 ;;; STDOUT ;;)

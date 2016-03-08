@@ -21,17 +21,19 @@
 0000012: 0000                                       ; func body size
 0000014: 00                                         ; local decl count
 0000015: 13                                         ; OPCODE_CALL_INDIRECT
-0000016: 00                                         ; signature index
-0000017: 0a                                         ; OPCODE_I32_CONST
-0000018: 00                                         ; i32 literal
-0000019: 0a                                         ; OPCODE_I32_CONST
-000001a: 00                                         ; i32 literal
-0000012: 0700                                       ; FIXUP func body size
-000001b: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
-000001c: 01                                         ; num function table entries
-000001d: 0000                                       ; function table entry
-000001f: 06                                         ; WASM_BINARY_SECTION_END
+0000016: 01                                         ; call arity
+0000017: 00                                         ; signature index
+0000018: 0a                                         ; OPCODE_I32_CONST
+0000019: 00                                         ; i32 literal
+000001a: 0a                                         ; OPCODE_I32_CONST
+000001b: 00                                         ; i32 literal
+0000012: 0800                                       ; FIXUP func body size
+000001c: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
+000001d: 01                                         ; num function table entries
+000001e: 0000                                       ; function table entry
+0000020: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0100 0102 0100  
-0000010: 0000 0700 0013 000a 000a 0005 0100 0006  
+0000010: 0000 0800 0013 0100 0a00 0a00 0501 0000  
+0000020: 06                                       
 ;;; STDOUT ;;)

@@ -583,22 +583,20 @@ static void write_expr(WasmWriteContext* ctx,
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br.var);
       assert(node);
       out_opcode(ws, WASM_OPCODE_BR);
+      out_u32_leb128(ws, expr->br.expr != NULL, "break arity");
       out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
       if (expr->br.expr)
         write_expr(ctx, module, func, expr->br.expr);
-      else
-        out_opcode(ws, WASM_OPCODE_NOP);
       break;
     }
     case WASM_EXPR_TYPE_BR_IF: {
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br_if.var);
       assert(node);
       out_opcode(ws, WASM_OPCODE_BR_IF);
+      out_u32_leb128(ws, expr->br_if.expr != NULL, "break arity");
       out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
       if (expr->br_if.expr)
         write_expr(ctx, module, func, expr->br_if.expr);
-      else
-        out_opcode(ws, WASM_OPCODE_NOP);
       write_expr(ctx, module, func, expr->br_if.cond);
       break;
     }
@@ -606,6 +604,7 @@ static void write_expr(WasmWriteContext* ctx,
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
       assert(index >= 0 && index < module->funcs.size);
       out_opcode(ws, WASM_OPCODE_CALL_FUNCTION);
+      out_u32_leb128(ws, expr->call.args.size, "call arity");
       out_u32_leb128(ws, index, "func index");
       write_expr_list(ctx, module, func, &expr->call.args);
       break;
@@ -614,6 +613,7 @@ static void write_expr(WasmWriteContext* ctx,
       int index = wasm_get_import_index_by_var(module, &expr->call.var);
       assert(index >= 0 && index < module->imports.size);
       out_opcode(ws, WASM_OPCODE_CALL_IMPORT);
+      out_u32_leb128(ws, expr->call.args.size, "call arity");
       out_u32_leb128(ws, index, "import index");
       write_expr_list(ctx, module, func, &expr->call.args);
       break;
@@ -623,6 +623,7 @@ static void write_expr(WasmWriteContext* ctx,
           wasm_get_func_type_index_by_var(module, &expr->call_indirect.var);
       assert(index >= 0 && index < module->func_types.size);
       out_opcode(ws, WASM_OPCODE_CALL_INDIRECT);
+      out_u32_leb128(ws, expr->call_indirect.args.size, "call arity");
       out_u32_leb128(ws, index, "signature index");
       write_expr(ctx, module, func, expr->call_indirect.expr);
       write_expr_list(ctx, module, func, &expr->call_indirect.args);
@@ -738,6 +739,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_RETURN:
       out_opcode(ws, WASM_OPCODE_RETURN);
+      out_u32_leb128(ws, expr->br.expr != NULL, "return arity");
       if (expr->return_.expr)
         write_expr(ctx, module, func, expr->return_.expr);
       break;
