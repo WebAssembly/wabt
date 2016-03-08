@@ -1,11 +1,6 @@
-;;; TODO: rebase after https://github.com/WebAssembly/spec/pull/209 lands
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/traps.wast
 (;; STDOUT ;;;
-third_party/testsuite/traps.wast:87: $assert_trap_0 failed, didn't throw
-third_party/testsuite/traps.wast:88: $assert_trap_1 failed, didn't throw
-third_party/testsuite/traps.wast:89: $assert_trap_2 failed, didn't throw
-third_party/testsuite/traps.wast:90: $assert_trap_3 failed, didn't throw
-16/20 tests passed.
+20/20 tests passed.
 ;;; STDOUT ;;)

@@ -1,14 +1,11 @@
-;;; TODO: rebase when testsuite repo updates to br_table
+;;; TODO: support br_table with argument
 ;;; ERROR: 1
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDERR ;;;
-third_party/testsuite/switch.wast:7:8: unexpected token "tableswitch"
-      (tableswitch (get_local $i)
-       ^^^^^^^^^^^
-third_party/testsuite/switch.wast:7:20: syntax error, unexpected (
-      (tableswitch (get_local $i)
-                   ^
+third_party/testsuite/switch.wast:99:23: syntax error, unexpected (, expecting )
+                      (i32.and (i32.const 3) (get_local $i))
+                      ^
 
 ;;; STDERR ;;)

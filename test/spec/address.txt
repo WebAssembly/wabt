@@ -1,16 +1,16 @@
-;;; TODO: rebase after https://github.com/WebAssembly/spec/pull/209 lands
 ;;; EXE: test/run-d8.py
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/address.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/address.wast:33:66: offset must be less than or equal to 0xffffffff
-...ory 1024) (func $bad1 (param $i i32) (i32.load offset=4294967296 (get_loca...
+  third_party/testsuite/address.wast:34:63: offset must be less than or equal to 0xffffffff
+...memory 1) (func $bad1 (param $i i32) (i32.load offset=4294967296 (get_loca...
                                         ^
 97
 98
 99
 122
+25185
 25185
 25442
 25699
@@ -20,6 +20,7 @@ assert_invalid error:
 1717920867
 122
 $invoke_0 = undefined
+0
 0
 0
 0
@@ -45,6 +46,5 @@ $invoke_1 = undefined
 0
 0
 0
-third_party/testsuite/address.wast:29: $assert_trap_2 failed, didn't throw
-2/3 tests passed.
+3/3 tests passed.
 ;;; STDOUT ;;)
