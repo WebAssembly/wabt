@@ -31,9 +31,6 @@
 #define DEFAULT_MEMORY_EXPORT 1
 #define DUMP_OCTETS_PER_LINE 16
 
-#define SEGMENT_SIZE 13
-#define SEGMENT_OFFSET_OFFSET 4
-
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
@@ -195,6 +192,14 @@ static void out_data_at(WasmWriterState* writer_state,
   if (writer_state->writer->write_data)
     *writer_state->result = writer_state->writer->write_data(
         offset, src, size, writer_state->writer->user_data);
+}
+
+static void out_data(WasmWriterState* writer_state,
+                     const void* src,
+                     size_t length,
+                     const char* desc) {
+  out_data_at(writer_state, writer_state->offset, src, length, desc);
+  writer_state->offset += length;
 }
 
 static void out_u8(WasmWriterState* writer_state,
@@ -829,7 +834,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   out_u32(ws, WASM_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   out_u32(ws, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
 
-  size_t segments_offset = 0;
   if (module->memory) {
     out_u8(ws, WASM_BINARY_SECTION_MEMORY, "WASM_BINARY_SECTION_MEMORY");
     out_u32_leb128(ws, module->memory->initial_pages, "min mem pages");
@@ -840,14 +844,13 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       out_u8(ws, WASM_BINARY_SECTION_DATA_SEGMENTS,
              "WASM_BINARY_SECTION_DATA_SEGMENTS");
       out_u32_leb128(ws, module->memory->segments.size, "num data segments");
-      segments_offset = ctx->writer_state.offset;
       for (i = 0; i < module->memory->segments.size; ++i) {
         WasmSegment* segment = &module->memory->segments.data[i];
         print_header(ctx, "segment header", i);
-        out_u32(ws, segment->addr, "segment address");
-        out_u32(ws, 0, "segment data offset");
-        out_u32(ws, segment->size, "segment size");
-        out_u8(ws, 1, "segment init");
+        out_u32_leb128(ws, segment->addr, "segment address");
+        out_u32_leb128(ws, segment->size, "segment size");
+        print_header(ctx, "segment data", i);
+        out_data(ws, segment->data, segment->size, "segment data");
       }
     }
   }
@@ -969,23 +972,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   out_u8(ws, WASM_BINARY_SECTION_END, "WASM_BINARY_SECTION_END");
-
-  /* output segment data */
-  size_t offset;
-  if (module->memory) {
-    offset = segments_offset;
-    for (i = 0; i < module->memory->segments.size; ++i) {
-      print_header(ctx, "segment data", i);
-      WasmSegment* segment = &module->memory->segments.data[i];
-      out_u32_at(ws, offset + SEGMENT_OFFSET_OFFSET, ctx->writer_state.offset,
-                 "FIXUP segment data offset");
-      out_data_at(ws, ctx->writer_state.offset, segment->data, segment->size,
-                  "segment data");
-      ctx->writer_state.offset += segment->size;
-      offset += SEGMENT_SIZE;
-    }
-  }
-
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
