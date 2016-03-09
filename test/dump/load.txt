@@ -31,67 +31,82 @@
 0000011: 0000                                       ; func body size
 0000013: 00                                         ; local decl count
 0000014: 2a                                         ; OPCODE_I32_LOAD_MEM
-0000015: 00                                         ; load access byte
-0000016: 0a                                         ; OPCODE_I32_CONST
-0000017: 00                                         ; i32 literal
-0000018: 20                                         ; OPCODE_I32_LOAD_MEM8_S
-0000019: 00                                         ; load access byte
-000001a: 0a                                         ; OPCODE_I32_CONST
-000001b: 00                                         ; i32 literal
-000001c: 22                                         ; OPCODE_I32_LOAD_MEM16_S
-000001d: 00                                         ; load access byte
-000001e: 0a                                         ; OPCODE_I32_CONST
-000001f: 00                                         ; i32 literal
-0000020: 21                                         ; OPCODE_I32_LOAD_MEM8_U
-0000021: 00                                         ; load access byte
-0000022: 0a                                         ; OPCODE_I32_CONST
-0000023: 00                                         ; i32 literal
-0000024: 23                                         ; OPCODE_I32_LOAD_MEM16_U
-0000025: 00                                         ; load access byte
+0000015: 20                                         ; alignment
+0000016: 00                                         ; load offset
+0000017: 0a                                         ; OPCODE_I32_CONST
+0000018: 00                                         ; i32 literal
+0000019: 20                                         ; OPCODE_I32_LOAD_MEM8_S
+000001a: 20                                         ; alignment
+000001b: 00                                         ; load offset
+000001c: 0a                                         ; OPCODE_I32_CONST
+000001d: 00                                         ; i32 literal
+000001e: 22                                         ; OPCODE_I32_LOAD_MEM16_S
+000001f: 20                                         ; alignment
+0000020: 00                                         ; load offset
+0000021: 0a                                         ; OPCODE_I32_CONST
+0000022: 00                                         ; i32 literal
+0000023: 21                                         ; OPCODE_I32_LOAD_MEM8_U
+0000024: 20                                         ; alignment
+0000025: 00                                         ; load offset
 0000026: 0a                                         ; OPCODE_I32_CONST
 0000027: 00                                         ; i32 literal
-0000028: 2b                                         ; OPCODE_I64_LOAD_MEM
-0000029: 00                                         ; load access byte
-000002a: 0a                                         ; OPCODE_I32_CONST
-000002b: 00                                         ; i32 literal
-000002c: 24                                         ; OPCODE_I64_LOAD_MEM8_S
-000002d: 00                                         ; load access byte
-000002e: 0a                                         ; OPCODE_I32_CONST
-000002f: 00                                         ; i32 literal
-0000030: 26                                         ; OPCODE_I64_LOAD_MEM16_S
-0000031: 00                                         ; load access byte
-0000032: 0a                                         ; OPCODE_I32_CONST
-0000033: 00                                         ; i32 literal
-0000034: 28                                         ; OPCODE_I64_LOAD_MEM32_S
-0000035: 00                                         ; load access byte
-0000036: 0a                                         ; OPCODE_I32_CONST
-0000037: 00                                         ; i32 literal
-0000038: 25                                         ; OPCODE_I64_LOAD_MEM8_U
-0000039: 00                                         ; load access byte
+0000028: 23                                         ; OPCODE_I32_LOAD_MEM16_U
+0000029: 20                                         ; alignment
+000002a: 00                                         ; load offset
+000002b: 0a                                         ; OPCODE_I32_CONST
+000002c: 00                                         ; i32 literal
+000002d: 2b                                         ; OPCODE_I64_LOAD_MEM
+000002e: 20                                         ; alignment
+000002f: 00                                         ; load offset
+0000030: 0a                                         ; OPCODE_I32_CONST
+0000031: 00                                         ; i32 literal
+0000032: 24                                         ; OPCODE_I64_LOAD_MEM8_S
+0000033: 20                                         ; alignment
+0000034: 00                                         ; load offset
+0000035: 0a                                         ; OPCODE_I32_CONST
+0000036: 00                                         ; i32 literal
+0000037: 26                                         ; OPCODE_I64_LOAD_MEM16_S
+0000038: 20                                         ; alignment
+0000039: 00                                         ; load offset
 000003a: 0a                                         ; OPCODE_I32_CONST
 000003b: 00                                         ; i32 literal
-000003c: 27                                         ; OPCODE_I64_LOAD_MEM16_U
-000003d: 00                                         ; load access byte
-000003e: 0a                                         ; OPCODE_I32_CONST
-000003f: 00                                         ; i32 literal
-0000040: 29                                         ; OPCODE_I64_LOAD_MEM32_U
-0000041: 00                                         ; load access byte
-0000042: 0a                                         ; OPCODE_I32_CONST
-0000043: 00                                         ; i32 literal
-0000044: 2c                                         ; OPCODE_F32_LOAD_MEM
-0000045: 00                                         ; load access byte
-0000046: 0a                                         ; OPCODE_I32_CONST
-0000047: 00                                         ; i32 literal
-0000048: 2d                                         ; OPCODE_F64_LOAD_MEM
-0000049: 00                                         ; load access byte
-000004a: 0a                                         ; OPCODE_I32_CONST
-000004b: 00                                         ; i32 literal
-0000011: 3900                                       ; FIXUP func body size
-000004c: 06                                         ; WASM_BINARY_SECTION_END
+000003c: 28                                         ; OPCODE_I64_LOAD_MEM32_S
+000003d: 20                                         ; alignment
+000003e: 00                                         ; load offset
+000003f: 0a                                         ; OPCODE_I32_CONST
+0000040: 00                                         ; i32 literal
+0000041: 25                                         ; OPCODE_I64_LOAD_MEM8_U
+0000042: 20                                         ; alignment
+0000043: 00                                         ; load offset
+0000044: 0a                                         ; OPCODE_I32_CONST
+0000045: 00                                         ; i32 literal
+0000046: 27                                         ; OPCODE_I64_LOAD_MEM16_U
+0000047: 20                                         ; alignment
+0000048: 00                                         ; load offset
+0000049: 0a                                         ; OPCODE_I32_CONST
+000004a: 00                                         ; i32 literal
+000004b: 29                                         ; OPCODE_I64_LOAD_MEM32_U
+000004c: 20                                         ; alignment
+000004d: 00                                         ; load offset
+000004e: 0a                                         ; OPCODE_I32_CONST
+000004f: 00                                         ; i32 literal
+0000050: 2c                                         ; OPCODE_F32_LOAD_MEM
+0000051: 20                                         ; alignment
+0000052: 00                                         ; load offset
+0000053: 0a                                         ; OPCODE_I32_CONST
+0000054: 00                                         ; i32 literal
+0000055: 2d                                         ; OPCODE_F64_LOAD_MEM
+0000056: 20                                         ; alignment
+0000057: 00                                         ; load offset
+0000058: 0a                                         ; OPCODE_I32_CONST
+0000059: 00                                         ; i32 literal
+0000011: 4700                                       ; FIXUP func body size
+000005a: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0039 0000 2a00 0a00 2000 0a00 2200 0a00  
-0000020: 2100 0a00 2300 0a00 2b00 0a00 2400 0a00  
-0000030: 2600 0a00 2800 0a00 2500 0a00 2700 0a00  
-0000040: 2900 0a00 2c00 0a00 2d00 0a00 06         
+0000010: 0047 0000 2a20 000a 0020 2000 0a00 2220  
+0000020: 000a 0021 2000 0a00 2320 000a 002b 2000  
+0000030: 0a00 2420 000a 0026 2000 0a00 2820 000a  
+0000040: 0025 2000 0a00 2720 000a 0029 2000 0a00  
+0000050: 2c20 000a 002d 2000 0a00 06              
 ;;; STDOUT ;;)

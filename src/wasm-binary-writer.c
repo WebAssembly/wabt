@@ -701,23 +701,15 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_LOAD: {
-      /* Access byte: 0bAaao0000
-       A = Alignment. If set, access is unaligned
-       a = Atomicity. 0 = None, 1 = SeqCst, 2 = Acq, 3 = Rel
-       o = Offset. If set, offset field follows access byte */
       out_opcode(ws, s_mem_opcodes[expr->load.op.op_type]);
-      uint32_t natural_align = expr->load.op.size >> 3;
       uint32_t align = expr->load.align;
-      uint8_t access = 0;
-      if (align == WASM_USE_NATURAL_ALIGNMENT)
-        align = natural_align;
-      if (align < natural_align)
-        access |= 0x80;
-      if (expr->load.offset)
-        access |= 0x10;
-      out_u8(ws, access, "load access byte");
-      if (expr->load.offset)
-        out_u32_leb128(ws, (uint32_t)expr->load.offset, "load offset");
+      uint8_t align_log = 0;
+      while (align) {
+        align >>= 1;
+        align_log++;
+      }
+      out_u8(ws, align_log, "alignment");
+      out_u32_leb128(ws, (uint32_t)expr->load.offset, "load offset");
       write_expr(ctx, module, func, expr->load.addr);
       break;
     }
@@ -759,18 +751,14 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_STORE: {
       /* See LOAD for format of memory access byte */
       out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
-      uint32_t natural_align = expr->load.op.size >> 3;
       uint32_t align = expr->load.align;
-      uint8_t access = 0;
-      if (align == WASM_USE_NATURAL_ALIGNMENT)
-        align = natural_align;
-      if (align < natural_align)
-        access |= 0x80;
-      if (expr->store.offset)
-        access |= 0x10;
-      out_u8(ws, access, "store access byte");
-      if (expr->store.offset)
-        out_u32_leb128(ws, (uint32_t)expr->store.offset, "store offset");
+      uint8_t align_log = 0;
+      while (align) {
+        align >>= 1;
+        align_log++;
+      }
+      out_u8(ws, align_log, "alignment");
+      out_u32_leb128(ws, (uint32_t)expr->load.offset, "store offset");
       write_expr(ctx, module, func, expr->store.addr);
       write_expr(ctx, module, func, expr->store.value);
       break;
