@@ -341,9 +341,9 @@ static void out_str(WasmWriterState* writer_state,
                     const char* s,
                     size_t length,
                     const char* desc) {
+  out_u32_leb128(writer_state, length, "string length");
   out_data_at(writer_state, writer_state->offset, s, length, desc);
   writer_state->offset += length;
-  out_u8(writer_state, 0, "\\0");
 }
 
 static void out_opcode(WasmWriterState* writer_state, uint8_t opcode) {
@@ -870,17 +870,18 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
   }
 
-  size_t imports_offset = 0;
   if (module->imports.size) {
     out_u8(ws, WASM_BINARY_SECTION_IMPORTS, "WASM_BINARY_SECTION_IMPORTS");
     out_u32_leb128(ws, module->imports.size, "num imports");
 
-    imports_offset = ctx->writer_state.offset;
     for (i = 0; i < module->imports.size; ++i) {
+      WasmImport* import = module->imports.data[i];
       print_header(ctx, "import header", i);
       out_u32_leb128(ws, ctx->import_sig_indexes[i], "import signature index");
-      out_u32(ws, 0, "import module name offset");
-      out_u32(ws, 0, "import function name offset");
+      out_str(ws, import->module_name.start, import->module_name.length,
+              "import module name");
+      out_str(ws, import->func_name.start, import->func_name.length,
+              "import function name");
     }
   }
 
@@ -937,18 +938,16 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
   }
 
-  size_t exports_offset = 0;
   if (module->exports.size) {
     out_u8(ws, WASM_BINARY_SECTION_EXPORTS, "WASM_BINARY_SECTION_EXPORTS");
     out_u32_leb128(ws, module->exports.size, "num exports");
 
-    exports_offset = ctx->writer_state.offset;
     for (i = 0; i < module->exports.size; ++i) {
       WasmExport* export = module->exports.data[i];
       int func_index = wasm_get_func_index_by_var(module, &export->var);
       assert(func_index >= 0 && func_index < module->funcs.size);
       out_u32_leb128(ws, func_index, "export func index");
-      out_u32(ws, 0, "export name offset");
+      out_str(ws, export->name.start, export->name.length, "export name");
     }
   }
 
@@ -985,37 +984,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       ctx->writer_state.offset += segment->size;
       offset += SEGMENT_SIZE;
     }
-  }
-
-  /* output import names */
-  offset = imports_offset;
-  for (i = 0; i < module->imports.size; ++i) {
-    print_header(ctx, "import", i);
-    WasmImport* import = module->imports.data[i];
-    offset += size_u32_leb128(ctx->import_sig_indexes[i]);
-    out_u32_at(ws, offset, ctx->writer_state.offset,
-               "FIXUP import module name offset");
-    out_str(ws, import->module_name.start, import->module_name.length,
-            "import module name");
-    offset += sizeof(uint32_t);
-    out_u32_at(ws, offset, ctx->writer_state.offset,
-               "FIXUP import function name offset");
-    out_str(ws, import->func_name.start, import->func_name.length,
-            "import function name");
-    offset += sizeof(uint32_t);
-  }
-
-  /* output exported func names */
-  offset = exports_offset;
-  for (i = 0; i < module->exports.size; ++i) {
-    print_header(ctx, "export", i);
-    WasmExport* export = module->exports.data[i];
-    int func_index = wasm_get_func_index_by_var(module, &export->var);
-    assert(func_index >= 0 && func_index < module->funcs.size);
-    offset += size_u32_leb128(func_index);
-    out_u32_at(ws, offset, ctx->writer_state.offset, "FIXUP func name offset");
-    out_str(ws, export->name.start, export->name.length, "export name");
-    offset += sizeof(uint32_t);
   }
 
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
