@@ -29,20 +29,20 @@
 0000019: 01                                         ; OPCODE_BLOCK
 000001a: 01                                         ; num expressions
 000001b: 06                                         ; OPCODE_BR
-000001c: 02                                         ; break depth
-000001d: 00                                         ; OPCODE_NOP
+000001c: 00                                         ; break arity
+000001d: 02                                         ; break depth
 000001e: 03                                         ; OPCODE_IF
 000001f: 0a                                         ; OPCODE_I32_CONST
 0000020: 02                                         ; i32 literal
 0000021: 01                                         ; OPCODE_BLOCK
 0000022: 01                                         ; num expressions
 0000023: 06                                         ; OPCODE_BR
-0000024: 01                                         ; break depth
-0000025: 00                                         ; OPCODE_NOP
+0000024: 00                                         ; break arity
+0000025: 01                                         ; break depth
 0000011: 1300                                       ; FIXUP func body size
 0000026: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0013 0000 0202 030a 0101 0106 0200 030a  
-0000020: 0201 0106 0100 06                        
+0000010: 0013 0000 0202 030a 0101 0106 0002 030a  
+0000020: 0201 0106 0001 06                        
 ;;; STDOUT ;;)

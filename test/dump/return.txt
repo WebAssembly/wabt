@@ -22,19 +22,21 @@
 0000013: 0000                                       ; func body size
 0000015: 00                                         ; local decl count
 0000016: 14                                         ; OPCODE_RETURN
-0000017: 0a                                         ; OPCODE_I32_CONST
-0000018: 2a                                         ; i32 literal
-0000013: 0400                                       ; FIXUP func body size
+0000017: 00                                         ; return arity
+0000018: 0a                                         ; OPCODE_I32_CONST
+0000019: 2a                                         ; i32 literal
+0000013: 0500                                       ; FIXUP func body size
 ; function 1
-0000019: 00                                         ; func flags
-000001a: 0100                                       ; func signature index
-000001c: 0000                                       ; func body size
-000001e: 00                                         ; local decl count
-000001f: 14                                         ; OPCODE_RETURN
-000001c: 0200                                       ; FIXUP func body size
-0000020: 06                                         ; WASM_BINARY_SECTION_END
+000001a: 00                                         ; func flags
+000001b: 0100                                       ; func signature index
+000001d: 0000                                       ; func body size
+000001f: 00                                         ; local decl count
+0000020: 14                                         ; OPCODE_RETURN
+0000021: 00                                         ; return arity
+000001d: 0300                                       ; FIXUP func body size
+0000022: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0102 0001 0000 0202  
-0000010: 0000 0004 0000 140a 2a00 0100 0200 0014  
-0000020: 06                                       
+0000010: 0000 0005 0000 1400 0a2a 0001 0003 0000  
+0000020: 1400 06                                  
 ;;; STDOUT ;;)

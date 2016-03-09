@@ -46,8 +46,8 @@
 0000027: 0a                                         ; OPCODE_I32_CONST
 0000028: 02                                         ; i32 literal
 0000029: 06                                         ; OPCODE_BR
-000002a: 01                                         ; break depth
-000002b: 00                                         ; OPCODE_NOP
+000002a: 00                                         ; break arity
+000002b: 01                                         ; break depth
 000002c: 0a                                         ; OPCODE_I32_CONST
 000002d: 03                                         ; i32 literal
 0000011: 1b00                                       ; FIXUP func body size
@@ -55,5 +55,5 @@
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
 0000010: 001b 0000 0101 0104 0101 0802 0000 0001  
-0000020: 0000 000a 000a 010a 0206 0100 0a03 06    
+0000020: 0000 000a 000a 010a 0206 0001 0a03 06    
 ;;; STDOUT ;;)

@@ -49,14 +49,16 @@
 0000034: 01                                         ; OPCODE_BLOCK
 0000035: 01                                         ; num expressions
 0000036: 14                                         ; OPCODE_RETURN
-0000037: 01                                         ; OPCODE_BLOCK
-0000038: 01                                         ; num expressions
-0000039: 14                                         ; OPCODE_RETURN
-000002e: 0a00                                       ; FIXUP func body size
-000003a: 06                                         ; WASM_BINARY_SECTION_END
+0000037: 01                                         ; return arity
+0000038: 01                                         ; OPCODE_BLOCK
+0000039: 01                                         ; num expressions
+000003a: 14                                         ; OPCODE_RETURN
+000003b: 00                                         ; return arity
+000002e: 0c00                                       ; FIXUP func body size
+000003c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0202 0000  
 0000010: 0018 0000 030a 0101 0100 040a 0001 010d  
-0000020: 0000 803f 0101 0d00 0000 4000 0000 0a00  
-0000030: 0004 0a01 0101 1401 0114 06              
+0000020: 0000 803f 0101 0d00 0000 4000 0000 0c00  
+0000030: 0004 0a01 0101 1401 0101 1400 06         
 ;;; STDOUT ;;)

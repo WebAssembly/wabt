@@ -324,11 +324,11 @@
 0000118: 03                                         ; num expressions (byte 0)
 0000119: 00                                         ; OPCODE_NOP
 000011a: 06                                         ; OPCODE_BR
-000011b: 01                                         ; break depth
-000011c: 00                                         ; OPCODE_NOP
+000011b: 00                                         ; break arity
+000011c: 01                                         ; break depth
 000011d: 06                                         ; OPCODE_BR
-000011e: 01                                         ; break depth
-000011f: 00                                         ; OPCODE_NOP
+000011e: 00                                         ; break arity
+000011f: 01                                         ; break depth
 0000011: 0d01                                       ; FIXUP func body size
 0000120: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
@@ -349,6 +349,6 @@
 00000e0: 0000 0000 0000 0000 0000 0000 0000 0000  
 00000f0: 0000 0000 0000 0000 0000 0000 0000 0000  
 0000100: 0000 0000 0000 0000 0000 0000 0000 0000  
-0000110: 0000 0000 0000 0001 0300 0601 0006 0100  
+0000110: 0000 0000 0000 0001 0300 0600 0106 0001  
 0000120: 06                                       
 ;;; STDOUT ;;)

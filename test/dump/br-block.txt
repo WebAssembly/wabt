@@ -37,24 +37,24 @@
 000001c: 01                                         ; OPCODE_BLOCK
 000001d: 05                                         ; num expressions
 000001e: 06                                         ; OPCODE_BR
-000001f: 00                                         ; break depth
-0000020: 00                                         ; OPCODE_NOP
+000001f: 00                                         ; break arity
+0000020: 00                                         ; break depth
 0000021: 06                                         ; OPCODE_BR
-0000022: 00                                         ; break depth
-0000023: 00                                         ; OPCODE_NOP
+0000022: 00                                         ; break arity
+0000023: 00                                         ; break depth
 0000024: 06                                         ; OPCODE_BR
-0000025: 01                                         ; break depth
-0000026: 00                                         ; OPCODE_NOP
+0000025: 00                                         ; break arity
+0000026: 01                                         ; break depth
 0000027: 06                                         ; OPCODE_BR
-0000028: 02                                         ; break depth
-0000029: 00                                         ; OPCODE_NOP
+0000028: 00                                         ; break arity
+0000029: 02                                         ; break depth
 000002a: 06                                         ; OPCODE_BR
-000002b: 03                                         ; break depth
-000002c: 00                                         ; OPCODE_NOP
+000002b: 00                                         ; break arity
+000002c: 03                                         ; break depth
 0000011: 1a00                                       ; FIXUP func body size
 000002d: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
 0000010: 001a 0000 0101 0201 0102 0a00 0105 0600  
-0000020: 0006 0000 0601 0006 0200 0603 0006       
+0000020: 0006 0000 0600 0106 0002 0600 0306       
 ;;; STDOUT ;;)
