@@ -11,7 +11,7 @@
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 01                                         ; min mem pages
 000000a: 01                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 000000d: 01                                         ; num signatures
 ; signature 0
@@ -52,7 +52,7 @@
 0000030: 66                                         ; export name
 0000031: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0001 0101 0101 0201  
+0000000: 0061 736d 0a00 0000 0001 0100 0101 0201  
 0000010: 0101 0201 0000 0013 0000 3302 000a 0040  
 0000020: 2a02 000a 000a 0140 0e00 0e01 0901 0001  
 0000030: 6606                                     

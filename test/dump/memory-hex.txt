@@ -8,7 +8,7 @@
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 01                                         ; min mem pages
 000000a: 01                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 04                                         ; WASM_BINARY_SECTION_DATA_SEGMENTS
 000000d: 01                                         ; num data segments
 ; segment header 0
@@ -18,6 +18,6 @@
 0000010: 0001 0203 0405 0607 0809 0a                ; segment data
 000001b: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0001 0101 0401 000b  
+0000000: 0061 736d 0a00 0000 0001 0100 0401 000b  
 0000010: 0001 0203 0405 0607 0809 0a06            
 ;;; STDOUT ;;)

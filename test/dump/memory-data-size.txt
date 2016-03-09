@@ -9,27 +9,27 @@
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 01                                         ; min mem pages
 000000a: 01                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 06                                         ; WASM_BINARY_SECTION_END
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 02                                         ; min mem pages
 000000a: 02                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 06                                         ; WASM_BINARY_SECTION_END
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 04                                         ; min mem pages
 000000a: 04                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 06                                         ; WASM_BINARY_SECTION_END
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 05                                         ; min mem pages
 000000a: 05                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 06                                         ; WASM_BINARY_SECTION_END
 ;;; STDOUT ;;)

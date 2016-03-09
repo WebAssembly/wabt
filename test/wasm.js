@@ -19,7 +19,10 @@ if (arguments.length != 1) {
   quit(0);
 }
 
-var ffi = {stdio: {print: print}};
+var ffi = {
+  stdio: {print: print},
+  test: {has_memory: function() { return typeof module.memory !== undefined; }},
+};
 var buffer = readbuffer(arguments[0]);
 var module = Wasm.instantiateModule(buffer, ffi);
 

@@ -28,7 +28,6 @@
 #include "wasm-internal.h"
 #include "wasm-writer.h"
 
-#define DEFAULT_MEMORY_EXPORT 1
 #define DUMP_OCTETS_PER_LINE 16
 
 #define ALLOC_FAILURE \
@@ -835,10 +834,11 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   out_u32(ws, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
 
   if (module->memory) {
+    int export_memory = module->export_memory != NULL;
     out_u8(ws, WASM_BINARY_SECTION_MEMORY, "WASM_BINARY_SECTION_MEMORY");
     out_u32_leb128(ws, module->memory->initial_pages, "min mem pages");
     out_u32_leb128(ws, module->memory->max_pages, "max mem pages");
-    out_u8(ws, DEFAULT_MEMORY_EXPORT, "export mem");
+    out_u8(ws, export_memory, "export mem");
 
     if (module->memory->segments.size) {
       out_u8(ws, WASM_BINARY_SECTION_DATA_SEGMENTS,

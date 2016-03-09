@@ -1,0 +1,10 @@
+;;; EXE: test/run-d8.py
+;;; NOTE: broken in d8
+(module
+  (memory 100)
+  (import $has_memory "test" "has_memory" (result i32))
+  (func $f (result i32) (call_import $has_memory))
+  (export "f" $f))
+(;; STDOUT ;;;
+f() = 1
+;;; STDOUT ;;)

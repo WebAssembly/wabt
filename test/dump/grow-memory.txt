@@ -9,7 +9,7 @@
 0000008: 00                                         ; WASM_BINARY_SECTION_MEMORY
 0000009: 01                                         ; min mem pages
 000000a: 02                                         ; max mem pages
-000000b: 01                                         ; export mem
+000000b: 00                                         ; export mem
 000000c: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
 000000d: 01                                         ; num signatures
 ; signature 0
@@ -29,6 +29,6 @@
 0000016: 0400                                       ; FIXUP func body size
 000001c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0001 0201 0101 0100  
+0000000: 0061 736d 0a00 0000 0001 0200 0101 0100  
 0000010: 0102 0100 0000 0400 0039 0e00 06         
 ;;; STDOUT ;;)
