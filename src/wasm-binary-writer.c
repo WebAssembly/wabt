@@ -755,7 +755,7 @@ static void write_expr(WasmWriteContext* ctx,
       out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
       uint32_t align = expr->store.align;
       if (align == WASM_USE_NATURAL_ALIGNMENT) {
-        align = expr->load.op.size >> 3;
+        align = expr->store.op.size >> 3;
       }
       uint8_t align_log = 0;
       while (align) {
@@ -763,7 +763,7 @@ static void write_expr(WasmWriteContext* ctx,
         align_log++;
       }
       out_u8(ws, align_log, "alignment");
-      out_u32_leb128(ws, (uint32_t)expr->load.offset, "store offset");
+      out_u32_leb128(ws, (uint32_t)expr->store.offset, "store offset");
       write_expr(ctx, module, func, expr->store.addr);
       write_expr(ctx, module, func, expr->store.value);
       break;
