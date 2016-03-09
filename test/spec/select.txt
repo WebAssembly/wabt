@@ -3,12 +3,9 @@
 ;;; FLAGS: --spec
 ;;; STDIN_FILE: third_party/testsuite/select.wast
 (;; STDERR ;;;
-Failed to open startup resource '/usr/local/google/home/titzer/v8/wasm/sexpr-wasm-prototype/out/snapshot_blob.bin'.
+
 ;;; STDERR ;;)
 (;; STDOUT ;;;
-@1 ExprSelect [3]
-  @2 ExprUnreachable [0]
-  @3 ExprI32Const [0]
 WasmModule::Instantiate(): Compiling WASM function #4:<?> failed:Result = ExprSelect[1] expected type <end>, found ExprI32Const of type i32 @+1
 
   var module = Wasm.instantiateModule(u8a.buffer, ffi);

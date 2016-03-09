@@ -703,6 +703,9 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_LOAD: {
       out_opcode(ws, s_mem_opcodes[expr->load.op.op_type]);
       uint32_t align = expr->load.align;
+      if (align == WASM_USE_NATURAL_ALIGNMENT) {
+        align = expr->load.op.size >> 3;
+      }
       uint8_t align_log = 0;
       while (align) {
         align >>= 1;
@@ -749,9 +752,11 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_STORE: {
-      /* See LOAD for format of memory access byte */
       out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
-      uint32_t align = expr->load.align;
+      uint32_t align = expr->store.align;
+      if (align == WASM_USE_NATURAL_ALIGNMENT) {
+        align = expr->load.op.size >> 3;
+      }
       uint8_t align_log = 0;
       while (align) {
         align >>= 1;

@@ -27,13 +27,13 @@
 0000017: 0000                                       ; func body size
 0000019: 00                                         ; local decl count
 000001a: 33                                         ; OPCODE_I32_STORE_MEM
-000001b: 20                                         ; alignment
+000001b: 03                                         ; alignment
 000001c: 00                                         ; store offset
 000001d: 0a                                         ; OPCODE_I32_CONST
 000001e: 00                                         ; i32 literal
 000001f: 40                                         ; OPCODE_I32_ADD
 0000020: 2a                                         ; OPCODE_I32_LOAD_MEM
-0000021: 20                                         ; alignment
+0000021: 03                                         ; alignment
 0000022: 00                                         ; load offset
 0000023: 0a                                         ; OPCODE_I32_CONST
 0000024: 00                                         ; i32 literal
@@ -56,7 +56,7 @@
 0000035: 00                                         ; \0
 ;; dump
 0000000: 0061 736d 0a00 0000 0001 0101 0101 0201  
-0000010: 0101 0201 0000 0013 0000 3320 000a 0040  
-0000020: 2a20 000a 000a 0140 0e00 0e01 0901 0034  
+0000010: 0101 0201 0000 0013 0000 3303 000a 0040  
+0000020: 2a03 000a 000a 0140 0e00 0e01 0901 0034  
 0000030: 0000 0006 6600                           
 ;;; STDOUT ;;)
