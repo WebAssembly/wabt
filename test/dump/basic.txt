@@ -27,34 +27,36 @@
 0000017: 0000                                       ; func body size
 0000019: 00                                         ; local decl count
 000001a: 33                                         ; OPCODE_I32_STORE_MEM
-000001b: 00                                         ; store access byte
-000001c: 0a                                         ; OPCODE_I32_CONST
-000001d: 00                                         ; i32 literal
-000001e: 40                                         ; OPCODE_I32_ADD
-000001f: 2a                                         ; OPCODE_I32_LOAD_MEM
-0000020: 00                                         ; load access byte
-0000021: 0a                                         ; OPCODE_I32_CONST
-0000022: 00                                         ; i32 literal
+000001b: 02                                         ; alignment
+000001c: 00                                         ; store offset
+000001d: 0a                                         ; OPCODE_I32_CONST
+000001e: 00                                         ; i32 literal
+000001f: 40                                         ; OPCODE_I32_ADD
+0000020: 2a                                         ; OPCODE_I32_LOAD_MEM
+0000021: 02                                         ; alignment
+0000022: 00                                         ; load offset
 0000023: 0a                                         ; OPCODE_I32_CONST
-0000024: 01                                         ; i32 literal
-0000025: 40                                         ; OPCODE_I32_ADD
-0000026: 0e                                         ; OPCODE_GET_LOCAL
-0000027: 00                                         ; remapped local index
+0000024: 00                                         ; i32 literal
+0000025: 0a                                         ; OPCODE_I32_CONST
+0000026: 01                                         ; i32 literal
+0000027: 40                                         ; OPCODE_I32_ADD
 0000028: 0e                                         ; OPCODE_GET_LOCAL
-0000029: 01                                         ; remapped local index
-0000017: 1100                                       ; FIXUP func body size
-000002a: 09                                         ; WASM_BINARY_SECTION_EXPORTS
-000002b: 01                                         ; num exports
-000002c: 00                                         ; export func index
-000002d: 0000 0000                                  ; export name offset
-0000031: 06                                         ; WASM_BINARY_SECTION_END
+0000029: 00                                         ; remapped local index
+000002a: 0e                                         ; OPCODE_GET_LOCAL
+000002b: 01                                         ; remapped local index
+0000017: 1300                                       ; FIXUP func body size
+000002c: 09                                         ; WASM_BINARY_SECTION_EXPORTS
+000002d: 01                                         ; num exports
+000002e: 00                                         ; export func index
+000002f: 0000 0000                                  ; export name offset
+0000033: 06                                         ; WASM_BINARY_SECTION_END
 ; export 0
-000002d: 3200 0000                                  ; FIXUP func name offset
-0000032: 66                                         ; export name
-0000033: 00                                         ; \0
+000002f: 3400 0000                                  ; FIXUP func name offset
+0000034: 66                                         ; export name
+0000035: 00                                         ; \0
 ;; dump
 0000000: 0061 736d 0a00 0000 0001 0101 0101 0201  
-0000010: 0101 0201 0000 0011 0000 3300 0a00 402a  
-0000020: 000a 000a 0140 0e00 0e01 0901 0032 0000  
-0000030: 0006 6600                                
+0000010: 0101 0201 0000 0013 0000 3302 000a 0040  
+0000020: 2a02 000a 000a 0140 0e00 0e01 0901 0034  
+0000030: 0000 0006 6600                           
 ;;; STDOUT ;;)
