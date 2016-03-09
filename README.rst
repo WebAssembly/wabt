@@ -91,7 +91,7 @@ This can be loaded into d8 using JavaScript like this::
   V8 version 4.7.0 (candidate)
   d8> buffer = readbuffer('test.wasm');
   [object ArrayBuffer]
-  d8> module = _WASMEXP_.instantiateModule(buffer, {});
+  d8> module = Wasm.instantiateModule(buffer, {});
   {memory: [object ArrayBuffer], test: function test() { [native code] }}
   d8> module.test()
   3
