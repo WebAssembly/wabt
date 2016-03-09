@@ -12,16 +12,12 @@
 000000c: 04                                         ; WASM_BINARY_SECTION_DATA_SEGMENTS
 000000d: 01                                         ; num data segments
 ; segment header 0
-000000e: 0000 0000                                  ; segment address
-0000012: 0000 0000                                  ; segment data offset
-0000016: 0b00 0000                                  ; segment size
-000001a: 01                                         ; segment init
-000001b: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 00                                         ; segment address
+000000f: 0b                                         ; segment size
 ; segment data 0
-0000012: 1c00 0000                                  ; FIXUP segment data offset
-000001c: 0001 0203 0405 0607 0809 0a                ; segment data
+0000010: 0001 0203 0405 0607 0809 0a                ; segment data
+000001b: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0001 0101 0401 0000  
-0000010: 0000 1c00 0000 0b00 0000 0106 0001 0203  
-0000020: 0405 0607 0809 0a                        
+0000000: 0061 736d 0a00 0000 0001 0101 0401 000b  
+0000010: 0001 0203 0405 0607 0809 0a06            
 ;;; STDOUT ;;)
