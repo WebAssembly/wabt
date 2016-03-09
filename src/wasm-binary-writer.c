@@ -707,7 +707,7 @@ static void write_expr(WasmWriteContext* ctx,
         align = expr->load.op.size >> 3;
       }
       uint8_t align_log = 0;
-      while (align) {
+      while (align > 1) {
         align >>= 1;
         align_log++;
       }
@@ -758,7 +758,7 @@ static void write_expr(WasmWriteContext* ctx,
         align = expr->store.op.size >> 3;
       }
       uint8_t align_log = 0;
-      while (align) {
+      while (align > 1) {
         align >>= 1;
         align_log++;
       }
