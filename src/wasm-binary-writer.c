@@ -31,9 +31,6 @@
 #define DEFAULT_MEMORY_EXPORT 1
 #define DUMP_OCTETS_PER_LINE 16
 
-#define SEGMENT_SIZE 13
-#define SEGMENT_OFFSET_OFFSET 4
-
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
@@ -197,6 +194,14 @@ static void out_data_at(WasmWriterState* writer_state,
         offset, src, size, writer_state->writer->user_data);
 }
 
+static void out_data(WasmWriterState* writer_state,
+                     const void* src,
+                     size_t length,
+                     const char* desc) {
+  out_data_at(writer_state, writer_state->offset, src, length, desc);
+  writer_state->offset += length;
+}
+
 static void out_u8(WasmWriterState* writer_state,
                    uint32_t value,
                    const char* desc) {
@@ -342,14 +347,6 @@ static void out_str(WasmWriterState* writer_state,
                     size_t length,
                     const char* desc) {
   out_u32_leb128(writer_state, length, "string length");
-  out_data_at(writer_state, writer_state->offset, s, length, desc);
-  writer_state->offset += length;
-}
-
-static void out_data(WasmWriterState* writer_state,
-                     const void* s,
-                     size_t length,
-                     const char* desc) {
   out_data_at(writer_state, writer_state->offset, s, length, desc);
   writer_state->offset += length;
 }
