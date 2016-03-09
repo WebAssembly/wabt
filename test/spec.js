@@ -37,10 +37,7 @@ function wasmWrite(memory, offset, count) {
 function createModule(a) {
   var memory = null;
   var u8a = new Uint8Array(a);
-  var ffi = {
-    print: print,
-    write: function(offset, count) { wasmWrite(memory, offset, count); }
-  };
+  var ffi = {spectest: {print: print}};
   var module = Wasm.instantiateModule(u8a.buffer, ffi);
   memory = module.memory;
   return module;

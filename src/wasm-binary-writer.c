@@ -34,13 +34,6 @@
 #define SEGMENT_SIZE 13
 #define SEGMENT_OFFSET_OFFSET 4
 
-#define IMPORT_SIZE 10
-#define IMPORT_MODULE_NAME_OFFSET 2
-#define IMPORT_FUNCTION_NAME_OFFSET 6
-
-#define EXPORT_SIZE 6
-#define EXPORT_NAME_OFFSET 2
-
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
@@ -335,6 +328,15 @@ static void out_i64_leb128(WasmWriterState* writer_state,
 
 #undef LEB128_LOOP_UNTIL
 
+static uint32_t size_u32_leb128(uint32_t value) {
+  uint32_t size = 0;
+  do {
+    value >>= 7;
+    size++;
+  } while (value != 0);
+  return size;
+}
+
 static void out_str(WasmWriterState* writer_state,
                     const char* s,
                     size_t length,
@@ -583,7 +585,7 @@ static void write_expr(WasmWriteContext* ctx,
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br.var);
       assert(node);
       out_opcode(ws, WASM_OPCODE_BR);
-      out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
+      out_u32_leb128(ws, ctx->max_depth - node->depth - 1, "break depth");
       if (expr->br.expr)
         write_expr(ctx, module, func, expr->br.expr);
       else
@@ -594,7 +596,7 @@ static void write_expr(WasmWriteContext* ctx,
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br_if.var);
       assert(node);
       out_opcode(ws, WASM_OPCODE_BR_IF);
-      out_u8(ws, ctx->max_depth - node->depth - 1, "break depth");
+      out_u32_leb128(ws, ctx->max_depth - node->depth - 1, "break depth");
       if (expr->br_if.expr)
         write_expr(ctx, module, func, expr->br_if.expr);
       else
@@ -775,16 +777,16 @@ static void write_expr(WasmWriteContext* ctx,
     }
     case WASM_EXPR_TYPE_BR_TABLE: {
       out_opcode(ws, WASM_OPCODE_BR_TABLE);
-      out_u16(ws, expr->br_table.targets.size, "num targets");
+      out_u32_leb128(ws, expr->br_table.targets.size, "num targets");
       int i;
       WasmLabelNode* node;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
         WasmVar* var = &expr->br_table.targets.data[i];
         node = find_label_by_var(ctx->top_label, var);
-        out_u16(ws, ctx->max_depth - node->depth - 1, "break depth");
+        out_u32(ws, ctx->max_depth - node->depth - 1, "break depth");
       }
       node = find_label_by_var(ctx->top_label, &expr->br_table.default_target);
-      out_u16(ws, ctx->max_depth - node->depth - 1, "break depth for default");
+      out_u32(ws, ctx->max_depth - node->depth - 1, "break depth for default");
       write_expr(ctx, module, func, expr->br_table.expr);
       break;
     }
@@ -812,106 +814,13 @@ typedef enum WasmWriteBlockOpcode {
   WASM_WRITE_BLOCK_OPCODE,
 } WasmWriteBlockOpcode;
 
-static void write_expr_list_block_with_max_count_256(
-    WasmWriteContext* ctx,
-    WasmModule* module,
-    WasmFunc* func,
-    uint32_t count,
-    WasmExprPtr* exprs,
-    WasmWriteBlockOpcode write_block_opcode) {
-  assert(count < 256);
-  WasmWriterState* ws = &ctx->writer_state;
-  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
-    push_implicit_block(ctx);
-    out_opcode(ws, WASM_OPCODE_BLOCK);
-  }
-  out_u8(ws, count, "num expressions (byte 0)");
-  int i;
-  for (i = 0; i < count; ++i) {
-    write_expr(ctx, module, func, *exprs);
-    exprs++;
-  }
-  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
-    pop_implicit_block(ctx);
-}
-
-static void write_expr_list_block_with_max_count_65536(
-    WasmWriteContext* ctx,
-    WasmModule* module,
-    WasmFunc* func,
-    uint32_t count,
-    WasmExprPtr* exprs,
-    WasmWriteBlockOpcode write_block_opcode) {
-  assert(count < 65536);
-  WasmWriterState* ws = &ctx->writer_state;
-  uint8_t byte1 = (count + UINT8_MAX) >> 8; /* round up. */
-  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
-    push_implicit_block(ctx);
-    out_opcode(ws, WASM_OPCODE_BLOCK);
-  }
-  out_u8(ws, byte1, "num expressions (byte 1)");
-  int i;
-  for (i = 0; i < byte1; ++i) {
-    uint8_t byte0 = (count > UINT8_MAX ? UINT8_MAX : count) & 255;
-    write_expr_list_block_with_max_count_256(ctx, module, func, byte0, exprs,
-                                             WASM_WRITE_BLOCK_OPCODE);
-    exprs += byte0;
-    count -= byte0;
-  }
-  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
-    pop_implicit_block(ctx);
-  assert(count == 0);
-}
-
-static void write_expr_list_block_with_max_count_16777216(
-    WasmWriteContext* ctx,
-    WasmModule* module,
-    WasmFunc* func,
-    uint32_t count,
-    WasmExprPtr* exprs,
-    WasmWriteBlockOpcode write_block_opcode) {
-  assert(count < 16777216);
-  WasmWriterState* ws = &ctx->writer_state;
-  uint8_t byte2 = (count + UINT16_MAX) >> 16; /* round up. */
-  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE) {
-    push_implicit_block(ctx);
-    out_opcode(ws, WASM_OPCODE_BLOCK);
-  }
-  out_u8(ws, byte2, "num expressions (byte 2)");
-  int i;
-  for (i = 0; i < byte2; ++i) {
-    uint16_t bytes10 = count > UINT16_MAX ? UINT16_MAX : count;
-    write_expr_list_block_with_max_count_65536(ctx, module, func, bytes10,
-                                               exprs, WASM_WRITE_BLOCK_OPCODE);
-    exprs += bytes10;
-    count -= bytes10;
-  }
-  if (write_block_opcode == WASM_WRITE_BLOCK_OPCODE)
-    pop_implicit_block(ctx);
-  assert(count == 0);
-}
-
 static void write_expr_list_with_count(WasmWriteContext* ctx,
                                        WasmModule* module,
                                        WasmFunc* func,
                                        WasmExprPtrVector* exprs) {
-  /* The current binary format only uses u8 for the number of expressions. If
-   * the value is greater than that, we need to nest blocks. */
   WasmWriterState* ws = &ctx->writer_state;
-  uint32_t count = exprs->size;
-  WasmExprPtr* expr_ptr = exprs->data;
-  if (count < UINT8_MAX) {
-    out_u8(ws, count, "num expressions");
-    write_expr_list(ctx, module, func, exprs);
-  } else if (count < UINT16_MAX) {
-    write_expr_list_block_with_max_count_65536(
-        ctx, module, func, count, expr_ptr, WASM_DONT_WRITE_BLOCK_OPCODE);
-  } else if (count < 256 * 256 * 256) {
-    write_expr_list_block_with_max_count_16777216(
-        ctx, module, func, count, expr_ptr, WASM_DONT_WRITE_BLOCK_OPCODE);
-  } else {
-    assert(0); /* 2**24 expressions? really? */
-  }
+  out_u32_leb128(ws, exprs->size, "num expressions");
+  write_expr_list(ctx, module, func, exprs);
 }
 
 static void write_func(WasmWriteContext* ctx,
@@ -976,7 +885,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     imports_offset = ctx->writer_state.offset;
     for (i = 0; i < module->imports.size; ++i) {
       print_header(ctx, "import header", i);
-      out_u16(ws, ctx->import_sig_indexes[i], "import signature index");
+      out_u32_leb128(ws, ctx->import_sig_indexes[i], "import signature index");
       out_u32(ws, 0, "import module name offset");
       out_u32(ws, 0, "import function name offset");
     }
@@ -1045,7 +954,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       WasmExport* export = module->exports.data[i];
       int func_index = wasm_get_func_index_by_var(module, &export->var);
       assert(func_index >= 0 && func_index < module->funcs.size);
-      out_u16(ws, func_index, "export func index");
+      out_u32_leb128(ws, func_index, "export func index");
       out_u32(ws, 0, "export name offset");
     }
   }
@@ -1063,7 +972,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     for (i = 0; i < module->table->size; ++i) {
       int index = wasm_get_func_index_by_var(module, &module->table->data[i]);
       assert(index >= 0 && index < module->funcs.size);
-      out_u16(ws, index, "function table entry");
+      out_u32_leb128(ws, index, "function table entry");
     }
   }
 
@@ -1090,15 +999,17 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   for (i = 0; i < module->imports.size; ++i) {
     print_header(ctx, "import", i);
     WasmImport* import = module->imports.data[i];
-    out_u32_at(ws, offset + IMPORT_MODULE_NAME_OFFSET, ctx->writer_state.offset,
+    offset += size_u32_leb128(ctx->import_sig_indexes[i]);
+    out_u32_at(ws, offset, ctx->writer_state.offset,
                "FIXUP import module name offset");
     out_str(ws, import->module_name.start, import->module_name.length,
             "import module name");
-    out_u32_at(ws, offset + IMPORT_FUNCTION_NAME_OFFSET,
-               ctx->writer_state.offset, "FIXUP import function name offset");
+    offset += sizeof(uint32_t);
+    out_u32_at(ws, offset, ctx->writer_state.offset,
+               "FIXUP import function name offset");
     out_str(ws, import->func_name.start, import->func_name.length,
             "import function name");
-    offset += IMPORT_SIZE;
+    offset += sizeof(uint32_t);
   }
 
   /* output exported func names */
@@ -1108,10 +1019,10 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     WasmExport* export = module->exports.data[i];
     int func_index = wasm_get_func_index_by_var(module, &export->var);
     assert(func_index >= 0 && func_index < module->funcs.size);
-    out_u32_at(ws, offset + EXPORT_NAME_OFFSET, ctx->writer_state.offset,
-               "FIXUP func name offset");
+    offset += size_u32_leb128(func_index);
+    out_u32_at(ws, offset, ctx->writer_state.offset, "FIXUP func name offset");
     out_str(ws, export->name.start, export->name.length, "export name");
-    offset += EXPORT_SIZE;
+    offset += sizeof(uint32_t);
   }
 
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);

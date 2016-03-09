@@ -46,14 +46,14 @@
 0000024: 0a00                                       ; FIXUP func body size
 0000030: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
 0000031: 04                                         ; num function table entries
-0000032: 0000                                       ; function table entry
-0000034: 0000                                       ; function table entry
-0000036: 0100                                       ; function table entry
-0000038: 0200                                       ; function table entry
-000003a: 06                                         ; WASM_BINARY_SECTION_END
+0000032: 00                                         ; function table entry
+0000033: 00                                         ; function table entry
+0000034: 01                                         ; function table entry
+0000035: 02                                         ; function table entry
+0000036: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0103 0100 0102 0001  
 0000010: 0200 0402 0300 0000 0100 0000 0100 0100  
 0000020: 0000 0200 0a00 000c 0000 0000 0000 0000  
-0000030: 0504 0000 0000 0100 0200 06              
+0000030: 0504 0000 0102 06                        
 ;;; STDOUT ;;)
