@@ -74,6 +74,7 @@ typedef struct WasmLabelNode {
   WasmType expected_type;
   const char* desc;
   struct WasmLabelNode* next;
+  int used;
 } WasmLabelNode;
 
 typedef struct WasmCheckContext {
@@ -347,6 +348,7 @@ static WasmResult push_label(WasmCheckContext* ctx,
   node->next = ctx->top_label;
   node->expected_type = expected_type;
   node->desc = desc;
+  node->used = 0;
   ctx->top_label = node;
   ctx->max_depth++;
   return result;
@@ -375,6 +377,7 @@ static WasmResult check_br(WasmCheckContext* ctx,
   if (check_label_var(ctx, ctx->top_label, var, &node) != WASM_OK)
     return WASM_ERROR;
 
+  node->used = 1;
   if (node->expected_type != WASM_TYPE_VOID) {
     if (expr) {
       return check_expr(ctx, module, func, expr, node->expected_type, desc);
@@ -476,6 +479,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |= check_exprs(ctx, module, func, &expr->block.exprs,
                             expected_type, " of block");
       pop_label(ctx);
+      expr->block.used = node.used;
       break;
     }
     case WASM_EXPR_TYPE_BR: {
@@ -578,7 +582,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |= check_expr(ctx, module, func, expr->grow_memory.expr,
                            WASM_TYPE_I32, " of grow_memory");
       break;
-    case WASM_EXPR_TYPE_IF:
+    case WASM_EXPR_TYPE_IF: {
       result |= check_expr(ctx, module, func, expr->if_.cond, WASM_TYPE_I32,
                            " of condition");
       WasmLabelNode node;
@@ -587,23 +591,29 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       result |= check_exprs(ctx, module, func, &expr->if_.true_.exprs,
                             expected_type, " of if branch");
       pop_label(ctx);
+      expr->if_.true_.used = node.used;
       result |=
           check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
       break;
-    case WASM_EXPR_TYPE_IF_ELSE:
+    }
+    case WASM_EXPR_TYPE_IF_ELSE: {
       result |= check_expr(ctx, module, func, expr->if_else.cond, WASM_TYPE_I32,
                            " of condition");
+      WasmLabelNode node;
       result |= push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
                            expected_type, "block");
       result |= check_exprs(ctx, module, func, &expr->if_else.true_.exprs,
                             expected_type, " of if branch");
       pop_label(ctx);
+      expr->if_else.true_.used = node.used;
       result |= push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
                            expected_type, "block");
       result |= check_exprs(ctx, module, func, &expr->if_else.false_.exprs,
                             expected_type, " of if branch");
       pop_label(ctx);
+      expr->if_else.false_.used = node.used;
       break;
+    }
     case WASM_EXPR_TYPE_LOAD: {
       WasmType type = expr->load.op.type;
       result |= check_align(ctx, &expr->loc, expr->load.align);
@@ -624,6 +634,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
                             " of loop");
       pop_label(ctx);
       pop_label(ctx);
+      expr->loop.outer_used = outer_node.used;
+      expr->loop.inner_used = inner_node.used;
       break;
     }
     case WASM_EXPR_TYPE_MEMORY_SIZE:

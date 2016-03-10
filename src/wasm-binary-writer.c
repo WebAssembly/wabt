@@ -476,29 +476,31 @@ static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
   return node;
 }
 
-static void push_label(WasmWriteContext* ctx,
-                       WasmLabelNode* node,
-                       WasmLabel* label) {
+static void push_unused_label(WasmWriteContext* ctx,
+                              WasmLabelNode* node,
+                              WasmLabel* label) {
   assert(label);
   node->label = label;
   node->next = ctx->top_label;
   node->depth = ctx->max_depth;
   ctx->top_label = node;
+}
+
+static void pop_unused_label(WasmWriteContext* ctx, WasmLabel* label) {
+  if (ctx->top_label && ctx->top_label->label == label)
+    ctx->top_label = ctx->top_label->next;
+}
+
+static void push_label(WasmWriteContext* ctx,
+                       WasmLabelNode* node,
+                       WasmLabel* label) {
+  push_unused_label(ctx, node, label);
   ctx->max_depth++;
 }
 
 static void pop_label(WasmWriteContext* ctx, WasmLabel* label) {
   ctx->max_depth--;
-  if (ctx->top_label && ctx->top_label->label == label)
-    ctx->top_label = ctx->top_label->next;
-}
-
-static void push_implicit_block(WasmWriteContext* ctx) {
-  ctx->max_depth++;
-}
-
-static void pop_implicit_block(WasmWriteContext* ctx) {
-  ctx->max_depth--;
+  pop_unused_label(ctx, label);
 }
 
 static int find_func_signature(WasmFuncSignatureVector* sigs,
@@ -648,6 +650,11 @@ static void write_expr_list_with_count(WasmWriteContext* ctx,
                                        WasmFunc* func,
                                        WasmExprPtrVector* exprs);
 
+static void write_block(WasmWriteContext* ctx,
+                        WasmModule* module,
+                        WasmFunc* func,
+                        WasmBlock* block);
+
 static void write_expr(WasmWriteContext* ctx,
                        WasmModule* module,
                        WasmFunc* func,
@@ -659,14 +666,9 @@ static void write_expr(WasmWriteContext* ctx,
       write_expr(ctx, module, func, expr->binary.left);
       write_expr(ctx, module, func, expr->binary.right);
       break;
-    case WASM_EXPR_TYPE_BLOCK: {
-      WasmLabelNode node;
-      push_label(ctx, &node, &expr->block.label);
-      out_opcode(ws, WASM_OPCODE_BLOCK);
-      write_expr_list_with_count(ctx, module, func, &expr->block.exprs);
-      pop_label(ctx, &expr->block.label);
+    case WASM_EXPR_TYPE_BLOCK:
+      write_block(ctx, module, func, &expr->block);
       break;
-    }
     case WASM_EXPR_TYPE_BR: {
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br.var);
       assert(node);
@@ -759,33 +761,17 @@ static void write_expr(WasmWriteContext* ctx,
       out_opcode(ws, WASM_OPCODE_GROW_MEMORY);
       write_expr(ctx, module, func, expr->grow_memory.expr);
       break;
-    case WASM_EXPR_TYPE_IF: {
-      WasmLabelNode node;
+    case WASM_EXPR_TYPE_IF:
       out_opcode(ws, WASM_OPCODE_IF);
       write_expr(ctx, module, func, expr->if_.cond);
-      push_label(ctx, &node, &expr->if_.true_.label);
-      /* TODO(binji): optimize so block is only included if the expression
-       * count > 1, or if the expression list contains a br/br_if */
-      out_opcode(ws, WASM_OPCODE_BLOCK);
-      write_expr_list_with_count(ctx, module, func, &expr->if_.true_.exprs);
-      pop_label(ctx, &expr->if_.true_.label);
+      write_block(ctx, module, func, &expr->if_.true_);
       break;
-    }
-    case WASM_EXPR_TYPE_IF_ELSE: {
-      WasmLabelNode true_node, false_node;
+    case WASM_EXPR_TYPE_IF_ELSE:
       out_opcode(ws, WASM_OPCODE_IF_THEN);
       write_expr(ctx, module, func, expr->if_else.cond);
-      push_label(ctx, &true_node, &expr->if_else.true_.label);
-      out_opcode(ws, WASM_OPCODE_BLOCK);
-      write_expr_list_with_count(ctx, module, func, &expr->if_else.true_.exprs);
-      pop_label(ctx, &expr->if_else.true_.label);
-      push_label(ctx, &false_node, &expr->if_else.false_.label);
-      out_opcode(ws, WASM_OPCODE_BLOCK);
-      write_expr_list_with_count(ctx, module, func,
-                                 &expr->if_else.false_.exprs);
-      pop_label(ctx, &expr->if_else.false_.label);
+      write_block(ctx, module, func, &expr->if_else.true_);
+      write_block(ctx, module, func, &expr->if_else.false_);
       break;
-    }
     case WASM_EXPR_TYPE_LOAD: {
       out_opcode(ws, s_mem_opcodes[expr->load.op.op_type]);
       uint32_t align = expr->load.align;
@@ -895,6 +881,23 @@ static void write_expr_list_with_count(WasmWriteContext* ctx,
   WasmWriterState* ws = &ctx->writer_state;
   out_u32_leb128(ws, exprs->size, "num expressions");
   write_expr_list(ctx, module, func, exprs);
+}
+
+static void write_block(WasmWriteContext* ctx,
+                        WasmModule* module,
+                        WasmFunc* func,
+                        WasmBlock* block) {
+  WasmLabelNode node;
+  if (block->exprs.size == 1 && !block->used) {
+    push_unused_label(ctx, &node, &block->label);
+    write_expr(ctx, module, func, block->exprs.data[0]);
+    pop_unused_label(ctx, &block->label);
+  } else {
+    push_label(ctx, &node, &block->label);
+    out_opcode(&ctx->writer_state, WASM_OPCODE_BLOCK);
+    write_expr_list_with_count(ctx, module, func, &block->exprs);
+    pop_label(ctx, &block->label);
+  }
 }
 
 static void write_func(WasmWriteContext* ctx,
