@@ -79,13 +79,6 @@ typedef WasmStringSlice WasmLabel;
 typedef struct WasmExpr* WasmExprPtr;
 DECLARE_VECTOR(expr_ptr, WasmExprPtr);
 
-typedef struct WasmCase {
-  WasmLocation loc;
-  WasmLabel label;
-  WasmExprPtrVector exprs;
-} WasmCase;
-DECLARE_VECTOR(case, WasmCase);
-
 typedef struct WasmConst {
   WasmLocation loc;
   WasmType type;
@@ -396,9 +389,6 @@ WasmExpr* wasm_new_empty_expr(struct WasmAllocator*, WasmExprType);
 /* destruction functions. not needed unless you're creating your own AST
  elements */
 void wasm_destroy_script(struct WasmScript*);
-void wasm_destroy_case_vector_and_elements(struct WasmAllocator*,
-                                           WasmCaseVector*);
-void wasm_destroy_case(struct WasmAllocator*, WasmCase*);
 void wasm_destroy_command_vector_and_elements(struct WasmAllocator*,
                                               WasmCommandVector*);
 void wasm_destroy_command(struct WasmAllocator*, WasmCommand*);

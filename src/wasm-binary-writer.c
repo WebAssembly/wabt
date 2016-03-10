@@ -888,11 +888,6 @@ static void write_expr_list(WasmWriteContext* ctx,
     write_expr(ctx, module, func, exprs->data[i]);
 }
 
-typedef enum WasmWriteBlockOpcode {
-  WASM_DONT_WRITE_BLOCK_OPCODE,
-  WASM_WRITE_BLOCK_OPCODE,
-} WasmWriteBlockOpcode;
-
 static void write_expr_list_with_count(WasmWriteContext* ctx,
                                        WasmModule* module,
                                        WasmFunc* func,
