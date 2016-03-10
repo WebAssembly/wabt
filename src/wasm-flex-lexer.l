@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+%top {
+#include <stdint.h>
+}
+
 %{
 #include <assert.h>
 
