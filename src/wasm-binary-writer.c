@@ -15,8 +15,8 @@
  */
 
 #include "wasm-binary-writer.h"
+#include "wasm-config.h"
 
-#include <alloca.h>
 #include <assert.h>
 #include <math.h>
 #include <memory.h>
@@ -171,6 +171,15 @@ typedef struct WasmWriteContext {
 DECLARE_VECTOR(func_signature, WasmFuncSignature);
 DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
+static int is_nan_f32(uint32_t bits) {
+  return (bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0;
+}
+
+static int is_nan_f64(uint64_t bits) {
+  return (bits & 0x7ff0000000000000LL) == 0x7ff0000000000000LL &&
+         (bits & 0x000fffffffffffffLL) != 0;
+}
+
 static void destroy_func_signature_vector_and_elements(
     WasmAllocator* allocator,
     WasmFuncSignatureVector* sigs) {
@@ -236,16 +245,6 @@ static void out_u8(WasmWriterState* writer_state,
 }
 
 /* TODO(binji): endianness */
-static void out_u16(WasmWriterState* writer_state,
-                    uint32_t value,
-                    const char* desc) {
-  assert(value <= UINT16_MAX);
-  uint16_t value16 = value;
-  out_data_at(writer_state, writer_state->offset, &value16, sizeof(value16),
-              desc);
-  writer_state->offset += sizeof(value16);
-}
-
 static void out_u32(WasmWriterState* writer_state,
                     uint32_t value,
                     const char* desc) {
@@ -258,45 +257,6 @@ static void out_u64(WasmWriterState* writer_state,
                     const char* desc) {
   out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
   writer_state->offset += sizeof(value);
-}
-
-static void out_f32(WasmWriterState* writer_state,
-                    float value,
-                    const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
-  writer_state->offset += sizeof(value);
-}
-
-static void out_f64(WasmWriterState* writer_state,
-                    double value,
-                    const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
-  writer_state->offset += sizeof(value);
-}
-
-static void out_u8_at(WasmWriterState* writer_state,
-                      uint32_t offset,
-                      uint32_t value,
-                      const char* desc) {
-  assert(value <= UINT8_MAX);
-  uint8_t value8 = value;
-  out_data_at(writer_state, offset, &value8, sizeof(value8), desc);
-}
-
-static void out_u16_at(WasmWriterState* writer_state,
-                       uint32_t offset,
-                       uint32_t value,
-                       const char* desc) {
-  assert(value <= UINT16_MAX);
-  uint16_t value16 = value;
-  out_data_at(writer_state, offset, &value16, sizeof(value16), desc);
-}
-
-static void out_u32_at(WasmWriterState* writer_state,
-                       uint32_t offset,
-                       uint32_t value,
-                       const char* desc) {
-  out_data_at(writer_state, offset, &value, sizeof(value), desc);
 }
 
 #undef OUT_AT_TYPE
@@ -435,12 +395,12 @@ static void begin_section(WasmWriterState* writer_state,
                           size_t leb_size_guess) {
   assert(writer_state->last_section_leb_size_guess == 0);
   char desc[100];
-  snprintf(desc, sizeof(desc), "section \"%s\"", name);
+  SNPRINTF(desc, sizeof(desc), "section \"%s\"", name);
   print_header(writer_state, desc, PRINT_HEADER_NO_INDEX);
   writer_state->last_section_offset = out_u32_leb128_space(
       writer_state, leb_size_guess, "section size (guess)");
   writer_state->last_section_leb_size_guess = leb_size_guess;
-  snprintf(desc, sizeof(desc), "section id: \"%s\"", name);
+  SNPRINTF(desc, sizeof(desc), "section id: \"%s\"", name);
   out_str(writer_state, name, strlen(name), desc);
 }
 
@@ -460,6 +420,7 @@ static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
       return node;
     node = node->next;
   }
+  return NULL;
 }
 
 static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
@@ -736,11 +697,11 @@ static void write_expr(WasmWriteContext* ctx,
           break;
         case WASM_TYPE_F32:
           out_opcode(ws, WASM_OPCODE_F32_CONST);
-          out_f32(ws, expr->const_.f32, "f32 literal");
+          out_u32(ws, expr->const_.f32_bits, "f32 literal");
           break;
         case WASM_TYPE_F64:
           out_opcode(ws, WASM_OPCODE_F64_CONST);
-          out_f64(ws, expr->const_.f64, "f64 literal");
+          out_u64(ws, expr->const_.f64_bits, "f64 literal");
           break;
         default:
           assert(0);
@@ -957,7 +918,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
     for (i = 0; i < module->funcs.size; ++i) {
       char desc[100];
-      snprintf(desc, sizeof(desc), "function %d signature index", i);
+      SNPRINTF(desc, sizeof(desc), "function %d signature index", i);
       out_u32_leb128(ws, ctx->func_sig_indexes[i], desc);
     }
     end_section(ws);
@@ -1345,7 +1306,7 @@ static WasmStringSlice create_assert_func_name(WasmAllocator* allocator,
                                                int format_index) {
   WasmStringSlice name;
   char buffer[256];
-  int buffer_len = snprintf(buffer, 256, format, format_index);
+  int buffer_len = SNPRINTF(buffer, 256, format, format_index);
   name.start = wasm_strndup(allocator, buffer, buffer_len);
   name.length = buffer_len;
   return name;
@@ -1516,7 +1477,8 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
                 create_const_expr(script->allocator, expected);
             CHECK_ALLOC_NULL(const_expr);
 
-            if (expected->type == WASM_TYPE_F32 && isnan(expected->f32)) {
+            if (expected->type == WASM_TYPE_F32 &&
+                is_nan_f32(expected->f32_bits)) {
               *expr_ptr = create_eq_expr(
                   script->allocator, WASM_TYPE_I32,
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F32,
@@ -1525,7 +1487,7 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
                                           const_expr));
               CHECK_ALLOC_NULL(*expr_ptr);
             } else if (expected->type == WASM_TYPE_F64 &&
-                       isnan(expected->f64)) {
+                       is_nan_f64(expected->f64_bits)) {
               *expr_ptr = create_eq_expr(
                   script->allocator, WASM_TYPE_I64,
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F64,

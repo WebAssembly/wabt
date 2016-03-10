@@ -15,8 +15,8 @@
  */
 
 #include "wasm-check.h"
+#include "wasm-config.h"
 
-#include <alloca.h>
 #include <assert.h>
 #include <memory.h>
 #include <stdarg.h>
@@ -413,11 +413,11 @@ static WasmResult check_call(WasmCheckContext* ctx,
   int expected_args = param_types->size;
   if (expected_args == actual_args) {
     char buffer[100];
-    snprintf(buffer, 100, " of %s result", desc);
+    SNPRINTF(buffer, 100, " of %s result", desc);
     result |= check_type(ctx, loc, result_type, expected_type, buffer);
     int i;
     for (i = 0; i < actual_args; ++i) {
-      snprintf(buffer, 100, " of argument %d of %s", i, desc);
+      SNPRINTF(buffer, 100, " of argument %d of %s", i, desc);
       result |= check_expr(ctx, module, func, args->data[i],
                            param_types->data[i], buffer);
     }
@@ -426,7 +426,7 @@ static WasmResult check_call(WasmCheckContext* ctx,
     if (func->name.start) {
       size_t length = func->name.length + 10;
       func_name = alloca(length);
-      snprintf(func_name, length, " \"%.*s\"", (int)func->name.length,
+      SNPRINTF(func_name, length, " \"%.*s\"", (int)func->name.length,
                func->name.start);
     }
     print_error(ctx, loc,
@@ -983,6 +983,8 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
       return check_invoke(ctx, &command->assert_trap.invoke,
                           WASM_TYPE_SET_VOID);
+    default:
+      return WASM_ERROR;
   }
 }
 

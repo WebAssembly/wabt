@@ -22,30 +22,54 @@ This will fetch the v8 and testsuite repos, which are needed for some tests.
 Building
 --------
 
-Building just sexpr-wasm::
+You'll need `CMake <https://cmake.org>`_. If you just run ``make``, it will run
+CMake for you, and put the result in ``out/clang/Debug/`` by default::
 
   $ make
+  mkdir -p out/clang/Debug
+  cd out/clang/Debug && cmake ../../.. -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug
+  -- The C compiler identification is Clang 3.4.0
+  ...
+  make --no-print-directory -C out/clang/Debug sexpr-wasm
+  ...
+  Linking C executable sexpr-wasm
+  [100%] Built target sexpr-wasm
+  ln -sf ../out/clang/Debug/sexpr-wasm out/sexpr-wasm
+
+This will build the default version of sexpr-wasm: a debug build using the
+Clang compiler. It will also create a symlink to the built binary in
+``out/sexpr-wasm``.
+
+There are many make targets available for other configurations as well::
+
+  $ make gcc-release-sexpr-wasm
+  ...
+  $ make clang-debug-sexpr-wasm-lsan
+  ...
+
+You can also run CMake yourself, the normal way::
+
+  $ mkdir build
+  $ cd build
+  $ cmake ..
+  -- The C compiler identification is GNU 4.8.4
+  -- The CXX compiler identification is GNU 4.8.4
+  -- Check for working C compiler: /usr/bin/cc
+  -- Check for working C compiler: /usr/bin/cc -- works
   ...
 
 If you make changes to ``src/wasm-bison-parser.y``, you'll need to install
-bison as well. On Debian-based systems::
+Bison as well. On Debian-based systems::
 
   $ sudo apt-get install bison
-  ...
-  $ touch src/wasm-bison-parser.y
-  $ make
-  bison -o src/wasm-bison-parser.c --defines=src/wasm-bison-parser.h src/wasm-bison-parser.y
-  ...
 
-If you make changes to ``src/wasm-flex-lexer.l``, you'll need to install flex
+If you make changes to ``src/wasm-flex-lexer.l``, you'll need to install Flex
 as well. On Debian-based systems::
 
   $ sudo apt-get install flex
-  ...
-  $ touch src/wasm-flex-lexer.l
-  $ make
-  flex -o src/wasm-flex-lexer.c src/wasm-flex-lexer.l
-  ...
+
+CMake will detect if you don't have Flex or Bison installed and use the
+prebuilt source files instead.
 
 Building d8
 -----------
@@ -96,7 +120,8 @@ This can be loaded into d8 using JavaScript like this::
   d8> module.test()
   3
 
-If you just want to run a quick test, you can use the run-d8.py script instead::
+If you just want to run a quick test, you can use the ``run-d8.py`` script
+instead::
 
   $ test/run-d8.py test.wast
   test() = 3
@@ -280,14 +305,11 @@ Sanitizers
 To build with the `LLVM sanitizers <https://github.com/google/sanitizers>`_,
 append the sanitizer name to sexpr-wasm::
 
-  $ make out/sexpr-wasm-asan
-  clang -fsanitize=address -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.asan.o -MMD -MP -MF out/wasm.asan.d src/wasm.c
+  $ make clang-debug-sexpr-wasm-asan
   ...
-  $ make out/sexpr-wasm-msan
-  clang -fsanitize=memory -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.msan.o -MMD -MP -MF out/wasm.msan.d src/wasm.c
+  $ make clang-debug-sexpr-wasm-msan
   ...
-  $ make out/sexpr-wasm-lsan
-  clang -fsanitize=leak -Wall -Werror -g -Wno-unused-function -Wno-return-type -c -o out/wasm.lsan.o -MMD -MP -MF out/wasm.lsan.d src/wasm.c
+  $ make clang-debug-sexpr-wasm-lsan
   ...
 
 There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
@@ -301,10 +323,11 @@ Typically, you'll just want to run all the tests for a given sanitizer::
 
   $ make test-asan
   [+420|-0|%100] (12.59s)
-  $ make test-msan
-  [+420|-0|%100] (4.69s)
-  $ make test-lsan
-  [+420|-0|%100] (5.41s)
+
+You can also run the tests for a release build::
+
+  $ make test-clang-release-asan
+  ...
 
 The Travis bots run all of these tests. Before you land a change, you should
 run them too. One easy way is to use the ``test-everything`` target::

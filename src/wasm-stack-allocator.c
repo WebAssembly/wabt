@@ -25,9 +25,11 @@
 #define CHUNK_SIZE (1024 * 1024)
 #define CHUNK_MAX_AVAIL (CHUNK_SIZE - sizeof(WasmStackAllocatorChunk))
 
+#ifndef NDEBUG
 static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
+#endif /* NDEBUG */
 
 static void* align_up(void* p, size_t align) {
   return (void*)(((intptr_t)p + align - 1) & ~(align - 1));

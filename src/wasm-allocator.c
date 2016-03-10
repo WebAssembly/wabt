@@ -26,16 +26,18 @@ typedef struct MemInfo {
   size_t size;
 } MemInfo;
 
+#ifndef NDEBUG
 static int is_power_of_two(size_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static void* align_up(void* p, size_t align) {
-  return (void*)(((intptr_t)p + align - 1) & ~(align - 1));
-}
-
 static int is_aligned(void* p, size_t align) {
   return ((intptr_t)p & (align - 1)) == 0;
+}
+#endif /* NDEBUG */
+
+static void* align_up(void* p, size_t align) {
+  return (void*)(((intptr_t)p + align - 1) & ~(align - 1));
 }
 
 static void* libc_alloc(WasmAllocator* allocator, size_t size, size_t align) {

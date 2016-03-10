@@ -1,0 +1,70 @@
+/*
+ * Copyright 2016 WebAssembly Community Group participants
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef WASM_CONFIG_H_
+#define WASM_CONFIG_H_
+
+/* Whether <alloca.h> is available */
+#cmakedefine01 HAVE_ALLOCA_H
+
+/* Whether <getopt.h> is available */
+#cmakedefine01 HAVE_GETOPT_H
+
+/* Whether <unistd.h> is available */
+#cmakedefine01 HAVE_UNISTD_H
+
+/* Whether snprintf is defined by stdio.h */
+#cmakedefine01 HAVE_SNPRINTF
+
+/* Whether ssize_t is defined by stddef.h */
+#cmakedefine01 HAVE_SSIZE_T
+
+#cmakedefine01 COMPILER_IS_CLANG
+#cmakedefine01 COMPILER_IS_GNU
+#cmakedefine01 COMPILER_IS_MSVC
+
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#elif COMPILER_IS_MSVC
+#include <malloc.h>
+#define alloca _alloca
+#else
+#error no alloca
+#endif
+
+#if COMPILER_IS_CLANG || COMPILER_IS_GNU
+#define WARN_UNUSED __attribute__ ((warn_unused_result))
+#define INLINE inline
+#elif COMPILER_IS_MSVC
+#define WARN_UNUSED _Check_return_
+#define INLINE __inline
+#else
+#define WARN_UNUSED
+#endif
+
+#if HAVE_SNPRINTF
+#define SNPRINTF snprintf
+#elif COMPILER_IS_MSVC
+#define SNPRINTF _snprintf
+#else
+#error no snprintf
+#endif
+
+#if !HAVE_SSIZE_T
+typedef int ssize_t;
+#endif
+
+#endif /* WASM_CONFIG_H_ */

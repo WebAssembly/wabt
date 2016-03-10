@@ -16,117 +16,108 @@
 
 .SUFFIXES:
 
-ALL = sexpr-wasm sexpr-wasm-opt
-EVERYTHING = $(ALL) sexpr-wasm-asan sexpr-wasm-msan sexpr-wasm-lsan
-CFLAGS = -Wall -Werror -g -Wno-unused-function -Wno-return-type
-DEPEND_FLAGS = -MMD -MP -MF $(patsubst %.o,%.d,$@)
-LIBS =
+DEFAULT_COMPILER = CLANG
+DEFAULT_BUILD_TYPE = DEBUG
 
-AFL_DIR ?= ~/dev/afl/afl-1.83b
-AFL_CC := $(AFL_DIR)/afl-gcc
+COMPILERS := GCC GCC_I686 CLANG
+BUILD_TYPES := DEBUG RELEASE
+SANITIZERS := NO ASAN MSAN LSAN
 
-SEXPR_WASM_CC := $(CC)
-SEXPR_WASM_CFLAGS := $(CFLAGS)
-SEXPR_WASM_SRCS := \
-	wasm.c sexpr-wasm.c wasm-bison-parser.c wasm-flex-lexer.c wasm-vector.c \
-	wasm-check.c wasm-writer.c wasm-binary-writer.c wasm-allocator.c \
-	wasm-stack-allocator.c wasm-ast.c
+GCC_DEBUG_DIR := out/gcc/Debug
+GCC_DEBUG_NO_FLEX_BISON_DIR := out/gcc/Debug-no-flex-bison
+GCC_RELEASE_DIR := out/gcc/Release
+GCC_I686_DEBUG_DIR := out/gcc-i686/Debug
+GCC_I686_RELEASE_DIR := out/gcc-i686/Release
+CLANG_DEBUG_DIR := out/clang/Debug
+CLANG_RELEASE_DIR := out/clang/Release
 
-SEXPR_WASM_OPT_CC := $(CC)
-SEXPR_WASM_OPT_CFLAGS := $(CFLAGS) -O3
-SEXPR_WASM_OPT_LDFLAGS :=
-SEXPR_WASM_OPT_SRCS := $(SEXPR_WASM_SRCS)
+DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
+RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
+GCC_FLAG := -DCMAKE_C_COMPILER=gcc
+GCC_I686_FLAG := -DCMAKE_C_COMPILER=gcc -DCMAKE_C_FLAGS=-m32
+CLANG_FLAG := -DCMAKE_C_COMPILER=clang
 
-ASAN_FLAGS := -fsanitize=address
-SEXPR_WASM_ASAN_CC := clang
-SEXPR_WASM_ASAN_CFLAGS := $(ASAN_FLAGS) $(CFLAGS)
-SEXPR_WASM_ASAN_LDFLAGS := $(ASAN_FLAGS)
-SEXPR_WASM_ASAN_SRCS := $(SEXPR_WASM_SRCS)
+GCC_DEBUG_PREFIX := gcc-debug
+GCC_DEBUG_NO_FLEX_BISON_PREFIX := gcc-debug-no-flex-bison
+GCC_RELEASE_PREFIX := gcc-release
+GCC_I686_DEBUG_PREFIX := gcc-i686-debug
+GCC_I686_RELEASE_PREFIX := gcc-i686-release
+CLANG_DEBUG_PREFIX := clang-debug
+CLANG_RELEASE_PREFIX := clang-release
 
-MSAN_FLAGS := -fsanitize=memory
-SEXPR_WASM_MSAN_CC := clang
-SEXPR_WASM_MSAN_CFLAGS := $(MSAN_FLAGS) $(CFLAGS)
-SEXPR_WASM_MSAN_LDFLAGS := $(MSAN_FLAGS)
-SEXPR_WASM_MSAN_SRCS := $(SEXPR_WASM_SRCS)
+NO_SUFFIX :=
+ASAN_SUFFIX := -asan
+MSAN_SUFFIX := -msan
+LSAN_SUFFIX := -lsan
 
-LSAN_FLAGS := -fsanitize=leak
-SEXPR_WASM_LSAN_CC := clang
-SEXPR_WASM_LSAN_CFLAGS := $(LSAN_FLAGS) $(CFLAGS)
-SEXPR_WASM_LSAN_LDFLAGS := $(LSAN_FLAGS)
-SEXPR_WASM_LSAN_SRCS := $(SEXPR_WASM_SRCS)
+define DEFAULT
+.PHONY: $(3)$$($(4)_SUFFIX) test$$($(4)_SUFFIX)
+$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX)
+	ln -sf ../$$($(1)_$(2)_DIR)/$(3)$$($(4)_SUFFIX) out/$(3)$$($(4)_SUFFIX)
 
-SEXPR_WASM_FUZZ_CC := $(AFL_CC)
-SEXPR_WASM_FUZZ_CFLAGS := -O3 $(CFLAGS)
-SEXPR_WASM_FUZZ_LDFLAGS :=
-SEXPR_WASM_FUZZ_SRCS := $(SEXPR_WASM_SRCS)
+test$$($(4)_SUFFIX): test-$$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
 
-.PHONY: all
-all: $(addprefix out/,$(ALL))
-
-.PHONY: everything
-everything: $(addprefix out/,$(EVERYTHING))
-
-out:
-	mkdir -p $@
-
-src/wasm-flex-lexer.c:  src/wasm-flex-lexer.l
-	flex -o src/wasm-flex-lexer.c $<
-
-src/wasm-bison-parser.c src/wasm-bison-parser.h: src/wasm-bison-parser.y
-	bison -o src/wasm-bison-parser.c --defines=src/wasm-bison-parser.h $<
-
-define EXE
-$(2)_OBJS = $$(patsubst %.c,out/obj/$(1)/%.o,$$($(2)_SRCS))
-
-out/obj/$(1):
-	mkdir -p $$@
-
-$$($(2)_OBJS): out/obj/$(1)/%.o: src/%.c | out/obj/$(1)
-	$$($(2)_CC) $$($(2)_CFLAGS) -c -o $$@ $$(DEPEND_FLAGS) $$<
-
-out/$(1): $$($(2)_OBJS) | out
-	$$($(2)_CC) $$($(2)_LDFLAGS) -o $$@ $$^ $${LIBS}
-
--include $$($(2)_OBJS:.o=.d)
+test-everything: test$$($(4)_SUFFIX)
 endef
 
-$(eval $(call EXE,sexpr-wasm,SEXPR_WASM))
-$(eval $(call EXE,sexpr-wasm-opt,SEXPR_WASM_OPT))
-$(eval $(call EXE,sexpr-wasm-asan,SEXPR_WASM_ASAN))
-$(eval $(call EXE,sexpr-wasm-msan,SEXPR_WASM_MSAN))
-$(eval $(call EXE,sexpr-wasm-lsan,SEXPR_WASM_LSAN))
-$(eval $(call EXE,sexpr-wasm-fuzz,SEXPR_WASM_FUZZ))
+define CMAKE
+$$($(1)_$(2)_DIR)/:
+	mkdir -p $$($(1)_$(2)_DIR)
 
-#### TESTS ####
-.PHONY: test
-test: out/sexpr-wasm
-	@python test/run-tests.py
+$$($(1)_$(2)_DIR)/Makefile: | $$($(1)_$(2)_DIR)/
+	cd $$($(1)_$(2)_DIR) && cmake ../../.. $$($(1)_FLAG) $$($(2)_FLAG) $(3)
+endef
 
-.PHONY: test-asan
-test-asan: out/sexpr-wasm-asan
-	@python test/run-tests.py -e $<
+define EXE
+.PHONY: $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX)
+$$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
+	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) $(3)$$($(4)_SUFFIX)
+endef
 
-.PHONY: test-msan
-test-msan: out/sexpr-wasm-msan
-	@python test/run-tests.py -e $<
+define TEST
+.PHONY: test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
+test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
+	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) test$$($(3)_SUFFIX)
+endef
 
-.PHONY: test-lsan
-test-lsan: out/sexpr-wasm-lsan
-	@python test/run-tests.py -e $<
+.PHONY: all
+all: sexpr-wasm
 
 .PHONY: test-everything
-test-everything: test test-asan test-msan test-lsan
+test-everything:
 
-#### FUZZ ####
+.PHONY: update-bison update-flex
+update-bison: src/prebuilt/wasm-bison-parser.c
+update-flex: src/prebuilt/wasm-flex-lexer.c
 
-FUZZ_IN = fuzz-in
-FUZZ_OUT = fuzz-out
+src/prebuilt/wasm-bison-parser.c: src/wasm-bison-parser.y
+	bison -o $@ $< --defines=src/prebuilt/wasm-bison-parser.h
 
-.PHONY: fuzz
-fuzz: out/sexpr-wasm-fuzz
-	$(AFL_DIR)/afl-fuzz -i $(FUZZ_IN) -o $(FUZZ_OUT) -x wasm.dict -- $^ @@
+src/prebuilt/wasm-flex-lexer.c: src/wasm-flex-lexer.l
+	flex -o $@ $<
 
-#### CLEAN ####
-.PHONY: clean
-clean:
-	rm -rf out
+# defaults with simple names
+$(foreach SANITIZER,$(SANITIZERS), \
+	$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),sexpr-wasm,$(SANITIZER))))
+
+# running CMake
+$(foreach COMPILER,$(COMPILERS), \
+	$(foreach BUILD_TYPE,$(BUILD_TYPES), \
+		$(eval $(call CMAKE,$(COMPILER),$(BUILD_TYPE)))))
+
+# sexpr-wasm builds
+$(foreach SANITIZER,$(SANITIZERS), \
+	$(foreach COMPILER,$(COMPILERS), \
+		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
+			$(eval $(call EXE,$(COMPILER),$(BUILD_TYPE),sexpr-wasm,$(SANITIZER))))))
+
+# test running
+$(foreach SANITIZER,$(SANITIZERS), \
+	$(foreach COMPILER,$(COMPILERS), \
+		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
+			$(eval $(call TEST,$(COMPILER),$(BUILD_TYPE),$(SANITIZER))))))
+
+# One-off build target for running w/out flex + bison
+$(eval $(call CMAKE,GCC,DEBUG_NO_FLEX_BISON,-DRUN_FLEX_BISON=OFF))
+$(eval $(call EXE,GCC,DEBUG_NO_FLEX_BISON,sexpr-wasm,NO))
+$(eval $(call TEST,GCC,DEBUG_NO_FLEX_BISON,NO))
