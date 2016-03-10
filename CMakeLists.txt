@@ -41,6 +41,8 @@ include(CheckIncludeFile)
 check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("getopt.h" HAVE_GETOPT_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
+check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
+check_symbol_exists(ssize_t "stddef.h" HAVE_SSIZE_T)
 
 configure_file(
   ${SEXPR_WASM_SOURCE_DIR}/src/wasm-config.h.in
@@ -49,7 +51,14 @@ configure_file(
 
 include_directories(src ${SEXPR_WASM_BINARY_DIR})
 
-add_definitions(-Wall -Werror -g)
+if (COMPILER_IS_MSVC)
+  # disable warning C4018: signed/unsigned mismatch
+  # disable warning C4056, C4756: overflow in floating-point constant arithmetic
+  #   seems to not like float compare w/ HUGE_VALF; bug?
+  add_definitions(-W3 -WX -wd4018 -wd4056 -wd4756 -D_CRT_SECURE_NO_WARNINGS)
+else ()
+  add_definitions(-Wall -Werror -g)
+endif ()
 
 option(RUN_FLEX_BISON "run flex and bison" ON)
 find_package(FLEX)
@@ -73,9 +82,11 @@ else ()
   set(FLEX_LEXER_C src/prebuilt/wasm-flex-lexer.c)
 endif ()
 
-set_source_files_properties(
-  ${FLEX_LEXER_C} PROPERTIES COMPILE_FLAGS -Wno-unused-function
-)
+if (NOT COMPILER_IS_MSVC)
+  set_source_files_properties(
+    ${FLEX_LEXER_C} PROPERTIES COMPILE_FLAGS -Wno-unused-function
+  )
+endif ()
 
 set(SEXPR_WASM_SRCS
   src/sexpr-wasm.c
