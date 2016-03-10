@@ -36,6 +36,7 @@
 #if COMPILER_IS_MSVC
 /* unistd.h replacement for Windows */
 #include <stdlib.h>
+#include <io.h>
 #define isatty _isatty
 #define fileno _fileno
 #else
