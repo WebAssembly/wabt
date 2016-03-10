@@ -22,41 +22,42 @@
 ; signature 0
 000000a: 00                                         ; num params
 000000b: 00                                         ; result_type
-000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000c: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 000000d: 01                                         ; num functions
-; function 0
-000000e: 00                                         ; func flags
-000000f: 0000                                       ; func signature index
-0000011: 0000                                       ; func body size
-0000013: 04                                         ; local decl count
-0000014: 02                                         ; local i32 count
-0000015: 01                                         ; WASM_TYPE_I32
-0000016: 02                                         ; local i64 count
-0000017: 02                                         ; WASM_TYPE_I64
-0000018: 02                                         ; local f32 count
-0000019: 03                                         ; WASM_TYPE_F32
-000001a: 02                                         ; local f64 count
-000001b: 04                                         ; WASM_TYPE_F64
-000001c: 0e                                         ; OPCODE_GET_LOCAL
-000001d: 06                                         ; remapped local index
-000001e: 0e                                         ; OPCODE_GET_LOCAL
-000001f: 04                                         ; remapped local index
-0000020: 0e                                         ; OPCODE_GET_LOCAL
-0000021: 02                                         ; remapped local index
-0000022: 0e                                         ; OPCODE_GET_LOCAL
-0000023: 00                                         ; remapped local index
-0000024: 0e                                         ; OPCODE_GET_LOCAL
-0000025: 01                                         ; remapped local index
-0000026: 0e                                         ; OPCODE_GET_LOCAL
-0000027: 05                                         ; remapped local index
-0000028: 0e                                         ; OPCODE_GET_LOCAL
-0000029: 07                                         ; remapped local index
-000002a: 0e                                         ; OPCODE_GET_LOCAL
-000002b: 03                                         ; remapped local index
-0000011: 1900                                       ; FIXUP func body size
-000002c: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 00                                         ; function 0 signature index
+000000f: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000010: 01                                         ; num functions
+; function body 0
+0000011: 00                                         ; func body size (guess)
+0000012: 04                                         ; local decl count
+0000013: 02                                         ; local i32 count
+0000014: 01                                         ; WASM_TYPE_I32
+0000015: 02                                         ; local i64 count
+0000016: 02                                         ; WASM_TYPE_I64
+0000017: 02                                         ; local f32 count
+0000018: 03                                         ; WASM_TYPE_F32
+0000019: 02                                         ; local f64 count
+000001a: 04                                         ; WASM_TYPE_F64
+000001b: 0e                                         ; OPCODE_GET_LOCAL
+000001c: 06                                         ; remapped local index
+000001d: 0e                                         ; OPCODE_GET_LOCAL
+000001e: 04                                         ; remapped local index
+000001f: 0e                                         ; OPCODE_GET_LOCAL
+0000020: 02                                         ; remapped local index
+0000021: 0e                                         ; OPCODE_GET_LOCAL
+0000022: 00                                         ; remapped local index
+0000023: 0e                                         ; OPCODE_GET_LOCAL
+0000024: 01                                         ; remapped local index
+0000025: 0e                                         ; OPCODE_GET_LOCAL
+0000026: 05                                         ; remapped local index
+0000027: 0e                                         ; OPCODE_GET_LOCAL
+0000028: 07                                         ; remapped local index
+0000029: 0e                                         ; OPCODE_GET_LOCAL
+000002a: 03                                         ; remapped local index
+0000011: 19                                         ; FIXUP func body size
+000002b: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0019 0004 0201 0202 0203 0204 0e06 0e04  
-0000020: 0e02 0e00 0e01 0e05 0e07 0e03 06         
+0000000: 0061 736d 0a00 0000 0101 0000 0a01 000b  
+0000010: 0119 0402 0102 0202 0302 040e 060e 040e  
+0000020: 020e 000e 010e 050e 070e 0306            
 ;;; STDOUT ;;)

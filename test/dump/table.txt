@@ -22,38 +22,36 @@
 ; signature 2
 0000011: 00                                         ; num params
 0000012: 04                                         ; result_type
-0000013: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+0000013: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 0000014: 03                                         ; num functions
-; function 0
-0000015: 00                                         ; func flags
-0000016: 0000                                       ; func signature index
-0000018: 0000                                       ; func body size
-000001a: 00                                         ; local decl count
-0000018: 0100                                       ; FIXUP func body size
-; function 1
-000001b: 00                                         ; func flags
-000001c: 0100                                       ; func signature index
-000001e: 0000                                       ; func body size
-0000020: 00                                         ; local decl count
-000001e: 0100                                       ; FIXUP func body size
-; function 2
-0000021: 00                                         ; func flags
-0000022: 0200                                       ; func signature index
-0000024: 0000                                       ; func body size
-0000026: 00                                         ; local decl count
-0000027: 0c                                         ; OPCODE_F64_CONST
-0000028: 0000 0000 0000 0000                        ; f64 literal
-0000024: 0a00                                       ; FIXUP func body size
-0000030: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
-0000031: 04                                         ; num function table entries
-0000032: 00                                         ; function table entry
-0000033: 00                                         ; function table entry
-0000034: 01                                         ; function table entry
-0000035: 02                                         ; function table entry
-0000036: 06                                         ; WASM_BINARY_SECTION_END
+0000015: 00                                         ; function 0 signature index
+0000016: 01                                         ; function 1 signature index
+0000017: 02                                         ; function 2 signature index
+0000018: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000019: 03                                         ; num functions
+; function body 0
+000001a: 00                                         ; func body size (guess)
+000001b: 00                                         ; local decl count
+000001a: 01                                         ; FIXUP func body size
+; function body 1
+000001c: 00                                         ; func body size (guess)
+000001d: 00                                         ; local decl count
+000001c: 01                                         ; FIXUP func body size
+; function body 2
+000001e: 00                                         ; func body size (guess)
+000001f: 00                                         ; local decl count
+0000020: 0c                                         ; OPCODE_F64_CONST
+0000021: 0000 0000 0000 0000                        ; f64 literal
+000001e: 0a                                         ; FIXUP func body size
+0000029: 05                                         ; WASM_BINARY_SECTION_FUNCTION_TABLE
+000002a: 04                                         ; num function table entries
+000002b: 00                                         ; function table entry
+000002c: 00                                         ; function table entry
+000002d: 01                                         ; function table entry
+000002e: 02                                         ; function table entry
+000002f: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0103 0100 0102 0001  
-0000010: 0200 0402 0300 0000 0100 0000 0100 0100  
-0000020: 0000 0200 0a00 000c 0000 0000 0000 0000  
-0000030: 0504 0000 0102 06                        
+0000010: 0200 040a 0300 0102 0b03 0100 0100 0a00  
+0000020: 0c00 0000 0000 0000 0005 0400 0001 0206  
 ;;; STDOUT ;;)

@@ -20,32 +20,32 @@
 ; signature 1
 000000c: 00                                         ; num params
 000000d: 01                                         ; result_type
-000000e: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000e: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 000000f: 02                                         ; num functions
-; function 0
-0000010: 00                                         ; func flags
-0000011: 0000                                       ; func signature index
-0000013: 0000                                       ; func body size
+0000010: 00                                         ; function 0 signature index
+0000011: 01                                         ; function 1 signature index
+0000012: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000013: 02                                         ; num functions
+; function body 0
+0000014: 00                                         ; func body size (guess)
 0000015: 00                                         ; local decl count
 0000016: 01                                         ; OPCODE_BLOCK
 0000017: 03                                         ; num expressions
 0000018: 00                                         ; OPCODE_NOP
 0000019: 00                                         ; OPCODE_NOP
 000001a: 00                                         ; OPCODE_NOP
-0000013: 0600                                       ; FIXUP func body size
-; function 1
-000001b: 00                                         ; func flags
-000001c: 0100                                       ; func signature index
-000001e: 0000                                       ; func body size
-0000020: 00                                         ; local decl count
-0000021: 01                                         ; OPCODE_BLOCK
-0000022: 01                                         ; num expressions
-0000023: 0a                                         ; OPCODE_I32_CONST
-0000024: 01                                         ; i32 literal
-000001e: 0500                                       ; FIXUP func body size
-0000025: 06                                         ; WASM_BINARY_SECTION_END
+0000014: 06                                         ; FIXUP func body size
+; function body 1
+000001b: 00                                         ; func body size (guess)
+000001c: 00                                         ; local decl count
+000001d: 01                                         ; OPCODE_BLOCK
+000001e: 01                                         ; num expressions
+000001f: 0a                                         ; OPCODE_I32_CONST
+0000020: 01                                         ; i32 literal
+000001b: 05                                         ; FIXUP func body size
+0000021: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0102 0000 0001 0202  
-0000010: 0000 0006 0000 0103 0000 0000 0100 0500  
-0000020: 0001 010a 0106                           
+0000000: 0061 736d 0a00 0000 0102 0000 0001 0a02  
+0000010: 0001 0b02 0600 0103 0000 0005 0001 010a  
+0000020: 0106                                     
 ;;; STDOUT ;;)

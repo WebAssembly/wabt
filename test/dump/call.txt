@@ -11,20 +11,21 @@
 000000a: 01                                         ; num params
 000000b: 00                                         ; result_type
 000000c: 01                                         ; param type
-000000d: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000d: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 000000e: 01                                         ; num functions
-; function 0
-000000f: 00                                         ; func flags
-0000010: 0000                                       ; func signature index
-0000012: 0000                                       ; func body size
-0000014: 00                                         ; local decl count
-0000015: 12                                         ; OPCODE_CALL_FUNCTION
-0000016: 00                                         ; func index
-0000017: 0a                                         ; OPCODE_I32_CONST
-0000018: 01                                         ; i32 literal
-0000012: 0500                                       ; FIXUP func body size
-0000019: 06                                         ; WASM_BINARY_SECTION_END
+000000f: 00                                         ; function 0 signature index
+0000010: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000011: 01                                         ; num functions
+; function body 0
+0000012: 00                                         ; func body size (guess)
+0000013: 00                                         ; local decl count
+0000014: 12                                         ; OPCODE_CALL_FUNCTION
+0000015: 00                                         ; func index
+0000016: 0a                                         ; OPCODE_I32_CONST
+0000017: 01                                         ; i32 literal
+0000012: 05                                         ; FIXUP func body size
+0000018: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0101 0100 0102 0100  
-0000010: 0000 0500 0012 000a 0106                 
+0000000: 0061 736d 0a00 0000 0101 0100 010a 0100  
+0000010: 0b01 0500 1200 0a01 06                   
 ;;; STDOUT ;;)

@@ -20,19 +20,20 @@
 0000011: 666f 6f                                    ; import module name
 0000014: 03                                         ; string length
 0000015: 6261 72                                    ; import function name
-0000018: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+0000018: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 0000019: 01                                         ; num functions
-; function 0
-000001a: 00                                         ; func flags
-000001b: 0000                                       ; func signature index
-000001d: 0000                                       ; func body size
-000001f: 00                                         ; local decl count
-0000020: 0b                                         ; OPCODE_I64_CONST
-0000021: 00                                         ; i64 literal
-000001d: 0300                                       ; FIXUP func body size
-0000022: 06                                         ; WASM_BINARY_SECTION_END
+000001a: 00                                         ; function 0 signature index
+000001b: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+000001c: 01                                         ; num functions
+; function body 0
+000001d: 00                                         ; func body size (guess)
+000001e: 00                                         ; local decl count
+000001f: 0b                                         ; OPCODE_I64_CONST
+0000020: 00                                         ; i64 literal
+000001d: 03                                         ; FIXUP func body size
+0000021: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0102 0108 0100  
-0000010: 0366 6f6f 0362 6172 0201 0000 0003 0000  
-0000020: 0b00 06                                  
+0000010: 0366 6f6f 0362 6172 0a01 000b 0103 000b  
+0000020: 0006                                     
 ;;; STDOUT ;;)

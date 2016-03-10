@@ -13,16 +13,17 @@
 000000d: 02                                         ; param type
 000000e: 03                                         ; param type
 000000f: 04                                         ; param type
-0000010: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+0000010: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 0000011: 01                                         ; num functions
-; function 0
-0000012: 00                                         ; func flags
-0000013: 0000                                       ; func signature index
-0000015: 0000                                       ; func body size
-0000017: 00                                         ; local decl count
-0000015: 0100                                       ; FIXUP func body size
-0000018: 06                                         ; WASM_BINARY_SECTION_END
+0000012: 00                                         ; function 0 signature index
+0000013: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000014: 01                                         ; num functions
+; function body 0
+0000015: 00                                         ; func body size (guess)
+0000016: 00                                         ; local decl count
+0000015: 01                                         ; FIXUP func body size
+0000017: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
 0000000: 0061 736d 0a00 0000 0101 0400 0102 0304  
-0000010: 0201 0000 0001 0000 06                   
+0000010: 0a01 000b 0101 0006                      
 ;;; STDOUT ;;)

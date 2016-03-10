@@ -16,6 +16,7 @@
 
 #include "wasm-writer.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <memory.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 
 #include "wasm-internal.h"
 
+#define ERROR0(msg) fprintf(stderr, "%s:%d: " msg, __FILE__, __LINE__)
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 
@@ -50,6 +52,17 @@ static WasmResult write_data_to_file(size_t offset,
   return WASM_OK;
 }
 
+static WasmResult move_data_in_file(size_t dst_offset,
+                                    size_t src_offset,
+                                    size_t size,
+                                    void* user_data) {
+  if (size == 0)
+    return WASM_OK;
+  /* TODO(binji): implement if needed. */
+  ERROR0("move_data_in_file not implemented!\n");
+  return WASM_ERROR;
+}
+
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
   ZERO_MEMORY(*writer);
   writer->file = fopen(filename, "wb");
@@ -61,6 +74,7 @@ WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
   writer->offset = 0;
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_file;
+  writer->base.move_data = move_data_in_file;
   return WASM_OK;
 }
 
@@ -117,11 +131,30 @@ static WasmResult write_data_to_output_buffer(size_t offset,
   return WASM_OK;
 }
 
+static WasmResult move_data_in_output_buffer(size_t dst_offset,
+                                             size_t src_offset,
+                                             size_t size,
+                                             void* user_data) {
+  WasmMemoryWriter* writer = user_data;
+  size_t src_end = src_offset + size;
+  size_t dst_end = dst_offset + size;
+  size_t end = src_end > dst_end ? src_end : dst_end;
+  if (ensure_output_buffer_capacity(&writer->buf, end) != WASM_OK)
+    return WASM_ERROR;
+  void* dst = (void*)((size_t)writer->buf.start + dst_offset);
+  void* src = (void*)((size_t)writer->buf.start + src_offset);
+  memmove(dst, src, size);
+  if (end > writer->buf.size)
+    writer->buf.size = end;
+  return WASM_OK;
+}
+
 WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
                                 WasmMemoryWriter* writer) {
   ZERO_MEMORY(*writer);
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
+  writer->base.move_data = move_data_in_output_buffer;
   return init_output_buffer(allocator, &writer->buf,
                             INITIAL_OUTPUT_BUFFER_CAPACITY);
 }

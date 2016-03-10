@@ -201,6 +201,20 @@ static void out_data(WasmWriterState* writer_state,
   writer_state->offset += length;
 }
 
+static void move_data(WasmWriterState* writer_state,
+                      size_t dst_offset,
+                      size_t src_offset,
+                      size_t size) {
+  if (*writer_state->result != WASM_OK)
+    return;
+  if (writer_state->log_writes)
+    printf("; move data: [%zx, %zx) -> [%zx, %zx)\n", src_offset,
+           src_offset + size, dst_offset, dst_offset + size);
+  if (writer_state->writer->write_data)
+    *writer_state->result = writer_state->writer->move_data(
+        dst_offset, src_offset, size, writer_state->writer->user_data);
+}
+
 static void out_u8(WasmWriterState* writer_state,
                    uint32_t value,
                    const char* desc) {
@@ -289,14 +303,24 @@ static void out_u32_at(WasmWriterState* writer_state,
     }                               \
   } while (1)
 
-static void out_u32_leb128(WasmWriterState* writer_state,
-                           uint32_t value,
-                           const char* desc) {
+/* returns the length of the leb128 */
+static uint32_t out_u32_leb128_at(WasmWriterState* writer_state,
+                                  uint32_t offset,
+                                  uint32_t value,
+                                  const char* desc) {
   uint8_t data[5]; /* max 5 bytes */
   int i = 0;
   LEB128_LOOP_UNTIL(value == 0);
   int length = i;
-  out_data_at(writer_state, writer_state->offset, data, length, desc);
+  out_data_at(writer_state, offset, data, length, desc);
+  return length;
+}
+
+static void out_u32_leb128(WasmWriterState* writer_state,
+                           uint32_t value,
+                           const char* desc) {
+  uint32_t length =
+      out_u32_leb128_at(writer_state, writer_state->offset, value, desc);
   writer_state->offset += length;
 }
 
@@ -341,6 +365,32 @@ static uint32_t size_u32_leb128(uint32_t value) {
   return size;
 }
 
+/* returns offset of leb128 */
+static uint32_t out_u32_leb128_space(WasmWriterState* writer_state,
+                                     uint32_t leb_size_guess,
+                                     const char* desc) {
+  assert(leb_size_guess <= 5);
+  uint8_t data[5] = {0};
+  uint32_t result = writer_state->offset;
+  out_data(writer_state, data, leb_size_guess, desc);
+  return result;
+}
+
+static void out_fixup_u32_leb128_size(WasmWriterState* writer_state,
+                                      uint32_t offset,
+                                      uint32_t leb_size_guess,
+                                      const char* desc) {
+  uint32_t size = writer_state->offset - offset - leb_size_guess;
+  uint32_t leb_size = size_u32_leb128(size);
+  if (leb_size != leb_size_guess) {
+    uint32_t src_offset = offset + leb_size_guess;
+    uint32_t dst_offset = offset + leb_size;
+    move_data(writer_state, dst_offset, src_offset, size);
+  }
+  out_u32_leb128_at(writer_state, offset, size, desc);
+  writer_state->offset += leb_size - leb_size_guess;
+}
+
 static void out_str(WasmWriterState* writer_state,
                     const char* s,
                     size_t length,
@@ -369,6 +419,7 @@ static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
   out_data_at(writer_state, writer_state->offset, buffer, len - 1, "");
   writer_state->offset += len - 1;
 }
+
 
 static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
                                          WasmStringSlice* name) {
@@ -889,21 +940,31 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   }
 
   if (module->funcs.size) {
-    out_u8(ws, WASM_BINARY_SECTION_FUNCTIONS, "WASM_BINARY_SECTION_FUNCTIONS");
+    out_u8(ws, WASM_BINARY_SECTION_FUNCTION_SIGNATURES,
+           "WASM_BINARY_SECTION_FUNCTION_SIGNATURES");
     out_u32_leb128(ws, module->funcs.size, "num functions");
 
     for (i = 0; i < module->funcs.size; ++i) {
+      char desc[100];
+      snprintf(desc, sizeof(desc), "function %d signature index", i);
+      out_u32_leb128(ws, ctx->func_sig_indexes[i], desc);
+    }
+
+    out_u8(ws, WASM_BINARY_SECTION_FUNCTION_BODIES,
+           "WASM_BINARY_SECTION_FUNCTION_BODIES");
+    out_u32_leb128(ws, module->funcs.size, "num functions");
+
+    for (i = 0; i < module->funcs.size; ++i) {
+      print_header(ctx, "function body", i);
       WasmFunc* func = module->funcs.data[i];
-      print_header(ctx, "function", i);
       /* TODO(binji): we're still remapping the locals here, but we may want to
        have this be an option, now that it is not necessary. */
       remap_locals(ctx, func);
 
-      uint8_t flags = 0;
-      out_u8(ws, flags, "func flags");
-      out_u16(ws, ctx->func_sig_indexes[i], "func signature index");
-      size_t func_body_offset = ctx->writer_state.offset;
-      out_u16(ws, 0, "func body size");
+      /* TODO(binji): better guess of the size of the function body section */
+      const uint32_t leb_size_guess = 1;
+      uint32_t func_body_size_offset =
+          out_u32_leb128_space(ws, leb_size_guess, "func body size (guess)");
 
       int num_locals[WASM_NUM_TYPES];
       ZERO_MEMORY(num_locals);
@@ -935,9 +996,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       }
 
       write_func(ctx, module, func);
-      int func_size =
-          ctx->writer_state.offset - func_body_offset - sizeof(uint16_t);
-      out_u16_at(ws, func_body_offset, func_size, "FIXUP func body size");
+      out_fixup_u32_leb128_size(ws, func_body_size_offset, leb_size_guess,
+                                "FIXUP func body size");
     }
   }
 

@@ -11,25 +11,26 @@
 ; signature 0
 000000a: 00                                         ; num params
 000000b: 00                                         ; result_type
-000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000c: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 000000d: 01                                         ; num functions
-; function 0
-000000e: 00                                         ; func flags
-000000f: 0000                                       ; func signature index
-0000011: 0000                                       ; func body size
-0000013: 00                                         ; local decl count
-0000014: 00                                         ; OPCODE_NOP
-0000011: 0200                                       ; FIXUP func body size
-0000015: 09                                         ; WASM_BINARY_SECTION_EXPORTS
-0000016: 02                                         ; num exports
-0000017: 00                                         ; export func index
-0000018: 01                                         ; string length
-0000019: 61                                         ; export name
-000001a: 00                                         ; export func index
-000001b: 01                                         ; string length
-000001c: 62                                         ; export name
-000001d: 06                                         ; WASM_BINARY_SECTION_END
+000000e: 00                                         ; function 0 signature index
+000000f: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000010: 01                                         ; num functions
+; function body 0
+0000011: 00                                         ; func body size (guess)
+0000012: 00                                         ; local decl count
+0000013: 00                                         ; OPCODE_NOP
+0000011: 02                                         ; FIXUP func body size
+0000014: 09                                         ; WASM_BINARY_SECTION_EXPORTS
+0000015: 02                                         ; num exports
+0000016: 00                                         ; export func index
+0000017: 01                                         ; string length
+0000018: 61                                         ; export name
+0000019: 00                                         ; export func index
+000001a: 01                                         ; string length
+000001b: 62                                         ; export name
+000001c: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0002 0000 0009 0200 0161 0001 6206       
+0000000: 0061 736d 0a00 0000 0101 0000 0a01 000b  
+0000010: 0102 0000 0902 0001 6100 0162 06         
 ;;; STDOUT ;;)

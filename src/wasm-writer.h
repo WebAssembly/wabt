@@ -28,6 +28,10 @@ typedef struct WasmWriter {
                            const void* data,
                            size_t size,
                            void* user_data);
+  WasmResult (*move_data)(size_t dst_offset,
+                          size_t src_offset,
+                          size_t size,
+                          void* user_data);
 } WasmWriter;
 
 typedef struct WasmOutputBuffer {

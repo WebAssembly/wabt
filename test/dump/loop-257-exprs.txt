@@ -52,15 +52,17 @@
 ; signature 0
 000000a: 00                                         ; num params
 000000b: 00                                         ; result_type
-000000c: 02                                         ; WASM_BINARY_SECTION_FUNCTIONS
+000000c: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
 000000d: 01                                         ; num functions
-; function 0
-000000e: 00                                         ; func flags
-000000f: 0000                                       ; func signature index
-0000011: 0000                                       ; func body size
-0000013: 00                                         ; local decl count
-0000014: 02                                         ; OPCODE_LOOP
-0000015: 8102                                       ; num expressions
+000000e: 00                                         ; function 0 signature index
+000000f: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
+0000010: 01                                         ; num functions
+; function body 0
+0000011: 00                                         ; func body size (guess)
+0000012: 00                                         ; local decl count
+0000013: 02                                         ; OPCODE_LOOP
+0000014: 8102                                       ; num expressions
+0000016: 00                                         ; OPCODE_NOP
 0000017: 00                                         ; OPCODE_NOP
 0000018: 00                                         ; OPCODE_NOP
 0000019: 00                                         ; OPCODE_NOP
@@ -317,12 +319,12 @@
 0000114: 00                                         ; OPCODE_NOP
 0000115: 00                                         ; OPCODE_NOP
 0000116: 00                                         ; OPCODE_NOP
-0000117: 00                                         ; OPCODE_NOP
-0000011: 0501                                       ; FIXUP func body size
+; move data: [12, 117) -> [13, 118)
+0000011: 8502                                       ; FIXUP func body size
 0000118: 06                                         ; WASM_BINARY_SECTION_END
 ;; dump
-0000000: 0061 736d 0a00 0000 0101 0000 0201 0000  
-0000010: 0005 0100 0281 0200 0000 0000 0000 0000  
+0000000: 0061 736d 0a00 0000 0101 0000 0a01 000b  
+0000010: 0185 0200 0281 0200 0000 0000 0000 0000  
 0000020: 0000 0000 0000 0000 0000 0000 0000 0000  
 0000030: 0000 0000 0000 0000 0000 0000 0000 0000  
 0000040: 0000 0000 0000 0000 0000 0000 0000 0000  
