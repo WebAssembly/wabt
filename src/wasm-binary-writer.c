@@ -444,12 +444,12 @@ static void begin_section(WasmWriteContext* ctx,
   WasmWriterState* ws = &ctx->writer_state;
   assert(ctx->last_section_leb_size_guess == 0);
   char desc[100];
-  snprintf(desc, sizeof(desc), "section \"%s\"", name);
+  SNPRINTF(desc, sizeof(desc), "section \"%s\"", name);
   print_header(ws, desc, PRINT_HEADER_NO_INDEX);
   ctx->last_section_offset =
       out_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
   ctx->last_section_leb_size_guess = leb_size_guess;
-  snprintf(desc, sizeof(desc), "section id: \"%s\"", name);
+  SNPRINTF(desc, sizeof(desc), "section id: \"%s\"", name);
   out_str(ws, name, strlen(name), DONT_PRINT_CHARS, desc);
 }
 
@@ -1033,7 +1033,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
     for (i = 0; i < module->funcs.size; ++i) {
       char desc[100];
-      snprintf(desc, sizeof(desc), "function %d signature index", i);
+      SNPRINTF(desc, sizeof(desc), "function %d signature index", i);
       out_u32_leb128(ws, ctx->func_sig_indexes[i], desc);
     }
     end_section(ctx);
@@ -1437,7 +1437,7 @@ static WasmStringSlice create_assert_func_name(WasmAllocator* allocator,
                                                int format_index) {
   WasmStringSlice name;
   char buffer[256];
-  int buffer_len = snprintf(buffer, 256, format, format_index);
+  int buffer_len = SNPRINTF(buffer, 256, format, format_index);
   name.start = wasm_strndup(allocator, buffer, buffer_len);
   name.length = buffer_len;
   return name;

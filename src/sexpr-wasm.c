@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include "wasm-config.h"
 
-#ifdef HAVE_GETOPT_H
+#if HAVE_GETOPT_H
 #include <getopt.h>
 #else
 #define USE_MIN_PARSER 1
@@ -141,7 +141,7 @@ static void usage(const char* prog) {
 
     if (help && help->metavar) {
       char buf[100];
-      snprintf(buf, 100, "%s=%s", opt->name, help->metavar);
+      SNPRINTF(buf, 100, "%s=%s", opt->name, help->metavar);
       printf("--%-30s", buf);
     } else {
       printf("--%-30s", opt->name);

@@ -35,14 +35,30 @@
 #elif COMPILER_IS_MSVC
 #include <malloc.h>
 #define alloca _alloca
+#else
+#error no alloca
 #endif
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 #define WARN_UNUSED __attribute__ ((warn_unused_result))
+#define INLINE inline
 #elif COMPILER_IS_MSVC
 #define WARN_UNUSED _Check_return_
+#define INLINE __inline
 #else
 #define WARN_UNUSED
+#endif
+
+#if HAVE_SNPRINTF
+#define SNPRINTF snprintf
+#elif COMPILER_IS_MSVC
+#define SNPRINTF _snprintf
+#else
+#error no snprintf
+#endif
+
+#if !HAVE_SSIZE_T
+typedef int ssize_t;
 #endif
 
 #endif /* WASM_CONFIG_H_ */

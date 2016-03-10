@@ -33,13 +33,13 @@ typedef struct WasmAllocator {
 extern WasmAllocator g_wasm_libc_allocator;
 
 EXTERN_C_BEGIN
-static inline void* wasm_alloc(WasmAllocator* allocator,
+static INLINE void* wasm_alloc(WasmAllocator* allocator,
                                size_t size,
                                size_t align) {
   return allocator->alloc(allocator, size, align);
 }
 
-static inline void* wasm_alloc_zero(WasmAllocator* allocator,
+static INLINE void* wasm_alloc_zero(WasmAllocator* allocator,
                                     size_t size,
                                     size_t align) {
   void* result = allocator->alloc(allocator, size, align);
@@ -49,18 +49,18 @@ static inline void* wasm_alloc_zero(WasmAllocator* allocator,
   return result;
 }
 
-static inline void* wasm_realloc(WasmAllocator* allocator,
+static INLINE void* wasm_realloc(WasmAllocator* allocator,
                                  void* p,
                                  size_t size,
                                  size_t align) {
   return allocator->realloc(allocator, p, size, align);
 }
 
-static inline void wasm_free(WasmAllocator* allocator, void* p) {
-  return allocator->free(allocator, p);
+static INLINE void wasm_free(WasmAllocator* allocator, void* p) {
+  allocator->free(allocator, p);
 }
 
-static inline char* wasm_strndup(WasmAllocator* allocator,
+static INLINE char* wasm_strndup(WasmAllocator* allocator,
                                  const char* s,
                                  size_t len) {
   size_t real_len = 0;
