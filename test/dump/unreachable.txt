@@ -5,23 +5,43 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-0000008: 01                                         ; WASM_BINARY_SECTION_SIGNATURES
-0000009: 01                                         ; num signatures
+; section "signatures"
+0000008: 00                                         ; section size (guess)
+0000009: 0a                                         ; string length
+000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
+0000014: 01                                         ; num signatures
 ; signature 0
-000000a: 00                                         ; num params
-000000b: 00                                         ; result_type
-000000c: 0a                                         ; WASM_BINARY_SECTION_FUNCTION_SIGNATURES
-000000d: 01                                         ; num functions
-000000e: 00                                         ; function 0 signature index
-000000f: 0b                                         ; WASM_BINARY_SECTION_FUNCTION_BODIES
-0000010: 01                                         ; num functions
+0000015: 00                                         ; num params
+0000016: 00                                         ; result_type
+0000008: 0e                                         ; FIXUP section size
+; section "function_signatures"
+0000017: 00                                         ; section size (guess)
+0000018: 13                                         ; string length
+0000019: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
+0000029: 7265 73                                    ; section id: "function_signatures"
+000002c: 01                                         ; num functions
+000002d: 00                                         ; function 0 signature index
+0000017: 16                                         ; FIXUP section size
+; section "function_bodies"
+000002e: 00                                         ; section size (guess)
+000002f: 0f                                         ; string length
+0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
+000003f: 01                                         ; num functions
 ; function body 0
-0000011: 00                                         ; func body size (guess)
-0000012: 00                                         ; local decl count
-0000013: 15                                         ; OPCODE_UNREACHABLE
-0000011: 02                                         ; FIXUP func body size
-0000014: 06                                         ; WASM_BINARY_SECTION_END
+0000040: 00                                         ; func body size (guess)
+0000041: 00                                         ; local decl count
+0000042: 15                                         ; OPCODE_UNREACHABLE
+0000040: 02                                         ; FIXUP func body size
+000002e: 14                                         ; FIXUP section size
+; section "end"
+0000043: 00                                         ; section size (guess)
+0000044: 03                                         ; string length
+0000045: 656e 64                                    ; section id: "end"
+0000043: 04                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0101 0000 0a01 000b  
-0000010: 0102 0015 06                             
+0000000: 0061 736d 0a00 0000 0e0a 7369 676e 6174  
+0000010: 7572 6573 0100 0016 1366 756e 6374 696f  
+0000020: 6e5f 7369 676e 6174 7572 6573 0100 140f  
+0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 7301  
+0000040: 0200 1504 0365 6e64                      
 ;;; STDOUT ;;)
