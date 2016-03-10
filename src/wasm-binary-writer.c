@@ -30,6 +30,8 @@
 
 #define DUMP_OCTETS_PER_LINE 16
 #define PRINT_HEADER_NO_INDEX -1
+#define MAX_U32_LEB128_BYTES 5
+#define MAX_U64_LEB128_BYTES 10
 
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
@@ -149,6 +151,7 @@ typedef struct WasmWriterState {
   size_t offset;
   WasmResult* result;
   int log_writes;
+  int canonicalize_lebs;
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
 } WasmWriterState;
@@ -318,12 +321,26 @@ static uint32_t out_u32_leb128_at(WasmWriterState* writer_state,
                                   uint32_t offset,
                                   uint32_t value,
                                   const char* desc) {
-  uint8_t data[5]; /* max 5 bytes */
+  uint8_t data[MAX_U32_LEB128_BYTES];
   int i = 0;
   LEB128_LOOP_UNTIL(value == 0);
   int length = i;
   out_data_at(writer_state, offset, data, length, desc);
   return length;
+}
+
+static uint32_t out_fixed_u32_leb128_at(WasmWriterState* writer_state,
+                                        uint32_t offset,
+                                        uint32_t value,
+                                        const char* desc) {
+  uint8_t data[MAX_U32_LEB128_BYTES];
+  data[0] = (value & 0x7f) | 0x80;
+  data[1] = ((value >> 7) & 0x7f) | 0x80;
+  data[2] = ((value >> 14) & 0x7f) | 0x80;
+  data[3] = ((value >> 21) & 0x7f) | 0x80;
+  data[4] = ((value >> 28) & 0x0f);
+  out_data_at(writer_state, offset, data, MAX_U32_LEB128_BYTES, desc);
+  return MAX_U32_LEB128_BYTES;
 }
 
 static void out_u32_leb128(WasmWriterState* writer_state,
@@ -337,7 +354,7 @@ static void out_u32_leb128(WasmWriterState* writer_state,
 static void out_i32_leb128(WasmWriterState* writer_state,
                            int32_t value,
                            const char* desc) {
-  uint8_t data[5]; /* max 5 bytes */
+  uint8_t data[MAX_U32_LEB128_BYTES];
   int i = 0;
   if (value < 0)
     LEB128_LOOP_UNTIL(value == -1 && (byte & 0x40));
@@ -352,7 +369,7 @@ static void out_i32_leb128(WasmWriterState* writer_state,
 static void out_i64_leb128(WasmWriterState* writer_state,
                            int64_t value,
                            const char* desc) {
-  uint8_t data[10]; /* max 10 bytes */
+  uint8_t data[MAX_U64_LEB128_BYTES];
   int i = 0;
   if (value < 0)
     LEB128_LOOP_UNTIL(value == -1 && (byte & 0x40));
@@ -379,10 +396,12 @@ static uint32_t size_u32_leb128(uint32_t value) {
 static uint32_t out_u32_leb128_space(WasmWriterState* writer_state,
                                      uint32_t leb_size_guess,
                                      const char* desc) {
-  assert(leb_size_guess <= 5);
-  uint8_t data[5] = {0};
+  assert(leb_size_guess <= MAX_U32_LEB128_BYTES);
+  uint8_t data[MAX_U32_LEB128_BYTES] = {0};
   uint32_t result = writer_state->offset;
-  out_data(writer_state, data, leb_size_guess, desc);
+  uint32_t bytes_to_write =
+      writer_state->canonicalize_lebs ? leb_size_guess : MAX_U32_LEB128_BYTES;
+  out_data(writer_state, data, bytes_to_write, desc);
   return result;
 }
 
@@ -390,15 +409,20 @@ static void out_fixup_u32_leb128_size(WasmWriterState* writer_state,
                                       uint32_t offset,
                                       uint32_t leb_size_guess,
                                       const char* desc) {
-  uint32_t size = writer_state->offset - offset - leb_size_guess;
-  uint32_t leb_size = size_u32_leb128(size);
-  if (leb_size != leb_size_guess) {
-    uint32_t src_offset = offset + leb_size_guess;
-    uint32_t dst_offset = offset + leb_size;
-    move_data(writer_state, dst_offset, src_offset, size);
+  if (writer_state->canonicalize_lebs) {
+    uint32_t size = writer_state->offset - offset - leb_size_guess;
+    uint32_t leb_size = size_u32_leb128(size);
+    if (leb_size != leb_size_guess) {
+      uint32_t src_offset = offset + leb_size_guess;
+      uint32_t dst_offset = offset + leb_size;
+      move_data(writer_state, dst_offset, src_offset, size);
+    }
+    out_u32_leb128_at(writer_state, offset, size, desc);
+    writer_state->offset += leb_size - leb_size_guess;
+  } else {
+    uint32_t size = writer_state->offset - offset - MAX_U32_LEB128_BYTES;
+    out_fixed_u32_leb128_at(writer_state, offset, size, desc);
   }
-  out_u32_leb128_at(writer_state, offset, size, desc);
-  writer_state->offset += leb_size - leb_size_guess;
 }
 
 static void out_str(WasmWriterState* writer_state,
@@ -1630,6 +1654,7 @@ WasmResult wasm_write_binary(WasmAllocator* allocator,
     ctx.writer_state.writer = &mem_writer.base;
     ctx.writer_state.result = &ctx.result;
     ctx.writer_state.log_writes = options->log_writes;
+    ctx.writer_state.canonicalize_lebs = options->canonicalize_lebs;
     ctx.mem_writer = &mem_writer;
     write_header_spec(&ctx);
     write_commands_spec(&ctx, script);
@@ -1639,6 +1664,7 @@ WasmResult wasm_write_binary(WasmAllocator* allocator,
     ctx.writer_state.writer = writer;
     ctx.writer_state.result = &ctx.result;
     ctx.writer_state.log_writes = options->log_writes;
+    ctx.writer_state.canonicalize_lebs = options->canonicalize_lebs;
     write_commands_no_spec(&ctx, script);
   }
 

@@ -27,6 +27,7 @@ typedef struct WasmWriteBinaryOptions {
   int spec;
   int spec_verbose;
   int log_writes;
+  int canonicalize_lebs;
 } WasmWriteBinaryOptions;
 
 EXTERN_C WasmResult wasm_write_binary(struct WasmAllocator*,

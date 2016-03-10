@@ -36,8 +36,8 @@ enum {
   FLAG_OUTPUT,
   FLAG_SPEC,
   FLAG_SPEC_VERBOSE,
-  FLAG_BR_IF,
   FLAG_USE_LIBC_ALLOCATOR,
+  FLAG_NO_CANONICALIZE_LEB128S,
   NUM_FLAGS
 };
 
@@ -45,8 +45,7 @@ static const char* s_infile;
 static const char* s_outfile;
 static int s_dump_module;
 static int s_verbose;
-static int s_spec;
-static int s_spec_verbose;
+static WasmWriteBinaryOptions s_write_binary_options = {0, 0, 0, 1};
 static int s_use_libc_allocator;
 
 #ifndef __GNUC__
@@ -75,8 +74,8 @@ static struct option s_long_options[] = {
     {"output", required_argument, NULL, 'o'},
     {"spec", no_argument, NULL, 0},
     {"spec-verbose", no_argument, NULL, 0},
-    {"br-if", no_argument, NULL, 0},
     {"use-libc-allocator", no_argument, NULL, 0},
+    {"no-canonicalize-leb128s", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 #define OPTIONS_LENGTH (ARRAY_SIZE(s_long_options) - 1)
@@ -96,9 +95,10 @@ static OptionHelp s_option_help[] = {
     {FLAG_SPEC, NULL,
      "parse a file with multiple modules and assertions, like the spec tests"},
     {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
-    {FLAG_BR_IF, NULL, "DEPRECATED: br_if is always supported now"},
     {FLAG_USE_LIBC_ALLOCATOR, NULL,
      "use malloc, free, etc. instead of stack allocator"},
+    {FLAG_NO_CANONICALIZE_LEB128S, NULL,
+     "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
     {NUM_FLAGS, NULL},
 };
 #define OPTIONS_HELP_LENGTH (ARRAY_SIZE(s_option_help) - 1)
@@ -219,25 +219,26 @@ static void parse_options(int argc, char** argv) {
             break;
 
           case FLAG_SPEC:
-            s_spec = 1;
+            s_write_binary_options.spec = 1;
             break;
 
           case FLAG_SPEC_VERBOSE:
-            s_spec_verbose = 1;
-            break;
-
-          case FLAG_BR_IF:
-            printf("--br-if flag is deprecated.\n");
+            s_write_binary_options.spec_verbose = 1;
             break;
 
           case FLAG_USE_LIBC_ALLOCATOR:
             s_use_libc_allocator = 1;
+            break;
+
+          case FLAG_NO_CANONICALIZE_LEB128S:
+            s_write_binary_options.canonicalize_lebs = 0;
             break;
         }
         break;
 
       case 'v':
         s_verbose++;
+        s_write_binary_options.log_writes = 1;
         break;
 
       case 'h':
@@ -260,7 +261,7 @@ static void parse_options(int argc, char** argv) {
     }
   }
 
-  if (s_dump_module && s_spec)
+  if (s_dump_module && s_write_binary_options.spec)
     FATAL("--dump-module flag incompatible with --spec flag\n");
 
   if (optind < argc) {
@@ -299,17 +300,8 @@ int main(int argc, char** argv) {
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
         FATAL("unable to open memory writer for writing\n");
 
-      WasmWriteBinaryOptions options;
-      ZERO_MEMORY(options);
-      if (s_spec)
-        options.spec = 1;
-      if (s_spec_verbose)
-        options.spec_verbose = 1;
-      if (s_verbose)
-        options.log_writes = 1;
-
       result = wasm_write_binary(&g_wasm_libc_allocator, &writer.base, &script,
-                                 &options);
+                                 &s_write_binary_options);
       if (result == WASM_OK) {
         if (s_dump_module) {
           if (s_verbose)
