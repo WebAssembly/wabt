@@ -35,14 +35,15 @@ else ()
   set(COMPILER_IS_MSVC 0)
 endif ()
 
-include(CheckSymbolExists)
 include(CheckIncludeFile)
+include(CheckSymbolExists)
+include(CheckTypeSize)
 
 check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("getopt.h" HAVE_GETOPT_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
-check_symbol_exists(ssize_t "stddef.h" HAVE_SSIZE_T)
+check_type_size(ssize_t SSIZE_T)
 
 configure_file(
   ${SEXPR_WASM_SOURCE_DIR}/src/wasm-config.h.in
