@@ -8,82 +8,82 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "memory"
-0000008: 00                                         ; section size (guess)
-0000009: 06                                         ; string length
-000000a: 6d65 6d6f 7279                             ; section id: "memory"
-0000010: 01                                         ; min mem pages
-0000011: 01                                         ; max mem pages
-0000012: 00                                         ; export mem
-0000008: 0a                                         ; FIXUP section size
 ; section "signatures"
-0000013: 00                                         ; section size (guess)
-0000014: 0a                                         ; string length
-0000015: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-000001f: 01                                         ; num signatures
+0000008: 00                                         ; section size (guess)
+0000009: 0a                                         ; string length
+000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
+0000014: 01                                         ; num signatures
 ; signature 0
-0000020: 02                                         ; num params
-0000021: 01                                         ; result_type
-0000022: 01                                         ; param type
-0000023: 01                                         ; param type
-0000013: 10                                         ; FIXUP section size
+0000015: 02                                         ; num params
+0000016: 01                                         ; result_type
+0000017: 01                                         ; param type
+0000018: 01                                         ; param type
+0000008: 10                                         ; FIXUP section size
 ; section "function_signatures"
-0000024: 00                                         ; section size (guess)
-0000025: 13                                         ; string length
-0000026: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
-0000036: 7265 73                                    ; section id: "function_signatures"
-0000039: 01                                         ; num functions
-000003a: 00                                         ; function 0 signature index
-0000024: 16                                         ; FIXUP section size
-; section "function_bodies"
-000003b: 00                                         ; section size (guess)
-000003c: 0f                                         ; string length
-000003d: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-000004c: 01                                         ; num functions
-; function body 0
-000004d: 00                                         ; func body size (guess)
-000004e: 00                                         ; local decl count
-000004f: 33                                         ; OPCODE_I32_STORE_MEM
-0000050: 02                                         ; alignment
-0000051: 00                                         ; store offset
-0000052: 0a                                         ; OPCODE_I32_CONST
-0000053: 00                                         ; i32 literal
-0000054: 40                                         ; OPCODE_I32_ADD
-0000055: 2a                                         ; OPCODE_I32_LOAD_MEM
-0000056: 02                                         ; alignment
-0000057: 00                                         ; load offset
-0000058: 0a                                         ; OPCODE_I32_CONST
-0000059: 00                                         ; i32 literal
-000005a: 0a                                         ; OPCODE_I32_CONST
-000005b: 01                                         ; i32 literal
-000005c: 40                                         ; OPCODE_I32_ADD
-000005d: 0e                                         ; OPCODE_GET_LOCAL
-000005e: 00                                         ; remapped local index
-000005f: 0e                                         ; OPCODE_GET_LOCAL
-0000060: 01                                         ; remapped local index
-000004d: 13                                         ; FIXUP func body size
-000003b: 25                                         ; FIXUP section size
+0000019: 00                                         ; section size (guess)
+000001a: 13                                         ; string length
+000001b: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
+000002b: 7265 73                                    ; section id: "function_signatures"
+000002e: 01                                         ; num functions
+000002f: 00                                         ; function 0 signature index
+0000019: 16                                         ; FIXUP section size
+; section "memory"
+0000030: 00                                         ; section size (guess)
+0000031: 06                                         ; string length
+0000032: 6d65 6d6f 7279                             ; section id: "memory"
+0000038: 01                                         ; min mem pages
+0000039: 01                                         ; max mem pages
+000003a: 00                                         ; export mem
+0000030: 0a                                         ; FIXUP section size
 ; section "export_table"
-0000061: 00                                         ; section size (guess)
-0000062: 0c                                         ; string length
-0000063: 6578 706f 7274 5f74 6162 6c65              ; section id: "export_table"
-000006f: 01                                         ; num exports
-0000070: 00                                         ; export func index
-0000071: 01                                         ; string length
-0000072: 66                                         ; export name
-0000061: 11                                         ; FIXUP section size
+000003b: 00                                         ; section size (guess)
+000003c: 0c                                         ; string length
+000003d: 6578 706f 7274 5f74 6162 6c65              ; section id: "export_table"
+0000049: 01                                         ; num exports
+000004a: 00                                         ; export func index
+000004b: 01                                         ; string length
+000004c: 66                                         ; export name
+000003b: 11                                         ; FIXUP section size
+; section "function_bodies"
+000004d: 00                                         ; section size (guess)
+000004e: 0f                                         ; string length
+000004f: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
+000005e: 01                                         ; num functions
+; function body 0
+000005f: 00                                         ; func body size (guess)
+0000060: 00                                         ; local decl count
+0000061: 33                                         ; OPCODE_I32_STORE_MEM
+0000062: 02                                         ; alignment
+0000063: 00                                         ; store offset
+0000064: 0a                                         ; OPCODE_I32_CONST
+0000065: 00                                         ; i32 literal
+0000066: 40                                         ; OPCODE_I32_ADD
+0000067: 2a                                         ; OPCODE_I32_LOAD_MEM
+0000068: 02                                         ; alignment
+0000069: 00                                         ; load offset
+000006a: 0a                                         ; OPCODE_I32_CONST
+000006b: 00                                         ; i32 literal
+000006c: 0a                                         ; OPCODE_I32_CONST
+000006d: 01                                         ; i32 literal
+000006e: 40                                         ; OPCODE_I32_ADD
+000006f: 0e                                         ; OPCODE_GET_LOCAL
+0000070: 00                                         ; remapped local index
+0000071: 0e                                         ; OPCODE_GET_LOCAL
+0000072: 01                                         ; remapped local index
+000005f: 13                                         ; FIXUP func body size
+000004d: 25                                         ; FIXUP section size
 ; section "end"
 0000073: 00                                         ; section size (guess)
 0000074: 03                                         ; string length
 0000075: 656e 64                                    ; section id: "end"
 0000073: 04                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0a06 6d65 6d6f 7279  
-0000010: 0101 0010 0a73 6967 6e61 7475 7265 7301  
-0000020: 0201 0101 1613 6675 6e63 7469 6f6e 5f73  
-0000030: 6967 6e61 7475 7265 7301 0025 0f66 756e  
-0000040: 6374 696f 6e5f 626f 6469 6573 0113 0033  
-0000050: 0200 0a00 402a 0200 0a00 0a01 400e 000e  
-0000060: 0111 0c65 7870 6f72 745f 7461 626c 6501  
-0000070: 0001 6604 0365 6e64                      
+0000000: 0061 736d 0a00 0000 100a 7369 676e 6174  
+0000010: 7572 6573 0102 0101 0116 1366 756e 6374  
+0000020: 696f 6e5f 7369 676e 6174 7572 6573 0100  
+0000030: 0a06 6d65 6d6f 7279 0101 0011 0c65 7870  
+0000040: 6f72 745f 7461 626c 6501 0001 6625 0f66  
+0000050: 756e 6374 696f 6e5f 626f 6469 6573 0113  
+0000060: 0033 0200 0a00 402a 0200 0a00 0a01 400e  
+0000070: 000e 0104 0365 6e64                      
 ;;; STDOUT ;;)

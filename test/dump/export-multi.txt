@@ -23,28 +23,28 @@
 000002c: 01                                         ; num functions
 000002d: 00                                         ; function 0 signature index
 0000017: 16                                         ; FIXUP section size
-; section "function_bodies"
-000002e: 00                                         ; section size (guess)
-000002f: 0f                                         ; string length
-0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-000003f: 01                                         ; num functions
-; function body 0
-0000040: 00                                         ; func body size (guess)
-0000041: 00                                         ; local decl count
-0000042: 00                                         ; OPCODE_NOP
-0000040: 02                                         ; FIXUP func body size
-000002e: 14                                         ; FIXUP section size
 ; section "export_table"
+000002e: 00                                         ; section size (guess)
+000002f: 0c                                         ; string length
+0000030: 6578 706f 7274 5f74 6162 6c65              ; section id: "export_table"
+000003c: 02                                         ; num exports
+000003d: 00                                         ; export func index
+000003e: 01                                         ; string length
+000003f: 61                                         ; export name
+0000040: 00                                         ; export func index
+0000041: 01                                         ; string length
+0000042: 62                                         ; export name
+000002e: 14                                         ; FIXUP section size
+; section "function_bodies"
 0000043: 00                                         ; section size (guess)
-0000044: 0c                                         ; string length
-0000045: 6578 706f 7274 5f74 6162 6c65              ; section id: "export_table"
-0000051: 02                                         ; num exports
-0000052: 00                                         ; export func index
-0000053: 01                                         ; string length
-0000054: 61                                         ; export name
-0000055: 00                                         ; export func index
-0000056: 01                                         ; string length
-0000057: 62                                         ; export name
+0000044: 0f                                         ; string length
+0000045: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
+0000054: 01                                         ; num functions
+; function body 0
+0000055: 00                                         ; func body size (guess)
+0000056: 00                                         ; local decl count
+0000057: 00                                         ; OPCODE_NOP
+0000055: 02                                         ; FIXUP func body size
 0000043: 14                                         ; FIXUP section size
 ; section "end"
 0000058: 00                                         ; section size (guess)
@@ -54,8 +54,8 @@
 ;; dump
 0000000: 0061 736d 0a00 0000 0e0a 7369 676e 6174  
 0000010: 7572 6573 0100 0016 1366 756e 6374 696f  
-0000020: 6e5f 7369 676e 6174 7572 6573 0100 140f  
-0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 7301  
-0000040: 0200 0014 0c65 7870 6f72 745f 7461 626c  
-0000050: 6502 0001 6100 0162 0403 656e 64         
+0000020: 6e5f 7369 676e 6174 7572 6573 0100 140c  
+0000030: 6578 706f 7274 5f74 6162 6c65 0200 0161  
+0000040: 0001 6214 0f66 756e 6374 696f 6e5f 626f  
+0000050: 6469 6573 0102 0000 0403 656e 64         
 ;;; STDOUT ;;)

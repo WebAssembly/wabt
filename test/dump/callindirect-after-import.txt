@@ -57,34 +57,34 @@
 000004a: 00                                         ; function 0 signature index
 000004b: 02                                         ; function 1 signature index
 0000034: 17                                         ; FIXUP section size
-; section "function_bodies"
-000004c: 00                                         ; section size (guess)
-000004d: 0f                                         ; string length
-000004e: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-000005d: 02                                         ; num functions
-; function body 0
-000005e: 00                                         ; func body size (guess)
-000005f: 00                                         ; local decl count
-0000060: 00                                         ; OPCODE_NOP
-000005e: 02                                         ; FIXUP func body size
-; function body 1
-0000061: 00                                         ; func body size (guess)
-0000062: 00                                         ; local decl count
-0000063: 13                                         ; OPCODE_CALL_INDIRECT
-0000064: 00                                         ; signature index
-0000065: 0a                                         ; OPCODE_I32_CONST
-0000066: 00                                         ; i32 literal
-0000067: 0d                                         ; OPCODE_F32_CONST
-0000068: 0000 803f                                  ; f32 literal
-0000061: 0a                                         ; FIXUP func body size
-000004c: 1f                                         ; FIXUP section size
 ; section "function_table"
-000006c: 00                                         ; section size (guess)
-000006d: 0e                                         ; string length
-000006e: 6675 6e63 7469 6f6e 5f74 6162 6c65         ; section id: "function_table"
-000007c: 01                                         ; num function table entries
-000007d: 00                                         ; function table entry
-000006c: 11                                         ; FIXUP section size
+000004c: 00                                         ; section size (guess)
+000004d: 0e                                         ; string length
+000004e: 6675 6e63 7469 6f6e 5f74 6162 6c65         ; section id: "function_table"
+000005c: 01                                         ; num function table entries
+000005d: 00                                         ; function table entry
+000004c: 11                                         ; FIXUP section size
+; section "function_bodies"
+000005e: 00                                         ; section size (guess)
+000005f: 0f                                         ; string length
+0000060: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
+000006f: 02                                         ; num functions
+; function body 0
+0000070: 00                                         ; func body size (guess)
+0000071: 00                                         ; local decl count
+0000072: 00                                         ; OPCODE_NOP
+0000070: 02                                         ; FIXUP func body size
+; function body 1
+0000073: 00                                         ; func body size (guess)
+0000074: 00                                         ; local decl count
+0000075: 13                                         ; OPCODE_CALL_INDIRECT
+0000076: 00                                         ; signature index
+0000077: 0a                                         ; OPCODE_I32_CONST
+0000078: 00                                         ; i32 literal
+0000079: 0d                                         ; OPCODE_F32_CONST
+000007a: 0000 803f                                  ; f32 literal
+0000073: 0a                                         ; FIXUP func body size
+000005e: 1f                                         ; FIXUP section size
 ; section "end"
 000007e: 00                                         ; section size (guess)
 000007f: 03                                         ; string length
@@ -95,9 +95,9 @@
 0000010: 7572 6573 0301 0003 0001 0000 170c 696d  
 0000020: 706f 7274 5f74 6162 6c65 0101 0366 6f6f  
 0000030: 0362 6172 1713 6675 6e63 7469 6f6e 5f73  
-0000040: 6967 6e61 7475 7265 7302 0002 1f0f 6675  
-0000050: 6e63 7469 6f6e 5f62 6f64 6965 7302 0200  
-0000060: 000a 0013 000a 000d 0000 803f 110e 6675  
-0000070: 6e63 7469 6f6e 5f74 6162 6c65 0100 0403  
+0000040: 6967 6e61 7475 7265 7302 0002 110e 6675  
+0000050: 6e63 7469 6f6e 5f74 6162 6c65 0100 1f0f  
+0000060: 6675 6e63 7469 6f6e 5f62 6f64 6965 7302  
+0000070: 0200 000a 0013 000a 000d 0000 803f 0403  
 0000080: 656e 64                                  
 ;;; STDOUT ;;)
