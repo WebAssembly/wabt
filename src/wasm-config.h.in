@@ -26,6 +26,12 @@
 /* Whether <unistd.h> is available */
 #cmakedefine01 HAVE_UNISTD_H
 
+/* Whether snprintf is defined by stdio.h */
+#cmakedefine01 HAVE_SNPRINTF
+
+/* Whether ssize_t is defined by stddef.h */
+#cmakedefine01 HAVE_SSIZE_T
+
 #cmakedefine01 COMPILER_IS_CLANG
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC
