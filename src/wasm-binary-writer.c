@@ -33,6 +33,10 @@
 #define MAX_U32_LEB128_BYTES 5
 #define MAX_U64_LEB128_BYTES 10
 
+/* whether to display the ASCII characters in the debug output */
+#define PRINT_CHARS 1
+#define DONT_PRINT_CHARS 0
+
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
@@ -178,7 +182,8 @@ typedef struct WasmWriteContext {
   int* import_sig_indexes;
   int* func_sig_indexes;
   int* remapped_locals;         /* from unpacked -> packed index, has params */
-  int* reverse_remapped_locals; /* from packed -> unpacked index, no params*/
+  int* reverse_remapped_locals; /* from packed -> unpacked index, no params */
+  WasmStringSlice** local_type_names; /* from packed -> local name */
 } WasmWriteContext;
 
 DECLARE_VECTOR(func_signature, WasmFuncSignature);
@@ -206,11 +211,12 @@ static void out_data_at(WasmWriterState* writer_state,
                         size_t offset,
                         const void* src,
                         size_t size,
+                        int print_chars,
                         const char* desc) {
   if (*writer_state->result != WASM_OK)
     return;
   if (writer_state->log_writes)
-    wasm_print_memory(src, size, offset, 0, desc);
+    wasm_print_memory(src, size, offset, print_chars, desc);
   if (writer_state->writer->write_data)
     *writer_state->result = writer_state->writer->write_data(
         offset, src, size, writer_state->writer->user_data);
@@ -220,7 +226,7 @@ static void out_data(WasmWriterState* writer_state,
                      const void* src,
                      size_t length,
                      const char* desc) {
-  out_data_at(writer_state, writer_state->offset, src, length, desc);
+  out_data_at(writer_state, writer_state->offset, src, length, 0, desc);
   writer_state->offset += length;
 }
 
@@ -244,7 +250,7 @@ static void out_u8(WasmWriterState* writer_state,
   assert(value <= UINT8_MAX);
   uint8_t value8 = value;
   out_data_at(writer_state, writer_state->offset, &value8, sizeof(value8),
-              desc);
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += sizeof(value8);
 }
 
@@ -255,35 +261,39 @@ static void out_u16(WasmWriterState* writer_state,
   assert(value <= UINT16_MAX);
   uint16_t value16 = value;
   out_data_at(writer_state, writer_state->offset, &value16, sizeof(value16),
-              desc);
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += sizeof(value16);
 }
 
 static void out_u32(WasmWriterState* writer_state,
                     uint32_t value,
                     const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value),
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += sizeof(value);
 }
 
 static void out_u64(WasmWriterState* writer_state,
                     uint64_t value,
                     const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value),
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += sizeof(value);
 }
 
 static void out_f32(WasmWriterState* writer_state,
                     float value,
                     const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value),
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += sizeof(value);
 }
 
 static void out_f64(WasmWriterState* writer_state,
                     double value,
                     const char* desc) {
-  out_data_at(writer_state, writer_state->offset, &value, sizeof(value), desc);
+  out_data_at(writer_state, writer_state->offset, &value, sizeof(value),
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += sizeof(value);
 }
 
@@ -293,7 +303,8 @@ static void out_u8_at(WasmWriterState* writer_state,
                       const char* desc) {
   assert(value <= UINT8_MAX);
   uint8_t value8 = value;
-  out_data_at(writer_state, offset, &value8, sizeof(value8), desc);
+  out_data_at(writer_state, offset, &value8, sizeof(value8), DONT_PRINT_CHARS,
+              desc);
 }
 
 static void out_u16_at(WasmWriterState* writer_state,
@@ -302,14 +313,16 @@ static void out_u16_at(WasmWriterState* writer_state,
                        const char* desc) {
   assert(value <= UINT16_MAX);
   uint16_t value16 = value;
-  out_data_at(writer_state, offset, &value16, sizeof(value16), desc);
+  out_data_at(writer_state, offset, &value16, sizeof(value16), DONT_PRINT_CHARS,
+              desc);
 }
 
 static void out_u32_at(WasmWriterState* writer_state,
                        uint32_t offset,
                        uint32_t value,
                        const char* desc) {
-  out_data_at(writer_state, offset, &value, sizeof(value), desc);
+  out_data_at(writer_state, offset, &value, sizeof(value), DONT_PRINT_CHARS,
+              desc);
 }
 
 #undef OUT_AT_TYPE
@@ -335,7 +348,7 @@ static uint32_t out_u32_leb128_at(WasmWriterState* writer_state,
   int i = 0;
   LEB128_LOOP_UNTIL(value == 0);
   int length = i;
-  out_data_at(writer_state, offset, data, length, desc);
+  out_data_at(writer_state, offset, data, length, DONT_PRINT_CHARS, desc);
   return length;
 }
 
@@ -349,7 +362,8 @@ static uint32_t out_fixed_u32_leb128_at(WasmWriterState* writer_state,
   data[2] = ((value >> 14) & 0x7f) | 0x80;
   data[3] = ((value >> 21) & 0x7f) | 0x80;
   data[4] = ((value >> 28) & 0x0f);
-  out_data_at(writer_state, offset, data, MAX_U32_LEB128_BYTES, desc);
+  out_data_at(writer_state, offset, data, MAX_U32_LEB128_BYTES,
+              DONT_PRINT_CHARS, desc);
   return MAX_U32_LEB128_BYTES;
 }
 
@@ -372,7 +386,8 @@ static void out_i32_leb128(WasmWriterState* writer_state,
     LEB128_LOOP_UNTIL(value == 0 && !(byte & 0x40));
 
   int length = i;
-  out_data_at(writer_state, writer_state->offset, data, length, desc);
+  out_data_at(writer_state, writer_state->offset, data, length,
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += length;
 }
 
@@ -387,7 +402,8 @@ static void out_i64_leb128(WasmWriterState* writer_state,
     LEB128_LOOP_UNTIL(value == 0 && !(byte & 0x40));
 
   int length = i;
-  out_data_at(writer_state, writer_state->offset, data, length, desc);
+  out_data_at(writer_state, writer_state->offset, data, length,
+              DONT_PRINT_CHARS, desc);
   writer_state->offset += length;
 }
 
@@ -439,9 +455,10 @@ static void out_fixup_u32_leb128_size(WasmWriteContext* ctx,
 static void out_str(WasmWriterState* writer_state,
                     const char* s,
                     size_t length,
+                    int print_chars,
                     const char* desc) {
   out_u32_leb128(writer_state, length, "string length");
-  out_data_at(writer_state, writer_state->offset, s, length, desc);
+  out_data_at(writer_state, writer_state->offset, s, length, print_chars, desc);
   writer_state->offset += length;
 }
 
@@ -461,7 +478,8 @@ static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
   vsnprintf(buffer, len, format, args_copy);
   va_end(args_copy);
   /* - 1 to remove the trailing \0 that was added by vsnprintf */
-  out_data_at(writer_state, writer_state->offset, buffer, len - 1, "");
+  out_data_at(writer_state, writer_state->offset, buffer, len - 1,
+              DONT_PRINT_CHARS, "");
   writer_state->offset += len - 1;
 }
 
@@ -477,7 +495,7 @@ static void begin_section(WasmWriteContext* ctx,
       out_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
   ctx->last_section_leb_size_guess = leb_size_guess;
   snprintf(desc, sizeof(desc), "section id: \"%s\"", name);
-  out_str(ws, name, strlen(name), desc);
+  out_str(ws, name, strlen(name), DONT_PRINT_CHARS, desc);
 }
 
 static void end_section(WasmWriteContext* ctx) {
@@ -1046,9 +1064,9 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       print_header(ws, "import header", i);
       out_u32_leb128(ws, ctx->import_sig_indexes[i], "import signature index");
       out_str(ws, import->module_name.start, import->module_name.length,
-              "import module name");
+              PRINT_CHARS, "import module name");
       out_str(ws, import->func_name.start, import->func_name.length,
-              "import function name");
+              PRINT_CHARS, "import function name");
     }
     end_section(ctx);
   }
@@ -1095,7 +1113,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       int func_index = wasm_get_func_index_by_var(module, &export->var);
       assert(func_index >= 0 && func_index < module->funcs.size);
       out_u32_leb128(ws, func_index, "export func index");
-      out_str(ws, export->name.start, export->name.length, "export name");
+      out_str(ws, export->name.start, export->name.length, PRINT_CHARS,
+              "export name");
     }
     end_section(ctx);
   }
@@ -1137,6 +1156,57 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
       out_u32_leb128(ws, segment->size, "segment size");
       print_header(ws, "segment data", i);
       out_data(ws, segment->data, segment->size, "segment data");
+    }
+    end_section(ctx);
+  }
+
+  if (ctx->options->write_debug_names) {
+    char desc[100];
+    begin_section(ctx, WASM_BINARY_SECTION_NAMES, leb_size_guess);
+    out_u32_leb128(ws, module->funcs.size, "num functions");
+    for (i = 0; i < module->funcs.size; ++i) {
+      WasmFunc* func = module->funcs.data[i];
+      snprintf(desc, sizeof(desc), "func name %d", i);
+      out_str(ws, func->name.start, func->name.length, PRINT_CHARS, desc);
+      out_u32_leb128(ws, func->params_and_locals.types.size, "num locals");
+
+      if (func->params_and_locals.types.size) {
+        remap_locals(ctx, func);
+
+        /* create mapping from packed index to its name (if any) */
+        size_t local_type_names_size =
+            func->params_and_locals.types.size * sizeof(WasmStringSlice*);
+        ctx->local_type_names =
+            wasm_realloc(ctx->allocator, ctx->local_type_names,
+                         local_type_names_size, WASM_DEFAULT_ALIGN);
+        CHECK_ALLOC_NULL(ctx->local_type_names);
+        memset(ctx->local_type_names, 0, local_type_names_size);
+
+        int j;
+        for (j = 0; j < func->params_and_locals.bindings.entries.capacity;
+             ++j) {
+          WasmBindingHashEntry* entry =
+              &func->params_and_locals.bindings.entries.data[j];
+          if (wasm_hash_entry_is_free(entry))
+            continue;
+
+          ctx->local_type_names[ctx->remapped_locals[entry->binding.index]] =
+              &entry->binding.name;
+        }
+
+        for (j = 0; j < func->params_and_locals.types.size; ++j) {
+          WasmStringSlice name;
+          if (ctx->local_type_names[j]) {
+            name = *ctx->local_type_names[j];
+          } else {
+            name.start = "";
+            name.length = 0;
+          }
+
+          snprintf(desc, sizeof(desc), "remapped local name %d", j);
+          out_str(ws, name.start, name.length, PRINT_CHARS, desc);
+        }
+      }
     }
     end_section(ctx);
   }
@@ -1676,6 +1746,7 @@ static void cleanup_context(WasmWriteContext* ctx) {
   wasm_free(ctx->allocator, ctx->func_sig_indexes);
   wasm_free(ctx->allocator, ctx->remapped_locals);
   wasm_free(ctx->allocator, ctx->reverse_remapped_locals);
+  wasm_free(ctx->allocator, ctx->local_type_names);
 }
 
 WasmResult wasm_write_binary(WasmAllocator* allocator,

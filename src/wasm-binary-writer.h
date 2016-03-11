@@ -24,7 +24,7 @@ struct WasmScript;
 struct WasmWriter;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { 0, 0, 0, 1, 1 }
+  { 0, 0, 0, 1, 1, 0 }
 
 typedef struct WasmWriteBinaryOptions {
   int spec;
@@ -32,6 +32,7 @@ typedef struct WasmWriteBinaryOptions {
   int log_writes;
   int canonicalize_lebs;
   int remap_locals;
+  int write_debug_names;
 } WasmWriteBinaryOptions;
 
 EXTERN_C WasmResult wasm_write_binary(struct WasmAllocator*,

@@ -38,9 +38,9 @@
 ; import header 0
 0000036: 01                                         ; import signature index
 0000037: 05                                         ; string length
-0000038: 7374 6469 6f                               ; import module name
+0000038: 7374 6469 6f                             stdio  ; import module name
 000003d: 05                                         ; string length
-000003e: 7072 696e 74                               ; import function name
+000003e: 7072 696e 74                             print  ; import function name
 0000023: 9b80 8080 00                               ; FIXUP section size
 ; section "function_signatures"
 0000043: 0000 0000 00                               ; section size (guess)
@@ -75,7 +75,7 @@
 0000098: 01                                         ; num exports
 0000099: 00                                         ; export func index
 000009a: 02                                         ; string length
-000009b: 6631                                       ; export name
+000009b: 6631                                     f1  ; export name
 0000086: 9280 8080 00                               ; FIXUP section size
 ; section "function_bodies"
 000009d: 0000 0000 00                               ; section size (guess)

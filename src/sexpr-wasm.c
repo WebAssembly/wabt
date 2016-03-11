@@ -39,6 +39,7 @@ enum {
   FLAG_USE_LIBC_ALLOCATOR,
   FLAG_NO_CANONICALIZE_LEB128S,
   FLAG_NO_REMAP_LOCALS,
+  FLAG_DEBUG_NAMES,
   NUM_FLAGS
 };
 
@@ -79,6 +80,7 @@ static struct option s_long_options[] = {
     {"use-libc-allocator", no_argument, NULL, 0},
     {"no-canonicalize-leb128s", no_argument, NULL, 0},
     {"no-remap-locals", no_argument, NULL, 0},
+    {"debug-names", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 #define OPTIONS_LENGTH (ARRAY_SIZE(s_long_options) - 1)
@@ -105,6 +107,7 @@ static OptionHelp s_option_help[] = {
     {FLAG_NO_REMAP_LOCALS, NULL,
      "If set, function locals are written in source order, instead of packing "
      "them to reduce size"},
+    {FLAG_DEBUG_NAMES, NULL, "Write debug names to the generated binary file"},
     {NUM_FLAGS, NULL},
 };
 #define OPTIONS_HELP_LENGTH (ARRAY_SIZE(s_option_help) - 1)
@@ -242,6 +245,10 @@ static void parse_options(int argc, char** argv) {
 
           case FLAG_NO_REMAP_LOCALS:
             s_write_binary_options.remap_locals = 0;
+            break;
+
+          case FLAG_DEBUG_NAMES:
+            s_write_binary_options.write_debug_names = 1;
             break;
         }
         break;

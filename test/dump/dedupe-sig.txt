@@ -24,9 +24,9 @@
 ; import header 0
 0000027: 00                                         ; import signature index
 0000028: 03                                         ; string length
-0000029: 666f 6f                                    ; import module name
+0000029: 666f 6f                                  foo  ; import module name
 000002c: 03                                         ; string length
-000002d: 6261 72                                    ; import function name
+000002d: 6261 72                                  bar  ; import function name
 0000018: 17                                         ; FIXUP section size
 ; section "function_signatures"
 0000030: 00                                         ; section size (guess)

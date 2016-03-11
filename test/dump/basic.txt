@@ -42,7 +42,7 @@
 0000049: 01                                         ; num exports
 000004a: 00                                         ; export func index
 000004b: 01                                         ; string length
-000004c: 66                                         ; export name
+000004c: 66                                       f  ; export name
 000003b: 11                                         ; FIXUP section size
 ; section "function_bodies"
 000004d: 00                                         ; section size (guess)

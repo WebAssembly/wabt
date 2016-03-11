@@ -32,15 +32,15 @@
 ; import header 0
 000002d: 00                                         ; import signature index
 000002e: 07                                         ; string length
-000002f: 6967 6e6f 7265 64                          ; import module name
+000002f: 6967 6e6f 7265 64                        ignored  ; import module name
 0000036: 04                                         ; string length
-0000037: 7465 7374                                  ; import function name
+0000037: 7465 7374                                test  ; import function name
 ; import header 1
 000003b: 01                                         ; import signature index
 000003c: 07                                         ; string length
-000003d: 6967 6e6f 7265 64                          ; import module name
+000003d: 6967 6e6f 7265 64                        ignored  ; import module name
 0000044: 05                                         ; string length
-0000045: 7465 7374 32                               ; import function name
+0000045: 7465 7374 32                             test2  ; import function name
 000001e: 2b                                         ; FIXUP section size
 ; section "end"
 000004a: 00                                         ; section size (guess)

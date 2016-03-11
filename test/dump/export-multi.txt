@@ -30,10 +30,10 @@
 000003c: 02                                         ; num exports
 000003d: 00                                         ; export func index
 000003e: 01                                         ; string length
-000003f: 61                                         ; export name
+000003f: 61                                       a  ; export name
 0000040: 00                                         ; export func index
 0000041: 01                                         ; string length
-0000042: 62                                         ; export name
+0000042: 62                                       b  ; export name
 000002e: 14                                         ; FIXUP section size
 ; section "function_bodies"
 0000043: 00                                         ; section size (guess)
