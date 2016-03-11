@@ -14,11 +14,6 @@
 0000011: 01                                         ; max mem pages
 0000012: 00                                         ; export mem
 0000008: 0a                                         ; FIXUP section size
-; section "end"
-0000013: 00                                         ; section size (guess)
-0000014: 03                                         ; string length
-0000015: 656e 64                                    ; section id: "end"
-0000013: 04                                         ; FIXUP section size
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
@@ -29,11 +24,6 @@
 0000011: 02                                         ; max mem pages
 0000012: 00                                         ; export mem
 0000008: 0a                                         ; FIXUP section size
-; section "end"
-0000013: 00                                         ; section size (guess)
-0000014: 03                                         ; string length
-0000015: 656e 64                                    ; section id: "end"
-0000013: 04                                         ; FIXUP section size
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
@@ -44,11 +34,6 @@
 0000011: 04                                         ; max mem pages
 0000012: 00                                         ; export mem
 0000008: 0a                                         ; FIXUP section size
-; section "end"
-0000013: 00                                         ; section size (guess)
-0000014: 03                                         ; string length
-0000015: 656e 64                                    ; section id: "end"
-0000013: 04                                         ; FIXUP section size
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
@@ -59,9 +44,4 @@
 0000011: 05                                         ; max mem pages
 0000012: 00                                         ; export mem
 0000008: 0a                                         ; FIXUP section size
-; section "end"
-0000013: 00                                         ; section size (guess)
-0000014: 03                                         ; string length
-0000015: 656e 64                                    ; section id: "end"
-0000013: 04                                         ; FIXUP section size
 ;;; STDOUT ;;)

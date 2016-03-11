@@ -24,14 +24,8 @@
 ; segment data 0
 0000025: 0001 0203 0405 0607 0809 0a                ; segment data
 0000013: 1c                                         ; FIXUP section size
-; section "end"
-0000030: 00                                         ; section size (guess)
-0000031: 03                                         ; string length
-0000032: 656e 64                                    ; section id: "end"
-0000030: 04                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0a00 0000 0a06 6d65 6d6f 7279  
 0000010: 0101 001c 0d64 6174 615f 7365 676d 656e  
 0000020: 7473 0100 0b00 0102 0304 0506 0708 090a  
-0000030: 0403 656e 64                             
 ;;; STDOUT ;;)

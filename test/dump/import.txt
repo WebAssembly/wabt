@@ -42,15 +42,10 @@
 0000044: 05                                         ; string length
 0000045: 7465 7374 32                             test2  ; import function name
 000001e: 2b                                         ; FIXUP section size
-; section "end"
-000004a: 00                                         ; section size (guess)
-000004b: 03                                         ; string length
-000004c: 656e 64                                    ; section id: "end"
-000004a: 04                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0a00 0000 150a 7369 676e 6174  
 0000010: 7572 6573 0204 0001 0203 0401 0101 2b0c  
 0000020: 696d 706f 7274 5f74 6162 6c65 0200 0769  
 0000030: 676e 6f72 6564 0474 6573 7401 0769 676e  
-0000040: 6f72 6564 0574 6573 7432 0403 656e 64    
+0000040: 6f72 6564 0574 6573 7432                 
 ;;; STDOUT ;;)

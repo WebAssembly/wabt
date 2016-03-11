@@ -1210,9 +1210,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
     end_section(ctx);
   }
-
-  begin_section(ctx, WASM_BINARY_SECTION_END, leb_size_guess);
-  end_section(ctx);
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
@@ -1546,6 +1543,8 @@ static void write_module_spec(WasmWriteContext* ctx, WasmModule* module) {
   while (p < end) {
     out_printf(&ctx->spec_writer_state, " ");
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    if (line_end > end)
+      line_end = end;
     for (; p < line_end; ++p)
       out_printf(&ctx->spec_writer_state, "%4d,", *p);
     out_printf(&ctx->spec_writer_state, "\n");

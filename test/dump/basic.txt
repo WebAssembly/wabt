@@ -72,11 +72,6 @@
 0000072: 01                                         ; remapped local index
 000005f: 13                                         ; FIXUP func body size
 000004d: 25                                         ; FIXUP section size
-; section "end"
-0000073: 00                                         ; section size (guess)
-0000074: 03                                         ; string length
-0000075: 656e 64                                    ; section id: "end"
-0000073: 04                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0a00 0000 100a 7369 676e 6174  
 0000010: 7572 6573 0102 0101 0116 1366 756e 6374  
@@ -85,5 +80,5 @@
 0000040: 6f72 745f 7461 626c 6501 0001 6625 0f66  
 0000050: 756e 6374 696f 6e5f 626f 6469 6573 0113  
 0000060: 0033 0200 0a00 402a 0200 0a00 0a01 400e  
-0000070: 000e 0104 0365 6e64                      
+0000070: 000e 01                                  
 ;;; STDOUT ;;)

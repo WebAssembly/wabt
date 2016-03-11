@@ -40,15 +40,10 @@
 0000048: 01                                         ; i32 literal
 0000040: 08                                         ; FIXUP func body size
 000002e: 1a                                         ; FIXUP section size
-; section "end"
-0000049: 00                                         ; section size (guess)
-000004a: 03                                         ; string length
-000004b: 656e 64                                    ; section id: "end"
-0000049: 04                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0a00 0000 0e0a 7369 676e 6174  
 0000010: 7572 6573 0100 0016 1366 756e 6374 696f  
 0000020: 6e5f 7369 676e 6174 7572 6573 0100 1a0f  
 0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 7301  
-0000040: 0800 0101 0700 000a 0104 0365 6e64       
+0000040: 0800 0101 0700 000a 01                   
 ;;; STDOUT ;;)

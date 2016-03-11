@@ -23,7 +23,6 @@
 #define WASM_BINARY_VERSION 0x0a
 
 #define WASM_BINARY_SECTION_DATA_SEGMENTS "data_segments"
-#define WASM_BINARY_SECTION_END "end"
 #define WASM_BINARY_SECTION_EXPORTS "export_table"
 #define WASM_BINARY_SECTION_FUNCTION_BODIES "function_bodies"
 #define WASM_BINARY_SECTION_FUNCTION_SIGNATURES "function_signatures"
