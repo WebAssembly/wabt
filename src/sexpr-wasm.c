@@ -38,6 +38,7 @@ enum {
   FLAG_SPEC_VERBOSE,
   FLAG_USE_LIBC_ALLOCATOR,
   FLAG_NO_CANONICALIZE_LEB128S,
+  FLAG_NO_REMAP_LOCALS,
   NUM_FLAGS
 };
 
@@ -45,7 +46,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static int s_dump_module;
 static int s_verbose;
-static WasmWriteBinaryOptions s_write_binary_options = {0, 0, 0, 1};
+static WasmWriteBinaryOptions s_write_binary_options =
+    WASM_WRITE_BINARY_OPTIONS_DEFAULT;
 static int s_use_libc_allocator;
 
 #ifndef __GNUC__
@@ -76,6 +78,7 @@ static struct option s_long_options[] = {
     {"spec-verbose", no_argument, NULL, 0},
     {"use-libc-allocator", no_argument, NULL, 0},
     {"no-canonicalize-leb128s", no_argument, NULL, 0},
+    {"no-remap-locals", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
 #define OPTIONS_LENGTH (ARRAY_SIZE(s_long_options) - 1)
@@ -99,6 +102,9 @@ static OptionHelp s_option_help[] = {
      "use malloc, free, etc. instead of stack allocator"},
     {FLAG_NO_CANONICALIZE_LEB128S, NULL,
      "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
+    {FLAG_NO_REMAP_LOCALS, NULL,
+     "If set, function locals are written in source order, instead of packing "
+     "them to reduce size"},
     {NUM_FLAGS, NULL},
 };
 #define OPTIONS_HELP_LENGTH (ARRAY_SIZE(s_option_help) - 1)
@@ -232,6 +238,10 @@ static void parse_options(int argc, char** argv) {
 
           case FLAG_NO_CANONICALIZE_LEB128S:
             s_write_binary_options.canonicalize_lebs = 0;
+            break;
+
+          case FLAG_NO_REMAP_LOCALS:
+            s_write_binary_options.remap_locals = 0;
             break;
         }
         break;

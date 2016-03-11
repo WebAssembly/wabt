@@ -42,11 +42,11 @@
 ; function body 0
 0000042: 00                                         ; func body size (guess)
 0000043: 03                                         ; local decl count
-0000044: 01                                         ; local i32 count
+0000044: 01                                         ; local type count
 0000045: 01                                         ; WASM_TYPE_I32
-0000046: 01                                         ; local i64 count
+0000046: 01                                         ; local type count
 0000047: 02                                         ; WASM_TYPE_I64
-0000048: 02                                         ; local f32 count
+0000048: 02                                         ; local type count
 0000049: 03                                         ; WASM_TYPE_F32
 000004a: 0e                                         ; OPCODE_GET_LOCAL
 000004b: 00                                         ; remapped local index
