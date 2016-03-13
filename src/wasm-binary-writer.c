@@ -426,13 +426,14 @@ static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
   va_list args_copy;
   va_start(args, format);
   va_copy(args_copy, args);
-  /* + 1 to account for the \0 that will be added automatically by vsnprintf */
-  int len = vsnprintf(NULL, 0, format, args) + 1;
+  /* + 1 to account for the \0 that will be added automatically by
+   wasm_vsnprintf */
+  int len = wasm_vsnprintf(NULL, 0, format, args) + 1;
   va_end(args);
   char* buffer = alloca(len);
-  vsnprintf(buffer, len, format, args_copy);
+  wasm_vsnprintf(buffer, len, format, args_copy);
   va_end(args_copy);
-  /* - 1 to remove the trailing \0 that was added by vsnprintf */
+  /* - 1 to remove the trailing \0 that was added by wasm_vsnprintf */
   out_data_at(writer_state, writer_state->offset, buffer, len - 1,
               DONT_PRINT_CHARS, "");
   writer_state->offset += len - 1;
@@ -444,12 +445,12 @@ static void begin_section(WasmWriteContext* ctx,
   WasmWriterState* ws = &ctx->writer_state;
   assert(ctx->last_section_leb_size_guess == 0);
   char desc[100];
-  SNPRINTF(desc, sizeof(desc), "section \"%s\"", name);
+  wasm_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   print_header(ws, desc, PRINT_HEADER_NO_INDEX);
   ctx->last_section_offset =
       out_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
   ctx->last_section_leb_size_guess = leb_size_guess;
-  SNPRINTF(desc, sizeof(desc), "section id: \"%s\"", name);
+  wasm_snprintf(desc, sizeof(desc), "section id: \"%s\"", name);
   out_str(ws, name, strlen(name), DONT_PRINT_CHARS, desc);
 }
 
@@ -1033,7 +1034,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 
     for (i = 0; i < module->funcs.size; ++i) {
       char desc[100];
-      SNPRINTF(desc, sizeof(desc), "function %d signature index", i);
+      wasm_snprintf(desc, sizeof(desc), "function %d signature index", i);
       out_u32_leb128(ws, ctx->func_sig_indexes[i], desc);
     }
     end_section(ctx);
@@ -1122,7 +1123,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     out_u32_leb128(ws, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
       WasmFunc* func = module->funcs.data[i];
-      snprintf(desc, sizeof(desc), "func name %d", i);
+      wasm_snprintf(desc, sizeof(desc), "func name %d", i);
       out_str(ws, func->name.start, func->name.length, PRINT_CHARS, desc);
       out_u32_leb128(ws, func->params_and_locals.types.size, "num locals");
 
@@ -1159,7 +1160,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
             name.length = 0;
           }
 
-          snprintf(desc, sizeof(desc), "remapped local name %d", j);
+          wasm_snprintf(desc, sizeof(desc), "remapped local name %d", j);
           out_str(ws, name.start, name.length, PRINT_CHARS, desc);
         }
       }
@@ -1437,7 +1438,7 @@ static WasmStringSlice create_assert_func_name(WasmAllocator* allocator,
                                                int format_index) {
   WasmStringSlice name;
   char buffer[256];
-  int buffer_len = SNPRINTF(buffer, 256, format, format_index);
+  int buffer_len = wasm_snprintf(buffer, 256, format, format_index);
   name.start = wasm_strndup(allocator, buffer, buffer_len);
   name.length = buffer_len;
   return name;

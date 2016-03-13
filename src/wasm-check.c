@@ -413,11 +413,11 @@ static WasmResult check_call(WasmCheckContext* ctx,
   int expected_args = param_types->size;
   if (expected_args == actual_args) {
     char buffer[100];
-    SNPRINTF(buffer, 100, " of %s result", desc);
+    wasm_snprintf(buffer, 100, " of %s result", desc);
     result |= check_type(ctx, loc, result_type, expected_type, buffer);
     int i;
     for (i = 0; i < actual_args; ++i) {
-      SNPRINTF(buffer, 100, " of argument %d of %s", i, desc);
+      wasm_snprintf(buffer, 100, " of argument %d of %s", i, desc);
       result |= check_expr(ctx, module, func, args->data[i],
                            param_types->data[i], buffer);
     }
@@ -426,8 +426,8 @@ static WasmResult check_call(WasmCheckContext* ctx,
     if (func->name.start) {
       size_t length = func->name.length + 10;
       func_name = alloca(length);
-      SNPRINTF(func_name, length, " \"%.*s\"", (int)func->name.length,
-               func->name.start);
+      wasm_snprintf(func_name, length, " \"%.*s\"", (int)func->name.length,
+                    func->name.start);
     }
     print_error(ctx, loc,
                 "too %s parameters to function%s in %s. got %d, expected %d",

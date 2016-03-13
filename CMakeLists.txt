@@ -58,7 +58,7 @@ if (COMPILER_IS_MSVC)
   #   seems to not like float compare w/ HUGE_VALF; bug?
   add_definitions(-W3 -WX -wd4018 -wd4056 -wd4756 -D_CRT_SECURE_NO_WARNINGS)
 else ()
-  add_definitions(-Wall -Werror -g)
+  add_definitions(-Wall -Werror -Wpointer-arith -g)
 endif ()
 
 option(RUN_FLEX_BISON "run flex and bison" ON)

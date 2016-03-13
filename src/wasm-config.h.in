@@ -56,11 +56,20 @@
 #endif
 
 #if HAVE_SNPRINTF
-#define SNPRINTF snprintf
+#define wasm_snprintf snprintf
 #elif COMPILER_IS_MSVC
-#define SNPRINTF _snprintf
+/* can't just use _snprintf because it doesn't always null terminate */
+#include <stdarg.h>
+int wasm_snprintf(char* str, size_t size, const char* format, ...);
 #else
 #error no snprintf
+#endif
+
+#if COMPILER_IS_MSVC
+/* can't just use vsnprintf because it doesn't always null terminate */
+int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap);
+#else
+#define wasm_vsnprintf vsnprintf
 #endif
 
 #if !HAVE_SSIZE_T

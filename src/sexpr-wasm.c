@@ -141,7 +141,7 @@ static void usage(const char* prog) {
 
     if (help && help->metavar) {
       char buf[100];
-      SNPRINTF(buf, 100, "%s=%s", opt->name, help->metavar);
+      wasm_snprintf(buf, 100, "%s=%s", opt->name, help->metavar);
       printf("--%-30s", buf);
     } else {
       printf("--%-30s", opt->name);

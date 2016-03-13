@@ -26,6 +26,28 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
+/* c99-style vsnprintf for MSVC < 2015. See http://stackoverflow.com/a/8712996
+ using _snprintf or vsnprintf will not-properly null-terminate, and will return
+ -1 instead of the number of characters needed on overflow. */
+#if !HAVE_SNPRINTF && COMPILER_IS_MSVC
+int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
+  int result = -1;
+  if (size != 0)
+    result = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
+  if (result == -1)
+    result = _vscprintf(format, ap);
+  return result;
+}
+
+int wasm_snprintf(char* str, size_t size, const char* format, ...) {
+  va_list args;
+  va_start(format, args);
+  int result = wasm_vsnprintf(str, size, format, args);
+  va_end(args);
+  return result;
+}
+#endif
+
 int wasm_string_slices_are_equal(const WasmStringSlice* a,
                                  const WasmStringSlice* b) {
   return a->start && b->start && a->length == b->length &&
