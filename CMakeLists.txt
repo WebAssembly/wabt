@@ -106,11 +106,10 @@ set(SEXPR_WASM_SRCS
 add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
 add_custom_target(everything DEPENDS sexpr-wasm)
 
-find_package(PythonInterp)
+find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(test
-  COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-              -e ${SEXPR_WASM_BINARY_DIR}/sexpr-wasm
+  COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} -e $<TARGET_FILE:sexpr-wasm>
   DEPENDS sexpr-wasm
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )
@@ -126,7 +125,7 @@ if (COMPILER_IS_CLANG)
     )
     add_custom_target(${TEST_TARGET}
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-                  -e ${SEXPR_WASM_BINARY_DIR}/${EXECUTABLE}
+          -e $<TARGET_FILE:${EXECUTABLE}>
       DEPENDS ${EXECUTABLE}
       WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
     )

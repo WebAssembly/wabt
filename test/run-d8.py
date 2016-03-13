@@ -22,6 +22,7 @@ import subprocess
 import sys
 import tempfile
 
+IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
@@ -31,6 +32,11 @@ DOWNLOAD_D8 = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
 EXPOSE_WASM = '--expose-wasm'
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
+
+if IS_WINDOWS:
+  DEFAULT_EXE = '.exe'
+  BUILT_D8 += '.exe'
+  DOWNLOAD_D8 += '.exe'
 
 # Get signal names from numbers in Python
 # http://stackoverflow.com/a/2549950

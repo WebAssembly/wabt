@@ -31,11 +31,15 @@ import threading
 import time
 
 
+IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
 DEFAULT_TIMEOUT = 10 # seconds
 SLOW_TIMEOUT_MULTIPLIER = 2
+
+if IS_WINDOWS:
+  DEFAULT_EXE += '.exe'
 
 
 class Error(Exception):
@@ -177,17 +181,22 @@ class TestInfo(object):
       exe = override_exe
     else:
       exe = DEFAULT_EXE
-    return os.path.abspath(os.path.join(SCRIPT_DIR, exe))
+    exe = os.path.abspath(os.path.join(SCRIPT_DIR, exe))
+
+    if os.path.splitext(exe)[1] == '.py':
+      return [sys.executable, exe]
+    else:
+      return [exe]
 
   def GetCommand(self, filename, override_exe=None, extra_args=None):
-    cmd = [self.GetExecutable(override_exe)]
+    cmd = self.GetExecutable(override_exe)
     if extra_args:
       cmd += extra_args
     cmd += self.flags
     # See comment in GetExecutable above
     if self.exe and override_exe:
       cmd += ['-e', override_exe]
-    cmd += [filename]
+    cmd += [filename.replace(os.path.sep, '/')]
     return cmd
 
   def Run(self, timeout, temp_dir, override_exe=None, extra_args=None):
@@ -211,16 +220,21 @@ class TestInfo(object):
     def KillProcess(timeout=True):
       if process:
         try:
-          os.killpg(os.getpgid(process.pid), 15)
+          if IS_WINDOWS:
+            # http://stackoverflow.com/a/10830753: deleting child processes in
+            # Windows
+            subprocess.call(['taskkill', '/F', '/T', '/PID', str(process.pid)])
+          else:
+            os.killpg(os.getpgid(process.pid), 15)
         except OSError:
           pass
-        is_timeout[0] = timeout
+      is_timeout[0] = timeout
 
-    file_ = open(file_path, 'w')
+    file_ = open(file_path, 'wb')
     try:
       # add an empty line for each header line so the line numbers match
       if self.input_file:
-        with open(self.input_file) as input_file:
+        with open(self.input_file, 'rb') as input_file:
           file_.write(input_file.read())
       else:
         file_.write('\n' * self.header.count('\n'))
@@ -232,16 +246,23 @@ class TestInfo(object):
       cmd = self.GetCommand(rel_file_path, override_exe, extra_args)
       try:
         start_time = time.time()
+        kwargs = {}
+        if not IS_WINDOWS:
+          kwargs['preexec_fn'] = os.setsid
+
         # http://stackoverflow.com/a/10012262: subprocess with a timeout
         # http://stackoverflow.com/a/22582602: kill subprocess and children
         process = subprocess.Popen(cmd, cwd=temp_dir, stdout=subprocess.PIPE,
                                                       stderr=subprocess.PIPE,
-                                   preexec_fn=os.setsid)
+                                   universal_newlines=True,
+                                   **kwargs)
         timer = threading.Timer(timeout, KillProcess)
         try:
           timer.start()
           stdout, stderr = process.communicate()
         finally:
+          returncode = process.returncode
+          process = None
           timer.cancel()
         if is_timeout[0]:
           raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
@@ -253,10 +274,10 @@ class TestInfo(object):
     finally:
       file_.close()
 
-    return stdout, stderr, process.returncode, duration
+    return stdout, stderr, returncode, duration
 
   def Rebase(self, stdout, stderr):
-    with open(self.filename, 'w') as f:
+    with open(self.filename, 'wb') as f:
       f.write(self.header)
       f.write(self.input_)
       if stderr:
@@ -354,6 +375,27 @@ def GetAllTestInfo(test_names, status):
   return infos
 
 
+def ProcessWorker(i, options, inq, outq, temp_dir):
+  try:
+    while True:
+      try:
+        info = inq.get(False)
+        try:
+          out = info.Run(options.timeout, temp_dir, options.executable,
+                         options.arg)
+        except Exception as e:
+          outq.put((info, e))
+          continue
+        outq.put((info, out))
+      except Queue.Empty:
+        # Seems this can be fired even when the queue isn't actually empty.
+        # Double-check, via inq.empty()
+        if inq.empty():
+          break
+  except KeyboardInterrupt:
+    pass
+
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-a', '--arg',
@@ -422,35 +464,13 @@ def main(args):
 
   outq = multiprocessing.Queue()
   num_proc = options.jobs
-  processes = []
   status.Start(test_count)
-
-  def Worker(i, options, inq, outq):
-    try:
-      while True:
-        try:
-          info = inq.get(False)
-          try:
-            out = info.Run(options.timeout, temp_dir, options.executable,
-                           options.arg)
-          except Exception as e:
-            outq.put((info, e))
-            continue
-          outq.put((info, out))
-        except Queue.Empty:
-          # Seems this can be fired even when the queue isn't actually empty.
-          # Double-check, via inq.empty()
-          if inq.empty():
-            break
-    except KeyboardInterrupt:
-      pass
 
   temp_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
   try:
     for i, p in enumerate(range(num_proc)):
-      proc = multiprocessing.Process(target=Worker,
-                                     args=(i, options, inq, outq))
-      processes.append(proc)
+      proc = multiprocessing.Process(target=ProcessWorker,
+                                     args=(i, options, inq, outq, temp_dir))
       proc.start()
 
     finished_tests = 0
@@ -485,12 +505,11 @@ def main(args):
       except Exception as e:
         status.Failed(info, str(e))
   except KeyboardInterrupt:
-    for proc in processes:
-      proc.join()
+    while multiprocessing.active_children():
+      time.sleep(0.1)
   finally:
-    for proc in processes:
-      proc.terminate()
-      proc.join()
+    while multiprocessing.active_children():
+      time.sleep(0.1)
     shutil.rmtree(temp_dir)
 
   status.Clear()
