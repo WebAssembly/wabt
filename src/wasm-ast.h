@@ -230,8 +230,6 @@ typedef struct WasmSegment {
 } WasmSegment;
 DECLARE_VECTOR(segment, WasmSegment);
 
-#define WASM_PAGE_SIZE 0x10000  // 64k
-
 typedef struct WasmMemory {
   WasmLocation loc;
   uint32_t initial_pages;

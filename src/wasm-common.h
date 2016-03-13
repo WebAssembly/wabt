@@ -30,6 +30,8 @@
 #define EXTERN_C_END
 #endif
 
+#define WASM_PAGE_SIZE 0x10000 /* 64k */
+
 typedef enum WasmResult {
   WASM_OK,
   WASM_ERROR,

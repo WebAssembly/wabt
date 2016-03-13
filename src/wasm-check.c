@@ -815,15 +815,16 @@ static WasmResult check_memory(WasmCheckContext* ctx,
                   segment->addr, last_end);
       result = WASM_ERROR;
     }
-    if (segment->addr > memory->initial_pages * 65536) {
+    if (segment->addr > memory->initial_pages * WASM_PAGE_SIZE) {
       print_error(ctx, &segment->loc,
                   "address (%u) greater than initial memory size (%u)",
-                  segment->addr, memory->initial_pages * 65536);
+                  segment->addr, memory->initial_pages * WASM_PAGE_SIZE);
       result = WASM_ERROR;
-    } else if (segment->addr + segment->size > memory->initial_pages * 65536) {
+    } else if (segment->addr + segment->size >
+               memory->initial_pages * WASM_PAGE_SIZE) {
       print_error(ctx, &segment->loc,
                   "segment ends past the end of initial memory size (%u)",
-                  memory->initial_pages * 65536);
+                  memory->initial_pages * WASM_PAGE_SIZE);
       result = WASM_ERROR;
     }
     last_end = segment->addr + segment->size;
