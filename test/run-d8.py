@@ -17,6 +17,7 @@
 
 import argparse
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -34,7 +35,7 @@ WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
 
 if IS_WINDOWS:
-  DEFAULT_EXE = '.exe'
+  DEFAULT_EXE += '.exe'
   BUILT_D8 += '.exe'
   DOWNLOAD_D8 += '.exe'
 
@@ -96,15 +97,20 @@ def main(args):
 
   generated = None
   try:
-    generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-')
+    # Use delete=False because Windows can't open a NamedTemporaryFile until it
+    # is cloesd, but it will be deleted by default if it is closed.
+    generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-', delete=False)
+    generated.close()
+    wasm_file = generated.name
     # First compile the file
-    cmd = [exe, options.file, '-o', generated.name]
+    cmd = [exe, '-o', wasm_file]
     if options.verbose:
       cmd.append('-v')
     if options.spec:
       cmd.extend(['--spec', '--spec-verbose'])
     if options.use_libc_allocator:
       cmd.extend(['--use-libc-allocator'])
+    cmd.append(options.file)
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
       _, stderr = process.communicate()
@@ -116,12 +122,13 @@ def main(args):
     # Now run the generated file
     if options.spec:
       # The generated file is JavaScript, so run it directly.
-      cmd = [d8, EXPOSE_WASM, SPEC_JS, generated.name]
+      cmd = [d8, EXPOSE_WASM, SPEC_JS, wasm_file]
     else:
-      cmd = [d8, EXPOSE_WASM, WASM_JS, '--', generated.name]
+      cmd = [d8, EXPOSE_WASM, WASM_JS, '--', wasm_file]
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE)
+                                      stderr=subprocess.PIPE,
+                                 universal_newlines=True)
       stdout, stderr = process.communicate()
       sys.stdout.write(CleanD8Stdout(stdout))
       msg = CleanD8Stderr(stderr)
@@ -138,7 +145,7 @@ def main(args):
 
   finally:
     if generated:
-      generated.close()
+      os.remove(generated.name)
 
   return 0
 
