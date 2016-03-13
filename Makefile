@@ -83,6 +83,10 @@ endef
 .PHONY: all
 all: sexpr-wasm
 
+.PHONY: clean
+clean:
+	rm -rf out
+
 .PHONY: test-everything
 test-everything:
 
