@@ -6,6 +6,7 @@
 #Visual Studio Products
 Debug
 Release
+build/
 *.VC.opendb
 *.sdf
 *.vcxproj.user
