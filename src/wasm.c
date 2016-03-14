@@ -29,7 +29,7 @@
 /* c99-style vsnprintf for MSVC < 2015. See http://stackoverflow.com/a/8712996
  using _snprintf or vsnprintf will not-properly null-terminate, and will return
  -1 instead of the number of characters needed on overflow. */
-#if !HAVE_SNPRINTF && COMPILER_IS_MSVC
+#if COMPILER_IS_MSVC
 int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
   int result = -1;
   if (size != 0)
@@ -39,6 +39,7 @@ int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
   return result;
 }
 
+#if !HAVE_SNPRINTF
 int wasm_snprintf(char* str, size_t size, const char* format, ...) {
   va_list args;
   va_start(format, args);
@@ -46,6 +47,7 @@ int wasm_snprintf(char* str, size_t size, const char* format, ...) {
   va_end(args);
   return result;
 }
+#endif
 #endif
 
 int wasm_string_slices_are_equal(const WasmStringSlice* a,
