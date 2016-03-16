@@ -227,9 +227,17 @@ typedef enum WasmConvertOpType {
   WASM_NUM_CONVERT_OP_TYPES,
 } WasmConvertOpType;
 
-typedef enum WasmTargetType {
-  WASM_TARGET_TYPE_CASE,
-  WASM_TARGET_TYPE_BR,
-} WasmTargetType;
+typedef enum WasmLiteralType {
+  WASM_LITERAL_TYPE_INT,
+  WASM_LITERAL_TYPE_FLOAT,
+  WASM_LITERAL_TYPE_HEXFLOAT,
+  WASM_LITERAL_TYPE_INFINITY,
+  WASM_LITERAL_TYPE_NAN,
+} WasmLiteralType;
+
+typedef struct WasmLiteral {
+  WasmLiteralType type;
+  WasmStringSlice text;
+} WasmLiteral;
 
 #endif /* WASM_COMMON_H_ */

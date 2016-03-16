@@ -16,8 +16,6 @@
 
 %{
 #include <assert.h>
-#include <errno.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +23,7 @@
 #include "wasm-allocator.h"
 #include "wasm-internal.h"
 #include "wasm-parser.h"
+#include "wasm-parse-literal.h"
 
 #define DUPTEXT(dst, src)                                                   \
   (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
@@ -83,14 +82,8 @@ static WasmImport* new_import(WasmAllocator* allocator) {
   return wasm_alloc_zero(allocator, sizeof(WasmImport), WASM_DEFAULT_ALIGN);
 }
 
-static int read_int32(const char* s, const char* end, uint32_t* out,
-                      int allow_signed);
-static int read_int64(const char* s, const char* end, uint64_t* out);
-static int read_uint64(const char* s, const char* end, uint64_t* out);
-static int read_float(const char* s, const char* end, uint32_t* out_bits);
-static int read_double(const char* s, const char* end, uint64_t* out_bits);
-static int read_const(WasmType type, const char* s, const char* end,
-                      WasmConst* out);
+static int parse_const(WasmType type, WasmLiteralType literal_type,
+                       const char* s, const char* end, WasmConst* out);
 static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
                                       void** out_data, size_t* out_size);
 
@@ -124,10 +117,11 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<compare> COMPARE
 %type<convert> CONVERT
 %type<mem> LOAD STORE
-%type<text> ALIGN FLOAT INT OFFSET TEXT VAR
+%type<text> ALIGN OFFSET TEXT VAR
 %type<type> SELECT
 %type<type> CONST VALUE_TYPE
 %type<unary> UNARY
+%type<literal> INT FLOAT
 
 %type<command> cmd
 %type<commands> cmd_list
@@ -144,11 +138,12 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<memory> memory
 %type<module> module
 %type<module_fields> module_fields
+%type<literal> literal
 %type<script> script
 %type<segment> segment string_contents
 %type<segments> segment_list
 %type<type_bindings> local_list param_list
-%type<text> bind_var labeling literal quoted_text
+%type<text> bind_var labeling quoted_text
 %type<type> result
 %type<types> value_type_list
 %type<u32> align initial_pages max_pages segment_address
@@ -156,7 +151,8 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<vars> table var_list
 %type<var> start type_use var
 
-%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling literal quoted_text
+%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling quoted_text
+%destructor { wasm_destroy_string_slice(parser->allocator, &$$.text); } literal
 %destructor { wasm_destroy_type_vector(parser->allocator, &$$); } value_type_list
 %destructor { wasm_destroy_var(parser->allocator, &$$); } var
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
@@ -211,8 +207,16 @@ func_type :
 /* Expressions */
 
 literal :
-    INT { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
-  | FLOAT { DUPTEXT($$, $1); CHECK_ALLOC_STR($$); }
+    INT {
+      $$.type = $1.type;
+      DUPTEXT($$.text, $1.text);
+      CHECK_ALLOC_STR($$.text);
+    }
+  | FLOAT {
+      $$.type = $1.type;
+      DUPTEXT($$.text, $1.text);
+      CHECK_ALLOC_STR($$.text);
+    }
 ;
 
 var :
@@ -220,9 +224,11 @@ var :
       $$.loc = @1;
       $$.type = WASM_VAR_TYPE_INDEX;
       uint32_t index;
-      if (!read_int32($1.start, $1.start + $1.length, &index, 0))
-        wasm_parser_error(&@1, lexer, parser, "invalid int %.*s", $1.length,
-                          $1.start);
+      if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
+                            &index, 0)) {
+        wasm_parser_error(&@1, lexer, parser, "invalid int %.*s",
+                          $1.text.length, $1.text.start);
+      }
       $$.index = index;
     }
   | VAR {
@@ -262,7 +268,7 @@ labeling :
 offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
-      if (!read_int64($1.start, $1.start + $1.length, &$$))
+      if (!wasm_parse_int64($1.start, $1.start + $1.length, &$$))
         wasm_parser_error(&@1, lexer, parser, "invalid offset \"%.*s\"",
                           $1.length, $1.start);
     }
@@ -270,7 +276,7 @@ offset :
 align :
     /* empty */ { $$ = WASM_USE_NATURAL_ALIGNMENT; }
   | ALIGN {
-      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+      if (!wasm_parse_int32($1.start, $1.start + $1.length, &$$, 0))
         wasm_parser_error(&@1, lexer, parser, "invalid alignment \"%.*s\"",
                           $1.length, $1.start);
     }
@@ -426,10 +432,11 @@ expr1 :
       $$ = wasm_new_const_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->const_.loc = @1;
-      if (!read_const($1, $2.start, $2.start + $2.length, &$$->const_))
+      if (!parse_const($1, $2.type, $2.text.start,
+                       $2.text.start + $2.text.length, &$$->const_))
         wasm_parser_error(&@2, lexer, parser, "invalid literal \"%.*s\"",
-                          $2.length, $2.start);
-      wasm_free(parser->allocator, (char*)$2.start);
+                          $2.text.length, $2.text.start);
+      wasm_free(parser->allocator, (char*)$2.text.start);
     }
   | UNARY expr {
       $$ = wasm_new_unary_expr(parser->allocator);
@@ -1027,10 +1034,12 @@ start :
 
 segment_address :
     INT {
-      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+      if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
+                            &$$, 0)) {
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid memory segment address \"%.*s\"", $1.length,
-                          $1.start);
+                          "invalid memory segment address \"%.*s\"",
+                          $1.text.length, $1.text.start);
+      }
     }
 ;
 
@@ -1052,19 +1061,23 @@ segment_list :
 
 initial_pages :
     INT {
-      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+      if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
+                            &$$, 0)) {
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid initial memory pages \"%.*s\"", $1.length,
-                          $1.start);
+                          "invalid initial memory pages \"%.*s\"",
+                          $1.text.length, $1.text.start);
+      }
     }
 ;
 
 max_pages :
     INT {
-      if (!read_int32($1.start, $1.start + $1.length, &$$, 0))
+      if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
+                            &$$, 0)) {
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid max memory pages \"%.*s\"", $1.length,
-                          $1.start);
+                          "invalid max memory pages \"%.*s\"", $1.text.length,
+                          $1.text.start);
+      }
     }
 ;
 
@@ -1358,10 +1371,11 @@ cmd_list :
 const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
-      if (!read_const($2, $3.start, $3.start + $3.length, &$$))
+      if (!parse_const($2, $3.type, $3.text.start,
+                      $3.text.start + $3.text.length, &$$))
         wasm_parser_error(&@3, lexer, parser, "invalid literal \"%.*s\"",
-                          $3.length, $3.start);
-      wasm_free(parser->allocator, (char*)$3.start);
+                          $3.text.length, $3.text.start);
+      wasm_free(parser->allocator, (char*)$3.text.start);
     }
 ;
 const_opt :
@@ -1403,250 +1417,21 @@ void wasm_parser_error(WasmLocation* loc,
   va_end(args);
 }
 
-static int hexdigit(char c, uint32_t* out) {
-  if ((unsigned int)(c - '0') <= 9) {
-    *out = c - '0';
-    return 1;
-  } else if ((unsigned int)(c - 'a') <= 6) {
-    *out = 10 + (c - 'a');
-    return 1;
-  } else if ((unsigned int)(c - 'A') <= 6) {
-    *out = 10 + (c - 'A');
-    return 1;
-  }
-  return 0;
-}
-
-/* return 1 if the non-NULL-terminated string starting with |start| and ending
- with |end| starts with the NULL-terminated string |prefix|. */
-static int string_starts_with(const char* start,
-                              const char* end,
-                              const char* prefix) {
-  while (start < end && *prefix) {
-    if (*start != *prefix)
-      return 0;
-    start++;
-    prefix++;
-  }
-  return *prefix == 0;
-}
-
-static int read_uint64(const char* s, const char* end, uint64_t* out) {
-  if (s == end)
-    return 0;
-  uint64_t value = 0;
-  if (*s == '0' && s + 1 < end && s[1] == 'x') {
-    s += 2;
-    if (s == end)
-      return 0;
-    for (; s < end; ++s) {
-      uint32_t digit;
-      if (!hexdigit(*s, &digit))
-        return 0;
-      uint64_t old_value = value;
-      value = value * 16 + digit;
-      /* check for overflow */
-      if (old_value > value)
-        return 0;
-    }
-  } else {
-    for (; s < end; ++s) {
-      uint32_t digit = (*s - '0');
-      if (digit > 9)
-        return 0;
-      uint64_t old_value = value;
-      value = value * 10 + digit;
-      /* check for overflow */
-      if (old_value > value)
-        return 0;
-    }
-  }
-  if (s != end)
-    return 0;
-  *out = value;
-  return 1;
-}
-
-static int read_int64(const char* s, const char* end, uint64_t* out) {
-  int has_sign = 0;
-  if (*s == '-') {
-    has_sign = 1;
-    s++;
-  }
-  uint64_t value = 0;
-  int result = read_uint64(s, end, &value);
-  if (has_sign) {
-    if (value > (uint64_t)INT64_MAX + 1) /* abs(INT64_MIN) == INT64_MAX + 1 */
-      return 0;
-    value = UINT64_MAX - value + 1;
-  }
-  *out = value;
-  return result;
-}
-
-static int read_int32(const char* s,
-                      const char* end,
-                      uint32_t* out,
-                      int allow_signed) {
-  uint64_t value;
-  int has_sign = 0;
-  if (*s == '-') {
-    if (!allow_signed)
-      return 0;
-    has_sign = 1;
-    s++;
-  }
-  if (!read_uint64(s, end, &value))
-    return 0;
-
-  if (has_sign) {
-    if (value > (uint64_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
-      return 0;
-    value = UINT32_MAX - value + 1;
-  } else {
-    if (value > (uint64_t)UINT32_MAX)
-      return 0;
-  }
-  *out = (uint32_t)value;
-  return 1;
-}
-
-static int read_float_nan(const char* s, const char* end, uint32_t* out_bits) {
-  int is_neg = 0;
-  if (*s == '-') {
-    is_neg = 1;
-    s++;
-  } else if (*s == '+') {
-    s++;
-  }
-  if (!string_starts_with(s, end, "nan"))
-    return 0;
-  s += 3;
-
-  uint32_t tag;
-  if (s != end) {
-    tag = 0;
-    if (!string_starts_with(s, end, ":0x"))
-      return 0;
-    s += 3;
-
-    for (; s < end; ++s) {
-      uint32_t digit;
-      if (!hexdigit(*s, &digit))
-        return 0;
-      tag = tag * 16 + digit;
-      /* check for overflow */
-      const uint32_t max_tag = 0x7fffff;
-      if (tag > max_tag)
-        return 0;
-    }
-
-    /* NaN cannot have a zero tag, that is reserved for infinity */
-    if (tag == 0)
-      return 0;
-  } else {
-    /* normal quiet NaN */
-    tag = 0x400000;
-  }
-
-  uint32_t bits = 0x7f800000 | tag;
-  if (is_neg)
-    bits |= 0x80000000U;
-  *out_bits = bits;
-  return 1;
-}
-
-static int read_float(const char* s, const char* end, uint32_t* out_bits) {
-  if (read_float_nan(s, end, out_bits))
-    return 1;
-
-  errno = 0;
-  char* endptr;
-  float value;
-  value = strtof(s, &endptr);
-  if (endptr != end ||
-      ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) && errno != 0))
-    return 0;
-
-  memcpy(out_bits, &value, sizeof(value));
-  return 1;
-}
-
-static int read_double_nan(const char* s, const char* end, uint64_t* out_bits) {
-  int is_neg = 0;
-  if (*s == '-') {
-    is_neg = 1;
-    s++;
-  } else if (*s == '+') {
-    s++;
-  }
-  if (!string_starts_with(s, end, "nan"))
-    return 0;
-  s += 3;
-
-  uint64_t tag;
-  if (s != end) {
-    tag = 0;
-    if (!string_starts_with(s, end, ":0x"))
-      return 0;
-    s += 3;
-
-    for (; s < end; ++s) {
-      uint32_t digit;
-      if (!hexdigit(*s, &digit))
-        return 0;
-      tag = tag * 16 + digit;
-      /* check for overflow */
-      const uint64_t max_tag = 0xfffffffffffffULL;
-      if (tag > max_tag)
-        return 0;
-    }
-
-    /* NaN cannot have a zero tag, that is reserved for infinity */
-    if (tag == 0)
-      return 0;
-  } else {
-    /* normal quiet NaN */
-    tag = 0x8000000000000ULL;
-  }
-
-  uint64_t bits = 0x7ff0000000000000ULL | tag;
-  if (is_neg)
-    bits |= 0x8000000000000000ULL;
-  *out_bits = bits;
-  return 1;
-}
-
-static int read_double(const char* s, const char* end, uint64_t* out_bits) {
-  if (read_double_nan(s, end, out_bits))
-    return 1;
-
-  errno = 0;
-  char* endptr;
-  double value;
-  value = strtod(s, &endptr);
-  if (endptr != end ||
-      ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) && errno != 0))
-    return 0;
-
-  memcpy(out_bits, &value, sizeof(value));
-  return 1;
-}
-
-static int read_const(WasmType type,
+static int parse_const(WasmType type,
+                      WasmLiteralType literal_type,
                       const char* s,
                       const char* end,
                       WasmConst* out) {
   out->type = type;
   switch (type) {
     case WASM_TYPE_I32:
-      return read_int32(s, end, &out->u32, 1);
+      return wasm_parse_int32(s, end, &out->u32, 1);
     case WASM_TYPE_I64:
-      return read_int64(s, end, &out->u64);
+      return wasm_parse_int64(s, end, &out->u64);
     case WASM_TYPE_F32:
-      return read_float(s, end, &out->f32_bits);
+      return wasm_parse_float(literal_type, s, end, &out->f32_bits);
     case WASM_TYPE_F64:
-      return read_double(s, end, &out->f64_bits);
+      return wasm_parse_double(literal_type, s, end, &out->f64_bits);
     default:
       assert(0);
       break;
@@ -1686,7 +1471,8 @@ static size_t copy_string_contents(WasmStringSlice* text,
            * sequence */
           uint32_t hi;
           uint32_t lo;
-          if (hexdigit(src[0], &hi) && hexdigit(src[1], &lo)) {
+          if (wasm_parse_hexdigit(src[0], &hi) &&
+              wasm_parse_hexdigit(src[1], &lo)) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);

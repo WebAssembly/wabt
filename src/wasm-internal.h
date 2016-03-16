@@ -40,6 +40,7 @@ typedef union WasmToken {
   WasmCompareOp compare;
   WasmConvertOp convert;
   WasmMemOp mem;
+  WasmLiteral literal;
 
   /* non-terminals */
   /* some of these use pointers to keep the size of WasmToken down; copying the

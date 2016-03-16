@@ -108,6 +108,11 @@ typedef struct WasmLexerExtra {
 
 #define TYPE_STRUCT(struct_, type_) yylval->struct_.type = WASM_TYPE_##type_
 
+#define LITERAL(type_)                      \
+  yylval->literal.type = WASM_LITERAL_TYPE_##type_; \
+  yylval->literal.text.start = yytext;              \
+  yylval->literal.text.length = yyleng
+
 #define MEMOP(type_, name, size_)                                 \
   TYPE_STRUCT(mem, type_);                                        \
   yylval->mem.op_type = WASM_MEM_OP_TYPE_##type_##_##name##size_; \
@@ -171,7 +176,7 @@ FLOAT1    {NUM}(\.{DIGIT}*)?[eE]{NUM}
 HEXFLOAT  {SIGN}"0x"{HEXDIGIT}+\.?{HEXDIGIT}*p{SIGN}{DIGIT}+
 INFINITY  {SIGN}"infinity"
 NAN       {SIGN}"nan"|{SIGN}"nan:0x"{HEXDIGIT}+
-FLOAT     {FLOAT0}|{FLOAT1}|{HEXFLOAT}|{INFINITY}|{NAN}
+FLOAT     {FLOAT0}|{FLOAT1}
 TEXT      \"{CHARACTER}*\"
 ATOM      ({LETTER}|{DIGIT}|_|{TICK}|{SYMBOL})+
 NAME      \${ATOM}
@@ -180,8 +185,11 @@ NAME      \${ATOM}
 
 "("                   { return TOK(LPAR); }
 ")"                   { return TOK(RPAR); }
-{INT}                 { TEXT; return TOK(INT); }
-{FLOAT}               { TEXT; return TOK(FLOAT); }
+{INT}                 { LITERAL(INT); return TOK(INT); }
+{FLOAT}               { LITERAL(FLOAT); return TOK(FLOAT); }
+{HEXFLOAT}            { LITERAL(HEXFLOAT); return TOK(FLOAT); }
+{INFINITY}            { LITERAL(INFINITY); return TOK(FLOAT); }
+{NAN}                 { LITERAL(NAN); return TOK(FLOAT); }
 {TEXT}                { TEXT; return TOK(TEXT); }
 \"                    { BEGIN(BAD_TEXT); }
 <BAD_TEXT>{CHARACTER} {}

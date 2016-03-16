@@ -29,6 +29,9 @@
 /* Whether snprintf is defined by stdio.h */
 #cmakedefine01 HAVE_SNPRINTF
 
+/* Whether sysconf is defined by unistd.h */
+#cmakedefine01 HAVE_SYSCONF
+
 /* Whether ssize_t is defined by stddef.h */
 #cmakedefine01 HAVE_SSIZE_T
 
@@ -46,13 +49,33 @@
 #endif
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
+
 #define WARN_UNUSED __attribute__ ((warn_unused_result))
 #define INLINE inline
+#define wasm_clz_u32(x) __builtin_clz(x)
+#define wasm_clz_u64(x) __builtin_clzl(x)
+
 #elif COMPILER_IS_MSVC
+
 #define WARN_UNUSED _Check_return_
 #define INLINE __inline
+
+__inline unsigned long wasm_clz_u32(unsigned long mask) {
+  unsigned long index;
+  _BitScanReverse(&index, mask);
+  return index;
+}
+
+__inline unsigned long wasm_clz_u64(unsigned __int64 mask) {
+  unsigned long index;
+  _BitScanReverse(&index, mask);
+  return index;
+}
+
 #else
-#define WARN_UNUSED
+
+#error unknown compiler
+
 #endif
 
 #if HAVE_SNPRINTF

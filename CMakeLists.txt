@@ -43,6 +43,7 @@ check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("getopt.h" HAVE_GETOPT_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
+check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
 check_type_size(ssize_t SSIZE_T)
 
 configure_file(
@@ -89,6 +90,7 @@ if (NOT COMPILER_IS_MSVC)
   )
 endif ()
 
+# sexpr-wasm
 set(SEXPR_WASM_SRCS
   src/sexpr-wasm.c
   src/wasm.c
@@ -96,16 +98,29 @@ set(SEXPR_WASM_SRCS
   src/wasm-ast.c
   src/wasm-binary-writer.c
   src/wasm-check.c
+  src/wasm-parse-literal.c
   src/wasm-stack-allocator.c
   src/wasm-vector.c
   src/wasm-writer.c
   ${BISON_PARSER_C}
   ${FLEX_LEXER_C}
 )
-
 add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
-add_custom_target(everything DEPENDS sexpr-wasm)
 
+# hexfloat-test
+find_package(Threads)
+if (CMAKE_USE_PTHREADS_INIT)
+  set(HEXFLOAT_TEST_SRCS
+    src/wasm-parse-literal.c
+    test/hexfloat.c
+  )
+  add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
+  target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
+endif ()
+
+add_custom_target(everything DEPENDS sexpr-wasm hexfloat_test)
+
+# test running
 find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(test
@@ -114,6 +129,7 @@ add_custom_target(test
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )
 
+# sanitizer builds
 if (COMPILER_IS_CLANG)
   macro(add_sanitizer EXECUTABLE FLAGS TEST_TARGET)
     add_executable(${EXECUTABLE} EXCLUDE_FROM_ALL ${SEXPR_WASM_SRCS})
