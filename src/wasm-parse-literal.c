@@ -543,7 +543,7 @@ static void parse_double_hex(const char* s,
   if (exponent_is_neg)
     exponent = -exponent;
 
-  significand_bits = sizeof(uint64_t) * 8 - __builtin_clzl(significand);
+  significand_bits = sizeof(uint64_t) * 8 - wasm_clz_u64(significand);
   /* -1 for the implicit 1 bit of the significand */
   exponent += significand_exponent + significand_bits - 1;
 

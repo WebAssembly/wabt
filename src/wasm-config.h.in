@@ -39,6 +39,10 @@
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC
 
+#define SIZEOF_INT @SIZEOF_INT@
+#define SIZEOF_LONG @SIZEOF_LONG@
+#define SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
+
 #if HAVE_ALLOCA_H
 #include <alloca.h>
 #elif COMPILER_IS_MSVC
@@ -52,8 +56,22 @@
 
 #define WARN_UNUSED __attribute__ ((warn_unused_result))
 #define INLINE inline
+
+#if SIZEOF_INT == 4
 #define wasm_clz_u32(x) __builtin_clz(x)
+#elif SIZEOF_LONG == 4
+#define wasm_clz_u32(x) __builtin_clzl(x)
+#else
+#error "don't know how to define wasm_clz_u32"
+#endif
+
+#if SIZEOF_LONG == 8
 #define wasm_clz_u64(x) __builtin_clzl(x)
+#elif SIZEOF_LONG_LONG == 8
+#define wasm_clz_u64(x) __builtin_clzll(x)
+#else
+#error "don't know how to define wasm_clz_u64"
+#endif
 
 #elif COMPILER_IS_MSVC
 

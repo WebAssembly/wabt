@@ -45,6 +45,9 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
 check_type_size(ssize_t SSIZE_T)
+check_type_size(int SIZEOF_INT BUILTIN_TYPES_ONLY)
+check_type_size(long SIZEOF_LONG BUILTIN_TYPES_ONLY)
+check_type_size("long long" SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
 
 configure_file(
   ${SEXPR_WASM_SOURCE_DIR}/src/wasm-config.h.in
