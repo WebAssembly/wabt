@@ -22,6 +22,7 @@ DEFAULT_BUILD_TYPE = DEBUG
 COMPILERS := GCC GCC_I686 CLANG
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := NO ASAN MSAN LSAN
+EXECUTABLES := sexpr-wasm hexfloat_test
 
 GCC_DEBUG_DIR := out/gcc/Debug
 GCC_DEBUG_NO_FLEX_BISON_DIR := out/gcc/Debug-no-flex-bison
@@ -52,7 +53,7 @@ LSAN_SUFFIX := -lsan
 
 define DEFAULT
 .PHONY: $(3)$$($(4)_SUFFIX) test$$($(4)_SUFFIX)
-$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX)
+$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
 	ln -sf ../$$($(1)_$(2)_DIR)/$(3)$$($(4)_SUFFIX) out/$(3)$$($(4)_SUFFIX)
 
 test$$($(4)_SUFFIX): test-$$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
@@ -69,9 +70,9 @@ $$($(1)_$(2)_DIR)/Makefile: | $$($(1)_$(2)_DIR)/
 endef
 
 define EXE
-.PHONY: $$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX)
-$$($(1)_$(2)_PREFIX)-$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
-	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) $(3)$$($(4)_SUFFIX)
+.PHONY: $$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
+$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
+	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) all$$($(3)_SUFFIX)
 endef
 
 define TEST
@@ -81,7 +82,7 @@ test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
 endef
 
 .PHONY: all
-all: sexpr-wasm
+all: ${EXECUTABLES}
 
 .PHONY: clean
 clean:
@@ -102,18 +103,19 @@ src/prebuilt/wasm-flex-lexer.c: src/wasm-flex-lexer.l
 
 # defaults with simple names
 $(foreach SANITIZER,$(SANITIZERS), \
-	$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),sexpr-wasm,$(SANITIZER))))
+	$(foreach EXECUTABLE,$(EXECUTABLES), \
+		$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),$(EXECUTABLE),$(SANITIZER)))))
 
 # running CMake
 $(foreach COMPILER,$(COMPILERS), \
 	$(foreach BUILD_TYPE,$(BUILD_TYPES), \
 		$(eval $(call CMAKE,$(COMPILER),$(BUILD_TYPE)))))
 
-# sexpr-wasm builds
+# building
 $(foreach SANITIZER,$(SANITIZERS), \
 	$(foreach COMPILER,$(COMPILERS), \
 		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
-			$(eval $(call EXE,$(COMPILER),$(BUILD_TYPE),sexpr-wasm,$(SANITIZER))))))
+			$(eval $(call EXE,$(COMPILER),$(BUILD_TYPE),$(SANITIZER))))))
 
 # test running
 $(foreach SANITIZER,$(SANITIZERS), \
@@ -123,5 +125,5 @@ $(foreach SANITIZER,$(SANITIZERS), \
 
 # One-off build target for running w/out flex + bison
 $(eval $(call CMAKE,GCC,DEBUG_NO_FLEX_BISON,-DRUN_FLEX_BISON=OFF))
-$(eval $(call EXE,GCC,DEBUG_NO_FLEX_BISON,sexpr-wasm,NO))
+$(eval $(call EXE,GCC,DEBUG_NO_FLEX_BISON,NO))
 $(eval $(call TEST,GCC,DEBUG_NO_FLEX_BISON,NO))
