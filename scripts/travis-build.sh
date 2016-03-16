@@ -23,15 +23,15 @@ source ${SCRIPT_DIR}/travis-common.sh
 
 # Build without flex/bison to test prebuilt C sources
 if [ ${CC} = "gcc" ]; then
-  make gcc-debug-no-flex-bison-sexpr-wasm
+  make gcc-debug-no-flex-bison
 fi
 
 for COMPILER in ${COMPILERS}; do
   for BUILD_TYPE in ${BUILD_TYPES}; do
-    make ${COMPILER}-${BUILD_TYPE}-sexpr-wasm
+    make ${COMPILER}-${BUILD_TYPE}
     if [ ${COMPILER} = "clang" ]; then
       for SANITIZER in ${SANITIZERS}; do
-        make ${CC}-${BUILD_TYPE}-sexpr-wasm${SANITIZER}
+        make ${CC}-${BUILD_TYPE}{SANITIZER}
       done
     fi
   done
