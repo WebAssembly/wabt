@@ -134,23 +134,32 @@ add_custom_target(test
 
 # sanitizer builds
 if (COMPILER_IS_CLANG)
-  macro(add_sanitizer EXECUTABLE FLAGS TEST_TARGET)
-    add_executable(${EXECUTABLE} EXCLUDE_FROM_ALL ${SEXPR_WASM_SRCS})
-    add_dependencies(everything ${EXECUTABLE})
-    set_target_properties(${EXECUTABLE}
+  macro(add_sanitizer_exe EXE_NAME FLAGS SRCS)
+    add_executable(${EXE_NAME} EXCLUDE_FROM_ALL ${SRCS})
+    add_dependencies(everything ${EXE_NAME})
+    set_target_properties(${EXE_NAME}
       PROPERTIES
       COMPILE_FLAGS ${FLAGS}
       LINK_FLAGS ${FLAGS}
     )
-    add_custom_target(${TEST_TARGET}
+  endmacro ()
+
+  macro(add_sanitizer SANITIZER_NAME FLAGS)
+    add_sanitizer_exe(sexpr-wasm-${SANITIZER_NAME} ${FLAGS} "${SEXPR_WASM_SRCS}")
+    add_sanitizer_exe(hexfloat_test-${SANITIZER_NAME} ${FLAGS} "${HEXFLOAT_TEST_SRCS}")
+
+    add_custom_target(all-${SANITIZER_NAME}
+      DEPENDS sexpr-wasm-${SANITIZER_NAME} hexfloat_test-${SANITIZER_NAME})
+
+    add_custom_target(test-${SANITIZER_NAME}
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-          -e $<TARGET_FILE:${EXECUTABLE}>
-      DEPENDS ${EXECUTABLE}
+          -e $<TARGET_FILE:sexpr-wasm-${SANITIZER_NAME}>
+      DEPENDS sexpr-wasm-${SANITIZER_NAME}
       WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
     )
   endmacro ()
 
-  add_sanitizer(sexpr-wasm-asan -fsanitize=address test-asan)
-  add_sanitizer(sexpr-wasm-msan -fsanitize=memory test-msan)
-  add_sanitizer(sexpr-wasm-lsan -fsanitize=leak test-lsan)
+  add_sanitizer(asan -fsanitize=address)
+  add_sanitizer(msan -fsanitize=memory)
+  add_sanitizer(lsan -fsanitize=leak)
 endif ()
