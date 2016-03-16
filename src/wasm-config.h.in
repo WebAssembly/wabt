@@ -81,13 +81,30 @@
 __inline unsigned long wasm_clz_u32(unsigned long mask) {
   unsigned long index;
   _BitScanReverse(&index, mask);
-  return index;
+  return sizeof(unsigned long) * 8 - (index + 1);
 }
 
 __inline unsigned long wasm_clz_u64(unsigned __int64 mask) {
+#if _M_X64
   unsigned long index;
-  _BitScanReverse(&index, mask);
-  return index;
+  _BitScanReverse64(&index, mask);
+  return sizeof(unsigned __int64) * 8 - (index + 1);
+#elif _M_IX86
+  unsigned long index;
+  unsigned long high_mask;
+  memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
+         sizeof(unsigned long));
+  if (_BitScanReverse(&index, high_mask)) {
+    return sizeof(unsigned long) * 8 - (index + 1);
+  }
+
+  unsigned long low_mask;
+  memcpy(&low_mask, &mask, sizeof(unsigned long));
+  _BitScanReverse(&index, low_mask);
+  return sizeof(unsigned __int64) * 8 - (index + 1);
+#else
+#error unexpected architecture
+#endif
 }
 
 #else

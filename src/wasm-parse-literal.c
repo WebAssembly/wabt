@@ -166,8 +166,8 @@ static uint32_t shift_float_and_round_to_nearest(uint32_t significand,
                                                  int shift) {
   assert(shift > 0);
   /* round ties to even */
-  if (significand & (1 << shift))
-    significand += 1 << (shift - 1);
+  if (significand & ((uint32_t)1 << shift))
+    significand += (uint32_t)1 << (shift - 1);
   significand >>= shift;
   return significand;
 }
@@ -235,8 +235,8 @@ static void parse_float_hex(const char* s,
   int seen_dot = 0;
   uint32_t significand = 0;
   /* how much to shift |significand| if a non-zero value is appended */
-  uint32_t significand_shift = 0;
-  uint32_t significand_bits = 0; /* bits of |significand| */
+  int significand_shift = 0;
+  int significand_bits = 0; /* bits of |significand| */
   int significand_exponent = 0;  /* exponent adjustment due to dot placement */
   for (; s < end; ++s) {
     uint32_t digit;
@@ -412,8 +412,8 @@ static uint64_t shift_double_and_round_to_nearest(uint64_t significand,
                                                   int shift) {
   assert(shift > 0);
   /* round ties to even */
-  if (significand & (1 << shift))
-    significand += 1 << (shift - 1);
+  if (significand & ((uint64_t)1 << shift))
+    significand += (uint64_t)1 << (shift - 1);
   significand >>= shift;
   return significand;
 }
@@ -477,8 +477,8 @@ static void parse_double_hex(const char* s,
   int seen_dot = 0;
   uint64_t significand = 0;
   /* how much to shift |significand| if a non-zero value is appended */
-  uint64_t significand_shift = 0;
-  uint64_t significand_bits = 0; /* bits of |significand| */
+  int significand_shift = 0;
+  int significand_bits = 0; /* bits of |significand| */
   int significand_exponent = 0;  /* exponent adjustment due to dot placement */
   for (; s < end; ++s) {
     uint32_t digit;
@@ -497,7 +497,7 @@ static void parse_double_hex(const char* s,
                            F64_SIG_BITS + 1 + HEX_DIGIT_BITS)) {
       significand <<= significand_shift;
       if (seen_dot)
-        significand_exponent -= significand_shift;
+        significand_exponent -= (int)significand_shift;
       significand += digit;
       significand_shift = 0;
       significand_bits += HEX_DIGIT_BITS;
@@ -533,7 +533,7 @@ static void parse_double_hex(const char* s,
   }
 
   for (; s < end; ++s) {
-    uint64_t digit = (*s - '0');
+    uint32_t digit = (*s - '0');
     assert(digit <= 9);
     exponent = exponent * 10 + digit;
     if (exponent + significand_exponent_add >= F64_MAX_EXP)

@@ -42,7 +42,7 @@ int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
 #if !HAVE_SNPRINTF
 int wasm_snprintf(char* str, size_t size, const char* format, ...) {
   va_list args;
-  va_start(format, args);
+  va_start(args, format);
   int result = wasm_vsnprintf(str, size, format, args);
   va_end(args);
   return result;
