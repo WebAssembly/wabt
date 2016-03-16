@@ -24,6 +24,10 @@
 #include "wasm-config.h"
 #include "wasm-parse-literal.h"
 
+#if HAVE_SYSCONF
+#include <unistd.h>
+#endif
+
 #define DEFAULT_NUM_CPUS 4
 #define OK 0
 #define ERROR 1
@@ -51,7 +55,8 @@ int test_all_floats(int shard, int num_shards) {
       memcpy(&f, &value, sizeof(f));
 
       if (exp != last_exp) {
-        printf("shard %d: value: %g (%a)\n", shard, f, f);
+        printf("shard %d: value: %a (%.0f%%)\n", shard, f,
+               (double)value * 100.0 / UINT32_MAX);
         last_exp = exp;
       }
 
@@ -71,15 +76,14 @@ int test_all_floats(int shard, int num_shards) {
         printf("shard %d: value: %g (%a)\n", shard, f, f);
         print_float_bits("me", me);
         print_float_bits("them", them);
-        assert(0);
-        return 1;
+        return ERROR;
       }
     }
 
     last_value = value;
     value += num_shards;
   } while (last_value < value);
-  return 0;
+  return OK;
 }
 
 int test_many_doubles(int shard, int num_shards) {
@@ -95,7 +99,8 @@ int test_many_doubles(int shard, int num_shards) {
       memcpy(&d, &value, sizeof(d));
 
       if (exp != last_exp) {
-        printf("shard %d: value: %g (%a)\n", shard, d, d);
+        printf("shard %d: value: %a (%.0f%%)\n", shard, d,
+               (double)v * 100.0f / UINT32_MAX);
         last_exp = exp;
       }
 
@@ -115,14 +120,14 @@ int test_many_doubles(int shard, int num_shards) {
         printf("shard %d: value: %g (%a)\n", shard, d, d);
         print_double_bits("me", me);
         print_double_bits("them", them);
-        assert(0);
+        return ERROR;
       }
     }
 
     last_v = v;
     v += num_shards;
   } while (last_v < v);
-  return 0;
+  return OK;
 }
 
 typedef struct ThreadInfo {
@@ -134,10 +139,10 @@ typedef struct ThreadInfo {
 
 void* thread_start(void* param) {
   ThreadInfo* info = param;
-  if (!test_all_floats(info->shard, info->num_shards))
+  if (test_all_floats(info->shard, info->num_shards) != OK)
     return NULL;
 
-  if (!test_many_doubles(info->shard, info->num_shards))
+  if (test_many_doubles(info->shard, info->num_shards) != OK)
     return NULL;
 
   info->result = OK;
@@ -146,7 +151,7 @@ void* thread_start(void* param) {
 
 int main() {
   int num_cpus;
-#if HAS_SYSCONF
+#if HAVE_SYSCONF
   num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
   if (num_cpus == -1)
     num_cpus = DEFAULT_NUM_CPUS;
