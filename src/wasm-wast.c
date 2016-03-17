@@ -146,6 +146,7 @@ static void parse_options(int argc, char** argv) {
 }
 
 #if 0
+#if 0
 #define LOG(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define LOG(...) (void)0
@@ -592,6 +593,16 @@ static WasmBinaryReader s_binary_reader = {
   .on_local_name = &on_local_name,
   .end_names_section = &end_names_section,
 };
+#else
+static void on_error(const char* message, void* user_data) {
+  fprintf(stderr, "error: %s\n", message);
+}
+
+static WasmBinaryReader s_binary_reader = {
+  .user_data = NULL,
+  .on_error = &on_error,
+};
+#endif
 
 int main(int argc, char** argv) {
   parse_options(argc, argv);

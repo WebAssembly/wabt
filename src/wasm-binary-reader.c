@@ -37,6 +37,7 @@ WASM_DECLARE_VECTOR(type, WasmType)
 
 WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
+/* TODO(binji): handle error result from callback */
 #define CALLBACK0(ctx, member)                                             \
   ((ctx)->reader->member ? (ctx)->reader->member((ctx)->reader->user_data) \
                          : (void)0)

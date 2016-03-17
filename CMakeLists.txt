@@ -119,6 +119,7 @@ set(WASM_WAST_SRCS
   src/wasm-allocator.c
   src/wasm-ast.c
   src/wasm-binary-reader.c
+  src/wasm-binary-reader-ast.c
   src/wasm-common.c
   src/wasm-wast.c
   src/wasm-vector.c

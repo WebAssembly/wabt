@@ -57,7 +57,7 @@ typedef struct WasmLocation {
 } WasmLocation;
 
 /* matches binary format, do not change */
-typedef enum WasmType {
+enum {
   WASM_TYPE_VOID,
   WASM_TYPE_I32,
   WASM_TYPE_I64,
@@ -65,7 +65,8 @@ typedef enum WasmType {
   WASM_TYPE_F64,
   WASM_NUM_TYPES,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
-} WasmType;
+};
+typedef unsigned char WasmType;
 
 enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
