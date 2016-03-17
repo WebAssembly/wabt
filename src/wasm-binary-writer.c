@@ -52,20 +52,17 @@
 #define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
 
-STATIC_ASSERT(WASM_TYPE_VOID == 0);
-STATIC_ASSERT(WASM_TYPE_I32 == 1);
-STATIC_ASSERT(WASM_TYPE_I64 == 2);
-STATIC_ASSERT(WASM_TYPE_F32 == 3);
-STATIC_ASSERT(WASM_TYPE_F64 == 4);
+WASM_STATIC_ASSERT(WASM_TYPE_VOID == 0);
+WASM_STATIC_ASSERT(WASM_TYPE_I32 == 1);
+WASM_STATIC_ASSERT(WASM_TYPE_I64 == 2);
+WASM_STATIC_ASSERT(WASM_TYPE_F32 == 3);
+WASM_STATIC_ASSERT(WASM_TYPE_F64 == 4);
 
 static const char* s_type_names[] = {
-    "WASM_TYPE_VOID",
-    "WASM_TYPE_I32",
-    "WASM_TYPE_I64",
-    "WASM_TYPE_F32",
-    "WASM_TYPE_F64",
+    "WASM_TYPE_VOID", "WASM_TYPE_I32", "WASM_TYPE_I64",
+    "WASM_TYPE_F32",  "WASM_TYPE_F64",
 };
-STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
 #define V(name, code) [code] = "OPCODE_" #name,
 static const char* s_opcode_names[] = {WASM_FOREACH_OPCODE(V)};
@@ -88,7 +85,8 @@ static uint8_t s_binary_opcodes[] = {
     WASM_OPCODE_I64_SHR_U, WASM_OPCODE_I64_ROL,      WASM_OPCODE_I64_ROR,
     WASM_OPCODE_I64_SUB,   WASM_OPCODE_I64_XOR,
 };
-STATIC_ASSERT(ARRAY_SIZE(s_binary_opcodes) == WASM_NUM_BINARY_OP_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_binary_opcodes) ==
+                   WASM_NUM_BINARY_OP_TYPES);
 
 static uint8_t s_compare_opcodes[] = {
     WASM_OPCODE_F32_EQ,   WASM_OPCODE_F32_GE,   WASM_OPCODE_F32_GT,
@@ -103,7 +101,8 @@ static uint8_t s_compare_opcodes[] = {
     WASM_OPCODE_I64_LE_S, WASM_OPCODE_I64_LE_U, WASM_OPCODE_I64_LT_S,
     WASM_OPCODE_I64_LT_U, WASM_OPCODE_I64_NE,
 };
-STATIC_ASSERT(ARRAY_SIZE(s_compare_opcodes) == WASM_NUM_COMPARE_OP_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_compare_opcodes) ==
+                   WASM_NUM_COMPARE_OP_TYPES);
 
 static uint8_t s_convert_opcodes[] = {
     WASM_OPCODE_F32_SCONVERT_I32,    WASM_OPCODE_F32_SCONVERT_I64,
@@ -120,7 +119,8 @@ static uint8_t s_convert_opcodes[] = {
     WASM_OPCODE_F64_REINTERPRET_I64, WASM_OPCODE_I32_REINTERPRET_F32,
     WASM_OPCODE_I64_REINTERPRET_F64,
 };
-STATIC_ASSERT(ARRAY_SIZE(s_convert_opcodes) == WASM_NUM_CONVERT_OP_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_convert_opcodes) ==
+                   WASM_NUM_CONVERT_OP_TYPES);
 
 static uint8_t s_mem_opcodes[] = {
     WASM_OPCODE_F32_LOAD_MEM,     WASM_OPCODE_F32_STORE_MEM,
@@ -136,7 +136,7 @@ static uint8_t s_mem_opcodes[] = {
     WASM_OPCODE_I64_STORE_MEM8,   WASM_OPCODE_I64_STORE_MEM16,
     WASM_OPCODE_I64_STORE_MEM32,
 };
-STATIC_ASSERT(ARRAY_SIZE(s_mem_opcodes) == WASM_NUM_MEM_OP_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_mem_opcodes) == WASM_NUM_MEM_OP_TYPES);
 
 static uint8_t s_unary_opcodes[] = {
     WASM_OPCODE_F32_ABS,         WASM_OPCODE_F32_CEIL,
@@ -151,7 +151,7 @@ static uint8_t s_unary_opcodes[] = {
     WASM_OPCODE_I64_CLZ,         WASM_OPCODE_I64_CTZ,
     WASM_OPCODE_I64_POPCNT,
 };
-STATIC_ASSERT(ARRAY_SIZE(s_unary_opcodes) == WASM_NUM_UNARY_OP_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_unary_opcodes) == WASM_NUM_UNARY_OP_TYPES);
 
 typedef struct WasmLabelNode {
   WasmLabel* label;
@@ -186,8 +186,8 @@ typedef struct WasmWriteContext {
   WasmStringSlice** local_type_names; /* from packed -> local name */
 } WasmWriteContext;
 
-DECLARE_VECTOR(func_signature, WasmFuncSignature);
-DEFINE_VECTOR(func_signature, WasmFuncSignature);
+WASM_DECLARE_VECTOR(func_signature, WasmFuncSignature);
+WASM_DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
 static int is_nan_f32(uint32_t bits) {
   return (bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0;
@@ -201,7 +201,7 @@ static int is_nan_f64(uint64_t bits) {
 static void destroy_func_signature_vector_and_elements(
     WasmAllocator* allocator,
     WasmFuncSignatureVector* sigs) {
-  DESTROY_VECTOR_AND_ELEMENTS(allocator, *sigs, func_signature);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *sigs, func_signature);
 }
 
 static void print_header(WasmWriterState* writer_state,
@@ -546,7 +546,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
     CHECK_ALLOC_NULL(sig);
     sig->result_type = func_type->sig.result_type;
-    ZERO_MEMORY(sig->param_types);
+    WASM_ZERO_MEMORY(sig->param_types);
     CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                   &func_type->sig.param_types));
   }
@@ -568,7 +568,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
             wasm_append_func_signature(ctx->allocator, sigs);
         CHECK_ALLOC_NULL(sig);
         sig->result_type = import->func_sig.result_type;
-        ZERO_MEMORY(sig->param_types);
+        WASM_ZERO_MEMORY(sig->param_types);
         CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                       &import->func_sig.param_types));
       }
@@ -605,7 +605,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
             wasm_append_func_signature(ctx->allocator, sigs);
         CHECK_ALLOC_NULL(sig);
         sig->result_type = func->result_type;
-        ZERO_MEMORY(sig->param_types);
+        WASM_ZERO_MEMORY(sig->param_types);
         CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                       &func->params.types));
       }
@@ -642,7 +642,7 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   }
 
   int max[WASM_NUM_TYPES];
-  ZERO_MEMORY(max);
+  WASM_ZERO_MEMORY(max);
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
     max[type]++;
@@ -659,7 +659,7 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
 
   int seen[WASM_NUM_TYPES];
-  ZERO_MEMORY(seen);
+  WASM_ZERO_MEMORY(seen);
   for (i = 0; i < num_locals; ++i) {
     WasmType type = func->locals.types.data[i];
     int unpacked_index = num_params + i;
@@ -941,7 +941,7 @@ static void write_func_locals(WasmWriteContext* ctx,
     return;
   }
 
-  /* remapped_locals includes the parameter list, so skip those */
+/* remapped_locals includes the parameter list, so skip those */
 #define FIRST_LOCAL_INDEX (0)
 #define LAST_LOCAL_INDEX (local_types->size)
 #define GET_LOCAL_TYPE(x) (local_types->data[ctx->reverse_remapped_locals[x]])
@@ -995,7 +995,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   out_u32(ws, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
 
   WasmFuncSignatureVector sigs;
-  ZERO_MEMORY(sigs);
+  WASM_ZERO_MEMORY(sigs);
   get_func_signatures(ctx, module, &sigs);
   if (sigs.size) {
     begin_section(ctx, WASM_BINARY_SECTION_SIGNATURES, leb_size_guess);
@@ -1058,7 +1058,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     out_u32_leb128(ws, module->memory->max_pages, "max mem pages");
     out_u8(ws, export_memory, "export mem");
     end_section(ctx);
-
   }
 
   if (module->exports.size) {
@@ -1075,7 +1074,6 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
     end_section(ctx);
   }
-
 
   int start_func_index = wasm_get_func_index_by_var(module, &module->start);
   if (start_func_index != -1) {
@@ -1336,7 +1334,7 @@ static WasmModuleField* append_module_field_and_fixup(
       wasm_append_module_field(allocator, &module->fields);
   if (!result)
     return NULL;
-  ZERO_MEMORY(*result);
+  WASM_ZERO_MEMORY(*result);
   result->type = module_field_type;
 
   /* make space for the new entry, it will be assigned twice, once here, once
@@ -1711,14 +1709,14 @@ WasmResult wasm_write_binary(WasmAllocator* allocator,
                              WasmScript* script,
                              WasmWriteBinaryOptions* options) {
   WasmWriteContext ctx;
-  ZERO_MEMORY(ctx);
+  WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.options = options;
   ctx.result = WASM_OK;
 
   if (options->spec) {
     WasmMemoryWriter mem_writer;
-    ZERO_MEMORY(mem_writer);
+    WASM_ZERO_MEMORY(mem_writer);
     WasmResult result = wasm_init_mem_writer(allocator, &mem_writer);
     if (result != WASM_OK)
       return result;

@@ -23,7 +23,7 @@
 #include "wasm-common.h"
 #include "wasm-vector.h"
 
-DECLARE_VECTOR(type, WasmType)
+WASM_DECLARE_VECTOR(type, WasmType)
 
 typedef enum WasmMemSize {
   WASM_MEM_SIZE_8 = 8,
@@ -72,12 +72,12 @@ typedef struct WasmVar {
     WasmStringSlice name;
   };
 } WasmVar;
-DECLARE_VECTOR(var, WasmVar);
+WASM_DECLARE_VECTOR(var, WasmVar);
 
 typedef WasmStringSlice WasmLabel;
 
 typedef struct WasmExpr* WasmExprPtr;
-DECLARE_VECTOR(expr_ptr, WasmExprPtr);
+WASM_DECLARE_VECTOR(expr_ptr, WasmExprPtr);
 
 typedef struct WasmConst {
   WasmLocation loc;
@@ -89,7 +89,7 @@ typedef struct WasmConst {
     uint64_t f64_bits;
   };
 } WasmConst;
-DECLARE_VECTOR(const, WasmConst);
+WASM_DECLARE_VECTOR(const, WasmConst);
 
 typedef enum WasmExprType {
   WASM_EXPR_TYPE_BINARY,
@@ -130,7 +130,7 @@ typedef struct WasmBindingHashEntry {
   struct WasmBindingHashEntry* next;
   struct WasmBindingHashEntry* prev; /* only valid when this entry is unused */
 } WasmBindingHashEntry;
-DECLARE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
+WASM_DECLARE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
 
 typedef struct WasmBindingHash {
   WasmBindingHashEntryVector entries;
@@ -220,7 +220,7 @@ typedef struct WasmFunc {
   WasmTypeBindings params_and_locals;
 } WasmFunc;
 typedef WasmFunc* WasmFuncPtr;
-DECLARE_VECTOR(func_ptr, WasmFuncPtr);
+WASM_DECLARE_VECTOR(func_ptr, WasmFuncPtr);
 
 typedef struct WasmSegment {
   WasmLocation loc;
@@ -228,7 +228,7 @@ typedef struct WasmSegment {
   void* data;
   size_t size;
 } WasmSegment;
-DECLARE_VECTOR(segment, WasmSegment);
+WASM_DECLARE_VECTOR(segment, WasmSegment);
 
 typedef struct WasmMemory {
   WasmLocation loc;
@@ -247,7 +247,7 @@ typedef struct WasmFuncType {
   WasmFuncSignature sig;
 } WasmFuncType;
 typedef WasmFuncType* WasmFuncTypePtr;
-DECLARE_VECTOR(func_type_ptr, WasmFuncTypePtr);
+WASM_DECLARE_VECTOR(func_type_ptr, WasmFuncTypePtr);
 
 typedef enum WasmImportType {
   WASM_IMPORT_HAS_TYPE,
@@ -264,14 +264,14 @@ typedef struct WasmImport {
   WasmFuncSignature func_sig;
 } WasmImport;
 typedef WasmImport* WasmImportPtr;
-DECLARE_VECTOR(import_ptr, WasmImportPtr);
+WASM_DECLARE_VECTOR(import_ptr, WasmImportPtr);
 
 typedef struct WasmExport {
   WasmStringSlice name;
   WasmVar var;
 } WasmExport;
 typedef WasmExport* WasmExportPtr;
-DECLARE_VECTOR(export_ptr, WasmExportPtr);
+WASM_DECLARE_VECTOR(export_ptr, WasmExportPtr);
 
 typedef struct WasmExportMemory {
   WasmStringSlice name;
@@ -302,7 +302,7 @@ typedef struct WasmModuleField {
     WasmVar start;
   };
 } WasmModuleField;
-DECLARE_VECTOR(module_field, WasmModuleField);
+WASM_DECLARE_VECTOR(module_field, WasmModuleField);
 
 typedef struct WasmModule {
   WasmLocation loc;
@@ -350,14 +350,14 @@ typedef struct WasmCommand {
     struct { WasmModule module; WasmStringSlice text; } assert_invalid;
   };
 } WasmCommand;
-DECLARE_VECTOR(command, WasmCommand);
+WASM_DECLARE_VECTOR(command, WasmCommand);
 
 typedef struct WasmScript {
   struct WasmAllocator* allocator;
   WasmCommandVector commands;
 } WasmScript;
 
-EXTERN_C_BEGIN
+WASM_EXTERN_C_BEGIN
 WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  WasmBindingHash*,
                                  const WasmStringSlice*);
@@ -435,7 +435,7 @@ int wasm_func_is_exported(const WasmModule* module, const WasmFunc* func);
 
 WasmResult wasm_extend_type_bindings(struct WasmAllocator*,
                                      WasmTypeBindings* dst,
-                                     WasmTypeBindings* src) WARN_UNUSED;
-EXTERN_C_END
+                                     WasmTypeBindings* src) WASM_WARN_UNUSED;
+WASM_EXTERN_C_END
 
 #endif /* WASM_AST_H_ */

@@ -184,14 +184,14 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 /* Types */
 
 value_type_list :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | value_type_list VALUE_TYPE {
       $$ = $1;
       CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$, &$2));
     }
 ;
 func_type :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | LPAR PARAM value_type_list RPAR {
       $$.result_type = WASM_TYPE_VOID;
       $$.param_types = $3;
@@ -200,7 +200,7 @@ func_type :
       $$.result_type = $7;
       $$.param_types = $3;
     }
-  | LPAR RESULT VALUE_TYPE RPAR { ZERO_MEMORY($$); $$.result_type = $3; }
+  | LPAR RESULT VALUE_TYPE RPAR { WASM_ZERO_MEMORY($$); $$.result_type = $3; }
 ;
 
 
@@ -239,7 +239,7 @@ var :
     }
 ;
 var_list :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | var_list var {
       $$ = $1;
       CHECK_ALLOC(wasm_append_var_value(parser->allocator, &$$, &$2));
@@ -261,7 +261,7 @@ string_contents :
 ;
 
 labeling :
-    /* empty */ %prec LOW { ZERO_MEMORY($$); }
+    /* empty */ %prec LOW { WASM_ZERO_MEMORY($$); }
   | bind_var { $$ = $1; }
 ;
 
@@ -344,7 +344,7 @@ expr1 :
   | LOOP labeling expr_list {
       $$ = wasm_new_loop_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      ZERO_MEMORY($$->loop.outer);
+      WASM_ZERO_MEMORY($$->loop.outer);
       $$->loop.inner = $2;
       $$->loop.exprs = $3;
     }
@@ -491,7 +491,7 @@ expr_opt :
 ;
 non_empty_expr_list :
     expr {
-      ZERO_MEMORY($$);
+      WASM_ZERO_MEMORY($$);
       CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator, &$$, &$1));
     }
   | non_empty_expr_list expr {
@@ -500,7 +500,7 @@ non_empty_expr_list :
     }
 ;
 expr_list :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | non_empty_expr_list
 ;
 
@@ -508,12 +508,12 @@ expr_list :
 
 param_list :
     LPAR PARAM value_type_list RPAR {
-      ZERO_MEMORY($$);
+      WASM_ZERO_MEMORY($$);
       CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$3));
       wasm_destroy_type_vector(parser->allocator, &$3);
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR {
-      ZERO_MEMORY($$);
+      WASM_ZERO_MEMORY($$);
       WasmBinding* binding =
           wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
@@ -541,12 +541,12 @@ result :
 ;
 local_list :
     LPAR LOCAL value_type_list RPAR {
-      ZERO_MEMORY($$);
+      WASM_ZERO_MEMORY($$);
       CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$3));
       wasm_destroy_type_vector(parser->allocator, &$3);
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR {
-      ZERO_MEMORY($$);
+      WASM_ZERO_MEMORY($$);
       WasmBinding* binding =
           wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
       CHECK_ALLOC_NULL(binding);
@@ -1052,7 +1052,7 @@ segment :
     }
 ;
 segment_list :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | segment_list segment {
       $$ = $1;
       CHECK_ALLOC(wasm_append_segment_value(parser->allocator, &$$, &$2));
@@ -1098,7 +1098,7 @@ memory :
 
 type_def :
     LPAR TYPE LPAR FUNC func_type RPAR RPAR {
-      ZERO_MEMORY($$);
+      WASM_ZERO_MEMORY($$);
       $$.sig = $5;
     }
   | LPAR TYPE bind_var LPAR FUNC func_type RPAR RPAR {
@@ -1158,7 +1158,7 @@ export_memory :
 ;
 
 module_fields :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | module_fields func {
       $$ = $1;
       WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
@@ -1360,7 +1360,7 @@ cmd :
     }
 ;
 cmd_list :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | cmd_list cmd {
       $$ = $1;
       CHECK_ALLOC(wasm_append_command_value(parser->allocator, &$$, $2));
@@ -1383,7 +1383,7 @@ const_opt :
   | const
 ;
 const_list :
-    /* empty */ { ZERO_MEMORY($$); }
+    /* empty */ { WASM_ZERO_MEMORY($$); }
   | const_list const {
       $$ = $1;
       CHECK_ALLOC(wasm_append_const_value(parser->allocator, &$$, &$2));
@@ -1511,7 +1511,7 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
 
 WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script) {
   WasmParser parser;
-  ZERO_MEMORY(parser);
+  WASM_ZERO_MEMORY(parser);
   WasmAllocator* allocator = wasm_lexer_get_allocator(lexer);
   parser.allocator = allocator;
   out_script->allocator = allocator;

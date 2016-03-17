@@ -41,7 +41,7 @@ void wasm_vfprint_error(FILE* error_file,
     if (old_offset != -1) {
       size_t next_line_offset =
           wasm_lexer_get_file_offset_from_line(lexer, loc->line + 1);
-      if (next_line_offset == INVALID_LINE_OFFSET) {
+      if (next_line_offset == WASM_INVALID_LINE_OFFSET) {
         /* we haven't gotten to the next line yet. read the file to find it. - 1
          because columns are 1-based */
         size_t offset = line_offset + (loc->last_column - 1);
@@ -125,7 +125,7 @@ void wasm_vfprint_error(FILE* error_file,
 
       if (fseek(lexer_file, old_offset, SEEK_SET) == -1) {
         /* we're screwed now, blow up. */
-        FATAL("failed to seek.");
+        WASM_FATAL("failed to seek.");
       }
     }
   }

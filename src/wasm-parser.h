@@ -22,8 +22,8 @@
 
 struct WasmScript;
 
-EXTERN_C_BEGIN
+WASM_EXTERN_C_BEGIN
 WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script);
-EXTERN_C_END
+WASM_EXTERN_C_END
 
 #endif /* WASM_PARSER_H_ */

@@ -1203,8 +1203,8 @@ static yyconst flex_int32_t yy_rule_can_match_eol[222] =
 #define WASM_INITIAL_LINE_OFFSETS 10000
 
 typedef size_t WasmLineOffset;
-DECLARE_VECTOR(line_offset, WasmLineOffset);
-DEFINE_VECTOR(line_offset, WasmLineOffset);
+WASM_DECLARE_VECTOR(line_offset, WasmLineOffset);
+WASM_DEFINE_VECTOR(line_offset, WasmLineOffset);
 
 typedef struct WasmLexerExtra {
   WasmAllocator* allocator;
@@ -4043,7 +4043,7 @@ FILE* wasm_lexer_get_file(WasmLexer lexer) {
 size_t wasm_lexer_get_file_offset_from_line(WasmLexer lexer, int line) {
   WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   if (line < 0 || line >= extra->line_offsets.size)
-    return INVALID_LINE_OFFSET;
+    return WASM_INVALID_LINE_OFFSET;
 
   return extra->line_offsets.data[line];
 }

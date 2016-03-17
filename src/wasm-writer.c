@@ -62,7 +62,7 @@ static WasmResult move_data_in_file(size_t dst_offset,
 }
 
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
-  ZERO_MEMORY(*writer);
+  WASM_ZERO_MEMORY(*writer);
   writer->file = fopen(filename, "wb");
   if (!writer->file) {
     ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
@@ -145,7 +145,7 @@ static WasmResult move_data_in_output_buffer(size_t dst_offset,
 
 WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
                                 WasmMemoryWriter* writer) {
-  ZERO_MEMORY(*writer);
+  WASM_ZERO_MEMORY(*writer);
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;

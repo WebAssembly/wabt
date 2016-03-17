@@ -34,11 +34,11 @@ typedef struct WasmStackAllocator {
   void* last_allocation;
 } WasmStackAllocator;
 
-EXTERN_C_BEGIN
+WASM_EXTERN_C_BEGIN
 WasmResult wasm_init_stack_allocator(WasmStackAllocator*,
                                      WasmAllocator* fallback);
 void wasm_destroy_stack_allocator(WasmStackAllocator*);
 void wasm_reset_stack_allocator(WasmStackAllocator*);
-EXTERN_C_END
+WASM_EXTERN_C_END
 
 #endif /* WASM_STACK_ALLOCATOR_H_ */

@@ -32,16 +32,16 @@ typedef struct WasmAllocator {
 
 extern WasmAllocator g_wasm_libc_allocator;
 
-EXTERN_C_BEGIN
-static INLINE void* wasm_alloc(WasmAllocator* allocator,
-                               size_t size,
-                               size_t align) {
+WASM_EXTERN_C_BEGIN
+static WASM_INLINE void* wasm_alloc(WasmAllocator* allocator,
+                                    size_t size,
+                                    size_t align) {
   return allocator->alloc(allocator, size, align);
 }
 
-static INLINE void* wasm_alloc_zero(WasmAllocator* allocator,
-                                    size_t size,
-                                    size_t align) {
+static WASM_INLINE void* wasm_alloc_zero(WasmAllocator* allocator,
+                                         size_t size,
+                                         size_t align) {
   void* result = allocator->alloc(allocator, size, align);
   if (!result)
     return NULL;
@@ -49,20 +49,20 @@ static INLINE void* wasm_alloc_zero(WasmAllocator* allocator,
   return result;
 }
 
-static INLINE void* wasm_realloc(WasmAllocator* allocator,
-                                 void* p,
-                                 size_t size,
-                                 size_t align) {
+static WASM_INLINE void* wasm_realloc(WasmAllocator* allocator,
+                                      void* p,
+                                      size_t size,
+                                      size_t align) {
   return allocator->realloc(allocator, p, size, align);
 }
 
-static INLINE void wasm_free(WasmAllocator* allocator, void* p) {
+static WASM_INLINE void wasm_free(WasmAllocator* allocator, void* p) {
   allocator->free(allocator, p);
 }
 
-static INLINE char* wasm_strndup(WasmAllocator* allocator,
-                                 const char* s,
-                                 size_t len) {
+static WASM_INLINE char* wasm_strndup(WasmAllocator* allocator,
+                                      const char* s,
+                                      size_t len) {
   size_t real_len = 0;
   const char* p = s;
   while (*p && real_len < len) {
@@ -78,6 +78,6 @@ static INLINE char* wasm_strndup(WasmAllocator* allocator,
   new_s[real_len] = 0;
   return new_s;
 }
-EXTERN_C_END
+WASM_EXTERN_C_END
 
 #endif /* WASM_ALLOCATOR_H_ */

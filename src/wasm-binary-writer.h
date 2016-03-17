@@ -35,9 +35,9 @@ typedef struct WasmWriteBinaryOptions {
   int write_debug_names;
 } WasmWriteBinaryOptions;
 
-EXTERN_C WasmResult wasm_write_binary(struct WasmAllocator*,
-                                      struct WasmWriter*,
-                                      struct WasmScript*,
-                                      WasmWriteBinaryOptions*);
+WASM_EXTERN_C WasmResult wasm_write_binary(struct WasmAllocator*,
+                                           struct WasmWriter*,
+                                           struct WasmScript*,
+                                           WasmWriteBinaryOptions*);
 
 #endif /* WASM_BINARY_WRITER_H_ */

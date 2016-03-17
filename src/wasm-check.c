@@ -32,7 +32,7 @@ static const char* s_type_names[] = {
     "f32",
     "f64",
 };
-STATIC_ASSERT(ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
 typedef enum WasmTypeSet {
   WASM_TYPE_SET_VOID = 0,
@@ -61,11 +61,11 @@ static const char* s_type_set_names[] = {
     "i64, f32 or f64",
     "i32, i64, f32 or f64",
 };
-STATIC_ASSERT(ARRAY_SIZE(s_type_set_names) == WASM_TYPE_SET_ALL + 1);
-STATIC_ASSERT((1 << (WASM_TYPE_I32 - 1)) == WASM_TYPE_SET_I32);
-STATIC_ASSERT((1 << (WASM_TYPE_I64 - 1)) == WASM_TYPE_SET_I64);
-STATIC_ASSERT((1 << (WASM_TYPE_F32 - 1)) == WASM_TYPE_SET_F32);
-STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_set_names) == WASM_TYPE_SET_ALL + 1);
+WASM_STATIC_ASSERT((1 << (WASM_TYPE_I32 - 1)) == WASM_TYPE_SET_I32);
+WASM_STATIC_ASSERT((1 << (WASM_TYPE_I64 - 1)) == WASM_TYPE_SET_I64);
+WASM_STATIC_ASSERT((1 << (WASM_TYPE_F32 - 1)) == WASM_TYPE_SET_F32);
+WASM_STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
 
 #define TYPE_TO_TYPE_SET(type) (1 << ((type) - 1))
 
@@ -991,7 +991,7 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
 
 WasmResult wasm_check_script(WasmLexer lexer, WasmScript* script) {
   WasmCheckContext ctx;
-  ZERO_MEMORY(ctx);
+  WASM_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
   ctx.allocator = script->allocator;
   WasmResult result = WASM_OK;

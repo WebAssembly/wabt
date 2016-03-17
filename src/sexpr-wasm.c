@@ -29,6 +29,7 @@
 #include "wasm-ast.h"
 #include "wasm-binary-writer.h"
 #include "wasm-check.h"
+#include "wasm-common.h"
 #include "wasm-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"
@@ -86,8 +87,8 @@ static struct option s_long_options[] = {
     {"debug-names", no_argument, NULL, 0},
     {NULL, 0, NULL, 0},
 };
-#define OPTIONS_LENGTH (ARRAY_SIZE(s_long_options) - 1)
-STATIC_ASSERT(NUM_FLAGS == OPTIONS_LENGTH);
+#define OPTIONS_LENGTH (WASM_ARRAY_SIZE(s_long_options) - 1)
+WASM_STATIC_ASSERT(NUM_FLAGS == OPTIONS_LENGTH);
 
 typedef struct OptionHelp {
   int flag;
@@ -113,8 +114,8 @@ static OptionHelp s_option_help[] = {
     {FLAG_DEBUG_NAMES, NULL, "Write debug names to the generated binary file"},
     {NUM_FLAGS, NULL},
 };
-#define OPTIONS_HELP_LENGTH (ARRAY_SIZE(s_option_help) - 1)
-STATIC_ASSERT(NUM_FLAGS == OPTIONS_HELP_LENGTH);
+#define OPTIONS_HELP_LENGTH (WASM_ARRAY_SIZE(s_option_help) - 1)
+WASM_STATIC_ASSERT(NUM_FLAGS == OPTIONS_HELP_LENGTH);
 
 static void usage(const char* prog) {
   printf("usage: %s [option] filename\n", prog);
@@ -198,7 +199,7 @@ static void parse_options(int argc, char** argv) {
           if (optind < argc) {
             optarg = argv[optind++];
           } else if (opt->has_arg == required_argument) {
-            FATAL("Missing argument for option %s.\n", opt->name);
+            WASM_FATAL("Missing argument for option %s.\n", opt->name);
             usage(argv[0]);
           }
         }
@@ -276,18 +277,18 @@ static void parse_options(int argc, char** argv) {
         break;
 
       default:
-        FATAL("getopt_long returned '%c' (%d)\n", c, c);
+        WASM_FATAL("getopt_long returned '%c' (%d)\n", c, c);
         break;
     }
   }
 
   if (s_dump_module && s_write_binary_options.spec)
-    FATAL("--dump-module flag incompatible with --spec flag\n");
+    WASM_FATAL("--dump-module flag incompatible with --spec flag\n");
 
   if (optind < argc) {
     s_infile = argv[optind];
   } else {
-    FATAL("No filename given.\n");
+    WASM_FATAL("No filename given.\n");
     usage(argv[0]);
   }
 }
@@ -307,7 +308,7 @@ int main(int argc, char** argv) {
 
   WasmLexer lexer = wasm_new_lexer(allocator, s_infile);
   if (!lexer)
-    FATAL("unable to read %s\n", s_infile);
+    WASM_FATAL("unable to read %s\n", s_infile);
 
   WasmScript script;
   WasmResult result = wasm_parse(lexer, &script);
@@ -316,9 +317,9 @@ int main(int argc, char** argv) {
     result = wasm_check_script(lexer, &script);
     if (result == WASM_OK) {
       WasmMemoryWriter writer;
-      ZERO_MEMORY(writer);
+      WASM_ZERO_MEMORY(writer);
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
-        FATAL("unable to open memory writer for writing\n");
+        WASM_FATAL("unable to open memory writer for writing\n");
 
       result = wasm_write_binary(&g_wasm_libc_allocator, &writer.base, &script,
                                  &s_write_binary_options);
@@ -332,12 +333,12 @@ int main(int argc, char** argv) {
         if (s_outfile) {
           FILE* f = fopen(s_outfile, "wb");
           if (!f)
-            FATAL("unable to open %s for writing\n", s_outfile);
+            WASM_FATAL("unable to open %s for writing\n", s_outfile);
 
           ssize_t bytes = fwrite(writer.buf.start, 1, writer.buf.size, f);
           if (bytes != writer.buf.size)
-            FATAL("failed to write %zd bytes to %s\n", writer.buf.size,
-                  s_outfile);
+            WASM_FATAL("failed to write %zd bytes to %s\n", writer.buf.size,
+                       s_outfile);
           fclose(f);
         }
       }

@@ -25,7 +25,7 @@
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */
 
-EXTERN_C_BEGIN
+WASM_EXTERN_C_BEGIN
 int wasm_parse_hexdigit(char c, uint32_t* out);
 int wasm_parse_int32(const char* s,
                      const char* end,
@@ -41,4 +41,4 @@ int wasm_parse_double(WasmLiteralType literal_type,
                       const char* s,
                       const char* end,
                       uint64_t* out_bits);
-EXTERN_C_END
+WASM_EXTERN_C_END

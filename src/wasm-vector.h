@@ -43,27 +43,27 @@
 
 struct WasmAllocator;
 
-#define DECLARE_VECTOR(name, type)                                            \
+#define WASM_DECLARE_VECTOR(name, type)                                       \
   typedef struct type##Vector {                                               \
     type* data;                                                               \
     size_t size;                                                              \
     size_t capacity;                                                          \
   } type##Vector;                                                             \
-  EXTERN_C void wasm_destroy_##name##_vector(struct WasmAllocator* allocator, \
-                                             type##Vector* vec);              \
-  EXTERN_C type* wasm_append_##name(struct WasmAllocator* allocator,          \
-                                    type##Vector* vec) WARN_UNUSED;           \
-  EXTERN_C WasmResult wasm_reserve_##name##s(                                 \
+  WASM_EXTERN_C void wasm_destroy_##name##_vector(                            \
+      struct WasmAllocator* allocator, type##Vector* vec);                    \
+  WASM_EXTERN_C type* wasm_append_##name(struct WasmAllocator* allocator,     \
+                                         type##Vector* vec) WASM_WARN_UNUSED; \
+  WASM_EXTERN_C WasmResult wasm_reserve_##name##s(                            \
       struct WasmAllocator* allocator, type##Vector* vec, size_t desired)     \
-      WARN_UNUSED;                                                            \
-  EXTERN_C WasmResult wasm_append_##name##_value(                             \
+      WASM_WARN_UNUSED;                                                       \
+  WASM_EXTERN_C WasmResult wasm_append_##name##_value(                        \
       struct WasmAllocator* allocator, type##Vector* vec, type* value)        \
-      WARN_UNUSED;                                                            \
-  EXTERN_C WasmResult wasm_extend_##name##s(                                  \
+      WASM_WARN_UNUSED;                                                       \
+  WASM_EXTERN_C WasmResult wasm_extend_##name##s(                             \
       struct WasmAllocator* allocator, type##Vector* dst, type##Vector* src)  \
-      WARN_UNUSED;
+      WASM_WARN_UNUSED;
 
-#define DEFINE_VECTOR(name, type)                                              \
+#define WASM_DEFINE_VECTOR(name, type)                                         \
   void wasm_destroy_##name##_vector(struct WasmAllocator* allocator,           \
                                     type##Vector* vec) {                       \
     wasm_free(allocator, vec->data);                                           \
@@ -93,25 +93,26 @@ struct WasmAllocator;
                                 src->size, sizeof(type));                      \
   }
 
-#define DESTROY_VECTOR_AND_ELEMENTS(allocator, v, name) \
-  {                                                     \
-    int i;                                              \
-    for (i = 0; i < (v).size; ++i)                      \
-      wasm_destroy_##name(allocator, &((v).data[i]));   \
-    wasm_destroy_##name##_vector(allocator, &(v));      \
+#define WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, v, name) \
+  {                                                          \
+    int i;                                                   \
+    for (i = 0; i < (v).size; ++i)                           \
+      wasm_destroy_##name(allocator, &((v).data[i]));        \
+    wasm_destroy_##name##_vector(allocator, &(v));           \
   }
 
+WASM_EXTERN_C_BEGIN
 WasmResult wasm_ensure_capacity(struct WasmAllocator*,
                                 void** data,
                                 size_t* capacity,
                                 size_t desired_size,
-                                size_t elt_byte_size) WARN_UNUSED;
+                                size_t elt_byte_size) WASM_WARN_UNUSED;
 
 void* wasm_append_element(struct WasmAllocator*,
                           void** data,
                           size_t* size,
                           size_t* capacity,
-                          size_t elt_byte_size) WARN_UNUSED;
+                          size_t elt_byte_size) WASM_WARN_UNUSED;
 
 WasmResult wasm_extend_elements(struct WasmAllocator*,
                                 void** dst,
@@ -119,6 +120,7 @@ WasmResult wasm_extend_elements(struct WasmAllocator*,
                                 size_t* dst_capacity,
                                 const void** src,
                                 size_t src_size,
-                                size_t elt_byte_size) WARN_UNUSED;
+                                size_t elt_byte_size) WASM_WARN_UNUSED;
+WASM_EXTERN_C_END
 
 #endif /* WASM_VECTOR_H_ */

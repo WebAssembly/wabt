@@ -29,7 +29,7 @@
 #define YYSTYPE WASM_PARSER_STYPE
 #define YYLTYPE WASM_PARSER_LTYPE
 
-#define INVALID_LINE_OFFSET ((size_t)~0)
+#define WASM_INVALID_LINE_OFFSET ((size_t)~0)
 
 struct WasmAllocator;
 
@@ -79,7 +79,7 @@ typedef struct WasmParser {
   int errors;
 } WasmParser;
 
-EXTERN_C_BEGIN
+WASM_EXTERN_C_BEGIN
 struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer);
 FILE* wasm_lexer_get_file(WasmLexer);
 size_t wasm_lexer_get_file_offset_from_line(WasmLexer, int line);
@@ -97,6 +97,6 @@ void wasm_vfprint_error(FILE*,
                         WasmLexer,
                         const char*,
                         va_list);
-EXTERN_C_END
+WASM_EXTERN_C_END
 
 #endif /* WASM_PARSER_LEXER_SHARED_H_ */

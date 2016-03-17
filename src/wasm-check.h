@@ -22,6 +22,6 @@
 
 struct WasmScript;
 
-EXTERN_C WasmResult wasm_check_script(WasmLexer lexer, struct WasmScript*);
+WASM_EXTERN_C WasmResult wasm_check_script(WasmLexer lexer, struct WasmScript*);
 
 #endif /* WASM_CHECK_H_ */
