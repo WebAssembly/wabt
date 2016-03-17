@@ -23,6 +23,8 @@
 #include "wasm-binary.h"
 #include "wasm-common.h"
 
+struct WasmAllocator;
+
 typedef struct WasmBinaryReader {
   void* user_data;
 
@@ -167,7 +169,8 @@ typedef struct WasmBinaryReader {
 } WasmBinaryReader;
 
 WASM_EXTERN_C_BEGIN
-WasmResult wasm_read_binary(const void* data,
+WasmResult wasm_read_binary(struct WasmAllocator* allocator,
+                            const void* data,
                             size_t size,
                             WasmBinaryReader* reader);
 WASM_EXTERN_C_END

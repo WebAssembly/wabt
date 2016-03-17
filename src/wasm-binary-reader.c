@@ -27,6 +27,15 @@
 #include "wasm-binary.h"
 #include "wasm-vector.h"
 
+#define INITIAL_PARAM_TYPES_CAPACITY 128
+#define INITIAL_BR_TABLE_TARGET_CAPACITY 1000
+
+typedef uint32_t WasmUint32;
+WASM_DECLARE_VECTOR(type, WasmType)
+WASM_DECLARE_VECTOR(uint32, WasmUint32);
+WASM_DEFINE_VECTOR(type, WasmType)
+WASM_DEFINE_VECTOR(uint32, WasmUint32);
+
 #define CALLBACK0(ctx, member)                                             \
   ((ctx)->reader->member ? (ctx)->reader->member((ctx)->reader->user_data) \
                          : (void)0)
@@ -43,6 +52,13 @@
   if (!cond)                               \
     RAISE_ERROR((ctx), __VA_ARGS__);
 
+#define CHECK_ALLOC_(ctx, cond)                                         \
+  RAISE_ERROR_UNLESS(ctx, cond, "%s:%d: allocation failed\n", __FILE__, \
+                     __LINE__)
+
+#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, (e) == WASM_OK)
+#define CHECK_ALLOC_NULL(ctx, v) CHECK_ALLOC_(ctx, v)
+
 enum {
 #define V(name) WASM_SECTION_INDEX_##name,
   WASM_FOREACH_SECTION(V)
@@ -56,6 +72,8 @@ typedef struct WasmReadContext {
   size_t offset;
   WasmBinaryReader* reader;
   jmp_buf error_jmp_buf;
+  WasmTypeVector param_types;
+  WasmUint32Vector target_depths;
 } WasmReadContext;
 
 static void raise_error(WasmReadContext* ctx, const char* format, ...) {
@@ -372,12 +390,30 @@ static int skip_until_section(WasmReadContext* ctx, int section_index) {
   return 1;
 }
 
-WasmResult wasm_read_binary(const void* data,
+static void destroy_context(WasmAllocator* allocator, WasmReadContext* ctx) {
+  wasm_destroy_type_vector(allocator, &ctx->param_types);
+  wasm_destroy_uint32_vector(allocator, &ctx->target_depths);
+}
+
+WasmResult wasm_read_binary(WasmAllocator* allocator,
+                            const void* data,
                             size_t size,
                             WasmBinaryReader* reader) {
-  WasmReadContext ctx = {.data = data, .size = size, .reader = reader};
-  if (setjmp(ctx.error_jmp_buf) == 1)
+  WasmReadContext ctx;
+  WASM_ZERO_MEMORY(ctx);
+  ctx.data = data;
+  ctx.size = size;
+  ctx.reader = reader;
+
+  if (setjmp(ctx.error_jmp_buf) == 1) {
+    destroy_context(allocator, &ctx);
     return WASM_ERROR;
+  }
+
+  CHECK_ALLOC(&ctx, wasm_reserve_types(allocator, &ctx.param_types,
+                                       INITIAL_PARAM_TYPES_CAPACITY));
+  CHECK_ALLOC(&ctx, wasm_reserve_uint32s(allocator, &ctx.target_depths,
+                                         INITIAL_BR_TABLE_TARGET_CAPACITY));
 
   CALLBACK0(&ctx, begin_module);
 
@@ -399,22 +435,26 @@ WasmResult wasm_read_binary(const void* data,
       uint32_t num_params;
       in_u32_leb128(&ctx, &num_params, "signature param count");
 
+      if (num_params > ctx.param_types.capacity) {
+        CHECK_ALLOC(
+            &ctx, wasm_reserve_types(allocator, &ctx.param_types, num_params));
+      }
+
       uint8_t result_type;
       in_u8(&ctx, &result_type, "signature result type");
       RAISE_ERROR_UNLESS(&ctx, is_valid_type(result_type),
                          "expected valid result type");
       int j;
-      WasmType param_types[num_params];
       for (j = 0; j < num_params; ++j) {
         uint8_t param_type;
         in_u8(&ctx, &param_type, "signature param type");
         RAISE_ERROR_UNLESS(&ctx, is_valid_type(param_type),
                            "expected valid param type");
-        param_types[j] = param_type;
+        ctx.param_types.data[j] = param_type;
       }
 
       CALLBACK(&ctx, on_signature, i, (WasmType)result_type, num_params,
-               param_types);
+               ctx.param_types.data);
     }
     CALLBACK0(&ctx, end_signature_section);
   }
@@ -592,21 +632,25 @@ WasmResult wasm_read_binary(const void* data,
           case WASM_OPCODE_BR_TABLE: {
             uint32_t num_targets;
             in_u32_leb128(&ctx, &num_targets, "br_table target count");
-            uint32_t target_depths[num_targets];
+            if (num_targets > ctx.target_depths.capacity) {
+              CHECK_ALLOC(&ctx,
+                          wasm_reserve_uint32s(allocator, &ctx.target_depths,
+                                               num_targets));
+            }
 
             int i;
             for (i = 0; i < num_targets; ++i) {
               uint32_t target_depth;
               in_u32(&ctx, &target_depth, "br_table target depth");
-              target_depths[i] = target_depth;
+              ctx.target_depths.data[i] = target_depth;
             }
 
             uint32_t default_target_depth;
             in_u32(&ctx, &default_target_depth,
                    "br_table default target depth");
 
-            CALLBACK(&ctx, on_br_table_expr, num_targets, target_depths,
-                     default_target_depth);
+            CALLBACK(&ctx, on_br_table_expr, num_targets,
+                     ctx.target_depths.data, default_target_depth);
             break;
           }
 
@@ -919,5 +963,6 @@ WasmResult wasm_read_binary(const void* data,
   }
 
   CALLBACK0(&ctx, end_module);
+  destroy_context(allocator, &ctx);
   return WASM_OK;
 }

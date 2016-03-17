@@ -116,8 +116,10 @@ add_dependencies(everything sexpr-wasm)
 
 # wasm-objdump
 set(WASM_OBJDUMP_SRCS
+  src/wasm-allocator.c
   src/wasm-binary-reader.c
   src/wasm-objdump.c
+  src/wasm-vector.c
 )
 
 add_executable(wasm-objdump ${WASM_OBJDUMP_SRCS})
