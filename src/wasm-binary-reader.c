@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -31,9 +32,9 @@
 #define INITIAL_BR_TABLE_TARGET_CAPACITY 1000
 
 typedef uint32_t WasmUint32;
-WASM_DECLARE_VECTOR(type, WasmType)
 WASM_DECLARE_VECTOR(uint32, WasmUint32);
-WASM_DEFINE_VECTOR(type, WasmType)
+WASM_DECLARE_VECTOR(type, WasmType)
+
 WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
 #define CALLBACK0(ctx, member)                                             \

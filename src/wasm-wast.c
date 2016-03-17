@@ -151,7 +151,7 @@ static void parse_options(int argc, char** argv) {
 #define LOG(...) (void)0
 #endif
 
-void on_error(const char* message, void* user_data) {
+static void on_error(const char* message, void* user_data) {
 #if 0
   LOG("error: %s\n", message);
 #else
@@ -471,33 +471,35 @@ static void end_export_section(void* user_data) {
   LOG("end_export_section\n");
 }
 
-void begin_names_section(void* user_data) {
+static void begin_names_section(void* user_data) {
   LOG("begin_export_section\n");
 }
 
-void on_function_names_count(uint32_t count, void* user_data) {
+static void on_function_names_count(uint32_t count, void* user_data) {
   LOG("on_function_names_count(%u)\n", count);
 }
 
-void on_function_name(uint32_t index,
+static void on_function_name(uint32_t index,
                          WasmStringSlice name,
                          void* user_data) {
   LOG("on_function_names_count(%.*s)\n", (int)name.length, name.start);
 }
 
-void on_local_names_count(uint32_t index, uint32_t count, void* user_data) {
+static void on_local_names_count(uint32_t index,
+                                 uint32_t count,
+                                 void* user_data) {
   LOG("on_local_names_count(%u, %u)\n", index, count);
 }
 
-void on_local_name(uint32_t func_index,
-                      uint32_t local_index,
-                      WasmStringSlice name,
-                      void* user_data) {
+static void on_local_name(uint32_t func_index,
+                          uint32_t local_index,
+                          WasmStringSlice name,
+                          void* user_data) {
   LOG("on_local_name(%u, %u, %.*s)\n", func_index, local_index,
       (int)name.length, name.start);
 }
 
-void end_names_section(void* user_data) {
+static void end_names_section(void* user_data) {
   LOG("end_export_section\n");
 }
 
