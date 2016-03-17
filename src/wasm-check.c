@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include "wasm-allocator.h"
-#include "wasm-internal.h"
+#include "wasm-parser-lexer-shared.h"
 
 static const char* s_type_names[] = {
     "void",

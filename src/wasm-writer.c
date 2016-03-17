@@ -22,8 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm-internal.h"
-
 #define ERROR0(msg) fprintf(stderr, "%s:%d: " msg, __FILE__, __LINE__)
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)

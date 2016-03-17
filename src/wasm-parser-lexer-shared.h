@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef WASM_INTERNAL_H
-#define WASM_INTERNAL_H
+#ifndef WASM_PARSER_LEXER_SHARED_H_
+#define WASM_PARSER_LEXER_SHARED_H_
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "wasm-ast.h"
+#include "wasm-common.h"
 #include "wasm-lexer.h"
 
-#define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
-#define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
-#define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
-#define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
+#define WASM_PARSER_STYPE WasmToken
+#define WASM_PARSER_LTYPE WasmLocation
+#define YYSTYPE WASM_PARSER_STYPE
+#define YYLTYPE WASM_PARSER_LTYPE
+
+#define INVALID_LINE_OFFSET ((size_t)~0)
 
 struct WasmAllocator;
 
@@ -77,27 +79,24 @@ typedef struct WasmParser {
   int errors;
 } WasmParser;
 
-#define WASM_PARSER_STYPE WasmToken
-#define WASM_PARSER_LTYPE WasmLocation
-#define YYSTYPE WASM_PARSER_STYPE
-#define YYLTYPE WASM_PARSER_LTYPE
-
-#define INVALID_LINE_OFFSET ((size_t)~0)
-
+EXTERN_C_BEGIN
 struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer);
 FILE* wasm_lexer_get_file(WasmLexer);
 size_t wasm_lexer_get_file_offset_from_line(WasmLexer, int line);
-int wasm_lexer_lex(WasmToken*, WasmLocation*, WasmLexer, WasmParser*);
-void wasm_parser_error(WasmLocation*, WasmLexer, WasmParser*, const char*, ...);
-void wasm_vfprint_error(FILE*, WasmLocation*, WasmLexer, const char*, va_list);
-void wasm_print_memory(const void* start,
-                       size_t size,
-                       size_t offset,
-                       int print_chars,
-                       const char* desc);
+int wasm_lexer_lex(union WasmToken*,
+                   struct WasmLocation*,
+                   WasmLexer,
+                   struct WasmParser*);
+void wasm_parser_error(struct WasmLocation*,
+                       WasmLexer,
+                       struct WasmParser*,
+                       const char*,
+                       ...);
+void wasm_vfprint_error(FILE*,
+                        struct WasmLocation*,
+                        WasmLexer,
+                        const char*,
+                        va_list);
+EXTERN_C_END
 
-int wasm_string_slices_are_equal(const WasmStringSlice*,
-                                 const WasmStringSlice*);
-void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);
-
-#endif /* WASM_INTERNAL_H */
+#endif /* WASM_PARSER_LEXER_SHARED_H_ */

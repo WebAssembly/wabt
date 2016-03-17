@@ -17,9 +17,8 @@
 #include "wasm-stack-allocator.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
-
-#include "wasm-internal.h"
 
 #define CHUNK_ALIGN 8
 #define CHUNK_SIZE (1024 * 1024)

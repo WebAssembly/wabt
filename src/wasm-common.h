@@ -31,7 +31,16 @@
 #define EXTERN_C_END
 #endif
 
+#define FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#define ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
+#define STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
+#define STATIC_ASSERT_(x, c) STATIC_ASSERT__(x, c)
+#define STATIC_ASSERT(x) STATIC_ASSERT_(x, __COUNTER__)
+
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
+
+struct WasmAllocator;
 
 typedef enum WasmResult {
   WASM_OK,
@@ -239,5 +248,17 @@ typedef struct WasmLiteral {
   WasmLiteralType type;
   WasmStringSlice text;
 } WasmLiteral;
+
+EXTERN_C_BEGIN
+int wasm_string_slices_are_equal(const WasmStringSlice*,
+                                 const WasmStringSlice*);
+void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);
+/* dump memory to stdout similar to the xxd format */
+void wasm_print_memory(const void* start,
+                       size_t size,
+                       size_t offset,
+                       int print_chars,
+                       const char* desc);
+EXTERN_C_END
 
 #endif /* WASM_COMMON_H_ */

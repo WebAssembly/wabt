@@ -17,7 +17,6 @@
 #include "wasm-vector.h"
 
 #include "wasm-allocator.h"
-#include "wasm-internal.h"
 
 #define INITIAL_VECTOR_CAPACITY 8
 

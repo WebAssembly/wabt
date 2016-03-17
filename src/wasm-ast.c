@@ -20,7 +20,6 @@
 #include <stddef.h>
 
 #include "wasm-allocator.h"
-#include "wasm-internal.h"
 
 #define INITIAL_HASH_CAPACITY 8
 

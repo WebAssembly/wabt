@@ -24,8 +24,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "wasm-ast.h"
 #include "wasm-binary.h"
-#include "wasm-internal.h"
 #include "wasm-writer.h"
 
 #define DUMP_OCTETS_PER_LINE 16

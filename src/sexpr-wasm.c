@@ -26,9 +26,9 @@
 #define USE_MIN_PARSER 1
 #endif
 
+#include "wasm-ast.h"
 #include "wasm-binary-writer.h"
 #include "wasm-check.h"
-#include "wasm-internal.h"
 #include "wasm-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"

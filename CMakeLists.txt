@@ -96,12 +96,14 @@ endif ()
 # sexpr-wasm
 set(SEXPR_WASM_SRCS
   src/sexpr-wasm.c
-  src/wasm.c
   src/wasm-allocator.c
   src/wasm-ast.c
   src/wasm-binary-writer.c
   src/wasm-check.c
+  src/wasm-common.c
+  src/wasm-config.c
   src/wasm-parse-literal.c
+  src/wasm-parser-lexer-shared.c
   src/wasm-stack-allocator.c
   src/wasm-vector.c
   src/wasm-writer.c

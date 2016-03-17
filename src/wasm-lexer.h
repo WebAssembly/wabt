@@ -19,6 +19,8 @@
 
 #include <stddef.h>
 
+#include "wasm-common.h"
+
 struct WasmAllocator;
 typedef void* WasmLexer;
 

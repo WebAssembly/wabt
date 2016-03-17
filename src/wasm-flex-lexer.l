@@ -24,8 +24,8 @@
 #include "wasm-config.h"
 
 #include "wasm-allocator.h"
-#include "wasm-internal.h"
 #include "wasm-parser.h"
+#include "wasm-parser-lexer-shared.h"
 #include "wasm-vector.h"
 
 /* must be included after so some typedefs will be defined */

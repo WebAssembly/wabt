@@ -21,9 +21,9 @@
 #include <stdlib.h>
 
 #include "wasm-allocator.h"
-#include "wasm-internal.h"
-#include "wasm-parser.h"
 #include "wasm-parse-literal.h"
+#include "wasm-parser.h"
+#include "wasm-parser-lexer-shared.h"
 
 #define DUPTEXT(dst, src)                                                   \
   (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
