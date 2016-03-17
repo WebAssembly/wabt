@@ -835,13 +835,12 @@ static WasmResult check_memory(WasmCheckContext* ctx,
 static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
   WasmResult result = WASM_OK;
   WasmLocation* export_memory_loc = NULL;
-  int i;
   int seen_memory = 0;
   int seen_export_memory = 0;
   int seen_table = 0;
   int seen_start = 0;
-  for (i = 0; i < module->fields.size; ++i) {
-    WasmModuleField* field = &module->fields.data[i];
+  WasmModuleField* field;
+  for (field = module->first_field; field != NULL; field = field->next) {
     switch (field->type) {
       case WASM_MODULE_FIELD_TYPE_FUNC:
         result |= check_func(ctx, module, &field->loc, &field->func);

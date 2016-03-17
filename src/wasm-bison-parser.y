@@ -136,8 +136,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %type<func_type> type_def
 %type<import> import
 %type<memory> memory
-%type<module> module
-%type<module_fields> module_fields
+%type<module> module module_fields
 %type<literal> literal
 %type<script> script
 %type<segment> segment string_contents
@@ -167,8 +166,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %destructor { wasm_destroy_func_type(parser->allocator, &$$); } type_def
 %destructor { wasm_destroy_import(parser->allocator, $$); wasm_free(parser->allocator, $$); } import
 %destructor { wasm_destroy_export(parser->allocator, &$$); } export
-%destructor { wasm_destroy_module_field_vector_and_elements(parser->allocator, &$$); } module_fields
-%destructor { wasm_destroy_module(parser->allocator, $$); wasm_free(parser->allocator, $$); } module
+%destructor { wasm_destroy_module(parser->allocator, $$); wasm_free(parser->allocator, $$); } module module_fields
 %destructor { wasm_destroy_const_vector(parser->allocator, &$$); } const_list
 %destructor { wasm_destroy_command(parser->allocator, $$); wasm_free(parser->allocator, $$); } cmd
 %destructor { wasm_destroy_command_vector_and_elements(parser->allocator, &$$); } cmd_list
@@ -1158,10 +1156,15 @@ export_memory :
 ;
 
 module_fields :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ {
+      $$ = new_module(parser->allocator);
+      /* clear the start function */
+      $$->start.type = WASM_VAR_TYPE_INDEX;
+      $$->start.index = -1;
+    }
   | module_fields func {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
@@ -1170,7 +1173,7 @@ module_fields :
     }
   | module_fields import {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
@@ -1179,7 +1182,7 @@ module_fields :
     }
   | module_fields export {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
@@ -1187,7 +1190,7 @@ module_fields :
     }
   | module_fields export_memory {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY;
@@ -1195,7 +1198,7 @@ module_fields :
     }
   | module_fields table {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_TABLE;
@@ -1203,7 +1206,7 @@ module_fields :
     }
   | module_fields type_def {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
@@ -1211,7 +1214,7 @@ module_fields :
     }
   | module_fields memory {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
@@ -1219,7 +1222,7 @@ module_fields :
     }
   | module_fields start {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, &$$);
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_START;
@@ -1228,17 +1231,12 @@ module_fields :
 ;
 module :
     LPAR MODULE module_fields RPAR {
-      $$ = new_module(parser->allocator);
+      $$ = $3;
       $$->loc = @2;
-      $$->fields = $3;
-      /* clear the start function */
-      $$->start.type = WASM_VAR_TYPE_INDEX;
-      $$->start.index = -1;
 
       /* cache values */
-      int i;
-      for (i = 0; i < $$->fields.size; ++i) {
-        WasmModuleField* field = &$$->fields.data[i];
+      WasmModuleField* field;
+      for (field = $$->first_field; field; field = field->next) {
         switch (field->type) {
           case WASM_MODULE_FIELD_TYPE_FUNC: {
             WasmFuncPtr func_ptr = &field->func;

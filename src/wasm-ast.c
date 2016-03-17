@@ -32,7 +32,6 @@ WASM_DEFINE_VECTOR(segment, WasmSegment);
 WASM_DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
 WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
 WASM_DEFINE_VECTOR(export_ptr, WasmExportPtr);
-WASM_DEFINE_VECTOR(module_field, WasmModuleField);
 WASM_DEFINE_VECTOR(const, WasmConst);
 WASM_DEFINE_VECTOR(command, WasmCommand);
 
@@ -280,6 +279,20 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
     *dst_binding = src_entry->binding;
     dst_binding->index += last_type; /* fixup the binding index */
   }
+  return result;
+}
+
+WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
+                                          WasmModule* module) {
+  WasmModuleField* result =
+      wasm_alloc_zero(allocator, sizeof(WasmModuleField), WASM_DEFAULT_ALIGN);
+  if (!result)
+    return NULL;
+  if (!module->first_field)
+    module->first_field = result;
+  else if (module->last_field)
+    module->last_field->next = result;
+  module->last_field = result;
   return result;
 }
 
@@ -555,15 +568,16 @@ static void wasm_destroy_module_field(WasmAllocator* allocator,
   }
 }
 
-void wasm_destroy_module_field_vector_and_elements(
-    WasmAllocator* allocator,
-    WasmModuleFieldVector* module_fields) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *module_fields, module_field);
-}
-
 void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, module->fields, module_field);
-  /* everything that follows shares data with the module_fields above, so we
+  WasmModuleField* field = module->first_field;
+  while (field != NULL) {
+    WasmModuleField* next_field = field->next;
+    wasm_destroy_module_field(allocator, field);
+    wasm_free(allocator, field);
+    field = next_field;
+  }
+
+  /* everything that follows shares data with the module fields above, so we
    only need to destroy the containing vectors */
   wasm_destroy_func_ptr_vector(allocator, &module->funcs);
   wasm_destroy_import_ptr_vector(allocator, &module->imports);

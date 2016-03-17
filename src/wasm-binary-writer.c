@@ -1325,21 +1325,13 @@ static WasmExpr* create_reinterpret_expr(WasmAllocator* allocator,
   return result;
 }
 
-static WasmModuleField* append_module_field_and_fixup(
+static WasmModuleField* append_module_field(
     WasmAllocator* allocator,
     WasmModule* module,
     WasmModuleFieldType module_field_type) {
-  WasmModuleField* first_field = &module->fields.data[0];
-  WasmModuleField* result =
-      wasm_append_module_field(allocator, &module->fields);
-  if (!result)
-    return NULL;
-  WASM_ZERO_MEMORY(*result);
+  WasmModuleField* result = wasm_append_module_field(allocator, module);
   result->type = module_field_type;
 
-  /* make space for the new entry, it will be assigned twice, once here, once
-   below. It is easier to do this than check below whether the new value was
-   already assigned. */
   switch (module_field_type) {
     case WASM_MODULE_FIELD_TYPE_FUNC: {
       WasmFuncPtr* func_ptr = wasm_append_func_ptr(allocator, &module->funcs);
@@ -1382,52 +1374,9 @@ static WasmModuleField* append_module_field_and_fixup(
       break;
   }
 
-  if (first_field == &module->fields.data[0])
-    return result;
-
-  /* the first element moved, so we need to fixup all the pointers */
-  int i;
-  int num_funcs = 0;
-  int num_imports = 0;
-  int num_exports = 0;
-  int num_func_types = 0;
-  for (i = 0; i < module->fields.size; ++i) {
-    WasmModuleField* field = &module->fields.data[i];
-    switch (field->type) {
-      case WASM_MODULE_FIELD_TYPE_FUNC:
-        assert(num_funcs < module->funcs.size);
-        module->funcs.data[num_funcs++] = &field->func;
-        break;
-      case WASM_MODULE_FIELD_TYPE_IMPORT:
-        assert(num_imports < module->imports.size);
-        module->imports.data[num_imports++] = &field->import;
-        break;
-      case WASM_MODULE_FIELD_TYPE_EXPORT:
-        assert(num_exports < module->exports.size);
-        module->exports.data[num_exports++] = &field->export_;
-        break;
-      case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
-        module->export_memory = &field->export_memory;
-        break;
-      case WASM_MODULE_FIELD_TYPE_TABLE:
-        module->table = &field->table;
-        break;
-      case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
-        assert(num_func_types < module->func_types.size);
-        module->func_types.data[num_func_types++] = &field->func_type;
-        break;
-      case WASM_MODULE_FIELD_TYPE_MEMORY:
-        module->memory = &field->memory;
-        break;
-      case WASM_MODULE_FIELD_TYPE_START:
-        /* not pointers, so they don't need to be fixed */
-        break;
-    }
-  }
-
   return result;
 fail:
-  module->fields.size--;
+  wasm_free(allocator, result);
   return NULL;
 }
 
@@ -1446,20 +1395,20 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
                                      WasmModule* module,
                                      WasmType result_type,
                                      WasmStringSlice export_name) {
-  WasmModuleField* func_field = append_module_field_and_fixup(
-      allocator, module, WASM_MODULE_FIELD_TYPE_FUNC);
+  WasmModuleField* func_field =
+      append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_FUNC);
   if (!func_field)
     return NULL;
   WasmFunc* func = &func_field->func;
   func->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
   func->result_type = result_type;
   int func_index = module->funcs.size - 1;
-  /* invalidated by append_module_field_and_fixup below */
+  /* invalidated by append_module_field below */
   func_field = NULL;
   func = NULL;
 
-  WasmModuleField* export_field = append_module_field_and_fixup(
-      allocator, module, WASM_MODULE_FIELD_TYPE_EXPORT);
+  WasmModuleField* export_field =
+      append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_EXPORT);
   if (!export_field) {
     /* leave the func field, it will be cleaned up later */
     return NULL;

@@ -291,6 +291,7 @@ typedef enum WasmModuleFieldType {
 typedef struct WasmModuleField {
   WasmLocation loc;
   WasmModuleFieldType type;
+  struct WasmModuleField* next;
   union {
     WasmFunc func;
     WasmImport import;
@@ -302,11 +303,11 @@ typedef struct WasmModuleField {
     WasmVar start;
   };
 } WasmModuleField;
-WASM_DECLARE_VECTOR(module_field, WasmModuleField);
 
 typedef struct WasmModule {
   WasmLocation loc;
-  WasmModuleFieldVector fields;
+  WasmModuleField* first_field;
+  WasmModuleField* last_field;
 
   /* cached for convenience */
   WasmFuncPtrVector funcs;
@@ -363,6 +364,8 @@ WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  const WasmStringSlice*);
 int wasm_hash_entry_is_free(WasmBindingHashEntry*);
 
+WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
+
 /* WasmExpr creation functions */
 WasmExpr* wasm_new_binary_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_block_expr(struct WasmAllocator*);
@@ -404,8 +407,6 @@ void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);
 void wasm_destroy_func(struct WasmAllocator*, WasmFunc*);
 void wasm_destroy_import(struct WasmAllocator*, WasmImport*);
 void wasm_destroy_memory(struct WasmAllocator*, WasmMemory*);
-void wasm_destroy_module_field_vector_and_elements(struct WasmAllocator*,
-                                                   WasmModuleFieldVector*);
 void wasm_destroy_module(struct WasmAllocator*, WasmModule*);
 void wasm_destroy_segment_vector_and_elements(struct WasmAllocator*,
                                               WasmSegmentVector*);
