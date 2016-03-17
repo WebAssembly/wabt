@@ -114,16 +114,16 @@ set(SEXPR_WASM_SRCS
 add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
 add_dependencies(everything sexpr-wasm)
 
-# wasm-objdump
-set(WASM_OBJDUMP_SRCS
+# wasm-wast
+set(WASM_WAST_SRCS
   src/wasm-allocator.c
   src/wasm-binary-reader.c
-  src/wasm-objdump.c
+  src/wasm-wast.c
   src/wasm-vector.c
 )
 
-add_executable(wasm-objdump ${WASM_OBJDUMP_SRCS})
-add_dependencies(everything wasm-objdump)
+add_executable(wasm-wast ${WASM_WAST_SRCS})
+add_dependencies(everything wasm-wast)
 
 # hexfloat-test
 option(BUILD_TESTS "Build GTest-based tests" ON)
@@ -158,7 +158,7 @@ find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} -e $<TARGET_FILE:sexpr-wasm>
-  DEPENDS sexpr-wasm wasm-objdump
+  DEPENDS sexpr-wasm wasm-wast
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )
 
@@ -176,6 +176,7 @@ if (COMPILER_IS_CLANG)
 
   macro(add_sanitizer SANITIZER_NAME FLAGS)
     add_sanitizer_exe(sexpr-wasm-${SANITIZER_NAME} ${FLAGS} "${SEXPR_WASM_SRCS}")
+    add_sanitizer_exe(wasm-wast-${SANITIZER_NAME} ${FLAGS} "${WASM_WAST_SRCS}")
     if (BUILD_TESTS)
       add_sanitizer_exe(hexfloat_test-${SANITIZER_NAME} ${FLAGS} "${HEXFLOAT_TEST_SRCS}")
     endif ()
@@ -183,12 +184,12 @@ if (COMPILER_IS_CLANG)
     add_custom_target(all-${SANITIZER_NAME}
       DEPENDS sexpr-wasm-${SANITIZER_NAME}
               hexfloat_test-${SANITIZER_NAME}
-              wasm-objdump-${SANITIZER_NAME})
+              wasm-wast-${SANITIZER_NAME})
 
     add_custom_target(run-tests-${SANITIZER_NAME}
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
           -e $<TARGET_FILE:sexpr-wasm-${SANITIZER_NAME}>
-      DEPENDS sexpr-wasm-${SANITIZER_NAME} wasm-objdump-${SANITIZER_NAME}
+      DEPENDS sexpr-wasm-${SANITIZER_NAME} wasm-wast-${SANITIZER_NAME}
       WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
     )
   endmacro ()

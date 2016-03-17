@@ -130,35 +130,15 @@ static void in_f64(WasmReadContext* ctx,
 #define BYTE_AT(type, i, shift) (((type)p[i] & 0x7f) << (shift))
 
 #define LEB128_1(type) (BYTE_AT(type, 0, 0))
-#define LEB128_2(type) (BYTE_AT(type, 1, 7) | BYTE_AT(type, 0, 0))
-#define LEB128_3(type) \
-  (BYTE_AT(type, 2, 14) | BYTE_AT(type, 1, 7) | BYTE_AT(type, 0, 0))
-#define LEB128_4(type)                                                 \
-  (BYTE_AT(type, 3, 21) | BYTE_AT(type, 2, 14) | BYTE_AT(type, 1, 7) | \
-   BYTE_AT(type, 0, 0))
-#define LEB128_5(type)                                                  \
-  (BYTE_AT(type, 4, 28) | BYTE_AT(type, 3, 21) | BYTE_AT(type, 2, 14) | \
-   BYTE_AT(type, 1, 7) | BYTE_AT(type, 0, 0))
-#define LEB128_6(type)                                                  \
-  (BYTE_AT(type, 5, 35) | BYTE_AT(type, 4, 28) | BYTE_AT(type, 3, 21) | \
-   BYTE_AT(type, 2, 14) | BYTE_AT(type, 1, 7) | BYTE_AT(type, 0, 0))
-#define LEB128_7(type)                                                  \
-  (BYTE_AT(type, 6, 42) | BYTE_AT(type, 5, 35) | BYTE_AT(type, 4, 28) | \
-   BYTE_AT(type, 3, 21) | BYTE_AT(type, 2, 14) | BYTE_AT(type, 1, 7) |  \
-   BYTE_AT(type, 0, 0))
-#define LEB128_8(type)                                                  \
-  (BYTE_AT(type, 7, 49) | BYTE_AT(type, 6, 42) | BYTE_AT(type, 5, 35) | \
-   BYTE_AT(type, 4, 28) | BYTE_AT(type, 3, 21) | BYTE_AT(type, 2, 14) | \
-   BYTE_AT(type, 1, 7) | BYTE_AT(type, 0, 0))
-#define LEB128_9(type)                                                  \
-  (BYTE_AT(type, 8, 56) | BYTE_AT(type, 7, 49) | BYTE_AT(type, 6, 42) | \
-   BYTE_AT(type, 5, 35) | BYTE_AT(type, 4, 28) | BYTE_AT(type, 3, 21) | \
-   BYTE_AT(type, 2, 14) | BYTE_AT(type, 1, 7) | BYTE_AT(type, 0, 0))
-#define LEB128_10(type)                                                 \
-  (BYTE_AT(type, 9, 63) | BYTE_AT(type, 8, 56) | BYTE_AT(type, 7, 49) | \
-   BYTE_AT(type, 6, 42) | BYTE_AT(type, 5, 35) | BYTE_AT(type, 4, 28) | \
-   BYTE_AT(type, 3, 21) | BYTE_AT(type, 2, 14) | BYTE_AT(type, 1, 7) |  \
-   BYTE_AT(type, 0, 0))
+#define LEB128_2(type) (BYTE_AT(type, 1, 7) | LEB128_1(type))
+#define LEB128_3(type) (BYTE_AT(type, 2, 14) | LEB128_2(type))
+#define LEB128_4(type) (BYTE_AT(type, 3, 21) | LEB128_3(type))
+#define LEB128_5(type) (BYTE_AT(type, 4, 28) | LEB128_4(type))
+#define LEB128_6(type) (BYTE_AT(type, 5, 35) | LEB128_5(type))
+#define LEB128_7(type) (BYTE_AT(type, 6, 42) | LEB128_6(type))
+#define LEB128_8(type) (BYTE_AT(type, 7, 49) | LEB128_7(type))
+#define LEB128_9(type) (BYTE_AT(type, 8, 56) | LEB128_8(type))
+#define LEB128_10(type) (BYTE_AT(type, 9, 63) | LEB128_9(type))
 
 #define SHIFT_AMOUNT(type, sign_bit) (sizeof(type) * 8 - 1 - (sign_bit))
 #define SIGN_EXTEND(type, value, sign_bit)            \
