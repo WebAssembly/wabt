@@ -38,6 +38,8 @@
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(v)
 #define CHECK_ALLOC_NULL_STR(v) CHECK_ALLOC_((v).start)
 
+#define LOG 0
+
 typedef struct WasmExprNode {
   WasmExpr* expr;
   uint32_t index;
@@ -246,11 +248,22 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
   WasmReadAstContext* ctx = user_data;
   assert(index < ctx->module->funcs.size);
   ctx->current_func = ctx->module->funcs.data[index];
+#if LOG
+  fprintf(stderr, "func %d\n", index);
+#endif
   return WASM_OK;
 }
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   WasmReadAstContext* ctx = user_data;
+  if (ctx->expr_stack.size != 0) {
+#if 1
+    /* TODO(binji): use on_error */
+    fprintf(stderr, "expression stack not empty on function exit! %zd items\n",
+            ctx->expr_stack.size);
+#endif
+    return WASM_ERROR;
+  }
   ctx->current_func = NULL;
   return WASM_OK;
 }
@@ -277,10 +290,14 @@ static WasmResult on_local_decl(uint32_t decl_index,
 }
 
 static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
-  int done = 1;
+  int done = 0;
   while (!done) {
     done = 1;
     if (ctx->expr_stack.size == 0) {
+#if LOG
+      fprintf(stderr, "reduce: <- %u\n", expr->type);
+#endif
+
       WasmExprPtr* expr_ptr =
           wasm_append_expr_ptr(ctx->allocator, &ctx->current_func->exprs);
       CHECK_ALLOC_NULL(expr_ptr);
@@ -288,6 +305,11 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
     } else {
       WasmExprNode* top = &ctx->expr_stack.data[ctx->expr_stack.size - 1];
       assert(top->index < top->total);
+
+#if LOG
+      fprintf(stderr, "reduce: %d(%d/%d) <- %d\n", top->expr->type, top->index,
+              top->total, expr->type);
+#endif
 
       switch (top->expr->type) {
         case WASM_EXPR_TYPE_BINARY:
@@ -434,6 +456,25 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
   return WASM_OK;
 }
 
+static WasmResult shift(WasmReadAstContext* ctx,
+                        WasmExpr* expr,
+                        uint32_t count) {
+  if (count > 0) {
+#if LOG
+    fprintf(stderr, "shift: %d %u\n", expr->type, count);
+#endif
+    WasmExprNode* node =
+        wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
+    CHECK_ALLOC_NULL(node);
+    node->expr = expr;
+    node->index = 0;
+    node->total = count;
+    return WASM_OK;
+  } else {
+    return reduce(ctx, expr);
+  }
+}
+
 static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
   WasmReadAstContext* ctx = user_data;
   assert(ctx->current_func);
@@ -441,12 +482,7 @@ static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
   WasmExpr* expr = wasm_new_binary_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->binary.opcode = opcode;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 2;
-  return WASM_OK;
+  return shift(ctx, expr, 2);
 }
 
 static WasmResult on_block_expr(uint32_t count, void* user_data) {
@@ -455,17 +491,7 @@ static WasmResult on_block_expr(uint32_t count, void* user_data) {
 
   WasmExpr* expr = wasm_new_block_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  if (count > 0) {
-    WasmExprNode* node =
-        wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-    CHECK_ALLOC_NULL(node);
-    node->expr = expr;
-    node->total = count;
-    return WASM_OK;
-  } else {
-    return reduce(ctx, expr);
-  }
+  return shift(ctx, expr, count);
 }
 
 static WasmResult on_br_expr(uint32_t depth, void* user_data) {
@@ -476,12 +502,7 @@ static WasmResult on_br_expr(uint32_t depth, void* user_data) {
   CHECK_ALLOC_NULL(expr);
   expr->br.var.type = WASM_VAR_TYPE_INDEX;
   expr->br.var.index = depth;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
@@ -492,12 +513,7 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   CHECK_ALLOC_NULL(expr);
   expr->br_if.var.type = WASM_VAR_TYPE_INDEX;
   expr->br_if.var.index = depth;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
@@ -513,18 +529,8 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   CHECK_ALLOC_NULL(expr);
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
   expr->call.var.index = func_index;
-
   uint32_t num_params = func_type->sig.param_types.size;
-  if (num_params > 0) {
-    WasmExprNode* node =
-        wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-    CHECK_ALLOC_NULL(node);
-    node->expr = expr;
-    node->total = num_params;
-    return WASM_OK;
-  } else {
-    return reduce(ctx, expr);
-  }
+  return shift(ctx, expr, num_params);
 }
 
 static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
@@ -540,18 +546,8 @@ static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
   CHECK_ALLOC_NULL(expr);
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
   expr->call.var.index = import_index;
-
   uint32_t num_params = func_type->sig.param_types.size;
-  if (num_params > 0) {
-    WasmExprNode* node =
-        wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-    CHECK_ALLOC_NULL(node);
-    node->expr = expr;
-    node->total = num_params;
-    return WASM_OK;
-  } else {
-    return reduce(ctx, expr);
-  }
+  return shift(ctx, expr, num_params);
 }
 
 static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
@@ -564,14 +560,8 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   CHECK_ALLOC_NULL(expr);
   expr->call_indirect.var.type = WASM_VAR_TYPE_INDEX;
   expr->call_indirect.var.index = sig_index;
-
   uint32_t num_params = func_type->sig.param_types.size;
-  WasmExprNode* node =
-      wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = num_params + 1;
-  return WASM_OK;
+  return shift(ctx, expr, num_params + 1);
 }
 
 static WasmResult on_compare_expr(WasmOpcode opcode, void* user_data) {
@@ -581,12 +571,7 @@ static WasmResult on_compare_expr(WasmOpcode opcode, void* user_data) {
   WasmExpr* expr = wasm_new_compare_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->compare.opcode = opcode;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 2;
-  return WASM_OK;
+  return shift(ctx, expr, 2);
 }
 
 static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
@@ -640,12 +625,7 @@ static WasmResult on_convert_expr(WasmOpcode opcode, void* user_data) {
   WasmExpr* expr = wasm_new_convert_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->convert.opcode = opcode;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
@@ -665,12 +645,7 @@ static WasmResult on_grow_memory_expr(void* user_data) {
 
   WasmExpr* expr = wasm_new_grow_memory_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_if_expr(void* user_data) {
@@ -679,12 +654,7 @@ static WasmResult on_if_expr(void* user_data) {
 
   WasmExpr* expr = wasm_new_if_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 2;
-  return WASM_OK;
+  return shift(ctx, expr, 2);
 }
 
 static WasmResult on_if_else_expr(void* user_data) {
@@ -693,12 +663,7 @@ static WasmResult on_if_else_expr(void* user_data) {
 
   WasmExpr* expr = wasm_new_if_else_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 3;
-  return WASM_OK;
+  return shift(ctx, expr, 3);
 }
 
 static WasmResult on_load_expr(WasmOpcode opcode,
@@ -713,12 +678,7 @@ static WasmResult on_load_expr(WasmOpcode opcode,
   expr->load.opcode = opcode;
   expr->load.align = 1 << alignment_log2;
   expr->load.offset = offset;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_loop_expr(uint32_t count, void* user_data) {
@@ -727,12 +687,7 @@ static WasmResult on_loop_expr(uint32_t count, void* user_data) {
 
   WasmExpr* expr = wasm_new_loop_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = count;
-  return WASM_OK;
+  return shift(ctx, expr, count);
 }
 
 static WasmResult on_memory_size_expr(void* user_data) {
@@ -764,17 +719,7 @@ static WasmResult on_return_expr(void* user_data) {
 
   WasmExpr* expr = wasm_new_return_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  if (func_type->sig.result_type != WASM_TYPE_VOID) {
-    WasmExprNode* node =
-        wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-    CHECK_ALLOC_NULL(node);
-    node->expr = expr;
-    node->total = 1;
-    return WASM_OK;
-  } else {
-    return reduce(ctx, expr);
-  }
+  return shift(ctx, expr, func_type->sig.result_type == WASM_TYPE_VOID ? 0 : 1);
 }
 
 static WasmResult on_select_expr(void* user_data) {
@@ -783,12 +728,7 @@ static WasmResult on_select_expr(void* user_data) {
 
   WasmExpr* expr = wasm_new_select_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 3;
-  return WASM_OK;
+  return shift(ctx, expr, 3);
 }
 
 static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
@@ -799,12 +739,7 @@ static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
   CHECK_ALLOC_NULL(expr);
   expr->set_local.var.type = WASM_VAR_TYPE_INDEX;
   expr->set_local.var.index = local_index;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_store_expr(WasmOpcode opcode,
@@ -819,12 +754,7 @@ static WasmResult on_store_expr(WasmOpcode opcode,
   expr->store.opcode = opcode;
   expr->store.align = 1 << alignment_log2;
   expr->store.offset = offset;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 2;
-  return WASM_OK;
+  return shift(ctx, expr, 2);
 }
 
 static WasmResult on_br_table_expr(uint32_t num_targets,
@@ -849,12 +779,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
   }
   expr->br_table.default_target.type = WASM_VAR_TYPE_INDEX;
   expr->br_table.default_target.index = default_target_depth;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
@@ -864,12 +789,7 @@ static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
   WasmExpr* expr = wasm_new_unary_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->unary.opcode = opcode;
-
-  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  CHECK_ALLOC_NULL(node);
-  node->expr = expr;
-  node->total = 1;
-  return WASM_OK;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_unreachable_expr(void* user_data) {
