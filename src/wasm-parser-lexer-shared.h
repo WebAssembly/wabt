@@ -37,11 +37,7 @@ typedef union WasmToken {
   /* terminals */
   WasmStringSlice text;
   WasmType type;
-  WasmUnaryOp unary;
-  WasmBinaryOp binary;
-  WasmCompareOp compare;
-  WasmConvertOp convert;
-  WasmMemOp mem;
+  WasmOpcode opcode;
   WasmLiteral literal;
 
   /* non-terminals */

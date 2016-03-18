@@ -52,13 +52,13 @@
 ; function body 0
 000005f: 00                                         ; func body size (guess)
 0000060: 00                                         ; local decl count
-0000061: 33                                         ; OPCODE_I32_STORE_MEM
+0000061: 33                                         ; OPCODE_I32_STORE
 0000062: 02                                         ; alignment
 0000063: 00                                         ; store offset
 0000064: 0a                                         ; OPCODE_I32_CONST
 0000065: 00                                         ; i32 literal
 0000066: 40                                         ; OPCODE_I32_ADD
-0000067: 2a                                         ; OPCODE_I32_LOAD_MEM
+0000067: 2a                                         ; OPCODE_I32_LOAD
 0000068: 02                                         ; alignment
 0000069: 00                                         ; load offset
 000006a: 0a                                         ; OPCODE_I32_CONST

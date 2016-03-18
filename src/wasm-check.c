@@ -69,6 +69,14 @@ WASM_STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
 
 #define TYPE_TO_TYPE_SET(type) (1 << ((type) - 1))
 
+#define V(type1, type2, mem_size, code, name) [code] = WASM_TYPE_##type1,
+static WasmType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
+
+#define V(type1, type2, mem_size, code, name) [code] = WASM_TYPE_##type2,
+static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
+
 typedef struct WasmLabelNode {
   WasmLabel* label;
   WasmType expected_type;
@@ -464,7 +472,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
   WasmResult result = WASM_OK;
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY: {
-      WasmType type = expr->binary.op.type;
+      WasmType type = s_opcode_type1[expr->binary.opcode];
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->binary.left, type,
                            " of argument 0 of binary op");
@@ -549,7 +557,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_COMPARE: {
-      WasmType type = expr->convert.op.type;
+      WasmType type = s_opcode_type1[expr->compare.opcode];
       result |= check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type, desc);
       result |= check_expr(ctx, module, func, expr->compare.left, type,
                            " of argument 0 of compare op");
@@ -562,10 +570,11 @@ static WasmResult check_expr(WasmCheckContext* ctx,
           check_type(ctx, &expr->loc, expr->const_.type, expected_type, desc);
       break;
     case WASM_EXPR_TYPE_CONVERT: {
-      result |= check_type(ctx, &expr->loc, expr->convert.op.type,
-                           expected_type, desc);
-      result |= check_expr(ctx, module, func, expr->convert.expr,
-                           expr->convert.op.type2, " of convert op");
+      WasmType type1 = s_opcode_type1[expr->convert.opcode];
+      WasmType type2 = s_opcode_type2[expr->convert.opcode];
+      result |= check_type(ctx, &expr->loc, type1, expected_type, desc);
+      result |= check_expr(ctx, module, func, expr->convert.expr, type2,
+                           " of convert op");
       break;
     }
     case WASM_EXPR_TYPE_GET_LOCAL: {
@@ -615,7 +624,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_LOAD: {
-      WasmType type = expr->load.op.type;
+      WasmType type = s_opcode_type1[expr->load.opcode];
       result |= check_align(ctx, &expr->loc, expr->load.align);
       result |= check_offset(ctx, &expr->loc, expr->load.offset);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
@@ -682,7 +691,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_STORE: {
-      WasmType type = expr->store.op.type;
+      WasmType type = s_opcode_type1[expr->store.opcode];
       result |= check_align(ctx, &expr->loc, expr->store.align);
       result |= check_offset(ctx, &expr->loc, expr->store.offset);
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
@@ -707,10 +716,10 @@ static WasmResult check_expr(WasmCheckContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_UNARY: {
-      WasmType type = expr->unary.op.type;
+      WasmType type = s_opcode_type1[expr->unary.opcode];
       result |= check_type(ctx, &expr->loc, type, expected_type, desc);
-      result |= check_expr(ctx, module, func, expr->unary.expr,
-                           expr->unary.op.type, " of unary op");
+      result |=
+          check_expr(ctx, module, func, expr->unary.expr, type, " of unary op");
       break;
     }
     case WASM_EXPR_TYPE_UNREACHABLE:

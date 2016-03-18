@@ -140,8 +140,8 @@
 000004c: 4a                                         ; OPCODE_I32_SHL
 000004d: 4b                                         ; OPCODE_I32_SHR_U
 000004e: 4c                                         ; OPCODE_I32_SHR_S
-000004f: b7                                         ; OPCODE_I32_ROL
-0000050: b6                                         ; OPCODE_I32_ROR
+000004f: b7                                         ; OPCODE_I32_ROTL
+0000050: b6                                         ; OPCODE_I32_ROTR
 0000051: 0a                                         ; OPCODE_I32_CONST
 0000052: 00                                         ; i32 literal
 0000053: 0a                                         ; OPCODE_I32_CONST
@@ -187,8 +187,8 @@
 000007b: 65                                         ; OPCODE_I64_SHL
 000007c: 66                                         ; OPCODE_I64_SHR_U
 000007d: 67                                         ; OPCODE_I64_SHR_S
-000007e: b9                                         ; OPCODE_I64_ROL
-000007f: b8                                         ; OPCODE_I64_ROR
+000007e: b9                                         ; OPCODE_I64_ROTL
+000007f: b8                                         ; OPCODE_I64_ROTR
 0000080: 0b                                         ; OPCODE_I64_CONST
 0000081: 00                                         ; i64 literal
 0000082: 0b                                         ; OPCODE_I64_CONST

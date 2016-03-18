@@ -64,94 +64,13 @@ static const char* s_type_names[] = {
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
-#define V(name, code) [code] = "OPCODE_" #name,
+#define V(type1, type2, mem_size, code, name) [code] = "OPCODE_" #name,
 static const char* s_opcode_names[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-static uint8_t s_binary_opcodes[] = {
-    WASM_OPCODE_F32_ADD,   WASM_OPCODE_F32_COPYSIGN, WASM_OPCODE_F32_DIV,
-    WASM_OPCODE_F32_MAX,   WASM_OPCODE_F32_MIN,      WASM_OPCODE_F32_MUL,
-    WASM_OPCODE_F32_SUB,   WASM_OPCODE_F64_ADD,      WASM_OPCODE_F64_COPYSIGN,
-    WASM_OPCODE_F64_DIV,   WASM_OPCODE_F64_MAX,      WASM_OPCODE_F64_MIN,
-    WASM_OPCODE_F64_MUL,   WASM_OPCODE_F64_SUB,      WASM_OPCODE_I32_ADD,
-    WASM_OPCODE_I32_AND,   WASM_OPCODE_I32_DIV_S,    WASM_OPCODE_I32_DIV_U,
-    WASM_OPCODE_I32_MUL,   WASM_OPCODE_I32_OR,       WASM_OPCODE_I32_REM_S,
-    WASM_OPCODE_I32_REM_U, WASM_OPCODE_I32_SHL,      WASM_OPCODE_I32_SHR_S,
-    WASM_OPCODE_I32_SHR_U, WASM_OPCODE_I32_ROL,      WASM_OPCODE_I32_ROR,
-    WASM_OPCODE_I32_SUB,   WASM_OPCODE_I32_XOR,      WASM_OPCODE_I64_ADD,
-    WASM_OPCODE_I64_AND,   WASM_OPCODE_I64_DIV_S,    WASM_OPCODE_I64_DIV_U,
-    WASM_OPCODE_I64_MUL,   WASM_OPCODE_I64_OR,       WASM_OPCODE_I64_REM_S,
-    WASM_OPCODE_I64_REM_U, WASM_OPCODE_I64_SHL,      WASM_OPCODE_I64_SHR_S,
-    WASM_OPCODE_I64_SHR_U, WASM_OPCODE_I64_ROL,      WASM_OPCODE_I64_ROR,
-    WASM_OPCODE_I64_SUB,   WASM_OPCODE_I64_XOR,
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_binary_opcodes) ==
-                   WASM_NUM_BINARY_OP_TYPES);
-
-static uint8_t s_compare_opcodes[] = {
-    WASM_OPCODE_F32_EQ,   WASM_OPCODE_F32_GE,   WASM_OPCODE_F32_GT,
-    WASM_OPCODE_F32_LE,   WASM_OPCODE_F32_LT,   WASM_OPCODE_F32_NE,
-    WASM_OPCODE_F64_EQ,   WASM_OPCODE_F64_GE,   WASM_OPCODE_F64_GT,
-    WASM_OPCODE_F64_LE,   WASM_OPCODE_F64_LT,   WASM_OPCODE_F64_NE,
-    WASM_OPCODE_I32_EQ,   WASM_OPCODE_I32_GE_S, WASM_OPCODE_I32_GE_U,
-    WASM_OPCODE_I32_GT_S, WASM_OPCODE_I32_GT_U, WASM_OPCODE_I32_LE_S,
-    WASM_OPCODE_I32_LE_U, WASM_OPCODE_I32_LT_S, WASM_OPCODE_I32_LT_U,
-    WASM_OPCODE_I32_NE,   WASM_OPCODE_I64_EQ,   WASM_OPCODE_I64_GE_S,
-    WASM_OPCODE_I64_GE_U, WASM_OPCODE_I64_GT_S, WASM_OPCODE_I64_GT_U,
-    WASM_OPCODE_I64_LE_S, WASM_OPCODE_I64_LE_U, WASM_OPCODE_I64_LT_S,
-    WASM_OPCODE_I64_LT_U, WASM_OPCODE_I64_NE,
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_compare_opcodes) ==
-                   WASM_NUM_COMPARE_OP_TYPES);
-
-static uint8_t s_convert_opcodes[] = {
-    WASM_OPCODE_F32_SCONVERT_I32,    WASM_OPCODE_F32_SCONVERT_I64,
-    WASM_OPCODE_F32_UCONVERT_I32,    WASM_OPCODE_F32_UCONVERT_I64,
-    WASM_OPCODE_F32_CONVERT_F64,     WASM_OPCODE_F64_SCONVERT_I32,
-    WASM_OPCODE_F64_SCONVERT_I64,    WASM_OPCODE_F64_UCONVERT_I32,
-    WASM_OPCODE_F64_UCONVERT_I64,    WASM_OPCODE_F64_CONVERT_F32,
-    WASM_OPCODE_I32_SCONVERT_F32,    WASM_OPCODE_I32_SCONVERT_F64,
-    WASM_OPCODE_I32_UCONVERT_F32,    WASM_OPCODE_I32_UCONVERT_F64,
-    WASM_OPCODE_I32_CONVERT_I64,     WASM_OPCODE_I64_SCONVERT_I32,
-    WASM_OPCODE_I64_UCONVERT_I32,    WASM_OPCODE_I64_SCONVERT_F32,
-    WASM_OPCODE_I64_SCONVERT_F64,    WASM_OPCODE_I64_UCONVERT_F32,
-    WASM_OPCODE_I64_UCONVERT_F64,    WASM_OPCODE_F32_REINTERPRET_I32,
-    WASM_OPCODE_F64_REINTERPRET_I64, WASM_OPCODE_I32_REINTERPRET_F32,
-    WASM_OPCODE_I64_REINTERPRET_F64,
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_convert_opcodes) ==
-                   WASM_NUM_CONVERT_OP_TYPES);
-
-static uint8_t s_mem_opcodes[] = {
-    WASM_OPCODE_F32_LOAD_MEM,     WASM_OPCODE_F32_STORE_MEM,
-    WASM_OPCODE_F64_LOAD_MEM,     WASM_OPCODE_F64_STORE_MEM,
-    WASM_OPCODE_I32_LOAD_MEM,     WASM_OPCODE_I32_LOAD_MEM8_S,
-    WASM_OPCODE_I32_LOAD_MEM8_U,  WASM_OPCODE_I32_LOAD_MEM16_S,
-    WASM_OPCODE_I32_LOAD_MEM16_U, WASM_OPCODE_I32_STORE_MEM,
-    WASM_OPCODE_I32_STORE_MEM8,   WASM_OPCODE_I32_STORE_MEM16,
-    WASM_OPCODE_I64_LOAD_MEM,     WASM_OPCODE_I64_LOAD_MEM8_S,
-    WASM_OPCODE_I64_LOAD_MEM8_U,  WASM_OPCODE_I64_LOAD_MEM16_S,
-    WASM_OPCODE_I64_LOAD_MEM16_U, WASM_OPCODE_I64_LOAD_MEM32_S,
-    WASM_OPCODE_I64_LOAD_MEM32_U, WASM_OPCODE_I64_STORE_MEM,
-    WASM_OPCODE_I64_STORE_MEM8,   WASM_OPCODE_I64_STORE_MEM16,
-    WASM_OPCODE_I64_STORE_MEM32,
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_mem_opcodes) == WASM_NUM_MEM_OP_TYPES);
-
-static uint8_t s_unary_opcodes[] = {
-    WASM_OPCODE_F32_ABS,         WASM_OPCODE_F32_CEIL,
-    WASM_OPCODE_F32_FLOOR,       WASM_OPCODE_F32_NEAREST_INT,
-    WASM_OPCODE_F32_NEG,         WASM_OPCODE_F32_SQRT,
-    WASM_OPCODE_F32_TRUNC,       WASM_OPCODE_F64_ABS,
-    WASM_OPCODE_F64_CEIL,        WASM_OPCODE_F64_FLOOR,
-    WASM_OPCODE_F64_NEAREST_INT, WASM_OPCODE_F64_NEG,
-    WASM_OPCODE_F64_SQRT,        WASM_OPCODE_F64_TRUNC,
-    WASM_OPCODE_I32_CLZ,         WASM_OPCODE_I32_CTZ,
-    WASM_OPCODE_BOOL_NOT,        WASM_OPCODE_I32_POPCNT,
-    WASM_OPCODE_I64_CLZ,         WASM_OPCODE_I64_CTZ,
-    WASM_OPCODE_I64_POPCNT,
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_unary_opcodes) == WASM_NUM_UNARY_OP_TYPES);
+#define V(type1, type2, mem_size, code, name) [code] = mem_size,
+static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
 
 typedef struct WasmLabelNode {
   WasmLabel* label;
@@ -691,7 +610,7 @@ static void write_expr(WasmWriteContext* ctx,
   WasmWriterState* ws = &ctx->writer_state;
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      out_opcode(ws, s_binary_opcodes[expr->binary.op.op_type]);
+      out_opcode(ws, expr->binary.opcode);
       write_expr(ctx, module, func, expr->binary.left);
       write_expr(ctx, module, func, expr->binary.right);
       break;
@@ -748,7 +667,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_COMPARE:
-      out_opcode(ws, s_compare_opcodes[expr->compare.op.op_type]);
+      out_opcode(ws, expr->compare.opcode);
       write_expr(ctx, module, func, expr->compare.left);
       write_expr(ctx, module, func, expr->compare.right);
       break;
@@ -776,7 +695,7 @@ static void write_expr(WasmWriteContext* ctx,
       }
       break;
     case WASM_EXPR_TYPE_CONVERT:
-      out_opcode(ws, s_convert_opcodes[expr->convert.op.op_type]);
+      out_opcode(ws, expr->convert.opcode);
       write_expr(ctx, module, func, expr->convert.expr);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL: {
@@ -796,17 +715,16 @@ static void write_expr(WasmWriteContext* ctx,
       write_block(ctx, module, func, &expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
-      out_opcode(ws, WASM_OPCODE_IF_THEN);
+      out_opcode(ws, WASM_OPCODE_IF_ELSE);
       write_expr(ctx, module, func, expr->if_else.cond);
       write_block(ctx, module, func, &expr->if_else.true_);
       write_block(ctx, module, func, &expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LOAD: {
-      out_opcode(ws, s_mem_opcodes[expr->load.op.op_type]);
+      out_opcode(ws, expr->load.opcode);
       uint32_t align = expr->load.align;
-      if (align == WASM_USE_NATURAL_ALIGNMENT) {
-        align = expr->load.op.size >> 3;
-      }
+      if (align == WASM_USE_NATURAL_ALIGNMENT)
+        align = s_opcode_mem_size[expr->load.opcode];
       uint8_t align_log = 0;
       while (align > 1) {
         align >>= 1;
@@ -853,11 +771,10 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_STORE: {
-      out_opcode(ws, s_mem_opcodes[expr->store.op.op_type]);
+      out_opcode(ws, expr->store.opcode);
       uint32_t align = expr->store.align;
-      if (align == WASM_USE_NATURAL_ALIGNMENT) {
-        align = expr->store.op.size >> 3;
-      }
+      if (align == WASM_USE_NATURAL_ALIGNMENT)
+        align = s_opcode_mem_size[expr->store.opcode];
       uint8_t align_log = 0;
       while (align > 1) {
         align >>= 1;
@@ -885,7 +802,7 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     }
     case WASM_EXPR_TYPE_UNARY:
-      out_opcode(ws, s_unary_opcodes[expr->unary.op.op_type]);
+      out_opcode(ws, expr->unary.opcode);
       write_expr(ctx, module, func, expr->unary.expr);
       break;
     case WASM_EXPR_TYPE_UNREACHABLE:
@@ -1216,19 +1133,18 @@ static WasmExpr* create_eq_expr(WasmAllocator* allocator,
   WasmExpr* expr = wasm_new_compare_expr(allocator);
   if (!expr)
     return NULL;
-  expr->compare.op.type = type;
   switch (type) {
     case WASM_TYPE_I32:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I32_EQ;
+      expr->compare.opcode = WASM_OPCODE_I32_EQ;
       break;
     case WASM_TYPE_I64:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I64_EQ;
+      expr->compare.opcode = WASM_OPCODE_I64_EQ;
       break;
     case WASM_TYPE_F32:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F32_EQ;
+      expr->compare.opcode = WASM_OPCODE_F32_EQ;
       break;
     case WASM_TYPE_F64:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F64_EQ;
+      expr->compare.opcode = WASM_OPCODE_F64_EQ;
       break;
     default:
       assert(0);
@@ -1251,19 +1167,18 @@ static WasmExpr* create_ne_expr(WasmAllocator* allocator,
   WasmExpr* expr = wasm_new_compare_expr(allocator);
   if (!expr)
     return NULL;
-  expr->compare.op.type = type;
   switch (type) {
     case WASM_TYPE_I32:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I32_NE;
+      expr->compare.opcode = WASM_OPCODE_I32_NE;
       break;
     case WASM_TYPE_I64:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_I64_NE;
+      expr->compare.opcode = WASM_OPCODE_I64_NE;
       break;
     case WASM_TYPE_F32:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F32_NE;
+      expr->compare.opcode = WASM_OPCODE_F32_NE;
       break;
     case WASM_TYPE_F64:
-      expr->compare.op.op_type = WASM_COMPARE_OP_TYPE_F64_NE;
+      expr->compare.opcode = WASM_OPCODE_F64_NE;
       break;
     default:
       assert(0);
@@ -1312,10 +1227,10 @@ static WasmExpr* create_reinterpret_expr(WasmAllocator* allocator,
     return NULL;
   switch (type) {
     case WASM_TYPE_F32:
-      result->convert.op.op_type = WASM_CONVERT_OP_TYPE_I32_REINTERPRET_F32;
+      result->convert.opcode = WASM_OPCODE_I32_REINTERPRET_F32;
       break;
     case WASM_TYPE_F64:
-      result->convert.op.op_type = WASM_CONVERT_OP_TYPE_I64_REINTERPRET_F64;
+      result->convert.opcode = WASM_OPCODE_I64_REINTERPRET_F64;
       break;
     default:
       assert(0);

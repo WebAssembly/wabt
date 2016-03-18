@@ -32,7 +32,7 @@
 ; function body 0
 0000040: 00                                         ; func body size (guess)
 0000041: 00                                         ; local decl count
-0000042: 04                                         ; OPCODE_IF_THEN
+0000042: 04                                         ; OPCODE_IF_ELSE
 0000043: 0a                                         ; OPCODE_I32_CONST
 0000044: 01                                         ; i32 literal
 0000045: 01                                         ; OPCODE_BLOCK

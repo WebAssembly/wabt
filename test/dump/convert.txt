@@ -52,31 +52,31 @@
 ; function body 0
 0000040: 00                                         ; func body size (guess)
 0000041: 00                                         ; local decl count
-0000042: a1                                         ; OPCODE_I32_CONVERT_I64
-0000043: a7                                         ; OPCODE_I64_UCONVERT_I32
-0000044: 9d                                         ; OPCODE_I32_SCONVERT_F32
-0000045: a8                                         ; OPCODE_F32_SCONVERT_I32
-0000046: 9f                                         ; OPCODE_I32_UCONVERT_F32
-0000047: a9                                         ; OPCODE_F32_UCONVERT_I32
-0000048: 9e                                         ; OPCODE_I32_SCONVERT_F64
-0000049: ae                                         ; OPCODE_F64_SCONVERT_I32
-000004a: a0                                         ; OPCODE_I32_UCONVERT_F64
-000004b: af                                         ; OPCODE_F64_UCONVERT_I32
+0000042: a1                                         ; OPCODE_I32_WRAP_I64
+0000043: a7                                         ; OPCODE_I64_EXTEND_U_I32
+0000044: 9d                                         ; OPCODE_I32_TRUNC_S_F32
+0000045: a8                                         ; OPCODE_F32_CONVERT_S_I32
+0000046: 9f                                         ; OPCODE_I32_TRUNC_U_F32
+0000047: a9                                         ; OPCODE_F32_CONVERT_U_I32
+0000048: 9e                                         ; OPCODE_I32_TRUNC_S_F64
+0000049: ae                                         ; OPCODE_F64_CONVERT_S_I32
+000004a: a0                                         ; OPCODE_I32_TRUNC_U_F64
+000004b: af                                         ; OPCODE_F64_CONVERT_U_I32
 000004c: 0a                                         ; OPCODE_I32_CONST
 000004d: 00                                         ; i32 literal
-000004e: a2                                         ; OPCODE_I64_SCONVERT_F32
-000004f: aa                                         ; OPCODE_F32_SCONVERT_I64
-0000050: a4                                         ; OPCODE_I64_UCONVERT_F32
-0000051: ab                                         ; OPCODE_F32_UCONVERT_I64
-0000052: a3                                         ; OPCODE_I64_SCONVERT_F64
-0000053: b0                                         ; OPCODE_F64_SCONVERT_I64
-0000054: a5                                         ; OPCODE_I64_UCONVERT_F64
-0000055: b1                                         ; OPCODE_F64_UCONVERT_I64
-0000056: a6                                         ; OPCODE_I64_SCONVERT_I32
+000004e: a2                                         ; OPCODE_I64_TRUNC_S_F32
+000004f: aa                                         ; OPCODE_F32_CONVERT_S_I64
+0000050: a4                                         ; OPCODE_I64_TRUNC_U_F32
+0000051: ab                                         ; OPCODE_F32_CONVERT_U_I64
+0000052: a3                                         ; OPCODE_I64_TRUNC_S_F64
+0000053: b0                                         ; OPCODE_F64_CONVERT_S_I64
+0000054: a5                                         ; OPCODE_I64_TRUNC_U_F64
+0000055: b1                                         ; OPCODE_F64_CONVERT_U_I64
+0000056: a6                                         ; OPCODE_I64_EXTEND_S_I32
 0000057: 0a                                         ; OPCODE_I32_CONST
 0000058: 00                                         ; i32 literal
-0000059: ac                                         ; OPCODE_F32_CONVERT_F64
-000005a: b2                                         ; OPCODE_F64_CONVERT_F32
+0000059: ac                                         ; OPCODE_F32_DEMOTE_F64
+000005a: b2                                         ; OPCODE_F64_PROMOTE_F32
 000005b: 0d                                         ; OPCODE_F32_CONST
 000005c: 0000 0000                                  ; f32 literal
 0000040: 1f                                         ; FIXUP func body size

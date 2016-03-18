@@ -1,7 +1,7 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (i32.not
+    (i32.eqz
       (i32.clz
         (i32.ctz
           (i32.popcnt (i32.const 0)))))
@@ -53,7 +53,7 @@
 ; function body 0
 0000040: 00                                         ; func body size (guess)
 0000041: 00                                         ; local decl count
-0000042: 5a                                         ; OPCODE_BOOL_NOT
+0000042: 5a                                         ; OPCODE_I32_EQZ
 0000043: 57                                         ; OPCODE_I32_CLZ
 0000044: 58                                         ; OPCODE_I32_CTZ
 0000045: 59                                         ; OPCODE_I32_POPCNT
@@ -70,7 +70,7 @@
 0000050: 7e                                         ; OPCODE_F32_CEIL
 0000051: 7f                                         ; OPCODE_F32_FLOOR
 0000052: 80                                         ; OPCODE_F32_TRUNC
-0000053: 81                                         ; OPCODE_F32_NEAREST_INT
+0000053: 81                                         ; OPCODE_F32_NEAREST
 0000054: 0d                                         ; OPCODE_F32_CONST
 0000055: 0000 0000                                  ; f32 literal
 0000059: 90                                         ; OPCODE_F64_NEG
@@ -79,7 +79,7 @@
 000005c: 92                                         ; OPCODE_F64_CEIL
 000005d: 93                                         ; OPCODE_F64_FLOOR
 000005e: 94                                         ; OPCODE_F64_TRUNC
-000005f: 95                                         ; OPCODE_F64_NEAREST_INT
+000005f: 95                                         ; OPCODE_F64_NEAREST
 0000060: 0c                                         ; OPCODE_F64_CONST
 0000061: 0000 0000 0000 0000                        ; f64 literal
 0000040: 28                                         ; FIXUP func body size

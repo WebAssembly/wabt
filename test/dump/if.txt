@@ -38,7 +38,7 @@
 0000044: 0a                                         ; OPCODE_I32_CONST
 0000045: 01                                         ; i32 literal
 0000046: 00                                         ; OPCODE_NOP
-0000047: 04                                         ; OPCODE_IF_THEN
+0000047: 04                                         ; OPCODE_IF_ELSE
 0000048: 0a                                         ; OPCODE_I32_CONST
 0000049: 00                                         ; i32 literal
 000004a: 0d                                         ; OPCODE_F32_CONST
@@ -49,7 +49,7 @@
 ; function body 1
 0000054: 00                                         ; func body size (guess)
 0000055: 00                                         ; local decl count
-0000056: 04                                         ; OPCODE_IF_THEN
+0000056: 04                                         ; OPCODE_IF_ELSE
 0000057: 0a                                         ; OPCODE_I32_CONST
 0000058: 01                                         ; i32 literal
 0000059: 14                                         ; OPCODE_RETURN

@@ -1,10 +1,10 @@
 ;;; EXE: test/run-d8.py
 (module
   ;; i32
-  (export "i32_not_100" $i32_not_100)
-  (func $i32_not_100 (result i32) (i32.not (i32.const 100)))
-  (export "i32_not_0" $i32_not_0)
-  (func $i32_not_0 (result i32) (i32.not (i32.const 0)))
+  (export "i32_eqz_100" $i32_eqz_100)
+  (func $i32_eqz_100 (result i32) (i32.eqz (i32.const 100)))
+  (export "i32_eqz_0" $i32_eqz_0)
+  (func $i32_eqz_0 (result i32) (i32.eqz (i32.const 0)))
   (export "i32_clz" $i32_clz)
   (func $i32_clz (result i32) (i32.clz (i32.const 128)))
   (export "i32_ctz" $i32_ctz)
@@ -61,8 +61,8 @@
   (func $f64_nearest_hi (result f64) (f64.nearest (f64.const 1.75)))
 )
 (;; STDOUT ;;;
-i32_not_100() = 0
-i32_not_0() = 1
+i32_eqz_100() = 0
+i32_eqz_0() = 1
 i32_clz() = 24
 i32_ctz() = 7
 i32_popcnt() = 1

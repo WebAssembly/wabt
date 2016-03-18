@@ -25,40 +25,6 @@
 
 WASM_DECLARE_VECTOR(type, WasmType)
 
-typedef enum WasmMemSize {
-  WASM_MEM_SIZE_8 = 8,
-  WASM_MEM_SIZE_16 = 16,
-  WASM_MEM_SIZE_32 = 32,
-  WASM_MEM_SIZE_64 = 64,
-} WasmMemSize;
-
-typedef struct WasmUnaryOp {
-  WasmType type;
-  WasmUnaryOpType op_type;
-} WasmUnaryOp;
-
-typedef struct WasmBinaryOp {
-  WasmType type;
-  WasmBinaryOpType op_type;
-} WasmBinaryOp;
-
-typedef struct WasmCompareOp {
-  WasmType type;
-  WasmCompareOpType op_type;
-} WasmCompareOp;
-
-typedef struct WasmConvertOp {
-  WasmType type;
-  WasmConvertOpType op_type;
-  WasmType type2;
-} WasmConvertOp;
-
-typedef struct WasmMemOp {
-  WasmType type;
-  WasmMemOpType op_type;
-  WasmMemSize size;
-} WasmMemOp;
-
 typedef enum WasmVarType {
   WASM_VAR_TYPE_INDEX,
   WASM_VAR_TYPE_NAME,
@@ -173,23 +139,23 @@ struct WasmExpr {
     struct { WasmVar var; } get_local;
     struct { WasmVar var; WasmExprPtr expr; } set_local;
     struct {
-      WasmMemOp op;
+      WasmOpcode opcode;
       uint32_t align;
       uint64_t offset;
       WasmExprPtr addr;
     } load;
     struct {
-      WasmMemOp op;
+      WasmOpcode opcode;
       uint32_t align;
       uint64_t offset;
       WasmExprPtr addr, value;
     } store;
     WasmConst const_;
-    struct { WasmUnaryOp op; WasmExprPtr expr; } unary;
-    struct { WasmBinaryOp op; WasmExprPtr left, right; } binary;
+    struct { WasmOpcode opcode; WasmExprPtr expr; } unary;
+    struct { WasmOpcode opcode; WasmExprPtr left, right; } binary;
     struct { WasmExprPtr cond, true_, false_; } select;
-    struct { WasmCompareOp op; WasmExprPtr left, right; } compare;
-    struct { WasmConvertOp op; WasmExprPtr expr; } convert;
+    struct { WasmOpcode opcode; WasmExprPtr left, right; } compare;
+    struct { WasmOpcode opcode; WasmExprPtr expr; } convert;
     struct { WasmExprPtr expr; } grow_memory;
   };
 };

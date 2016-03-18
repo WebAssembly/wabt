@@ -113,14 +113,10 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
 %token EOF 0 "EOF"
 
-%type<binary> BINARY
-%type<compare> COMPARE
-%type<convert> CONVERT
-%type<mem> LOAD STORE
+%type<opcode> BINARY COMPARE CONVERT LOAD STORE UNARY
 %type<text> ALIGN OFFSET TEXT VAR
 %type<type> SELECT
 %type<type> CONST VALUE_TYPE
-%type<unary> UNARY
 %type<literal> INT FLOAT
 
 %type<command> cmd
@@ -412,7 +408,7 @@ expr1 :
   | LOAD offset align expr {
       $$ = wasm_new_load_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->load.op = $1;
+      $$->load.opcode = $1;
       $$->load.offset = $2;
       $$->load.align = $3;
       $$->load.addr = $4;
@@ -420,7 +416,7 @@ expr1 :
   | STORE offset align expr expr {
       $$ = wasm_new_store_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->store.op = $1;
+      $$->store.opcode = $1;
       $$->store.offset = $2;
       $$->store.align = $3;
       $$->store.addr = $4;
@@ -439,13 +435,13 @@ expr1 :
   | UNARY expr {
       $$ = wasm_new_unary_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->unary.op = $1;
+      $$->unary.opcode = $1;
       $$->unary.expr = $2;
     }
   | BINARY expr expr {
       $$ = wasm_new_binary_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->binary.op = $1;
+      $$->binary.opcode = $1;
       $$->binary.left = $2;
       $$->binary.right = $3;
     }
@@ -459,14 +455,14 @@ expr1 :
   | COMPARE expr expr {
       $$ = wasm_new_compare_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->compare.op = $1;
+      $$->compare.opcode = $1;
       $$->compare.left = $2;
       $$->compare.right = $3;
     }
   | CONVERT expr {
       $$ = wasm_new_convert_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
-      $$->convert.op = $1;
+      $$->convert.opcode = $1;
       $$->convert.expr = $2;
     }
   | UNREACHABLE {
