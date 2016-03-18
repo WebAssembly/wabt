@@ -38,6 +38,12 @@
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(v)
 #define CHECK_ALLOC_NULL_STR(v) CHECK_ALLOC_((v).start)
 
+#define CHECK_RESULT(expr) \
+  if ((expr) != WASM_OK)   \
+    return WASM_ERROR;     \
+  else                     \
+  (void)0
+
 #define LOG 0
 
 typedef struct WasmExprNode {
@@ -48,6 +54,10 @@ typedef struct WasmExprNode {
 WASM_DECLARE_VECTOR(expr_node, WasmExprNode);
 WASM_DEFINE_VECTOR(expr_node, WasmExprNode);
 
+/* TODO(binji): nicer handling of vectors */
+typedef uint32_t WasmUint32;
+WASM_DECLARE_VECTOR(uint32, WasmUint32);
+
 typedef struct WasmReadAstContext {
   WasmAllocator* allocator;
   WasmModule* module;
@@ -55,6 +65,21 @@ typedef struct WasmReadAstContext {
   WasmFuncTypePtrVector func_types;
   WasmFunc* current_func;
   WasmExprNodeVector expr_stack;
+
+  /* TODO(binji): remove all this if-block stuff when we switch to postorder */
+  WasmUint32Vector depth_stack;
+  uint32_t depth;
+  /* currently there is a discrepancy between the wast format and the binary
+   * format w.r.t. whether the if branches introduce new blocks. As a result,
+   * if we see an if or if_else operator in the binary format that does not
+   * have a block as the branch expression, we'll have to introduce a fake
+   * block so that the break depths are correct for any nested br operators.
+   *
+   * |just_pushed_fake_depth| works as follows: we pre-emptively assume that an
+   * expression does not have a nested block, and introduce a fake block. If
+   * the next expression we see is a block, then we reverse that and add the
+   * real block instead. */
+  int just_pushed_fake_depth;
 } WasmReadAstContext;
 
 static WasmStringSlice dup_string_slice(WasmAllocator* allocator,
@@ -63,6 +88,41 @@ static WasmStringSlice dup_string_slice(WasmAllocator* allocator,
   result.start = wasm_strndup(allocator, str.start, str.length);
   result.length = str.length;
   return result;
+}
+
+/* TODO(binji): remove all this if-block stuff when we switch to postorder */
+static WasmResult push_depth(WasmReadAstContext* ctx) {
+  uint32_t* depth = wasm_append_uint32(ctx->allocator, &ctx->depth_stack);
+  CHECK_ALLOC_NULL(depth);
+  *depth = ctx->depth;
+  ctx->depth++;
+  return WASM_OK;
+}
+
+static void pop_depth(WasmReadAstContext* ctx) {
+  ctx->depth--;
+  ctx->depth_stack.size--;
+}
+
+static void push_fake_depth(WasmReadAstContext* ctx) {
+  ctx->depth++;
+  ctx->just_pushed_fake_depth = 1;
+}
+
+static void pop_fake_depth(WasmReadAstContext* ctx) {
+  ctx->depth--;
+}
+
+static void pop_fake_depth_unless_block(WasmReadAstContext* ctx,
+                                        WasmExpr* expr) {
+  if (expr->type != WASM_EXPR_TYPE_BLOCK)
+    pop_fake_depth(ctx);
+}
+
+static uint32_t translate_depth(WasmReadAstContext* ctx, uint32_t depth) {
+  uint32_t index = ctx->depth_stack.size - depth - 1;
+  assert(index < ctx->depth_stack.size);
+  return ctx->depth - ctx->depth_stack.data[index] - 1;
 }
 
 static void on_error(const char* message, void* user_data) {
@@ -290,6 +350,7 @@ static WasmResult on_local_decl(uint32_t decl_index,
 }
 
 static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
+  ctx->just_pushed_fake_depth = 0;
   int done = 0;
   while (!done) {
     done = 1;
@@ -324,6 +385,10 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
               wasm_append_expr_ptr(ctx->allocator, &top->expr->block.exprs);
           CHECK_ALLOC_NULL(expr_ptr);
           *expr_ptr = expr;
+
+          /* TODO(binji): remove after post order, only needed for if-block */
+          if (top->index + 1 == top->total)
+            pop_depth(ctx);
           break;
         }
 
@@ -332,7 +397,10 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
           break;
 
         case WASM_EXPR_TYPE_BR_IF:
-          top->expr->br_if.expr = expr;
+          if (top->index == 0)
+            top->expr->br_if.expr = expr;
+          else
+            top->expr->br_if.cond = expr;
           break;
 
         case WASM_EXPR_TYPE_BR_TABLE:
@@ -378,18 +446,24 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
         case WASM_EXPR_TYPE_IF:
           if (top->index == 0) {
             top->expr->if_.cond = expr;
+            push_fake_depth(ctx);
           } else {
             top->expr->if_.true_ = expr;
+            pop_fake_depth_unless_block(ctx, expr);
           }
           break;
 
         case WASM_EXPR_TYPE_IF_ELSE:
           if (top->index == 0) {
             top->expr->if_else.cond = expr;
+            push_fake_depth(ctx);
           } else if (top->index == 1) {
             top->expr->if_else.true_ = expr;
+            pop_fake_depth_unless_block(ctx, expr);
+            push_fake_depth(ctx);
           } else {
             top->expr->if_else.false_ = expr;
+            pop_fake_depth_unless_block(ctx, expr);
           }
           break;
 
@@ -402,6 +476,12 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
               wasm_append_expr_ptr(ctx->allocator, &top->expr->loop.exprs);
           CHECK_ALLOC_NULL(expr_ptr);
           *expr_ptr = expr;
+
+          /* TODO(binji): remove after post order, only needed for if-block */
+          if (top->index + 1 == top->total) {
+            pop_depth(ctx);
+            pop_depth(ctx);
+          }
           break;
         }
 
@@ -459,6 +539,7 @@ static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
 static WasmResult shift(WasmReadAstContext* ctx,
                         WasmExpr* expr,
                         uint32_t count) {
+  ctx->just_pushed_fake_depth = 0;
   if (count > 0) {
 #if LOG
     fprintf(stderr, "shift: %d %u\n", expr->type, count);
@@ -489,6 +570,11 @@ static WasmResult on_block_expr(uint32_t count, void* user_data) {
   WasmReadAstContext* ctx = user_data;
   assert(ctx->current_func);
 
+  if (ctx->just_pushed_fake_depth)
+    pop_fake_depth(ctx);
+
+  CHECK_RESULT(push_depth(ctx));
+
   WasmExpr* expr = wasm_new_block_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   return shift(ctx, expr, count);
@@ -501,7 +587,7 @@ static WasmResult on_br_expr(uint32_t depth, void* user_data) {
   WasmExpr* expr = wasm_new_br_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->br.var.type = WASM_VAR_TYPE_INDEX;
-  expr->br.var.index = depth;
+  expr->br.var.index = translate_depth(ctx, depth);
   return shift(ctx, expr, 1);
 }
 
@@ -512,7 +598,30 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   WasmExpr* expr = wasm_new_br_if_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->br_if.var.type = WASM_VAR_TYPE_INDEX;
-  expr->br_if.var.index = depth;
+  expr->br_if.var.index = translate_depth(ctx, depth);
+  return shift(ctx, expr, 2);
+}
+
+static WasmResult on_br_table_expr(uint32_t num_targets,
+                                   uint32_t* target_depths,
+                                   uint32_t default_target_depth,
+                                   void* user_data) {
+  WasmReadAstContext* ctx = user_data;
+  assert(ctx->current_func);
+
+  WasmExpr* expr = wasm_new_br_table_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(expr);
+  CHECK_ALLOC(
+      wasm_reserve_vars(ctx->allocator, &expr->br_table.targets, num_targets));
+  int i;
+  for (i = 0; i < num_targets; ++i) {
+    WasmVar* var = &expr->br_table.targets.data[i];
+    var->type = WASM_VAR_TYPE_INDEX;
+    var->index = translate_depth(ctx, target_depths[i]);
+  }
+  expr->br_table.default_target.type = WASM_VAR_TYPE_INDEX;
+  expr->br_table.default_target.index =
+      translate_depth(ctx, default_target_depth);
   return shift(ctx, expr, 1);
 }
 
@@ -685,6 +794,9 @@ static WasmResult on_loop_expr(uint32_t count, void* user_data) {
   WasmReadAstContext* ctx = user_data;
   assert(ctx->current_func);
 
+  CHECK_RESULT(push_depth(ctx));
+  CHECK_RESULT(push_depth(ctx));
+
   WasmExpr* expr = wasm_new_loop_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   return shift(ctx, expr, count);
@@ -749,37 +861,12 @@ static WasmResult on_store_expr(WasmOpcode opcode,
   WasmReadAstContext* ctx = user_data;
   assert(ctx->current_func);
 
-  WasmExpr* expr = wasm_new_load_expr(ctx->allocator);
+  WasmExpr* expr = wasm_new_store_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->store.opcode = opcode;
   expr->store.align = 1 << alignment_log2;
   expr->store.offset = offset;
   return shift(ctx, expr, 2);
-}
-
-static WasmResult on_br_table_expr(uint32_t num_targets,
-                                   uint32_t* target_depths,
-                                   uint32_t default_target_depth,
-                                   void* user_data) {
-  WasmReadAstContext* ctx = user_data;
-  assert(ctx->current_func);
-
-  WasmExpr* expr = wasm_new_br_table_expr(ctx->allocator);
-  CHECK_ALLOC_NULL(expr);
-  expr->br_table.default_target.type = WASM_VAR_TYPE_INDEX;
-  expr->br_table.default_target.index = default_target_depth;
-
-  CHECK_ALLOC(
-      wasm_reserve_vars(ctx->allocator, &expr->br_table.targets, num_targets));
-  int i;
-  for (i = 0; i < num_targets; ++i) {
-    WasmVar* var = &expr->br_table.targets.data[i];
-    var->type = WASM_VAR_TYPE_INDEX;
-    var->index = target_depths[i];
-  }
-  expr->br_table.default_target.type = WASM_VAR_TYPE_INDEX;
-  expr->br_table.default_target.index = default_target_depth;
-  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
@@ -820,7 +907,8 @@ static WasmResult on_function_table_entry(uint32_t index,
                                           uint32_t func_index,
                                           void* user_data) {
   WasmReadAstContext* ctx = user_data;
-  WasmVar* func_var = &ctx->module->table->data[index];
+  assert(index < ctx->module->table->capacity);
+  WasmVar* func_var = wasm_append_var(ctx->allocator, ctx->module->table);
   func_var->type = WASM_VAR_TYPE_INDEX;
   assert(func_index < ctx->module->funcs.size);
   func_var->index = func_index;

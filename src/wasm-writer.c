@@ -61,19 +61,24 @@ static WasmResult move_data_in_file(size_t dst_offset,
   return WASM_ERROR;
 }
 
-WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
+WasmResult wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file) {
   WASM_ZERO_MEMORY(*writer);
-  writer->file = fopen(filename, "wb");
-  if (!writer->file) {
-    ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
-    return WASM_ERROR;
-  }
-
+  writer->file = file;
   writer->offset = 0;
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_file;
   writer->base.move_data = move_data_in_file;
   return WASM_OK;
+}
+
+WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
+  FILE* file = fopen(filename, "wb");
+  if (!file) {
+    ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
+    return WASM_ERROR;
+  }
+
+  return wasm_init_file_writer_existing(writer, file);
 }
 
 void wasm_close_file_writer(WasmFileWriter* writer) {

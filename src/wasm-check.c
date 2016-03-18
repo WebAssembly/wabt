@@ -69,11 +69,11 @@ WASM_STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
 
 #define TYPE_TO_TYPE_SET(type) (1 << ((type) - 1))
 
-#define V(type1, type2, mem_size, code, name) [code] = WASM_TYPE_##type1,
+#define V(type1, type2, mem_size, code, NAME, text) [code] = WASM_TYPE_##type1,
 static WasmType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-#define V(type1, type2, mem_size, code, name) [code] = WASM_TYPE_##type2,
+#define V(type1, type2, mem_size, code, NAME, text) [code] = WASM_TYPE_##type2,
 static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 

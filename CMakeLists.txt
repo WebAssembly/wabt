@@ -125,6 +125,7 @@ set(WASM_WAST_SRCS
   src/wasm-stack-allocator.c
   src/wasm-vector.c
   src/wasm-wast.c
+  src/wasm-writer.c
 )
 
 add_executable(wasm-wast ${WASM_WAST_SRCS})

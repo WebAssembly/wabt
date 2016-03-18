@@ -26,8 +26,10 @@
 
 #include "wasm-allocator.h"
 #include "wasm-ast.h"
+#include "wasm-ast-writer.h"
 #include "wasm-binary-reader-ast.h"
 #include "wasm-stack-allocator.h"
+#include "wasm-writer.h"
 
 enum {
   FLAG_VERBOSE,
@@ -169,9 +171,16 @@ int main(int argc, char** argv) {
   WasmModule module;
   WASM_ZERO_MEMORY(module);
   WasmResult result = wasm_read_binary_ast(allocator, addr, length, &module);
-  wasm_destroy_stack_allocator(&stack_allocator);
+  if (result == WASM_OK) {
+    WasmFileWriter file_writer;
+    result = wasm_init_file_writer_existing(&file_writer, stdout);
+    if (result == WASM_OK) {
+      result = wasm_write_ast(&file_writer.base, &module);
+      fprintf(stdout, "\n");
+      wasm_close_file_writer(&file_writer);
+    }
+  }
 
-  if (result == WASM_ERROR)
-    return 1;
-  return 0;
+  wasm_destroy_stack_allocator(&stack_allocator);
+  return result;
 }

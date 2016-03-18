@@ -53,6 +53,7 @@ typedef struct WasmFileWriter {
 } WasmFileWriter;
 
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename);
+WasmResult wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file);
 void wasm_close_file_writer(WasmFileWriter* writer);
 WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
                                 WasmMemoryWriter* writer);

@@ -16,6 +16,7 @@
 
 #include "wasm-common.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -25,6 +26,24 @@
 
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
+
+#define V(type1, type2, mem_size, code, NAME, text) [code] = mem_size,
+static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
+
+int wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
+  assert(opcode < WASM_ARRAY_SIZE(s_opcode_mem_size));
+  uint32_t opcode_align = s_opcode_mem_size[opcode];
+  return alignment == WASM_USE_NATURAL_ALIGNMENT ||
+         alignment == opcode_align;
+}
+
+uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment) {
+  assert(opcode < WASM_ARRAY_SIZE(s_opcode_mem_size));
+  if (alignment == WASM_USE_NATURAL_ALIGNMENT)
+    return s_opcode_mem_size[opcode];
+  return alignment;
+}
 
 int wasm_string_slices_are_equal(const WasmStringSlice* a,
                                  const WasmStringSlice* b) {

@@ -64,12 +64,8 @@ static const char* s_type_names[] = {
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
-#define V(type1, type2, mem_size, code, name) [code] = "OPCODE_" #name,
-static const char* s_opcode_names[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(type1, type2, mem_size, code, name) [code] = mem_size,
-static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
+#define V(type1, type2, mem_size, code, NAME, text) [code] = "OPCODE_" #NAME,
+static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
 typedef struct WasmLabelNode {
@@ -337,7 +333,7 @@ static void out_str(WasmWriterState* writer_state,
 }
 
 static void out_opcode(WasmWriterState* writer_state, uint8_t opcode) {
-  out_u8(writer_state, opcode, s_opcode_names[opcode]);
+  out_u8(writer_state, opcode, s_opcode_name[opcode]);
 }
 
 static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
@@ -722,9 +718,8 @@ static void write_expr(WasmWriteContext* ctx,
       break;
     case WASM_EXPR_TYPE_LOAD: {
       out_opcode(ws, expr->load.opcode);
-      uint32_t align = expr->load.align;
-      if (align == WASM_USE_NATURAL_ALIGNMENT)
-        align = s_opcode_mem_size[expr->load.opcode];
+      uint32_t align =
+          wasm_get_opcode_alignment(expr->load.opcode, expr->load.align);
       uint8_t align_log = 0;
       while (align > 1) {
         align >>= 1;
@@ -772,9 +767,8 @@ static void write_expr(WasmWriteContext* ctx,
     }
     case WASM_EXPR_TYPE_STORE: {
       out_opcode(ws, expr->store.opcode);
-      uint32_t align = expr->store.align;
-      if (align == WASM_USE_NATURAL_ALIGNMENT)
-        align = s_opcode_mem_size[expr->store.opcode];
+      uint32_t align =
+          wasm_get_opcode_alignment(expr->store.opcode, expr->store.align);
       uint8_t align_log = 0;
       while (align > 1) {
         align >>= 1;

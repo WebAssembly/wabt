@@ -66,6 +66,8 @@
 #define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
 #define YYFREE(p) wasm_free(parser->allocator, p)
 
+#define USE_NATURAL_ALIGNMENT (~0)
+
 static WasmFunc* new_func(WasmAllocator* allocator) {
   return wasm_alloc_zero(allocator, sizeof(WasmFunc), WASM_DEFAULT_ALIGN);
 }
@@ -274,7 +276,7 @@ offset :
     }
 ;
 align :
-    /* empty */ { $$ = WASM_USE_NATURAL_ALIGNMENT; }
+    /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN {
       if (!wasm_parse_int32($1.start, $1.start + $1.length, &$$, 0))
         wasm_parser_error(&@1, lexer, parser, "invalid alignment \"%.*s\"",
