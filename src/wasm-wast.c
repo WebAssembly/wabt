@@ -25,7 +25,8 @@
 #include <unistd.h>
 
 #include "wasm-allocator.h"
-#include "wasm-binary-reader.h"
+#include "wasm-ast.h"
+#include "wasm-binary-reader-ast.h"
 
 enum {
   FLAG_VERBOSE,
@@ -593,7 +594,7 @@ static WasmBinaryReader s_binary_reader = {
   .on_local_name = &on_local_name,
   .end_names_section = &end_names_section,
 };
-#else
+#elif 0
 static void on_error(const char* message, void* user_data) {
   fprintf(stderr, "error: %s\n", message);
 }
@@ -620,8 +621,15 @@ int main(int argc, char** argv) {
   if (addr == MAP_FAILED)
     WASM_FATAL("Unable to mmap file %s.\n", s_infile);
 
+#if 0
   WasmResult result =
       wasm_read_binary(&g_wasm_libc_allocator, addr, length, &s_binary_reader);
+#else
+  WasmAllocator* allocator = &g_wasm_libc_allocator;
+  WasmModule module;
+  WASM_ZERO_MEMORY(module);
+  WasmResult result = wasm_read_binary_ast(allocator, addr, length, &module);
+#endif
   if (result == WASM_ERROR)
     return 1;
   return 0;
