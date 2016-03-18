@@ -13,6 +13,10 @@
   (func $i32_popcnt (result i32) (i32.popcnt (i32.const 128)))
 
   ;; i64
+  (export "i64_eqz_100" $i64_eqz_100)
+  (func $i64_eqz_100 (result i32) (i64.eqz (i64.const 100)))
+  (export "i64_eqz_0" $i64_eqz_0)
+  (func $i64_eqz_0 (result i32) (i64.eqz (i64.const 0)))
   (export "i64_clz" $i64_clz)
   (func $i64_clz (result i64) (i64.clz (i64.const 128)))
   (export "i64_ctz" $i64_ctz)
@@ -66,6 +70,8 @@ i32_eqz_0() = 1
 i32_clz() = 24
 i32_ctz() = 7
 i32_popcnt() = 1
+i64_eqz_100() = 0
+i64_eqz_0() = 1
 i64_clz() = 56
 i64_ctz() = 7
 i64_popcnt() = 1
