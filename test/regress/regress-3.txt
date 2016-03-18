@@ -1,0 +1,5 @@
+;;; NOTE: bug when calling function defined with type after call
+(module
+  (type $t (func (result i32)))
+  (func (i32.eq (call $f) (i32.const 0)))
+  (func $f (type $t) (i32.const 42)))

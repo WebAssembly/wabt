@@ -507,9 +507,28 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_CALL: {
       WasmFunc* callee;
       if (check_func_var(ctx, module, &expr->call.var, &callee) == WASM_OK) {
-        result |= check_call(ctx, &expr->loc, module, func,
-                             &callee->params.types, callee->result_type,
-                             &expr->call.args, expected_type, "call");
+        WasmTypeVector* param_types = NULL;
+        WasmType result_type = WASM_TYPE_VOID;
+        if (callee->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
+          WasmFuncType* func_type;
+          if (check_func_type_var(ctx, module, &callee->type_var, &func_type) ==
+              WASM_OK) {
+            param_types = &func_type->sig.param_types;
+            result_type = func_type->sig.result_type;
+          } else {
+            result = WASM_ERROR;
+          }
+        } else {
+          assert(callee->flags & WASM_FUNC_FLAG_HAS_SIGNATURE);
+          param_types = &callee->params.types;
+          result_type = callee->result_type;
+        }
+
+        if (param_types) {
+          result |=
+              check_call(ctx, &expr->loc, module, func, param_types,
+                         result_type, &expr->call.args, expected_type, "call");
+        }
       } else {
         result = WASM_ERROR;
       }
