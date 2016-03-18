@@ -118,6 +118,7 @@ add_dependencies(everything sexpr-wasm)
 set(WASM_WAST_SRCS
   src/wasm-allocator.c
   src/wasm-ast.c
+  src/wasm-ast-writer.c
   src/wasm-binary-reader.c
   src/wasm-binary-reader-ast.c
   src/wasm-common.c
