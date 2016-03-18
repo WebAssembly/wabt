@@ -34,9 +34,6 @@
 #define WASM_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WASM_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define WASM_ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
-#define WASM_STATIC_ASSERT__(x, c) typedef char static_assert_##c[x ? 1 : -1]
-#define WASM_STATIC_ASSERT_(x, c) WASM_STATIC_ASSERT__(x, c)
-#define WASM_STATIC_ASSERT(x) WASM_STATIC_ASSERT_(x, __COUNTER__)
 
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
 
