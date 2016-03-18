@@ -292,7 +292,7 @@ static void in_i64_leb128(WasmReadContext* ctx,
 static void in_str(WasmReadContext* ctx,
                    WasmStringSlice* out_str,
                    const char* desc) {
-  uint32_t str_len;
+  uint32_t str_len = 0;
   in_u32_leb128(ctx, &str_len, "string length");
 
   if (ctx->offset + str_len > ctx->size)
@@ -307,7 +307,7 @@ static void in_bytes(WasmReadContext* ctx,
                      const void** out_data,
                      uint32_t* out_data_size,
                      const char* desc) {
-  uint32_t data_size;
+  uint32_t data_size = 0;
   in_u32_leb128(ctx, &data_size, "data size");
 
   if (ctx->offset + data_size > ctx->size)
@@ -328,7 +328,7 @@ static int is_bool(uint8_t value) {
 
 static int skip_until_section(WasmReadContext* ctx, int section_index) {
   uint32_t section_start_offset = ctx->offset;
-  uint32_t section_size;
+  uint32_t section_size = 0;
   if (ctx->offset == ctx->size) {
     /* ok, no more sections */
     return 0;
@@ -645,28 +645,28 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             break;
 
           case WASM_OPCODE_I32_CONST: {
-            uint32_t value;
+            uint32_t value = 0;
             in_i32_leb128(&ctx, &value, "i32.const value");
             CALLBACK(&ctx, on_i32_const_expr, value);
             break;
           }
 
           case WASM_OPCODE_I64_CONST: {
-            uint64_t value;
+            uint64_t value = 0;
             in_i64_leb128(&ctx, &value, "i64.const value");
             CALLBACK(&ctx, on_i64_const_expr, value);
             break;
           }
 
           case WASM_OPCODE_F32_CONST: {
-            uint32_t value_bits;
+            uint32_t value_bits = 0;
             in_f32(&ctx, &value_bits, "f32.const value");
             CALLBACK(&ctx, on_f32_const_expr, value_bits);
             break;
           }
 
           case WASM_OPCODE_F64_CONST: {
-            uint64_t value_bits;
+            uint64_t value_bits = 0;
             in_f64(&ctx, &value_bits, "f64.const value");
             CALLBACK(&ctx, on_f64_const_expr, value_bits);
             break;

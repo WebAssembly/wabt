@@ -238,6 +238,7 @@ static WasmResult on_function_signature(uint32_t index,
 static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
   WasmReadAstContext* ctx = user_data;
   assert(count == ctx->module->funcs.size);
+  (void)ctx;
   return WASM_OK;
 }
 
