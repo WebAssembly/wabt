@@ -38,12 +38,21 @@
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(v)
 #define CHECK_ALLOC_NULL_STR(v) CHECK_ALLOC_((v).start)
 
+typedef struct WasmExprNode {
+  WasmExpr* expr;
+  uint32_t index;
+  uint32_t total;
+} WasmExprNode;
+WASM_DECLARE_VECTOR(expr_node, WasmExprNode);
+WASM_DEFINE_VECTOR(expr_node, WasmExprNode);
+
 typedef struct WasmReadAstContext {
   WasmAllocator* allocator;
   WasmModule* module;
 
   WasmFuncTypePtrVector func_types;
   WasmFunc* current_func;
+  WasmExprNodeVector expr_stack;
 } WasmReadAstContext;
 
 static WasmStringSlice dup_string_slice(WasmAllocator* allocator,
@@ -266,16 +275,205 @@ static WasmResult on_local_decl(uint32_t decl_index,
   return WASM_OK;
 }
 
+static WasmResult reduce(WasmReadAstContext* ctx, WasmExpr* expr) {
+  int done = 1;
+  while (!done) {
+    done = 1;
+    if (ctx->expr_stack.size == 0) {
+      WasmExprPtr* expr_ptr =
+          wasm_append_expr_ptr(ctx->allocator, &ctx->current_func->exprs);
+      CHECK_ALLOC_NULL(expr_ptr);
+      *expr_ptr = expr;
+    } else {
+      WasmExprNode* top = &ctx->expr_stack.data[ctx->expr_stack.size - 1];
+      assert(top->index < top->total);
+
+      switch (top->expr->type) {
+        case WASM_EXPR_TYPE_BINARY:
+          if (top->index == 0)
+            top->expr->binary.left = expr;
+          else
+            top->expr->binary.right = expr;
+          break;
+
+        case WASM_EXPR_TYPE_BLOCK: {
+          WasmExprPtr* expr_ptr =
+              wasm_append_expr_ptr(ctx->allocator, &top->expr->block.exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = expr;
+          break;
+        }
+
+        case WASM_EXPR_TYPE_BR:
+          top->expr->br.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_BR_IF:
+          top->expr->br_if.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_BR_TABLE:
+          top->expr->br_table.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_CALL:
+        case WASM_EXPR_TYPE_CALL_IMPORT: {
+          WasmExprPtr* expr_ptr =
+              wasm_append_expr_ptr(ctx->allocator, &top->expr->call.args);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = expr;
+          break;
+        }
+
+        case WASM_EXPR_TYPE_CALL_INDIRECT: {
+          if (top->index == 0) {
+            top->expr->call_indirect.expr = expr;
+          } else {
+            WasmExprPtr* expr_ptr = wasm_append_expr_ptr(
+                ctx->allocator, &top->expr->call_indirect.args);
+            CHECK_ALLOC_NULL(expr_ptr);
+            *expr_ptr = expr;
+          }
+          break;
+        }
+
+        case WASM_EXPR_TYPE_COMPARE:
+          if (top->index == 0)
+            top->expr->compare.left = expr;
+          else
+            top->expr->compare.right = expr;
+          break;
+
+        case WASM_EXPR_TYPE_CONVERT:
+          top->expr->convert.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_GROW_MEMORY:
+          top->expr->grow_memory.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_IF:
+          if (top->index == 0) {
+            top->expr->if_.cond = expr;
+          } else {
+            top->expr->if_.true_ = expr;
+          }
+          break;
+
+        case WASM_EXPR_TYPE_IF_ELSE:
+          if (top->index == 0) {
+            top->expr->if_else.cond = expr;
+          } else if (top->index == 1) {
+            top->expr->if_else.true_ = expr;
+          } else {
+            top->expr->if_else.false_ = expr;
+          }
+          break;
+
+        case WASM_EXPR_TYPE_LOAD:
+          top->expr->load.addr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_LOOP: {
+          WasmExprPtr* expr_ptr =
+              wasm_append_expr_ptr(ctx->allocator, &top->expr->loop.exprs);
+          CHECK_ALLOC_NULL(expr_ptr);
+          *expr_ptr = expr;
+          break;
+        }
+
+        case WASM_EXPR_TYPE_RETURN:
+          top->expr->return_.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_SELECT:
+          if (top->index == 0)
+            top->expr->select.true_ = expr;
+          else if (top->index == 1)
+            top->expr->select.false_ = expr;
+          else
+            top->expr->select.cond = expr;
+          break;
+
+        case WASM_EXPR_TYPE_SET_LOCAL:
+          top->expr->set_local.expr = expr;
+          break;
+
+        case WASM_EXPR_TYPE_STORE:
+          if (top->index == 0)
+            top->expr->store.addr = expr;
+          else
+            top->expr->store.value = expr;
+          break;
+
+        case WASM_EXPR_TYPE_UNARY:
+          top->expr->unary.expr = expr;
+          break;
+
+
+        default:
+        case WASM_EXPR_TYPE_CONST:
+        case WASM_EXPR_TYPE_GET_LOCAL:
+        case WASM_EXPR_TYPE_MEMORY_SIZE:
+        case WASM_EXPR_TYPE_NOP:
+        case WASM_EXPR_TYPE_UNREACHABLE:
+          assert(0);
+          return WASM_ERROR;
+      }
+
+      if (++top->index == top->total) {
+        /* "recurse" and reduce the current expr */
+        expr = top->expr;
+        ctx->expr_stack.size--;
+        done = 0;
+      }
+    }
+  }
+
+  return WASM_OK;
+}
+
 static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
+  WasmReadAstContext* ctx = user_data;
+  assert(ctx->current_func);
+
+  WasmExpr* expr = wasm_new_binary_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(expr);
+  expr->binary = opcode_to_binary_op(opcode);
+
+  WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
+  CHECK_ALLOC_NULL(node);
+  node->expr = expr;
+  node->total = 2;
   return WASM_OK;
 }
 
 static WasmResult on_block_expr(uint32_t count, void* user_data) {
-  return WASM_OK;
+  WasmReadAstContext* ctx = user_data;
+  assert(ctx->current_func);
+
+  WasmExpr* expr = wasm_new_block_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(expr);
+
+  if (count > 0) {
+    WasmExprNode* node =
+        wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
+    CHECK_ALLOC_NULL(node);
+    node->expr = expr;
+    node->total = count;
+    return WASM_OK;
+  } else {
+    return reduce(ctx, expr);
+  }
 }
 
 static WasmResult on_br_expr(uint32_t depth, void* user_data) {
-  return WASM_OK;
+  WasmReadAstContext* ctx = user_data;
+  assert(ctx->current_func);
+
+  WasmExpr* expr = wasm_new_block_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(expr);
+  expr->br.
 }
 
 static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
