@@ -121,8 +121,9 @@ set(WASM_WAST_SRCS
   src/wasm-binary-reader.c
   src/wasm-binary-reader-ast.c
   src/wasm-common.c
-  src/wasm-wast.c
+  src/wasm-stack-allocator.c
   src/wasm-vector.c
+  src/wasm-wast.c
 )
 
 add_executable(wasm-wast ${WASM_WAST_SRCS})
