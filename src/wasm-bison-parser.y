@@ -87,6 +87,12 @@ static int parse_const(WasmType type, WasmLiteralType literal_type,
 static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
                                       void** out_data, size_t* out_size);
 
+static WasmExpr* new_block_expr_with_one(WasmAllocator* allocator,
+                                         WasmExpr* expr);
+static WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
+                                          WasmLabel* label,
+                                          WasmExprPtrVector* exprs);
+
 #define wasm_parser_lex wasm_lexer_lex
 
 %}
@@ -285,42 +291,49 @@ expr1 :
       CHECK_ALLOC_NULL($$);
     }
   | BLOCK labeling expr_list {
-      $$ = wasm_new_block_expr(parser->allocator);
+      $$ = new_block_expr_with_list(parser->allocator, &$2, &$3);
       CHECK_ALLOC_NULL($$);
-      $$->block.label = $2;
-      $$->block.exprs = $3;
     }
   | IF expr expr {
       $$ = wasm_new_if_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_.cond = $2;
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
-                                             &$$->if_.true_.exprs, &$3));
+      WasmExpr* true_block = new_block_expr_with_one(parser->allocator, $3);
+      CHECK_ALLOC_NULL(true_block);
+      $$->if_.true_ = true_block;
     }
   | IF expr LPAR THEN labeling expr_list RPAR {
       $$ = wasm_new_if_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_.cond = $2;
-      $$->if_.true_.label = $5;
-      $$->if_.true_.exprs = $6;
+      WasmExpr* true_block =
+          new_block_expr_with_list(parser->allocator, &$5, &$6);
+      CHECK_ALLOC_NULL(true_block);
+      $$->if_.true_ = true_block;
     }
   | IF expr expr expr {
       $$ = wasm_new_if_else_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
-                                             &$$->if_else.true_.exprs, &$3));
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
-                                             &$$->if_else.false_.exprs, &$4));
+      WasmExpr* true_block = new_block_expr_with_one(parser->allocator, $3);
+      CHECK_ALLOC_NULL(true_block);
+      $$->if_else.true_ = true_block;
+      WasmExpr* false_block = new_block_expr_with_one(parser->allocator, $4);
+      CHECK_ALLOC_NULL(false_block);
+      $$->if_else.false_ = false_block;
     }
   | IF expr LPAR THEN labeling expr_list RPAR LPAR ELSE labeling expr_list RPAR {
       $$ = wasm_new_if_else_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
-      $$->if_else.true_.label = $5;
-      $$->if_else.true_.exprs = $6;
-      $$->if_else.false_.label = $10;
-      $$->if_else.false_.exprs = $11;
+      WasmExpr* true_block =
+          new_block_expr_with_list(parser->allocator, &$5, &$6);
+      CHECK_ALLOC_NULL(true_block);
+      $$->if_else.true_ = true_block;
+      WasmExpr* false_block =
+          new_block_expr_with_list(parser->allocator, &$10, &$11);
+      CHECK_ALLOC_NULL(false_block);
+      $$->if_else.false_ = false_block;
     }
   | BR_IF var expr {
       $$ = wasm_new_br_if_expr(parser->allocator);
@@ -1512,4 +1525,29 @@ WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script) {
   int result = wasm_parser_parse(lexer, &parser);
   out_script->commands = parser.script.commands;
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
+}
+
+WasmExpr* new_block_expr_with_one(WasmAllocator* allocator, WasmExpr* expr) {
+  WasmExpr* block = wasm_new_block_expr(allocator);
+  if (block) {
+    WasmExprPtr* expr_ptr =
+        wasm_append_expr_ptr(allocator, &block->block.exprs);
+    if (expr_ptr) {
+      *expr_ptr = expr;
+      return block;
+    }
+    wasm_destroy_expr_ptr(allocator, &block);
+  }
+  return NULL;
+}
+
+WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
+                                   WasmLabel* label,
+                                   WasmExprPtrVector* exprs) {
+  WasmExpr* block = wasm_new_block_expr(allocator);
+  if (!block)
+    return NULL;
+  block->block.label = *label;
+  block->block.exprs = *exprs;
+  return block;
 }

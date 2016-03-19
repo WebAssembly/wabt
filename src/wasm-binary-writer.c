@@ -712,13 +712,13 @@ static void write_expr(WasmWriteContext* ctx,
     case WASM_EXPR_TYPE_IF:
       out_opcode(ws, WASM_OPCODE_IF);
       write_expr(ctx, module, func, expr->if_.cond);
-      write_block(ctx, module, func, &expr->if_.true_);
+      write_expr(ctx, module, func, expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
       out_opcode(ws, WASM_OPCODE_IF_ELSE);
       write_expr(ctx, module, func, expr->if_else.cond);
-      write_block(ctx, module, func, &expr->if_else.true_);
-      write_block(ctx, module, func, &expr->if_else.false_);
+      write_expr(ctx, module, func, expr->if_else.true_);
+      write_expr(ctx, module, func, expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LOAD: {
       out_opcode(ws, expr->load.opcode);

@@ -613,13 +613,8 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_IF: {
       result |= check_expr(ctx, module, func, expr->if_.cond, WASM_TYPE_I32,
                            " of condition");
-      WasmLabelNode node;
-      result |= push_label(ctx, &expr->loc, &node, &expr->if_.true_.label,
-                           expected_type, "block");
-      result |= check_exprs(ctx, module, func, &expr->if_.true_.exprs,
-                            expected_type, " of if branch");
-      pop_label(ctx);
-      expr->if_.true_.used = node.used;
+      result |= check_expr(ctx, module, func, expr->if_.true_, expected_type,
+                           " of if branch");
       result |=
           check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
       break;
@@ -627,19 +622,10 @@ static WasmResult check_expr(WasmCheckContext* ctx,
     case WASM_EXPR_TYPE_IF_ELSE: {
       result |= check_expr(ctx, module, func, expr->if_else.cond, WASM_TYPE_I32,
                            " of condition");
-      WasmLabelNode node;
-      result |= push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
-                           expected_type, "block");
-      result |= check_exprs(ctx, module, func, &expr->if_else.true_.exprs,
-                            expected_type, " of if branch");
-      pop_label(ctx);
-      expr->if_else.true_.used = node.used;
-      result |= push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
-                           expected_type, "block");
-      result |= check_exprs(ctx, module, func, &expr->if_else.false_.exprs,
-                            expected_type, " of if branch");
-      pop_label(ctx);
-      expr->if_else.false_.used = node.used;
+      result |= check_expr(ctx, module, func, expr->if_else.true_,
+                           expected_type, " of if branch");
+      result |= check_expr(ctx, module, func, expr->if_else.false_,
+                           expected_type, " of if branch");
       break;
     }
     case WASM_EXPR_TYPE_LOAD: {
