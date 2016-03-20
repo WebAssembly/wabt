@@ -16,6 +16,8 @@
 
 .SUFFIXES:
 
+USE_NINJA ?= 0
+
 DEFAULT_COMPILER = CLANG
 DEFAULT_BUILD_TYPE = DEBUG
 
@@ -52,6 +54,16 @@ ASAN_SUFFIX := -asan
 MSAN_SUFFIX := -msan
 LSAN_SUFFIX := -lsan
 
+ifeq ($(USE_NINJA),1)
+BUILD := ninja
+BUILD_FILE := build.ninja
+GENERATOR := Ninja
+else
+BUILD := $(MAKE) --no-print-directory
+BUILD_FILE := Makefile
+GENERATOR := "Unix Makefiles"
+endif
+
 define DEFAULT
 .PHONY: $(3)$$($(4)_SUFFIX) test$$($(4)_SUFFIX)
 $(3)$$($(4)_SUFFIX): $$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
@@ -66,20 +78,20 @@ define CMAKE
 $$($(1)_$(2)_DIR)/:
 	mkdir -p $$($(1)_$(2)_DIR)
 
-$$($(1)_$(2)_DIR)/Makefile: | $$($(1)_$(2)_DIR)/
-	cd $$($(1)_$(2)_DIR) && cmake ../../.. $$($(1)_FLAG) $$($(2)_FLAG) $(3)
+$$($(1)_$(2)_DIR)/$$(BUILD_FILE): | $$($(1)_$(2)_DIR)/
+	cd $$($(1)_$(2)_DIR) && cmake -G $$(GENERATOR) ../../.. $$($(1)_FLAG) $$($(2)_FLAG) $(3)
 endef
 
 define EXE
 .PHONY: $$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
-	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) all$$($(3)_SUFFIX)
+$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/$$(BUILD_FILE)
+	$$(BUILD) -C $$($(1)_$(2)_DIR) all$$($(3)_SUFFIX)
 endef
 
 define TEST
 .PHONY: test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
-test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/Makefile
-	$$(MAKE) --no-print-directory -C $$($(1)_$(2)_DIR) test$$($(3)_SUFFIX)
+test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/$$(BUILD_FILE)
+	$$(BUILD) -C $$($(1)_$(2)_DIR) test$$($(3)_SUFFIX)
 endef
 
 .PHONY: all
