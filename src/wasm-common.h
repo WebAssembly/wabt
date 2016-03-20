@@ -142,7 +142,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, ___, 0, 0x57, I32_CLZ)             \
   V(I32, ___, 0, 0x58, I32_CTZ)             \
   V(I32, ___, 0, 0x59, I32_POPCNT)          \
-  V(I32, ___, 0, 0x5a, I32_EQZ)             \
+  V(I32, I32, 0, 0x5a, I32_EQZ)             \
   V(I64, ___, 0, 0x5b, I64_ADD)             \
   V(I64, ___, 0, 0x5c, I64_SUB)             \
   V(I64, ___, 0, 0x5d, I64_MUL)             \
@@ -237,7 +237,8 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, ___, 0, 0xb6, I32_ROTR)            \
   V(I32, ___, 0, 0xb7, I32_ROTL)            \
   V(I64, ___, 0, 0xb8, I64_ROTR)            \
-  V(I64, ___, 0, 0xb9, I64_ROTL)
+  V(I64, ___, 0, 0xb9, I64_ROTL)            \
+  V(I32, I64, 0, 0xba, I64_EQZ)
 
 typedef enum WasmOpcode {
 #define V(type1, type2, mem_size, code, name) WASM_OPCODE_##name = code,
