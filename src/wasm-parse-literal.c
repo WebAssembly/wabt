@@ -32,18 +32,24 @@
 #define F32_SIG_MASK 0x7fffff
 #define F32_SIG_PLUS_ONE_BITS 24
 #define F32_SIG_PLUS_ONE_MASK 0xffffff
+#define F32_EXP_MASK 0xff
 #define F32_MIN_EXP -127
 #define F32_MAX_EXP 128
 #define F32_EXP_BIAS 127
+#define F32_QUIET_NAN_TAG 0x400000
 
 #define F64_SIGN_SHIFT 63
 #define F64_SIG_BITS 52
 #define F64_SIG_MASK 0xfffffffffffffULL
 #define F64_SIG_PLUS_ONE_BITS 53
 #define F64_SIG_PLUS_ONE_MASK 0x1fffffffffffffULL
+#define F64_EXP_MASK 0x7ff
 #define F64_MIN_EXP -1023
 #define F64_MAX_EXP 1024
 #define F64_EXP_BIAS 1023
+#define F64_QUIET_NAN_TAG 0x8000000000000ULL
+
+static const char s_hex_digits[] = "0123456789abcdef";
 
 int wasm_parse_hexdigit(char c, uint32_t* out) {
   if ((unsigned int)(c - '0') <= 9) {
@@ -203,8 +209,7 @@ static int parse_float_nan(const char* s, const char* end, uint32_t* out_bits) {
     if (tag == 0)
       return 0;
   } else {
-    /* normal quiet NaN */
-    tag = 0x400000;
+    tag = F32_QUIET_NAN_TAG;
   }
 
   *out_bits = make_float(is_neg, F32_MAX_EXP, tag);
@@ -399,6 +404,88 @@ int wasm_parse_float(WasmLiteralType literal_type,
   }
 }
 
+void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
+  /* 1234567890123456 */
+  /* -0x#.######p-### */
+  /* -nan:0x###### */
+  /* -infinity */
+  char buffer[20];
+  char* p = buffer;
+  int is_neg = (bits >> F32_SIGN_SHIFT);
+  int exp = ((bits >> F32_SIG_BITS) & F32_EXP_MASK) - F32_EXP_BIAS;
+  uint32_t sig = bits & F32_SIG_MASK;
+
+  if (is_neg)
+    *p++ = '-';
+  if (exp == F32_MAX_EXP) {
+    /* infinity or nan */
+    if (sig == 0) {
+      strcpy(p, "infinity");
+      p += 8;
+    } else {
+      strcpy(p, "nan");
+      p += 3;
+      if (sig != F32_QUIET_NAN_TAG) {
+        strcpy(p, ":0x");
+        p += 3;
+        /* skip leading zeroes */
+        while ((sig & 0xf0000000) == 0)
+          sig <<= 4;
+        while (sig) {
+          uint32_t nybble = (sig >> (sizeof(uint32_t) * 8 - 4)) & 0xf;
+          *p++ = s_hex_digits[nybble];
+          sig <<= 4;
+        }
+      }
+    }
+  } else {
+    int is_zero = sig == 0 && exp == F32_MIN_EXP;
+    strcpy(p, "0x");
+    p += 2;
+    *p++ = is_zero ? '0' : '1';
+
+    /* shift sig up so the top 4-bits are at the top of the uint32 */
+    sig <<= sizeof(uint32_t) * 8 - F32_SIG_BITS;
+
+    if (exp == F32_MIN_EXP) {
+      /* subnormal */
+      uint32_t leading_zeroes = wasm_clz_u32(sig);
+      sig <<= leading_zeroes + 1;
+      exp -= leading_zeroes;
+    }
+
+    if (sig) {
+      *p++ = '.';
+      while (sig) {
+        uint32_t nybble = (sig >> (sizeof(uint32_t) * 8 - 4)) & 0xf;
+        *p++ = s_hex_digits[nybble];
+        sig <<= 4;
+      }
+    }
+    *p++ = 'p';
+    if (is_zero) {
+      strcpy(p, "+0");
+      p += 2;
+    } else {
+      if (exp < 0) {
+        *p++ = '-';
+        exp = -exp;
+      } else {
+        *p++ = '+';
+      }
+      if (exp >= 100) *p++ = '1';
+      if (exp >= 10) *p++ = '0' + (exp / 10) % 10;
+      *p++ = '0' + exp % 10;
+    }
+  }
+
+  size_t len = p - buffer;
+  if (len >= size)
+    len = size - 1;
+  memcpy(out, buffer, len);
+  out[len] = '\0';
+}
+
 /* doubles */
 static uint64_t make_double(int sign, int exp, uint64_t sig) {
   assert(sign == 0 || sign == 1);
@@ -452,8 +539,7 @@ static int parse_double_nan(const char* s,
     if (tag == 0)
       return 0;
   } else {
-    /* normal quiet NaN */
-    tag = 0x8000000000000ULL;
+    tag = F64_QUIET_NAN_TAG;
   }
 
   *out_bits = make_double(is_neg, F64_MAX_EXP, tag);
@@ -641,3 +727,84 @@ int wasm_parse_double(WasmLiteralType literal_type,
   }
 }
 
+void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
+  /* 123456789012345678901234 */
+  /* -0x#.#############p-#### */
+  /* -nan:0x############# */
+  /* -infinity */
+  char buffer[40];
+  char* p = buffer;
+  int is_neg = (bits >> F64_SIGN_SHIFT);
+  int exp = ((bits >> F64_SIG_BITS) & F64_EXP_MASK) - F64_EXP_BIAS;
+  uint64_t sig = bits & F64_SIG_MASK;
+
+  if (is_neg)
+    *p++ = '-';
+  if (exp == F64_MAX_EXP) {
+    /* infinity or nan */
+    if (sig == 0) {
+      strcpy(p, "infinity");
+      p += 8;
+    } else {
+      strcpy(p, "nan");
+      p += 3;
+      if (sig != F64_QUIET_NAN_TAG) {
+        strcpy(p, ":0x");
+        p += 3;
+        /* skip leading zeroes */
+        while ((sig & 0xf000000000000000ULL) == 0)
+          sig <<= 4;
+        while (sig) {
+          uint32_t nybble = (sig >> (sizeof(uint64_t) * 8 - 4)) & 0xf;
+          *p++ = s_hex_digits[nybble];
+          sig <<= 4;
+        }
+      }
+    }
+  } else {
+    int is_zero = sig == 0 && exp == F64_MIN_EXP;
+    strcpy(p, "0x");
+    p += 2;
+    *p++ = is_zero ? '0' : '1';
+
+    /* shift sig up so the top 4-bits are at the top of the uint32 */
+    sig <<= sizeof(uint64_t) * 8 - F64_SIG_BITS;
+
+    if (exp == F64_MIN_EXP) {
+      /* subnormal */
+      uint32_t leading_zeroes = wasm_clz_u64(sig);
+      sig <<= leading_zeroes + 1;
+      exp -= leading_zeroes;
+    }
+
+    if (sig) {
+      *p++ = '.';
+      while (sig) {
+        uint32_t nybble = (sig >> (sizeof(uint64_t) * 8 - 4)) & 0xf;
+        *p++ = s_hex_digits[nybble];
+        sig <<= 4;
+      }
+    }
+    *p++ = 'p';
+    if (is_zero) {
+      strcpy(p, "+0");
+      p += 2;
+    } else {
+      if (exp < 0) {
+        *p++ = '-';
+        exp = -exp;
+      } else {
+        *p++ = '+';
+      }
+      if (exp >= 100) *p++ = '1';
+      if (exp >= 10) *p++ = '0' + (exp / 10) % 10;
+      *p++ = '0' + exp % 10;
+    }
+  }
+
+  size_t len = p - buffer;
+  if (len >= size)
+    len = size - 1;
+  memcpy(out, buffer, len);
+  out[len] = '\0';
+}

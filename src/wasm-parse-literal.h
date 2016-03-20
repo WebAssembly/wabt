@@ -41,4 +41,8 @@ int wasm_parse_double(WasmLiteralType literal_type,
                       const char* s,
                       const char* end,
                       uint64_t* out_bits);
+
+void wasm_write_float_hex(char* buffer, size_t size, uint32_t bits);
+void wasm_write_double_hex(char* buffer, size_t size, uint64_t bits);
+
 WASM_EXTERN_C_END
