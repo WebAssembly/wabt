@@ -93,6 +93,8 @@ if (NOT COMPILER_IS_MSVC)
   )
 endif ()
 
+add_custom_target(everything)
+
 # sexpr-wasm
 set(SEXPR_WASM_SRCS
   src/sexpr-wasm.c
@@ -111,6 +113,7 @@ set(SEXPR_WASM_SRCS
   ${FLEX_LEXER_C}
 )
 add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
+add_dependencies(everything sexpr-wasm)
 
 # hexfloat-test
 find_package(Threads)
@@ -120,10 +123,9 @@ if (CMAKE_USE_PTHREADS_INIT)
     test/hexfloat.c
   )
   add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
+  add_dependencies(everything hexfloat_test)
   target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
 endif ()
-
-add_custom_target(everything DEPENDS sexpr-wasm hexfloat_test)
 
 # test running
 find_package(PythonInterp 2.7 REQUIRED)
