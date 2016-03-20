@@ -51,7 +51,7 @@ WASM_DEFINE_VECTOR(uint32, WasmUint32);
   ((ctx)->reader->on_error ? raise_error((ctx), __VA_ARGS__) : (void)0)
 
 #define RAISE_ERROR_UNLESS(ctx, cond, ...) \
-  if (!cond)                               \
+  if (!(cond))                             \
     RAISE_ERROR((ctx), __VA_ARGS__);
 
 #define CHECK_ALLOC_(ctx, cond)                                         \
@@ -407,9 +407,10 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   RAISE_ERROR_UNLESS(&ctx, version == WASM_BINARY_VERSION, "version mismatch");
 
   /* signatures */
+  uint32_t num_signatures = 0;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_SIGNATURES)) {
     CALLBACK0(&ctx, begin_signature_section);
-    uint32_t i, num_signatures;
+    uint32_t i;
     in_u32_leb128(&ctx, &num_signatures, "signature count");
     CALLBACK(&ctx, on_signature_count, num_signatures);
 
@@ -442,14 +443,17 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   }
 
   /* import_table */
+  uint32_t num_imports = 0;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_IMPORT_TABLE)) {
     CALLBACK0(&ctx, begin_import_section);
-    uint32_t i, num_imports;
+    uint32_t i;
     in_u32_leb128(&ctx, &num_imports, "import count");
     CALLBACK(&ctx, on_import_count, num_imports);
     for (i = 0; i < num_imports; ++i) {
       uint32_t sig_index;
       in_u32_leb128(&ctx, &sig_index, "import signature index");
+      RAISE_ERROR_UNLESS(&ctx, sig_index < num_signatures,
+                         "invalid import signature index");
 
       WasmStringSlice module_name;
       in_str(&ctx, &module_name, "import module name");
@@ -463,35 +467,44 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   }
 
   /* function_signatures */
+  uint32_t num_function_signatures = 0;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION_SIGNATURES)) {
     CALLBACK0(&ctx, begin_function_signatures_section);
-    uint32_t i, num_functions;
-    in_u32_leb128(&ctx, &num_functions, "function signature count");
-    CALLBACK(&ctx, on_function_signatures_count, num_functions);
-    for (i = 0; i < num_functions; ++i) {
+    uint32_t i;
+    in_u32_leb128(&ctx, &num_function_signatures, "function signature count");
+    CALLBACK(&ctx, on_function_signatures_count, num_function_signatures);
+    for (i = 0; i < num_function_signatures; ++i) {
       uint32_t sig_index;
       in_u32_leb128(&ctx, &sig_index, "function signature index");
+      RAISE_ERROR_UNLESS(&ctx, sig_index < num_signatures,
+                         "invalid function signature index");
       CALLBACK(&ctx, on_function_signature, i, sig_index);
     }
     CALLBACK0(&ctx, end_function_signatures_section);
   }
 
   /* function_table */
+  uint32_t num_function_table_entries;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION_TABLE)) {
     CALLBACK0(&ctx, begin_function_table_section);
-    uint32_t i, num_entries;
-    in_u32_leb128(&ctx, &num_entries, "function table entry count");
-    CALLBACK(&ctx, on_function_table_count, num_entries);
-    for (i = 0; i < num_entries; ++i) {
+    uint32_t i;
+    in_u32_leb128(&ctx, &num_function_table_entries,
+                  "function table entry count");
+    CALLBACK(&ctx, on_function_table_count, num_function_table_entries);
+    for (i = 0; i < num_function_table_entries; ++i) {
       uint32_t func_index;
       in_u32_leb128(&ctx, &func_index, "function table function index");
+      RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
+                         "invalid function table function index");
       CALLBACK(&ctx, on_function_table_entry, i, func_index);
     }
     CALLBACK0(&ctx, end_function_table_section);
   }
 
   /* memory */
+  int seen_memory_section = 0;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_MEMORY)) {
+    seen_memory_section = 1;
     CALLBACK0(&ctx, begin_memory_section);
     uint32_t initial_size_pages;
     in_u32_leb128(&ctx, &initial_size_pages, "memory initial size");
@@ -510,14 +523,17 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   }
 
   /* export_table */
+  uint32_t num_exports = 0;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_EXPORT_TABLE)) {
     CALLBACK0(&ctx, begin_export_section);
-    uint32_t i, num_exports;
+    uint32_t i;
     in_u32_leb128(&ctx, &num_exports, "export count");
     CALLBACK(&ctx, on_export_count, num_exports);
     for (i = 0; i < num_exports; ++i) {
       uint32_t func_index;
       in_u32_leb128(&ctx, &func_index, "export function index");
+      RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
+                         "invalid export function index");
 
       WasmStringSlice name;
       in_str(&ctx, &name, "export function name");
@@ -532,23 +548,29 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, begin_start_section);
     uint32_t func_index;
     in_u32_leb128(&ctx, &func_index, "start function index");
+    RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
+                       "invalid start function index");
     CALLBACK(&ctx, on_start_function, func_index);
     CALLBACK0(&ctx, end_start_section);
   }
 
   /* function_bodies */
+  uint32_t num_function_bodies = 0;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION_BODIES)) {
     CALLBACK0(&ctx, begin_function_bodies_section);
-    uint32_t i, num_functions;
-    in_u32_leb128(&ctx, &num_functions, "function body count");
-    CALLBACK(&ctx, on_function_bodies_count, num_functions);
-    for (i = 0; i < num_functions; ++i) {
+    uint32_t i;
+    in_u32_leb128(&ctx, &num_function_bodies, "function body count");
+    RAISE_ERROR_UNLESS(&ctx, num_function_signatures == num_function_bodies,
+                       "function signature count != function body count");
+    CALLBACK(&ctx, on_function_bodies_count, num_function_bodies);
+    for (i = 0; i < num_function_bodies; ++i) {
       CALLBACK(&ctx, begin_function_body, i);
       uint32_t body_size;
       in_u32_leb128(&ctx, &body_size, "function body size");
       uint32_t body_start_offset = ctx.offset;
       uint32_t end_offset = body_start_offset + body_size;
 
+      uint32_t num_locals = 0;
       uint32_t num_local_decls;
       in_u32_leb128(&ctx, &num_local_decls, "local declaration count");
       CALLBACK(&ctx, on_local_decl_count, num_local_decls);
@@ -556,6 +578,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       for (j = 0; j < num_local_decls; ++j) {
         uint32_t num_local_types;
         in_u32_leb128(&ctx, &num_local_types, "local type count");
+        num_locals += num_local_types;
         uint8_t local_type;
         in_u8(&ctx, &local_type, "local type");
         RAISE_ERROR_UNLESS(&ctx, is_valid_type(local_type),
@@ -676,6 +699,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_GET_LOCAL: {
             uint32_t local_index;
             in_u32_leb128(&ctx, &local_index, "get_local local index");
+            RAISE_ERROR_UNLESS(&ctx, local_index < num_locals,
+                               "invalid get_local local index");
             CALLBACK(&ctx, on_get_local_expr, local_index);
             break;
           }
@@ -683,6 +708,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_SET_LOCAL: {
             uint32_t local_index;
             in_u32_leb128(&ctx, &local_index, "set_local local index");
+            RAISE_ERROR_UNLESS(&ctx, local_index < num_locals,
+                               "invalid set_local local index");
             CALLBACK(&ctx, on_set_local_expr, local_index);
             break;
           }
@@ -690,6 +717,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_CALL_FUNCTION: {
             uint32_t func_index;
             in_u32_leb128(&ctx, &func_index, "call_function function index");
+            RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
+                               "invalid call_function function index");
             CALLBACK(&ctx, on_call_expr, func_index);
             break;
           }
@@ -697,6 +726,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_CALL_INDIRECT: {
             uint32_t sig_index;
             in_u32_leb128(&ctx, &sig_index, "call_indirect signature index");
+            RAISE_ERROR_UNLESS(&ctx, sig_index < num_function_signatures,
+                               "invalid call_indirect signature index");
             CALLBACK(&ctx, on_call_indirect_expr, sig_index);
             break;
           }
@@ -704,6 +735,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_CALL_IMPORT: {
             uint32_t import_index;
             in_u32_leb128(&ctx, &import_index, "call_import import index");
+            RAISE_ERROR_UNLESS(&ctx, import_index < num_imports,
+                               "invalid call_import import index");
             CALLBACK(&ctx, on_call_import_expr, import_index);
             break;
           }
@@ -905,6 +938,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* data_segments */
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_DATA_SEGMENTS)) {
+    RAISE_ERROR_UNLESS(&ctx, seen_memory_section,
+                       "data segment section without memory section");
     CALLBACK0(&ctx, begin_data_segment_section);
     uint32_t i, num_data_segments;
     in_u32_leb128(&ctx, &num_data_segments, "data segment count");
@@ -927,6 +962,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, begin_names_section);
     uint32_t i, num_functions;
     in_u32_leb128(&ctx, &num_functions, "function name count");
+    RAISE_ERROR_UNLESS(&ctx, num_functions <= num_function_signatures,
+                       "function name count > function signature count");
     CALLBACK(&ctx, on_function_names_count, num_functions);
     for (i = 0; i < num_functions; ++i) {
       WasmStringSlice function_name;

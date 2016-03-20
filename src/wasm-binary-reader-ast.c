@@ -44,6 +44,14 @@
   else                     \
   (void)0
 
+#define CHECK_DEPTH(ctx, depth)                              \
+  if ((depth) >= (ctx)->depth_stack.size) {                  \
+    fprintf(stderr, "invalid depth: %d (max %d)\n", (depth), \
+            (int)((ctx)->depth_stack.size));                 \
+    return WASM_ERROR;                                       \
+  } else                                                     \
+  (void)0
+
 #define LOG 0
 
 typedef struct WasmExprNode {
@@ -586,6 +594,7 @@ static WasmResult on_br_expr(uint32_t depth, void* user_data) {
   WasmExpr* expr = wasm_new_br_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->br.var.type = WASM_VAR_TYPE_INDEX;
+  CHECK_DEPTH(ctx, depth);
   expr->br.var.index = translate_depth(ctx, depth);
   return shift(ctx, expr, 1);
 }
@@ -597,6 +606,7 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   WasmExpr* expr = wasm_new_br_if_expr(ctx->allocator);
   CHECK_ALLOC_NULL(expr);
   expr->br_if.var.type = WASM_VAR_TYPE_INDEX;
+  CHECK_DEPTH(ctx, depth);
   expr->br_if.var.index = translate_depth(ctx, depth);
   return shift(ctx, expr, 2);
 }
@@ -617,9 +627,11 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
   for (i = 0; i < num_targets; ++i) {
     WasmVar* var = &expr->br_table.targets.data[i];
     var->type = WASM_VAR_TYPE_INDEX;
+    CHECK_DEPTH(ctx, target_depths[i]);
     var->index = translate_depth(ctx, target_depths[i]);
   }
   expr->br_table.default_target.type = WASM_VAR_TYPE_INDEX;
+  CHECK_DEPTH(ctx, default_target_depth);
   expr->br_table.default_target.index =
       translate_depth(ctx, default_target_depth);
   return shift(ctx, expr, 1);
