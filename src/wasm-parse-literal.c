@@ -796,7 +796,8 @@ void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
       } else {
         *p++ = '+';
       }
-      if (exp >= 100) *p++ = '1';
+      if (exp >= 1000) *p++ = '1';
+      if (exp >= 100) *p++ = '0' + (exp / 100) % 10;
       if (exp >= 10) *p++ = '0' + (exp / 10) % 10;
       *p++ = '0' + exp % 10;
     }

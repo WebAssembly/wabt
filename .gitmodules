@@ -4,3 +4,6 @@
 [submodule "third_party/v8/v8"]
 	path = third_party/v8/v8
 	url = https://chromium.googlesource.com/v8/v8.git
+[submodule "third_party/gtest"]
+	path = third_party/gtest
+	url = https://github.com/google/googletest

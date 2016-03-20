@@ -120,10 +120,21 @@ find_package(Threads)
 if (CMAKE_USE_PTHREADS_INIT)
   set(HEXFLOAT_TEST_SRCS
     src/wasm-parse-literal.c
-    test/hexfloat.c
+    test/hexfloat.cc
+    third_party/gtest/googletest/src/gtest-all.cc
+    third_party/gtest/googletest/src/gtest_main.cc
+  )
+  include_directories(
+    third_party/gtest/googletest
+    third_party/gtest/googletest/include
   )
   add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
   add_dependencies(everything hexfloat_test)
+  set_source_files_properties(hexfloat_test
+    test/hexfloat.cc
+    PROPERTIES
+    COMPILE_FLAGS -std=c++11
+  )
   target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
 endif ()
 
