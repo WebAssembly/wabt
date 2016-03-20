@@ -29,11 +29,6 @@
   (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
   (dst).length = (src).length
 
-#define DUPQUOTEDTEXT(dst, src)                                           \
-  (dst).start =                                                           \
-      wasm_strndup(parser->allocator, (src).start + 1, (src).length - 2); \
-  (dst).length = (src).length - 2
-
 #define CHECK_ALLOC_(cond)                                       \
   if ((cond)) {                                                  \
     WasmLocation loc;                                            \
@@ -252,7 +247,13 @@ bind_var :
 ;
 
 quoted_text :
-    TEXT { DUPQUOTEDTEXT($$, $1); CHECK_ALLOC_STR($$); }
+    TEXT {
+      void* data;
+      size_t size;
+      CHECK_ALLOC(dup_string_contents(parser->allocator, &$1, &data, &size));
+      $$.start = data;
+      $$.length = size;
+    }
 ;
 
 string_contents :

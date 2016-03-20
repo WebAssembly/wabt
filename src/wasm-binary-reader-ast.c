@@ -174,7 +174,6 @@ static WasmResult on_data_segment_count(uint32_t count, void* user_data) {
   WasmReadAstContext* ctx = user_data;
   CHECK_ALLOC(wasm_reserve_segments(ctx->allocator,
                                     &ctx->module->memory->segments, count));
-  ctx->module->memory->segments.size = count;
   return WASM_OK;
 }
 

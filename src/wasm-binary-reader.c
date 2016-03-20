@@ -842,7 +842,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_I32_CLZ:
           case WASM_OPCODE_I32_CTZ:
           case WASM_OPCODE_I32_POPCNT:
-          case WASM_OPCODE_I32_EQZ:
           case WASM_OPCODE_I64_CLZ:
           case WASM_OPCODE_I64_CTZ:
           case WASM_OPCODE_I64_POPCNT:
@@ -888,6 +887,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_F64_REINTERPRET_I64:
           case WASM_OPCODE_I32_REINTERPRET_F32:
           case WASM_OPCODE_I64_REINTERPRET_F64:
+          case WASM_OPCODE_I32_EQZ:
+          case WASM_OPCODE_I64_EQZ:
             CALLBACK(&ctx, on_convert_expr, opcode);
             break;
 

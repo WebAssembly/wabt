@@ -1551,6 +1551,7 @@ static void write_commands_no_spec(WasmWriteContext* ctx, WasmScript* script) {
       continue;
 
     write_module(ctx, &command->module);
+    break;
   }
 }
 

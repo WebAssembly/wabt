@@ -27,15 +27,31 @@
 #include "wasm-writer.h"
 
 #define INDENT_SIZE 2
+#define NO_FORCE_NEWLINE 0
+#define FORCE_NEWLINE 1
 
 #define V(type1, type2, mem_size, code, NAME, text) [code] = text,
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+static const uint8_t s_is_char_escaped[] = {
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+
 typedef enum WasmNextChar {
   WASM_NEXT_CHAR_NONE,
   WASM_NEXT_CHAR_SPACE,
   WASM_NEXT_CHAR_NEWLINE,
+  WASM_NEXT_CHAR_FORCE_NEWLINE,
 } WasmNextChar;
 
 typedef struct WasmWriteContext {
@@ -88,14 +104,13 @@ static void out_indent(WasmWriteContext* ctx) {
   }
 }
 
-static void out_data_with_next_char(WasmWriteContext* ctx,
-                                    const void* src,
-                                    size_t size) {
+static void out_next_char(WasmWriteContext* ctx) {
   switch (ctx->next_char) {
     case WASM_NEXT_CHAR_SPACE:
       out_data(ctx, " ", 1);
       break;
     case WASM_NEXT_CHAR_NEWLINE:
+    case WASM_NEXT_CHAR_FORCE_NEWLINE:
       out_data(ctx, "\n", 1);
       out_indent(ctx);
       break;
@@ -104,6 +119,13 @@ static void out_data_with_next_char(WasmWriteContext* ctx,
     case WASM_NEXT_CHAR_NONE:
       break;
   }
+  ctx->next_char = WASM_NEXT_CHAR_NONE;
+}
+
+static void out_data_with_next_char(WasmWriteContext* ctx,
+                                    const void* src,
+                                    size_t size) {
+  out_next_char(ctx);
   out_data(ctx, src, size);
 }
 
@@ -127,6 +149,10 @@ static void out_printf(WasmWriteContext* ctx, const char* format, ...) {
   ctx->next_char = WASM_NEXT_CHAR_SPACE;
 }
 
+static void out_putc(WasmWriteContext* ctx, char c) {
+  out_data(ctx, &c, 1);
+}
+
 static void out_puts(WasmWriteContext* ctx,
                      const char* s,
                      WasmNextChar next_char) {
@@ -139,9 +165,11 @@ static void out_puts_space(WasmWriteContext* ctx, const char* s) {
   out_puts(ctx, s, WASM_NEXT_CHAR_SPACE);
 }
 
-static void out_newline(WasmWriteContext* ctx) {
-  /* TODO(binji): multiple newlines? */
-  ctx->next_char = WASM_NEXT_CHAR_NEWLINE;
+static void out_newline(WasmWriteContext* ctx, int force) {
+  if (ctx->next_char == WASM_NEXT_CHAR_FORCE_NEWLINE)
+    out_next_char(ctx);
+  ctx->next_char =
+      force ? WASM_NEXT_CHAR_FORCE_NEWLINE : WASM_NEXT_CHAR_NEWLINE;
 }
 
 static void out_open(WasmWriteContext* ctx,
@@ -161,7 +189,8 @@ static void out_open_space(WasmWriteContext* ctx, const char* name) {
 }
 
 static void out_close(WasmWriteContext* ctx, WasmNextChar next_char) {
-  ctx->next_char = WASM_NEXT_CHAR_NONE;
+  if (ctx->next_char != WASM_NEXT_CHAR_FORCE_NEWLINE)
+    ctx->next_char = WASM_NEXT_CHAR_NONE;
   dedent(ctx);
   out_puts(ctx, ")", next_char);
 }
@@ -188,11 +217,32 @@ static void out_string_slice_opt(WasmWriteContext* ctx,
     out_string_slice(ctx, str, next_char);
 }
 
+static void out_quoted_data(WasmWriteContext* ctx,
+                            const void* data,
+                            size_t length) {
+  const uint8_t* u8_data = data;
+  static const char s_hexdigits[] = "0123456789abcdef";
+  out_next_char(ctx);
+  out_putc(ctx, '\"');
+  size_t i;
+  for (i = 0; i < length; ++i) {
+    uint8_t c = u8_data[i];
+    if (s_is_char_escaped[c]) {
+      out_putc(ctx, '\\');
+      out_putc(ctx, s_hexdigits[c >> 4]);
+      out_putc(ctx, s_hexdigits[c & 0xf]);
+    } else {
+      out_putc(ctx, c);
+    }
+  }
+  out_putc(ctx, '\"');
+  ctx->next_char = WASM_NEXT_CHAR_SPACE;
+}
+
 static void out_quoted_string_slice(WasmWriteContext* ctx,
                                     WasmStringSlice* str,
                                     WasmNextChar next_char) {
-  /* TODO(binji): handle escaped characters */
-  out_printf(ctx, "\"%.*s\"", (int)str->length, str->start);
+  out_quoted_data(ctx, str->start, str->length);
   ctx->next_char = next_char;
 }
 
@@ -253,7 +303,7 @@ static void write_block(WasmWriteContext* ctx,
   out_open_space(ctx, text);
   out_string_slice_opt(ctx, &block->label, WASM_NEXT_CHAR_SPACE);
   out_printf(ctx, " ;; exit = @%d", ctx->depth);
-  out_newline(ctx);
+  out_newline(ctx, FORCE_NEWLINE);
   ctx->depth++;
   write_exprs(ctx, &block->exprs);
   ctx->depth--;
@@ -279,7 +329,7 @@ static void write_if_branch(WasmWriteContext* ctx,
   switch (type) {
     case WASM_IF_BRANCH_TYPE_ONE_EXPRESSION:
       out_printf(ctx, ";; exit = @%d", ctx->depth);
-      out_newline(ctx);
+      out_newline(ctx, FORCE_NEWLINE);
       ctx->depth++;
       write_expr(ctx, expr);
       ctx->depth--;
@@ -290,7 +340,7 @@ static void write_if_branch(WasmWriteContext* ctx,
       } else {
         out_open_space(ctx, text);
         out_printf(ctx, " ;; exit = @%d", ctx->depth);
-        out_newline(ctx);
+        out_newline(ctx, FORCE_NEWLINE);
         ctx->depth++;
         write_expr(ctx, expr);
         ctx->depth--;
@@ -404,7 +454,7 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
-      out_var(ctx, &expr->call_indirect.var, WASM_NEXT_CHAR_NONE);
+      out_var(ctx, &expr->call_indirect.var, WASM_NEXT_CHAR_NEWLINE);
       write_expr(ctx, expr->call_indirect.expr);
       size_t i;
       for (i = 0; i < expr->call_indirect.args.size; ++i)
@@ -475,11 +525,11 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_LOAD:
       out_open_space(ctx, s_opcode_name[expr->load.opcode]);
-      if (!wasm_is_naturally_aligned(expr->load.opcode, expr->load.align))
-        out_printf(ctx, "align=%u", expr->load.align);
       if (expr->load.offset)
         out_printf(ctx, "offset=%" PRIu64, expr->load.offset);
-      out_newline(ctx);
+      if (!wasm_is_naturally_aligned(expr->load.opcode, expr->load.align))
+        out_printf(ctx, "align=%u", expr->load.align);
+      out_newline(ctx, NO_FORCE_NEWLINE);
       write_expr(ctx, expr->load.addr);
       out_close_newline(ctx);
       break;
@@ -490,8 +540,8 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
       out_string_slice_opt(ctx, &expr->loop.outer, WASM_NEXT_CHAR_SPACE);
       out_printf(ctx, " ;; exit = @%d, cont = @%d", ctx->depth,
                  ctx->depth + 1);
+      out_newline(ctx, FORCE_NEWLINE);
       ctx->depth += 2;
-      out_newline(ctx);
       write_exprs(ctx, &expr->loop.exprs);
       ctx->depth -= 2;
       out_close_newline(ctx);
@@ -531,11 +581,11 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_STORE:
       out_open_space(ctx, s_opcode_name[expr->store.opcode]);
-      if (!wasm_is_naturally_aligned(expr->store.opcode, expr->store.align))
-        out_printf(ctx, "align=%u", expr->store.align);
       if (expr->store.offset)
         out_printf(ctx, "offset=%" PRIu64, expr->store.offset);
-      out_newline(ctx);
+      if (!wasm_is_naturally_aligned(expr->store.opcode, expr->store.align))
+        out_printf(ctx, "align=%u", expr->store.align);
+      out_newline(ctx, NO_FORCE_NEWLINE);
       write_expr(ctx, expr->store.addr);
       write_expr(ctx, expr->store.value);
       out_close_newline(ctx);
@@ -590,7 +640,7 @@ static void write_func(WasmWriteContext* ctx, int func_index, WasmFunc* func) {
       out_close_space(ctx);
     }
   }
-  out_newline(ctx);
+  out_newline(ctx, NO_FORCE_NEWLINE);
   if (func->locals.types.size) {
     out_open_space(ctx, "local");
     for (i = 0; i < func->locals.types.size; ++i) {
@@ -599,7 +649,7 @@ static void write_func(WasmWriteContext* ctx, int func_index, WasmFunc* func) {
     }
     out_close_space(ctx);
   }
-  out_newline(ctx);
+  out_newline(ctx, NO_FORCE_NEWLINE);
   write_exprs(ctx, &func->exprs);
   out_close_newline(ctx);
 }
@@ -651,23 +701,16 @@ static void write_table(WasmWriteContext* ctx, WasmVarVector* table) {
 static void write_segment(WasmWriteContext* ctx, WasmSegment* segment) {
   out_open_space(ctx, "segment");
   out_printf(ctx, "%u", segment->addr);
-  /* TODO(binji): optimize */
-  uint8_t* data = segment->data;
-  size_t i;
-  for (i = 0; i < segment->size; ++i) {
-    uint8_t b = data[i];
-    if (b >= 32 && b < 127)
-      out_printf(ctx, "%c", b);
-    else
-      out_printf(ctx, "\\%02x", b);
-  }
+  out_quoted_data(ctx, segment->data, segment->size);
   out_close_newline(ctx);
 }
 
 static void write_memory(WasmWriteContext* ctx, WasmMemory* memory) {
   out_open_space(ctx, "memory");
-  out_printf(ctx, "%u %u", memory->initial_pages, memory->max_pages);
-  out_newline(ctx);
+  out_printf(ctx, "%u", memory->initial_pages);
+  if (memory->initial_pages != memory->max_pages)
+    out_printf(ctx, "%u", memory->max_pages);
+  out_newline(ctx, NO_FORCE_NEWLINE);
   size_t i;
   for (i = 0; i < memory->segments.size; ++i) {
     WasmSegment* segment = &memory->segments.data[i];
