@@ -591,10 +591,12 @@ static void write_func(WasmWriteContext* ctx, int func_index, WasmFunc* func) {
     }
   }
   out_newline(ctx);
-  for (i = 0; i < func->locals.types.size; ++i) {
+  if (func->locals.types.size) {
     out_open_space(ctx, "local");
-    /* TODO(binji): lookup name given type index */
-    out_type(ctx, func->locals.types.data[i], WASM_NEXT_CHAR_NONE);
+    for (i = 0; i < func->locals.types.size; ++i) {
+      /* TODO(binji): lookup name given type index */
+      out_type(ctx, func->locals.types.data[i], WASM_NEXT_CHAR_SPACE);
+    }
     out_close_space(ctx);
   }
   out_newline(ctx);
