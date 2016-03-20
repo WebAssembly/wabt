@@ -94,7 +94,7 @@ static void raise_error(WasmReadContext* ctx, const char* format, ...) {
   wasm_vsnprintf(buffer, len, format, args_copy);
   va_end(args_copy);
 
-  ctx->reader->on_error(buffer, ctx->reader->user_data);
+  ctx->reader->on_error(ctx->offset, buffer, ctx->reader->user_data);
   longjmp(ctx->error_jmp_buf, 1);
 }
 

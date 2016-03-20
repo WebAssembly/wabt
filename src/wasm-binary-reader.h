@@ -28,7 +28,7 @@ struct WasmAllocator;
 typedef struct WasmBinaryReader {
   void* user_data;
 
-  void (*on_error)(const char* message, void* user_data);
+  void (*on_error)(uint32_t offset, const char* message, void* user_data);
 
   /* module */
   WasmResult (*begin_module)(void* user_data);
