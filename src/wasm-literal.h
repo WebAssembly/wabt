@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef WASM_LITERAL_H_
+#define WASM_LITERAL_H_
+
 #include <stdint.h>
 
 #include "wasm-common.h"
@@ -46,3 +49,5 @@ void wasm_write_float_hex(char* buffer, size_t size, uint32_t bits);
 void wasm_write_double_hex(char* buffer, size_t size, uint64_t bits);
 
 WASM_EXTERN_C_END
+
+#endif /* WASM_LITERAL_H_ */

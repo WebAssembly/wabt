@@ -78,7 +78,7 @@
 #include <stdlib.h>
 
 #include "wasm-allocator.h"
-#include "wasm-parse-literal.h"
+#include "wasm-literal.h"
 #include "wasm-parser.h"
 #include "wasm-parser-lexer-shared.h"
 

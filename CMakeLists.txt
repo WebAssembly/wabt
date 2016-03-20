@@ -104,7 +104,7 @@ set(SEXPR_WASM_SRCS
   src/wasm-check.c
   src/wasm-common.c
   src/wasm-config.c
-  src/wasm-parse-literal.c
+  src/wasm-literal.c
   src/wasm-parser-lexer-shared.c
   src/wasm-stack-allocator.c
   src/wasm-vector.c
@@ -119,7 +119,7 @@ add_dependencies(everything sexpr-wasm)
 find_package(Threads)
 if (CMAKE_USE_PTHREADS_INIT)
   set(HEXFLOAT_TEST_SRCS
-    src/wasm-parse-literal.c
+    src/wasm-literal.c
     test/hexfloat.cc
     third_party/gtest/googletest/src/gtest-all.cc
     third_party/gtest/googletest/src/gtest_main.cc

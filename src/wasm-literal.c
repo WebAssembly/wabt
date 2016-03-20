@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "wasm-parse-literal.h"
+#include "wasm-literal.h"
 
 #include <assert.h>
 #include <errno.h>
