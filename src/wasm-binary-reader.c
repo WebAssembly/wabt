@@ -618,6 +618,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               CHECK_ALLOC(&ctx,
                           wasm_reserve_uint32s(allocator, &ctx.target_depths,
                                                num_targets));
+              ctx.target_depths.size = num_targets;
             }
 
             int i;

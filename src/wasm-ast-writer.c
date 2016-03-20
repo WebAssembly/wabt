@@ -77,7 +77,7 @@ static void out_indent(WasmWriteContext* ctx) {
   static char s_indent[] =
       "                                                                       "
       "                                                                       ";
-  static size_t s_indent_len = sizeof(s_indent);
+  static size_t s_indent_len = sizeof(s_indent) - 1;
   int indent = ctx->indent;
   while (indent > s_indent_len) {
     out_data(ctx, s_indent, s_indent_len);
@@ -373,11 +373,11 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_BR_TABLE: {
       out_open_newline(ctx, s_opcode_name[WASM_OPCODE_BR_TABLE]);
-      write_expr(ctx, expr->br_table.expr);
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i)
         out_br_var(ctx, &expr->br_table.targets.data[i], WASM_NEXT_CHAR_SPACE);
-      out_br_var(ctx, &expr->br_table.default_target, WASM_NEXT_CHAR_SPACE);
+      out_br_var(ctx, &expr->br_table.default_target, WASM_NEXT_CHAR_NEWLINE);
+      write_expr(ctx, expr->br_table.expr);
       out_close_newline(ctx);
       break;
     }

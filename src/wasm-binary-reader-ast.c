@@ -613,6 +613,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
   CHECK_ALLOC_NULL(expr);
   CHECK_ALLOC(
       wasm_reserve_vars(ctx->allocator, &expr->br_table.targets, num_targets));
+  expr->br_table.targets.size = num_targets;
   int i;
   for (i = 0; i < num_targets; ++i) {
     WasmVar* var = &expr->br_table.targets.data[i];

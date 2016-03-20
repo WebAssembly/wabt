@@ -136,7 +136,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, ___, 0, 0x4f, I32_LT_S, "i32.lt_s")                       \
   V(I32, ___, 0, 0x50, I32_LE_S, "i32.le_s")                       \
   V(I32, ___, 0, 0x51, I32_LT_U, "i32.lt_u")                       \
-  V(I32, ___, 0, 0x52, I32_LE_U, "i32.lt_u")                       \
+  V(I32, ___, 0, 0x52, I32_LE_U, "i32.le_u")                       \
   V(I32, ___, 0, 0x53, I32_GT_S, "i32.gt_s")                       \
   V(I32, ___, 0, 0x54, I32_GE_S, "i32.ge_s")                       \
   V(I32, ___, 0, 0x55, I32_GT_U, "i32.gt_u")                       \
