@@ -23,6 +23,7 @@
 
 #include "wasm-ast.h"
 #include "wasm-common.h"
+#include "wasm-literal.h"
 #include "wasm-writer.h"
 
 #define INDENT_SIZE 2
@@ -316,15 +317,23 @@ static void write_const(WasmWriteContext* ctx, WasmConst* const_) {
       out_close_newline(ctx);
       break;
 
-    case WASM_TYPE_F32:
+    case WASM_TYPE_F32: {
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_F32_CONST]);
+      char buffer[128];
+      wasm_write_float_hex(buffer, 128, const_->f32_bits);
+      out_puts_space(ctx, buffer);
       out_close_newline(ctx);
       break;
+    }
 
-    case WASM_TYPE_F64:
+    case WASM_TYPE_F64: {
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_F64_CONST]);
+      char buffer[128];
+      wasm_write_double_hex(buffer, 128, const_->f64_bits);
+      out_puts_space(ctx, buffer);
       out_close_newline(ctx);
       break;
+    }
 
     default:
       assert(0);
