@@ -20,19 +20,25 @@
 #include <stdlib.h>
 #include "wasm-config.h"
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#else
-#define USE_MIN_PARSER 1
-#endif
-
 #include "wasm-ast.h"
 #include "wasm-binary-writer.h"
 #include "wasm-check.h"
 #include "wasm-common.h"
+#include "wasm-option-parser.h"
 #include "wasm-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"
+
+static const char* s_infile;
+static const char* s_outfile;
+static int s_dump_module;
+static int s_verbose;
+static WasmWriteBinaryOptions s_write_binary_options =
+    WASM_WRITE_BINARY_OPTIONS_DEFAULT;
+static int s_use_libc_allocator;
+
+#define NOPE WASM_OPTION_NO_ARGUMENT
+#define YEP WASM_OPTION_HAS_ARGUMENT
 
 enum {
   FLAG_VERBOSE,
@@ -48,248 +54,103 @@ enum {
   NUM_FLAGS
 };
 
-static const char* s_infile;
-static const char* s_outfile;
-static int s_dump_module;
-static int s_verbose;
-static WasmWriteBinaryOptions s_write_binary_options =
-    WASM_WRITE_BINARY_OPTIONS_DEFAULT;
-static int s_use_libc_allocator;
-
-#ifdef USE_MIN_PARSER
-typedef struct option {
-  const char* name;
-  int has_arg;
-  int* flag;
-  int val;
-} option;
-#define null_argument 0     /*Argument Null*/
-#define no_argument 0       /*Argument Switch Only*/
-#define required_argument 1 /*Argument Required*/
-#define optional_argument 2 /*Argument Optional*/
-
-typedef struct OptionText {
-  char long_name[64];
-  char short_name[64];
-} OptionText;
-#endif /* HAVE_GETOPT_H */
-
-static struct option s_long_options[] = {
-    {"verbose", no_argument, NULL, 'v'},
-    {"help", no_argument, NULL, 'h'},
-    {"dump-module", no_argument, NULL, 'd'},
-    {"output", required_argument, NULL, 'o'},
-    {"spec", no_argument, NULL, 0},
-    {"spec-verbose", no_argument, NULL, 0},
-    {"use-libc-allocator", no_argument, NULL, 0},
-    {"no-canonicalize-leb128s", no_argument, NULL, 0},
-    {"no-remap-locals", no_argument, NULL, 0},
-    {"debug-names", no_argument, NULL, 0},
-    {NULL, 0, NULL, 0},
-};
-#define OPTIONS_LENGTH (WASM_ARRAY_SIZE(s_long_options) - 1)
-WASM_STATIC_ASSERT(NUM_FLAGS == OPTIONS_LENGTH);
-
-typedef struct OptionHelp {
-  int flag;
-  const char* metavar;
-  const char* help;
-} OptionHelp;
-
-static OptionHelp s_option_help[] = {
-    {FLAG_VERBOSE, NULL, "use multiple times for more info"},
-    {FLAG_HELP, NULL, "print this help message"},
-    {FLAG_DUMP_MODULE, NULL, "print a hexdump of the module to stdout"},
-    {FLAG_OUTPUT, "FILENAME", "output file for the generated binary format"},
-    {FLAG_SPEC, NULL,
+static WasmOption s_options[] = {
+    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+     "use multiple times for more info"},
+    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
+    {FLAG_DUMP_MODULE, 'd', "dump-module", NULL, NOPE,
+     "print a hexdump of the module to stdout"},
+    {FLAG_OUTPUT, 'o', "output", "FILE", YEP,
+     "output file for the generated binary format"},
+    {FLAG_SPEC, 0, "spec", NULL, NOPE,
      "parse a file with multiple modules and assertions, like the spec tests"},
-    {FLAG_SPEC_VERBOSE, NULL, "print logging messages when running spec files"},
-    {FLAG_USE_LIBC_ALLOCATOR, NULL,
+    {FLAG_SPEC_VERBOSE, 0, "spec-verbose", NULL, NOPE,
+     "print logging messages when running spec files"},
+    {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
      "use malloc, free, etc. instead of stack allocator"},
-    {FLAG_NO_CANONICALIZE_LEB128S, NULL,
+    {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", NULL, NOPE,
      "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
-    {FLAG_NO_REMAP_LOCALS, NULL,
+    {FLAG_NO_REMAP_LOCALS, 0, "no-remap-locals", NULL, NOPE,
      "If set, function locals are written in source order, instead of packing "
      "them to reduce size"},
-    {FLAG_DEBUG_NAMES, NULL, "Write debug names to the generated binary file"},
-    {NUM_FLAGS, NULL},
+    {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
+     "Write debug names to the generated binary file"},
 };
-#define OPTIONS_HELP_LENGTH (WASM_ARRAY_SIZE(s_option_help) - 1)
-WASM_STATIC_ASSERT(NUM_FLAGS == OPTIONS_HELP_LENGTH);
+WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
-static void usage(const char* prog) {
-  printf("usage: %s [option] filename\n", prog);
-  printf("options:\n");
-  struct option* opt = &s_long_options[0];
-  int i = 0;
-  for (; opt->name; ++i, ++opt) {
-    OptionHelp* help = NULL;
+static void on_option(struct WasmOptionParser* parser,
+                      struct WasmOption* option,
+                      const char* argument) {
+  switch (option->id) {
+    case FLAG_VERBOSE:
+      s_verbose++;
+      s_write_binary_options.log_writes = 1;
+      break;
 
-    int n = 0;
-    while (s_option_help[n].help) {
-      if (i == s_option_help[n].flag) {
-        help = &s_option_help[n];
-        break;
-      }
-      n++;
-    }
+    case FLAG_HELP:
+      wasm_print_help(parser);
+      exit(0);
+      break;
 
-    if (opt->val) {
-      printf("  -%c, ", opt->val);
-    } else {
-      printf("      ");
-    }
+    case FLAG_DUMP_MODULE:
+      s_dump_module = 1;
+      break;
 
-    if (help && help->metavar) {
-      char buf[100];
-      wasm_snprintf(buf, 100, "%s=%s", opt->name, help->metavar);
-      printf("--%-30s", buf);
-    } else {
-      printf("--%-30s", opt->name);
-    }
+    case FLAG_OUTPUT:
+      s_outfile = argument;
+      break;
 
-    if (help) {
-      printf("%s", help->help);
-    }
+    case FLAG_SPEC:
+      s_write_binary_options.spec = 1;
+      break;
 
-    printf("\n");
+    case FLAG_SPEC_VERBOSE:
+      s_write_binary_options.spec_verbose = 1;
+      break;
+
+    case FLAG_USE_LIBC_ALLOCATOR:
+      s_use_libc_allocator = 1;
+      break;
+
+    case FLAG_NO_CANONICALIZE_LEB128S:
+      s_write_binary_options.canonicalize_lebs = 0;
+      break;
+
+    case FLAG_NO_REMAP_LOCALS:
+      s_write_binary_options.remap_locals = 0;
+      break;
+
+    case FLAG_DEBUG_NAMES:
+      s_write_binary_options.write_debug_names = 1;
+      break;
   }
-  exit(0);
+}
+
+static void on_argument(struct WasmOptionParser* parser, const char* argument) {
+  s_infile = argument;
+}
+
+static void on_option_error(struct WasmOptionParser* parser,
+                            const char* message) {
+  WASM_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  int c;
-  int option_index = 0;
-#ifdef USE_MIN_PARSER
-  const char* optarg = NULL;
-  int optind = 1;
-  OptionText options_text[OPTIONS_LENGTH];
-  int i = 0;
-  for (; i < OPTIONS_LENGTH; i++) {
-    struct option* opt = &s_long_options[i];
-    sprintf(options_text[i].long_name, "--%s", opt->name);
-    if (opt->val) {
-      sprintf(options_text[i].short_name, "-%c", (char)opt->val);
-    }
-  }
-#endif /* USE_MIN_PARSER */
-  while (1) {
-#ifndef USE_MIN_PARSER
-    c = getopt_long(argc, argv, "vhdo:", s_long_options, &option_index);
-    if (c == -1) {
-      break;
-    }
-
-#else
-    if (optind >= argc) {
-      break;
-    }
-    optarg = NULL;
-    option_index = -1;
-    const char* in_opt = argv[optind++];
-    i = 0;
-    for (; i < OPTIONS_LENGTH; i++) {
-      const struct OptionText* optText = &options_text[i];
-      const struct option* opt = &s_long_options[i];
-      if (strcmp(in_opt, optText->long_name) == 0 ||
-          (opt->val && strcmp(in_opt, optText->short_name) == 0)) {
-        option_index = i;
-        c = opt->val;
-        if (opt->has_arg != no_argument) {
-          if (optind < argc) {
-            optarg = argv[optind++];
-          } else if (opt->has_arg == required_argument) {
-            WASM_FATAL("Missing argument for option %s.\n", opt->name);
-            usage(argv[0]);
-          }
-        }
-        break;
-      }
-    }
-
-    // no argument found
-    if (option_index == -1) {
-      --optind;
-      break;
-    }
-#endif /* USE_MIN_PARSER */
-
-  redo_switch:
-    switch (c) {
-      case 0:
-        c = s_long_options[option_index].val;
-        if (c) {
-          goto redo_switch;
-        }
-
-        switch (option_index) {
-          case FLAG_VERBOSE:
-          case FLAG_HELP:
-          case FLAG_DUMP_MODULE:
-          case FLAG_OUTPUT:
-            /* Handled above by goto */
-            assert(0);
-            break;
-
-          case FLAG_SPEC:
-            s_write_binary_options.spec = 1;
-            break;
-
-          case FLAG_SPEC_VERBOSE:
-            s_write_binary_options.spec_verbose = 1;
-            break;
-
-          case FLAG_USE_LIBC_ALLOCATOR:
-            s_use_libc_allocator = 1;
-            break;
-
-          case FLAG_NO_CANONICALIZE_LEB128S:
-            s_write_binary_options.canonicalize_lebs = 0;
-            break;
-
-          case FLAG_NO_REMAP_LOCALS:
-            s_write_binary_options.remap_locals = 0;
-            break;
-
-          case FLAG_DEBUG_NAMES:
-            s_write_binary_options.write_debug_names = 1;
-            break;
-        }
-        break;
-
-      case 'v':
-        s_verbose++;
-        s_write_binary_options.log_writes = 1;
-        break;
-
-      case 'h':
-        usage(argv[0]);
-
-      case 'd':
-        s_dump_module = 1;
-        break;
-
-      case 'o':
-        s_outfile = optarg;
-        break;
-
-      case '?':
-        break;
-
-      default:
-        WASM_FATAL("getopt_long returned '%c' (%d)\n", c, c);
-        break;
-    }
-  }
+  WasmOptionParser parser;
+  WASM_ZERO_MEMORY(parser);
+  parser.options = s_options;
+  parser.num_options = WASM_ARRAY_SIZE(s_options);
+  parser.on_option = on_option;
+  parser.on_argument = on_argument;
+  parser.on_error = on_option_error;
+  wasm_parse_options(&parser, argc, argv);
 
   if (s_dump_module && s_write_binary_options.spec)
     WASM_FATAL("--dump-module flag incompatible with --spec flag\n");
 
-  if (optind < argc) {
-    s_infile = argv[optind];
-  } else {
+  if (!s_infile) {
+    wasm_print_help(&parser);
     WASM_FATAL("No filename given.\n");
-    usage(argv[0]);
   }
 }
 

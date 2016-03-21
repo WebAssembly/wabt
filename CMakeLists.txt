@@ -40,7 +40,6 @@ include(CheckSymbolExists)
 include(CheckTypeSize)
 
 check_include_file("alloca.h" HAVE_ALLOCA_H)
-check_include_file("getopt.h" HAVE_GETOPT_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
@@ -105,6 +104,7 @@ set(SEXPR_WASM_SRCS
   src/wasm-common.c
   src/wasm-config.c
   src/wasm-literal.c
+  src/wasm-option-parser.c
   src/wasm-parser-lexer-shared.c
   src/wasm-stack-allocator.c
   src/wasm-vector.c

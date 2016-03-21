@@ -22,9 +22,6 @@
 /* Whether <alloca.h> is available */
 #cmakedefine01 HAVE_ALLOCA_H
 
-/* Whether <getopt.h> is available */
-#cmakedefine01 HAVE_GETOPT_H
-
 /* Whether <unistd.h> is available */
 #cmakedefine01 HAVE_UNISTD_H
 
