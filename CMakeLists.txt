@@ -116,8 +116,13 @@ add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
 add_dependencies(everything sexpr-wasm)
 
 # hexfloat-test
+option(BUILD_TESTS "Build GTest-based tests" ON)
 find_package(Threads)
-if (CMAKE_USE_PTHREADS_INIT)
+if (BUILD_TESTS AND CMAKE_USE_PTHREADS_INIT)
+  if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
+    message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
+  endif ()
+
   set(HEXFLOAT_TEST_SRCS
     src/wasm-literal.c
     test/hexfloat.cc
@@ -141,7 +146,7 @@ endif ()
 # test running
 find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
-add_custom_target(test
+add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} -e $<TARGET_FILE:sexpr-wasm>
   DEPENDS sexpr-wasm
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
@@ -161,12 +166,14 @@ if (COMPILER_IS_CLANG)
 
   macro(add_sanitizer SANITIZER_NAME FLAGS)
     add_sanitizer_exe(sexpr-wasm-${SANITIZER_NAME} ${FLAGS} "${SEXPR_WASM_SRCS}")
-    add_sanitizer_exe(hexfloat_test-${SANITIZER_NAME} ${FLAGS} "${HEXFLOAT_TEST_SRCS}")
+    if (BUILD_TESTS)
+      add_sanitizer_exe(hexfloat_test-${SANITIZER_NAME} ${FLAGS} "${HEXFLOAT_TEST_SRCS}")
+    endif ()
 
     add_custom_target(all-${SANITIZER_NAME}
       DEPENDS sexpr-wasm-${SANITIZER_NAME} hexfloat_test-${SANITIZER_NAME})
 
-    add_custom_target(test-${SANITIZER_NAME}
+    add_custom_target(run-tests-${SANITIZER_NAME}
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
           -e $<TARGET_FILE:sexpr-wasm-${SANITIZER_NAME}>
       DEPENDS sexpr-wasm-${SANITIZER_NAME}

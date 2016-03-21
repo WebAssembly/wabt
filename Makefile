@@ -33,6 +33,7 @@ GCC_I686_DEBUG_DIR := out/gcc-i686/Debug
 GCC_I686_RELEASE_DIR := out/gcc-i686/Release
 CLANG_DEBUG_DIR := out/clang/Debug
 CLANG_RELEASE_DIR := out/clang/Release
+CLANG_DEBUG_NO_TESTS_DIR := out/clang/Debug-no-tests
 
 DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
 RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
@@ -48,6 +49,7 @@ GCC_I686_DEBUG_PREFIX := gcc-i686-debug
 GCC_I686_RELEASE_PREFIX := gcc-i686-release
 CLANG_DEBUG_PREFIX := clang-debug
 CLANG_RELEASE_PREFIX := clang-release
+CLANG_DEBUG_NO_TESTS_PREFIX := clang-debug-no-tests
 
 NO_SUFFIX :=
 ASAN_SUFFIX := -asan
@@ -91,7 +93,7 @@ endef
 define TEST
 .PHONY: test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
 test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/$$(BUILD_FILE)
-	$$(BUILD) -C $$($(1)_$(2)_DIR) test$$($(3)_SUFFIX)
+	$$(BUILD) -C $$($(1)_$(2)_DIR) run-tests$$($(3)_SUFFIX)
 endef
 
 .PHONY: all
@@ -140,3 +142,8 @@ $(foreach SANITIZER,$(SANITIZERS), \
 $(eval $(call CMAKE,GCC,DEBUG_NO_FLEX_BISON,-DRUN_FLEX_BISON=OFF))
 $(eval $(call EXE,GCC,DEBUG_NO_FLEX_BISON,NO))
 $(eval $(call TEST,GCC,DEBUG_NO_FLEX_BISON,NO))
+
+# One-off build target for running w/out gtest
+$(eval $(call CMAKE,CLANG,DEBUG_NO_TESTS,-DBUILD_TESTS=OFF))
+$(eval $(call EXE,CLANG,DEBUG_NO_TESTS,NO))
+$(eval $(call TEST,CLANG,DEBUG_NO_TESTS,NO))

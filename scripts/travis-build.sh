@@ -21,9 +21,12 @@ set -o errexit
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source ${SCRIPT_DIR}/travis-common.sh
 
-# Build without flex/bison to test prebuilt C sources
 if [ ${CC} = "gcc" ]; then
+  # Build without flex/bison to test prebuilt C sources
   make gcc-debug-no-flex-bison
+elif [ ${CC} = "clang" ]; then
+  # Test building without GTest submodule
+  make clang-debug-no-tests
 fi
 
 for COMPILER in ${COMPILERS}; do
