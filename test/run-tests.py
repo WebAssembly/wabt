@@ -31,6 +31,7 @@ import threading
 import time
 
 import find_exe
+import findtests
 from utils import Error
 
 
@@ -59,17 +60,6 @@ def DiffLines(expected, actual):
   actual_lines = actual.splitlines(1)
   return list(difflib.unified_diff(expected_lines, actual_lines,
                                    fromfile='expected', tofile='actual'))
-
-
-def FindTestFiles(directory, ext, filter_pattern_re):
-  tests = []
-  for root, dirs, files in os.walk(directory):
-    for f in files:
-      path = os.path.join(root, f)
-      if os.path.splitext(f)[1] == ext:
-        tests.append(os.path.relpath(path, SCRIPT_DIR))
-  tests.sort()
-  return [test for test in tests if re.match(filter_pattern_re, test)]
 
 
 # default configurations for tests
@@ -434,7 +424,7 @@ def main(args):
   else:
     pattern_re = '.*'
 
-  test_names = FindTestFiles(SCRIPT_DIR, '.txt', pattern_re)
+  test_names = findtests.FindTestFiles(SCRIPT_DIR, '.txt', pattern_re)
   if options.list:
     for test_name in test_names:
       print test_name

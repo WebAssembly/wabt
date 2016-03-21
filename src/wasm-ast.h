@@ -282,7 +282,7 @@ typedef struct WasmModule {
   WasmFuncTypePtrVector func_types;
   WasmVarVector* table;
   WasmMemory* memory;
-  WasmVar start;
+  WasmVar* start;
   WasmExportMemory* export_memory;
 
   WasmBindingHash func_bindings;

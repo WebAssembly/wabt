@@ -570,7 +570,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint32_t body_start_offset = ctx.offset;
       uint32_t end_offset = body_start_offset + body_size;
 
-      uint32_t num_locals = 0;
       uint32_t num_local_decls;
       in_u32_leb128(&ctx, &num_local_decls, "local declaration count");
       CALLBACK(&ctx, on_local_decl_count, num_local_decls);
@@ -578,7 +577,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       for (j = 0; j < num_local_decls; ++j) {
         uint32_t num_local_types;
         in_u32_leb128(&ctx, &num_local_types, "local type count");
-        num_locals += num_local_types;
         uint8_t local_type;
         in_u8(&ctx, &local_type, "local type");
         RAISE_ERROR_UNLESS(&ctx, is_valid_type(local_type),
@@ -699,8 +697,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_GET_LOCAL: {
             uint32_t local_index;
             in_u32_leb128(&ctx, &local_index, "get_local local index");
-            RAISE_ERROR_UNLESS(&ctx, local_index < num_locals,
-                               "invalid get_local local index");
             CALLBACK(&ctx, on_get_local_expr, local_index);
             break;
           }
@@ -708,8 +704,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_SET_LOCAL: {
             uint32_t local_index;
             in_u32_leb128(&ctx, &local_index, "set_local local index");
-            RAISE_ERROR_UNLESS(&ctx, local_index < num_locals,
-                               "invalid set_local local index");
             CALLBACK(&ctx, on_set_local_expr, local_index);
             break;
           }

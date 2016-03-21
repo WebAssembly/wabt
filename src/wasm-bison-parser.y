@@ -1170,9 +1170,6 @@ export_memory :
 module_fields :
     /* empty */ {
       $$ = new_module(parser->allocator);
-      /* clear the start function */
-      $$->start.type = WASM_VAR_TYPE_INDEX;
-      $$->start.index = -1;
     }
   | module_fields func {
       $$ = $1;
@@ -1314,7 +1311,7 @@ module :
             $$->memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_START:
-            $$->start = field->start;
+            $$->start = &field->start;
             break;
         }
       }

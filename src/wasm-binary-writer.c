@@ -986,11 +986,13 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     end_section(ctx);
   }
 
-  int start_func_index = wasm_get_func_index_by_var(module, &module->start);
-  if (start_func_index != -1) {
-    begin_section(ctx, WASM_SECTION_NAME_START_FUNCTION, leb_size_guess);
-    out_u32_leb128(ws, start_func_index, "start func index");
-    end_section(ctx);
+  if (module->start) {
+    int start_func_index = wasm_get_func_index_by_var(module, module->start);
+    if (start_func_index != -1) {
+      begin_section(ctx, WASM_SECTION_NAME_START_FUNCTION, leb_size_guess);
+      out_u32_leb128(ws, start_func_index, "start func index");
+      end_section(ctx);
+    }
   }
 
   if (module->funcs.size) {
@@ -1545,13 +1547,21 @@ static void write_commands_spec(WasmWriteContext* ctx, WasmScript* script) {
 
 static void write_commands_no_spec(WasmWriteContext* ctx, WasmScript* script) {
   int i;
+  int wrote_module = 0;
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
     if (command->type != WASM_COMMAND_TYPE_MODULE)
       continue;
 
     write_module(ctx, &command->module);
+    wrote_module = 1;
     break;
+  }
+  if (!wrote_module) {
+    /* just write an empty module */
+    WasmModule module;
+    WASM_ZERO_MEMORY(module);
+    write_module(ctx, &module);
   }
 }
 

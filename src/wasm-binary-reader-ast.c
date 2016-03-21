@@ -52,6 +52,22 @@
   } else                                                      \
   (void)0
 
+#define CHECK_LOCAL(ctx, local_index)                                       \
+  do {                                                                      \
+    assert((ctx)->current_func->flags& WASM_FUNC_FLAG_HAS_FUNC_TYPE);       \
+    uint32_t num_params =                                                   \
+        (ctx)                                                               \
+            ->module->func_types.data[(ctx)->current_func->type_var.index]  \
+            ->sig.param_types.size;                                         \
+    uint32_t num_locals = (ctx)->current_func->locals.types.size;           \
+    uint32_t max_local_index = num_params + num_locals;                     \
+    if ((local_index) >= max_local_index) {                                 \
+      print_error((ctx), "invalid local_index: %d (max %d)", (local_index), \
+                  max_local_index);                                         \
+      return WASM_ERROR;                                                    \
+    }                                                                       \
+  } while (0)
+
 #define LOG 0
 #define UNKNOWN_OFFSET ((uint32_t)~0)
 
@@ -71,7 +87,6 @@ typedef struct WasmReadAstContext {
   WasmAllocator* allocator;
   WasmModule* module;
 
-  WasmFuncTypePtrVector func_types;
   WasmFunc* current_func;
   WasmExprNodeVector expr_stack;
 
@@ -778,6 +793,7 @@ static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
   CHECK_ALLOC_NULL(ctx, expr);
   expr->get_local.var.type = WASM_VAR_TYPE_INDEX;
   expr->get_local.var.index = local_index;
+  CHECK_LOCAL(ctx, local_index);
   return reduce(ctx, expr);
 }
 
@@ -884,6 +900,7 @@ static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
   CHECK_ALLOC_NULL(ctx, expr);
   expr->set_local.var.type = WASM_VAR_TYPE_INDEX;
   expr->set_local.var.index = local_index;
+  CHECK_LOCAL(ctx, local_index);
   return shift(ctx, expr, 1);
 }
 
@@ -959,7 +976,7 @@ static WasmResult on_start_function(uint32_t func_index, void* user_data) {
   assert(func_index < ctx->module->funcs.size);
   field->start.index = func_index;
 
-  ctx->module->start = field->start;
+  ctx->module->start = &field->start;
   return WASM_OK;
 }
 
