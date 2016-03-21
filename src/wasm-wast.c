@@ -22,130 +22,79 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "wasm-allocator.h"
 #include "wasm-ast.h"
 #include "wasm-ast-writer.h"
 #include "wasm-binary-reader-ast.h"
+#include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"
+
+static int s_verbose;
+static const char* s_infile;
+static const char* s_outfile;
+
+#define NOPE WASM_OPTION_NO_ARGUMENT
+#define YEP WASM_OPTION_HAS_ARGUMENT
 
 enum {
   FLAG_VERBOSE,
   FLAG_HELP,
+  FLAG_OUTPUT,
   NUM_FLAGS
 };
 
-static int s_verbose;
-static const char* s_infile;
-
-static struct option s_long_options[] = {
-    {"verbose", no_argument, NULL, 'v'},
-    {"help", no_argument, NULL, 'h'},
-    {NULL, 0, NULL, 0},
+static WasmOption s_options[] = {
+    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+     "use multiple times for more info"},
+    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
+    {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
+     "output file for the generated wast file"},
 };
-WASM_STATIC_ASSERT(NUM_FLAGS + 1 == WASM_ARRAY_SIZE(s_long_options));
+WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
-typedef struct OptionHelp {
-  int flag;
-  const char* metavar;
-  const char* help;
-} OptionHelp;
+static void on_option(struct WasmOptionParser* parser,
+                      struct WasmOption* option,
+                      const char* argument) {
+  switch (option->id) {
+    case FLAG_VERBOSE:
+      s_verbose++;
+      break;
 
-static OptionHelp s_option_help[] = {
-    {FLAG_VERBOSE, NULL, "use multiple times for more info"},
-    {NUM_FLAGS, NULL},
-};
+    case FLAG_HELP:
+      wasm_print_help(parser);
+      exit(0);
+      break;
 
-static void usage(const char* prog) {
-  printf("usage: %s [option] filename\n", prog);
-  printf("options:\n");
-  struct option* opt = &s_long_options[0];
-  int i = 0;
-  for (; opt->name; ++i, ++opt) {
-    OptionHelp* help = NULL;
-
-    int n = 0;
-    while (s_option_help[n].help) {
-      if (i == s_option_help[n].flag) {
-        help = &s_option_help[n];
-        break;
-      }
-      n++;
-    }
-
-    if (opt->val) {
-      printf("  -%c, ", opt->val);
-    } else {
-      printf("      ");
-    }
-
-    if (help && help->metavar) {
-      char buf[100];
-      snprintf(buf, 100, "%s=%s", opt->name, help->metavar);
-      printf("--%-30s", buf);
-    } else {
-      printf("--%-30s", opt->name);
-    }
-
-    if (help) {
-      printf("%s", help->help);
-    }
-
-    printf("\n");
+    case FLAG_OUTPUT:
+      s_outfile = argument;
+      break;
   }
-  exit(0);
+}
+
+static void on_argument(struct WasmOptionParser* parser, const char* argument) {
+  s_infile = argument;
+}
+
+static void on_option_error(struct WasmOptionParser* parser,
+                            const char* message) {
+  WASM_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  int c;
-  int option_index = 0;
+  WasmOptionParser parser;
+  WASM_ZERO_MEMORY(parser);
+  parser.options = s_options;
+  parser.num_options = WASM_ARRAY_SIZE(s_options);
+  parser.on_option = on_option;
+  parser.on_argument = on_argument;
+  parser.on_error = on_option_error;
+  wasm_parse_options(&parser, argc, argv);
 
-  while (1) {
-    c = getopt_long(argc, argv, "vh", s_long_options, &option_index);
-    if (c == -1) {
-      break;
-    }
-
-  redo_switch:
-    switch (c) {
-      case 0:
-        c = s_long_options[option_index].val;
-        if (c) {
-          goto redo_switch;
-        }
-
-        switch (option_index) {
-          case FLAG_VERBOSE:
-          case FLAG_HELP:
-            /* Handled above by goto */
-            assert(0);
-            break;
-        }
-        break;
-
-      case 'v':
-        s_verbose++;
-        break;
-
-      case 'h':
-        usage(argv[0]);
-
-      case '?':
-        break;
-
-      default:
-        WASM_FATAL("getopt_long returned '%c' (%d)\n", c, c);
-        break;
-    }
-  }
-
-  if (optind < argc) {
-    s_infile = argv[optind];
-  } else {
+  if (!s_infile) {
+    wasm_print_help(&parser);
     WASM_FATAL("No filename given.\n");
-    usage(argv[0]);
   }
 }
 
@@ -172,12 +121,14 @@ int main(int argc, char** argv) {
   WASM_ZERO_MEMORY(module);
   WasmResult result = wasm_read_binary_ast(allocator, addr, length, &module);
   if (result == WASM_OK) {
-    WasmFileWriter file_writer;
-    result = wasm_init_file_writer_existing(&file_writer, stdout);
-    if (result == WASM_OK) {
-      result = wasm_write_ast(&file_writer.base, &module);
-      fprintf(stdout, "\n");
-      wasm_close_file_writer(&file_writer);
+    if (s_outfile) {
+      WasmFileWriter file_writer;
+      result = wasm_init_file_writer(&file_writer, s_outfile);
+      if (result == WASM_OK) {
+        result = wasm_write_ast(&file_writer.base, &module);
+        fprintf(stdout, "\n");
+        wasm_close_file_writer(&file_writer);
+      }
     }
   }
 

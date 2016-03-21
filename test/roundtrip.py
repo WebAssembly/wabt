@@ -40,31 +40,15 @@ class Error(Exception):
   pass
 
 
-def RunSexprWasm(*args):
-  cmd = [SEXPR_WASM] + list(args)
+def RunWithArgs(exe, *args):
+  cmd = [exe] + list(args)
   cmd_str = ' '.join(cmd)
   try:
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
+    _, stderr = process.communicate()
     if process.returncode != 0:
       raise Error('Error running "%s":\n%s' % (cmd_str, stderr))
-  except OSError as e:
-    raise Error('Error running "%s": %s' % (cmd_str, str(e)))
-
-
-def RunWasmWast(out_filename, *args):
-  cmd = [WASM_WAST] + list(args)
-  cmd_str = ' '.join(cmd)
-  try:
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    if process.returncode != 0:
-      raise Error('Error running "%s":\n%s' % (cmd_str, stderr))
-    # TODO(binji): add flag to wasm-wast for output
-    with open(out_filename, 'wb') as out_file:
-      out_file.write(stdout)
   except OSError as e:
     raise Error('Error running "%s": %s' % (cmd_str, str(e)))
 
@@ -140,14 +124,14 @@ def Run(out_dir, filename, verbose):
   wast2_file = os.path.join(out_dir, basename_noext + '-2.wast')
   wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
   try:
-    RunSexprWasm('-o', wasm1_file, filename)
+    RunWithArgs(SEXPR_WASM, '-o', wasm1_file, filename)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
     return (SKIPPED, None)
   try:
-    RunWasmWast(wast2_file, wasm1_file)
-    RunSexprWasm('-o', wasm3_file, wast2_file)
+    RunWithArgs(WASM_WAST, '-o', wast2_file, wasm1_file)
+    RunWithArgs(SEXPR_WASM, '-o', wasm3_file, wast2_file)
   except Error as e:
     return (ERROR, str(e))
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
