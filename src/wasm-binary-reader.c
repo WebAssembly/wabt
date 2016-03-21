@@ -37,15 +37,19 @@ WASM_DECLARE_VECTOR(type, WasmType)
 
 WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
-/* TODO(binji): handle error result from callback */
-#define CALLBACK0(ctx, member)                                             \
-  ((ctx)->reader->member ? (ctx)->reader->member((ctx)->reader->user_data) \
-                         : (void)0)
+#define CALLBACK0(ctx, member)                                                 \
+  RAISE_ERROR_UNLESS(                                                          \
+      (ctx),                                                                   \
+      ((ctx)->reader->member ? (ctx)->reader->member((ctx)->reader->user_data) \
+                             : WASM_OK) == WASM_OK,                            \
+      #member " callback failed")
 
-#define CALLBACK(ctx, member, ...)                                    \
-  ((ctx)->reader->member                                              \
-       ? (ctx)->reader->member(__VA_ARGS__, (ctx)->reader->user_data) \
-       : (void)0)
+#define CALLBACK(ctx, member, ...)                                            \
+  RAISE_ERROR_UNLESS((ctx), ((ctx)->reader->member                            \
+                                 ? (ctx)->reader->member(                     \
+                                       __VA_ARGS__, (ctx)->reader->user_data) \
+                                 : WASM_OK) == WASM_OK,                       \
+                     #member " callback failed")
 
 #define RAISE_ERROR(ctx, ...) \
   ((ctx)->reader->on_error ? raise_error((ctx), __VA_ARGS__) : (void)0)
@@ -322,6 +326,10 @@ static int is_valid_type(uint8_t type) {
   return type < WASM_NUM_TYPES;
 }
 
+static int is_non_void_type(uint8_t type) {
+  return type != 0 && type < WASM_NUM_TYPES;
+}
+
 static int is_bool(uint8_t value) {
   return value < 2;
 }
@@ -431,7 +439,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       for (j = 0; j < num_params; ++j) {
         uint8_t param_type;
         in_u8(&ctx, &param_type, "signature param type");
-        RAISE_ERROR_UNLESS(&ctx, is_valid_type(param_type),
+        RAISE_ERROR_UNLESS(&ctx, is_non_void_type(param_type),
                            "expected valid param type");
         ctx.param_types.data[j] = param_type;
       }
@@ -579,7 +587,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         in_u32_leb128(&ctx, &num_local_types, "local type count");
         uint8_t local_type;
         in_u8(&ctx, &local_type, "local type");
-        RAISE_ERROR_UNLESS(&ctx, is_valid_type(local_type),
+        RAISE_ERROR_UNLESS(&ctx, is_non_void_type(local_type),
                            "expected valid local type");
         CALLBACK(&ctx, on_local_decl, j, num_local_types, local_type);
       }
