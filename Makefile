@@ -28,6 +28,7 @@ EXECUTABLES := sexpr-wasm hexfloat_test
 
 GCC_DEBUG_DIR := out/gcc/Debug
 GCC_DEBUG_NO_FLEX_BISON_DIR := out/gcc/Debug-no-flex-bison
+GCC_DEBUG_NO_TESTS_DIR := out/gcc/Debug-no-tests
 GCC_RELEASE_DIR := out/gcc/Release
 GCC_I686_DEBUG_DIR := out/gcc-i686/Debug
 GCC_I686_RELEASE_DIR := out/gcc-i686/Release
@@ -44,6 +45,7 @@ CLANG_FLAG := -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 GCC_DEBUG_PREFIX := gcc-debug
 GCC_DEBUG_NO_FLEX_BISON_PREFIX := gcc-debug-no-flex-bison
+GCC_DEBUG_NO_TESTS_PREFIX := gcc-debug-no-tests
 GCC_RELEASE_PREFIX := gcc-release
 GCC_I686_DEBUG_PREFIX := gcc-i686-debug
 GCC_I686_RELEASE_PREFIX := gcc-i686-release
