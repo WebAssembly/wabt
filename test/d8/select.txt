@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   (func $i32 (param i32) (result i32)
     (select (i32.const 1) (i32.const 2) (get_local 0)))

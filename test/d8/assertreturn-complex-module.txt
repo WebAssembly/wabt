@@ -1,5 +1,4 @@
-;;; EXE: test/run-d8.py
-;;; FLAGS: --spec
+;;; TOOL: run-d8-spec
 (module
   (memory 1 (segment 0 "hello") (segment 20 "goodbye"))
   (func $set_m (param i32) (i32.store (i32.const 32) (get_local 0)))

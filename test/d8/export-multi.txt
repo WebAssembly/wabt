@@ -1,5 +1,4 @@
-;;; EXE: test/run-d8.py
-;;; FLAGS: --spec
+;;; TOOL: run-d8-spec
 (module
   (func (result i32)
     (i32.const 1))

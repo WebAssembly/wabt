@@ -1,5 +1,4 @@
-;;; EXE: test/run-d8.py
-;;; FLAGS: --spec
+;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/i64.wast
 (;; STDOUT ;;;
 324/324 tests passed.

@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   (export "f32_reinterpret_i32" $f32_reinterpret_i32)
   (func $f32_reinterpret_i32 (result f32)

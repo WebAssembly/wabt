@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   (export "if1" $if1)
   (func $if1 (result i32) (local i32)

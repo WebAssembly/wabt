@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   (type $v_i (func (result i32)))
   (func $zero (type $v_i) (i32.const 0))

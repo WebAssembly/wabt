@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   ;; basic br test
   (export "br0" $br0)

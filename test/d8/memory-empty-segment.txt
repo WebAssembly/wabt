@@ -1,2 +1,2 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module (memory 1 (segment 0 "")))

@@ -1,7 +1,6 @@
 ;;; TODO: support br_table with argument
 ;;; ERROR: 1
-;;; EXE: test/run-d8.py
-;;; FLAGS: --spec
+;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDERR ;;;
 third_party/testsuite/switch.wast:99:23: syntax error, unexpected (, expecting )

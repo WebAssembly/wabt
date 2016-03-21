@@ -1,4 +1,3 @@
 ;;; SKIP: v8-native throws memory access out of bounds
-;;; EXE: test/run-d8.py
-;;; FLAGS: --spec
+;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/resizing.wast

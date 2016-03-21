@@ -251,6 +251,7 @@ argument to the executable (which by default is out/sexpr-wasm).
 
 The currently supported list of keys:
 
+- TOOL: a set of preconfigured keys, see below.
 - EXE: the executable to run, defaults to out/sexpr-wasm
 - STDIN_FILE: the file to use for STDIN instead of the contents of this file.
 - FLAGS: additional flags to pass to the executable
@@ -259,13 +260,18 @@ The currently supported list of keys:
 - SKIP: if defined, this test is not run. You can use the value as a comment.
 - TODO,NOTE: useful place to put additional info about the test.
 
+The currently supported list of tools:
+
+- ``sexpr-wasm``: runs ``sexpr-wasm``.
+- ``run-d8``: runs the ``run-d8.py`` script.
+- ``run-d8-spec``: runs the ``run-d8.py`` script with ``--spec`` flag.
+
 When you first write a test, it's easiest if you omit the expected stdout and
 stderr. You can have the test harness fill it in for you automatically. First
 let's write our test::
 
   $ cat > test/my-awesome-test.txt << HERE
-  ;;; EXE: test/run-d8.py
-  ;;; FLAGS: --spec
+  ;;; TOOL: run-d8-spec
   (module
     (export "add2" 0)
     (func (param i32) (result i32)

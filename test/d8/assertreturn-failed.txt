@@ -1,11 +1,10 @@
-;;; EXE: test/run-d8.py
-;;; FLAGS: --spec
+;;; TOOL: run-d8-spec
 (module
   (func (param i32) (result i32)
     (i32.add (get_local 0) (i32.const 1)))
   (export "f" 0))
 (assert_return (invoke "f" (i32.const 1)) (i32.const 11))
 (;; STDOUT ;;;
-d8/assertreturn-failed.txt:7: $assert_return_0 failed.
+d8/assertreturn-failed.txt:6: $assert_return_0 failed.
 0/1 tests passed.
 ;;; STDOUT ;;)

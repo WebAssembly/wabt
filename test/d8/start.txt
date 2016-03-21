@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   (memory 1)
   (func $start (i32.store (i32.const 0) (i32.const 42)))

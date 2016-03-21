@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 (module
   (func (param i32) (result i32)
     (if (i32.eq (get_local 0) (i32.const 0))

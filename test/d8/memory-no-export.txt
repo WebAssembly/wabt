@@ -1,4 +1,4 @@
-;;; EXE: test/run-d8.py
+;;; TOOL: run-d8
 ;;; NOTE: broken in d8
 (module
   (memory 100)
