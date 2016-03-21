@@ -29,12 +29,12 @@ import findtests
 IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
-SEXPR_WASM = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
-WASM_WAST = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
+DEFAULT_SEXPR_WASM = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
+DEFAULT_WASM_WAST = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
 
 if IS_WINDOWS:
-  SEXPR_WASM += '.exe'
-  WASM_WAST += '.exe'
+  DEFAULT_SEXPR_WASM += '.exe'
+  DEFAULT_WASM_WAST += '.exe'
 
 class Error(Exception):
   pass
@@ -117,21 +117,21 @@ def FilesAreEqual(filename1, filename2, verbose=False):
   return (OK, '')
 
 
-def Run(out_dir, filename, verbose):
+def Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
   wast2_file = os.path.join(out_dir, basename_noext + '-2.wast')
   wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
   try:
-    RunWithArgs(SEXPR_WASM, '-o', wasm1_file, filename)
+    RunWithArgs(sexpr_wasm_exe, '-o', wasm1_file, filename)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
-    # test)
+#test)
     return (SKIPPED, None)
   try:
-    RunWithArgs(WASM_WAST, '-o', wast2_file, wasm1_file)
-    RunWithArgs(SEXPR_WASM, '-o', wasm3_file, wast2_file)
+    RunWithArgs(wasm_wast_exe, '-o', wast2_file, wasm1_file)
+    RunWithArgs(sexpr_wasm_exe, '-o', wasm3_file, wast2_file)
   except Error as e:
     return (ERROR, str(e))
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
@@ -141,9 +141,16 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
-  parser.add_argument('-o', '--out-dir', help='output directory for files.')
+  parser.add_argument('-o', '--out-dir', metavar='PATH',
+                      help='output directory for files.')
   parser.add_argument('--test-all', help='run on all test files.',
                       action='store_true')
+  parser.add_argument('--sexpr-wasm', metavar='PATH',
+                      help='set the sexpr-wasm executable to use.',
+                      default=DEFAULT_SEXPR_WASM)
+  parser.add_argument('--wasm-wast', metavar='PATH',
+                      help='set the wasm-wast executable to use.',
+                      default=DEFAULT_WASM_WAST)
   parser.add_argument('file', nargs='?', help='test file.')
   options = parser.parse_args(args)
 
@@ -168,7 +175,8 @@ def main(args):
           continue
 
         filename = os.path.relpath(os.path.join(SCRIPT_DIR, test_name), cwd)
-        result, msg = Run(out_dir, filename, verbose=True)
+        result, msg = Run(options.sexpr_wasm, options.wasm_wast, out_dir,
+                          filename, verbose=True)
         counts[result] += 1
         if options.verbose:
           sys.stderr.write('%s: %s\n' % (filename, message[result]))
@@ -181,7 +189,8 @@ def main(args):
     else:
       if not options.file:
         parser.error('expected file or --test-all')
-      result, msg = Run(out_dir, options.file, options.verbose)
+      result, msg = Run(options.sexpr_wasm, options.wasm_wast, out_dir,
+                        options.file, options.verbose)
       if result == ERROR:
         sys.stderr.write(msg)
       return result
