@@ -15,13 +15,9 @@
  */
 
 #include <assert.h>
-#include <fcntl.h>
-#include <getopt.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 #include "wasm-allocator.h"
 #include "wasm-ast.h"
@@ -98,28 +94,44 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
+static void read_file(const char* filename,
+                      const void** out_data,
+                      size_t* out_size) {
+  FILE* infile = fopen(s_infile, "rb");
+  if (!infile)
+    WASM_FATAL("unable to read %s\n", s_infile);
+
+  if (fseek(infile, 0, SEEK_END) < 0)
+    WASM_FATAL("fseek to end failed.\n");
+
+  long size = ftell(infile);
+  if (size < 0)
+    WASM_FATAL("ftell failed.\n");
+
+  if (fseek(infile, 0, SEEK_SET) < 0)
+    WASM_FATAL("fseek to beginning failed.\n");
+
+  void* data = malloc(size);
+  if (fread(data, size, 1, infile) != 1)
+    WASM_FATAL("fread failed.\n");
+
+  *out_data = data;
+  *out_size = size;
+  fclose(infile);
+}
+
 int main(int argc, char** argv) {
   parse_options(argc, argv);
-
-  int fd = open(s_infile, O_RDONLY);
-  if (fd == -1)
-    WASM_FATAL("Unable to open file %s.\n", s_infile);
-
-  struct stat statbuf;
-  if (fstat(fd, &statbuf) == -1)
-    WASM_FATAL("Unable to stat file %s.\n", s_infile);
-
-  size_t length = statbuf.st_size;
-  void* addr = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (addr == MAP_FAILED)
-    WASM_FATAL("Unable to mmap file %s.\n", s_infile);
+  const void* data;
+  size_t size;
+  read_file(s_infile, &data, &size);
 
   WasmStackAllocator stack_allocator;
   wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
   WasmAllocator* allocator = &stack_allocator.allocator;
   WasmModule module;
   WASM_ZERO_MEMORY(module);
-  WasmResult result = wasm_read_binary_ast(allocator, addr, length, &module);
+  WasmResult result = wasm_read_binary_ast(allocator, data, size, &module);
   if (result == WASM_OK) {
     if (s_outfile) {
       WasmFileWriter file_writer;
