@@ -1,0 +1,6 @@
+;;; SLOW:
+;;; EXE: test/roundtrip.py
+;;; FLAGS: --test-all --sexpr-wasm %(sexpr-wasm)s --wasm-wast %(wasm-wast)s
+(;; STDERR ;;;
+OK: 231 ERROR: 0 SKIPPED: 176
+;;; STDERR ;;)

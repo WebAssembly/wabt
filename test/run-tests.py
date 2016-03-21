@@ -403,6 +403,8 @@ def main(args):
                       help='override executable.')
   parser.add_argument('--d8-executable', metavar='PATH',
                       help='override d8 executable.')
+  parser.add_argument('--wasm-wast-executable', metavar='PATH',
+                      help='override wasm-wast executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
@@ -436,7 +438,12 @@ def main(args):
   sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(
       options.sexpr_wasm_executable)
   d8_exe = find_exe.GetD8Executable(options.d8_executable)
-  variables = {'sexpr-wasm': sexpr_wasm_exe, 'd8': d8_exe}
+  wasm_wast_exe = find_exe.GetWasmWastExecutable(options.wasm_wast_executable)
+  variables = {
+    'sexpr-wasm': sexpr_wasm_exe,
+    'd8': d8_exe,
+    'wasm-wast': wasm_wast_exe
+  }
 
   status = Status(options.verbose)
   infos = GetAllTestInfo(test_names, status)

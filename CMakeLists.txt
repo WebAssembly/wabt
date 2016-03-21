@@ -165,7 +165,9 @@ endif ()
 find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(run-tests
-  COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} -e $<TARGET_FILE:sexpr-wasm>
+  COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
+      -e $<TARGET_FILE:sexpr-wasm>
+      --wasm-wast $<TARGET_FILE:wasm-wast>
   DEPENDS sexpr-wasm wasm-wast
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )

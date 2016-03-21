@@ -24,20 +24,11 @@ import subprocess
 import sys
 import tempfile
 
+import find_exe
 import findtests
+from utils import Error
 
-IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
-DEFAULT_SEXPR_WASM = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
-DEFAULT_WASM_WAST = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
-
-if IS_WINDOWS:
-  DEFAULT_SEXPR_WASM += '.exe'
-  DEFAULT_WASM_WAST += '.exe'
-
-class Error(Exception):
-  pass
 
 
 def RunWithArgs(exe, *args):
@@ -145,14 +136,16 @@ def main(args):
                       help='output directory for files.')
   parser.add_argument('--test-all', help='run on all test files.',
                       action='store_true')
-  parser.add_argument('--sexpr-wasm', metavar='PATH',
-                      help='set the sexpr-wasm executable to use.',
-                      default=DEFAULT_SEXPR_WASM)
-  parser.add_argument('--wasm-wast', metavar='PATH',
-                      help='set the wasm-wast executable to use.',
-                      default=DEFAULT_WASM_WAST)
+  parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
+                      help='set the sexpr-wasm executable to use.')
+  parser.add_argument('--wasm-wast-executable', metavar='PATH',
+                      help='set the wasm-wast executable to use.')
   parser.add_argument('file', nargs='?', help='test file.')
   options = parser.parse_args(args)
+
+  sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(
+      options.sexpr_wasm_executable)
+  wasm_wast_exe = find_exe.GetWasmWastExecutable(options.wasm_wast_executable)
 
   if options.out_dir:
     out_dir = options.out_dir
@@ -175,8 +168,8 @@ def main(args):
           continue
 
         filename = os.path.relpath(os.path.join(SCRIPT_DIR, test_name), cwd)
-        result, msg = Run(options.sexpr_wasm, options.wasm_wast, out_dir,
-                          filename, verbose=True)
+        result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
+                          verbose=True)
         counts[result] += 1
         if options.verbose:
           sys.stderr.write('%s: %s\n' % (filename, message[result]))
@@ -185,12 +178,12 @@ def main(args):
 
       # summary
       sys.stderr.write('OK: %d ERROR: %d SKIPPED: %d\n' % tuple(counts))
-      return counts[ERROR] == 0
+      return counts[ERROR] != 0
     else:
       if not options.file:
         parser.error('expected file or --test-all')
-      result, msg = Run(options.sexpr_wasm, options.wasm_wast, out_dir,
-                        options.file, options.verbose)
+      result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
+                        options.verbose)
       if result == ERROR:
         sys.stderr.write(msg)
       return result
