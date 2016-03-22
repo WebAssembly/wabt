@@ -1119,5 +1119,7 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
   reader.user_data = &ctx;
 
   WasmResult result = wasm_read_binary(allocator, data, size, &reader);
+  wasm_destroy_expr_node_vector(allocator, &ctx.expr_stack);
+  wasm_destroy_uint32_vector(allocator, &ctx.depth_stack);
   return result;
 }
