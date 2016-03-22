@@ -108,21 +108,21 @@ def FilesAreEqual(filename1, filename2, verbose=False):
   return (OK, '')
 
 
-def Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename, verbose):
+def Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename, verbose, extra_args):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
   wast2_file = os.path.join(out_dir, basename_noext + '-2.wast')
   wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
   try:
-    RunWithArgs(sexpr_wasm_exe, '-o', wasm1_file, filename)
+    RunWithArgs(sexpr_wasm_exe, '-o', wasm1_file, filename, *extra_args)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
 #test)
     return (SKIPPED, None)
   try:
-    RunWithArgs(wasm_wast_exe, '-o', wast2_file, wasm1_file)
-    RunWithArgs(sexpr_wasm_exe, '-o', wasm3_file, wast2_file)
+    RunWithArgs(wasm_wast_exe, '-o', wast2_file, wasm1_file, *extra_args)
+    RunWithArgs(sexpr_wasm_exe, '-o', wasm3_file, wast2_file, *extra_args)
   except Error as e:
     return (ERROR, str(e))
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
@@ -140,6 +140,7 @@ def main(args):
                       help='set the sexpr-wasm executable to use.')
   parser.add_argument('--wasm-wast-executable', metavar='PATH',
                       help='set the wasm-wast executable to use.')
+  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', nargs='?', help='test file.')
   options = parser.parse_args(args)
 
@@ -156,6 +157,10 @@ def main(args):
     out_dir = tempfile.mkdtemp(prefix='roundtrip-')
     out_dir_is_temp = True
 
+  extra_args = []
+  if options.use_libc_allocator:
+    extra_args.append('--use-libc-allocator')
+
   try:
     if options.test_all:
       message= {OK: 'OK', ERROR: 'ERROR', SKIPPED: 'SKIPPED'}
@@ -169,7 +174,7 @@ def main(args):
 
         filename = os.path.relpath(os.path.join(SCRIPT_DIR, test_name), cwd)
         result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
-                          verbose=True)
+                          verbose=True, extra_args=extra_args)
         counts[result] += 1
         if options.verbose:
           sys.stderr.write('%s: %s\n' % (filename, message[result]))
@@ -180,10 +185,11 @@ def main(args):
       sys.stderr.write('OK: %d ERROR: %d SKIPPED: %d\n' % tuple(counts))
       return counts[ERROR] != 0
     else:
-      if not options.file:
+      filename = options.file
+      if not filename:
         parser.error('expected file or --test-all')
       result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
-                        options.verbose)
+                        options.verbose, extra_args=extra_args)
       if result == ERROR:
         sys.stderr.write(msg)
       return result
