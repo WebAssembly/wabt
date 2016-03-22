@@ -148,6 +148,39 @@ TEST_F(AllFloatsWriteTest, Run) {
   RunThreads();
 }
 
+class AllFloatsRoundtripTest : public ThreadedTest {
+ protected:
+  static WasmLiteralType ClassifyFloat(uint32_t float_bits) {
+    if (is_infinity_or_nan(float_bits)) {
+      if (float_bits & 0x7fffff) {
+        return WASM_LITERAL_TYPE_NAN;
+      } else {
+        return WASM_LITERAL_TYPE_INFINITY;
+      }
+    } else {
+      return WASM_LITERAL_TYPE_HEXFLOAT;
+    }
+  }
+
+  virtual void RunShard(int shard) {
+    char buffer[100];
+    FOREACH_UINT32(bits) {
+      LOG_COMPLETION(bits);
+      wasm_write_float_hex(buffer, sizeof(buffer), bits);
+      int len = strlen(buffer);
+
+      uint32_t new_bits;
+      wasm_parse_float(ClassifyFloat(bits), buffer, buffer + len, &new_bits);
+      ASSERT_EQ(new_bits, bits);
+    }
+    LOG_DONE();
+  }
+};
+
+TEST_F(AllFloatsRoundtripTest, Run) {
+  RunThreads();
+}
+
 /* doubles */
 class ManyDoublesParseTest : public ThreadedTest {
  protected:
@@ -196,5 +229,39 @@ class ManyDoublesWriteTest : public ThreadedTest {
 };
 
 TEST_F(ManyDoublesWriteTest, Run) {
+  RunThreads();
+}
+
+class ManyDoublesRoundtripTest : public ThreadedTest {
+ protected:
+  static WasmLiteralType ClassifyDouble(uint64_t double_bits) {
+    if (is_infinity_or_nan(double_bits)) {
+      if (double_bits & 0xfffffffffffffULL) {
+        return WASM_LITERAL_TYPE_NAN;
+      } else {
+        return WASM_LITERAL_TYPE_INFINITY;
+      }
+    } else {
+      return WASM_LITERAL_TYPE_HEXFLOAT;
+    }
+  }
+
+  virtual void RunShard(int shard) {
+    char buffer[100];
+    FOREACH_UINT32(halfbits) {
+      LOG_COMPLETION(halfbits);
+      uint64_t bits = (static_cast<uint64_t>(halfbits) << 32) | halfbits;
+      wasm_write_double_hex(buffer, sizeof(buffer), bits);
+      int len = strlen(buffer);
+
+      uint64_t new_bits;
+      wasm_parse_double(ClassifyDouble(bits), buffer, buffer + len, &new_bits);
+      ASSERT_EQ(new_bits, bits);
+    }
+    LOG_DONE();
+  }
+};
+
+TEST_F(ManyDoublesRoundtripTest, Run) {
   RunThreads();
 }
