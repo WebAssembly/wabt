@@ -27,11 +27,7 @@ log_and_run() {
 }
 
 run_tests() {
-  local EXE=$1
-  if [ "${2+defined}" = "defined" ]; then
-    local ARG_FLAG="-a=$2"
-  fi
-  (cd ${ROOT_DIR} && log_and_run test/run-tests.py -e ${EXE} ${ARG_FLAG-} --timeout=10)
+  (cd ${ROOT_DIR} && log_and_run test/run-tests.py $* --timeout=10)
 }
 
 if [ ${CC} = "gcc" ]; then
@@ -40,20 +36,24 @@ fi
 
 for COMPILER in ${COMPILERS}; do
   for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
-    EXE=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm
-    if [ -e ${EXE} ]; then
-      run_tests ${EXE}
-      run_tests ${EXE} --use-libc-allocator
+    SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm
+    WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/wasm-wast
+        RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
+    if [ -e ${SEXPR_WASM} ] && [ -e ${WASM_WAST} ]; then
+      run_tests ${RUN_TEST_ARGS}
+      run_tests ${RUN_TEST_ARGS} -a=--use-libc-allocator
     else
       echo "${EXE} doesn't exist; skipping."
     fi
 
     if [ ${COMPILER} = "clang" ]; then
       for SANITIZER in ${SANITIZERS}; do
-        EXE=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
-        if [ -e ${EXE} ]; then
-          run_tests ${EXE}
-          run_tests ${EXE} --use-libc-allocator
+        SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
+        WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/wasm-wast${SANITIZER}
+        RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
+        if [ -e ${SEXPR_WASM} ] && [ -e ${WASM_WAST} ]; then
+          run_tests ${RUN_TEST_ARGS}
+          run_tests ${RUN_TEST_ARGS} -a=--use-libc-allocator
         else
           echo "${EXE} doesn't exist; skipping."
         fi
