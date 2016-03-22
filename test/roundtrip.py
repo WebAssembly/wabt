@@ -118,7 +118,7 @@ def Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename, verbose, extra_args):
     RunWithArgs(sexpr_wasm_exe, '-o', wasm1_file, filename, *extra_args)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
-#test)
+    # test)
     return (SKIPPED, None)
   try:
     RunWithArgs(wasm_wast_exe, '-o', wast2_file, wasm1_file, *extra_args)
@@ -134,8 +134,6 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--test-all', help='run on all test files.',
-                      action='store_true')
   parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
                       help='set the sexpr-wasm executable to use.')
   parser.add_argument('--wasm-wast-executable', metavar='PATH',
@@ -162,37 +160,14 @@ def main(args):
     extra_args.append('--use-libc-allocator')
 
   try:
-    if options.test_all:
-      message= {OK: 'OK', ERROR: 'ERROR', SKIPPED: 'SKIPPED'}
-      test_names = findtests.FindTestFiles(SCRIPT_DIR, '.txt', '.*')
-      counts = [0, 0, 0]
-
-      cwd = os.getcwd()
-      for test_name in test_names:
-        if test_name.startswith('spec'):
-          continue
-
-        filename = os.path.relpath(os.path.join(SCRIPT_DIR, test_name), cwd)
-        result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
-                          verbose=True, extra_args=extra_args)
-        counts[result] += 1
-        if options.verbose:
-          sys.stderr.write('%s: %s\n' % (filename, message[result]))
-        if result == ERROR:
-          sys.stderr.write('%s:\n%s\n' % (filename, msg))
-
-      # summary
-      sys.stderr.write('OK: %d ERROR: %d SKIPPED: %d\n' % tuple(counts))
-      return counts[ERROR] != 0
-    else:
-      filename = options.file
-      if not filename:
-        parser.error('expected file or --test-all')
-      result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
-                        options.verbose, extra_args=extra_args)
-      if result == ERROR:
-        sys.stderr.write(msg)
-      return result
+    filename = options.file
+    if not filename:
+      parser.error('expected file')
+    result, msg = Run(sexpr_wasm_exe, wasm_wast_exe, out_dir, filename,
+                      options.verbose, extra_args=extra_args)
+    if result == ERROR:
+      sys.stderr.write(msg)
+    return result
   finally:
     if out_dir_is_temp:
       shutil.rmtree(out_dir)
