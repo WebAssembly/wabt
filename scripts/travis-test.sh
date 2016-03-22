@@ -27,35 +27,41 @@ log_and_run() {
 }
 
 run_tests() {
-  (cd ${ROOT_DIR} && log_and_run test/run-tests.py $* --timeout=10)
+  (cd ${ROOT_DIR} && log_and_run test/run-tests.py ${RUN_TEST_ARGS} $* --timeout=10)
+}
+
+set_run_test_args() {
+  local COMPILER=$1
+  local BUILD_TYPE=$2
+  local SANITIZER=${3:-}
+  SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
+  WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/wasm-wast${SANITIZER}
+  RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
 }
 
 if [ ${CC} = "gcc" ]; then
-  run_tests out/gcc/Debug-no-flex-bison/sexpr-wasm
+  set_run_test_args gcc Debug-no-flex-bison
+  run_tests
 fi
 
 for COMPILER in ${COMPILERS}; do
   for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
-    SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm
-    WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/wasm-wast
-        RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
+    set_run_test_args ${COMPILER} ${BUILD_TYPE}
     if [ -e ${SEXPR_WASM} ] && [ -e ${WASM_WAST} ]; then
-      run_tests ${RUN_TEST_ARGS}
-      run_tests ${RUN_TEST_ARGS} -a=--use-libc-allocator
+      run_tests
+      run_tests -a=--use-libc-allocator
     else
-      echo "${EXE} doesn't exist; skipping."
+      echo "${SEXPR_WASM} or ${WASM_WAST} doesn't exist; skipping."
     fi
 
     if [ ${COMPILER} = "clang" ]; then
       for SANITIZER in ${SANITIZERS}; do
-        SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
-        WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/wasm-wast${SANITIZER}
-        RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
+        set_run_test_args ${COMPILER} ${BUILD_TYPE} ${SANITIZER}
         if [ -e ${SEXPR_WASM} ] && [ -e ${WASM_WAST} ]; then
-          run_tests ${RUN_TEST_ARGS}
-          run_tests ${RUN_TEST_ARGS} -a=--use-libc-allocator
+          run_tests
+          run_tests -a=--use-libc-allocator
         else
-          echo "${EXE} doesn't exist; skipping."
+          echo "${SEXPR_WASM} or ${WASM_WAST} doesn't exist; skipping."
         fi
       done
     fi

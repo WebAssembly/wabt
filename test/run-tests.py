@@ -270,6 +270,11 @@ class TestInfo(object):
       file_path = os.path.join(temp_dir, self.input_file)
     else:
       file_path = os.path.join(temp_dir, self.name)
+
+    if self.is_roundtrip:
+      file_path_noext, ext = os.path.splitext(file_path)
+      file_path = file_path_noext + '-roundtrip' + ext
+
     file_dir = os.path.dirname(file_path)
     try:
       os.makedirs(file_dir)
