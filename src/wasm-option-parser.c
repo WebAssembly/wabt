@@ -16,12 +16,15 @@
 
 #include "wasm-option-parser.h"
 
-#include <alloca.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "wasm-config.h"
+
+#if HAVE_ALLOCA
+#include <alloca.h>
+#endif
 
 static int option_match(const char* s, const char* full, int has_argument) {
   int i;

@@ -37,13 +37,13 @@ static WasmResult write_data_to_file(size_t offset,
   WasmFileWriter* writer = user_data;
   if (offset != writer->offset) {
     if (fseek(writer->file, offset, SEEK_SET) != 0) {
-      ERROR("fseek offset=%zd failed, errno=%d\n", size, errno);
+      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
       return WASM_ERROR;
     }
     writer->offset = offset;
   }
   if (fwrite(data, size, 1, writer->file) != 1) {
-    ERROR("fwrite size=%zd failed, errno=%d\n", size, errno);
+    ERROR("fwrite size=%" PRIzd " failed, errno=%d\n", size, errno);
     return WASM_ERROR;
   }
   writer->offset += size;
@@ -91,7 +91,7 @@ static WasmResult init_output_buffer(WasmAllocator* allocator,
   buf->allocator = allocator;
   buf->start = wasm_alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
   if (!buf->start) {
-    ERROR("allocation size=%zd failed\n", initial_capacity);
+    ERROR("allocation size=%" PRIzd " failed\n", initial_capacity);
     return WASM_ERROR;
   }
   buf->size = 0;
@@ -108,7 +108,7 @@ static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
     buf->start = wasm_realloc(buf->allocator, buf->start, new_capacity,
                               WASM_DEFAULT_ALIGN);
     if (!buf->start) {
-      ERROR("allocation size=%zd failed\n", new_capacity);
+      ERROR("allocation size=%" PRIzd " failed\n", new_capacity);
       return WASM_ERROR;
     }
     buf->capacity = new_capacity;

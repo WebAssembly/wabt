@@ -16,7 +16,6 @@
 
 #include "wasm-binary-reader.h"
 
-#include <alloca.h>
 #include <assert.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -26,7 +25,12 @@
 
 #include "wasm-allocator.h"
 #include "wasm-binary.h"
+#include "wasm-config.h"
 #include "wasm-vector.h"
+
+#if HAVE_ALLOCA
+#include <alloca.h>
+#endif
 
 #define INITIAL_PARAM_TYPES_CAPACITY 128
 #define INITIAL_BR_TABLE_TARGET_CAPACITY 1000

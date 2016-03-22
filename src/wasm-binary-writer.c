@@ -161,8 +161,8 @@ static void move_data(WasmWriterState* writer_state,
   if (*writer_state->result != WASM_OK)
     return;
   if (writer_state->log_writes)
-    printf("; move data: [%zx, %zx) -> [%zx, %zx)\n", src_offset,
-           src_offset + size, dst_offset, dst_offset + size);
+    printf("; move data: [%"PRIzx", %"PRIzx") -> [%"PRIzx", %"PRIzx")\n",
+           src_offset, src_offset + size, dst_offset, dst_offset + size);
   if (writer_state->writer->write_data)
     *writer_state->result = writer_state->writer->move_data(
         dst_offset, src_offset, size, writer_state->writer->user_data);

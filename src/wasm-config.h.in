@@ -38,6 +38,7 @@
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC
 
+#define SIZEOF_SIZE_T @SIZEOF_SIZE_T@
 #define SIZEOF_INT @SIZEOF_INT@
 #define SIZEOF_LONG @SIZEOF_LONG@
 #define SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
@@ -73,6 +74,10 @@
 #error "don't know how to define wasm_clz_u64"
 #endif
 
+/* print format specifier for size_t */
+#define PRIzd "zd"
+#define PRIzx "zx"
+
 #elif COMPILER_IS_MSVC
 
 #define WASM_WARN_UNUSED _Check_return_
@@ -107,6 +112,17 @@ __inline unsigned long wasm_clz_u64(unsigned __int64 mask) {
 #error unexpected architecture
 #endif
 }
+
+/* print format specifier for size_t */
+#if SIZEOF_SIZE_T == 4
+#define PRIzd "d"
+#define PRIzx "x"
+#elif SIZEOF_SIZE_T == 8
+#define PRIzd "I64d"
+#define PRIzx "I64x"
+#else
+#error "weird sizeof size_t"
+#endif
 
 #else
 

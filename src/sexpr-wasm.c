@@ -198,8 +198,8 @@ int main(int argc, char** argv) {
 
           ssize_t bytes = fwrite(writer.buf.start, 1, writer.buf.size, f);
           if (bytes != writer.buf.size)
-            WASM_FATAL("failed to write %zd bytes to %s\n", writer.buf.size,
-                       s_outfile);
+            WASM_FATAL("failed to write %" PRIzd " bytes to %s\n",
+                       writer.buf.size, s_outfile);
           fclose(f);
         }
       }
