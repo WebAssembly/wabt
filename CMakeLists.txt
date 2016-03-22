@@ -80,6 +80,7 @@ if (RUN_FLEX_BISON AND FLEX_FOUND AND BISON_FOUND)
   FLEX_TARGET(WASM_FLEX_LEXER
     ${SEXPR_WASM_SOURCE_DIR}/src/wasm-flex-lexer.l
     ${FLEX_LEXER_C}
+    COMPILE_FLAGS -Cf
   )
 else ()
   set(BISON_PARSER_C src/prebuilt/wasm-bison-parser.c)

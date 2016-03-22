@@ -375,7 +375,7 @@ NAME      \${ATOM}
                          return TOK(EOF); }
 <BLOCK_COMMENT>.
 \n                    { RESET_COLUMN; }
-[ \t\r]
+[ \t\r]+
 <<EOF>>               { return TOK(EOF); }
 {ATOM}                { wasm_parser_error(yylloc, yyscanner, parser,
                                           "unexpected token \"%.*s\"", yyleng,
