@@ -30,6 +30,7 @@
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
+static int s_use_libc_allocator;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
@@ -38,6 +39,7 @@ enum {
   FLAG_VERBOSE,
   FLAG_HELP,
   FLAG_OUTPUT,
+  FLAG_USE_LIBC_ALLOCATOR,
   NUM_FLAGS
 };
 
@@ -47,6 +49,8 @@ static WasmOption s_options[] = {
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
     {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
      "output file for the generated wast file"},
+    {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
+     "use malloc, free, etc. instead of stack allocator"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
@@ -65,6 +69,10 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_OUTPUT:
       s_outfile = argument;
+      break;
+
+    case FLAG_USE_LIBC_ALLOCATOR:
+      s_use_libc_allocator = 1;
       break;
   }
 }
@@ -121,14 +129,22 @@ static void read_file(const char* filename,
 }
 
 int main(int argc, char** argv) {
+  WasmStackAllocator stack_allocator;
+  WasmAllocator* allocator;
+
   parse_options(argc, argv);
+
+  if (s_use_libc_allocator) {
+    allocator = &g_wasm_libc_allocator;
+  } else {
+    wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
+    allocator = &stack_allocator.allocator;
+  }
+
   const void* data;
   size_t size;
   read_file(s_infile, &data, &size);
 
-  WasmStackAllocator stack_allocator;
-  wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
-  WasmAllocator* allocator = &stack_allocator.allocator;
   WasmModule module;
   WASM_ZERO_MEMORY(module);
   WasmResult result = wasm_read_binary_ast(allocator, data, size, &module);
@@ -144,6 +160,10 @@ int main(int argc, char** argv) {
     }
   }
 
-  wasm_destroy_stack_allocator(&stack_allocator);
+  if (s_use_libc_allocator)
+    wasm_destroy_module(allocator, &module);
+  else
+    wasm_destroy_stack_allocator(&stack_allocator);
+  free((void*)data);
   return result;
 }
