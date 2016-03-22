@@ -65,7 +65,7 @@ static WASM_INLINE char* wasm_strndup(WasmAllocator* allocator,
                                       size_t len) {
   size_t real_len = 0;
   const char* p = s;
-  while (*p && real_len < len) {
+  while (real_len < len && *p) {
     p++;
     real_len++;
   }
