@@ -429,12 +429,16 @@ void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
         strcpy(p, ":0x");
         p += 3;
         /* skip leading zeroes */
-        while ((sig & 0xf0000000) == 0)
+        int num_nybbles = sizeof(uint32_t) * 8 / 4;
+        while ((sig & 0xf0000000) == 0) {
           sig <<= 4;
-        while (sig) {
+          num_nybbles--;
+        }
+        while (num_nybbles) {
           uint32_t nybble = (sig >> (sizeof(uint32_t) * 8 - 4)) & 0xf;
           *p++ = s_hex_digits[nybble];
           sig <<= 4;
+          --num_nybbles;
         }
       }
     }
@@ -752,12 +756,16 @@ void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
         strcpy(p, ":0x");
         p += 3;
         /* skip leading zeroes */
-        while ((sig & 0xf000000000000000ULL) == 0)
+        int num_nybbles = sizeof(uint64_t) * 8 / 4;
+        while ((sig & 0xf000000000000000ULL) == 0) {
           sig <<= 4;
-        while (sig) {
+          num_nybbles--;
+        }
+        while (num_nybbles) {
           uint32_t nybble = (sig >> (sizeof(uint64_t) * 8 - 4)) & 0xf;
           *p++ = s_hex_digits[nybble];
           sig <<= 4;
+          --num_nybbles;
         }
       }
     }
