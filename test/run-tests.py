@@ -477,8 +477,9 @@ def main(args):
                       type=int, default=multiprocessing.cpu_count())
   parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                       help='per test timeout in seconds')
-  parser.add_argument('--roundtrip', help='round roundtrip.py on all files',
-                      action='store_true')
+  parser.add_argument('--no-roundtrip',
+                      help='don\'t run roundtrip.py on all tests',
+                      action='store_false', default=True, dest='roundtrip')
   parser.add_argument('patterns', metavar='pattern', nargs='*',
                       help='test patterns.')
   options = parser.parse_args(args)
