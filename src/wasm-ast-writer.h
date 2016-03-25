@@ -19,9 +19,12 @@
 
 #include "wasm-common.h"
 
+struct WasmAllocator;
 struct WasmModule;
 struct WasmWriter;
 
-WASM_EXTERN_C WasmResult wasm_write_ast(struct WasmWriter*, struct WasmModule*);
+WASM_EXTERN_C WasmResult wasm_write_ast(struct WasmAllocator*,
+                                        struct WasmWriter*,
+                                        struct WasmModule*);
 
 #endif /* WASM_AST_WRITER_H_ */

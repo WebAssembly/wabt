@@ -22,6 +22,7 @@
 #include "wasm-allocator.h"
 #include "wasm-ast.h"
 #include "wasm-ast-writer.h"
+#include "wasm-binary-reader.h"
 #include "wasm-binary-reader-ast.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
@@ -30,6 +31,8 @@
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
+static WasmReadBinaryOptions s_read_binary_options =
+    WASM_READ_BINARY_OPTIONS_DEFAULT;
 static int s_use_libc_allocator;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
@@ -40,6 +43,7 @@ enum {
   FLAG_HELP,
   FLAG_OUTPUT,
   FLAG_USE_LIBC_ALLOCATOR,
+  FLAG_DEBUG_NAMES,
   NUM_FLAGS
 };
 
@@ -51,6 +55,8 @@ static WasmOption s_options[] = {
      "output file for the generated wast file"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
      "use malloc, free, etc. instead of stack allocator"},
+    {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
+     "Read debug names from the binary file"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
@@ -73,6 +79,10 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_USE_LIBC_ALLOCATOR:
       s_use_libc_allocator = 1;
+      break;
+
+    case FLAG_DEBUG_NAMES:
+      s_read_binary_options.read_debug_names = 1;
       break;
   }
 }
@@ -147,13 +157,14 @@ int main(int argc, char** argv) {
 
   WasmModule module;
   WASM_ZERO_MEMORY(module);
-  WasmResult result = wasm_read_binary_ast(allocator, data, size, &module);
+  WasmResult result = wasm_read_binary_ast(allocator, data, size,
+                                           &s_read_binary_options, &module);
   if (result == WASM_OK) {
     if (s_outfile) {
       WasmFileWriter file_writer;
       result = wasm_init_file_writer(&file_writer, s_outfile);
       if (result == WASM_OK) {
-        result = wasm_write_ast(&file_writer.base, &module);
+        result = wasm_write_ast(allocator, &file_writer.base, &module);
         fprintf(stdout, "\n");
         wasm_close_file_writer(&file_writer);
       }

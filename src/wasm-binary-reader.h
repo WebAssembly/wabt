@@ -25,6 +25,13 @@
 
 struct WasmAllocator;
 
+#define WASM_READ_BINARY_OPTIONS_DEFAULT \
+  { 0 }
+
+typedef struct WasmReadBinaryOptions {
+  int read_debug_names;
+} WasmReadBinaryOptions;
+
 typedef struct WasmBinaryReader {
   void* user_data;
 
@@ -174,7 +181,8 @@ WASM_EXTERN_C_BEGIN
 WasmResult wasm_read_binary(struct WasmAllocator* allocator,
                             const void* data,
                             size_t size,
-                            WasmBinaryReader* reader);
+                            WasmBinaryReader* reader,
+                            WasmReadBinaryOptions* options);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_READER_H_ */

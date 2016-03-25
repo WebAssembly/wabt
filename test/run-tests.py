@@ -38,9 +38,29 @@ from utils import Error
 IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
-ROUNDTRIP_PY = os.path.join(SCRIPT_DIR, 'roundtrip.py')
+ROUNDTRIP_PY = os.path.join(SCRIPT_DIR, 'run-roundtrip.py')
 DEFAULT_TIMEOUT = 10 # seconds
 SLOW_TIMEOUT_MULTIPLIER = 2
+
+
+# default configurations for tests
+TOOLS = {
+  'sexpr-wasm': {
+    'EXE': '%(sexpr-wasm)s'
+  },
+  'run-d8': {
+    'EXE': 'test/run-d8.py',
+    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s'
+  },
+  'run-d8-spec': {
+    'EXE': 'test/run-d8.py',
+    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s --spec'
+  },
+  'run-roundtrip': {
+    'EXE': 'test/run-roundtrip.py',
+    'FLAGS': '-v -e %(sexpr-wasm)s --wasm-wast-executable=%(wasm-wast)s'
+  }
+}
 
 
 def AsList(value):
@@ -111,22 +131,6 @@ def RunCommandWithTimeout(command, cwd, timeout):
 
 
 
-# default configurations for tests
-TOOLS = {
-  'sexpr-wasm': {
-    'EXE': '%(sexpr-wasm)s'
-  },
-  'run-d8': {
-    'EXE': 'test/run-d8.py',
-    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s'
-  },
-  'run-d8-spec': {
-    'EXE': 'test/run-d8.py',
-    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s --spec'
-  }
-}
-
-
 class TestInfo(object):
   def __init__(self):
     self.name = ''
@@ -136,6 +140,7 @@ class TestInfo(object):
     self.input_ = []
     self.expected_stdout = ''
     self.expected_stderr = ''
+    self.tool = None
     self.exe = '%(sexpr-wasm)s'
     self.flags = []
     self.expected_error = 0
@@ -152,6 +157,7 @@ class TestInfo(object):
     result.input_ = self.input_
     result.expected_stdout = ''
     result.expected_stderr = ''
+    result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
     result.flags = ['-e', '%(sexpr-wasm)s', '--wasm-wast', '%(wasm-wast)s',
                     '-v']
@@ -161,13 +167,16 @@ class TestInfo(object):
     result.is_roundtrip = True
     return result
 
+  def ShouldCreateRoundtrip(self):
+    return self.tool != 'run-roundtrip'
+
   def ParseDirective(self, key, value):
     if key == 'EXE':
       self.exe = value
     elif key == 'STDIN_FILE':
       self.input_file = value
     elif key == 'FLAGS':
-      self.flags = shlex.split(value)
+      self.flags += shlex.split(value)
     elif key == 'ERROR':
       self.expected_error = int(value)
     elif key == 'SLOW':
@@ -179,6 +188,7 @@ class TestInfo(object):
     elif key == 'TOOL':
       if not value in TOOLS:
         raise Error('Unknown tool: %s' % value)
+      self.tool = value
       for tool_key, tool_value in TOOLS[value].iteritems():
         self.ParseDirective(tool_key, tool_value)
     else:
@@ -435,7 +445,7 @@ def HandleTestResult(status, info, result, rebase=False):
       if returncode == 0:
         status.Passed(info, duration)
       elif returncode == 2:
-        # roundtrip.py returns 2 if the file couldn't be parsed.
+        # run-roundtrip.py returns 2 if the file couldn't be parsed.
         # it's likely a "bad-*" file.
         status.Skipped(info)
       else:
@@ -527,8 +537,9 @@ def main(args):
     test_count += 1
 
     if options.roundtrip:
-      inq.put(info.CreateRoundtripInfo())
-      test_count += 1
+      if info.ShouldCreateRoundtrip():
+        inq.put(info.CreateRoundtripInfo())
+        test_count += 1
 
   outq = multiprocessing.Queue()
   num_proc = options.jobs

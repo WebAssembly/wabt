@@ -55,12 +55,8 @@
 #define CHECK_LOCAL(ctx, local_index)                                       \
   do {                                                                      \
     assert((ctx)->current_func->flags& WASM_FUNC_FLAG_HAS_FUNC_TYPE);       \
-    uint32_t num_params =                                                   \
-        (ctx)                                                               \
-            ->module->func_types.data[(ctx)->current_func->type_var.index]  \
-            ->sig.param_types.size;                                         \
-    uint32_t num_locals = (ctx)->current_func->locals.types.size;           \
-    uint32_t max_local_index = num_params + num_locals;                     \
+    uint32_t max_local_index =                                              \
+        get_num_func_params_and_locals((ctx)->module, (ctx)->current_func); \
     if ((local_index) >= max_local_index) {                                 \
       print_error((ctx), "invalid local_index: %d (max %d)", (local_index), \
                   max_local_index);                                         \
@@ -124,6 +120,22 @@ static void print_error(WasmReadAstContext* ctx, const char* format, ...) {
   }
 
   on_error(UNKNOWN_OFFSET, buffer, ctx);
+}
+
+static WasmFuncSignature* get_func_sig(WasmModule* module, WasmFunc* func) {
+  return &module->func_types.data[func->type_var.index]->sig;
+}
+
+static uint32_t get_num_func_params(WasmModule* module, WasmFunc* func) {
+  WasmFuncSignature* sig = get_func_sig(module, func);
+  return sig->param_types.size;
+}
+
+static uint32_t get_num_func_params_and_locals(WasmModule* module,
+                                               WasmFunc* func) {
+  uint32_t num_params = get_num_func_params(module, func);
+  uint32_t num_locals = func->locals.types.size;
+  return num_params + num_locals;
 }
 
 static WasmStringSlice dup_string_slice(WasmAllocator* allocator,
@@ -1013,18 +1025,57 @@ static WasmResult on_export(uint32_t index,
 }
 
 static WasmResult on_function_names_count(uint32_t count, void* user_data) {
+  WasmReadAstContext* ctx = user_data;
+  if (count > ctx->module->funcs.size) {
+    print_error(ctx, "expected function name count (%d) <= function count (%d)",
+                count, (int)ctx->module->funcs.size);
+    return WASM_ERROR;
+  }
   return WASM_OK;
 }
 
 static WasmResult on_function_name(uint32_t index,
                                    WasmStringSlice name,
                                    void* user_data) {
+  WasmReadAstContext* ctx = user_data;
+
+  WasmStringSlice dup_name;
+  CHECK_ALLOC_NULL_STR(ctx, dup_name = dup_string_slice(ctx->allocator, name));
+
+  WasmBinding* binding = wasm_insert_binding(
+      ctx->allocator, &ctx->module->func_bindings, &dup_name);
+  CHECK_ALLOC_NULL(ctx, binding);
+  binding->index = index;
+
+  WasmFunc* func = ctx->module->funcs.data[index];
+  func->name = dup_name;
+  /* TODO(binji): We could update the call expressions to use the function name
+   * instead of the index */
   return WASM_OK;
 }
 
 static WasmResult on_local_names_count(uint32_t index,
                                        uint32_t count,
                                        void* user_data) {
+  WasmReadAstContext* ctx = user_data;
+  WasmModule* module = ctx->module;
+  assert(index < module->funcs.size);
+  WasmFunc* func = module->funcs.data[index];
+  uint32_t num_params_and_locals = get_num_func_params_and_locals(module, func);
+  if (count > num_params_and_locals) {
+    print_error(ctx, "expected local name count (%d) <= local count (%d)",
+                count, num_params_and_locals);
+    return WASM_ERROR;
+  }
+  /* copy the signature from the function type */
+  int i;
+  WasmFuncSignature* sig = get_func_sig(module, func);
+  for (i = 0; i < sig->param_types.size; ++i) {
+    CHECK_ALLOC(ctx, wasm_append_type_value(ctx->allocator, &func->params.types,
+                                            &sig->param_types.data[i]));
+  }
+  func->result_type = sig->result_type;
+  func->flags |= WASM_FUNC_FLAG_HAS_SIGNATURE;
   return WASM_OK;
 }
 
@@ -1032,6 +1083,26 @@ static WasmResult on_local_name(uint32_t func_index,
                                 uint32_t local_index,
                                 WasmStringSlice name,
                                 void* user_data) {
+  WasmReadAstContext* ctx = user_data;
+  WasmModule* module = ctx->module;
+  WasmFunc* func = module->funcs.data[func_index];
+  uint32_t num_params = get_num_func_params(module, func);
+  WasmStringSlice dup_name;
+  CHECK_ALLOC_NULL_STR(ctx, dup_name = dup_string_slice(ctx->allocator, name));
+  WasmBinding* binding;
+  if (local_index < num_params) {
+    /* param name */
+    binding =
+        wasm_insert_binding(ctx->allocator, &func->params.bindings, &dup_name);
+  } else {
+    /* local name */
+    binding =
+        wasm_insert_binding(ctx->allocator, &func->locals.bindings, &dup_name);
+  }
+  CHECK_ALLOC_NULL(ctx, binding);
+  binding->index = local_index;
+  /* TODO(binji): We could update the get_local/set_local expressions to use
+   * the name instead of the index */
   return WASM_OK;
 }
 
@@ -1107,6 +1178,7 @@ static WasmBinaryReader s_binary_reader = {
 WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
                                 const void* data,
                                 size_t size,
+                                WasmReadBinaryOptions* options,
                                 struct WasmModule* out_module) {
   WasmReadAstContext ctx;
   WASM_ZERO_MEMORY(ctx);
@@ -1118,7 +1190,7 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
   reader = s_binary_reader;
   reader.user_data = &ctx;
 
-  WasmResult result = wasm_read_binary(allocator, data, size, &reader);
+  WasmResult result = wasm_read_binary(allocator, data, size, &reader, options);
   wasm_destroy_expr_node_vector(allocator, &ctx.expr_stack);
   wasm_destroy_uint32_vector(allocator, &ctx.depth_stack);
   return result;

@@ -34,6 +34,23 @@
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+#define ALLOC_FAILURE \
+  fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
+
+#define CHECK_ALLOC_(ctx, cond) \
+  do {                          \
+    if (!(cond)) {              \
+      ALLOC_FAILURE;            \
+      ctx->result = WASM_ERROR; \
+      return;                   \
+    }                           \
+  } while (0)
+
+#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, (e) == WASM_OK)
+
+WASM_DECLARE_VECTOR(string_slice, WasmStringSlice);
+WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
+
 static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -55,12 +72,14 @@ typedef enum WasmNextChar {
 } WasmNextChar;
 
 typedef struct WasmWriteContext {
+  WasmAllocator* allocator;
   WasmWriter* writer;
   size_t offset;
   WasmResult result;
   int indent;
   WasmNextChar next_char;
   int depth;
+  WasmStringSliceVector index_to_name;
 } WasmWriteContext;
 
 static void indent(WasmWriteContext* ctx) {
@@ -615,25 +634,77 @@ static void write_exprs(WasmWriteContext* ctx, WasmExprPtrVector* exprs) {
     write_expr(ctx, exprs->data[i]);
 }
 
-static void write_func(WasmWriteContext* ctx, int func_index, WasmFunc* func) {
+static void write_type_bindings(WasmWriteContext* ctx,
+                                const char* prefix,
+                                WasmFunc* func,
+                                WasmTypeBindings* type_bindings,
+                                uint32_t index_offset) {
+  size_t i;
+  /* allocate memory for the index-to-name mapping */
+  uint32_t num_names = type_bindings->types.size;
+  if (num_names > ctx->index_to_name.size) {
+    CHECK_ALLOC(ctx, wasm_reserve_string_slices(
+                         ctx->allocator, &ctx->index_to_name, num_names));
+  }
+  ctx->index_to_name.size = num_names;
+  memset(ctx->index_to_name.data, 0, num_names * sizeof(WasmStringSlice));
+
+  /* map index to name */
+  for (i = 0; i < type_bindings->bindings.entries.capacity; ++i) {
+    WasmBindingHashEntry* entry = &type_bindings->bindings.entries.data[i];
+    if (wasm_hash_entry_is_free(entry))
+      continue;
+
+    uint32_t index = entry->binding.index + index_offset;
+
+    assert(index < ctx->index_to_name.size);
+    ctx->index_to_name.data[index] = entry->binding.name;
+  }
+
+  /* named params/locals must be specified by themselves, but nameless
+   * params/locals can be compressed, e.g.:
+   *   (param $foo i32)
+   *   (param i32 i64 f32)
+   */
+  int is_open = 0;
+  for (i = 0; i < type_bindings->types.size; ++i) {
+    if (!is_open) {
+      out_open_space(ctx, prefix);
+      is_open = 1;
+    }
+
+    WasmStringSlice* name = &ctx->index_to_name.data[i];
+    int has_name = name->start != NULL;
+    if (has_name)
+      out_string_slice(ctx, name, WASM_NEXT_CHAR_SPACE);
+    out_type(ctx, type_bindings->types.data[i], WASM_NEXT_CHAR_SPACE);
+    if (has_name) {
+      out_close_space(ctx);
+      is_open = 0;
+    }
+  }
+  if (is_open)
+    out_close_space(ctx);
+}
+
+static void write_func(WasmWriteContext* ctx,
+                       WasmModule* module,
+                       int func_index,
+                       WasmFunc* func) {
   out_open_space(ctx, "func");
   out_printf(ctx, "(; %d ;)", func_index);
   out_string_slice_opt(ctx, &func->name, WASM_NEXT_CHAR_SPACE);
+  uint32_t num_params = 0;
   if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
+    num_params =
+        module->func_types.data[func->type_var.index]->sig.param_types.size;
     out_open_space(ctx, "type");
     out_var(ctx, &func->type_var, WASM_NEXT_CHAR_NONE);
     out_close_space(ctx);
   }
-  size_t i;
   if (func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE) {
-    /* TODO(binji): could compress params without names */
-    for (i = 0; i < func->params.types.size; ++i) {
-      out_open_space(ctx, "param");
-      /* TODO(binji): lookup name given type index */
-      out_type(ctx, func->params.types.data[i], WASM_NEXT_CHAR_NONE);
-      out_close_space(ctx);
-    }
-
+    num_params = func->params.types.size;
+    write_type_bindings(ctx, "param", func, &func->params, 0);
     if (func->result_type != WASM_TYPE_VOID) {
       out_open_space(ctx, "result");
       out_type(ctx, func->result_type, WASM_NEXT_CHAR_NONE);
@@ -642,12 +713,7 @@ static void write_func(WasmWriteContext* ctx, int func_index, WasmFunc* func) {
   }
   out_newline(ctx, NO_FORCE_NEWLINE);
   if (func->locals.types.size) {
-    out_open_space(ctx, "local");
-    for (i = 0; i < func->locals.types.size; ++i) {
-      /* TODO(binji): lookup name given type index */
-      out_type(ctx, func->locals.types.data[i], WASM_NEXT_CHAR_SPACE);
-    }
-    out_close_space(ctx);
+    write_type_bindings(ctx, "local", func, &func->locals, -num_params);
   }
   out_newline(ctx, NO_FORCE_NEWLINE);
   write_exprs(ctx, &func->exprs);
@@ -747,7 +813,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   for (field = module->first_field; field != NULL; field = field->next) {
     switch (field->type) {
       case WASM_MODULE_FIELD_TYPE_FUNC:
-        write_func(ctx, func_index++, &field->func);
+        write_func(ctx, module, func_index++, &field->func);
         break;
       case WASM_MODULE_FIELD_TYPE_IMPORT:
         write_import(ctx, import_index++, &field->import);
@@ -775,12 +841,17 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   out_close_newline(ctx);
 }
 
-WasmResult wasm_write_ast(struct WasmWriter* writer,
+WasmResult wasm_write_ast(struct WasmAllocator* allocator,
+                          struct WasmWriter* writer,
                           struct WasmModule* module) {
   WasmWriteContext ctx;
   WASM_ZERO_MEMORY(ctx);
+  ctx.allocator = allocator;
   ctx.result = WASM_OK;
   ctx.writer = writer;
   write_module(&ctx, module);
+  /* the memory for the actual string slice is shared with the module, so we
+   * only need to free the vector */
+  wasm_destroy_string_slice_vector(allocator, &ctx.index_to_name);
   return ctx.result;
 }

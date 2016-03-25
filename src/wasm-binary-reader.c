@@ -392,7 +392,8 @@ static void destroy_context(WasmAllocator* allocator, WasmReadContext* ctx) {
 WasmResult wasm_read_binary(WasmAllocator* allocator,
                             const void* data,
                             size_t size,
-                            WasmBinaryReader* reader) {
+                            WasmBinaryReader* reader,
+                            WasmReadBinaryOptions* options) {
   WasmReadContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.data = data;
@@ -964,7 +965,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   }
 
   /* names */
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_NAMES)) {
+  if (options->read_debug_names &&
+      skip_until_section(&ctx, WASM_SECTION_INDEX_NAMES)) {
     CALLBACK0(&ctx, begin_names_section);
     uint32_t i, num_functions;
     in_u32_leb128(&ctx, &num_functions, "function name count");

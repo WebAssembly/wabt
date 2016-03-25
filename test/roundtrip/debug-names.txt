@@ -1,0 +1,7 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --debug-names
+(module
+  (func $f1)
+  (func $f2 (param $p1 i32) (param $p2 i64)
+    (local $l1 f32)
+    (local $l2 f64)))

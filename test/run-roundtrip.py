@@ -139,6 +139,7 @@ def main(args):
   parser.add_argument('--wasm-wast-executable', metavar='PATH',
                       help='set the wasm-wast executable to use.')
   parser.add_argument('--use-libc-allocator', action='store_true')
+  parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('file', nargs='?', help='test file.')
   options = parser.parse_args(args)
 
@@ -158,6 +159,8 @@ def main(args):
   extra_args = []
   if options.use_libc_allocator:
     extra_args.append('--use-libc-allocator')
+  if options.debug_names:
+    extra_args.append('--debug-names')
 
   try:
     filename = options.file
