@@ -38,6 +38,25 @@ WasmResult wasm_ensure_capacity(WasmAllocator* allocator,
   return WASM_OK;
 }
 
+WasmResult wasm_resize_vector(struct WasmAllocator* allocator,
+                              void** data,
+                              size_t* size,
+                              size_t* capacity,
+                              size_t desired_size,
+                              size_t elt_byte_size) {
+  size_t old_size = *size;
+  WasmResult result = wasm_ensure_capacity(allocator, data, capacity,
+                                           desired_size, elt_byte_size);
+  if (result != WASM_OK)
+    return result;
+  if (desired_size > old_size) {
+    memset((void*)((size_t)*data + old_size * elt_byte_size), 0,
+           (desired_size - old_size) * elt_byte_size);
+  }
+  *size = desired_size;
+  return WASM_OK;
+}
+
 void* wasm_append_element(WasmAllocator* allocator,
                           void** data,
                           size_t* size,

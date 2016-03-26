@@ -52,11 +52,16 @@ typedef struct WasmFileWriter {
   size_t offset;
 } WasmFileWriter;
 
+WASM_EXTERN_C_BEGIN
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename);
 WasmResult wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file);
 void wasm_close_file_writer(WasmFileWriter* writer);
 WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
                                 WasmMemoryWriter* writer);
+void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,
+                                         WasmOutputBuffer* out_buf);
 void wasm_close_mem_writer(WasmMemoryWriter* writer);
+void wasm_free_output_buffer(WasmOutputBuffer* buf);
+WASM_EXTERN_C_END
 
 #endif /* WASM_WRITER_H_ */

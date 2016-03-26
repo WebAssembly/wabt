@@ -78,6 +78,15 @@ static WASM_INLINE char* wasm_strndup(WasmAllocator* allocator,
   new_s[real_len] = 0;
   return new_s;
 }
+
+static WASM_INLINE WasmStringSlice
+wasm_dup_string_slice(WasmAllocator* allocator, WasmStringSlice str) {
+  WasmStringSlice result;
+  result.start = wasm_strndup(allocator, str.start, str.length);
+  result.length = str.length;
+  return result;
+}
+
 WASM_EXTERN_C_END
 
 #endif /* WASM_ALLOCATOR_H_ */

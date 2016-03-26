@@ -35,6 +35,7 @@
 #define WASM_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WASM_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define WASM_ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
+#define WASM_USE(x) (void)x
 
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
 
@@ -258,6 +259,7 @@ typedef enum WasmOpcode {
   WASM_OPCODE_##NAME = code,
   WASM_FOREACH_OPCODE(V)
 #undef V
+  WASM_LAST_OPCODE
 } WasmOpcode;
 
 typedef enum WasmLiteralType {

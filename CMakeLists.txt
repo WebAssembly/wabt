@@ -137,6 +137,26 @@ set(WASM_WAST_SRCS
 add_executable(wasm-wast ${WASM_WAST_SRCS})
 add_dependencies(everything wasm-wast)
 
+# wasm-interp
+set(WASM_INTERP_SRCS
+  src/wasm-allocator.c
+  src/wasm-binary-reader.c
+  src/wasm-binary-reader-interpreter.c
+  src/wasm-common.c
+  src/wasm-config.c
+  src/wasm-interp.c
+  src/wasm-interpreter.c
+  src/wasm-option-parser.c
+  src/wasm-stack-allocator.c
+  src/wasm-vector.c
+  src/wasm-writer.c
+)
+
+add_executable(wasm-interp ${WASM_INTERP_SRCS})
+add_dependencies(everything wasm-interp)
+target_link_libraries(wasm-interp m)
+
+
 # hexfloat-test
 option(BUILD_TESTS "Build GTest-based tests" ON)
 find_package(Threads)

@@ -158,6 +158,18 @@ WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
                             INITIAL_OUTPUT_BUFFER_CAPACITY);
 }
 
+void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,
+                                         WasmOutputBuffer* out_buf) {
+  *out_buf= writer->buf;
+  writer->buf.start = NULL;
+  writer->buf.size = 0;
+  writer->buf.capacity = 0;
+}
+
 void wasm_close_mem_writer(WasmMemoryWriter* writer) {
-  wasm_free(writer->buf.allocator, writer->buf.start);
+  wasm_free_output_buffer(&writer->buf);
+}
+
+void wasm_free_output_buffer(WasmOutputBuffer* buf) {
+  wasm_free(buf->allocator, buf->start);
 }

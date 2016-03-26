@@ -136,14 +136,6 @@ static uint32_t get_num_func_params_and_locals(WasmModule* module,
   return num_params + num_locals;
 }
 
-static WasmStringSlice dup_string_slice(WasmAllocator* allocator,
-                                        WasmStringSlice str) {
-  WasmStringSlice result;
-  result.start = wasm_strndup(allocator, str.start, str.length);
-  result.length = str.length;
-  return result;
-}
-
 /* TODO(binji): remove all this if-block stuff when we switch to postorder */
 static WasmResult push_depth(WasmReadAstContext* ctx) {
   uint32_t* depth = wasm_append_uint32(ctx->allocator, &ctx->depth_stack);
@@ -307,10 +299,10 @@ static WasmResult on_import(uint32_t index,
   WasmImport* import = &field->import;
   WASM_ZERO_MEMORY(*import);
   import->import_type = WASM_IMPORT_HAS_TYPE;
-  CHECK_ALLOC_NULL_STR(
-      ctx, import->module_name = dup_string_slice(ctx->allocator, module_name));
-  CHECK_ALLOC_NULL_STR(
-      ctx, import->func_name = dup_string_slice(ctx->allocator, function_name));
+  CHECK_ALLOC_NULL_STR(ctx, import->module_name = wasm_dup_string_slice(
+                                ctx->allocator, module_name));
+  CHECK_ALLOC_NULL_STR(ctx, import->func_name = wasm_dup_string_slice(
+                                ctx->allocator, function_name));
   import->type_var.type = WASM_VAR_TYPE_INDEX;
   assert(sig_index < ctx->module->func_types.size);
   import->type_var.index = sig_index;
@@ -1009,8 +1001,8 @@ static WasmResult on_export(uint32_t index,
 
   WasmExport* export = &field->export_;
   WASM_ZERO_MEMORY(*export);
-  CHECK_ALLOC_NULL_STR(ctx,
-                       export->name = dup_string_slice(ctx->allocator, name));
+  CHECK_ALLOC_NULL_STR(
+      ctx, export->name = wasm_dup_string_slice(ctx->allocator, name));
   export->var.type = WASM_VAR_TYPE_INDEX;
   assert(func_index < ctx->module->funcs.size);
   export->var.index = func_index;
@@ -1038,7 +1030,8 @@ static WasmResult on_function_name(uint32_t index,
   WasmReadAstContext* ctx = user_data;
 
   WasmStringSlice dup_name;
-  CHECK_ALLOC_NULL_STR(ctx, dup_name = dup_string_slice(ctx->allocator, name));
+  CHECK_ALLOC_NULL_STR(ctx,
+                       dup_name = wasm_dup_string_slice(ctx->allocator, name));
 
   WasmBinding* binding = wasm_insert_binding(
       ctx->allocator, &ctx->module->func_bindings, &dup_name);
@@ -1086,7 +1079,8 @@ static WasmResult on_local_name(uint32_t func_index,
   WasmFunc* func = module->funcs.data[func_index];
   uint32_t num_params = get_num_func_params(module, func);
   WasmStringSlice dup_name;
-  CHECK_ALLOC_NULL_STR(ctx, dup_name = dup_string_slice(ctx->allocator, name));
+  CHECK_ALLOC_NULL_STR(ctx,
+                       dup_name = wasm_dup_string_slice(ctx->allocator, name));
   WasmBinding* binding;
   if (local_index < num_params) {
     /* param name */

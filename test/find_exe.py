@@ -28,6 +28,7 @@ BUILT_D8_EXE = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8', 'v8', 'out',
                             'Release', 'd8')
 DOWNLOAD_D8_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
 DEFAULT_WASM_WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
+DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
 
 
 if IS_WINDOWS:
@@ -35,6 +36,7 @@ if IS_WINDOWS:
   BUILT_D8_EXE += '.exe'
   DOWNLOAD_D8_EXE += '.exe'
   DEFAULT_WASM_WAST_EXE += '.exe'
+  DEFAULT_WASM_INTERP_EXE += '.exe'
 
 
 def FindExeWithFallback(name, default_exe_list, override_exe=None):
@@ -59,6 +61,10 @@ def GetSexprWasmExecutable(override=None):
 
 def GetWasmWastExecutable(override=None):
   return FindExeWithFallback('wasm-wast', [DEFAULT_WASM_WAST_EXE], override)
+
+
+def GetWasmInterpExecutable(override=None):
+  return FindExeWithFallback('wasm-interp', [DEFAULT_WASM_INTERP_EXE], override)
 
 
 def GetD8Executable(override=None):
