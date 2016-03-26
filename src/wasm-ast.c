@@ -23,18 +23,6 @@
 
 #define INITIAL_HASH_CAPACITY 8
 
-WASM_DEFINE_VECTOR(type, WasmType)
-WASM_DEFINE_VECTOR(var, WasmVar);
-WASM_DEFINE_VECTOR(expr_ptr, WasmExprPtr);
-WASM_DEFINE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
-WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
-WASM_DEFINE_VECTOR(segment, WasmSegment);
-WASM_DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
-WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
-WASM_DEFINE_VECTOR(export_ptr, WasmExportPtr);
-WASM_DEFINE_VECTOR(const, WasmConst);
-WASM_DEFINE_VECTOR(command, WasmCommand);
-
 static size_t wasm_hash_name(const WasmStringSlice* name) {
   // FNV-1a hash
   const uint32_t fnv_prime = 0x01000193;

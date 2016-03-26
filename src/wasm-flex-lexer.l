@@ -47,7 +47,6 @@
 #define WASM_INITIAL_LINE_OFFSETS 10000
 
 typedef size_t WasmLineOffset;
-WASM_DECLARE_VECTOR(line_offset, WasmLineOffset);
 WASM_DEFINE_VECTOR(line_offset, WasmLineOffset);
 
 typedef struct WasmLexerExtra {

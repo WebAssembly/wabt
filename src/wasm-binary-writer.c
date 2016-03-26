@@ -101,7 +101,6 @@ typedef struct WasmWriteContext {
   WasmStringSlice** local_type_names; /* from packed -> local name */
 } WasmWriteContext;
 
-WASM_DECLARE_VECTOR(func_signature, WasmFuncSignature);
 WASM_DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
 static int is_nan_f32(uint32_t bits) {

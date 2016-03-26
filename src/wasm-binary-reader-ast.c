@@ -72,12 +72,10 @@ typedef struct WasmExprNode {
   uint32_t index;
   uint32_t total;
 } WasmExprNode;
-WASM_DECLARE_VECTOR(expr_node, WasmExprNode);
 WASM_DEFINE_VECTOR(expr_node, WasmExprNode);
 
-/* TODO(binji): nicer handling of vectors */
 typedef uint32_t WasmUint32;
-WASM_DECLARE_VECTOR(uint32, WasmUint32);
+WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
 typedef struct WasmReadAstContext {
   WasmAllocator* allocator;

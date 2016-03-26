@@ -17,12 +17,14 @@
 #ifndef WASM_VECTOR_H_
 #define WASM_VECTOR_H_
 
-#include <stdlib.h>
+#include <stddef.h>
 
+#include "wasm-allocator.h"
 #include "wasm-common.h"
+#include "wasm-config.h"
 
 /*
- * DECLARE_VECTOR(widget, WasmWidget) defines struct and functions like the
+ * WASM_DEFINE_VECTOR(widget, WasmWidget) defines struct and functions like the
  * following:
  *
  * typedef struct WasmWidgetVector {
@@ -41,29 +43,29 @@
  *                                WasmWidgetVector* src);
  */
 
-struct WasmAllocator;
-
-#define WASM_DECLARE_VECTOR(name, type)                                       \
-  typedef struct type##Vector {                                               \
-    type* data;                                                               \
-    size_t size;                                                              \
-    size_t capacity;                                                          \
-  } type##Vector;                                                             \
-  WASM_EXTERN_C void wasm_destroy_##name##_vector(                            \
-      struct WasmAllocator* allocator, type##Vector* vec);                    \
-  WASM_EXTERN_C type* wasm_append_##name(struct WasmAllocator* allocator,     \
-                                         type##Vector* vec) WASM_WARN_UNUSED; \
-  WASM_EXTERN_C WasmResult wasm_reserve_##name##s(                            \
-      struct WasmAllocator* allocator, type##Vector* vec, size_t desired)     \
-      WASM_WARN_UNUSED;                                                       \
-  WASM_EXTERN_C WasmResult wasm_append_##name##_value(                        \
-      struct WasmAllocator* allocator, type##Vector* vec, type* value)        \
-      WASM_WARN_UNUSED;                                                       \
-  WASM_EXTERN_C WasmResult wasm_extend_##name##s(                             \
-      struct WasmAllocator* allocator, type##Vector* dst, type##Vector* src)  \
-      WASM_WARN_UNUSED;
-
 #define WASM_DEFINE_VECTOR(name, type)                                         \
+  typedef struct type##Vector {                                                \
+    type* data;                                                                \
+    size_t size;                                                               \
+    size_t capacity;                                                           \
+  } type##Vector;                                                              \
+                                                                               \
+  WASM_EXTERN_C_BEGIN                                                          \
+  static WASM_INLINE void wasm_destroy_##name##_vector(                        \
+      struct WasmAllocator* allocator, type##Vector* vec) WASM_UNUSED;         \
+  static WASM_INLINE WasmResult wasm_reserve_##name##s(                        \
+      struct WasmAllocator* allocator, type##Vector* vec, size_t desired)      \
+      WASM_UNUSED;                                                             \
+  static WASM_INLINE type* wasm_append_##name(struct WasmAllocator* allocator, \
+                                              type##Vector* vec) WASM_UNUSED;  \
+  static WASM_INLINE WasmResult wasm_append_##name##_value(                    \
+      struct WasmAllocator* allocator, type##Vector* vec, type* value)         \
+      WASM_UNUSED;                                                             \
+  static WASM_INLINE WasmResult wasm_extend_##name##s(                         \
+      struct WasmAllocator* allocator, type##Vector* dst, type##Vector* src)   \
+      WASM_UNUSED;                                                             \
+  WASM_EXTERN_C_END                                                            \
+                                                                               \
   void wasm_destroy_##name##_vector(struct WasmAllocator* allocator,           \
                                     type##Vector* vec) {                       \
     wasm_free(allocator, vec->data);                                           \

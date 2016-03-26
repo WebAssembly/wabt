@@ -48,7 +48,6 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 
 #define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, (e) == WASM_OK)
 
-WASM_DECLARE_VECTOR(string_slice, WasmStringSlice);
 WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
 
 static const uint8_t s_is_char_escaped[] = {

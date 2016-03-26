@@ -54,6 +54,7 @@
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 
+#define WASM_UNUSED __attribute__ ((unused))
 #define WASM_WARN_UNUSED __attribute__ ((warn_unused_result))
 #define WASM_INLINE inline
 #define WASM_STATIC_ASSERT(x) _Static_assert((x), #x)
@@ -80,6 +81,7 @@
 
 #elif COMPILER_IS_MSVC
 
+#define WASM_UNUSED
 #define WASM_WARN_UNUSED _Check_return_
 #define WASM_INLINE __inline
 #define WASM_STATIC_ASSERT(x) _STATIC_ASSERT(x)
