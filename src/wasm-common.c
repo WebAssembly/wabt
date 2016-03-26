@@ -27,7 +27,7 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
-#define V(type1, type2, mem_size, code, NAME, text) [code] = mem_size,
+#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = mem_size,
 static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 

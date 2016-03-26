@@ -30,7 +30,7 @@
 #define NO_FORCE_NEWLINE 0
 #define FORCE_NEWLINE 1
 
-#define V(type1, type2, mem_size, code, NAME, text) [code] = text,
+#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
