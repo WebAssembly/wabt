@@ -63,15 +63,6 @@ TOOLS = {
 }
 
 
-def AsList(value):
-  if value is None:
-    return []
-  elif type(value) is list:
-    return value
-  else:
-    return [value]
-
-
 def Indent(s, spaces):
   return ''.join(' '*spaces + l for l in s.splitlines(1))
 
@@ -81,6 +72,12 @@ def DiffLines(expected, actual):
   actual_lines = actual.splitlines(1)
   return list(difflib.unified_diff(expected_lines, actual_lines,
                                    fromfile='expected', tofile='actual'))
+
+
+def AppendBeforeExt(file_path, suffix):
+  file_path_noext, ext = os.path.splitext(file_path)
+  return file_path_noext + suffix + ext
+
 
 def RunCommandWithTimeout(command, cwd, timeout):
   process = None
@@ -134,9 +131,10 @@ def RunCommandWithTimeout(command, cwd, timeout):
 class TestInfo(object):
   def __init__(self):
     self.name = ''
+    self.generated_input_filename = ''
     self.filename = ''
     self.header = []
-    self.input_file = ''
+    self.input_filename = ''
     self.input_ = []
     self.expected_stdout = ''
     self.expected_stderr = ''
@@ -151,9 +149,10 @@ class TestInfo(object):
   def CreateRoundtripInfo(self):
     result = TestInfo()
     result.name = '%s (roundtrip)' % self.name
+    result.generated_input_filename = AppendBeforeExt(self.name, '-roundtrip')
     result.filename = self.filename
     result.header = self.header
-    result.input_file = self.input_file
+    result.input_filename = self.input_filename
     result.input_ = self.input_
     result.expected_stdout = ''
     result.expected_stderr = ''
@@ -174,7 +173,8 @@ class TestInfo(object):
     if key == 'EXE':
       self.exe = value
     elif key == 'STDIN_FILE':
-      self.input_file = value
+      self.input_filename = value
+      self.generated_input_filename = value
     elif key == 'FLAGS':
       self.flags += shlex.split(value)
     elif key == 'ERROR':
@@ -197,6 +197,7 @@ class TestInfo(object):
   def Parse(self, filename):
     self.name = filename
     self.filename = os.path.join(SCRIPT_DIR, filename)
+    self.generated_input_filename = self.name
 
     with open(self.filename) as f:
       seen_keys = set()
@@ -242,8 +243,8 @@ class TestInfo(object):
         if state == 'header':
           header_lines.append(line)
         if state == 'input':
-          if self.input_file:
-            raise Error('Can\'t have input_file and input')
+          if self.input_filename:
+            raise Error('Can\'t have STDIN_FILE and input')
           input_lines.append(line)
         elif state == 'stderr':
           stderr_lines.append(line)
@@ -276,15 +277,7 @@ class TestInfo(object):
     return cmd
 
   def CreateInputFile(self, temp_dir):
-    if self.input_file:
-      file_path = os.path.join(temp_dir, self.input_file)
-    else:
-      file_path = os.path.join(temp_dir, self.name)
-
-    if self.is_roundtrip:
-      file_path_noext, ext = os.path.splitext(file_path)
-      file_path = file_path_noext + '-roundtrip' + ext
-
+    file_path = os.path.join(temp_dir, self.generated_input_filename)
     file_dir = os.path.dirname(file_path)
     try:
       os.makedirs(file_dir)
@@ -294,9 +287,9 @@ class TestInfo(object):
 
     file_ = open(file_path, 'wb')
     # add an empty line for each header line so the line numbers match
-    if self.input_file:
-      with open(self.input_file, 'rb') as input_file:
-        file_.write(input_file.read())
+    if self.input_filename:
+      with open(self.input_filename, 'rb') as input_filename:
+        file_.write(input_filename.read())
     else:
       file_.write('\n' * self.header.count('\n'))
       file_.write(self.input_)
@@ -475,6 +468,8 @@ def main(args):
   parser.add_argument('-a', '--arg',
                       help='additional args to pass to executable',
                       action='append')
+  parser.add_argument('-o', '--out-dir', metavar='PATH',
+                      help='output directory for files.')
   parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
                       help='override executable.')
   parser.add_argument('--d8-executable', metavar='PATH',
@@ -545,10 +540,18 @@ def main(args):
   num_proc = options.jobs
   status.Start(test_count)
 
-  temp_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
+  if options.out_dir:
+    out_dir = options.out_dir
+    out_dir_is_temp = False
+    if not os.path.exists(out_dir):
+      os.makedirs(out_dir)
+  else:
+    out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
+    out_dir_is_temp = True
+
   try:
     for i, p in enumerate(range(num_proc)):
-      args = (i, options, variables, inq, outq, temp_dir)
+      args = (i, options, variables, inq, outq, out_dir)
       proc = multiprocessing.Process(target=ProcessWorker, args=args)
       proc.start()
 
@@ -568,7 +571,8 @@ def main(args):
   finally:
     while multiprocessing.active_children():
       time.sleep(0.1)
-    shutil.rmtree(temp_dir)
+    if out_dir_is_temp:
+      shutil.rmtree(out_dir)
 
   status.Clear()
 
