@@ -30,8 +30,8 @@ DEFAULT_BUILD_TYPE = DEBUG
 
 COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG EMSCRIPTEN
 BUILD_TYPES := DEBUG RELEASE
-SANITIZERS := ASAN MSAN LSAN
-CONFIGS := NORMAL ASAN MSAN LSAN NO_RE2C_BISON NO_TESTS
+SANITIZERS := ASAN MSAN LSAN UBSAN
+CONFIGS := NORMAL $(SANITIZERS) NO_RE2C_BISON NO_TESTS
 EXECUTABLES := sexpr-wasm wasm-wast wasm-interp wasm-interp-sq hexfloat_test
 
 # directory names
@@ -46,6 +46,7 @@ NORMAL_DIR :=
 ASAN_DIR := asan/
 MSAN_DIR := msan/
 LSAN_DIR := lsan/
+UBSAN_DIR := ubsan/
 NO_RE2C_BISON_DIR := no-re2c-bison/
 NO_TESTS_DIR := no-tests/
 
@@ -62,6 +63,7 @@ NORMAL_FLAG :=
 ASAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address
 MSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=memory -DCMAKE_CXX_FLAGS=-fsanitize=memory
 LSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=leak -DCMAKE_CXX_FLAGS=-fsanitize=leak
+UBSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=undefined -DCMAKE_CXX_FLAGS=-fsanitize=undefined
 NO_RE2C_BISON_FLAG := -DRUN_BISON=OFF -DRUN_RE2C=OFF
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
@@ -77,6 +79,7 @@ NORMAL_PREFIX :=
 ASAN_PREFIX := -asan
 MSAN_PREFIX := -msan
 LSAN_PREFIX := -lsan
+UBSAN_PREFIX := -ubsan
 NO_RE2C_BISON_PREFIX := -no-re2c-bison
 NO_TESTS_PREFIX := -no-tests
 

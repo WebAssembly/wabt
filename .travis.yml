@@ -19,3 +19,5 @@ matrix:
       env: SANITIZER=msan
     - compiler: clang
       env: SANITIZER=lsan
+    - compiler: clang
+      env: SANITIZER=ubsan

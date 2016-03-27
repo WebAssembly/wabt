@@ -39,7 +39,8 @@ configuration.
 
  - compilers: `gcc`, `clang`, `gcc-i686`, `gcc-fuzz`
  - build types: `debug`, `release`
- - configurations: empty, `asan`, `msan`, `lsan`, `no-re2c-bison`, `no-tests`
+ - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-re2c-bison`,
+   `no-tests`
 
 They are combined with dashes, for example:
 
@@ -374,14 +375,16 @@ append the sanitizer name to the target:
 $ make clang-debug-asan
 $ make clang-debug-msan
 $ make clang-debug-lsan
+$ make clang-debug-ubsan
 ```
 
 There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
-(MSAN) and Leak Sanitizer (LSAN). You can read about the behaviors of the
-sanitizers in the link above, but essentially the Address Sanitizer finds
-invalid memory accesses (use after free, access out-of-bounds, etc.), Memory
-Sanitizer finds uses of uninitialized memory, and the Leak Sanitizer finds
-memory leaks.
+(MSAN), Leak Sanitizer (LSAN) and Undefine Behavior Sanitizer (UBSAN). You can
+read about the behaviors of the sanitizers in the link above, but essentially
+the Address Sanitizer finds invalid memory accesses (use after free, access
+out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory, 
+the Leak Sanitizer finds memory leaks, and the Undefined Behavior Sanitizer
+finds undefined behavior (surprise!).
 
 Typically, you'll just want to run all the tests for a given sanitizer:
 
