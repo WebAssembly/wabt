@@ -259,7 +259,8 @@ static void parse_float_hex(const char* s,
     if (digit != 0 && (significand == 0 ||
                        significand_bits + significand_shift <=
                            F32_SIG_BITS + 1 + HEX_DIGIT_BITS)) {
-      significand <<= significand_shift;
+      if (significand != 0)
+        significand <<= significand_shift;
       if (seen_dot)
         significand_exponent -= significand_shift;
       significand += digit;
@@ -585,7 +586,8 @@ static void parse_double_hex(const char* s,
     if (digit != 0 && (significand == 0 ||
                        significand_bits + significand_shift <=
                            F64_SIG_BITS + 1 + HEX_DIGIT_BITS)) {
-      significand <<= significand_shift;
+      if (significand != 0)
+        significand <<= significand_shift;
       if (seen_dot)
         significand_exponent -= significand_shift;
       significand += digit;
