@@ -111,13 +111,13 @@ Then run sexpr-wasm to build a binary-encoded file::
 
 This can be loaded into d8 using JavaScript like this::
 
-  $ third_party/v8/v8/out/Release/d8
-  V8 version 4.7.0 (candidate)
+  $ third_party/v8/v8/out/Release/d8 --expose_wasm
+  V8 version 5.1.0 (candidate)
   d8> buffer = readbuffer('test.wasm');
   [object ArrayBuffer]
   d8> module = Wasm.instantiateModule(buffer, {});
-  {memory: [object ArrayBuffer], test: function test() { [native code] }}
-  d8> module.test()
+  {exports: {test: function test() { [native code] }}}
+  d8> module.exports.test()
   3
 
 If you just want to run a quick test, you can use the ``run-d8.py`` script
@@ -126,18 +126,17 @@ instead::
   $ test/run-d8.py test.wast
   test() = 3
 
-To run spec-style tests (with assert_eq, invoke, etc.) use the ``--spec`` flag::
+To run spec-style tests (with assert_return, invoke, etc.) use the ``--spec`` flag::
 
   $ cat > test2.wast << HERE
   (module
     (export "neg" 0)
     (func (param i32) (result i32)
       (i32.sub (i32.const 0) (get_local 0))))
-  (assert_eq (invoke "neg" (i32.const 100)) (i32.const -100))
+  (assert_return (invoke "neg" (i32.const 100)) (i32.const -100))
   HERE
   $ test/run-d8.py --spec test2.wast
   instantiating module
-  $assert_eq_0 OK
   1/1 tests passed.
 
 Tests
