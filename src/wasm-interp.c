@@ -38,6 +38,7 @@ static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
 static WasmInterpreterThreadOptions s_thread_options =
     WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT;
+static int s_trace;
 static int s_run_all_exports;
 static int s_use_libc_allocator;
 
@@ -49,6 +50,7 @@ enum {
   FLAG_HELP,
   FLAG_VALUE_STACK_SIZE,
   FLAG_CALL_STACK_SIZE,
+  FLAG_TRACE,
   FLAG_RUN_ALL_EXPORTS,
   FLAG_USE_LIBC_ALLOCATOR,
   NUM_FLAGS
@@ -62,6 +64,7 @@ static WasmOption s_options[] = {
      "size in elements of the value stack"},
     {FLAG_CALL_STACK_SIZE, 'C', "call-stack-size", "SIZE", YEP,
      "size in frames of the call stack"},
+    {FLAG_TRACE, 't', "trace", NULL, NOPE, "trace execution"},
     {FLAG_RUN_ALL_EXPORTS, 0, "run-all-exports", NULL, NOPE,
      "run all the exported functions, in order. useful for testing"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
@@ -90,6 +93,10 @@ static void on_option(struct WasmOptionParser* parser,
     case FLAG_CALL_STACK_SIZE:
       /* TODO(binji): validate */
       s_thread_options.call_stack_size = atoi(argument);
+      break;
+
+    case FLAG_TRACE:
+      s_trace = 1;
       break;
 
     case FLAG_RUN_ALL_EXPORTS:
@@ -166,14 +173,14 @@ static void print_typed_value(WasmInterpreterTypedValue* tv) {
     case WASM_TYPE_F32: {
       float value;
       memcpy(&value, &tv->value.f32_bits, sizeof(float));
-      printf("f32:%f", value);
+      printf("f32:%g", value);
       break;
     }
 
     case WASM_TYPE_F64: {
       double value;
       memcpy(&value, &tv->value.f64_bits, sizeof(double));
-      printf("f64:%f", value);
+      printf("f64:%g", value);
       break;
     }
 
@@ -230,8 +237,12 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
                                           uint32_t offset) {
   thread->pc = offset;
   WasmInterpreterResult result = WASM_INTERPRETER_OK;
-  while (result == WASM_INTERPRETER_OK)
-    result = wasm_run_interpreter(module, thread, INSTRUCTION_QUANTUM);
+  uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
+  while (result == WASM_INTERPRETER_OK) {
+    if (s_trace)
+      wasm_trace_pc(module, thread);
+    result = wasm_run_interpreter(module, thread, quantum);
+  }
   return result;
 }
 
@@ -270,6 +281,8 @@ static WasmInterpreterResult run_export(WasmInterpreterModule* module,
       printf(")\n");
       assert(thread->value_stack_top == 0);
     }
+
+    thread->value_stack_top = 0;
   }
   return result;
 }
@@ -294,6 +307,8 @@ int main(int argc, char** argv) {
   read_file(s_infile, &data, &size);
 
   WasmInterpreterModule module;
+  WASM_ZERO_MEMORY(module);
+
   WasmResult result = wasm_read_binary_interpreter(
       allocator, memory_allocator, data, size, &s_read_binary_options, &module);
 

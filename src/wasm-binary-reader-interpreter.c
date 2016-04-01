@@ -176,6 +176,15 @@ static WasmDepthNode* get_depth_node(WasmReadInterpreterContext* ctx,
   return &ctx->depth_stack.data[depth];
 }
 
+static WasmDepthNode* top_minus_nth_depth_node(WasmReadInterpreterContext* ctx,
+                                               uint32_t n) {
+  return get_depth_node(ctx, ctx->depth_stack.size - n);
+}
+
+static WasmDepthNode* top_depth_node(WasmReadInterpreterContext* ctx) {
+  return top_minus_nth_depth_node(ctx, 1);
+}
+
 static uint32_t get_istream_offset(WasmReadInterpreterContext* ctx) {
   return ctx->istream_offset;
 }
@@ -333,6 +342,7 @@ static void unemit_discard(WasmReadInterpreterContext* ctx) {
   assert(((uint8_t*)ctx->istream_writer.buf.start)[ctx->istream_offset - 1] ==
          WASM_OPCODE_DISCARD);
   ctx->istream_offset--;
+  ctx->value_stack_size++;
 }
 
 static WasmResult emit_discard(WasmReadInterpreterContext* ctx) {
@@ -495,7 +505,10 @@ static void pop_depth(WasmReadInterpreterContext* ctx) {
 #endif
   assert(ctx->depth_stack.size > 0);
   ctx->depth_stack.size--;
-  ctx->depth_fixups.size = ctx->depth_stack.size;
+  /* reduce the depth_fixups stack as well, but it may be smaller than
+   * depth_stack so only do it conditionally. */
+  if (ctx->depth_fixups.size > ctx->depth_stack.size)
+    ctx->depth_fixups.size = ctx->depth_stack.size;
 }
 
 static uint32_t translate_depth(WasmReadInterpreterContext* ctx,
@@ -635,6 +648,9 @@ static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult begin_function_body(uint32_t index, void* user_data) {
+#if LOG
+  fprintf(stderr, "*** func %d ***\n", index);
+#endif
   WasmReadInterpreterContext* ctx = user_data;
   WasmInterpreterFunc* func = get_func(ctx, index);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, func->sig_index);
@@ -770,8 +786,11 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
           break;
 
         case WASM_OPCODE_BLOCK:
-          if (is_expr_done)
+          if (is_expr_done) {
+            WasmDepthNode* node = top_depth_node(ctx);
+            unify_type(&top->expr.type, node->type);
             unify_type(&top->expr.type, expr->type);
+          }
           if (top->expr.type == WASM_TYPE_VOID || !is_expr_done)
             CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
           if (is_expr_done) {
@@ -974,8 +993,11 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
           break;
 
         case WASM_OPCODE_LOOP: {
-          if (is_expr_done)
+          if (is_expr_done) {
+            WasmDepthNode* node = top_minus_nth_depth_node(ctx, 2);
+            unify_type(&top->expr.type, node->type);
             unify_type(&top->expr.type, expr->type);
+          }
           if (top->expr.type == WASM_TYPE_VOID || !is_expr_done)
             CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
           if (is_expr_done) {
@@ -1535,6 +1557,7 @@ WasmResult wasm_read_binary_interpreter(
   ctx.memory_allocator = memory_allocator;
   ctx.module = out_module;
   ctx.start_func_index = INVALID_FUNC_INDEX;
+  ctx.module->start_func_offset = WASM_INVALID_OFFSET;
   CHECK_RESULT(wasm_init_mem_writer(allocator, &ctx.istream_writer));
 
   WasmBinaryReader reader;
