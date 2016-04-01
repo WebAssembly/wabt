@@ -1571,3 +1571,42 @@ void wasm_trace_pc(WasmInterpreterModule* module,
       break;
   }
 }
+
+static void wasm_destroy_memory(WasmInterpreterMemory* memory) {
+  if (memory->allocator) {
+    wasm_free(memory->allocator, memory->data);
+  } else {
+    assert(memory->data == NULL);
+  }
+}
+
+static void wasm_destroy_interpreter_func_signature(
+    WasmAllocator* allocator,
+    WasmInterpreterFuncSignature* sig) {
+  wasm_destroy_type_vector(allocator, &sig->param_types);
+}
+
+static void wasm_destroy_interpreter_import(WasmAllocator* allocator,
+                                            WasmInterpreterImport* import) {
+  wasm_destroy_string_slice(allocator, &import->module_name);
+  wasm_destroy_string_slice(allocator, &import->func_name);
+}
+
+static void wasm_destroy_interpreter_export(WasmAllocator* allocator,
+                                            WasmInterpreterExport* export) {
+  wasm_destroy_string_slice(allocator, &export->name);
+}
+
+void wasm_destroy_interpreter_module(WasmAllocator* allocator,
+                                     WasmInterpreterModule* module) {
+  wasm_destroy_memory(&module->memory);
+  WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->sigs,
+                                  interpreter_func_signature);
+  wasm_destroy_interpreter_func_table_entry_array(allocator,
+                                                  &module->func_table);
+  WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->imports,
+                                  interpreter_import);
+  WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->exports,
+                                  interpreter_export);
+  wasm_destroy_output_buffer(&module->istream);
+}

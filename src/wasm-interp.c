@@ -348,6 +348,7 @@ int main(int argc, char** argv) {
     }
 
     wasm_destroy_interpreter_thread(allocator, &thread);
+    wasm_destroy_interpreter_module(allocator, &module);
   }
 
   if (!s_use_libc_allocator)

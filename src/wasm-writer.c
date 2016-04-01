@@ -167,9 +167,9 @@ void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,
 }
 
 void wasm_close_mem_writer(WasmMemoryWriter* writer) {
-  wasm_free_output_buffer(&writer->buf);
+  wasm_destroy_output_buffer(&writer->buf);
 }
 
-void wasm_free_output_buffer(WasmOutputBuffer* buf) {
+void wasm_destroy_output_buffer(WasmOutputBuffer* buf) {
   wasm_free(buf->allocator, buf->start);
 }

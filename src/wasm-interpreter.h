@@ -180,6 +180,8 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            uint32_t num_instructions);
 void wasm_trace_pc(WasmInterpreterModule* module,
                    WasmInterpreterThread* thread);
+void wasm_destroy_interpreter_module(WasmAllocator* allocator,
+                                     WasmInterpreterModule* module);
 WASM_EXTERN_C_END
 
 #endif /* WASM_INTERPRETER_H_ */

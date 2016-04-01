@@ -48,4 +48,12 @@
     return array->data ? WASM_OK : WASM_ERROR;                               \
   }
 
+#define WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, v, name) \
+  {                                                         \
+    int i;                                                  \
+    for (i = 0; i < (v).size; ++i)                          \
+      wasm_destroy_##name(allocator, &((v).data[i]));       \
+    wasm_destroy_##name##_array(allocator, &(v));           \
+  }
+
 #endif /* WASM_ARRAY_H_ */
