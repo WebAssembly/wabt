@@ -101,6 +101,7 @@ set(SEXPR_WASM_SRCS
   src/wasm-allocator.c
   src/wasm-ast.c
   src/wasm-binary-writer.c
+  src/wasm-binary-writer-spec.c
   src/wasm-check.c
   src/wasm-common.c
   src/wasm-config.c

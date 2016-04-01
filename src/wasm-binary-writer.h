@@ -20,24 +20,30 @@
 #include "wasm-common.h"
 
 struct WasmAllocator;
+struct WasmModule;
 struct WasmScript;
 struct WasmWriter;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { 0, 0, 0, 1, 1, 0 }
+  { 0, 1, 1, 0 }
 
 typedef struct WasmWriteBinaryOptions {
-  int spec;
-  int spec_verbose;
   int log_writes;
   int canonicalize_lebs;
   int remap_locals;
   int write_debug_names;
 } WasmWriteBinaryOptions;
 
-WASM_EXTERN_C WasmResult wasm_write_binary(struct WasmAllocator*,
-                                           struct WasmWriter*,
-                                           struct WasmScript*,
-                                           WasmWriteBinaryOptions*);
+WASM_EXTERN_C_BEGIN
+WasmResult wasm_write_binary_module(struct WasmAllocator*,
+                                    struct WasmWriter*,
+                                    struct WasmModule*,
+                                    WasmWriteBinaryOptions*);
+
+WasmResult wasm_write_binary_script(struct WasmAllocator*,
+                                    struct WasmWriter*,
+                                    struct WasmScript*,
+                                    WasmWriteBinaryOptions*);
+WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_WRITER_H_ */

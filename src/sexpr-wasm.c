@@ -22,6 +22,7 @@
 
 #include "wasm-ast.h"
 #include "wasm-binary-writer.h"
+#include "wasm-binary-writer-spec.h"
 #include "wasm-check.h"
 #include "wasm-common.h"
 #include "wasm-option-parser.h"
@@ -35,6 +36,9 @@ static int s_dump_module;
 static int s_verbose;
 static WasmWriteBinaryOptions s_write_binary_options =
     WASM_WRITE_BINARY_OPTIONS_DEFAULT;
+static WasmWriteBinarySpecOptions s_write_binary_spec_options =
+    WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
+static int s_spec;
 static int s_use_libc_allocator;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
@@ -101,11 +105,11 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_SPEC:
-      s_write_binary_options.spec = 1;
+      s_spec = 1;
       break;
 
     case FLAG_SPEC_VERBOSE:
-      s_write_binary_options.spec_verbose = 1;
+      s_write_binary_spec_options.verbose = 1;
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
@@ -145,7 +149,7 @@ static void parse_options(int argc, char** argv) {
   parser.on_error = on_option_error;
   wasm_parse_options(&parser, argc, argv);
 
-  if (s_dump_module && s_write_binary_options.spec)
+  if (s_dump_module && s_spec)
     WASM_FATAL("--dump-module flag incompatible with --spec flag\n");
 
   if (!s_infile) {
@@ -182,8 +186,15 @@ int main(int argc, char** argv) {
       if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
         WASM_FATAL("unable to open memory writer for writing\n");
 
-      result = wasm_write_binary(&g_wasm_libc_allocator, &writer.base, &script,
-                                 &s_write_binary_options);
+      if (s_spec) {
+        result = wasm_write_binary_spec_script(
+            &g_wasm_libc_allocator, &writer.base, &script,
+            &s_write_binary_options, &s_write_binary_spec_options);
+      } else {
+        result = wasm_write_binary_script(&g_wasm_libc_allocator, &writer.base,
+                                          &script, &s_write_binary_options);
+      }
+
       if (result == WASM_OK) {
         if (s_dump_module) {
           if (s_verbose)
