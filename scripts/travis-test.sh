@@ -30,38 +30,52 @@ run_tests() {
   (cd ${ROOT_DIR} && log_and_run test/run-tests.py ${RUN_TEST_ARGS} $* --timeout=10)
 }
 
+check_and_add_flag() {
+  local FLAG=$1
+  local NAME=$2
+  if [ ! -e ${NAME} ]; then
+    echo "${NAME} doesn't exist; skipping test."
+    return 1
+  fi
+  RUN_TEST_ARGS="${RUN_TEST_ARGS} ${FLAG} ${NAME}"
+  return 0
+}
+
 set_run_test_args() {
   local COMPILER=$1
   local BUILD_TYPE=$2
   local CONFIG=${3:-}
-  SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}/sexpr-wasm
-  WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}/wasm-wast
-  RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
+
+  RUN_TEST_ARGS=""
+  local EXE_DIR=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}
+
+  SEXPR_WASM=${EXE_DIR}/sexpr-wasm
+  WASM_WAST=${EXE_DIR}/wasm-wast
+  WASM_INTERP=${EXE_DIR}/wasm-interp
+
+  check_and_add_flag "--sexpr-wasm" ${SEXPR_WASM} && \
+      check_and_add_flag "--wasm-wast" ${WASM_WAST} && \
+      check_and_add_flag "--wasm-interp" ${WASM_INTERP}
 }
 
 if [ ${CC} = "gcc" ]; then
-  set_run_test_args gcc Debug no-flex-bison
-  run_tests
+  if set_run_test_args gcc Debug no-flex-bison; then
+    run_tests
+  fi
 fi
 
 for COMPILER in ${COMPILERS}; do
   for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
-    set_run_test_args ${COMPILER} ${BUILD_TYPE}
-    if [ -e ${SEXPR_WASM} ] && [ -e ${WASM_WAST} ]; then
+    if set_run_test_args ${COMPILER} ${BUILD_TYPE}; then
       run_tests
       run_tests -a=--use-libc-allocator
-    else
-      echo "${SEXPR_WASM} or ${WASM_WAST} doesn't exist; skipping."
     fi
 
     if [ ${COMPILER} = "clang" ]; then
       for SANITIZER in ${SANITIZERS}; do
-        set_run_test_args ${COMPILER} ${BUILD_TYPE} ${SANITIZER}
-        if [ -e ${SEXPR_WASM} ] && [ -e ${WASM_WAST} ]; then
+        if set_run_test_args ${COMPILER} ${BUILD_TYPE} ${SANITIZER}; then
           run_tests
           run_tests -a=--use-libc-allocator
-        else
-          echo "${SEXPR_WASM} or ${WASM_WAST} doesn't exist; skipping."
         fi
       done
     fi
