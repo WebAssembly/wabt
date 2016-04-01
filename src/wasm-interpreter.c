@@ -1235,7 +1235,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       }
 
       case WASM_OPCODE_DISCARD:
-        POP();
+        (void)POP();
         break;
 
       case WASM_OPCODE_DISCARD_KEEP: {
