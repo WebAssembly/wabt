@@ -1,0 +1,14 @@
+;;; TOOL: run-interp
+(module
+  (import "foo" "bar" (result i32))
+
+  (func $f (result i32)
+    (i32.add
+      (i32.const 13)
+      (call_import 0)))
+
+  (export "f" $f))
+(;; STDOUT ;;;
+called import foo.bar() => i32:0
+f() => i32:13
+;;; STDOUT ;;)

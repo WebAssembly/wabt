@@ -3,5 +3,5 @@
   (export "f" 0)
   (func))
 (;; STDOUT ;;;
-f()
+f() 
 ;;; STDOUT ;;)

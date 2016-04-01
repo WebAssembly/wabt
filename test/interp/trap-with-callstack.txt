@@ -1,0 +1,20 @@
+;;; TOOL: run-interp
+(module
+  (func $trap
+    (i32.div_s
+      (i32.const 1)
+      (i32.const 0)))
+
+  (func $f (call $trap))
+  (func $g (call $f))
+  (func $h (call $g))
+  (export "h" $h)
+
+  ;; this function should run properly, even after h traps.
+  (func $i (result i32)
+    (i32.const 22))
+  (export "i" $i))
+(;; STDOUT ;;;
+h() error: integer divide by zero
+i() => i32:22
+;;; STDOUT ;;)

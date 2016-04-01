@@ -22,8 +22,8 @@
     (i32.load (i32.const 0)))
   (export "check2" $check2))
 (;; STDOUT ;;;
-test1()
-check1() => i32:1
-test2()
+test1() 
+check1() => i32:0
+test2() 
 check2() => i32:1
 ;;; STDOUT ;;)

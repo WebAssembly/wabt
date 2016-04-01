@@ -271,7 +271,7 @@ static WasmInterpreterResult run_export(WasmInterpreterModule* module,
   if (sig->result_type != WASM_TYPE_VOID)
     printf(") => ");
   else
-    printf(")");
+    printf(") ");
 
   if (result == WASM_INTERPRETER_RETURNED) {
     if (sig->result_type != WASM_TYPE_VOID) {
@@ -290,6 +290,7 @@ static WasmInterpreterResult run_export(WasmInterpreterModule* module,
     printf("error: %s\n", s_trap_strings[result]);
   }
   thread->value_stack_top = 0;
+  thread->call_stack_top = 0;
   return result;
 }
 
