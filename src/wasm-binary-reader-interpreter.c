@@ -414,8 +414,9 @@ static WasmResult emit_br(WasmReadInterpreterContext* ctx,
                           WasmDepthNode* node) {
   WasmType expected_type = node->type;
   assert(ctx->value_stack_size >= node->value_stack_size);
-  uint32_t discard_count = ctx->value_stack_size - node->value_stack_size;
   uint8_t keep_count = get_result_count(expected_type);
+  uint32_t discard_count =
+      (ctx->value_stack_size - node->value_stack_size) - keep_count;
   CHECK_RESULT(emit_discard_keep(ctx, discard_count, keep_count));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR, 0));
   CHECK_RESULT(emit_br_offset(ctx, depth, node->offset));
@@ -826,6 +827,8 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
             CHECK_RESULT(emit_br(ctx, depth, node));
             CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset,
                                      get_istream_offset(ctx)));
+            /* discard the br_if value if the branch wasn't taken */
+            CHECK_RESULT(maybe_emit_discard(ctx, node->type, NULL));
           }
           break;
         }
