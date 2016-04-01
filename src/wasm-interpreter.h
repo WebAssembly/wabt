@@ -128,6 +128,7 @@ typedef struct WasmInterpreterImport {
 WASM_DEFINE_ARRAY(interpreter_import, WasmInterpreterImport);
 
 typedef struct WasmInterpreterExport {
+  uint32_t func_index;
   WasmStringSlice name;
   uint32_t func_offset;
   uint32_t sig_index;
@@ -157,6 +158,9 @@ typedef struct WasmInterpreterThread {
   /* a temporary buffer that is for passing args to import functions */
   WasmInterpreterTypedValueArray import_args;
 } WasmInterpreterThread;
+
+#define WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT \
+  { 1 * 1024 * 1024, 64 * 1024, WASM_INVALID_OFFSET }
 
 typedef struct WasmInterpreterThreadOptions {
   uint32_t value_stack_size;

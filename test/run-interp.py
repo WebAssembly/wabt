@@ -35,6 +35,7 @@ def main(args):
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -66,6 +67,8 @@ def main(args):
       raise Error(str(e))
 
     cmd = [wasm_interp_exe, wasm_file]
+    if options.run_all_exports:
+      cmd.extend(['--run-all-exports'])
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE,
                                  universal_newlines=True)

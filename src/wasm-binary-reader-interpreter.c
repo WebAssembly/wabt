@@ -370,8 +370,8 @@ static WasmResult emit_discard_keep(WasmReadInterpreterContext* ctx,
 
 static WasmResult emit_return(WasmReadInterpreterContext* ctx,
                               WasmType result_type) {
-  uint32_t discard_count = ctx->value_stack_size;
   uint32_t keep_count = get_result_count(result_type);
+  uint32_t discard_count = ctx->value_stack_size - keep_count;
   CHECK_RESULT(emit_discard_keep(ctx, discard_count, keep_count));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_RETURN, 0));
   return WASM_OK;
@@ -441,6 +441,12 @@ static WasmInterpreterImport* get_import(WasmReadInterpreterContext* ctx,
                                          uint32_t import_index) {
   assert(import_index < ctx->module->imports.size);
   return &ctx->module->imports.data[import_index];
+}
+
+static WasmInterpreterExport* get_export(WasmReadInterpreterContext* ctx,
+                                         uint32_t export_index) {
+  assert(export_index < ctx->module->exports.size);
+  return &ctx->module->exports.data[export_index];
 }
 
 static WasmInterpreterFuncSignature* get_signature(
@@ -673,16 +679,6 @@ static WasmResult end_function_body(uint32_t index, void* user_data) {
   }
   ctx->current_func = NULL;
   ctx->value_stack_size = 0;
-  return WASM_OK;
-}
-
-static WasmResult end_function_bodies_section(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
-  if (ctx->start_func_index != INVALID_FUNC_INDEX) {
-    WasmInterpreterFunc* func = get_func(ctx, ctx->start_func_index);
-    assert(func->offset != WASM_INVALID_OFFSET);
-    ctx->module->start_func_offset = func->offset;
-  }
   return WASM_OK;
 }
 
@@ -1431,8 +1427,28 @@ static WasmResult on_export(uint32_t index,
   WasmInterpreterFunc* func = get_func(ctx, func_index);
   CHECK_ALLOC_NULL_STR(
       ctx, export->name = wasm_dup_string_slice(ctx->allocator, name));
+  export->func_index = func_index;
   export->sig_index = func->sig_index;
-  export->func_offset = func->offset;
+  export->func_offset = WASM_INVALID_OFFSET;
+  return WASM_OK;
+}
+
+static WasmResult end_function_bodies_section(void* user_data) {
+  WasmReadInterpreterContext* ctx = user_data;
+
+  if (ctx->start_func_index != INVALID_FUNC_INDEX) {
+    WasmInterpreterFunc* func = get_func(ctx, ctx->start_func_index);
+    assert(func->offset != WASM_INVALID_OFFSET);
+    ctx->module->start_func_offset = func->offset;
+  }
+
+  uint32_t i;
+  for (i = 0; i < ctx->module->exports.size; ++i) {
+    WasmInterpreterExport* export = get_export(ctx, i);
+    WasmInterpreterFunc* func = get_func(ctx, export->func_index);
+    export->func_offset = func->offset;
+  }
+
   return WASM_OK;
 }
 

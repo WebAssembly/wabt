@@ -59,8 +59,15 @@ TOOLS = {
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': '-v -e %(sexpr-wasm)s --wasm-wast-executable=%(wasm-wast)s'
+  },
+  'run-interp': {
+    'EXE': 'test/run-interp.py',
+    'FLAGS': '-e %(sexpr-wasm)s --wasm-interp-executable=%(wasm-interp)s '
+             '--run-all-exports'
   }
 }
+
+ROUNDTRIP_TOOLS = ('sexpr-wasm', 'run-d8')
 
 
 def Indent(s, spaces):
@@ -167,7 +174,7 @@ class TestInfo(object):
     return result
 
   def ShouldCreateRoundtrip(self):
-    return self.tool != 'run-roundtrip'
+    return self.tool in ROUNDTRIP_TOOLS
 
   def ParseDirective(self, key, value):
     if key == 'EXE':
@@ -476,6 +483,8 @@ def main(args):
                       help='override d8 executable.')
   parser.add_argument('--wasm-wast-executable', metavar='PATH',
                       help='override wasm-wast executable.')
+  parser.add_argument('--wasm-interp-executable', metavar='PATH',
+                      help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
@@ -509,14 +518,15 @@ def main(args):
     print 'no tests match that filter'
     return 1
 
-  sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(
-      options.sexpr_wasm_executable)
-  d8_exe = find_exe.GetD8Executable(options.d8_executable)
-  wasm_wast_exe = find_exe.GetWasmWastExecutable(options.wasm_wast_executable)
   variables = {
-    'sexpr-wasm': sexpr_wasm_exe,
-    'd8': d8_exe,
-    'wasm-wast': wasm_wast_exe
+    'sexpr-wasm':
+        find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
+    'd8':
+        find_exe.GetD8Executable(options.d8_executable),
+    'wasm-wast':
+        find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+    'wasm-interp':
+        find_exe.GetWasmInterpExecutable(options.wasm_interp_executable),
   }
 
   status = Status(options.verbose)

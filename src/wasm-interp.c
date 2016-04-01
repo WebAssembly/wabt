@@ -26,15 +26,19 @@
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
 
+#define INSTRUCTION_QUANTUM 1000
+
 #define V(name, str) str,
 static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
 #undef V
 
 static int s_verbose;
 static const char* s_infile;
-static const char* s_outfile;
 static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
+static WasmInterpreterThreadOptions s_thread_options =
+    WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT;
+static int s_run_all_exports;
 static int s_use_libc_allocator;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
@@ -43,7 +47,9 @@ static int s_use_libc_allocator;
 enum {
   FLAG_VERBOSE,
   FLAG_HELP,
-  FLAG_OUTPUT,
+  FLAG_VALUE_STACK_SIZE,
+  FLAG_CALL_STACK_SIZE,
+  FLAG_RUN_ALL_EXPORTS,
   FLAG_USE_LIBC_ALLOCATOR,
   NUM_FLAGS
 };
@@ -52,8 +58,12 @@ static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
-     "output file for the generated wast file"},
+    {FLAG_VALUE_STACK_SIZE, 'V', "value-stack-size", "SIZE", YEP,
+     "size in elements of the value stack"},
+    {FLAG_CALL_STACK_SIZE, 'C', "call-stack-size", "SIZE", YEP,
+     "size in frames of the call stack"},
+    {FLAG_RUN_ALL_EXPORTS, 0, "run-all-exports", NULL, NOPE,
+     "run all the exported functions, in order. useful for testing"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
      "use malloc, free, etc. instead of stack allocator"},
 };
@@ -72,8 +82,18 @@ static void on_option(struct WasmOptionParser* parser,
       exit(0);
       break;
 
-    case FLAG_OUTPUT:
-      s_outfile = argument;
+    case FLAG_VALUE_STACK_SIZE:
+      /* TODO(binji): validate */
+      s_thread_options.value_stack_size = atoi(argument);
+      break;
+
+    case FLAG_CALL_STACK_SIZE:
+      /* TODO(binji): validate */
+      s_thread_options.call_stack_size = atoi(argument);
+      break;
+
+    case FLAG_RUN_ALL_EXPORTS:
+      s_run_all_exports = 1;
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
@@ -205,6 +225,55 @@ static void set_all_import_callbacks_to_default(WasmInterpreterModule* module) {
   }
 }
 
+static WasmInterpreterResult run_function(WasmInterpreterModule* module,
+                                          WasmInterpreterThread* thread,
+                                          uint32_t offset) {
+  thread->pc = offset;
+  WasmInterpreterResult result = WASM_INTERPRETER_OK;
+  while (result == WASM_INTERPRETER_OK)
+    result = wasm_run_interpreter(module, thread, INSTRUCTION_QUANTUM);
+  return result;
+}
+
+static WasmInterpreterResult run_export(WasmInterpreterModule* module,
+                                        WasmInterpreterThread* thread,
+                                        WasmInterpreterExport* export) {
+  /* pass all zeroes to the function */
+  assert(export->sig_index < module->sigs.size);
+  WasmInterpreterFuncSignature* sig = &module->sigs.data[export->sig_index];
+  assert(sig->param_types.size < thread->value_stack.size);
+  uint32_t num_params = sig->param_types.size;
+  thread->value_stack_top = num_params;
+  memset(thread->value_stack.data, 0,
+         num_params * sizeof(WasmInterpreterValue));
+
+  WasmInterpreterResult result =
+      run_function(module, thread, export->func_offset);
+  if (result == WASM_INTERPRETER_RETURNED) {
+    printf("%.*s(", (int)export->name.length, export->name.start);
+    uint32_t i;
+    for (i = 0; i < num_params; ++i) {
+      printf("0");
+      if (i != num_params - 1)
+        printf(", ");
+    }
+    if (sig->result_type != WASM_TYPE_VOID) {
+      assert(thread->value_stack_top == 1);
+      WasmInterpreterValue value = thread->value_stack.data[0];
+      WasmInterpreterTypedValue typed_value;
+      typed_value.type = sig->result_type;
+      typed_value.value = value;
+      printf(") => ");
+      print_typed_value(&typed_value);
+      printf("\n");
+    } else {
+      printf(")\n");
+      assert(thread->value_stack_top == 0);
+    }
+  }
+  return result;
+}
+
 int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
@@ -229,37 +298,41 @@ int main(int argc, char** argv) {
       allocator, memory_allocator, data, size, &s_read_binary_options, &module);
 
   if (result == WASM_OK) {
+    set_all_import_callbacks_to_default(&module);
+
+    WasmInterpreterThread thread;
+    result = wasm_init_interpreter_thread(allocator, &module, &thread,
+                                          &s_thread_options);
+
+    WasmInterpreterResult iresult;
     if (module.start_func_offset != WASM_INVALID_OFFSET) {
-      set_all_import_callbacks_to_default(&module);
-
-      WasmInterpreterThreadOptions thread_options;
-      WASM_ZERO_MEMORY(thread_options);
-      thread_options.value_stack_size = 1 * 1024 * 1024;
-      thread_options.call_stack_size = 64 * 1024;
-      thread_options.pc = module.start_func_offset;
-
-      WasmInterpreterThread thread;
-      result = wasm_init_interpreter_thread(allocator, &module, &thread,
-                                            &thread_options);
       if (result == WASM_OK) {
-        int instruction_quantum = 1000;
-
-        WasmInterpreterResult iresult = WASM_INTERPRETER_OK;
-        while (iresult == WASM_INTERPRETER_OK) {
-          iresult = wasm_run_interpreter(&module, &thread, instruction_quantum);
-        }
-
+        iresult = run_function(&module, &thread, module.start_func_offset);
         if (iresult != WASM_INTERPRETER_RETURNED) {
           /* trap */
           fprintf(stderr, "error: %s\n", s_trap_strings[iresult]);
           result = WASM_ERROR;
         }
-        wasm_destroy_interpreter_thread(allocator, &thread);
       }
-    } else {
-      fprintf(stderr, "no start function defined.\n");
-      result = WASM_ERROR;
     }
+
+    if (result == WASM_OK) {
+      if (s_run_all_exports) {
+        uint32_t i;
+        for (i = 0; i < module.exports.size; ++i) {
+          WasmInterpreterExport* export = &module.exports.data[i];
+          iresult = run_export(&module, &thread, export);
+          if (iresult != WASM_INTERPRETER_RETURNED) {
+            /* trap */
+            fprintf(stderr, "error: %s\n", s_trap_strings[iresult]);
+            result = WASM_ERROR;
+            break;
+          }
+        }
+      }
+    }
+
+    wasm_destroy_interpreter_thread(allocator, &thread);
   }
 
   if (!s_use_libc_allocator)
