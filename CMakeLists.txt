@@ -192,6 +192,7 @@ add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
       -e $<TARGET_FILE:sexpr-wasm>
       --wasm-wast $<TARGET_FILE:wasm-wast>
-  DEPENDS sexpr-wasm wasm-wast
+      --wasm-interp $<TARGET_FILE:wasm-interp>
+  DEPENDS sexpr-wasm wasm-wast wasm-interp
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )
