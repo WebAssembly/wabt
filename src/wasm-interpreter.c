@@ -22,10 +22,10 @@
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
 static const char* s_opcode_name[] = {
-  WASM_FOREACH_OPCODE(V)
-  [WASM_OPCODE_ALLOCA] = "alloca",
-  [WASM_OPCODE_DISCARD] = "discard",
-  [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
+    WASM_FOREACH_OPCODE(V)
+    [WASM_OPCODE_ALLOCA] = "alloca",
+    [WASM_OPCODE_DISCARD] = "discard",
+    [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
 };
 #undef V
 
@@ -204,8 +204,8 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define PUSH_F32(v) PUSH_TYPE(F32, (v))
 #define PUSH_F64(v) PUSH_TYPE(F64, (v))
 
-#define STACK_VALUE(depth) (*(vs_top - (depth)))
-#define TOP() (STACK_VALUE(1))
+#define PICK(depth) (*(vs_top - (depth)))
+#define TOP() (PICK(1))
 #define POP() (*--vs_top)
 #define POP_I32() (POP().i32)
 #define POP_I64() (POP().i64)
@@ -246,19 +246,19 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     PUSH_##type(value);                                        \
   } while (0)
 
-#define BINOP(type, op)                   \
+#define BINOP(rtype, type, op)            \
   do {                                    \
     VALUE_TYPE_##type rhs = POP_##type(); \
     VALUE_TYPE_##type lhs = POP_##type(); \
-    PUSH_##type(lhs op rhs);              \
+    PUSH_##rtype(lhs op rhs);             \
   } while (0)
 
-#define BINOP_SIGNED(type, op)                           \
-  do {                                                   \
-    VALUE_TYPE_##type rhs = POP_##type();                \
-    VALUE_TYPE_##type lhs = POP_##type();                \
-    PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs)          \
-                    op BITCAST_##type##_TO_SIGNED(rhs)); \
+#define BINOP_SIGNED(rtype, type, op)                     \
+  do {                                                    \
+    VALUE_TYPE_##type rhs = POP_##type();                 \
+    VALUE_TYPE_##type lhs = POP_##type();                 \
+    PUSH_##rtype(BITCAST_##type##_TO_SIGNED(lhs)          \
+                     op BITCAST_##type##_TO_SIGNED(rhs)); \
   } while (0)
 
 #define SHIFT_MASK_I32 31
@@ -312,6 +312,13 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     FLOAT_TYPE_##type rhs = BITCAST_TO_##type(POP_##type()); \
     FLOAT_TYPE_##type lhs = BITCAST_TO_##type(POP_##type()); \
     PUSH_##type(BITCAST_FROM_##type(lhs op rhs));            \
+  } while (0)
+
+#define BINOP_FLOAT_COMPARE(type, op)                        \
+  do {                                                       \
+    FLOAT_TYPE_##type rhs = BITCAST_TO_##type(POP_##type()); \
+    FLOAT_TYPE_##type lhs = BITCAST_TO_##type(POP_##type()); \
+    PUSH_I32(lhs op rhs);                                    \
   } while (0)
 
 #define MIN_OP <
@@ -441,13 +448,13 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_GET_LOCAL: {
-        WasmInterpreterValue value = STACK_VALUE(read_u32(&pc));
+        WasmInterpreterValue value = PICK(read_u32(&pc));
         PUSH(value);
         break;
       }
 
       case WASM_OPCODE_SET_LOCAL:
-        STACK_VALUE(read_u32(&pc)) = TOP();
+        PICK(read_u32(&pc)) = TOP();
         break;
 
       case WASM_OPCODE_CALL_FUNCTION: {
@@ -462,7 +469,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         assert(sig_index < module->sigs.size);
         WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
         uint32_t num_args = sig->param_types.size;
-        VALUE_TYPE_I32 entry_index = STACK_VALUE(num_args + 1).i32;
+        VALUE_TYPE_I32 entry_index = PICK(num_args + 1).i32;
         if (entry_index >= module->func_table.size)
           TRAP(UNDEFINED_TABLE_INDEX);
         WasmInterpreterFuncTableEntry* entry =
@@ -615,15 +622,15 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       }
 
       case WASM_OPCODE_I32_ADD:
-        BINOP(I32, +);
+        BINOP(I32, I32, +);
         break;
 
       case WASM_OPCODE_I32_SUB:
-        BINOP(I32, -);
+        BINOP(I32, I32, -);
         break;
 
       case WASM_OPCODE_I32_MUL:
-        BINOP(I32, *);
+        BINOP(I32, I32, *);
         break;
 
       case WASM_OPCODE_I32_DIV_S:
@@ -643,15 +650,15 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I32_AND:
-        BINOP(I32, &);
+        BINOP(I32, I32, &);
         break;
 
       case WASM_OPCODE_I32_OR:
-        BINOP(I32, |);
+        BINOP(I32, I32, | );
         break;
 
       case WASM_OPCODE_I32_XOR:
-        BINOP(I32, ^);
+        BINOP(I32, I32, ^);
         break;
 
       case WASM_OPCODE_I32_SHL:
@@ -667,43 +674,43 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I32_EQ:
-        BINOP(I32, ==);
+        BINOP(I32, I32, == );
         break;
 
       case WASM_OPCODE_I32_NE:
-        BINOP(I32, !=);
+        BINOP(I32, I32, != );
         break;
 
       case WASM_OPCODE_I32_LT_S:
-        BINOP_SIGNED(I32, <);
+        BINOP_SIGNED(I32, I32, < );
         break;
 
       case WASM_OPCODE_I32_LE_S:
-        BINOP_SIGNED(I32, <=);
+        BINOP_SIGNED(I32, I32, <= );
         break;
 
       case WASM_OPCODE_I32_LT_U:
-        BINOP(I32, <);
+        BINOP(I32, I32, < );
         break;
 
       case WASM_OPCODE_I32_LE_U:
-        BINOP(I32, <=);
+        BINOP(I32, I32, <= );
         break;
 
       case WASM_OPCODE_I32_GT_S:
-        BINOP_SIGNED(I32, >);
+        BINOP_SIGNED(I32, I32, > );
         break;
 
       case WASM_OPCODE_I32_GE_S:
-        BINOP_SIGNED(I32, >=);
+        BINOP_SIGNED(I32, I32, >= );
         break;
 
       case WASM_OPCODE_I32_GT_U:
-        BINOP(I32, >);
+        BINOP(I32, I32, > );
         break;
 
       case WASM_OPCODE_I32_GE_U:
-        BINOP(I32, >=);
+        BINOP(I32, I32, >= );
         break;
 
       case WASM_OPCODE_I32_CLZ: {
@@ -731,15 +738,15 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       }
 
       case WASM_OPCODE_I64_ADD:
-        BINOP(I64, +);
+        BINOP(I64, I64, +);
         break;
 
       case WASM_OPCODE_I64_SUB:
-        BINOP(I64, -);
+        BINOP(I64, I64, -);
         break;
 
       case WASM_OPCODE_I64_MUL:
-        BINOP(I64, *);
+        BINOP(I64, I64, *);
         break;
 
       case WASM_OPCODE_I64_DIV_S:
@@ -759,15 +766,15 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I64_AND:
-        BINOP(I64, &);
+        BINOP(I64, I64, &);
         break;
 
       case WASM_OPCODE_I64_OR:
-        BINOP(I64, |);
+        BINOP(I64, I64, | );
         break;
 
       case WASM_OPCODE_I64_XOR:
-        BINOP(I64, ^);
+        BINOP(I64, I64, ^);
         break;
 
       case WASM_OPCODE_I64_SHL:
@@ -783,43 +790,43 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I64_EQ:
-        BINOP(I64, ==);
+        BINOP(I32, I64, == );
         break;
 
       case WASM_OPCODE_I64_NE:
-        BINOP(I64, !=);
+        BINOP(I32, I64, != );
         break;
 
       case WASM_OPCODE_I64_LT_S:
-        BINOP_SIGNED(I64, <);
+        BINOP_SIGNED(I32, I64, < );
         break;
 
       case WASM_OPCODE_I64_LE_S:
-        BINOP_SIGNED(I64, <=);
+        BINOP_SIGNED(I32, I64, <= );
         break;
 
       case WASM_OPCODE_I64_LT_U:
-        BINOP(I64, <);
+        BINOP(I32, I64, < );
         break;
 
       case WASM_OPCODE_I64_LE_U:
-        BINOP(I64, <=);
+        BINOP(I32, I64, <= );
         break;
 
       case WASM_OPCODE_I64_GT_S:
-        BINOP_SIGNED(I64, >);
+        BINOP_SIGNED(I32, I64, > );
         break;
 
       case WASM_OPCODE_I64_GE_S:
-        BINOP_SIGNED(I64, >=);
+        BINOP_SIGNED(I32, I64, >= );
         break;
 
       case WASM_OPCODE_I64_GT_U:
-        BINOP(I64, >);
+        BINOP(I32, I64, > );
         break;
 
       case WASM_OPCODE_I64_GE_U:
-        BINOP(I64, >=);
+        BINOP(I32, I64, >= );
         break;
 
       case WASM_OPCODE_I64_CLZ: {
@@ -853,7 +860,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_F32_DIV:
-        BINOP_FLOAT(F32, /);
+        BINOP_FLOAT(F32, / );
         break;
 
       case WASM_OPCODE_F32_MIN:
@@ -900,27 +907,27 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_F32_EQ:
-        BINOP_FLOAT(F32, ==);
+        BINOP_FLOAT_COMPARE(F32, == );
         break;
 
       case WASM_OPCODE_F32_NE:
-        BINOP_FLOAT(F32, !=);
+        BINOP_FLOAT_COMPARE(F32, != );
         break;
 
       case WASM_OPCODE_F32_LT:
-        BINOP_FLOAT(F32, <);
+        BINOP_FLOAT_COMPARE(F32, < );
         break;
 
       case WASM_OPCODE_F32_LE:
-        BINOP_FLOAT(F32, <=);
+        BINOP_FLOAT_COMPARE(F32, <= );
         break;
 
       case WASM_OPCODE_F32_GT:
-        BINOP_FLOAT(F32, >);
+        BINOP_FLOAT_COMPARE(F32, > );
         break;
 
       case WASM_OPCODE_F32_GE:
-        BINOP_FLOAT(F32, >=);
+        BINOP_FLOAT_COMPARE(F32, >= );
         break;
 
       case WASM_OPCODE_F64_ADD:
@@ -936,7 +943,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_F64_DIV:
-        BINOP_FLOAT(F64, /);
+        BINOP_FLOAT(F64, / );
         break;
 
       case WASM_OPCODE_F64_MIN:
@@ -983,27 +990,27 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_F64_EQ:
-        BINOP_FLOAT(F64, ==);
+        BINOP_FLOAT_COMPARE(F64, == );
         break;
 
       case WASM_OPCODE_F64_NE:
-        BINOP_FLOAT(F64, !=);
+        BINOP_FLOAT_COMPARE(F64, != );
         break;
 
       case WASM_OPCODE_F64_LT:
-        BINOP_FLOAT(F64, <);
+        BINOP_FLOAT_COMPARE(F64, < );
         break;
 
       case WASM_OPCODE_F64_LE:
-        BINOP_FLOAT(F64, <=);
+        BINOP_FLOAT_COMPARE(F64, <= );
         break;
 
       case WASM_OPCODE_F64_GT:
-        BINOP_FLOAT(F64, >);
+        BINOP_FLOAT_COMPARE(F64, > );
         break;
 
       case WASM_OPCODE_F64_GE:
-        BINOP_FLOAT(F64, >=);
+        BINOP_FLOAT_COMPARE(F64, >= );
         break;
 
       case WASM_OPCODE_I32_TRUNC_S_F32: {
@@ -1236,7 +1243,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint8_t keep_count = *pc++;
         assert(keep_count <= 1);
         if (keep_count == 1)
-          STACK_VALUE(discard_count + 1) = TOP();
+          PICK(discard_count + 1) = TOP();
         vs_top -= discard_count;
         break;
       }
@@ -1269,7 +1276,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
   switch (opcode) {
     case WASM_OPCODE_SELECT:
       printf("%s %u, %" PRIu64 ", %" PRIu64 "\n", s_opcode_name[opcode],
-             STACK_VALUE(3).i32, STACK_VALUE(2).i64, STACK_VALUE(1).i64);
+             PICK(3).i32, PICK(2).i64, PICK(1).i64);
       break;
 
     case WASM_OPCODE_BR:
@@ -1355,26 +1362,26 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I32_STORE8:
     case WASM_OPCODE_I32_STORE16:
     case WASM_OPCODE_I32_STORE:
-      printf("%s %u+$%u, %u\n", s_opcode_name[opcode], STACK_VALUE(2).i32,
-             read_u32_at(pc), STACK_VALUE(1).i32);
+      printf("%s %u+$%u, %u\n", s_opcode_name[opcode], PICK(2).i32,
+             read_u32_at(pc), PICK(1).i32);
       break;
 
     case WASM_OPCODE_I64_STORE8:
     case WASM_OPCODE_I64_STORE16:
     case WASM_OPCODE_I64_STORE32:
     case WASM_OPCODE_I64_STORE:
-      printf("%s %u+$%u, %" PRIu64 "\n", s_opcode_name[opcode],
-             STACK_VALUE(2).i32, read_u32_at(pc), STACK_VALUE(1).i64);
+      printf("%s %u+$%u, %" PRIu64 "\n", s_opcode_name[opcode], PICK(2).i32,
+             read_u32_at(pc), PICK(1).i64);
       break;
 
     case WASM_OPCODE_F32_STORE:
-      printf("%s %u+$%u, %g\n", s_opcode_name[opcode], STACK_VALUE(2).i32,
-             read_u32_at(pc), bitcast_u32_to_f32(STACK_VALUE(1).f32_bits));
+      printf("%s %u+$%u, %g\n", s_opcode_name[opcode], PICK(2).i32,
+             read_u32_at(pc), bitcast_u32_to_f32(PICK(1).f32_bits));
       break;
 
     case WASM_OPCODE_F64_STORE:
-      printf("%s %u+$%u, %g\n", s_opcode_name[opcode], STACK_VALUE(2).i32,
-             read_u32_at(pc), bitcast_u64_to_f64(STACK_VALUE(1).f64_bits));
+      printf("%s %u+$%u, %g\n", s_opcode_name[opcode], PICK(2).i32,
+             read_u32_at(pc), bitcast_u64_to_f64(PICK(1).f64_bits));
       break;
 
     case WASM_OPCODE_MEMORY_SIZE:
@@ -1410,8 +1417,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I32_GE_U:
     case WASM_OPCODE_I32_ROTR:
     case WASM_OPCODE_I32_ROTL:
-      printf("%s %u, %u\n", s_opcode_name[opcode], STACK_VALUE(2).i32,
-             STACK_VALUE(1).i32);
+      printf("%s %u, %u\n", s_opcode_name[opcode], PICK(2).i32, PICK(1).i32);
       break;
 
     case WASM_OPCODE_I32_CLZ:
@@ -1447,7 +1453,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I64_ROTR:
     case WASM_OPCODE_I64_ROTL:
       printf("%s %" PRIu64 ", %" PRIu64 "\n", s_opcode_name[opcode],
-             STACK_VALUE(2).i64, STACK_VALUE(1).i64);
+             PICK(2).i64, PICK(1).i64);
       break;
 
     case WASM_OPCODE_I64_CLZ:
@@ -1471,8 +1477,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F32_GT:
     case WASM_OPCODE_F32_GE:
       printf("%s %g, %g\n", s_opcode_name[opcode],
-             bitcast_u32_to_f32(STACK_VALUE(2).i32),
-             bitcast_u32_to_f32(STACK_VALUE(1).i32));
+             bitcast_u32_to_f32(PICK(2).i32), bitcast_u32_to_f32(PICK(1).i32));
       break;
 
     case WASM_OPCODE_F32_ABS:
@@ -1499,8 +1504,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F64_GT:
     case WASM_OPCODE_F64_GE:
       printf("%s %g, %g\n", s_opcode_name[opcode],
-             bitcast_u64_to_f64(STACK_VALUE(2).i64),
-             bitcast_u64_to_f64(STACK_VALUE(1).i64));
+             bitcast_u64_to_f64(PICK(2).i64), bitcast_u64_to_f64(PICK(1).i64));
       break;
 
     case WASM_OPCODE_F64_ABS:
