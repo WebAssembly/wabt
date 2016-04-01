@@ -1,0 +1,8 @@
+;;; TOOL: run-interp
+(module
+  (export "trap" 0)
+  (func
+    (unreachable)))
+(;; STDOUT ;;;
+trap()error: unreachable executed
+;;; STDOUT ;;)

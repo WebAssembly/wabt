@@ -1,0 +1,59 @@
+;;; TOOL: run-interp
+(module
+  ;; basic br test
+  (export "br0" $br0)
+  (func $br0 (result i32)
+    (local i32 i32)
+    (block $exit
+      (if (i32.const 1) (br 1))     ;; if branches introduce blocks
+      (set_local 0 (i32.const 1)))  ;; not executed
+    (set_local 1 (i32.const 1))
+    (return (i32.add
+        (i32.eq (get_local 0) (i32.const 0))
+        (i32.eq (get_local 1) (i32.const 1)))))
+
+  ;; test br-ing with a depth > 0
+  (export "br1" $br1)
+  (func $br1 (result i32)
+    (local i32 i32 i32)
+    (block $outer
+      (block $inner
+        (if (i32.const 1) (br 2))     ;; if branches introduce blocks
+        (set_local 0 (i32.const 1)))  ;; not executed
+      (set_local 1 (i32.const 1)))    ;; not executed
+    (set_local 2 (i32.const 1))
+    (return (i32.add
+                (i32.add (i32.eq (get_local 0) (i32.const 0))
+                         (i32.eq (get_local 1) (i32.const 0)))
+                (i32.eq (get_local 2) (i32.const 1)))))
+
+  ;; test br-ing to a label
+  (export "br2" $br2)
+  (func $br2 (result i32)
+    (block $exit
+      (block
+        (if (i32.const 1)
+          (br $exit))
+        (return (i32.const 1))))  ;; not executed
+    (return (i32.const 2)))
+
+  ;; test br-ing in a loop with an exit and continue continuation
+  (export "br3" $br3)
+  (func $br3 (result i32)
+    (local i32 i32)
+    (loop $exit $cont
+      (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+      (if (i32.ge_s (get_local 0) (i32.const 5))
+        (br $exit))
+      (if (i32.eq (get_local 0) (i32.const 4))
+        (br $cont))
+      (set_local 1 (get_local 0))
+      (br $cont))
+    (return (get_local 1)))
+)
+(;; STDOUT ;;;
+br0() => i32:2
+br1() => i32:3
+br2() => i32:2
+br3() => i32:3
+;;; STDOUT ;;)
