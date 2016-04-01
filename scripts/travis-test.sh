@@ -33,14 +33,14 @@ run_tests() {
 set_run_test_args() {
   local COMPILER=$1
   local BUILD_TYPE=$2
-  local SANITIZER=${3:-}
-  SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/sexpr-wasm${SANITIZER}
-  WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/wasm-wast${SANITIZER}
+  local CONFIG=${3:-}
+  SEXPR_WASM=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}/sexpr-wasm
+  WASM_WAST=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}/wasm-wast
   RUN_TEST_ARGS="--sexpr-wasm ${SEXPR_WASM} --wasm-wast ${WASM_WAST}"
 }
 
 if [ ${CC} = "gcc" ]; then
-  set_run_test_args gcc Debug-no-flex-bison
+  set_run_test_args gcc Debug no-flex-bison
   run_tests
 fi
 

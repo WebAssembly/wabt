@@ -42,9 +42,9 @@ Clang compiler. It will also create a symlink to the built binary in
 
 There are many make targets available for other configurations as well::
 
-  $ make gcc-release-sexpr-wasm
+  $ make gcc-i686-release
   ...
-  $ make clang-debug-sexpr-wasm-lsan
+  $ make clang-debug-lsan
   ...
 
 You can also run CMake yourself, the normal way::
@@ -308,13 +308,13 @@ Sanitizers
 ----------
 
 To build with the `LLVM sanitizers <https://github.com/google/sanitizers>`_,
-append the sanitizer name to sexpr-wasm::
+append the sanitizer name to the target::
 
-  $ make clang-debug-sexpr-wasm-asan
+  $ make clang-debug-asan
   ...
-  $ make clang-debug-sexpr-wasm-msan
+  $ make clang-debug-msan
   ...
-  $ make clang-debug-sexpr-wasm-lsan
+  $ make clang-debug-lsan
   ...
 
 There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer

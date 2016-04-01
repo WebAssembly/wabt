@@ -19,7 +19,7 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 BUILD_TYPES="debug release"
 BUILD_TYPES_UPPER="Debug Release"
-SANITIZERS="-asan -lsan -msan"
+SANITIZERS="asan lsan msan"
 
 if [ ${CC} = "gcc" ]; then
   COMPILERS="gcc gcc-i686"

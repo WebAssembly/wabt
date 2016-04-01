@@ -16,6 +16,9 @@
 
 .SUFFIXES:
 
+MAKEFILE_NAME := $(lastword $(MAKEFILE_LIST))
+ROOT_DIR := $(dir $(abspath $(MAKEFILE_NAME)))
+
 USE_NINJA ?= 0
 
 DEFAULT_COMPILER = CLANG
@@ -23,40 +26,49 @@ DEFAULT_BUILD_TYPE = DEBUG
 
 COMPILERS := GCC GCC_I686 CLANG
 BUILD_TYPES := DEBUG RELEASE
-SANITIZERS := NO ASAN MSAN LSAN
+SANITIZERS := ASAN MSAN LSAN
+CONFIGS := NORMAL ASAN MSAN LSAN NO_FLEX_BISON NO_TESTS
 EXECUTABLES := sexpr-wasm wasm-wast hexfloat_test
 
-GCC_DEBUG_DIR := out/gcc/Debug
-GCC_DEBUG_NO_FLEX_BISON_DIR := out/gcc/Debug-no-flex-bison
-GCC_DEBUG_NO_TESTS_DIR := out/gcc/Debug-no-tests
-GCC_RELEASE_DIR := out/gcc/Release
-GCC_I686_DEBUG_DIR := out/gcc-i686/Debug
-GCC_I686_RELEASE_DIR := out/gcc-i686/Release
-CLANG_DEBUG_DIR := out/clang/Debug
-CLANG_RELEASE_DIR := out/clang/Release
-CLANG_DEBUG_NO_TESTS_DIR := out/clang/Debug-no-tests
+# directory names
+GCC_DIR := gcc/
+GCC_I686_DIR := gcc-i686/
+CLANG_DIR := clang/
+DEBUG_DIR := Debug/
+RELEASE_DIR := Release/
+NORMAL_DIR :=
+ASAN_DIR := asan/
+MSAN_DIR := msan/
+LSAN_DIR := lsan/
+NO_FLEX_BISON_DIR := no-flex-bison/
+NO_TESTS_DIR := no-tests/
 
-DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
-RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
+# CMake flags
 GCC_FLAG := -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 GCC_I686_FLAG := -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
 	-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
 CLANG_FLAG := -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
+RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
+NORMAL_FLAG :=
+ASAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address
+MSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=memory -DCMAKE_CXX_FLAGS=-fsanitize=memory
+LSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=leak -DCMAKE_CXX_FLAGS=-fsanitize=leak
+NO_FLEX_BISON_FLAG := -DRUN_FLEX_BISON=OFF
+NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
-GCC_DEBUG_PREFIX := gcc-debug
-GCC_DEBUG_NO_FLEX_BISON_PREFIX := gcc-debug-no-flex-bison
-GCC_DEBUG_NO_TESTS_PREFIX := gcc-debug-no-tests
-GCC_RELEASE_PREFIX := gcc-release
-GCC_I686_DEBUG_PREFIX := gcc-i686-debug
-GCC_I686_RELEASE_PREFIX := gcc-i686-release
-CLANG_DEBUG_PREFIX := clang-debug
-CLANG_RELEASE_PREFIX := clang-release
-CLANG_DEBUG_NO_TESTS_PREFIX := clang-debug-no-tests
-
-NO_SUFFIX :=
-ASAN_SUFFIX := -asan
-MSAN_SUFFIX := -msan
-LSAN_SUFFIX := -lsan
+# make target prefixes
+GCC_PREFIX := gcc
+GCC_I686_PREFIX := gcc-i686
+CLANG_PREFIX := clang
+DEBUG_PREFIX := -debug
+RELEASE_PREFIX := -release
+NORMAL_PREFIX :=
+ASAN_PREFIX := -asan
+MSAN_PREFIX := -msan
+LSAN_PREFIX := -lsan
+NO_FLEX_BISON_PREFIX := -no-flex-bison
+NO_TESTS_PREFIX := -no-tests
 
 ifeq ($(USE_NINJA),1)
 BUILD := ninja
@@ -68,34 +80,38 @@ BUILD_FILE := Makefile
 GENERATOR := "Unix Makefiles"
 endif
 
+CMAKE_DIR = out/$($(1)_DIR)$($(2)_DIR)$($(3)_DIR)
+EXE_TARGET = $($(1)_PREFIX)$($(2)_PREFIX)$($(3)_PREFIX)
+TEST_TARGET = test-$($(1)_PREFIX)$($(2)_PREFIX)$($(3)_PREFIX)
+
 define DEFAULT
-.PHONY: $(3)$$($(4)_SUFFIX) test$$($(4)_SUFFIX)
-$(3)$$($(4)_SUFFIX): $$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
-	ln -sf ../$$($(1)_$(2)_DIR)/$(3)$$($(4)_SUFFIX) out/$(3)$$($(4)_SUFFIX)
+.PHONY: $(3)$($(4)_PREFIX) test$($(4)_PREFIX)
+$(3)$($(4)_PREFIX): $(call EXE_TARGET,$(1),$(2),$(4))
+	ln -sf ../$(call CMAKE_DIR,$(1),$(2),$(4))$(3) out/$(3)$($(4)_PREFIX)
 
-test$$($(4)_SUFFIX): test-$$($(1)_$(2)_PREFIX)$$($(4)_SUFFIX)
-
-test-everything: test$$($(4)_SUFFIX)
+test$($(4)_PREFIX): $(call TEST_TARGET,$(1),$(2),$(4))
+test-everything: test$($(4)_PREFIX)
 endef
 
 define CMAKE
-$$($(1)_$(2)_DIR)/:
-	mkdir -p $$($(1)_$(2)_DIR)
+$(call CMAKE_DIR,$(1),$(2),$(3)):
+	mkdir -p $(call CMAKE_DIR,$(1),$(2),$(3))
 
-$$($(1)_$(2)_DIR)/$$(BUILD_FILE): | $$($(1)_$(2)_DIR)/
-	cd $$($(1)_$(2)_DIR) && cmake -G $$(GENERATOR) ../../.. $$($(1)_FLAG) $$($(2)_FLAG) $(3)
+$(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE): | $(call CMAKE_DIR,$(1),$(2),$(3))
+	cd $(call CMAKE_DIR,$(1),$(2),$(3)) && \
+	cmake -G $$(GENERATOR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
 endef
 
 define EXE
-.PHONY: $$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/$$(BUILD_FILE)
-	$$(BUILD) -C $$($(1)_$(2)_DIR) all$$($(3)_SUFFIX)
+.PHONY: $(call EXE_TARGET,$(1),$(2),$(3))
+$(call EXE_TARGET,$(1),$(2),$(3)): $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE)
+	$$(BUILD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) all
 endef
 
 define TEST
-.PHONY: test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX)
-test-$$($(1)_$(2)_PREFIX)$$($(3)_SUFFIX): $$($(1)_$(2)_DIR)/$$(BUILD_FILE)
-	$$(BUILD) -C $$($(1)_$(2)_DIR) run-tests$$($(3)_SUFFIX)
+.PHONY: $(call TEST_TARGET,$(1),$(2),$(3))
+$(call TEST_TARGET,$(1),$(2),$(3)): $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE)
+	$$(BUILD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) run-tests
 endef
 
 .PHONY: all
@@ -119,33 +135,26 @@ src/prebuilt/wasm-flex-lexer.c: src/wasm-flex-lexer.l
 	flex -o $@ $<
 
 # defaults with simple names
-$(foreach SANITIZER,$(SANITIZERS), \
-	$(foreach EXECUTABLE,$(EXECUTABLES), \
+$(foreach EXECUTABLE,$(EXECUTABLES), \
+	$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),$(EXECUTABLE),NORMAL)) \
+	$(foreach SANITIZER,$(SANITIZERS), \
 		$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),$(EXECUTABLE),$(SANITIZER)))))
 
 # running CMake
-$(foreach COMPILER,$(COMPILERS), \
-	$(foreach BUILD_TYPE,$(BUILD_TYPES), \
-		$(eval $(call CMAKE,$(COMPILER),$(BUILD_TYPE)))))
+$(foreach CONFIG,$(CONFIGS), \
+	$(foreach COMPILER,$(COMPILERS), \
+		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
+			$(eval $(call CMAKE,$(COMPILER),$(BUILD_TYPE),$(CONFIG))))))
 
 # building
-$(foreach SANITIZER,$(SANITIZERS), \
+$(foreach CONFIG,$(CONFIGS), \
 	$(foreach COMPILER,$(COMPILERS), \
 		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
-			$(eval $(call EXE,$(COMPILER),$(BUILD_TYPE),$(SANITIZER))))))
+			$(eval $(call EXE,$(COMPILER),$(BUILD_TYPE),$(CONFIG))))))
 
 # test running
-$(foreach SANITIZER,$(SANITIZERS), \
+$(foreach CONFIG,$(CONFIGS), \
 	$(foreach COMPILER,$(COMPILERS), \
 		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
-			$(eval $(call TEST,$(COMPILER),$(BUILD_TYPE),$(SANITIZER))))))
+			$(eval $(call TEST,$(COMPILER),$(BUILD_TYPE),$(CONFIG))))))
 
-# One-off build target for running w/out flex + bison
-$(eval $(call CMAKE,GCC,DEBUG_NO_FLEX_BISON,-DRUN_FLEX_BISON=OFF))
-$(eval $(call EXE,GCC,DEBUG_NO_FLEX_BISON,NO))
-$(eval $(call TEST,GCC,DEBUG_NO_FLEX_BISON,NO))
-
-# One-off build target for running w/out gtest
-$(eval $(call CMAKE,CLANG,DEBUG_NO_TESTS,-DBUILD_TESTS=OFF))
-$(eval $(call EXE,CLANG,DEBUG_NO_TESTS,NO))
-$(eval $(call TEST,CLANG,DEBUG_NO_TESTS,NO))

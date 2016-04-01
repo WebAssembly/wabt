@@ -34,7 +34,7 @@ for COMPILER in ${COMPILERS}; do
     make ${COMPILER}-${BUILD_TYPE}
     if [ ${COMPILER} = "clang" ]; then
       for SANITIZER in ${SANITIZERS}; do
-        make ${CC}-${BUILD_TYPE}${SANITIZER}
+        make ${CC}-${BUILD_TYPE}-${SANITIZER}
       done
     fi
   done
