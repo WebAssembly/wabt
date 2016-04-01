@@ -424,9 +424,8 @@ static WasmResult emit_br(WasmReadInterpreterContext* ctx,
 
 static WasmResult emit_br_table_offset(WasmReadInterpreterContext* ctx,
                                        uint32_t depth,
-                                       WasmDepthNode* node,
-                                       uint32_t discard_count) {
-  discard_count = ctx->value_stack_size - node->value_stack_size;
+                                       WasmDepthNode* node) {
+  uint32_t discard_count = ctx->value_stack_size - node->value_stack_size;
   CHECK_RESULT(emit_br_offset(ctx, depth, node->offset));
   CHECK_RESULT(emit_i32(ctx, discard_count));
   return WASM_OK;
@@ -1171,31 +1170,22 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
   /* we need to parse the "key" expression before we can execute the br_table.
    * Rather than store the target_depths in an Expr, we just write them out
    * into the instruction stream and just jump over it. */
-  uint32_t fixup_br_offset = get_istream_offset(ctx);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR, 0));
+  uint32_t fixup_br_offset = get_istream_offset(ctx);
   CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
 
   /* write the branch table as (offset, discard count) pairs */
   expr.br_table.table_offset = get_istream_offset(ctx);
 
-  WasmDepthNode* node;
-  uint32_t discard_count;
   uint32_t i;
-  for (i = 0; i < num_targets; ++i) {
-    uint32_t depth = translate_depth(ctx, target_depths[i]);
-    node = get_depth_node(ctx, depth);
-    discard_count = ctx->value_stack_size - node->value_stack_size;
+  for (i = 0; i <= num_targets; ++i) {
+    uint32_t depth = i != num_targets ? target_depths[i] : default_target_depth;
+    uint32_t translated_depth = translate_depth(ctx, depth);
+    WasmDepthNode* node = get_depth_node(ctx, translated_depth);
     CHECK_RESULT(unify_and_check_type_exact(ctx, &node->type, WASM_TYPE_VOID,
                                             " in br_table"));
-    CHECK_RESULT(emit_br_table_offset(ctx, depth, node, discard_count));
+    CHECK_RESULT(emit_br_table_offset(ctx, translated_depth, node));
   }
-  /* write default target */
-  node = get_depth_node(ctx, translate_depth(ctx, default_target_depth));
-  discard_count = ctx->value_stack_size - node->value_stack_size;
-  CHECK_RESULT(unify_and_check_type_exact(ctx, &node->type, WASM_TYPE_VOID,
-                                          " in br_table"));
-  CHECK_RESULT(
-      emit_br_table_offset(ctx, default_target_depth, node, discard_count));
 
   CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset, get_istream_offset(ctx)));
   return shift(ctx, &expr, 1);
@@ -1418,8 +1408,9 @@ static WasmResult on_function_table_entry(uint32_t index,
   WasmInterpreterFuncTableEntry* entry = &ctx->module->func_table.data[index];
   WasmInterpreterFunc* func = get_func(ctx, func_index);
   entry->sig_index = func->sig_index;
-  assert(func->offset != WASM_INVALID_OFFSET);
-  entry->func_offset = func->offset;
+  /* the function offset isn't known yet, so temporarily store the func index
+   * in func_offset and resolve after the last function body */
+  entry->func_offset = func_index;
   return WASM_OK;
 }
 
@@ -1458,17 +1449,27 @@ static WasmResult on_export(uint32_t index,
 static WasmResult end_function_bodies_section(void* user_data) {
   WasmReadInterpreterContext* ctx = user_data;
 
+  /* resolve the start function offset */
   if (ctx->start_func_index != INVALID_FUNC_INDEX) {
     WasmInterpreterFunc* func = get_func(ctx, ctx->start_func_index);
     assert(func->offset != WASM_INVALID_OFFSET);
     ctx->module->start_func_offset = func->offset;
   }
 
+  /* resolve the export function offsets */
   uint32_t i;
   for (i = 0; i < ctx->module->exports.size; ++i) {
     WasmInterpreterExport* export = get_export(ctx, i);
     WasmInterpreterFunc* func = get_func(ctx, export->func_index);
     export->func_offset = func->offset;
+  }
+
+  /* resolve the function table entry offsets */
+  for (i = 0; i < ctx->module->func_table.size; ++i) {
+    WasmInterpreterFuncTableEntry* entry = &ctx->module->func_table.data[i];
+    /* function index is stored in func_offset temporarily */
+    WasmInterpreterFunc* func = get_func(ctx, entry->func_offset);
+    entry->func_offset = func->offset;
   }
 
   return WASM_OK;

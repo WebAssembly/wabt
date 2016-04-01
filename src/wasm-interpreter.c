@@ -399,10 +399,12 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t num_targets = read_u32(&pc);
         uint32_t table_offset = read_u32(&pc);
         VALUE_TYPE_I32 key = POP_I32();
-        uint32_t key_offset;
-        key_offset =
-            (key >= num_targets ? num_targets : key) * sizeof(uint32_t);
-        uint32_t new_pc = read_u32_at(istream + table_offset + key_offset);
+        uint32_t key_offset =
+            (key >= num_targets ? num_targets : key) * 2 * sizeof(uint32_t);
+        const uint8_t* entry = istream + table_offset + key_offset;
+        uint32_t new_pc = read_u32_at(entry);
+        uint32_t discard_count = read_u32_at(entry + sizeof(uint32_t));
+        vs_top -= discard_count;
         GOTO(new_pc);
         break;
       }
@@ -457,7 +459,10 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_CALL_INDIRECT: {
         uint32_t sig_index = read_u32(&pc);
-        VALUE_TYPE_I32 entry_index = POP_I32();
+        assert(sig_index < module->sigs.size);
+        WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
+        uint32_t num_args = sig->param_types.size;
+        VALUE_TYPE_I32 entry_index = STACK_VALUE(num_args + 1).i32;
         if (entry_index >= module->func_table.size)
           TRAP(UNDEFINED_TABLE_INDEX);
         WasmInterpreterFuncTableEntry* entry =

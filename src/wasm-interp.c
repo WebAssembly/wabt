@@ -260,30 +260,36 @@ static WasmInterpreterResult run_export(WasmInterpreterModule* module,
 
   WasmInterpreterResult result =
       run_function(module, thread, export->func_offset);
+
+  printf("%.*s(", (int)export->name.length, export->name.start);
+  uint32_t i;
+  for (i = 0; i < num_params; ++i) {
+    printf("0");
+    if (i != num_params - 1)
+      printf(", ");
+  }
+  if (sig->result_type != WASM_TYPE_VOID)
+    printf(") => ");
+  else
+    printf(")");
+
   if (result == WASM_INTERPRETER_RETURNED) {
-    printf("%.*s(", (int)export->name.length, export->name.start);
-    uint32_t i;
-    for (i = 0; i < num_params; ++i) {
-      printf("0");
-      if (i != num_params - 1)
-        printf(", ");
-    }
     if (sig->result_type != WASM_TYPE_VOID) {
       assert(thread->value_stack_top == 1);
       WasmInterpreterValue value = thread->value_stack.data[0];
       WasmInterpreterTypedValue typed_value;
       typed_value.type = sig->result_type;
       typed_value.value = value;
-      printf(") => ");
       print_typed_value(&typed_value);
-      printf("\n");
     } else {
-      printf(")\n");
       assert(thread->value_stack_top == 0);
     }
-
-    thread->value_stack_top = 0;
+    printf("\n");
+  } else {
+    /* trap */
+    printf("error: %s\n", s_trap_strings[result]);
   }
+  thread->value_stack_top = 0;
   return result;
 }
 
@@ -336,13 +342,7 @@ int main(int argc, char** argv) {
         uint32_t i;
         for (i = 0; i < module.exports.size; ++i) {
           WasmInterpreterExport* export = &module.exports.data[i];
-          iresult = run_export(&module, &thread, export);
-          if (iresult != WASM_INTERPRETER_RETURNED) {
-            /* trap */
-            fprintf(stderr, "error: %s\n", s_trap_strings[iresult]);
-            result = WASM_ERROR;
-            break;
-          }
+          run_export(&module, &thread, export);
         }
       }
     }
