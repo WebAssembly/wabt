@@ -891,6 +891,7 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
             CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, expr->type, " in if"));
             CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I32_EQZ));
             CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_IF));
+            adjust_value_stack(ctx, -get_value_count(expr->type));
             top->expr.if_.fixup_offset = get_istream_offset(ctx);
             CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
           } else {
@@ -911,6 +912,7 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
                 check_type(ctx, WASM_TYPE_I32, expr->type, " in if_else"));
             CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I32_EQZ));
             CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_IF));
+            adjust_value_stack(ctx, -get_value_count(expr->type));
             top->expr.if_else.fixup_cond_offset = get_istream_offset(ctx);
             top->expr.if_else.value_stack_size = ctx->value_stack_size;
             CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
