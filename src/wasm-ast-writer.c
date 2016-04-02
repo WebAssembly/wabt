@@ -838,6 +838,8 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
     }
   }
   out_close_newline(ctx);
+  /* force the newline to be written */
+  out_next_char(ctx);
 }
 
 WasmResult wasm_write_ast(struct WasmAllocator* allocator,

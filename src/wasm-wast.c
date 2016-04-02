@@ -165,7 +165,6 @@ int main(int argc, char** argv) {
       result = wasm_init_file_writer(&file_writer, s_outfile);
       if (result == WASM_OK) {
         result = wasm_write_ast(allocator, &file_writer.base, &module);
-        fprintf(stdout, "\n");
         wasm_close_file_writer(&file_writer);
       }
     }
