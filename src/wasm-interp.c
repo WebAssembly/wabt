@@ -541,8 +541,15 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         break;
 
       case MODULES_ARRAY:
-        EXPECT('{');
-        state = MODULE_OBJECT;
+        if (MATCHES(']')) {
+          /* should only match with an empty module list */
+          SKIP_WS();
+          EXPECT('}');
+          state = DONE;
+        } else {
+          EXPECT('{');
+          state = MODULE_OBJECT;
+        }
         break;
 
       case END_MODULES_ARRAY:

@@ -227,10 +227,10 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define LOAD(type, mem_type)                                               \
   do {                                                                     \
     uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                 \
-    if (offset >= module->memory.byte_size)                                \
+    MEM_TYPE_##mem_type value;                                             \
+    if (offset + sizeof(value) > module->memory.byte_size)                 \
       TRAP(MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
     void* src = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
-    MEM_TYPE_##mem_type value;                                             \
     memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                      \
     PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);               \
   } while (0)
@@ -239,10 +239,10 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                                     \
     VALUE_TYPE_##type value = POP_##type();                                \
     uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                 \
-    if (offset >= module->memory.byte_size)                                \
+    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;                  \
+    if (offset + sizeof(src) > module->memory.byte_size)                   \
       TRAP(MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
     void* dst = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
-    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;                  \
     memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                        \
     PUSH_##type(value);                                                    \
   } while (0)
