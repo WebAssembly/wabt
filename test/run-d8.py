@@ -17,6 +17,7 @@
 
 import argparse
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -54,6 +55,8 @@ def CleanD8Stderr(stderr):
 
 def main(args):
   parser = argparse.ArgumentParser()
+  parser.add_argument('-o', '--out-dir', metavar='PATH',
+                      help='output directory for files.')
   parser.add_argument('-e', '--executable', metavar='PATH',
                       help='override sexpr-wasm executable.')
   parser.add_argument('--d8-executable', metavar='PATH',
@@ -68,19 +71,29 @@ def main(args):
   sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(options.executable)
   d8_exe = find_exe.GetD8Executable(options.d8_executable)
 
-  generated = None
+  if options.out_dir:
+    out_dir = options.out_dir
+    out_dir_is_temp = False
+    if not os.path.exists(out_dir):
+      os.makedirs(out_dir)
+  else:
+    out_dir = tempfile.mkdtemp(prefix='run-d8-')
+    out_dir_is_temp = True
+
   try:
-    # Use delete=False because Windows can't open a NamedTemporaryFile until it
-    # is cloesd, but it will be deleted by default if it is closed.
-    generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-', delete=False)
-    generated.close()
-    wasm_file = generated.name
+    basename_noext = os.path.splitext(os.path.basename(options.file))[0]
+    if options.spec:
+      basename = basename_noext + '.json'
+    else:
+      basename = basename_noext + '.wasm'
+    out_file = os.path.join(out_dir, basename)
+
     # First compile the file
-    cmd = [sexpr_wasm_exe, '-o', wasm_file]
+    cmd = [sexpr_wasm_exe, '-o', out_file]
     if options.verbose:
       cmd.append('-v')
     if options.spec:
-      cmd.extend(['--spec', '--spec-verbose'])
+      cmd.extend(['--spec'])
     if options.use_libc_allocator:
       cmd.extend(['--use-libc-allocator'])
     cmd.append(options.file)
@@ -94,10 +107,9 @@ def main(args):
 
     # Now run the generated file
     if options.spec:
-      # The generated file is JavaScript, so run it directly.
-      cmd = [d8_exe, EXPOSE_WASM, SPEC_JS, wasm_file]
+      cmd = [d8_exe, EXPOSE_WASM, SPEC_JS, '--', out_file]
     else:
-      cmd = [d8_exe, EXPOSE_WASM, WASM_JS, '--', wasm_file]
+      cmd = [d8_exe, EXPOSE_WASM, WASM_JS, '--', out_file]
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE,
@@ -117,8 +129,8 @@ def main(args):
       raise Error(str(e))
 
   finally:
-    if generated:
-      os.remove(generated.name)
+    if out_dir_is_temp:
+      shutil.rmtree(out_dir)
 
   return 0
 

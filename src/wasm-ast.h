@@ -298,6 +298,7 @@ typedef enum WasmCommandType {
   WASM_COMMAND_TYPE_ASSERT_RETURN,
   WASM_COMMAND_TYPE_ASSERT_RETURN_NAN,
   WASM_COMMAND_TYPE_ASSERT_TRAP,
+  WASM_NUM_COMMAND_TYPES,
 } WasmCommandType;
 
 typedef struct WasmCommandInvoke {

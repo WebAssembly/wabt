@@ -20,10 +20,24 @@
 
 #include "wasm-ast.h"
 #include "wasm-binary.h"
+#include "wasm-binary-writer.h"
 #include "wasm-config.h"
 #include "wasm-writer.h"
 
 #define DUMP_OCTETS_PER_LINE 16
+
+#define CALLBACK0(ctx, member)                                     \
+  do {                                                             \
+    if (((ctx)->spec_options->member))                             \
+      (ctx)->spec_options->member((ctx)->spec_options->user_data); \
+  } while (0)
+
+#define CALLBACK(ctx, member, ...)                                             \
+  do {                                                                         \
+    if (((ctx)->spec_options->member))                                         \
+      (ctx)                                                                    \
+          ->spec_options->member(__VA_ARGS__, (ctx)->spec_options->user_data); \
+  } while (0)
 
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
@@ -46,7 +60,6 @@ typedef struct WasmWriteSpecContext {
   size_t writer_offset;
   WasmWriteBinaryOptions* options;
   WasmWriteBinarySpecOptions* spec_options;
-  WasmMemoryWriter module_writer;
   WasmResult result;
 } WasmWriteSpecContext;
 
@@ -57,36 +70,6 @@ static int is_nan_f32(uint32_t bits) {
 static int is_nan_f64(uint64_t bits) {
   return (bits & 0x7ff0000000000000LL) == 0x7ff0000000000000LL &&
          (bits & 0x000fffffffffffffLL) != 0;
-}
-
-static void out_data_at(WasmWriteSpecContext* ctx,
-                        size_t offset,
-                        const void* src,
-                        size_t size,
-                        const char* desc) {
-  if (ctx->result != WASM_OK)
-    return;
-  if (ctx->writer->write_data) {
-    ctx->result =
-        ctx->writer->write_data(offset, src, size, ctx->writer->user_data);
-  }
-}
-
-static void out_printf(WasmWriteSpecContext* ctx, const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-  /* + 1 to account for the \0 that will be added automatically by
-   wasm_vsnprintf */
-  int len = wasm_vsnprintf(NULL, 0, format, args) + 1;
-  va_end(args);
-  char* buffer = alloca(len);
-  wasm_vsnprintf(buffer, len, format, args_copy);
-  va_end(args_copy);
-  /* - 1 to remove the trailing \0 that was added by wasm_vsnprintf */
-  out_data_at(ctx, ctx->writer_offset, buffer, len - 1, "");
-  ctx->writer_offset += len - 1;
 }
 
 static WasmExpr* create_const_expr(WasmAllocator* allocator,
@@ -336,79 +319,54 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
   return module->funcs.data[func_index];
 }
 
-static void write_header(WasmWriteSpecContext* ctx) {
-  out_printf(ctx, "var quiet = %s;\n",
-             ctx->spec_options->verbose ? "false" : "true");
-}
-
-static void write_footer(WasmWriteSpecContext* ctx) {
-  out_printf(ctx, "end();\n");
-}
-
-static void write_module_header(WasmWriteSpecContext* ctx) {
-  out_printf(ctx, "var tests = function(m) {\n");
-}
-
-static void write_module(WasmWriteSpecContext* ctx, WasmModule* module) {
-  /* reset the module writer in case it's already been used */
-  ctx->module_writer.buf.size = 0;
-
-  WasmResult result = wasm_write_binary_module(
-      ctx->allocator, &ctx->module_writer.base, module, ctx->options);
+static void write_module(WasmWriteSpecContext* ctx,
+                         uint32_t index,
+                         WasmModule* module) {
+  WasmResult result;
+  WasmWriter* writer = NULL;
+  CALLBACK(ctx, on_module_before_write, index, &writer);
+  if (writer != NULL) {
+    result =
+        wasm_write_binary_module(ctx->allocator, writer, module, ctx->options);
+  } else {
+    result = WASM_ERROR;
+  }
   if (result != WASM_OK)
     ctx->result = result;
-
-  /* copy the written module from the output buffer */
-  out_printf(ctx, "};\nvar m = createModule([\n");
-  WasmOutputBuffer* module_buf = &ctx->module_writer.buf;
-  const uint8_t* p = module_buf->start;
-  const uint8_t* end = p + module_buf->size;
-  while (p < end) {
-    out_printf(ctx, " ");
-    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    if (line_end > end)
-      line_end = end;
-    for (; p < line_end; ++p)
-      out_printf(ctx, "%4d,", *p);
-    out_printf(ctx, "\n");
-  }
-  out_printf(ctx, "]);\ntests(m);\n");
+  CALLBACK(ctx, on_module_end, index, result);
 }
 
 static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
-  int i;
+  uint32_t i;
+  uint32_t num_modules = 0;
   WasmModule* last_module = NULL;
-  int num_assert_funcs = 0;
+  uint32_t num_assert_funcs = 0;
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
     if (command->type == WASM_COMMAND_TYPE_MODULE) {
       if (last_module)
-        write_module(ctx, last_module);
-      write_module_header(ctx);
+        write_module(ctx, num_modules, last_module);
+      CALLBACK(ctx, on_module_begin, num_modules);
       last_module = &command->module;
       num_assert_funcs = 0;
+      ++num_modules;
     } else {
-      const char* js_call = NULL;
       const char* format = NULL;
       WasmCommandInvoke* invoke = NULL;
       switch (command->type) {
         case WASM_COMMAND_TYPE_INVOKE:
-          js_call = "invoke";
           format = "$invoke_%d";
           invoke = &command->invoke;
           break;
         case WASM_COMMAND_TYPE_ASSERT_RETURN:
-          js_call = "assertReturn";
           format = "$assert_return_%d";
           invoke = &command->assert_return.invoke;
           break;
         case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-          js_call = "assertReturn";
           format = "$assert_return_nan_%d";
           invoke = &command->assert_return_nan.invoke;
           break;
         case WASM_COMMAND_TYPE_ASSERT_TRAP:
-          js_call = "assertTrap";
           format = "$assert_trap_%d";
           invoke = &command->assert_trap.invoke;
           break;
@@ -426,10 +384,13 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
       export = NULL;
       callee = NULL;
 
-      WasmStringSlice name = create_assert_func_name(script->allocator, format,
-                                                     num_assert_funcs++);
-      out_printf(ctx, "  %s(m, \"%.*s\", \"%s\", %d);\n", js_call, name.length,
-                 name.start, invoke->loc.filename, invoke->loc.line);
+      WasmStringSlice name =
+          create_assert_func_name(script->allocator, format, num_assert_funcs);
+
+      CALLBACK(ctx, on_command, num_assert_funcs, command->type, &name,
+               &invoke->loc);
+
+      ++num_assert_funcs;
 
       WasmExprPtr* expr_ptr;
       switch (command->type) {
@@ -549,31 +510,24 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
     }
   }
   if (last_module)
-    write_module(ctx, last_module);
+    write_module(ctx, num_modules, last_module);
 }
 
 WasmResult wasm_write_binary_spec_script(
     WasmAllocator* allocator,
-    WasmWriter* writer,
     WasmScript* script,
     WasmWriteBinaryOptions* options,
     WasmWriteBinarySpecOptions* spec_options) {
   WasmWriteSpecContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
-  ctx.writer = writer;
   ctx.options = options;
   ctx.spec_options = spec_options;
   ctx.result = WASM_OK;
 
-  WasmResult result = wasm_init_mem_writer(allocator, &ctx.module_writer);
-  if (result != WASM_OK)
-    return result;
-
-  write_header(&ctx);
+  CALLBACK0(&ctx, on_script_begin);
   write_commands(&ctx, script);
-  write_footer(&ctx);
+  CALLBACK0(&ctx, on_script_end);
 
-  wasm_close_mem_writer(&ctx.module_writer);
   return ctx.result;
 }

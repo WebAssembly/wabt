@@ -603,6 +603,9 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       wasm_destroy_invoke(allocator, &command->assert_trap.invoke);
       wasm_destroy_string_slice(allocator, &command->assert_trap.text);
       break;
+    default:
+      assert(0);
+      break;
   }
 }
 

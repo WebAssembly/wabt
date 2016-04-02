@@ -14,24 +14,50 @@
  * limitations under the License.
  */
 
-var quiet; /* global, defined by output from sexpr-wasm */
+if (arguments.length != 1) {
+  print('usage: d8 spec.js -- <filename.json>');
+  quit(0);
+}
+
 var passed = 0;
 var failed = 0;
 
-function wasmWrite(memory, offset, count) {
-  try {
-    var view = new Uint8Array(memory, offset, count);
-  } catch (exc) {
-    print("wasmWrite(" + offset + ", " + count + ") failed on heap of size " +
-          memory.byteLength);
-    throw exc;
+var quiet = false;
+
+run(arguments[0]);
+
+function run(inPath) {
+  var lastSlash = inPath.lastIndexOf('/');
+  var inDir = lastSlash == -1 ? '.' : inPath.slice(0, lastSlash);
+  var data = read(inPath);
+  var jsonData = JSON.parse(data);
+
+  for (var i = 0; i < jsonData.modules.length; ++i) {
+    var module = jsonData.modules[i];
+    var moduleFile = readbuffer(inDir + '/' + module.filename);
+    var m = createModule(moduleFile);
+    for (var j = 0; j < module.commands.length; ++j) {
+      var command = module.commands[j];
+      switch (command.type) {
+        case 'invoke':
+          invoke(m, command.name);
+          break;
+
+        case 'assert_return':
+          assertReturn(m, command.name, command.file, command.line);
+          break;
+
+        case 'assert_return_nan':
+          assertReturn(m, command.name, command.file, command.line);
+          break;
+
+        case 'assert_trap':
+          assertTrap(m, command.name, command.file, command.line);
+          break;
+      }
+    }
   }
-  var str = "";
-
-  for (var i = 0; i < count; i++)
-    str += String.fromCharCode(view[i]);
-
-  write(str);
+  end();
 }
 
 function createModule(a) {
