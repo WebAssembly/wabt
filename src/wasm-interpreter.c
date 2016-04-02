@@ -67,6 +67,7 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread) {
   wasm_destroy_interpreter_value_array(allocator, &thread->value_stack);
   wasm_destroy_uint32_array(allocator, &thread->call_stack);
+  wasm_destroy_interpreter_typed_value_array(allocator, &thread->import_args);
 }
 
 #define F32_SIGN_MASK 0x80000000U

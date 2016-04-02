@@ -171,5 +171,6 @@ void wasm_close_mem_writer(WasmMemoryWriter* writer) {
 }
 
 void wasm_destroy_output_buffer(WasmOutputBuffer* buf) {
-  wasm_free(buf->allocator, buf->start);
+  if (buf->allocator)
+    wasm_free(buf->allocator, buf->start);
 }

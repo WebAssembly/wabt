@@ -1563,9 +1563,16 @@ static WasmBinaryReader s_binary_reader = {
     .on_export = &on_export,
 };
 
+static void wasm_destroy_interpreter_func(WasmAllocator* allocator,
+                                          WasmInterpreterFunc* func) {
+  wasm_destroy_type_vector(allocator, &func->param_and_local_types);
+}
+
 static void destroy_context(WasmReadInterpreterContext* ctx) {
   wasm_destroy_expr_node_vector(ctx->allocator, &ctx->expr_stack);
   wasm_destroy_depth_node_vector(ctx->allocator, &ctx->depth_stack);
+  WASM_DESTROY_ARRAY_AND_ELEMENTS(ctx->allocator, ctx->funcs,
+                                   interpreter_func);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->depth_fixups,
                                    uint32_vector);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->func_fixups,
