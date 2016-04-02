@@ -269,20 +269,24 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
                                           WasmInterpreterThread* thread,
                                           uint32_t offset) {
   thread->pc = offset;
-  WasmInterpreterResult result = WASM_INTERPRETER_OK;
+  WasmInterpreterResult iresult = WASM_INTERPRETER_OK;
   uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
-  while (result == WASM_INTERPRETER_OK) {
+  while (iresult == WASM_INTERPRETER_OK) {
     if (s_trace)
       wasm_trace_pc(module, thread);
-    result = wasm_run_interpreter(module, thread, quantum);
+    iresult = wasm_run_interpreter(module, thread, quantum);
   }
-  return result;
+  if (s_trace && iresult != WASM_INTERPRETER_RETURNED)
+    printf("!!! trapped: %s\n", s_trap_strings[iresult]);
+  return iresult;
 }
 
 static WasmResult run_start_function(WasmInterpreterModule* module,
                                      WasmInterpreterThread* thread) {
   WasmResult result = WASM_OK;
   if (module->start_func_offset != WASM_INVALID_OFFSET) {
+    if (s_trace)
+      printf(">>> running start function:\n");
     WasmInterpreterResult iresult =
         run_function(module, thread, module->start_func_offset);
     if (iresult != WASM_INTERPRETER_RETURNED) {
@@ -309,6 +313,9 @@ static WasmInterpreterResult run_export(
   memset(thread->value_stack.data, 0,
          num_params * sizeof(WasmInterpreterValue));
 
+  if (s_trace)
+    printf(">>> running export \"%.*s\":\n", (int)export->name.length,
+           export->name.start);
   WasmInterpreterResult result =
       run_function(module, thread, export->func_offset);
 
