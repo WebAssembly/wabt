@@ -25,10 +25,6 @@
 
 #define DUMP_OCTETS_PER_LINE 16
 
-/* whether to display the ASCII characters in the debug output */
-#define PRINT_CHARS 1
-#define DONT_PRINT_CHARS 0
-
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
@@ -44,19 +40,13 @@
 #define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
 
-typedef struct WasmWriterState {
-  WasmWriter* writer;
-  size_t offset;
-  WasmResult* result;
-  int log_writes;
-} WasmWriterState;
-
 typedef struct WasmWriteSpecContext {
   WasmAllocator* allocator;
-  WasmWriterState writer_state;
+  WasmWriter* writer;
+  size_t writer_offset;
   WasmWriteBinaryOptions* options;
   WasmWriteBinarySpecOptions* spec_options;
-  WasmMemoryWriter* mem_writer;
+  WasmMemoryWriter module_writer;
   WasmResult result;
 } WasmWriteSpecContext;
 
@@ -69,22 +59,20 @@ static int is_nan_f64(uint64_t bits) {
          (bits & 0x000fffffffffffffLL) != 0;
 }
 
-static void out_data_at(WasmWriterState* writer_state,
+static void out_data_at(WasmWriteSpecContext* ctx,
                         size_t offset,
                         const void* src,
                         size_t size,
-                        int print_chars,
                         const char* desc) {
-  if (*writer_state->result != WASM_OK)
+  if (ctx->result != WASM_OK)
     return;
-  if (writer_state->log_writes)
-    wasm_print_memory(src, size, offset, print_chars, desc);
-  if (writer_state->writer->write_data)
-    *writer_state->result = writer_state->writer->write_data(
-        offset, src, size, writer_state->writer->user_data);
+  if (ctx->writer->write_data) {
+    ctx->result =
+        ctx->writer->write_data(offset, src, size, ctx->writer->user_data);
+  }
 }
 
-static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
+static void out_printf(WasmWriteSpecContext* ctx, const char* format, ...) {
   va_list args;
   va_list args_copy;
   va_start(args, format);
@@ -97,9 +85,8 @@ static void out_printf(WasmWriterState* writer_state, const char* format, ...) {
   wasm_vsnprintf(buffer, len, format, args_copy);
   va_end(args_copy);
   /* - 1 to remove the trailing \0 that was added by wasm_vsnprintf */
-  out_data_at(writer_state, writer_state->offset, buffer, len - 1,
-              DONT_PRINT_CHARS, "");
-  writer_state->offset += len - 1;
+  out_data_at(ctx, ctx->writer_offset, buffer, len - 1, "");
+  ctx->writer_offset += len - 1;
 }
 
 static WasmExpr* create_const_expr(WasmAllocator* allocator,
@@ -335,9 +322,6 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
   func->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
   func->result_type = result_type;
   int func_index = module->funcs.size - 1;
-  /* invalidated by append_module_field below */
-  func_field = NULL;
-  func = NULL;
 
   WasmModuleField* export_field =
       append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_EXPORT);
@@ -352,46 +336,46 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
   return module->funcs.data[func_index];
 }
 
-static void write_header_spec(WasmWriteSpecContext* ctx) {
-  out_printf(&ctx->writer_state, "var quiet = %s;\n",
+static void write_header(WasmWriteSpecContext* ctx) {
+  out_printf(ctx, "var quiet = %s;\n",
              ctx->spec_options->verbose ? "false" : "true");
 }
 
-static void write_footer_spec(WasmWriteSpecContext* ctx) {
-  out_printf(&ctx->writer_state, "end();\n");
+static void write_footer(WasmWriteSpecContext* ctx) {
+  out_printf(ctx, "end();\n");
 }
 
-static void write_module_header_spec(WasmWriteSpecContext* ctx) {
-  out_printf(&ctx->writer_state, "var tests = function(m) {\n");
+static void write_module_header(WasmWriteSpecContext* ctx) {
+  out_printf(ctx, "var tests = function(m) {\n");
 }
 
-static void write_module_spec(WasmWriteSpecContext* ctx, WasmModule* module) {
-  /* reset the memory writer in case it's already been used */
-  ctx->mem_writer->buf.size = 0;
+static void write_module(WasmWriteSpecContext* ctx, WasmModule* module) {
+  /* reset the module writer in case it's already been used */
+  ctx->module_writer.buf.size = 0;
 
   WasmResult result = wasm_write_binary_module(
-      ctx->allocator, &ctx->mem_writer->base, module, ctx->options);
+      ctx->allocator, &ctx->module_writer.base, module, ctx->options);
   if (result != WASM_OK)
     ctx->result = result;
 
   /* copy the written module from the output buffer */
-  out_printf(&ctx->writer_state, "};\nvar m = createModule([\n");
-  WasmOutputBuffer* module_buf = &ctx->mem_writer->buf;
+  out_printf(ctx, "};\nvar m = createModule([\n");
+  WasmOutputBuffer* module_buf = &ctx->module_writer.buf;
   const uint8_t* p = module_buf->start;
   const uint8_t* end = p + module_buf->size;
   while (p < end) {
-    out_printf(&ctx->writer_state, " ");
+    out_printf(ctx, " ");
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
     if (line_end > end)
       line_end = end;
     for (; p < line_end; ++p)
-      out_printf(&ctx->writer_state, "%4d,", *p);
-    out_printf(&ctx->writer_state, "\n");
+      out_printf(ctx, "%4d,", *p);
+    out_printf(ctx, "\n");
   }
-  out_printf(&ctx->writer_state, "]);\ntests(m);\n");
+  out_printf(ctx, "]);\ntests(m);\n");
 }
 
-static void write_commands_spec(WasmWriteSpecContext* ctx, WasmScript* script) {
+static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
   int i;
   WasmModule* last_module = NULL;
   int num_assert_funcs = 0;
@@ -399,8 +383,8 @@ static void write_commands_spec(WasmWriteSpecContext* ctx, WasmScript* script) {
     WasmCommand* command = &script->commands.data[i];
     if (command->type == WASM_COMMAND_TYPE_MODULE) {
       if (last_module)
-        write_module_spec(ctx, last_module);
-      write_module_header_spec(ctx);
+        write_module(ctx, last_module);
+      write_module_header(ctx);
       last_module = &command->module;
       num_assert_funcs = 0;
     } else {
@@ -444,9 +428,8 @@ static void write_commands_spec(WasmWriteSpecContext* ctx, WasmScript* script) {
 
       WasmStringSlice name = create_assert_func_name(script->allocator, format,
                                                      num_assert_funcs++);
-      out_printf(&ctx->writer_state, "  %s(m, \"%.*s\", \"%s\", %d);\n",
-                 js_call, name.length, name.start, invoke->loc.filename,
-                 invoke->loc.line);
+      out_printf(ctx, "  %s(m, \"%.*s\", \"%s\", %d);\n", js_call, name.length,
+                 name.start, invoke->loc.filename, invoke->loc.line);
 
       WasmExprPtr* expr_ptr;
       switch (command->type) {
@@ -566,7 +549,7 @@ static void write_commands_spec(WasmWriteSpecContext* ctx, WasmScript* script) {
     }
   }
   if (last_module)
-    write_module_spec(ctx, last_module);
+    write_module(ctx, last_module);
 }
 
 WasmResult wasm_write_binary_spec_script(
@@ -578,23 +561,19 @@ WasmResult wasm_write_binary_spec_script(
   WasmWriteSpecContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
+  ctx.writer = writer;
   ctx.options = options;
   ctx.spec_options = spec_options;
   ctx.result = WASM_OK;
 
-  WasmMemoryWriter mem_writer;
-  WASM_ZERO_MEMORY(mem_writer);
-  WasmResult result = wasm_init_mem_writer(allocator, &mem_writer);
+  WasmResult result = wasm_init_mem_writer(allocator, &ctx.module_writer);
   if (result != WASM_OK)
     return result;
 
-  ctx.writer_state.writer = writer;
-  ctx.writer_state.result = &ctx.result;
-  ctx.mem_writer = &mem_writer;
-  write_header_spec(&ctx);
-  write_commands_spec(&ctx, script);
-  write_footer_spec(&ctx);
-  wasm_close_mem_writer(&mem_writer);
+  write_header(&ctx);
+  write_commands(&ctx, script);
+  write_footer(&ctx);
 
+  wasm_close_mem_writer(&ctx.module_writer);
   return ctx.result;
 }
