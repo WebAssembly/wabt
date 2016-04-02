@@ -17,6 +17,7 @@
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def main(args):
   parser = argparse.ArgumentParser()
+  parser.add_argument('-o', '--out-dir', metavar='PATH',
+                      help='output directory for files.')
   parser.add_argument('-e', '--executable', metavar='PATH',
                       help='override sexpr-wasm executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
@@ -45,21 +48,32 @@ def main(args):
   wasm_interp_exe = find_exe.GetWasmInterpExecutable(
       options.wasm_interp_executable)
 
+  if options.out_dir:
+    out_dir = options.out_dir
+    out_dir_is_temp = False
+    if not os.path.exists(out_dir):
+      os.makedirs(out_dir)
+  else:
+    out_dir = tempfile.mkdtemp(prefix='run-interp-')
+    out_dir_is_temp = True
+
   generated = None
   try:
-    # Use delete=False because Windows can't open a NamedTemporaryFile until it
-    # is cloesd, but it will be deleted by default if it is closed.
-    generated = tempfile.NamedTemporaryFile(prefix='sexpr-wasm-', delete=False)
-    generated.close()
-    wasm_file = generated.name
+    basename_noext = os.path.splitext(os.path.basename(options.file))[0]
+    if options.spec:
+      basename = basename_noext + '.json'
+    else:
+      basename = basename_noext + '.wasm'
+    out_file = os.path.join(out_dir, basename)
+
     # First compile the file
-    cmd = [sexpr_wasm_exe, '-o', wasm_file]
+    cmd = [sexpr_wasm_exe, '-o', out_file]
     if options.verbose:
       cmd.append('-v')
     if options.spec:
-      cmd.extend(['--spec'])
+      cmd.append('--spec')
     if options.use_libc_allocator:
-      cmd.extend(['--use-libc-allocator'])
+      cmd.append('--use-libc-allocator')
     cmd.append(options.file)
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
@@ -69,11 +83,13 @@ def main(args):
     except OSError as e:
       raise Error(str(e))
 
-    cmd = [wasm_interp_exe, wasm_file]
+    cmd = [wasm_interp_exe, out_file]
     if options.run_all_exports:
-      cmd.extend(['--run-all-exports'])
+      cmd.append('--run-all-exports')
     if options.spec:
-      cmd.extend(['--spec'])
+      cmd.append('--spec')
+    if options.verbose:
+      cmd.append('--trace')
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE,
                                  universal_newlines=True)
@@ -84,8 +100,8 @@ def main(args):
       raise Error(str(e))
 
   finally:
-    if generated:
-      os.remove(generated.name)
+    if out_dir_is_temp:
+      shutil.rmtree(out_dir)
 
   return 0
 
