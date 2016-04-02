@@ -183,16 +183,16 @@ int main(int argc, char** argv) {
     if (result == WASM_OK) {
       WasmMemoryWriter writer;
       WASM_ZERO_MEMORY(writer);
-      if (wasm_init_mem_writer(&g_wasm_libc_allocator, &writer) != WASM_OK)
+      if (wasm_init_mem_writer(allocator, &writer) != WASM_OK)
         WASM_FATAL("unable to open memory writer for writing\n");
 
       if (s_spec) {
-        result = wasm_write_binary_spec_script(
-            &g_wasm_libc_allocator, &writer.base, &script,
-            &s_write_binary_options, &s_write_binary_spec_options);
+        result = wasm_write_binary_spec_script(allocator, &writer.base, &script,
+                                               &s_write_binary_options,
+                                               &s_write_binary_spec_options);
       } else {
-        result = wasm_write_binary_script(&g_wasm_libc_allocator, &writer.base,
-                                          &script, &s_write_binary_options);
+        result = wasm_write_binary_script(allocator, &writer.base, &script,
+                                          &s_write_binary_options);
       }
 
       if (result == WASM_OK) {
