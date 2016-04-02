@@ -628,44 +628,61 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         EXPECT(':');
         break;
 
+#define FAILED(msg)                                                        \
+  fprintf(stderr, "*** %.*s:%d: %.*s " msg "\n", (int)command_file.length, \
+          command_file.start, command_line_no, (int)command_name.length,   \
+          command_name.start);
+
       case END_COMMAND_OBJECT: {
         WasmInterpreterResult iresult;
         WasmInterpreterTypedValue return_value;
         EXPECT('}');
+        WasmRunVerbosity verbose =
+            command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
         result = run_export_by_name(&module, &thread, &command_name, &iresult,
-                                    &return_value, RUN_QUIET);
-        if (result != WASM_OK)
+                                    &return_value, verbose);
+        if (result != WASM_OK) {
+          FAILED("unknown export");
+          failed++;
           goto fail;
+        }
 
         switch (command_type) {
           case INVOKE:
-            if (iresult == WASM_INTERPRETER_RETURNED)
-              passed++;
-            else
-              failed++;
-            break;
-
-          case ASSERT_RETURN:
-          case ASSERT_RETURN_NAN:
-            if (iresult == WASM_INTERPRETER_RETURNED &&
-                return_value.type == WASM_TYPE_I32 &&
-                return_value.value.i32 == 1) {
-              passed++;
-            } else {
+            if (iresult != WASM_INTERPRETER_RETURNED) {
+              FAILED("trapped");
               failed++;
             }
             break;
 
-          case ASSERT_TRAP:
-            if (iresult == WASM_INTERPRETER_RETURNED)
+          case ASSERT_RETURN:
+          case ASSERT_RETURN_NAN:
+            if (iresult != WASM_INTERPRETER_RETURNED) {
+              FAILED("trapped");
               failed++;
-            else
+            } else if (return_value.type != WASM_TYPE_I32) {
+              FAILED("type mismatch");
+              failed++;
+            } else if (return_value.value.i32 != 1) {
+              FAILED("didn't return 1");
+              failed++;
+            } else {
               passed++;
+            }
+            break;
+
+          case ASSERT_TRAP:
+            if (iresult == WASM_INTERPRETER_RETURNED) {
+              FAILED("didn't trap");
+              failed++;
+            } else {
+              passed++;
+            }
             break;
 
           default:
             assert(0);
-            break;
+            goto fail;
         }
         MAYBE_CONTINUE(COMMANDS_ARRAY);
         break;
@@ -717,7 +734,9 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
     }
   }
 
-  printf("%d/%d tests passed.\n", passed, passed + failed);
+  uint32_t total = passed + failed;
+  printf("%d/%d tests passed.\n", passed, total);
+  result = passed == total ? WASM_OK : WASM_ERROR;
 
   goto done;
 

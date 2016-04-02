@@ -36,6 +36,7 @@ def main(args):
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
+  parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -55,6 +56,8 @@ def main(args):
     cmd = [sexpr_wasm_exe, '-o', wasm_file]
     if options.verbose:
       cmd.append('-v')
+    if options.spec:
+      cmd.extend(['--spec'])
     if options.use_libc_allocator:
       cmd.extend(['--use-libc-allocator'])
     cmd.append(options.file)
@@ -69,6 +72,8 @@ def main(args):
     cmd = [wasm_interp_exe, wasm_file]
     if options.run_all_exports:
       cmd.extend(['--run-all-exports'])
+    if options.spec:
+      cmd.extend(['--spec'])
     try:
       process = subprocess.Popen(cmd, stderr=subprocess.PIPE,
                                  universal_newlines=True)

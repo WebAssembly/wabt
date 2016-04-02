@@ -64,6 +64,10 @@ TOOLS = {
     'EXE': 'test/run-interp.py',
     'FLAGS': '-e %(sexpr-wasm)s --wasm-interp-executable=%(wasm-interp)s '
              '--run-all-exports'
+  },
+  'run-interp-spec': {
+    'EXE': 'test/run-interp.py',
+    'FLAGS': '-e %(sexpr-wasm)s --wasm-interp-executable=%(wasm-interp)s --spec'
   }
 }
 
