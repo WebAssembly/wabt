@@ -611,8 +611,13 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
       }
 
       case COMMANDS_ARRAY:
-        EXPECT('{');
-        state = COMMAND_OBJECT;
+        if (MATCHES(']')) {
+          /* should only match with an empty command array */
+          state = END_MODULE_OBJECT;
+        } else {
+          EXPECT('{');
+          state = COMMAND_OBJECT;
+        }
         break;
 
       case END_COMMANDS_ARRAY:
