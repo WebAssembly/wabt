@@ -133,6 +133,11 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define VALUE_TYPE_F32 uint32_t
 #define VALUE_TYPE_F64 uint64_t
 
+#define VALUE_TYPE_SIGNED_MAX_I32 (uint32_t)(0x80000000U)
+#define VALUE_TYPE_UNSIGNED_MAX_I32 (uint32_t)(0xFFFFFFFFU)
+#define VALUE_TYPE_SIGNED_MAX_I64 (uint64_t)(0x8000000000000000ULL)
+#define VALUE_TYPE_UNSIGNED_MAX_I64 (uint64_t)(0xFFFFFFFFFFFFFFFFULL)
+
 #define FLOAT_TYPE_F32 float
 #define FLOAT_TYPE_F64 double
 
@@ -292,14 +297,46 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     }                                                                      \
   } while (0)
 
-#define BINOP_TRAP_ZERO(type, op, sign)                  \
-  do {                                                   \
-    VALUE_TYPE_##type rhs = POP_##type();                \
-    VALUE_TYPE_##type lhs = POP_##type();                \
-    if (rhs == 0)                                        \
-      TRAP(INTEGER_DIVIDE_BY_ZERO);                      \
-    PUSH_##type(BITCAST_##type##_TO_##sign(lhs)          \
-                    op BITCAST_##type##_TO_##sign(rhs)); \
+#define BINOP_DIV_REM_U(type, op)                          \
+  do {                                                     \
+    VALUE_TYPE_##type rhs = POP_##type();                  \
+    VALUE_TYPE_##type lhs = POP_##type();                  \
+    if (rhs == 0)                                          \
+      TRAP(INTEGER_DIVIDE_BY_ZERO);                        \
+    PUSH_##type(BITCAST_##type##_TO_UNSIGNED(lhs)          \
+                    op BITCAST_##type##_TO_UNSIGNED(rhs)); \
+  } while (0)
+
+/* {i32,i64}.{div,rem}_s are special-cased because they trap when dividing the
+ * max signed value by -1. The modulo operation on x86 uses the same
+ * instruction to generate the quotient and the remainder. */
+#define BINOP_DIV_S(type)                               \
+  do {                                                  \
+    VALUE_TYPE_##type rhs = POP_##type();               \
+    VALUE_TYPE_##type lhs = POP_##type();               \
+    if (rhs == 0) {                                     \
+      TRAP(INTEGER_DIVIDE_BY_ZERO);                     \
+    } else if (lhs == VALUE_TYPE_SIGNED_MAX_##type &&   \
+               rhs == VALUE_TYPE_UNSIGNED_MAX_##type) { \
+      TRAP(INTEGER_OVERFLOW);                           \
+    }                                                   \
+    PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) /       \
+                BITCAST_##type##_TO_SIGNED(rhs));       \
+  } while (0)
+
+#define BINOP_REM_S(type)                               \
+  do {                                                  \
+    VALUE_TYPE_##type rhs = POP_##type();               \
+    VALUE_TYPE_##type lhs = POP_##type();               \
+    if (rhs == 0) {                                     \
+      TRAP(INTEGER_DIVIDE_BY_ZERO);                     \
+    } else if (lhs == VALUE_TYPE_SIGNED_MAX_##type &&   \
+               rhs == VALUE_TYPE_UNSIGNED_MAX_##type) { \
+      PUSH_##type(0);                                   \
+    } else {                                            \
+      PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) %     \
+                  BITCAST_##type##_TO_SIGNED(rhs));     \
+    }                                                   \
   } while (0)
 
 #define UNOP_FLOAT(type, func)                                 \
@@ -636,19 +673,19 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I32_DIV_S:
-        BINOP_TRAP_ZERO(I32, /, SIGNED);
+        BINOP_DIV_S(I32);
         break;
 
       case WASM_OPCODE_I32_DIV_U:
-        BINOP_TRAP_ZERO(I32, /, UNSIGNED);
+        BINOP_DIV_REM_U(I32, / );
         break;
 
       case WASM_OPCODE_I32_REM_S:
-        BINOP_TRAP_ZERO(I32, %, SIGNED);
+        BINOP_REM_S(I32);
         break;
 
       case WASM_OPCODE_I32_REM_U:
-        BINOP_TRAP_ZERO(I32, %, UNSIGNED);
+        BINOP_DIV_REM_U(I32, % );
         break;
 
       case WASM_OPCODE_I32_AND:
@@ -752,19 +789,19 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I64_DIV_S:
-        BINOP_TRAP_ZERO(I64, /, SIGNED);
+        BINOP_DIV_S(I64);
         break;
 
       case WASM_OPCODE_I64_DIV_U:
-        BINOP_TRAP_ZERO(I64, /, UNSIGNED);
+        BINOP_DIV_REM_U(I64, / );
         break;
 
       case WASM_OPCODE_I64_REM_S:
-        BINOP_TRAP_ZERO(I64, %, SIGNED);
+        BINOP_REM_S(I64);
         break;
 
       case WASM_OPCODE_I64_REM_U:
-        BINOP_TRAP_ZERO(I64, %, UNSIGNED);
+        BINOP_DIV_REM_U(I64, % );
         break;
 
       case WASM_OPCODE_I64_AND:
