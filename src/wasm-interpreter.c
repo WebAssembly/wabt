@@ -718,19 +718,24 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_GROW_MEMORY: {
-        VALUE_TYPE_I32 new_page_size = POP_I32();
-        uint64_t new_byte_size = (uint64_t)new_page_size * WASM_PAGE_SIZE;
-        if (new_byte_size > UINT32_MAX)
+        uint32_t old_page_size = module->memory.page_size;
+        uint32_t old_byte_size = module->memory.byte_size;
+        VALUE_TYPE_I32 grow_pages = POP_I32();
+        uint32_t new_page_size = old_page_size + grow_pages;
+        if ((uint64_t)new_page_size * WASM_PAGE_SIZE > UINT32_MAX)
           TRAP(MEMORY_SIZE_OVERFLOW);
+        uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
         WasmAllocator* allocator = module->memory.allocator;
         void* new_data = wasm_realloc(allocator, module->memory.data,
                                       new_byte_size, WASM_DEFAULT_ALIGN);
         if (new_data == NULL)
           TRAP(OUT_OF_MEMORY);
+        memset((void*)((intptr_t)new_data + old_byte_size), 0,
+               new_byte_size - old_byte_size);
         module->memory.data = new_data;
         module->memory.page_size = new_page_size;
         module->memory.byte_size = new_byte_size;
-        PUSH_I32(module->memory.byte_size);
+        PUSH_I32(old_byte_size);
         break;
       }
 
