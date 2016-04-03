@@ -1,0 +1,49 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/memory.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/memory.wast:11:12: max pages (0) must be greater than or equal to initial pages (1)
+  (module (memory 1 0))
+           ^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:15:24: segment ends past the end of initial memory size (0)
+  (module (memory 0 0 (segment 0 "a")))
+                       ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:19:40: address (98304) greater than initial memory size (65536)
+  (module (memory 1 2 (segment 0 "a") (segment 98304 "b")))
+                                       ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:23:42: address (0) less than end of previous segment (3)
+  (module (memory 1 2 (segment 0 "abc") (segment 0 "def")))
+                                         ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:27:41: address (0) less than end of previous segment (5)
+  (module (memory 1 2 (segment 3 "ab") (segment 0 "de")))
+                                        ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:31:56: address (1) less than end of previous segment (3)
+  (module (memory 1 2 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
+                                                       ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:42:28: alignment must be power-of-two
+  (module (memory 0) (func (i64.load align=0 (i32.const 0))))
+                           ^
+assert_invalid error:
+  third_party/testsuite/memory.wast:46:28: alignment must be power-of-two
+  (module (memory 0) (func (i64.load align=3 (i32.const 0))))
+                           ^
+assert_invalid error:
+  third_party/testsuite/memory.wast:50:28: alignment must be power-of-two
+  (module (memory 0) (func (i64.load align=5 (i32.const 0))))
+                           ^
+assert_invalid error:
+  third_party/testsuite/memory.wast:54:28: alignment must be power-of-two
+  (module (memory 0) (func (i64.load align=6 (i32.const 0))))
+                           ^
+assert_invalid error:
+  third_party/testsuite/memory.wast:58:28: alignment must be power-of-two
+  (module (memory 0) (func (i64.load align=7 (i32.const 0))))
+                           ^
+24/24 tests passed.
+;;; STDOUT ;;)

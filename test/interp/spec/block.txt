@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/block.wast
+(;; STDOUT ;;;
+$invoke_0() 
+3/3 tests passed.
+;;; STDOUT ;;)

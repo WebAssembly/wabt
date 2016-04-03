@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/float_exprs.wast
+(;; STDOUT ;;;
+236/236 tests passed.
+;;; STDOUT ;;)

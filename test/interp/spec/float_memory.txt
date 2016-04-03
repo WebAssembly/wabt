@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/float_memory.wast
+(;; STDOUT ;;;
+16/16 tests passed.
+;;; STDOUT ;;)

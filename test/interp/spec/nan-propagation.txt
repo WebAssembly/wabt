@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/nan-propagation.wast
+(;; STDOUT ;;;
+110/110 tests passed.
+;;; STDOUT ;;)

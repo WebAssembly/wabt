@@ -1,0 +1,15 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/func_ptrs.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/func_ptrs.wast:33:37: function type variable out of range (max 0)
+(assert_invalid (module (func (type 42))) "unknown function type 42")
+                                    ^^
+assert_invalid error:
+  third_party/testsuite/func_ptrs.wast:34:58: function type variable out of range (max 0)
+...id (module (import "spectest" "print" (type 43))) "unknown function type 43")
+                                               ^^
+called import spectest.print(i32:83)
+$invoke_3() 
+24/24 tests passed.
+;;; STDOUT ;;)

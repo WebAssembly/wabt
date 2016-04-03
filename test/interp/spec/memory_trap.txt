@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/memory_trap.wast
+(;; STDOUT ;;;
+13/13 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/select.wast
+(;; STDOUT ;;;
+28/28 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,9 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/imports.wast
+(;; STDOUT ;;;
+called import spectest.print(i32:14, f32:42)
+called import spectest.print(i32:13)
+called import spectest.print(i64:25, f64:53)
+called import spectest.print(i64:24)
+2/2 tests passed.
+;;; STDOUT ;;)

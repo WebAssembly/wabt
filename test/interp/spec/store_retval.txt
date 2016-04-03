@@ -1,0 +1,35 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/store_retval.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:34:25: type mismatch of set_local. got i32, expected i64
+        (set_local $i64 (set_local $i32 (i32.const 1)))))
+                        ^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:39:25: type mismatch of set_local. got i64, expected i32
+        (set_local $i32 (set_local $i64 (i64.const 1)))))
+                        ^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:44:25: type mismatch of set_local. got f32, expected f64
+        (set_local $f64 (set_local $f32 (f32.const 1)))))
+                        ^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:49:25: type mismatch of set_local. got f64, expected f32
+        (set_local $f32 (set_local $f64 (f64.const 1)))))
+                        ^
+called import spectest.print(i32:1)
+called import spectest.print(i64:2)
+called import spectest.print(f32:3)
+called import spectest.print(f64:4)
+called import spectest.print(i32:11)
+called import spectest.print(i64:12)
+called import spectest.print(f32:13)
+called import spectest.print(f64:14)
+called import spectest.print(i32:512)
+called import spectest.print(i32:65536)
+called import spectest.print(i64:512)
+called import spectest.print(i64:65536)
+called import spectest.print(i64:4294967296)
+$invoke_0() 
+0/0 tests passed.
+;;; STDOUT ;;)

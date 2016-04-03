@@ -1,0 +1,23 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/start.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/start.wast:2:39: function variable out of range (max 1)
+  (module (func (i32.const 1)) (start 1))
+                                      ^
+assert_invalid error:
+  third_party/testsuite/start.wast:8:5: start function must not return anything
+    (start $main)
+    ^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/start.wast:15:5: start function must be nullary
+    (start $main)
+    ^^^^^^^^^^^^^
+$invoke_1() 
+$invoke_3() 
+$invoke_1() 
+$invoke_3() 
+called import spectest.print(i32:1)
+called import spectest.print(i32:2)
+6/6 tests passed.
+;;; STDOUT ;;)

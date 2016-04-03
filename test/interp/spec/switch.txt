@@ -1,0 +1,10 @@
+;;; TODO: support br_table with argument
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/switch.wast
+(;; STDERR ;;;
+third_party/testsuite/switch.wast:99:23: syntax error, unexpected (, expecting )
+                      (i32.and (i32.const 3) (get_local $i))
+                      ^
+
+;;; STDERR ;;)
