@@ -71,42 +71,115 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
   wasm_destroy_interpreter_typed_value_array(allocator, &thread->import_args);
 }
 
+/* 3 32222222 222...00
+ * 1 09876543 210...10
+ * -------------------
+ * 0 00000000 000...00 => 0x00000000 => 0
+ * 0 10011101 111...11 => 0x4effffff => 2147483520                  (~INT32_MAX)
+ * 0 10011110 000...00 => 0x4f000000 => 2147483648
+ * 0 10011110 111...11 => 0x4f7fffff => 4294967040                 (~UINT32_MAX)
+ * 0 10111110 111...11 => 0x5effffff => 9223371487098961920         (~INT64_MAX)
+ * 0 10111110 000...00 => 0x5f000000 => 9223372036854775808
+ * 0 10111111 111...11 => 0x5f7fffff => 18446742974197923840       (~UINT64_MAX)
+ * 0 10111111 000...00 => 0x5f800000 => 18446744073709551616
+ * 0 11111111 000...00 => 0x7f800000 => inf
+ * 0 11111111 000...01 => 0x7f800001 => nan(0x1)
+ * 0 11111111 111...11 => 0x7fffffff => nan(0x7fffff)
+ * 1 00000000 000...00 => 0x80000000 => -0
+ * 1 01111110 111...11 => 0xbf7fffff => -1 + ulp      (~UINT32_MIN, ~UINT64_MIN)
+ * 1 01111111 000...00 => 0xbf800000 => -1
+ * 1 10011110 000...00 => 0xcf000000 => -2147483648                  (INT32_MIN)
+ * 1 10111110 000...00 => 0xdf000000 => -9223372036854775808         (INT64_MIN)
+ * 1 11111111 000...00 => 0xff800000 => -inf
+ * 1 11111111 000...01 => 0xff800001 => -nan(0x1)
+ * 1 11111111 111...11 => 0xffffffff => -nan(0x7fffff)
+ */
+
 #define F32_SIGN_MASK 0x80000000U
-#define F32_EXP_MASK 0x7f800000U
-#define F32_SIG_MASK 0x007fffffU
-#define F32_EXP_SHIFT 23
-#define F32_EXP_BIAS 127
-#define F64_SIGN_MASK 0x8000000000000000ULL
-#define F64_EXP_MASK 0x7ff0000000000000ULL
-#define F64_SIG_MASK 0x000fffffffffffffULL
-#define F64_EXP_SHIFT 52
-#define F64_EXP_BIAS 1023
+#define F32_QUIET_NAN_BIT 0x00400000U
 
 static WASM_INLINE int is_nan_f32(uint32_t f32_bits) {
-  return ((f32_bits & F32_EXP_MASK) == F32_EXP_MASK) &&
-         ((f32_bits & F32_SIG_MASK) != 0);
+  return (f32_bits > 0x7f800000U && f32_bits < 0x80000000U) ||
+         (f32_bits > 0xff800000U);
 }
+
+static WASM_INLINE int is_in_range_i32_trunc_s_f32(uint32_t f32_bits) {
+  return (f32_bits < 0x4f000000U) ||
+         (f32_bits >= 0x80000000U && f32_bits <= 0xcf000000U);
+}
+
+static WASM_INLINE int is_in_range_i64_trunc_s_f32(uint32_t f32_bits) {
+  return (f32_bits < 0x5f000000U) ||
+         (f32_bits >= 0x80000000U && f32_bits <= 0xdf000000U);
+}
+
+static WASM_INLINE int is_in_range_i32_trunc_u_f32(uint32_t f32_bits) {
+  return (f32_bits < 0x4f800000U) ||
+         (f32_bits >= 0x80000000U && f32_bits < 0xbf800000);
+}
+
+static WASM_INLINE int is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
+  return (f32_bits < 0x5f800000U) ||
+         (f32_bits >= 0x80000000U && f32_bits < 0xbf800000);
+}
+
+/*
+ * 6 66655555555 5544...222221...000
+ * 3 21098765432 1098...432109...210
+ * ---------------------------------
+ * 0 00000000000 0000...000000...000 0x0000000000000000 => 0
+ * 0 10000011101 1111...111000...000 0x41dfffffffc00000 => 2147483647               (INT32_MAX)
+ * 0 10000011110 1111...111100...000 0x41efffffffe00000 => 4294967295              (UINT32_MAX)
+ * 0 10000111101 1111...111111...111 0x43dfffffffffffff => 9223372036854774784     (~INT64_MAX)
+ * 0 10000111110 0000...000000...000 0x43e0000000000000 => 9223372036854775808
+ * 0 10000111110 1111...111111...111 0x43efffffffffffff => 18446744073709549568   (~UINT64_MAX)
+ * 0 10000111111 0000...000000...000 0x43f0000000000000 => 18446744073709551616
+ * 0 11111111111 0000...000000...000 0x7ff0000000000000 => inf
+ * 0 11111111111 0000...000000...001 0x7ff0000000000001 => nan(0x1)
+ * 0 11111111111 1111...111111...111 0x7fffffffffffffff => nan(0xfff...)
+ * 1 00000000000 0000...000000...000 0x8000000000000000 => -0
+ * 1 01111111110 1111...111111...111 0xbfefffffffffffff => -1 + ulp  (~UINT32_MIN, ~UINT64_MIN)
+ * 1 01111111111 0000...000000...000 0xbff0000000000000 => -1
+ * 1 10000011110 0000...000000...000 0xc1e0000000000000 => -2147483648              (INT32_MIN)
+ * 1 10000111110 0000...000000...000 0xc3e0000000000000 => -9223372036854775808     (INT64_MIN)
+ * 1 11111111111 0000...000000...000 0xfff0000000000000 => -inf
+ * 1 11111111111 0000...000000...001 0xfff0000000000001 => -nan(0x1)
+ * 1 11111111111 1111...111111...111 0xffffffffffffffff => -nan(0xfff...)
+ */
+
+#define F64_SIGN_MASK 0x8000000000000000ULL
+#define F64_QUIET_NAN_BIT 0x0008000000000000ULL
 
 static WASM_INLINE int is_nan_f64(uint64_t f64_bits) {
-  return ((f64_bits & F64_EXP_MASK) == F64_EXP_MASK) &&
-         ((f64_bits & F64_SIG_MASK) != 0);
+  return (f64_bits > 0x7ff0000000000000ULL &&
+          f64_bits < 0x8000000000000000ULL) ||
+         (f64_bits > 0xfff0000000000000ULL);
 }
 
-static WASM_INLINE int get_exp_f32(uint32_t f32_bits) {
-  return (int)((f32_bits & F32_EXP_MASK) >> F32_EXP_SHIFT) - F32_EXP_BIAS;
+static WASM_INLINE int is_in_range_i32_trunc_s_f64(uint64_t f64_bits) {
+  return (f64_bits <= 0x41dfffffffc00000ULL) ||
+         (f64_bits >= 0x8000000000000000ULL &&
+          f64_bits <= 0xc1e0000000000000ULL);
 }
 
-static WASM_INLINE int get_exp_f64(uint64_t f64_bits) {
-  return (int)((f64_bits & F64_EXP_MASK) >> F64_EXP_SHIFT) - F64_EXP_BIAS;
+static WASM_INLINE int is_in_range_i32_trunc_u_f64(uint64_t f64_bits) {
+  return (f64_bits <= 0x41efffffffe00000ULL) ||
+         (f64_bits >= 0x8000000000000000ULL &&
+          f64_bits <= 0xbfefffffffffffffULL);
 }
 
-static WASM_INLINE int is_signed_f32(uint32_t f32_bits) {
-  return (f32_bits & F32_SIGN_MASK) != 0;
+static WASM_INLINE int is_in_range_i64_trunc_s_f64(uint64_t f64_bits) {
+  return (f64_bits < 0x43e0000000000000ULL) ||
+         (f64_bits >= 0x8000000000000000ULL &&
+          f64_bits <= 0xc3e0000000000000ULL);
 }
 
-static WASM_INLINE int is_signed_f64(uint64_t f64_bits) {
-  return (f64_bits & F64_SIGN_MASK) != 0;
+static WASM_INLINE int is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
+  return (f64_bits < 0x43f0000000000000ULL) ||
+         (f64_bits >= 0x8000000000000000ULL &&
+          f64_bits <= 0xbfefffffffffffffULL);
 }
+
 
 #define IS_NAN_F32 is_nan_f32
 #define IS_NAN_F64 is_nan_f64
@@ -369,9 +442,9 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type lhs = POP_##type();                                    \
     VALUE_TYPE_##type result;                                                \
     if (IS_NAN_##type(lhs)) {                                                \
-      result = lhs;                                                          \
+      result = lhs | type##_QUIET_NAN_BIT;                                   \
     } else if (IS_NAN_##type(rhs)) {                                         \
-      result = rhs;                                                          \
+      result = rhs | type##_QUIET_NAN_BIT;                                   \
     } else {                                                                 \
       FLOAT_TYPE_##type float_rhs = BITCAST_TO_##type(rhs);                  \
       FLOAT_TYPE_##type float_lhs = BITCAST_TO_##type(lhs);                  \
@@ -1056,8 +1129,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F32 value = POP_F32();
         if (is_nan_f32(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f32(value);
-        if (exp > 31)
+        if (!is_in_range_i32_trunc_s_f32(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I32((int32_t)BITCAST_TO_F32(value));
         break;
@@ -1067,8 +1139,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F64 value = POP_F64();
         if (is_nan_f64(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f64(value);
-        if (exp >= 31)
+        if (!is_in_range_i32_trunc_s_f64(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I32((int32_t)BITCAST_TO_F64(value));
         break;
@@ -1078,8 +1149,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F32 value = POP_F32();
         if (is_nan_f32(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f32(value);
-        if (is_signed_f32(value) || exp >= 32)
+        if (!is_in_range_i32_trunc_u_f32(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I32((uint32_t)BITCAST_TO_F32(value));
         break;
@@ -1089,8 +1159,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F64 value = POP_F64();
         if (is_nan_f64(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f64(value);
-        if (is_signed_f64(value) || exp >= 32)
+        if (!is_in_range_i32_trunc_u_f64(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I32((uint32_t)BITCAST_TO_F64(value));
         break;
@@ -1106,8 +1175,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F32 value = POP_F32();
         if (is_nan_f32(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f32(value);
-        if (exp >= 63)
+        if (!is_in_range_i64_trunc_s_f32(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I64((int64_t)BITCAST_TO_F32(value));
         break;
@@ -1117,8 +1185,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F64 value = POP_F64();
         if (is_nan_f64(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f64(value);
-        if (exp >= 63)
+        if (!is_in_range_i64_trunc_s_f64(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I64((int64_t)BITCAST_TO_F64(value));
         break;
@@ -1128,8 +1195,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F32 value = POP_F32();
         if (is_nan_f32(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f32(value);
-        if (is_signed_f64(value) || exp >= 64)
+        if (!is_in_range_i64_trunc_u_f32(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I64((uint64_t)BITCAST_TO_F32(value));
         break;
@@ -1139,8 +1205,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         VALUE_TYPE_F64 value = POP_F64();
         if (is_nan_f64(value))
           TRAP(INVALID_CONVERSION_TO_INTEGER);
-        int exp = get_exp_f64(value);
-        if (is_signed_f64(value) || exp >= 64)
+        if (!is_in_range_i64_trunc_u_f64(value))
           TRAP(INTEGER_OVERFLOW);
         PUSH_I64((uint64_t)BITCAST_TO_F64(value));
         break;
@@ -1196,25 +1261,25 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_F64_CONVERT_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_F64(BITCAST_FROM_F64((float)BITCAST_I32_TO_SIGNED(value)));
+        PUSH_F64(BITCAST_FROM_F64((double)BITCAST_I32_TO_SIGNED(value)));
         break;
       }
 
       case WASM_OPCODE_F64_CONVERT_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_F64(BITCAST_FROM_F64((float)value));
+        PUSH_F64(BITCAST_FROM_F64((double)value));
         break;
       }
 
       case WASM_OPCODE_F64_CONVERT_S_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F64(BITCAST_FROM_F64((float)BITCAST_I64_TO_SIGNED(value)));
+        PUSH_F64(BITCAST_FROM_F64((double)BITCAST_I64_TO_SIGNED(value)));
         break;
       }
 
       case WASM_OPCODE_F64_CONVERT_U_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F64(BITCAST_FROM_F64((float)value));
+        PUSH_F64(BITCAST_FROM_F64((double)value));
         break;
       }
 
