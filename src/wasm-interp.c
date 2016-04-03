@@ -446,6 +446,11 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   uint32_t passed = 0;
   uint32_t failed = 0;
 
+  WASM_ZERO_MEMORY(module);
+  WASM_ZERO_MEMORY(thread);
+  WASM_ZERO_MEMORY(command_file);
+  WASM_ZERO_MEMORY(command_name);
+
   const void* data;
   size_t size;
   read_file(spec_json_filename, &data, &size);
@@ -648,6 +653,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
       case END_COMMAND_OBJECT: {
         WasmInterpreterResult iresult;
         WasmInterpreterTypedValue return_value;
+        WASM_ZERO_MEMORY(return_value);
         EXPECT('}');
         WasmRunVerbosity verbose =
             command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
