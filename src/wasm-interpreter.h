@@ -64,6 +64,7 @@ typedef enum WasmInterpreterResult {
 enum {
   /* push space on the value stack for N entries */
   WASM_OPCODE_ALLOCA = WASM_LAST_OPCODE,
+  WASM_OPCODE_BR_UNLESS,
   WASM_OPCODE_DISCARD,
   WASM_OPCODE_DISCARD_KEEP,
   WASM_LAST_INTERPRETER_OPCODE,

@@ -798,20 +798,37 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
           uint32_t depth = top->expr.br.depth;
           WasmDepthNode* node = get_depth_node(ctx, depth);
           if (cur_index == 0) {
-            CHECK_RESULT(unify_and_check_type(ctx, &node->type,
-                                                    expr->type, " in br_if"));
+            CHECK_RESULT(unify_and_check_type(ctx, &node->type, expr->type,
+                                              " in br_if"));
           } else {
+            /* this actually flips the br_if so if <cond> is true it can
+             * discard values from the stack, e.g.:
+             *
+             *   (br_if DEST <value> <cond>)
+             *
+             * becomes
+             *
+             *   <value>            value
+             *   <cond>             value cond
+             *   br_unless OVER     value
+             *   discard_keep ...   value
+             *   br DEST            value
+             *   discard
+             * OVER:
+             *   ...
+             */
             assert(cur_index == 1 && is_expr_done);
             CHECK_RESULT(
                 check_type(ctx, WASM_TYPE_I32, expr->type, " in br_if"));
-            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I32_EQZ));
-            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_IF));
+            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_UNLESS));
             uint32_t fixup_br_offset = get_istream_offset(ctx);
             CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
+            /* adjust stack to account for br_unless consuming <cond> */
+            adjust_value_stack(ctx, -get_value_count(expr->type));
             CHECK_RESULT(emit_br(ctx, depth, node));
             CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset,
                                      get_istream_offset(ctx)));
-            /* discard the br_if value if the branch wasn't taken */
+            /* discard the value if the branch wasn't taken */
             CHECK_RESULT(maybe_emit_discard(ctx, node->type, NULL));
           }
           break;
@@ -889,8 +906,7 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
           if (cur_index == 0) {
             /* after cond */
             CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, expr->type, " in if"));
-            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I32_EQZ));
-            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_IF));
+            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_UNLESS));
             adjust_value_stack(ctx, -get_value_count(expr->type));
             top->expr.if_.fixup_offset = get_istream_offset(ctx);
             CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
@@ -910,8 +926,7 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
             /* after cond */
             CHECK_RESULT(
                 check_type(ctx, WASM_TYPE_I32, expr->type, " in if_else"));
-            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I32_EQZ));
-            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_IF));
+            CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_UNLESS));
             adjust_value_stack(ctx, -get_value_count(expr->type));
             top->expr.if_else.fixup_cond_offset = get_istream_offset(ctx);
             top->expr.if_else.value_stack_size = ctx->value_stack_size;

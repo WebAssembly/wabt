@@ -24,6 +24,7 @@
 static const char* s_opcode_name[] = {
     WASM_FOREACH_OPCODE(V)
     [WASM_OPCODE_ALLOCA] = "alloca",
+    [WASM_OPCODE_BR_UNLESS] = "br_unless",
     [WASM_OPCODE_DISCARD] = "discard",
     [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
 };
@@ -1235,6 +1236,13 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
       }
 
+      case WASM_OPCODE_BR_UNLESS: {
+        uint32_t new_pc = read_u32(&pc);
+        if (!POP_I32())
+          GOTO(new_pc);
+        break;
+      }
+
       case WASM_OPCODE_DISCARD:
         (void)POP();
         break;
@@ -1557,6 +1565,10 @@ void wasm_trace_pc(WasmInterpreterModule* module,
 
     case WASM_OPCODE_ALLOCA:
       printf("%s $%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      break;
+
+    case WASM_OPCODE_BR_UNLESS:
+      printf("%s @%u, %u\n", s_opcode_name[opcode], read_u32_at(pc), TOP().i32);
       break;
 
     case WASM_OPCODE_DISCARD:
