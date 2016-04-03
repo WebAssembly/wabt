@@ -52,7 +52,7 @@ static WasmOption s_options[] = {
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
     {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
-     "output file for the generated wast file"},
+     "output file for the generated wast file, by default use stdout"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
      "use malloc, free, etc. instead of stack allocator"},
     {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
@@ -160,13 +160,16 @@ int main(int argc, char** argv) {
   WasmResult result = wasm_read_binary_ast(allocator, data, size,
                                            &s_read_binary_options, &module);
   if (result == WASM_OK) {
+    WasmFileWriter file_writer;
     if (s_outfile) {
-      WasmFileWriter file_writer;
       result = wasm_init_file_writer(&file_writer, s_outfile);
-      if (result == WASM_OK) {
-        result = wasm_write_ast(allocator, &file_writer.base, &module);
-        wasm_close_file_writer(&file_writer);
-      }
+    } else {
+      result = wasm_init_file_writer_existing(&file_writer, stdout);
+    }
+
+    if (result == WASM_OK) {
+      result = wasm_write_ast(allocator, &file_writer.base, &module);
+      wasm_close_file_writer(&file_writer);
     }
   }
 
