@@ -1009,23 +1009,23 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       }
 
       case WASM_OPCODE_F64_CEIL:
-        UNOP_FLOAT(F64, ceilf);
+        UNOP_FLOAT(F64, ceil);
         break;
 
       case WASM_OPCODE_F64_FLOOR:
-        UNOP_FLOAT(F64, floorf);
+        UNOP_FLOAT(F64, floor);
         break;
 
       case WASM_OPCODE_F64_TRUNC:
-        UNOP_FLOAT(F64, truncf);
+        UNOP_FLOAT(F64, trunc);
         break;
 
       case WASM_OPCODE_F64_NEAREST:
-        UNOP_FLOAT(F64, nearbyintf);
+        UNOP_FLOAT(F64, nearbyint);
         break;
 
       case WASM_OPCODE_F64_SQRT:
-        UNOP_FLOAT(F64, sqrtf);
+        UNOP_FLOAT(F64, sqrt);
         break;
 
       case WASM_OPCODE_F64_EQ:
