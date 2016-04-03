@@ -479,8 +479,8 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
     ASSERT_TRAP,
   } command_type = NONE;
 
-#define SKIP_WS()                                                        \
-  while (p < end && *p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') \
+#define SKIP_WS()                                                            \
+  while ((p < end) && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')) \
   p++
 
 #define MATCHES(c) \
