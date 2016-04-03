@@ -1,7 +1,6 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/memory_trap.wast
 (;; STDOUT ;;;
-third_party/testsuite/memory_trap.wast:31: $assert_trap_12 failed, didn't throw
-third_party/testsuite/memory_trap.wast:32: $assert_trap_13 failed, didn't throw
-12/14 tests passed.
+third_party/testsuite/memory_trap.wast:32: $assert_trap_12 failed, didn't throw
+12/13 tests passed.
 ;;; STDOUT ;;)

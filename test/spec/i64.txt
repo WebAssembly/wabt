@@ -1,5 +1,5 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/i64.wast
 (;; STDOUT ;;;
-324/324 tests passed.
+328/328 tests passed.
 ;;; STDOUT ;;)
