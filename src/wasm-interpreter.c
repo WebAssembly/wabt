@@ -544,19 +544,19 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_I32_CONST:
-        PUSH_TYPE(I32, read_u32(&pc));
+        PUSH_I32(read_u32(&pc));
         break;
 
       case WASM_OPCODE_I64_CONST:
-        PUSH_TYPE(I64, read_u64(&pc));
+        PUSH_I64(read_u64(&pc));
         break;
 
       case WASM_OPCODE_F32_CONST:
-        PUSH_TYPE(F32, read_u32(&pc));
+        PUSH_F32(read_u32(&pc));
         break;
 
       case WASM_OPCODE_F64_CONST:
-        PUSH_TYPE(F64, read_u64(&pc));
+        PUSH_F64(read_u64(&pc));
         break;
 
       case WASM_OPCODE_GET_LOCAL: {
@@ -714,7 +714,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_MEMORY_SIZE:
-        PUSH_TYPE(I32, module->memory.page_size);
+        PUSH_I32(module->memory.byte_size);
         break;
 
       case WASM_OPCODE_GROW_MEMORY: {
@@ -730,6 +730,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         module->memory.data = new_data;
         module->memory.page_size = new_page_size;
         module->memory.byte_size = new_byte_size;
+        PUSH_I32(module->memory.byte_size);
         break;
       }
 
