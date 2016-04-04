@@ -40,7 +40,11 @@ static void* align_up(void* p, size_t align) {
   return (void*)(((intptr_t)p + align - 1) & ~(align - 1));
 }
 
-static void* libc_alloc(WasmAllocator* allocator, size_t size, size_t align) {
+static void* libc_alloc(WasmAllocator* allocator,
+                        size_t size,
+                        size_t align,
+                        const char* file,
+                        int line) {
   assert(is_power_of_two(align));
   if (align < sizeof(void*))
     align = sizeof(void*);
@@ -57,7 +61,10 @@ static void* libc_alloc(WasmAllocator* allocator, size_t size, size_t align) {
   return aligned;
 }
 
-static void libc_free(WasmAllocator* allocator, void* p) {
+static void libc_free(WasmAllocator* allocator,
+                      void* p,
+                      const char* file,
+                      int line) {
   if (!p)
     return;
 
@@ -65,15 +72,20 @@ static void libc_free(WasmAllocator* allocator, void* p) {
   free(mem_info->real_pointer);
 }
 
+/* nothing to destroy */
+static void libc_destroy(WasmAllocator* allocator) {}
+
 static void* libc_realloc(WasmAllocator* allocator,
                           void* p,
                           size_t size,
-                          size_t align) {
+                          size_t align,
+                          const char* file,
+                          int line) {
   if (!p)
-    return libc_alloc(allocator, size, align);
+    return libc_alloc(allocator, size, align, NULL, 0);
 
   MemInfo* mem_info = (MemInfo*)p - 1;
-  void* new_p = libc_alloc(allocator, size, align);
+  void* new_p = libc_alloc(allocator, size, align, NULL, 0);
   if (!new_p)
     return NULL;
 
@@ -83,4 +95,18 @@ static void* libc_realloc(WasmAllocator* allocator,
   return new_p;
 }
 
-WasmAllocator g_wasm_libc_allocator = {libc_alloc, libc_realloc, libc_free};
+/* mark/reset_to_mark are not supported by the libc allocator */
+static WasmAllocatorMark libc_mark(WasmAllocator* allocator) {
+  return NULL;
+}
+
+static void libc_reset_to_mark(WasmAllocator* allocator,
+                               WasmAllocatorMark mark) {}
+
+static void libc_print_stats(WasmAllocator* allocator) {
+  /* TODO(binji): nothing for now, implement later */
+}
+
+WasmAllocator g_wasm_libc_allocator = {
+    libc_alloc, libc_realloc,       libc_free,       libc_destroy,
+    libc_mark,  libc_reset_to_mark, libc_print_stats};

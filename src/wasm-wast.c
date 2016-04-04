@@ -172,8 +172,8 @@ int main(int argc, char** argv) {
 
   if (s_use_libc_allocator)
     wasm_destroy_module(allocator, &module);
-  else
-    wasm_destroy_stack_allocator(&stack_allocator);
+  wasm_print_allocator_stats(allocator);
+  wasm_destroy_allocator(allocator);
   free((void*)data);
   return result;
 }

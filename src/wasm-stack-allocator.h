@@ -20,10 +20,16 @@
 #include "wasm-allocator.h"
 #include "wasm-common.h"
 
+#define WASM_STACK_ALLOCATOR_STATS 0
+
 typedef struct WasmStackAllocatorChunk {
+  void* start;
   void* current;
   void* end;
-  struct WasmStackAllocatorChunk* prev;
+  union {
+    struct WasmStackAllocatorChunk* prev;
+    struct WasmStackAllocatorChunk* next_free;
+  };
 } WasmStackAllocatorChunk;
 
 typedef struct WasmStackAllocator {
@@ -32,13 +38,24 @@ typedef struct WasmStackAllocator {
   WasmStackAllocatorChunk* last;
   WasmAllocator* fallback;
   void* last_allocation;
+  WasmStackAllocatorChunk* next_free;
+
+#if WASM_STACK_ALLOCATOR_STATS
+  /* some random stats */
+  size_t chunk_alloc_count;
+  size_t alloc_count;
+  size_t realloc_count;
+  size_t free_count;
+  size_t total_chunk_bytes;
+  size_t total_alloc_bytes;
+  size_t total_realloc_bytes;
+#endif /* WASM_STACK_ALLOCATOR_STATS */
 } WasmStackAllocator;
 
 WASM_EXTERN_C_BEGIN
 WasmResult wasm_init_stack_allocator(WasmStackAllocator*,
                                      WasmAllocator* fallback);
 void wasm_destroy_stack_allocator(WasmStackAllocator*);
-void wasm_reset_stack_allocator(WasmStackAllocator*);
 WASM_EXTERN_C_END
 
 #endif /* WASM_STACK_ALLOCATOR_H_ */

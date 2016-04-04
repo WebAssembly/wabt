@@ -419,8 +419,7 @@ int main(int argc, char** argv) {
 
   if (s_use_libc_allocator)
     wasm_destroy_script(&script);
-  else
-    wasm_destroy_stack_allocator(&stack_allocator);
-
+  wasm_print_allocator_stats(allocator);
+  wasm_destroy_allocator(allocator);
   return result;
 }

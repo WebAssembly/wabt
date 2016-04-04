@@ -441,6 +441,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WasmInterpreterThread thread;
   WasmStringSlice command_file;
   WasmStringSlice command_name;
+  WasmAllocatorMark module_mark;
   uint32_t command_line_no;
   int has_module = 0;
   uint32_t passed = 0;
@@ -583,6 +584,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         EXPECT('}');
         MAYBE_CONTINUE(MODULES_ARRAY);
         destroy_module_and_thread(allocator, &module, &thread);
+        wasm_reset_to_mark(allocator, module_mark);
         has_module = 0;
         break;
 
@@ -601,6 +603,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
                         module_filename.start);
         }
 
+        module_mark = wasm_mark(allocator);
         result = read_module(allocator, path, &module, &thread);
         if (result != WASM_OK)
           goto fail;
@@ -788,7 +791,7 @@ int main(int argc, char** argv) {
     result = read_and_run_module(allocator, s_infile);
   }
 
-  if (!s_use_libc_allocator)
-    wasm_destroy_stack_allocator(&stack_allocator);
+  wasm_print_allocator_stats(allocator);
+  wasm_destroy_allocator(allocator);
   return result;
 }
