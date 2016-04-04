@@ -92,16 +92,16 @@ typedef struct WasmLabelNode {
   int used;
 } WasmLabelNode;
 
-typedef struct WasmCheckContext {
+typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmLexer lexer;
   WasmModule* last_module;
   WasmLabelNode* top_label;
   int in_assert_invalid;
   int max_depth;
-} WasmCheckContext;
+} WasmContext;
 
-static void print_error(WasmCheckContext* ctx,
+static void print_error(WasmContext* ctx,
                         WasmLocation* loc,
                         const char* fmt,
                         ...) {
@@ -121,7 +121,7 @@ static int is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
+static WasmResult check_duplicate_bindings(WasmContext* ctx,
                                            WasmBindingHash* bindings,
                                            const char* desc) {
   WasmResult result = WASM_OK;
@@ -154,7 +154,7 @@ static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_var(WasmCheckContext* ctx,
+static WasmResult check_var(WasmContext* ctx,
                             WasmBindingHash* bindings,
                             int max_index,
                             WasmVar* var,
@@ -175,7 +175,7 @@ static WasmResult check_var(WasmCheckContext* ctx,
   return WASM_ERROR;
 }
 
-static WasmResult check_func_var(WasmCheckContext* ctx,
+static WasmResult check_func_var(WasmContext* ctx,
                                  WasmModule* module,
                                  WasmVar* var,
                                  WasmFunc** out_func) {
@@ -189,7 +189,7 @@ static WasmResult check_func_var(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_import_var(WasmCheckContext* ctx,
+static WasmResult check_import_var(WasmContext* ctx,
                                    WasmModule* module,
                                    WasmVar* var,
                                    WasmImport** out_import) {
@@ -203,7 +203,7 @@ static WasmResult check_import_var(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_func_type_var(WasmCheckContext* ctx,
+static WasmResult check_func_type_var(WasmContext* ctx,
                                       WasmModule* module,
                                       WasmVar* var,
                                       WasmFuncType** out_func_type) {
@@ -217,7 +217,7 @@ static WasmResult check_func_type_var(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_local_var(WasmCheckContext* ctx,
+static WasmResult check_local_var(WasmContext* ctx,
                                   WasmFunc* func,
                                   WasmVar* var,
                                   WasmType* out_type) {
@@ -232,7 +232,7 @@ static WasmResult check_local_var(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_align(WasmCheckContext* ctx,
+static WasmResult check_align(WasmContext* ctx,
                               WasmLocation* loc,
                               uint32_t alignment) {
   if (alignment != WASM_USE_NATURAL_ALIGNMENT && !is_power_of_two(alignment)) {
@@ -242,7 +242,7 @@ static WasmResult check_align(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_offset(WasmCheckContext* ctx,
+static WasmResult check_offset(WasmContext* ctx,
                                WasmLocation* loc,
                                uint64_t offset) {
   if (offset > UINT32_MAX) {
@@ -252,7 +252,7 @@ static WasmResult check_offset(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_type(WasmCheckContext* ctx,
+static WasmResult check_type(WasmContext* ctx,
                              WasmLocation* loc,
                              WasmType actual,
                              WasmType expected,
@@ -265,7 +265,7 @@ static WasmResult check_type(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_type_set(WasmCheckContext* ctx,
+static WasmResult check_type_set(WasmContext* ctx,
                                  WasmLocation* loc,
                                  WasmType actual,
                                  WasmTypeSet expected,
@@ -280,7 +280,7 @@ static WasmResult check_type_set(WasmCheckContext* ctx,
 }
 
 
-static WasmResult check_type_exact(WasmCheckContext* ctx,
+static WasmResult check_type_exact(WasmContext* ctx,
                                    WasmLocation* loc,
                                    WasmType actual,
                                    WasmType expected,
@@ -293,7 +293,7 @@ static WasmResult check_type_exact(WasmCheckContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_type_arg_exact(WasmCheckContext* ctx,
+static WasmResult check_type_arg_exact(WasmContext* ctx,
                                        WasmLocation* loc,
                                        WasmType actual,
                                        WasmType expected,
@@ -333,7 +333,7 @@ static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
   return node;
 }
 
-static WasmResult check_label_var(WasmCheckContext* ctx,
+static WasmResult check_label_var(WasmContext* ctx,
                                   WasmLabelNode* top_label,
                                   WasmVar* var,
                                   WasmLabelNode** out_node) {
@@ -353,7 +353,7 @@ static WasmResult check_label_var(WasmCheckContext* ctx,
   return WASM_ERROR;
 }
 
-static WasmResult push_label(WasmCheckContext* ctx,
+static WasmResult push_label(WasmContext* ctx,
                              WasmLocation* loc,
                              WasmLabelNode* node,
                              WasmLabel* label,
@@ -370,19 +370,19 @@ static WasmResult push_label(WasmCheckContext* ctx,
   return result;
 }
 
-static void pop_label(WasmCheckContext* ctx) {
+static void pop_label(WasmContext* ctx) {
   ctx->max_depth--;
   ctx->top_label = ctx->top_label->next;
 }
 
-static WasmResult check_expr(WasmCheckContext* ctx,
+static WasmResult check_expr(WasmContext* ctx,
                              WasmModule* module,
                              WasmFunc* func,
                              WasmExpr* expr,
                              WasmType expected_type,
                              const char* desc);
 
-static WasmResult check_br(WasmCheckContext* ctx,
+static WasmResult check_br(WasmContext* ctx,
                            WasmLocation* loc,
                            WasmModule* module,
                            WasmFunc* func,
@@ -415,7 +415,7 @@ static WasmResult check_br(WasmCheckContext* ctx,
   }
 }
 
-static WasmResult check_call(WasmCheckContext* ctx,
+static WasmResult check_call(WasmContext* ctx,
                              WasmLocation* loc,
                              WasmModule* module,
                              WasmFunc* func,
@@ -454,7 +454,7 @@ static WasmResult check_call(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_exprs(WasmCheckContext* ctx,
+static WasmResult check_exprs(WasmContext* ctx,
                               WasmModule* module,
                               WasmFunc* func,
                               WasmExprPtrVector* exprs,
@@ -471,7 +471,7 @@ static WasmResult check_exprs(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_expr(WasmCheckContext* ctx,
+static WasmResult check_expr(WasmContext* ctx,
                              WasmModule* module,
                              WasmFunc* func,
                              WasmExpr* expr,
@@ -749,7 +749,7 @@ static WasmResult check_expr(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_func(WasmCheckContext* ctx,
+static WasmResult check_func(WasmContext* ctx,
                              WasmModule* module,
                              WasmLocation* loc,
                              WasmFunc* func) {
@@ -798,7 +798,7 @@ static WasmResult check_func(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_import(WasmCheckContext* ctx,
+static WasmResult check_import(WasmContext* ctx,
                                WasmModule* module,
                                WasmLocation* loc,
                                WasmImport* import) {
@@ -808,13 +808,13 @@ static WasmResult check_import(WasmCheckContext* ctx,
   return check_func_type_var(ctx, module, &import->type_var, NULL);
 }
 
-static WasmResult check_export(WasmCheckContext* ctx,
+static WasmResult check_export(WasmContext* ctx,
                                WasmModule* module,
                                WasmExport* export) {
   return check_func_var(ctx, module, &export->var, NULL);
 }
 
-static WasmResult check_table(WasmCheckContext* ctx,
+static WasmResult check_table(WasmContext* ctx,
                               WasmModule* module,
                               WasmVarVector* table) {
   WasmResult result = WASM_OK;
@@ -824,7 +824,7 @@ static WasmResult check_table(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_memory(WasmCheckContext* ctx,
+static WasmResult check_memory(WasmContext* ctx,
                                WasmModule* module,
                                WasmMemory* memory) {
   WasmResult result = WASM_OK;
@@ -862,7 +862,7 @@ static WasmResult check_memory(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
+static WasmResult check_module(WasmContext* ctx, WasmModule* module) {
   WasmResult result = WASM_OK;
   WasmLocation* export_memory_loc = NULL;
   int seen_memory = 0;
@@ -942,7 +942,7 @@ static WasmResult check_module(WasmCheckContext* ctx, WasmModule* module) {
   return result;
 }
 
-static WasmResult check_invoke(WasmCheckContext* ctx,
+static WasmResult check_invoke(WasmContext* ctx,
                                WasmCommandInvoke* invoke,
                                WasmTypeSet return_type) {
   if (!ctx->last_module) {
@@ -985,7 +985,7 @@ static WasmResult check_invoke(WasmCheckContext* ctx,
   return result;
 }
 
-static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
+static WasmResult check_command(WasmContext* ctx, WasmCommand* command) {
   switch (command->type) {
     case WASM_COMMAND_TYPE_MODULE:
       ctx->last_module = &command->module;
@@ -1020,7 +1020,7 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
 }
 
 WasmResult wasm_check_ast(WasmLexer lexer, WasmScript* script) {
-  WasmCheckContext ctx;
+  WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
   ctx.allocator = script->allocator;

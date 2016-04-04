@@ -74,7 +74,7 @@ typedef struct WasmLabelNode {
   struct WasmLabelNode* next;
 } WasmLabelNode;
 
-typedef struct WasmWriteContext {
+typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmWriter* writer;
   size_t writer_offset;
@@ -91,7 +91,7 @@ typedef struct WasmWriteContext {
   int* remapped_locals;         /* from unpacked -> packed index, has params */
   int* reverse_remapped_locals; /* from packed -> unpacked index, no params */
   WasmStringSlice** local_type_names; /* from packed -> local name */
-} WasmWriteContext;
+} WasmContext;
 
 WASM_DEFINE_VECTOR(func_signature, WasmFuncSignature);
 
@@ -101,7 +101,7 @@ static void destroy_func_signature_vector_and_elements(
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *sigs, func_signature);
 }
 
-static void print_header(WasmWriteContext* ctx, const char* name, int index) {
+static void print_header(WasmContext* ctx, const char* name, int index) {
   if (ctx->options->log_writes) {
     if (index == PRINT_HEADER_NO_INDEX) {
       printf("; %s\n", name);
@@ -111,7 +111,7 @@ static void print_header(WasmWriteContext* ctx, const char* name, int index) {
   }
 }
 
-static void out_data_at(WasmWriteContext* ctx,
+static void out_data_at(WasmContext* ctx,
                         size_t offset,
                         const void* src,
                         size_t size,
@@ -127,7 +127,7 @@ static void out_data_at(WasmWriteContext* ctx,
   }
 }
 
-static void out_data(WasmWriteContext* ctx,
+static void out_data(WasmContext* ctx,
                      const void* src,
                      size_t length,
                      const char* desc) {
@@ -135,7 +135,7 @@ static void out_data(WasmWriteContext* ctx,
   ctx->writer_offset += length;
 }
 
-static void move_data(WasmWriteContext* ctx,
+static void move_data(WasmContext* ctx,
                       size_t dst_offset,
                       size_t src_offset,
                       size_t size) {
@@ -151,7 +151,7 @@ static void move_data(WasmWriteContext* ctx,
   }
 }
 
-static void out_u8(WasmWriteContext* ctx, uint32_t value, const char* desc) {
+static void out_u8(WasmContext* ctx, uint32_t value, const char* desc) {
   assert(value <= UINT8_MAX);
   uint8_t value8 = value;
   out_data_at(ctx, ctx->writer_offset, &value8, sizeof(value8),
@@ -160,13 +160,13 @@ static void out_u8(WasmWriteContext* ctx, uint32_t value, const char* desc) {
 }
 
 /* TODO(binji): endianness */
-static void out_u32(WasmWriteContext* ctx, uint32_t value, const char* desc) {
+static void out_u32(WasmContext* ctx, uint32_t value, const char* desc) {
   out_data_at(ctx, ctx->writer_offset, &value, sizeof(value), DONT_PRINT_CHARS,
               desc);
   ctx->writer_offset += sizeof(value);
 }
 
-static void out_u64(WasmWriteContext* ctx, uint64_t value, const char* desc) {
+static void out_u64(WasmContext* ctx, uint64_t value, const char* desc) {
   out_data_at(ctx, ctx->writer_offset, &value, sizeof(value), DONT_PRINT_CHARS,
               desc);
   ctx->writer_offset += sizeof(value);
@@ -187,7 +187,7 @@ static void out_u64(WasmWriteContext* ctx, uint64_t value, const char* desc) {
   } while (1)
 
 /* returns the length of the leb128 */
-static uint32_t out_u32_leb128_at(WasmWriteContext* ctx,
+static uint32_t out_u32_leb128_at(WasmContext* ctx,
                                   uint32_t offset,
                                   uint32_t value,
                                   const char* desc) {
@@ -199,7 +199,7 @@ static uint32_t out_u32_leb128_at(WasmWriteContext* ctx,
   return length;
 }
 
-static uint32_t out_fixed_u32_leb128_at(WasmWriteContext* ctx,
+static uint32_t out_fixed_u32_leb128_at(WasmContext* ctx,
                                         uint32_t offset,
                                         uint32_t value,
                                         const char* desc) {
@@ -213,16 +213,12 @@ static uint32_t out_fixed_u32_leb128_at(WasmWriteContext* ctx,
   return MAX_U32_LEB128_BYTES;
 }
 
-static void out_u32_leb128(WasmWriteContext* ctx,
-                           uint32_t value,
-                           const char* desc) {
+static void out_u32_leb128(WasmContext* ctx, uint32_t value, const char* desc) {
   uint32_t length = out_u32_leb128_at(ctx, ctx->writer_offset, value, desc);
   ctx->writer_offset += length;
 }
 
-static void out_i32_leb128(WasmWriteContext* ctx,
-                           int32_t value,
-                           const char* desc) {
+static void out_i32_leb128(WasmContext* ctx, int32_t value, const char* desc) {
   uint8_t data[MAX_U32_LEB128_BYTES];
   int i = 0;
   if (value < 0)
@@ -235,9 +231,7 @@ static void out_i32_leb128(WasmWriteContext* ctx,
   ctx->writer_offset += length;
 }
 
-static void out_i64_leb128(WasmWriteContext* ctx,
-                           int64_t value,
-                           const char* desc) {
+static void out_i64_leb128(WasmContext* ctx, int64_t value, const char* desc) {
   uint8_t data[MAX_U64_LEB128_BYTES];
   int i = 0;
   if (value < 0)
@@ -262,7 +256,7 @@ static uint32_t size_u32_leb128(uint32_t value) {
 }
 
 /* returns offset of leb128 */
-static uint32_t out_u32_leb128_space(WasmWriteContext* ctx,
+static uint32_t out_u32_leb128_space(WasmContext* ctx,
                                      uint32_t leb_size_guess,
                                      const char* desc) {
   assert(leb_size_guess <= MAX_U32_LEB128_BYTES);
@@ -274,7 +268,7 @@ static uint32_t out_u32_leb128_space(WasmWriteContext* ctx,
   return result;
 }
 
-static void out_fixup_u32_leb128_size(WasmWriteContext* ctx,
+static void out_fixup_u32_leb128_size(WasmContext* ctx,
                                       uint32_t offset,
                                       uint32_t leb_size_guess,
                                       const char* desc) {
@@ -294,7 +288,7 @@ static void out_fixup_u32_leb128_size(WasmWriteContext* ctx,
   }
 }
 
-static void out_str(WasmWriteContext* ctx,
+static void out_str(WasmContext* ctx,
                     const char* s,
                     size_t length,
                     int print_chars,
@@ -304,11 +298,11 @@ static void out_str(WasmWriteContext* ctx,
   ctx->writer_offset += length;
 }
 
-static void out_opcode(WasmWriteContext* ctx, uint8_t opcode) {
+static void out_opcode(WasmContext* ctx, uint8_t opcode) {
   out_u8(ctx, opcode, s_opcode_name[opcode]);
 }
 
-static void begin_section(WasmWriteContext* ctx,
+static void begin_section(WasmContext* ctx,
                           const char* name,
                           size_t leb_size_guess) {
   assert(ctx->last_section_leb_size_guess == 0);
@@ -322,7 +316,7 @@ static void begin_section(WasmWriteContext* ctx,
   out_str(ctx, name, strlen(name), DONT_PRINT_CHARS, desc);
 }
 
-static void end_section(WasmWriteContext* ctx) {
+static void end_section(WasmContext* ctx) {
   assert(ctx->last_section_leb_size_guess != 0);
   out_fixup_u32_leb128_size(ctx, ctx->last_section_offset,
                             ctx->last_section_leb_size_guess,
@@ -355,7 +349,7 @@ static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
   return node;
 }
 
-static void push_unused_label(WasmWriteContext* ctx,
+static void push_unused_label(WasmContext* ctx,
                               WasmLabelNode* node,
                               WasmLabel* label) {
   assert(label);
@@ -365,19 +359,19 @@ static void push_unused_label(WasmWriteContext* ctx,
   ctx->top_label = node;
 }
 
-static void pop_unused_label(WasmWriteContext* ctx, WasmLabel* label) {
+static void pop_unused_label(WasmContext* ctx, WasmLabel* label) {
   if (ctx->top_label && ctx->top_label->label == label)
     ctx->top_label = ctx->top_label->next;
 }
 
-static void push_label(WasmWriteContext* ctx,
+static void push_label(WasmContext* ctx,
                        WasmLabelNode* node,
                        WasmLabel* label) {
   push_unused_label(ctx, node, label);
   ctx->max_depth++;
 }
 
-static void pop_label(WasmWriteContext* ctx, WasmLabel* label) {
+static void pop_label(WasmContext* ctx, WasmLabel* label) {
   ctx->max_depth--;
   pop_unused_label(ctx, label);
 }
@@ -403,7 +397,7 @@ static int find_func_signature(WasmFuncSignatureVector* sigs,
   return -1;
 }
 
-static void get_func_signatures(WasmWriteContext* ctx,
+static void get_func_signatures(WasmContext* ctx,
                                 WasmModule* module,
                                 WasmFuncSignatureVector* sigs) {
   /* function types are not deduped; we don't want the signature index to match
@@ -483,7 +477,7 @@ static void get_func_signatures(WasmWriteContext* ctx,
   }
 }
 
-static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
+static void remap_locals(WasmContext* ctx, WasmFunc* func) {
   int i;
   int num_params = func->params.types.size;
   int num_locals = func->locals.types.size;
@@ -537,22 +531,22 @@ static void remap_locals(WasmWriteContext* ctx, WasmFunc* func) {
   }
 }
 
-static void write_expr_list(WasmWriteContext* ctx,
+static void write_expr_list(WasmContext* ctx,
                             WasmModule* module,
                             WasmFunc* func,
                             WasmExprPtrVector* exprs);
 
-static void write_expr_list_with_count(WasmWriteContext* ctx,
+static void write_expr_list_with_count(WasmContext* ctx,
                                        WasmModule* module,
                                        WasmFunc* func,
                                        WasmExprPtrVector* exprs);
 
-static void write_block(WasmWriteContext* ctx,
+static void write_block(WasmContext* ctx,
                         WasmModule* module,
                         WasmFunc* func,
                         WasmBlock* block);
 
-static void write_expr(WasmWriteContext* ctx,
+static void write_expr(WasmContext* ctx,
                        WasmModule* module,
                        WasmFunc* func,
                        WasmExpr* expr) {
@@ -757,7 +751,7 @@ static void write_expr(WasmWriteContext* ctx,
   }
 }
 
-static void write_expr_list(WasmWriteContext* ctx,
+static void write_expr_list(WasmContext* ctx,
                             WasmModule* module,
                             WasmFunc* func,
                             WasmExprPtrVector* exprs) {
@@ -766,7 +760,7 @@ static void write_expr_list(WasmWriteContext* ctx,
     write_expr(ctx, module, func, exprs->data[i]);
 }
 
-static void write_expr_list_with_count(WasmWriteContext* ctx,
+static void write_expr_list_with_count(WasmContext* ctx,
                                        WasmModule* module,
                                        WasmFunc* func,
                                        WasmExprPtrVector* exprs) {
@@ -774,7 +768,7 @@ static void write_expr_list_with_count(WasmWriteContext* ctx,
   write_expr_list(ctx, module, func, exprs);
 }
 
-static void write_block(WasmWriteContext* ctx,
+static void write_block(WasmContext* ctx,
                         WasmModule* module,
                         WasmFunc* func,
                         WasmBlock* block) {
@@ -791,7 +785,7 @@ static void write_block(WasmWriteContext* ctx,
   }
 }
 
-static void write_func_locals(WasmWriteContext* ctx,
+static void write_func_locals(WasmContext* ctx,
                               WasmModule* module,
                               WasmFunc* func,
                               WasmTypeVector* local_types) {
@@ -837,14 +831,12 @@ static void write_func_locals(WasmWriteContext* ctx,
   }
 }
 
-static void write_func(WasmWriteContext* ctx,
-                       WasmModule* module,
-                       WasmFunc* func) {
+static void write_func(WasmContext* ctx, WasmModule* module, WasmFunc* func) {
   write_func_locals(ctx, module, func, &func->locals.types);
   write_expr_list(ctx, module, func, &func->exprs);
 }
 
-static void write_module(WasmWriteContext* ctx, WasmModule* module) {
+static void write_module(WasmContext* ctx, WasmModule* module) {
   /* TODO(binji): better leb size guess. Some sections we know will only be 1
    byte, but others we can be fairly certain will be larger. */
   const size_t leb_size_guess = 1;
@@ -1029,7 +1021,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
-static void write_commands(WasmWriteContext* ctx, WasmScript* script) {
+static void write_commands(WasmContext* ctx, WasmScript* script) {
   int i;
   int wrote_module = 0;
   for (i = 0; i < script->commands.size; ++i) {
@@ -1049,7 +1041,7 @@ static void write_commands(WasmWriteContext* ctx, WasmScript* script) {
   }
 }
 
-static void cleanup_context(WasmWriteContext* ctx) {
+static void cleanup_context(WasmContext* ctx) {
   wasm_free(ctx->allocator, ctx->import_sig_indexes);
   wasm_free(ctx->allocator, ctx->func_sig_indexes);
   wasm_free(ctx->allocator, ctx->remapped_locals);
@@ -1061,7 +1053,7 @@ WasmResult wasm_write_binary_module(struct WasmAllocator* allocator,
                                     struct WasmWriter* writer,
                                     struct WasmModule* module,
                                     WasmWriteBinaryOptions* options) {
-  WasmWriteContext ctx;
+  WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.options = options;
@@ -1078,7 +1070,7 @@ WasmResult wasm_write_binary_script(WasmAllocator* allocator,
                                     WasmWriter* writer,
                                     WasmScript* script,
                                     WasmWriteBinaryOptions* options) {
-  WasmWriteContext ctx;
+  WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.options = options;

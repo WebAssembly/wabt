@@ -70,7 +70,7 @@ typedef enum WasmNextChar {
   WASM_NEXT_CHAR_FORCE_NEWLINE,
 } WasmNextChar;
 
-typedef struct WasmWriteContext {
+typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmWriter* writer;
   size_t offset;
@@ -79,18 +79,18 @@ typedef struct WasmWriteContext {
   WasmNextChar next_char;
   int depth;
   WasmStringSliceVector index_to_name;
-} WasmWriteContext;
+} WasmContext;
 
-static void indent(WasmWriteContext* ctx) {
+static void indent(WasmContext* ctx) {
   ctx->indent += INDENT_SIZE;
 }
 
-static void dedent(WasmWriteContext* ctx) {
+static void dedent(WasmContext* ctx) {
   ctx->indent -= INDENT_SIZE;
   assert(ctx->indent >= 0);
 }
 
-static void out_data_at(WasmWriteContext* ctx,
+static void out_data_at(WasmContext* ctx,
                         size_t offset,
                         const void* src,
                         size_t size) {
@@ -102,12 +102,12 @@ static void out_data_at(WasmWriteContext* ctx,
   }
 }
 
-static void out_data(WasmWriteContext* ctx, const void* src, size_t size) {
+static void out_data(WasmContext* ctx, const void* src, size_t size) {
   out_data_at(ctx, ctx->offset, src, size);
   ctx->offset += size;
 }
 
-static void out_indent(WasmWriteContext* ctx) {
+static void out_indent(WasmContext* ctx) {
   static char s_indent[] =
       "                                                                       "
       "                                                                       ";
@@ -122,7 +122,7 @@ static void out_indent(WasmWriteContext* ctx) {
   }
 }
 
-static void out_next_char(WasmWriteContext* ctx) {
+static void out_next_char(WasmContext* ctx) {
   switch (ctx->next_char) {
     case WASM_NEXT_CHAR_SPACE:
       out_data(ctx, " ", 1);
@@ -140,14 +140,14 @@ static void out_next_char(WasmWriteContext* ctx) {
   ctx->next_char = WASM_NEXT_CHAR_NONE;
 }
 
-static void out_data_with_next_char(WasmWriteContext* ctx,
+static void out_data_with_next_char(WasmContext* ctx,
                                     const void* src,
                                     size_t size) {
   out_next_char(ctx);
   out_data(ctx, src, size);
 }
 
-static void out_printf(WasmWriteContext* ctx, const char* format, ...) {
+static void out_printf(WasmContext* ctx, const char* format, ...) {
   va_list args;
   va_list args_copy;
   va_start(args, format);
@@ -167,30 +167,28 @@ static void out_printf(WasmWriteContext* ctx, const char* format, ...) {
   ctx->next_char = WASM_NEXT_CHAR_SPACE;
 }
 
-static void out_putc(WasmWriteContext* ctx, char c) {
+static void out_putc(WasmContext* ctx, char c) {
   out_data(ctx, &c, 1);
 }
 
-static void out_puts(WasmWriteContext* ctx,
-                     const char* s,
-                     WasmNextChar next_char) {
+static void out_puts(WasmContext* ctx, const char* s, WasmNextChar next_char) {
   size_t len = strlen(s);
   out_data_with_next_char(ctx, s, len);
   ctx->next_char = next_char;
 }
 
-static void out_puts_space(WasmWriteContext* ctx, const char* s) {
+static void out_puts_space(WasmContext* ctx, const char* s) {
   out_puts(ctx, s, WASM_NEXT_CHAR_SPACE);
 }
 
-static void out_newline(WasmWriteContext* ctx, int force) {
+static void out_newline(WasmContext* ctx, int force) {
   if (ctx->next_char == WASM_NEXT_CHAR_FORCE_NEWLINE)
     out_next_char(ctx);
   ctx->next_char =
       force ? WASM_NEXT_CHAR_FORCE_NEWLINE : WASM_NEXT_CHAR_NEWLINE;
 }
 
-static void out_open(WasmWriteContext* ctx,
+static void out_open(WasmContext* ctx,
                      const char* name,
                      WasmNextChar next_char) {
   out_puts(ctx, "(", WASM_NEXT_CHAR_NONE);
@@ -198,46 +196,44 @@ static void out_open(WasmWriteContext* ctx,
   indent(ctx);
 }
 
-static void out_open_newline(WasmWriteContext* ctx, const char* name) {
+static void out_open_newline(WasmContext* ctx, const char* name) {
   out_open(ctx, name, WASM_NEXT_CHAR_NEWLINE);
 }
 
-static void out_open_space(WasmWriteContext* ctx, const char* name) {
+static void out_open_space(WasmContext* ctx, const char* name) {
   out_open(ctx, name, WASM_NEXT_CHAR_SPACE);
 }
 
-static void out_close(WasmWriteContext* ctx, WasmNextChar next_char) {
+static void out_close(WasmContext* ctx, WasmNextChar next_char) {
   if (ctx->next_char != WASM_NEXT_CHAR_FORCE_NEWLINE)
     ctx->next_char = WASM_NEXT_CHAR_NONE;
   dedent(ctx);
   out_puts(ctx, ")", next_char);
 }
 
-static void out_close_newline(WasmWriteContext* ctx) {
+static void out_close_newline(WasmContext* ctx) {
   out_close(ctx, WASM_NEXT_CHAR_NEWLINE);
 }
 
-static void out_close_space(WasmWriteContext* ctx) {
+static void out_close_space(WasmContext* ctx) {
   out_close(ctx, WASM_NEXT_CHAR_SPACE);
 }
 
-static void out_string_slice(WasmWriteContext* ctx,
+static void out_string_slice(WasmContext* ctx,
                              WasmStringSlice* str,
                              WasmNextChar next_char) {
   out_printf(ctx, PRIstringslice, WASM_PRINTF_STRING_SLICE_ARG(*str));
   ctx->next_char = next_char;
 }
 
-static void out_string_slice_opt(WasmWriteContext* ctx,
+static void out_string_slice_opt(WasmContext* ctx,
                                  WasmStringSlice* str,
                                  WasmNextChar next_char) {
   if (str->start)
     out_string_slice(ctx, str, next_char);
 }
 
-static void out_quoted_data(WasmWriteContext* ctx,
-                            const void* data,
-                            size_t length) {
+static void out_quoted_data(WasmContext* ctx, const void* data, size_t length) {
   const uint8_t* u8_data = data;
   static const char s_hexdigits[] = "0123456789abcdef";
   out_next_char(ctx);
@@ -257,16 +253,14 @@ static void out_quoted_data(WasmWriteContext* ctx,
   ctx->next_char = WASM_NEXT_CHAR_SPACE;
 }
 
-static void out_quoted_string_slice(WasmWriteContext* ctx,
+static void out_quoted_string_slice(WasmContext* ctx,
                                     WasmStringSlice* str,
                                     WasmNextChar next_char) {
   out_quoted_data(ctx, str->start, str->length);
   ctx->next_char = next_char;
 }
 
-static void out_var(WasmWriteContext* ctx,
-                    WasmVar* var,
-                    WasmNextChar next_char) {
+static void out_var(WasmContext* ctx, WasmVar* var, WasmNextChar next_char) {
   if (var->type == WASM_VAR_TYPE_INDEX) {
     out_printf(ctx, "%d", var->index);
     ctx->next_char = next_char;
@@ -275,9 +269,7 @@ static void out_var(WasmWriteContext* ctx,
   }
 }
 
-static void out_br_var(WasmWriteContext* ctx,
-                       WasmVar* var,
-                       WasmNextChar next_char) {
+static void out_br_var(WasmContext* ctx, WasmVar* var, WasmNextChar next_char) {
   if (var->type == WASM_VAR_TYPE_INDEX) {
     out_printf(ctx, "%d (; @%d ;)", var->index, ctx->depth - var->index - 1);
     ctx->next_char = next_char;
@@ -286,15 +278,12 @@ static void out_br_var(WasmWriteContext* ctx,
   }
 }
 
-static void out_type(WasmWriteContext* ctx,
-                     WasmType type,
-                     WasmNextChar next_char) {
+static void out_type(WasmContext* ctx, WasmType type, WasmNextChar next_char) {
   static const char* s_types[] = {NULL, "i32", "i64", "f32", "f64"};
   out_puts(ctx, s_types[type], next_char);
 }
 
-static void out_func_sig_space(WasmWriteContext* ctx,
-                               WasmFuncSignature* func_sig) {
+static void out_func_sig_space(WasmContext* ctx, WasmFuncSignature* func_sig) {
   if (func_sig->param_types.size) {
     size_t i;
     out_open_space(ctx, "param");
@@ -311,13 +300,11 @@ static void out_func_sig_space(WasmWriteContext* ctx,
   }
 }
 
-static void write_exprs(WasmWriteContext* ctx, WasmExprPtrVector* exprs);
+static void write_exprs(WasmContext* ctx, WasmExprPtrVector* exprs);
 
-static void write_expr(WasmWriteContext* ctx, WasmExpr* expr);
+static void write_expr(WasmContext* ctx, WasmExpr* expr);
 
-static void write_block(WasmWriteContext* ctx,
-                        WasmBlock* block,
-                        const char* text) {
+static void write_block(WasmContext* ctx, WasmBlock* block, const char* text) {
   out_open_space(ctx, text);
   out_string_slice_opt(ctx, &block->label, WASM_NEXT_CHAR_SPACE);
   out_printf(ctx, " ;; exit = @%d", ctx->depth);
@@ -340,7 +327,7 @@ static WriteIfBranchType get_if_branch_type(WasmExpr* expr) {
              : WASM_IF_BRANCH_TYPE_ONE_EXPRESSION;
 }
 
-static void write_if_branch(WasmWriteContext* ctx,
+static void write_if_branch(WasmContext* ctx,
                             WriteIfBranchType type,
                             WasmExpr* expr,
                             const char* text) {
@@ -371,7 +358,7 @@ static void write_if_branch(WasmWriteContext* ctx,
   }
 }
 
-static void write_const(WasmWriteContext* ctx, WasmConst* const_) {
+static void write_const(WasmContext* ctx, WasmConst* const_) {
   switch (const_->type) {
     case WASM_TYPE_I32:
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_I32_CONST]);
@@ -409,7 +396,7 @@ static void write_const(WasmWriteContext* ctx, WasmConst* const_) {
   }
 }
 
-static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
+static void write_expr(WasmContext* ctx, WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
       out_open_newline(ctx, s_opcode_name[expr->binary.opcode]);
@@ -556,8 +543,7 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_LOOP]);
       out_string_slice_opt(ctx, &expr->loop.inner, WASM_NEXT_CHAR_SPACE);
       out_string_slice_opt(ctx, &expr->loop.outer, WASM_NEXT_CHAR_SPACE);
-      out_printf(ctx, " ;; exit = @%d, cont = @%d", ctx->depth,
-                 ctx->depth + 1);
+      out_printf(ctx, " ;; exit = @%d, cont = @%d", ctx->depth, ctx->depth + 1);
       out_newline(ctx, FORCE_NEWLINE);
       ctx->depth += 2;
       write_exprs(ctx, &expr->loop.exprs);
@@ -627,13 +613,13 @@ static void write_expr(WasmWriteContext* ctx, WasmExpr* expr) {
   }
 }
 
-static void write_exprs(WasmWriteContext* ctx, WasmExprPtrVector* exprs) {
+static void write_exprs(WasmContext* ctx, WasmExprPtrVector* exprs) {
   size_t i;
   for (i = 0; i < exprs->size; ++i)
     write_expr(ctx, exprs->data[i]);
 }
 
-static void write_type_bindings(WasmWriteContext* ctx,
+static void write_type_bindings(WasmContext* ctx,
                                 const char* prefix,
                                 WasmFunc* func,
                                 WasmTypeBindings* type_bindings,
@@ -686,7 +672,7 @@ static void write_type_bindings(WasmWriteContext* ctx,
     out_close_space(ctx);
 }
 
-static void write_func(WasmWriteContext* ctx,
+static void write_func(WasmContext* ctx,
                        WasmModule* module,
                        int func_index,
                        WasmFunc* func) {
@@ -719,7 +705,7 @@ static void write_func(WasmWriteContext* ctx,
   out_close_newline(ctx);
 }
 
-static void write_import(WasmWriteContext* ctx,
+static void write_import(WasmContext* ctx,
                          int import_index,
                          WasmImport* import) {
   out_open_space(ctx, "import");
@@ -737,7 +723,7 @@ static void write_import(WasmWriteContext* ctx,
   out_close_newline(ctx);
 }
 
-static void write_export(WasmWriteContext* ctx,
+static void write_export(WasmContext* ctx,
                          int export_index,
                          WasmExport* export) {
   out_open_space(ctx, "export");
@@ -747,15 +733,14 @@ static void write_export(WasmWriteContext* ctx,
   out_close_newline(ctx);
 }
 
-static void write_export_memory(WasmWriteContext* ctx,
-                                WasmExportMemory* export) {
+static void write_export_memory(WasmContext* ctx, WasmExportMemory* export) {
   out_open_space(ctx, "export");
   out_quoted_string_slice(ctx, &export->name, WASM_NEXT_CHAR_SPACE);
   out_puts_space(ctx, "memory");
   out_close_newline(ctx);
 }
 
-static void write_table(WasmWriteContext* ctx, WasmVarVector* table) {
+static void write_table(WasmContext* ctx, WasmVarVector* table) {
   out_open_space(ctx, "table");
   size_t i;
   for (i = 0; i < table->size; ++i)
@@ -763,14 +748,14 @@ static void write_table(WasmWriteContext* ctx, WasmVarVector* table) {
   out_close_newline(ctx);
 }
 
-static void write_segment(WasmWriteContext* ctx, WasmSegment* segment) {
+static void write_segment(WasmContext* ctx, WasmSegment* segment) {
   out_open_space(ctx, "segment");
   out_printf(ctx, "%u", segment->addr);
   out_quoted_data(ctx, segment->data, segment->size);
   out_close_newline(ctx);
 }
 
-static void write_memory(WasmWriteContext* ctx, WasmMemory* memory) {
+static void write_memory(WasmContext* ctx, WasmMemory* memory) {
   out_open_space(ctx, "memory");
   out_printf(ctx, "%u", memory->initial_pages);
   if (memory->initial_pages != memory->max_pages)
@@ -784,7 +769,7 @@ static void write_memory(WasmWriteContext* ctx, WasmMemory* memory) {
   out_close_newline(ctx);
 }
 
-static void write_func_type(WasmWriteContext* ctx,
+static void write_func_type(WasmContext* ctx,
                             int func_type_index,
                             WasmFuncType* func_type) {
   out_open_space(ctx, "type");
@@ -796,13 +781,13 @@ static void write_func_type(WasmWriteContext* ctx,
   out_close_newline(ctx);
 }
 
-static void write_start_function(WasmWriteContext* ctx, WasmVar* start) {
+static void write_start_function(WasmContext* ctx, WasmVar* start) {
   out_open_space(ctx, "start");
   out_var(ctx, start, WASM_NEXT_CHAR_NONE);
   out_close_newline(ctx);
 }
 
-static void write_module(WasmWriteContext* ctx, WasmModule* module) {
+static void write_module(WasmContext* ctx, WasmModule* module) {
   out_open_newline(ctx, "module");
   WasmModuleField* field;
   int func_index = 0;
@@ -845,7 +830,7 @@ static void write_module(WasmWriteContext* ctx, WasmModule* module) {
 WasmResult wasm_write_ast(struct WasmAllocator* allocator,
                           struct WasmWriter* writer,
                           struct WasmModule* module) {
-  WasmWriteContext ctx;
+  WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.result = WASM_OK;

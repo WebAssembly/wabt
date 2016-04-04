@@ -240,7 +240,7 @@ static char* get_module_filename(WasmAllocator* allocator,
   return str;
 }
 
-typedef struct WasmSexprWasmContext {
+typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmMemoryWriter json_writer;
   uint32_t json_writer_offset;
@@ -248,9 +248,9 @@ typedef struct WasmSexprWasmContext {
   WasmStringSlice output_filename_noext;
   char* module_filename;
   WasmResult result;
-} WasmSexprWasmContext;
+} WasmContext;
 
-static void out_data(WasmSexprWasmContext* ctx, const void* src, size_t size) {
+static void out_data(WasmContext* ctx, const void* src, size_t size) {
   if (ctx->result != WASM_OK)
     return;
   WasmWriter* writer = &ctx->json_writer.base;
@@ -261,7 +261,7 @@ static void out_data(WasmSexprWasmContext* ctx, const void* src, size_t size) {
   }
 }
 
-static void out_printf(WasmSexprWasmContext* ctx, const char* format, ...) {
+static void out_printf(WasmContext* ctx, const char* format, ...) {
   va_list args;
   va_list args_copy;
   va_start(args, format);
@@ -278,7 +278,7 @@ static void out_printf(WasmSexprWasmContext* ctx, const char* format, ...) {
 }
 
 static void on_script_begin(void* user_data) {
-  WasmSexprWasmContext* ctx = user_data;
+  WasmContext* ctx = user_data;
 
   if (wasm_init_mem_writer(ctx->allocator, &ctx->module_writer) != WASM_OK)
     WASM_FATAL("unable to open memory writer for writing\n");
@@ -290,7 +290,7 @@ static void on_script_begin(void* user_data) {
 }
 
 static void on_module_begin(uint32_t index, void* user_data) {
-  WasmSexprWasmContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   wasm_free(ctx->allocator, ctx->module_filename);
   ctx->module_filename =
       get_module_filename(ctx->allocator, &ctx->output_filename_noext, index);
@@ -325,7 +325,7 @@ static void on_command(uint32_t index,
       "\"file\": \"%s\", "
       "\"line\": %d}";
 
-  WasmSexprWasmContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   if (index != 0)
     out_printf(ctx, ",\n");
   out_printf(ctx, s_command_format, s_command_names[type],
@@ -335,20 +335,20 @@ static void on_command(uint32_t index,
 static void on_module_before_write(uint32_t index,
                                    WasmWriter** out_writer,
                                    void* user_data) {
-  WasmSexprWasmContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   ctx->module_writer.buf.size = 0;
   *out_writer = &ctx->module_writer.base;
 }
 
 static void on_module_end(uint32_t index, WasmResult result, void* user_data) {
-  WasmSexprWasmContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   out_printf(ctx, "\n  ]}");
   if (result == WASM_OK)
     write_buffer_to_file(ctx->module_filename, &ctx->module_writer.buf);
 }
 
 static void on_script_end(void* user_data) {
-  WasmSexprWasmContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   out_printf(ctx, "\n]}\n");
 
   if (ctx->result == WASM_OK)
@@ -385,7 +385,7 @@ int main(int argc, char** argv) {
     if (result == WASM_OK) {
 
       if (s_spec) {
-        WasmSexprWasmContext ctx;
+        WasmContext ctx;
         WASM_ZERO_MEMORY(ctx);
         ctx.allocator = allocator;
         ctx.output_filename_noext = strip_extension(s_outfile);

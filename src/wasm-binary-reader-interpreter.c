@@ -93,10 +93,12 @@ static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 #if LOG
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
 static const char* s_opcode_name[] = {
+  /* clang-format off */
   WASM_FOREACH_OPCODE(V)
   [WASM_OPCODE_ALLOCA] = "alloca",
   [WASM_OPCODE_DISCARD] = "discard",
   [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
+  /* clang-format on */
 };
 #undef V
 #endif
@@ -151,7 +153,7 @@ typedef struct WasmInterpreterFunc {
 } WasmInterpreterFunc;
 WASM_DEFINE_ARRAY(interpreter_func, WasmInterpreterFunc);
 
-typedef struct WasmReadInterpreterContext {
+typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmAllocator* memory_allocator;
   WasmInterpreterModule* module;
@@ -169,24 +171,22 @@ typedef struct WasmReadInterpreterContext {
   /* the last expression evaluated at the top-level of a func */
   WasmInterpreterExpr last_expr;
   int last_expr_was_discarded;
-} WasmReadInterpreterContext;
+} WasmContext;
 
-static WasmDepthNode* get_depth_node(WasmReadInterpreterContext* ctx,
-                                     uint32_t depth) {
+static WasmDepthNode* get_depth_node(WasmContext* ctx, uint32_t depth) {
   assert(depth < ctx->depth_stack.size);
   return &ctx->depth_stack.data[depth];
 }
 
-static WasmDepthNode* top_minus_nth_depth_node(WasmReadInterpreterContext* ctx,
-                                               uint32_t n) {
+static WasmDepthNode* top_minus_nth_depth_node(WasmContext* ctx, uint32_t n) {
   return get_depth_node(ctx, ctx->depth_stack.size - n);
 }
 
-static WasmDepthNode* top_depth_node(WasmReadInterpreterContext* ctx) {
+static WasmDepthNode* top_depth_node(WasmContext* ctx) {
   return top_minus_nth_depth_node(ctx, 1);
 }
 
-static uint32_t get_istream_offset(WasmReadInterpreterContext* ctx) {
+static uint32_t get_istream_offset(WasmContext* ctx) {
   return ctx->istream_offset;
 }
 
@@ -197,9 +197,7 @@ static uint32_t get_value_count(WasmType result_type) {
 
 static void on_error(uint32_t offset, const char* message, void* user_data);
 
-static void print_error(WasmReadInterpreterContext* ctx,
-                        const char* format,
-                        ...) {
+static void print_error(WasmContext* ctx, const char* format, ...) {
   va_list args;
   va_list args_copy;
   va_start(args, format);
@@ -217,8 +215,7 @@ static void print_error(WasmReadInterpreterContext* ctx,
   on_error(WASM_INVALID_OFFSET, buffer, ctx);
 }
 
-static void adjust_value_stack(WasmReadInterpreterContext* ctx,
-                               int32_t amount) {
+static void adjust_value_stack(WasmContext* ctx, int32_t amount) {
   uint32_t old_size = ctx->value_stack_size;
   uint32_t new_size = old_size + (uint32_t)amount;
   assert((amount <= 0 && new_size <= old_size) ||
@@ -237,7 +234,7 @@ static void adjust_value_stack(WasmReadInterpreterContext* ctx,
 #endif
 }
 
-static WasmResult type_mismatch(WasmReadInterpreterContext* ctx,
+static WasmResult type_mismatch(WasmContext* ctx,
                                 WasmType expected_type,
                                 WasmType type,
                                 const char* desc) {
@@ -246,7 +243,7 @@ static WasmResult type_mismatch(WasmReadInterpreterContext* ctx,
   return WASM_ERROR;
 }
 
-static WasmResult check_type(WasmReadInterpreterContext* ctx,
+static WasmResult check_type(WasmContext* ctx,
                              WasmType expected_type,
                              WasmType type,
                              const char* desc) {
@@ -266,7 +263,7 @@ static void unify_type(WasmType* dest_type, WasmType type) {
     *dest_type = WASM_TYPE_VOID;
 }
 
-static WasmResult unify_and_check_type(WasmReadInterpreterContext* ctx,
+static WasmResult unify_and_check_type(WasmContext* ctx,
                                        WasmType* dest_type,
                                        WasmType type,
                                        const char* desc) {
@@ -274,7 +271,7 @@ static WasmResult unify_and_check_type(WasmReadInterpreterContext* ctx,
   return check_type(ctx, *dest_type, type, desc);
 }
 
-static WasmResult emit_data_at(WasmReadInterpreterContext* ctx,
+static WasmResult emit_data_at(WasmContext* ctx,
                                size_t offset,
                                const void* data,
                                size_t size) {
@@ -282,39 +279,36 @@ static WasmResult emit_data_at(WasmReadInterpreterContext* ctx,
       offset, data, size, ctx->istream_writer.base.user_data);
 }
 
-static WasmResult emit_data(WasmReadInterpreterContext* ctx,
-                            const void* data,
-                            size_t size) {
+static WasmResult emit_data(WasmContext* ctx, const void* data, size_t size) {
   CHECK_RESULT(emit_data_at(ctx, ctx->istream_offset, data, size));
   ctx->istream_offset += size;
   return WASM_OK;
 }
 
-static WasmResult emit_opcode(WasmReadInterpreterContext* ctx,
-                              WasmOpcode opcode) {
+static WasmResult emit_opcode(WasmContext* ctx, WasmOpcode opcode) {
   CHECK_RESULT(emit_data(ctx, &opcode, sizeof(uint8_t)));
   return WASM_OK;
 }
 
-static WasmResult emit_i8(WasmReadInterpreterContext* ctx, uint8_t value) {
+static WasmResult emit_i8(WasmContext* ctx, uint8_t value) {
   return emit_data(ctx, &value, sizeof(value));
 }
 
-static WasmResult emit_i32(WasmReadInterpreterContext* ctx, uint32_t value) {
+static WasmResult emit_i32(WasmContext* ctx, uint32_t value) {
   return emit_data(ctx, &value, sizeof(value));
 }
 
-static WasmResult emit_i64(WasmReadInterpreterContext* ctx, uint64_t value) {
+static WasmResult emit_i64(WasmContext* ctx, uint64_t value) {
   return emit_data(ctx, &value, sizeof(value));
 }
 
-static WasmResult emit_i32_at(WasmReadInterpreterContext* ctx,
+static WasmResult emit_i32_at(WasmContext* ctx,
                               uint32_t offset,
                               uint32_t value) {
   return emit_data_at(ctx, offset, &value, sizeof(value));
 }
 
-static void unemit_discard(WasmReadInterpreterContext* ctx) {
+static void unemit_discard(WasmContext* ctx) {
   assert(ctx->istream_offset > 0);
   assert(ctx->istream_offset <= ctx->istream_writer.buf.size);
   assert(((uint8_t*)ctx->istream_writer.buf.start)[ctx->istream_offset - 1] ==
@@ -323,13 +317,13 @@ static void unemit_discard(WasmReadInterpreterContext* ctx) {
   ctx->value_stack_size++;
 }
 
-static WasmResult emit_discard(WasmReadInterpreterContext* ctx) {
+static WasmResult emit_discard(WasmContext* ctx) {
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_DISCARD));
   adjust_value_stack(ctx, -1);
   return WASM_OK;
 }
 
-static WasmResult maybe_emit_discard(WasmReadInterpreterContext* ctx,
+static WasmResult maybe_emit_discard(WasmContext* ctx,
                                      WasmType type,
                                      int* out_discarded) {
   int should_discard = type != WASM_TYPE_VOID && type != WASM_TYPE_ANY;
@@ -340,7 +334,7 @@ static WasmResult maybe_emit_discard(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult emit_discard_keep(WasmReadInterpreterContext* ctx,
+static WasmResult emit_discard_keep(WasmContext* ctx,
                                     uint32_t discard,
                                     uint8_t keep) {
   assert(discard != UINT32_MAX);
@@ -357,8 +351,7 @@ static WasmResult emit_discard_keep(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult emit_return(WasmReadInterpreterContext* ctx,
-                              WasmType result_type) {
+static WasmResult emit_return(WasmContext* ctx, WasmType result_type) {
   uint32_t keep_count = get_value_count(result_type);
   uint32_t discard_count = ctx->value_stack_size - keep_count;
   CHECK_RESULT(emit_discard_keep(ctx, discard_count, keep_count));
@@ -366,7 +359,7 @@ static WasmResult emit_return(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult append_fixup(WasmReadInterpreterContext* ctx,
+static WasmResult append_fixup(WasmContext* ctx,
                                WasmUint32VectorVector* fixups_vector,
                                uint32_t index) {
   if (index >= fixups_vector->size) {
@@ -379,7 +372,7 @@ static WasmResult append_fixup(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult emit_br_offset(WasmReadInterpreterContext* ctx,
+static WasmResult emit_br_offset(WasmContext* ctx,
                                  uint32_t depth,
                                  uint32_t offset) {
   if (offset == WASM_INVALID_OFFSET)
@@ -388,7 +381,7 @@ static WasmResult emit_br_offset(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult emit_br(WasmReadInterpreterContext* ctx,
+static WasmResult emit_br(WasmContext* ctx,
                           uint32_t depth,
                           WasmDepthNode* node) {
   WasmType expected_type = node->type;
@@ -402,7 +395,7 @@ static WasmResult emit_br(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult emit_br_table_offset(WasmReadInterpreterContext* ctx,
+static WasmResult emit_br_table_offset(WasmContext* ctx,
                                        uint32_t depth,
                                        WasmDepthNode* node) {
   uint32_t discard_count = ctx->value_stack_size - node->value_stack_size;
@@ -411,7 +404,7 @@ static WasmResult emit_br_table_offset(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult emit_func_offset(WasmReadInterpreterContext* ctx,
+static WasmResult emit_func_offset(WasmContext* ctx,
                                    WasmInterpreterFunc* func,
                                    uint32_t func_index) {
   if (func->offset == WASM_INVALID_OFFSET)
@@ -420,33 +413,31 @@ static WasmResult emit_func_offset(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmInterpreterFunc* get_func(WasmReadInterpreterContext* ctx,
-                                     uint32_t func_index) {
+static WasmInterpreterFunc* get_func(WasmContext* ctx, uint32_t func_index) {
   assert(func_index < ctx->funcs.size);
   return &ctx->funcs.data[func_index];
 }
 
-static WasmInterpreterImport* get_import(WasmReadInterpreterContext* ctx,
+static WasmInterpreterImport* get_import(WasmContext* ctx,
                                          uint32_t import_index) {
   assert(import_index < ctx->module->imports.size);
   return &ctx->module->imports.data[import_index];
 }
 
-static WasmInterpreterExport* get_export(WasmReadInterpreterContext* ctx,
+static WasmInterpreterExport* get_export(WasmContext* ctx,
                                          uint32_t export_index) {
   assert(export_index < ctx->module->exports.size);
   return &ctx->module->exports.data[export_index];
 }
 
-static WasmInterpreterFuncSignature* get_signature(
-    WasmReadInterpreterContext* ctx,
-    uint32_t sig_index) {
+static WasmInterpreterFuncSignature* get_signature(WasmContext* ctx,
+                                                   uint32_t sig_index) {
   assert(sig_index < ctx->module->sigs.size);
   return &ctx->module->sigs.data[sig_index];
 }
 
 static WasmInterpreterFuncSignature* get_func_signature(
-    WasmReadInterpreterContext* ctx,
+    WasmContext* ctx,
     WasmInterpreterFunc* func) {
   return get_signature(ctx, func->sig_index);
 }
@@ -457,7 +448,7 @@ static WasmType get_local_index_type(WasmInterpreterFunc* func,
   return func->param_and_local_types.data[local_index];
 }
 
-static WasmResult push_depth_with_offset(WasmReadInterpreterContext* ctx,
+static WasmResult push_depth_with_offset(WasmContext* ctx,
                                          WasmType type,
                                          uint32_t offset) {
   WasmDepthNode* node =
@@ -473,11 +464,11 @@ static WasmResult push_depth_with_offset(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult push_depth(WasmReadInterpreterContext* ctx, WasmType type) {
+static WasmResult push_depth(WasmContext* ctx, WasmType type) {
   return push_depth_with_offset(ctx, type, WASM_INVALID_OFFSET);
 }
 
-static void pop_depth(WasmReadInterpreterContext* ctx) {
+static void pop_depth(WasmContext* ctx) {
 #if LOG
   fprintf(stderr, "   (%d): pop depth %" PRIzd "\n", ctx->value_stack_size,
           ctx->depth_stack.size - 1);
@@ -490,14 +481,12 @@ static void pop_depth(WasmReadInterpreterContext* ctx) {
     ctx->depth_fixups.size = ctx->depth_stack.size;
 }
 
-static uint32_t translate_depth(WasmReadInterpreterContext* ctx,
-                                uint32_t depth) {
+static uint32_t translate_depth(WasmContext* ctx, uint32_t depth) {
   assert(depth < ctx->depth_stack.size);
   return ctx->depth_stack.size - 1 - depth;
 }
 
-static WasmResult fixup_top_depth(WasmReadInterpreterContext* ctx,
-                                  uint32_t offset) {
+static WasmResult fixup_top_depth(WasmContext* ctx, uint32_t offset) {
   uint32_t top = ctx->depth_stack.size - 1;
   if (top >= ctx->depth_fixups.size) {
     /* nothing to fixup */
@@ -514,8 +503,7 @@ static WasmResult fixup_top_depth(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static uint32_t translate_local_index(WasmReadInterpreterContext* ctx,
-                                      uint32_t local_index) {
+static uint32_t translate_local_index(WasmContext* ctx, uint32_t local_index) {
   assert(local_index < ctx->value_stack_size);
   return ctx->value_stack_size - local_index;
 }
@@ -529,7 +517,7 @@ void on_error(uint32_t offset, const char* message, void* user_data) {
 
 static WasmResult on_memory_initial_size_pages(uint32_t pages,
                                                void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterMemory* memory = &ctx->module->memory;
   memory->allocator = ctx->memory_allocator;
   memory->page_size = pages;
@@ -545,7 +533,7 @@ static WasmResult on_data_segment(uint32_t index,
                                   const void* src_data,
                                   uint32_t size,
                                   void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterMemory* memory = &ctx->module->memory;
   uint8_t* dst_data = memory->data;
   memcpy(&dst_data[address], src_data, size);
@@ -553,7 +541,7 @@ static WasmResult on_data_segment(uint32_t index,
 }
 
 static WasmResult on_signature_count(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_ALLOC(ctx, wasm_new_interpreter_func_signature_array(
                        ctx->allocator, &ctx->module->sigs, count));
   return WASM_OK;
@@ -564,7 +552,7 @@ static WasmResult on_signature(uint32_t index,
                                uint32_t param_count,
                                WasmType* param_types,
                                void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterFuncSignature* sig = get_signature(ctx, index);
   sig->result_type = result_type;
 
@@ -576,7 +564,7 @@ static WasmResult on_signature(uint32_t index,
 }
 
 static WasmResult on_import_count(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_ALLOC(ctx, wasm_new_interpreter_import_array(
                        ctx->allocator, &ctx->module->imports, count));
   return WASM_OK;
@@ -587,7 +575,7 @@ static WasmResult on_import(uint32_t index,
                             WasmStringSlice module_name,
                             WasmStringSlice function_name,
                             void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterImport* import = &ctx->module->imports.data[index];
   CHECK_ALLOC_NULL_STR(ctx, import->module_name = wasm_dup_string_slice(
                                 ctx->allocator, module_name));
@@ -600,7 +588,7 @@ static WasmResult on_import(uint32_t index,
 
 static WasmResult on_function_signatures_count(uint32_t count,
                                                void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_ALLOC(
       ctx, wasm_new_interpreter_func_array(ctx->allocator, &ctx->funcs, count));
   CHECK_ALLOC(ctx, wasm_resize_uint32_vector_vector(ctx->allocator,
@@ -611,7 +599,7 @@ static WasmResult on_function_signatures_count(uint32_t count,
 static WasmResult on_function_signature(uint32_t index,
                                         uint32_t sig_index,
                                         void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   assert(sig_index < ctx->module->sigs.size);
   WasmInterpreterFunc* func = get_func(ctx, index);
   func->offset = WASM_INVALID_OFFSET;
@@ -620,7 +608,7 @@ static WasmResult on_function_signature(uint32_t index,
 }
 
 static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   assert(count == ctx->funcs.size);
   WASM_USE(ctx);
   return WASM_OK;
@@ -630,7 +618,7 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 #if LOG
   fprintf(stderr, "*** func %d ***\n", index);
 #endif
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterFunc* func = get_func(ctx, index);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, func->sig_index);
   ctx->current_func = func;
@@ -655,7 +643,7 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 }
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   if (ctx->expr_stack.size != 0) {
     print_error(ctx, "expression stack not empty on function exit! %d items",
                 (int)ctx->expr_stack.size);
@@ -680,7 +668,7 @@ static WasmResult end_function_body(uint32_t index, void* user_data) {
 }
 
 static WasmResult on_local_decl_count(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   ctx->current_func->local_decl_count = count;
   return WASM_OK;
 }
@@ -689,7 +677,7 @@ static WasmResult on_local_decl(uint32_t decl_index,
                                 uint32_t count,
                                 WasmType type,
                                 void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterFunc* func = ctx->current_func;
   func->local_count += count;
 
@@ -708,8 +696,7 @@ static WasmResult on_local_decl(uint32_t decl_index,
   return WASM_OK;
 }
 
-static WasmResult reduce(WasmReadInterpreterContext* ctx,
-                         WasmInterpreterExpr* expr) {
+static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
   int done = 0;
   while (!done) {
     done = 1;
@@ -826,8 +813,8 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
             /* adjust stack to account for br_unless consuming <cond> */
             adjust_value_stack(ctx, -get_value_count(expr->type));
             CHECK_RESULT(emit_br(ctx, depth, node));
-            CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset,
-                                     get_istream_offset(ctx)));
+            CHECK_RESULT(
+                emit_i32_at(ctx, fixup_br_offset, get_istream_offset(ctx)));
             /* discard the value if the branch wasn't taken */
             CHECK_RESULT(maybe_emit_discard(ctx, node->type, NULL));
           }
@@ -1080,7 +1067,7 @@ static WasmResult reduce(WasmReadInterpreterContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult shift(WasmReadInterpreterContext* ctx,
+static WasmResult shift(WasmContext* ctx,
                         WasmInterpreterExpr* expr,
                         uint32_t count) {
   assert(count > 0);
@@ -1099,7 +1086,7 @@ static WasmResult shift(WasmReadInterpreterContext* ctx,
 }
 
 static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = s_opcode_rtype[opcode];
   expr.opcode = opcode;
@@ -1107,7 +1094,7 @@ static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
 }
 
 static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = s_opcode_rtype[opcode];
   expr.opcode = opcode;
@@ -1115,7 +1102,7 @@ static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
 }
 
 static WasmResult on_block_expr(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = count ? WASM_TYPE_ANY : WASM_TYPE_VOID;
   expr.opcode = WASM_OPCODE_BLOCK;
@@ -1129,7 +1116,7 @@ static WasmResult on_block_expr(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_br_expr(uint32_t depth, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_DEPTH(ctx, depth);
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_ANY;
@@ -1139,7 +1126,7 @@ static WasmResult on_br_expr(uint32_t depth, void* user_data) {
 }
 
 static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_DEPTH(ctx, depth);
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_VOID;
@@ -1152,7 +1139,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
                                    uint32_t* target_depths,
                                    uint32_t default_target_depth,
                                    void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_ANY;
   expr.opcode = WASM_OPCODE_BR_TABLE;
@@ -1183,7 +1170,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
 }
 
 static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   assert(func_index < ctx->funcs.size);
   WasmInterpreterFunc* func = get_func(ctx, func_index);
   WasmInterpreterFuncSignature* sig = get_func_signature(ctx, func);
@@ -1202,7 +1189,7 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
 }
 
 static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   assert(import_index < ctx->module->imports.size);
   WasmInterpreterImport* import = get_import(ctx, import_index);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, import->sig_index);
@@ -1221,7 +1208,7 @@ static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
 }
 
 static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterFuncSignature* sig = get_signature(ctx, sig_index);
   WasmInterpreterExpr expr;
   expr.type = sig->result_type;
@@ -1231,7 +1218,7 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
 }
 
 static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_I32;
   expr.opcode = WASM_OPCODE_I32_CONST;
@@ -1242,7 +1229,7 @@ static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
 }
 
 static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_I64;
   expr.opcode = WASM_OPCODE_I64_CONST;
@@ -1253,7 +1240,7 @@ static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
 }
 
 static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_F32;
   expr.opcode = WASM_OPCODE_F32_CONST;
@@ -1264,7 +1251,7 @@ static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
 }
 
 static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_F64;
   expr.opcode = WASM_OPCODE_F64_CONST;
@@ -1275,7 +1262,7 @@ static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
 }
 
 static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = get_local_index_type(ctx->current_func, local_index);
   expr.opcode = WASM_OPCODE_GET_LOCAL;
@@ -1288,7 +1275,7 @@ static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
 }
 
 static WasmResult on_grow_memory_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_I32;
   expr.opcode = WASM_OPCODE_GROW_MEMORY;
@@ -1296,7 +1283,7 @@ static WasmResult on_grow_memory_expr(void* user_data) {
 }
 
 static WasmResult on_if_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_VOID;
   expr.opcode = WASM_OPCODE_IF;
@@ -1304,7 +1291,7 @@ static WasmResult on_if_expr(void* user_data) {
 }
 
 static WasmResult on_if_else_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_ANY;
   expr.opcode = WASM_OPCODE_IF_ELSE;
@@ -1315,7 +1302,7 @@ static WasmResult on_load_expr(WasmOpcode opcode,
                                uint32_t alignment_log2,
                                uint32_t offset,
                                void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = s_opcode_rtype[opcode];
   expr.opcode = opcode;
@@ -1325,7 +1312,7 @@ static WasmResult on_load_expr(WasmOpcode opcode,
 }
 
 static WasmResult on_loop_expr(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = count ? WASM_TYPE_ANY : WASM_TYPE_VOID;
   expr.opcode = WASM_OPCODE_LOOP;
@@ -1341,7 +1328,7 @@ static WasmResult on_loop_expr(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_memory_size_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_I32;
   expr.opcode = WASM_OPCODE_MEMORY_SIZE;
@@ -1351,7 +1338,7 @@ static WasmResult on_memory_size_expr(void* user_data) {
 }
 
 static WasmResult on_nop_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_VOID;
   expr.opcode = WASM_OPCODE_NOP;
@@ -1359,7 +1346,7 @@ static WasmResult on_nop_expr(void* user_data) {
 }
 
 static WasmResult on_return_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
   WasmInterpreterExpr expr;
@@ -1375,7 +1362,7 @@ static WasmResult on_return_expr(void* user_data) {
 }
 
 static WasmResult on_select_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_ANY;
   expr.opcode = WASM_OPCODE_SELECT;
@@ -1383,7 +1370,7 @@ static WasmResult on_select_expr(void* user_data) {
 }
 
 static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = get_local_index_type(ctx->current_func, local_index);
   expr.opcode = WASM_OPCODE_SET_LOCAL;
@@ -1396,7 +1383,7 @@ static WasmResult on_store_expr(WasmOpcode opcode,
                                 uint32_t alignment_log2,
                                 uint32_t offset,
                                 void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = s_opcode_rtype[opcode];
   expr.opcode = opcode;
@@ -1406,7 +1393,7 @@ static WasmResult on_store_expr(WasmOpcode opcode,
 }
 
 static WasmResult on_unreachable_expr(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExpr expr;
   expr.type = WASM_TYPE_ANY;
   expr.opcode = WASM_OPCODE_UNREACHABLE;
@@ -1415,7 +1402,7 @@ static WasmResult on_unreachable_expr(void* user_data) {
 }
 
 static WasmResult on_function_table_count(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_ALLOC(ctx, wasm_new_interpreter_func_table_entry_array(
                        ctx->allocator, &ctx->module->func_table, count));
   return WASM_OK;
@@ -1424,7 +1411,7 @@ static WasmResult on_function_table_count(uint32_t count, void* user_data) {
 static WasmResult on_function_table_entry(uint32_t index,
                                           uint32_t func_index,
                                           void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   assert(index < ctx->module->func_table.size);
   WasmInterpreterFuncTableEntry* entry = &ctx->module->func_table.data[index];
   WasmInterpreterFunc* func = get_func(ctx, func_index);
@@ -1436,7 +1423,7 @@ static WasmResult on_function_table_entry(uint32_t index,
 }
 
 static WasmResult on_start_function(uint32_t func_index, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   /* can't get the function offset yet, because we haven't parsed the
    * functions. Just store the function index and resolve it later in
    * end_function_bodies_section. */
@@ -1446,7 +1433,7 @@ static WasmResult on_start_function(uint32_t func_index, void* user_data) {
 }
 
 static WasmResult on_export_count(uint32_t count, void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   CHECK_ALLOC(ctx, wasm_new_interpreter_export_array(
                        ctx->allocator, &ctx->module->exports, count));
   return WASM_OK;
@@ -1456,7 +1443,7 @@ static WasmResult on_export(uint32_t index,
                             uint32_t func_index,
                             WasmStringSlice name,
                             void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
   WasmInterpreterExport* export = &ctx->module->exports.data[index];
   WasmInterpreterFunc* func = get_func(ctx, func_index);
   CHECK_ALLOC_NULL_STR(
@@ -1468,7 +1455,7 @@ static WasmResult on_export(uint32_t index,
 }
 
 static WasmResult end_function_bodies_section(void* user_data) {
-  WasmReadInterpreterContext* ctx = user_data;
+  WasmContext* ctx = user_data;
 
   /* resolve the start function offset */
   if (ctx->start_func_index != INVALID_FUNC_INDEX) {
@@ -1562,11 +1549,10 @@ static void wasm_destroy_interpreter_func(WasmAllocator* allocator,
   wasm_destroy_type_vector(allocator, &func->param_and_local_types);
 }
 
-static void destroy_context(WasmReadInterpreterContext* ctx) {
+static void destroy_context(WasmContext* ctx) {
   wasm_destroy_expr_node_vector(ctx->allocator, &ctx->expr_stack);
   wasm_destroy_depth_node_vector(ctx->allocator, &ctx->depth_stack);
-  WASM_DESTROY_ARRAY_AND_ELEMENTS(ctx->allocator, ctx->funcs,
-                                   interpreter_func);
+  WASM_DESTROY_ARRAY_AND_ELEMENTS(ctx->allocator, ctx->funcs, interpreter_func);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->depth_fixups,
                                    uint32_vector);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->func_fixups,
@@ -1580,7 +1566,7 @@ WasmResult wasm_read_binary_interpreter(
     size_t size,
     struct WasmReadBinaryOptions* options,
     struct WasmInterpreterModule* out_module) {
-  WasmReadInterpreterContext ctx;
+  WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.memory_allocator = memory_allocator;

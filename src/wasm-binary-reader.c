@@ -71,10 +71,10 @@ enum {
 #define V(name) WASM_SECTION_INDEX_##name,
   WASM_FOREACH_SECTION(V)
 #undef V
-  WASM_NUM_SECTIONS
+      WASM_NUM_SECTIONS
 };
 
-typedef struct WasmReadContext {
+typedef struct WasmContext {
   const uint8_t* data;
   size_t size;
   size_t offset;
@@ -82,9 +82,9 @@ typedef struct WasmReadContext {
   jmp_buf error_jmp_buf;
   WasmTypeVector param_types;
   WasmUint32Vector target_depths;
-} WasmReadContext;
+} WasmContext;
 
-static void raise_error(WasmReadContext* ctx, const char* format, ...) {
+static void raise_error(WasmContext* ctx, const char* format, ...) {
   assert(ctx->reader->on_error);
 
   va_list args;
@@ -111,25 +111,19 @@ static void raise_error(WasmReadContext* ctx, const char* format, ...) {
   memcpy(out_value, ctx->data + ctx->offset, sizeof(type)); \
   ctx->offset += sizeof(type)
 
-static void in_u8(WasmReadContext* ctx, uint8_t* out_value, const char* desc) {
+static void in_u8(WasmContext* ctx, uint8_t* out_value, const char* desc) {
   IN_SIZE(uint8_t);
 }
 
-static void in_u32(WasmReadContext* ctx,
-                   uint32_t* out_value,
-                   const char* desc) {
+static void in_u32(WasmContext* ctx, uint32_t* out_value, const char* desc) {
   IN_SIZE(uint32_t);
 }
 
-static void in_f32(WasmReadContext* ctx,
-                   uint32_t* out_value,
-                   const char* desc) {
+static void in_f32(WasmContext* ctx, uint32_t* out_value, const char* desc) {
   IN_SIZE(float);
 }
 
-static void in_f64(WasmReadContext* ctx,
-                   uint64_t* out_value,
-                   const char* desc) {
+static void in_f64(WasmContext* ctx, uint64_t* out_value, const char* desc) {
   IN_SIZE(double);
 }
 
@@ -153,7 +147,7 @@ static void in_f64(WasmReadContext* ctx,
   ((type)((value) << SHIFT_AMOUNT(type, sign_bit)) >> \
    SHIFT_AMOUNT(type, sign_bit))
 
-static void in_u32_leb128(WasmReadContext* ctx,
+static void in_u32_leb128(WasmContext* ctx,
                           uint32_t* out_value,
                           const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
@@ -183,7 +177,7 @@ static void in_u32_leb128(WasmReadContext* ctx,
   }
 }
 
-static void in_i32_leb128(WasmReadContext* ctx,
+static void in_i32_leb128(WasmContext* ctx,
                           uint32_t* out_value,
                           const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
@@ -222,7 +216,7 @@ static void in_i32_leb128(WasmReadContext* ctx,
   }
 }
 
-static void in_i64_leb128(WasmReadContext* ctx,
+static void in_i64_leb128(WasmContext* ctx,
                           uint64_t* out_value,
                           const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
@@ -295,7 +289,7 @@ static void in_i64_leb128(WasmReadContext* ctx,
 #undef SHIFT_AMOUNT
 #undef SIGN_EXTEND
 
-static void in_str(WasmReadContext* ctx,
+static void in_str(WasmContext* ctx,
                    WasmStringSlice* out_str,
                    const char* desc) {
   uint32_t str_len = 0;
@@ -309,7 +303,7 @@ static void in_str(WasmReadContext* ctx,
   ctx->offset += str_len;
 }
 
-static void in_bytes(WasmReadContext* ctx,
+static void in_bytes(WasmContext* ctx,
                      const void** out_data,
                      uint32_t* out_data_size,
                      const char* desc) {
@@ -336,7 +330,7 @@ static int is_bool(uint8_t value) {
   return value < 2;
 }
 
-static int skip_until_section(WasmReadContext* ctx, int section_index) {
+static int skip_until_section(WasmContext* ctx, int section_index) {
   uint32_t section_start_offset = ctx->offset;
   uint32_t section_size = 0;
   if (ctx->offset == ctx->size) {
@@ -359,7 +353,8 @@ static int skip_until_section(WasmReadContext* ctx, int section_index) {
                    section_name.length) == 0) {                  \
     index = WASM_SECTION_INDEX_##name;                           \
   }
-  if (0) {}
+  if (0) {
+  }
   WASM_FOREACH_SECTION(V)
 #undef V
 
@@ -382,7 +377,7 @@ static int skip_until_section(WasmReadContext* ctx, int section_index) {
   return 1;
 }
 
-static void destroy_context(WasmAllocator* allocator, WasmReadContext* ctx) {
+static void destroy_context(WasmAllocator* allocator, WasmContext* ctx) {
   wasm_destroy_type_vector(allocator, &ctx->param_types);
   wasm_destroy_uint32_vector(allocator, &ctx->target_depths);
 }
@@ -392,7 +387,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                             size_t size,
                             WasmBinaryReader* reader,
                             WasmReadBinaryOptions* options) {
-  WasmReadContext ctx;
+  WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.data = data;
   ctx.size = size;
