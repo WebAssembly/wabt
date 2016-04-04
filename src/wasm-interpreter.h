@@ -161,7 +161,7 @@ typedef struct WasmInterpreterThread {
 } WasmInterpreterThread;
 
 #define WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT \
-  { 1 * 1024 * 1024, 64 * 1024, WASM_INVALID_OFFSET }
+  { 512 * 1024 / sizeof(WasmInterpreterValue), 64 * 1024, WASM_INVALID_OFFSET }
 
 typedef struct WasmInterpreterThreadOptions {
   uint32_t value_stack_size;
