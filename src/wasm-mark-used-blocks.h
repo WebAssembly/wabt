@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef WASM_AST_CHECKER_H_
-#define WASM_AST_CHECKER_H_
+#ifndef WASM_MARK_USED_BLOCKS_H_
+#define WASM_MARK_USED_BLOCKS_H_
 
 #include "wasm-common.h"
-#include "wasm-lexer.h"
 
+struct WasmAllocator;
 struct WasmScript;
 
 WASM_EXTERN_C_BEGIN
-WasmResult wasm_check_ast(WasmLexer lexer, const struct WasmScript*);
+/* TODO(binji): this is a temporary function, only used during the transition
+ * between pre-order and post-order encoding. */
+WasmResult wasm_mark_used_blocks(struct WasmAllocator*, struct WasmScript*);
 WASM_EXTERN_C_END
 
-#endif /* WASM_AST_CHECKER_H_ */
+#endif /* WASM_MARK_USED_BLOCKS_H_ */

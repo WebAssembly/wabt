@@ -145,6 +145,7 @@ set(SEXPR_WASM_SRCS
   src/wasm-common.c
   src/wasm-config.c
   src/wasm-literal.c
+  src/wasm-mark-used-blocks.c
   src/wasm-option-parser.c
   src/wasm-parser-lexer-shared.c
   src/wasm-stack-allocator.c
