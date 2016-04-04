@@ -144,8 +144,8 @@ static WasmResult check_duplicate_bindings(WasmCheckContext* ctx,
           WasmLocation* a_loc = &a->binding.loc;
           WasmLocation* b_loc = &b->binding.loc;
           WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
-          print_error(ctx, loc, "redefinition of %s \"%.*s\"", desc,
-                      a->binding.name.length, a->binding.name.start);
+          print_error(ctx, loc, "redefinition of %s \"" PRIstringslice "\"",
+                      desc, WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
           result = WASM_ERROR;
         }
       }
@@ -167,8 +167,8 @@ static WasmResult check_var(WasmCheckContext* ctx,
     return WASM_OK;
   }
   if (var->type == WASM_VAR_TYPE_NAME)
-    print_error(ctx, &var->loc, "undefined %s variable \"%.*s\"", desc,
-                var->name.length, var->name.start);
+    print_error(ctx, &var->loc, "undefined %s variable \"" PRIstringslice "\"",
+                desc, WASM_PRINTF_STRING_SLICE_ARG(var->name));
   else
     print_error(ctx, &var->loc, "%s variable out of range (max %d)", desc,
                 max_index);
@@ -344,8 +344,9 @@ static WasmResult check_label_var(WasmCheckContext* ctx,
     return WASM_OK;
   }
   if (var->type == WASM_VAR_TYPE_NAME)
-    print_error(ctx, &var->loc, "undefined label variable \"%.*s\"",
-                var->name.length, var->name.start);
+    print_error(ctx, &var->loc,
+                "undefined label variable \"" PRIstringslice "\"",
+                WASM_PRINTF_STRING_SLICE_ARG(var->name));
   else
     print_error(ctx, &var->loc, "label variable out of range (max %d)",
                 ctx->max_depth);
@@ -441,8 +442,8 @@ static WasmResult check_call(WasmCheckContext* ctx,
     if (func->name.start) {
       size_t length = func->name.length + 10;
       func_name = alloca(length);
-      wasm_snprintf(func_name, length, " \"%.*s\"", (int)func->name.length,
-                    func->name.start);
+      wasm_snprintf(func_name, length, " \"" PRIstringslice "\"",
+                    WASM_PRINTF_STRING_SLICE_ARG(func->name));
     }
     print_error(ctx, loc,
                 "too %s parameters to function%s in %s. got %d, expected %d",
@@ -952,8 +953,9 @@ static WasmResult check_invoke(WasmCheckContext* ctx,
 
   WasmExport* export = wasm_get_export_by_name(ctx->last_module, &invoke->name);
   if (!export) {
-    print_error(ctx, &invoke->loc, "unknown function export \"%.*s\"",
-                invoke->name.length, invoke->name.start);
+    print_error(ctx, &invoke->loc,
+                "unknown function export \"" PRIstringslice "\"",
+                WASM_PRINTF_STRING_SLICE_ARG(invoke->name));
     return WASM_ERROR;
   }
 

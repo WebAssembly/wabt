@@ -368,8 +368,8 @@ static int skip_until_section(WasmReadContext* ctx, int section_index) {
     ctx->offset = after_size_offset + section_size;
     return 0;
   } else if (index < section_index) {
-    RAISE_ERROR(ctx, "section %.*s out of order", section_name.length,
-                  section_name.start);
+    RAISE_ERROR(ctx, "section " PRIstringslice " out of order",
+                WASM_PRINTF_STRING_SLICE_ARG(section_name));
   } else if (index > section_index) {
     /* ok, future section. Reset the offset. */
     /* TODO(binji): slightly inefficient to re-read the section later. But

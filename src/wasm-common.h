@@ -39,6 +39,9 @@
 
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
 
+#define PRIstringslice "%.*s"
+#define WASM_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
+
 struct WasmAllocator;
 
 typedef enum WasmResult {

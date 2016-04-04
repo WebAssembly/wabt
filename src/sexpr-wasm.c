@@ -235,8 +235,8 @@ static char* get_module_filename(WasmAllocator* allocator,
   size_t buflen = filename_noext->length + 20;
   char* str;
   CHECK_ALLOC(str = wasm_alloc(allocator, buflen, WASM_DEFAULT_ALIGN));
-  wasm_snprintf(str, buflen, "%.*s.%d.wasm", (int)filename_noext->length,
-                filename_noext->start, index);
+  wasm_snprintf(str, buflen, PRIstringslice ".%d.wasm",
+                WASM_PRINTF_STRING_SLICE_ARG(*filename_noext), index);
   return str;
 }
 
@@ -297,16 +297,9 @@ static void on_module_begin(uint32_t index, void* user_data) {
   if (index != 0)
     out_printf(ctx, ",\n");
   WasmStringSlice module_basename = get_basename(ctx->module_filename);
-  out_printf(ctx, "  {\"filename\": \"%.*s\", \"commands\": [\n",
-             (int)module_basename.length, module_basename.start);
+  out_printf(ctx, "  {\"filename\": \"" PRIstringslice "\", \"commands\": [\n",
+             WASM_PRINTF_STRING_SLICE_ARG(module_basename));
 }
-
-static const char* s_command_format =
-    "    {"
-    "\"type\": \"%s\", "
-    "\"name\": \"%.*s\", "
-    "\"file\": \"%s\", "
-    "\"line\": %d}";
 
 static void on_command(uint32_t index,
                        WasmCommandType type,
@@ -323,11 +316,20 @@ static void on_command(uint32_t index,
   };
   WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_command_names) ==
                      WASM_NUM_COMMAND_TYPES);
+
+  static const char* s_command_format =
+      "    {"
+      "\"type\": \"%s\", "
+      "\"name\": \"" PRIstringslice
+      "\", "
+      "\"file\": \"%s\", "
+      "\"line\": %d}";
+
   WasmSexprWasmContext* ctx = user_data;
   if (index != 0)
     out_printf(ctx, ",\n");
-  out_printf(ctx, s_command_format, s_command_names[type], (int)name->length,
-             name->start, loc->filename, loc->line);
+  out_printf(ctx, s_command_format, s_command_names[type],
+             WASM_PRINTF_STRING_SLICE_ARG(*name), loc->filename, loc->line);
 }
 
 static void on_module_before_write(uint32_t index,

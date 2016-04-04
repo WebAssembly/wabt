@@ -224,7 +224,7 @@ static void out_close_space(WasmWriteContext* ctx) {
 static void out_string_slice(WasmWriteContext* ctx,
                              WasmStringSlice* str,
                              WasmNextChar next_char) {
-  out_printf(ctx, "%.*s", (int)str->length, str->start);
+  out_printf(ctx, PRIstringslice, WASM_PRINTF_STRING_SLICE_ARG(*str));
   ctx->next_char = next_char;
 }
 

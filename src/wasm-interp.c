@@ -229,9 +229,9 @@ static WasmInterpreterTypedValue default_import_callback(
     uint32_t num_args,
     WasmInterpreterTypedValue* args,
     void* user_data) {
-  printf("called import %.*s.%.*s(", (int)import->module_name.length,
-         import->module_name.start, (int)import->func_name.length,
-         import->func_name.start);
+  printf("called import " PRIstringslice "." PRIstringslice "(",
+         WASM_PRINTF_STRING_SLICE_ARG(import->module_name),
+         WASM_PRINTF_STRING_SLICE_ARG(import->func_name));
   uint32_t i;
   for (i = 0; i < num_args; ++i) {
     print_typed_value(&args[i]);
@@ -313,14 +313,15 @@ static WasmInterpreterResult run_export(
   memset(thread->value_stack.data, 0,
          num_params * sizeof(WasmInterpreterValue));
 
-  if (s_trace)
-    printf(">>> running export \"%.*s\":\n", (int)export->name.length,
-           export->name.start);
+  if (s_trace) {
+    printf(">>> running export \"" PRIstringslice "\":\n",
+           WASM_PRINTF_STRING_SLICE_ARG(export->name));
+  }
   WasmInterpreterResult result =
       run_function(module, thread, export->func_offset);
 
   if (verbose) {
-    printf("%.*s(", (int)export->name.length, export->name.start);
+    printf(PRIstringslice "(", WASM_PRINTF_STRING_SLICE_ARG(export->name));
     uint32_t i;
     for (i = 0; i < num_params; ++i) {
       printf("0");
@@ -596,12 +597,12 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         size_t path_len = dirname.length + 1 + module_filename.length + 1;
         char* path = alloca(path_len);
         if (dirname.length == 0) {
-          wasm_snprintf(path, path_len, "%.*s", (int)module_filename.length,
-                        module_filename.start);
+          wasm_snprintf(path, path_len, PRIstringslice,
+                        WASM_PRINTF_STRING_SLICE_ARG(module_filename));
         } else {
-          wasm_snprintf(path, path_len, "%.*s/%.*s", (int)dirname.length,
-                        dirname.start, (int)module_filename.length,
-                        module_filename.start);
+          wasm_snprintf(path, path_len, PRIstringslice "/" PRIstringslice,
+                        WASM_PRINTF_STRING_SLICE_ARG(dirname),
+                        WASM_PRINTF_STRING_SLICE_ARG(module_filename));
         }
 
         module_mark = wasm_mark(allocator);
@@ -649,10 +650,10 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         EXPECT(':');
         break;
 
-#define FAILED(msg)                                                        \
-  fprintf(stderr, "*** %.*s:%d: %.*s " msg "\n", (int)command_file.length, \
-          command_file.start, command_line_no, (int)command_name.length,   \
-          command_name.start);
+#define FAILED(msg)                                                          \
+  fprintf(stderr, "*** " PRIstringslice ":%d: " PRIstringslice " " msg "\n", \
+          WASM_PRINTF_STRING_SLICE_ARG(command_file), command_line_no,       \
+          WASM_PRINTF_STRING_SLICE_ARG(command_name));
 
       case END_COMMAND_OBJECT: {
         WasmInterpreterResult iresult;

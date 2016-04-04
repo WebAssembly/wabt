@@ -223,8 +223,8 @@ var :
       uint32_t index;
       if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
                             &index, 0)) {
-        wasm_parser_error(&@1, lexer, parser, "invalid int %.*s",
-                          $1.text.length, $1.text.start);
+        wasm_parser_error(&@1, lexer, parser, "invalid int " PRIstringslice,
+                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
       $$.index = index;
     }
@@ -272,16 +272,18 @@ offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
       if (!wasm_parse_int64($1.start, $1.start + $1.length, &$$))
-        wasm_parser_error(&@1, lexer, parser, "invalid offset \"%.*s\"",
-                          $1.length, $1.start);
+        wasm_parser_error(&@1, lexer, parser,
+                          "invalid offset \"" PRIstringslice "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($1));
     }
 ;
 align :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN {
       if (!wasm_parse_int32($1.start, $1.start + $1.length, &$$, 0))
-        wasm_parser_error(&@1, lexer, parser, "invalid alignment \"%.*s\"",
-                          $1.length, $1.start);
+        wasm_parser_error(&@1, lexer, parser,
+                          "invalid alignment \"" PRIstringslice "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($1));
     }
 ;
 
@@ -444,8 +446,9 @@ expr1 :
       $$->const_.loc = @1;
       if (!parse_const($1, $2.type, $2.text.start,
                        $2.text.start + $2.text.length, &$$->const_))
-        wasm_parser_error(&@2, lexer, parser, "invalid literal \"%.*s\"",
-                          $2.text.length, $2.text.start);
+        wasm_parser_error(&@2, lexer, parser,
+                          "invalid literal \"" PRIstringslice "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($2.text));
       wasm_free(parser->allocator, (char*)$2.text.start);
     }
   | UNARY expr {
@@ -1047,8 +1050,9 @@ segment_address :
       if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
                             &$$, 0)) {
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid memory segment address \"%.*s\"",
-                          $1.text.length, $1.text.start);
+                          "invalid memory segment address \"" PRIstringslice
+                          "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -1074,8 +1078,8 @@ initial_pages :
       if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
                             &$$, 0)) {
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid initial memory pages \"%.*s\"",
-                          $1.text.length, $1.text.start);
+                          "invalid initial memory pages \"" PRIstringslice "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -1085,8 +1089,8 @@ max_pages :
       if (!wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
                             &$$, 0)) {
         wasm_parser_error(&@1, lexer, parser,
-                          "invalid max memory pages \"%.*s\"", $1.text.length,
-                          $1.text.start);
+                          "invalid max memory pages \"" PRIstringslice "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -1380,8 +1384,9 @@ const :
       $$.loc = @2;
       if (!parse_const($2, $3.type, $3.text.start,
                       $3.text.start + $3.text.length, &$$))
-        wasm_parser_error(&@3, lexer, parser, "invalid literal \"%.*s\"",
-                          $3.text.length, $3.text.start);
+        wasm_parser_error(&@3, lexer, parser,
+                          "invalid literal \"" PRIstringslice "\"",
+                          WASM_PRINTF_STRING_SLICE_ARG($3.text));
       wasm_free(parser->allocator, (char*)$3.text.start);
     }
 ;
