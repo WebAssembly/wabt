@@ -139,9 +139,9 @@ set(SEXPR_WASM_SRCS
   src/sexpr-wasm.c
   src/wasm-allocator.c
   src/wasm-ast.c
+  src/wasm-ast-checker.c
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
-  src/wasm-check.c
   src/wasm-common.c
   src/wasm-config.c
   src/wasm-literal.c

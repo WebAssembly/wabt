@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "wasm-check.h"
+#include "wasm-ast-checker.h"
 #include "wasm-config.h"
 
 #include <assert.h>
@@ -1019,7 +1019,7 @@ static WasmResult check_command(WasmCheckContext* ctx, WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_script(WasmLexer lexer, WasmScript* script) {
+WasmResult wasm_check_ast(WasmLexer lexer, WasmScript* script) {
   WasmCheckContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;

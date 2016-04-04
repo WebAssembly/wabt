@@ -22,9 +22,9 @@
 #include "wasm-config.h"
 
 #include "wasm-ast.h"
+#include "wasm-ast-checker.h"
 #include "wasm-binary-writer.h"
 #include "wasm-binary-writer-spec.h"
-#include "wasm-check.h"
 #include "wasm-common.h"
 #include "wasm-option-parser.h"
 #include "wasm-parser.h"
@@ -380,7 +380,7 @@ int main(int argc, char** argv) {
   WasmResult result = wasm_parse(lexer, &script);
 
   if (result == WASM_OK) {
-    result = wasm_check_script(lexer, &script);
+    result = wasm_check_ast(lexer, &script);
 
     if (result == WASM_OK) {
 

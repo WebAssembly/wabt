@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef WASM_CHECK_H_
-#define WASM_CHECK_H_
+#ifndef WASM_AST_CHECKER_H_
+#define WASM_AST_CHECKER_H_
 
 #include "wasm-common.h"
 #include "wasm-lexer.h"
 
 struct WasmScript;
 
-WASM_EXTERN_C WasmResult wasm_check_script(WasmLexer lexer, struct WasmScript*);
+WASM_EXTERN_C WasmResult wasm_check_ast(WasmLexer lexer, struct WasmScript*);
 
-#endif /* WASM_CHECK_H_ */
+#endif /* WASM_AST_CHECKER_H_ */
