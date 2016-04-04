@@ -451,6 +451,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WASM_ZERO_MEMORY(thread);
   WASM_ZERO_MEMORY(command_file);
   WASM_ZERO_MEMORY(command_name);
+  WASM_ZERO_MEMORY(module_mark);
 
   const void* data;
   size_t size;
