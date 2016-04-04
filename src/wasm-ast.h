@@ -325,6 +325,55 @@ typedef struct WasmScript {
   WasmCommandVector commands;
 } WasmScript;
 
+typedef struct WasmExprTraverser {
+  void* user_data;
+  WasmResult (*begin_binary_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_binary_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_block_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_block_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_br_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_br_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_br_if_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_br_if_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_br_table_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_br_table_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_call_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_call_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_call_import_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_call_import_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_call_indirect_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_call_indirect_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_compare_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_compare_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_const_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_convert_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_convert_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_get_local_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_grow_memory_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_grow_memory_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_if_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_if_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_if_else_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_if_else_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_load_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_load_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_loop_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_loop_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_memory_size_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_nop_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_return_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_return_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_select_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_select_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_set_local_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_set_local_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_store_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_store_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_unary_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_unary_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_unreachable_expr)(WasmExpr*, void* user_data);
+} WasmExprTraverser;
+
 WASM_EXTERN_C_BEGIN
 WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  WasmBindingHash*,
@@ -382,6 +431,9 @@ void wasm_destroy_type_bindings(struct WasmAllocator*, WasmTypeBindings*);
 void wasm_destroy_var_vector_and_elements(struct WasmAllocator*,
                                           WasmVarVector*);
 void wasm_destroy_var(struct WasmAllocator*, WasmVar*);
+
+/* traversal functions */
+WasmResult wasm_traverse_func(WasmFunc* func, WasmExprTraverser*);
 
 /* convenience functions for looking through the AST */
 int wasm_get_index_from_var(const WasmBindingHash* bindings,

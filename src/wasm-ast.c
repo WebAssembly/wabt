@@ -618,3 +618,188 @@ void wasm_destroy_script(WasmScript* script) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(script->allocator, script->commands,
                                    command);
 }
+
+#define CHECK_RESULT(expr) \
+  do {                     \
+    if ((expr) != WASM_OK) \
+      return WASM_ERROR;   \
+  } while (0)
+
+#define CALLBACK(member)                                               \
+  CHECK_RESULT((traverser)->member                                     \
+                   ? (traverser)->member(expr, (traverser)->user_data) \
+                   : WASM_OK)
+
+static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser);
+
+static WasmResult traverse_exprs(WasmExprPtrVector* exprs,
+                                 WasmExprTraverser* traverser) {
+  int i;
+  for (i = 0; i < exprs->size; ++i)
+    CHECK_RESULT(traverse_expr(exprs->data[i], traverser));
+  return WASM_OK;
+}
+
+static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
+  switch (expr->type) {
+    case WASM_EXPR_TYPE_BINARY:
+      CALLBACK(begin_binary_expr);
+      CHECK_RESULT(traverse_expr(expr->binary.left, traverser));
+      CHECK_RESULT(traverse_expr(expr->binary.right, traverser));
+      CALLBACK(end_binary_expr);
+      break;
+
+    case WASM_EXPR_TYPE_BLOCK:
+      CALLBACK(begin_block_expr);
+      CHECK_RESULT(traverse_exprs(&expr->block.exprs, traverser));
+      CALLBACK(end_block_expr);
+      break;
+
+    case WASM_EXPR_TYPE_BR:
+      CALLBACK(begin_br_expr);
+      if (expr->br.expr)
+        CHECK_RESULT(traverse_expr(expr->br.expr, traverser));
+      CALLBACK(end_br_expr);
+      break;
+
+    case WASM_EXPR_TYPE_BR_IF:
+      CALLBACK(begin_br_if_expr);
+      if (expr->br_if.expr)
+        CHECK_RESULT(traverse_expr(expr->br_if.expr, traverser));
+      CHECK_RESULT(traverse_expr(expr->br_if.cond, traverser));
+      CALLBACK(end_br_if_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CALL:
+      CALLBACK(begin_call_expr);
+      CHECK_RESULT(traverse_exprs(&expr->call.args, traverser));
+      CALLBACK(end_call_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CALL_IMPORT:
+      CALLBACK(begin_call_import_expr);
+      CHECK_RESULT(traverse_exprs(&expr->call.args, traverser));
+      CALLBACK(end_call_import_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CALL_INDIRECT:
+      CALLBACK(begin_call_indirect_expr);
+      CHECK_RESULT(traverse_expr(expr->call_indirect.expr, traverser));
+      CHECK_RESULT(traverse_exprs(&expr->call_indirect.args, traverser));
+      CALLBACK(end_call_indirect_expr);
+      break;
+
+    case WASM_EXPR_TYPE_COMPARE:
+      CALLBACK(begin_compare_expr);
+      CHECK_RESULT(traverse_expr(expr->compare.left, traverser));
+      CHECK_RESULT(traverse_expr(expr->compare.right, traverser));
+      CALLBACK(end_compare_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CONST:
+      CALLBACK(on_const_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CONVERT:
+      CALLBACK(begin_convert_expr);
+      CHECK_RESULT(traverse_expr(expr->convert.expr, traverser));
+      CALLBACK(end_convert_expr);
+      break;
+
+    case WASM_EXPR_TYPE_GET_LOCAL:
+      CALLBACK(on_get_local_expr);
+      break;
+
+    case WASM_EXPR_TYPE_GROW_MEMORY:
+      CALLBACK(begin_grow_memory_expr);
+      CHECK_RESULT(traverse_expr(expr->grow_memory.expr, traverser));
+      CALLBACK(end_grow_memory_expr);
+      break;
+
+    case WASM_EXPR_TYPE_IF:
+      CALLBACK(begin_if_expr);
+      CHECK_RESULT(traverse_expr(expr->if_.cond, traverser));
+      CHECK_RESULT(traverse_expr(expr->if_.true_, traverser));
+      CALLBACK(end_if_expr);
+      break;
+
+    case WASM_EXPR_TYPE_IF_ELSE:
+      CALLBACK(begin_if_else_expr);
+      CHECK_RESULT(traverse_expr(expr->if_else.cond, traverser));
+      CHECK_RESULT(traverse_expr(expr->if_else.true_, traverser));
+      CHECK_RESULT(traverse_expr(expr->if_else.false_, traverser));
+      CALLBACK(end_if_else_expr);
+      break;
+
+    case WASM_EXPR_TYPE_LOAD:
+      CALLBACK(begin_load_expr);
+      CHECK_RESULT(traverse_expr(expr->load.addr, traverser));
+      CALLBACK(end_load_expr);
+      break;
+
+    case WASM_EXPR_TYPE_LOOP:
+      CALLBACK(begin_loop_expr);
+      CHECK_RESULT(traverse_exprs(&expr->loop.exprs, traverser));
+      CALLBACK(end_loop_expr);
+      break;
+
+    case WASM_EXPR_TYPE_MEMORY_SIZE:
+      CALLBACK(on_memory_size_expr);
+      break;
+
+    case WASM_EXPR_TYPE_NOP:
+      CALLBACK(on_nop_expr);
+      break;
+
+    case WASM_EXPR_TYPE_RETURN:
+      CALLBACK(begin_return_expr);
+      if (expr->return_.expr)
+        CHECK_RESULT(traverse_expr(expr->return_.expr, traverser));
+      CALLBACK(end_return_expr);
+      break;
+
+    case WASM_EXPR_TYPE_SELECT:
+      CALLBACK(begin_select_expr);
+      CHECK_RESULT(traverse_expr(expr->select.true_, traverser));
+      CHECK_RESULT(traverse_expr(expr->select.false_, traverser));
+      CHECK_RESULT(traverse_expr(expr->select.cond, traverser));
+      CALLBACK(end_select_expr);
+      break;
+
+    case WASM_EXPR_TYPE_SET_LOCAL:
+      CALLBACK(begin_set_local_expr);
+      CHECK_RESULT(traverse_expr(expr->set_local.expr, traverser));
+      CALLBACK(end_set_local_expr);
+      break;
+
+    case WASM_EXPR_TYPE_STORE:
+      CALLBACK(begin_store_expr);
+      CHECK_RESULT(traverse_expr(expr->store.addr, traverser));
+      CHECK_RESULT(traverse_expr(expr->store.value, traverser));
+      CALLBACK(end_store_expr);
+      break;
+
+    case WASM_EXPR_TYPE_BR_TABLE:
+      CALLBACK(begin_br_table_expr);
+      CHECK_RESULT(traverse_expr(expr->br_table.expr, traverser));
+      CALLBACK(end_br_table_expr);
+      break;
+
+    case WASM_EXPR_TYPE_UNARY:
+      CALLBACK(begin_unary_expr);
+      CHECK_RESULT(traverse_expr(expr->unary.expr, traverser));
+      CALLBACK(end_unary_expr);
+      break;
+
+    case WASM_EXPR_TYPE_UNREACHABLE:
+      CALLBACK(on_unreachable_expr);
+      break;
+  }
+
+  return WASM_OK;
+}
+
+/* TODO(binji): make the traverser non-recursive */
+WasmResult wasm_traverse_func(WasmFunc* func, WasmExprTraverser* traverser) {
+  return traverse_exprs(&func->exprs, traverser);
+}
