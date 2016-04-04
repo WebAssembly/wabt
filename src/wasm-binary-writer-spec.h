@@ -34,8 +34,8 @@ typedef struct WasmWriteBinarySpecOptions {
                           void* user_data);
   void (*on_command)(uint32_t index,
                      WasmCommandType type,
-                     WasmStringSlice* name,
-                     WasmLocation* loc,
+                     const WasmStringSlice* name,
+                     const WasmLocation* loc,
                      void* user_data);
   void (*on_module_before_write)(uint32_t index,
                                  struct WasmWriter** out_writer,
@@ -47,10 +47,11 @@ typedef struct WasmWriteBinarySpecOptions {
 } WasmWriteBinarySpecOptions;
 
 WASM_EXTERN_C_BEGIN
+/* this function modifies the AST */
 WasmResult wasm_write_binary_spec_script(struct WasmAllocator*,
                                          struct WasmScript*,
-                                         struct WasmWriteBinaryOptions*,
-                                         WasmWriteBinarySpecOptions*);
+                                         const struct WasmWriteBinaryOptions*,
+                                         const WasmWriteBinarySpecOptions*);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_WRITER_SPEC_H_ */

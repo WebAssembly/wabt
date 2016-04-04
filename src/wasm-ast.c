@@ -41,7 +41,7 @@ static WasmBindingHashEntry* wasm_hash_main_entry(const WasmBindingHash* hash,
   return &hash->entries.data[wasm_hash_name(name) % hash->entries.capacity];
 }
 
-int wasm_hash_entry_is_free(WasmBindingHashEntry* entry) {
+int wasm_hash_entry_is_free(const WasmBindingHashEntry* entry) {
   return !entry->binding.name.start;
 }
 

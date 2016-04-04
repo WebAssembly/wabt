@@ -69,7 +69,7 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
 typedef struct WasmLabelNode {
-  WasmLabel* label;
+  const WasmLabel* label;
   int depth;
   struct WasmLabelNode* next;
 } WasmLabelNode;
@@ -78,7 +78,7 @@ typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmWriter* writer;
   size_t writer_offset;
-  WasmWriteBinaryOptions* options;
+  const WasmWriteBinaryOptions* options;
   WasmLabelNode* top_label;
   int max_depth;
   WasmResult result;
@@ -90,7 +90,7 @@ typedef struct WasmContext {
   int* func_sig_indexes;
   int* remapped_locals;         /* from unpacked -> packed index, has params */
   int* reverse_remapped_locals; /* from packed -> unpacked index, no params */
-  WasmStringSlice** local_type_names; /* from packed -> local name */
+  const WasmStringSlice** local_type_names; /* from packed -> local name */
 } WasmContext;
 
 WASM_DEFINE_VECTOR(func_signature, WasmFuncSignature);
@@ -325,7 +325,7 @@ static void end_section(WasmContext* ctx) {
 }
 
 static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
-                                         WasmStringSlice* name) {
+                                         const WasmStringSlice* name) {
   WasmLabelNode* node = top_label;
   while (node) {
     if (node->label && wasm_string_slices_are_equal(node->label, name))
@@ -336,7 +336,7 @@ static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
 }
 
 static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
-                                        WasmVar* var) {
+                                        const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
     return find_label_by_name(top_label, &var->name);
 
@@ -351,7 +351,7 @@ static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
 
 static void push_unused_label(WasmContext* ctx,
                               WasmLabelNode* node,
-                              WasmLabel* label) {
+                              const WasmLabel* label) {
   assert(label);
   node->label = label;
   node->next = ctx->top_label;
@@ -359,29 +359,29 @@ static void push_unused_label(WasmContext* ctx,
   ctx->top_label = node;
 }
 
-static void pop_unused_label(WasmContext* ctx, WasmLabel* label) {
+static void pop_unused_label(WasmContext* ctx, const WasmLabel* label) {
   if (ctx->top_label && ctx->top_label->label == label)
     ctx->top_label = ctx->top_label->next;
 }
 
 static void push_label(WasmContext* ctx,
                        WasmLabelNode* node,
-                       WasmLabel* label) {
+                       const WasmLabel* label) {
   push_unused_label(ctx, node, label);
   ctx->max_depth++;
 }
 
-static void pop_label(WasmContext* ctx, WasmLabel* label) {
+static void pop_label(WasmContext* ctx, const WasmLabel* label) {
   ctx->max_depth--;
   pop_unused_label(ctx, label);
 }
 
-static int find_func_signature(WasmFuncSignatureVector* sigs,
-                               WasmType result_type,
-                               WasmTypeVector* param_types) {
+static int find_func_signature(const WasmFuncSignatureVector* sigs,
+                               const WasmType result_type,
+                               const WasmTypeVector* param_types) {
   int i;
   for (i = 0; i < sigs->size; ++i) {
-    WasmFuncSignature* sig2 = &sigs->data[i];
+    const WasmFuncSignature* sig2 = &sigs->data[i];
     if (sig2->result_type != result_type)
       continue;
     if (sig2->param_types.size != param_types->size)
@@ -398,13 +398,13 @@ static int find_func_signature(WasmFuncSignatureVector* sigs,
 }
 
 static void get_func_signatures(WasmContext* ctx,
-                                WasmModule* module,
+                                const WasmModule* module,
                                 WasmFuncSignatureVector* sigs) {
   /* function types are not deduped; we don't want the signature index to match
    if they were specified separately in the source */
   int i;
   for (i = 0; i < module->func_types.size; ++i) {
-    WasmFuncType* func_type = module->func_types.data[i];
+    const WasmFuncType* func_type = module->func_types.data[i];
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
     CHECK_ALLOC_NULL(sig);
     sig->result_type = func_type->sig.result_type;
@@ -419,7 +419,7 @@ static void get_func_signatures(WasmContext* ctx,
   if (module->imports.size)
     CHECK_ALLOC_NULL(ctx->import_sig_indexes);
   for (i = 0; i < module->imports.size; ++i) {
-    WasmImport* import = module->imports.data[i];
+    const WasmImport* import = module->imports.data[i];
     int index;
     if (import->import_type == WASM_IMPORT_HAS_FUNC_SIGNATURE) {
       index = find_func_signature(sigs, import->func_sig.result_type,
@@ -436,7 +436,7 @@ static void get_func_signatures(WasmContext* ctx,
       }
     } else {
       assert(import->import_type == WASM_IMPORT_HAS_TYPE);
-      WasmFuncType* func_type =
+      const WasmFuncType* func_type =
           wasm_get_func_type_by_var(module, &import->type_var);
       assert(func_type);
       index = find_func_signature(sigs, func_type->sig.result_type,
@@ -453,7 +453,7 @@ static void get_func_signatures(WasmContext* ctx,
   if (module->funcs.size)
     CHECK_ALLOC_NULL(ctx->func_sig_indexes);
   for (i = 0; i < module->funcs.size; ++i) {
-    WasmFunc* func = module->funcs.data[i];
+    const WasmFunc* func = module->funcs.data[i];
     int index;
     if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
       index = wasm_get_func_type_index_by_var(module, &func->type_var);
@@ -477,7 +477,7 @@ static void get_func_signatures(WasmContext* ctx,
   }
 }
 
-static void remap_locals(WasmContext* ctx, WasmFunc* func) {
+static void remap_locals(WasmContext* ctx, const WasmFunc* func) {
   int i;
   int num_params = func->params.types.size;
   int num_locals = func->locals.types.size;
@@ -532,24 +532,24 @@ static void remap_locals(WasmContext* ctx, WasmFunc* func) {
 }
 
 static void write_expr_list(WasmContext* ctx,
-                            WasmModule* module,
-                            WasmFunc* func,
-                            WasmExprPtrVector* exprs);
+                            const WasmModule* module,
+                            const WasmFunc* func,
+                            const WasmExprPtrVector* exprs);
 
 static void write_expr_list_with_count(WasmContext* ctx,
-                                       WasmModule* module,
-                                       WasmFunc* func,
-                                       WasmExprPtrVector* exprs);
+                                       const WasmModule* module,
+                                       const WasmFunc* func,
+                                       const WasmExprPtrVector* exprs);
 
 static void write_block(WasmContext* ctx,
-                        WasmModule* module,
-                        WasmFunc* func,
-                        WasmBlock* block);
+                        const WasmModule* module,
+                        const WasmFunc* func,
+                        const WasmBlock* block);
 
 static void write_expr(WasmContext* ctx,
-                       WasmModule* module,
-                       WasmFunc* func,
-                       WasmExpr* expr) {
+                       const WasmModule* module,
+                       const WasmFunc* func,
+                       const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
       out_opcode(ctx, expr->binary.opcode);
@@ -732,7 +732,7 @@ static void write_expr(WasmContext* ctx,
       int i;
       WasmLabelNode* node;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
-        WasmVar* var = &expr->br_table.targets.data[i];
+        const WasmVar* var = &expr->br_table.targets.data[i];
         node = find_label_by_var(ctx->top_label, var);
         out_u32(ctx, ctx->max_depth - node->depth - 1, "break depth");
       }
@@ -752,26 +752,26 @@ static void write_expr(WasmContext* ctx,
 }
 
 static void write_expr_list(WasmContext* ctx,
-                            WasmModule* module,
-                            WasmFunc* func,
-                            WasmExprPtrVector* exprs) {
+                            const WasmModule* module,
+                            const WasmFunc* func,
+                            const WasmExprPtrVector* exprs) {
   int i;
   for (i = 0; i < exprs->size; ++i)
     write_expr(ctx, module, func, exprs->data[i]);
 }
 
 static void write_expr_list_with_count(WasmContext* ctx,
-                                       WasmModule* module,
-                                       WasmFunc* func,
-                                       WasmExprPtrVector* exprs) {
+                                       const WasmModule* module,
+                                       const WasmFunc* func,
+                                       const WasmExprPtrVector* exprs) {
   out_u32_leb128(ctx, exprs->size, "num expressions");
   write_expr_list(ctx, module, func, exprs);
 }
 
 static void write_block(WasmContext* ctx,
-                        WasmModule* module,
-                        WasmFunc* func,
-                        WasmBlock* block) {
+                        const WasmModule* module,
+                        const WasmFunc* func,
+                        const WasmBlock* block) {
   WasmLabelNode node;
   if (block->exprs.size == 1 && !block->used) {
     push_unused_label(ctx, &node, &block->label);
@@ -786,9 +786,9 @@ static void write_block(WasmContext* ctx,
 }
 
 static void write_func_locals(WasmContext* ctx,
-                              WasmModule* module,
-                              WasmFunc* func,
-                              WasmTypeVector* local_types) {
+                              const WasmModule* module,
+                              const WasmFunc* func,
+                              const WasmTypeVector* local_types) {
   remap_locals(ctx, func);
 
   if (local_types->size == 0) {
@@ -831,12 +831,14 @@ static void write_func_locals(WasmContext* ctx,
   }
 }
 
-static void write_func(WasmContext* ctx, WasmModule* module, WasmFunc* func) {
+static void write_func(WasmContext* ctx,
+                       const WasmModule* module,
+                       const WasmFunc* func) {
   write_func_locals(ctx, module, func, &func->locals.types);
   write_expr_list(ctx, module, func, &func->exprs);
 }
 
-static void write_module(WasmContext* ctx, WasmModule* module) {
+static void write_module(WasmContext* ctx, const WasmModule* module) {
   /* TODO(binji): better leb size guess. Some sections we know will only be 1
    byte, but others we can be fairly certain will be larger. */
   const size_t leb_size_guess = 1;
@@ -852,7 +854,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
     begin_section(ctx, WASM_SECTION_NAME_SIGNATURES, leb_size_guess);
     out_u32_leb128(ctx, sigs.size, "num signatures");
     for (i = 0; i < sigs.size; ++i) {
-      WasmFuncSignature* sig = &sigs.data[i];
+      const WasmFuncSignature* sig = &sigs.data[i];
       print_header(ctx, "signature", i);
       out_u8(ctx, sig->param_types.size, "num params");
       out_u8(ctx, sig->result_type, "result_type");
@@ -868,7 +870,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
     out_u32_leb128(ctx, module->imports.size, "num imports");
 
     for (i = 0; i < module->imports.size; ++i) {
-      WasmImport* import = module->imports.data[i];
+      const WasmImport* import = module->imports.data[i];
       print_header(ctx, "import header", i);
       out_u32_leb128(ctx, ctx->import_sig_indexes[i], "import signature index");
       out_str(ctx, import->module_name.start, import->module_name.length,
@@ -916,7 +918,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
     out_u32_leb128(ctx, module->exports.size, "num exports");
 
     for (i = 0; i < module->exports.size; ++i) {
-      WasmExport* export = module->exports.data[i];
+      const WasmExport* export = module->exports.data[i];
       int func_index = wasm_get_func_index_by_var(module, &export->var);
       assert(func_index >= 0 && func_index < module->funcs.size);
       out_u32_leb128(ctx, func_index, "export func index");
@@ -941,7 +943,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
 
     for (i = 0; i < module->funcs.size; ++i) {
       print_header(ctx, "function body", i);
-      WasmFunc* func = module->funcs.data[i];
+      const WasmFunc* func = module->funcs.data[i];
 
       /* TODO(binji): better guess of the size of the function body section */
       const uint32_t leb_size_guess = 1;
@@ -958,7 +960,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
     begin_section(ctx, WASM_SECTION_NAME_DATA_SEGMENTS, leb_size_guess);
     out_u32_leb128(ctx, module->memory->segments.size, "num data segments");
     for (i = 0; i < module->memory->segments.size; ++i) {
-      WasmSegment* segment = &module->memory->segments.data[i];
+      const WasmSegment* segment = &module->memory->segments.data[i];
       print_header(ctx, "segment header", i);
       out_u32_leb128(ctx, segment->addr, "segment address");
       out_u32_leb128(ctx, segment->size, "segment size");
@@ -973,7 +975,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
     begin_section(ctx, WASM_SECTION_NAME_NAMES, leb_size_guess);
     out_u32_leb128(ctx, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
-      WasmFunc* func = module->funcs.data[i];
+      const WasmFunc* func = module->funcs.data[i];
       wasm_snprintf(desc, sizeof(desc), "func name %d", i);
       out_str(ctx, func->name.start, func->name.length, PRINT_CHARS, desc);
       out_u32_leb128(ctx, func->params_and_locals.types.size, "num locals");
@@ -993,7 +995,7 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
         int j;
         for (j = 0; j < func->params_and_locals.bindings.entries.capacity;
              ++j) {
-          WasmBindingHashEntry* entry =
+          const WasmBindingHashEntry* entry =
               &func->params_and_locals.bindings.entries.data[j];
           if (wasm_hash_entry_is_free(entry))
             continue;
@@ -1021,11 +1023,11 @@ static void write_module(WasmContext* ctx, WasmModule* module) {
   destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
-static void write_commands(WasmContext* ctx, WasmScript* script) {
+static void write_commands(WasmContext* ctx, const WasmScript* script) {
   int i;
   int wrote_module = 0;
   for (i = 0; i < script->commands.size; ++i) {
-    WasmCommand* command = &script->commands.data[i];
+    const WasmCommand* command = &script->commands.data[i];
     if (command->type != WASM_COMMAND_TYPE_MODULE)
       continue;
 
@@ -1049,10 +1051,10 @@ static void cleanup_context(WasmContext* ctx) {
   wasm_free(ctx->allocator, ctx->local_type_names);
 }
 
-WasmResult wasm_write_binary_module(struct WasmAllocator* allocator,
-                                    struct WasmWriter* writer,
-                                    struct WasmModule* module,
-                                    WasmWriteBinaryOptions* options) {
+WasmResult wasm_write_binary_module(WasmAllocator* allocator,
+                                    WasmWriter* writer,
+                                    const WasmModule* module,
+                                    const WasmWriteBinaryOptions* options) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
@@ -1068,8 +1070,8 @@ WasmResult wasm_write_binary_module(struct WasmAllocator* allocator,
 
 WasmResult wasm_write_binary_script(WasmAllocator* allocator,
                                     WasmWriter* writer,
-                                    WasmScript* script,
-                                    WasmWriteBinaryOptions* options) {
+                                    const WasmScript* script,
+                                    const WasmWriteBinaryOptions* options) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;

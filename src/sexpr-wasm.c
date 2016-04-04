@@ -303,8 +303,8 @@ static void on_module_begin(uint32_t index, void* user_data) {
 
 static void on_command(uint32_t index,
                        WasmCommandType type,
-                       WasmStringSlice* name,
-                       WasmLocation* loc,
+                       const WasmStringSlice* name,
+                       const WasmLocation* loc,
                        void* user_data) {
   static const char* s_command_names[] = {
     "module",

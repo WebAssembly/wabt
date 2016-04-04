@@ -37,13 +37,13 @@ typedef struct WasmWriteBinaryOptions {
 WASM_EXTERN_C_BEGIN
 WasmResult wasm_write_binary_module(struct WasmAllocator*,
                                     struct WasmWriter*,
-                                    struct WasmModule*,
-                                    WasmWriteBinaryOptions*);
+                                    const struct WasmModule*,
+                                    const WasmWriteBinaryOptions*);
 
 WasmResult wasm_write_binary_script(struct WasmAllocator*,
                                     struct WasmWriter*,
-                                    struct WasmScript*,
-                                    WasmWriteBinaryOptions*);
+                                    const struct WasmScript*,
+                                    const WasmWriteBinaryOptions*);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_WRITER_H_ */

@@ -58,8 +58,8 @@ typedef struct WasmWriteSpecContext {
   WasmAllocator* allocator;
   WasmWriter* writer;
   size_t writer_offset;
-  WasmWriteBinaryOptions* options;
-  WasmWriteBinarySpecOptions* spec_options;
+  const WasmWriteBinaryOptions* options;
+  const WasmWriteBinarySpecOptions* spec_options;
   WasmResult result;
 } WasmWriteSpecContext;
 
@@ -516,8 +516,8 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
 WasmResult wasm_write_binary_spec_script(
     WasmAllocator* allocator,
     WasmScript* script,
-    WasmWriteBinaryOptions* options,
-    WasmWriteBinarySpecOptions* spec_options) {
+    const WasmWriteBinaryOptions* options,
+    const WasmWriteBinarySpecOptions* spec_options) {
   WasmWriteSpecContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;

@@ -40,9 +40,9 @@
  * WasmResult wasm_reserve_widgets(WasmAllocator*, WasmWidgetVector* vec,
  *                                 size_t desired);
  * WasmResult wasm_append_widget_value(WasmAllocator*, WasmWidgetVector* vec,
- *                                     WasmWidget* value);
+ *                                     const WasmWidget* value);
  * WasmResult wasm_extend_widgets(WasmAllocator*, WasmWidgetVector* dst,
- *                                WasmWidgetVector* src);
+ *                                const WasmWidgetVector* src);
  */
 
 #define WASM_DEFINE_VECTOR(name, type)                                         \
@@ -64,11 +64,11 @@
   static WASM_INLINE type* wasm_append_##name(struct WasmAllocator* allocator, \
                                               type##Vector* vec) WASM_UNUSED;  \
   static WASM_INLINE WasmResult wasm_append_##name##_value(                    \
-      struct WasmAllocator* allocator, type##Vector* vec, type* value)         \
+      struct WasmAllocator* allocator, type##Vector* vec, const type* value)   \
       WASM_UNUSED;                                                             \
   static WASM_INLINE WasmResult wasm_extend_##name##s(                         \
-      struct WasmAllocator* allocator, type##Vector* dst, type##Vector* src)   \
-      WASM_UNUSED;                                                             \
+      struct WasmAllocator* allocator, type##Vector* dst,                      \
+      const type##Vector* src) WASM_UNUSED;                                    \
   WASM_EXTERN_C_END                                                            \
                                                                                \
   void wasm_destroy_##name##_vector(struct WasmAllocator* allocator,           \
@@ -90,8 +90,8 @@
     return wasm_append_element(allocator, (void**)&vec->data, &vec->size,      \
                                &vec->capacity, sizeof(type));                  \
   }                                                                            \
-  WasmResult wasm_append_##name##_value(struct WasmAllocator* allocator,       \
-                                        type##Vector* vec, type* value) {      \
+  WasmResult wasm_append_##name##_value(                                       \
+      struct WasmAllocator* allocator, type##Vector* vec, const type* value) { \
     type* slot = wasm_append_##name(allocator, vec);                           \
     if (!slot)                                                                 \
       return WASM_ERROR;                                                       \
@@ -99,7 +99,8 @@
     return WASM_OK;                                                            \
   }                                                                            \
   WasmResult wasm_extend_##name##s(struct WasmAllocator* allocator,            \
-                                   type##Vector* dst, type##Vector* src) {     \
+                                   type##Vector* dst,                          \
+                                   const type##Vector* src) {                  \
     return wasm_extend_elements(allocator, (void**)&dst->data, &dst->size,     \
                                 &dst->capacity, (const void**)&src->data,      \
                                 src->size, sizeof(type));                      \

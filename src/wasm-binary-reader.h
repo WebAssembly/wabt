@@ -182,7 +182,7 @@ WasmResult wasm_read_binary(struct WasmAllocator* allocator,
                             const void* data,
                             size_t size,
                             WasmBinaryReader* reader,
-                            WasmReadBinaryOptions* options);
+                            const WasmReadBinaryOptions* options);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_READER_H_ */

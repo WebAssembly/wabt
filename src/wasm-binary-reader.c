@@ -386,7 +386,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                             const void* data,
                             size_t size,
                             WasmBinaryReader* reader,
-                            WasmReadBinaryOptions* options) {
+                            const WasmReadBinaryOptions* options) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.data = data;

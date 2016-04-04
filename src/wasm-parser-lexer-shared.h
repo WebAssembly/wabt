@@ -88,7 +88,7 @@ void wasm_parser_error(struct WasmLocation*,
                        const char*,
                        ...);
 void wasm_vfprint_error(FILE*,
-                        struct WasmLocation*,
+                        const struct WasmLocation*,
                         WasmLexer,
                         const char*,
                         va_list);

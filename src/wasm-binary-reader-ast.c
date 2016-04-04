@@ -1167,7 +1167,7 @@ static WasmBinaryReader s_binary_reader = {
 WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
                                 const void* data,
                                 size_t size,
-                                WasmReadBinaryOptions* options,
+                                const WasmReadBinaryOptions* options,
                                 struct WasmModule* out_module) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);

@@ -1559,13 +1559,12 @@ static void destroy_context(WasmContext* ctx) {
                                    uint32_vector);
 }
 
-WasmResult wasm_read_binary_interpreter(
-    struct WasmAllocator* allocator,
-    struct WasmAllocator* memory_allocator,
-    const void* data,
-    size_t size,
-    struct WasmReadBinaryOptions* options,
-    struct WasmInterpreterModule* out_module) {
+WasmResult wasm_read_binary_interpreter(WasmAllocator* allocator,
+                                        WasmAllocator* memory_allocator,
+                                        const void* data,
+                                        size_t size,
+                                        const WasmReadBinaryOptions* options,
+                                        WasmInterpreterModule* out_module) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;

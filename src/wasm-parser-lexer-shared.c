@@ -21,7 +21,7 @@
 #include <string.h>
 
 void wasm_vfprint_error(FILE* error_file,
-                        WasmLocation* loc,
+                        const WasmLocation* loc,
                         WasmLexer lexer,
                         const char* fmt,
                         va_list args) {

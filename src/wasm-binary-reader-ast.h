@@ -27,7 +27,7 @@ WASM_EXTERN_C_BEGIN
 WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
                                 const void* data,
                                 size_t size,
-                                struct WasmReadBinaryOptions* options,
+                                const struct WasmReadBinaryOptions* options,
                                 struct WasmModule* out_module);
 WASM_EXTERN_C_END
 

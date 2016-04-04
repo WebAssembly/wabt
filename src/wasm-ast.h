@@ -329,7 +329,7 @@ WASM_EXTERN_C_BEGIN
 WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  WasmBindingHash*,
                                  const WasmStringSlice*);
-int wasm_hash_entry_is_free(WasmBindingHashEntry*);
+int wasm_hash_entry_is_free(const WasmBindingHashEntry*);
 
 WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
 
