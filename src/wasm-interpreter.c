@@ -260,12 +260,14 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define TYPE_FIELD_NAME_F64 f64_bits
 
 #define TRAP(type) return WASM_INTERPRETER_TRAP_##type
-
-#define CHECK_STACK()              \
-  do {                             \
-    if (vs_top >= vs_end)          \
-      TRAP(VALUE_STACK_EXHAUSTED); \
+#define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
+#define TRAP_IF(cond, type)                \
+  do {                                     \
+    if (WASM_UNLIKELY(cond))               \
+      return WASM_INTERPRETER_TRAP_##type; \
   } while (0)
+
+#define CHECK_STACK() TRAP_IF(vs_top >= vs_end, VALUE_STACK_EXHAUSTED)
 
 #define PUSH(v)        \
   do {                 \
@@ -294,11 +296,10 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define GOTO(offset) pc = &istream[offset]
 
-#define PUSH_CALL(o)              \
-  do {                            \
-    if (cs_top >= cs_end)         \
-      TRAP(CALL_STACK_EXHAUSTED); \
-    (*cs_top++) = (pc - istream); \
+#define PUSH_CALL(o)                                 \
+  do {                                               \
+    TRAP_IF(cs_top >= cs_end, CALL_STACK_EXHAUSTED); \
+    (*cs_top++) = (pc - istream);                    \
   } while (0)
 
 #define POP_CALL() (*--cs_top)
@@ -307,8 +308,8 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                                     \
     uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                 \
     MEM_TYPE_##mem_type value;                                             \
-    if (offset + sizeof(value) > module->memory.byte_size)                 \
-      TRAP(MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
+    TRAP_IF(offset + sizeof(value) > module->memory.byte_size,             \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
     void* src = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
     memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                      \
     PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);               \
@@ -319,8 +320,8 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type value = POP_##type();                                \
     uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                 \
     MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;                  \
-    if (offset + sizeof(src) > module->memory.byte_size)                   \
-      TRAP(MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
+    TRAP_IF(offset + sizeof(src) > module->memory.byte_size,               \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
     void* dst = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
     memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                        \
     PUSH_##type(value);                                                    \
@@ -361,7 +362,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type rhs = POP_##type();                                  \
     VALUE_TYPE_##type lhs = POP_##type();                                  \
     uint32_t amount = rhs & SHIFT_MASK_##type;                             \
-    if (amount != 0) {                                                     \
+    if (WASM_LIKELY(amount != 0)) {                                        \
       PUSH_##type(                                                         \
           (lhs ROT_##dir##_0_SHIFT_OP amount) |                            \
           (lhs ROT_##dir##_1_SHIFT_OP((SHIFT_MASK_##type + 1) - amount))); \
@@ -374,8 +375,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                     \
     VALUE_TYPE_##type rhs = POP_##type();                  \
     VALUE_TYPE_##type lhs = POP_##type();                  \
-    if (rhs == 0)                                          \
-      TRAP(INTEGER_DIVIDE_BY_ZERO);                        \
+    TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);             \
     PUSH_##type(BITCAST_##type##_TO_UNSIGNED(lhs)          \
                     op BITCAST_##type##_TO_UNSIGNED(rhs)); \
   } while (0)
@@ -383,33 +383,30 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 /* {i32,i64}.{div,rem}_s are special-cased because they trap when dividing the
  * max signed value by -1. The modulo operation on x86 uses the same
  * instruction to generate the quotient and the remainder. */
-#define BINOP_DIV_S(type)                               \
-  do {                                                  \
-    VALUE_TYPE_##type rhs = POP_##type();               \
-    VALUE_TYPE_##type lhs = POP_##type();               \
-    if (rhs == 0) {                                     \
-      TRAP(INTEGER_DIVIDE_BY_ZERO);                     \
-    } else if (lhs == VALUE_TYPE_SIGNED_MAX_##type &&   \
-               rhs == VALUE_TYPE_UNSIGNED_MAX_##type) { \
-      TRAP(INTEGER_OVERFLOW);                           \
-    }                                                   \
-    PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) /       \
-                BITCAST_##type##_TO_SIGNED(rhs));       \
+#define BINOP_DIV_S(type)                              \
+  do {                                                 \
+    VALUE_TYPE_##type rhs = POP_##type();              \
+    VALUE_TYPE_##type lhs = POP_##type();              \
+    TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);         \
+    TRAP_IF(lhs == VALUE_TYPE_SIGNED_MAX_##type &&     \
+                rhs == VALUE_TYPE_UNSIGNED_MAX_##type, \
+            INTEGER_OVERFLOW);                         \
+    PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) /      \
+                BITCAST_##type##_TO_SIGNED(rhs));      \
   } while (0)
 
-#define BINOP_REM_S(type)                               \
-  do {                                                  \
-    VALUE_TYPE_##type rhs = POP_##type();               \
-    VALUE_TYPE_##type lhs = POP_##type();               \
-    if (rhs == 0) {                                     \
-      TRAP(INTEGER_DIVIDE_BY_ZERO);                     \
-    } else if (lhs == VALUE_TYPE_SIGNED_MAX_##type &&   \
-               rhs == VALUE_TYPE_UNSIGNED_MAX_##type) { \
-      PUSH_##type(0);                                   \
-    } else {                                            \
-      PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) %     \
-                  BITCAST_##type##_TO_SIGNED(rhs));     \
-    }                                                   \
+#define BINOP_REM_S(type)                                       \
+  do {                                                          \
+    VALUE_TYPE_##type rhs = POP_##type();                       \
+    VALUE_TYPE_##type lhs = POP_##type();                       \
+    TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);                  \
+    if (WASM_UNLIKELY(lhs == VALUE_TYPE_SIGNED_MAX_##type &&    \
+                      rhs == VALUE_TYPE_UNSIGNED_MAX_##type)) { \
+      PUSH_##type(0);                                           \
+    } else {                                                    \
+      PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) %             \
+                  BITCAST_##type##_TO_SIGNED(rhs));             \
+    }                                                           \
   } while (0)
 
 #define UNOP_FLOAT(type, func)                                 \
@@ -441,9 +438,9 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type rhs = POP_##type();                                    \
     VALUE_TYPE_##type lhs = POP_##type();                                    \
     VALUE_TYPE_##type result;                                                \
-    if (IS_NAN_##type(lhs)) {                                                \
+    if (WASM_UNLIKELY(IS_NAN_##type(lhs))) {                                 \
       result = lhs | type##_QUIET_NAN_BIT;                                   \
-    } else if (IS_NAN_##type(rhs)) {                                         \
+    } else if (WASM_UNLIKELY(IS_NAN_##type(rhs))) {                          \
       result = rhs | type##_QUIET_NAN_BIT;                                   \
     } else {                                                                 \
       FLOAT_TYPE_##type float_rhs = BITCAST_TO_##type(rhs);                  \
@@ -582,12 +579,11 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
         uint32_t num_args = sig->param_types.size;
         VALUE_TYPE_I32 entry_index = PICK(num_args + 1).i32;
-        if (entry_index >= module->func_table.size)
-          TRAP(UNDEFINED_TABLE_INDEX);
+        TRAP_IF(entry_index >= module->func_table.size, UNDEFINED_TABLE_INDEX);
         WasmInterpreterFuncTableEntry* entry =
             &module->func_table.data[entry_index];
-        if (entry->sig_index != sig_index)
-          TRAP(INDIRECT_CALL_SIGNATURE_MISMATCH);
+        TRAP_IF(entry->sig_index != sig_index,
+                INDIRECT_CALL_SIGNATURE_MISMATCH);
         PUSH_CALL();
         GOTO(entry->func_offset);
         break;
@@ -614,8 +610,8 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
             import->callback(module, import, num_args, thread->import_args.data,
                              import->user_data);
         if (sig->result_type != WASM_TYPE_VOID) {
-          if (call_result.type != sig->result_type)
-            TRAP(IMPORT_RESULT_TYPE_MISMATCH);
+          TRAP_IF(call_result.type != sig->result_type,
+                  IMPORT_RESULT_TYPE_MISMATCH);
           PUSH(call_result.value);
         }
         break;
@@ -722,14 +718,13 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t old_byte_size = module->memory.byte_size;
         VALUE_TYPE_I32 grow_pages = POP_I32();
         uint32_t new_page_size = old_page_size + grow_pages;
-        if ((uint64_t)new_page_size * WASM_PAGE_SIZE > UINT32_MAX)
-          TRAP(MEMORY_SIZE_OVERFLOW);
+        TRAP_IF((uint64_t)new_page_size * WASM_PAGE_SIZE > UINT32_MAX,
+                MEMORY_SIZE_OVERFLOW);
         uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
         WasmAllocator* allocator = module->memory.allocator;
         void* new_data = wasm_realloc(allocator, module->memory.data,
                                       new_byte_size, WASM_DEFAULT_ALIGN);
-        if (new_data == NULL)
-          TRAP(OUT_OF_MEMORY);
+        TRAP_IF(new_data == NULL, OUT_OF_MEMORY);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
         module->memory.data = new_data;
@@ -1133,40 +1128,32 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_I32_TRUNC_S_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        if (is_nan_f32(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i32_trunc_s_f32(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i32_trunc_s_f32(value), INTEGER_OVERFLOW);
         PUSH_I32((int32_t)BITCAST_TO_F32(value));
         break;
       }
 
       case WASM_OPCODE_I32_TRUNC_S_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        if (is_nan_f64(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i32_trunc_s_f64(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i32_trunc_s_f64(value), INTEGER_OVERFLOW);
         PUSH_I32((int32_t)BITCAST_TO_F64(value));
         break;
       }
 
       case WASM_OPCODE_I32_TRUNC_U_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        if (is_nan_f32(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i32_trunc_u_f32(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i32_trunc_u_f32(value), INTEGER_OVERFLOW);
         PUSH_I32((uint32_t)BITCAST_TO_F32(value));
         break;
       }
 
       case WASM_OPCODE_I32_TRUNC_U_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        if (is_nan_f64(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i32_trunc_u_f64(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i32_trunc_u_f64(value), INTEGER_OVERFLOW);
         PUSH_I32((uint32_t)BITCAST_TO_F64(value));
         break;
       }
@@ -1179,40 +1166,32 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_I64_TRUNC_S_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        if (is_nan_f32(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i64_trunc_s_f32(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i64_trunc_s_f32(value), INTEGER_OVERFLOW);
         PUSH_I64((int64_t)BITCAST_TO_F32(value));
         break;
       }
 
       case WASM_OPCODE_I64_TRUNC_S_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        if (is_nan_f64(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i64_trunc_s_f64(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i64_trunc_s_f64(value), INTEGER_OVERFLOW);
         PUSH_I64((int64_t)BITCAST_TO_F64(value));
         break;
       }
 
       case WASM_OPCODE_I64_TRUNC_U_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        if (is_nan_f32(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i64_trunc_u_f32(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i64_trunc_u_f32(value), INTEGER_OVERFLOW);
         PUSH_I64((uint64_t)BITCAST_TO_F32(value));
         break;
       }
 
       case WASM_OPCODE_I64_TRUNC_U_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        if (is_nan_f64(value))
-          TRAP(INVALID_CONVERSION_TO_INTEGER);
-        if (!is_in_range_i64_trunc_u_f64(value))
-          TRAP(INTEGER_OVERFLOW);
+        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_UNLESS(is_in_range_i64_trunc_u_f64(value), INTEGER_OVERFLOW);
         PUSH_I64((uint64_t)BITCAST_TO_F64(value));
         break;
       }
