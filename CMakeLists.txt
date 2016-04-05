@@ -134,67 +134,57 @@ endif ()
 
 add_custom_target(everything)
 
-# sexpr-wasm
-set(SEXPR_WASM_SRCS
-  src/sexpr-wasm.c
+add_library(
+  wasm-common STATIC
   src/wasm-allocator.c
+  src/wasm-common.c
+  src/wasm-config.c
+  src/wasm-option-parser.c
+  src/wasm-stack-allocator.c
+  src/wasm-vector.c
+  src/wasm-writer.c
+)
+
+# sexpr-wasm
+add_executable(
+  sexpr-wasm
+  src/sexpr-wasm.c
   src/wasm-ast.c
   src/wasm-ast-checker.c
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
-  src/wasm-common.c
-  src/wasm-config.c
   src/wasm-literal.c
   src/wasm-mark-used-blocks.c
-  src/wasm-option-parser.c
   src/wasm-parser-lexer-shared.c
-  src/wasm-stack-allocator.c
-  src/wasm-vector.c
-  src/wasm-writer.c
   ${BISON_PARSER_C}
   ${FLEX_LEXER_C}
 )
-add_executable(sexpr-wasm ${SEXPR_WASM_SRCS})
 add_dependencies(everything sexpr-wasm)
+target_link_libraries(sexpr-wasm wasm-common)
 
 # wasm-wast
-set(WASM_WAST_SRCS
-  src/wasm-allocator.c
+add_executable(
+  wasm-wast
   src/wasm-ast.c
   src/wasm-ast-writer.c
   src/wasm-binary-reader.c
   src/wasm-binary-reader-ast.c
-  src/wasm-common.c
-  src/wasm-config.c
   src/wasm-literal.c
-  src/wasm-option-parser.c
-  src/wasm-stack-allocator.c
-  src/wasm-vector.c
   src/wasm-wast.c
-  src/wasm-writer.c
 )
-
-add_executable(wasm-wast ${WASM_WAST_SRCS})
 add_dependencies(everything wasm-wast)
+target_link_libraries(wasm-wast wasm-common)
 
 # wasm-interp
-set(WASM_INTERP_SRCS
-  src/wasm-allocator.c
+add_executable(
+  wasm-interp
   src/wasm-binary-reader.c
   src/wasm-binary-reader-interpreter.c
-  src/wasm-common.c
-  src/wasm-config.c
   src/wasm-interp.c
   src/wasm-interpreter.c
-  src/wasm-option-parser.c
-  src/wasm-stack-allocator.c
-  src/wasm-vector.c
-  src/wasm-writer.c
 )
-
-add_executable(wasm-interp ${WASM_INTERP_SRCS})
 add_dependencies(everything wasm-interp)
-target_link_libraries(wasm-interp m)
+target_link_libraries(wasm-interp wasm-common m)
 
 
 # hexfloat-test
