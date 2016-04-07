@@ -78,10 +78,17 @@ typedef uint8_t WasmUint8;
 WASM_DEFINE_VECTOR(uint8, WasmUint8);
 WASM_DEFINE_VECTOR(type, WasmType);
 
+/* A bundle of value types. */
+typedef struct WasmExprType {
+  int empty;
+  uint32_t size;
+  WasmType types[10];
+} WasmExprType;
+
 /* TODO(binji): identical to WasmFuncSignature. Share? */
 typedef struct WasmInterpreterFuncSignature {
-  WasmType result_type;
   WasmTypeVector param_types;
+  WasmExprType result_type;
 } WasmInterpreterFuncSignature;
 WASM_DEFINE_ARRAY(interpreter_func_signature, WasmInterpreterFuncSignature);
 

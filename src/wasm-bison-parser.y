@@ -91,6 +91,7 @@ static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
 static WasmExpr* new_block_expr_with_one(WasmAllocator* allocator,
                                          WasmExpr* expr);
 static WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
+                                          int rtn_first,
                                           WasmLabel* label,
                                           WasmExprPtrVector* exprs);
 
@@ -114,8 +115,8 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
 %token LPAR "("
 %token RPAR ")"
 %token INT FLOAT TEXT VAR VALUE_TYPE
-%token NOP BLOCK IF THEN ELSE LOOP BR BR_IF BR_TABLE CASE
-%token CALL CALL_IMPORT CALL_INDIRECT RETURN
+%token NOP BLOCK BLOCK1 IF THEN ELSE LOOP BR BR_IF BR_TABLE CASE
+%token CALL CALL_IMPORT CALL_INDIRECT VALUES CONC_VALUES MV_CALL RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token FUNC START TYPE PARAM RESULT LOCAL
@@ -197,14 +198,14 @@ value_type_list :
 func_type :
     /* empty */ { WASM_ZERO_MEMORY($$); }
   | LPAR PARAM value_type_list RPAR {
-      $$.result_type = WASM_TYPE_VOID;
+      WASM_ZERO_MEMORY($$);
       $$.param_types = $3;
     }
-  | LPAR PARAM value_type_list RPAR LPAR RESULT VALUE_TYPE RPAR {
-      $$.result_type = $7;
+  | LPAR PARAM value_type_list RPAR LPAR RESULT value_type_list RPAR {
+      $$.result_types = $7;
       $$.param_types = $3;
     }
-  | LPAR RESULT VALUE_TYPE RPAR { WASM_ZERO_MEMORY($$); $$.result_type = $3; }
+  | LPAR RESULT value_type_list RPAR { WASM_ZERO_MEMORY($$); $$.result_types = $3; }
 ;
 
 
@@ -307,7 +308,11 @@ expr1 :
       CHECK_ALLOC_NULL($$);
     }
   | BLOCK labeling expr_list {
-      $$ = new_block_expr_with_list(parser->allocator, &$2, &$3);
+      $$ = new_block_expr_with_list(parser->allocator, 0, &$2, &$3);
+      CHECK_ALLOC_NULL($$);
+    }
+  | BLOCK1 labeling expr_list {
+      $$ = new_block_expr_with_list(parser->allocator, 1, &$2, &$3);
       CHECK_ALLOC_NULL($$);
     }
   | IF expr expr {
@@ -323,7 +328,7 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       $$->if_.cond = $2;
       WasmExpr* true_block =
-          new_block_expr_with_list(parser->allocator, &$5, &$6);
+          new_block_expr_with_list(parser->allocator, 0, &$5, &$6);
       CHECK_ALLOC_NULL(true_block);
       $$->if_.true_ = true_block;
     }
@@ -343,11 +348,11 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       WasmExpr* true_block =
-          new_block_expr_with_list(parser->allocator, &$5, &$6);
+          new_block_expr_with_list(parser->allocator, 0, &$5, &$6);
       CHECK_ALLOC_NULL(true_block);
       $$->if_else.true_ = true_block;
       WasmExpr* false_block =
-          new_block_expr_with_list(parser->allocator, &$10, &$11);
+          new_block_expr_with_list(parser->allocator, 0, &$10, &$11);
       CHECK_ALLOC_NULL(false_block);
       $$->if_else.false_ = false_block;
     }
@@ -422,6 +427,22 @@ expr1 :
       $$->call_indirect.var = $2;
       $$->call_indirect.expr = $3;
       $$->call_indirect.args = $4;
+    }
+  | VALUES expr_list {
+      $$ = wasm_new_values_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->values.args = $2;
+    }
+  | CONC_VALUES expr_list {
+      $$ = wasm_new_conc_values_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->values.args = $2;
+    }
+  | MV_CALL var expr {
+      $$ = wasm_new_mv_call_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->mv_call.var = $2;
+      $$->mv_call.expr = $3;
     }
   | GET_LOCAL var {
       $$ = wasm_new_get_local_expr(parser->allocator);
@@ -553,10 +574,10 @@ func_fields :
       $$->bound_type.type = $4;
       $$->next = $6;
     }
-  | LPAR RESULT VALUE_TYPE RPAR func_fields {
+  | LPAR RESULT value_type_list RPAR func_fields {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPE;
-      $$->result_type = $3;
+      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPES;
+      $$->types = $3;
       $$->next = $5;
     }
   | LPAR LOCAL value_type_list RPAR func_fields {
@@ -587,7 +608,7 @@ func_info :
 
         if (field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES ||
             field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM ||
-            field->type == WASM_FUNC_FIELD_TYPE_RESULT_TYPE) {
+            field->type == WASM_FUNC_FIELD_TYPE_RESULT_TYPES) {
           $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
         }
 
@@ -597,11 +618,14 @@ func_info :
             break;
 
           case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
+          case WASM_FUNC_FIELD_TYPE_RESULT_TYPES:
           case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES: {
             WasmTypeVector* types =
                 field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES
                     ? &$$->decl.sig.param_types
-                    : &$$->local_types;
+                    : (field->type == WASM_FUNC_FIELD_TYPE_RESULT_TYPES
+                           ? &$$->decl.sig.result_types
+                           : &$$->local_types);
             CHECK_ALLOC(
                 wasm_extend_types(parser->allocator, types, &field->types));
             wasm_destroy_type_vector(parser->allocator, &field->types);
@@ -629,10 +653,6 @@ func_info :
             binding->index = types->size - 1;
             break;
           }
-
-          case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
-            $$->decl.sig.result_type = field->result_type;
-            break;
         }
 
         /* we steal memory from the func field, but not the linked list nodes */
@@ -1184,6 +1204,7 @@ WasmExpr* new_block_expr_with_one(WasmAllocator* allocator, WasmExpr* expr) {
   if (block) {
     WasmExprPtr* expr_ptr =
         wasm_append_expr_ptr(allocator, &block->block.exprs);
+    block->block.rtn_first = 0;
     if (expr_ptr) {
       *expr_ptr = expr;
       return block;
@@ -1194,11 +1215,13 @@ WasmExpr* new_block_expr_with_one(WasmAllocator* allocator, WasmExpr* expr) {
 }
 
 WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
+                                   int rtn_first,
                                    WasmLabel* label,
                                    WasmExprPtrVector* exprs) {
   WasmExpr* block = wasm_new_block_expr(allocator);
   if (!block)
     return NULL;
+  block->block.rtn_first = rtn_first;
   block->block.label = *label;
   block->block.exprs = *exprs;
   return block;
@@ -1213,9 +1236,14 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
     int index = wasm_get_func_type_index_by_var(module, &decl->type_var);
     if (index >= 0 && (size_t)index < module->func_types.size) {
       WasmFuncType* func_type = module->func_types.data[index];
-      decl->sig.result_type = func_type->sig.result_type;
-      return wasm_extend_types(allocator, &decl->sig.param_types,
-                               &func_type->sig.param_types);
+      WasmResult result = wasm_extend_types(allocator,
+                                            &decl->sig.param_types,
+                                            &func_type->sig.param_types);
+      if (result == WASM_OK)
+        return wasm_extend_types(allocator, &decl->sig.result_types,
+                                 &func_type->sig.result_types);
+      else
+        return WASM_ERROR;
     } else {
       /* technically not OK, but we'll catch this error later in the AST
        * checker */

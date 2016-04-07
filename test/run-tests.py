@@ -48,14 +48,14 @@ TOOLS = {
   'sexpr-wasm': {
     'EXE': '%(sexpr-wasm)s'
   },
-  'run-d8': {
-    'EXE': 'test/run-d8.py',
-    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s'
-  },
-  'run-d8-spec': {
-    'EXE': 'test/run-d8.py',
-    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s --spec'
-  },
+#  'run-d8': {
+#    'EXE': 'test/run-d8.py',
+#    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s'
+#  },
+#  'run-d8-spec': {
+#    'EXE': 'test/run-d8.py',
+#    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s --spec'
+#  },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': '-v -e %(sexpr-wasm)s --wasm-wast-executable=%(wasm-wast)s'

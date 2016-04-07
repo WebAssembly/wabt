@@ -100,6 +100,8 @@ enum {
   WASM_TYPE_F32,
   WASM_TYPE_F64,
   WASM_NUM_TYPES,
+  WASM_TYPE_UNION,
+  WASM_TYPE_OPTIONAL,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
 };
 typedef unsigned char WasmType;
@@ -286,7 +288,11 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, I32, I32, 0, 0xb7, I32_ROTL, "i32.rotl")                       \
   V(I64, I64, I64, 0, 0xb8, I64_ROTR, "i64.rotr")                       \
   V(I64, I64, I64, 0, 0xb9, I64_ROTL, "i64.rotl")                       \
-  V(I32, I64, ___, 0, 0xba, I64_EQZ, "i64.eqz")
+  V(I32, I64, ___, 0, 0xba, I64_EQZ, "i64.eqz")                         \
+  V(___, ___, ___, 0, 0xbb, VALUES, "values")                           \
+  V(___, ___, ___, 0, 0xbc, CONC_VALUES, "conc_values")                 \
+  V(___, ___, ___, 0, 0xbd, MV_CALL_FUNCTION, "mv_call")                \
+  V(___, ___, ___, 0, 0xbe, BLOCK1, "block1")
 
 typedef enum WasmOpcode {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \

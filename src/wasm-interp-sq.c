@@ -555,10 +555,16 @@ static WasmResult squirrel_wasm_import_callback(
   assert(import->sig_index < module->sigs.size);
   WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
   WasmInterpreterTypedValue result;
-  if (WASM_FAILED(convert_typed_value(&top_tv, sig->result_type, &result))) {
+  if (sig->result_type.size != 1) {
+    squirrel_throwerrorf(
+        v, "expected a return value of type %s.",
+        s_type_names[top_tv.type]);
+    return WASM_ERROR;
+  }
+  if (WASM_FAILED(convert_typed_value(&top_tv, sig->result_type.types[0], &result))) {
     squirrel_throwerrorf(
         v, "cannot convert return value of type %s to type %s.",
-        s_type_names[top_tv.type], s_type_names[sig->result_type]);
+        s_type_names[top_tv.type], s_type_names[sig->result_type.types[0]]);
     return WASM_ERROR;
   }
   *out_result = result;
@@ -601,9 +607,9 @@ static SQRESULT squirrel_wasm_export_callback(HSQUIRRELVM v) {
   if (result != WASM_INTERPRETER_RETURNED)
     return SQ_ERROR;
 
-  if (sig->result_type != WASM_TYPE_VOID) {
+  if (sig->result_type.size > 0) {
     WasmInterpreterTypedValue return_tv;
-    return_tv.type = sig->result_type;
+    return_tv.type = sig->result_type.types[1];
     return_tv.value =
         smc->thread.value_stack.data[smc->thread.value_stack_top - 1];
     squirrel_push_typedvalue(v, &return_tv);

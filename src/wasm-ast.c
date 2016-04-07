@@ -289,6 +289,9 @@ WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_CALL, call, call)                            \
   V(WASM_EXPR_TYPE_CALL_IMPORT, call_import, call)              \
   V(WASM_EXPR_TYPE_CALL_INDIRECT, call_indirect, call_indirect) \
+  V(WASM_EXPR_TYPE_VALUES, values, values)                      \
+  V(WASM_EXPR_TYPE_CONC_VALUES, conc_values, values)            \
+  V(WASM_EXPR_TYPE_MV_CALL, mv_call, mv_call)                   \
   V(WASM_EXPR_TYPE_COMPARE, compare, compare)                   \
   V(WASM_EXPR_TYPE_CONST, const, const_)                        \
   V(WASM_EXPR_TYPE_CONVERT, convert, convert)                   \
@@ -387,6 +390,16 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       wasm_destroy_expr_ptr(allocator, &expr->call_indirect.expr);
       WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->call_indirect.args,
                                        expr_ptr);
+      break;
+    case WASM_EXPR_TYPE_VALUES:
+    case WASM_EXPR_TYPE_CONC_VALUES:
+      wasm_destroy_expr_ptr(allocator, &expr->values.expr);
+      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->values.args,
+                                       expr_ptr);
+      break;
+    case WASM_EXPR_TYPE_MV_CALL:
+      wasm_destroy_var(allocator, &expr->call.var);
+      wasm_destroy_expr_ptr(allocator, &expr->mv_call.expr);
       break;
     case WASM_EXPR_TYPE_COMPARE:
       wasm_destroy_expr_ptr(allocator, &expr->compare.left);
@@ -507,6 +520,7 @@ void wasm_destroy_func_fields(struct WasmAllocator* allocator,
         break;
 
       case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
+      case WASM_FUNC_FIELD_TYPE_RESULT_TYPES:
       case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES:
         wasm_destroy_type_vector(allocator, &func_field->types);
         break;
@@ -514,10 +528,6 @@ void wasm_destroy_func_fields(struct WasmAllocator* allocator,
       case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
       case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL:
         wasm_destroy_string_slice(allocator, &func_field->bound_type.name);
-        break;
-
-      case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
-        /* nothing to free */
         break;
     }
 
@@ -706,6 +716,24 @@ static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
       CHECK_RESULT(traverse_expr(expr->call_indirect.expr, traverser));
       CHECK_RESULT(traverse_exprs(&expr->call_indirect.args, traverser));
       CALLBACK(end_call_indirect_expr);
+      break;
+
+    case WASM_EXPR_TYPE_VALUES:
+      CALLBACK(begin_values_expr);
+      CHECK_RESULT(traverse_exprs(&expr->values.args, traverser));
+      CALLBACK(end_values_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CONC_VALUES:
+      CALLBACK(begin_conc_values_expr);
+      CHECK_RESULT(traverse_exprs(&expr->values.args, traverser));
+      CALLBACK(end_conc_values_expr);
+      break;
+
+    case WASM_EXPR_TYPE_MV_CALL:
+      CALLBACK(begin_mv_call_expr);
+      CHECK_RESULT(traverse_expr(expr->mv_call.expr, traverser));
+      CALLBACK(end_mv_call_expr);
       break;
 
     case WASM_EXPR_TYPE_COMPARE:

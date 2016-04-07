@@ -171,6 +171,7 @@ NAME      \${ATOM}
 "f64"                 { TYPE(F64); return TOK(VALUE_TYPE); }
 "nop"                 { return TOK(NOP); }
 "block"               { return TOK(BLOCK); }
+"block1"              { return TOK(BLOCK1); }
 "if"                  { return TOK(IF); }
 "if_else"             { return TOK(IF); /* TODO(binji): remove */ }
 "then"                { return TOK(THEN); }
@@ -183,6 +184,9 @@ NAME      \${ATOM}
 "call"                { return TOK(CALL); }
 "call_import"         { return TOK(CALL_IMPORT); }
 "call_indirect"       { return TOK(CALL_INDIRECT); }
+"values"              { return TOK(VALUES); }
+"conc_values"         { return TOK(CONC_VALUES); }
+"mv_call"             { return TOK(MV_CALL); }
 "return"              { return TOK(RETURN); }
 "get_local"           { return TOK(GET_LOCAL); }
 "set_local"           { return TOK(SET_LOCAL); }

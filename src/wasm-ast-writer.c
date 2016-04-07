@@ -283,9 +283,12 @@ static void out_func_sig_space(WasmContext* ctx,
     out_close_space(ctx);
   }
 
-  if (func_sig->result_type != WASM_TYPE_VOID) {
+  if (func_sig->result_types.size) {
+    size_t i;
     out_open_space(ctx, "result");
-    out_type(ctx, func_sig->result_type, WASM_NEXT_CHAR_NONE);
+    for (i = 0; i < func_sig->result_types.size; ++i) {
+      out_type(ctx, func_sig->result_types.data[i], WASM_NEXT_CHAR_SPACE);
+    }
     out_close_space(ctx);
   }
 }
@@ -397,9 +400,12 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
       out_close_newline(ctx);
       break;
 
-    case WASM_EXPR_TYPE_BLOCK:
-      write_block(ctx, &expr->block, s_opcode_name[WASM_OPCODE_BLOCK]);
+    case WASM_EXPR_TYPE_BLOCK: {
+      WasmOpcode opcode = &expr->block.rtn_first ? WASM_OPCODE_BLOCK1
+                                                 : WASM_OPCODE_BLOCK;
+      write_block(ctx, &expr->block, s_opcode_name[opcode]);
       break;
+    }
 
     case WASM_EXPR_TYPE_BR:
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
@@ -460,7 +466,32 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
       break;
     }
 
-    case WASM_EXPR_TYPE_COMPARE:
+    case WASM_EXPR_TYPE_VALUES: {
+      out_open_space(ctx, s_opcode_name[WASM_OPCODE_VALUES]);
+      size_t i;
+      for (i = 0; i < expr->values.args.size; ++i)
+        write_expr(ctx, expr->values.args.data[i]);
+      out_close_newline(ctx);
+      break;
+    }
+
+    case WASM_EXPR_TYPE_CONC_VALUES: {
+      out_open_space(ctx, s_opcode_name[WASM_OPCODE_CONC_VALUES]);
+      size_t i;
+      for (i = 0; i < expr->values.args.size; ++i)
+        write_expr(ctx, expr->values.args.data[i]);
+      out_close_newline(ctx);
+      break;
+    }
+
+    case WASM_EXPR_TYPE_MV_CALL:
+      out_open_newline(ctx, s_opcode_name[WASM_OPCODE_MV_CALL_FUNCTION]);
+      out_var(ctx, &expr->call.var, WASM_NEXT_CHAR_NEWLINE);
+      write_expr(ctx, expr->mv_call.expr);
+      out_close_newline(ctx);
+      break;
+
+   case WASM_EXPR_TYPE_COMPARE:
       out_open_newline(ctx, s_opcode_name[expr->compare.opcode]);
       write_expr(ctx, expr->compare.left);
       write_expr(ctx, expr->compare.right);
@@ -661,9 +692,12 @@ static void write_func(WasmContext* ctx,
   if (wasm_decl_has_signature(&func->decl)) {
     write_type_bindings(ctx, "param", func, &func->decl.sig.param_types,
                         &func->param_bindings);
-    if (wasm_get_result_type(func) != WASM_TYPE_VOID) {
+    if (func->decl.sig.result_types.size) {
+      size_t i;
       out_open_space(ctx, "result");
-      out_type(ctx, wasm_get_result_type(func), WASM_NEXT_CHAR_NONE);
+      for (i = 0; i < func->decl.sig.result_types.size; ++i) {
+	out_type(ctx, func->decl.sig.result_types.data[i], WASM_NEXT_CHAR_SPACE);
+      }
       out_close_space(ctx);
     }
   }

@@ -66,13 +66,13 @@ else ()
   #   interfaces, etc.
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
   add_definitions(
-    -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g
+    -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -Wno-parentheses-equality -g
   )
 
   if (COMPILER_IS_GNU)
     # disable -Wclobbered: it seems to be guessing incorrectly about a local
     # variable being clobbered by longjmp.
-    add_definitions(-Wno-clobbered)
+    #add_definitions(-Wno-clobbered)
   endif ()
 
   # try to get the target architecture by compiling a dummy.c file and checking
