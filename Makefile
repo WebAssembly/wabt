@@ -31,7 +31,7 @@ COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := ASAN MSAN LSAN
 CONFIGS := NORMAL ASAN MSAN LSAN NO_FLEX_BISON NO_TESTS
-EXECUTABLES := sexpr-wasm wasm-wast wasm-interp hexfloat_test
+EXECUTABLES := sexpr-wasm wasm-wast wasm-interp wasm-interp-sq hexfloat_test
 
 # directory names
 GCC_DIR := gcc/

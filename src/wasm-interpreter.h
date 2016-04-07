@@ -175,6 +175,8 @@ WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
                                         WasmInterpreterModule* module,
                                         WasmInterpreterThread* thread,
                                         WasmInterpreterThreadOptions* options);
+WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
+                                             WasmInterpreterValue value);
 void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread);
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,

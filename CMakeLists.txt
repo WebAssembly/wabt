@@ -145,8 +145,7 @@ endif ()
 
 add_custom_target(everything)
 
-add_library(
-  wasm-common STATIC
+add_library(wasm-common STATIC
   src/wasm-allocator.c
   src/wasm-common.c
   src/wasm-config.c
@@ -157,8 +156,7 @@ add_library(
 )
 
 # sexpr-wasm
-add_executable(
-  sexpr-wasm
+add_executable(sexpr-wasm
   src/sexpr-wasm.c
   src/wasm-ast.c
   src/wasm-ast-checker.c
@@ -174,8 +172,7 @@ add_dependencies(everything sexpr-wasm)
 target_link_libraries(sexpr-wasm wasm-common)
 
 # wasm-wast
-add_executable(
-  wasm-wast
+add_executable(wasm-wast
   src/wasm-ast.c
   src/wasm-ast-writer.c
   src/wasm-binary-reader.c
@@ -186,16 +183,66 @@ add_executable(
 add_dependencies(everything wasm-wast)
 target_link_libraries(wasm-wast wasm-common)
 
-# wasm-interp
-add_executable(
-  wasm-interp
+# wasm-interp-common
+add_library(wasm-interp-common
   src/wasm-binary-reader.c
   src/wasm-binary-reader-interpreter.c
-  src/wasm-interp.c
   src/wasm-interpreter.c
 )
+
+# wasm-interp
+add_executable(wasm-interp src/wasm-interp.c)
 add_dependencies(everything wasm-interp)
-target_link_libraries(wasm-interp wasm-common m)
+target_link_libraries(wasm-interp wasm-interp-common wasm-common m)
+
+# stuff that requires squirrel
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
+  add_library(libsquirrel STATIC
+    third_party/squirrel/squirrel/sqapi.cpp
+    third_party/squirrel/squirrel/sqcompiler.cpp
+    third_party/squirrel/squirrel/sqlexer.cpp
+    third_party/squirrel/squirrel/sqstate.cpp
+    third_party/squirrel/squirrel/sqbaselib.cpp
+    third_party/squirrel/squirrel/sqdebug.cpp
+    third_party/squirrel/squirrel/sqmem.cpp
+    third_party/squirrel/squirrel/sqtable.cpp
+    third_party/squirrel/squirrel/sqclass.cpp
+    third_party/squirrel/squirrel/sqfuncstate.cpp
+    third_party/squirrel/squirrel/sqobject.cpp
+    third_party/squirrel/squirrel/sqvm.cpp
+    third_party/squirrel/sqstdlib/sqstdaux.cpp
+    third_party/squirrel/sqstdlib/sqstdio.cpp
+    third_party/squirrel/sqstdlib/sqstdrex.cpp
+    third_party/squirrel/sqstdlib/sqstdstring.cpp
+    third_party/squirrel/sqstdlib/sqstdblob.cpp
+    third_party/squirrel/sqstdlib/sqstdmath.cpp
+    third_party/squirrel/sqstdlib/sqstdstream.cpp
+    third_party/squirrel/sqstdlib/sqstdsystem.cpp
+  )
+  set_target_properties(libsquirrel PROPERTIES OUTPUT_NAME squirrel)
+  include_directories(third_party/squirrel/include)
+
+  if (COMPILER_IS_GNU)
+    set_target_properties(libsquirrel
+      PROPERTIES
+      COMPILE_FLAGS -Wno-strict-aliasing
+    )
+  endif ()
+
+  # standalone squirrel interpreter
+  add_executable(sq EXCLUDE_FROM_ALL third_party/squirrel/sq/sq.c)
+  target_link_libraries(sq libsquirrel)
+
+  # wasm-interp-sq
+  add_executable(wasm-interp-sq src/wasm-interp-sq.c)
+  add_dependencies(everything wasm-interp-sq)
+  target_link_libraries(wasm-interp-sq
+    wasm-interp-common
+    wasm-common
+    libsquirrel
+    m
+  )
+endif ()
 
 
 # hexfloat-test

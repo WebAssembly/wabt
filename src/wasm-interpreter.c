@@ -65,6 +65,14 @@ WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
   return WASM_OK;
 }
 
+WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
+                                             WasmInterpreterValue value) {
+  if (thread->value_stack_top >= thread->value_stack.size)
+    return WASM_INTERPRETER_TRAP_VALUE_STACK_EXHAUSTED;
+  thread->value_stack.data[thread->value_stack_top++] = value;
+  return WASM_INTERPRETER_OK;
+}
+
 void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread) {
   wasm_destroy_interpreter_value_array(allocator, &thread->value_stack);

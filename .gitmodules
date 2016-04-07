@@ -7,3 +7,6 @@
 [submodule "third_party/gtest"]
 	path = third_party/gtest
 	url = https://github.com/google/googletest
+[submodule "third_party/squirrel"]
+	path = third_party/squirrel
+	url = https://github.com/albertodemichelis/squirrel/
