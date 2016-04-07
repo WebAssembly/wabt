@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -92,4 +93,42 @@ void wasm_print_memory(const void* start,
       printf("  ; %s", desc);
     putchar('\n');
   }
+}
+
+WasmResult wasm_read_file(WasmAllocator* allocator,
+                          const char* filename,
+                          void** out_data,
+                          size_t* out_size) {
+  FILE* infile = fopen(filename, "rb");
+  if (!infile) {
+    fprintf(stderr, "unable to read %s\n", filename);
+    return WASM_ERROR;
+  }
+
+  if (fseek(infile, 0, SEEK_END) < 0) {
+    fprintf(stderr, "fseek to end failed.\n");
+    return WASM_ERROR;
+  }
+
+  long size = ftell(infile);
+  if (size < 0) {
+    fprintf(stderr, "ftell failed.\n");
+    return WASM_ERROR;
+  }
+
+  if (fseek(infile, 0, SEEK_SET) < 0) {
+    fprintf(stderr, "fseek to beginning failed.\n");
+    return WASM_ERROR;
+  }
+
+  void* data = wasm_alloc(allocator, size, WASM_DEFAULT_ALIGN);
+  if (fread(data, size, 1, infile) != 1) {
+    fprintf(stderr, "fread failed.\n");
+    return WASM_ERROR;
+  }
+
+  *out_data = data;
+  *out_size = size;
+  fclose(infile);
+  return WASM_OK;
 }

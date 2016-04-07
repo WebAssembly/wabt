@@ -313,6 +313,10 @@ void wasm_print_memory(const void* start,
                        size_t offset,
                        int print_chars,
                        const char* desc);
+WasmResult wasm_read_file(struct WasmAllocator* allocator,
+                          const char* filename,
+                          void** out_data,
+                          size_t* out_size);
 WASM_EXTERN_C_END
 
 #endif /* WASM_COMMON_H_ */

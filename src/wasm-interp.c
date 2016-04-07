@@ -167,32 +167,6 @@ static WasmStringSlice get_dirname(const char* s) {
   return result;
 }
 
-static void read_file(const char* filename,
-                      const void** out_data,
-                      size_t* out_size) {
-  FILE* infile = fopen(filename, "rb");
-  if (!infile)
-    WASM_FATAL("unable to read %s\n", filename);
-
-  if (fseek(infile, 0, SEEK_END) < 0)
-    WASM_FATAL("fseek to end failed.\n");
-
-  long size = ftell(infile);
-  if (size < 0)
-    WASM_FATAL("ftell failed.\n");
-
-  if (fseek(infile, 0, SEEK_SET) < 0)
-    WASM_FATAL("fseek to beginning failed.\n");
-
-  void* data = malloc(size);
-  if (fread(data, size, 1, infile) != 1)
-    WASM_FATAL("fread failed.\n");
-
-  *out_data = data;
-  *out_size = size;
-  fclose(infile);
-}
-
 static void print_typed_value(WasmInterpreterTypedValue* tv) {
   switch (tv->type) {
     case WASM_TYPE_I32:
@@ -393,23 +367,25 @@ static WasmResult read_module(WasmAllocator* allocator,
                               const char* module_filename,
                               WasmInterpreterModule* out_module,
                               WasmInterpreterThread* out_thread) {
-  const void* data;
+  WasmResult result;
+  void* data;
   size_t size;
-  read_file(module_filename, &data, &size);
-
-  WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
-  WASM_ZERO_MEMORY(*out_module);
-  WasmResult result =
-      wasm_read_binary_interpreter(allocator, memory_allocator, data, size,
-                                   &s_read_binary_options, out_module);
-
+  result = wasm_read_file(allocator, module_filename, &data, &size);
   if (result == WASM_OK) {
-    set_all_import_callbacks_to_default(out_module);
-    WASM_ZERO_MEMORY(*out_thread);
-    result = wasm_init_interpreter_thread(allocator, out_module, out_thread,
-                                          &s_thread_options);
+    WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
+    WASM_ZERO_MEMORY(*out_module);
+    result =
+        wasm_read_binary_interpreter(allocator, memory_allocator, data, size,
+                                     &s_read_binary_options, out_module);
+
+    if (result == WASM_OK) {
+      set_all_import_callbacks_to_default(out_module);
+      WASM_ZERO_MEMORY(*out_thread);
+      result = wasm_init_interpreter_thread(allocator, out_module, out_thread,
+                                            &s_thread_options);
+    }
+    wasm_free(allocator, data);
   }
-  free((void*)data);
   return result;
 }
 
@@ -454,9 +430,11 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WASM_ZERO_MEMORY(command_name);
   WASM_ZERO_MEMORY(module_mark);
 
-  const void* data;
+  void* data;
   size_t size;
-  read_file(spec_json_filename, &data, &size);
+  result = wasm_read_file(allocator, spec_json_filename, &data, &size);
+  if (result != WASM_OK)
+    return WASM_ERROR;
 
   /* an extremely simple JSON parser that only knows how to parse the expected
    * format from sexpr-wasm */
@@ -770,7 +748,7 @@ fail:
 done:
   if (has_module)
     destroy_module_and_thread(allocator, &module, &thread);
-  free((void*)data);
+  wasm_free(allocator, data);
   return result;
 }
 

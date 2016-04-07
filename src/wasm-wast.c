@@ -112,33 +112,8 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
-static void read_file(const char* filename,
-                      const void** out_data,
-                      size_t* out_size) {
-  FILE* infile = fopen(s_infile, "rb");
-  if (!infile)
-    WASM_FATAL("unable to read %s\n", s_infile);
-
-  if (fseek(infile, 0, SEEK_END) < 0)
-    WASM_FATAL("fseek to end failed.\n");
-
-  long size = ftell(infile);
-  if (size < 0)
-    WASM_FATAL("ftell failed.\n");
-
-  if (fseek(infile, 0, SEEK_SET) < 0)
-    WASM_FATAL("fseek to beginning failed.\n");
-
-  void* data = malloc(size);
-  if (fread(data, size, 1, infile) != 1)
-    WASM_FATAL("fread failed.\n");
-
-  *out_data = data;
-  *out_size = size;
-  fclose(infile);
-}
-
 int main(int argc, char** argv) {
+  WasmResult result;
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
 
@@ -151,32 +126,33 @@ int main(int argc, char** argv) {
     allocator = &stack_allocator.allocator;
   }
 
-  const void* data;
+  void* data;
   size_t size;
-  read_file(s_infile, &data, &size);
-
-  WasmModule module;
-  WASM_ZERO_MEMORY(module);
-  WasmResult result = wasm_read_binary_ast(allocator, data, size,
-                                           &s_read_binary_options, &module);
+  result = wasm_read_file(allocator, s_infile, &data, &size);
   if (result == WASM_OK) {
-    WasmFileWriter file_writer;
-    if (s_outfile) {
-      result = wasm_init_file_writer(&file_writer, s_outfile);
-    } else {
-      result = wasm_init_file_writer_existing(&file_writer, stdout);
-    }
-
+    WasmModule module;
+    WASM_ZERO_MEMORY(module);
+    result = wasm_read_binary_ast(allocator, data, size,
+                                             &s_read_binary_options, &module);
     if (result == WASM_OK) {
-      result = wasm_write_ast(allocator, &file_writer.base, &module);
-      wasm_close_file_writer(&file_writer);
-    }
-  }
+      WasmFileWriter file_writer;
+      if (s_outfile) {
+        result = wasm_init_file_writer(&file_writer, s_outfile);
+      } else {
+        result = wasm_init_file_writer_existing(&file_writer, stdout);
+      }
 
-  if (s_use_libc_allocator)
-    wasm_destroy_module(allocator, &module);
-  wasm_print_allocator_stats(allocator);
-  wasm_destroy_allocator(allocator);
-  free((void*)data);
+      if (result == WASM_OK) {
+        result = wasm_write_ast(allocator, &file_writer.base, &module);
+        wasm_close_file_writer(&file_writer);
+      }
+    }
+
+    if (s_use_libc_allocator)
+      wasm_destroy_module(allocator, &module);
+    wasm_free(allocator, data);
+    wasm_print_allocator_stats(allocator);
+    wasm_destroy_allocator(allocator);
+  }
   return result;
 }
