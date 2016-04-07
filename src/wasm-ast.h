@@ -451,7 +451,6 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
                                      const WasmVar* var);
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
                                       const WasmStringSlice* name);
-int wasm_func_is_exported(const WasmModule* module, const WasmFunc* func);
 
 WasmResult wasm_extend_type_bindings(struct WasmAllocator*,
                                      WasmTypeBindings* dst,

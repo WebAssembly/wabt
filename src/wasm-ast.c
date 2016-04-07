@@ -186,24 +186,6 @@ WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
   return module->exports.data[index];
 }
 
-int wasm_func_is_exported(const WasmModule* module, const WasmFunc* func) {
-  int i;
-  for (i = 0; i < module->exports.size; ++i) {
-    WasmExport* export = module->exports.data[i];
-    if (export->var.type == WASM_VAR_TYPE_NAME) {
-      if (wasm_string_slices_are_equal(&export->var.name, &func->name))
-        return 1;
-    } else {
-      assert(export->var.type == WASM_VAR_TYPE_INDEX);
-      int index = export->var.index;
-      if (index >= 0 && index < module->funcs.size &&
-          module->funcs.data[index] == func)
-        return 1;
-    }
-  }
-  return 0;
-}
-
 int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var) {
   return wasm_get_index_from_var(&module->func_bindings, var);
 }

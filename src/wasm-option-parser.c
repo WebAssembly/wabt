@@ -48,20 +48,7 @@ static int option_match(const char* s, const char* full, int has_argument) {
 }
 
 static void error(WasmOptionParser* parser, const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-
-  char buffer[128];
-  int len = wasm_vsnprintf(buffer, sizeof(buffer), format, args);
-  va_end(args);
-  if (len + 1 > sizeof(buffer)) {
-    char* buffer2 = alloca(len + 1);
-    len = wasm_vsnprintf(buffer2, len + 1, format, args_copy);
-    va_end(args_copy);
-  }
-
+  WASM_SNPRINTF_ALLOCA(buffer, length, format);
   parser->on_error(parser, buffer);
 }
 

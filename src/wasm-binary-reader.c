@@ -85,21 +85,8 @@ typedef struct WasmContext {
 } WasmContext;
 
 static void raise_error(WasmContext* ctx, const char* format, ...) {
+  WASM_SNPRINTF_ALLOCA(buffer, length, format);
   assert(ctx->reader->on_error);
-
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-  /* + 1 to account for the \0 that will be added automatically by
-   wasm_vsnprintf */
-  int len = wasm_vsnprintf(NULL, 0, format, args) + 1;
-  va_end(args);
-
-  char* buffer = alloca(len);
-  wasm_vsnprintf(buffer, len, format, args_copy);
-  va_end(args_copy);
-
   ctx->reader->on_error(ctx->offset, buffer, ctx->reader->user_data);
   longjmp(ctx->error_jmp_buf, 1);
 }

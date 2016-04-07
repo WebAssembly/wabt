@@ -148,22 +148,9 @@ static void out_data_with_next_char(WasmContext* ctx,
 }
 
 static void out_printf(WasmContext* ctx, const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-
-  char buffer[128];
-  int len = wasm_vsnprintf(buffer, sizeof(buffer), format, args);
-  va_end(args);
-  if (len + 1 > sizeof(buffer)) {
-    char* buffer2 = alloca(len + 1);
-    len = wasm_vsnprintf(buffer2, len + 1, format, args_copy);
-    va_end(args_copy);
-  }
-
-  out_data_with_next_char(ctx, buffer, len);
+  WASM_SNPRINTF_ALLOCA(buffer, length, format);
   /* default to following space */
+  out_data_with_next_char(ctx, buffer, length);
   ctx->next_char = WASM_NEXT_CHAR_SPACE;
 }
 

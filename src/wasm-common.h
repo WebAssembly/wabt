@@ -17,6 +17,7 @@
 #ifndef WASM_COMMON_H_
 #define WASM_COMMON_H_
 
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -41,6 +42,22 @@
 
 #define PRIstringslice "%.*s"
 #define WASM_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
+
+#define WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
+#define WASM_SNPRINTF_ALLOCA(buffer, len, format)                       \
+  va_list args;                                                         \
+  va_list args_copy;                                                    \
+  va_start(args, format);                                               \
+  va_copy(args_copy, args);                                             \
+  char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                 \
+  char* buffer = fixed_buf;                                             \
+  int len = wasm_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
+  va_end(args);                                                         \
+  if (len + 1 > sizeof(fixed_buf)) {                                    \
+    buffer = alloca(len + 1);                                           \
+    len = wasm_vsnprintf(buffer, len + 1, format, args_copy);           \
+  }                                                                     \
+  va_end(args_copy)
 
 struct WasmAllocator;
 
@@ -86,7 +103,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
  *
  *  tr  t1    t2   m  code  NAME text
  *  ============================ */
-#define WASM_FOREACH_OPCODE(V)                                     \
+#define WASM_FOREACH_OPCODE(V)                                          \
   V(___, ___, ___, 0, 0x00, NOP, "nop")                                 \
   V(___, ___, ___, 0, 0x01, BLOCK, "block")                             \
   V(___, ___, ___, 0, 0x02, LOOP, "loop")                               \
@@ -96,8 +113,6 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x06, BR, "br")                                   \
   V(___, ___, ___, 0, 0x07, BR_IF, "br_if")                             \
   V(___, ___, ___, 0, 0x08, BR_TABLE, "br_table")                       \
-  V(___, ___, ___, 0, 0x14, RETURN, "return")                           \
-  V(___, ___, ___, 0, 0x15, UNREACHABLE, "unreachable")                 \
   V(___, ___, ___, 0, 0x09, I8_CONST, "i8.const")                       \
   V(I32, ___, ___, 0, 0x0a, I32_CONST, "i32.const")                     \
   V(I64, ___, ___, 0, 0x0b, I64_CONST, "i64.const")                     \
@@ -107,6 +122,8 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x0f, SET_LOCAL, "set_local")                     \
   V(___, ___, ___, 0, 0x12, CALL_FUNCTION, "call")                      \
   V(___, ___, ___, 0, 0x13, CALL_INDIRECT, "call_indirect")             \
+  V(___, ___, ___, 0, 0x14, RETURN, "return")                           \
+  V(___, ___, ___, 0, 0x15, UNREACHABLE, "unreachable")                 \
   V(___, ___, ___, 0, 0x1f, CALL_IMPORT, "call_import")                 \
   V(I32, I32, ___, 1, 0x20, I32_LOAD8_S, "i32.load8_s")                 \
   V(I32, I32, ___, 1, 0x21, I32_LOAD8_U, "i32.load8_u")                 \

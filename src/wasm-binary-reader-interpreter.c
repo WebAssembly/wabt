@@ -198,20 +198,7 @@ static uint32_t get_value_count(WasmType result_type) {
 static void on_error(uint32_t offset, const char* message, void* user_data);
 
 static void print_error(WasmContext* ctx, const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-
-  char buffer[128];
-  int len = wasm_vsnprintf(buffer, sizeof(buffer), format, args);
-  va_end(args);
-  if (len + 1 > sizeof(buffer)) {
-    char* buffer2 = alloca(len + 1);
-    len = wasm_vsnprintf(buffer2, len + 1, format, args_copy);
-    va_end(args_copy);
-  }
-
+  WASM_SNPRINTF_ALLOCA(buffer, length, format);
   on_error(WASM_INVALID_OFFSET, buffer, ctx);
 }
 
@@ -800,8 +787,8 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
              *   br_unless OVER     value
              *   discard_keep ...   value
              *   br DEST            value
-             *   discard
              * OVER:
+             *   discard
              *   ...
              */
             assert(cur_index == 1 && is_expr_done);
