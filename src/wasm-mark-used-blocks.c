@@ -141,6 +141,7 @@ static WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
     WasmVar* var = &expr->br_table.targets.data[i];
     CHECK_RESULT(mark_node_used(ctx, var));
   }
+  CHECK_RESULT(mark_node_used(ctx, &expr->br_table.default_target));
   return WASM_OK;
 }
 

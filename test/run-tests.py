@@ -149,7 +149,7 @@ class TestInfo(object):
     self.input_ = []
     self.expected_stdout = ''
     self.expected_stderr = ''
-    self.tool = None
+    self.tool = 'sexpr-wasm'
     self.exe = '%(sexpr-wasm)s'
     self.flags = []
     self.expected_error = 0
