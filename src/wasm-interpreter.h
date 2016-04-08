@@ -181,7 +181,8 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread);
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            WasmInterpreterThread* thread,
-                                           uint32_t num_instructions);
+                                           uint32_t num_instructions,
+                                           uint32_t call_stack_return_top);
 void wasm_trace_pc(WasmInterpreterModule* module,
                    WasmInterpreterThread* thread);
 void wasm_disassemble_module(WasmInterpreterModule* module,

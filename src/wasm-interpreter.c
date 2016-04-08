@@ -486,7 +486,8 @@ static WASM_INLINE uint64_t read_u64(const uint8_t** pc) {
 
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            WasmInterpreterThread* thread,
-                                           uint32_t num_instructions) {
+                                           uint32_t num_instructions,
+                                           uint32_t call_stack_return_top) {
   WasmInterpreterResult result = WASM_INTERPRETER_OK;
   WasmInterpreterValue* vs_bottom = &thread->value_stack.data[0];
   WasmInterpreterValue* vs_top = vs_bottom + thread->value_stack_top;
@@ -494,6 +495,8 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
   uint32_t* cs_bottom = &thread->call_stack.data[0];
   uint32_t* cs_top = cs_bottom + thread->call_stack_top;
   uint32_t* cs_end = cs_bottom + thread->call_stack.size;
+  assert(call_stack_return_top < thread->call_stack.size);
+  uint32_t* cs_return_top = cs_bottom + call_stack_return_top;
 
   const uint8_t* istream = module->istream.start;
   const uint8_t* pc = &istream[thread->pc];
@@ -535,7 +538,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       }
 
       case WASM_OPCODE_RETURN:
-        if (cs_top == cs_bottom) {
+        if (cs_top == cs_return_top) {
           result = WASM_INTERPRETER_RETURNED;
           goto exit_loop;
         }

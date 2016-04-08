@@ -178,10 +178,12 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
   thread->pc = offset;
   WasmInterpreterResult iresult = WASM_INTERPRETER_OK;
   uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
+  uint32_t call_stack_return_top = thread->call_stack_top;
   while (iresult == WASM_INTERPRETER_OK) {
     if (s_trace)
       wasm_trace_pc(module, thread);
-    iresult = wasm_run_interpreter(module, thread, quantum);
+    iresult =
+        wasm_run_interpreter(module, thread, quantum, call_stack_return_top);
   }
   if (s_trace && iresult != WASM_INTERPRETER_RETURNED)
     printf("!!! trapped: %s\n", s_trap_strings[iresult]);
@@ -340,12 +342,23 @@ static double bitcast_u64_to_f64(uint64_t x) {
   return result;
 }
 
+WASM_STATIC_ASSERT(sizeof(SQInteger) == sizeof(uint32_t) ||
+                   sizeof(SQInteger) == sizeof(uint64_t));
+WASM_STATIC_ASSERT(sizeof(SQFloat) == sizeof(float) ||
+                   sizeof(SQFloat) == sizeof(double));
+
 static void squirrel_push_typedvalue(HSQUIRRELVM v,
                                      WasmInterpreterTypedValue* tv) {
   switch (tv->type) {
-    case WASM_TYPE_I32:
-      sq_pushinteger(v, tv->value.i32);
+    case WASM_TYPE_I32: {
+      if (sizeof(SQInteger) == sizeof(uint32_t)) {
+        sq_pushinteger(v, tv->value.i32);
+      } else {
+        /* sign extend */
+        sq_pushinteger(v, (int64_t)(int32_t)tv->value.i32);
+      }
       break;
+    }
 
     case WASM_TYPE_I64:
       sq_pushinteger(v, tv->value.i64);
@@ -367,8 +380,6 @@ static SQRESULT squirrel_get_typedvalue(HSQUIRRELVM v,
   SQObjectType type = sq_gettype(v, idx);
   switch (type) {
     case OT_INTEGER: {
-      WASM_STATIC_ASSERT(sizeof(SQInteger) == sizeof(uint32_t) ||
-                         sizeof(SQInteger) == sizeof(uint64_t));
       SQInteger value;
       sq_getinteger(v, idx, &value);
 
@@ -383,8 +394,6 @@ static SQRESULT squirrel_get_typedvalue(HSQUIRRELVM v,
     }
 
     case OT_FLOAT: {
-      WASM_STATIC_ASSERT(sizeof(SQFloat) == sizeof(float) ||
-                         sizeof(SQFloat) == sizeof(double));
       SQFloat value;
       sq_getfloat(v, idx, &value);
 
@@ -503,7 +512,8 @@ static WasmInterpreterTypedValue squirrel_wasm_import_callback(
   WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
   WasmInterpreterTypedValue result;
   if (convert_typed_value(&top_tv, sig->result_type, &result) != WASM_OK) {
-    fprintf(stderr, "error: cannot convert return value of type %s to type %s.",
+    fprintf(stderr,
+            "error: cannot convert return value of type %s to type %s.\n",
             s_type_names[top_tv.type], s_type_names[sig->result_type]);
   }
   return result;
@@ -547,7 +557,16 @@ static SQRESULT squirrel_wasm_export_callback(HSQUIRRELVM v) {
                                 WASM_PRINTF_STRING_SLICE_ARG(export->name));
   }
 
-  return SQ_OK;
+  if (sig->result_type != WASM_TYPE_VOID) {
+    WasmInterpreterTypedValue return_tv;
+    return_tv.type = sig->result_type;
+    return_tv.value =
+        smc->thread.value_stack.data[smc->thread.value_stack_top - 1];
+    squirrel_push_typedvalue(v, &return_tv);
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 static SQInteger squirrel_wasm_instantiate_module(HSQUIRRELVM v) {
@@ -724,7 +743,7 @@ static WasmResult init_squirrel(WasmAllocator* allocator, HSQUIRRELVM* out_sq) {
   CHECK_SQ_RESULT(sqstd_register_iolib(v));
   sq_pop(v, 1);
 
-  /* push allocator */
+  /* put allocator into the registry */
   sq_pushregistrytable(v);
   sq_pushstring(v, WASM_ALLOCATOR_NAME, -1);
   sq_pushuserpointer(v, (SQUserPointer)allocator);

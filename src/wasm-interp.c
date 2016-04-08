@@ -245,10 +245,12 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
   thread->pc = offset;
   WasmInterpreterResult iresult = WASM_INTERPRETER_OK;
   uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
+  uint32_t call_stack_return_top = 0;
   while (iresult == WASM_INTERPRETER_OK) {
     if (s_trace)
       wasm_trace_pc(module, thread);
-    iresult = wasm_run_interpreter(module, thread, quantum);
+    iresult =
+        wasm_run_interpreter(module, thread, quantum, call_stack_return_top);
   }
   if (s_trace && iresult != WASM_INTERPRETER_RETURNED)
     printf("!!! trapped: %s\n", s_trap_strings[iresult]);
