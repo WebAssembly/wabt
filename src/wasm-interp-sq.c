@@ -24,6 +24,7 @@
 #include "wasm-array.h"
 #include "wasm-binary-reader.h"
 #include "wasm-binary-reader-interpreter.h"
+#include "wasm-common.h"
 #include "wasm-interpreter.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
@@ -148,30 +149,6 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
-static void read_file(const char* filename, void** out_data, size_t* out_size) {
-  FILE* infile = fopen(filename, "rb");
-  if (!infile)
-    WASM_FATAL("unable to read %s\n", filename);
-
-  if (fseek(infile, 0, SEEK_END) < 0)
-    WASM_FATAL("fseek to end failed.\n");
-
-  long size = ftell(infile);
-  if (size < 0)
-    WASM_FATAL("ftell failed.\n");
-
-  if (fseek(infile, 0, SEEK_SET) < 0)
-    WASM_FATAL("fseek to beginning failed.\n");
-
-  void* data = malloc(size);
-  if (fread(data, size, 1, infile) != 1)
-    WASM_FATAL("fread failed.\n");
-
-  *out_data = data;
-  *out_size = size;
-  fclose(infile);
-}
-
 static WasmInterpreterResult run_function(WasmInterpreterModule* module,
                                           WasmInterpreterThread* thread,
                                           uint32_t offset) {
@@ -269,21 +246,29 @@ static SQInteger squirrel_errorhandler(HSQUIRRELVM v) {
   return 0;
 }
 
-static WasmResult run_squirrel_file(HSQUIRRELVM v, const char* filename) {
+static WasmResult run_squirrel_file(WasmAllocator* allocator,
+                                    HSQUIRRELVM v,
+                                    const char* filename) {
+  WasmResult result;
   void* data;
   size_t size;
-  read_file(filename, &data, &size);
-  WasmResult result = WASM_ERROR;
-  const SQBool raise_error = SQTrue;
-  if (SQ_SUCCEEDED(sq_compilebuffer(v, data, size, filename, raise_error))) {
-    sq_pushroottable(v);
-    const SQBool with_retval = SQFalse;
-    if (SQ_SUCCEEDED(sq_call(v, 1, with_retval, raise_error))) {
-      /* do some other stuff... */
-      result = WASM_OK;
+  result = wasm_read_file(allocator, filename, &data, &size);
+  if (result == WASM_OK) {
+    const SQBool raise_error = SQTrue;
+    if (SQ_SUCCEEDED(sq_compilebuffer(v, data, size, filename, raise_error))) {
+      sq_pushroottable(v);
+      const SQBool with_retval = SQFalse;
+      if (SQ_SUCCEEDED(sq_call(v, 1, with_retval, raise_error))) {
+        /* do some other stuff... */
+        result = WASM_OK;
+      } else {
+        result = WASM_ERROR;
+      }
+    } else {
+      result = WASM_ERROR;
     }
+    wasm_free(allocator, data);
   }
-  free(data);
   return result;
 }
 
@@ -787,7 +772,7 @@ int main(int argc, char** argv) {
   HSQUIRRELVM v;
   result = init_squirrel(allocator, &v);
   if (result == WASM_OK) {
-    result = run_squirrel_file(v, s_infile);
+    result = run_squirrel_file(allocator, v, s_infile);
     sq_close(v);
   }
 
