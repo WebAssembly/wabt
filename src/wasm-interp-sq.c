@@ -37,6 +37,7 @@
 #define INITIAL_SQ_STACK_SIZE 1024
 
 #define WASM_ALLOCATOR_NAME "wasm_allocator"
+#define WASM_MEMORY_NAME "wasm_memory"
 
 static int s_verbose;
 static const char* s_infile;
@@ -658,7 +659,7 @@ static SQInteger squirrel_wasm_instantiate_module(HSQUIRRELVM v) {
 
     /* add exports */
     if (smc->module.exports.size > 0) {
-      sq_newtable(v);  /* the exports table */
+      sq_newtable(v); /* the exports table */
 
       size_t i;
       for (i = 0; i < smc->module.exports.size; ++i) {
@@ -689,6 +690,21 @@ static SQInteger squirrel_wasm_instantiate_module(HSQUIRRELVM v) {
       sq_pop(v, 1);
     }
 
+    /* add memory export */
+    sq_pushregistrytable(v);
+    sq_pushstring(v, WASM_MEMORY_NAME, -1);
+    CHECK_SQ_RESULT(sq_get(v, -2));
+    sq_remove(v, -2); /* remove the registry table */
+
+    /* STACK: ... module delegate memory_class */
+    CHECK_SQ_RESULT(sq_createinstance(v, -1));
+    CHECK_SQ_RESULT(sq_setinstanceup(v, -1, &smc->module.memory));
+    sq_remove(v, -2); /* remove the memory class */
+    sq_pushstring(v, "memory", -1);
+    sq_push(v, -2);
+    CHECK_SQ_RESULT(sq_newslot(v, -4, SQFalse));
+    sq_pop(v, 1);
+
     /* STACK: ... module delegate */
     CHECK_SQ_RESULT(sq_setdelegate(v, -2));
 
@@ -704,6 +720,96 @@ static SQInteger squirrel_wasm_instantiate_module(HSQUIRRELVM v) {
   } else {
     return sq_throwerror(v, "error reading module.");
   }
+}
+
+static SQRESULT squirrel_register_closure(HSQUIRRELVM v,
+                                          const char* name,
+                                          SQFUNCTION closure,
+                                          const char* typemask) {
+#ifndef NDEBUG
+  /* assume the table/class is at the top */
+  SQObjectType type = sq_gettype(v, -1);
+  assert(type == OT_TABLE || type == OT_CLASS);
+#endif
+  sq_pushstring(v, name, -1);
+  sq_newclosure(v, closure, 0);
+  CHECK_SQ_RESULT(sq_setparamscheck(v, SQ_MATCHTYPEMASKSTRING, typemask));
+  CHECK_SQ_RESULT(sq_newslot(v, -3, SQFalse));
+  return SQ_OK;
+}
+
+static SQRESULT squirrel_memory_get_addr(HSQUIRRELVM v,
+                                         size_t access_size,
+                                         void** out_addr) {
+  SQUserPointer up;
+  CHECK_SQ_RESULT(sq_getinstanceup(v, 1, &up, NULL));
+  WasmInterpreterMemory* memory = up;
+  SQInteger index;
+  CHECK_SQ_RESULT(sq_getinteger(v, 2, &index));
+  if (index + access_size <= memory->byte_size) {
+    *out_addr = (uint8_t*)memory->data + index;
+    return 1;
+  } else {
+    return squirrel_throwerrorf(v, "index " _PRINT_INT_FMT " out of bounds.",
+                                index);
+  }
+}
+
+/* TODO(binji): this will truncate values if SQInteger/SQFloat is too small */
+#define DEFINE_MEMORY_GET(name, type, sqop)                            \
+  static SQInteger name(HSQUIRRELVM v) {                               \
+    void* addr;                                                        \
+    CHECK_SQ_RESULT(squirrel_memory_get_addr(v, sizeof(type), &addr)); \
+    type value;                                                        \
+    memcpy(&value, addr, sizeof(value));                               \
+    sqop(v, value);                                                    \
+    return 1;                                                          \
+  }
+
+DEFINE_MEMORY_GET(squirrel_memory_get_i8, int8_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_u8, uint8_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_i16, int16_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_u16, uint16_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_i32, int32_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_u32, uint32_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_i64, int64_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_u64, uint64_t, sq_pushinteger)
+DEFINE_MEMORY_GET(squirrel_memory_get_f32, float, sq_pushfloat)
+DEFINE_MEMORY_GET(squirrel_memory_get_f64, double, sq_pushfloat)
+
+#define DEFINE_MEMORY_SET(name, type, sqtype, sqop)                    \
+  static SQInteger name(HSQUIRRELVM v) {                               \
+    void* addr;                                                        \
+    CHECK_SQ_RESULT(squirrel_memory_get_addr(v, sizeof(type), &addr)); \
+    sqtype sq_value;                                                   \
+    CHECK_SQ_RESULT(sqop(v, 3, &sq_value));                            \
+    type value = sq_value;                                             \
+    memcpy(addr, &value, sizeof(value));                               \
+    return 0;                                                          \
+  }
+
+#define DEFINE_MEMORY_SET_INTEGER(name, type) \
+  DEFINE_MEMORY_SET(name, type, SQInteger, sq_getinteger)
+#define DEFINE_MEMORY_SET_FLOAT(name, type) \
+  DEFINE_MEMORY_SET(name, type, SQFloat, sq_getfloat)
+
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_i8, int8_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_u8, uint8_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_i16, int16_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_u16, uint16_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_i32, int32_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_u32, uint32_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_i64, int64_t)
+DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_u64, uint64_t)
+DEFINE_MEMORY_SET_FLOAT(squirrel_memory_set_f32, float)
+DEFINE_MEMORY_SET_FLOAT(squirrel_memory_set_f64, double)
+
+static SQInteger squirrel_memory_len(HSQUIRRELVM v) {
+  SQUserPointer up;
+  CHECK_SQ_RESULT(sq_getinstanceup(v, 1, &up, NULL));
+  WasmInterpreterMemory* memory = up;
+  sq_pushinteger(v, memory->byte_size);
+  return 1;
 }
 
 #undef CHECK_SQ_RESULT
@@ -737,15 +843,67 @@ static WasmResult init_squirrel(WasmAllocator* allocator, HSQUIRRELVM* out_sq) {
 
   /* initialize Wasm API */
   sq_newtable(v);
-  sq_pushstring(v, "instantiateModule", -1);
-  sq_newclosure(v, squirrel_wasm_instantiate_module, 0);
-  CHECK_SQ_RESULT(sq_setparamscheck(v, 3, "t x t"));
-  CHECK_SQ_RESULT(sq_newslot(v, -3, SQFalse));
+  CHECK_SQ_RESULT(squirrel_register_closure(
+      v, "instantiateModule", squirrel_wasm_instantiate_module, "txt"));
 
   sq_pushroottable(v);
   sq_pushstring(v, "Wasm", -1);
   sq_push(v, -3);
   sq_newslot(v, -3, SQFalse);
+  sq_pop(v, 2);
+
+  /* create memory class */
+  CHECK_SQ_RESULT(sq_newclass(v, SQFalse));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "geti8", squirrel_memory_get_i8, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getu8", squirrel_memory_get_u8, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "geti16", squirrel_memory_get_i16, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getu16", squirrel_memory_get_u16, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "geti32", squirrel_memory_get_i32, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getu32", squirrel_memory_get_u32, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "geti64", squirrel_memory_get_i64, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getu64", squirrel_memory_get_u64, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getf32", squirrel_memory_get_f32, "xi"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getf64", squirrel_memory_get_f64, "xi"));
+
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "seti8", squirrel_memory_set_i8, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setu8", squirrel_memory_set_u8, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "seti16", squirrel_memory_set_i16, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setu16", squirrel_memory_set_u16, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "seti32", squirrel_memory_set_i32, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setu32", squirrel_memory_set_u32, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "seti64", squirrel_memory_set_i64, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setu64", squirrel_memory_set_u64, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setf32", squirrel_memory_set_f32, "xif"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setf64", squirrel_memory_set_f64, "xif"));
+
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "len", squirrel_memory_len, "x"));
+
+  /* store the class in the registry */
+  sq_pushregistrytable(v);
+  sq_pushstring(v, WASM_MEMORY_NAME, -1);
+  sq_push(v, -3);
+  CHECK_SQ_RESULT(sq_newslot(v, -3, SQFalse));
   sq_pop(v, 2);
 
   *out_sq = v;
