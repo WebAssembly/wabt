@@ -62,7 +62,7 @@ if (COMPILER_IS_MSVC)
   #   seems to not like float compare w/ HUGE_VALF; bug?
   add_definitions(-W3 -WX -wd4018 -wd4056 -wd4756 -D_CRT_SECURE_NO_WARNINGS)
 else ()
-  add_definitions(-Wall -Werror -Wpointer-arith -g)
+  add_definitions(-Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g)
 
   # try to get the target architecture by compiling a dummy.c file and checking
   # the architecture using the file command.

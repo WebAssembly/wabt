@@ -174,9 +174,10 @@ static void write_buffer_to_file(const char* out_filename,
       WASM_FATAL("unable to open %s for writing\n", s_outfile);
 
     ssize_t bytes = fwrite(buffer->start, 1, buffer->size, file);
-    if (bytes != buffer->size)
+    if (bytes < 0 || (size_t)bytes != buffer->size) {
       WASM_FATAL("failed to write %" PRIzd " bytes to %s\n", buffer->size,
                  out_filename);
+    }
     fclose(file);
   }
 }

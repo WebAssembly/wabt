@@ -205,7 +205,7 @@ int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
   int index = wasm_get_index_from_var(&module->func_bindings, var);
-  if (index < 0 || index >= module->funcs.size)
+  if (index < 0 || (size_t)index >= module->funcs.size)
     return NULL;
   return module->funcs.data[index];
 }
@@ -213,7 +213,7 @@ WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
                                           const WasmVar* var) {
   int index = wasm_get_index_from_var(&module->func_type_bindings, var);
-  if (index < 0 || index >= module->func_types.size)
+  if (index < 0 || (size_t)index >= module->func_types.size)
     return NULL;
   return module->func_types.data[index];
 }
@@ -221,7 +221,7 @@ WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
 WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
                                      const WasmVar* var) {
   int index = wasm_get_index_from_var(&module->import_bindings, var);
-  if (index < 0 || index >= module->imports.size)
+  if (index < 0 || (size_t)index >= module->imports.size)
     return NULL;
   return module->imports.data[index];
 }

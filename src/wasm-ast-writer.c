@@ -112,7 +112,7 @@ static void out_indent(WasmContext* ctx) {
       "                                                                       "
       "                                                                       ";
   static size_t s_indent_len = sizeof(s_indent) - 1;
-  int indent = ctx->indent;
+  size_t indent = ctx->indent;
   while (indent > s_indent_len) {
     out_data(ctx, s_indent, s_indent_len);
     indent -= s_indent_len;

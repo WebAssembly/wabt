@@ -25,7 +25,7 @@ struct WasmWriteBinaryOptions;
 struct WasmWriter;
 
 #define WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
-  { 0 }
+  { NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 
 typedef struct WasmWriteBinarySpecOptions {
   /* callbacks for writing multiple modules */

@@ -44,19 +44,19 @@
 #define WASM_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
 
 #define WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
-#define WASM_SNPRINTF_ALLOCA(buffer, len, format)                       \
-  va_list args;                                                         \
-  va_list args_copy;                                                    \
-  va_start(args, format);                                               \
-  va_copy(args_copy, args);                                             \
-  char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                 \
-  char* buffer = fixed_buf;                                             \
-  int len = wasm_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
-  va_end(args);                                                         \
-  if (len + 1 > sizeof(fixed_buf)) {                                    \
-    buffer = alloca(len + 1);                                           \
-    len = wasm_vsnprintf(buffer, len + 1, format, args_copy);           \
-  }                                                                     \
+#define WASM_SNPRINTF_ALLOCA(buffer, len, format)                          \
+  va_list args;                                                            \
+  va_list args_copy;                                                       \
+  va_start(args, format);                                                  \
+  va_copy(args_copy, args);                                                \
+  char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                    \
+  char* buffer = fixed_buf;                                                \
+  size_t len = wasm_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
+  va_end(args);                                                            \
+  if (len + 1 > sizeof(fixed_buf)) {                                       \
+    buffer = alloca(len + 1);                                              \
+    len = wasm_vsnprintf(buffer, len + 1, format, args_copy);              \
+  }                                                                        \
   va_end(args_copy)
 
 struct WasmAllocator;

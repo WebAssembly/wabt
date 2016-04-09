@@ -464,7 +464,7 @@ FILE* wasm_lexer_get_file(WasmLexer lexer) {
 
 size_t wasm_lexer_get_file_offset_from_line(WasmLexer lexer, int line) {
   WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
-  if (line < 0 || line >= extra->line_offsets.size)
+  if (line < 0 || (size_t)line >= extra->line_offsets.size)
     return WASM_INVALID_LINE_OFFSET;
 
   return extra->line_offsets.data[line];

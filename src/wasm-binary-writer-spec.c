@@ -377,7 +377,7 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
       WasmExport* export = wasm_get_export_by_name(last_module, &invoke->name);
       assert(export);
       int func_index = wasm_get_func_index_by_var(last_module, &export->var);
-      assert(func_index >= 0 && func_index < last_module->funcs.size);
+      assert(func_index >= 0 && (size_t)func_index < last_module->funcs.size);
       WasmFunc* callee = last_module->funcs.data[func_index];
       WasmType result_type = callee->result_type;
       /* these pointers will be invalidated later, so we can't use them */

@@ -584,7 +584,7 @@ static void write_expr(WasmContext* ctx,
     }
     case WASM_EXPR_TYPE_CALL: {
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
-      assert(index >= 0 && index < module->funcs.size);
+      assert(index >= 0 && (size_t)index < module->funcs.size);
       out_opcode(ctx, WASM_OPCODE_CALL_FUNCTION);
       out_u32_leb128(ctx, index, "func index");
       write_expr_list(ctx, module, func, &expr->call.args);
@@ -592,7 +592,7 @@ static void write_expr(WasmContext* ctx,
     }
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       int index = wasm_get_import_index_by_var(module, &expr->call.var);
-      assert(index >= 0 && index < module->imports.size);
+      assert(index >= 0 && (size_t)index < module->imports.size);
       out_opcode(ctx, WASM_OPCODE_CALL_IMPORT);
       out_u32_leb128(ctx, index, "import index");
       write_expr_list(ctx, module, func, &expr->call.args);
@@ -601,7 +601,7 @@ static void write_expr(WasmContext* ctx,
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
       int index =
           wasm_get_func_type_index_by_var(module, &expr->call_indirect.var);
-      assert(index >= 0 && index < module->func_types.size);
+      assert(index >= 0 && (size_t)index < module->func_types.size);
       out_opcode(ctx, WASM_OPCODE_CALL_INDIRECT);
       out_u32_leb128(ctx, index, "signature index");
       write_expr(ctx, module, func, expr->call_indirect.expr);
@@ -642,7 +642,7 @@ static void write_expr(WasmContext* ctx,
       break;
     case WASM_EXPR_TYPE_GET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
-      assert(index >= 0 && index < func->params_and_locals.types.size);
+      assert(index >= 0 && (size_t)index < func->params_and_locals.types.size);
       out_opcode(ctx, WASM_OPCODE_GET_LOCAL);
       out_u32_leb128(ctx, ctx->remapped_locals[index], "remapped local index");
       break;
@@ -729,7 +729,7 @@ static void write_expr(WasmContext* ctx,
     case WASM_EXPR_TYPE_BR_TABLE: {
       out_opcode(ctx, WASM_OPCODE_BR_TABLE);
       out_u32_leb128(ctx, expr->br_table.targets.size, "num targets");
-      int i;
+      size_t i;
       WasmLabelNode* node;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
         const WasmVar* var = &expr->br_table.targets.data[i];
@@ -804,7 +804,7 @@ static void write_func_locals(WasmContext* ctx,
   /* loop through once to count the number of local declaration runs */
   WasmType current_type = GET_LOCAL_TYPE(FIRST_LOCAL_INDEX);
   uint32_t local_decl_count = 1;
-  int i;
+  uint32_t i;
   for (i = FIRST_LOCAL_INDEX + 1; i < LAST_LOCAL_INDEX; ++i) {
     WasmType type = GET_LOCAL_TYPE(i);
     if (current_type != type) {
@@ -899,7 +899,7 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
     out_u32_leb128(ctx, module->table->size, "num function table entries");
     for (i = 0; i < module->table->size; ++i) {
       int index = wasm_get_func_index_by_var(module, &module->table->data[i]);
-      assert(index >= 0 && index < module->funcs.size);
+      assert(index >= 0 && (size_t)index < module->funcs.size);
       out_u32_leb128(ctx, index, "function table entry");
     }
     end_section(ctx);
@@ -921,7 +921,7 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
     for (i = 0; i < module->exports.size; ++i) {
       const WasmExport* export = module->exports.data[i];
       int func_index = wasm_get_func_index_by_var(module, &export->var);
-      assert(func_index >= 0 && func_index < module->funcs.size);
+      assert(func_index >= 0 && (size_t)func_index < module->funcs.size);
       out_u32_leb128(ctx, func_index, "export func index");
       out_str(ctx, export->name.start, export->name.length, WASM_PRINT_CHARS,
               "export name");

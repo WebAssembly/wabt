@@ -78,7 +78,7 @@ static WasmLabelNode* find_label_node_by_var(WasmContext* ctx, WasmVar* var) {
     }
     return NULL;
   } else {
-    if (var->index < 0 || var->index >= ctx->labels.size)
+    if (var->index < 0 || (size_t)var->index >= ctx->labels.size)
       return NULL;
     return &ctx->labels.data[ctx->labels.size - 1 - var->index];
   }
