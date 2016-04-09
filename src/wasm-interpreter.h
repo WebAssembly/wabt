@@ -65,6 +65,7 @@ enum {
   /* push space on the value stack for N entries */
   WASM_OPCODE_ALLOCA = WASM_LAST_OPCODE,
   WASM_OPCODE_BR_UNLESS,
+  WASM_OPCODE_DATA,
   WASM_OPCODE_DISCARD,
   WASM_OPCODE_DISCARD_KEEP,
   WASM_LAST_INTERPRETER_OPCODE,
@@ -181,6 +182,9 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            uint32_t num_instructions);
 void wasm_trace_pc(WasmInterpreterModule* module,
                    WasmInterpreterThread* thread);
+void wasm_disassemble_module(WasmInterpreterModule* module,
+                             uint32_t from,
+                             uint32_t to);
 void wasm_destroy_interpreter_module(WasmAllocator* allocator,
                                      WasmInterpreterModule* module);
 WASM_EXTERN_C_END

@@ -379,6 +379,9 @@ static WasmResult read_module(WasmAllocator* allocator,
                                      &s_read_binary_options, out_module);
 
     if (WASM_SUCCEEDED(result)) {
+      if (s_verbose)
+        wasm_disassemble_module(out_module, 0, out_module->istream.size);
+
       set_all_import_callbacks_to_default(out_module);
       WASM_ZERO_MEMORY(*out_thread);
       result = wasm_init_interpreter_thread(allocator, out_module, out_thread,

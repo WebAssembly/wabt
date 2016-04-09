@@ -25,6 +25,7 @@ static const char* s_opcode_name[] = {
     WASM_FOREACH_OPCODE(V)
     [WASM_OPCODE_ALLOCA] = "alloca",
     [WASM_OPCODE_BR_UNLESS] = "br_unless",
+    [WASM_OPCODE_DATA] = "data",
     [WASM_OPCODE_DISCARD] = "discard",
     [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
 };
@@ -1344,6 +1345,11 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
       }
 
+      case WASM_OPCODE_DATA:
+        /* shouldn't ever execute this */
+        assert(0);
+        break;
+
       default:
         assert(0);
         break;
@@ -1666,9 +1672,281 @@ void wasm_trace_pc(WasmInterpreterModule* module,
       printf("%s $%u $%u\n", s_opcode_name[opcode], read_u32_at(pc), *(pc + 4));
       break;
 
+    case WASM_OPCODE_DATA:
+      /* shouldn't ever execute this */
+      assert(0);
+      break;
+
     default:
       assert(0);
       break;
+  }
+}
+
+void wasm_disassemble_module(WasmInterpreterModule* module,
+                             uint32_t from,
+                             uint32_t to) {
+  /* TODO(binji): mark function entries */
+  /* TODO(binji): track value stack size */
+  const uint8_t* istream = module->istream.start;
+  const uint8_t* pc = &istream[from];
+
+  while (pc - istream < to) {
+    printf("%4" PRIzd "| ", pc - istream);
+
+    uint8_t opcode = *pc++;
+    switch (opcode) {
+      case WASM_OPCODE_SELECT:
+        printf("%s %%[-3], %%[-2], %%[-1]\n", s_opcode_name[opcode]);
+        break;
+
+      case WASM_OPCODE_BR:
+        printf("%s @%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_BR_IF:
+        printf("%s @%u, %%[-1]\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_BR_TABLE: {
+        uint32_t num_targets = read_u32(&pc);
+        uint32_t table_offset = read_u32(&pc);
+        printf("%s %%[-1], $#%u, table:$%u\n", s_opcode_name[opcode],
+               num_targets, table_offset);
+        break;
+      }
+
+      case WASM_OPCODE_RETURN:
+      case WASM_OPCODE_UNREACHABLE:
+      case WASM_OPCODE_MEMORY_SIZE:
+      case WASM_OPCODE_DISCARD:
+        printf("%s\n", s_opcode_name[opcode]);
+        break;
+
+      case WASM_OPCODE_I32_CONST:
+        printf("%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_I64_CONST:
+        printf("%s $%" PRIu64 "\n", s_opcode_name[opcode], read_u64(&pc));
+        break;
+
+      case WASM_OPCODE_F32_CONST:
+        printf("%s $%g\n", s_opcode_name[opcode],
+               bitcast_u32_to_f32(read_u32(&pc)));
+        break;
+
+      case WASM_OPCODE_F64_CONST:
+        printf("%s $%g\n", s_opcode_name[opcode],
+               bitcast_u64_to_f64(read_u64(&pc)));
+        break;
+
+      case WASM_OPCODE_GET_LOCAL:
+        printf("%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_SET_LOCAL:
+        printf("%s $%u, %%[-1]\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_CALL_FUNCTION:
+        printf("%s @%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_CALL_INDIRECT:
+        printf("%s $%u, %%[-1]\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_CALL_IMPORT:
+        printf("%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_I32_LOAD8_S:
+      case WASM_OPCODE_I32_LOAD8_U:
+      case WASM_OPCODE_I32_LOAD16_S:
+      case WASM_OPCODE_I32_LOAD16_U:
+      case WASM_OPCODE_I64_LOAD8_S:
+      case WASM_OPCODE_I64_LOAD8_U:
+      case WASM_OPCODE_I64_LOAD16_S:
+      case WASM_OPCODE_I64_LOAD16_U:
+      case WASM_OPCODE_I64_LOAD32_S:
+      case WASM_OPCODE_I64_LOAD32_U:
+      case WASM_OPCODE_I32_LOAD:
+      case WASM_OPCODE_I64_LOAD:
+      case WASM_OPCODE_F32_LOAD:
+      case WASM_OPCODE_F64_LOAD:
+        printf("%s %%[-1]+$%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_I32_STORE8:
+      case WASM_OPCODE_I32_STORE16:
+      case WASM_OPCODE_I32_STORE:
+      case WASM_OPCODE_I64_STORE8:
+      case WASM_OPCODE_I64_STORE16:
+      case WASM_OPCODE_I64_STORE32:
+      case WASM_OPCODE_I64_STORE:
+      case WASM_OPCODE_F32_STORE:
+      case WASM_OPCODE_F64_STORE:
+        printf("%s %%[-2]+$%u, %%[-1]\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_I32_ADD:
+      case WASM_OPCODE_I32_SUB:
+      case WASM_OPCODE_I32_MUL:
+      case WASM_OPCODE_I32_DIV_S:
+      case WASM_OPCODE_I32_DIV_U:
+      case WASM_OPCODE_I32_REM_S:
+      case WASM_OPCODE_I32_REM_U:
+      case WASM_OPCODE_I32_AND:
+      case WASM_OPCODE_I32_OR:
+      case WASM_OPCODE_I32_XOR:
+      case WASM_OPCODE_I32_SHL:
+      case WASM_OPCODE_I32_SHR_U:
+      case WASM_OPCODE_I32_SHR_S:
+      case WASM_OPCODE_I32_EQ:
+      case WASM_OPCODE_I32_NE:
+      case WASM_OPCODE_I32_LT_S:
+      case WASM_OPCODE_I32_LE_S:
+      case WASM_OPCODE_I32_LT_U:
+      case WASM_OPCODE_I32_LE_U:
+      case WASM_OPCODE_I32_GT_S:
+      case WASM_OPCODE_I32_GE_S:
+      case WASM_OPCODE_I32_GT_U:
+      case WASM_OPCODE_I32_GE_U:
+      case WASM_OPCODE_I32_ROTR:
+      case WASM_OPCODE_I32_ROTL:
+      case WASM_OPCODE_F32_ADD:
+      case WASM_OPCODE_F32_SUB:
+      case WASM_OPCODE_F32_MUL:
+      case WASM_OPCODE_F32_DIV:
+      case WASM_OPCODE_F32_MIN:
+      case WASM_OPCODE_F32_MAX:
+      case WASM_OPCODE_F32_COPYSIGN:
+      case WASM_OPCODE_F32_EQ:
+      case WASM_OPCODE_F32_NE:
+      case WASM_OPCODE_F32_LT:
+      case WASM_OPCODE_F32_LE:
+      case WASM_OPCODE_F32_GT:
+      case WASM_OPCODE_F32_GE:
+      case WASM_OPCODE_I64_ADD:
+      case WASM_OPCODE_I64_SUB:
+      case WASM_OPCODE_I64_MUL:
+      case WASM_OPCODE_I64_DIV_S:
+      case WASM_OPCODE_I64_DIV_U:
+      case WASM_OPCODE_I64_REM_S:
+      case WASM_OPCODE_I64_REM_U:
+      case WASM_OPCODE_I64_AND:
+      case WASM_OPCODE_I64_OR:
+      case WASM_OPCODE_I64_XOR:
+      case WASM_OPCODE_I64_SHL:
+      case WASM_OPCODE_I64_SHR_U:
+      case WASM_OPCODE_I64_SHR_S:
+      case WASM_OPCODE_I64_EQ:
+      case WASM_OPCODE_I64_NE:
+      case WASM_OPCODE_I64_LT_S:
+      case WASM_OPCODE_I64_LE_S:
+      case WASM_OPCODE_I64_LT_U:
+      case WASM_OPCODE_I64_LE_U:
+      case WASM_OPCODE_I64_GT_S:
+      case WASM_OPCODE_I64_GE_S:
+      case WASM_OPCODE_I64_GT_U:
+      case WASM_OPCODE_I64_GE_U:
+      case WASM_OPCODE_I64_ROTR:
+      case WASM_OPCODE_I64_ROTL:
+      case WASM_OPCODE_F64_ADD:
+      case WASM_OPCODE_F64_SUB:
+      case WASM_OPCODE_F64_MUL:
+      case WASM_OPCODE_F64_DIV:
+      case WASM_OPCODE_F64_MIN:
+      case WASM_OPCODE_F64_MAX:
+      case WASM_OPCODE_F64_COPYSIGN:
+      case WASM_OPCODE_F64_EQ:
+      case WASM_OPCODE_F64_NE:
+      case WASM_OPCODE_F64_LT:
+      case WASM_OPCODE_F64_LE:
+      case WASM_OPCODE_F64_GT:
+      case WASM_OPCODE_F64_GE:
+        printf("%s %%[-2], %%[-1]\n", s_opcode_name[opcode]);
+        break;
+
+      case WASM_OPCODE_I32_CLZ:
+      case WASM_OPCODE_I32_CTZ:
+      case WASM_OPCODE_I32_POPCNT:
+      case WASM_OPCODE_I32_EQZ:
+      case WASM_OPCODE_I64_CLZ:
+      case WASM_OPCODE_I64_CTZ:
+      case WASM_OPCODE_I64_POPCNT:
+      case WASM_OPCODE_I64_EQZ:
+      case WASM_OPCODE_F32_ABS:
+      case WASM_OPCODE_F32_NEG:
+      case WASM_OPCODE_F32_CEIL:
+      case WASM_OPCODE_F32_FLOOR:
+      case WASM_OPCODE_F32_TRUNC:
+      case WASM_OPCODE_F32_NEAREST:
+      case WASM_OPCODE_F32_SQRT:
+      case WASM_OPCODE_F64_ABS:
+      case WASM_OPCODE_F64_NEG:
+      case WASM_OPCODE_F64_CEIL:
+      case WASM_OPCODE_F64_FLOOR:
+      case WASM_OPCODE_F64_TRUNC:
+      case WASM_OPCODE_F64_NEAREST:
+      case WASM_OPCODE_F64_SQRT:
+      case WASM_OPCODE_I32_TRUNC_S_F32:
+      case WASM_OPCODE_I32_TRUNC_U_F32:
+      case WASM_OPCODE_I64_TRUNC_S_F32:
+      case WASM_OPCODE_I64_TRUNC_U_F32:
+      case WASM_OPCODE_F64_PROMOTE_F32:
+      case WASM_OPCODE_I32_REINTERPRET_F32:
+      case WASM_OPCODE_I32_TRUNC_S_F64:
+      case WASM_OPCODE_I32_TRUNC_U_F64:
+      case WASM_OPCODE_I64_TRUNC_S_F64:
+      case WASM_OPCODE_I64_TRUNC_U_F64:
+      case WASM_OPCODE_F32_DEMOTE_F64:
+      case WASM_OPCODE_I64_REINTERPRET_F64:
+      case WASM_OPCODE_I32_WRAP_I64:
+      case WASM_OPCODE_F32_CONVERT_S_I64:
+      case WASM_OPCODE_F32_CONVERT_U_I64:
+      case WASM_OPCODE_F64_CONVERT_S_I64:
+      case WASM_OPCODE_F64_CONVERT_U_I64:
+      case WASM_OPCODE_F64_REINTERPRET_I64:
+      case WASM_OPCODE_I64_EXTEND_S_I32:
+      case WASM_OPCODE_I64_EXTEND_U_I32:
+      case WASM_OPCODE_F32_CONVERT_S_I32:
+      case WASM_OPCODE_F32_CONVERT_U_I32:
+      case WASM_OPCODE_F32_REINTERPRET_I32:
+      case WASM_OPCODE_F64_CONVERT_S_I32:
+      case WASM_OPCODE_F64_CONVERT_U_I32:
+      case WASM_OPCODE_GROW_MEMORY:
+        printf("%s %%[-1]\n", s_opcode_name[opcode]);
+        break;
+
+      case WASM_OPCODE_ALLOCA:
+        printf("%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_BR_UNLESS:
+        printf("%s @%u, %%[-1]\n", s_opcode_name[opcode], read_u32(&pc));
+        break;
+
+      case WASM_OPCODE_DISCARD_KEEP: {
+        uint32_t discard = read_u32(&pc);
+        uint32_t keep = *pc++;
+        printf("%s $%u $%u\n", s_opcode_name[opcode], discard, keep);
+        break;
+      }
+
+      case WASM_OPCODE_DATA: {
+        uint32_t num_bytes = read_u32(&pc);
+        printf("%s $%u\n", s_opcode_name[opcode], num_bytes);
+        /* just skip those data bytes */
+        pc += num_bytes;
+        break;
+      }
+
+      default:
+        assert(0);
+        break;
+    }
   }
 }
 

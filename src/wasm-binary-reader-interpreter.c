@@ -1140,6 +1140,11 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
   uint32_t fixup_br_offset = get_istream_offset(ctx);
   CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
 
+  /* not necessary for the interpreter, but it makes it easier to disassemble.
+   * This opcode specifies how many bytes of data follow. */
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_DATA));
+  CHECK_RESULT(emit_i32(ctx, (num_targets + 1) * sizeof(uint32_t) * 2));
+
   /* write the branch table as (offset, discard count) pairs */
   expr.br_table.table_offset = get_istream_offset(ctx);
 
