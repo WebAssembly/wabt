@@ -89,7 +89,7 @@ WasmResult wasm_parse_uint64(const char* s, const char* end, uint64_t* out) {
       return WASM_ERROR;
     for (; s < end; ++s) {
       uint32_t digit;
-      if (wasm_parse_hexdigit(*s, &digit) != WASM_OK)
+      if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit)))
         return WASM_ERROR;
       uint64_t old_value = value;
       value = value * 16 + digit;
@@ -144,7 +144,7 @@ WasmResult wasm_parse_int32(const char* s,
     has_sign = WASM_TRUE;
     s++;
   }
-  if (wasm_parse_uint64(s, end, &value) != WASM_OK)
+  if (WASM_FAILED(wasm_parse_uint64(s, end, &value)))
     return WASM_ERROR;
 
   if (has_sign) {
@@ -198,7 +198,7 @@ static WasmResult parse_float_nan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (wasm_parse_hexdigit(*s, &digit) != WASM_OK)
+      if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit)))
         return WASM_ERROR;
       tag = tag * 16 + digit;
       /* check for overflow */
@@ -252,7 +252,7 @@ static void parse_float_hex(const char* s,
       significand_shift = 0;
       seen_dot = WASM_TRUE;
       continue;
-    } else if (wasm_parse_hexdigit(*s, &digit) != WASM_OK) {
+    } else if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit))) {
       break;
     }
     significand_shift += HEX_DIGIT_BITS;
@@ -531,7 +531,7 @@ static WasmResult parse_double_nan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (wasm_parse_hexdigit(*s, &digit) != WASM_OK)
+      if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit)))
         return WASM_ERROR;
       tag = tag * 16 + digit;
       /* check for overflow */
@@ -578,7 +578,7 @@ static void parse_double_hex(const char* s,
       significand_shift = 0;
       seen_dot = WASM_TRUE;
       continue;
-    } else if (wasm_parse_hexdigit(*s, &digit) != WASM_OK) {
+    } else if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit))) {
       break;
     }
     significand_shift += HEX_DIGIT_BITS;

@@ -44,15 +44,15 @@
 
 #define CHECK_ALLOC_(cond)      \
   do {                          \
-    if ((cond)) {               \
+    if (!(cond)) {               \
       ALLOC_FAILURE;            \
       ctx->result = WASM_ERROR; \
       return;                   \
     }                           \
   } while (0)
 
-#define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
-#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
+#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
+#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_((v) != NULL)
 
 typedef struct WasmWriteSpecContext {
   WasmAllocator* allocator;
@@ -331,7 +331,7 @@ static void write_module(WasmWriteSpecContext* ctx,
   } else {
     result = WASM_ERROR;
   }
-  if (result != WASM_OK)
+  if (WASM_FAILED(result))
     ctx->result = result;
   CALLBACK(ctx, on_module_end, index, result);
 }

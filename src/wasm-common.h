@@ -77,6 +77,9 @@ typedef enum WasmResult {
   WASM_ERROR,
 } WasmResult;
 
+#define WASM_SUCCEEDED(x) ((x) == WASM_OK)
+#define WASM_FAILED(x) ((x) == WASM_ERROR)
+
 typedef struct WasmStringSlice {
   const char* start;
   size_t length;

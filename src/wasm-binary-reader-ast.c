@@ -34,12 +34,12 @@
     }                                                                     \
   } while (0)
 
-#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_((ctx), (e) == WASM_OK)
+#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_((ctx), WASM_SUCCEEDED(e))
 #define CHECK_ALLOC_NULL(ctx, v) CHECK_ALLOC_((ctx), (v))
 #define CHECK_ALLOC_NULL_STR(ctx, v) CHECK_ALLOC_((ctx), (v).start)
 
 #define CHECK_RESULT(expr) \
-  if ((expr) != WASM_OK)   \
+  if (WASM_FAILED(expr))   \
     return WASM_ERROR;     \
   else                     \
   (void)0

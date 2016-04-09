@@ -174,9 +174,10 @@ static WasmResult check_func_var(WasmContext* ctx,
                                  const WasmVar* var,
                                  const WasmFunc** out_func) {
   int index;
-  if (check_var(ctx, &module->func_bindings, module->funcs.size, var,
-                "function", &index) != WASM_OK)
+  if (WASM_FAILED(check_var(ctx, &module->func_bindings, module->funcs.size,
+                            var, "function", &index))) {
     return WASM_ERROR;
+  }
 
   if (out_func)
     *out_func = module->funcs.data[index];
@@ -188,9 +189,10 @@ static WasmResult check_import_var(WasmContext* ctx,
                                    const WasmVar* var,
                                    const WasmImport** out_import) {
   int index;
-  if (check_var(ctx, &module->import_bindings, module->imports.size, var,
-                "import", &index) != WASM_OK)
+  if (WASM_FAILED(check_var(ctx, &module->import_bindings, module->imports.size,
+                            var, "import", &index))) {
     return WASM_ERROR;
+  }
 
   if (out_import)
     *out_import = module->imports.data[index];
@@ -202,9 +204,11 @@ static WasmResult check_func_type_var(WasmContext* ctx,
                                       const WasmVar* var,
                                       const WasmFuncType** out_func_type) {
   int index;
-  if (check_var(ctx, &module->func_type_bindings, module->func_types.size, var,
-                "function type", &index) != WASM_OK)
+  if (WASM_FAILED(check_var(ctx, &module->func_type_bindings,
+                            module->func_types.size, var, "function type",
+                            &index))) {
     return WASM_ERROR;
+  }
 
   if (out_func_type)
     *out_func_type = module->func_types.data[index];
@@ -216,10 +220,11 @@ static WasmResult check_local_var(WasmContext* ctx,
                                   const WasmVar* var,
                                   WasmType* out_type) {
   int index;
-  if (check_var(ctx, &func->params_and_locals.bindings,
+  if (WASM_FAILED(check_var(ctx, &func->params_and_locals.bindings,
                 func->params_and_locals.types.size, var, "local",
-                &index) != WASM_OK)
+                &index))) {
     return WASM_ERROR;
+  }
 
   if (out_type)
     *out_type = func->params_and_locals.types.data[index];
@@ -369,7 +374,7 @@ static void check_br(WasmContext* ctx,
                      const WasmExpr* expr,
                      const char* desc) {
   WasmLabelNode* node;
-  if (check_label_var(ctx, ctx->top_label, var, &node) != WASM_OK)
+  if (WASM_FAILED(check_label_var(ctx, ctx->top_label, var, &node)))
     return;
 
   if (node->expected_type != WASM_TYPE_VOID) {
@@ -486,13 +491,14 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_CALL: {
       const WasmFunc* callee;
-      if (check_func_var(ctx, module, &expr->call.var, &callee) == WASM_OK) {
+      if (WASM_SUCCEEDED(
+              check_func_var(ctx, module, &expr->call.var, &callee))) {
         const WasmTypeVector* param_types = NULL;
         WasmType result_type = WASM_TYPE_VOID;
         if (callee->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
           const WasmFuncType* func_type;
-          if (check_func_type_var(ctx, module, &callee->type_var, &func_type) ==
-              WASM_OK) {
+          if (WASM_SUCCEEDED(check_func_type_var(ctx, module, &callee->type_var,
+                                                 &func_type))) {
             param_types = &func_type->sig.param_types;
             result_type = func_type->sig.result_type;
           }
@@ -512,12 +518,13 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       const WasmImport* import;
-      if (check_import_var(ctx, module, &expr->call.var, &import) == WASM_OK) {
+      if (WASM_SUCCEEDED(
+              check_import_var(ctx, module, &expr->call.var, &import))) {
         const WasmFuncSignature* sig = NULL;
         if (import->import_type == WASM_IMPORT_HAS_TYPE) {
           const WasmFuncType* func_type;
-          if (check_func_type_var(ctx, module, &import->type_var, &func_type) ==
-              WASM_OK) {
+          if (WASM_SUCCEEDED(check_func_type_var(ctx, module, &import->type_var,
+                                                 &func_type))) {
             sig = &func_type->sig;
           }
         } else {
@@ -537,8 +544,8 @@ static void check_expr(WasmContext* ctx,
       check_expr(ctx, module, func, expr->call_indirect.expr, WASM_TYPE_I32,
                  " of function index");
       const WasmFuncType* func_type;
-      if (check_func_type_var(ctx, module, &expr->call_indirect.var,
-                              &func_type) == WASM_OK) {
+      if (WASM_SUCCEEDED(check_func_type_var(
+              ctx, module, &expr->call_indirect.var, &func_type))) {
         const WasmFuncSignature* sig = &func_type->sig;
         check_call(ctx, &expr->loc, module, func, &sig->param_types,
                    sig->result_type, &expr->call_indirect.args, expected_type,
@@ -574,8 +581,10 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_GET_LOCAL: {
       WasmType type;
-      if (check_local_var(ctx, func, &expr->get_local.var, &type) == WASM_OK)
+      if (WASM_SUCCEEDED(
+              check_local_var(ctx, func, &expr->get_local.var, &type))) {
         check_type(ctx, &expr->loc, type, expected_type, desc);
+      }
       break;
     }
 
@@ -664,7 +673,8 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_SET_LOCAL: {
       WasmType type;
-      if (check_local_var(ctx, func, &expr->set_local.var, &type) == WASM_OK) {
+      if (WASM_SUCCEEDED(
+              check_local_var(ctx, func, &expr->set_local.var, &type))) {
         check_type(ctx, &expr->loc, type, expected_type, desc);
         check_expr(ctx, module, func, expr->set_local.expr, type,
                    " of set_local");
@@ -717,8 +727,8 @@ static void check_func(WasmContext* ctx,
                        const WasmFunc* func) {
   if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
     const WasmFuncType* func_type;
-    if (check_func_type_var(ctx, module, &func->type_var, &func_type) ==
-        WASM_OK) {
+    if (WASM_SUCCEEDED(
+            check_func_type_var(ctx, module, &func->type_var, &func_type))) {
       if (func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE) {
         check_type_exact(ctx, &func->loc, func->result_type,
                          func_type->sig.result_type, "");
@@ -930,7 +940,7 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
       ctx2.in_assert_invalid = WASM_TRUE;
       check_module(&ctx2, &command->assert_invalid.module);
 
-      if (ctx2.result == WASM_OK) {
+      if (WASM_SUCCEEDED(ctx2.result)) {
         print_error(ctx, &command->assert_invalid.module.loc,
                     "expected module to be invalid");
       }

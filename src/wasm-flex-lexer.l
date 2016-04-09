@@ -405,8 +405,8 @@ WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
     return NULL;
   }
 
-  if (wasm_reserve_line_offsets(allocator, &extra->line_offsets,
-                                WASM_INITIAL_LINE_OFFSETS) != WASM_OK) {
+  if (WASM_FAILED(wasm_reserve_line_offsets(allocator, &extra->line_offsets,
+                                            WASM_INITIAL_LINE_OFFSETS))) {
     fclose(extra->file);
     wasm_free(allocator, extra);
     return NULL;

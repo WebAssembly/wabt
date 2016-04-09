@@ -32,7 +32,7 @@ static const char* s_opcode_name[] = {
 
 #define CHECK_RESULT(expr) \
   do {                     \
-    if ((expr) != WASM_OK) \
+    if (WASM_FAILED(expr)) \
       return WASM_ERROR;   \
   } while (0)
 

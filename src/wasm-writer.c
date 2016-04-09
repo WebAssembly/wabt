@@ -122,7 +122,7 @@ static WasmResult write_data_to_output_buffer(size_t offset,
                                               void* user_data) {
   WasmMemoryWriter* writer = user_data;
   size_t end = offset + size;
-  if (ensure_output_buffer_capacity(&writer->buf, end) != WASM_OK)
+  if (WASM_FAILED(ensure_output_buffer_capacity(&writer->buf, end)))
     return WASM_ERROR;
   memcpy((void*)((size_t)writer->buf.start + offset), data, size);
   if (end > writer->buf.size)
@@ -138,7 +138,7 @@ static WasmResult move_data_in_output_buffer(size_t dst_offset,
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
-  if (ensure_output_buffer_capacity(&writer->buf, end) != WASM_OK)
+  if (WASM_FAILED(ensure_output_buffer_capacity(&writer->buf, end)))
     return WASM_ERROR;
   void* dst = (void*)((size_t)writer->buf.start + dst_offset);
   void* src = (void*)((size_t)writer->buf.start + src_offset);

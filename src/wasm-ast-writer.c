@@ -46,7 +46,7 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
     }                           \
   } while (0)
 
-#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, (e) == WASM_OK)
+#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, WASM_SUCCEEDED(e))
 
 WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
 
@@ -94,7 +94,7 @@ static void out_data_at(WasmContext* ctx,
                         size_t offset,
                         const void* src,
                         size_t size) {
-  if (ctx->result != WASM_OK)
+  if (WASM_FAILED(ctx->result))
     return;
   if (ctx->writer->write_data) {
     ctx->result =

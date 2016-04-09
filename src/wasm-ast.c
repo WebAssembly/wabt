@@ -96,14 +96,13 @@ static WasmBindingHashEntry* wasm_hash_new_entry(WasmBindingHash* hash,
 static WasmResult wasm_hash_resize(WasmAllocator* allocator,
                                    WasmBindingHash* hash,
                                    size_t desired_capacity) {
-  WasmResult result = WASM_OK;
   WasmBindingHash new_hash;
   WASM_ZERO_MEMORY(new_hash);
   /* TODO(binji): better plural */
-  result = wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
-                                            desired_capacity);
-  if (result != WASM_OK)
-    return result;
+  if (WASM_FAILED(wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
+                                                   desired_capacity))) {
+    return WASM_ERROR;
+  }
 
   /* update the free list */
   size_t i;
@@ -133,22 +132,23 @@ static WasmResult wasm_hash_resize(WasmAllocator* allocator,
    * binding vector */
   wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
   *hash = new_hash;
-  return result;
+  return WASM_OK;
 }
 
 WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
                                  WasmBindingHash* hash,
                                  const WasmStringSlice* name) {
   if (hash->entries.size == 0) {
-    if (wasm_hash_resize(allocator, hash, INITIAL_HASH_CAPACITY) != WASM_OK)
+    if (WASM_FAILED(wasm_hash_resize(allocator, hash, INITIAL_HASH_CAPACITY)))
       return NULL;
   }
 
   if (!hash->free_head) {
     /* no more free space, allocate more */
-    if (wasm_hash_resize(allocator, hash, hash->entries.capacity * 2) !=
-        WASM_OK)
+    if (WASM_FAILED(
+            wasm_hash_resize(allocator, hash, hash->entries.capacity * 2))) {
       return NULL;
+    }
   }
 
   WasmBindingHashEntry* entry = wasm_hash_new_entry(hash, name);
@@ -229,11 +229,9 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
 WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
                                      WasmTypeBindings* dst,
                                      WasmTypeBindings* src) {
-  WasmResult result = WASM_OK;
   size_t last_type = dst->types.size;
-  result = wasm_extend_types(allocator, &dst->types, &src->types);
-  if (result != WASM_OK)
-    return result;
+  if (WASM_FAILED(wasm_extend_types(allocator, &dst->types, &src->types)))
+    return WASM_ERROR;
 
   size_t i;
   for (i = 0; i < src->bindings.entries.capacity; ++i) {
@@ -249,7 +247,7 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
     *dst_binding = src_entry->binding;
     dst_binding->index += last_type; /* fixup the binding index */
   }
-  return result;
+  return WASM_OK;
 }
 
 WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
@@ -601,10 +599,10 @@ void wasm_destroy_script(WasmScript* script) {
                                    command);
 }
 
-#define CHECK_RESULT(expr) \
-  do {                     \
-    if ((expr) != WASM_OK) \
-      return WASM_ERROR;   \
+#define CHECK_RESULT(expr)   \
+  do {                       \
+    if (WASM_FAILED((expr))) \
+      return WASM_ERROR;     \
   } while (0)
 
 #define CALLBACK(member)                                               \

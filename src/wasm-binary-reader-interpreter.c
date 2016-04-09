@@ -37,13 +37,13 @@
     }                                                                     \
   } while (0)
 
-#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_((ctx), (e) == WASM_OK)
+#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_((ctx), WASM_SUCCEEDED(e))
 #define CHECK_ALLOC_NULL(ctx, v) CHECK_ALLOC_((ctx), (v))
 #define CHECK_ALLOC_NULL_STR(ctx, v) CHECK_ALLOC_((ctx), (v).start)
 
 #define CHECK_RESULT(expr) \
   do {                     \
-    if ((expr) != WASM_OK) \
+    if (WASM_FAILED(expr)) \
       return WASM_ERROR;   \
   } while (0)
 
@@ -1568,7 +1568,7 @@ WasmResult wasm_read_binary_interpreter(WasmAllocator* allocator,
   reader.user_data = &ctx;
 
   WasmResult result = wasm_read_binary(allocator, data, size, &reader, options);
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     wasm_steal_mem_writer_output_buffer(&ctx.istream_writer,
                                         &out_module->istream);
     out_module->istream.size = ctx.istream_offset;

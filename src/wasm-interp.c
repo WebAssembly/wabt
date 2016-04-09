@@ -371,14 +371,14 @@ static WasmResult read_module(WasmAllocator* allocator,
   void* data;
   size_t size;
   result = wasm_read_file(allocator, module_filename, &data, &size);
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
     WASM_ZERO_MEMORY(*out_module);
     result =
         wasm_read_binary_interpreter(allocator, memory_allocator, data, size,
                                      &s_read_binary_options, out_module);
 
-    if (result == WASM_OK) {
+    if (WASM_SUCCEEDED(result)) {
       set_all_import_callbacks_to_default(out_module);
       WASM_ZERO_MEMORY(*out_thread);
       result = wasm_init_interpreter_thread(allocator, out_module, out_thread,
@@ -402,10 +402,10 @@ static WasmResult read_and_run_module(WasmAllocator* allocator,
   WasmInterpreterModule module;
   WasmInterpreterThread thread;
   result = read_module(allocator, module_filename, &module, &thread);
-  if (result == WASM_OK)
+  if (WASM_SUCCEEDED(result))
     result = run_start_function(&module, &thread);
 
-  if (result == WASM_OK && s_run_all_exports)
+  if (WASM_SUCCEEDED(result) && s_run_all_exports)
     run_all_exports(&module, &thread, RUN_VERBOSE);
   destroy_module_and_thread(allocator, &module, &thread);
   return result;
@@ -433,7 +433,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   void* data;
   size_t size;
   result = wasm_read_file(allocator, spec_json_filename, &data, &size);
-  if (result != WASM_OK)
+  if (WASM_FAILED(result))
     return WASM_ERROR;
 
   /* an extremely simple JSON parser that only knows how to parse the expected
@@ -585,13 +585,13 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
 
         module_mark = wasm_mark(allocator);
         result = read_module(allocator, path, &module, &thread);
-        if (result != WASM_OK)
+        if (WASM_FAILED(result))
           goto fail;
 
         has_module = WASM_TRUE;
 
         result = run_start_function(&module, &thread);
-        if (result != WASM_OK)
+        if (WASM_FAILED(result))
           goto fail;
 
         MAYBE_CONTINUE(MODULE_OBJECT);
@@ -642,7 +642,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
             command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
         result = run_export_by_name(&module, &thread, &command_name, &iresult,
                                     &return_value, verbose);
-        if (result != WASM_OK) {
+        if (WASM_FAILED(result)) {
           FAILED("unknown export");
           failed++;
           goto fail;

@@ -24,13 +24,13 @@
 
 #define CHECK_RESULT(expr) \
   do {                     \
-    if ((expr) != WASM_OK) \
+    if (WASM_FAILED(expr)) \
       return WASM_ERROR;   \
   } while (0)
 
 #define CHECK_ALLOC(e)                                                   \
   do {                                                                   \
-    if ((e) != WASM_OK) {                                                \
+    if (WASM_FAILED(e)) {                                                \
       fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__); \
       return WASM_ERROR;                                                 \
     }                                                                    \

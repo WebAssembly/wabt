@@ -253,7 +253,7 @@ typedef struct WasmContext {
 } WasmContext;
 
 static void out_data(WasmContext* ctx, const void* src, size_t size) {
-  if (ctx->result != WASM_OK)
+  if (WASM_FAILED(ctx->result))
     return;
   WasmWriter* writer = &ctx->json_writer.base;
   if (writer->write_data) {
@@ -282,10 +282,10 @@ static void out_printf(WasmContext* ctx, const char* format, ...) {
 static void on_script_begin(void* user_data) {
   WasmContext* ctx = user_data;
 
-  if (wasm_init_mem_writer(ctx->allocator, &ctx->module_writer) != WASM_OK)
+  if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->module_writer)))
     WASM_FATAL("unable to open memory writer for writing\n");
 
-  if (wasm_init_mem_writer(ctx->allocator, &ctx->json_writer) != WASM_OK)
+  if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->json_writer)))
     WASM_FATAL("unable to open memory writer for writing\n");
 
   out_printf(ctx, "{\"modules\": [\n");
@@ -345,7 +345,7 @@ static void on_module_before_write(uint32_t index,
 static void on_module_end(uint32_t index, WasmResult result, void* user_data) {
   WasmContext* ctx = user_data;
   out_printf(ctx, "\n  ]}");
-  if (result == WASM_OK)
+  if (WASM_SUCCEEDED(result))
     write_buffer_to_file(ctx->module_filename, &ctx->module_writer.buf);
 }
 
@@ -353,7 +353,7 @@ static void on_script_end(void* user_data) {
   WasmContext* ctx = user_data;
   out_printf(ctx, "\n]}\n");
 
-  if (ctx->result == WASM_OK)
+  if (WASM_SUCCEEDED(ctx->result))
     write_buffer_to_file(s_outfile, &ctx->json_writer.buf);
 
   wasm_free(ctx->allocator, ctx->module_filename);
@@ -381,13 +381,13 @@ int main(int argc, char** argv) {
   WasmScript script;
   WasmResult result = wasm_parse(lexer, &script);
 
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     result = wasm_check_ast(lexer, &script);
 
-    if (result == WASM_OK) {
+    if (WASM_SUCCEEDED(result)) {
       result = wasm_mark_used_blocks(allocator, &script);
 
-      if (result == WASM_OK) {
+      if (WASM_SUCCEEDED(result)) {
         if (s_spec) {
           WasmContext ctx;
           WASM_ZERO_MEMORY(ctx);
@@ -409,12 +409,12 @@ int main(int argc, char** argv) {
         } else {
           WasmMemoryWriter writer;
           WASM_ZERO_MEMORY(writer);
-          if (wasm_init_mem_writer(allocator, &writer) != WASM_OK)
+          if (WASM_FAILED(wasm_init_mem_writer(allocator, &writer)))
             WASM_FATAL("unable to open memory writer for writing\n");
 
           result = wasm_write_binary_script(allocator, &writer.base, &script,
                                             &s_write_binary_options);
-          if (result == WASM_OK)
+          if (WASM_SUCCEEDED(result))
             write_buffer_to_file(s_outfile, &writer.buf);
           wasm_close_mem_writer(&writer);
         }

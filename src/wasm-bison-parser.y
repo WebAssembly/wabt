@@ -30,7 +30,7 @@
   (dst).length = (src).length
 
 #define CHECK_ALLOC_(cond)                                       \
-  if ((cond)) {                                                  \
+  if (!(cond)) {                                                 \
     WasmLocation loc;                                            \
     loc.filename = __FILE__;                                     \
     loc.line = __LINE__;                                         \
@@ -39,9 +39,9 @@
     YYERROR;                                                     \
   }
 
-#define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
-#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
-#define CHECK_ALLOC_STR(s) CHECK_ALLOC_(!(s).start)
+#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
+#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_((v) != NULL)
+#define CHECK_ALLOC_STR(s) CHECK_ALLOC_((s).start != NULL)
 
 #define YYLLOC_DEFAULT(Current, Rhs, N)                       \
   do                                                          \
@@ -221,8 +221,9 @@ var :
       $$.loc = @1;
       $$.type = WASM_VAR_TYPE_INDEX;
       uint32_t index;
-      if (wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
-                           &index, WASM_PARSE_UNSIGNED_ONLY) != WASM_OK) {
+      if (WASM_FAILED(wasm_parse_int32($1.text.start,
+                                       $1.text.start + $1.text.length, &index,
+                                       WASM_PARSE_UNSIGNED_ONLY))) {
         wasm_parser_error(&@1, lexer, parser, "invalid int " PRIstringslice,
                           WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
@@ -271,7 +272,7 @@ labeling :
 offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
-      if (wasm_parse_int64($1.start, $1.start + $1.length, &$$) != WASM_OK) {
+      if (WASM_FAILED(wasm_parse_int64($1.start, $1.start + $1.length, &$$))) {
         wasm_parser_error(&@1, lexer, parser,
                           "invalid offset \"" PRIstringslice "\"",
                           WASM_PRINTF_STRING_SLICE_ARG($1));
@@ -281,8 +282,8 @@ offset :
 align :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN {
-      if (wasm_parse_int32($1.start, $1.start + $1.length, &$$,
-                           WASM_PARSE_UNSIGNED_ONLY) != WASM_OK) {
+      if (WASM_FAILED(wasm_parse_int32($1.start, $1.start + $1.length, &$$,
+                                       WASM_PARSE_UNSIGNED_ONLY))) {
         wasm_parser_error(&@1, lexer, parser,
                           "invalid alignment \"" PRIstringslice "\"",
                           WASM_PRINTF_STRING_SLICE_ARG($1));
@@ -447,8 +448,9 @@ expr1 :
       $$ = wasm_new_const_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->const_.loc = @1;
-      if (parse_const($1, $2.type, $2.text.start,
-                      $2.text.start + $2.text.length, &$$->const_) != WASM_OK) {
+      if (WASM_FAILED(parse_const($1, $2.type, $2.text.start,
+                                  $2.text.start + $2.text.length,
+                                  &$$->const_))) {
         wasm_parser_error(&@2, lexer, parser,
                           "invalid literal \"" PRIstringslice "\"",
                           WASM_PRINTF_STRING_SLICE_ARG($2.text));
@@ -1051,8 +1053,9 @@ start :
 
 segment_address :
     INT {
-      if (wasm_parse_int32($1.text.start, $1.text.start + $1.text.length, &$$,
-                           WASM_PARSE_UNSIGNED_ONLY) != WASM_OK) {
+      if (WASM_FAILED(wasm_parse_int32($1.text.start,
+                                       $1.text.start + $1.text.length, &$$,
+                                       WASM_PARSE_UNSIGNED_ONLY))) {
         wasm_parser_error(&@1, lexer, parser,
                           "invalid memory segment address \"" PRIstringslice
                           "\"",
@@ -1079,8 +1082,9 @@ segment_list :
 
 initial_pages :
     INT {
-      if (wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
-                           &$$, WASM_PARSE_UNSIGNED_ONLY) != WASM_OK) {
+      if (WASM_FAILED(wasm_parse_int32($1.text.start,
+                                       $1.text.start + $1.text.length, &$$,
+                                       WASM_PARSE_UNSIGNED_ONLY))) {
         wasm_parser_error(&@1, lexer, parser,
                           "invalid initial memory pages \"" PRIstringslice "\"",
                           WASM_PRINTF_STRING_SLICE_ARG($1.text));
@@ -1090,8 +1094,9 @@ initial_pages :
 
 max_pages :
     INT {
-      if (wasm_parse_int32($1.text.start, $1.text.start + $1.text.length,
-                            &$$, WASM_PARSE_UNSIGNED_ONLY) != WASM_OK) {
+      if (WASM_FAILED(wasm_parse_int32($1.text.start,
+                                       $1.text.start + $1.text.length, &$$,
+                                       WASM_PARSE_UNSIGNED_ONLY))) {
         wasm_parser_error(&@1, lexer, parser,
                           "invalid max memory pages \"" PRIstringslice "\"",
                           WASM_PRINTF_STRING_SLICE_ARG($1.text));
@@ -1410,8 +1415,8 @@ cmd_list :
 const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
-      if (parse_const($2, $3.type, $3.text.start,
-                      $3.text.start + $3.text.length, &$$) != WASM_OK) {
+      if (WASM_FAILED(parse_const($2, $3.type, $3.text.start,
+                                  $3.text.start + $3.text.length, &$$))) {
         wasm_parser_error(&@3, lexer, parser,
                           "invalid literal \"" PRIstringslice "\"",
                           WASM_PRINTF_STRING_SLICE_ARG($3.text));
@@ -1513,8 +1518,8 @@ static size_t copy_string_contents(WasmStringSlice* text,
            * sequence */
           uint32_t hi;
           uint32_t lo;
-          if (wasm_parse_hexdigit(src[0], &hi) == WASM_OK &&
-              wasm_parse_hexdigit(src[1], &lo) == WASM_OK) {
+          if (WASM_SUCCEEDED(wasm_parse_hexdigit(src[0], &hi)) &&
+              WASM_SUCCEEDED(wasm_parse_hexdigit(src[1], &lo))) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);

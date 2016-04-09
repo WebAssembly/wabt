@@ -37,15 +37,15 @@
 
 #define CHECK_ALLOC_(cond)      \
   do {                          \
-    if ((cond)) {               \
+    if (!(cond)) {               \
       ALLOC_FAILURE;            \
       ctx->result = WASM_ERROR; \
       return;                   \
     }                           \
   } while (0)
 
-#define CHECK_ALLOC(e) CHECK_ALLOC_((e) != WASM_OK)
-#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_(!(v))
+#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
+#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_((v) != NULL)
 
 WASM_STATIC_ASSERT(WASM_TYPE_VOID == 0);
 WASM_STATIC_ASSERT(WASM_TYPE_I32 == 1);
@@ -114,7 +114,7 @@ static void out_data_at(WasmContext* ctx,
                         size_t size,
                         WasmPrintChars print_chars,
                         const char* desc) {
-  if (ctx->result != WASM_OK)
+  if (WASM_FAILED(ctx->result))
     return;
   if (ctx->options->log_writes)
     wasm_print_memory(src, size, offset, print_chars, desc);
@@ -136,7 +136,7 @@ static void move_data(WasmContext* ctx,
                       size_t dst_offset,
                       size_t src_offset,
                       size_t size) {
-  if (ctx->result != WASM_OK)
+  if (WASM_FAILED(ctx->result))
     return;
   if (ctx->options->log_writes)
     printf("; move data: [%" PRIzx ", %" PRIzx ") -> [%" PRIzx ", %" PRIzx

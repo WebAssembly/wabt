@@ -39,19 +39,21 @@ typedef uint32_t WasmUint32;
 WASM_DEFINE_VECTOR(type, WasmType)
 WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
-#define CALLBACK0(ctx, member)                                                 \
-  RAISE_ERROR_UNLESS(                                                          \
-      (ctx),                                                                   \
-      ((ctx)->reader->member ? (ctx)->reader->member((ctx)->reader->user_data) \
-                             : WASM_OK) == WASM_OK,                            \
+#define CALLBACK0(ctx, member)                                             \
+  RAISE_ERROR_UNLESS(                                                      \
+      (ctx),                                                               \
+      WASM_SUCCEEDED((ctx)->reader->member                                 \
+                         ? (ctx)->reader->member((ctx)->reader->user_data) \
+                         : WASM_OK),                                       \
       #member " callback failed")
 
-#define CALLBACK(ctx, member, ...)                                            \
-  RAISE_ERROR_UNLESS((ctx), ((ctx)->reader->member                            \
-                                 ? (ctx)->reader->member(                     \
-                                       __VA_ARGS__, (ctx)->reader->user_data) \
-                                 : WASM_OK) == WASM_OK,                       \
-                     #member " callback failed")
+#define CALLBACK(ctx, member, ...)                                           \
+  RAISE_ERROR_UNLESS(                                                        \
+      (ctx), WASM_SUCCEEDED((ctx)->reader->member                            \
+                                ? (ctx)->reader->member(                     \
+                                      __VA_ARGS__, (ctx)->reader->user_data) \
+                                : WASM_OK),                                  \
+      #member " callback failed")
 
 #define RAISE_ERROR(ctx, ...) \
   ((ctx)->reader->on_error ? raise_error((ctx), __VA_ARGS__) : (void)0)
@@ -64,7 +66,7 @@ WASM_DEFINE_VECTOR(uint32, WasmUint32);
   RAISE_ERROR_UNLESS(ctx, cond, "%s:%d: allocation failed\n", __FILE__, \
                      __LINE__)
 
-#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, (e) == WASM_OK)
+#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, WASM_SUCCEEDED(e))
 #define CHECK_ALLOC_NULL(ctx, v) CHECK_ALLOC_(ctx, v)
 
 enum {
