@@ -315,7 +315,7 @@ static WasmResult run_squirrel_file(WasmAllocator* allocator,
   void* data;
   size_t size;
   result = wasm_read_file(allocator, filename, &data, &size);
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     if (SQ_SUCCEEDED(sq_compilebuffer(v, data, size, filename, RAISE_ERROR))) {
       sq_pushroottable(v);
       if (SQ_SUCCEEDED(sq_call(v, 1, WITHOUT_RETVAL, RAISE_ERROR))) {
@@ -555,7 +555,7 @@ static WasmResult squirrel_wasm_import_callback(
   assert(import->sig_index < module->sigs.size);
   WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
   WasmInterpreterTypedValue result;
-  if (convert_typed_value(&top_tv, sig->result_type, &result) != WASM_OK) {
+  if (WASM_FAILED(convert_typed_value(&top_tv, sig->result_type, &result))) {
     fprintf(stderr,
             "error: cannot convert return value of type %s to type %s.\n",
             s_type_names[top_tv.type], s_type_names[sig->result_type]);
@@ -590,7 +590,7 @@ static SQRESULT squirrel_wasm_export_callback(HSQUIRRELVM v) {
     /* + 1 to skip first arg (environment), and + 1 because stack is 1-based */
     CHECK_SQ_RESULT(squirrel_get_typedvalue(v, i + 1 + 1, &arg));
     WasmInterpreterTypedValue converted_arg;
-    if (convert_typed_value(&arg, param_type, &converted_arg) != WASM_OK)
+    if (WASM_FAILED(convert_typed_value(&arg, param_type, &converted_arg)))
       return squirrel_throwerrorf(v, "unable to convert arg %d.", i);
     result = wasm_push_thread_value(&smc->thread, converted_arg.value);
     if (result != WASM_INTERPRETER_OK)
@@ -632,7 +632,7 @@ static SQInteger squirrel_wasm_instantiate_module(HSQUIRRELVM v) {
 
   WasmResult result =
       read_module(allocator, blob_data, blob_size, &smc->module, &smc->thread);
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     /* STACK: ... module */
     sq_setreleasehook(v, -1, squirrel_wasm_release_module);
     sq_newtable(v); /* the delegate table */
@@ -767,11 +767,11 @@ static SQInteger squirrel_wasm_instantiate_module(HSQUIRRELVM v) {
     CHECK_SQ_RESULT(sq_setdelegate(v, -2));
 
     result = init_thread(allocator, &smc->module, &smc->thread);
-    if (result != WASM_OK)
+    if (WASM_FAILED(result))
       return sq_throwerror(v, "unable to initialize thread.");
 
     result = run_start_function(&smc->module, &smc->thread);
-    if (result != WASM_OK)
+    if (WASM_FAILED(result))
       return sq_throwerror(v, "start function trapped.");
 
     return 1;
@@ -994,7 +994,7 @@ int main(int argc, char** argv) {
 
   HSQUIRRELVM v;
   result = init_squirrel(allocator, &v);
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     result = run_squirrel_file(allocator, v, s_infile);
     sq_close(v);
   }
