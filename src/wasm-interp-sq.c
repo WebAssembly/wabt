@@ -40,14 +40,14 @@
 #define WASM_LAST_ERROR_NAME "wasm_last_error"
 #define WASM_MEMORY_NAME "wasm_memory"
 
-static int s_verbose;
+static WasmBool s_verbose;
 static const char* s_infile;
 static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
 static WasmInterpreterThreadOptions s_thread_options =
     WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT;
-static int s_trace;
-static int s_use_libc_allocator;
+static WasmBool s_trace;
+static WasmBool s_use_libc_allocator;
 
 #define V(name, str) str,
 static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
@@ -127,11 +127,11 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_TRACE:
-      s_trace = 1;
+      s_trace = WASM_TRUE;
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = 1;
+      s_use_libc_allocator = WASM_TRUE;
       break;
   }
 }
@@ -240,7 +240,7 @@ void squirrel_compiler_error(HSQUIRRELVM v,
           source, line, column, desc);
 }
 
-static int squirrel_objects_are_equal_raw(HSQOBJECT o1, HSQOBJECT o2) {
+static WasmBool squirrel_objects_are_equal_raw(HSQOBJECT o1, HSQOBJECT o2) {
   if (o1._type != o2._type)
     return 0;
   /* TODO(binji): this relies on type-punning through a union (but so does a
@@ -258,7 +258,7 @@ static SQInteger squirrel_errorhandler(HSQUIRRELVM v) {
    * between the Squirrel and Wasm VMs. */
   /* TODO(binji): It seems like there should be a better way to handle this */
   SQInteger top = sq_gettop(v);
-  int is_new_error = 1;
+  WasmBool is_new_error = WASM_TRUE;
   /* get the last error we saw */
   sq_pushregistrytable(v);
   sq_pushstring(v, WASM_LAST_ERROR_NAME, -1);
@@ -273,7 +273,7 @@ static SQInteger squirrel_errorhandler(HSQUIRRELVM v) {
       /* we don't want to use cmp here, because it will throw if the values are
        * unordered, and because it performs value equality */
       if (squirrel_objects_are_equal_raw(last_error, error))
-        is_new_error = 0;
+        is_new_error = WASM_FALSE;
     }
 
     /* set the last_error in the registry to the new error. */
@@ -283,6 +283,7 @@ static SQInteger squirrel_errorhandler(HSQUIRRELVM v) {
     sq_push(v, -2);
     /* STACK: registry_table error WASM_LAST_ERROR_NAME error */
     SQRESULT r = sq_set(v, -4);
+    WASM_USE(r);
     assert(r == SQ_OK);
   }
   sq_settop(v, top);
@@ -527,7 +528,7 @@ static WasmResult squirrel_wasm_import_callback(
   HSQUIRRELVM v = smc->squirrel_vm;
 
   /* TODO(binji): kinda nasty, should pass the import index instead */
-  int import_index = import - module->imports.data;
+  SQInteger import_index = import - module->imports.data;
   sq_pushobject(v, smc->import_array);
   sq_pushinteger(v, import_index);
   sq_get(v, -2);
