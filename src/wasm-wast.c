@@ -78,11 +78,11 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = 1;
+      s_use_libc_allocator = WASM_TRUE;
       break;
 
     case FLAG_DEBUG_NAMES:
-      s_read_binary_options.read_debug_names = 1;
+      s_read_binary_options.read_debug_names = WASM_TRUE;
       break;
   }
 }

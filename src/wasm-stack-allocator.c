@@ -37,7 +37,7 @@ typedef struct WasmStackAllocatorMark {
 } WasmStackAllocatorMark;
 
 #ifndef NDEBUG
-static int is_power_of_two(uint32_t x) {
+static WasmBool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 #endif /* NDEBUG */
@@ -46,7 +46,7 @@ static void* align_up(void* p, size_t align) {
   return (void*)(((intptr_t)p + align - 1) & ~(align - 1));
 }
 
-static int allocation_in_chunk(WasmStackAllocatorChunk* chunk, void* p) {
+static WasmBool allocation_in_chunk(WasmStackAllocatorChunk* chunk, void* p) {
   return p >= (void*)chunk && p < chunk->end;
 }
 

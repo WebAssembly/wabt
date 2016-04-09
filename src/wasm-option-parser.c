@@ -26,7 +26,9 @@
 #include <alloca.h>
 #endif
 
-static int option_match(const char* s, const char* full, int has_argument) {
+static int option_match(const char* s,
+                        const char* full,
+                        WasmHasArgument has_argument) {
   int i;
   for (i = 0; ; i++) {
     if (full[i] == '\0') {
@@ -117,7 +119,7 @@ void wasm_parse_options(WasmOptionParser* parser,
 
         /* allow short names to be combined, e.g. "-d -v" => "-dv" */
         for (k = 1; arg[k]; ++k) {
-          int matched = 0;
+          WasmBool matched = WASM_FALSE;
           for (j = 0; j < parser->num_options; ++j) {
             WasmOption* option = &parser->options[j];
             if (option->short_name && arg[k] == option->short_name) {
@@ -140,7 +142,7 @@ void wasm_parse_options(WasmOptionParser* parser,
                 option_argument = argv[i];
               }
               parser->on_option(parser, option, option_argument);
-              matched = 1;
+              matched = WASM_TRUE;
               break;
             }
           }

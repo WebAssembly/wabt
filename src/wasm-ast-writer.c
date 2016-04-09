@@ -168,7 +168,7 @@ static void out_puts_space(WasmContext* ctx, const char* s) {
   out_puts(ctx, s, WASM_NEXT_CHAR_SPACE);
 }
 
-static void out_newline(WasmContext* ctx, int force) {
+static void out_newline(WasmContext* ctx, WasmBool force) {
   if (ctx->next_char == WASM_NEXT_CHAR_FORCE_NEWLINE)
     out_next_char(ctx);
   ctx->next_char =
@@ -646,21 +646,21 @@ static void write_type_bindings(WasmContext* ctx,
    *   (param $foo i32)
    *   (param i32 i64 f32)
    */
-  int is_open = 0;
+  WasmBool is_open = WASM_FALSE;
   for (i = 0; i < type_bindings->types.size; ++i) {
     if (!is_open) {
       out_open_space(ctx, prefix);
-      is_open = 1;
+      is_open = WASM_TRUE;
     }
 
     const WasmStringSlice* name = &ctx->index_to_name.data[i];
-    int has_name = name->start != NULL;
+    WasmBool has_name = name->start != NULL;
     if (has_name)
       out_string_slice(ctx, name, WASM_NEXT_CHAR_SPACE);
     out_type(ctx, type_bindings->types.data[i], WASM_NEXT_CHAR_SPACE);
     if (has_name) {
       out_close_space(ctx);
-      is_open = 0;
+      is_open = WASM_FALSE;
     }
   }
   if (is_open)
@@ -728,7 +728,8 @@ static void write_export(WasmContext* ctx,
   out_close_newline(ctx);
 }
 
-static void write_export_memory(WasmContext* ctx, const WasmExportMemory* export) {
+static void write_export_memory(WasmContext* ctx,
+                                const WasmExportMemory* export) {
   out_open_space(ctx, "export");
   out_quoted_string_slice(ctx, &export->name, WASM_NEXT_CHAR_SPACE);
   out_puts_space(ctx, "memory");

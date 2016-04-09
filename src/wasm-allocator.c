@@ -27,11 +27,11 @@ typedef struct MemInfo {
 } MemInfo;
 
 #ifndef NDEBUG
-static int is_power_of_two(size_t x) {
+static WasmBool is_power_of_two(size_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static int is_aligned(void* p, size_t align) {
+static WasmBool is_aligned(void* p, size_t align) {
   return ((intptr_t)p & (align - 1)) == 0;
 }
 #endif /* NDEBUG */

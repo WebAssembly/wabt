@@ -63,11 +63,11 @@ typedef struct WasmWriteSpecContext {
   WasmResult result;
 } WasmWriteSpecContext;
 
-static int is_nan_f32(uint32_t bits) {
+static WasmBool is_nan_f32(uint32_t bits) {
   return (bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0;
 }
 
-static int is_nan_f64(uint64_t bits) {
+static WasmBool is_nan_f64(uint64_t bits) {
   return (bits & 0x7ff0000000000000LL) == 0x7ff0000000000000LL &&
          (bits & 0x000fffffffffffffLL) != 0;
 }
@@ -89,7 +89,7 @@ static WasmExpr* create_invoke_expr(WasmAllocator* allocator,
     return NULL;
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
   expr->call.var.index = func_index;
-  int i;
+  size_t i;
   for (i = 0; i < invoke->args.size; ++i) {
     WasmConst* arg = &invoke->args.data[i];
     WasmExprPtr* expr_ptr = wasm_append_expr_ptr(allocator, &expr->call.args);

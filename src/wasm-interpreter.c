@@ -98,27 +98,27 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
 #define F32_SIGN_MASK 0x80000000U
 #define F32_QUIET_NAN_BIT 0x00400000U
 
-static WASM_INLINE int is_nan_f32(uint32_t f32_bits) {
+static WASM_INLINE WasmBool is_nan_f32(uint32_t f32_bits) {
   return (f32_bits > 0x7f800000U && f32_bits < 0x80000000U) ||
          (f32_bits > 0xff800000U);
 }
 
-static WASM_INLINE int is_in_range_i32_trunc_s_f32(uint32_t f32_bits) {
+static WASM_INLINE WasmBool is_in_range_i32_trunc_s_f32(uint32_t f32_bits) {
   return (f32_bits < 0x4f000000U) ||
          (f32_bits >= 0x80000000U && f32_bits <= 0xcf000000U);
 }
 
-static WASM_INLINE int is_in_range_i64_trunc_s_f32(uint32_t f32_bits) {
+static WASM_INLINE WasmBool is_in_range_i64_trunc_s_f32(uint32_t f32_bits) {
   return (f32_bits < 0x5f000000U) ||
          (f32_bits >= 0x80000000U && f32_bits <= 0xdf000000U);
 }
 
-static WASM_INLINE int is_in_range_i32_trunc_u_f32(uint32_t f32_bits) {
+static WASM_INLINE WasmBool is_in_range_i32_trunc_u_f32(uint32_t f32_bits) {
   return (f32_bits < 0x4f800000U) ||
          (f32_bits >= 0x80000000U && f32_bits < 0xbf800000);
 }
 
-static WASM_INLINE int is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
+static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
   return (f32_bits < 0x5f800000U) ||
          (f32_bits >= 0x80000000U && f32_bits < 0xbf800000);
 }
@@ -150,31 +150,31 @@ static WASM_INLINE int is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
 #define F64_SIGN_MASK 0x8000000000000000ULL
 #define F64_QUIET_NAN_BIT 0x0008000000000000ULL
 
-static WASM_INLINE int is_nan_f64(uint64_t f64_bits) {
+static WASM_INLINE WasmBool is_nan_f64(uint64_t f64_bits) {
   return (f64_bits > 0x7ff0000000000000ULL &&
           f64_bits < 0x8000000000000000ULL) ||
          (f64_bits > 0xfff0000000000000ULL);
 }
 
-static WASM_INLINE int is_in_range_i32_trunc_s_f64(uint64_t f64_bits) {
+static WASM_INLINE WasmBool is_in_range_i32_trunc_s_f64(uint64_t f64_bits) {
   return (f64_bits <= 0x41dfffffffc00000ULL) ||
          (f64_bits >= 0x8000000000000000ULL &&
           f64_bits <= 0xc1e0000000000000ULL);
 }
 
-static WASM_INLINE int is_in_range_i32_trunc_u_f64(uint64_t f64_bits) {
+static WASM_INLINE WasmBool is_in_range_i32_trunc_u_f64(uint64_t f64_bits) {
   return (f64_bits <= 0x41efffffffe00000ULL) ||
          (f64_bits >= 0x8000000000000000ULL &&
           f64_bits <= 0xbfefffffffffffffULL);
 }
 
-static WASM_INLINE int is_in_range_i64_trunc_s_f64(uint64_t f64_bits) {
+static WASM_INLINE WasmBool is_in_range_i64_trunc_s_f64(uint64_t f64_bits) {
   return (f64_bits < 0x43e0000000000000ULL) ||
          (f64_bits >= 0x8000000000000000ULL &&
           f64_bits <= 0xc3e0000000000000ULL);
 }
 
-static WASM_INLINE int is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
+static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
   return (f64_bits < 0x43f0000000000000ULL) ||
          (f64_bits >= 0x8000000000000000ULL &&
           f64_bits <= 0xbfefffffffffffffULL);

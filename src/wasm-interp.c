@@ -32,16 +32,16 @@
 static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
 #undef V
 
-static int s_verbose;
+static WasmBool s_verbose;
 static const char* s_infile;
 static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
 static WasmInterpreterThreadOptions s_thread_options =
     WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT;
-static int s_trace;
-static int s_spec;
-static int s_run_all_exports;
-static int s_use_libc_allocator;
+static WasmBool s_trace;
+static WasmBool s_spec;
+static WasmBool s_run_all_exports;
+static WasmBool s_use_libc_allocator;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
@@ -105,19 +105,19 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_TRACE:
-      s_trace = 1;
+      s_trace = WASM_TRUE;
       break;
 
     case FLAG_SPEC:
-      s_spec = 1;
+      s_spec = WASM_TRUE;
       break;
 
     case FLAG_RUN_ALL_EXPORTS:
-      s_run_all_exports = 1;
+      s_run_all_exports = WASM_TRUE;
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = 1;
+      s_use_libc_allocator = WASM_TRUE;
       break;
   }
 }
@@ -420,7 +420,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WasmStringSlice command_name;
   WasmAllocatorMark module_mark;
   uint32_t command_line_no;
-  int has_module = 0;
+  WasmBool has_module = WASM_FALSE;
   uint32_t passed = 0;
   uint32_t failed = 0;
 
@@ -565,7 +565,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         MAYBE_CONTINUE(MODULES_ARRAY);
         destroy_module_and_thread(allocator, &module, &thread);
         wasm_reset_to_mark(allocator, module_mark);
-        has_module = 0;
+        has_module = WASM_FALSE;
         break;
 
       case MODULE_FILENAME: {
@@ -588,7 +588,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         if (result != WASM_OK)
           goto fail;
 
-        has_module = 1;
+        has_module = WASM_TRUE;
 
         result = run_start_function(&module, &thread);
         if (result != WASM_OK)

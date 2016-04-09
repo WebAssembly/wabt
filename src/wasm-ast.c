@@ -41,7 +41,7 @@ static WasmBindingHashEntry* wasm_hash_main_entry(const WasmBindingHash* hash,
   return &hash->entries.data[wasm_hash_name(name) % hash->entries.capacity];
 }
 
-int wasm_hash_entry_is_free(const WasmBindingHashEntry* entry) {
+WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry* entry) {
   return !entry->binding.name.start;
 }
 
@@ -106,7 +106,7 @@ static WasmResult wasm_hash_resize(WasmAllocator* allocator,
     return result;
 
   /* update the free list */
-  int i;
+  size_t i;
   for (i = 0; i < new_hash.entries.capacity; ++i) {
     WasmBindingHashEntry* entry = &new_hash.entries.data[i];
     if (new_hash.free_head)
@@ -230,12 +230,12 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
                                      WasmTypeBindings* dst,
                                      WasmTypeBindings* src) {
   WasmResult result = WASM_OK;
-  int last_type = dst->types.size;
+  size_t last_type = dst->types.size;
   result = wasm_extend_types(allocator, &dst->types, &src->types);
   if (result != WASM_OK)
     return result;
 
-  int i;
+  size_t i;
   for (i = 0; i < src->bindings.entries.capacity; ++i) {
     WasmBindingHashEntry* src_entry = &src->bindings.entries.data[i];
     if (wasm_hash_entry_is_free(src_entry))
@@ -324,7 +324,7 @@ static void wasm_destroy_binding_hash(WasmAllocator* allocator,
                                       WasmBindingHash* hash) {
   /* Can't use WASM_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
    * capacity. */
-  int i;
+  size_t i;
   for (i = 0; i < hash->entries.capacity; ++i)
     wasm_destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
   wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
@@ -616,7 +616,7 @@ static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser);
 
 static WasmResult traverse_exprs(WasmExprPtrVector* exprs,
                                  WasmExprTraverser* traverser) {
-  int i;
+  size_t i;
   for (i = 0; i < exprs->size; ++i)
     CHECK_RESULT(traverse_expr(exprs->data[i], traverser));
   return WASM_OK;

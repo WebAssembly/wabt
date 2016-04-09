@@ -47,13 +47,13 @@
       return WASM_ERROR;   \
   } while (0)
 
-#define CHECK_DEPTH(ctx, depth)                                 \
-  do {                                                          \
-    if ((depth) >= (ctx)->depth_stack.size) {                   \
-      print_error((ctx), "invalid depth: %d (max %d)", (depth), \
-                  (int)((ctx)->depth_stack.size));              \
-      return WASM_ERROR;                                        \
-    }                                                           \
+#define CHECK_DEPTH(ctx, depth)                                         \
+  do {                                                                  \
+    if ((depth) >= (ctx)->depth_stack.size) {                           \
+      print_error((ctx), "invalid depth: %d (max %" PRIzd ")", (depth), \
+                  ((ctx)->depth_stack.size));                           \
+      return WASM_ERROR;                                                \
+    }                                                                   \
   } while (0)
 
 #define CHECK_LOCAL(ctx, local_index)                                       \
@@ -170,7 +170,7 @@ typedef struct WasmContext {
   uint32_t istream_offset;
   /* the last expression evaluated at the top-level of a func */
   WasmInterpreterExpr last_expr;
-  int last_expr_was_discarded;
+  WasmBool last_expr_was_discarded;
 } WasmContext;
 
 static WasmDepthNode* get_depth_node(WasmContext* ctx, uint32_t depth) {
@@ -312,8 +312,8 @@ static WasmResult emit_discard(WasmContext* ctx) {
 
 static WasmResult maybe_emit_discard(WasmContext* ctx,
                                      WasmType type,
-                                     int* out_discarded) {
-  int should_discard = type != WASM_TYPE_VOID && type != WASM_TYPE_ANY;
+                                     WasmBool* out_discarded) {
+  WasmBool should_discard = type != WASM_TYPE_VOID && type != WASM_TYPE_ANY;
   if (out_discarded)
     *out_discarded = should_discard;
   if (should_discard)
@@ -632,8 +632,9 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   WasmContext* ctx = user_data;
   if (ctx->expr_stack.size != 0) {
-    print_error(ctx, "expression stack not empty on function exit! %d items",
-                (int)ctx->expr_stack.size);
+    print_error(ctx,
+                "expression stack not empty on function exit! %" PRIzd " items",
+                ctx->expr_stack.size);
     return WASM_ERROR;
   }
   assert(ctx->depth_stack.size == 0);
@@ -684,9 +685,9 @@ static WasmResult on_local_decl(uint32_t decl_index,
 }
 
 static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
-  int done = 0;
+  WasmBool done = WASM_FALSE;
   while (!done) {
-    done = 1;
+    done = WASM_TRUE;
 
     if (ctx->expr_stack.size == 0) {
 #if LOG
@@ -719,7 +720,7 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
 #endif
 
       uint32_t cur_index = top->index++;
-      int is_expr_done = top->index == top->total;
+      WasmBool is_expr_done = top->index == top->total;
       int32_t result_count = 0;
 
       switch (top->expr.opcode) {
@@ -1046,7 +1047,7 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
         ctx->value_stack_size = top->value_stack_size + result_count;
         expr = &top->expr;
         ctx->expr_stack.size--;
-        done = 0;
+        done = WASM_FALSE;
       }
     }
   }

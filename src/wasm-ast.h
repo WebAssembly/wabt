@@ -106,7 +106,7 @@ typedef struct WasmBindingHash {
 typedef struct WasmBlock {
   WasmLabel label;
   WasmExprPtrVector exprs;
-  int used;
+  WasmBool used;
 } WasmBlock;
 
 typedef struct WasmExpr WasmExpr;
@@ -121,7 +121,7 @@ struct WasmExpr {
     struct {
       WasmLabel inner, outer;
       WasmExprPtrVector exprs;
-      int inner_used, outer_used;
+      WasmBool inner_used, outer_used;
     } loop;
     struct { WasmVar var; WasmExprPtr expr; } br;
     struct { WasmExprPtr expr; } return_;
@@ -378,7 +378,7 @@ WASM_EXTERN_C_BEGIN
 WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  WasmBindingHash*,
                                  const WasmStringSlice*);
-int wasm_hash_entry_is_free(const WasmBindingHashEntry*);
+WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry*);
 
 WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
 

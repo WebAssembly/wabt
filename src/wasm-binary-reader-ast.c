@@ -44,12 +44,12 @@
   else                     \
   (void)0
 
-#define CHECK_DEPTH(ctx, depth)                               \
-  if ((depth) >= (ctx)->depth_stack.size) {                   \
-    print_error((ctx), "invalid depth: %d (max %d)", (depth), \
-                (int)((ctx)->depth_stack.size));              \
-    return WASM_ERROR;                                        \
-  } else                                                      \
+#define CHECK_DEPTH(ctx, depth)                                       \
+  if ((depth) >= (ctx)->depth_stack.size) {                           \
+    print_error((ctx), "invalid depth: %d (max %" PRIzd ")", (depth), \
+                ((ctx)->depth_stack.size));                           \
+    return WASM_ERROR;                                                \
+  } else                                                              \
   (void)0
 
 #define CHECK_LOCAL(ctx, local_index)                                       \
@@ -97,7 +97,7 @@ typedef struct WasmContext {
    * expression does not have a nested block, and introduce a fake block. If
    * the next expression we see is a block, then we reverse that and add the
    * real block instead. */
-  int just_pushed_fake_depth;
+  WasmBool just_pushed_fake_depth;
 } WasmContext;
 
 static void on_error(uint32_t offset, const char* message, void* user_data);
@@ -139,7 +139,7 @@ static void pop_depth(WasmContext* ctx) {
 
 static void push_fake_depth(WasmContext* ctx) {
   ctx->depth++;
-  ctx->just_pushed_fake_depth = 1;
+  ctx->just_pushed_fake_depth = WASM_TRUE;
 }
 
 static void pop_fake_depth(WasmContext* ctx) {
@@ -188,7 +188,7 @@ static WasmResult on_memory_max_size_pages(uint32_t pages, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_memory_exported(int exported, void* user_data) {
+static WasmResult on_memory_exported(WasmBool exported, void* user_data) {
   WasmContext* ctx = user_data;
   if (exported) {
     WasmModuleField* field =
@@ -351,8 +351,9 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   WasmContext* ctx = user_data;
   if (ctx->expr_stack.size != 0) {
-    print_error(ctx, "expression stack not empty on function exit! %d items",
-                (int)ctx->expr_stack.size);
+    print_error(ctx,
+                "expression stack not empty on function exit! %" PRIzd " items",
+                ctx->expr_stack.size);
     return WASM_ERROR;
   }
   ctx->current_func = NULL;
@@ -378,10 +379,10 @@ static WasmResult on_local_decl(uint32_t decl_index,
 }
 
 static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
-  ctx->just_pushed_fake_depth = 0;
-  int done = 0;
+  ctx->just_pushed_fake_depth = WASM_FALSE;
+  WasmBool done = WASM_FALSE;
   while (!done) {
-    done = 1;
+    done = WASM_TRUE;
     if (ctx->expr_stack.size == 0) {
 #if LOG
       fprintf(stderr, "reduce: <- %u\n", expr->type);
@@ -555,7 +556,7 @@ static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
         /* "recurse" and reduce the current expr */
         expr = top->expr;
         ctx->expr_stack.size--;
-        done = 0;
+        done = WASM_FALSE;
       }
     }
   }
@@ -564,7 +565,7 @@ static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
 }
 
 static WasmResult shift(WasmContext* ctx, WasmExpr* expr, uint32_t count) {
-  ctx->just_pushed_fake_depth = 0;
+  ctx->just_pushed_fake_depth = WASM_FALSE;
   if (count > 0) {
 #if LOG
     fprintf(stderr, "shift: %d %u\n", expr->type, count);
@@ -641,7 +642,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
   CHECK_ALLOC(ctx, wasm_reserve_vars(ctx->allocator, &expr->br_table.targets,
                                      num_targets));
   expr->br_table.targets.size = num_targets;
-  int i;
+  uint32_t i;
   for (i = 0; i < num_targets; ++i) {
     WasmVar* var = &expr->br_table.targets.data[i];
     var->type = WASM_VAR_TYPE_INDEX;
@@ -997,8 +998,9 @@ static WasmResult on_export(uint32_t index,
 static WasmResult on_function_names_count(uint32_t count, void* user_data) {
   WasmContext* ctx = user_data;
   if (count > ctx->module->funcs.size) {
-    print_error(ctx, "expected function name count (%d) <= function count (%d)",
-                count, (int)ctx->module->funcs.size);
+    print_error(
+        ctx, "expected function name count (%u) <= function count (%" PRIzd ")",
+        count, ctx->module->funcs.size);
     return WASM_ERROR;
   }
   return WASM_OK;
@@ -1039,8 +1041,8 @@ static WasmResult on_local_names_count(uint32_t index,
     return WASM_ERROR;
   }
   /* copy the signature from the function type */
-  int i;
   WasmFuncSignature* sig = get_func_sig(module, func);
+  size_t i;
   for (i = 0; i < sig->param_types.size; ++i) {
     CHECK_ALLOC(ctx, wasm_append_type_value(ctx->allocator, &func->params.types,
                                             &sig->param_types.data[i]));

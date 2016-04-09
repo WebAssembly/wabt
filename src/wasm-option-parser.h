@@ -19,10 +19,10 @@
 
 #include "wasm-common.h"
 
-enum {
+typedef enum WasmHasArgument {
   WASM_OPTION_NO_ARGUMENT,
   WASM_OPTION_HAS_ARGUMENT,
-};
+} WasmHasArgument;
 
 struct WasmOption;
 struct WasmOptionParser;
@@ -39,7 +39,7 @@ typedef struct WasmOption {
   char short_name;
   const char* long_name;
   const char* metavar;
-  int has_argument;
+  WasmHasArgument has_argument;
   const char* help;
 } WasmOption;
 

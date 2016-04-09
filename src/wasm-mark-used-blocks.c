@@ -38,7 +38,7 @@
 
 typedef struct WasmLabelNode {
   const WasmLabel* label;
-  int used;
+  WasmBool used;
 } WasmLabelNode;
 
 WASM_DEFINE_VECTOR(label_node, WasmLabelNode);
@@ -52,7 +52,7 @@ typedef struct WasmContext {
 static WasmResult push_label_node(WasmContext* ctx, const WasmLabel* label) {
   WasmLabelNode node;
   node.label = label;
-  node.used = 0;
+  node.used = WASM_FALSE;
   CHECK_ALLOC(
       wasm_append_label_node_value(ctx->allocator, &ctx->labels, &node));
   return WASM_OK;
@@ -88,7 +88,7 @@ static WasmResult mark_node_used(WasmContext* ctx, WasmVar* var) {
   WasmLabelNode* node = find_label_node_by_var(ctx, var);
   if (!node)
     return WASM_ERROR;
-  node->used = 1;
+  node->used = WASM_TRUE;
   return WASM_OK;
 }
 
@@ -136,7 +136,7 @@ static WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
 
 static WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
   WasmContext* ctx = user_data;
-  int i;
+  size_t i;
   for (i = 0; i < expr->br_table.targets.size; ++i) {
     WasmVar* var = &expr->br_table.targets.data[i];
     CHECK_RESULT(mark_node_used(ctx, var));
@@ -161,13 +161,13 @@ WasmResult wasm_mark_used_blocks(WasmAllocator* allocator, WasmScript* script) {
   traverser.begin_br_if_expr = &begin_br_if_expr;
   traverser.begin_br_table_expr = &begin_br_table_expr;
 
-  int i;
+  size_t i;
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
     if (command->type != WASM_COMMAND_TYPE_MODULE)
       continue;
     WasmModule* module = &command->module;
-    int j;
+    size_t j;
     for (j = 0; j < module->funcs.size; ++j) {
       WasmFunc* func = module->funcs.data[j];
       ctx.current_func = func;

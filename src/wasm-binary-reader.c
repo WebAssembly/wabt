@@ -188,7 +188,7 @@ static void in_i32_leb128(WasmContext* ctx,
     ctx->offset += 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     /* the top bits should be a sign-extension of the sign bit */
-    int sign_bit_set = (p[4] & 0x8);
+    WasmBool sign_bit_set = (p[4] & 0x8);
     int top_bits = p[4] & 0xf0;
     if ((sign_bit_set && top_bits != 0x70) ||
         (!sign_bit_set && top_bits != 0)) {
@@ -247,7 +247,7 @@ static void in_i64_leb128(WasmContext* ctx,
     ctx->offset += 9;
   } else if (p + 9 < end && (p[9] & 0x80) == 0) {
     /* the top bits should be a sign-extension of the sign bit */
-    int sign_bit_set = (p[9] & 0x1);
+    WasmBool sign_bit_set = (p[9] & 0x1);
     int top_bits = p[9] & 0xfe;
     if ((sign_bit_set && top_bits != 0x7e) ||
         (!sign_bit_set && top_bits != 0)) {
@@ -305,24 +305,24 @@ static void in_bytes(WasmContext* ctx,
   ctx->offset += data_size;
 }
 
-static int is_valid_type(uint8_t type) {
+static WasmBool is_valid_type(uint8_t type) {
   return type < WASM_NUM_TYPES;
 }
 
-static int is_non_void_type(uint8_t type) {
+static WasmBool is_non_void_type(uint8_t type) {
   return type != 0 && type < WASM_NUM_TYPES;
 }
 
-static int is_bool(uint8_t value) {
+static WasmBool is_bool(uint8_t value) {
   return value < 2;
 }
 
-static int skip_until_section(WasmContext* ctx, int section_index) {
+static WasmBool skip_until_section(WasmContext* ctx, int section_index) {
   uint32_t section_start_offset = ctx->offset;
   uint32_t section_size = 0;
   if (ctx->offset == ctx->size) {
     /* ok, no more sections */
-    return 0;
+    return WASM_FALSE;
   }
 
   in_u32_leb128(ctx, &section_size, "section size");
@@ -357,11 +357,11 @@ static int skip_until_section(WasmContext* ctx, int section_index) {
     /* TODO(binji): slightly inefficient to re-read the section later. But
      there aren't many so it probably doesn't matter */
     ctx->offset = section_start_offset;
-    return 0;
+    return WASM_FALSE;
   }
 
   assert(index == section_index);
-  return 1;
+  return WASM_TRUE;
 }
 
 static void destroy_context(WasmAllocator* allocator, WasmContext* ctx) {
@@ -420,7 +420,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       in_u8(&ctx, &result_type, "signature result type");
       RAISE_ERROR_UNLESS(&ctx, is_valid_type(result_type),
                          "expected valid result type");
-      int j;
+      uint32_t j;
       for (j = 0; j < num_params; ++j) {
         uint8_t param_type;
         in_u8(&ctx, &param_type, "signature param type");
@@ -495,9 +495,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   }
 
   /* memory */
-  int seen_memory_section = 0;
+  WasmBool seen_memory_section = WASM_FALSE;
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_MEMORY)) {
-    seen_memory_section = 1;
+    seen_memory_section = WASM_TRUE;
     CALLBACK0(&ctx, begin_memory_section);
     uint32_t initial_size_pages;
     in_u32_leb128(&ctx, &initial_size_pages, "memory initial size");
@@ -635,7 +635,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               ctx.target_depths.size = num_targets;
             }
 
-            int i;
+            uint32_t i;
             for (i = 0; i < num_targets; ++i) {
               uint32_t target_depth;
               in_u32(&ctx, &target_depth, "br_table target depth");

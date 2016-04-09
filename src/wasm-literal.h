@@ -21,29 +21,34 @@
 
 #include "wasm-common.h"
 
-/* These functions all return 1 on success and 0 on failure.
+/* These functions all return WASM_OK on success and WASM_ERROR on failure.
  *
  * NOTE: the functions are written for use with the flex lexer, assuming that
  * the literal has already matched the regular expressions defined there. As a
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */
 
+typedef enum WasmParseIntType {
+  WASM_PARSE_UNSIGNED_ONLY = 0,
+  WASM_PARSE_SIGNED_AND_UNSIGNED = 1,
+} WasmParseIntType;
+
 WASM_EXTERN_C_BEGIN
-int wasm_parse_hexdigit(char c, uint32_t* out);
-int wasm_parse_int32(const char* s,
-                     const char* end,
-                     uint32_t* out,
-                     int allow_signed);
-int wasm_parse_int64(const char* s, const char* end, uint64_t* out);
-int wasm_parse_uint64(const char* s, const char* end, uint64_t* out);
-int wasm_parse_float(WasmLiteralType literal_type,
-                     const char* s,
-                     const char* end,
-                     uint32_t* out_bits);
-int wasm_parse_double(WasmLiteralType literal_type,
-                      const char* s,
-                      const char* end,
-                      uint64_t* out_bits);
+WasmResult wasm_parse_hexdigit(char c, uint32_t* out);
+WasmResult wasm_parse_int32(const char* s,
+                            const char* end,
+                            uint32_t* out,
+                            WasmParseIntType parse_type);
+WasmResult wasm_parse_int64(const char* s, const char* end, uint64_t* out);
+WasmResult wasm_parse_uint64(const char* s, const char* end, uint64_t* out);
+WasmResult wasm_parse_float(WasmLiteralType literal_type,
+                            const char* s,
+                            const char* end,
+                            uint32_t* out_bits);
+WasmResult wasm_parse_double(WasmLiteralType literal_type,
+                             const char* s,
+                             const char* end,
+                             uint64_t* out_bits);
 
 void wasm_write_float_hex(char* buffer, size_t size, uint32_t bits);
 void wasm_write_double_hex(char* buffer, size_t size, uint64_t bits);

@@ -25,13 +25,13 @@ struct WasmScript;
 struct WasmWriter;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { 0, 1, 1, 0 }
+  { WASM_FALSE, WASM_TRUE, WASM_TRUE, WASM_FALSE }
 
 typedef struct WasmWriteBinaryOptions {
-  int log_writes;
-  int canonicalize_lebs;
-  int remap_locals;
-  int write_debug_names;
+  WasmBool log_writes;
+  WasmBool canonicalize_lebs;
+  WasmBool remap_locals;
+  WasmBool write_debug_names;
 } WasmWriteBinaryOptions;
 
 WASM_EXTERN_C_BEGIN

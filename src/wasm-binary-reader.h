@@ -29,7 +29,7 @@ struct WasmAllocator;
   { 0 }
 
 typedef struct WasmReadBinaryOptions {
-  int read_debug_names;
+  WasmBool read_debug_names;
 } WasmReadBinaryOptions;
 
 typedef struct WasmBinaryReader {
@@ -45,7 +45,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_memory_section)(void* user_data);
   WasmResult (*on_memory_initial_size_pages)(uint32_t pages, void* user_data);
   WasmResult (*on_memory_max_size_pages)(uint32_t pages, void* user_data);
-  WasmResult (*on_memory_exported)(int exported, void* user_data);
+  WasmResult (*on_memory_exported)(WasmBool exported, void* user_data);
   WasmResult (*end_memory_section)(void* user_data);
 
   /* data segment section */

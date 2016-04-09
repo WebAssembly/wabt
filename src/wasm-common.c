@@ -33,7 +33,7 @@
 static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-int wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
+WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
   assert(opcode < WASM_ARRAY_SIZE(s_opcode_mem_size));
   uint32_t opcode_align = s_opcode_mem_size[opcode];
   return alignment == WASM_USE_NATURAL_ALIGNMENT ||
@@ -47,8 +47,8 @@ uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment) {
   return alignment;
 }
 
-int wasm_string_slices_are_equal(const WasmStringSlice* a,
-                                 const WasmStringSlice* b) {
+WasmBool wasm_string_slices_are_equal(const WasmStringSlice* a,
+                                      const WasmStringSlice* b) {
   return a->start && b->start && a->length == b->length &&
          memcmp(a->start, b->start, a->length) == 0;
 }
@@ -60,7 +60,7 @@ void wasm_destroy_string_slice(WasmAllocator* allocator, WasmStringSlice* str) {
 void wasm_print_memory(const void* start,
                        size_t size,
                        size_t offset,
-                       int print_chars,
+                       WasmPrintChars print_chars,
                        const char* desc) {
   /* mimic xxd output */
   const uint8_t* p = start;
@@ -68,7 +68,7 @@ void wasm_print_memory(const void* start,
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07x: ", (int)((size_t)p - (size_t)start + offset));
+    printf("%07" PRIzx ": ", (size_t)p - (size_t)start + offset);
     while (p < line_end) {
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {

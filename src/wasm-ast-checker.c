@@ -92,7 +92,7 @@ typedef struct WasmContext {
   WasmLexer lexer;
   const WasmModule* last_module;
   WasmLabelNode* top_label;
-  int in_assert_invalid;
+  WasmBool in_assert_invalid;
   int max_depth;
   WasmResult result;
 } WasmContext;
@@ -114,14 +114,14 @@ static void print_error(WasmContext* ctx,
   va_end(args);
 }
 
-static int is_power_of_two(uint32_t x) {
+static WasmBool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
 static void check_duplicate_bindings(WasmContext* ctx,
                                      const WasmBindingHash* bindings,
                                      const char* desc) {
-  int i;
+  size_t i;
   for (i = 0; i < bindings->entries.capacity; ++i) {
     WasmBindingHashEntry* entry = &bindings->entries.data[i];
     if (wasm_hash_entry_is_free(entry))
@@ -398,15 +398,15 @@ static void check_call(WasmContext* ctx,
                        const WasmExprPtrVector* args,
                        WasmType expected_type,
                        const char* desc) {
-  int actual_args = args->size;
-  int expected_args = param_types->size;
+  size_t actual_args = args->size;
+  size_t expected_args = param_types->size;
   if (expected_args == actual_args) {
     char buffer[100];
     wasm_snprintf(buffer, 100, " of %s result", desc);
     check_type(ctx, loc, result_type, expected_type, buffer);
-    int i;
+    size_t i;
     for (i = 0; i < actual_args; ++i) {
-      wasm_snprintf(buffer, 100, " of argument %d of %s", i, desc);
+      wasm_snprintf(buffer, 100, " of argument %" PRIzd " of %s", i, desc);
       check_expr(ctx, module, func, args->data[i], param_types->data[i],
                  buffer);
     }
@@ -432,7 +432,7 @@ static void check_exprs(WasmContext* ctx,
                         WasmType expected_type,
                         const char* desc) {
   if (exprs->size > 0) {
-    int i;
+    size_t i;
     WasmExprPtr* expr = &exprs->data[0];
     for (i = 0; i < exprs->size - 1; ++i, ++expr)
       check_expr(ctx, module, func, *expr, WASM_TYPE_VOID, "");
@@ -688,7 +688,7 @@ static void check_expr(WasmContext* ctx,
     case WASM_EXPR_TYPE_BR_TABLE: {
       check_expr(ctx, module, func, expr->br_table.expr, WASM_TYPE_I32,
                  " of key");
-      int i;
+      size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
         check_br(ctx, &expr->loc, module, func, &expr->br_table.targets.data[i],
                  NULL, " of br_table target");
@@ -723,7 +723,7 @@ static void check_func(WasmContext* ctx,
         check_type_exact(ctx, &func->loc, func->result_type,
                          func_type->sig.result_type, "");
         if (func->params.types.size == func_type->sig.param_types.size) {
-          int i;
+          size_t i;
           for (i = 0; i < func->params.types.size; ++i) {
             check_type_arg_exact(ctx, &func->loc, func->params.types.data[i],
                                  func_type->sig.param_types.data[i], "function",
@@ -760,7 +760,7 @@ static void check_export(WasmContext* ctx,
 static void check_table(WasmContext* ctx,
                         const WasmModule* module,
                         const WasmVarVector* table) {
-  int i;
+  size_t i;
   for (i = 0; i < table->size; ++i)
     check_func_var(ctx, module, &table->data[i], NULL);
 }
@@ -775,7 +775,7 @@ static void check_memory(WasmContext* ctx,
         memory->max_pages, memory->initial_pages);
   }
 
-  int i;
+  size_t i;
   uint32_t last_end = 0;
   for (i = 0; i < memory->segments.size; ++i) {
     const WasmSegment* segment = &memory->segments.data[i];
@@ -800,10 +800,10 @@ static void check_memory(WasmContext* ctx,
 
 static void check_module(WasmContext* ctx, const WasmModule* module) {
   WasmLocation* export_memory_loc = NULL;
-  int seen_memory = 0;
-  int seen_export_memory = 0;
-  int seen_table = 0;
-  int seen_start = 0;
+  WasmBool seen_memory = WASM_FALSE;
+  WasmBool seen_export_memory = WASM_FALSE;
+  WasmBool seen_table = WASM_FALSE;
+  WasmBool seen_start = WASM_FALSE;
 
   WasmModuleField* field;
   for (field = module->first_field; field != NULL; field = field->next) {
@@ -821,7 +821,7 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
-        seen_export_memory = 1;
+        seen_export_memory = WASM_TRUE;
         export_memory_loc = &field->loc;
         break;
 
@@ -829,14 +829,14 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
         if (seen_table)
           print_error(ctx, &field->loc, "only one table allowed");
         check_table(ctx, module, &field->table);
-        seen_table = 1;
+        seen_table = WASM_TRUE;
         break;
 
       case WASM_MODULE_FIELD_TYPE_MEMORY:
         if (seen_memory)
           print_error(ctx, &field->loc, "only one memory block allowed");
         check_memory(ctx, module, &field->memory);
-        seen_memory = 1;
+        seen_memory = WASM_TRUE;
         break;
 
       case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
@@ -857,7 +857,7 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
                         "start function must not return anything");
           }
         }
-        seen_start = 1;
+        seen_start = WASM_TRUE;
         break;
       }
     }
@@ -895,8 +895,8 @@ static void check_invoke(WasmContext* ctx,
     return;
   }
 
-  int actual_args = invoke->args.size;
-  int expected_args = func->params.types.size;
+  size_t actual_args = invoke->args.size;
+  size_t expected_args = func->params.types.size;
   if (expected_args != actual_args) {
     print_error(ctx, &invoke->loc,
                 "too %s parameters to function. got %d, expected %d",
@@ -905,7 +905,7 @@ static void check_invoke(WasmContext* ctx,
     return;
   }
   check_type_set(ctx, &invoke->loc, func->result_type, return_type, "");
-  int i;
+  size_t i;
   for (i = 0; i < actual_args; ++i) {
     WasmConst* const_ = &invoke->args.data[i];
     check_type_arg_exact(ctx, &const_->loc, const_->type,
@@ -927,7 +927,7 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
     case WASM_COMMAND_TYPE_ASSERT_INVALID: {
       WasmContext ctx2 = *ctx;
       ctx2.result = WASM_OK;
-      ctx2.in_assert_invalid = 1;
+      ctx2.in_assert_invalid = WASM_TRUE;
       check_module(&ctx2, &command->assert_invalid.module);
 
       if (ctx2.result == WASM_OK) {
@@ -962,7 +962,7 @@ WasmResult wasm_check_ast(WasmLexer lexer, const WasmScript* script) {
   ctx.lexer = lexer;
   ctx.allocator = script->allocator;
   ctx.result = WASM_OK;
-  int i;
+  size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
   return ctx.result;

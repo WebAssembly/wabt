@@ -43,14 +43,14 @@
 
 static const char* s_infile;
 static const char* s_outfile;
-static int s_dump_module;
-static int s_verbose;
+static WasmBool s_dump_module;
+static WasmBool s_verbose;
 static WasmWriteBinaryOptions s_write_binary_options =
     WASM_WRITE_BINARY_OPTIONS_DEFAULT;
 static WasmWriteBinarySpecOptions s_write_binary_spec_options =
     WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
-static int s_spec;
-static int s_use_libc_allocator;
+static WasmBool s_spec;
+static WasmBool s_use_libc_allocator;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
@@ -96,7 +96,7 @@ static void on_option(struct WasmOptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      s_write_binary_options.log_writes = 1;
+      s_write_binary_options.log_writes = WASM_TRUE;
       break;
 
     case FLAG_HELP:
@@ -105,7 +105,7 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_DUMP_MODULE:
-      s_dump_module = 1;
+      s_dump_module = WASM_TRUE;
       break;
 
     case FLAG_OUTPUT:
@@ -113,23 +113,23 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_SPEC:
-      s_spec = 1;
+      s_spec = WASM_TRUE;
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = 1;
+      s_use_libc_allocator = WASM_TRUE;
       break;
 
     case FLAG_NO_CANONICALIZE_LEB128S:
-      s_write_binary_options.canonicalize_lebs = 0;
+      s_write_binary_options.canonicalize_lebs = WASM_FALSE;
       break;
 
     case FLAG_NO_REMAP_LOCALS:
-      s_write_binary_options.remap_locals = 0;
+      s_write_binary_options.remap_locals = WASM_FALSE;
       break;
 
     case FLAG_DEBUG_NAMES:
-      s_write_binary_options.write_debug_names = 1;
+      s_write_binary_options.write_debug_names = WASM_TRUE;
       break;
   }
 }
@@ -164,7 +164,8 @@ static void write_buffer_to_file(const char* out_filename,
   if (s_dump_module) {
     if (s_verbose)
       printf(";; dump\n");
-    wasm_print_memory(buffer->start, buffer->size, 0, 0, NULL);
+    wasm_print_memory(buffer->start, buffer->size, 0, WASM_DONT_PRINT_CHARS,
+                      NULL);
   }
 
   if (out_filename) {
