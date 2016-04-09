@@ -618,13 +618,15 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
           arg->value = value;
         }
         assert(import->callback);
-        WasmInterpreterTypedValue call_result =
+        WasmInterpreterTypedValue call_result_value;
+        WasmResult call_result =
             import->callback(module, import, num_args, thread->import_args.data,
-                             import->user_data);
+                             &call_result_value, import->user_data);
+        TRAP_IF(call_result != WASM_OK, IMPORT_TRAPPED);
         if (sig->result_type != WASM_TYPE_VOID) {
-          TRAP_IF(call_result.type != sig->result_type,
+          TRAP_IF(call_result_value.type != sig->result_type,
                   IMPORT_RESULT_TYPE_MISMATCH);
-          PUSH(call_result.value);
+          PUSH(call_result_value.value);
         }
         break;
       }

@@ -51,7 +51,9 @@
   V(TRAP_VALUE_STACK_EXHAUSTED, "value stack exhausted")                       \
   /* we called an import function, but the return value didn't match the */    \
   /* expected type */                                                          \
-  V(TRAP_IMPORT_RESULT_TYPE_MISMATCH, "import result type mismatch")
+  V(TRAP_IMPORT_RESULT_TYPE_MISMATCH, "import result type mismatch")           \
+  /* we called an import function, but it didn't complete succesfully */       \
+  V(TRAP_IMPORT_TRAPPED, "import function trapped")
 
 typedef enum WasmInterpreterResult {
 #define V(name, str) WASM_INTERPRETER_##name,
@@ -113,11 +115,12 @@ WASM_DEFINE_ARRAY(interpreter_typed_value, WasmInterpreterTypedValue);
 struct WasmInterpreterModule;
 struct WasmInterpreterImport;
 
-typedef WasmInterpreterTypedValue (*WasmInterpreterImportCallback)(
+typedef WasmResult (*WasmInterpreterImportCallback)(
     struct WasmInterpreterModule* module,
     struct WasmInterpreterImport* import,
     uint32_t num_args,
     WasmInterpreterTypedValue* args,
+    WasmInterpreterTypedValue* out_result,
     void* user_data);
 
 typedef struct WasmInterpreterImport {

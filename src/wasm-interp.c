@@ -197,12 +197,12 @@ static void print_typed_value(WasmInterpreterTypedValue* tv) {
   }
 }
 
-static WasmInterpreterTypedValue default_import_callback(
-    WasmInterpreterModule* module,
-    WasmInterpreterImport* import,
-    uint32_t num_args,
-    WasmInterpreterTypedValue* args,
-    void* user_data) {
+static WasmResult default_import_callback(WasmInterpreterModule* module,
+                                          WasmInterpreterImport* import,
+                                          uint32_t num_args,
+                                          WasmInterpreterTypedValue* args,
+                                          WasmInterpreterTypedValue* out_result,
+                                          void* user_data) {
   printf("called import " PRIstringslice "." PRIstringslice "(",
          WASM_PRINTF_STRING_SLICE_ARG(import->module_name),
          WASM_PRINTF_STRING_SLICE_ARG(import->func_name));
@@ -227,7 +227,8 @@ static WasmInterpreterTypedValue default_import_callback(
   } else {
     printf(")\n");
   }
-  return result;
+  *out_result = result;
+  return WASM_OK;
 }
 
 static void set_all_import_callbacks_to_default(WasmInterpreterModule* module) {

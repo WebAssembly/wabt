@@ -37,6 +37,7 @@
 #define INITIAL_SQ_STACK_SIZE 1024
 
 #define WASM_ALLOCATOR_NAME "wasm_allocator"
+#define WASM_LAST_ERROR_NAME "wasm_last_error"
 #define WASM_MEMORY_NAME "wasm_memory"
 
 static int s_verbose;
@@ -56,6 +57,16 @@ static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+
+enum {
+  DONT_RAISE_ERROR = SQFalse,
+  RAISE_ERROR = SQTrue,
+};
+
+enum {
+  WITHOUT_RETVAL = SQFalse,
+  WITH_RETVAL = SQTrue,
+};
 
 typedef struct SquirrelModuleContext {
   WasmAllocator* allocator;
@@ -229,20 +240,69 @@ void squirrel_compiler_error(HSQUIRRELVM v,
           source, line, column, desc);
 }
 
+static int squirrel_objects_are_equal_raw(HSQOBJECT o1, HSQOBJECT o2) {
+  if (o1._type != o2._type)
+    return 0;
+  /* TODO(binji): this relies on type-punning through a union (but so does a
+   * lot of squirrel */
+  return o1._unVal.raw == o2._unVal.raw;
+}
+
 static SQInteger squirrel_errorhandler(HSQUIRRELVM v) {
-  const char* error_msg = "unknown";
-  if (sq_gettop(v) >= 1)
-    sq_getstring(v, 2, &error_msg);
-  squirrel_error(v, "error: %s\n", error_msg);
-  squirrel_error(v, "callstack:\n");
-  SQStackInfos stack_info;
-  SQInteger depth;
-  for (depth = 1; SQ_SUCCEEDED(sq_stackinfos(v, depth, &stack_info)); depth++) {
-    const char* source = stack_info.source ? stack_info.source : "unknown";
-    const char* funcname =
-        stack_info.funcname ? stack_info.funcname : "unknown";
-    SQInteger line = stack_info.line;
-    squirrel_error(v, "  #%d: %s:%d: %s()\n", depth, source, line, funcname);
+  /* Detect whether this error is just propagating through, or it originated
+   * here. To do so, we store the last error we saw in the registry and compare
+   * it to the current error. If they are the equal, we've already handled this
+   * error.
+   *
+   * Without this check, we'll call the error handler for every transition
+   * between the Squirrel and Wasm VMs. */
+  /* TODO(binji): It seems like there should be a better way to handle this */
+  SQInteger top = sq_gettop(v);
+  int is_new_error = 1;
+  /* get the last error we saw */
+  sq_pushregistrytable(v);
+  sq_pushstring(v, WASM_LAST_ERROR_NAME, -1);
+  if (SQ_SUCCEEDED(sq_get(v, -2))) {
+    /* STACK: error registry_table last_error */
+    sq_push(v, -3);
+
+    HSQOBJECT last_error;
+    HSQOBJECT error;
+    if (SQ_SUCCEEDED(sq_getstackobj(v, -1, &error)) &&
+        SQ_SUCCEEDED(sq_getstackobj(v, -2, &last_error))) {
+      /* we don't want to use cmp here, because it will throw if the values are
+       * unordered, and because it performs value equality */
+      if (squirrel_objects_are_equal_raw(last_error, error))
+        is_new_error = 0;
+    }
+
+    /* set the last_error in the registry to the new error. */
+    /* STACK: registry_table last_error error */
+    sq_remove(v, -2);
+    sq_pushstring(v, WASM_LAST_ERROR_NAME, -1);
+    sq_push(v, -2);
+    /* STACK: registry_table error WASM_LAST_ERROR_NAME error */
+    SQRESULT r = sq_set(v, -4);
+    assert(r == SQ_OK);
+  }
+  sq_settop(v, top);
+
+  if (is_new_error) {
+    const char* error_msg = "unknown";
+    if (sq_gettop(v) >= 1)
+      sq_getstring(v, -1, &error_msg);
+    squirrel_error(v, "error: %s\n", error_msg);
+    squirrel_error(v, "callstack:\n");
+    SQStackInfos stack_info;
+    SQInteger depth;
+    for (depth = 1; SQ_SUCCEEDED(sq_stackinfos(v, depth, &stack_info));
+         depth++) {
+      const char* source = stack_info.source ? stack_info.source : "unknown";
+      const char* funcname =
+          stack_info.funcname ? stack_info.funcname : "unknown";
+      SQInteger line = stack_info.line;
+      squirrel_error(v, "  #%d: %s:%d: %s()\n", depth, source, line, funcname);
+    }
   }
   return 0;
 }
@@ -255,11 +315,9 @@ static WasmResult run_squirrel_file(WasmAllocator* allocator,
   size_t size;
   result = wasm_read_file(allocator, filename, &data, &size);
   if (result == WASM_OK) {
-    const SQBool raise_error = SQTrue;
-    if (SQ_SUCCEEDED(sq_compilebuffer(v, data, size, filename, raise_error))) {
+    if (SQ_SUCCEEDED(sq_compilebuffer(v, data, size, filename, RAISE_ERROR))) {
       sq_pushroottable(v);
-      const SQBool with_retval = SQFalse;
-      if (SQ_SUCCEEDED(sq_call(v, 1, with_retval, raise_error))) {
+      if (SQ_SUCCEEDED(sq_call(v, 1, WITHOUT_RETVAL, RAISE_ERROR))) {
         /* do some other stuff... */
         result = WASM_OK;
       } else {
@@ -281,7 +339,7 @@ static SQInteger squirrel_throwerrorf(HSQUIRRELVM v, const char* format, ...) {
 #define CHECK_SQ_RESULT(cond) \
   do {                        \
     if (SQ_FAILED(cond))      \
-      return -1;              \
+      return SQ_ERROR;        \
   } while (0)
 
 static SQRESULT squirrel_get_allocator(HSQUIRRELVM v,
@@ -458,11 +516,12 @@ static WasmResult convert_typed_value(WasmInterpreterTypedValue* from_tv,
   return WASM_ERROR;
 }
 
-static WasmInterpreterTypedValue squirrel_wasm_import_callback(
+static WasmResult squirrel_wasm_import_callback(
     WasmInterpreterModule* module,
     WasmInterpreterImport* import,
     uint32_t num_args,
     WasmInterpreterTypedValue* args,
+    WasmInterpreterTypedValue* out_result,
     void* user_data) {
   SquirrelModuleContext* smc = user_data;
   HSQUIRRELVM v = smc->squirrel_vm;
@@ -482,13 +541,11 @@ static WasmInterpreterTypedValue squirrel_wasm_import_callback(
     squirrel_push_typedvalue(v, arg);
   }
 
-  /* TODO(binji): need way to trap from import callback */
   WasmInterpreterTypedValue top_tv;
   top_tv.type = WASM_TYPE_VOID;
 
-  const SQBool retval = SQTrue;
-  const SQBool raise_error = SQTrue;
-  if (SQ_SUCCEEDED(sq_call(v, num_args + 1, retval, raise_error))) {
+  SQRESULT call_result = sq_call(v, num_args + 1, WITH_RETVAL, RAISE_ERROR);
+  if (SQ_SUCCEEDED(call_result)) {
     squirrel_get_typedvalue(v, -1, &top_tv);
     sq_pop(v, 1); /* pop the return value */
   }
@@ -501,8 +558,10 @@ static WasmInterpreterTypedValue squirrel_wasm_import_callback(
     fprintf(stderr,
             "error: cannot convert return value of type %s to type %s.\n",
             s_type_names[top_tv.type], s_type_names[sig->result_type]);
+    return WASM_ERROR;
   }
-  return result;
+  *out_result = result;
+  return WASM_OK;
 }
 
 static SQRESULT squirrel_wasm_export_callback(HSQUIRRELVM v) {
@@ -538,10 +597,8 @@ static SQRESULT squirrel_wasm_export_callback(HSQUIRRELVM v) {
   }
 
   result = run_function(&smc->module, &smc->thread, export->func_offset);
-  if (result != WASM_INTERPRETER_RETURNED) {
-    return squirrel_throwerrorf(v, PRIstringslice " trapped.",
-                                WASM_PRINTF_STRING_SLICE_ARG(export->name));
-  }
+  if (result != WASM_INTERPRETER_RETURNED)
+    return SQ_ERROR;
 
   if (sig->result_type != WASM_TYPE_VOID) {
     WasmInterpreterTypedValue return_tv;
@@ -551,7 +608,7 @@ static SQRESULT squirrel_wasm_export_callback(HSQUIRRELVM v) {
     squirrel_push_typedvalue(v, &return_tv);
     return 1;
   } else {
-    return 0;
+    return SQ_OK;
   }
 }
 
@@ -838,6 +895,13 @@ static WasmResult init_squirrel(WasmAllocator* allocator, HSQUIRRELVM* out_sq) {
   sq_pushregistrytable(v);
   sq_pushstring(v, WASM_ALLOCATOR_NAME, -1);
   sq_pushuserpointer(v, (SQUserPointer)allocator);
+  CHECK_SQ_RESULT(sq_newslot(v, -3, SQFalse));
+
+  /* set the last error in the registry (used for stack unwinding) */
+  /* TODO(binji): this should be set per-VM, not in the registry (which is
+   * shared) */
+  sq_pushstring(v, WASM_LAST_ERROR_NAME, -1);
+  sq_pushnull(v);
   CHECK_SQ_RESULT(sq_newslot(v, -3, SQFalse));
   sq_pop(v, 1);
 
