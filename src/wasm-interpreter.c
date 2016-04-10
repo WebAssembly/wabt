@@ -1691,7 +1691,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
   const uint8_t* istream = module->istream.start;
   const uint8_t* pc = &istream[from];
 
-  while (pc - istream < to) {
+  while ((uint32_t)(pc - istream) < to) {
     printf("%4" PRIzd "| ", pc - istream);
 
     uint8_t opcode = *pc++;
