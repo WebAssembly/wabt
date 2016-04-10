@@ -128,7 +128,8 @@ typedef struct WasmInterpreterExpr {
     struct { uint32_t sig_index; } call_indirect;
     struct { uint32_t fixup_offset; } if_;
     struct {
-      uint32_t fixup_cond_offset, fixup_true_offset, value_stack_size;
+      uint32_t fixup_nop_offset, fixup_cond_offset, fixup_true_offset;
+      uint32_t value_stack_size;
     } if_else;
     struct { uint32_t mem_offset, alignment_log2; } load, store;
     struct { uint32_t local_index; } get_local, set_local;
@@ -273,8 +274,7 @@ static WasmResult emit_data(WasmContext* ctx, const void* data, size_t size) {
 }
 
 static WasmResult emit_opcode(WasmContext* ctx, WasmOpcode opcode) {
-  CHECK_RESULT(emit_data(ctx, &opcode, sizeof(uint8_t)));
-  return WASM_OK;
+  return emit_data(ctx, &opcode, sizeof(uint8_t));
 }
 
 static WasmResult emit_i8(WasmContext* ctx, uint8_t value) {
@@ -287,6 +287,12 @@ static WasmResult emit_i32(WasmContext* ctx, uint32_t value) {
 
 static WasmResult emit_i64(WasmContext* ctx, uint64_t value) {
   return emit_data(ctx, &value, sizeof(value));
+}
+
+static WasmResult emit_opcode_at(WasmContext* ctx,
+                                 uint32_t offset,
+                                 WasmOpcode opcode) {
+  return emit_data_at(ctx, offset, &opcode, sizeof(uint8_t));
 }
 
 static WasmResult emit_i32_at(WasmContext* ctx,
@@ -313,7 +319,7 @@ static WasmResult emit_discard(WasmContext* ctx) {
 static WasmResult maybe_emit_discard(WasmContext* ctx,
                                      WasmType type,
                                      WasmBool* out_discarded) {
-  WasmBool should_discard = type != WASM_TYPE_VOID && type != WASM_TYPE_ANY;
+  WasmBool should_discard = get_value_count(type) != 0;
   if (out_discarded)
     *out_discarded = should_discard;
   if (should_discard)
@@ -749,13 +755,13 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
             WasmDepthNode* node = top_depth_node(ctx);
             unify_type(&top->expr.type, node->type);
             unify_type(&top->expr.type, expr->type);
-          }
-          if (top->expr.type == WASM_TYPE_VOID || !is_expr_done)
-            CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
-          if (is_expr_done) {
+            if (top->expr.type == WASM_TYPE_VOID)
+              CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
             CHECK_RESULT(fixup_top_depth(ctx, get_istream_offset(ctx)));
             pop_depth(ctx);
             result_count = get_value_count(top->expr.type);
+          } else {
+            CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
           }
           break;
 
@@ -907,13 +913,16 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
             top->expr.if_else.value_stack_size = ctx->value_stack_size;
             CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
           } else {
+            WasmType prev_type = top->expr.type;
             CHECK_RESULT(unify_and_check_type(ctx, &top->expr.type, expr->type,
                                               " in if_else"));
-            if (top->expr.type == WASM_TYPE_VOID)
-              CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
-
             if (cur_index == 1) {
               /* after true */
+
+              /* this NOP may or may not become a discard, depending on whether
+               * the final type of this if_else has a value. */
+              top->expr.if_else.fixup_nop_offset = get_istream_offset(ctx);
+              CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_NOP));
               CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR));
               top->expr.if_else.fixup_true_offset = get_istream_offset(ctx);
               CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
@@ -924,6 +933,18 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
             } else {
               /* after false */
               assert(cur_index == 2 && is_expr_done);
+
+              if (top->expr.type == WASM_TYPE_VOID) {
+                CHECK_RESULT(maybe_emit_discard(ctx, expr->type, NULL));
+                /* rewrite the nop above into a discard as well, if the
+                 * previous type (i.e. the type returned by the true branch)
+                 * had a value */
+                if (get_value_count(prev_type)) {
+                  emit_opcode_at(ctx, top->expr.if_else.fixup_nop_offset,
+                                 WASM_OPCODE_DISCARD);
+                }
+              }
+
               CHECK_RESULT(emit_i32_at(ctx, top->expr.if_else.fixup_true_offset,
                                        get_istream_offset(ctx)));
               result_count = get_value_count(top->expr.type);

@@ -1350,6 +1350,9 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         assert(0);
         break;
 
+      case WASM_OPCODE_NOP:
+        break;
+
       default:
         assert(0);
         break;
@@ -1398,11 +1401,11 @@ void wasm_trace_pc(WasmInterpreterModule* module,
       break;
     }
 
+    case WASM_OPCODE_NOP:
     case WASM_OPCODE_RETURN:
-      printf("%s\n", s_opcode_name[opcode]);
-      break;
-
     case WASM_OPCODE_UNREACHABLE:
+    case WASM_OPCODE_MEMORY_SIZE:
+    case WASM_OPCODE_DISCARD:
       printf("%s\n", s_opcode_name[opcode]);
       break;
 
@@ -1484,10 +1487,6 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F64_STORE:
       printf("%s %u+$%u, %g\n", s_opcode_name[opcode], PICK(2).i32,
              read_u32_at(pc), bitcast_u64_to_f64(PICK(1).f64_bits));
-      break;
-
-    case WASM_OPCODE_MEMORY_SIZE:
-      printf("%s\n", s_opcode_name[opcode]);
       break;
 
     case WASM_OPCODE_GROW_MEMORY:
@@ -1664,10 +1663,6 @@ void wasm_trace_pc(WasmInterpreterModule* module,
       printf("%s @%u, %u\n", s_opcode_name[opcode], read_u32_at(pc), TOP().i32);
       break;
 
-    case WASM_OPCODE_DISCARD:
-      printf("%s\n", s_opcode_name[opcode]);
-      break;
-
     case WASM_OPCODE_DISCARD_KEEP:
       printf("%s $%u $%u\n", s_opcode_name[opcode], read_u32_at(pc), *(pc + 4));
       break;
@@ -1716,6 +1711,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
         break;
       }
 
+      case WASM_OPCODE_NOP:
       case WASM_OPCODE_RETURN:
       case WASM_OPCODE_UNREACHABLE:
       case WASM_OPCODE_MEMORY_SIZE:
