@@ -3789,7 +3789,7 @@ yyreduce:
         WasmFunc* func = (yyval.module)->funcs.data[i];
         if (func->flags == WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
           int index = wasm_get_func_type_index_by_var((yyval.module), &func->type_var);
-          if (index >= 0 && index < (yyval.module)->func_types.size) {
+          if (index >= 0 && (size_t)index < (yyval.module)->func_types.size) {
             WasmFuncType* func_type = (yyval.module)->func_types.data[index];
             func->result_type = func_type->sig.result_type;
             CHECK_ALLOC(wasm_extend_types(parser->allocator,
