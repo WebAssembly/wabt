@@ -556,9 +556,9 @@ static WasmResult squirrel_wasm_import_callback(
   WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
   WasmInterpreterTypedValue result;
   if (WASM_FAILED(convert_typed_value(&top_tv, sig->result_type, &result))) {
-    fprintf(stderr,
-            "error: cannot convert return value of type %s to type %s.\n",
-            s_type_names[top_tv.type], s_type_names[sig->result_type]);
+    squirrel_throwerrorf(
+        v, "cannot convert return value of type %s to type %s.",
+        s_type_names[top_tv.type], s_type_names[sig->result_type]);
     return WASM_ERROR;
   }
   *out_result = result;
@@ -862,6 +862,30 @@ DEFINE_MEMORY_SET_INTEGER(squirrel_memory_set_u64, uint64_t)
 DEFINE_MEMORY_SET_FLOAT(squirrel_memory_set_f32, float)
 DEFINE_MEMORY_SET_FLOAT(squirrel_memory_set_f64, double)
 
+static SQInteger squirrel_memory_get_blob(HSQUIRRELVM v) {
+  SQInteger blob_size;
+  CHECK_SQ_RESULT(sq_getinteger(v, 3, &blob_size));
+  void* addr;
+  CHECK_SQ_RESULT(squirrel_memory_get_addr(v, blob_size, &addr));
+  SQUserPointer blob_data = sqstd_createblob(v, blob_size);
+  memcpy(blob_data, addr, blob_size);
+  return 1;
+}
+
+static SQInteger squirrel_memory_set_blob(HSQUIRRELVM v) {
+  SQUserPointer blob_data;
+  SQInteger blob_size;
+  CHECK_SQ_RESULT(sqstd_getblob(v, 3, &blob_data));
+  blob_size = sqstd_getblobsize(v, 3);
+  if (blob_size == -1)
+    return -1;
+
+  void* addr;
+  CHECK_SQ_RESULT(squirrel_memory_get_addr(v, blob_size, &addr));
+  memcpy(addr, blob_data, blob_size);
+  return 0;
+}
+
 static SQInteger squirrel_memory_len(HSQUIRRELVM v) {
   SQUserPointer up;
   CHECK_SQ_RESULT(sq_getinstanceup(v, 1, &up, NULL));
@@ -960,6 +984,11 @@ static WasmResult init_squirrel(WasmAllocator* allocator, HSQUIRRELVM* out_sq) {
       squirrel_register_closure(v, "setf32", squirrel_memory_set_f32, "xif"));
   CHECK_SQ_RESULT(
       squirrel_register_closure(v, "setf64", squirrel_memory_set_f64, "xif"));
+
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "getblob", squirrel_memory_get_blob, "xii"));
+  CHECK_SQ_RESULT(
+      squirrel_register_closure(v, "setblob", squirrel_memory_set_blob, "xix"));
 
   CHECK_SQ_RESULT(
       squirrel_register_closure(v, "len", squirrel_memory_len, "x"));
