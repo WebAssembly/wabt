@@ -250,6 +250,34 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
   return WASM_OK;
 }
 
+WasmResult wasm_make_type_binding_reverse_mapping(
+    struct WasmAllocator* allocator,
+    const WasmTypeBindings* type_bindings,
+    uint32_t index_offset,
+    WasmStringSliceVector* out_reverse_mapping) {
+  uint32_t num_names = type_bindings->types.size;
+  if (WASM_FAILED(wasm_reserve_string_slices(allocator, out_reverse_mapping,
+                                             num_names))) {
+    return WASM_ERROR;
+  }
+  out_reverse_mapping->size = num_names;
+  memset(out_reverse_mapping->data, 0, num_names * sizeof(WasmStringSlice));
+
+  /* map index to name */
+  size_t i;
+  for (i = 0; i < type_bindings->bindings.entries.capacity; ++i) {
+    const WasmBindingHashEntry* entry =
+        &type_bindings->bindings.entries.data[i];
+    if (wasm_hash_entry_is_free(entry))
+      continue;
+
+    uint32_t index = entry->binding.index + index_offset;
+    assert(index < out_reverse_mapping->size);
+    out_reverse_mapping->data[index] = entry->binding.name;
+  }
+  return WASM_OK;
+}
+
 WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
                                           WasmModule* module) {
   WasmModuleField* result =

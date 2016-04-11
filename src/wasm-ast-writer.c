@@ -48,8 +48,6 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 
 #define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, WASM_SUCCEEDED(e))
 
-WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
-
 static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -618,28 +616,9 @@ static void write_type_bindings(WasmContext* ctx,
                                 const WasmFunc* func,
                                 const WasmTypeBindings* type_bindings,
                                 uint32_t index_offset) {
-  size_t i;
-  /* allocate memory for the index-to-name mapping */
-  uint32_t num_names = type_bindings->types.size;
-  if (num_names > ctx->index_to_name.size) {
-    CHECK_ALLOC(ctx, wasm_reserve_string_slices(
-                         ctx->allocator, &ctx->index_to_name, num_names));
-  }
-  ctx->index_to_name.size = num_names;
-  memset(ctx->index_to_name.data, 0, num_names * sizeof(WasmStringSlice));
-
-  /* map index to name */
-  for (i = 0; i < type_bindings->bindings.entries.capacity; ++i) {
-    const WasmBindingHashEntry* entry =
-        &type_bindings->bindings.entries.data[i];
-    if (wasm_hash_entry_is_free(entry))
-      continue;
-
-    uint32_t index = entry->binding.index + index_offset;
-
-    assert(index < ctx->index_to_name.size);
-    ctx->index_to_name.data[index] = entry->binding.name;
-  }
+  CHECK_ALLOC(ctx, wasm_make_type_binding_reverse_mapping(
+                       ctx->allocator, type_bindings, index_offset,
+                       &ctx->index_to_name));
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -647,6 +626,7 @@ static void write_type_bindings(WasmContext* ctx,
    *   (param i32 i64 f32)
    */
   WasmBool is_open = WASM_FALSE;
+  size_t i;
   for (i = 0; i < type_bindings->types.size; ++i) {
     if (!is_open) {
       out_open_space(ctx, prefix);

@@ -41,6 +41,7 @@ typedef struct WasmVar {
 WASM_DEFINE_VECTOR(var, WasmVar);
 
 typedef WasmStringSlice WasmLabel;
+WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
 
 typedef struct WasmExpr* WasmExprPtr;
 WASM_DEFINE_VECTOR(expr_ptr, WasmExprPtr);
@@ -483,6 +484,11 @@ WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
 WasmResult wasm_extend_type_bindings(struct WasmAllocator*,
                                      WasmTypeBindings* dst,
                                      WasmTypeBindings* src) WASM_WARN_UNUSED;
+WasmResult wasm_make_type_binding_reverse_mapping(
+    struct WasmAllocator*,
+    const WasmTypeBindings* bindings,
+    uint32_t index_offset,
+    WasmStringSliceVector* out_reverse_mapping);
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_H_ */
