@@ -218,6 +218,16 @@ static void out_string_slice_opt(WasmContext* ctx,
     out_string_slice(ctx, str, next_char);
 }
 
+static void out_string_slice_or_index(WasmContext* ctx,
+                                      const WasmStringSlice* str,
+                                      uint32_t index,
+                                      WasmNextChar next_char) {
+  if (str->start)
+    out_string_slice(ctx, str, next_char);
+  else
+    out_printf(ctx, "(;%u;)", index);
+}
+
 static void out_quoted_data(WasmContext* ctx, const void* data, size_t length) {
   const uint8_t* u8_data = data;
   static const char s_hexdigits[] = "0123456789abcdef";
@@ -260,7 +270,7 @@ static void out_br_var(WasmContext* ctx,
                        const WasmVar* var,
                        WasmNextChar next_char) {
   if (var->type == WASM_VAR_TYPE_INDEX) {
-    out_printf(ctx, "%d (; @%d ;)", var->index, ctx->depth - var->index - 1);
+    out_printf(ctx, "%d (;@%d;)", var->index, ctx->depth - var->index - 1);
     ctx->next_char = next_char;
   } else {
     out_string_slice(ctx, &var->name, next_char);
@@ -651,8 +661,7 @@ static void write_func(WasmContext* ctx,
                        int func_index,
                        const WasmFunc* func) {
   out_open_space(ctx, "func");
-  out_printf(ctx, "(; %d ;)", func_index);
-  out_string_slice_opt(ctx, &func->name, WASM_NEXT_CHAR_SPACE);
+  out_string_slice_or_index(ctx, &func->name, func_index, WASM_NEXT_CHAR_SPACE);
   if (wasm_decl_has_func_type(&func->decl)) {
     out_open_space(ctx, "type");
     out_var(ctx, &func->decl.type_var, WASM_NEXT_CHAR_NONE);
@@ -681,8 +690,8 @@ static void write_import(WasmContext* ctx,
                          int import_index,
                          const WasmImport* import) {
   out_open_space(ctx, "import");
-  out_printf(ctx, "(; %d ;)", import_index);
-  out_string_slice_opt(ctx, &import->name, WASM_NEXT_CHAR_SPACE);
+  out_string_slice_or_index(ctx, &import->name, import_index,
+                            WASM_NEXT_CHAR_SPACE);
   out_quoted_string_slice(ctx, &import->module_name, WASM_NEXT_CHAR_SPACE);
   out_quoted_string_slice(ctx, &import->func_name, WASM_NEXT_CHAR_SPACE);
   if (wasm_decl_has_func_type(&import->decl)) {
@@ -699,9 +708,8 @@ static void write_export(WasmContext* ctx,
                          int export_index,
                          const WasmExport* export) {
   out_open_space(ctx, "export");
-  out_printf(ctx, "(; %d ;)", export_index);
   out_quoted_string_slice(ctx, &export->name, WASM_NEXT_CHAR_SPACE);
-  out_var(ctx, &export->var, WASM_NEXT_CHAR_NONE);
+  out_var(ctx, &export->var, WASM_NEXT_CHAR_SPACE);
   out_close_newline(ctx);
 }
 
@@ -746,8 +754,8 @@ static void write_func_type(WasmContext* ctx,
                             int func_type_index,
                             const WasmFuncType* func_type) {
   out_open_space(ctx, "type");
-  out_printf(ctx, "(; %d ;)", func_type_index);
-  out_string_slice_opt(ctx, &func_type->name, WASM_NEXT_CHAR_SPACE);
+  out_string_slice_or_index(ctx, &func_type->name, func_type_index,
+                            WASM_NEXT_CHAR_SPACE);
   out_open_space(ctx, "func");
   out_func_sig_space(ctx, &func_type->sig);
   out_close_space(ctx);

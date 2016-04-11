@@ -173,10 +173,12 @@ target_link_libraries(sexpr-wasm wasm-common)
 
 # wasm-wast
 add_executable(wasm-wast
+  src/wasm-apply-names.c
   src/wasm-ast.c
   src/wasm-ast-writer.c
   src/wasm-binary-reader.c
   src/wasm-binary-reader-ast.c
+  src/wasm-generate-names.c
   src/wasm-literal.c
   src/wasm-wast.c
 )

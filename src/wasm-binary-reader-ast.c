@@ -1017,8 +1017,6 @@ static WasmResult on_function_name(uint32_t index,
 
   WasmFunc* func = ctx->module->funcs.data[index];
   func->name = dup_name;
-  /* TODO(binji): We could update the call expressions to use the function name
-   * instead of the index */
   return WASM_OK;
 }
 
@@ -1064,8 +1062,6 @@ static WasmResult on_local_name(uint32_t func_index,
   binding = wasm_insert_binding(ctx->allocator, bindings, &dup_name);
   CHECK_ALLOC_NULL(ctx, binding);
   binding->index = index;
-  /* TODO(binji): We could update the get_local/set_local expressions to use
-   * the name instead of the index */
   return WASM_OK;
 }
 

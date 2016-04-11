@@ -26,7 +26,7 @@
 struct WasmAllocator;
 
 #define WASM_READ_BINARY_OPTIONS_DEFAULT \
-  { 0 }
+  { WASM_FALSE }
 
 typedef struct WasmReadBinaryOptions {
   WasmBool read_debug_names;

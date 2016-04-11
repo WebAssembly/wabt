@@ -1,0 +1,44 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --debug-names --generate-names
+
+;; currently, only function names and local names are saved in the debug
+;; section
+
+(module
+  (type (func (param i32) (result f32)))
+  (import $import "foo" "bar" (result i32))
+  (table 0)
+  (func $func0 (type 0))
+  (func (param i32) (param $param1 i64)
+    (local f32)
+    (local $local1 f64)
+    (call_import 0)
+    (call 0 (i32.const 0))
+    (call_indirect 0 (i32.const 0) (i32.const 1))
+    (get_local 1)
+    (set_local 2 (f32.const 0)))
+  (export "baz" 0)
+  (export "quux" 1))
+
+(;; STDOUT ;;;
+(module
+  (type $t0 (func (param i32) (result f32)))
+  (type $t1 (func (result i32)))
+  (type $t2 (func (param i32 i64)))
+  (import $i0 "foo" "bar" (type $t1))
+  (func $func0 (type $t0) (param  i32) (result f32))
+  (func $f1 (type $t2) (param $p0 i32) (param $param1 i64)
+    (local $l0 f32) (local $local1 f64)
+    (call_import $i0)
+    (call $func0
+      (i32.const 0))
+    (call_indirect $t0
+      (i32.const 0)
+      (i32.const 1))
+    (get_local $param1)
+    (set_local $l0
+      (f32.const 0x0p+0)))
+  (table $func0)
+  (export "baz" $func0)
+  (export "quux" $f1))
+;;; STDOUT ;;)

@@ -20,10 +20,12 @@
 #include <stdlib.h>
 
 #include "wasm-allocator.h"
+#include "wasm-apply-names.h"
 #include "wasm-ast.h"
 #include "wasm-ast-writer.h"
 #include "wasm-binary-reader.h"
 #include "wasm-binary-reader-ast.h"
+#include "wasm-generate-names.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-writer.h"
@@ -33,7 +35,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
-static int s_use_libc_allocator;
+static WasmBool s_use_libc_allocator;
+static WasmBool s_generate_names;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
@@ -44,6 +47,7 @@ enum {
   FLAG_OUTPUT,
   FLAG_USE_LIBC_ALLOCATOR,
   FLAG_DEBUG_NAMES,
+  FLAG_GENERATE_NAMES,
   NUM_FLAGS
 };
 
@@ -57,6 +61,8 @@ static WasmOption s_options[] = {
      "use malloc, free, etc. instead of stack allocator"},
     {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
      "Read debug names from the binary file"},
+    {FLAG_GENERATE_NAMES, 0, "generate-names", NULL, NOPE,
+     "Give auto-generated names to non-named functions, types, etc."},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
@@ -83,6 +89,10 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_DEBUG_NAMES:
       s_read_binary_options.read_debug_names = WASM_TRUE;
+      break;
+
+    case FLAG_GENERATE_NAMES:
+      s_generate_names = WASM_TRUE;
       break;
   }
 }
@@ -129,22 +139,30 @@ int main(int argc, char** argv) {
   void* data;
   size_t size;
   result = wasm_read_file(allocator, s_infile, &data, &size);
-  if (result == WASM_OK) {
+  if (WASM_SUCCEEDED(result)) {
     WasmModule module;
     WASM_ZERO_MEMORY(module);
-    result = wasm_read_binary_ast(allocator, data, size,
-                                             &s_read_binary_options, &module);
-    if (result == WASM_OK) {
-      WasmFileWriter file_writer;
-      if (s_outfile) {
-        result = wasm_init_file_writer(&file_writer, s_outfile);
-      } else {
-        result = wasm_init_file_writer_existing(&file_writer, stdout);
-      }
+    result = wasm_read_binary_ast(allocator, data, size, &s_read_binary_options,
+                                  &module);
+    if (WASM_SUCCEEDED(result)) {
+      if (s_generate_names)
+        result = wasm_generate_names(allocator, &module);
 
-      if (result == WASM_OK) {
-        result = wasm_write_ast(allocator, &file_writer.base, &module);
-        wasm_close_file_writer(&file_writer);
+      if (WASM_SUCCEEDED(result))
+        result = wasm_apply_names(allocator, &module);
+
+      if (WASM_SUCCEEDED(result)) {
+        WasmFileWriter file_writer;
+        if (s_outfile) {
+          result = wasm_init_file_writer(&file_writer, s_outfile);
+        } else {
+          result = wasm_init_file_writer_existing(&file_writer, stdout);
+        }
+
+        if (WASM_SUCCEEDED(result)) {
+          result = wasm_write_ast(allocator, &file_writer.base, &module);
+          wasm_close_file_writer(&file_writer);
+        }
       }
     }
 

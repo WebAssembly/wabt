@@ -74,6 +74,9 @@
   void wasm_destroy_##name##_vector(struct WasmAllocator* allocator,           \
                                     type##Vector* vec) {                       \
     wasm_free(allocator, vec->data);                                           \
+    vec->data = NULL;                                                          \
+    vec->size = 0;                                                             \
+    vec->capacity = 0;                                                         \
   }                                                                            \
   WasmResult wasm_resize_##name##_vector(struct WasmAllocator* allocator,      \
                                          type##Vector* vec, size_t size) {     \
