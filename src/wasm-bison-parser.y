@@ -63,6 +63,10 @@
 
 #define USE_NATURAL_ALIGNMENT (~0)
 
+static WasmFuncField* new_func_field(WasmAllocator* allocator) {
+  return wasm_alloc_zero(allocator, sizeof(WasmFuncField), WASM_DEFAULT_ALIGN);
+}
+
 static WasmFunc* new_func(WasmAllocator* allocator) {
   return wasm_alloc_zero(allocator, sizeof(WasmFunc), WASM_DEFAULT_ALIGN);
 }
@@ -130,6 +134,7 @@ static WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
 %type<export_memory> export_memory
 %type<expr> expr expr1 expr_opt
 %type<exprs> expr_list non_empty_expr_list
+%type<func_fields> func_fields
 %type<func> func func_info
 %type<func_sig> func_type
 %type<func_type> type_def
@@ -140,9 +145,7 @@ static WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
 %type<script> script
 %type<segment> segment string_contents
 %type<segments> segment_list
-%type<type_bindings> local_list param_list
 %type<text> bind_var labeling quoted_text
-%type<type> result
 %type<types> value_type_list
 %type<u32> align initial_pages max_pages segment_address
 %type<u64> offset
@@ -156,7 +159,7 @@ static WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
 %destructor { wasm_destroy_expr_ptr(parser->allocator, &$$); } expr expr1 expr_opt
 %destructor { wasm_destroy_expr_ptr_vector_and_elements(parser->allocator, &$$); } expr_list non_empty_expr_list
-%destructor { wasm_destroy_type_bindings(parser->allocator, &$$); } local_list param_list
+%destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment string_contents
 %destructor { wasm_destroy_segment_vector_and_elements(parser->allocator, &$$); } segment_list
@@ -524,525 +527,135 @@ expr_list :
 ;
 
 /* Functions */
-
-param_list :
-    LPAR PARAM value_type_list RPAR {
-      WASM_ZERO_MEMORY($$);
-      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$3));
-      wasm_destroy_type_vector(parser->allocator, &$3);
+func_fields :
+    expr_list {
+      $$ = new_func_field(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->type = WASM_FUNC_FIELD_TYPE_EXPRS;
+      $$->exprs = $1;
+      $$->next = NULL;
     }
-  | LPAR PARAM bind_var VALUE_TYPE RPAR {
-      WASM_ZERO_MEMORY($$);
-      WasmBinding* binding =
-          wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
-      CHECK_ALLOC_NULL(binding);
-      binding->loc = @2;
-      binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$4));
+  | LPAR PARAM value_type_list RPAR func_fields {
+      $$ = new_func_field(parser->allocator);
+      $$->type = WASM_FUNC_FIELD_TYPE_PARAM_TYPES;
+      $$->types = $3;
+      $$->next = $5;
     }
-  | param_list LPAR PARAM value_type_list RPAR {
-      $$ = $1;
-      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$4));
-      wasm_destroy_type_vector(parser->allocator, &$4);
+  | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields {
+      $$ = new_func_field(parser->allocator);
+      $$->type = WASM_FUNC_FIELD_TYPE_BOUND_PARAM;
+      $$->bound_type.loc = @2;
+      $$->bound_type.name = $3;
+      $$->bound_type.type = $4;
+      $$->next = $6;
     }
-  | param_list LPAR PARAM bind_var VALUE_TYPE RPAR {
-      $$ = $1;
-      WasmBinding* binding =
-          wasm_insert_binding(parser->allocator, &$$.bindings, &$4);
-      CHECK_ALLOC_NULL(binding);
-      binding->loc = @3;
-      binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$5));
+  | LPAR RESULT VALUE_TYPE RPAR func_fields {
+      $$ = new_func_field(parser->allocator);
+      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPE;
+      $$->result_type = $3;
+      $$->next = $5;
     }
-;
-result :
-    LPAR RESULT VALUE_TYPE RPAR { $$ = $3; }
-;
-local_list :
-    LPAR LOCAL value_type_list RPAR {
-      WASM_ZERO_MEMORY($$);
-      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$3));
-      wasm_destroy_type_vector(parser->allocator, &$3);
+  | LPAR LOCAL value_type_list RPAR func_fields {
+      $$ = new_func_field(parser->allocator);
+      $$->type = WASM_FUNC_FIELD_TYPE_LOCAL_TYPES;
+      $$->types = $3;
+      $$->next = $5;
     }
-  | LPAR LOCAL bind_var VALUE_TYPE RPAR {
-      WASM_ZERO_MEMORY($$);
-      WasmBinding* binding =
-          wasm_insert_binding(parser->allocator, &$$.bindings, &$3);
-      CHECK_ALLOC_NULL(binding);
-      binding->loc = @2;
-      binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$4));
-    }
-  | local_list LPAR LOCAL value_type_list RPAR {
-      $$ = $1;
-      CHECK_ALLOC(wasm_extend_types(parser->allocator, &$$.types, &$4));
-      wasm_destroy_type_vector(parser->allocator, &$4);
-    }
-  | local_list LPAR LOCAL bind_var VALUE_TYPE RPAR {
-      $$ = $1;
-      WasmBinding* binding =
-          wasm_insert_binding(parser->allocator, &$$.bindings, &$4);
-      CHECK_ALLOC_NULL(binding);
-      binding->loc = @3;
-      binding->index = $$.types.size;
-      CHECK_ALLOC(wasm_append_type_value(parser->allocator, &$$.types, &$5));
+  | LPAR LOCAL bind_var VALUE_TYPE RPAR func_fields {
+      $$ = new_func_field(parser->allocator);
+      $$->type = WASM_FUNC_FIELD_TYPE_BOUND_LOCAL;
+      $$->bound_type.loc = @2;
+      $$->bound_type.name = $3;
+      $$->bound_type.type = $4;
+      $$->next = $6;
     }
 ;
 type_use :
     LPAR TYPE var RPAR { $$ = $3; }
 ;
 func_info :
-    /* empty */ {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-    }
-  | bind_var {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-    }
-  | bind_var type_use {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->name = $1;
-      $$->type_var = $2;
-    }
-  | bind_var type_use param_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-    }
-  | bind_var type_use param_list result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->result_type = $4;
-    }
-  | bind_var type_use param_list result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->result_type = $4;
-      $$->locals = $5;
-    }
-  | bind_var type_use param_list result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->result_type = $4;
-      $$->locals = $5;
-      $$->exprs = $6;
-    }
-  | bind_var type_use param_list result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->result_type = $4;
-      $$->exprs = $5;
-    }
-  | bind_var type_use param_list local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->locals = $4;
-    }
-  | bind_var type_use param_list local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->locals = $4;
-      $$->exprs = $5;
-    }
-  | bind_var type_use param_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->params = $3;
-      $$->exprs = $4;
-    }
-  | bind_var type_use result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->result_type = $3;
-    }
-  | bind_var type_use result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->result_type = $3;
-      $$->locals = $4;
-    }
-  | bind_var type_use result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->result_type = $3;
-      $$->locals = $4;
-      $$->exprs = $5;
-    }
-  | bind_var type_use result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->result_type = $3;
-      $$->exprs = $4;
-    }
-  | bind_var type_use local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->locals = $3;
-    }
-  | bind_var type_use local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->locals = $3;
-      $$->exprs = $4;
-    }
-  | bind_var type_use non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->name = $1;
-      $$->type_var = $2;
-      $$->exprs = $3;
-    }
-  | bind_var local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->locals = $2;
-    }
-  | bind_var local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->locals = $2;
-      $$->exprs = $3;
-    }
-  | bind_var param_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-    }
-  | bind_var param_list result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-    }
-  | bind_var param_list result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-      $$->locals = $4;
-    }
-  | bind_var param_list result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-      $$->locals = $4;
-      $$->exprs = $5;
-    }
-  | bind_var param_list result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-      $$->exprs = $4;
-    }
-  | bind_var param_list local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->locals = $3;
-    }
-  | bind_var param_list local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->locals = $3;
-      $$->exprs = $4;
-    }
-  | bind_var param_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->params = $2;
-      $$->exprs = $3;
-    }
-  | bind_var result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->result_type = $2;
-    }
-  | bind_var result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->result_type = $2;
-      $$->locals = $3;
-    }
-  | bind_var result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->result_type = $2;
-      $$->locals = $3;
-      $$->exprs = $4;
-    }
-  | bind_var result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->result_type = $2;
-      $$->exprs = $3;
-    }
-  | bind_var non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->name = $1;
-      $$->exprs = $2;
-    }
-  | type_use {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->type_var = $1;
-    }
-  | type_use param_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-    }
-  | type_use param_list result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-    }
-  | type_use param_list result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-      $$->locals = $4;
-    }
-  | type_use param_list result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-      $$->locals = $4;
-      $$->exprs = $5;
-    }
-  | type_use param_list result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->result_type = $3;
-      $$->exprs = $4;
-    }
-  | type_use param_list local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->locals = $3;
-    }
-  | type_use param_list local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->locals = $3;
-      $$->exprs = $4;
-    }
-  | type_use param_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->params = $2;
-      $$->exprs = $3;
-    }
-  | type_use result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->result_type = $2;
-    }
-  | type_use result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->result_type = $2;
-      $$->locals = $3;
-    }
-  | type_use result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->result_type = $2;
-      $$->locals = $3;
-      $$->exprs = $4;
-    }
-  | type_use result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->type_var = $1;
-      $$->result_type = $2;
-      $$->exprs = $3;
-    }
-  | type_use local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->type_var = $1;
-      $$->locals = $2;
-    }
-  | type_use local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->type_var = $1;
-      $$->locals = $2;
-      $$->exprs = $3;
-    }
-  | type_use non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->type_var = $1;
-      $$->exprs = $2;
-    }
-  | param_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-    }
-  | param_list result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->result_type = $2;
-    }
-  | param_list result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->result_type = $2;
-      $$->locals = $3;
-    }
-  | param_list result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->result_type = $2;
-      $$->locals = $3;
-      $$->exprs = $4;
-    }
-  | param_list result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->result_type = $2;
-      $$->exprs = $3;
-    }
-  | param_list local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->locals = $2;
-    }
-  | param_list local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->locals = $2;
-      $$->exprs = $3;
-    }
-  | param_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->params = $1;
-      $$->exprs = $2;
-    }
-  | result {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->result_type = $1;
-    }
-  | result local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->result_type = $1;
-      $$->locals = $2;
-    }
-  | result local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->result_type = $1;
-      $$->locals = $2;
-      $$->exprs = $3;
-    }
-  | result non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->result_type = $1;
-      $$->exprs = $2;
-    }
-  | local_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->locals = $1;
-    }
-  | local_list non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->locals = $1;
-      $$->exprs = $2;
-    }
-  | non_empty_expr_list {
-      $$ = new_func(parser->allocator);
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-      $$->exprs = $1;
+    func_fields {
+      $$ = new_func(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      WasmFuncField* field = $1;
+      while (field) {
+        WasmFuncField* next = field->next;
+
+        if (field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES ||
+            field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM ||
+            field->type == WASM_FUNC_FIELD_TYPE_RESULT_TYPE) {
+          $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+        }
+
+        switch (field->type) {
+          case WASM_FUNC_FIELD_TYPE_EXPRS:
+            $$->exprs = field->exprs;
+            break;
+
+          case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
+          case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES: {
+            WasmTypeVector* types =
+                field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES
+                    ? &$$->params.types
+                    : &$$->locals.types;
+            CHECK_ALLOC(
+                wasm_extend_types(parser->allocator, types, &field->types));
+            wasm_destroy_type_vector(parser->allocator, &field->types);
+            break;
+          }
+
+          case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
+          case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL: {
+            WasmTypeBindings* bindings =
+                field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM ? &$$->params
+                                                                : &$$->locals;
+            CHECK_ALLOC(wasm_append_type_value(
+                parser->allocator, &bindings->types, &field->bound_type.type));
+            WasmBinding* binding =
+                wasm_insert_binding(parser->allocator, &bindings->bindings,
+                                    &field->bound_type.name);
+            CHECK_ALLOC_NULL(binding);
+            binding->loc = field->bound_type.loc;
+            binding->index = bindings->types.size - 1;
+            break;
+          }
+
+          case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
+            $$->result_type = field->result_type;
+            break;
+        }
+
+        /* we steal memory from the func field, but not the linked list nodes */
+        wasm_free(parser->allocator, field);
+        field = next;
+      }
     }
 ;
 func :
-    LPAR FUNC func_info RPAR { $$ = $3; $$->loc = @2; }
+    LPAR FUNC type_use func_info RPAR {
+      $$ = $4;
+      $$->loc = @2;
+      $$->flags |= WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->type_var = $3;
+    }
+  | LPAR FUNC bind_var type_use func_info RPAR {
+      $$ = $5;
+      $$->loc = @2;
+      $$->flags |= WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->name = $3;
+      $$->type_var = $4;
+    }
+  | LPAR FUNC func_info RPAR {
+      $$ = $3;
+      $$->loc = @2;
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+    }
+  | LPAR FUNC bind_var func_info RPAR {
+      $$ = $4;
+      $$->loc = @2;
+      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->name = $3;
+    }
 ;
 
 /* Modules */

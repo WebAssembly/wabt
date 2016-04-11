@@ -487,6 +487,38 @@ void wasm_destroy_func_type(WasmAllocator* allocator, WasmFuncType* func_type) {
   wasm_destroy_func_signature(allocator, &func_type->sig);
 }
 
+void wasm_destroy_func_fields(struct WasmAllocator* allocator,
+                              WasmFuncField* func_field) {
+  /* destroy the entire linked-list */
+  while (func_field) {
+    WasmFuncField* next_func_field = func_field->next;
+
+    switch (func_field->type) {
+      case WASM_FUNC_FIELD_TYPE_EXPRS:
+        WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, func_field->exprs,
+                                         expr_ptr);
+        break;
+
+      case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
+      case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES:
+        wasm_destroy_type_vector(allocator, &func_field->types);
+        break;
+
+      case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
+      case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL:
+        wasm_destroy_string_slice(allocator, &func_field->bound_type.name);
+        break;
+
+      case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
+        /* nothing to free */
+        break;
+    }
+
+    wasm_free(allocator, func_field);
+    func_field = next_func_field;
+  }
+}
+
 void wasm_destroy_segment(WasmAllocator* allocator, WasmSegment* segment) {
   wasm_free(allocator, segment->data);
 }

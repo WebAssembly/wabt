@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module (func (local i32) (param i32)))
-(;; STDERR ;;;
-parse/func/bad-param-after-local.txt:2:28: syntax error, unexpected PARAM
-(module (func (local i32) (param i32)))
-                           ^^^^^
-;;; STDERR ;;)

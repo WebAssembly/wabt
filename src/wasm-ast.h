@@ -160,10 +160,37 @@ struct WasmExpr {
   };
 };
 
+typedef struct WasmBoundType {
+  WasmLocation loc;
+  WasmStringSlice name;
+  WasmType type;
+} WasmBoundType;
+
 typedef struct WasmTypeBindings {
   WasmTypeVector types;
   WasmBindingHash bindings;
 } WasmTypeBindings;
+
+/* only used for parsing */
+typedef enum WasmFuncFieldType {
+  WASM_FUNC_FIELD_TYPE_EXPRS,
+  WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
+  WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
+  WASM_FUNC_FIELD_TYPE_RESULT_TYPE,
+  WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
+  WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
+} WasmFuncFieldType;
+
+typedef struct WasmFuncField {
+  WasmFuncFieldType type;
+  union {
+    WasmExprPtrVector exprs;
+    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
+    WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
+    WasmType result_type;
+  };
+  struct WasmFuncField* next;
+} WasmFuncField;
 
 enum {
   WASM_FUNC_FLAG_HAS_FUNC_TYPE = 1,
@@ -418,6 +445,7 @@ void wasm_destroy_export(struct WasmAllocator*, WasmExport*);
 void wasm_destroy_expr_ptr_vector_and_elements(struct WasmAllocator*,
                                                WasmExprPtrVector*);
 void wasm_destroy_expr_ptr(struct WasmAllocator*, WasmExprPtr*);
+void wasm_destroy_func_fields(struct WasmAllocator*, WasmFuncField*);
 void wasm_destroy_func_signature(struct WasmAllocator*, WasmFuncSignature*);
 void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);
 void wasm_destroy_func(struct WasmAllocator*, WasmFunc*);
