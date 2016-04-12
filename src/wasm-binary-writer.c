@@ -395,6 +395,24 @@ static int find_func_signature(const WasmFuncSignatureVector* sigs,
   return -1;
 }
 
+static void get_or_create_func_signature(WasmContext* ctx,
+                                         WasmFuncSignatureVector* sigs,
+                                         WasmType result_type,
+                                         const WasmTypeVector* param_types,
+                                         int* out_index) {
+  int index = find_func_signature(sigs, result_type, param_types);
+  if (index == -1) {
+    index = sigs->size;
+    WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
+    CHECK_ALLOC_NULL(sig);
+    sig->result_type = result_type;
+    WASM_ZERO_MEMORY(sig->param_types);
+    CHECK_ALLOC(
+        wasm_extend_types(ctx->allocator, &sig->param_types, param_types));
+  }
+  *out_index = index;
+}
+
 static void get_func_signatures(WasmContext* ctx,
                                 const WasmModule* module,
                                 WasmFuncSignatureVector* sigs) {
@@ -420,25 +438,11 @@ static void get_func_signatures(WasmContext* ctx,
     const WasmImport* import = module->imports.data[i];
     int index;
     if (import->import_type == WASM_IMPORT_HAS_FUNC_SIGNATURE) {
-      index = find_func_signature(sigs, import->func_sig.result_type,
-                                  &import->func_sig.param_types);
-      if (index == -1) {
-        index = sigs->size;
-        WasmFuncSignature* sig =
-            wasm_append_func_signature(ctx->allocator, sigs);
-        CHECK_ALLOC_NULL(sig);
-        sig->result_type = import->func_sig.result_type;
-        WASM_ZERO_MEMORY(sig->param_types);
-        CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
-                                      &import->func_sig.param_types));
-      }
+      get_or_create_func_signature(ctx, sigs, import->func_sig.result_type,
+                                   &import->func_sig.param_types, &index);
     } else {
       assert(import->import_type == WASM_IMPORT_HAS_TYPE);
-      const WasmFuncType* func_type =
-          wasm_get_func_type_by_var(module, &import->type_var);
-      assert(func_type);
-      index = find_func_signature(sigs, func_type->sig.result_type,
-                                  &func_type->sig.param_types);
+      index = wasm_get_func_type_index_by_var(module, &import->type_var);
       assert(index != -1);
     }
 
@@ -453,22 +457,13 @@ static void get_func_signatures(WasmContext* ctx,
   for (i = 0; i < module->funcs.size; ++i) {
     const WasmFunc* func = module->funcs.data[i];
     int index;
-    if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
+    if (func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE) {
+      get_or_create_func_signature(ctx, sigs, func->result_type,
+                                   &func->params.types, &index);
+    } else {
+      assert(func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE);
       index = wasm_get_func_type_index_by_var(module, &func->type_var);
       assert(index != -1);
-    } else {
-      assert(func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE);
-      index = find_func_signature(sigs, func->result_type, &func->params.types);
-      if (index == -1) {
-        index = sigs->size;
-        WasmFuncSignature* sig =
-            wasm_append_func_signature(ctx->allocator, sigs);
-        CHECK_ALLOC_NULL(sig);
-        sig->result_type = func->result_type;
-        WASM_ZERO_MEMORY(sig->param_types);
-        CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
-                                      &func->params.types));
-      }
     }
 
     ctx->func_sig_indexes[i] = index;
