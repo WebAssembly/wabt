@@ -54,7 +54,7 @@
 
 #define CHECK_LOCAL(ctx, local_index)                                       \
   do {                                                                      \
-    assert((ctx)->current_func->flags& WASM_FUNC_FLAG_HAS_FUNC_TYPE);       \
+    assert(wasm_decl_has_func_type(&(ctx)->current_func->decl));            \
     uint32_t max_local_index =                                              \
         wasm_get_num_params_and_locals((ctx)->current_func);                \
     if ((local_index) >= max_local_index) {                                 \
@@ -268,14 +268,14 @@ static WasmResult on_import(uint32_t index,
 
   WasmImport* import = &field->import;
   WASM_ZERO_MEMORY(*import);
-  import->import_type = WASM_IMPORT_HAS_TYPE;
+  import->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
   CHECK_ALLOC_NULL_STR(ctx, import->module_name = wasm_dup_string_slice(
                                 ctx->allocator, module_name));
   CHECK_ALLOC_NULL_STR(ctx, import->func_name = wasm_dup_string_slice(
                                 ctx->allocator, function_name));
-  import->type_var.type = WASM_VAR_TYPE_INDEX;
+  import->decl.type_var.type = WASM_VAR_TYPE_INDEX;
   assert(sig_index < ctx->module->func_types.size);
-  import->type_var.index = sig_index;
+  import->decl.type_var.index = sig_index;
 
   assert(index < ctx->module->imports.capacity);
   WasmImportPtr* import_ptr =
@@ -303,19 +303,21 @@ static WasmResult on_function_signature(uint32_t index,
 
   WasmFunc* func = &field->func;
   WASM_ZERO_MEMORY(*func);
-  func->flags = WASM_FUNC_FLAG_HAS_FUNC_TYPE | WASM_FUNC_FLAG_HAS_SIGNATURE;
-  func->type_var.type = WASM_VAR_TYPE_INDEX;
+  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
+                     WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+  func->decl.type_var.type = WASM_VAR_TYPE_INDEX;
   assert(sig_index < ctx->module->func_types.size);
-  func->type_var.index = sig_index;
+  func->decl.type_var.index = sig_index;
 
   /* copy the signature from the function type */
   WasmFuncSignature* sig = &ctx->module->func_types.data[sig_index]->sig;
   size_t i;
   for (i = 0; i < sig->param_types.size; ++i) {
-    CHECK_ALLOC(ctx, wasm_append_type_value(ctx->allocator, &func->params.types,
-                                            &sig->param_types.data[i]));
+    CHECK_ALLOC(
+        ctx, wasm_append_type_value(ctx->allocator, &func->decl.sig.param_types,
+                                    &sig->param_types.data[i]));
   }
-  func->result_type = sig->result_type;
+  func->decl.sig.result_type = sig->result_type;
 
   assert(index < ctx->module->funcs.capacity);
   WasmFuncPtr* func_ptr =
@@ -359,13 +361,13 @@ static WasmResult on_local_decl(uint32_t decl_index,
                                 void* user_data) {
   WasmContext* ctx = user_data;
   assert(ctx->current_func);
-  size_t old_local_count = ctx->current_func->locals.types.size;
+  size_t old_local_count = ctx->current_func->local_types.size;
   size_t new_local_count = old_local_count + count;
   CHECK_ALLOC(
-      ctx, wasm_reserve_types(ctx->allocator, &ctx->current_func->locals.types,
+      ctx, wasm_reserve_types(ctx->allocator, &ctx->current_func->local_types,
                               new_local_count));
   WASM_STATIC_ASSERT(sizeof(WasmType) == sizeof(uint8_t));
-  WasmTypeVector* types = &ctx->current_func->locals.types;
+  WasmTypeVector* types = &ctx->current_func->local_types;
   memset(&types->data[old_local_count], type, count);
   types->size = new_local_count;
   return WASM_OK;
@@ -654,7 +656,7 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   assert(ctx->current_func);
   assert(func_index < ctx->module->funcs.size);
   WasmFunc* func = ctx->module->funcs.data[func_index];
-  uint32_t sig_index = func->type_var.index;
+  uint32_t sig_index = func->decl.type_var.index;
   assert(sig_index < ctx->module->func_types.size);
   WasmFuncType* func_type = ctx->module->func_types.data[sig_index];
 
@@ -671,7 +673,7 @@ static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
   assert(ctx->current_func);
   assert(import_index < ctx->module->imports.size);
   WasmImport* import = ctx->module->imports.data[import_index];
-  uint32_t sig_index = import->type_var.index;
+  uint32_t sig_index = import->decl.type_var.index;
   assert(sig_index < ctx->module->func_types.size);
   WasmFuncType* func_type = ctx->module->func_types.data[sig_index];
 
@@ -850,7 +852,7 @@ static WasmResult on_return_expr(void* user_data) {
   WasmContext* ctx = user_data;
   assert(ctx->current_func);
 
-  uint32_t sig_index = ctx->current_func->type_var.index;
+  uint32_t sig_index = ctx->current_func->decl.type_var.index;
   assert(sig_index < ctx->module->func_types.size);
   WasmFuncType* func_type = ctx->module->func_types.data[sig_index];
 
@@ -1043,7 +1045,7 @@ static WasmResult on_local_name(uint32_t func_index,
   WasmContext* ctx = user_data;
   WasmModule* module = ctx->module;
   WasmFunc* func = module->funcs.data[func_index];
-  uint32_t num_params = func->params.types.size;
+  uint32_t num_params = wasm_get_num_params(func);
   WasmStringSlice dup_name;
   CHECK_ALLOC_NULL_STR(ctx,
                        dup_name = wasm_dup_string_slice(ctx->allocator, name));
@@ -1052,11 +1054,11 @@ static WasmResult on_local_name(uint32_t func_index,
   uint32_t index;
   if (local_index < num_params) {
     /* param name */
-    bindings = &func->params.bindings;
+    bindings = &func->param_bindings;
     index = local_index;
   } else {
     /* local name */
-    bindings = &func->locals.bindings;
+    bindings = &func->local_bindings;
     index = local_index - num_params;
   }
   binding = wasm_insert_binding(ctx->allocator, bindings, &dup_name);

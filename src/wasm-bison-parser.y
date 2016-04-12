@@ -94,6 +94,10 @@ static WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
                                           WasmLabel* label,
                                           WasmExprPtrVector* exprs);
 
+WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
+                                         WasmModule* module,
+                                         WasmFuncDeclaration* decl);
+
 #define wasm_parser_lex wasm_lexer_lex
 
 %}
@@ -584,7 +588,7 @@ func_info :
         if (field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES ||
             field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM ||
             field->type == WASM_FUNC_FIELD_TYPE_RESULT_TYPE) {
-          $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+          $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
         }
 
         switch (field->type) {
@@ -596,8 +600,8 @@ func_info :
           case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES: {
             WasmTypeVector* types =
                 field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES
-                    ? &$$->params.types
-                    : &$$->locals.types;
+                    ? &$$->decl.sig.param_types
+                    : &$$->local_types;
             CHECK_ALLOC(
                 wasm_extend_types(parser->allocator, types, &field->types));
             wasm_destroy_type_vector(parser->allocator, &field->types);
@@ -606,22 +610,28 @@ func_info :
 
           case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
           case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL: {
-            WasmTypeBindings* bindings =
-                field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM ? &$$->params
-                                                                : &$$->locals;
-            CHECK_ALLOC(wasm_append_type_value(
-                parser->allocator, &bindings->types, &field->bound_type.type));
-            WasmBinding* binding =
-                wasm_insert_binding(parser->allocator, &bindings->bindings,
-                                    &field->bound_type.name);
+            WasmTypeVector* types;
+            WasmBindingHash* bindings;
+            if (field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM) {
+              types = &$$->decl.sig.param_types;
+              bindings = &$$->param_bindings;
+            } else {
+              types = &$$->local_types;
+              bindings = &$$->local_bindings;
+            }
+
+            CHECK_ALLOC(wasm_append_type_value(parser->allocator, types,
+                                               &field->bound_type.type));
+            WasmBinding* binding = wasm_insert_binding(
+                parser->allocator, bindings, &field->bound_type.name);
             CHECK_ALLOC_NULL(binding);
             binding->loc = field->bound_type.loc;
-            binding->index = bindings->types.size - 1;
+            binding->index = types->size - 1;
             break;
           }
 
           case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
-            $$->result_type = field->result_type;
+            $$->decl.sig.result_type = field->result_type;
             break;
         }
 
@@ -635,25 +645,25 @@ func :
     LPAR FUNC type_use func_info RPAR {
       $$ = $4;
       $$->loc = @2;
-      $$->flags |= WASM_FUNC_FLAG_HAS_FUNC_TYPE;
-      $$->type_var = $3;
+      $$->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->decl.type_var = $3;
     }
   | LPAR FUNC bind_var type_use func_info RPAR {
       $$ = $5;
       $$->loc = @2;
-      $$->flags |= WASM_FUNC_FLAG_HAS_FUNC_TYPE;
+      $$->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->decl.type_var = $4;
       $$->name = $3;
-      $$->type_var = $4;
     }
   | LPAR FUNC func_info RPAR {
       $$ = $3;
       $$->loc = @2;
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
     }
   | LPAR FUNC bind_var func_info RPAR {
       $$ = $4;
       $$->loc = @2;
-      $$->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
+      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
       $$->name = $3;
     }
 ;
@@ -750,33 +760,33 @@ table :
 import :
     LPAR IMPORT quoted_text quoted_text type_use RPAR {
       $$ = new_import(parser->allocator);
-      $$->import_type = WASM_IMPORT_HAS_TYPE;
       $$->module_name = $3;
       $$->func_name = $4;
-      $$->type_var = $5;
+      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->decl.type_var = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text type_use RPAR /* Sugar */ {
       $$ = new_import(parser->allocator);
-      $$->import_type = WASM_IMPORT_HAS_TYPE;
       $$->name = $3;
       $$->module_name = $4;
       $$->func_name = $5;
-      $$->type_var = $6;
+      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->decl.type_var = $6;
     }
   | LPAR IMPORT quoted_text quoted_text func_type RPAR  /* Sugar */ {
       $$ = new_import(parser->allocator);
-      $$->import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
       $$->module_name = $3;
       $$->func_name = $4;
-      $$->func_sig = $5;
+      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+      $$->decl.sig = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text func_type RPAR  /* Sugar */ {
       $$ = new_import(parser->allocator);
-      $$->import_type = WASM_IMPORT_HAS_FUNC_SIGNATURE;
       $$->name = $3;
       $$->module_name = $4;
       $$->func_name = $5;
-      $$->func_sig = $6;
+      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+      $$->decl.sig = $6;
     }
 ;
 
@@ -942,21 +952,17 @@ module :
         }
       }
 
-      /* if a function only defines a func type (and no explicit signature),
-       * copy the signature over for convenience */
       size_t i;
       for (i = 0; i < $$->funcs.size; ++i) {
         WasmFunc* func = $$->funcs.data[i];
-        if (func->flags == WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
-          int index = wasm_get_func_type_index_by_var($$, &func->type_var);
-          if (index >= 0 && (size_t)index < $$->func_types.size) {
-            WasmFuncType* func_type = $$->func_types.data[index];
-            func->result_type = func_type->sig.result_type;
-            CHECK_ALLOC(wasm_extend_types(parser->allocator,
-                                          &func->params.types,
-                                          &func_type->sig.param_types));
-          }
-        }
+        CHECK_ALLOC(
+            copy_signature_from_func_type(parser->allocator, $$, &func->decl));
+      }
+
+      for (i = 0; i < $$->imports.size; ++i) {
+        WasmImport* import = $$->imports.data[i];
+        CHECK_ALLOC(copy_signature_from_func_type(parser->allocator, $$,
+                                                  &import->decl));
       }
     }
 ;
@@ -1196,4 +1202,25 @@ WasmExpr* new_block_expr_with_list(WasmAllocator* allocator,
   block->block.label = *label;
   block->block.exprs = *exprs;
   return block;
+}
+
+WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
+                                         WasmModule* module,
+                                         WasmFuncDeclaration* decl) {
+  /* if a function or import only defines a func type (and no explicit
+   * signature), copy the signature over for convenience */
+  if (wasm_decl_has_func_type(decl) && !wasm_decl_has_signature(decl)) {
+    int index = wasm_get_func_type_index_by_var(module, &decl->type_var);
+    if (index >= 0 && (size_t)index < module->func_types.size) {
+      WasmFuncType* func_type = module->func_types.data[index];
+      decl->sig.result_type = func_type->sig.result_type;
+      return wasm_extend_types(allocator, &decl->sig.param_types,
+                               &func_type->sig.param_types);
+    } else {
+      /* technically not OK, but we'll catch this error later in the AST
+       * checker */
+      return WASM_OK;
+    }
+  }
+  return WASM_OK;
 }

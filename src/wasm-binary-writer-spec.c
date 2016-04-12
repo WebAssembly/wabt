@@ -302,8 +302,8 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
   if (!func_field)
     return NULL;
   WasmFunc* func = &func_field->func;
-  func->flags = WASM_FUNC_FLAG_HAS_SIGNATURE;
-  func->result_type = result_type;
+  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+  func->decl.sig.result_type = result_type;
   int func_index = module->funcs.size - 1;
 
   WasmModuleField* export_field =
@@ -379,7 +379,7 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
       int func_index = wasm_get_func_index_by_var(last_module, &export->var);
       assert(func_index >= 0 && (size_t)func_index < last_module->funcs.size);
       WasmFunc* callee = last_module->funcs.data[func_index];
-      WasmType result_type = callee->result_type;
+      WasmType result_type = wasm_get_result_type(callee);
       /* these pointers will be invalidated later, so we can't use them */
       export = NULL;
       callee = NULL;
@@ -469,7 +469,7 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
                                                  WASM_TYPE_I32, name);
           CHECK_ALLOC_NULL(caller);
           CHECK_ALLOC(wasm_append_type_value(
-              script->allocator, &caller->locals.types, &result_type));
+              script->allocator, &caller->local_types, &result_type));
           expr_ptr = wasm_append_expr_ptr(script->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
           *expr_ptr = create_set_local_expr(

@@ -50,7 +50,6 @@ typedef union WasmToken {
   WasmVarVector vars;
   WasmExprPtr expr;
   WasmExprPtrVector exprs;
-  WasmTypeBindings type_bindings;
   WasmFuncField* func_fields;
   WasmFunc* func;
   WasmSegment segment;

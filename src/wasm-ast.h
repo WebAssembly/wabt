@@ -17,6 +17,7 @@
 #ifndef WASM_AST_H_
 #define WASM_AST_H_
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -167,11 +168,6 @@ typedef struct WasmBoundType {
   WasmType type;
 } WasmBoundType;
 
-typedef struct WasmTypeBindings {
-  WasmTypeVector types;
-  WasmBindingHash bindings;
-} WasmTypeBindings;
-
 /* only used for parsing */
 typedef enum WasmFuncFieldType {
   WASM_FUNC_FIELD_TYPE_EXPRS,
@@ -193,24 +189,51 @@ typedef struct WasmFuncField {
   struct WasmFuncField* next;
 } WasmFuncField;
 
+typedef struct WasmFuncSignature {
+  WasmType result_type;
+  WasmTypeVector param_types;
+} WasmFuncSignature;
+
+typedef struct WasmFuncType {
+  WasmStringSlice name;
+  WasmFuncSignature sig;
+} WasmFuncType;
+typedef WasmFuncType* WasmFuncTypePtr;
+WASM_DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
+
 enum {
-  WASM_FUNC_FLAG_HAS_FUNC_TYPE = 1,
-  WASM_FUNC_FLAG_HAS_SIGNATURE = 2,
+  WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE = 1,
+  WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE = 2,
 };
-typedef uint32_t WasmFuncFlags;
+typedef uint32_t WasmFuncDeclarationFlags;
+
+typedef struct WasmFuncDeclaration {
+  WasmFuncDeclarationFlags flags;
+  WasmVar type_var;
+  WasmFuncSignature sig;
+} WasmFuncDeclaration;
 
 typedef struct WasmFunc {
   WasmLocation loc;
-  WasmFuncFlags flags;
   WasmStringSlice name;
-  WasmVar type_var;
-  WasmTypeBindings params;
-  WasmType result_type;
-  WasmTypeBindings locals;
+  WasmFuncDeclaration decl;
+  WasmTypeVector local_types;
+  WasmBindingHash param_bindings;
+  WasmBindingHash local_bindings;
   WasmExprPtrVector exprs;
 } WasmFunc;
 typedef WasmFunc* WasmFuncPtr;
 WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
+
+typedef struct WasmImport {
+  WasmLocation loc;
+  WasmStringSlice name;
+  WasmStringSlice module_name;
+  WasmStringSlice func_name;
+  WasmFuncDeclaration decl;
+} WasmImport;
+typedef WasmImport* WasmImportPtr;
+WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
 
 typedef struct WasmSegment {
   WasmLocation loc;
@@ -226,35 +249,6 @@ typedef struct WasmMemory {
   uint32_t max_pages;
   WasmSegmentVector segments;
 } WasmMemory;
-
-typedef struct WasmFuncSignature {
-  WasmType result_type;
-  WasmTypeVector param_types;
-} WasmFuncSignature;
-
-typedef struct WasmFuncType {
-  WasmStringSlice name;
-  WasmFuncSignature sig;
-} WasmFuncType;
-typedef WasmFuncType* WasmFuncTypePtr;
-WASM_DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
-
-typedef enum WasmImportType {
-  WASM_IMPORT_HAS_TYPE,
-  WASM_IMPORT_HAS_FUNC_SIGNATURE,
-} WasmImportType;
-
-typedef struct WasmImport {
-  WasmLocation loc;
-  WasmImportType import_type;
-  WasmStringSlice name;
-  WasmStringSlice module_name;
-  WasmStringSlice func_name;
-  WasmVar type_var;
-  WasmFuncSignature func_sig;
-} WasmImport;
-typedef WasmImport* WasmImportPtr;
-WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
 
 typedef struct WasmExport {
   WasmStringSlice name;
@@ -442,6 +436,7 @@ void wasm_destroy_export(struct WasmAllocator*, WasmExport*);
 void wasm_destroy_expr_ptr_vector_and_elements(struct WasmAllocator*,
                                                WasmExprPtrVector*);
 void wasm_destroy_expr_ptr(struct WasmAllocator*, WasmExprPtr*);
+void wasm_destroy_func_declaration(WasmAllocator*, WasmFuncDeclaration*);
 void wasm_destroy_func_fields(struct WasmAllocator*, WasmFuncField*);
 void wasm_destroy_func_signature(struct WasmAllocator*, WasmFuncSignature*);
 void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);
@@ -452,7 +447,6 @@ void wasm_destroy_module(struct WasmAllocator*, WasmModule*);
 void wasm_destroy_segment_vector_and_elements(struct WasmAllocator*,
                                               WasmSegmentVector*);
 void wasm_destroy_segment(struct WasmAllocator*, WasmSegment*);
-void wasm_destroy_type_bindings(struct WasmAllocator*, WasmTypeBindings*);
 void wasm_destroy_var_vector_and_elements(struct WasmAllocator*,
                                           WasmVarVector*);
 void wasm_destroy_var(struct WasmAllocator*, WasmVar*);
@@ -468,7 +462,6 @@ int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var);
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
-size_t wasm_get_num_params_and_locals(const WasmFunc* func);
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
@@ -478,13 +471,56 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
                                       const WasmStringSlice* name);
 
-WasmResult wasm_extend_type_bindings(struct WasmAllocator*,
-                                     WasmTypeBindings* dst,
-                                     WasmTypeBindings* src) WASM_WARN_UNUSED;
 WasmResult wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator*,
-    const WasmTypeBindings*,
+    const WasmTypeVector*,
+    const WasmBindingHash*,
     WasmStringSliceVector* out_reverse_mapping);
+
+static WASM_INLINE WasmBool
+wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
+  return decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+}
+
+static WASM_INLINE WasmBool
+wasm_decl_has_signature(const WasmFuncDeclaration* decl) {
+  return decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+}
+
+
+static WASM_INLINE size_t wasm_get_num_params(const WasmFunc* func) {
+  return func->decl.sig.param_types.size;
+}
+
+static WASM_INLINE size_t wasm_get_num_params_and_locals(const WasmFunc* func) {
+  return wasm_get_num_params(func) + func->local_types.size;
+}
+
+static WASM_INLINE WasmType wasm_get_param_type(const WasmFunc* func,
+                                                int index) {
+  assert((size_t)index < wasm_get_num_params(func));
+  return func->decl.sig.param_types.data[index];
+}
+
+static WASM_INLINE WasmType wasm_get_result_type(const WasmFunc* func) {
+  return func->decl.sig.result_type;
+}
+
+static WASM_INLINE WasmType
+wasm_get_func_type_result_type(const WasmFuncType* func_type) {
+  return func_type->sig.result_type;
+}
+
+static WASM_INLINE WasmType
+wasm_get_func_type_param_type(const WasmFuncType* func_type, int index) {
+  return func_type->sig.param_types.data[index];
+}
+
+static WASM_INLINE size_t
+wasm_get_func_type_num_params(const WasmFuncType* func_type) {
+  return func_type->sig.param_types.size;
+}
+
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_H_ */

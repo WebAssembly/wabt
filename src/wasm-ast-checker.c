@@ -223,11 +223,11 @@ static WasmResult check_local_var(WasmContext* ctx,
   int index = wasm_get_local_index_by_var(func, var);
   if (index >= 0 && index < max_index) {
     if (out_type) {
-      int num_params = func->params.types.size;
+      int num_params = wasm_get_num_params(func);
       if (index < num_params)  {
-        *out_type = func->params.types.data[index];
+        *out_type = wasm_get_param_type(func, index);
       } else {
-        *out_type = func->locals.types.data[index - num_params];
+        *out_type = func->local_types.data[index - num_params];
       }
     }
     return WASM_OK;
@@ -411,21 +411,20 @@ static void check_call(WasmContext* ctx,
                        const WasmLocation* loc,
                        const WasmModule* module,
                        const WasmFunc* func,
-                       const WasmTypeVector* param_types,
-                       WasmType result_type,
+                       const WasmFuncSignature* sig,
                        const WasmExprPtrVector* args,
                        WasmType expected_type,
                        const char* desc) {
   size_t actual_args = args->size;
-  size_t expected_args = param_types->size;
+  size_t expected_args = sig->param_types.size;
   if (expected_args == actual_args) {
     char buffer[100];
     wasm_snprintf(buffer, 100, " of %s result", desc);
-    check_type(ctx, loc, result_type, expected_type, buffer);
+    check_type(ctx, loc, sig->result_type, expected_type, buffer);
     size_t i;
     for (i = 0; i < actual_args; ++i) {
       wasm_snprintf(buffer, 100, " of argument %" PRIzd " of %s", i, desc);
-      check_expr(ctx, module, func, args->data[i], param_types->data[i],
+      check_expr(ctx, module, func, args->data[i], sig->param_types.data[i],
                  buffer);
     }
   } else {
@@ -506,25 +505,11 @@ static void check_expr(WasmContext* ctx,
       const WasmFunc* callee;
       if (WASM_SUCCEEDED(
               check_func_var(ctx, module, &expr->call.var, &callee))) {
-        const WasmTypeVector* param_types = NULL;
-        WasmType result_type = WASM_TYPE_VOID;
-        if (callee->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
-          const WasmFuncType* func_type;
-          if (WASM_SUCCEEDED(check_func_type_var(ctx, module, &callee->type_var,
-                                                 &func_type))) {
-            param_types = &func_type->sig.param_types;
-            result_type = func_type->sig.result_type;
-          }
-        } else {
-          assert(callee->flags & WASM_FUNC_FLAG_HAS_SIGNATURE);
-          param_types = &callee->params.types;
-          result_type = callee->result_type;
-        }
+        if (wasm_decl_has_func_type(&callee->decl))
+          check_func_type_var(ctx, module, &callee->decl.type_var, NULL);
 
-        if (param_types) {
-          check_call(ctx, &expr->loc, module, func, param_types, result_type,
-                     &expr->call.args, expected_type, "call");
-        }
+        check_call(ctx, &expr->loc, module, func, &callee->decl.sig,
+                   &expr->call.args, expected_type, "call");
       }
       break;
     }
@@ -533,22 +518,11 @@ static void check_expr(WasmContext* ctx,
       const WasmImport* import;
       if (WASM_SUCCEEDED(
               check_import_var(ctx, module, &expr->call.var, &import))) {
-        const WasmFuncSignature* sig = NULL;
-        if (import->import_type == WASM_IMPORT_HAS_TYPE) {
-          const WasmFuncType* func_type;
-          if (WASM_SUCCEEDED(check_func_type_var(ctx, module, &import->type_var,
-                                                 &func_type))) {
-            sig = &func_type->sig;
-          }
-        } else {
-          assert(import->import_type == WASM_IMPORT_HAS_FUNC_SIGNATURE);
-          sig = &import->func_sig;
-        }
-        if (sig) {
-          check_call(ctx, &expr->loc, module, func, &sig->param_types,
-                     sig->result_type, &expr->call.args, expected_type,
-                     "call_import");
-        }
+        if (wasm_decl_has_func_type(&import->decl))
+          check_func_type_var(ctx, module, &import->decl.type_var, NULL);
+
+        check_call(ctx, &expr->loc, module, func, &import->decl.sig,
+                   &expr->call.args, expected_type, "call_import");
       }
       break;
     }
@@ -559,10 +533,8 @@ static void check_expr(WasmContext* ctx,
       const WasmFuncType* func_type;
       if (WASM_SUCCEEDED(check_func_type_var(
               ctx, module, &expr->call_indirect.var, &func_type))) {
-        const WasmFuncSignature* sig = &func_type->sig;
-        check_call(ctx, &expr->loc, module, func, &sig->param_types,
-                   sig->result_type, &expr->call_indirect.args, expected_type,
-                   "call_indirect");
+        check_call(ctx, &expr->loc, module, func, &func_type->sig,
+                   &expr->call_indirect.args, expected_type, "call_indirect");
       }
       break;
     }
@@ -660,20 +632,22 @@ static void check_expr(WasmContext* ctx,
       check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, " in nop");
       break;
 
-    case WASM_EXPR_TYPE_RETURN:
+    case WASM_EXPR_TYPE_RETURN: {
+      WasmType result_type = wasm_get_result_type(func);
       if (expr->return_.expr) {
-        if (func->result_type == WASM_TYPE_VOID) {
+        if (result_type == WASM_TYPE_VOID) {
           print_error(ctx, &expr->loc,
                       "arity mismatch of return. function expects void, but "
                       "return value is non-empty");
         } else {
-          check_expr(ctx, module, func, expr->return_.expr, func->result_type,
+          check_expr(ctx, module, func, expr->return_.expr, result_type,
                      " of return");
         }
       } else {
-        check_type(ctx, &expr->loc, WASM_TYPE_VOID, func->result_type, desc);
+        check_type(ctx, &expr->loc, WASM_TYPE_VOID, result_type, desc);
       }
       break;
+    }
 
     case WASM_EXPR_TYPE_SELECT:
       check_expr(ctx, module, func, expr->select.cond, WASM_TYPE_I32,
@@ -734,35 +708,42 @@ static void check_expr(WasmContext* ctx,
   }
 }
 
+static void check_func_signature_matches_func_type(
+    WasmContext* ctx,
+    const WasmFunc* func,
+    const WasmFuncType* func_type) {
+  size_t num_params = wasm_get_num_params(func);
+  check_type_exact(ctx, &func->loc, wasm_get_result_type(func),
+                   wasm_get_func_type_result_type(func_type), "");
+  if (num_params == wasm_get_func_type_num_params(func_type)) {
+    size_t i;
+    for (i = 0; i < num_params; ++i) {
+      check_type_arg_exact(ctx, &func->loc, wasm_get_param_type(func, i),
+                           wasm_get_func_type_param_type(func_type, i),
+                           "function", i);
+    }
+  } else {
+    print_error(ctx, &func->loc, "expected %d parameters, got %d",
+                wasm_get_func_type_num_params(func_type), num_params);
+  }
+}
+
 static void check_func(WasmContext* ctx,
                        const WasmModule* module,
                        const WasmLocation* loc,
                        const WasmFunc* func) {
-  if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
+  if (wasm_decl_has_func_type(&func->decl)) {
     const WasmFuncType* func_type;
-    if (WASM_SUCCEEDED(
-            check_func_type_var(ctx, module, &func->type_var, &func_type))) {
-      if (func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE) {
-        check_type_exact(ctx, &func->loc, func->result_type,
-                         func_type->sig.result_type, "");
-        if (func->params.types.size == func_type->sig.param_types.size) {
-          size_t i;
-          for (i = 0; i < func->params.types.size; ++i) {
-            check_type_arg_exact(ctx, &func->loc, func->params.types.data[i],
-                                 func_type->sig.param_types.data[i], "function",
-                                 i);
-          }
-        } else {
-          print_error(ctx, &func->loc, "expected %d parameters, got %d",
-                      func_type->sig.param_types.size, func->params.types.size);
-        }
-      }
+    if (WASM_SUCCEEDED(check_func_type_var(ctx, module, &func->decl.type_var,
+                                           &func_type))) {
+      if (wasm_decl_has_signature(&func->decl))
+        check_func_signature_matches_func_type(ctx, func, func_type);
     }
   }
 
-  check_duplicate_bindings(ctx, &func->params.bindings, "parameter");
-  check_duplicate_bindings(ctx, &func->locals.bindings, "local");
-  check_exprs(ctx, module, func, &func->exprs, func->result_type,
+  check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
+  check_duplicate_bindings(ctx, &func->local_bindings, "local");
+  check_exprs(ctx, module, func, &func->exprs, wasm_get_result_type(func),
               " of function result");
 }
 
@@ -770,8 +751,8 @@ static void check_import(WasmContext* ctx,
                          const WasmModule* module,
                          const WasmLocation* loc,
                          const WasmImport* import) {
-  if (import->import_type == WASM_IMPORT_HAS_TYPE)
-    check_func_type_var(ctx, module, &import->type_var, NULL);
+  if (wasm_decl_has_func_type(&import->decl))
+    check_func_type_var(ctx, module, &import->decl.type_var, NULL);
 }
 
 static void check_export(WasmContext* ctx,
@@ -872,10 +853,10 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
         const WasmFunc* start_func = NULL;
         check_func_var(ctx, module, &field->start, &start_func);
         if (start_func) {
-          if (start_func->params.types.size != 0)
+          if (wasm_get_num_params(start_func) != 0)
             print_error(ctx, &field->loc, "start function must be nullary");
 
-          if (start_func->result_type != WASM_TYPE_VOID) {
+          if (wasm_get_result_type(start_func) != WASM_TYPE_VOID) {
             print_error(ctx, &field->loc,
                         "start function must not return anything");
           }
@@ -919,7 +900,7 @@ static void check_invoke(WasmContext* ctx,
   }
 
   size_t actual_args = invoke->args.size;
-  size_t expected_args = func->params.types.size;
+  size_t expected_args = wasm_get_num_params(func);
   if (expected_args != actual_args) {
     print_error(ctx, &invoke->loc,
                 "too %s parameters to function. got %d, expected %d",
@@ -927,12 +908,13 @@ static void check_invoke(WasmContext* ctx,
                 expected_args);
     return;
   }
-  check_type_set(ctx, &invoke->loc, func->result_type, return_type, "");
+  check_type_set(ctx, &invoke->loc, wasm_get_result_type(func), return_type,
+                 "");
   size_t i;
   for (i = 0; i < actual_args; ++i) {
     WasmConst* const_ = &invoke->args.data[i];
     check_type_arg_exact(ctx, &const_->loc, const_->type,
-                         func->params.types.data[i], "invoke", i);
+                         wasm_get_param_type(func, i), "invoke", i);
   }
 }
 

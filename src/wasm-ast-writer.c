@@ -614,9 +614,10 @@ static void write_exprs(WasmContext* ctx, const WasmExprPtrVector* exprs) {
 static void write_type_bindings(WasmContext* ctx,
                                 const char* prefix,
                                 const WasmFunc* func,
-                                const WasmTypeBindings* type_bindings) {
+                                const WasmTypeVector* types,
+                                const WasmBindingHash* bindings) {
   CHECK_ALLOC(ctx, wasm_make_type_binding_reverse_mapping(
-                       ctx->allocator, type_bindings, &ctx->index_to_name));
+                       ctx->allocator, types, bindings, &ctx->index_to_name));
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -625,7 +626,7 @@ static void write_type_bindings(WasmContext* ctx,
    */
   WasmBool is_open = WASM_FALSE;
   size_t i;
-  for (i = 0; i < type_bindings->types.size; ++i) {
+  for (i = 0; i < types->size; ++i) {
     if (!is_open) {
       out_open_space(ctx, prefix);
       is_open = WASM_TRUE;
@@ -635,7 +636,7 @@ static void write_type_bindings(WasmContext* ctx,
     WasmBool has_name = name->start != NULL;
     if (has_name)
       out_string_slice(ctx, name, WASM_NEXT_CHAR_SPACE);
-    out_type(ctx, type_bindings->types.data[i], WASM_NEXT_CHAR_SPACE);
+    out_type(ctx, types->data[i], WASM_NEXT_CHAR_SPACE);
     if (has_name) {
       out_close_space(ctx);
       is_open = WASM_FALSE;
@@ -652,26 +653,24 @@ static void write_func(WasmContext* ctx,
   out_open_space(ctx, "func");
   out_printf(ctx, "(; %d ;)", func_index);
   out_string_slice_opt(ctx, &func->name, WASM_NEXT_CHAR_SPACE);
-  uint32_t num_params = 0;
-  if (func->flags & WASM_FUNC_FLAG_HAS_FUNC_TYPE) {
-    num_params =
-        module->func_types.data[func->type_var.index]->sig.param_types.size;
+  if (wasm_decl_has_func_type(&func->decl)) {
     out_open_space(ctx, "type");
-    out_var(ctx, &func->type_var, WASM_NEXT_CHAR_NONE);
+    out_var(ctx, &func->decl.type_var, WASM_NEXT_CHAR_NONE);
     out_close_space(ctx);
   }
-  if (func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE) {
-    num_params = func->params.types.size;
-    write_type_bindings(ctx, "param", func, &func->params);
-    if (func->result_type != WASM_TYPE_VOID) {
+  if (wasm_decl_has_signature(&func->decl)) {
+    write_type_bindings(ctx, "param", func, &func->decl.sig.param_types,
+                        &func->param_bindings);
+    if (wasm_get_result_type(func) != WASM_TYPE_VOID) {
       out_open_space(ctx, "result");
-      out_type(ctx, func->result_type, WASM_NEXT_CHAR_NONE);
+      out_type(ctx, wasm_get_result_type(func), WASM_NEXT_CHAR_NONE);
       out_close_space(ctx);
     }
   }
   out_newline(ctx, NO_FORCE_NEWLINE);
-  if (func->locals.types.size) {
-    write_type_bindings(ctx, "local", func, &func->locals);
+  if (func->local_types.size) {
+    write_type_bindings(ctx, "local", func, &func->local_types,
+                        &func->local_bindings);
   }
   out_newline(ctx, NO_FORCE_NEWLINE);
   write_exprs(ctx, &func->exprs);
@@ -686,12 +685,12 @@ static void write_import(WasmContext* ctx,
   out_string_slice_opt(ctx, &import->name, WASM_NEXT_CHAR_SPACE);
   out_quoted_string_slice(ctx, &import->module_name, WASM_NEXT_CHAR_SPACE);
   out_quoted_string_slice(ctx, &import->func_name, WASM_NEXT_CHAR_SPACE);
-  if (import->import_type == WASM_IMPORT_HAS_TYPE) {
+  if (wasm_decl_has_func_type(&import->decl)) {
     out_open_space(ctx, "type");
-    out_var(ctx, &import->type_var, WASM_NEXT_CHAR_NONE);
+    out_var(ctx, &import->decl.type_var, WASM_NEXT_CHAR_NONE);
     out_close_space(ctx);
   } else {
-    out_func_sig_space(ctx, &import->func_sig);
+    out_func_sig_space(ctx, &import->decl.sig);
   }
   out_close_newline(ctx);
 }

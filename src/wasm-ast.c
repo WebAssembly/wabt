@@ -203,16 +203,12 @@ int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_INDEX)
     return var->index;
 
-  int result = find_binding_index_by_name(&func->params.bindings, &var->name);
+  int result = find_binding_index_by_name(&func->param_bindings, &var->name);
   if (result != -1)
     return result;
   /* the locals start after all the params */
-  return func->params.types.size +
-         find_binding_index_by_name(&func->locals.bindings, &var->name);
-}
-
-size_t wasm_get_num_params_and_locals(const WasmFunc* func) {
-  return func->params.types.size + func->locals.types.size;
+  return func->decl.sig.param_types.size +
+         find_binding_index_by_name(&func->local_bindings, &var->name);
 }
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
@@ -238,35 +234,12 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
   return module->imports.data[index];
 }
 
-WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
-                                     WasmTypeBindings* dst,
-                                     WasmTypeBindings* src) {
-  size_t last_type = dst->types.size;
-  if (WASM_FAILED(wasm_extend_types(allocator, &dst->types, &src->types)))
-    return WASM_ERROR;
-
-  size_t i;
-  for (i = 0; i < src->bindings.entries.capacity; ++i) {
-    WasmBindingHashEntry* src_entry = &src->bindings.entries.data[i];
-    if (wasm_hash_entry_is_free(src_entry))
-      continue;
-
-    WasmBinding* dst_binding = wasm_insert_binding(allocator, &dst->bindings,
-                                                   &src_entry->binding.name);
-    if (!dst_binding)
-      return WASM_ERROR;
-
-    *dst_binding = src_entry->binding;
-    dst_binding->index += last_type; /* fixup the binding index */
-  }
-  return WASM_OK;
-}
-
 WasmResult wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator* allocator,
-    const WasmTypeBindings* type_bindings,
+    const WasmTypeVector* types,
+    const WasmBindingHash* bindings,
     WasmStringSliceVector* out_reverse_mapping) {
-  uint32_t num_names = type_bindings->types.size;
+  uint32_t num_names = types->size;
   if (WASM_FAILED(wasm_reserve_string_slices(allocator, out_reverse_mapping,
                                              num_names))) {
     return WASM_ERROR;
@@ -276,9 +249,8 @@ WasmResult wasm_make_type_binding_reverse_mapping(
 
   /* map index to name */
   size_t i;
-  for (i = 0; i < type_bindings->bindings.entries.capacity; ++i) {
-    const WasmBindingHashEntry* entry =
-        &type_bindings->bindings.entries.data[i];
+  for (i = 0; i < bindings->entries.capacity; ++i) {
+    const WasmBindingHashEntry* entry = &bindings->entries.data[i];
     if (wasm_hash_entry_is_free(entry))
       continue;
 
@@ -365,12 +337,6 @@ static void wasm_destroy_binding_hash(WasmAllocator* allocator,
   for (i = 0; i < hash->entries.capacity; ++i)
     wasm_destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
   wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
-}
-
-void wasm_destroy_type_bindings(WasmAllocator* allocator,
-                                WasmTypeBindings* type_bindings) {
-  wasm_destroy_type_vector(allocator, &type_bindings->types);
-  wasm_destroy_binding_hash(allocator, &type_bindings->bindings);
 }
 
 void wasm_destroy_var(WasmAllocator* allocator, WasmVar* var) {
@@ -496,11 +462,18 @@ void wasm_destroy_expr_ptr_vector_and_elements(WasmAllocator* allocator,
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *exprs, expr_ptr);
 }
 
+void wasm_destroy_func_declaration(WasmAllocator* allocator,
+                                   WasmFuncDeclaration* decl) {
+  wasm_destroy_var(allocator, &decl->type_var);
+  wasm_destroy_func_signature(allocator, &decl->sig);
+}
+
 void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
   wasm_destroy_string_slice(allocator, &func->name);
-  wasm_destroy_var(allocator, &func->type_var);
-  wasm_destroy_type_bindings(allocator, &func->params);
-  wasm_destroy_type_bindings(allocator, &func->locals);
+  wasm_destroy_func_declaration(allocator, &func->decl);
+  wasm_destroy_type_vector(allocator, &func->local_types);
+  wasm_destroy_binding_hash(allocator, &func->param_bindings);
+  wasm_destroy_binding_hash(allocator, &func->local_bindings);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, func->exprs, expr_ptr);
 }
 
@@ -508,8 +481,7 @@ void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
   wasm_destroy_string_slice(allocator, &import->name);
   wasm_destroy_string_slice(allocator, &import->module_name);
   wasm_destroy_string_slice(allocator, &import->func_name);
-  wasm_destroy_var(allocator, &import->type_var);
-  wasm_destroy_func_signature(allocator, &import->func_sig);
+  wasm_destroy_func_declaration(allocator, &import->decl);
 }
 
 void wasm_destroy_export(WasmAllocator* allocator, WasmExport* export) {
