@@ -208,10 +208,6 @@ typedef struct WasmFunc {
   WasmType result_type;
   WasmTypeBindings locals;
   WasmExprPtrVector exprs;
-
-  /* combined from params and locals; the binding names share memory with the
-   originals */
-  WasmTypeBindings params_and_locals;
 } WasmFunc;
 typedef WasmFunc* WasmFuncPtr;
 WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
@@ -472,6 +468,7 @@ int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var);
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
+size_t wasm_get_num_params_and_locals(const WasmFunc* func);
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
@@ -486,8 +483,7 @@ WasmResult wasm_extend_type_bindings(struct WasmAllocator*,
                                      WasmTypeBindings* src) WASM_WARN_UNUSED;
 WasmResult wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator*,
-    const WasmTypeBindings* bindings,
-    uint32_t index_offset,
+    const WasmTypeBindings*,
     WasmStringSliceVector* out_reverse_mapping);
 WASM_EXTERN_C_END
 

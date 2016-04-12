@@ -614,11 +614,9 @@ static void write_exprs(WasmContext* ctx, const WasmExprPtrVector* exprs) {
 static void write_type_bindings(WasmContext* ctx,
                                 const char* prefix,
                                 const WasmFunc* func,
-                                const WasmTypeBindings* type_bindings,
-                                uint32_t index_offset) {
+                                const WasmTypeBindings* type_bindings) {
   CHECK_ALLOC(ctx, wasm_make_type_binding_reverse_mapping(
-                       ctx->allocator, type_bindings, index_offset,
-                       &ctx->index_to_name));
+                       ctx->allocator, type_bindings, &ctx->index_to_name));
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -664,7 +662,7 @@ static void write_func(WasmContext* ctx,
   }
   if (func->flags & WASM_FUNC_FLAG_HAS_SIGNATURE) {
     num_params = func->params.types.size;
-    write_type_bindings(ctx, "param", func, &func->params, 0);
+    write_type_bindings(ctx, "param", func, &func->params);
     if (func->result_type != WASM_TYPE_VOID) {
       out_open_space(ctx, "result");
       out_type(ctx, func->result_type, WASM_NEXT_CHAR_NONE);
@@ -673,7 +671,7 @@ static void write_func(WasmContext* ctx,
   }
   out_newline(ctx, NO_FORCE_NEWLINE);
   if (func->locals.types.size) {
-    write_type_bindings(ctx, "local", func, &func->locals, -num_params);
+    write_type_bindings(ctx, "local", func, &func->locals);
   }
   out_newline(ctx, NO_FORCE_NEWLINE);
   write_exprs(ctx, &func->exprs);

@@ -219,16 +219,29 @@ static WasmResult check_local_var(WasmContext* ctx,
                                   const WasmFunc* func,
                                   const WasmVar* var,
                                   WasmType* out_type) {
-  int index;
-  if (WASM_FAILED(check_var(ctx, &func->params_and_locals.bindings,
-                func->params_and_locals.types.size, var, "local",
-                &index))) {
-    return WASM_ERROR;
+  int max_index = wasm_get_num_params_and_locals(func);
+  int index = wasm_get_local_index_by_var(func, var);
+  if (index >= 0 && index < max_index) {
+    if (out_type) {
+      int num_params = func->params.types.size;
+      if (index < num_params)  {
+        *out_type = func->params.types.data[index];
+      } else {
+        *out_type = func->locals.types.data[index - num_params];
+      }
+    }
+    return WASM_OK;
   }
 
-  if (out_type)
-    *out_type = func->params_and_locals.types.data[index];
-  return WASM_OK;
+  if (var->type == WASM_VAR_TYPE_NAME) {
+    print_error(ctx, &var->loc,
+                "undefined local variable \"" PRIstringslice "\"",
+                WASM_PRINTF_STRING_SLICE_ARG(var->name));
+  } else {
+    print_error(ctx, &var->loc, "local variable out of range (max %d)",
+                max_index);
+  }
+  return WASM_ERROR;
 }
 
 static void check_align(WasmContext* ctx,

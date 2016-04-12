@@ -470,9 +470,6 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
           CHECK_ALLOC_NULL(caller);
           CHECK_ALLOC(wasm_append_type_value(
               script->allocator, &caller->locals.types, &result_type));
-          CHECK_ALLOC(wasm_append_type_value(script->allocator,
-                                             &caller->params_and_locals.types,
-                                             &result_type));
           expr_ptr = wasm_append_expr_ptr(script->allocator, &caller->exprs);
           CHECK_ALLOC_NULL(expr_ptr);
           *expr_ptr = create_set_local_expr(

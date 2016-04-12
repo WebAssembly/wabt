@@ -200,7 +200,19 @@ int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var) {
 }
 
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
-  return wasm_get_index_from_var(&func->params_and_locals.bindings, var);
+  if (var->type == WASM_VAR_TYPE_INDEX)
+    return var->index;
+
+  int result = find_binding_index_by_name(&func->params.bindings, &var->name);
+  if (result != -1)
+    return result;
+  /* the locals start after all the params */
+  return func->params.types.size +
+         find_binding_index_by_name(&func->locals.bindings, &var->name);
+}
+
+size_t wasm_get_num_params_and_locals(const WasmFunc* func) {
+  return func->params.types.size + func->locals.types.size;
 }
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
@@ -253,7 +265,6 @@ WasmResult wasm_extend_type_bindings(WasmAllocator* allocator,
 WasmResult wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator* allocator,
     const WasmTypeBindings* type_bindings,
-    uint32_t index_offset,
     WasmStringSliceVector* out_reverse_mapping) {
   uint32_t num_names = type_bindings->types.size;
   if (WASM_FAILED(wasm_reserve_string_slices(allocator, out_reverse_mapping,
@@ -271,7 +282,7 @@ WasmResult wasm_make_type_binding_reverse_mapping(
     if (wasm_hash_entry_is_free(entry))
       continue;
 
-    uint32_t index = entry->binding.index + index_offset;
+    uint32_t index = entry->binding.index;
     assert(index < out_reverse_mapping->size);
     out_reverse_mapping->data[index] = entry->binding.name;
   }
@@ -490,10 +501,6 @@ void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
   wasm_destroy_var(allocator, &func->type_var);
   wasm_destroy_type_bindings(allocator, &func->params);
   wasm_destroy_type_bindings(allocator, &func->locals);
-  /* params_and_locals shares binding data with params and locals */
-  wasm_destroy_type_vector(allocator, &func->params_and_locals.types);
-  wasm_destroy_binding_hash_entry_vector(
-      allocator, &func->params_and_locals.bindings.entries);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, func->exprs, expr_ptr);
 }
 

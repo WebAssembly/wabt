@@ -957,13 +957,6 @@ module :
                                           &func_type->sig.param_types));
           }
         }
-
-        /* now that func->params is set, we can easily create params_and_locals
-         * as well */
-        CHECK_ALLOC(wasm_extend_type_bindings(
-            parser->allocator, &func->params_and_locals, &func->params));
-        CHECK_ALLOC(wasm_extend_type_bindings(
-            parser->allocator, &func->params_and_locals, &func->locals));
       }
     }
 ;
