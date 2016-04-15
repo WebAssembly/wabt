@@ -1,0 +1,19 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --generate-names
+(module
+  (func)
+  (func
+    (call 0))
+  (table 0 1 0)
+  (export "zero" 0)
+  (export "one" 1))
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0))
+  (func $f1 (type $t0)
+    (call $f0))
+  (table $f0 $f1 $f0)
+  (export "zero" $f0)
+  (export "one" $f1))
+;;; STDOUT ;;)

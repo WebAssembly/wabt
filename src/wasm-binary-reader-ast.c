@@ -107,6 +107,18 @@ static void print_error(WasmContext* ctx, const char* format, ...) {
   on_error(UNKNOWN_OFFSET, buffer, ctx);
 }
 
+static WasmResult dup_name(WasmContext* ctx,
+                           WasmStringSlice* name,
+                           WasmStringSlice* out_name) {
+  if (name->length > 0) {
+    *out_name = wasm_dup_string_slice(ctx->allocator, *name);
+    CHECK_ALLOC_NULL_STR(ctx, *out_name);
+  } else {
+    WASM_ZERO_MEMORY(*out_name);
+  }
+  return WASM_OK;
+}
+
 /* TODO(binji): remove all this if-block stuff when we switch to postorder */
 static WasmResult push_depth(WasmContext* ctx) {
   uint32_t* depth = wasm_append_uint32(ctx->allocator, &ctx->depth_stack);
@@ -1006,17 +1018,16 @@ static WasmResult on_function_name(uint32_t index,
                                    void* user_data) {
   WasmContext* ctx = user_data;
 
-  WasmStringSlice dup_name;
-  CHECK_ALLOC_NULL_STR(ctx,
-                       dup_name = wasm_dup_string_slice(ctx->allocator, name));
+  WasmStringSlice new_name;
+  CHECK_RESULT(dup_name(ctx, &name, &new_name));
 
   WasmBinding* binding = wasm_insert_binding(
-      ctx->allocator, &ctx->module->func_bindings, &dup_name);
+      ctx->allocator, &ctx->module->func_bindings, &new_name);
   CHECK_ALLOC_NULL(ctx, binding);
   binding->index = index;
 
   WasmFunc* func = ctx->module->funcs.data[index];
-  func->name = dup_name;
+  func->name = new_name;
   return WASM_OK;
 }
 
@@ -1044,9 +1055,8 @@ static WasmResult on_local_name(uint32_t func_index,
   WasmModule* module = ctx->module;
   WasmFunc* func = module->funcs.data[func_index];
   uint32_t num_params = wasm_get_num_params(func);
-  WasmStringSlice dup_name;
-  CHECK_ALLOC_NULL_STR(ctx,
-                       dup_name = wasm_dup_string_slice(ctx->allocator, name));
+  WasmStringSlice new_name;
+  CHECK_RESULT(dup_name(ctx, &name, &new_name));
   WasmBindingHash* bindings;
   WasmBinding* binding;
   uint32_t index;
@@ -1059,7 +1069,7 @@ static WasmResult on_local_name(uint32_t func_index,
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  binding = wasm_insert_binding(ctx->allocator, bindings, &dup_name);
+  binding = wasm_insert_binding(ctx->allocator, bindings, &new_name);
   CHECK_ALLOC_NULL(ctx, binding);
   binding->index = index;
   return WASM_OK;

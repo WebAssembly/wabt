@@ -43,6 +43,10 @@
 typedef uint32_t WasmUint32;
 WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
+typedef WasmLabel* WasmLabelPtr;
+WASM_DEFINE_VECTOR(label_ptr, WasmLabelPtr);
+
+
 typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmModule* module;
@@ -51,7 +55,35 @@ typedef struct WasmContext {
   /* mapping from param index to its name, if any, for the current func */
   WasmStringSliceVector param_index_to_name;
   WasmStringSliceVector local_index_to_name;
+  WasmLabelPtrVector labels;
 } WasmContext;
+
+static WasmResult push_label(WasmContext* ctx, WasmLabel* label) {
+  CHECK_ALLOC(
+      wasm_append_label_ptr_value(ctx->allocator, &ctx->labels, &label));
+  return WASM_OK;
+}
+
+static void pop_label(WasmContext* ctx) {
+  assert(ctx->labels.size > 0);
+  ctx->labels.size--;
+}
+
+static WasmLabel* find_label_by_var(WasmContext* ctx, WasmVar* var) {
+  if (var->type == WASM_VAR_TYPE_NAME) {
+    int i;
+    for (i = ctx->labels.size - 1; i >= 0; --i) {
+      WasmLabel* label = ctx->labels.data[i];
+      if (wasm_string_slices_are_equal(label, &var->name))
+        return label;
+    }
+    return NULL;
+  } else {
+    if (var->index < 0 || (size_t)var->index >= ctx->labels.size)
+      return NULL;
+    return ctx->labels.data[ctx->labels.size - 1 - var->index];
+  }
+}
 
 static WasmResult use_name_for_var(WasmAllocator* allocator,
                                    WasmStringSlice* name,
@@ -61,7 +93,7 @@ static WasmResult use_name_for_var(WasmAllocator* allocator,
     return WASM_OK;
   }
 
-  if (name->start) {
+  if (name && name->start) {
     var->type = WASM_VAR_TYPE_NAME;
     var->name = wasm_dup_string_slice(allocator, *name);
     return var->name.start != NULL ? WASM_OK : WASM_ERROR;
@@ -129,6 +161,62 @@ static WasmResult use_name_for_param_and_local_var(WasmContext* ctx,
     var->name = wasm_dup_string_slice(ctx->allocator, *name);
     return var->name.start != NULL ? WASM_OK : WASM_ERROR;
   }
+  return WASM_OK;
+}
+
+WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  CHECK_RESULT(push_label(ctx, &expr->block.label));
+  return WASM_OK;
+}
+
+WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  pop_label(ctx);
+  return WASM_OK;
+}
+
+WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  CHECK_RESULT(push_label(ctx, &expr->loop.outer));
+  CHECK_RESULT(push_label(ctx, &expr->loop.inner));
+  return WASM_OK;
+}
+
+WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  pop_label(ctx);
+  pop_label(ctx);
+  return WASM_OK;
+}
+
+WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
+  CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
+  return WASM_OK;
+}
+
+WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
+  CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
+  return WASM_OK;
+}
+
+WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  size_t i;
+  WasmVarVector* targets = &expr->br_table.targets;
+  for (i = 0; i < targets->size; ++i) {
+    WasmVar* target = &targets->data[i];
+    WasmLabel* label = find_label_by_var(ctx, target);
+    CHECK_RESULT(use_name_for_var(ctx->allocator, label, target));
+  }
+
+  WasmLabel* label = find_label_by_var(ctx, &expr->br_table.default_target);
+  CHECK_RESULT(
+      use_name_for_var(ctx->allocator, label, &expr->br_table.default_target));
   return WASM_OK;
 }
 
@@ -232,6 +320,13 @@ WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.allocator = allocator;
   ctx.module = module;
   ctx.visitor.user_data = &ctx;
+  ctx.visitor.begin_block_expr = begin_block_expr;
+  ctx.visitor.end_block_expr = end_block_expr;
+  ctx.visitor.begin_loop_expr = begin_loop_expr;
+  ctx.visitor.end_loop_expr = end_loop_expr;
+  ctx.visitor.begin_br_expr = begin_br_expr;
+  ctx.visitor.begin_br_if_expr = begin_br_if_expr;
+  ctx.visitor.begin_br_table_expr = begin_br_table_expr;
   ctx.visitor.begin_call_expr = begin_call_expr;
   ctx.visitor.begin_call_import_expr = begin_call_import_expr;
   ctx.visitor.begin_call_indirect_expr = begin_call_indirect_expr;
@@ -240,5 +335,6 @@ WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.param_index_to_name);
   wasm_destroy_string_slice_vector(allocator, &ctx.local_index_to_name);
+  wasm_destroy_label_ptr_vector(allocator, &ctx.labels);
   return result;
 }

@@ -1,0 +1,21 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --generate-names
+(module
+  (import "an" "import" (param i32))
+  (import "another" "import" (param f32))
+  (func
+    (call_import 0 (i32.const 0))
+    (call_import 1 (f32.const 0))))
+(;; STDOUT ;;;
+(module
+  (type $t0 (func (param i32)))
+  (type $t1 (func (param f32)))
+  (type $t2 (func))
+  (import $i0 "an" "import" (type $t0))
+  (import $i1 "another" "import" (type $t1))
+  (func $f0 (type $t2)
+    (call_import $i0
+      (i32.const 0))
+    (call_import $i1
+      (f32.const 0x0p+0))))
+;;; STDOUT ;;)

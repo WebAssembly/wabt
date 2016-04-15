@@ -211,11 +211,12 @@ static void out_string_slice(WasmContext* ctx,
   ctx->next_char = next_char;
 }
 
-static void out_string_slice_opt(WasmContext* ctx,
-                                 const WasmStringSlice* str,
-                                 WasmNextChar next_char) {
+static WasmBool out_string_slice_opt(WasmContext* ctx,
+                                     const WasmStringSlice* str,
+                                     WasmNextChar next_char) {
   if (str->start)
     out_string_slice(ctx, str, next_char);
+  return str->start ? WASM_TRUE : WASM_FALSE;
 }
 
 static void out_string_slice_or_index(WasmContext* ctx,
@@ -308,8 +309,8 @@ static void write_block(WasmContext* ctx,
                         const WasmBlock* block,
                         const char* text) {
   out_open_space(ctx, text);
-  out_string_slice_opt(ctx, &block->label, WASM_NEXT_CHAR_SPACE);
-  out_printf(ctx, " ;; exit = @%d", ctx->depth);
+  if (!out_string_slice_opt(ctx, &block->label, WASM_NEXT_CHAR_SPACE))
+    out_printf(ctx, " ;; exit = @%d", ctx->depth);
   out_newline(ctx, FORCE_NEWLINE);
   ctx->depth++;
   write_exprs(ctx, &block->exprs);
@@ -541,17 +542,27 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
       out_close_newline(ctx);
       break;
 
-    case WASM_EXPR_TYPE_LOOP:
+    case WASM_EXPR_TYPE_LOOP: {
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_LOOP]);
-      out_string_slice_opt(ctx, &expr->loop.inner, WASM_NEXT_CHAR_SPACE);
-      out_string_slice_opt(ctx, &expr->loop.outer, WASM_NEXT_CHAR_SPACE);
-      out_printf(ctx, " ;; exit = @%d, cont = @%d", ctx->depth, ctx->depth + 1);
+      WasmBool has_outer_name =
+          out_string_slice_opt(ctx, &expr->loop.outer, WASM_NEXT_CHAR_SPACE);
+      WasmBool has_inner_name =
+          out_string_slice_opt(ctx, &expr->loop.inner, WASM_NEXT_CHAR_SPACE);
+      if (!has_outer_name || !has_inner_name) {
+        out_printf(ctx, " ;;");
+        if (!has_outer_name)
+          out_printf(ctx, "exit = @%d", ctx->depth);
+        if (!has_inner_name) {
+          out_printf(ctx, "cont = @%d", ctx->depth + 1);
+        }
+      }
       out_newline(ctx, FORCE_NEWLINE);
       ctx->depth += 2;
       write_exprs(ctx, &expr->loop.exprs);
       ctx->depth -= 2;
       out_close_newline(ctx);
       break;
+    }
 
     case WASM_EXPR_TYPE_MEMORY_SIZE:
       out_open_space(ctx, s_opcode_name[WASM_OPCODE_MEMORY_SIZE]);

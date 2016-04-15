@@ -26,7 +26,7 @@
   (type $t1 (func (result i32)))
   (type $t2 (func (param i32 i64)))
   (import $i0 "foo" "bar" (type $t1))
-  (func $func0 (type $t0) (param  i32) (result f32))
+  (func $func0 (type $t0) (param $p0 i32) (result f32))
   (func $f1 (type $t2) (param $p0 i32) (param $param1 i64)
     (local $l0 f32) (local $local1 f64)
     (call_import $i0)

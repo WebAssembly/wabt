@@ -46,7 +46,9 @@ WASM_DEFINE_VECTOR(uint32, WasmUint32);
 typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmModule* module;
+  WasmExprVisitor visitor;
   WasmStringSliceVector index_to_name;
+  uint32_t label_count;
 } WasmContext;
 
 static WasmBool has_name(WasmStringSlice* str) {
@@ -54,7 +56,6 @@ static WasmBool has_name(WasmStringSlice* str) {
 }
 
 static WasmResult generate_name(WasmAllocator* allocator,
-                                WasmBindingHash* bindings,
                                 const char* prefix,
                                 uint32_t index,
                                 WasmStringSlice* str) {
@@ -67,26 +68,46 @@ static WasmResult generate_name(WasmAllocator* allocator,
   buf.length = actual_len;
   buf.start = buffer;
   CHECK_ALLOC_NULL_STR(*str = wasm_dup_string_slice(allocator, buf));
+  return WASM_OK;
+}
+
+static WasmResult maybe_generate_name(WasmAllocator* allocator,
+                                      const char* prefix,
+                                      uint32_t index,
+                                      WasmStringSlice* str) {
+  if (has_name(str))
+    return WASM_OK;
+  return generate_name(allocator, prefix, index, str);
+}
+
+
+static WasmResult generate_and_bind_name(WasmAllocator* allocator,
+                                         WasmBindingHash* bindings,
+                                         const char* prefix,
+                                         uint32_t index,
+                                         WasmStringSlice* str) {
+  CHECK_RESULT(generate_name(allocator, prefix, index, str));
   WasmBinding* binding;
   CHECK_ALLOC_NULL(binding = wasm_insert_binding(allocator, bindings, str));
   binding->index = index;
   return WASM_OK;
 }
 
-static WasmResult maybe_generate_name(WasmAllocator* allocator,
-                                      WasmBindingHash* bindings,
-                                      const char* prefix,
-                                      uint32_t index,
-                                      WasmStringSlice* str) {
+static WasmResult maybe_generate_and_bind_name(WasmAllocator* allocator,
+                                               WasmBindingHash* bindings,
+                                               const char* prefix,
+                                               uint32_t index,
+                                               WasmStringSlice* str) {
   if (has_name(str))
     return WASM_OK;
-  return generate_name(allocator, bindings, prefix, index, str);
+  return generate_and_bind_name(allocator, bindings, prefix, index, str);
 }
 
-static WasmResult generate_local_names(WasmAllocator* allocator,
-                                       WasmStringSliceVector* index_to_name,
-                                       WasmBindingHash* bindings,
-                                       const char* prefix) {
+static WasmResult generate_and_bind_local_names(
+    WasmAllocator* allocator,
+    WasmStringSliceVector* index_to_name,
+    WasmBindingHash* bindings,
+    const char* prefix) {
   size_t i;
   for (i = 0; i < index_to_name->size; ++i) {
     WasmStringSlice* old_name = &index_to_name->data[i];
@@ -94,37 +115,57 @@ static WasmResult generate_local_names(WasmAllocator* allocator,
       continue;
 
     WasmStringSlice new_name;
-    CHECK_RESULT(generate_name(allocator, bindings, prefix, i, &new_name));
+    CHECK_RESULT(
+        generate_and_bind_name(allocator, bindings, prefix, i, &new_name));
     index_to_name->data[i] = new_name;
   }
+  return WASM_OK;
+}
+
+static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  CHECK_ALLOC(maybe_generate_name(ctx->allocator, "$B", ctx->label_count++,
+                                  &expr->block.label));
+  return WASM_OK;
+}
+
+static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
+  WasmContext* ctx = user_data;
+  CHECK_ALLOC(maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
+                                  &expr->loop.outer));
+  CHECK_ALLOC(maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
+                                  &expr->loop.inner));
   return WASM_OK;
 }
 
 static WasmResult visit_func(WasmContext* ctx,
                              uint32_t func_index,
                              WasmFunc* func) {
-  CHECK_ALLOC(maybe_generate_name(ctx->allocator, &ctx->module->func_bindings,
-                                  "$f", func_index, &func->name));
+  CHECK_ALLOC(maybe_generate_and_bind_name(ctx->allocator,
+                                           &ctx->module->func_bindings, "$f",
+                                           func_index, &func->name));
 
   CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
       ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
       &ctx->index_to_name));
-  CHECK_RESULT(generate_local_names(ctx->allocator, &ctx->index_to_name,
-                                    &func->param_bindings, "$p"));
+  CHECK_RESULT(generate_and_bind_local_names(
+      ctx->allocator, &ctx->index_to_name, &func->param_bindings, "$p"));
 
   CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
       ctx->allocator, &func->local_types, &func->local_bindings,
       &ctx->index_to_name));
-  CHECK_RESULT(generate_local_names(ctx->allocator, &ctx->index_to_name,
-                                    &func->local_bindings, "$l"));
+  CHECK_RESULT(generate_and_bind_local_names(
+      ctx->allocator, &ctx->index_to_name, &func->local_bindings, "$l"));
 
+  ctx->label_count = 0;
+  CHECK_RESULT(wasm_visit_func(func, &ctx->visitor));
   return WASM_OK;
 }
 
 static WasmResult visit_func_type(WasmContext* ctx,
                                   uint32_t func_type_index,
                                   WasmFuncType* func_type) {
-  CHECK_ALLOC(maybe_generate_name(ctx->allocator,
+  CHECK_ALLOC(maybe_generate_and_bind_name(ctx->allocator,
                                   &ctx->module->func_type_bindings, "$t",
                                   func_type_index, &func_type->name));
   return WASM_OK;
@@ -133,8 +174,9 @@ static WasmResult visit_func_type(WasmContext* ctx,
 static WasmResult visit_import(WasmContext* ctx,
                                uint32_t import_index,
                                WasmImport* import) {
-  CHECK_ALLOC(maybe_generate_name(ctx->allocator, &ctx->module->import_bindings,
-                                  "$i", import_index, &import->name));
+  CHECK_ALLOC(maybe_generate_and_bind_name(ctx->allocator,
+                                           &ctx->module->import_bindings, "$i",
+                                           import_index, &import->name));
   return WASM_OK;
 }
 
@@ -153,6 +195,9 @@ WasmResult wasm_generate_names(WasmAllocator* allocator, WasmModule* module) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
+  ctx.visitor.user_data = &ctx;
+  ctx.visitor.begin_block_expr = begin_block_expr;
+  ctx.visitor.begin_loop_expr = begin_loop_expr;
   ctx.module = module;
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.index_to_name);
