@@ -303,7 +303,9 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
     return NULL;
   WasmFunc* func = &func_field->func;
   func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
-  func->decl.sig.result_type = result_type;
+  WASM_ZERO_MEMORY(func->decl.sig.result_types);
+  if (result_type != WASM_TYPE_VOID)
+    wasm_append_type_value(allocator, &func->decl.sig.result_types, &result_type);
   int func_index = module->funcs.size - 1;
 
   WasmModuleField* export_field =
@@ -379,7 +381,7 @@ static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
       int func_index = wasm_get_func_index_by_var(last_module, &export->var);
       assert(func_index >= 0 && (size_t)func_index < last_module->funcs.size);
       WasmFunc* callee = last_module->funcs.data[func_index];
-      WasmType result_type = wasm_get_result_type(callee);
+      WasmType result_type = wasm_get_single_value_result_type(callee);
       /* these pointers will be invalidated later, so we can't use them */
       export = NULL;
       callee = NULL;

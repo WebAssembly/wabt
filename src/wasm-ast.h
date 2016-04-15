@@ -68,6 +68,9 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_CALL,
   WASM_EXPR_TYPE_CALL_IMPORT,
   WASM_EXPR_TYPE_CALL_INDIRECT,
+  WASM_EXPR_TYPE_VALUES,
+  WASM_EXPR_TYPE_CONC_VALUES,
+  WASM_EXPR_TYPE_MV_CALL,
   WASM_EXPR_TYPE_COMPARE,
   WASM_EXPR_TYPE_CONST,
   WASM_EXPR_TYPE_CONVERT,
@@ -106,6 +109,7 @@ typedef struct WasmBindingHash {
 } WasmBindingHash;
 
 typedef struct WasmBlock {
+  int rtn_first;
   WasmLabel label;
   WasmExprPtrVector exprs;
   WasmBool used;
@@ -138,6 +142,11 @@ struct WasmExpr {
       WasmExprPtr expr;
       WasmExprPtrVector args;
     } call_indirect;
+    struct {
+      WasmExprPtr expr;
+      WasmExprPtrVector args;
+    } values;
+    struct { WasmVar var; WasmExprPtr expr; } mv_call;
     struct { WasmVar var; } get_local;
     struct { WasmVar var; WasmExprPtr expr; } set_local;
     struct {
@@ -173,7 +182,7 @@ typedef enum WasmFuncFieldType {
   WASM_FUNC_FIELD_TYPE_EXPRS,
   WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
   WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
-  WASM_FUNC_FIELD_TYPE_RESULT_TYPE,
+  WASM_FUNC_FIELD_TYPE_RESULT_TYPES,
   WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
   WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
 } WasmFuncFieldType;
@@ -182,16 +191,15 @@ typedef struct WasmFuncField {
   WasmFuncFieldType type;
   union {
     WasmExprPtrVector exprs;
-    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
+    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,RESULT,LOCAL}_TYPES */
     WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
-    WasmType result_type;
   };
   struct WasmFuncField* next;
 } WasmFuncField;
 
 typedef struct WasmFuncSignature {
-  WasmType result_type;
   WasmTypeVector param_types;
+  WasmTypeVector result_types;
 } WasmFuncSignature;
 
 typedef struct WasmFuncType {
@@ -361,6 +369,12 @@ typedef struct WasmExprVisitor {
   WasmResult (*end_call_import_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_call_indirect_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_call_indirect_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_values_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_values_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_conc_values_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_conc_values_expr)(WasmExpr*, void* user_data);
+  WasmResult (*begin_mv_call_expr)(WasmExpr*, void* user_data);
+  WasmResult (*end_mv_call_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_compare_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_compare_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_const_expr)(WasmExpr*, void* user_data);
@@ -409,6 +423,9 @@ WasmExpr* wasm_new_br_table_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_call_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_call_import_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_call_indirect_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_values_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_conc_values_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_mv_call_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_compare_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_const_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_convert_expr(struct WasmAllocator*);
@@ -502,13 +519,26 @@ static WASM_INLINE WasmType wasm_get_param_type(const WasmFunc* func,
   return func->decl.sig.param_types.data[index];
 }
 
-static WASM_INLINE WasmType wasm_get_result_type(const WasmFunc* func) {
-  return func->decl.sig.result_type;
+static WASM_INLINE size_t wasm_get_num_results(const WasmFunc* func) {
+  return func->decl.sig.result_types.size;
 }
 
-static WASM_INLINE WasmType
-wasm_get_func_type_result_type(const WasmFuncType* func_type) {
-  return func_type->sig.result_type;
+static WASM_INLINE WasmType wasm_get_result_type(const WasmFunc* func,
+                                                 int index) {
+  assert((size_t)index < wasm_get_num_results(func));
+  return func->decl.sig.result_types.data[index];
+}
+
+static WASM_INLINE WasmType single_value_result_type(const WasmTypeVector* result_types) {
+  assert(result_types->size <= 1);
+  if (result_types->size == 0)
+    return WASM_TYPE_VOID;
+  return result_types->data[0];
+}
+
+static WASM_INLINE WasmType wasm_get_single_value_result_type(const WasmFunc* func) {
+  assert((size_t)index < wasm_get_num_results(func));
+  return single_value_result_type(&func->decl.sig.result_types);
 }
 
 static WASM_INLINE WasmType
@@ -519,6 +549,16 @@ wasm_get_func_type_param_type(const WasmFuncType* func_type, int index) {
 static WASM_INLINE size_t
 wasm_get_func_type_num_params(const WasmFuncType* func_type) {
   return func_type->sig.param_types.size;
+}
+
+static WASM_INLINE WasmType
+wasm_get_func_type_result_type(const WasmFuncType* func_type, int index) {
+  return func_type->sig.result_types.data[index];
+}
+
+static WASM_INLINE size_t
+wasm_get_func_type_num_results(const WasmFuncType* func_type) {
+  return func_type->sig.result_types.size;
 }
 
 WASM_EXTERN_C_END

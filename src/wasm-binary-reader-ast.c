@@ -232,9 +232,10 @@ static WasmResult on_signature_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_signature(uint32_t index,
-                               WasmType result_type,
                                uint32_t param_count,
                                WasmType* param_types,
+                               uint32_t result_count,
+                               WasmType* result_types,
                                void* user_data) {
   WasmContext* ctx = user_data;
   WasmModuleField* field =
@@ -244,7 +245,6 @@ static WasmResult on_signature(uint32_t index,
 
   WasmFuncType* func_type = &field->func_type;
   WASM_ZERO_MEMORY(*func_type);
-  func_type->sig.result_type = result_type;
 
   CHECK_ALLOC(ctx,
               wasm_reserve_types(ctx->allocator, &func_type->sig.param_types,
@@ -252,6 +252,13 @@ static WasmResult on_signature(uint32_t index,
   func_type->sig.param_types.size = param_count;
   memcpy(func_type->sig.param_types.data, param_types,
          param_count * sizeof(WasmType));
+
+  CHECK_ALLOC(ctx,
+              wasm_reserve_types(ctx->allocator, &func_type->sig.result_types,
+                                 result_count));
+  func_type->sig.result_types.size = result_count;
+  memcpy(func_type->sig.result_types.data, result_types,
+         result_count * sizeof(WasmType));
 
   assert(index < ctx->module->func_types.capacity);
   WasmFuncTypePtr* func_type_ptr =
@@ -329,7 +336,11 @@ static WasmResult on_function_signature(uint32_t index,
         ctx, wasm_append_type_value(ctx->allocator, &func->decl.sig.param_types,
                                     &sig->param_types.data[i]));
   }
-  func->decl.sig.result_type = sig->result_type;
+  for (i = 0; i < sig->result_types.size; ++i) {
+    CHECK_ALLOC(
+        ctx, wasm_append_type_value(ctx->allocator, &func->decl.sig.result_types,
+                                    &sig->result_types.data[i]));
+  }
 
   assert(index < ctx->module->funcs.capacity);
   WasmFuncPtr* func_ptr =
@@ -463,6 +474,20 @@ static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
           }
           break;
         }
+
+        case WASM_EXPR_TYPE_VALUES:
+        case WASM_EXPR_TYPE_CONC_VALUES: {
+          WasmExprPtr* expr_ptr =
+              wasm_append_expr_ptr(ctx->allocator, &top->expr->values.args);
+          CHECK_ALLOC_NULL(ctx, expr_ptr);
+          *expr_ptr = expr;
+          break;
+        }
+
+        case WASM_EXPR_TYPE_MV_CALL:
+          assert(top->index == 0);
+          top->expr->mv_call.expr = expr;
+          break;
 
         case WASM_EXPR_TYPE_COMPARE:
           if (top->index == 0)
@@ -599,7 +624,8 @@ static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
   return shift(ctx, expr, 2);
 }
 
-static WasmResult on_block_expr(uint32_t count, void* user_data) {
+static WasmResult on_block_expr(int rtn_first, uint32_t count,
+                                void* user_data) {
   WasmContext* ctx = user_data;
   assert(ctx->current_func);
 
@@ -610,6 +636,7 @@ static WasmResult on_block_expr(uint32_t count, void* user_data) {
 
   WasmExpr* expr = wasm_new_block_expr(ctx->allocator);
   CHECK_ALLOC_NULL(ctx, expr);
+  expr->block.rtn_first = rtn_first;
   return shift(ctx, expr, count);
 }
 
@@ -709,6 +736,39 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   expr->call_indirect.var.index = sig_index;
   uint32_t num_params = func_type->sig.param_types.size;
   return shift(ctx, expr, num_params + 1);
+}
+
+static WasmResult on_values_expr(uint32_t values_count, void* user_data) {
+  WasmContext* ctx = user_data;
+  assert(ctx->current_func);
+
+  WasmExpr* expr = wasm_new_values_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(ctx, expr);
+  return shift(ctx, expr, values_count);
+}
+
+static WasmResult on_conc_values_expr(uint32_t values_count, void* user_data) {
+  WasmContext* ctx = user_data;
+  assert(ctx->current_func);
+
+  WasmExpr* expr = wasm_new_conc_values_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(ctx, expr);
+  return shift(ctx, expr, values_count);
+}
+
+static WasmResult on_mv_call_expr(uint32_t func_index, void* user_data) {
+  WasmContext* ctx = user_data;
+  assert(ctx->current_func);
+  assert(func_index < ctx->module->funcs.size);
+  WasmFunc* func = ctx->module->funcs.data[func_index];
+  uint32_t sig_index = func->decl.type_var.index;
+  assert(sig_index < ctx->module->func_types.size);
+
+  WasmExpr* expr = wasm_new_mv_call_expr(ctx->allocator);
+  CHECK_ALLOC_NULL(ctx, expr);
+  expr->call.var.type = WASM_VAR_TYPE_INDEX;
+  expr->call.var.index = func_index;
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_compare_expr(WasmOpcode opcode, void* user_data) {
@@ -866,11 +926,10 @@ static WasmResult on_return_expr(void* user_data) {
 
   uint32_t sig_index = ctx->current_func->decl.type_var.index;
   assert(sig_index < ctx->module->func_types.size);
-  WasmFuncType* func_type = ctx->module->func_types.data[sig_index];
 
   WasmExpr* expr = wasm_new_return_expr(ctx->allocator);
   CHECK_ALLOC_NULL(ctx, expr);
-  return shift(ctx, expr, func_type->sig.result_type == WASM_TYPE_VOID ? 0 : 1);
+  return shift(ctx, expr, 1);
 }
 
 static WasmResult on_select_expr(void* user_data) {
@@ -1107,6 +1166,9 @@ static WasmBinaryReader s_binary_reader = {
     .on_call_expr = &on_call_expr,
     .on_call_import_expr = &on_call_import_expr,
     .on_call_indirect_expr = &on_call_indirect_expr,
+    .on_values_expr = &on_values_expr,
+    .on_conc_values_expr = &on_conc_values_expr,
+    .on_mv_call_expr = &on_mv_call_expr,
     .on_compare_expr = &on_compare_expr,
     .on_i32_const_expr = &on_i32_const_expr,
     .on_i64_const_expr = &on_i64_const_expr,

@@ -375,13 +375,11 @@ static void pop_label(WasmContext* ctx, const WasmLabel* label) {
 }
 
 static int find_func_signature(const WasmFuncSignatureVector* sigs,
-                               const WasmType result_type,
-                               const WasmTypeVector* param_types) {
+                               const WasmTypeVector* param_types,
+                               const WasmTypeVector* result_types) {
   size_t i;
   for (i = 0; i < sigs->size; ++i) {
     const WasmFuncSignature* sig2 = &sigs->data[i];
-    if (sig2->result_type != result_type)
-      continue;
     if (sig2->param_types.size != param_types->size)
       continue;
     size_t j;
@@ -389,7 +387,15 @@ static int find_func_signature(const WasmFuncSignatureVector* sigs,
       if (sig2->param_types.data[j] != param_types->data[j])
         break;
     }
-    if (j == param_types->size)
+    if (j != param_types->size)
+      continue;
+    if (sig2->result_types.size != result_types->size)
+      continue;
+    for (j = 0; j < result_types->size; ++j) {
+      if (sig2->result_types.data[j] != result_types->data[j])
+        break;
+    }
+    if (j == result_types->size)
       return i;
   }
   return -1;
@@ -397,18 +403,20 @@ static int find_func_signature(const WasmFuncSignatureVector* sigs,
 
 static void get_or_create_func_signature(WasmContext* ctx,
                                          WasmFuncSignatureVector* sigs,
-                                         WasmType result_type,
                                          const WasmTypeVector* param_types,
+                                         const WasmTypeVector* result_types,
                                          int* out_index) {
-  int index = find_func_signature(sigs, result_type, param_types);
+  int index = find_func_signature(sigs, param_types, result_types);
   if (index == -1) {
     index = sigs->size;
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
     CHECK_ALLOC_NULL(sig);
-    sig->result_type = result_type;
     WASM_ZERO_MEMORY(sig->param_types);
     CHECK_ALLOC(
         wasm_extend_types(ctx->allocator, &sig->param_types, param_types));
+    WASM_ZERO_MEMORY(sig->result_types);
+    CHECK_ALLOC(
+        wasm_extend_types(ctx->allocator, &sig->result_types, result_types));
   }
   *out_index = index;
 }
@@ -419,8 +427,8 @@ static int get_signature_index(WasmContext* ctx,
                                const WasmFuncDeclaration* decl) {
   int index = -1;
   if (wasm_decl_has_signature(decl)) {
-    get_or_create_func_signature(ctx, sigs, decl->sig.result_type,
-                                 &decl->sig.param_types, &index);
+    get_or_create_func_signature(ctx, sigs, &decl->sig.param_types,
+				 &decl->sig.result_types, &index);
   } else {
     assert(wasm_decl_has_func_type(decl));
     index = wasm_get_func_type_index_by_var(module, &decl->type_var);
@@ -439,10 +447,12 @@ static void get_func_signatures(WasmContext* ctx,
     const WasmFuncType* func_type = module->func_types.data[i];
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
     CHECK_ALLOC_NULL(sig);
-    sig->result_type = func_type->sig.result_type;
     WASM_ZERO_MEMORY(sig->param_types);
     CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
                                   &func_type->sig.param_types));
+    WASM_ZERO_MEMORY(sig->result_types);
+    CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->result_types,
+                                  &func_type->sig.result_types));
   }
 
   ctx->import_sig_indexes =
@@ -601,6 +611,26 @@ static void write_expr(WasmContext* ctx,
       write_expr_list(ctx, module, func, &expr->call_indirect.args);
       break;
     }
+    case WASM_EXPR_TYPE_VALUES: {
+      out_opcode(ctx, WASM_OPCODE_VALUES);
+      out_u32_leb128(ctx, expr->values.args.size, "values count");
+      write_expr_list(ctx, module, func, &expr->values.args);
+      break;
+    }
+    case WASM_EXPR_TYPE_CONC_VALUES: {
+      out_opcode(ctx, WASM_OPCODE_CONC_VALUES);
+      out_u32_leb128(ctx, expr->values.args.size, "conc_values count");
+      write_expr_list(ctx, module, func, &expr->values.args);
+      break;
+    }
+    case WASM_EXPR_TYPE_MV_CALL: {
+      int index = wasm_get_func_index_by_var(module, &expr->call.var);
+      assert(index >= 0 && (size_t)index < module->funcs.size);
+      out_opcode(ctx, WASM_OPCODE_MV_CALL_FUNCTION);
+      out_u32_leb128(ctx, index, "func index");
+      write_expr(ctx, module, func, expr->mv_call.expr);
+      break;
+    }
     case WASM_EXPR_TYPE_COMPARE:
       out_opcode(ctx, expr->compare.opcode);
       write_expr(ctx, module, func, expr->compare.left);
@@ -689,6 +719,8 @@ static void write_expr(WasmContext* ctx,
       out_opcode(ctx, WASM_OPCODE_RETURN);
       if (expr->return_.expr)
         write_expr(ctx, module, func, expr->return_.expr);
+      else
+        out_opcode(ctx, WASM_OPCODE_NOP);
       break;
     case WASM_EXPR_TYPE_SELECT:
       out_opcode(ctx, WASM_OPCODE_SELECT);
@@ -771,7 +803,8 @@ static void write_block(WasmContext* ctx,
     pop_unused_label(ctx, &block->label);
   } else {
     push_label(ctx, &node, &block->label);
-    out_opcode(ctx, WASM_OPCODE_BLOCK);
+    out_opcode(ctx, block->rtn_first ? WASM_OPCODE_BLOCK1
+                                     : WASM_OPCODE_BLOCK);
     write_expr_list_with_count(ctx, module, func, &block->exprs);
     pop_label(ctx, &block->label);
   }
@@ -851,10 +884,12 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
       const WasmFuncSignature* sig = &sigs.data[i];
       print_header(ctx, "signature", i);
       out_u8(ctx, sig->param_types.size, "num params");
-      out_u8(ctx, sig->result_type, "result_type");
       size_t j;
       for (j = 0; j < sig->param_types.size; ++j)
         out_u8(ctx, sig->param_types.data[j], "param type");
+      out_u8(ctx, sig->result_types.size, "num results");
+      for (j = 0; j < sig->result_types.size; ++j)
+        out_u8(ctx, sig->result_types.data[j], "result type");
     }
     end_section(ctx);
   }

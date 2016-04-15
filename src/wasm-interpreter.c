@@ -505,10 +505,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
     uint8_t opcode = *pc++;
     switch (opcode) {
       case WASM_OPCODE_SELECT: {
+        uint32_t num_values = read_u32(&pc);
         VALUE_TYPE_I32 cond = POP_I32();
-        WasmInterpreterValue false_ = POP();
-        WasmInterpreterValue true_ = POP();
-        PUSH(cond ? true_ : false_);
+	if (!cond) {
+	  /* Keep the false values */
+	  for (size_t i = 0; i < num_values; i++)
+	    PICK(num_values + num_values - i) = PICK(num_values - i);
+	}
+	vs_top -= num_values;
         break;
       }
 
@@ -623,8 +627,10 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
             import->callback(module, import, num_args, thread->import_args.data,
                              &call_result_value, import->user_data);
         TRAP_IF(call_result != WASM_OK, IMPORT_TRAPPED);
-        if (sig->result_type != WASM_TYPE_VOID) {
-          TRAP_IF(call_result_value.type != sig->result_type,
+        if (sig->result_type.size > 0) {
+	  /* dtc: TODO support more than one result value from imports. */
+	  TRAP_IF(sig->result_type.size != 1, IMPORT_RESULT_TYPE_MISMATCH);
+          TRAP_IF(call_result_value.type != sig->result_type.types[0],
                   IMPORT_RESULT_TYPE_MISMATCH);
           PUSH(call_result_value.value);
         }
@@ -1351,10 +1357,9 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       case WASM_OPCODE_DISCARD_KEEP: {
         uint32_t discard_count = read_u32(&pc);
         uint8_t keep_count = *pc++;
-        assert(keep_count <= 1);
-        if (keep_count == 1)
-          PICK(discard_count + 1) = TOP();
-        vs_top -= discard_count;
+	for (int i = 0; i < keep_count; i++)
+          PICK(discard_count + keep_count - i) = PICK(keep_count - i);
+	vs_top -= discard_count;
         break;
       }
 
@@ -1392,10 +1397,13 @@ void wasm_trace_pc(WasmInterpreterModule* module,
 
   uint8_t opcode = *pc++;
   switch (opcode) {
-    case WASM_OPCODE_SELECT:
-      printf("%s %u, %" PRIu64 ", %" PRIu64 "\n", s_opcode_name[opcode],
-             PICK(3).i32, PICK(2).i64, PICK(1).i64);
+    case WASM_OPCODE_SELECT: {
+      uint32_t num_values = read_u32_at(pc);
+      printf("%s $%u %" PRIu64 ", %" PRIu64 ", %u\n", s_opcode_name[opcode],
+	     num_values, PICK(2 * num_values + 1).i64,
+	     PICK(num_values + 1).i64, PICK(1).i32);
       break;
+    }
 
     case WASM_OPCODE_BR:
       printf("%s @%u\n", s_opcode_name[opcode], read_u32_at(pc));
@@ -1704,9 +1712,12 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
 
     uint8_t opcode = *pc++;
     switch (opcode) {
-      case WASM_OPCODE_SELECT:
-        printf("%s %%[-3], %%[-2], %%[-1]\n", s_opcode_name[opcode]);
+      case WASM_OPCODE_SELECT: {
+        uint32_t num_values = read_u32(&pc);
+        printf("%s $%u %%[%d], %%[%d], %%[-1]\n", s_opcode_name[opcode],
+               num_values, -(2 * num_values + 1), -(num_values + 1));
         break;
+      }
 
       case WASM_OPCODE_BR:
         printf("%s @%u\n", s_opcode_name[opcode], read_u32(&pc));

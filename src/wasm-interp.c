@@ -218,9 +218,11 @@ static WasmResult default_import_callback(WasmInterpreterModule* module,
 
   WasmInterpreterTypedValue result;
   WASM_ZERO_MEMORY(result);
-  result.type = sig->result_type;
+  // dtc: TODO support imports returning more than one value.
+  assert(sig->result_type.size <= 1);
+  result.type = sig->result_type.size == 0 ? WASM_TYPE_VOID : sig->result_type.types[0];
 
-  if (sig->result_type != WASM_TYPE_VOID) {
+  if (sig->result_type.size > 0) {
     printf(") => ");
     print_typed_value(&result);
     printf("\n");
@@ -279,7 +281,8 @@ static WasmInterpreterResult run_export(
     WasmInterpreterModule* module,
     WasmInterpreterThread* thread,
     WasmInterpreterExport* export,
-    WasmInterpreterTypedValue* out_return_value,
+    WasmInterpreterTypedValue* out_return_values,
+    int* out_return_values_count,
     WasmRunVerbosity verbose) {
   /* pass all zeroes to the function */
   assert(export->sig_index < module->sigs.size);
@@ -305,23 +308,23 @@ static WasmInterpreterResult run_export(
       if (i != num_params - 1)
         printf(", ");
     }
-    if (sig->result_type != WASM_TYPE_VOID)
-      printf(") => ");
+    if (sig->result_type.size > 0)
+      printf(") =>");
     else
       printf(") ");
   }
 
+  *out_return_values_count = sig->result_type.size;
   if (result == WASM_INTERPRETER_RETURNED) {
-    out_return_value->type = sig->result_type;
+    assert(thread->value_stack_top == sig->result_type.size);
+    for (size_t i = 0; i < sig->result_type.size; i++) {
+      out_return_values[i].type = sig->result_type.types[i];
+      out_return_values[i].value = thread->value_stack.data[i];
 
-    if (sig->result_type != WASM_TYPE_VOID) {
-      assert(thread->value_stack_top == 1);
-      out_return_value->value = thread->value_stack.data[0];
-
-      if (verbose)
-        print_typed_value(out_return_value);
-    } else {
-      assert(thread->value_stack_top == 0);
+      if (verbose) {
+	printf(" ");
+        print_typed_value(&out_return_values[i]);
+      }
     }
 
     if (verbose)
@@ -342,13 +345,16 @@ static WasmResult run_export_by_name(
     WasmStringSlice* name,
     WasmInterpreterResult* out_iresult,
     WasmInterpreterTypedValue* out_return_value,
+    int* out_return_values_count,
     WasmRunVerbosity verbose) {
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WasmInterpreterExport* export = &module->exports.data[i];
     if (wasm_string_slices_are_equal(name, &export->name)) {
       *out_iresult =
-          run_export(module, thread, export, out_return_value, verbose);
+          run_export(module, thread, export,
+		     out_return_value, out_return_values_count,
+		     verbose);
       return WASM_OK;
     }
   }
@@ -361,8 +367,9 @@ static void run_all_exports(WasmInterpreterModule* module,
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WasmInterpreterExport* export = &module->exports.data[i];
-    WasmInterpreterTypedValue return_value;
-    run_export(module, thread, export, &return_value, verbose);
+    WasmInterpreterTypedValue return_values[10]; /* dtc todo dynamic */
+    int return_values_count;
+    run_export(module, thread, export, return_values, &return_values_count, verbose);
   }
 }
 
@@ -641,13 +648,15 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
 
       case END_COMMAND_OBJECT: {
         WasmInterpreterResult iresult;
-        WasmInterpreterTypedValue return_value;
-        WASM_ZERO_MEMORY(return_value);
+        WasmInterpreterTypedValue return_values[10]; /* dtc todo dynamic */
+        int return_values_count;
+        WASM_ZERO_MEMORY(return_values);
         EXPECT('}');
         WasmRunVerbosity verbose =
             command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
         result = run_export_by_name(&module, &thread, &command_name, &iresult,
-                                    &return_value, verbose);
+                                    return_values, &return_values_count,
+                                    verbose);
         if (WASM_FAILED(result)) {
           FAILED("unknown export");
           failed++;
@@ -667,10 +676,13 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
             if (iresult != WASM_INTERPRETER_RETURNED) {
               FAILED("trapped");
               failed++;
-            } else if (return_value.type != WASM_TYPE_I32) {
+            } else if (return_values_count < 1) {
+              FAILED("no return value");
+              failed++;
+            } else if (return_values[0].type != WASM_TYPE_I32) {
               FAILED("type mismatch");
               failed++;
-            } else if (return_value.value.i32 != 1) {
+            } else if (return_values[0].value.i32 != 1) {
               FAILED("didn't return 1");
               failed++;
             } else {

@@ -83,6 +83,7 @@ typedef struct WasmContext {
   WasmBinaryReader* reader;
   jmp_buf error_jmp_buf;
   WasmTypeVector param_types;
+  WasmTypeVector result_types;
   WasmUint32Vector target_depths;
 } WasmContext;
 
@@ -307,10 +308,6 @@ static void in_bytes(WasmContext* ctx,
   ctx->offset += data_size;
 }
 
-static WasmBool is_valid_type(uint8_t type) {
-  return type < WASM_NUM_TYPES;
-}
-
 static WasmBool is_non_void_type(uint8_t type) {
   return type != 0 && type < WASM_NUM_TYPES;
 }
@@ -418,10 +415,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             &ctx, wasm_reserve_types(allocator, &ctx.param_types, num_params));
       }
 
-      uint8_t result_type;
-      in_u8(&ctx, &result_type, "signature result type");
-      RAISE_ERROR_UNLESS(&ctx, is_valid_type(result_type),
-                         "expected valid result type");
       uint32_t j;
       for (j = 0; j < num_params; ++j) {
         uint8_t param_type;
@@ -431,8 +424,25 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         ctx.param_types.data[j] = param_type;
       }
 
-      CALLBACK(&ctx, on_signature, i, (WasmType)result_type, num_params,
-               ctx.param_types.data);
+      uint32_t num_results;
+      in_u32_leb128(&ctx, &num_results, "signature result count");
+
+      if (num_results > ctx.result_types.capacity) {
+        CHECK_ALLOC(
+            &ctx, wasm_reserve_types(allocator, &ctx.result_types, num_results));
+      }
+
+      for (j = 0; j < num_results; ++j) {
+        uint8_t result_type;
+        in_u8(&ctx, &result_type, "signature result type");
+        RAISE_ERROR_UNLESS(&ctx, is_non_void_type(result_type),
+                           "expected valid result type");
+        ctx.result_types.data[j] = result_type;
+      }
+
+      CALLBACK(&ctx, on_signature, i,
+	       num_params, ctx.param_types.data,
+	       num_results, ctx.result_types.data);
     }
     CALLBACK0(&ctx, end_signature_section);
   }
@@ -590,11 +600,18 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           case WASM_OPCODE_BLOCK: {
             uint32_t num_exprs;
             in_u32_leb128(&ctx, &num_exprs, "block expression count");
-            CALLBACK(&ctx, on_block_expr, num_exprs);
+            CALLBACK(&ctx, on_block_expr, 0, num_exprs);
             break;
           }
 
-          case WASM_OPCODE_LOOP: {
+          case WASM_OPCODE_BLOCK1: {
+            uint32_t num_exprs;
+            in_u32_leb128(&ctx, &num_exprs, "block1 expression count");
+            CALLBACK(&ctx, on_block_expr, 1, num_exprs);
+            break;
+          }
+
+	  case WASM_OPCODE_LOOP: {
             uint32_t num_exprs;
             in_u32_leb128(&ctx, &num_exprs, "loop expression count");
             CALLBACK(&ctx, on_loop_expr, num_exprs);
@@ -727,6 +744,29 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             RAISE_ERROR_UNLESS(&ctx, import_index < num_imports,
                                "invalid call_import import index");
             CALLBACK(&ctx, on_call_import_expr, import_index);
+            break;
+          }
+
+          case WASM_OPCODE_VALUES: {
+            uint32_t values_count;
+            in_u32_leb128(&ctx, &values_count, "values count");
+            CALLBACK(&ctx, on_values_expr, values_count);
+            break;
+          }
+
+          case WASM_OPCODE_CONC_VALUES: {
+            uint32_t values_count;
+            in_u32_leb128(&ctx, &values_count, "conc_values count");
+            CALLBACK(&ctx, on_conc_values_expr, values_count);
+            break;
+          }
+
+          case WASM_OPCODE_MV_CALL_FUNCTION: {
+            uint32_t func_index;
+            in_u32_leb128(&ctx, &func_index, "mv_call_function function index");
+            RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
+                               "invalid call_function function index");
+            CALLBACK(&ctx, on_mv_call_expr, func_index);
             break;
           }
 
