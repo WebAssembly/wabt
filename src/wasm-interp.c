@@ -43,6 +43,9 @@ static WasmBool s_spec;
 static WasmBool s_run_all_exports;
 static WasmBool s_use_libc_allocator;
 
+static WasmBinaryErrorHandler s_error_handler =
+    WASM_BINARY_ERROR_HANDLER_DEFAULT;
+
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
 
@@ -377,9 +380,9 @@ static WasmResult read_module(WasmAllocator* allocator,
   if (WASM_SUCCEEDED(result)) {
     WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
     WASM_ZERO_MEMORY(*out_module);
-    result =
-        wasm_read_binary_interpreter(allocator, memory_allocator, data, size,
-                                     &s_read_binary_options, out_module);
+    result = wasm_read_binary_interpreter(allocator, memory_allocator, data,
+                                          size, &s_read_binary_options,
+                                          &s_error_handler, out_module);
 
     if (WASM_SUCCEEDED(result)) {
       if (s_verbose)

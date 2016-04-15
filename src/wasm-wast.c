@@ -38,6 +38,9 @@ static WasmReadBinaryOptions s_read_binary_options =
 static WasmBool s_use_libc_allocator;
 static WasmBool s_generate_names;
 
+static WasmBinaryErrorHandler s_error_handler =
+    WASM_BINARY_ERROR_HANDLER_DEFAULT;
+
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
 
@@ -143,7 +146,7 @@ int main(int argc, char** argv) {
     WasmModule module;
     WASM_ZERO_MEMORY(module);
     result = wasm_read_binary_ast(allocator, data, size, &s_read_binary_options,
-                                  &module);
+                                  &s_error_handler, &module);
     if (WASM_SUCCEEDED(result)) {
       if (s_generate_names)
         result = wasm_generate_names(allocator, &module);

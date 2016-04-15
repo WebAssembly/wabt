@@ -49,6 +49,9 @@ static WasmInterpreterThreadOptions s_thread_options =
 static WasmBool s_trace;
 static WasmBool s_use_libc_allocator;
 
+static WasmBinaryErrorHandler s_error_handler =
+    WASM_BINARY_ERROR_HANDLER_DEFAULT;
+
 #define V(name, str) str,
 static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
 #undef V
@@ -204,7 +207,8 @@ static WasmResult read_module(WasmAllocator* allocator,
   WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
   WASM_ZERO_MEMORY(*out_module);
   return wasm_read_binary_interpreter(allocator, memory_allocator, data, size,
-                                      &s_read_binary_options, out_module);
+                                      &s_read_binary_options, &s_error_handler,
+                                      out_module);
 }
 
 static WasmResult init_thread(WasmAllocator* allocator,

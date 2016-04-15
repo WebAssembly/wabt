@@ -26,6 +26,14 @@
 #include "wasm-binary-reader.h"
 #include "wasm-common.h"
 
+#define LOG 0
+
+#if LOG
+#define LOGF(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define LOGF(...) (void)0
+#endif
+
 #define CHECK_ALLOC_(ctx, cond)                                           \
   do {                                                                    \
     if (!(cond)) {                                                        \
@@ -64,9 +72,6 @@
     }                                                                       \
   } while (0)
 
-#define LOG 0
-#define UNKNOWN_OFFSET ((uint32_t)~0)
-
 typedef struct WasmExprNode {
   WasmExpr* expr;
   uint32_t index;
@@ -79,6 +84,7 @@ WASM_DEFINE_VECTOR(uint32, WasmUint32);
 
 typedef struct WasmContext {
   WasmAllocator* allocator;
+  WasmBinaryErrorHandler* error_handler;
   WasmModule* module;
 
   WasmFunc* current_func;
@@ -104,7 +110,7 @@ static void on_error(uint32_t offset, const char* message, void* user_data);
 
 static void print_error(WasmContext* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
-  on_error(UNKNOWN_OFFSET, buffer, ctx);
+  on_error(WASM_UNKNOWN_OFFSET, buffer, ctx);
 }
 
 static WasmResult dup_name(WasmContext* ctx,
@@ -154,10 +160,11 @@ static uint32_t translate_depth(WasmContext* ctx, uint32_t depth) {
 }
 
 void on_error(uint32_t offset, const char* message, void* user_data) {
-  if (offset == UNKNOWN_OFFSET)
-    fprintf(stderr, "error: %s\n", message);
-  else
-    fprintf(stderr, "error: @0x%08x: %s\n", offset, message);
+  WasmContext* ctx = user_data;
+  if (ctx->error_handler->on_error) {
+    ctx->error_handler->on_error(offset, message,
+                                 ctx->error_handler->user_data);
+  }
 }
 
 static WasmResult begin_memory_section(void* user_data) {
@@ -349,9 +356,7 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
   WasmContext* ctx = user_data;
   assert(index < ctx->module->funcs.size);
   ctx->current_func = ctx->module->funcs.data[index];
-#if LOG
-  fprintf(stderr, "func %d\n", index);
-#endif
+  LOGF("func %d\n", index);
   return WASM_OK;
 }
 
@@ -391,9 +396,7 @@ static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
   while (!done) {
     done = WASM_TRUE;
     if (ctx->expr_stack.size == 0) {
-#if LOG
-      fprintf(stderr, "reduce: <- %u\n", expr->type);
-#endif
+      LOGF("reduce: <- %u\n", expr->type);
 
       WasmExprPtr* expr_ptr =
           wasm_append_expr_ptr(ctx->allocator, &ctx->current_func->exprs);
@@ -403,10 +406,8 @@ static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
       WasmExprNode* top = &ctx->expr_stack.data[ctx->expr_stack.size - 1];
       assert(top->index < top->total);
 
-#if LOG
-      fprintf(stderr, "reduce: %d(%d/%d) <- %d\n", top->expr->type, top->index,
+      LOGF("reduce: %d(%d/%d) <- %d\n", top->expr->type, top->index,
               top->total, expr->type);
-#endif
 
       switch (top->expr->type) {
         case WASM_EXPR_TYPE_BINARY:
@@ -574,9 +575,7 @@ static WasmResult reduce(WasmContext* ctx, WasmExpr* expr) {
 static WasmResult shift(WasmContext* ctx, WasmExpr* expr, uint32_t count) {
   ctx->just_pushed_fake_depth = WASM_FALSE;
   if (count > 0) {
-#if LOG
-    fprintf(stderr, "shift: %d %u\n", expr->type, count);
-#endif
+    LOGF("shift: %d %u\n", expr->type, count);
     WasmExprNode* node =
         wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
     CHECK_ALLOC_NULL(ctx, node);
@@ -1147,10 +1146,12 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
                                 const void* data,
                                 size_t size,
                                 const WasmReadBinaryOptions* options,
+                                WasmBinaryErrorHandler* error_handler,
                                 struct WasmModule* out_module) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
+  ctx.error_handler = error_handler;
   ctx.module = out_module;
 
   WasmBinaryReader reader;

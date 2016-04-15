@@ -145,12 +145,12 @@ static void print_carets(FILE* out,
   fprintf(out, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets, carets);
 }
 
-static void print_error(FILE* out,
-                        const WasmLocation* loc,
-                        const char* error,
-                        const char* source_line,
-                        size_t source_line_length,
-                        size_t source_line_column_offset) {
+static void print_source_error(FILE* out,
+                               const WasmLocation* loc,
+                               const char* error,
+                               const char* source_line,
+                               size_t source_line_length,
+                               size_t source_line_column_offset) {
   fprintf(out, "%s:%d:%d: %s\n", loc->filename, loc->line, loc->first_column,
           error);
   if (source_line && source_line_length > 0) {
@@ -161,23 +161,33 @@ static void print_error(FILE* out,
   }
 }
 
-void wasm_default_error_callback(const WasmLocation* loc,
-                                 const char* error,
-                                 const char* source_line,
-                                 size_t source_line_length,
-                                 size_t source_line_column_offset,
-                                 void* user_data) {
-  print_error(stderr, loc, error, source_line, source_line_length,
-              source_line_column_offset);
+void wasm_default_source_error_callback(const WasmLocation* loc,
+                                        const char* error,
+                                        const char* source_line,
+                                        size_t source_line_length,
+                                        size_t source_line_column_offset,
+                                        void* user_data) {
+  print_source_error(stderr, loc, error, source_line, source_line_length,
+                     source_line_column_offset);
 }
 
-void wasm_default_assert_invalid_callback(const WasmLocation* loc,
-                                          const char* error,
-                                          const char* source_line,
-                                          size_t source_line_length,
-                                          size_t source_line_column_offset,
-                                          void* user_data) {
+void wasm_default_assert_invalid_source_error_callback(
+    const WasmLocation* loc,
+    const char* error,
+    const char* source_line,
+    size_t source_line_length,
+    size_t source_line_column_offset,
+    void* user_data) {
   fprintf(stdout, "assert_invalid error:\n  ");
-  print_error(stdout, loc, error, source_line, source_line_length,
-              source_line_column_offset);
+  print_source_error(stdout, loc, error, source_line, source_line_length,
+                     source_line_column_offset);
+}
+
+void wasm_default_binary_error_callback(uint32_t offset,
+                                        const char* error,
+                                        void* user_data) {
+  if (offset == WASM_UNKNOWN_OFFSET)
+    fprintf(stderr, "error: %s\n", error);
+  else
+    fprintf(stderr, "error: @0x%08x: %s\n", offset, error);
 }

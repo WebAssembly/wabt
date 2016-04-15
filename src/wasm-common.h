@@ -38,6 +38,7 @@
 #define WASM_ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
 #define WASM_USE(x) (void)x
 
+#define WASM_UNKNOWN_OFFSET ((uint32_t)~0)
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
 
 #define PRIstringslice "%.*s"
@@ -107,10 +108,22 @@ typedef struct WasmSourceErrorHandler {
 } WasmSourceErrorHandler;
 
 #define WASM_SOURCE_ERROR_HANDLER_DEFAULT \
-  { wasm_default_error_callback, 80, NULL }
+  { wasm_default_source_error_callback, 80, NULL }
 
 #define WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT \
-  { wasm_default_assert_invalid_callback, 80, NULL }
+  { wasm_default_assert_invalid_source_error_callback, 80, NULL }
+
+typedef void (*WasmBinaryErrorCallback)(uint32_t offset,
+                                        const char* error,
+                                        void* user_data);
+
+typedef struct WasmBinaryErrorHandler {
+  WasmBinaryErrorCallback on_error;
+  void* user_data;
+} WasmBinaryErrorHandler;
+
+#define WASM_BINARY_ERROR_HANDLER_DEFAULT \
+  { wasm_default_binary_error_callback, NULL }
 
 /* matches binary format, do not change */
 enum {
@@ -351,18 +364,24 @@ WasmResult wasm_read_file(struct WasmAllocator* allocator,
                           const char* filename,
                           void** out_data,
                           size_t* out_size);
-void wasm_default_error_callback(const WasmLocation*,
-                                 const char* error,
-                                 const char* source_line,
-                                 size_t source_line_length,
-                                 size_t source_line_column_offset,
-                                 void* user_data);
-void wasm_default_assert_invalid_callback(const WasmLocation*,
-                                          const char* error,
-                                          const char* source_line,
-                                          size_t source_line_length,
-                                          size_t source_line_column_offset,
-                                          void* user_data);
+
+void wasm_default_source_error_callback(const WasmLocation*,
+                                        const char* error,
+                                        const char* source_line,
+                                        size_t source_line_length,
+                                        size_t source_line_column_offset,
+                                        void* user_data);
+void wasm_default_assert_invalid_source_error_callback(
+    const WasmLocation*,
+    const char* error,
+    const char* source_line,
+    size_t source_line_length,
+    size_t source_line_column_offset,
+    void* user_data);
+void wasm_default_binary_error_callback(uint32_t offset,
+                                        const char* error,
+                                        void* user_data);
+
 WASM_EXTERN_C_END
 
 #endif /* WASM_COMMON_H_ */

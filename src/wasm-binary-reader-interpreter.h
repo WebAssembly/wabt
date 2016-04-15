@@ -30,6 +30,7 @@ WasmResult wasm_read_binary_interpreter(
     const void* data,
     size_t size,
     const struct WasmReadBinaryOptions* options,
+    WasmBinaryErrorHandler*,
     struct WasmInterpreterModule* out_module);
 WASM_EXTERN_C_END
 

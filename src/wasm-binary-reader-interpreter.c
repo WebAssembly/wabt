@@ -27,6 +27,12 @@
 
 #define LOG 0
 
+#if LOG
+#define LOGF(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define LOGF(...) (void)0
+#endif
+
 #define INVALID_FUNC_INDEX ((uint32_t)~0)
 
 #define CHECK_ALLOC_(ctx, cond)                                           \
@@ -156,6 +162,7 @@ WASM_DEFINE_ARRAY(interpreter_func, WasmInterpreterFunc);
 
 typedef struct WasmContext {
   WasmAllocator* allocator;
+  WasmBinaryErrorHandler* error_handler;
   WasmAllocator* memory_allocator;
   WasmInterpreterModule* module;
   WasmInterpreterFuncArray funcs;
@@ -450,10 +457,8 @@ static WasmResult push_depth_with_offset(WasmContext* ctx,
   node->type = type;
   node->value_stack_size = ctx->value_stack_size;
   node->offset = offset;
-#if LOG
-  fprintf(stderr, "   (%d): push depth %" PRIzd ":%s\n", ctx->value_stack_size,
-          ctx->depth_stack.size - 1, s_type_names[type]);
-#endif
+  LOGF("   (%d): push depth %" PRIzd ":%s\n", ctx->value_stack_size,
+       ctx->depth_stack.size - 1, s_type_names[type]);
   return WASM_OK;
 }
 
@@ -462,10 +467,8 @@ static WasmResult push_depth(WasmContext* ctx, WasmType type) {
 }
 
 static void pop_depth(WasmContext* ctx) {
-#if LOG
-  fprintf(stderr, "   (%d): pop depth %" PRIzd "\n", ctx->value_stack_size,
-          ctx->depth_stack.size - 1);
-#endif
+  LOGF("   (%d): pop depth %" PRIzd "\n", ctx->value_stack_size,
+       ctx->depth_stack.size - 1);
   assert(ctx->depth_stack.size > 0);
   ctx->depth_stack.size--;
   /* reduce the depth_fixups stack as well, but it may be smaller than
@@ -502,10 +505,11 @@ static uint32_t translate_local_index(WasmContext* ctx, uint32_t local_index) {
 }
 
 void on_error(uint32_t offset, const char* message, void* user_data) {
-  if (offset == WASM_INVALID_OFFSET)
-    fprintf(stderr, "error: %s\n", message);
-  else
-    fprintf(stderr, "error: @0x%08x: %s\n", offset, message);
+  WasmContext* ctx = user_data;
+  if (ctx->error_handler->on_error) {
+    ctx->error_handler->on_error(offset, message,
+                                 ctx->error_handler->user_data);
+  }
 }
 
 static WasmResult on_memory_initial_size_pages(uint32_t pages,
@@ -608,9 +612,7 @@ static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult begin_function_body(uint32_t index, void* user_data) {
-#if LOG
-  fprintf(stderr, "*** func %d ***\n", index);
-#endif
+  LOGF("*** func %d ***\n", index);
   WasmContext* ctx = user_data;
   WasmInterpreterFunc* func = get_func(ctx, index);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, func->sig_index);
@@ -696,11 +698,9 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
     done = WASM_TRUE;
 
     if (ctx->expr_stack.size == 0) {
-#if LOG
-      fprintf(stderr, "%3" PRIzd "(%d): reduce: <- %s:%s\n",
+      LOGF("%3" PRIzd "(%d): reduce: <- %s:%s\n",
               ctx->expr_stack.size, ctx->value_stack_size,
               s_opcode_name[expr->opcode], s_type_names[expr->type]);
-#endif
 
       /* discard all top-level values. The last one is the return value, which
        * we don't want to discard, but we won't know if this is the last
@@ -713,15 +713,13 @@ static WasmResult reduce(WasmContext* ctx, WasmInterpreterExpr* expr) {
       WasmExprNode* top = &ctx->expr_stack.data[ctx->expr_stack.size - 1];
       assert(top->index < top->total);
 
-#if LOG
-      fprintf(stderr, "%3" PRIzd "(%d): reduce: %s(%d/%d) <- %s:%s\n",
+      LOGF("%3" PRIzd "(%d): reduce: %s(%d/%d) <- %s:%s\n",
               ctx->expr_stack.size, ctx->value_stack_size,
               s_opcode_name[top->expr.opcode], top->index, top->total,
               s_opcode_name[expr->opcode], s_type_names[expr->type]);
-#endif
 #if LOG
       if (top->expr.opcode == WASM_OPCODE_BR) {
-        fprintf(stderr, "      : br depth %u\n", top->expr.br.depth);
+        LOGF("      : br depth %u\n", top->expr.br.depth);
       }
 #endif
 
@@ -1080,11 +1078,9 @@ static WasmResult shift(WasmContext* ctx,
                         WasmInterpreterExpr* expr,
                         uint32_t count) {
   assert(count > 0);
-#if LOG
-  fprintf(stderr, "%3" PRIzd "(%d): shift: %s:%s %u\n", ctx->expr_stack.size,
-          ctx->value_stack_size, s_opcode_name[expr->opcode],
-          s_type_names[expr->type], count);
-#endif
+  LOGF("%3" PRIzd "(%d): shift: %s:%s %u\n", ctx->expr_stack.size,
+       ctx->value_stack_size, s_opcode_name[expr->opcode],
+       s_type_names[expr->type], count);
   WasmExprNode* node = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
   CHECK_ALLOC_NULL(ctx, node);
   node->expr = *expr;
@@ -1578,10 +1574,12 @@ WasmResult wasm_read_binary_interpreter(WasmAllocator* allocator,
                                         const void* data,
                                         size_t size,
                                         const WasmReadBinaryOptions* options,
+                                        WasmBinaryErrorHandler* error_handler,
                                         WasmInterpreterModule* out_module) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
+  ctx.error_handler = error_handler;
   ctx.memory_allocator = memory_allocator;
   ctx.module = out_module;
   ctx.start_func_index = INVALID_FUNC_INDEX;

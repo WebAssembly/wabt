@@ -22,6 +22,12 @@
 
 #define WASM_TRACE_ALLOCATOR 0
 
+#if WASM_TRACE_ALLOCATOR
+#define TRACEF(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define TRACEF(...)
+#endif
+
 #if WASM_STACK_ALLOCATOR_STATS
 #include <stdio.h>
 #endif /* WASM_STACK_ALLOCATOR_STATS */
@@ -126,8 +132,8 @@ static void* stack_alloc(WasmAllocator* allocator,
 
 #if WASM_TRACE_ALLOCATOR
   if (file) {
-    fprintf(stderr, "%s:%d: stack_alloc(%" PRIzd ", align=%" PRIzd ") => %p\n",
-            file, line, size, align, result);
+    TRACEF("%s:%d: stack_alloc(%" PRIzd ", align=%" PRIzd ") => %p\n", file,
+           line, size, align, result);
   }
 #endif /* WASM_TRACE_ALLOCATOR */
 
@@ -163,9 +169,8 @@ static void* stack_realloc(WasmAllocator* allocator,
 
 #if WASM_TRACE_ALLOCATOR
   if (file) {
-    fprintf(stderr,
-            "%s:%d: stack_realloc(%p, %" PRIzd ", align=%" PRIzd ") => %p\n",
-            file, line, p, size, align, result);
+    TRACEF("%s:%d: stack_realloc(%p, %" PRIzd ", align=%" PRIzd ") => %p\n",
+           file, line, p, size, align, result);
   }
 #endif /* WASM_TRACE_ALLOCATOR */
 
@@ -193,10 +198,7 @@ static void stack_free(WasmAllocator* allocator,
   if (!p)
     return;
 
-#if WASM_TRACE_ALLOCATOR
-  fprintf(stderr, "%s:%d: stack_free(%p)\n", file, line, p);
-#endif /* WASM_TRACE_ALLOCATOR */
-
+  TRACEF("%s:%d: stack_free(%p)\n", file, line, p);
   WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
 
 #if WASM_STACK_ALLOCATOR_STATS
