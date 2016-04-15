@@ -22,7 +22,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wasm-allocator.h"
 #include "wasm-parser-lexer-shared.h"
 
 static const char* s_type_names[] = {
@@ -88,11 +87,10 @@ typedef struct WasmLabelNode {
 } WasmLabelNode;
 
 typedef struct WasmContext {
-  WasmAllocator* allocator;
+  WasmSourceErrorHandler* error_handler;
   WasmLexer lexer;
   const WasmModule* last_module;
   WasmLabelNode* top_label;
-  WasmBool in_assert_invalid;
   int max_depth;
   WasmResult result;
 } WasmContext;
@@ -101,16 +99,10 @@ static void print_error(WasmContext* ctx,
                         const WasmLocation* loc,
                         const char* fmt,
                         ...) {
-  FILE* out = stderr;
   ctx->result = WASM_ERROR;
-  if (ctx->in_assert_invalid) {
-    out = stdout;
-    fprintf(out, "assert_invalid error:\n  ");
-  }
-
   va_list args;
   va_start(args, fmt);
-  wasm_vfprint_error(out, loc, ctx->lexer, fmt, args);
+  wasm_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
 }
 
@@ -929,18 +921,9 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
       check_invoke(ctx, &command->invoke, WASM_TYPE_SET_VOID);
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_INVALID: {
-      WasmContext ctx2 = *ctx;
-      ctx2.result = WASM_OK;
-      ctx2.in_assert_invalid = WASM_TRUE;
-      check_module(&ctx2, &command->assert_invalid.module);
-
-      if (WASM_SUCCEEDED(ctx2.result)) {
-        print_error(ctx, &command->assert_invalid.module.loc,
-                    "expected module to be invalid");
-      }
+    case WASM_COMMAND_TYPE_ASSERT_INVALID:
+      /* ignore */
       break;
-    }
 
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
       check_invoke(ctx, &command->assert_return.invoke,
@@ -961,11 +944,13 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_ast(WasmLexer lexer, const WasmScript* script) {
+WasmResult wasm_check_ast(WasmLexer lexer,
+                          const struct WasmScript* script,
+                          WasmSourceErrorHandler* error_handler) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
-  ctx.allocator = script->allocator;
+  ctx.error_handler = error_handler;
   ctx.result = WASM_OK;
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
@@ -973,3 +958,34 @@ WasmResult wasm_check_ast(WasmLexer lexer, const WasmScript* script) {
   return ctx.result;
 }
 
+WasmResult wasm_check_assert_invalid(
+    WasmLexer lexer,
+    const struct WasmScript* script,
+    WasmSourceErrorHandler* assert_invalid_error_handler,
+    WasmSourceErrorHandler* error_handler) {
+  WasmContext ctx;
+  WASM_ZERO_MEMORY(ctx);
+  ctx.lexer = lexer;
+  ctx.error_handler = error_handler;
+  ctx.result = WASM_OK;
+
+  size_t i;
+  for (i = 0; i < script->commands.size; ++i) {
+    WasmCommand* command = &script->commands.data[i];
+    if (command->type != WASM_COMMAND_TYPE_ASSERT_INVALID)
+      continue;
+
+    WasmContext ai_ctx;
+    WASM_ZERO_MEMORY(ai_ctx);
+    ai_ctx.lexer = lexer;
+    ai_ctx.error_handler = assert_invalid_error_handler;
+    ai_ctx.result = WASM_OK;
+    check_module(&ai_ctx, &command->assert_invalid.module);
+
+    if (WASM_SUCCEEDED(ai_ctx.result)) {
+      print_error(&ctx, &command->assert_invalid.module.loc,
+                  "expected module to be invalid");
+    }
+  }
+  return ctx.result;
+}

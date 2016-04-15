@@ -92,6 +92,26 @@ typedef struct WasmLocation {
   int last_column;
 } WasmLocation;
 
+typedef void (*WasmSourceErrorCallback)(const WasmLocation*,
+                                        const char* error,
+                                        const char* source_line,
+                                        size_t source_line_length,
+                                        size_t source_line_column_offset,
+                                        void* user_data);
+
+typedef struct WasmSourceErrorHandler {
+  WasmSourceErrorCallback on_error;
+  /* on_error will be called with with source_line trimmed to this length */
+  size_t source_line_max_length;
+  void* user_data;
+} WasmSourceErrorHandler;
+
+#define WASM_SOURCE_ERROR_HANDLER_DEFAULT \
+  { wasm_default_error_callback, 80, NULL }
+
+#define WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT \
+  { wasm_default_assert_invalid_callback, 80, NULL }
+
 /* matches binary format, do not change */
 enum {
   WASM_TYPE_VOID,
@@ -331,6 +351,18 @@ WasmResult wasm_read_file(struct WasmAllocator* allocator,
                           const char* filename,
                           void** out_data,
                           size_t* out_size);
+void wasm_default_error_callback(const WasmLocation*,
+                                 const char* error,
+                                 const char* source_line,
+                                 size_t source_line_length,
+                                 size_t source_line_column_offset,
+                                 void* user_data);
+void wasm_default_assert_invalid_callback(const WasmLocation*,
+                                          const char* error,
+                                          const char* source_line,
+                                          size_t source_line_length,
+                                          size_t source_line_column_offset,
+                                          void* user_data);
 WASM_EXTERN_C_END
 
 #endif /* WASM_COMMON_H_ */

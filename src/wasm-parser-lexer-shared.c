@@ -20,21 +20,40 @@
 #include <stdio.h>
 #include <string.h>
 
-void wasm_vfprint_error(FILE* error_file,
-                        const WasmLocation* loc,
-                        WasmLexer lexer,
-                        const char* fmt,
-                        va_list args) {
-  if (loc) {
-    fprintf(error_file, "%s:%d:%d: ", loc->filename, loc->line,
-            loc->first_column);
+void wasm_parser_error(WasmLocation* loc,
+                       WasmLexer lexer,
+                       WasmParser* parser,
+                       const char* format,
+                       ...) {
+  parser->errors++;
+  va_list args;
+  va_start(args, format);
+  wasm_format_error(parser->error_handler, loc, lexer, format, args);
+  va_end(args);
+}
+
+void wasm_format_error(WasmSourceErrorHandler* error_handler,
+                       const struct WasmLocation* loc,
+                       WasmLexer lexer,
+                       const char* format,
+                       va_list args) {
+  va_list args_copy;
+  va_copy(args_copy, args);
+  char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
+  char* buffer = fixed_buf;
+  size_t len = wasm_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
+  if (len + 1 > sizeof(fixed_buf)) {
+    buffer = alloca(len + 1);
+    len = wasm_vsnprintf(buffer, len + 1, format, args_copy);
   }
 
-  vfprintf(error_file, fmt, args);
-  fprintf(error_file, "\n");
-
+  char* source_line = NULL;
+  size_t source_line_length = 0;
+  size_t source_line_column_offset = 0;
+  size_t source_line_max_length = error_handler->source_line_max_length;
   if (loc) {
-    /* print the line and a cute little caret, like clang */
+    source_line = alloca(source_line_max_length + 1);
+
     size_t line_offset = wasm_lexer_get_file_offset_from_line(lexer, loc->line);
     FILE* lexer_file = wasm_lexer_get_file(lexer);
     long old_offset = ftell(lexer_file);
@@ -67,61 +86,59 @@ void wasm_vfprint_error(FILE* error_file,
         next_line_offset--;
       }
 
-#define MAX_LINE 80
-      size_t line_length = next_line_offset - line_offset;
+      source_line_length = next_line_offset - line_offset;
       size_t column_range = loc->last_column - loc->first_column;
       size_t start_offset = line_offset;
-      if (line_length > MAX_LINE) {
-        line_length = MAX_LINE;
+      if (source_line_length > source_line_max_length) {
+        source_line_length = source_line_max_length;
         size_t center_on;
-        if (column_range > MAX_LINE) {
+        if (column_range > source_line_max_length) {
           /* the column range doesn't fit, just center on first_column */
           center_on = loc->first_column - 1;
         } else {
           /* the entire range fits, display it all in the center */
           center_on = (loc->first_column + loc->last_column) / 2 - 1;
         }
-        if (center_on > MAX_LINE / 2)
-          start_offset = line_offset + center_on - MAX_LINE / 2;
-        if (start_offset > next_line_offset - MAX_LINE)
-          start_offset = next_line_offset - MAX_LINE;
+        if (center_on > source_line_max_length / 2)
+          start_offset = line_offset + center_on - source_line_max_length / 2;
+        if (start_offset > next_line_offset - source_line_max_length)
+          start_offset = next_line_offset - source_line_max_length;
       }
 
-      const char ellipsis[] = "...";
-      size_t ellipsis_length = sizeof(ellipsis) - 1;
-      const char* line_prefix = "";
-      const char* line_suffix = "";
-      if (start_offset + line_length != next_line_offset) {
-        line_suffix = ellipsis;
-        line_length -= ellipsis_length;
+      source_line_column_offset = start_offset - line_offset;
+
+      char* p = source_line;
+      size_t read_start = start_offset;
+      size_t read_length = source_line_length;
+      WasmBool has_start_ellipsis = start_offset != line_offset;
+      WasmBool has_end_ellipsis =
+          start_offset + source_line_length != next_line_offset;
+
+      if (has_start_ellipsis) {
+        memcpy(p, "...", 3);
+        p += 3;
+        read_start += 3;
+        read_length -= 3;
       }
 
-      if (start_offset != line_offset) {
-        start_offset += ellipsis_length;
-        line_length -= ellipsis_length;
-        line_prefix = ellipsis;
+      if (has_end_ellipsis) {
+        read_length -= 3;
       }
 
-      if (fseek(lexer_file, start_offset, SEEK_SET) != -1) {
-        char buffer[MAX_LINE];
-        size_t bytes_read = fread(buffer, 1, line_length, lexer_file);
-        if (bytes_read > 0) {
-          fprintf(error_file, "%s%.*s%s\n", line_prefix, (int)bytes_read,
-                  buffer, line_suffix);
-
-          /* print the caret */
-          char carets[MAX_LINE];
-          memset(carets, '^', sizeof(carets));
-          size_t num_spaces = (loc->first_column - 1) -
-                              (start_offset - line_offset) +
-                              strlen(line_prefix);
-          size_t num_carets = column_range;
-          if (num_carets > MAX_LINE - num_spaces)
-            num_carets = MAX_LINE - num_spaces;
-          fprintf(error_file, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets,
-                  carets);
-        }
+      if (fseek(lexer_file, read_start, SEEK_SET) != -1) {
+        size_t bytes_read = fread(p, 1, read_length, lexer_file);
+        if (bytes_read > 0)
+          p += bytes_read;
       }
+
+      if (has_end_ellipsis) {
+        memcpy(p, "...", 3);
+        p += 3;
+      }
+
+      source_line_length = p - source_line;
+
+      *p = '\0';
 
       if (fseek(lexer_file, old_offset, SEEK_SET) == -1) {
         /* we're screwed now, blow up. */
@@ -129,5 +146,10 @@ void wasm_vfprint_error(FILE* error_file,
       }
     }
   }
-}
 
+  if (error_handler->on_error) {
+    error_handler->on_error(loc, buffer, source_line, source_line_length,
+                            source_line_column_offset, error_handler->user_data);
+  }
+  va_end(args_copy);
+}

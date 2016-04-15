@@ -71,6 +71,7 @@ typedef union WasmToken {
 typedef struct WasmParser {
   struct WasmAllocator* allocator;
   WasmScript script;
+  WasmSourceErrorHandler* error_handler;
   int errors;
 } WasmParser;
 
@@ -87,11 +88,11 @@ void wasm_parser_error(struct WasmLocation*,
                        struct WasmParser*,
                        const char*,
                        ...);
-void wasm_vfprint_error(FILE*,
-                        const struct WasmLocation*,
-                        WasmLexer,
-                        const char*,
-                        va_list);
+void wasm_format_error(WasmSourceErrorHandler*,
+                       const struct WasmLocation*,
+                       WasmLexer,
+                       const char* format,
+                       va_list);
 WASM_EXTERN_C_END
 
 #endif /* WASM_PARSER_LEXER_SHARED_H_ */

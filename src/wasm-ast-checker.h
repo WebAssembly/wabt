@@ -20,10 +20,20 @@
 #include "wasm-common.h"
 #include "wasm-lexer.h"
 
+struct WasmAllocator;
+struct WasmModule;
 struct WasmScript;
 
 WASM_EXTERN_C_BEGIN
-WasmResult wasm_check_ast(WasmLexer lexer, const struct WasmScript*);
+WasmResult wasm_check_ast(WasmLexer,
+                          const struct WasmScript*,
+                          WasmSourceErrorHandler*);
+
+WasmResult wasm_check_assert_invalid(
+    WasmLexer,
+    const struct WasmScript*,
+    WasmSourceErrorHandler* assert_invalid_error_handler,
+    WasmSourceErrorHandler* error_handler);
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_CHECKER_H_ */

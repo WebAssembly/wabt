@@ -3385,18 +3385,6 @@ yyreturn:
 #line 1064 "src/wasm-bison-parser.y" /* yacc.c:1906  */
 
 
-void wasm_parser_error(WasmLocation* loc,
-                       WasmLexer lexer,
-                       WasmParser* parser,
-                       const char* fmt,
-                       ...) {
-  parser->errors++;
-  va_list args;
-  va_start(args, fmt);
-  wasm_vfprint_error(stderr, loc, lexer, fmt, args);
-  va_end(args);
-}
-
 static WasmResult parse_const(WasmType type,
                               WasmLiteralType literal_type,
                               const char* s,
@@ -3490,11 +3478,14 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-WasmResult wasm_parse(WasmLexer lexer, struct WasmScript* out_script) {
+WasmResult wasm_parse(WasmLexer lexer,
+                      struct WasmScript* out_script,
+                      WasmSourceErrorHandler* error_handler) {
   WasmParser parser;
   WASM_ZERO_MEMORY(parser);
   WasmAllocator* allocator = wasm_lexer_get_allocator(lexer);
   parser.allocator = allocator;
+  parser.error_handler = error_handler;
   out_script->allocator = allocator;
   int result = wasm_parser_parse(lexer, &parser);
   out_script->commands = parser.script.commands;

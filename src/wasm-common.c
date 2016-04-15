@@ -132,3 +132,52 @@ WasmResult wasm_read_file(WasmAllocator* allocator,
   fclose(infile);
   return WASM_OK;
 }
+
+static void print_carets(FILE* out,
+                         size_t num_spaces,
+                         size_t num_carets,
+                         size_t max_line) {
+  /* print the caret */
+  char* carets = alloca(max_line);
+  memset(carets, '^', max_line);
+  if (num_carets > max_line - num_spaces)
+    num_carets = max_line - num_spaces;
+  fprintf(out, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets, carets);
+}
+
+static void print_error(FILE* out,
+                        const WasmLocation* loc,
+                        const char* error,
+                        const char* source_line,
+                        size_t source_line_length,
+                        size_t source_line_column_offset) {
+  fprintf(out, "%s:%d:%d: %s\n", loc->filename, loc->line, loc->first_column,
+          error);
+  if (source_line && source_line_length > 0) {
+    fprintf(out, "%s\n", source_line);
+    size_t num_spaces = (loc->first_column - 1) - source_line_column_offset;
+    size_t num_carets = loc->last_column - loc->first_column;
+    print_carets(out, num_spaces, num_carets, source_line_length);
+  }
+}
+
+void wasm_default_error_callback(const WasmLocation* loc,
+                                 const char* error,
+                                 const char* source_line,
+                                 size_t source_line_length,
+                                 size_t source_line_column_offset,
+                                 void* user_data) {
+  print_error(stderr, loc, error, source_line, source_line_length,
+              source_line_column_offset);
+}
+
+void wasm_default_assert_invalid_callback(const WasmLocation* loc,
+                                          const char* error,
+                                          const char* source_line,
+                                          size_t source_line_length,
+                                          size_t source_line_column_offset,
+                                          void* user_data) {
+  fprintf(stdout, "assert_invalid error:\n  ");
+  print_error(stdout, loc, error, source_line, source_line_length,
+              source_line_column_offset);
+}

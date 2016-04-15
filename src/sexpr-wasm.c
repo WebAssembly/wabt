@@ -52,6 +52,11 @@ static WasmWriteBinarySpecOptions s_write_binary_spec_options =
 static WasmBool s_spec;
 static WasmBool s_use_libc_allocator;
 
+static WasmSourceErrorHandler s_error_handler =
+    WASM_SOURCE_ERROR_HANDLER_DEFAULT;
+static WasmSourceErrorHandler s_assert_invalid_error_handler =
+    WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT;
+
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
 
@@ -380,10 +385,15 @@ int main(int argc, char** argv) {
     WASM_FATAL("unable to read %s\n", s_infile);
 
   WasmScript script;
-  WasmResult result = wasm_parse(lexer, &script);
+  WasmResult result = wasm_parse(lexer, &script, &s_error_handler);
 
   if (WASM_SUCCEEDED(result)) {
-    result = wasm_check_ast(lexer, &script);
+    result = wasm_check_ast(lexer, &script, &s_error_handler);
+
+    if (WASM_SUCCEEDED(result)) {
+      result = wasm_check_assert_invalid(
+          lexer, &script, &s_assert_invalid_error_handler, &s_error_handler);
+    }
 
     if (WASM_SUCCEEDED(result)) {
       result = wasm_mark_used_blocks(allocator, &script);
