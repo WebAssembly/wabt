@@ -644,74 +644,74 @@ void wasm_destroy_script(WasmScript* script) {
       return WASM_ERROR;     \
   } while (0)
 
-#define CALLBACK(member)                                               \
-  CHECK_RESULT((traverser)->member                                     \
-                   ? (traverser)->member(expr, (traverser)->user_data) \
+#define CALLBACK(member)                                           \
+  CHECK_RESULT((visitor)->member                                   \
+                   ? (visitor)->member(expr, (visitor)->user_data) \
                    : WASM_OK)
 
-static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser);
+static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor);
 
-static WasmResult traverse_exprs(WasmExprPtrVector* exprs,
-                                 WasmExprTraverser* traverser) {
+static WasmResult visit_exprs(WasmExprPtrVector* exprs,
+                              WasmExprVisitor* visitor) {
   size_t i;
   for (i = 0; i < exprs->size; ++i)
-    CHECK_RESULT(traverse_expr(exprs->data[i], traverser));
+    CHECK_RESULT(visit_expr(exprs->data[i], visitor));
   return WASM_OK;
 }
 
-static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
+static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
       CALLBACK(begin_binary_expr);
-      CHECK_RESULT(traverse_expr(expr->binary.left, traverser));
-      CHECK_RESULT(traverse_expr(expr->binary.right, traverser));
+      CHECK_RESULT(visit_expr(expr->binary.left, visitor));
+      CHECK_RESULT(visit_expr(expr->binary.right, visitor));
       CALLBACK(end_binary_expr);
       break;
 
     case WASM_EXPR_TYPE_BLOCK:
       CALLBACK(begin_block_expr);
-      CHECK_RESULT(traverse_exprs(&expr->block.exprs, traverser));
+      CHECK_RESULT(visit_exprs(&expr->block.exprs, visitor));
       CALLBACK(end_block_expr);
       break;
 
     case WASM_EXPR_TYPE_BR:
       CALLBACK(begin_br_expr);
       if (expr->br.expr)
-        CHECK_RESULT(traverse_expr(expr->br.expr, traverser));
+        CHECK_RESULT(visit_expr(expr->br.expr, visitor));
       CALLBACK(end_br_expr);
       break;
 
     case WASM_EXPR_TYPE_BR_IF:
       CALLBACK(begin_br_if_expr);
       if (expr->br_if.expr)
-        CHECK_RESULT(traverse_expr(expr->br_if.expr, traverser));
-      CHECK_RESULT(traverse_expr(expr->br_if.cond, traverser));
+        CHECK_RESULT(visit_expr(expr->br_if.expr, visitor));
+      CHECK_RESULT(visit_expr(expr->br_if.cond, visitor));
       CALLBACK(end_br_if_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL:
       CALLBACK(begin_call_expr);
-      CHECK_RESULT(traverse_exprs(&expr->call.args, traverser));
+      CHECK_RESULT(visit_exprs(&expr->call.args, visitor));
       CALLBACK(end_call_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL_IMPORT:
       CALLBACK(begin_call_import_expr);
-      CHECK_RESULT(traverse_exprs(&expr->call.args, traverser));
+      CHECK_RESULT(visit_exprs(&expr->call.args, visitor));
       CALLBACK(end_call_import_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL_INDIRECT:
       CALLBACK(begin_call_indirect_expr);
-      CHECK_RESULT(traverse_expr(expr->call_indirect.expr, traverser));
-      CHECK_RESULT(traverse_exprs(&expr->call_indirect.args, traverser));
+      CHECK_RESULT(visit_expr(expr->call_indirect.expr, visitor));
+      CHECK_RESULT(visit_exprs(&expr->call_indirect.args, visitor));
       CALLBACK(end_call_indirect_expr);
       break;
 
     case WASM_EXPR_TYPE_COMPARE:
       CALLBACK(begin_compare_expr);
-      CHECK_RESULT(traverse_expr(expr->compare.left, traverser));
-      CHECK_RESULT(traverse_expr(expr->compare.right, traverser));
+      CHECK_RESULT(visit_expr(expr->compare.left, visitor));
+      CHECK_RESULT(visit_expr(expr->compare.right, visitor));
       CALLBACK(end_compare_expr);
       break;
 
@@ -721,7 +721,7 @@ static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
 
     case WASM_EXPR_TYPE_CONVERT:
       CALLBACK(begin_convert_expr);
-      CHECK_RESULT(traverse_expr(expr->convert.expr, traverser));
+      CHECK_RESULT(visit_expr(expr->convert.expr, visitor));
       CALLBACK(end_convert_expr);
       break;
 
@@ -731,34 +731,34 @@ static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
       CALLBACK(begin_grow_memory_expr);
-      CHECK_RESULT(traverse_expr(expr->grow_memory.expr, traverser));
+      CHECK_RESULT(visit_expr(expr->grow_memory.expr, visitor));
       CALLBACK(end_grow_memory_expr);
       break;
 
     case WASM_EXPR_TYPE_IF:
       CALLBACK(begin_if_expr);
-      CHECK_RESULT(traverse_expr(expr->if_.cond, traverser));
-      CHECK_RESULT(traverse_expr(expr->if_.true_, traverser));
+      CHECK_RESULT(visit_expr(expr->if_.cond, visitor));
+      CHECK_RESULT(visit_expr(expr->if_.true_, visitor));
       CALLBACK(end_if_expr);
       break;
 
     case WASM_EXPR_TYPE_IF_ELSE:
       CALLBACK(begin_if_else_expr);
-      CHECK_RESULT(traverse_expr(expr->if_else.cond, traverser));
-      CHECK_RESULT(traverse_expr(expr->if_else.true_, traverser));
-      CHECK_RESULT(traverse_expr(expr->if_else.false_, traverser));
+      CHECK_RESULT(visit_expr(expr->if_else.cond, visitor));
+      CHECK_RESULT(visit_expr(expr->if_else.true_, visitor));
+      CHECK_RESULT(visit_expr(expr->if_else.false_, visitor));
       CALLBACK(end_if_else_expr);
       break;
 
     case WASM_EXPR_TYPE_LOAD:
       CALLBACK(begin_load_expr);
-      CHECK_RESULT(traverse_expr(expr->load.addr, traverser));
+      CHECK_RESULT(visit_expr(expr->load.addr, visitor));
       CALLBACK(end_load_expr);
       break;
 
     case WASM_EXPR_TYPE_LOOP:
       CALLBACK(begin_loop_expr);
-      CHECK_RESULT(traverse_exprs(&expr->loop.exprs, traverser));
+      CHECK_RESULT(visit_exprs(&expr->loop.exprs, visitor));
       CALLBACK(end_loop_expr);
       break;
 
@@ -773,40 +773,40 @@ static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
     case WASM_EXPR_TYPE_RETURN:
       CALLBACK(begin_return_expr);
       if (expr->return_.expr)
-        CHECK_RESULT(traverse_expr(expr->return_.expr, traverser));
+        CHECK_RESULT(visit_expr(expr->return_.expr, visitor));
       CALLBACK(end_return_expr);
       break;
 
     case WASM_EXPR_TYPE_SELECT:
       CALLBACK(begin_select_expr);
-      CHECK_RESULT(traverse_expr(expr->select.true_, traverser));
-      CHECK_RESULT(traverse_expr(expr->select.false_, traverser));
-      CHECK_RESULT(traverse_expr(expr->select.cond, traverser));
+      CHECK_RESULT(visit_expr(expr->select.true_, visitor));
+      CHECK_RESULT(visit_expr(expr->select.false_, visitor));
+      CHECK_RESULT(visit_expr(expr->select.cond, visitor));
       CALLBACK(end_select_expr);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:
       CALLBACK(begin_set_local_expr);
-      CHECK_RESULT(traverse_expr(expr->set_local.expr, traverser));
+      CHECK_RESULT(visit_expr(expr->set_local.expr, visitor));
       CALLBACK(end_set_local_expr);
       break;
 
     case WASM_EXPR_TYPE_STORE:
       CALLBACK(begin_store_expr);
-      CHECK_RESULT(traverse_expr(expr->store.addr, traverser));
-      CHECK_RESULT(traverse_expr(expr->store.value, traverser));
+      CHECK_RESULT(visit_expr(expr->store.addr, visitor));
+      CHECK_RESULT(visit_expr(expr->store.value, visitor));
       CALLBACK(end_store_expr);
       break;
 
     case WASM_EXPR_TYPE_BR_TABLE:
       CALLBACK(begin_br_table_expr);
-      CHECK_RESULT(traverse_expr(expr->br_table.expr, traverser));
+      CHECK_RESULT(visit_expr(expr->br_table.expr, visitor));
       CALLBACK(end_br_table_expr);
       break;
 
     case WASM_EXPR_TYPE_UNARY:
       CALLBACK(begin_unary_expr);
-      CHECK_RESULT(traverse_expr(expr->unary.expr, traverser));
+      CHECK_RESULT(visit_expr(expr->unary.expr, visitor));
       CALLBACK(end_unary_expr);
       break;
 
@@ -818,7 +818,7 @@ static WasmResult traverse_expr(WasmExpr* expr, WasmExprTraverser* traverser) {
   return WASM_OK;
 }
 
-/* TODO(binji): make the traverser non-recursive */
-WasmResult wasm_traverse_func(WasmFunc* func, WasmExprTraverser* traverser) {
-  return traverse_exprs(&func->exprs, traverser);
+/* TODO(binji): make the visitor non-recursive */
+WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor* visitor) {
+  return visit_exprs(&func->exprs, visitor);
 }

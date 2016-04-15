@@ -343,7 +343,7 @@ typedef struct WasmScript {
   WasmCommandVector commands;
 } WasmScript;
 
-typedef struct WasmExprTraverser {
+typedef struct WasmExprVisitor {
   void* user_data;
   WasmResult (*begin_binary_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_binary_expr)(WasmExpr*, void* user_data);
@@ -390,7 +390,7 @@ typedef struct WasmExprTraverser {
   WasmResult (*begin_unary_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_unary_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_unreachable_expr)(WasmExpr*, void* user_data);
-} WasmExprTraverser;
+} WasmExprVisitor;
 
 WASM_EXTERN_C_BEGIN
 WasmBinding* wasm_insert_binding(struct WasmAllocator*,
@@ -452,7 +452,7 @@ void wasm_destroy_var_vector_and_elements(struct WasmAllocator*,
 void wasm_destroy_var(struct WasmAllocator*, WasmVar*);
 
 /* traversal functions */
-WasmResult wasm_traverse_func(WasmFunc* func, WasmExprTraverser*);
+WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor*);
 
 /* convenience functions for looking through the AST */
 int wasm_get_index_from_var(const WasmBindingHash* bindings,

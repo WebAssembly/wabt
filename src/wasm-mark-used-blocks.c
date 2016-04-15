@@ -150,16 +150,16 @@ WasmResult wasm_mark_used_blocks(WasmAllocator* allocator, WasmScript* script) {
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
 
-  WasmExprTraverser traverser;
-  WASM_ZERO_MEMORY(traverser);
-  traverser.user_data = &ctx;
-  traverser.begin_block_expr = &begin_block_expr;
-  traverser.end_block_expr = &end_block_expr;
-  traverser.begin_loop_expr = &begin_loop_expr;
-  traverser.end_loop_expr = &end_loop_expr;
-  traverser.begin_br_expr = &begin_br_expr;
-  traverser.begin_br_if_expr = &begin_br_if_expr;
-  traverser.begin_br_table_expr = &begin_br_table_expr;
+  WasmExprVisitor visitor;
+  WASM_ZERO_MEMORY(visitor);
+  visitor.user_data = &ctx;
+  visitor.begin_block_expr = &begin_block_expr;
+  visitor.end_block_expr = &end_block_expr;
+  visitor.begin_loop_expr = &begin_loop_expr;
+  visitor.end_loop_expr = &end_loop_expr;
+  visitor.begin_br_expr = &begin_br_expr;
+  visitor.begin_br_if_expr = &begin_br_if_expr;
+  visitor.begin_br_table_expr = &begin_br_table_expr;
 
   size_t i;
   for (i = 0; i < script->commands.size; ++i) {
@@ -171,7 +171,7 @@ WasmResult wasm_mark_used_blocks(WasmAllocator* allocator, WasmScript* script) {
     for (j = 0; j < module->funcs.size; ++j) {
       WasmFunc* func = module->funcs.data[j];
       ctx.current_func = func;
-      CHECK_RESULT(wasm_traverse_func(func, &traverser));
+      CHECK_RESULT(wasm_visit_func(func, &visitor));
       ctx.current_func = NULL;
     }
   }
