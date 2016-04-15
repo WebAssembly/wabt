@@ -2,6 +2,7 @@
 /out
 /third_party/v8/depot_tools
 /fuzz-out
+/emscripten
 *.pyc
 
 #Visual Studio Products

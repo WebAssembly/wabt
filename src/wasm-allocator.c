@@ -110,3 +110,7 @@ static void libc_print_stats(WasmAllocator* allocator) {
 WasmAllocator g_wasm_libc_allocator = {
     libc_alloc, libc_realloc,       libc_free,       libc_destroy,
     libc_mark,  libc_reset_to_mark, libc_print_stats};
+
+WasmAllocator* wasm_get_libc_allocator(void) {
+  return &g_wasm_libc_allocator;
+}

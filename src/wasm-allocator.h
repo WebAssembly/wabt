@@ -78,6 +78,8 @@ extern WasmAllocator g_wasm_libc_allocator;
 
 WASM_EXTERN_C_BEGIN
 
+WasmAllocator* wasm_get_libc_allocator(void);
+
 static WASM_INLINE void* wasm_alloc_zero_(WasmAllocator* allocator,
                                           size_t size,
                                           size_t align,

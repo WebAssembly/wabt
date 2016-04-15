@@ -37,17 +37,26 @@ endif ()
 
 include(CheckIncludeFile)
 include(CheckSymbolExists)
-include(CheckTypeSize)
 
 check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
-check_type_size(ssize_t SSIZE_T)
-check_type_size(size_t SIZEOF_SIZE_T)
-check_type_size(int SIZEOF_INT BUILTIN_TYPES_ONLY)
-check_type_size(long SIZEOF_LONG BUILTIN_TYPES_ONLY)
-check_type_size("long long" SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
+
+if (EMSCRIPTEN)
+  set(SIZEOF_SSIZE_T 4)
+  set(SIZEOF_SIZE_T 4)
+  set(SIZEOF_INT 4)
+  set(SIZEOF_LONG 4)
+  set(SIZEOF_LONG_LONG 8)
+else ()
+  include(CheckTypeSize)
+  check_type_size(ssize_t SSIZE_T)
+  check_type_size(size_t SIZEOF_SIZE_T)
+  check_type_size(int SIZEOF_INT BUILTIN_TYPES_ONLY)
+  check_type_size(long SIZEOF_LONG BUILTIN_TYPES_ONLY)
+  check_type_size("long long" SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
+endif ()
 
 configure_file(
   ${SEXPR_WASM_SOURCE_DIR}/src/wasm-config.h.in
@@ -75,43 +84,45 @@ else ()
     add_definitions(-Wno-clobbered)
   endif ()
 
-  # try to get the target architecture by compiling a dummy.c file and checking
-  # the architecture using the file command.
-  file(WRITE ${SEXPR_WASM_BINARY_DIR}/dummy.c "main(){}")
-  try_compile(
-    COMPILE_OK
-    ${SEXPR_WASM_BINARY_DIR}
-    ${SEXPR_WASM_BINARY_DIR}/dummy.c
-    COPY_FILE ${SEXPR_WASM_BINARY_DIR}/dummy
-  )
-  if (COMPILE_OK)
-    execute_process(
-      COMMAND file ${SEXPR_WASM_BINARY_DIR}/dummy
-      RESULT_VARIABLE FILE_RESULT
-      OUTPUT_VARIABLE FILE_OUTPUT
-      ERROR_QUIET
+  if (NOT EMSCRIPTEN)
+    # try to get the target architecture by compiling a dummy.c file and
+    # checking the architecture using the file command.
+    file(WRITE ${SEXPR_WASM_BINARY_DIR}/dummy.c "main(){}")
+    try_compile(
+      COMPILE_OK
+      ${SEXPR_WASM_BINARY_DIR}
+      ${SEXPR_WASM_BINARY_DIR}/dummy.c
+      COPY_FILE ${SEXPR_WASM_BINARY_DIR}/dummy
     )
+    if (COMPILE_OK)
+      execute_process(
+        COMMAND file ${SEXPR_WASM_BINARY_DIR}/dummy
+        RESULT_VARIABLE FILE_RESULT
+        OUTPUT_VARIABLE FILE_OUTPUT
+        ERROR_QUIET
+      )
 
-    if (FILE_RESULT EQUAL 0)
-      if (${FILE_OUTPUT} MATCHES "x86-64")
-        set(TARGET_ARCH "x86-64")
-      elseif (${FILE_OUTPUT} MATCHES "Intel 80386")
-        set(TARGET_ARCH "i386")
-      elseif (${FILE_OUTPUT} MATCHES "ARM")
-        set(TARGET_ARCH "ARM")
+      if (FILE_RESULT EQUAL 0)
+        if (${FILE_OUTPUT} MATCHES "x86-64")
+          set(TARGET_ARCH "x86-64")
+        elseif (${FILE_OUTPUT} MATCHES "Intel 80386")
+          set(TARGET_ARCH "i386")
+        elseif (${FILE_OUTPUT} MATCHES "ARM")
+          set(TARGET_ARCH "ARM")
+        else ()
+          message(WARNING "Unknown target architecture!")
+        endif ()
       else ()
-        message(WARNING "Unknown target architecture!")
+        message(WARNING "Error running file on dummy executable")
       endif ()
     else ()
-      message(WARNING "Error running file on dummy executable")
+      message(WARNING "Error compiling dummy.c file")
     endif ()
-  else ()
-    message(WARNING "Error compiling dummy.c file")
-  endif ()
 
-  if (TARGET_ARCH STREQUAL "i386")
-    # wasm doesn't allow for x87 floating point math
-    add_definitions(-msse2 -mfpmath=sse)
+    if (TARGET_ARCH STREQUAL "i386")
+      # wasm doesn't allow for x87 floating point math
+      add_definitions(-msse2 -mfpmath=sse)
+    endif ()
   endif ()
 endif ()
 
@@ -244,6 +255,48 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
     wasm-common
     libsquirrel
     m
+  )
+endif ()
+
+
+# emscripten stuff
+if (EMSCRIPTEN)
+  # just dump everything into one binary so we can reference it from JavaScript
+  add_executable(libwasm
+    src/wasm-apply-names.c
+    src/wasm-ast.c
+    src/wasm-ast-checker.c
+    src/wasm-ast-writer.c
+    src/wasm-binary-reader-ast.c
+    src/wasm-binary-reader.c
+    src/wasm-binary-writer.c
+    src/wasm-binary-writer-spec.c
+    src/wasm-emscripten-helpers.c
+    src/wasm-generate-names.c
+    src/wasm-literal.c
+    src/wasm-mark-used-blocks.c
+    src/wasm-parser-lexer-shared.c
+    ${BISON_PARSER_C}
+    ${FLEX_LEXER_C}
+  )
+  add_dependencies(everything libwasm)
+  target_link_libraries(libwasm wasm-interp-common wasm-common)
+
+  set(WASM_JS ${SEXPR_WASM_SOURCE_DIR}/src/wasm.js)
+  set(EMSCRIPTEN_EXPORTED_JSON
+    ${SEXPR_WASM_SOURCE_DIR}/src/emscripten-exported.json)
+
+  set(LIBWASM_LINK_FLAGS
+    --post-js ${WASM_JS}
+    -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
+    -s RESERVED_FUNCTION_POINTERS=10
+  )
+  string(REPLACE ";" " " LIBWASM_LINK_FLAGS_STR "${LIBWASM_LINK_FLAGS}")
+
+  set_target_properties(libwasm
+    PROPERTIES
+    LINK_FLAGS "${LIBWASM_LINK_FLAGS_STR}"
+    LINK_DEPENDS "${WASM_JS};${EMSCRIPTEN_EXPORTED_JSON}"
   )
 endif ()
 
