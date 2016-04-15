@@ -92,6 +92,11 @@ enum {
   NUM_FLAGS
 };
 
+static const char s_description[] =
+    "  read a squirrel file and run it. this squirrel interpreter has\n"
+    "  support for reading wasm binary files, via the Wasm.instantiateModule\n"
+    "  interface.\n";
+
 static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
      "use multiple times for more info"},
@@ -151,6 +156,7 @@ static void on_option_error(struct WasmOptionParser* parser,
 static void parse_options(int argc, char** argv) {
   WasmOptionParser parser;
   WASM_ZERO_MEMORY(parser);
+  parser.description = s_description;
   parser.options = s_options;
   parser.num_options = WASM_ARRAY_SIZE(s_options);
   parser.on_option = on_option;

@@ -1,0 +1,35 @@
+;;; EXE: %(wasm-interp)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: wasm-interp [options] filename
+
+  read a file in the wasm binary format, and run in it a stack-based
+  interpreter.
+
+examples:
+  # parse binary file test.wasm, and type-check it
+  $ wasm-interp test.wasm
+
+  # parse test.wasm and run all its exported functions
+  $ wasm-interp test.wasm --run-all-exports
+
+  # parse test.wasm, run the exported functions and trace the output
+  $ wasm-interp test.wasm --run-all-exports --trace
+
+  # parse test.json and run the spec tests
+  $ wasm-interp test.json --spec
+
+  # parse test.wasm and run all its exported functions, setting the
+  # value stack size to 100 elements
+  $ wasm-interp test.wasm -V 100 --run-all-exports
+
+options:
+  -v, --verbose                      use multiple times for more info
+  -h, --help                         print this help message
+  -V, --value-stack-size=SIZE        size in elements of the value stack
+  -C, --call-stack-size=SIZE         size in frames of the call stack
+  -t, --trace                        trace execution
+      --spec                         run spec tests (input file should be .json)
+      --run-all-exports              run all the exported functions, in order. useful for testing
+      --use-libc-allocator           use malloc, free, etc. instead of stack allocator
+;;; STDOUT ;;)

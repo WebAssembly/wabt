@@ -73,6 +73,25 @@ enum {
   NUM_FLAGS
 };
 
+static const char s_description[] =
+    "  read a file in the wasm s-expression format, check it for errors, and\n"
+    "  convert it to the wasm binary format.\n"
+    "\n"
+    "examples:\n"
+    "  # parse and typecheck test.wast\n"
+    "  $ sexpr-wasm test.wast\n"
+    "\n"
+    "  # parse test.wast and write to binary file test.wasm\n"
+    "  $ sexpr-wasm test.wast -o test.wasm\n"
+    "\n"
+    "  # parse spec-test.wast, and write verbose output to stdout (including\n"
+    "  # the meaning of every byte)\n"
+    "  $ sexpr-wasm spec-test.wast -v\n"
+    "\n"
+    "  # parse spec-test.wast, and write files to spec-test.json. Modules are\n"
+    "  # written to spec-test.0.wasm, spec-test.1.wasm, etc.\n"
+    "  $ sexpr-wasm spec-test.wast --spec -o spec-test.json\n";
+
 static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
      "use multiple times for more info"},
@@ -82,13 +101,15 @@ static WasmOption s_options[] = {
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP,
      "output file for the generated binary format"},
     {FLAG_SPEC, 0, "spec", NULL, NOPE,
-     "parse a file with multiple modules and assertions, like the spec tests"},
+     "parse a file with multiple modules and assertions, like the spec "
+     "tests"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
      "use malloc, free, etc. instead of stack allocator"},
     {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", NULL, NOPE,
      "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
     {FLAG_NO_REMAP_LOCALS, 0, "no-remap-locals", NULL, NOPE,
-     "If set, function locals are written in source order, instead of packing "
+     "If set, function locals are written in source order, instead of "
+     "packing "
      "them to reduce size"},
     {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
      "Write debug names to the generated binary file"},
@@ -151,6 +172,7 @@ static void on_option_error(struct WasmOptionParser* parser,
 static void parse_options(int argc, char** argv) {
   WasmOptionParser parser;
   WASM_ZERO_MEMORY(parser);
+  parser.description = s_description;
   parser.options = s_options;
   parser.num_options = WASM_ARRAY_SIZE(s_options);
   parser.on_option = on_option;

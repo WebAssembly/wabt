@@ -1,0 +1,23 @@
+;;; EXE: %(wasm-wast)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: wasm-wast [options] filename
+
+  read a file in the wasm binary format, and convert it to the wasm
+  s-expression file format.
+
+examples:
+  # parse binary file test.wasm and write s-expression file test.wast
+  $ wasm-wast test.wasm -o test.wast
+
+  # parse test.wasm and write test.wast, using the debug names, if any
+  $ wasm-wast test.wasm --debug-names -o test.wast
+
+options:
+  -v, --verbose                   use multiple times for more info
+  -h, --help                      print this help message
+  -o, --output=FILENAME           output file for the generated wast file, by default use stdout
+      --use-libc-allocator        use malloc, free, etc. instead of stack allocator
+      --debug-names               Read debug names from the binary file
+      --generate-names            Give auto-generated names to non-named functions, types, etc.
+;;; STDOUT ;;)

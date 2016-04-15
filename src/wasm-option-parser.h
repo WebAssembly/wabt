@@ -44,6 +44,7 @@ typedef struct WasmOption {
 } WasmOption;
 
 typedef struct WasmOptionParser {
+  const char* description;
   WasmOption* options;
   int num_options;
   WasmOptionCallback on_option;

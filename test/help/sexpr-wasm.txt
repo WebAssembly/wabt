@@ -1,0 +1,34 @@
+;;; EXE: %(sexpr-wasm)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: sexpr-wasm [options] filename
+
+  read a file in the wasm s-expression format, check it for errors, and
+  convert it to the wasm binary format.
+
+examples:
+  # parse and typecheck test.wast
+  $ sexpr-wasm test.wast
+
+  # parse test.wast and write to binary file test.wasm
+  $ sexpr-wasm test.wast -o test.wasm
+
+  # parse spec-test.wast, and write verbose output to stdout (including
+  # the meaning of every byte)
+  $ sexpr-wasm spec-test.wast -v
+
+  # parse spec-test.wast, and write files to spec-test.json. Modules are
+  # written to spec-test.0.wasm, spec-test.1.wasm, etc.
+  $ sexpr-wasm spec-test.wast --spec -o spec-test.json
+
+options:
+  -v, --verbose                        use multiple times for more info
+  -h, --help                           print this help message
+  -d, --dump-module                    print a hexdump of the module to stdout
+  -o, --output=FILE                    output file for the generated binary format
+      --spec                           parse a file with multiple modules and assertions, like the spec tests
+      --use-libc-allocator             use malloc, free, etc. instead of stack allocator
+      --no-canonicalize-leb128s        Write all LEB128 sizes as 5-bytes instead of their minimal size
+      --no-remap-locals                If set, function locals are written in source order, instead of packing them to reduce size
+      --debug-names                    Write debug names to the generated binary file
+;;; STDOUT ;;)

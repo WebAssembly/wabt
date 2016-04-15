@@ -66,6 +66,27 @@ enum {
   NUM_FLAGS
 };
 
+static const char s_description[] =
+    "  read a file in the wasm binary format, and run in it a stack-based\n"
+    "  interpreter.\n"
+    "\n"
+    "examples:\n"
+    "  # parse binary file test.wasm, and type-check it\n"
+    "  $ wasm-interp test.wasm\n"
+    "\n"
+    "  # parse test.wasm and run all its exported functions\n"
+    "  $ wasm-interp test.wasm --run-all-exports\n"
+    "\n"
+    "  # parse test.wasm, run the exported functions and trace the output\n"
+    "  $ wasm-interp test.wasm --run-all-exports --trace\n"
+    "\n"
+    "  # parse test.json and run the spec tests\n"
+    "  $ wasm-interp test.json --spec\n"
+    "\n"
+    "  # parse test.wasm and run all its exported functions, setting the\n"
+    "  # value stack size to 100 elements\n"
+    "  $ wasm-interp test.wasm -V 100 --run-all-exports\n";
+
 static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
      "use multiple times for more info"},
@@ -137,6 +158,7 @@ static void on_option_error(struct WasmOptionParser* parser,
 static void parse_options(int argc, char** argv) {
   WasmOptionParser parser;
   WASM_ZERO_MEMORY(parser);
+  parser.description = s_description;
   parser.options = s_options;
   parser.num_options = WASM_ARRAY_SIZE(s_options);
   parser.on_option = on_option;
