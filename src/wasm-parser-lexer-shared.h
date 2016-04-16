@@ -18,7 +18,6 @@
 #define WASM_PARSER_LEXER_SHARED_H_
 
 #include <stdarg.h>
-#include <stdio.h>
 
 #include "wasm-ast.h"
 #include "wasm-common.h"
@@ -77,12 +76,16 @@ typedef struct WasmParser {
 
 WASM_EXTERN_C_BEGIN
 struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer);
-FILE* wasm_lexer_get_file(WasmLexer);
-size_t wasm_lexer_get_file_offset_from_line(WasmLexer, int line);
 int wasm_lexer_lex(union WasmToken*,
                    struct WasmLocation*,
                    WasmLexer,
                    struct WasmParser*);
+WasmResult wasm_lexer_get_source_line(WasmLexer,
+                                      const struct WasmLocation*,
+                                      size_t line_max_length,
+                                      char* line,
+                                      size_t* out_line_length,
+                                      int* out_column_offset);
 void wasm_parser_error(struct WasmLocation*,
                        WasmLexer,
                        struct WasmParser*,

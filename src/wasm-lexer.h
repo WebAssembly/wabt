@@ -25,7 +25,12 @@ struct WasmAllocator;
 typedef void* WasmLexer;
 
 WASM_EXTERN_C_BEGIN
-WasmLexer wasm_new_lexer(struct WasmAllocator*, const char* filename);
+
+WasmLexer wasm_new_file_lexer(struct WasmAllocator*, const char* filename);
+WasmLexer wasm_new_buffer_lexer(struct WasmAllocator*,
+                                const char* filename,
+                                const void* data,
+                                size_t size);
 void wasm_destroy_lexer(WasmLexer);
 WASM_EXTERN_C_END
 

@@ -49,9 +49,22 @@
 typedef size_t WasmLineOffset;
 WASM_DEFINE_VECTOR(line_offset, WasmLineOffset);
 
+typedef enum WasmLexerType {
+  WASM_LEXER_TYPE_FILE,
+  WASM_LEXER_TYPE_BUFFER,
+} WasmLexerType;
+
 typedef struct WasmLexerExtra {
   WasmAllocator* allocator;
-  FILE* file;
+  WasmLexerType type;
+  union {
+    FILE* file;
+    struct {
+      const void* data;
+      size_t size;
+      size_t read_offset;
+    } buffer;
+  };
   const char* filename;
   size_t offset;
   WasmLineOffsetVector line_offsets;
@@ -59,10 +72,21 @@ typedef struct WasmLexerExtra {
   int comment_nesting;
 } WasmLexerExtra;
 
+static void read_input(WasmLexer, char* buffer, size_t* result,
+                       size_t max_size);
+
 #define YY_DECL                                                           \
   int wasm_lexer_lex(WASM_PARSER_STYPE* yylval_param,                     \
                      WASM_PARSER_LTYPE* yylloc_param, yyscan_t yyscanner, \
                      WasmParser* parser)
+
+#undef YY_INPUT
+#define YY_INPUT(buf, result, max_size)               \
+  do {                                                \
+    size_t my_result = 0;                             \
+    read_input(yyscanner, buf, &my_result, max_size); \
+    result = my_result;                               \
+  } while (0)
 
 #define COMMENT_NESTING (yyextra->comment_nesting)
 #define RESET_COLUMN                                                       \
@@ -390,7 +414,9 @@ int wasm_lexer_wrap(yyscan_t yyscanner) {
 
 static WasmAllocator* s_lexer_allocator;
 
-WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
+static WasmLexer wasm_new_lexer(WasmAllocator* allocator,
+                                WasmLexerType type,
+                                const char* filename) {
   WasmLexerExtra* extra =
       wasm_alloc_zero(allocator, sizeof(WasmLexerExtra), WASM_DEFAULT_ALIGN);
   if (!extra)
@@ -398,16 +424,10 @@ WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
   extra->allocator = allocator;
   extra->column = 1;
   extra->filename = filename;
-  extra->file = fopen(filename, "r");
-
-  if (!extra->file) {
-    wasm_free(allocator, extra);
-    return NULL;
-  }
+  extra->type = type;
 
   if (WASM_FAILED(wasm_reserve_line_offsets(allocator, &extra->line_offsets,
                                             WASM_INITIAL_LINE_OFFSETS))) {
-    fclose(extra->file);
     wasm_free(allocator, extra);
     return NULL;
   }
@@ -422,15 +442,56 @@ WasmLexer wasm_new_lexer(WasmAllocator* allocator, const char* filename) {
   s_lexer_allocator = allocator;
   yyscan_t lexer;
   yylex_init(&lexer);
-  yyset_in(extra->file, lexer);
   yyset_extra(extra, lexer);
   s_lexer_allocator = NULL;
   return lexer;
 }
 
+WasmLexer wasm_new_file_lexer(WasmAllocator* allocator, const char* filename) {
+  WasmLexer lexer = wasm_new_lexer(allocator, WASM_LEXER_TYPE_FILE, filename);
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  extra->file = fopen(filename, "r");
+  if (!extra->file) {
+    wasm_destroy_lexer(lexer);
+    wasm_free(allocator, extra);
+    return NULL;
+  }
+  yyset_in(extra->file, lexer);
+  return lexer;
+}
+
+WasmLexer wasm_new_buffer_lexer(WasmAllocator* allocator, const char* filename,
+                                const void* data, size_t size) {
+  WasmLexer lexer = wasm_new_lexer(allocator, WASM_LEXER_TYPE_BUFFER, filename);
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  extra->buffer.data = data;
+  extra->buffer.size = size;
+  extra->buffer.read_offset = 0;
+  return lexer;
+}
+
+static void read_input(WasmLexer lexer, char* buffer, size_t* result,
+                       size_t max_size) {
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  if (extra->type == WASM_LEXER_TYPE_FILE) {
+    *result = fread(buffer, 1, max_size, extra->file);
+  } else {
+    assert(extra->type == WASM_LEXER_TYPE_BUFFER);
+    size_t read_size = max_size;
+    size_t offset = extra->buffer.read_offset;
+    size_t bytes_left = extra->buffer.size - offset;
+    if (read_size > bytes_left)
+      read_size = bytes_left;
+    memcpy(buffer, (char*)extra->buffer.data + offset, read_size);
+    extra->buffer.read_offset += read_size;
+    *result = read_size;
+  }
+}
+
 void wasm_destroy_lexer(WasmLexer lexer) {
   WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
-  fclose(extra->file);
+  if (extra->type == WASM_LEXER_TYPE_FILE && extra->file)
+    fclose(extra->file);
   wasm_destroy_line_offset_vector(extra->allocator, &extra->line_offsets);
   wasm_lexer_lex_destroy((yyscan_t)lexer);
   wasm_free(extra->allocator, extra);
@@ -457,15 +518,158 @@ WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer) {
   return extra->allocator;
 }
 
-FILE* wasm_lexer_get_file(WasmLexer lexer) {
-  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
-  return extra->file;
-}
-
-size_t wasm_lexer_get_file_offset_from_line(WasmLexer lexer, int line) {
+static size_t lexer_get_offset_from_line(WasmLexer lexer, int line) {
   WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
   if (line < 0 || (size_t)line >= extra->line_offsets.size)
     return WASM_INVALID_LINE_OFFSET;
 
   return extra->line_offsets.data[line];
+}
+
+static WasmResult lexer_get_offsets_from_line(WasmLexer lexer,
+                                              int line,
+                                              size_t* out_line_start,
+                                              size_t* out_line_end) {
+  size_t line_start = lexer_get_offset_from_line(lexer, line);
+  size_t line_end = lexer_get_offset_from_line(lexer, line + 1);
+  if (line_end == WASM_INVALID_LINE_OFFSET) {
+    /* we haven't gotten to the next line yet. scan ahead to find it. */
+    WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+    if (extra->type == WASM_LEXER_TYPE_BUFFER) {
+      const char* buffer_start = extra->buffer.data;
+      const char* buffer_line_start = buffer_start + line_start;
+      const char* buffer_end = buffer_start + extra->buffer.size;
+
+      const char* newline =
+          memchr(buffer_line_start, '\n', buffer_end - buffer_line_start);
+      line_end = (newline ? newline : buffer_end) - buffer_start;
+    } else {
+      assert(extra->type == WASM_LEXER_TYPE_FILE);
+      FILE* lexer_file = extra->file;
+      long old_offset = ftell(lexer_file);
+      if (old_offset == -1)
+        return WASM_ERROR;
+
+      /* we haven't gotten to the next line yet. read the file to find it. */
+      size_t offset = line_start;
+      line_end = offset;
+      if (fseek(lexer_file, offset, SEEK_SET) == -1)
+        return WASM_ERROR;
+
+      char buffer[256];
+      while (1) {
+        size_t bytes_read = fread(buffer, 1, sizeof(buffer), lexer_file);
+        if (bytes_read == 0)
+          break;
+
+        char* newline = memchr(buffer, '\n', bytes_read);
+        if (newline) {
+          line_end += (newline - buffer);
+          break;
+        } else {
+          line_end += bytes_read;
+        }
+      }
+      if (fseek(lexer_file, old_offset, SEEK_SET) == -1)
+        return WASM_ERROR;
+    }
+  } else {
+    /* don't include the newline */
+    line_end--;
+  }
+
+  *out_line_start = line_start;
+  *out_line_end = line_end;
+  return WASM_OK;
+}
+
+static void clamp_source_line_offsets_to_location(size_t line_start,
+                                                  size_t line_end,
+                                                  int first_column,
+                                                  int last_column,
+                                                  size_t max_line_length,
+                                                  size_t* out_new_line_start,
+                                                  size_t* out_new_line_end) {
+  size_t line_length = line_end - line_start;
+  if (line_length > max_line_length) {
+    size_t column_range = last_column - first_column;
+    size_t center_on;
+    if (column_range > max_line_length) {
+      /* the column range doesn't fit, just center on first_column */
+      center_on = first_column - 1;
+    } else {
+      /* the entire range fits, display it all in the center */
+      center_on = (first_column + last_column) / 2 - 1;
+    }
+    if (center_on > max_line_length / 2)
+      line_start += center_on - max_line_length / 2;
+    if (line_start > line_end - max_line_length)
+      line_start = line_end - max_line_length;
+    line_end = line_start + max_line_length;
+  }
+
+  *out_new_line_start = line_start;
+  *out_new_line_end = line_end;
+}
+
+WasmResult wasm_lexer_get_source_line(WasmLexer lexer,
+                                      const WasmLocation* loc,
+                                      size_t line_max_length,
+                                      char* line,
+                                      size_t* out_line_length,
+                                      int* out_column_offset) {
+  WasmResult result;
+  size_t line_start;
+  size_t line_end;
+  result =
+      lexer_get_offsets_from_line(lexer, loc->line, &line_start, &line_end);
+  if (WASM_FAILED(result))
+    return result;
+
+  size_t new_line_start;
+  size_t new_line_end;
+  clamp_source_line_offsets_to_location(
+      line_start, line_end, loc->first_column, loc->last_column,
+      line_max_length, &new_line_start, &new_line_end);
+  WasmBool has_start_ellipsis = line_start != new_line_start;
+  WasmBool has_end_ellipsis = line_end != new_line_end;
+
+  char* write_start = line;
+  size_t line_length = new_line_end - new_line_start;
+  size_t read_start = new_line_start;
+  size_t read_length = line_length;
+  if (has_start_ellipsis) {
+    memcpy(line, "...", 3);
+    read_start += 3;
+    write_start += 3;
+    read_length -= 3;
+  }
+  if (has_end_ellipsis) {
+    memcpy(line + line_length - 3, "...", 3);
+    read_length -= 3;
+  }
+
+  WasmLexerExtra* extra = wasm_lexer_get_extra(lexer);
+  if (extra->type == WASM_LEXER_TYPE_BUFFER) {
+    char* buffer_read_start = (char*)extra->buffer.data + read_start;
+    memcpy(write_start, buffer_read_start, read_length);
+  } else {
+    assert(extra->type == WASM_LEXER_TYPE_FILE);
+    FILE* lexer_file = extra->file;
+    long old_offset = ftell(lexer_file);
+    if (old_offset == -1)
+      return WASM_ERROR;
+    if (fseek(lexer_file, read_start, SEEK_SET) == -1)
+      return WASM_ERROR;
+    if (fread(write_start, 1, read_length, lexer_file) < read_length)
+      return WASM_ERROR;
+    if (fseek(lexer_file, old_offset, SEEK_SET) == -1)
+      return WASM_ERROR;
+  }
+
+  line[line_length] = '\0';
+
+  *out_line_length = line_length;
+  *out_column_offset = new_line_start - line_start;
+  return WASM_OK;
 }
