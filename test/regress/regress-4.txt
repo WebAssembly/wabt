@@ -1,0 +1,11 @@
+;;; ERROR: 1
+;; bug where looking up an undefined name would not produce an error if there
+;; was any name at all.
+(module
+  (func (param $p i32)
+    (get_local $n)))
+(;; STDERR ;;;
+regress/regress-4.txt:6:16: undefined local variable "$n"
+    (get_local $n)))
+               ^^
+;;; STDERR ;;)

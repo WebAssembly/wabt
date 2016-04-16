@@ -206,9 +206,13 @@ int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
   int result = find_binding_index_by_name(&func->param_bindings, &var->name);
   if (result != -1)
     return result;
+
+  result = find_binding_index_by_name(&func->local_bindings, &var->name);
+  if (result == -1)
+    return result;
+
   /* the locals start after all the params */
-  return func->decl.sig.param_types.size +
-         find_binding_index_by_name(&func->local_bindings, &var->name);
+  return func->decl.sig.param_types.size + result;
 }
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
