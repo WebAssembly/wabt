@@ -21,8 +21,11 @@
 
 #include "wasm-allocator.h"
 #include "wasm-ast.h"
+#include "wasm-binary-writer.h"
 #include "wasm-common.h"
 #include "wasm-stack-allocator.h"
+#include "wasm-stream.h"
+#include "wasm-writer.h"
 
 /* TODO(binji): it would be nicer to generate this as static data, but it's not
  * currently easy to do. Maybe use LLVM's python bindings for this? */
@@ -73,6 +76,14 @@ WASM_DEFINE_STRUCT(
     WasmLocation, location,
     filename, line, first_column, last_column)
 
+WASM_DEFINE_STRUCT(
+    WasmMemoryWriter, memory_writer,
+    base, buf)
+
+WASM_DEFINE_STRUCT(
+    WasmOutputBuffer, output_buffer,
+    allocator, start, size, capacity)
+
 WASM_DEFINE_STRUCT0(
     WasmScript, script)
 
@@ -85,8 +96,20 @@ WASM_DEFINE_STRUCT(
     allocator);
 
 WASM_DEFINE_STRUCT(
+    WasmStream, stream,
+    writer, offset, result, log_stream)
+
+WASM_DEFINE_STRUCT(
     WasmStringSlice, string_slice,
     start, length)
+
+WASM_DEFINE_STRUCT(
+    WasmWriter, writer,
+    write_data, move_data)
+
+WASM_DEFINE_STRUCT(
+    WasmWriteBinaryOptions, write_binary_options,
+    log_stream, canonicalize_lebs, remap_locals, write_debug_names)
 /* clang-format on */
 
 WASM_EXTERN_C_END

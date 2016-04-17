@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-  <script src="libwasm.js"></script>
+  <script src="libwasm-debug.js"></script>
 </head>
 <style>
   textarea {
@@ -113,6 +113,20 @@
       try {
         var script = wasm.parse(lexer, eh);
         wasm.checkAst(lexer, script, eh);
+
+        try {
+          var memoryWriter = new wasm.MemoryWriter(allocator);
+          var writer = memoryWriter.base;
+          var options = new wasm.WriteBinaryOptions({logWrites: true});
+          wasm.writeBinaryScript(allocator, writer, script, options);
+
+          output.textContent = 'done';
+        } catch (e) {
+        } finally {
+          options.$destroy();
+          memoryWriter.$destroy();
+        }
+
       } catch (e) {
         // swallow error
       } finally {
