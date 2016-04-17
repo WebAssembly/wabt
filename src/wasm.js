@@ -88,6 +88,18 @@ function freeString(mem) {
   free(mem);
 }
 
+// WrappedFunction /////////////////////////////////////////////////////////////
+function WrappedFunction(f) {
+  this.$index = Runtime.addFunction(f);
+}
+WrappedFunction.prototype = Object.create(Object.prototype);
+WrappedFunction.prototype.store = function(addr) {
+  storeu32(addr, this.$index);
+};
+WrappedFunction.prototype.$destroy = function() {
+  Runtime.removeFunction(this.$index);
+};
+
 
 // Allocator ///////////////////////////////////////////////////////////////////
 var Allocator = function() {
@@ -151,6 +163,60 @@ Buffer.$newAt = function(addr, size) {
 };
 Buffer.prototype.$free = function() { free(this.$addr); };
 Buffer.prototype.$destroy = function() { this.$free(); };
+
+
+// JSWriter ////////////////////////////////////////////////////////////////////
+var JSWriter = function(writeData, moveData) {
+  var writeDataWrap = function(offset, data, size, userData) {
+    return writeData(offset, new Uint8Array(Module.buffer, data, size));
+  };
+  var moveDataWrap = function(dstOffset, srcOffset, size, userData) {
+    return moveData(dstOffset, srcOffset, size);
+  };
+
+  this.writer = new Writer();
+  this.$writeData = new WrappedFunction(writeDataWrap);
+  this.$moveData = new WrappedFunction(moveDataWrap);
+  this.$writeData.store(this.writer.$addr + this.writer.$offsetof_write_data);
+  this.$moveData.store(this.writer.$addr + this.writer.$offsetof_move_data);
+};
+JSWriter.prototype = Object.create(Object.prototype);
+JSWriter.prototype.$destroy = function() {
+  this.$moveData.$destroy();
+  this.$writeData.$destroy();
+  this.writer.$destroy();
+};
+
+
+// JSStringWriter //////////////////////////////////////////////////////////////
+var JSStringWriter = function() {
+  this.string = '';
+
+  var splice = function(offset, str) {
+    var before = this.string.slice(0, offset);
+    var after = this.string.slice(offset + str.length);
+    this.string = before + str + after;
+  };
+
+  var writeData = function(offset, buf) {
+    var str = '';
+    for (var i = 0; i < buf.length; ++i)
+      str += String.fromCharCode(buf[i]);
+    if (offset == this.string.length) {
+      // common case, appending data
+      this.string += str;
+    } else {
+      splice(offset, str);
+    }
+  };
+
+  var moveData = function(dstOffset, srcOffset, size) {
+    splice(dstOffset, this.string.slice(srcOffset, size));
+  };
+
+  JSWriter.call(this, writeData.bind(this), moveData.bind(this));
+};
+JSStringWriter.prototype = Object.create(JSWriter.prototype);
 
 
 // Lexer ///////////////////////////////////////////////////////////////////////
@@ -287,13 +353,13 @@ SourceErrorHandler.prototype.$init =
       Module._wasm_default_source_error_callback.apply(null, arguments);
     };
   }
-  this.index = Runtime.addFunction(f);
-  storeu32(this.$addr + this.$offsetof_on_error, this.index);
+  this.$onError = new WrappedFunction(f);
+  this.$onError.store(this.$addr + this.$offsetof_on_error);
   storeu32(this.$addr + this.$offsetof_source_line_max_length,
            sourceLineMaxLength);
 };
 SourceErrorHandler.prototype.$destroy = function() {
-  Runtime.removeFunction(this.index);
+  this.$onError.$destroy();
   this.$free();
 };
 
@@ -313,19 +379,56 @@ StackAllocator.prototype.$destroy = function() {
 };
 
 
+// Stream //////////////////////////////////////////////////////////////
+var Stream = function(writer, logStream) {
+  this.$addr = Stream.$allocate();
+  this.$init(writer, logStream);
+}
+decorateStruct(Stream, 'stream', ['writer', 'result', 'offset', 'log_stream']);
+Stream.prototype.$init = function(writer, logStream) {
+  var logStreamAddr = logStream ? logStream.$addr : 0;
+
+  Module._wasm_init_stream(this.$addr, writer.$addr, logStreamAddr);
+  this.$writer = Writer.$newAt(loadu32(this.$addr + this.$offsetof_writer));
+
+  logStreamAddr = loadu32(this.$addr + this.$offsetof_log_stream);
+  this.$logStream = logStreamAddr ? Stream.$newAt(logStreamAddr) : null;
+};
+Object.defineProperty(Stream.prototype, 'writer', {
+  get: function() {
+    this.$writer.$addr = loadu32(this.$addr + this.$offsetof_writer);
+    return this.$writer;
+  }
+});
+Object.defineProperty(Stream.prototype, 'offset', {
+  get: function() { return loadu32(this.$addr + this.$offsetof_offset); }
+});
+Object.defineProperty(Stream.prototype, 'result', {
+  get: function() { return loadu32(this.$addr + this.$offsetof_result); }
+});
+Object.defineProperty(Stream.prototype, 'logStream', {
+  get: function() {
+    if (this.$logStream) {
+      this.$logStream.$addr = loadu32(this.$addr + this.$offsetof_log_stream);
+    }
+    return this.$logStream;
+  }
+});
+
+
 // WriteBinaryOptions //////////////////////////////////////////////////////////
 var WriteBinaryOptions = function(options) {
   this.$addr = WriteBinaryOptions.$allocate();
   this.$init(options);
 };
 decorateStruct(WriteBinaryOptions, 'write_binary_options',
-               ['log_writes', 'canonicalize_lebs', 'remap_locals',
+               ['log_stream', 'canonicalize_lebs', 'remap_locals',
                 'write_debug_names']);
 WriteBinaryOptions.prototype.$init = function(options) {
   if (!options)
     options = {};
-  storeboolopt(this.$addr + this.$offsetof_log_writes, options.logWrites,
-               false);
+  storeu32(this.$addr + this.$offsetof_log_stream,
+           options.logStream ? options.logStream.$addr : 0);
   storeboolopt(this.$addr + this.$offsetof_canonicalize_lebs,
                options.canonicalizeLebs, true);
   storeboolopt(this.$addr + this.$offsetof_remap_locals, options.remapLocals,
@@ -335,15 +438,21 @@ WriteBinaryOptions.prototype.$init = function(options) {
 };
 
 
-// Writer ////////////////////////////////////////////////////////////////
-var Writer = function(allocator) {
-  throw "Writer is an abstract base class";
+// Writer //////////////////////////////////////////////////////////////////////
+var Writer = function() {
+  this.$addr = Writer.$allocate();
 };
 decorateStruct(Writer, 'writer', ['write_data', 'move_data']);
-Writer.prototype.$init = function() {
-  // TODO(binji): use these?
-  this.$write_data = loadu32(this.$addr + this.$offsetof_write_data);
-  this.$move_data = loadu32(this.$addr + this.$offsetof_move_data);
+Writer.prototype.$init = function() {};
+Writer.prototype.$writeData = function(offset, data, size, userData) {
+  var write_data = loadu32(this.$addr + this.$offsetof_write_data);
+  return Runtime.dynCall('iiiii', write_data,
+                         [this.$addr, offset, data, size, userData]);
+};
+Writer.prototype.$moveData = function(dstOffset, srcOffset, size, userData) {
+  var move_data = loadu32(this.$addr + this.$offsetof_move_data);
+  return Runtime.dynCall('iiiii', move_data,
+                         [this.$addr, dstOffset, srcOffset, size, userData]);
 };
 
 
@@ -377,6 +486,8 @@ return {
 
   Allocator: Allocator,
   Buffer: Buffer,
+  JSStringWriter: JSStringWriter,
+  JSWriter: JSWriter,
   Lexer: Lexer,
   LibcAllocator: LibcAllocator,
   Location: Location,
@@ -385,6 +496,7 @@ return {
   Script: Script,
   SourceErrorHandler: SourceErrorHandler,
   StackAllocator: StackAllocator,
+  Stream: Stream,
   WriteBinaryOptions: WriteBinaryOptions,
   Writer: Writer,
 

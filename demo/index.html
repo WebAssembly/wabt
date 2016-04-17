@@ -108,33 +108,35 @@
 
     function compile(text) {
       output.textContent = '';
-      var buf = wasm.Buffer.fromString(text);
-      var lexer = wasm.Lexer.fromBuffer(allocator, 'test.wast', buf);
       try {
+        var buf = wasm.Buffer.fromString(text);
+        var lexer = wasm.Lexer.fromBuffer(allocator, 'test.wast', buf);
         var script = wasm.parse(lexer, eh);
         wasm.checkAst(lexer, script, eh);
-
-        try {
-          var memoryWriter = new wasm.MemoryWriter(allocator);
-          var writer = memoryWriter.base;
-          var options = new wasm.WriteBinaryOptions({logWrites: true});
-          wasm.writeBinaryScript(allocator, writer, script, options);
-
-          output.textContent = 'done';
-        } catch (e) {
-        } finally {
-          options.$destroy();
-          memoryWriter.$destroy();
-        }
-
+        var memoryWriter = new wasm.MemoryWriter(allocator);
+        var jsWriter = new wasm.JSStringWriter();
+        var logStream = new wasm.Stream(jsWriter.writer);
+        var options = new wasm.WriteBinaryOptions({logStream: logStream});
+        wasm.writeBinaryScript(allocator, memoryWriter.base, script, options);
+        output.textContent = jsWriter.string;
       } catch (e) {
-        // swallow error
+        output.textContent += e.toString();
       } finally {
+        if (options)
+          options.$destroy();
+        if (logStream)
+          logStream.$destroy();
         if (script)
           script.$destroy();
+        if (jsWriter)
+          jsWriter.$destroy();
+        if (memoryWriter)
+          memoryWriter.$destroy();
+        if (lexer)
+          lexer.$destroy();
+        if (buf)
+          buf.$destroy();
       }
-      lexer.$destroy();
-      buf.$destroy();
     }
 
     function onInputInput(e) {
