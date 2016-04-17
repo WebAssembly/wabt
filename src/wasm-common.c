@@ -17,17 +17,11 @@
 #include "wasm-common.h"
 
 #include <assert.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "wasm-allocator.h"
-
-#define DUMP_OCTETS_PER_LINE 16
-#define DUMP_OCTETS_PER_GROUP 2
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = mem_size,
 static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
@@ -55,44 +49,6 @@ WasmBool wasm_string_slices_are_equal(const WasmStringSlice* a,
 
 void wasm_destroy_string_slice(WasmAllocator* allocator, WasmStringSlice* str) {
   wasm_free(allocator, (void*)str->start);
-}
-
-void wasm_print_memory(const void* start,
-                       size_t size,
-                       size_t offset,
-                       WasmPrintChars print_chars,
-                       const char* desc) {
-  /* mimic xxd output */
-  const uint8_t* p = start;
-  const uint8_t* end = p + size;
-  while (p < end) {
-    const uint8_t* line = p;
-    const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    printf("%07" PRIzx ": ", (size_t)p - (size_t)start + offset);
-    while (p < line_end) {
-      int i;
-      for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
-        if (p < end) {
-          printf("%02x", *p);
-        } else {
-          putchar(' ');
-          putchar(' ');
-        }
-      }
-      putchar(' ');
-    }
-
-    putchar(' ');
-    p = line;
-    int i;
-    for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
-      if (print_chars)
-        printf("%c", isprint(*p) ? *p : '.');
-    /* if there are multiple lines, only print the desc on the last one */
-    if (p >= end && desc)
-      printf("  ; %s", desc);
-    putchar('\n');
-  }
 }
 
 WasmResult wasm_read_file(WasmAllocator* allocator,

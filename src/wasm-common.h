@@ -67,12 +67,6 @@ typedef enum WasmBool {
   WASM_TRUE,
 } WasmBool;
 
-/* whether to display the ASCII characters in the debug output */
-typedef enum WasmPrintChars {
-  WASM_DONT_PRINT_CHARS,
-  WASM_PRINT_CHARS,
-} WasmPrintChars;
-
 typedef enum WasmResult {
   WASM_OK,
   WASM_ERROR,
@@ -354,12 +348,6 @@ uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment);
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice*,
                                       const WasmStringSlice*);
 void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);
-/* dump memory to stdout similar to the xxd format */
-void wasm_print_memory(const void* start,
-                       size_t size,
-                       size_t offset,
-                       WasmPrintChars print_chars,
-                       const char* desc);
 WasmResult wasm_read_file(struct WasmAllocator* allocator,
                           const char* filename,
                           void** out_data,

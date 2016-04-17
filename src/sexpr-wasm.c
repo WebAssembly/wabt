@@ -30,6 +30,7 @@
 #include "wasm-option-parser.h"
 #include "wasm-parser.h"
 #include "wasm-stack-allocator.h"
+#include "wasm-stream.h"
 #include "wasm-writer.h"
 
 #define ALLOC_FAILURE \
@@ -56,6 +57,9 @@ static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
 static WasmSourceErrorHandler s_assert_invalid_error_handler =
     WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT;
+
+static WasmFileWriter s_log_stream_writer;
+static WasmStream s_log_stream;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
@@ -122,7 +126,9 @@ static void on_option(struct WasmOptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      s_write_binary_options.log_writes = WASM_TRUE;
+      wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
+      wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      s_write_binary_options.log_stream = &s_log_stream;
       break;
 
     case FLAG_HELP:
@@ -186,26 +192,16 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
-static void write_buffer_to_file(const char* out_filename,
+static void write_buffer_to_file(const char* filename,
                                  WasmOutputBuffer* buffer) {
   if (s_dump_module) {
     if (s_verbose)
-      printf(";; dump\n");
-    wasm_print_memory(buffer->start, buffer->size, 0, WASM_DONT_PRINT_CHARS,
-                      NULL);
+      wasm_writef(&s_log_stream, ";; dump\n");
+    wasm_write_output_buffer_memory_dump(&s_log_stream, buffer);
   }
 
-  if (out_filename) {
-    FILE* file = fopen(out_filename, "wb");
-    if (!file)
-      WASM_FATAL("unable to open %s for writing\n", s_outfile);
-
-    ssize_t bytes = fwrite(buffer->start, 1, buffer->size, file);
-    if (bytes < 0 || (size_t)bytes != buffer->size) {
-      WASM_FATAL("failed to write %" PRIzd " bytes to %s\n", buffer->size,
-                 out_filename);
-    }
-    fclose(file);
+  if (filename) {
+    wasm_write_output_buffer_to_file(buffer, filename);
   }
 }
 
@@ -273,39 +269,12 @@ static char* get_module_filename(WasmAllocator* allocator,
 typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmMemoryWriter json_writer;
-  uint32_t json_writer_offset;
   WasmMemoryWriter module_writer;
+  WasmStream json_stream;
   WasmStringSlice output_filename_noext;
   char* module_filename;
   WasmResult result;
 } WasmContext;
-
-static void out_data(WasmContext* ctx, const void* src, size_t size) {
-  if (WASM_FAILED(ctx->result))
-    return;
-  WasmWriter* writer = &ctx->json_writer.base;
-  if (writer->write_data) {
-    ctx->result = writer->write_data(ctx->json_writer_offset, src, size,
-                                     writer->user_data);
-    ctx->json_writer_offset += size;
-  }
-}
-
-static void out_printf(WasmContext* ctx, const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-  /* + 1 to account for the \0 that will be added automatically by
-   wasm_vsnprintf */
-  int len = wasm_vsnprintf(NULL, 0, format, args) + 1;
-  va_end(args);
-  char* buffer = alloca(len);
-  wasm_vsnprintf(buffer, len, format, args_copy);
-  va_end(args_copy);
-  /* - 1 to remove the trailing \0 that was added by wasm_vsnprintf */
-  out_data(ctx, buffer, len - 1);
-}
 
 static void on_script_begin(void* user_data) {
   WasmContext* ctx = user_data;
@@ -315,8 +284,9 @@ static void on_script_begin(void* user_data) {
 
   if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->json_writer)))
     WASM_FATAL("unable to open memory writer for writing\n");
+  wasm_init_stream(&ctx->json_stream, &ctx->json_writer.base, NULL);
 
-  out_printf(ctx, "{\"modules\": [\n");
+  wasm_writef(&ctx->json_stream, "{\"modules\": [\n");
 }
 
 static void on_module_begin(uint32_t index, void* user_data) {
@@ -325,10 +295,11 @@ static void on_module_begin(uint32_t index, void* user_data) {
   ctx->module_filename =
       get_module_filename(ctx->allocator, &ctx->output_filename_noext, index);
   if (index != 0)
-    out_printf(ctx, ",\n");
+    wasm_writef(&ctx->json_stream, ",\n");
   WasmStringSlice module_basename = get_basename(ctx->module_filename);
-  out_printf(ctx, "  {\"filename\": \"" PRIstringslice "\", \"commands\": [\n",
-             WASM_PRINTF_STRING_SLICE_ARG(module_basename));
+  wasm_writef(&ctx->json_stream,
+              "  {\"filename\": \"" PRIstringslice "\", \"commands\": [\n",
+              WASM_PRINTF_STRING_SLICE_ARG(module_basename));
 }
 
 static void on_command(uint32_t index,
@@ -357,9 +328,9 @@ static void on_command(uint32_t index,
 
   WasmContext* ctx = user_data;
   if (index != 0)
-    out_printf(ctx, ",\n");
-  out_printf(ctx, s_command_format, s_command_names[type],
-             WASM_PRINTF_STRING_SLICE_ARG(*name), loc->filename, loc->line);
+    wasm_writef(&ctx->json_stream, ",\n");
+  wasm_writef(&ctx->json_stream, s_command_format, s_command_names[type],
+              WASM_PRINTF_STRING_SLICE_ARG(*name), loc->filename, loc->line);
 }
 
 static void on_module_before_write(uint32_t index,
@@ -372,14 +343,14 @@ static void on_module_before_write(uint32_t index,
 
 static void on_module_end(uint32_t index, WasmResult result, void* user_data) {
   WasmContext* ctx = user_data;
-  out_printf(ctx, "\n  ]}");
+  wasm_writef(&ctx->json_stream, "\n  ]}");
   if (WASM_SUCCEEDED(result))
     write_buffer_to_file(ctx->module_filename, &ctx->module_writer.buf);
 }
 
 static void on_script_end(void* user_data) {
   WasmContext* ctx = user_data;
-  out_printf(ctx, "\n]}\n");
+  wasm_writef(&ctx->json_stream, "\n]}\n");
 
   if (WASM_SUCCEEDED(ctx->result))
     write_buffer_to_file(s_outfile, &ctx->json_writer.buf);

@@ -170,6 +170,24 @@ void wasm_close_mem_writer(WasmMemoryWriter* writer) {
   wasm_destroy_output_buffer(&writer->buf);
 }
 
+WasmResult wasm_write_output_buffer_to_file(WasmOutputBuffer* buf,
+                                            const char* filename) {
+  FILE* file = fopen(filename, "wb");
+  if (!file) {
+    ERROR("unable to open %s for writing\n", filename);
+    return WASM_ERROR;
+  }
+
+  ssize_t bytes = fwrite(buf->start, 1, buf->size, file);
+  if (bytes < 0 || (size_t)bytes != buf->size) {
+    ERROR("failed to write %" PRIzd " bytes to %s\n", buf->size, filename);
+    return WASM_ERROR;
+  }
+
+  fclose(file);
+  return WASM_OK;
+}
+
 void wasm_destroy_output_buffer(WasmOutputBuffer* buf) {
   if (buf->allocator)
     wasm_free(buf->allocator, buf->start);

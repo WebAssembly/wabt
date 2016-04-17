@@ -23,12 +23,13 @@ struct WasmAllocator;
 struct WasmModule;
 struct WasmScript;
 struct WasmWriter;
+struct WasmStream;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { WASM_FALSE, WASM_TRUE, WASM_TRUE, WASM_FALSE }
+  { NULL, WASM_TRUE, WASM_TRUE, WASM_FALSE }
 
 typedef struct WasmWriteBinaryOptions {
-  WasmBool log_writes;
+  struct WasmStream* log_stream;
   WasmBool canonicalize_lebs;
   WasmBool remap_locals;
   WasmBool write_debug_names;

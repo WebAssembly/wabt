@@ -151,6 +151,7 @@ add_library(wasm-common STATIC
   src/wasm-config.c
   src/wasm-option-parser.c
   src/wasm-stack-allocator.c
+  src/wasm-stream.c
   src/wasm-vector.c
   src/wasm-writer.c
 )
