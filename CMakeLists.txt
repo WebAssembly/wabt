@@ -287,9 +287,10 @@ if (EMSCRIPTEN)
     ${SEXPR_WASM_SOURCE_DIR}/src/emscripten-exported.json)
 
   set(LIBWASM_LINK_FLAGS
-    --post-js ${WASM_JS}
+    --pre-js ${WASM_JS}
     -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
     -s RESERVED_FUNCTION_POINTERS=10
+    -s NO_EXIT_RUNTIME=1
   )
   string(REPLACE ";" " " LIBWASM_LINK_FLAGS_STR "${LIBWASM_LINK_FLAGS}")
 

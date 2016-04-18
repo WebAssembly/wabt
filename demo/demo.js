@@ -104,40 +104,43 @@ function onError(loc, error, sourceLine, sourceLineColumnOffset) {
   output.textContent += lines.join('\n') + '\n';
 }
 
-var allocator = wasm.LibcAllocator;
-var eh = new wasm.SourceErrorHandler(onError, 80);
-
 function compile(text) {
-  output.textContent = '';
-  try {
-    var buf = wasm.Buffer.fromString(text);
-    var lexer = wasm.Lexer.fromBuffer(allocator, 'test.wast', buf);
-    var script = wasm.parse(lexer, eh);
-    wasm.checkAst(lexer, script, eh);
-    var memoryWriter = new wasm.MemoryWriter(allocator);
-    var jsWriter = new wasm.JSStringWriter();
-    var logStream = new wasm.Stream(jsWriter.writer);
-    var options = new wasm.WriteBinaryOptions({logStream: logStream});
-    wasm.writeBinaryScript(allocator, memoryWriter.base, script, options);
-    output.textContent = jsWriter.string;
-  } catch (e) {
-    output.textContent += e.toString();
-  } finally {
-    if (options)
-      options.$destroy();
-    if (logStream)
-      logStream.$destroy();
-    if (script)
-      script.$destroy();
-    if (jsWriter)
-      jsWriter.$destroy();
-    if (memoryWriter)
-      memoryWriter.$destroy();
-    if (lexer)
-      lexer.$destroy();
-    if (buf)
-      buf.$destroy();
-  }
+  wasm.ready.then(function() {
+    output.textContent = '';
+    try {
+      var allocator = wasm.LibcAllocator;
+      var eh = new wasm.SourceErrorHandler(onError, 80);
+      var buf = wasm.Buffer.fromString(text);
+      var lexer = wasm.Lexer.fromBuffer(allocator, 'test.wast', buf);
+      var script = wasm.parse(lexer, eh);
+      wasm.checkAst(lexer, script, eh);
+      var memoryWriter = new wasm.MemoryWriter(allocator);
+      var jsWriter = new wasm.JSStringWriter();
+      var logStream = new wasm.Stream(jsWriter.writer);
+      var options = new wasm.WriteBinaryOptions({logStream: logStream});
+      wasm.writeBinaryScript(allocator, memoryWriter.base, script, options);
+      output.textContent = jsWriter.string;
+    } catch (e) {
+      output.textContent += e.toString();
+    } finally {
+      if (options)
+        options.$destroy();
+      if (logStream)
+        logStream.$destroy();
+      if (script)
+        script.$destroy();
+      if (jsWriter)
+        jsWriter.$destroy();
+      if (memoryWriter)
+        memoryWriter.$destroy();
+      if (lexer)
+        lexer.$destroy();
+      if (buf)
+        buf.$destroy();
+      if (eh)
+        eh.$destroy();
+    }
+  });
 }
 
 var compileInput = debounce(function() { compile(input.value); }, 100);
@@ -168,7 +171,7 @@ var examples = [
     contents:
       '(module\n' +
       '  (func $fac (param i64) (result i64)\n' +
-      '    (if (i64.lt_s (get_local 0) (i64.const 0))\n' +
+      '    (if (i64.lt_s (get_local 0) (i64.const 1))\n' +
       '      (then (i64.const 1))\n' +
       '      (else\n' +
       '        (i64.mul\n' +

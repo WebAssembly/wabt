@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-var wasm = (function() {
+var wasm = {};
+
+wasm.ready = new Promise(function(resolve, reject) {
+  wasm.$resolve = resolve;
+  wasm.$reject = reject;
+});
+
+var Module = {};
+Module.onRuntimeInitialized = function() {
 
 var OK = 0;
 var ERROR = 1;
@@ -328,6 +336,10 @@ var Script = function() {
 };
 decorateStruct(Script, 'script', []);
 Script.prototype.$init = function() {};
+Script.prototype.$destroy = function() {
+  Module._wasm_destroy_script(this.$addr);
+  this.$free();
+};
 
 
 // SourceErrorHandler //////////////////////////////////////////////////////////
@@ -480,7 +492,11 @@ var writeBinaryScript = function(allocator, writer, script, options) {
     throw "writeBinaryScript failed";
 };
 
-return {
+var resolve = wasm.$resolve;
+
+wasm = {
+  ready: wasm.ready,
+
   OK: OK,
   ERROR: ERROR,
 
@@ -505,4 +521,6 @@ return {
   writeBinaryScript: writeBinaryScript,
 };
 
-})();
+resolve();
+
+};
