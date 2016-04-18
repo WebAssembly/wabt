@@ -1,0 +1,19 @@
+textarea {
+  width: 100%;
+  height: 400px;
+  min-height: 400px;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.two-fifths {
+  width:40%;
+}
+
+.three-fifths {
+  width:60%;
+}
+
+.container {
+  width: 1200px;
+}

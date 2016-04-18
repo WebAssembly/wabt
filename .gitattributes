@@ -9,3 +9,5 @@
 *.sh text
 *.txt text
 *.y text
+demo/primer.css binary
+demo/libwasm.js binary
