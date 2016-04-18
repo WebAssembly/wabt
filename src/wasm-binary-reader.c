@@ -588,26 +588,20 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             CALLBACK0(&ctx, on_nop_expr);
             break;
 
-          case WASM_OPCODE_BLOCK: {
-            uint32_t num_exprs;
-            in_u32_leb128(&ctx, &num_exprs, "block expression count");
-            CALLBACK(&ctx, on_block_expr, num_exprs);
+          case WASM_OPCODE_BLOCK:
+            CALLBACK0(&ctx, on_block_expr);
             break;
-          }
 
-          case WASM_OPCODE_LOOP: {
-            uint32_t num_exprs;
-            in_u32_leb128(&ctx, &num_exprs, "loop expression count");
-            CALLBACK(&ctx, on_loop_expr, num_exprs);
+          case WASM_OPCODE_LOOP:
+            CALLBACK0(&ctx, on_loop_expr);
             break;
-          }
 
           case WASM_OPCODE_IF:
             CALLBACK0(&ctx, on_if_expr);
             break;
 
-          case WASM_OPCODE_IF_ELSE:
-            CALLBACK0(&ctx, on_if_else_expr);
+          case WASM_OPCODE_ELSE:
+            CALLBACK0(&ctx, on_else_expr);
             break;
 
           case WASM_OPCODE_SELECT:
@@ -660,6 +654,10 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
           case WASM_OPCODE_UNREACHABLE:
             CALLBACK0(&ctx, on_unreachable_expr);
+            break;
+
+          case WASM_OPCODE_END:
+            CALLBACK0(&ctx, on_end_expr);
             break;
 
           case WASM_OPCODE_I32_CONST: {

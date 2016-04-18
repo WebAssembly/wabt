@@ -99,7 +99,7 @@ typedef struct WasmBinaryReader {
   /* function expressions; called between begin_function_body and
    end_function_body */
   WasmResult (*on_binary_expr)(WasmOpcode opcode, void* user_data);
-  WasmResult (*on_block_expr)(uint32_t count, void* user_data);
+  WasmResult (*on_block_expr)(void* user_data);
   WasmResult (*on_br_expr)(uint32_t depth, void* user_data);
   WasmResult (*on_br_if_expr)(uint32_t depth, void* user_data);
   WasmResult (*on_br_table_expr)(uint32_t num_targets,
@@ -110,6 +110,8 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_call_import_expr)(uint32_t import_index, void* user_data);
   WasmResult (*on_call_indirect_expr)(uint32_t sig_index, void* user_data);
   WasmResult (*on_compare_expr)(WasmOpcode opcode, void* user_data);
+  WasmResult (*on_else_expr)(void* user_data);
+  WasmResult (*on_end_expr)(void* user_data);
   WasmResult (*on_i32_const_expr)(uint32_t value, void* user_data);
   WasmResult (*on_i64_const_expr)(uint64_t value, void* user_data);
   WasmResult (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
@@ -118,12 +120,11 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_get_local_expr)(uint32_t local_index, void* user_data);
   WasmResult (*on_grow_memory_expr)(void* user_data);
   WasmResult (*on_if_expr)(void* user_data);
-  WasmResult (*on_if_else_expr)(void* user_data);
   WasmResult (*on_load_expr)(WasmOpcode opcode,
                              uint32_t alignment_log2,
                              uint32_t offset,
                              void* user_data);
-  WasmResult (*on_loop_expr)(uint32_t count, void* user_data);
+  WasmResult (*on_loop_expr)(void* user_data);
   WasmResult (*on_memory_size_expr)(void* user_data);
   WasmResult (*on_nop_expr)(void* user_data);
   WasmResult (*on_return_expr)(void* user_data);
