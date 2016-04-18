@@ -1,8 +1,0 @@
-;;; ERROR: 1
-(module
-  (func (return (nop))))
-(;; STDERR ;;;
-typecheck/bad-return-arity-mismatch.txt:3:9: arity mismatch of return. function expects void, but return value is non-empty
-  (func (return (nop))))
-        ^
-;;; STDERR ;;)

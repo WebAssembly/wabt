@@ -371,6 +371,19 @@ static void check_expr(WasmContext* ctx,
                        WasmType expected_type,
                        const char* desc);
 
+static void check_expr_opt(WasmContext* ctx,
+                           const WasmLocation* loc,
+                           const WasmModule* module,
+                           const WasmFunc* func,
+                           const WasmExpr* expr,
+                           WasmType expected_type,
+                           const char* desc) {
+  if (expr)
+    check_expr(ctx, module, func, expr, expected_type, desc);
+  else
+    check_type(ctx, loc, WASM_TYPE_VOID, expected_type, desc);
+}
+
 static void check_br(WasmContext* ctx,
                      const WasmLocation* loc,
                      const WasmModule* module,
@@ -382,21 +395,7 @@ static void check_br(WasmContext* ctx,
   if (WASM_FAILED(check_label_var(ctx, ctx->top_label, var, &node)))
     return;
 
-  if (node->expected_type != WASM_TYPE_VOID) {
-    if (expr) {
-      check_expr(ctx, module, func, expr, node->expected_type, desc);
-    } else {
-      print_error(
-          ctx, loc,
-          "arity mismatch%s. label expects non-void, but br value is empty",
-          desc);
-    }
-  } else if (expr) {
-    print_error(
-        ctx, loc,
-        "arity mismatch%s. label expects void, but br value is non-empty",
-        desc);
-  }
+  check_expr_opt(ctx, loc, module, func, expr, node->expected_type, desc);
 }
 
 static void check_call(WasmContext* ctx,
@@ -626,18 +625,8 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_RETURN: {
       WasmType result_type = wasm_get_result_type(func);
-      if (expr->return_.expr) {
-        if (result_type == WASM_TYPE_VOID) {
-          print_error(ctx, &expr->loc,
-                      "arity mismatch of return. function expects void, but "
-                      "return value is non-empty");
-        } else {
-          check_expr(ctx, module, func, expr->return_.expr, result_type,
-                     " of return");
-        }
-      } else {
-        check_type(ctx, &expr->loc, WASM_TYPE_VOID, result_type, desc);
-      }
+      check_expr_opt(ctx, &expr->loc, module, func, expr->return_.expr,
+                     result_type, " of return");
       break;
     }
 
