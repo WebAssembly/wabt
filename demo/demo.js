@@ -97,7 +97,8 @@ function onError(loc, error, sourceLine, sourceLineColumnOffset) {
   ];
   if (sourceLine.length > 0) {
     var numSpaces = loc.firstColumn - 1 - sourceLineColumnOffset;
-    var numCarets = loc.lastColumn - loc.firstColumn;
+    var numCarets =
+        Math.min(loc.lastColumn - loc.firstColumn, sourceLine.length);
     lines.push(sourceLine);
     lines.push(' '.repeat(numSpaces) + '^'.repeat(numCarets));
   }
@@ -118,6 +119,7 @@ function compile(text) {
       var jsWriter = new wasm.JSStringWriter();
       var logStream = new wasm.Stream(jsWriter.writer);
       var options = new wasm.WriteBinaryOptions({logStream: logStream});
+      wasm.markUsedBlocks(allocator, script);
       wasm.writeBinaryScript(allocator, memoryWriter.base, script, options);
       output.textContent = jsWriter.string;
     } catch (e) {
@@ -181,6 +183,20 @@ var examples = [
       '              (get_local 0)\n' +
       '              (i64.const 1)))))))\n' +
       '  (export "fac" $fac))\n'
+  },
+
+  {
+    name: 'stuff',
+    contents:
+      '(module\n' +
+      '  (memory 1 (segment 0 "hi"))\n' +
+      '  (type (func (param i32) (result i32)))\n' +
+      '  (import "foo" "bar" (param f32))\n' +
+      '  (start 0)\n' +
+      '  (table 0 1)\n' +
+      '  (func)\n' +
+      '  (func (type 0) (i32.const 42))\n' +
+      '  (export "e" 1))\n'
   }
 ];
 

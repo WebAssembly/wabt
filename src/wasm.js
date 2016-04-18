@@ -485,6 +485,12 @@ var checkAst = function(lexer, script, errorHandler) {
     throw "checkAst failed";
 };
 
+var markUsedBlocks = function(allocator, script) {
+  var result = Module._wasm_mark_used_blocks(allocator.$addr, script.$addr);
+  if (result != OK)
+    throw "markUsedBlocks failed";
+};
+
 var writeBinaryScript = function(allocator, writer, script, options) {
   var result = Module._wasm_write_binary_script(allocator.$addr, writer.$addr,
                                                 script.$addr, options.$addr);
@@ -517,6 +523,7 @@ wasm = {
   Writer: Writer,
 
   checkAst: checkAst,
+  markUsedBlocks: markUsedBlocks,
   parse: parse,
   writeBinaryScript: writeBinaryScript,
 };
