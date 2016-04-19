@@ -282,7 +282,7 @@ struct WASM_PARSER_LTYPE
 
 
 
-int wasm_parser_parse (WasmLexer lexer, WasmParser* parser);
+int wasm_parser_parse (WasmLexer* lexer, WasmParser* parser);
 
 #endif /* !YY_WASM_PARSER_SRC_PREBUILT_WASM_BISON_PARSER_H_INCLUDED  */
 
@@ -1026,7 +1026,7 @@ do {                                                                      \
 `----------------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, WasmLexer lexer, WasmParser* parser)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, WasmLexer* lexer, WasmParser* parser)
 {
   FILE *yyo = yyoutput;
   YYUSE (yyo);
@@ -1048,7 +1048,7 @@ yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvalue
 `--------------------------------*/
 
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, WasmLexer lexer, WasmParser* parser)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, WasmLexer* lexer, WasmParser* parser)
 {
   YYFPRINTF (yyoutput, "%s %s (",
              yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
@@ -1088,7 +1088,7 @@ do {                                                            \
 `------------------------------------------------*/
 
 static void
-yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, WasmLexer lexer, WasmParser* parser)
+yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, WasmLexer* lexer, WasmParser* parser)
 {
   unsigned long int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -1368,7 +1368,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 `-----------------------------------------------*/
 
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, WasmLexer lexer, WasmParser* parser)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, WasmLexer* lexer, WasmParser* parser)
 {
   YYUSE (yyvaluep);
   YYUSE (yylocationp);
@@ -1576,7 +1576,7 @@ yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocatio
 `----------*/
 
 int
-yyparse (WasmLexer lexer, WasmParser* parser)
+yyparse (WasmLexer* lexer, WasmParser* parser)
 {
 /* The lookahead symbol.  */
 int yychar;
@@ -3478,7 +3478,7 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-WasmResult wasm_parse(WasmLexer lexer,
+WasmResult wasm_parse(WasmLexer* lexer,
                       struct WasmScript* out_script,
                       WasmSourceErrorHandler* error_handler) {
   WasmParser parser;

@@ -31,7 +31,7 @@ DEFAULT_BUILD_TYPE = DEBUG
 COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG EMSCRIPTEN
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := ASAN MSAN LSAN
-CONFIGS := NORMAL ASAN MSAN LSAN NO_FLEX_BISON NO_TESTS
+CONFIGS := NORMAL ASAN MSAN LSAN NO_RE2C_BISON NO_TESTS
 EXECUTABLES := sexpr-wasm wasm-wast wasm-interp wasm-interp-sq hexfloat_test
 
 # directory names
@@ -46,7 +46,7 @@ NORMAL_DIR :=
 ASAN_DIR := asan/
 MSAN_DIR := msan/
 LSAN_DIR := lsan/
-NO_FLEX_BISON_DIR := no-flex-bison/
+NO_RE2C_BISON_DIR := no-re2c-bison/
 NO_TESTS_DIR := no-tests/
 
 # CMake flags
@@ -62,7 +62,7 @@ NORMAL_FLAG :=
 ASAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address
 MSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=memory -DCMAKE_CXX_FLAGS=-fsanitize=memory
 LSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=leak -DCMAKE_CXX_FLAGS=-fsanitize=leak
-NO_FLEX_BISON_FLAG := -DRUN_FLEX_BISON=OFF
+NO_RE2C_BISON_FLAG := -DRUN_BISON=OFF -DRUN_RE2C=OFF
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
 # make target prefixes
@@ -77,7 +77,7 @@ NORMAL_PREFIX :=
 ASAN_PREFIX := -asan
 MSAN_PREFIX := -msan
 LSAN_PREFIX := -lsan
-NO_FLEX_BISON_PREFIX := -no-flex-bison
+NO_RE2C_BISON_PREFIX := -no-re2c-bison
 NO_TESTS_PREFIX := -no-tests
 
 ifeq ($(USE_NINJA),1)
@@ -134,15 +134,15 @@ clean:
 .PHONY: test-everything
 test-everything:
 
-.PHONY: update-bison update-flex
+.PHONY: update-bison update-re2c
 update-bison: src/prebuilt/wasm-bison-parser.c
-update-flex: src/prebuilt/wasm-flex-lexer.c
+update-re2c: src/prebuilt/wasm-re2c-lexer.c
 
 src/prebuilt/wasm-bison-parser.c: src/wasm-bison-parser.y
 	bison -o $@ $< --defines=src/prebuilt/wasm-bison-parser.h
 
-src/prebuilt/wasm-flex-lexer.c: src/wasm-flex-lexer.l
-	flex -o $@ $<
+src/prebuilt/wasm-re2c-lexer.c: src/wasm-lexer.c
+	re2c -bc -o $@ $<
 
 # defaults with simple names
 $(foreach EXECUTABLE,$(EXECUTABLES), \

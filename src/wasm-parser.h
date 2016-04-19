@@ -23,7 +23,7 @@
 struct WasmScript;
 
 WASM_EXTERN_C_BEGIN
-WasmResult wasm_parse(WasmLexer lexer,
+WasmResult wasm_parse(WasmLexer* lexer,
                       struct WasmScript* out_script,
                       WasmSourceErrorHandler*);
 WASM_EXTERN_C_END

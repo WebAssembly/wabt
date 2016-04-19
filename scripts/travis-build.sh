@@ -22,8 +22,8 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source ${SCRIPT_DIR}/travis-common.sh
 
 if [ ${CC} = "gcc" ]; then
-  # Build without flex/bison to test prebuilt C sources
-  make gcc-debug-no-flex-bison
+  # Build without re2c/bison to test prebuilt C sources
+  make gcc-debug-no-re2c-bison
 elif [ ${CC} = "clang" ]; then
   # Test building without GTest submodule
   make clang-debug-no-tests

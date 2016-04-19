@@ -59,7 +59,7 @@ set_run_test_args() {
 }
 
 if [ ${CC} = "gcc" ]; then
-  if set_run_test_args gcc Debug no-flex-bison; then
+  if set_run_test_args gcc Debug no-re2c-bison; then
     run_tests
   fi
 fi

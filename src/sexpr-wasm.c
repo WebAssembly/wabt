@@ -373,7 +373,7 @@ int main(int argc, char** argv) {
     allocator = &stack_allocator.allocator;
   }
 
-  WasmLexer lexer = wasm_new_file_lexer(allocator, s_infile);
+  WasmLexer* lexer = wasm_new_file_lexer(allocator, s_infile);
   if (!lexer)
     WASM_FATAL("unable to read %s\n", s_infile);
 

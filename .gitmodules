@@ -10,3 +10,6 @@
 [submodule "third_party/squirrel"]
 	path = third_party/squirrel
 	url = https://github.com/albertodemichelis/squirrel/
+[submodule "third_party/CMakeXFind"]
+	path = third_party/CMakeXFind
+	url = https://github.com/julp/CMakeXFind

@@ -88,7 +88,7 @@ typedef struct WasmLabelNode {
 
 typedef struct WasmContext {
   WasmSourceErrorHandler* error_handler;
-  WasmLexer lexer;
+  WasmLexer* lexer;
   const WasmModule* last_module;
   WasmLabelNode* top_label;
   int max_depth;
@@ -933,7 +933,7 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_ast(WasmLexer lexer,
+WasmResult wasm_check_ast(WasmLexer* lexer,
                           const struct WasmScript* script,
                           WasmSourceErrorHandler* error_handler) {
   WasmContext ctx;
@@ -948,7 +948,7 @@ WasmResult wasm_check_ast(WasmLexer lexer,
 }
 
 WasmResult wasm_check_assert_invalid(
-    WasmLexer lexer,
+    WasmLexer* lexer,
     const struct WasmScript* script,
     WasmSourceErrorHandler* assert_invalid_error_handler,
     WasmSourceErrorHandler* error_handler) {

@@ -126,33 +126,36 @@ else ()
   endif ()
 endif ()
 
-option(RUN_FLEX_BISON "run flex and bison" ON)
-find_package(FLEX)
+option(RUN_BISON "run bison" ON)
 find_package(BISON 3.0)
-if (RUN_FLEX_BISON AND FLEX_FOUND AND BISON_FOUND)
+if (RUN_BISON AND BISON_FOUND)
   set(BISON_PARSER_C ${SEXPR_WASM_BINARY_DIR}/wasm-bison-parser.c)
   BISON_TARGET(WASM_BISON_PARSER
     ${SEXPR_WASM_SOURCE_DIR}/src/wasm-bison-parser.y
     ${BISON_PARSER_C}
     COMPILE_FLAGS --defines=${SEXPR_WASM_BINARY_DIR}/wasm-bison-parser.h
   )
-
-  set(FLEX_LEXER_C ${SEXPR_WASM_BINARY_DIR}/wasm-flex-lexer.c)
-  FLEX_TARGET(WASM_FLEX_LEXER
-    ${SEXPR_WASM_SOURCE_DIR}/src/wasm-flex-lexer.l
-    ${FLEX_LEXER_C}
-    COMPILE_FLAGS -Cf
-  )
 else ()
   set(BISON_PARSER_C src/prebuilt/wasm-bison-parser.c)
-  set(FLEX_LEXER_C src/prebuilt/wasm-flex-lexer.c)
 endif ()
 
-if (NOT COMPILER_IS_MSVC)
-  set_source_files_properties(
-    ${FLEX_LEXER_C} PROPERTIES COMPILE_FLAGS -Wno-unused-function
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+    ${SEXPR_WASM_SOURCE_DIR}/third_party/CMakeXFind)
+option(RUN_RE2C "run re2c" ON)
+find_package(RE2C 0.13)
+if (RUN_RE2C AND RE2C_EXECUTABLE)
+  set(WASM_LEXER_C ${SEXPR_WASM_SOURCE_DIR}/src/wasm-lexer.c)
+  set(RE2C_LEXER_C ${SEXPR_WASM_BINARY_DIR}/wasm-re2c-lexer.c)
+  RE2C_TARGET(
+    NAME RE2C_LEXER_C
+    INPUT ${WASM_LEXER_C}
+    OUTPUT ${RE2C_LEXER_C}
+    OPTIONS -bc
   )
+else ()
+  set(RE2C_LEXER_C src/prebuilt/wasm-re2c-lexer.c)
 endif ()
+
 
 add_custom_target(everything)
 
@@ -178,7 +181,7 @@ add_executable(sexpr-wasm
   src/wasm-mark-used-blocks.c
   src/wasm-parser-lexer-shared.c
   ${BISON_PARSER_C}
-  ${FLEX_LEXER_C}
+  ${RE2C_LEXER_C}
 )
 add_dependencies(everything sexpr-wasm)
 target_link_libraries(sexpr-wasm wasm-common)
@@ -277,7 +280,7 @@ if (EMSCRIPTEN)
     src/wasm-mark-used-blocks.c
     src/wasm-parser-lexer-shared.c
     ${BISON_PARSER_C}
-    ${FLEX_LEXER_C}
+    ${RE2C_LEXER_C}
   )
   add_dependencies(everything libwasm)
   target_link_libraries(libwasm wasm-interp-common wasm-common)

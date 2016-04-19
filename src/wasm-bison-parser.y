@@ -107,8 +107,8 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
 %define api.value.type {WasmToken}
 %define api.token.prefix {WASM_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {WasmLexer lexer} {WasmParser* parser}
-%parse-param {WasmLexer lexer} {WasmParser* parser}
+%lex-param {WasmLexer* lexer} {WasmParser* parser}
+%parse-param {WasmLexer* lexer} {WasmParser* parser}
 %locations
 
 %token LPAR "("
@@ -1156,7 +1156,7 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-WasmResult wasm_parse(WasmLexer lexer,
+WasmResult wasm_parse(WasmLexer* lexer,
                       struct WasmScript* out_script,
                       WasmSourceErrorHandler* error_handler) {
   WasmParser parser;

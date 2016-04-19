@@ -98,6 +98,9 @@ static void print_carets(FILE* out,
   memset(carets, '^', max_line);
   if (num_carets > max_line - num_spaces)
     num_carets = max_line - num_spaces;
+  /* always print at least one caret */
+  if (num_carets == 0)
+    num_carets = 1;
   fprintf(out, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets, carets);
 }
 

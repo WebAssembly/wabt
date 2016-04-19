@@ -134,6 +134,6 @@ struct WASM_PARSER_LTYPE
 
 
 
-int wasm_parser_parse (WasmLexer lexer, WasmParser* parser);
+int wasm_parser_parse (WasmLexer* lexer, WasmParser* parser);
 
 #endif /* !YY_WASM_PARSER_SRC_PREBUILT_WASM_BISON_PARSER_H_INCLUDED  */

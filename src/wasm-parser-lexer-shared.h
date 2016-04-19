@@ -75,25 +75,25 @@ typedef struct WasmParser {
 } WasmParser;
 
 WASM_EXTERN_C_BEGIN
-struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer lexer);
+struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer* lexer);
 int wasm_lexer_lex(union WasmToken*,
                    struct WasmLocation*,
-                   WasmLexer,
+                   WasmLexer*,
                    struct WasmParser*);
-WasmResult wasm_lexer_get_source_line(WasmLexer,
+WasmResult wasm_lexer_get_source_line(WasmLexer*,
                                       const struct WasmLocation*,
                                       size_t line_max_length,
                                       char* line,
                                       size_t* out_line_length,
                                       int* out_column_offset);
 void wasm_parser_error(struct WasmLocation*,
-                       WasmLexer,
+                       WasmLexer*,
                        struct WasmParser*,
                        const char*,
                        ...);
 void wasm_format_error(WasmSourceErrorHandler*,
                        const struct WasmLocation*,
-                       WasmLexer,
+                       WasmLexer*,
                        const char* format,
                        va_list);
 WASM_EXTERN_C_END

@@ -21,7 +21,7 @@
 #include <string.h>
 
 void wasm_parser_error(WasmLocation* loc,
-                       WasmLexer lexer,
+                       WasmLexer* lexer,
                        WasmParser* parser,
                        const char* format,
                        ...) {
@@ -34,7 +34,7 @@ void wasm_parser_error(WasmLocation* loc,
 
 void wasm_format_error(WasmSourceErrorHandler* error_handler,
                        const struct WasmLocation* loc,
-                       WasmLexer lexer,
+                       WasmLexer* lexer,
                        const char* format,
                        va_list args) {
   va_list args_copy;
