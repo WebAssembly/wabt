@@ -50,9 +50,9 @@
   YY_USER_ACTION;  \
   wasm_parser_error(loc, lexer, parser, __VA_ARGS__)
 
-#define BEGIN(c)       \
-  do {                 \
-    cond = YYCOND_##c; \
+#define BEGIN(c) \
+  do {           \
+    cond = c;    \
   } while (0)
 #define FILL(n)                                     \
   do {                                              \
@@ -192,8 +192,7 @@ int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
     re2c:define:YYFILL = "FILL";
     re2c:define:YYGETCONDITION = "cond";
     re2c:define:YYGETCONDITION:naked = 1;
-    re2c:define:YYSETCONDITION = "cond = @@;";
-    re2c:define:YYSETCONDITION:naked = 1;
+    re2c:define:YYSETCONDITION = "BEGIN";
 
     space =     [ \t];
     digit =     [0-9];
@@ -233,7 +232,7 @@ int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
     <BAD_TEXT> "\\".          { ERROR("bad escape \"%.*s\"", yyleng, yytext); continue; }
     <BAD_TEXT> '"' => i       { TEXT; RETURN(TEXT); }
     <BAD_TEXT> EOF            { ERROR("unexpected EOF"); RETURN(EOF); }
-    <BAD_TEXT> *              { ERROR("illegal character in string"); continue; }
+    <BAD_TEXT> [^]            { ERROR("illegal character in string"); continue; }
     <i> "i32"                 { TYPE(I32); RETURN(VALUE_TYPE); }
     <i> "i64"                 { TYPE(I64); RETURN(VALUE_TYPE); }
     <i> "f32"                 { TYPE(F32); RETURN(VALUE_TYPE); }
@@ -432,20 +431,22 @@ int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
 
     <i> ";;" => LINE_COMMENT  { continue; }
     <LINE_COMMENT> "\n" => i  { NEWLINE; continue; }
-    <LINE_COMMENT> *          { continue; }
+    <LINE_COMMENT> [^\n]*     { continue; }
     <i> "(;" => BLOCK_COMMENT { COMMENT_NESTING = 1; continue; }
     <BLOCK_COMMENT> "(;"      { COMMENT_NESTING++; continue; }
-    <BLOCK_COMMENT> ";)"      { if (--COMMENT_NESTING == 0) BEGIN(i); continue; }
+    <BLOCK_COMMENT> ";)"      { if (--COMMENT_NESTING == 0)
+                                  BEGIN(YYCOND_INIT);
+                                continue; }
     <BLOCK_COMMENT> "\n"      { NEWLINE; continue; }
     <BLOCK_COMMENT> EOF       { ERROR("unexpected EOF"); RETURN(EOF); }
-    <BLOCK_COMMENT> *         { continue; }
+    <BLOCK_COMMENT> [^]       { continue; }
     <i> "\n"                  { NEWLINE; continue; }
     <i> [ \t\r]+              { continue; }
     <i> atom                  { ERROR("unexpected token \"%.*s\"",
                                       yyleng, yytext);
-                                continue;}
+                                continue; }
     <*> EOF                   { RETURN(EOF); }
-    <*> *                     { ERROR("unexpected char"); continue; }
+    <*> [^]                   { ERROR("unexpected char"); continue; }
    */
   }
 }
