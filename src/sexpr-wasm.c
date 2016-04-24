@@ -27,7 +27,6 @@
 #include "wasm-binary-writer.h"
 #include "wasm-binary-writer-spec.h"
 #include "wasm-common.h"
-#include "wasm-mark-used-blocks.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-stream.h"
@@ -389,39 +388,35 @@ int main(int argc, char** argv) {
     }
 
     if (WASM_SUCCEEDED(result)) {
-      result = wasm_mark_used_blocks(allocator, &script);
+      if (s_spec) {
+        WasmContext ctx;
+        WASM_ZERO_MEMORY(ctx);
+        ctx.allocator = allocator;
+        ctx.output_filename_noext = strip_extension(s_outfile);
 
-      if (WASM_SUCCEEDED(result)) {
-        if (s_spec) {
-          WasmContext ctx;
-          WASM_ZERO_MEMORY(ctx);
-          ctx.allocator = allocator;
-          ctx.output_filename_noext = strip_extension(s_outfile);
+        s_write_binary_spec_options.on_script_begin = &on_script_begin;
+        s_write_binary_spec_options.on_module_begin = &on_module_begin;
+        s_write_binary_spec_options.on_command = &on_command,
+        s_write_binary_spec_options.on_module_before_write =
+            &on_module_before_write;
+        s_write_binary_spec_options.on_module_end = &on_module_end;
+        s_write_binary_spec_options.on_script_end = &on_script_end;
+        s_write_binary_spec_options.user_data = &ctx;
 
-          s_write_binary_spec_options.on_script_begin = &on_script_begin;
-          s_write_binary_spec_options.on_module_begin = &on_module_begin;
-          s_write_binary_spec_options.on_command = &on_command,
-          s_write_binary_spec_options.on_module_before_write =
-              &on_module_before_write;
-          s_write_binary_spec_options.on_module_end = &on_module_end;
-          s_write_binary_spec_options.on_script_end = &on_script_end;
-          s_write_binary_spec_options.user_data = &ctx;
+        result = wasm_write_binary_spec_script(allocator, &script,
+                                               &s_write_binary_options,
+                                               &s_write_binary_spec_options);
+      } else {
+        WasmMemoryWriter writer;
+        WASM_ZERO_MEMORY(writer);
+        if (WASM_FAILED(wasm_init_mem_writer(allocator, &writer)))
+          WASM_FATAL("unable to open memory writer for writing\n");
 
-          result = wasm_write_binary_spec_script(allocator, &script,
-                                                 &s_write_binary_options,
-                                                 &s_write_binary_spec_options);
-        } else {
-          WasmMemoryWriter writer;
-          WASM_ZERO_MEMORY(writer);
-          if (WASM_FAILED(wasm_init_mem_writer(allocator, &writer)))
-            WASM_FATAL("unable to open memory writer for writing\n");
-
-          result = wasm_write_binary_script(allocator, &writer.base, &script,
-                                            &s_write_binary_options);
-          if (WASM_SUCCEEDED(result))
-            write_buffer_to_file(s_outfile, &writer.buf);
-          wasm_close_mem_writer(&writer);
-        }
+        result = wasm_write_binary_script(allocator, &writer.base, &script,
+                                          &s_write_binary_options);
+        if (WASM_SUCCEEDED(result))
+          write_buffer_to_file(s_outfile, &writer.buf);
+        wasm_close_mem_writer(&writer);
       }
     }
   }

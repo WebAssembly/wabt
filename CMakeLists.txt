@@ -185,11 +185,10 @@ add_executable(sexpr-wasm
   src/sexpr-wasm.c
   src/wasm-ast.c
   src/wasm-ast-checker.c
+  src/wasm-ast-parser-lexer-shared.c
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
   src/wasm-literal.c
-  src/wasm-mark-used-blocks.c
-  src/wasm-ast-parser-lexer-shared.c
   ${WASM_AST_PARSER_GEN_C}
   ${WASM_AST_LEXER_GEN_C}
 )
@@ -288,7 +287,6 @@ if (EMSCRIPTEN)
     src/wasm-emscripten-helpers.c
     src/wasm-generate-names.c
     src/wasm-literal.c
-    src/wasm-mark-used-blocks.c
     ${WASM_AST_PARSER_GEN_C}
     ${WASM_AST_LEXER_GEN_C}
   )

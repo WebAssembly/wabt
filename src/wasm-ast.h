@@ -108,7 +108,6 @@ typedef struct WasmBindingHash {
 typedef struct WasmBlock {
   WasmLabel label;
   WasmExprPtrVector exprs;
-  WasmBool used;
 } WasmBlock;
 
 typedef struct WasmExpr WasmExpr;
@@ -117,13 +116,12 @@ struct WasmExpr {
   WasmExprType type;
   union {
     WasmBlock block;
-    struct { WasmExprPtr cond, true_, false_; } if_else;
-    struct { WasmExprPtr cond, true_; } if_;
+    struct { WasmExprPtr cond; WasmBlock true_, false_; } if_else;
+    struct { WasmExprPtr cond; WasmBlock true_; } if_;
     struct { WasmVar var; WasmExprPtr cond, expr; } br_if;
     struct {
       WasmLabel inner, outer;
       WasmExprPtrVector exprs;
-      WasmBool inner_used, outer_used;
     } loop;
     struct { WasmVar var; WasmExprPtr expr; } br;
     struct { WasmExprPtr expr; } return_;

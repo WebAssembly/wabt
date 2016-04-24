@@ -358,6 +358,11 @@ void wasm_destroy_func_signature(WasmAllocator* allocator,
   wasm_destroy_type_vector(allocator, &sig->param_types);
 }
 
+static void wasm_destroy_block(WasmAllocator* allocator, WasmBlock* block) {
+  wasm_destroy_string_slice(allocator, &block->label);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, block->exprs, expr_ptr);
+}
+
 void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr);
 
 static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
@@ -367,8 +372,7 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       wasm_destroy_expr_ptr(allocator, &expr->binary.right);
       break;
     case WASM_EXPR_TYPE_BLOCK:
-      wasm_destroy_string_slice(allocator, &expr->block.label);
-      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->block.exprs, expr_ptr);
+      wasm_destroy_block(allocator, &expr->block);
       break;
     case WASM_EXPR_TYPE_BR:
       wasm_destroy_var(allocator, &expr->br.var);
@@ -407,12 +411,12 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       break;
     case WASM_EXPR_TYPE_IF:
       wasm_destroy_expr_ptr(allocator, &expr->if_.cond);
-      wasm_destroy_expr_ptr(allocator, &expr->if_.true_);
+      wasm_destroy_block(allocator, &expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
       wasm_destroy_expr_ptr(allocator, &expr->if_else.cond);
-      wasm_destroy_expr_ptr(allocator, &expr->if_else.true_);
-      wasm_destroy_expr_ptr(allocator, &expr->if_else.false_);
+      wasm_destroy_block(allocator, &expr->if_else.true_);
+      wasm_destroy_block(allocator, &expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LOAD:
       wasm_destroy_expr_ptr(allocator, &expr->load.addr);
@@ -742,15 +746,15 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
     case WASM_EXPR_TYPE_IF:
       CALLBACK(begin_if_expr);
       CHECK_RESULT(visit_expr(expr->if_.cond, visitor));
-      CHECK_RESULT(visit_expr(expr->if_.true_, visitor));
+      CHECK_RESULT(visit_exprs(&expr->if_.true_.exprs, visitor));
       CALLBACK(end_if_expr);
       break;
 
     case WASM_EXPR_TYPE_IF_ELSE:
       CALLBACK(begin_if_else_expr);
       CHECK_RESULT(visit_expr(expr->if_else.cond, visitor));
-      CHECK_RESULT(visit_expr(expr->if_else.true_, visitor));
-      CHECK_RESULT(visit_expr(expr->if_else.false_, visitor));
+      CHECK_RESULT(visit_exprs(&expr->if_else.true_.exprs, visitor));
+      CHECK_RESULT(visit_exprs(&expr->if_else.false_.exprs, visitor));
       CALLBACK(end_if_else_expr);
       break;
 

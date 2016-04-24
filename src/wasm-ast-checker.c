@@ -572,21 +572,32 @@ static void check_expr(WasmContext* ctx,
       break;
 
     case WASM_EXPR_TYPE_IF: {
+      WasmLabelNode node;
       check_expr(ctx, module, func, expr->if_.cond, WASM_TYPE_I32,
                  " of condition");
-      check_expr(ctx, module, func, expr->if_.true_, expected_type,
+      push_label(ctx, &expr->loc, &node, &expr->if_.true_.label, expected_type,
+                 "if branch");
+      check_exprs(ctx, module, func, &expr->if_.true_.exprs, expected_type,
                  " of if branch");
+      pop_label(ctx);
       check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
       break;
     }
 
     case WASM_EXPR_TYPE_IF_ELSE: {
+      WasmLabelNode node;
       check_expr(ctx, module, func, expr->if_else.cond, WASM_TYPE_I32,
                  " of condition");
-      check_expr(ctx, module, func, expr->if_else.true_, expected_type,
+      push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
+                 expected_type, "if true branch");
+      check_exprs(ctx, module, func, &expr->if_else.true_.exprs, expected_type,
                  " of if branch");
-      check_expr(ctx, module, func, expr->if_else.false_, expected_type,
+      pop_label(ctx);
+      push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
+                 expected_type, "if false branch");
+      check_exprs(ctx, module, func, &expr->if_else.false_.exprs, expected_type,
                  " of if branch");
+      pop_label(ctx);
       break;
     }
 

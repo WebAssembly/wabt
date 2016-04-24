@@ -587,20 +587,30 @@ static void write_expr(WasmContext* ctx,
       write_expr(ctx, module, func, expr->grow_memory.expr);
       write_opcode(&ctx->stream, WASM_OPCODE_GROW_MEMORY);
       break;
-    case WASM_EXPR_TYPE_IF:
+    case WASM_EXPR_TYPE_IF: {
+      WasmLabelNode node;
       write_expr(ctx, module, func, expr->if_.cond);
       write_opcode(&ctx->stream, WASM_OPCODE_IF);
-      write_expr(ctx, module, func, expr->if_.true_);
+      push_label(ctx, &node, &expr->if_.true_.label);
+      write_expr_list(ctx, module, func, &expr->if_.true_.exprs);
+      pop_label(ctx, &expr->if_.true_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       break;
-    case WASM_EXPR_TYPE_IF_ELSE:
+    }
+    case WASM_EXPR_TYPE_IF_ELSE: {
+      WasmLabelNode node;
       write_expr(ctx, module, func, expr->if_else.cond);
       write_opcode(&ctx->stream, WASM_OPCODE_IF);
-      write_expr(ctx, module, func, expr->if_else.true_);
+      push_label(ctx, &node, &expr->if_else.true_.label);
+      write_expr_list(ctx, module, func, &expr->if_else.true_.exprs);
+      pop_label(ctx, &expr->if_else.true_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_ELSE);
-      write_expr(ctx, module, func, expr->if_else.false_);
+      push_label(ctx, &node, &expr->if_else.false_.label);
+      write_expr_list(ctx, module, func, &expr->if_else.false_.exprs);
+      pop_label(ctx, &expr->if_else.false_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       break;
+    }
     case WASM_EXPR_TYPE_LOAD: {
       write_expr(ctx, module, func, expr->load.addr);
       write_opcode(&ctx->stream, expr->load.opcode);

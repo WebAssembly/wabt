@@ -308,49 +308,6 @@ static void write_block(WasmContext* ctx,
   write_close_newline(ctx);
 }
 
-/* TODO(binji): remove all this if-block stuff when we switch to postorder */
-typedef enum WriteIfBranchType {
-  WASM_IF_BRANCH_TYPE_ONE_EXPRESSION,
-  WASM_IF_BRANCH_TYPE_BLOCK_EXPRESSION,
-} WriteIfBranchType;
-
-static WriteIfBranchType get_if_branch_type(const WasmExpr* expr) {
-  return expr->type == WASM_EXPR_TYPE_BLOCK
-             ? WASM_IF_BRANCH_TYPE_BLOCK_EXPRESSION
-             : WASM_IF_BRANCH_TYPE_ONE_EXPRESSION;
-}
-
-static void write_if_branch(WasmContext* ctx,
-                            WriteIfBranchType type,
-                            const WasmExpr* expr,
-                            const char* text) {
-  switch (type) {
-    case WASM_IF_BRANCH_TYPE_ONE_EXPRESSION:
-      writef(ctx, ";; exit = @%d", ctx->depth);
-      write_newline(ctx, FORCE_NEWLINE);
-      ctx->depth++;
-      write_expr(ctx, expr);
-      ctx->depth--;
-      break;
-    case WASM_IF_BRANCH_TYPE_BLOCK_EXPRESSION:
-      if (expr->type == WASM_EXPR_TYPE_BLOCK) {
-        write_block(ctx, &expr->block, text);
-      } else {
-        write_open_space(ctx, text);
-        writef(ctx, " ;; exit = @%d", ctx->depth);
-        write_newline(ctx, FORCE_NEWLINE);
-        ctx->depth++;
-        write_expr(ctx, expr);
-        ctx->depth--;
-        write_close_newline(ctx);
-      }
-      break;
-    default:
-      assert(0);
-      break;
-  }
-}
-
 static void write_const(WasmContext* ctx, const WasmConst* const_) {
   switch (const_->type) {
     case WASM_TYPE_I32:
@@ -494,8 +451,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_IF: {
       write_open_newline(ctx, s_opcode_name[WASM_OPCODE_IF]);
       write_expr(ctx, expr->if_.cond);
-      WriteIfBranchType true_type = get_if_branch_type(expr->if_.true_);
-      write_if_branch(ctx, true_type, expr->if_.true_, "then");
+      write_block(ctx, &expr->if_.true_, "then");
       write_close_newline(ctx);
       break;
     }
@@ -503,21 +459,8 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_IF_ELSE: {
       write_open_newline(ctx, s_opcode_name[WASM_OPCODE_IF]);
       write_expr(ctx, expr->if_else.cond);
-
-      /* silly dance to make sure that we don't use mismatching format for
-       * if/then/else. We're allowed to do the short if form:
-       *   (if (cond) (true) (false))
-       * only when true and false are one non-block expression. Otherwise we
-       * need to use the full
-       *   (if (then (true1) (true2)) (else (false1) (false2)))
-       * form. */
-      WriteIfBranchType true_type = get_if_branch_type(expr->if_else.true_);
-      WriteIfBranchType false_type = get_if_branch_type(expr->if_else.false_);
-      if (true_type != false_type)
-        true_type = false_type = WASM_IF_BRANCH_TYPE_BLOCK_EXPRESSION;
-
-      write_if_branch(ctx, true_type, expr->if_else.true_, "then");
-      write_if_branch(ctx, false_type, expr->if_else.false_, "else");
+      write_block(ctx, &expr->if_else.true_, "then");
+      write_block(ctx, &expr->if_else.false_, "else");
       write_close_newline(ctx);
       break;
     }
