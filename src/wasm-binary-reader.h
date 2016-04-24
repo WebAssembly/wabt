@@ -89,6 +89,9 @@ typedef struct WasmBinaryReader {
   /* function bodies section */
   WasmResult (*begin_function_bodies_section)(void* user_data);
   WasmResult (*on_function_bodies_count)(uint32_t count, void* user_data);
+  WasmResult (*begin_function_body_pass)(uint32_t index,
+                                         uint32_t pass,
+                                         void* user_data);
   WasmResult (*begin_function_body)(uint32_t index, void* user_data);
   WasmResult (*on_local_decl_count)(uint32_t count, void* user_data);
   WasmResult (*on_local_decl)(uint32_t decl_index,
@@ -110,15 +113,15 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_call_import_expr)(uint32_t import_index, void* user_data);
   WasmResult (*on_call_indirect_expr)(uint32_t sig_index, void* user_data);
   WasmResult (*on_compare_expr)(WasmOpcode opcode, void* user_data);
+  WasmResult (*on_convert_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_else_expr)(void* user_data);
   WasmResult (*on_end_expr)(void* user_data);
-  WasmResult (*on_i32_const_expr)(uint32_t value, void* user_data);
-  WasmResult (*on_i64_const_expr)(uint64_t value, void* user_data);
   WasmResult (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
   WasmResult (*on_f64_const_expr)(uint64_t value_bits, void* user_data);
-  WasmResult (*on_convert_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_get_local_expr)(uint32_t local_index, void* user_data);
   WasmResult (*on_grow_memory_expr)(void* user_data);
+  WasmResult (*on_i32_const_expr)(uint32_t value, void* user_data);
+  WasmResult (*on_i64_const_expr)(uint64_t value, void* user_data);
   WasmResult (*on_if_expr)(void* user_data);
   WasmResult (*on_load_expr)(WasmOpcode opcode,
                              uint32_t alignment_log2,
@@ -137,6 +140,9 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_unary_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_unreachable_expr)(void* user_data);
   WasmResult (*end_function_body)(uint32_t index, void* user_data);
+  WasmResult (*end_function_body_pass)(uint32_t index,
+                                       uint32_t pass,
+                                       void* user_data);
   WasmResult (*end_function_bodies_section)(void* user_data);
 
   /* function table section */
@@ -183,6 +189,7 @@ WasmResult wasm_read_binary(struct WasmAllocator* allocator,
                             const void* data,
                             size_t size,
                             WasmBinaryReader* reader,
+                            uint32_t num_function_passes,
                             const WasmReadBinaryOptions* options);
 WASM_EXTERN_C_END
 

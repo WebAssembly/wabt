@@ -376,6 +376,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                             const void* data,
                             size_t size,
                             WasmBinaryReader* reader,
+                            uint32_t num_function_passes,
                             const WasmReadBinaryOptions* options) {
   WasmContext ctx;
   WASM_ZERO_MEMORY(ctx);
@@ -560,366 +561,373 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                        "function signature count != function body count");
     CALLBACK(&ctx, on_function_bodies_count, num_function_bodies);
     for (i = 0; i < num_function_bodies; ++i) {
-      CALLBACK(&ctx, begin_function_body, i);
-      uint32_t body_size;
-      in_u32_leb128(&ctx, &body_size, "function body size");
-      uint32_t body_start_offset = ctx.offset;
-      uint32_t end_offset = body_start_offset + body_size;
-
-      uint32_t num_local_decls;
-      in_u32_leb128(&ctx, &num_local_decls, "local declaration count");
-      CALLBACK(&ctx, on_local_decl_count, num_local_decls);
       uint32_t j;
-      for (j = 0; j < num_local_decls; ++j) {
-        uint32_t num_local_types;
-        in_u32_leb128(&ctx, &num_local_types, "local type count");
-        uint8_t local_type;
-        in_u8(&ctx, &local_type, "local type");
-        RAISE_ERROR_UNLESS(&ctx, is_non_void_type(local_type),
-                           "expected valid local type");
-        CALLBACK(&ctx, on_local_decl, j, num_local_types, local_type);
-      }
+      uint32_t func_offset = ctx.offset;
+      for (j = 0; j < num_function_passes; ++j) {
+        ctx.offset = func_offset;
+        CALLBACK(&ctx, begin_function_body_pass, i, j);
+        CALLBACK(&ctx, begin_function_body, i);
+        uint32_t body_size;
+        in_u32_leb128(&ctx, &body_size, "function body size");
+        uint32_t body_start_offset = ctx.offset;
+        uint32_t end_offset = body_start_offset + body_size;
 
-      while (ctx.offset < end_offset) {
-        uint8_t opcode;
-        in_u8(&ctx, &opcode, "opcode");
-        switch (opcode) {
-          case WASM_OPCODE_NOP:
-            CALLBACK0(&ctx, on_nop_expr);
-            break;
-
-          case WASM_OPCODE_BLOCK:
-            CALLBACK0(&ctx, on_block_expr);
-            break;
-
-          case WASM_OPCODE_LOOP:
-            CALLBACK0(&ctx, on_loop_expr);
-            break;
-
-          case WASM_OPCODE_IF:
-            CALLBACK0(&ctx, on_if_expr);
-            break;
-
-          case WASM_OPCODE_ELSE:
-            CALLBACK0(&ctx, on_else_expr);
-            break;
-
-          case WASM_OPCODE_SELECT:
-            CALLBACK0(&ctx, on_select_expr);
-            break;
-
-          case WASM_OPCODE_BR: {
-            uint32_t depth;
-            in_u32_leb128(&ctx, &depth, "br depth");
-            CALLBACK(&ctx, on_br_expr, depth);
-            break;
-          }
-
-          case WASM_OPCODE_BR_IF: {
-            uint32_t depth;
-            in_u32_leb128(&ctx, &depth, "br_if depth");
-            CALLBACK(&ctx, on_br_if_expr, depth);
-            break;
-          }
-
-          case WASM_OPCODE_BR_TABLE: {
-            uint32_t num_targets;
-            in_u32_leb128(&ctx, &num_targets, "br_table target count");
-            if (num_targets > ctx.target_depths.capacity) {
-              CHECK_ALLOC(&ctx,
-                          wasm_reserve_uint32s(allocator, &ctx.target_depths,
-                                               num_targets));
-              ctx.target_depths.size = num_targets;
-            }
-
-            uint32_t i;
-            for (i = 0; i < num_targets; ++i) {
-              uint32_t target_depth;
-              in_u32(&ctx, &target_depth, "br_table target depth");
-              ctx.target_depths.data[i] = target_depth;
-            }
-
-            uint32_t default_target_depth;
-            in_u32(&ctx, &default_target_depth,
-                   "br_table default target depth");
-
-            CALLBACK(&ctx, on_br_table_expr, num_targets,
-                     ctx.target_depths.data, default_target_depth);
-            break;
-          }
-
-          case WASM_OPCODE_RETURN:
-            CALLBACK0(&ctx, on_return_expr);
-            break;
-
-          case WASM_OPCODE_UNREACHABLE:
-            CALLBACK0(&ctx, on_unreachable_expr);
-            break;
-
-          case WASM_OPCODE_END:
-            CALLBACK0(&ctx, on_end_expr);
-            break;
-
-          case WASM_OPCODE_I32_CONST: {
-            uint32_t value = 0;
-            in_i32_leb128(&ctx, &value, "i32.const value");
-            CALLBACK(&ctx, on_i32_const_expr, value);
-            break;
-          }
-
-          case WASM_OPCODE_I64_CONST: {
-            uint64_t value = 0;
-            in_i64_leb128(&ctx, &value, "i64.const value");
-            CALLBACK(&ctx, on_i64_const_expr, value);
-            break;
-          }
-
-          case WASM_OPCODE_F32_CONST: {
-            uint32_t value_bits = 0;
-            in_f32(&ctx, &value_bits, "f32.const value");
-            CALLBACK(&ctx, on_f32_const_expr, value_bits);
-            break;
-          }
-
-          case WASM_OPCODE_F64_CONST: {
-            uint64_t value_bits = 0;
-            in_f64(&ctx, &value_bits, "f64.const value");
-            CALLBACK(&ctx, on_f64_const_expr, value_bits);
-            break;
-          }
-
-          case WASM_OPCODE_GET_LOCAL: {
-            uint32_t local_index;
-            in_u32_leb128(&ctx, &local_index, "get_local local index");
-            CALLBACK(&ctx, on_get_local_expr, local_index);
-            break;
-          }
-
-          case WASM_OPCODE_SET_LOCAL: {
-            uint32_t local_index;
-            in_u32_leb128(&ctx, &local_index, "set_local local index");
-            CALLBACK(&ctx, on_set_local_expr, local_index);
-            break;
-          }
-
-          case WASM_OPCODE_CALL_FUNCTION: {
-            uint32_t func_index;
-            in_u32_leb128(&ctx, &func_index, "call_function function index");
-            RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
-                               "invalid call_function function index");
-            CALLBACK(&ctx, on_call_expr, func_index);
-            break;
-          }
-
-          case WASM_OPCODE_CALL_INDIRECT: {
-            uint32_t sig_index;
-            in_u32_leb128(&ctx, &sig_index, "call_indirect signature index");
-            RAISE_ERROR_UNLESS(&ctx, sig_index < num_function_signatures,
-                               "invalid call_indirect signature index");
-            CALLBACK(&ctx, on_call_indirect_expr, sig_index);
-            break;
-          }
-
-          case WASM_OPCODE_CALL_IMPORT: {
-            uint32_t import_index;
-            in_u32_leb128(&ctx, &import_index, "call_import import index");
-            RAISE_ERROR_UNLESS(&ctx, import_index < num_imports,
-                               "invalid call_import import index");
-            CALLBACK(&ctx, on_call_import_expr, import_index);
-            break;
-          }
-
-          case WASM_OPCODE_I32_LOAD8_S:
-          case WASM_OPCODE_I32_LOAD8_U:
-          case WASM_OPCODE_I32_LOAD16_S:
-          case WASM_OPCODE_I32_LOAD16_U:
-          case WASM_OPCODE_I64_LOAD8_S:
-          case WASM_OPCODE_I64_LOAD8_U:
-          case WASM_OPCODE_I64_LOAD16_S:
-          case WASM_OPCODE_I64_LOAD16_U:
-          case WASM_OPCODE_I64_LOAD32_S:
-          case WASM_OPCODE_I64_LOAD32_U:
-          case WASM_OPCODE_I32_LOAD:
-          case WASM_OPCODE_I64_LOAD:
-          case WASM_OPCODE_F32_LOAD:
-          case WASM_OPCODE_F64_LOAD: {
-            uint32_t alignment_log2;
-            in_u32_leb128(&ctx, &alignment_log2, "load alignment");
-            uint32_t offset;
-            in_u32_leb128(&ctx, &offset, "load offset");
-
-            CALLBACK(&ctx, on_load_expr, opcode, alignment_log2, offset);
-            break;
-          }
-
-          case WASM_OPCODE_I32_STORE8:
-          case WASM_OPCODE_I32_STORE16:
-          case WASM_OPCODE_I64_STORE8:
-          case WASM_OPCODE_I64_STORE16:
-          case WASM_OPCODE_I64_STORE32:
-          case WASM_OPCODE_I32_STORE:
-          case WASM_OPCODE_I64_STORE:
-          case WASM_OPCODE_F32_STORE:
-          case WASM_OPCODE_F64_STORE: {
-            uint32_t alignment_log2;
-            in_u32_leb128(&ctx, &alignment_log2, "store alignment");
-            uint32_t offset;
-            in_u32_leb128(&ctx, &offset, "store offset");
-
-            CALLBACK(&ctx, on_store_expr, opcode, alignment_log2, offset);
-            break;
-          }
-
-          case WASM_OPCODE_MEMORY_SIZE:
-            CALLBACK0(&ctx, on_memory_size_expr);
-            break;
-
-          case WASM_OPCODE_GROW_MEMORY:
-            CALLBACK0(&ctx, on_grow_memory_expr);
-            break;
-
-          case WASM_OPCODE_I32_ADD:
-          case WASM_OPCODE_I32_SUB:
-          case WASM_OPCODE_I32_MUL:
-          case WASM_OPCODE_I32_DIV_S:
-          case WASM_OPCODE_I32_DIV_U:
-          case WASM_OPCODE_I32_REM_S:
-          case WASM_OPCODE_I32_REM_U:
-          case WASM_OPCODE_I32_AND:
-          case WASM_OPCODE_I32_OR:
-          case WASM_OPCODE_I32_XOR:
-          case WASM_OPCODE_I32_SHL:
-          case WASM_OPCODE_I32_SHR_U:
-          case WASM_OPCODE_I32_SHR_S:
-          case WASM_OPCODE_I32_ROTR:
-          case WASM_OPCODE_I32_ROTL:
-          case WASM_OPCODE_I64_ADD:
-          case WASM_OPCODE_I64_SUB:
-          case WASM_OPCODE_I64_MUL:
-          case WASM_OPCODE_I64_DIV_S:
-          case WASM_OPCODE_I64_DIV_U:
-          case WASM_OPCODE_I64_REM_S:
-          case WASM_OPCODE_I64_REM_U:
-          case WASM_OPCODE_I64_AND:
-          case WASM_OPCODE_I64_OR:
-          case WASM_OPCODE_I64_XOR:
-          case WASM_OPCODE_I64_SHL:
-          case WASM_OPCODE_I64_SHR_U:
-          case WASM_OPCODE_I64_SHR_S:
-          case WASM_OPCODE_I64_ROTR:
-          case WASM_OPCODE_I64_ROTL:
-          case WASM_OPCODE_F32_ADD:
-          case WASM_OPCODE_F32_SUB:
-          case WASM_OPCODE_F32_MUL:
-          case WASM_OPCODE_F32_DIV:
-          case WASM_OPCODE_F32_MIN:
-          case WASM_OPCODE_F32_MAX:
-          case WASM_OPCODE_F32_COPYSIGN:
-          case WASM_OPCODE_F64_ADD:
-          case WASM_OPCODE_F64_SUB:
-          case WASM_OPCODE_F64_MUL:
-          case WASM_OPCODE_F64_DIV:
-          case WASM_OPCODE_F64_MIN:
-          case WASM_OPCODE_F64_MAX:
-          case WASM_OPCODE_F64_COPYSIGN:
-            CALLBACK(&ctx, on_binary_expr, opcode);
-            break;
-
-          case WASM_OPCODE_I32_EQ:
-          case WASM_OPCODE_I32_NE:
-          case WASM_OPCODE_I32_LT_S:
-          case WASM_OPCODE_I32_LE_S:
-          case WASM_OPCODE_I32_LT_U:
-          case WASM_OPCODE_I32_LE_U:
-          case WASM_OPCODE_I32_GT_S:
-          case WASM_OPCODE_I32_GE_S:
-          case WASM_OPCODE_I32_GT_U:
-          case WASM_OPCODE_I32_GE_U:
-          case WASM_OPCODE_I64_EQ:
-          case WASM_OPCODE_I64_NE:
-          case WASM_OPCODE_I64_LT_S:
-          case WASM_OPCODE_I64_LE_S:
-          case WASM_OPCODE_I64_LT_U:
-          case WASM_OPCODE_I64_LE_U:
-          case WASM_OPCODE_I64_GT_S:
-          case WASM_OPCODE_I64_GE_S:
-          case WASM_OPCODE_I64_GT_U:
-          case WASM_OPCODE_I64_GE_U:
-          case WASM_OPCODE_F32_EQ:
-          case WASM_OPCODE_F32_NE:
-          case WASM_OPCODE_F32_LT:
-          case WASM_OPCODE_F32_LE:
-          case WASM_OPCODE_F32_GT:
-          case WASM_OPCODE_F32_GE:
-          case WASM_OPCODE_F64_EQ:
-          case WASM_OPCODE_F64_NE:
-          case WASM_OPCODE_F64_LT:
-          case WASM_OPCODE_F64_LE:
-          case WASM_OPCODE_F64_GT:
-          case WASM_OPCODE_F64_GE:
-            CALLBACK(&ctx, on_compare_expr, opcode);
-            break;
-
-          case WASM_OPCODE_I32_CLZ:
-          case WASM_OPCODE_I32_CTZ:
-          case WASM_OPCODE_I32_POPCNT:
-          case WASM_OPCODE_I64_CLZ:
-          case WASM_OPCODE_I64_CTZ:
-          case WASM_OPCODE_I64_POPCNT:
-          case WASM_OPCODE_F32_ABS:
-          case WASM_OPCODE_F32_NEG:
-          case WASM_OPCODE_F32_CEIL:
-          case WASM_OPCODE_F32_FLOOR:
-          case WASM_OPCODE_F32_TRUNC:
-          case WASM_OPCODE_F32_NEAREST:
-          case WASM_OPCODE_F32_SQRT:
-          case WASM_OPCODE_F64_ABS:
-          case WASM_OPCODE_F64_NEG:
-          case WASM_OPCODE_F64_CEIL:
-          case WASM_OPCODE_F64_FLOOR:
-          case WASM_OPCODE_F64_TRUNC:
-          case WASM_OPCODE_F64_NEAREST:
-          case WASM_OPCODE_F64_SQRT:
-            CALLBACK(&ctx, on_unary_expr, opcode);
-            break;
-
-          case WASM_OPCODE_I32_TRUNC_S_F32:
-          case WASM_OPCODE_I32_TRUNC_S_F64:
-          case WASM_OPCODE_I32_TRUNC_U_F32:
-          case WASM_OPCODE_I32_TRUNC_U_F64:
-          case WASM_OPCODE_I32_WRAP_I64:
-          case WASM_OPCODE_I64_TRUNC_S_F32:
-          case WASM_OPCODE_I64_TRUNC_S_F64:
-          case WASM_OPCODE_I64_TRUNC_U_F32:
-          case WASM_OPCODE_I64_TRUNC_U_F64:
-          case WASM_OPCODE_I64_EXTEND_S_I32:
-          case WASM_OPCODE_I64_EXTEND_U_I32:
-          case WASM_OPCODE_F32_CONVERT_S_I32:
-          case WASM_OPCODE_F32_CONVERT_U_I32:
-          case WASM_OPCODE_F32_CONVERT_S_I64:
-          case WASM_OPCODE_F32_CONVERT_U_I64:
-          case WASM_OPCODE_F32_DEMOTE_F64:
-          case WASM_OPCODE_F32_REINTERPRET_I32:
-          case WASM_OPCODE_F64_CONVERT_S_I32:
-          case WASM_OPCODE_F64_CONVERT_U_I32:
-          case WASM_OPCODE_F64_CONVERT_S_I64:
-          case WASM_OPCODE_F64_CONVERT_U_I64:
-          case WASM_OPCODE_F64_PROMOTE_F32:
-          case WASM_OPCODE_F64_REINTERPRET_I64:
-          case WASM_OPCODE_I32_REINTERPRET_F32:
-          case WASM_OPCODE_I64_REINTERPRET_F64:
-          case WASM_OPCODE_I32_EQZ:
-          case WASM_OPCODE_I64_EQZ:
-            CALLBACK(&ctx, on_convert_expr, opcode);
-            break;
-
-          default:
-            RAISE_ERROR(&ctx, "unexpected opcode: %d (0x%x)", opcode, opcode);
+        uint32_t num_local_decls;
+        in_u32_leb128(&ctx, &num_local_decls, "local declaration count");
+        CALLBACK(&ctx, on_local_decl_count, num_local_decls);
+        uint32_t k;
+        for (k = 0; k < num_local_decls; ++k) {
+          uint32_t num_local_types;
+          in_u32_leb128(&ctx, &num_local_types, "local type count");
+          uint8_t local_type;
+          in_u8(&ctx, &local_type, "local type");
+          RAISE_ERROR_UNLESS(&ctx, is_non_void_type(local_type),
+                             "expected valid local type");
+          CALLBACK(&ctx, on_local_decl, k, num_local_types, local_type);
         }
+
+        while (ctx.offset < end_offset) {
+          uint8_t opcode;
+          in_u8(&ctx, &opcode, "opcode");
+          switch (opcode) {
+            case WASM_OPCODE_NOP:
+              CALLBACK0(&ctx, on_nop_expr);
+              break;
+
+            case WASM_OPCODE_BLOCK:
+              CALLBACK0(&ctx, on_block_expr);
+              break;
+
+            case WASM_OPCODE_LOOP:
+              CALLBACK0(&ctx, on_loop_expr);
+              break;
+
+            case WASM_OPCODE_IF:
+              CALLBACK0(&ctx, on_if_expr);
+              break;
+
+            case WASM_OPCODE_ELSE:
+              CALLBACK0(&ctx, on_else_expr);
+              break;
+
+            case WASM_OPCODE_SELECT:
+              CALLBACK0(&ctx, on_select_expr);
+              break;
+
+            case WASM_OPCODE_BR: {
+              uint32_t depth;
+              in_u32_leb128(&ctx, &depth, "br depth");
+              CALLBACK(&ctx, on_br_expr, depth);
+              break;
+            }
+
+            case WASM_OPCODE_BR_IF: {
+              uint32_t depth;
+              in_u32_leb128(&ctx, &depth, "br_if depth");
+              CALLBACK(&ctx, on_br_if_expr, depth);
+              break;
+            }
+
+            case WASM_OPCODE_BR_TABLE: {
+              uint32_t num_targets;
+              in_u32_leb128(&ctx, &num_targets, "br_table target count");
+              if (num_targets > ctx.target_depths.capacity) {
+                CHECK_ALLOC(&ctx,
+                            wasm_reserve_uint32s(allocator, &ctx.target_depths,
+                                                 num_targets));
+                ctx.target_depths.size = num_targets;
+              }
+
+              uint32_t i;
+              for (i = 0; i < num_targets; ++i) {
+                uint32_t target_depth;
+                in_u32(&ctx, &target_depth, "br_table target depth");
+                ctx.target_depths.data[i] = target_depth;
+              }
+
+              uint32_t default_target_depth;
+              in_u32(&ctx, &default_target_depth,
+                     "br_table default target depth");
+
+              CALLBACK(&ctx, on_br_table_expr, num_targets,
+                       ctx.target_depths.data, default_target_depth);
+              break;
+            }
+
+            case WASM_OPCODE_RETURN:
+              CALLBACK0(&ctx, on_return_expr);
+              break;
+
+            case WASM_OPCODE_UNREACHABLE:
+              CALLBACK0(&ctx, on_unreachable_expr);
+              break;
+
+            case WASM_OPCODE_END:
+              CALLBACK0(&ctx, on_end_expr);
+              break;
+
+            case WASM_OPCODE_I32_CONST: {
+              uint32_t value = 0;
+              in_i32_leb128(&ctx, &value, "i32.const value");
+              CALLBACK(&ctx, on_i32_const_expr, value);
+              break;
+            }
+
+            case WASM_OPCODE_I64_CONST: {
+              uint64_t value = 0;
+              in_i64_leb128(&ctx, &value, "i64.const value");
+              CALLBACK(&ctx, on_i64_const_expr, value);
+              break;
+            }
+
+            case WASM_OPCODE_F32_CONST: {
+              uint32_t value_bits = 0;
+              in_f32(&ctx, &value_bits, "f32.const value");
+              CALLBACK(&ctx, on_f32_const_expr, value_bits);
+              break;
+            }
+
+            case WASM_OPCODE_F64_CONST: {
+              uint64_t value_bits = 0;
+              in_f64(&ctx, &value_bits, "f64.const value");
+              CALLBACK(&ctx, on_f64_const_expr, value_bits);
+              break;
+            }
+
+            case WASM_OPCODE_GET_LOCAL: {
+              uint32_t local_index;
+              in_u32_leb128(&ctx, &local_index, "get_local local index");
+              CALLBACK(&ctx, on_get_local_expr, local_index);
+              break;
+            }
+
+            case WASM_OPCODE_SET_LOCAL: {
+              uint32_t local_index;
+              in_u32_leb128(&ctx, &local_index, "set_local local index");
+              CALLBACK(&ctx, on_set_local_expr, local_index);
+              break;
+            }
+
+            case WASM_OPCODE_CALL_FUNCTION: {
+              uint32_t func_index;
+              in_u32_leb128(&ctx, &func_index, "call_function function index");
+              RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
+                                 "invalid call_function function index");
+              CALLBACK(&ctx, on_call_expr, func_index);
+              break;
+            }
+
+            case WASM_OPCODE_CALL_INDIRECT: {
+              uint32_t sig_index;
+              in_u32_leb128(&ctx, &sig_index, "call_indirect signature index");
+              RAISE_ERROR_UNLESS(&ctx, sig_index < num_function_signatures,
+                                 "invalid call_indirect signature index");
+              CALLBACK(&ctx, on_call_indirect_expr, sig_index);
+              break;
+            }
+
+            case WASM_OPCODE_CALL_IMPORT: {
+              uint32_t import_index;
+              in_u32_leb128(&ctx, &import_index, "call_import import index");
+              RAISE_ERROR_UNLESS(&ctx, import_index < num_imports,
+                                 "invalid call_import import index");
+              CALLBACK(&ctx, on_call_import_expr, import_index);
+              break;
+            }
+
+            case WASM_OPCODE_I32_LOAD8_S:
+            case WASM_OPCODE_I32_LOAD8_U:
+            case WASM_OPCODE_I32_LOAD16_S:
+            case WASM_OPCODE_I32_LOAD16_U:
+            case WASM_OPCODE_I64_LOAD8_S:
+            case WASM_OPCODE_I64_LOAD8_U:
+            case WASM_OPCODE_I64_LOAD16_S:
+            case WASM_OPCODE_I64_LOAD16_U:
+            case WASM_OPCODE_I64_LOAD32_S:
+            case WASM_OPCODE_I64_LOAD32_U:
+            case WASM_OPCODE_I32_LOAD:
+            case WASM_OPCODE_I64_LOAD:
+            case WASM_OPCODE_F32_LOAD:
+            case WASM_OPCODE_F64_LOAD: {
+              uint32_t alignment_log2;
+              in_u32_leb128(&ctx, &alignment_log2, "load alignment");
+              uint32_t offset;
+              in_u32_leb128(&ctx, &offset, "load offset");
+
+              CALLBACK(&ctx, on_load_expr, opcode, alignment_log2, offset);
+              break;
+            }
+
+            case WASM_OPCODE_I32_STORE8:
+            case WASM_OPCODE_I32_STORE16:
+            case WASM_OPCODE_I64_STORE8:
+            case WASM_OPCODE_I64_STORE16:
+            case WASM_OPCODE_I64_STORE32:
+            case WASM_OPCODE_I32_STORE:
+            case WASM_OPCODE_I64_STORE:
+            case WASM_OPCODE_F32_STORE:
+            case WASM_OPCODE_F64_STORE: {
+              uint32_t alignment_log2;
+              in_u32_leb128(&ctx, &alignment_log2, "store alignment");
+              uint32_t offset;
+              in_u32_leb128(&ctx, &offset, "store offset");
+
+              CALLBACK(&ctx, on_store_expr, opcode, alignment_log2, offset);
+              break;
+            }
+
+            case WASM_OPCODE_MEMORY_SIZE:
+              CALLBACK0(&ctx, on_memory_size_expr);
+              break;
+
+            case WASM_OPCODE_GROW_MEMORY:
+              CALLBACK0(&ctx, on_grow_memory_expr);
+              break;
+
+            case WASM_OPCODE_I32_ADD:
+            case WASM_OPCODE_I32_SUB:
+            case WASM_OPCODE_I32_MUL:
+            case WASM_OPCODE_I32_DIV_S:
+            case WASM_OPCODE_I32_DIV_U:
+            case WASM_OPCODE_I32_REM_S:
+            case WASM_OPCODE_I32_REM_U:
+            case WASM_OPCODE_I32_AND:
+            case WASM_OPCODE_I32_OR:
+            case WASM_OPCODE_I32_XOR:
+            case WASM_OPCODE_I32_SHL:
+            case WASM_OPCODE_I32_SHR_U:
+            case WASM_OPCODE_I32_SHR_S:
+            case WASM_OPCODE_I32_ROTR:
+            case WASM_OPCODE_I32_ROTL:
+            case WASM_OPCODE_I64_ADD:
+            case WASM_OPCODE_I64_SUB:
+            case WASM_OPCODE_I64_MUL:
+            case WASM_OPCODE_I64_DIV_S:
+            case WASM_OPCODE_I64_DIV_U:
+            case WASM_OPCODE_I64_REM_S:
+            case WASM_OPCODE_I64_REM_U:
+            case WASM_OPCODE_I64_AND:
+            case WASM_OPCODE_I64_OR:
+            case WASM_OPCODE_I64_XOR:
+            case WASM_OPCODE_I64_SHL:
+            case WASM_OPCODE_I64_SHR_U:
+            case WASM_OPCODE_I64_SHR_S:
+            case WASM_OPCODE_I64_ROTR:
+            case WASM_OPCODE_I64_ROTL:
+            case WASM_OPCODE_F32_ADD:
+            case WASM_OPCODE_F32_SUB:
+            case WASM_OPCODE_F32_MUL:
+            case WASM_OPCODE_F32_DIV:
+            case WASM_OPCODE_F32_MIN:
+            case WASM_OPCODE_F32_MAX:
+            case WASM_OPCODE_F32_COPYSIGN:
+            case WASM_OPCODE_F64_ADD:
+            case WASM_OPCODE_F64_SUB:
+            case WASM_OPCODE_F64_MUL:
+            case WASM_OPCODE_F64_DIV:
+            case WASM_OPCODE_F64_MIN:
+            case WASM_OPCODE_F64_MAX:
+            case WASM_OPCODE_F64_COPYSIGN:
+              CALLBACK(&ctx, on_binary_expr, opcode);
+              break;
+
+            case WASM_OPCODE_I32_EQ:
+            case WASM_OPCODE_I32_NE:
+            case WASM_OPCODE_I32_LT_S:
+            case WASM_OPCODE_I32_LE_S:
+            case WASM_OPCODE_I32_LT_U:
+            case WASM_OPCODE_I32_LE_U:
+            case WASM_OPCODE_I32_GT_S:
+            case WASM_OPCODE_I32_GE_S:
+            case WASM_OPCODE_I32_GT_U:
+            case WASM_OPCODE_I32_GE_U:
+            case WASM_OPCODE_I64_EQ:
+            case WASM_OPCODE_I64_NE:
+            case WASM_OPCODE_I64_LT_S:
+            case WASM_OPCODE_I64_LE_S:
+            case WASM_OPCODE_I64_LT_U:
+            case WASM_OPCODE_I64_LE_U:
+            case WASM_OPCODE_I64_GT_S:
+            case WASM_OPCODE_I64_GE_S:
+            case WASM_OPCODE_I64_GT_U:
+            case WASM_OPCODE_I64_GE_U:
+            case WASM_OPCODE_F32_EQ:
+            case WASM_OPCODE_F32_NE:
+            case WASM_OPCODE_F32_LT:
+            case WASM_OPCODE_F32_LE:
+            case WASM_OPCODE_F32_GT:
+            case WASM_OPCODE_F32_GE:
+            case WASM_OPCODE_F64_EQ:
+            case WASM_OPCODE_F64_NE:
+            case WASM_OPCODE_F64_LT:
+            case WASM_OPCODE_F64_LE:
+            case WASM_OPCODE_F64_GT:
+            case WASM_OPCODE_F64_GE:
+              CALLBACK(&ctx, on_compare_expr, opcode);
+              break;
+
+            case WASM_OPCODE_I32_CLZ:
+            case WASM_OPCODE_I32_CTZ:
+            case WASM_OPCODE_I32_POPCNT:
+            case WASM_OPCODE_I64_CLZ:
+            case WASM_OPCODE_I64_CTZ:
+            case WASM_OPCODE_I64_POPCNT:
+            case WASM_OPCODE_F32_ABS:
+            case WASM_OPCODE_F32_NEG:
+            case WASM_OPCODE_F32_CEIL:
+            case WASM_OPCODE_F32_FLOOR:
+            case WASM_OPCODE_F32_TRUNC:
+            case WASM_OPCODE_F32_NEAREST:
+            case WASM_OPCODE_F32_SQRT:
+            case WASM_OPCODE_F64_ABS:
+            case WASM_OPCODE_F64_NEG:
+            case WASM_OPCODE_F64_CEIL:
+            case WASM_OPCODE_F64_FLOOR:
+            case WASM_OPCODE_F64_TRUNC:
+            case WASM_OPCODE_F64_NEAREST:
+            case WASM_OPCODE_F64_SQRT:
+              CALLBACK(&ctx, on_unary_expr, opcode);
+              break;
+
+            case WASM_OPCODE_I32_TRUNC_S_F32:
+            case WASM_OPCODE_I32_TRUNC_S_F64:
+            case WASM_OPCODE_I32_TRUNC_U_F32:
+            case WASM_OPCODE_I32_TRUNC_U_F64:
+            case WASM_OPCODE_I32_WRAP_I64:
+            case WASM_OPCODE_I64_TRUNC_S_F32:
+            case WASM_OPCODE_I64_TRUNC_S_F64:
+            case WASM_OPCODE_I64_TRUNC_U_F32:
+            case WASM_OPCODE_I64_TRUNC_U_F64:
+            case WASM_OPCODE_I64_EXTEND_S_I32:
+            case WASM_OPCODE_I64_EXTEND_U_I32:
+            case WASM_OPCODE_F32_CONVERT_S_I32:
+            case WASM_OPCODE_F32_CONVERT_U_I32:
+            case WASM_OPCODE_F32_CONVERT_S_I64:
+            case WASM_OPCODE_F32_CONVERT_U_I64:
+            case WASM_OPCODE_F32_DEMOTE_F64:
+            case WASM_OPCODE_F32_REINTERPRET_I32:
+            case WASM_OPCODE_F64_CONVERT_S_I32:
+            case WASM_OPCODE_F64_CONVERT_U_I32:
+            case WASM_OPCODE_F64_CONVERT_S_I64:
+            case WASM_OPCODE_F64_CONVERT_U_I64:
+            case WASM_OPCODE_F64_PROMOTE_F32:
+            case WASM_OPCODE_F64_REINTERPRET_I64:
+            case WASM_OPCODE_I32_REINTERPRET_F32:
+            case WASM_OPCODE_I64_REINTERPRET_F64:
+            case WASM_OPCODE_I32_EQZ:
+            case WASM_OPCODE_I64_EQZ:
+              CALLBACK(&ctx, on_convert_expr, opcode);
+              break;
+
+            default:
+              RAISE_ERROR(&ctx, "unexpected opcode: %d (0x%x)", opcode, opcode);
+          }
+        }
+        RAISE_ERROR_UNLESS(&ctx, ctx.offset == end_offset,
+                           "function body longer than given size");
+        CALLBACK(&ctx, end_function_body, i);
+        CALLBACK(&ctx, end_function_body_pass, i, j);
       }
-      RAISE_ERROR_UNLESS(&ctx, ctx.offset == end_offset,
-                         "function body longer than given size");
-      CALLBACK(&ctx, end_function_body, i);
     }
     CALLBACK0(&ctx, end_function_bodies_section);
   }

@@ -549,9 +549,6 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         TRAP(UNREACHABLE);
         break;
 
-      case WASM_OPCODE_I8_CONST:
-        break;
-
       case WASM_OPCODE_I32_CONST:
         PUSH_I32(read_u32(&pc));
         break;
