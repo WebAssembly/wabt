@@ -328,14 +328,12 @@ static WasmBool skip_until_section(WasmContext* ctx, int section_index) {
     return WASM_FALSE;
   }
 
-  in_u32_leb128(ctx, &section_size, "section size");
-
-  uint32_t after_size_offset = ctx->offset;
-  if (after_size_offset + section_size > ctx->size)
-    RAISE_ERROR(ctx, "invalid section size: extends past end");
-
   WasmStringSlice section_name;
   in_str(ctx, &section_name, "section name");
+  in_u32_leb128(ctx, &section_size, "section size");
+
+  if (ctx->offset + section_size > ctx->size)
+    RAISE_ERROR(ctx, "invalid section size: extends past end");
 
   int index = -1;
 #define V(name)                                                  \
@@ -350,7 +348,7 @@ static WasmBool skip_until_section(WasmContext* ctx, int section_index) {
 
   if (index == -1) {
     /* ok, unknown section, skip it. */
-    ctx->offset = after_size_offset + section_size;
+    ctx->offset += section_size;
     return 0;
   } else if (index < section_index) {
     RAISE_ERROR(ctx, "section " PRIstringslice " out of order",

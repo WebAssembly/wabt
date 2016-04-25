@@ -250,11 +250,11 @@ static void begin_section(WasmContext* ctx,
   char desc[100];
   wasm_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
-  ctx->last_section_offset =
-      write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
   ctx->last_section_leb_size_guess = leb_size_guess;
   wasm_snprintf(desc, sizeof(desc), "section id: \"%s\"", name);
   write_str(&ctx->stream, name, strlen(name), WASM_DONT_PRINT_CHARS, desc);
+  ctx->last_section_offset =
+      write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
 }
 
 static void end_section(WasmContext* ctx) {
