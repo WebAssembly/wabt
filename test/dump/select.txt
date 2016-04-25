@@ -7,69 +7,67 @@
     (select (f64.const 2) (f64.const 3) (i32.const 1))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "signatures"
-0000008: 00                                         ; section size (guess)
-0000009: 0a                                         ; string length
-000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-0000014: 01                                         ; num signatures
-; signature 0
-0000015: 00                                         ; num params
-0000016: 00                                         ; result_type
-0000008: 0e                                         ; FIXUP section size
-; section "function_signatures"
-0000017: 00                                         ; section size (guess)
-0000018: 13                                         ; string length
-0000019: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
-0000029: 7265 73                                    ; section id: "function_signatures"
-000002c: 01                                         ; num functions
-000002d: 00                                         ; function 0 signature index
-0000017: 16                                         ; FIXUP section size
-; section "function_bodies"
-000002e: 00                                         ; section size (guess)
-000002f: 0f                                         ; string length
-0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-000003f: 01                                         ; num functions
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 01                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 00                                         ; num params
+0000011: 00                                         ; num results
+000000d: 04                                         ; FIXUP section size
+; section "function"
+0000012: 08                                         ; string length
+0000013: 6675 6e63 7469 6f6e                        ; section id: "function"
+000001b: 00                                         ; section size (guess)
+000001c: 01                                         ; num functions
+000001d: 00                                         ; function 0 signature index
+000001b: 02                                         ; FIXUP section size
+; section "code"
+000001e: 04                                         ; string length
+000001f: 636f 6465                                  ; section id: "code"
+0000023: 00                                         ; section size (guess)
+0000024: 01                                         ; num functions
 ; function body 0
-0000040: 00                                         ; func body size (guess)
-0000041: 00                                         ; local decl count
-0000042: 05                                         ; OPCODE_SELECT
-0000043: 0a                                         ; OPCODE_I32_CONST
-0000044: 02                                         ; i32 literal
-0000045: 0a                                         ; OPCODE_I32_CONST
-0000046: 03                                         ; i32 literal
-0000047: 0a                                         ; OPCODE_I32_CONST
-0000048: 01                                         ; i32 literal
-0000049: 05                                         ; OPCODE_SELECT
-000004a: 0b                                         ; OPCODE_I64_CONST
-000004b: 02                                         ; i64 literal
-000004c: 0b                                         ; OPCODE_I64_CONST
-000004d: 03                                         ; i64 literal
-000004e: 0a                                         ; OPCODE_I32_CONST
-000004f: 01                                         ; i32 literal
-0000050: 05                                         ; OPCODE_SELECT
-0000051: 0d                                         ; OPCODE_F32_CONST
-0000052: 0000 0040                                  ; f32 literal
-0000056: 0d                                         ; OPCODE_F32_CONST
-0000057: 0000 4040                                  ; f32 literal
-000005b: 0a                                         ; OPCODE_I32_CONST
-000005c: 01                                         ; i32 literal
-000005d: 05                                         ; OPCODE_SELECT
-000005e: 0c                                         ; OPCODE_F64_CONST
-000005f: 0000 0000 0000 0040                        ; f64 literal
-0000067: 0c                                         ; OPCODE_F64_CONST
-0000068: 0000 0000 0000 0840                        ; f64 literal
-0000070: 0a                                         ; OPCODE_I32_CONST
-0000071: 01                                         ; i32 literal
-0000040: 31                                         ; FIXUP func body size
-000002e: 43                                         ; FIXUP section size
+0000025: 00                                         ; func body size (guess)
+0000026: 00                                         ; local decl count
+0000027: 10                                         ; OPCODE_I32_CONST
+0000028: 02                                         ; i32 literal
+0000029: 10                                         ; OPCODE_I32_CONST
+000002a: 03                                         ; i32 literal
+000002b: 10                                         ; OPCODE_I32_CONST
+000002c: 01                                         ; i32 literal
+000002d: 05                                         ; OPCODE_SELECT
+000002e: 11                                         ; OPCODE_I64_CONST
+000002f: 02                                         ; i64 literal
+0000030: 11                                         ; OPCODE_I64_CONST
+0000031: 03                                         ; i64 literal
+0000032: 10                                         ; OPCODE_I32_CONST
+0000033: 01                                         ; i32 literal
+0000034: 05                                         ; OPCODE_SELECT
+0000035: 13                                         ; OPCODE_F32_CONST
+0000036: 0000 0040                                  ; f32 literal
+000003a: 13                                         ; OPCODE_F32_CONST
+000003b: 0000 4040                                  ; f32 literal
+000003f: 10                                         ; OPCODE_I32_CONST
+0000040: 01                                         ; i32 literal
+0000041: 05                                         ; OPCODE_SELECT
+0000042: 12                                         ; OPCODE_F64_CONST
+0000043: 0000 0000 0000 0040                        ; f64 literal
+000004b: 12                                         ; OPCODE_F64_CONST
+000004c: 0000 0000 0000 0840                        ; f64 literal
+0000054: 10                                         ; OPCODE_I32_CONST
+0000055: 01                                         ; i32 literal
+0000056: 05                                         ; OPCODE_SELECT
+0000025: 31                                         ; FIXUP func body size
+0000023: 33                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0e0a 7369 676e 6174  
-0000010: 7572 6573 0100 0016 1366 756e 6374 696f  
-0000020: 6e5f 7369 676e 6174 7572 6573 0100 430f  
-0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 7301  
-0000040: 3100 050a 020a 030a 0105 0b02 0b03 0a01  
-0000050: 050d 0000 0040 0d00 0040 400a 0105 0c00  
-0000060: 0000 0000 0000 400c 0000 0000 0000 0840  
-0000070: 0a01                                     
+0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
+0000020: 6f64 6533 0131 0010 0210 0310 0105 1102  
+0000030: 1103 1001 0513 0000 0040 1300 0040 4010  
+0000040: 0105 1200 0000 0000 0000 4012 0000 0000  
+0000050: 0000 0840 1001 05                        
 ;;; STDOUT ;;)

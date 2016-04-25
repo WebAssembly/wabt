@@ -13,47 +13,62 @@
   (type (func (param i32) (result f64))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "signatures"
-0000008: 00                                         ; section size (guess)
-0000009: 0a                                         ; string length
-000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-0000014: 09                                         ; num signatures
-; signature 0
-0000015: 01                                         ; num params
-0000016: 00                                         ; result_type
-0000017: 01                                         ; param type
-; signature 1
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 09                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 01                                         ; num params
+0000011: 01                                         ; param type
+0000012: 00                                         ; num results
+; type 1
+0000013: 40                                         ; function form
+0000014: 01                                         ; num params
+0000015: 02                                         ; param type
+0000016: 00                                         ; num results
+; type 2
+0000017: 40                                         ; function form
 0000018: 01                                         ; num params
-0000019: 00                                         ; result_type
-000001a: 02                                         ; param type
-; signature 2
-000001b: 01                                         ; num params
-000001c: 00                                         ; result_type
-000001d: 03                                         ; param type
-; signature 3
-000001e: 01                                         ; num params
-000001f: 00                                         ; result_type
-0000020: 04                                         ; param type
-; signature 4
-0000021: 00                                         ; num params
+0000019: 03                                         ; param type
+000001a: 00                                         ; num results
+; type 3
+000001b: 40                                         ; function form
+000001c: 01                                         ; num params
+000001d: 04                                         ; param type
+000001e: 00                                         ; num results
+; type 4
+000001f: 40                                         ; function form
+0000020: 00                                         ; num params
+0000021: 01                                         ; num results
 0000022: 01                                         ; result_type
-; signature 5
-0000023: 00                                         ; num params
-0000024: 02                                         ; result_type
-; signature 6
-0000025: 00                                         ; num params
-0000026: 03                                         ; result_type
-; signature 7
-0000027: 00                                         ; num params
-0000028: 04                                         ; result_type
-; signature 8
-0000029: 01                                         ; num params
-000002a: 04                                         ; result_type
-000002b: 01                                         ; param type
-0000008: 23                                         ; FIXUP section size
+; type 5
+0000023: 40                                         ; function form
+0000024: 00                                         ; num params
+0000025: 01                                         ; num results
+0000026: 02                                         ; result_type
+; type 6
+0000027: 40                                         ; function form
+0000028: 00                                         ; num params
+0000029: 01                                         ; num results
+000002a: 03                                         ; result_type
+; type 7
+000002b: 40                                         ; function form
+000002c: 00                                         ; num params
+000002d: 01                                         ; num results
+000002e: 04                                         ; result_type
+; type 8
+000002f: 40                                         ; function form
+0000030: 01                                         ; num params
+0000031: 01                                         ; param type
+0000032: 01                                         ; num results
+0000033: 04                                         ; result_type
+000000d: 26                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 230a 7369 676e 6174  
-0000010: 7572 6573 0901 0001 0100 0201 0003 0100  
-0000020: 0400 0100 0200 0300 0401 0401            
+0000000: 0061 736d 0b00 0000 0474 7970 6526 0940  
+0000010: 0101 0040 0102 0040 0103 0040 0104 0040  
+0000020: 0001 0140 0001 0240 0001 0340 0001 0440  
+0000030: 0101 0104                                
 ;;; STDOUT ;;)

@@ -5,54 +5,53 @@
   (import "foo" "bar" (param i32) (result i64)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "signatures"
-0000008: 00                                         ; section size (guess)
-0000009: 0a                                         ; string length
-000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-0000014: 01                                         ; num signatures
-; signature 0
-0000015: 01                                         ; num params
-0000016: 02                                         ; result_type
-0000017: 01                                         ; param type
-0000008: 0f                                         ; FIXUP section size
-; section "import_table"
-0000018: 00                                         ; section size (guess)
-0000019: 0c                                         ; string length
-000001a: 696d 706f 7274 5f74 6162 6c65              ; section id: "import_table"
-0000026: 01                                         ; num imports
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 01                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 01                                         ; num params
+0000011: 01                                         ; param type
+0000012: 01                                         ; num results
+0000013: 02                                         ; result_type
+000000d: 06                                         ; FIXUP section size
+; section "import"
+0000014: 06                                         ; string length
+0000015: 696d 706f 7274                             ; section id: "import"
+000001b: 00                                         ; section size (guess)
+000001c: 01                                         ; num imports
 ; import header 0
-0000027: 00                                         ; import signature index
-0000028: 03                                         ; string length
-0000029: 666f 6f                                  foo  ; import module name
-000002c: 03                                         ; string length
-000002d: 6261 72                                  bar  ; import function name
-0000018: 17                                         ; FIXUP section size
-; section "function_signatures"
-0000030: 00                                         ; section size (guess)
-0000031: 13                                         ; string length
-0000032: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
-0000042: 7265 73                                    ; section id: "function_signatures"
-0000045: 01                                         ; num functions
-0000046: 00                                         ; function 0 signature index
-0000030: 16                                         ; FIXUP section size
-; section "function_bodies"
-0000047: 00                                         ; section size (guess)
-0000048: 0f                                         ; string length
-0000049: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-0000058: 01                                         ; num functions
+000001d: 00                                         ; import signature index
+000001e: 03                                         ; string length
+000001f: 666f 6f                                  foo  ; import module name
+0000022: 03                                         ; string length
+0000023: 6261 72                                  bar  ; import function name
+000001b: 0a                                         ; FIXUP section size
+; section "function"
+0000026: 08                                         ; string length
+0000027: 6675 6e63 7469 6f6e                        ; section id: "function"
+000002f: 00                                         ; section size (guess)
+0000030: 01                                         ; num functions
+0000031: 00                                         ; function 0 signature index
+000002f: 02                                         ; FIXUP section size
+; section "code"
+0000032: 04                                         ; string length
+0000033: 636f 6465                                  ; section id: "code"
+0000037: 00                                         ; section size (guess)
+0000038: 01                                         ; num functions
 ; function body 0
-0000059: 00                                         ; func body size (guess)
-000005a: 00                                         ; local decl count
-000005b: 0b                                         ; OPCODE_I64_CONST
-000005c: 00                                         ; i64 literal
-0000059: 03                                         ; FIXUP func body size
-0000047: 15                                         ; FIXUP section size
+0000039: 00                                         ; func body size (guess)
+000003a: 00                                         ; local decl count
+000003b: 11                                         ; OPCODE_I64_CONST
+000003c: 00                                         ; i64 literal
+0000039: 03                                         ; FIXUP func body size
+0000037: 05                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0f0a 7369 676e 6174  
-0000010: 7572 6573 0101 0201 170c 696d 706f 7274  
-0000020: 5f74 6162 6c65 0100 0366 6f6f 0362 6172  
-0000030: 1613 6675 6e63 7469 6f6e 5f73 6967 6e61  
-0000040: 7475 7265 7301 0015 0f66 756e 6374 696f  
-0000050: 6e5f 626f 6469 6573 0103 000b 00         
+0000000: 0061 736d 0b00 0000 0474 7970 6506 0140  
+0000010: 0101 0102 0669 6d70 6f72 740a 0100 0366  
+0000020: 6f6f 0362 6172 0866 756e 6374 696f 6e02  
+0000030: 0100 0463 6f64 6505 0103 0011 00         
 ;;; STDOUT ;;)

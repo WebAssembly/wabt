@@ -2,16 +2,16 @@
 (module (memory 1))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
-0000008: 00                                         ; section size (guess)
-0000009: 06                                         ; string length
-000000a: 6d65 6d6f 7279                             ; section id: "memory"
+0000008: 06                                         ; string length
+0000009: 6d65 6d6f 7279                             ; section id: "memory"
+000000f: 00                                         ; section size (guess)
 0000010: 01                                         ; min mem pages
 0000011: 01                                         ; max mem pages
 0000012: 00                                         ; export mem
-0000008: 0a                                         ; FIXUP section size
+000000f: 03                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0a06 6d65 6d6f 7279  
+0000000: 0061 736d 0b00 0000 066d 656d 6f72 7903  
 0000010: 0101 00                                  
 ;;; STDOUT ;;)

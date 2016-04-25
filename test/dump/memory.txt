@@ -3,34 +3,33 @@
   (memory 1 (segment 10 "hello") (segment 20 "goodbye")))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
-0000008: 00                                         ; section size (guess)
-0000009: 06                                         ; string length
-000000a: 6d65 6d6f 7279                             ; section id: "memory"
+0000008: 06                                         ; string length
+0000009: 6d65 6d6f 7279                             ; section id: "memory"
+000000f: 00                                         ; section size (guess)
 0000010: 01                                         ; min mem pages
 0000011: 01                                         ; max mem pages
 0000012: 00                                         ; export mem
-0000008: 0a                                         ; FIXUP section size
-; section "data_segments"
-0000013: 00                                         ; section size (guess)
-0000014: 0d                                         ; string length
-0000015: 6461 7461 5f73 6567 6d65 6e74 73           ; section id: "data_segments"
-0000022: 02                                         ; num data segments
+000000f: 03                                         ; FIXUP section size
+; section "data"
+0000013: 04                                         ; string length
+0000014: 6461 7461                                  ; section id: "data"
+0000018: 00                                         ; section size (guess)
+0000019: 02                                         ; num data segments
 ; segment header 0
-0000023: 0a                                         ; segment address
-0000024: 05                                         ; segment size
+000001a: 0a                                         ; segment address
+000001b: 05                                         ; segment size
 ; segment data 0
-0000025: 6865 6c6c 6f                               ; segment data
+000001c: 6865 6c6c 6f                               ; segment data
 ; segment header 1
-000002a: 14                                         ; segment address
-000002b: 07                                         ; segment size
+0000021: 14                                         ; segment address
+0000022: 07                                         ; segment size
 ; segment data 1
-000002c: 676f 6f64 6279 65                          ; segment data
-0000013: 1f                                         ; FIXUP section size
+0000023: 676f 6f64 6279 65                          ; segment data
+0000018: 11                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0a06 6d65 6d6f 7279  
-0000010: 0101 001f 0d64 6174 615f 7365 676d 656e  
-0000020: 7473 020a 0568 656c 6c6f 1407 676f 6f64  
-0000030: 6279 65                                  
+0000000: 0061 736d 0b00 0000 066d 656d 6f72 7903  
+0000010: 0101 0004 6461 7461 1102 0a05 6865 6c6c  
+0000020: 6f14 0767 6f6f 6462 7965                 
 ;;; STDOUT ;;)

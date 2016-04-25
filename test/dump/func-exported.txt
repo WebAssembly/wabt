@@ -4,48 +4,46 @@
   (export "foo" 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "signatures"
-0000008: 00                                         ; section size (guess)
-0000009: 0a                                         ; string length
-000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-0000014: 01                                         ; num signatures
-; signature 0
-0000015: 00                                         ; num params
-0000016: 00                                         ; result_type
-0000008: 0e                                         ; FIXUP section size
-; section "function_signatures"
-0000017: 00                                         ; section size (guess)
-0000018: 13                                         ; string length
-0000019: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
-0000029: 7265 73                                    ; section id: "function_signatures"
-000002c: 01                                         ; num functions
-000002d: 00                                         ; function 0 signature index
-0000017: 16                                         ; FIXUP section size
-; section "export_table"
-000002e: 00                                         ; section size (guess)
-000002f: 0c                                         ; string length
-0000030: 6578 706f 7274 5f74 6162 6c65              ; section id: "export_table"
-000003c: 01                                         ; num exports
-000003d: 00                                         ; export func index
-000003e: 03                                         ; string length
-000003f: 666f 6f                                  foo  ; export name
-000002e: 13                                         ; FIXUP section size
-; section "function_bodies"
-0000042: 00                                         ; section size (guess)
-0000043: 0f                                         ; string length
-0000044: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-0000053: 01                                         ; num functions
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 01                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 00                                         ; num params
+0000011: 00                                         ; num results
+000000d: 04                                         ; FIXUP section size
+; section "function"
+0000012: 08                                         ; string length
+0000013: 6675 6e63 7469 6f6e                        ; section id: "function"
+000001b: 00                                         ; section size (guess)
+000001c: 01                                         ; num functions
+000001d: 00                                         ; function 0 signature index
+000001b: 02                                         ; FIXUP section size
+; section "export"
+000001e: 06                                         ; string length
+000001f: 6578 706f 7274                             ; section id: "export"
+0000025: 00                                         ; section size (guess)
+0000026: 01                                         ; num exports
+0000027: 00                                         ; export func index
+0000028: 03                                         ; string length
+0000029: 666f 6f                                  foo  ; export name
+0000025: 06                                         ; FIXUP section size
+; section "code"
+000002c: 04                                         ; string length
+000002d: 636f 6465                                  ; section id: "code"
+0000031: 00                                         ; section size (guess)
+0000032: 01                                         ; num functions
 ; function body 0
-0000054: 00                                         ; func body size (guess)
-0000055: 00                                         ; local decl count
-0000054: 01                                         ; FIXUP func body size
-0000042: 13                                         ; FIXUP section size
+0000033: 00                                         ; func body size (guess)
+0000034: 00                                         ; local decl count
+0000033: 01                                         ; FIXUP func body size
+0000031: 03                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0e0a 7369 676e 6174  
-0000010: 7572 6573 0100 0016 1366 756e 6374 696f  
-0000020: 6e5f 7369 676e 6174 7572 6573 0100 130c  
-0000030: 6578 706f 7274 5f74 6162 6c65 0100 0366  
-0000040: 6f6f 130f 6675 6e63 7469 6f6e 5f62 6f64  
-0000050: 6965 7301 0100                           
+0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000010: 0000 0866 756e 6374 696f 6e02 0100 0665  
+0000020: 7870 6f72 7406 0100 0366 6f6f 0463 6f64  
+0000030: 6503 0101 00                             
 ;;; STDOUT ;;)

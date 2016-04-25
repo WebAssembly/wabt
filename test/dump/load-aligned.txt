@@ -37,188 +37,187 @@
     (i64.load32_s align=8 (i32.const 0))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "signatures"
-0000008: 00                                         ; section size (guess)
-0000009: 0a                                         ; string length
-000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-0000014: 01                                         ; num signatures
-; signature 0
-0000015: 00                                         ; num params
-0000016: 00                                         ; result_type
-0000008: 0e                                         ; FIXUP section size
-; section "function_signatures"
-0000017: 00                                         ; section size (guess)
-0000018: 13                                         ; string length
-0000019: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
-0000029: 7265 73                                    ; section id: "function_signatures"
-000002c: 01                                         ; num functions
-000002d: 00                                         ; function 0 signature index
-0000017: 16                                         ; FIXUP section size
-; section "function_bodies"
-000002e: 00                                         ; section size (guess)
-000002f: 0f                                         ; string length
-0000030: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-000003f: 01                                         ; num functions
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 01                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 00                                         ; num params
+0000011: 00                                         ; num results
+000000d: 04                                         ; FIXUP section size
+; section "function"
+0000012: 08                                         ; string length
+0000013: 6675 6e63 7469 6f6e                        ; section id: "function"
+000001b: 00                                         ; section size (guess)
+000001c: 01                                         ; num functions
+000001d: 00                                         ; function 0 signature index
+000001b: 02                                         ; FIXUP section size
+; section "code"
+000001e: 04                                         ; string length
+000001f: 636f 6465                                  ; section id: "code"
+0000023: 00                                         ; section size (guess)
+0000024: 01                                         ; num functions
 ; function body 0
-0000040: 00                                         ; func body size (guess)
-0000041: 00                                         ; local decl count
-0000042: 20                                         ; OPCODE_I32_LOAD8_S
-0000043: 00                                         ; alignment
+0000025: 00                                         ; func body size (guess)
+0000026: 00                                         ; local decl count
+0000027: 10                                         ; OPCODE_I32_CONST
+0000028: 00                                         ; i32 literal
+0000029: 20                                         ; OPCODE_I32_LOAD8_S
+000002a: 00                                         ; alignment
+000002b: 00                                         ; load offset
+000002c: 10                                         ; OPCODE_I32_CONST
+000002d: 00                                         ; i32 literal
+000002e: 20                                         ; OPCODE_I32_LOAD8_S
+000002f: 01                                         ; alignment
+0000030: 00                                         ; load offset
+0000031: 10                                         ; OPCODE_I32_CONST
+0000032: 00                                         ; i32 literal
+0000033: 20                                         ; OPCODE_I32_LOAD8_S
+0000034: 02                                         ; alignment
+0000035: 00                                         ; load offset
+0000036: 10                                         ; OPCODE_I32_CONST
+0000037: 00                                         ; i32 literal
+0000038: 20                                         ; OPCODE_I32_LOAD8_S
+0000039: 03                                         ; alignment
+000003a: 00                                         ; load offset
+000003b: 10                                         ; OPCODE_I32_CONST
+000003c: 00                                         ; i32 literal
+000003d: 22                                         ; OPCODE_I32_LOAD16_S
+000003e: 00                                         ; alignment
+000003f: 00                                         ; load offset
+0000040: 10                                         ; OPCODE_I32_CONST
+0000041: 00                                         ; i32 literal
+0000042: 22                                         ; OPCODE_I32_LOAD16_S
+0000043: 01                                         ; alignment
 0000044: 00                                         ; load offset
-0000045: 0a                                         ; OPCODE_I32_CONST
+0000045: 10                                         ; OPCODE_I32_CONST
 0000046: 00                                         ; i32 literal
-0000047: 20                                         ; OPCODE_I32_LOAD8_S
-0000048: 01                                         ; alignment
+0000047: 22                                         ; OPCODE_I32_LOAD16_S
+0000048: 02                                         ; alignment
 0000049: 00                                         ; load offset
-000004a: 0a                                         ; OPCODE_I32_CONST
+000004a: 10                                         ; OPCODE_I32_CONST
 000004b: 00                                         ; i32 literal
-000004c: 20                                         ; OPCODE_I32_LOAD8_S
-000004d: 02                                         ; alignment
+000004c: 22                                         ; OPCODE_I32_LOAD16_S
+000004d: 03                                         ; alignment
 000004e: 00                                         ; load offset
-000004f: 0a                                         ; OPCODE_I32_CONST
+000004f: 10                                         ; OPCODE_I32_CONST
 0000050: 00                                         ; i32 literal
-0000051: 20                                         ; OPCODE_I32_LOAD8_S
-0000052: 03                                         ; alignment
+0000051: 2a                                         ; OPCODE_I32_LOAD
+0000052: 00                                         ; alignment
 0000053: 00                                         ; load offset
-0000054: 0a                                         ; OPCODE_I32_CONST
+0000054: 10                                         ; OPCODE_I32_CONST
 0000055: 00                                         ; i32 literal
-0000056: 22                                         ; OPCODE_I32_LOAD16_S
-0000057: 00                                         ; alignment
+0000056: 2a                                         ; OPCODE_I32_LOAD
+0000057: 01                                         ; alignment
 0000058: 00                                         ; load offset
-0000059: 0a                                         ; OPCODE_I32_CONST
+0000059: 10                                         ; OPCODE_I32_CONST
 000005a: 00                                         ; i32 literal
-000005b: 22                                         ; OPCODE_I32_LOAD16_S
-000005c: 01                                         ; alignment
+000005b: 2a                                         ; OPCODE_I32_LOAD
+000005c: 02                                         ; alignment
 000005d: 00                                         ; load offset
-000005e: 0a                                         ; OPCODE_I32_CONST
+000005e: 10                                         ; OPCODE_I32_CONST
 000005f: 00                                         ; i32 literal
-0000060: 22                                         ; OPCODE_I32_LOAD16_S
-0000061: 02                                         ; alignment
+0000060: 2a                                         ; OPCODE_I32_LOAD
+0000061: 03                                         ; alignment
 0000062: 00                                         ; load offset
-0000063: 0a                                         ; OPCODE_I32_CONST
+0000063: 10                                         ; OPCODE_I32_CONST
 0000064: 00                                         ; i32 literal
-0000065: 22                                         ; OPCODE_I32_LOAD16_S
-0000066: 03                                         ; alignment
+0000065: 2b                                         ; OPCODE_I64_LOAD
+0000066: 00                                         ; alignment
 0000067: 00                                         ; load offset
-0000068: 0a                                         ; OPCODE_I32_CONST
+0000068: 10                                         ; OPCODE_I32_CONST
 0000069: 00                                         ; i32 literal
-000006a: 2a                                         ; OPCODE_I32_LOAD
-000006b: 00                                         ; alignment
+000006a: 2b                                         ; OPCODE_I64_LOAD
+000006b: 01                                         ; alignment
 000006c: 00                                         ; load offset
-000006d: 0a                                         ; OPCODE_I32_CONST
+000006d: 10                                         ; OPCODE_I32_CONST
 000006e: 00                                         ; i32 literal
-000006f: 2a                                         ; OPCODE_I32_LOAD
-0000070: 01                                         ; alignment
+000006f: 2b                                         ; OPCODE_I64_LOAD
+0000070: 02                                         ; alignment
 0000071: 00                                         ; load offset
-0000072: 0a                                         ; OPCODE_I32_CONST
+0000072: 10                                         ; OPCODE_I32_CONST
 0000073: 00                                         ; i32 literal
-0000074: 2a                                         ; OPCODE_I32_LOAD
-0000075: 02                                         ; alignment
+0000074: 2b                                         ; OPCODE_I64_LOAD
+0000075: 03                                         ; alignment
 0000076: 00                                         ; load offset
-0000077: 0a                                         ; OPCODE_I32_CONST
+0000077: 10                                         ; OPCODE_I32_CONST
 0000078: 00                                         ; i32 literal
-0000079: 2a                                         ; OPCODE_I32_LOAD
-000007a: 03                                         ; alignment
+0000079: 24                                         ; OPCODE_I64_LOAD8_S
+000007a: 00                                         ; alignment
 000007b: 00                                         ; load offset
-000007c: 0a                                         ; OPCODE_I32_CONST
+000007c: 10                                         ; OPCODE_I32_CONST
 000007d: 00                                         ; i32 literal
-000007e: 2b                                         ; OPCODE_I64_LOAD
-000007f: 00                                         ; alignment
+000007e: 24                                         ; OPCODE_I64_LOAD8_S
+000007f: 01                                         ; alignment
 0000080: 00                                         ; load offset
-0000081: 0a                                         ; OPCODE_I32_CONST
+0000081: 10                                         ; OPCODE_I32_CONST
 0000082: 00                                         ; i32 literal
-0000083: 2b                                         ; OPCODE_I64_LOAD
-0000084: 01                                         ; alignment
+0000083: 24                                         ; OPCODE_I64_LOAD8_S
+0000084: 02                                         ; alignment
 0000085: 00                                         ; load offset
-0000086: 0a                                         ; OPCODE_I32_CONST
+0000086: 10                                         ; OPCODE_I32_CONST
 0000087: 00                                         ; i32 literal
-0000088: 2b                                         ; OPCODE_I64_LOAD
-0000089: 02                                         ; alignment
+0000088: 24                                         ; OPCODE_I64_LOAD8_S
+0000089: 03                                         ; alignment
 000008a: 00                                         ; load offset
-000008b: 0a                                         ; OPCODE_I32_CONST
+000008b: 10                                         ; OPCODE_I32_CONST
 000008c: 00                                         ; i32 literal
-000008d: 2b                                         ; OPCODE_I64_LOAD
-000008e: 03                                         ; alignment
+000008d: 26                                         ; OPCODE_I64_LOAD16_S
+000008e: 00                                         ; alignment
 000008f: 00                                         ; load offset
-0000090: 0a                                         ; OPCODE_I32_CONST
+0000090: 10                                         ; OPCODE_I32_CONST
 0000091: 00                                         ; i32 literal
-0000092: 24                                         ; OPCODE_I64_LOAD8_S
-0000093: 00                                         ; alignment
+0000092: 26                                         ; OPCODE_I64_LOAD16_S
+0000093: 01                                         ; alignment
 0000094: 00                                         ; load offset
-0000095: 0a                                         ; OPCODE_I32_CONST
+0000095: 10                                         ; OPCODE_I32_CONST
 0000096: 00                                         ; i32 literal
-0000097: 24                                         ; OPCODE_I64_LOAD8_S
-0000098: 01                                         ; alignment
+0000097: 26                                         ; OPCODE_I64_LOAD16_S
+0000098: 02                                         ; alignment
 0000099: 00                                         ; load offset
-000009a: 0a                                         ; OPCODE_I32_CONST
+000009a: 10                                         ; OPCODE_I32_CONST
 000009b: 00                                         ; i32 literal
-000009c: 24                                         ; OPCODE_I64_LOAD8_S
-000009d: 02                                         ; alignment
+000009c: 26                                         ; OPCODE_I64_LOAD16_S
+000009d: 03                                         ; alignment
 000009e: 00                                         ; load offset
-000009f: 0a                                         ; OPCODE_I32_CONST
+000009f: 10                                         ; OPCODE_I32_CONST
 00000a0: 00                                         ; i32 literal
-00000a1: 24                                         ; OPCODE_I64_LOAD8_S
-00000a2: 03                                         ; alignment
+00000a1: 28                                         ; OPCODE_I64_LOAD32_S
+00000a2: 00                                         ; alignment
 00000a3: 00                                         ; load offset
-00000a4: 0a                                         ; OPCODE_I32_CONST
+00000a4: 10                                         ; OPCODE_I32_CONST
 00000a5: 00                                         ; i32 literal
-00000a6: 26                                         ; OPCODE_I64_LOAD16_S
-00000a7: 00                                         ; alignment
+00000a6: 28                                         ; OPCODE_I64_LOAD32_S
+00000a7: 01                                         ; alignment
 00000a8: 00                                         ; load offset
-00000a9: 0a                                         ; OPCODE_I32_CONST
+00000a9: 10                                         ; OPCODE_I32_CONST
 00000aa: 00                                         ; i32 literal
-00000ab: 26                                         ; OPCODE_I64_LOAD16_S
-00000ac: 01                                         ; alignment
+00000ab: 28                                         ; OPCODE_I64_LOAD32_S
+00000ac: 02                                         ; alignment
 00000ad: 00                                         ; load offset
-00000ae: 0a                                         ; OPCODE_I32_CONST
+00000ae: 10                                         ; OPCODE_I32_CONST
 00000af: 00                                         ; i32 literal
-00000b0: 26                                         ; OPCODE_I64_LOAD16_S
-00000b1: 02                                         ; alignment
+00000b0: 28                                         ; OPCODE_I64_LOAD32_S
+00000b1: 03                                         ; alignment
 00000b2: 00                                         ; load offset
-00000b3: 0a                                         ; OPCODE_I32_CONST
-00000b4: 00                                         ; i32 literal
-00000b5: 26                                         ; OPCODE_I64_LOAD16_S
-00000b6: 03                                         ; alignment
-00000b7: 00                                         ; load offset
-00000b8: 0a                                         ; OPCODE_I32_CONST
-00000b9: 00                                         ; i32 literal
-00000ba: 28                                         ; OPCODE_I64_LOAD32_S
-00000bb: 00                                         ; alignment
-00000bc: 00                                         ; load offset
-00000bd: 0a                                         ; OPCODE_I32_CONST
-00000be: 00                                         ; i32 literal
-00000bf: 28                                         ; OPCODE_I64_LOAD32_S
-00000c0: 01                                         ; alignment
-00000c1: 00                                         ; load offset
-00000c2: 0a                                         ; OPCODE_I32_CONST
-00000c3: 00                                         ; i32 literal
-00000c4: 28                                         ; OPCODE_I64_LOAD32_S
-00000c5: 02                                         ; alignment
-00000c6: 00                                         ; load offset
-00000c7: 0a                                         ; OPCODE_I32_CONST
-00000c8: 00                                         ; i32 literal
-00000c9: 28                                         ; OPCODE_I64_LOAD32_S
-00000ca: 03                                         ; alignment
-00000cb: 00                                         ; load offset
-00000cc: 0a                                         ; OPCODE_I32_CONST
-00000cd: 00                                         ; i32 literal
-; move data: [41, ce) -> [42, cf)
-0000040: 8d01                                       ; FIXUP func body size
-; move data: [2f, cf) -> [30, d0)
-000002e: a001                                       ; FIXUP section size
+; move data: [26, b3) -> [27, b4)
+0000025: 8d01                                       ; FIXUP func body size
+; move data: [24, b4) -> [25, b5)
+0000023: 9001                                       ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 0e0a 7369 676e 6174  
-0000010: 7572 6573 0100 0016 1366 756e 6374 696f  
-0000020: 6e5f 7369 676e 6174 7572 6573 0100 a001  
-0000030: 0f66 756e 6374 696f 6e5f 626f 6469 6573  
-0000040: 018d 0100 2000 000a 0020 0100 0a00 2002  
-0000050: 000a 0020 0300 0a00 2200 000a 0022 0100  
-0000060: 0a00 2202 000a 0022 0300 0a00 2a00 000a  
-0000070: 002a 0100 0a00 2a02 000a 002a 0300 0a00  
-0000080: 2b00 000a 002b 0100 0a00 2b02 000a 002b  
-0000090: 0300 0a00 2400 000a 0024 0100 0a00 2402  
-00000a0: 000a 0024 0300 0a00 2600 000a 0026 0100  
-00000b0: 0a00 2602 000a 0026 0300 0a00 2800 000a  
-00000c0: 0028 0100 0a00 2802 000a 0028 0300 0a00  
+0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
+0000020: 6f64 6590 0101 8d01 0010 0020 0000 1000  
+0000030: 2001 0010 0020 0200 1000 2003 0010 0022  
+0000040: 0000 1000 2201 0010 0022 0200 1000 2203  
+0000050: 0010 002a 0000 1000 2a01 0010 002a 0200  
+0000060: 1000 2a03 0010 002b 0000 1000 2b01 0010  
+0000070: 002b 0200 1000 2b03 0010 0024 0000 1000  
+0000080: 2401 0010 0024 0200 1000 2403 0010 0026  
+0000090: 0000 1000 2601 0010 0026 0200 1000 2603  
+00000a0: 0010 0028 0000 1000 2801 0010 0028 0200  
+00000b0: 1000 2803 00                             
 ;;; STDOUT ;;)

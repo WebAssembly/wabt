@@ -12,86 +12,85 @@
     (local $F2L3 i64)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0a00 0000                                  ; WASM_BINARY_VERSION
-; section "signatures"
-0000008: 00                                         ; section size (guess)
-0000009: 0a                                         ; string length
-000000a: 7369 676e 6174 7572 6573                   ; section id: "signatures"
-0000014: 02                                         ; num signatures
-; signature 0
-0000015: 01                                         ; num params
-0000016: 00                                         ; result_type
-0000017: 01                                         ; param type
-; signature 1
-0000018: 01                                         ; num params
-0000019: 00                                         ; result_type
-000001a: 03                                         ; param type
-0000008: 12                                         ; FIXUP section size
-; section "function_signatures"
-000001b: 00                                         ; section size (guess)
-000001c: 13                                         ; string length
-000001d: 6675 6e63 7469 6f6e 5f73 6967 6e61 7475  
-000002d: 7265 73                                    ; section id: "function_signatures"
-0000030: 02                                         ; num functions
-0000031: 00                                         ; function 0 signature index
-0000032: 01                                         ; function 1 signature index
-000001b: 17                                         ; FIXUP section size
-; section "function_bodies"
-0000033: 00                                         ; section size (guess)
-0000034: 0f                                         ; string length
-0000035: 6675 6e63 7469 6f6e 5f62 6f64 6965 73      ; section id: "function_bodies"
-0000044: 02                                         ; num functions
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 02                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 01                                         ; num params
+0000011: 01                                         ; param type
+0000012: 00                                         ; num results
+; type 1
+0000013: 40                                         ; function form
+0000014: 01                                         ; num params
+0000015: 03                                         ; param type
+0000016: 00                                         ; num results
+000000d: 09                                         ; FIXUP section size
+; section "function"
+0000017: 08                                         ; string length
+0000018: 6675 6e63 7469 6f6e                        ; section id: "function"
+0000020: 00                                         ; section size (guess)
+0000021: 02                                         ; num functions
+0000022: 00                                         ; function 0 signature index
+0000023: 01                                         ; function 1 signature index
+0000020: 03                                         ; FIXUP section size
+; section "code"
+0000024: 04                                         ; string length
+0000025: 636f 6465                                  ; section id: "code"
+0000029: 00                                         ; section size (guess)
+000002a: 02                                         ; num functions
 ; function body 0
-0000045: 00                                         ; func body size (guess)
-0000046: 02                                         ; local decl count
-0000047: 01                                         ; local type count
-0000048: 03                                         ; WASM_TYPE_F32
-0000049: 02                                         ; local type count
-000004a: 01                                         ; WASM_TYPE_I32
-0000045: 05                                         ; FIXUP func body size
+000002b: 00                                         ; func body size (guess)
+000002c: 02                                         ; local decl count
+000002d: 01                                         ; local type count
+000002e: 03                                         ; WASM_TYPE_F32
+000002f: 02                                         ; local type count
+0000030: 01                                         ; WASM_TYPE_I32
+000002b: 05                                         ; FIXUP func body size
 ; function body 1
-000004b: 00                                         ; func body size (guess)
-000004c: 02                                         ; local decl count
-000004d: 01                                         ; local type count
-000004e: 04                                         ; WASM_TYPE_F64
-000004f: 02                                         ; local type count
-0000050: 02                                         ; WASM_TYPE_I64
-000004b: 05                                         ; FIXUP func body size
-0000033: 1d                                         ; FIXUP section size
-; section "names"
-0000051: 00                                         ; section size (guess)
-0000052: 05                                         ; string length
-0000053: 6e61 6d65 73                               ; section id: "names"
-0000058: 02                                         ; num functions
-0000059: 03                                         ; string length
-000005a: 2446 31                                  $F1  ; func name 0
-000005d: 04                                         ; num locals
-000005e: 05                                         ; string length
-000005f: 2446 3150 30                             $F1P0  ; remapped local name 0
-0000064: 05                                         ; string length
-0000065: 2446 314c 31                             $F1L1  ; remapped local name 1
-000006a: 05                                         ; string length
-000006b: 2446 314c 32                             $F1L2  ; remapped local name 2
-0000070: 00                                         ; string length
-0000071: 03                                         ; string length
-0000072: 2446 32                                  $F2  ; func name 1
-0000075: 04                                         ; num locals
-0000076: 05                                         ; string length
-0000077: 2446 3250 30                             $F2P0  ; remapped local name 0
-000007c: 05                                         ; string length
-000007d: 2446 324c 31                             $F2L1  ; remapped local name 1
-0000082: 00                                         ; string length
-0000083: 05                                         ; string length
-0000084: 2446 324c 33                             $F2L3  ; remapped local name 3
-0000051: 37                                         ; FIXUP section size
+0000031: 00                                         ; func body size (guess)
+0000032: 02                                         ; local decl count
+0000033: 01                                         ; local type count
+0000034: 04                                         ; WASM_TYPE_F64
+0000035: 02                                         ; local type count
+0000036: 02                                         ; WASM_TYPE_I64
+0000031: 05                                         ; FIXUP func body size
+0000029: 0d                                         ; FIXUP section size
+; section "name"
+0000037: 04                                         ; string length
+0000038: 6e61 6d65                                  ; section id: "name"
+000003c: 00                                         ; section size (guess)
+000003d: 02                                         ; num functions
+000003e: 03                                         ; string length
+000003f: 2446 31                                  $F1  ; func name 0
+0000042: 04                                         ; num locals
+0000043: 05                                         ; string length
+0000044: 2446 3150 30                             $F1P0  ; remapped local name 0
+0000049: 05                                         ; string length
+000004a: 2446 314c 31                             $F1L1  ; remapped local name 1
+000004f: 05                                         ; string length
+0000050: 2446 314c 32                             $F1L2  ; remapped local name 2
+0000055: 00                                         ; string length
+0000056: 03                                         ; string length
+0000057: 2446 32                                  $F2  ; func name 1
+000005a: 04                                         ; num locals
+000005b: 05                                         ; string length
+000005c: 2446 3250 30                             $F2P0  ; remapped local name 0
+0000061: 05                                         ; string length
+0000062: 2446 324c 31                             $F2L1  ; remapped local name 1
+0000067: 00                                         ; string length
+0000068: 05                                         ; string length
+0000069: 2446 324c 33                             $F2L3  ; remapped local name 3
+000003c: 31                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0a00 0000 120a 7369 676e 6174  
-0000010: 7572 6573 0201 0001 0100 0317 1366 756e  
-0000020: 6374 696f 6e5f 7369 676e 6174 7572 6573  
-0000030: 0200 011d 0f66 756e 6374 696f 6e5f 626f  
-0000040: 6469 6573 0205 0201 0302 0105 0201 0402  
-0000050: 0237 056e 616d 6573 0203 2446 3104 0524  
-0000060: 4631 5030 0524 4631 4c31 0524 4631 4c32  
-0000070: 0003 2446 3204 0524 4632 5030 0524 4632  
-0000080: 4c31 0005 2446 324c 33                   
+0000000: 0061 736d 0b00 0000 0474 7970 6509 0240  
+0000010: 0101 0040 0103 0008 6675 6e63 7469 6f6e  
+0000020: 0302 0001 0463 6f64 650d 0205 0201 0302  
+0000030: 0105 0201 0402 0204 6e61 6d65 3102 0324  
+0000040: 4631 0405 2446 3150 3005 2446 314c 3105  
+0000050: 2446 314c 3200 0324 4632 0405 2446 3250  
+0000060: 3005 2446 324c 3100 0524 4632 4c33       
 ;;; STDOUT ;;)
