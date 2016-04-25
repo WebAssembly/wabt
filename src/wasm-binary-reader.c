@@ -406,29 +406,41 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   if (skip_until_section(&ctx, WASM_SECTION_INDEX_TYPE)) {
     CALLBACK0(&ctx, begin_signature_section);
     uint32_t i;
-    in_u32_leb128(&ctx, &num_signatures, "signature count");
+    in_u32_leb128(&ctx, &num_signatures, "type count");
     CALLBACK(&ctx, on_signature_count, num_signatures);
 
     for (i = 0; i < num_signatures; ++i) {
+      uint8_t form;
+      in_u8(&ctx, &form, "type form");
+      RAISE_ERROR_UNLESS(&ctx, form == WASM_BINARY_TYPE_FORM_FUNCTION,
+                         "unexpected type form");
+
       uint32_t num_params;
-      in_u32_leb128(&ctx, &num_params, "signature param count");
+      in_u32_leb128(&ctx, &num_params, "function param count");
 
       if (num_params > ctx.param_types.capacity) {
         CHECK_ALLOC(
             &ctx, wasm_reserve_types(allocator, &ctx.param_types, num_params));
       }
 
-      uint8_t result_type;
-      in_u8(&ctx, &result_type, "signature result type");
-      RAISE_ERROR_UNLESS(&ctx, is_valid_type(result_type),
-                         "expected valid result type");
       uint32_t j;
       for (j = 0; j < num_params; ++j) {
         uint8_t param_type;
-        in_u8(&ctx, &param_type, "signature param type");
+        in_u8(&ctx, &param_type, "function param type");
         RAISE_ERROR_UNLESS(&ctx, is_non_void_type(param_type),
                            "expected valid param type");
         ctx.param_types.data[j] = param_type;
+      }
+
+      uint32_t num_results;
+      in_u32_leb128(&ctx, &num_results, "function result count");
+      RAISE_ERROR_UNLESS(&ctx, num_results <= 1, "result count must be 0 or 1");
+
+      uint8_t result_type = WASM_TYPE_VOID;
+      if (num_results) {
+        in_u8(&ctx, &result_type, "function result type");
+        RAISE_ERROR_UNLESS(&ctx, is_valid_type(result_type),
+                           "expected valid result type");
       }
 
       CALLBACK(&ctx, on_signature, i, (WasmType)result_type, num_params,

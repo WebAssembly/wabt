@@ -785,15 +785,23 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
   get_func_signatures(ctx, module, &sigs);
   if (sigs.size) {
     begin_section(ctx, WASM_SECTION_NAME_TYPE, leb_size_guess);
-    write_u32_leb128(&ctx->stream, sigs.size, "num signatures");
+    write_u32_leb128(&ctx->stream, sigs.size, "num types");
     for (i = 0; i < sigs.size; ++i) {
       const WasmFuncSignature* sig = &sigs.data[i];
-      write_header(ctx, "signature", i);
-      wasm_write_u8(&ctx->stream, sig->param_types.size, "num params");
-      wasm_write_u8(&ctx->stream, sig->result_type, "result_type");
+      write_header(ctx, "type", i);
+      wasm_write_u8(&ctx->stream, WASM_BINARY_TYPE_FORM_FUNCTION,
+                    "function form");
+
+      uint32_t num_params = sig->param_types.size;
+      write_u32_leb128(&ctx->stream, num_params, "num params");
       size_t j;
-      for (j = 0; j < sig->param_types.size; ++j)
+      for (j = 0; j < num_params; ++j)
         wasm_write_u8(&ctx->stream, sig->param_types.data[j], "param type");
+
+      uint32_t num_results = sig->result_type == WASM_TYPE_VOID ? 0 : 1;
+      write_u32_leb128(&ctx->stream, num_results, "num results");
+      if (num_results)
+        wasm_write_u8(&ctx->stream, sig->result_type, "result_type");
     }
     end_section(ctx);
   }
