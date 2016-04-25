@@ -358,7 +358,7 @@ void wasm_destroy_func_signature(WasmAllocator* allocator,
   wasm_destroy_type_vector(allocator, &sig->param_types);
 }
 
-static void wasm_destroy_block(WasmAllocator* allocator, WasmBlock* block) {
+void wasm_destroy_block(WasmAllocator* allocator, WasmBlock* block) {
   wasm_destroy_string_slice(allocator, &block->label);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, block->exprs, expr_ptr);
 }

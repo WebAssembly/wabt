@@ -427,6 +427,7 @@ WasmExpr* wasm_new_empty_expr(struct WasmAllocator*, WasmExprType);
 /* destruction functions. not needed unless you're creating your own AST
  elements */
 void wasm_destroy_script(struct WasmScript*);
+void wasm_destroy_block(struct WasmAllocator*, struct WasmBlock*);
 void wasm_destroy_command_vector_and_elements(struct WasmAllocator*,
                                               WasmCommandVector*);
 void wasm_destroy_command(struct WasmAllocator*, WasmCommand*);
