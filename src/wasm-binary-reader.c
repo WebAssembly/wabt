@@ -403,9 +403,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   in_u32(&ctx, &version, "version");
   RAISE_ERROR_UNLESS(&ctx, version == WASM_BINARY_VERSION, "version mismatch");
 
-  /* signatures */
+  /* type */
   uint32_t num_signatures = 0;
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_SIGNATURES)) {
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_TYPE)) {
     CALLBACK0(&ctx, begin_signature_section);
     uint32_t i;
     in_u32_leb128(&ctx, &num_signatures, "signature count");
@@ -439,9 +439,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_signature_section);
   }
 
-  /* import_table */
+  /* import */
   uint32_t num_imports = 0;
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_IMPORT_TABLE)) {
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_IMPORT)) {
     CALLBACK0(&ctx, begin_import_section);
     uint32_t i;
     in_u32_leb128(&ctx, &num_imports, "import count");
@@ -463,9 +463,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_import_section);
   }
 
-  /* function_signatures */
+  /* function */
   uint32_t num_function_signatures = 0;
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION_SIGNATURES)) {
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION)) {
     CALLBACK0(&ctx, begin_function_signatures_section);
     uint32_t i;
     in_u32_leb128(&ctx, &num_function_signatures, "function signature count");
@@ -480,9 +480,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_function_signatures_section);
   }
 
-  /* function_table */
+  /* table */
   uint32_t num_function_table_entries;
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION_TABLE)) {
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_TABLE)) {
     CALLBACK0(&ctx, begin_function_table_section);
     uint32_t i;
     in_u32_leb128(&ctx, &num_function_table_entries,
@@ -519,9 +519,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_memory_section);
   }
 
-  /* export_table */
+  /* export */
   uint32_t num_exports = 0;
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_EXPORT_TABLE)) {
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_EXPORT)) {
     CALLBACK0(&ctx, begin_export_section);
     uint32_t i;
     in_u32_leb128(&ctx, &num_exports, "export count");
@@ -540,8 +540,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_export_section);
   }
 
-  /* start_function */
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_START_FUNCTION)) {
+  /* start */
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_START)) {
     CALLBACK0(&ctx, begin_start_section);
     uint32_t func_index;
     in_u32_leb128(&ctx, &func_index, "start function index");
@@ -551,9 +551,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_start_section);
   }
 
-  /* function_bodies */
+  /* code */
   uint32_t num_function_bodies = 0;
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_FUNCTION_BODIES)) {
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_CODE)) {
     CALLBACK0(&ctx, begin_function_bodies_section);
     uint32_t i;
     in_u32_leb128(&ctx, &num_function_bodies, "function body count");
@@ -932,8 +932,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_function_bodies_section);
   }
 
-  /* data_segments */
-  if (skip_until_section(&ctx, WASM_SECTION_INDEX_DATA_SEGMENTS)) {
+  /* data */
+  if (skip_until_section(&ctx, WASM_SECTION_INDEX_DATA)) {
     RAISE_ERROR_UNLESS(&ctx, seen_memory_section,
                        "data segment section without memory section");
     CALLBACK0(&ctx, begin_data_segment_section);
@@ -953,9 +953,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(&ctx, end_data_segment_section);
   }
 
-  /* names */
+  /* name */
   if (options->read_debug_names &&
-      skip_until_section(&ctx, WASM_SECTION_INDEX_NAMES)) {
+      skip_until_section(&ctx, WASM_SECTION_INDEX_NAME)) {
     CALLBACK0(&ctx, begin_names_section);
     uint32_t i, num_functions;
     in_u32_leb128(&ctx, &num_functions, "function name count");

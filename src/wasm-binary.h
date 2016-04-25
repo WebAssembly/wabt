@@ -18,29 +18,29 @@
 #define WASM_BINARY_H_
 
 #define WASM_BINARY_MAGIC 0x6d736100
-#define WASM_BINARY_VERSION 0x0a
+#define WASM_BINARY_VERSION 0x0b
 
-#define WASM_SECTION_NAME_SIGNATURES "signatures"
-#define WASM_SECTION_NAME_IMPORT_TABLE "import_table"
-#define WASM_SECTION_NAME_FUNCTION_SIGNATURES "function_signatures"
-#define WASM_SECTION_NAME_FUNCTION_TABLE "function_table"
+#define WASM_SECTION_NAME_TYPE "type"
+#define WASM_SECTION_NAME_IMPORT "import"
+#define WASM_SECTION_NAME_FUNCTION "function"
+#define WASM_SECTION_NAME_TABLE "table"
 #define WASM_SECTION_NAME_MEMORY "memory"
-#define WASM_SECTION_NAME_EXPORT_TABLE "export_table"
-#define WASM_SECTION_NAME_START_FUNCTION "start_function"
-#define WASM_SECTION_NAME_FUNCTION_BODIES "function_bodies"
-#define WASM_SECTION_NAME_DATA_SEGMENTS "data_segments"
-#define WASM_SECTION_NAME_NAMES "names"
+#define WASM_SECTION_NAME_EXPORT "export"
+#define WASM_SECTION_NAME_START "start"
+#define WASM_SECTION_NAME_CODE "code"
+#define WASM_SECTION_NAME_DATA "data"
+#define WASM_SECTION_NAME_NAME "name"
 
 #define WASM_FOREACH_SECTION(V) \
-  V(SIGNATURES)                 \
-  V(IMPORT_TABLE)               \
-  V(FUNCTION_SIGNATURES)        \
-  V(FUNCTION_TABLE)             \
+  V(TYPE)                       \
+  V(IMPORT)                     \
+  V(FUNCTION)                   \
+  V(TABLE)                      \
   V(MEMORY)                     \
-  V(EXPORT_TABLE)               \
-  V(START_FUNCTION)             \
-  V(FUNCTION_BODIES)            \
-  V(DATA_SEGMENTS)              \
-  V(NAMES)
+  V(EXPORT)                     \
+  V(START)                      \
+  V(CODE)                       \
+  V(DATA)                       \
+  V(NAME)
 
 #endif /* WASM_BINARY_H_ */
