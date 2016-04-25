@@ -362,7 +362,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_BR:
       write_open_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
       write_br_var(ctx, &expr->br.var, WASM_NEXT_CHAR_NEWLINE);
-      if (expr->br.expr && expr->br.expr->type != WASM_EXPR_TYPE_NOP)
+      if (expr->br.expr)
         write_expr(ctx, expr->br.expr);
       write_close_newline(ctx);
       break;
@@ -370,7 +370,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_BR_IF:
       write_open_space(ctx, s_opcode_name[WASM_OPCODE_BR_IF]);
       write_br_var(ctx, &expr->br_if.var, WASM_NEXT_CHAR_NEWLINE);
-      if (expr->br_if.expr && expr->br_if.expr->type != WASM_EXPR_TYPE_NOP)
+      if (expr->br_if.expr)
         write_expr(ctx, expr->br_if.expr);
       write_expr(ctx, expr->br_if.cond);
       write_close_newline(ctx);
@@ -383,10 +383,8 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
         write_br_var(ctx, &expr->br_table.targets.data[i],
                      WASM_NEXT_CHAR_SPACE);
       write_br_var(ctx, &expr->br_table.default_target, WASM_NEXT_CHAR_NEWLINE);
-      if (expr->br_table.expr &&
-          expr->br_table.expr->type != WASM_EXPR_TYPE_NOP) {
+      if (expr->br_table.expr)
         write_expr(ctx, expr->br_table.expr);
-      }
       write_expr(ctx, expr->br_table.key);
       write_close_newline(ctx);
       break;

@@ -103,15 +103,22 @@ typedef struct WasmBinaryReader {
    end_function_body */
   WasmResult (*on_binary_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_block_expr)(void* user_data);
-  WasmResult (*on_br_expr)(uint32_t depth, void* user_data);
-  WasmResult (*on_br_if_expr)(uint32_t depth, void* user_data);
-  WasmResult (*on_br_table_expr)(uint32_t num_targets,
+  WasmResult (*on_br_expr)(uint8_t arity, uint32_t depth, void* user_data);
+  WasmResult (*on_br_if_expr)(uint8_t arity, uint32_t depth, void* user_data);
+  WasmResult (*on_br_table_expr)(uint8_t arity,
+                                 uint32_t num_targets,
                                  uint32_t* target_depths,
                                  uint32_t default_target_depth,
                                  void* user_data);
-  WasmResult (*on_call_expr)(uint32_t func_index, void* user_data);
-  WasmResult (*on_call_import_expr)(uint32_t import_index, void* user_data);
-  WasmResult (*on_call_indirect_expr)(uint32_t sig_index, void* user_data);
+  WasmResult (*on_call_expr)(uint32_t arity,
+                             uint32_t func_index,
+                             void* user_data);
+  WasmResult (*on_call_import_expr)(uint32_t arity,
+                                    uint32_t import_index,
+                                    void* user_data);
+  WasmResult (*on_call_indirect_expr)(uint32_t arity,
+                                      uint32_t sig_index,
+                                      void* user_data);
   WasmResult (*on_compare_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_convert_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_else_expr)(void* user_data);
@@ -130,7 +137,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_loop_expr)(void* user_data);
   WasmResult (*on_current_memory_expr)(void* user_data);
   WasmResult (*on_nop_expr)(void* user_data);
-  WasmResult (*on_return_expr)(void* user_data);
+  WasmResult (*on_return_expr)(uint8_t arity, void* user_data);
   WasmResult (*on_select_expr)(void* user_data);
   WasmResult (*on_set_local_expr)(uint32_t local_index, void* user_data);
   WasmResult (*on_store_expr)(WasmOpcode opcode,

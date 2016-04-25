@@ -32,10 +32,10 @@
 0000025: 00                                         ; func body size (guess)
 0000026: 00                                         ; local decl count
 0000027: 02                                         ; OPCODE_LOOP
-0000028: 00                                         ; OPCODE_NOP
-0000029: 10                                         ; OPCODE_I32_CONST
-000002a: 00                                         ; i32 literal
-000002b: 07                                         ; OPCODE_BR_IF
+0000028: 10                                         ; OPCODE_I32_CONST
+0000029: 00                                         ; i32 literal
+000002a: 07                                         ; OPCODE_BR_IF
+000002b: 00                                         ; br_if arity
 000002c: 00                                         ; break depth
 000002d: 0f                                         ; OPCODE_END
 0000025: 08                                         ; FIXUP func body size
@@ -43,5 +43,5 @@
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 650a 0108 0002 0010 0007 000f       
+0000020: 6f64 650a 0108 0002 1000 0700 000f       
 ;;; STDOUT ;;)

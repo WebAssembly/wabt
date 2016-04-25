@@ -32,10 +32,10 @@
 0000025: 00                                         ; func body size (guess)
 0000026: 00                                         ; local decl count
 0000027: 01                                         ; OPCODE_BLOCK
-0000028: 00                                         ; OPCODE_NOP
-0000029: 10                                         ; OPCODE_I32_CONST
-000002a: 00                                         ; i32 literal
-000002b: 08                                         ; OPCODE_BR_TABLE
+0000028: 10                                         ; OPCODE_I32_CONST
+0000029: 00                                         ; i32 literal
+000002a: 08                                         ; OPCODE_BR_TABLE
+000002b: 00                                         ; br_table arity
 000002c: 00                                         ; num targets
 000002d: 0000 0000                                  ; break depth for default
 0000031: 0f                                         ; OPCODE_END
@@ -44,6 +44,6 @@
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 650e 010c 0001 0010 0008 0000 0000  
+0000020: 6f64 650e 010c 0001 1000 0800 0000 0000  
 0000030: 000f                                     
 ;;; STDOUT ;;)

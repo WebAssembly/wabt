@@ -45,20 +45,20 @@
 000002a: 10                                         ; OPCODE_I32_CONST
 000002b: 00                                         ; i32 literal
 000002c: 01                                         ; OPCODE_BLOCK
-000002d: 00                                         ; OPCODE_NOP
-000002e: 06                                         ; OPCODE_BR
+000002d: 06                                         ; OPCODE_BR
+000002e: 00                                         ; br arity
 000002f: 00                                         ; break depth
-0000030: 00                                         ; OPCODE_NOP
-0000031: 06                                         ; OPCODE_BR
+0000030: 06                                         ; OPCODE_BR
+0000031: 00                                         ; br arity
 0000032: 00                                         ; break depth
-0000033: 00                                         ; OPCODE_NOP
-0000034: 06                                         ; OPCODE_BR
+0000033: 06                                         ; OPCODE_BR
+0000034: 00                                         ; br arity
 0000035: 01                                         ; break depth
-0000036: 00                                         ; OPCODE_NOP
-0000037: 06                                         ; OPCODE_BR
+0000036: 06                                         ; OPCODE_BR
+0000037: 00                                         ; br arity
 0000038: 02                                         ; break depth
-0000039: 00                                         ; OPCODE_NOP
-000003a: 06                                         ; OPCODE_BR
+0000039: 06                                         ; OPCODE_BR
+000003a: 00                                         ; br arity
 000003b: 03                                         ; break depth
 000003c: 0f                                         ; OPCODE_END
 000003d: 0f                                         ; OPCODE_END
@@ -69,6 +69,6 @@
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 651c 011a 0001 0201 1000 0100 0600  
-0000030: 0006 0000 0601 0006 0200 0603 0f0f 0f0f  
+0000020: 6f64 651c 011a 0001 0201 1000 0106 0000  
+0000030: 0600 0006 0001 0600 0206 0003 0f0f 0f0f  
 ;;; STDOUT ;;)

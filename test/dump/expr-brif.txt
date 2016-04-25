@@ -39,15 +39,16 @@
 000002b: 10                                         ; OPCODE_I32_CONST
 000002c: 00                                         ; i32 literal
 000002d: 07                                         ; OPCODE_BR_IF
-000002e: 00                                         ; break depth
-000002f: 10                                         ; OPCODE_I32_CONST
-0000030: 1d                                         ; i32 literal
-0000031: 0f                                         ; OPCODE_END
-0000026: 0b                                         ; FIXUP func body size
-0000024: 0d                                         ; FIXUP section size
+000002e: 01                                         ; br_if arity
+000002f: 00                                         ; break depth
+0000030: 10                                         ; OPCODE_I32_CONST
+0000031: 1d                                         ; i32 literal
+0000032: 0f                                         ; OPCODE_END
+0000026: 0c                                         ; FIXUP func body size
+0000024: 0e                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6505 0140  
 0000010: 0001 0108 6675 6e63 7469 6f6e 0201 0004  
-0000020: 636f 6465 0d01 0b00 0110 2a10 0007 0010  
-0000030: 1d0f                                     
+0000020: 636f 6465 0e01 0c00 0110 2a10 0007 0100  
+0000030: 101d 0f                                  
 ;;; STDOUT ;;)

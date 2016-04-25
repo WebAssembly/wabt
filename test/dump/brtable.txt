@@ -44,10 +44,10 @@
 0000027: 01                                         ; OPCODE_BLOCK
 0000028: 01                                         ; OPCODE_BLOCK
 0000029: 01                                         ; OPCODE_BLOCK
-000002a: 00                                         ; OPCODE_NOP
-000002b: 10                                         ; OPCODE_I32_CONST
-000002c: 00                                         ; i32 literal
-000002d: 08                                         ; OPCODE_BR_TABLE
+000002a: 10                                         ; OPCODE_I32_CONST
+000002b: 00                                         ; i32 literal
+000002c: 08                                         ; OPCODE_BR_TABLE
+000002d: 00                                         ; br_table arity
 000002e: 02                                         ; num targets
 000002f: 0000 0000                                  ; break depth
 0000033: 0100 0000                                  ; break depth
@@ -57,8 +57,8 @@
 000003d: 01                                         ; i32 literal
 000003e: 10                                         ; OPCODE_I32_CONST
 000003f: 02                                         ; i32 literal
-0000040: 00                                         ; OPCODE_NOP
-0000041: 06                                         ; OPCODE_BR
+0000040: 06                                         ; OPCODE_BR
+0000041: 00                                         ; br arity
 0000042: 01                                         ; break depth
 0000043: 0f                                         ; OPCODE_END
 0000044: 0f                                         ; OPCODE_END
@@ -69,7 +69,7 @@
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 6523 0121 0001 0101 0010 0008 0200  
+0000020: 6f64 6523 0121 0001 0101 1000 0800 0200  
 0000030: 0000 0001 0000 0000 0000 000f 1001 1002  
-0000040: 0006 010f 0f10 03                        
+0000040: 0600 010f 0f10 03                        
 ;;; STDOUT ;;)

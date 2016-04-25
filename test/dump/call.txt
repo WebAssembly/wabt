@@ -34,11 +34,12 @@
 0000028: 10                                         ; OPCODE_I32_CONST
 0000029: 01                                         ; i32 literal
 000002a: 16                                         ; OPCODE_CALL_FUNCTION
-000002b: 00                                         ; func index
-0000026: 05                                         ; FIXUP func body size
-0000024: 07                                         ; FIXUP section size
+000002b: 01                                         ; call arity
+000002c: 00                                         ; func index
+0000026: 06                                         ; FIXUP func body size
+0000024: 08                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6505 0140  
 0000010: 0101 0008 6675 6e63 7469 6f6e 0201 0004  
-0000020: 636f 6465 0701 0500 1001 1600            
+0000020: 636f 6465 0801 0600 1001 1601 00         
 ;;; STDOUT ;;)

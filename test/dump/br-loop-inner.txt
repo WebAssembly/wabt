@@ -38,15 +38,15 @@
 0000028: 10                                         ; OPCODE_I32_CONST
 0000029: 01                                         ; i32 literal
 000002a: 03                                         ; OPCODE_IF
-000002b: 00                                         ; OPCODE_NOP
-000002c: 06                                         ; OPCODE_BR
+000002b: 06                                         ; OPCODE_BR
+000002c: 00                                         ; br arity
 000002d: 02                                         ; break depth
 000002e: 0f                                         ; OPCODE_END
 000002f: 10                                         ; OPCODE_I32_CONST
 0000030: 02                                         ; i32 literal
 0000031: 03                                         ; OPCODE_IF
-0000032: 00                                         ; OPCODE_NOP
-0000033: 06                                         ; OPCODE_BR
+0000032: 06                                         ; OPCODE_BR
+0000033: 00                                         ; br arity
 0000034: 01                                         ; break depth
 0000035: 0f                                         ; OPCODE_END
 0000036: 0f                                         ; OPCODE_END
@@ -55,6 +55,6 @@
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 6513 0111 0002 1001 0300 0602 0f10  
-0000030: 0203 0006 010f 0f                        
+0000020: 6f64 6513 0111 0002 1001 0306 0002 0f10  
+0000030: 0203 0600 010f 0f                        
 ;;; STDOUT ;;)

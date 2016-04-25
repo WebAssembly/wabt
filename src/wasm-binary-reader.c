@@ -625,20 +625,26 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
 
             case WASM_OPCODE_BR: {
+              uint8_t arity;
+              in_u8(&ctx, &arity, "br arity");
               uint32_t depth;
               in_u32_leb128(&ctx, &depth, "br depth");
-              CALLBACK(&ctx, on_br_expr, depth);
+              CALLBACK(&ctx, on_br_expr, arity, depth);
               break;
             }
 
             case WASM_OPCODE_BR_IF: {
+              uint8_t arity;
+              in_u8(&ctx, &arity, "br_if arity");
               uint32_t depth;
               in_u32_leb128(&ctx, &depth, "br_if depth");
-              CALLBACK(&ctx, on_br_if_expr, depth);
+              CALLBACK(&ctx, on_br_if_expr, arity, depth);
               break;
             }
 
             case WASM_OPCODE_BR_TABLE: {
+              uint8_t arity;
+              in_u8(&ctx, &arity, "br_table arity");
               uint32_t num_targets;
               in_u32_leb128(&ctx, &num_targets, "br_table target count");
               if (num_targets > ctx.target_depths.capacity) {
@@ -659,14 +665,17 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               in_u32(&ctx, &default_target_depth,
                      "br_table default target depth");
 
-              CALLBACK(&ctx, on_br_table_expr, num_targets,
+              CALLBACK(&ctx, on_br_table_expr, arity, num_targets,
                        ctx.target_depths.data, default_target_depth);
               break;
             }
 
-            case WASM_OPCODE_RETURN:
-              CALLBACK0(&ctx, on_return_expr);
+            case WASM_OPCODE_RETURN: {
+              uint8_t arity;
+              in_u8(&ctx, &arity, "return arity");
+              CALLBACK(&ctx, on_return_expr, arity);
               break;
+            }
 
             case WASM_OPCODE_UNREACHABLE:
               CALLBACK0(&ctx, on_unreachable_expr);
@@ -719,29 +728,35 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             }
 
             case WASM_OPCODE_CALL_FUNCTION: {
+              uint32_t arity;
+              in_u32_leb128(&ctx, &arity, "call_function arity");
               uint32_t func_index;
               in_u32_leb128(&ctx, &func_index, "call_function function index");
               RAISE_ERROR_UNLESS(&ctx, func_index < num_function_signatures,
                                  "invalid call_function function index");
-              CALLBACK(&ctx, on_call_expr, func_index);
+              CALLBACK(&ctx, on_call_expr, arity, func_index);
               break;
             }
 
             case WASM_OPCODE_CALL_INDIRECT: {
+              uint32_t arity;
+              in_u32_leb128(&ctx, &arity, "call_indirect arity");
               uint32_t sig_index;
               in_u32_leb128(&ctx, &sig_index, "call_indirect signature index");
               RAISE_ERROR_UNLESS(&ctx, sig_index < num_function_signatures,
                                  "invalid call_indirect signature index");
-              CALLBACK(&ctx, on_call_indirect_expr, sig_index);
+              CALLBACK(&ctx, on_call_indirect_expr, arity, sig_index);
               break;
             }
 
             case WASM_OPCODE_CALL_IMPORT: {
+              uint32_t arity;
+              in_u32_leb128(&ctx, &arity, "call_import arity");
               uint32_t import_index;
               in_u32_leb128(&ctx, &import_index, "call_import import index");
               RAISE_ERROR_UNLESS(&ctx, import_index < num_imports,
                                  "invalid call_import import index");
-              CALLBACK(&ctx, on_call_import_expr, import_index);
+              CALLBACK(&ctx, on_call_import_expr, arity, import_index);
               break;
             }
 
