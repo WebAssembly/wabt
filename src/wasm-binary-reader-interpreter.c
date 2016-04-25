@@ -684,7 +684,7 @@ static WasmResult on_end_expr(void* user_data) {
     WasmExprNode* last_expr = &ctx->expr_stack.data[ctx->expr_stack.size - 1];
     WasmType old_type = label->type;
     CHECK_RESULT(unify_and_check_type(ctx, &label->type, last_expr->type,
-                                      s_label_type_name[label->type]));
+                                      s_label_type_name[label->label_type]));
     if (label->label_type == WASM_LABEL_TYPE_ELSE &&
         get_value_count(old_type) > get_value_count(label->type)) {
       /* we unified the types between the true and false branches; the true
