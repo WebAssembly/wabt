@@ -62,6 +62,10 @@ typedef enum WasmInterpreterResult {
 } WasmInterpreterResult;
 
 #define WASM_INVALID_OFFSET ((uint32_t)~0)
+#define WASM_TABLE_ENTRY_SIZE (sizeof(uint32_t) * 2 + sizeof(uint8_t))
+#define WASM_TABLE_ENTRY_OFFSET_OFFSET 0
+#define WASM_TABLE_ENTRY_DISCARD_OFFSET sizeof(uint32_t)
+#define WASM_TABLE_ENTRY_KEEP_OFFSET (sizeof(uint32_t) * 2)
 
 enum {
   /* push space on the value stack for N entries */

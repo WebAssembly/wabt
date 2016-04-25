@@ -444,7 +444,9 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       wasm_destroy_expr_ptr(allocator, &expr->store.value);
       break;
     case WASM_EXPR_TYPE_BR_TABLE:
-      wasm_destroy_expr_ptr(allocator, &expr->br_table.expr);
+      wasm_destroy_expr_ptr(allocator, &expr->br_table.key);
+      if (expr->br_table.expr)
+        wasm_destroy_expr_ptr(allocator, &expr->br_table.expr);
       WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->br_table.targets, var);
       wasm_destroy_var(allocator, &expr->br_table.default_target);
       break;
@@ -808,7 +810,9 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_BR_TABLE:
       CALLBACK(begin_br_table_expr);
-      CHECK_RESULT(visit_expr(expr->br_table.expr, visitor));
+      CHECK_RESULT(visit_expr(expr->br_table.key, visitor));
+      if (expr->br_table.expr)
+        CHECK_RESULT(visit_expr(expr->br_table.expr, visitor));
       CALLBACK(end_br_table_expr);
       break;
 

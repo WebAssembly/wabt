@@ -387,6 +387,15 @@ expr1 :
   | BR_TABLE var_list var expr {
       $$ = wasm_new_br_table_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
+      $$->br_table.key = $4;
+      $$->br_table.expr = NULL;
+      $$->br_table.targets = $2;
+      $$->br_table.default_target = $3;
+    }
+  | BR_TABLE var_list var expr expr {
+      $$ = wasm_new_br_table_expr(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      $$->br_table.key = $5;
       $$->br_table.expr = $4;
       $$->br_table.targets = $2;
       $$->br_table.default_target = $3;

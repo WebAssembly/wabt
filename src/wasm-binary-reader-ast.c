@@ -585,12 +585,14 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
                                    uint32_t default_target_depth,
                                    void* user_data) {
   WasmContext* ctx = user_data;
-  WasmExpr *result, *key;
+  WasmExpr *result, *expr, *key;
   CHECK_RESULT(pop_expr(ctx, &key));
+  CHECK_RESULT(pop_expr(ctx, &expr));
   CHECK_ALLOC_NULL(result = wasm_new_br_table_expr(ctx->allocator));
   CHECK_ALLOC(wasm_reserve_vars(ctx->allocator, &result->br_table.targets,
                                 num_targets));
-  result->br_table.expr = key;
+  result->br_table.key = key;
+  result->br_table.expr = expr;
   result->br_table.targets.size = num_targets;
   uint32_t i;
   for (i = 0; i < num_targets; ++i) {

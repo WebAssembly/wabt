@@ -302,6 +302,13 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define POP_I64() (POP().i64)
 #define POP_F32() (POP().f32_bits)
 #define POP_F64() (POP().f64_bits)
+#define DISCARD_KEEP(discard, keep) \
+  do {                              \
+    assert((keep) <= 1);            \
+    if ((keep) == 1)                \
+      PICK((discard) + 1) = TOP();  \
+    vs_top -= (discard);            \
+  } while (0)
 
 #define GOTO(offset) pc = &istream[offset]
 
@@ -484,6 +491,15 @@ static WASM_INLINE uint64_t read_u64(const uint8_t** pc) {
   return result;
 }
 
+static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
+                                            uint32_t* out_offset,
+                                            uint32_t* out_discard,
+                                            uint8_t* out_keep) {
+  *out_offset = read_u32_at(pc + WASM_TABLE_ENTRY_OFFSET_OFFSET);
+  *out_discard = read_u32_at(pc + WASM_TABLE_ENTRY_DISCARD_OFFSET);
+  *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
+}
+
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            WasmInterpreterThread* thread,
                                            uint32_t num_instructions,
@@ -528,11 +544,13 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t table_offset = read_u32(&pc);
         VALUE_TYPE_I32 key = POP_I32();
         uint32_t key_offset =
-            (key >= num_targets ? num_targets : key) * 2 * sizeof(uint32_t);
+            (key >= num_targets ? num_targets : key) * WASM_TABLE_ENTRY_SIZE;
         const uint8_t* entry = istream + table_offset + key_offset;
-        uint32_t new_pc = read_u32_at(entry);
-        uint32_t discard_count = read_u32_at(entry + sizeof(uint32_t));
-        vs_top -= discard_count;
+        uint32_t new_pc;
+        uint32_t discard_count;
+        uint8_t keep_count;
+        read_table_entry_at(entry, &new_pc, &discard_count, &keep_count);
+        DISCARD_KEEP(discard_count, keep_count);
         GOTO(new_pc);
         break;
       }
@@ -1348,10 +1366,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       case WASM_OPCODE_DISCARD_KEEP: {
         uint32_t discard_count = read_u32(&pc);
         uint8_t keep_count = *pc++;
-        assert(keep_count <= 1);
-        if (keep_count == 1)
-          PICK(discard_count + 1) = TOP();
-        vs_top -= discard_count;
+        DISCARD_KEEP(discard_count, keep_count);
         break;
       }
 
@@ -1944,8 +1959,26 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_DATA: {
         uint32_t num_bytes = read_u32(&pc);
         printf("%s $%u\n", s_opcode_name[opcode], num_bytes);
-        /* just skip those data bytes */
-        pc += num_bytes;
+        /* for now, the only reason this is emitted is for br_table, so display
+         * it as a list of table entries */
+        if (num_bytes % WASM_TABLE_ENTRY_SIZE == 0) {
+          uint32_t num_entries = num_bytes / WASM_TABLE_ENTRY_SIZE;
+          uint32_t i;
+          for (i = 0; i < num_entries; ++i) {
+            printf("%4" PRIzd "| ", pc - istream);
+            uint32_t offset;
+            uint32_t discard;
+            uint8_t keep;
+            read_table_entry_at(pc, &offset, &discard, &keep);
+            printf("  entry %d: offset: %u discard: %u keep: %u\n", i, offset,
+                   discard, keep);
+            pc += WASM_TABLE_ENTRY_SIZE;
+          }
+        } else {
+          /* just skip those data bytes */
+          pc += num_bytes;
+        }
+
         break;
       }
 

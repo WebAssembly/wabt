@@ -750,6 +750,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
                                    void* user_data) {
   WasmContext* ctx = user_data;
   WasmType key = pop_expr(ctx);
+  WasmType value = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, key, "br_table"));
 
   uint32_t i;
@@ -757,8 +758,7 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
     uint32_t depth = i != num_targets ? target_depths[i] : default_target_depth;
     uint32_t translated_depth = translate_typecheck_depth(ctx, depth);
     WasmTypecheckLabel* label = get_typecheck_label(ctx, translated_depth);
-    CHECK_RESULT(unify_and_check_type(ctx, &label->type, WASM_TYPE_VOID,
-                                      "br_table"));
+    CHECK_RESULT(unify_and_check_type(ctx, &label->type, value, "br_table"));
   }
 
   return push_expr(ctx, WASM_TYPE_ANY, WASM_OPCODE_BR_TABLE);
@@ -1121,9 +1121,12 @@ static WasmResult emit_br(WasmContext* ctx, uint32_t depth) {
 
 static WasmResult emit_br_table_offset(WasmContext* ctx, uint32_t depth) {
   WasmEmitLabel* label = get_emit_label(ctx, depth);
-  uint32_t discard_count = ctx->value_stack_size - label->value_stack_size;
+  uint8_t keep_count = label->has_value ? 1 : 0;
+  uint32_t discard_count =
+      (ctx->value_stack_size - label->value_stack_size) - keep_count;
   CHECK_RESULT(emit_br_offset(ctx, depth, label->offset));
   CHECK_RESULT(emit_i32(ctx, discard_count));
+  CHECK_RESULT(emit_i8(ctx, keep_count));
   return WASM_OK;
 }
 
@@ -1349,8 +1352,7 @@ static WasmResult on_emit_br_table_expr(uint32_t num_targets,
   /* not necessary for the interpreter, but it makes it easier to disassemble.
    * This opcode specifies how many bytes of data follow. */
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_DATA));
-  CHECK_RESULT(emit_i32(ctx, (num_targets + 1) * sizeof(uint32_t) * 2));
-
+  CHECK_RESULT(emit_i32(ctx, (num_targets + 1) * WASM_TABLE_ENTRY_SIZE));
   CHECK_RESULT(emit_i32_at(ctx, fixup_table_offset, get_istream_offset(ctx)));
 
   /* write the branch table as (offset, discard count) pairs */

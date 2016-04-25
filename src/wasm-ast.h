@@ -126,6 +126,7 @@ struct WasmExpr {
     struct { WasmVar var; WasmExprPtr expr; } br;
     struct { WasmExprPtr expr; } return_;
     struct {
+      WasmExprPtr key;
       WasmExprPtr expr;
       WasmVarVector targets;
       WasmVar default_target;

@@ -675,15 +675,15 @@ static void check_expr(WasmContext* ctx,
     }
 
     case WASM_EXPR_TYPE_BR_TABLE: {
-      check_expr(ctx, module, func, expr->br_table.expr, WASM_TYPE_I32,
+      check_expr(ctx, module, func, expr->br_table.key, WASM_TYPE_I32,
                  " of key");
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
         check_br(ctx, &expr->loc, module, func, &expr->br_table.targets.data[i],
-                 NULL, " of br_table target");
+                 expr->br_table.expr, " of br_table target");
       }
       check_br(ctx, &expr->loc, module, func, &expr->br_table.default_target,
-               NULL, " of br_table default target");
+               expr->br_table.expr, " of br_table default target");
       break;
     }
 

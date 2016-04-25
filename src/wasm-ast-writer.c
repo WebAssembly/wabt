@@ -383,7 +383,11 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
         write_br_var(ctx, &expr->br_table.targets.data[i],
                      WASM_NEXT_CHAR_SPACE);
       write_br_var(ctx, &expr->br_table.default_target, WASM_NEXT_CHAR_NEWLINE);
-      write_expr(ctx, expr->br_table.expr);
+      if (expr->br_table.expr &&
+          expr->br_table.expr->type != WASM_EXPR_TYPE_NOP) {
+        write_expr(ctx, expr->br_table.expr);
+      }
+      write_expr(ctx, expr->br_table.key);
       write_close_newline(ctx);
       break;
     }
