@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
 (;; STDOUT ;;;
-300/300 tests passed.
+318/318 tests passed.
 ;;; STDOUT ;;)

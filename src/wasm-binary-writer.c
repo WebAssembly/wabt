@@ -575,6 +575,9 @@ static void write_expr(WasmContext* ctx,
       write_expr(ctx, module, func, expr->convert.expr);
       write_opcode(&ctx->stream, expr->convert.opcode);
       break;
+    case WASM_EXPR_TYPE_CURRENT_MEMORY:
+      write_opcode(&ctx->stream, WASM_OPCODE_CURRENT_MEMORY);
+      break;
     case WASM_EXPR_TYPE_GET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       write_opcode(&ctx->stream, WASM_OPCODE_GET_LOCAL);
@@ -637,9 +640,6 @@ static void write_expr(WasmContext* ctx,
       pop_label(ctx, &expr->loop.outer);
       break;
     }
-    case WASM_EXPR_TYPE_MEMORY_SIZE:
-      write_opcode(&ctx->stream, WASM_OPCODE_MEMORY_SIZE);
-      break;
     case WASM_EXPR_TYPE_NOP:
       write_opcode(&ctx->stream, WASM_OPCODE_NOP);
       break;

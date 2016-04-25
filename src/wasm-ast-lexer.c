@@ -407,7 +407,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "i64.reinterpret/f64" { OPCODE(I64_REINTERPRET_F64); RETURN(CONVERT); }
     <i> "select"              { RETURN(SELECT); }
     <i> "unreachable"         { RETURN(UNREACHABLE); }
-    <i> "memory_size"         { RETURN(MEMORY_SIZE); }
+    <i> "current_memory"      { RETURN(CURRENT_MEMORY); }
     <i> "grow_memory"         { RETURN(GROW_MEMORY); }
     <i> "type"                { RETURN(TYPE); }
     <i> "func"                { RETURN(FUNC); }

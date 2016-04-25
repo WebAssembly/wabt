@@ -1,55 +1,41 @@
-;;; NOTE: temporarily broken waiting for the testsuite update
-;;; ERROR: 1
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
-(;; STDERR ;;;
-Error running "sexpr-wasm":
-third_party/testsuite/labels.wast:247:18: expected module to be invalid
-(assert_invalid (module (func (loop $l (br $l (i32.const 0))))) "arity mismat...
-                 ^^^^^^
-third_party/testsuite/labels.wast:257:18: expected module to be invalid
-(assert_invalid (module (func (block $l0 (br_if $l0 (nop) (i32.const 1)))))
-                 ^^^^^^
-third_party/testsuite/labels.wast:259:18: expected module to be invalid
-(assert_invalid (module (func (result i32)
-                 ^^^^^^
-
-;;; STDERR ;;)
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/labels.wast:248:50: type mismatch of unary op. got void, expected f32
-...lid (module (func (block $l (f32.neg (br_if $l (i32.const 1))) (nop)))) "t...
-                                        ^
+  third_party/testsuite/labels.wast:268:36: type mismatch of unary op. got void, expected f32
+  (module (func (block $l (f32.neg (br_if $l (i32.const 1))) (nop))))
+                                   ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:250:54: type mismatch of block. got void, expected f32
-...(module (func (result f32) (block $l (br_if $l (f32.const 0) (i32.const 1)...
-                                        ^
+  third_party/testsuite/labels.wast:272:40: type mismatch of block. got void, expected f32
+  (module (func (result f32) (block $l (br_if $l (f32.const 0) (i32.const 1)))))
+                                       ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:251:54: type mismatch of block. got void, expected i32
-...(module (func (result i32) (block $l (br_if $l (f32.const 0) (i32.const 1)...
-                                        ^
+  third_party/testsuite/labels.wast:276:40: type mismatch of block. got void, expected i32
+  (module (func (result i32) (block $l (br_if $l (f32.const 0) (i32.const 1)))))
+                                       ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:251:64: type mismatch of br_if value. got f32, expected i32
-...unc (result i32) (block $l (br_if $l (f32.const 0) (i32.const 1))))) "type...
-                                        ^
+  third_party/testsuite/labels.wast:276:50: type mismatch of br_if value. got f32, expected i32
+  (module (func (result i32) (block $l (br_if $l (f32.const 0) (i32.const 1)))))
+                                                 ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:252:50: type mismatch of unary op. got void, expected f32
-...lid (module (func (block $l (f32.neg (br_if $l (f32.const 0) (i32.const 1)...
-                                        ^
+  third_party/testsuite/labels.wast:280:36: type mismatch of unary op. got void, expected f32
+  (module (func (block $l (f32.neg (br_if $l (f32.const 0) (i32.const 1))))))
+                                   ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:253:66: type mismatch of block. got f32, expected i32
-...c (param i32) (result i32) (block $l (f32.neg (br_if $l (f32.const 0) (get...
-                                        ^
+  third_party/testsuite/labels.wast:286:17: type mismatch of block. got f32, expected i32
+      (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0))))
+                ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:253:75: type mismatch of unary op. got void, expected f32
-...i32) (result i32) (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0)...
-                                        ^
+  third_party/testsuite/labels.wast:286:26: type mismatch of unary op. got void, expected f32
+      (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0))))
+                         ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:253:85: type mismatch of br_if value. got f32, expected i32
-...lt i32) (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0)))))) "typ...
-                                        ^
+  third_party/testsuite/labels.wast:286:36: type mismatch of br_if value. got f32, expected i32
+      (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0))))
+                                   ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:255:32: type mismatch of block. got void, expected f32
-  (block $l (f32.neg (block $i (br_if $l (f32.const 3) (get_local 0)))))))
-                               ^
+  third_party/testsuite/labels.wast:294:36: type mismatch of block. got void, expected f32
+      (block $l (f32.neg (block $i (br_if $l (f32.const 3) (get_local 0)))))
+                                   ^
+25/25 tests passed.
 ;;; STDOUT ;;)

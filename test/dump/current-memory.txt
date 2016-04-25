@@ -2,7 +2,7 @@
 (module
   (memory 1)
   (func (result i32)
-    (memory_size)))
+    (current_memory)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
@@ -40,7 +40,7 @@
 ; function body 0
 0000031: 00                                         ; func body size (guess)
 0000032: 00                                         ; local decl count
-0000033: 3b                                         ; OPCODE_MEMORY_SIZE
+0000033: 3b                                         ; OPCODE_CURRENT_MEMORY
 0000031: 02                                         ; FIXUP func body size
 000002f: 04                                         ; FIXUP section size
 ;; dump

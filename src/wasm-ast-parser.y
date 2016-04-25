@@ -114,7 +114,7 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token FUNC START TYPE PARAM RESULT LOCAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
-%token UNREACHABLE MEMORY_SIZE GROW_MEMORY
+%token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
 %token EOF 0 "EOF"
 
@@ -497,8 +497,9 @@ expr1 :
       $$ = wasm_new_empty_expr(parser->allocator, WASM_EXPR_TYPE_UNREACHABLE);
       CHECK_ALLOC_NULL($$);
     }
-  | MEMORY_SIZE {
-      $$ = wasm_new_empty_expr(parser->allocator, WASM_EXPR_TYPE_MEMORY_SIZE);
+  | CURRENT_MEMORY {
+      $$ = wasm_new_empty_expr(parser->allocator,
+                               WASM_EXPR_TYPE_CURRENT_MEMORY);
       CHECK_ALLOC_NULL($$);
     }
   | GROW_MEMORY expr {

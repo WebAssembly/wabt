@@ -879,9 +879,9 @@ static WasmResult on_store_expr(WasmOpcode opcode,
   return push_expr(ctx, type, opcode);
 }
 
-static WasmResult on_memory_size_expr(void* user_data) {
+static WasmResult on_current_memory_expr(void* user_data) {
   WasmContext* ctx = user_data;
-  return push_expr(ctx, WASM_TYPE_I32, WASM_OPCODE_MEMORY_SIZE);
+  return push_expr(ctx, WASM_TYPE_I32, WASM_OPCODE_CURRENT_MEMORY);
 }
 
 static WasmResult on_nop_expr(void* user_data) {
@@ -1526,11 +1526,11 @@ static WasmResult on_emit_store_expr(WasmOpcode opcode,
   return WASM_OK;
 }
 
-static WasmResult on_emit_memory_size_expr(void* user_data) {
+static WasmResult on_emit_current_memory_expr(void* user_data) {
   WasmContext* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
-       s_opcode_name[WASM_OPCODE_MEMORY_SIZE]);
-  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_MEMORY_SIZE));
+       s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CURRENT_MEMORY));
   adjust_value_stack(ctx, 1);
   CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
   ctx->expr_count++;
@@ -1707,7 +1707,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_if_expr = &on_if_expr,
     .on_load_expr = &on_load_expr,
     .on_loop_expr = &on_loop_expr,
-    .on_memory_size_expr = &on_memory_size_expr,
+    .on_current_memory_expr = &on_current_memory_expr,
     .on_nop_expr = &on_nop_expr,
     .on_return_expr = &on_return_expr,
     .on_select_expr = &on_select_expr,
@@ -1755,7 +1755,7 @@ static WasmBinaryReader s_binary_reader_emit = {
     .on_if_expr = &on_emit_if_expr,
     .on_load_expr = &on_emit_load_expr,
     .on_loop_expr = &on_emit_loop_expr,
-    .on_memory_size_expr = &on_emit_memory_size_expr,
+    .on_current_memory_expr = &on_emit_current_memory_expr,
     .on_nop_expr = &on_emit_nop_expr,
     .on_return_expr = &on_emit_return_expr,
     .on_select_expr = &on_emit_select_expr,

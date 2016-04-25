@@ -1,5 +1,21 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/float_memory.wast
 (;; STDOUT ;;;
-16/16 tests passed.
+$invoke_2() 
+$invoke_5() 
+$invoke_8() 
+$invoke_11() 
+$invoke_2() 
+$invoke_5() 
+$invoke_8() 
+$invoke_11() 
+$invoke_2() 
+$invoke_5() 
+$invoke_8() 
+$invoke_11() 
+$invoke_2() 
+$invoke_5() 
+$invoke_8() 
+$invoke_11() 
+40/40 tests passed.
 ;;; STDOUT ;;)

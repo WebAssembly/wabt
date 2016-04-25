@@ -625,9 +625,9 @@ static void check_expr(WasmContext* ctx,
       break;
     }
 
-    case WASM_EXPR_TYPE_MEMORY_SIZE:
+    case WASM_EXPR_TYPE_CURRENT_MEMORY:
       check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type,
-                 " in memory_size");
+                 " in current_memory");
       break;
 
     case WASM_EXPR_TYPE_NOP:

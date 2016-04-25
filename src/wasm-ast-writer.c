@@ -502,8 +502,8 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
       break;
     }
 
-    case WASM_EXPR_TYPE_MEMORY_SIZE:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_MEMORY_SIZE]);
+    case WASM_EXPR_TYPE_CURRENT_MEMORY:
+      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
       write_close_newline(ctx);
       break;
 

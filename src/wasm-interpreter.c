@@ -738,8 +738,8 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         STORE(F64, F64);
         break;
 
-      case WASM_OPCODE_MEMORY_SIZE:
-        PUSH_I32(module->memory.byte_size);
+      case WASM_OPCODE_CURRENT_MEMORY:
+        PUSH_I32(module->memory.page_size);
         break;
 
       case WASM_OPCODE_GROW_MEMORY: {
@@ -759,7 +759,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         module->memory.data = new_data;
         module->memory.page_size = new_page_size;
         module->memory.byte_size = new_byte_size;
-        PUSH_I32(old_byte_size);
+        PUSH_I32(old_page_size);
         break;
       }
 
@@ -1429,7 +1429,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_NOP:
     case WASM_OPCODE_RETURN:
     case WASM_OPCODE_UNREACHABLE:
-    case WASM_OPCODE_MEMORY_SIZE:
+    case WASM_OPCODE_CURRENT_MEMORY:
     case WASM_OPCODE_DISCARD:
       printf("%s\n", s_opcode_name[opcode]);
       break;
@@ -1739,7 +1739,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_NOP:
       case WASM_OPCODE_RETURN:
       case WASM_OPCODE_UNREACHABLE:
-      case WASM_OPCODE_MEMORY_SIZE:
+      case WASM_OPCODE_CURRENT_MEMORY:
       case WASM_OPCODE_DISCARD:
         printf("%s\n", s_opcode_name[opcode]);
         break;

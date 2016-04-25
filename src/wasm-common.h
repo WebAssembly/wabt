@@ -189,7 +189,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I64, I32, I64, 8, 0x34, I64_STORE, "i64.store")                     \
   V(F32, I32, F32, 4, 0x35, F32_STORE, "f32.store")                     \
   V(F64, I32, F64, 8, 0x36, F64_STORE, "f64.store")                     \
-  V(I32, ___, ___, 0, 0x3b, MEMORY_SIZE, "memory_size")                 \
+  V(I32, ___, ___, 0, 0x3b, CURRENT_MEMORY, "current_memory")           \
   V(I32, I32, ___, 0, 0x39, GROW_MEMORY, "grow_memory")                 \
   V(I32, I32, I32, 0, 0x40, I32_ADD, "i32.add")                         \
   V(I32, I32, I32, 0, 0x41, I32_SUB, "i32.sub")                         \

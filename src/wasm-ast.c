@@ -456,7 +456,7 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_UNREACHABLE:
     case WASM_EXPR_TYPE_CONST:
-    case WASM_EXPR_TYPE_MEMORY_SIZE:
+    case WASM_EXPR_TYPE_CURRENT_MEMORY:
     case WASM_EXPR_TYPE_NOP:
       break;
   }
@@ -772,8 +772,8 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       CALLBACK(end_loop_expr);
       break;
 
-    case WASM_EXPR_TYPE_MEMORY_SIZE:
-      CALLBACK(on_memory_size_expr);
+    case WASM_EXPR_TYPE_CURRENT_MEMORY:
+      CALLBACK(on_current_memory_expr);
       break;
 
     case WASM_EXPR_TYPE_NOP:

@@ -786,8 +786,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
             }
 
-            case WASM_OPCODE_MEMORY_SIZE:
-              CALLBACK0(&ctx, on_memory_size_expr);
+            case WASM_OPCODE_CURRENT_MEMORY:
+              CALLBACK0(&ctx, on_current_memory_expr);
               break;
 
             case WASM_OPCODE_GROW_MEMORY:

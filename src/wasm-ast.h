@@ -71,13 +71,13 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_COMPARE,
   WASM_EXPR_TYPE_CONST,
   WASM_EXPR_TYPE_CONVERT,
+  WASM_EXPR_TYPE_CURRENT_MEMORY,
   WASM_EXPR_TYPE_GET_LOCAL,
   WASM_EXPR_TYPE_GROW_MEMORY,
   WASM_EXPR_TYPE_IF,
   WASM_EXPR_TYPE_IF_ELSE,
   WASM_EXPR_TYPE_LOAD,
   WASM_EXPR_TYPE_LOOP,
-  WASM_EXPR_TYPE_MEMORY_SIZE,
   WASM_EXPR_TYPE_NOP,
   WASM_EXPR_TYPE_RETURN,
   WASM_EXPR_TYPE_SELECT,
@@ -365,6 +365,7 @@ typedef struct WasmExprVisitor {
   WasmResult (*on_const_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_convert_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_convert_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_current_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_get_local_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_grow_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_grow_memory_expr)(WasmExpr*, void* user_data);
@@ -376,7 +377,6 @@ typedef struct WasmExprVisitor {
   WasmResult (*end_load_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_loop_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_loop_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_memory_size_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_nop_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_return_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_return_expr)(WasmExpr*, void* user_data);
@@ -422,7 +422,7 @@ WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_unary_expr(struct WasmAllocator*);
-/* for nop, unreachable and memory_size */
+/* for nop, unreachable and current_memory */
 WasmExpr* wasm_new_empty_expr(struct WasmAllocator*, WasmExprType);
 
 /* destruction functions. not needed unless you're creating your own AST

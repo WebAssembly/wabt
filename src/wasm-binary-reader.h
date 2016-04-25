@@ -128,7 +128,7 @@ typedef struct WasmBinaryReader {
                              uint32_t offset,
                              void* user_data);
   WasmResult (*on_loop_expr)(void* user_data);
-  WasmResult (*on_memory_size_expr)(void* user_data);
+  WasmResult (*on_current_memory_expr)(void* user_data);
   WasmResult (*on_nop_expr)(void* user_data);
   WasmResult (*on_return_expr)(void* user_data);
   WasmResult (*on_select_expr)(void* user_data);

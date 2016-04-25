@@ -721,11 +721,11 @@ static WasmResult on_grow_memory_expr(void* user_data) {
   return push_expr(ctx, result);
 }
 
-static WasmResult on_memory_size_expr(void* user_data) {
+static WasmResult on_current_memory_expr(void* user_data) {
   WasmContext* ctx = user_data;
   WasmExpr* result;
-  CHECK_ALLOC_NULL(
-      result = wasm_new_empty_expr(ctx->allocator, WASM_EXPR_TYPE_MEMORY_SIZE));
+  CHECK_ALLOC_NULL(result = wasm_new_empty_expr(ctx->allocator,
+                                                WASM_EXPR_TYPE_CURRENT_MEMORY));
   return push_expr(ctx, result);
 }
 
@@ -995,7 +995,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_if_expr = &on_if_expr,
     .on_load_expr = &on_load_expr,
     .on_loop_expr = &on_loop_expr,
-    .on_memory_size_expr = &on_memory_size_expr,
+    .on_current_memory_expr = &on_current_memory_expr,
     .on_nop_expr = &on_nop_expr,
     .on_return_expr = &on_return_expr,
     .on_select_expr = &on_select_expr,
