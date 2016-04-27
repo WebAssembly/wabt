@@ -43,30 +43,31 @@ NAMED_VALUES = {
   'i64': 2,
   'f32': 3,
   'f64': 4,
+  'function': 0x40,
   'magic': (0, 0x61, 0x73, 0x6d),
-  'version': (0xa, 0, 0, 0),
+  'version': (0xb, 0, 0, 0),
 
   "nop": 0x00,
   "block": 0x01,
   "loop": 0x02,
   "if": 0x03,
-  "if_else": 0x04,
+  "else": 0x04,
   "select": 0x05,
   "br": 0x06,
   "br_if": 0x07,
   "br_table": 0x08,
-  "i8.const": 0x09,
-  "i32.const": 0x0a,
-  "i64.const": 0x0b,
-  "f64.const": 0x0c,
-  "f32.const": 0x0d,
-  "get_local": 0x0e,
-  "set_local": 0x0f,
-  "call": 0x12,
-  "call_indirect": 0x13,
-  "return": 0x14,
-  "unreachable": 0x15,
-  "call_import": 0x1f,
+  "return": 0x09,
+  "unreachable": 0x0a,
+  "end": 0x0f,
+  "i32.const": 0x10,
+  "i64.const": 0x11,
+  "f64.const": 0x12,
+  "f32.const": 0x13,
+  "get_local": 0x14,
+  "set_local": 0x15,
+  "call": 0x16,
+  "call_indirect": 0x17,
+  "call_import": 0x18,
   "i32.load8_s": 0x20,
   "i32.load8_u": 0x21,
   "i32.load16_s": 0x22,
@@ -90,7 +91,7 @@ NAMED_VALUES = {
   "i64.store": 0x34,
   "f32.store": 0x35,
   "f64.store": 0x36,
-  "memory_size": 0x3b,
+  "current_memory": 0x3b,
   "grow_memory": 0x39,
   "i32.add": 0x40,
   "i32.sub": 0x41,
@@ -362,11 +363,9 @@ def p_data_section(p):
   'data : data SECTION LPAREN STRING RPAREN LBRACE data RBRACE'
   p[0] = p[1]
   name = p[4]
-  contents = p[7]
-  section_data = []
-  WriteLebU32(section_data, len(name))
-  WriteString(section_data, name)
-  section_data.extend(contents)
+  section_data = p[7]
+  WriteLebU32(p[0], len(name))
+  WriteString(p[0], name)
   WriteLebU32(p[0], len(section_data))
   p[0].extend(section_data)
 

@@ -1,16 +1,16 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("signatures") { count[1] params[0] result[i32] }
-section("function_signatures") { count[1] type[0] }
-section("export_table") { count[1] func[0] str("main") }
-section("function_bodies") {
+section("type") { count[1] function params[0] results[1] i32 }
+section("function") { count[1] type[0] }
+section("export") { count[1] func[0] str("main") }
+section("code") {
   count[1]
   func {
     locals[0]
-    return
     i32.const
     leb_i32(-420)
+    return arity[1]
   }
 }
 (;; STDOUT ;;;
