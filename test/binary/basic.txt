@@ -1,0 +1,23 @@
+;;; TOOL: run-gen-wasm
+magic
+version
+section("signatures") { count[1] params[0] result[i32] }
+section("function_signatures") { count[1] type[0] }
+section("export_table") { count[1] func[0] str("main") }
+section("function_bodies") {
+  count[1]
+  func {
+    locals[0]
+    return
+    i32.const
+    leb_i32(-420)
+  }
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func (;0;) (type 0) (result i32)
+    (return
+      (i32.const -420)))
+  (export "main" 0))
+;;; STDOUT ;;)

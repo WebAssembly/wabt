@@ -33,16 +33,16 @@ class Error(Exception):
 
 
 class Executable(object):
-  def __init__(self, exe, error_cmdline=True, clean_stdout=None,
-               clean_stderr=None):
+  def __init__(self, exe, *before_args, **kwargs):
     self.exe = exe
-    self.extra_args = []
-    self.error_cmdline = error_cmdline
-    self.clean_stdout = clean_stdout
-    self.clean_stderr = clean_stderr
+    self.before_args = list(before_args)
+    self.after_args = []
+    self.error_cmdline = kwargs.get('error_cmdline', True)
+    self.clean_stdout = kwargs.get('clean_stdout')
+    self.clean_stderr = kwargs.get('clean_stderr')
 
   def RunWithArgs(self, *args):
-    cmd = [self.exe] + list(args) + self.extra_args
+    cmd = [self.exe] + self.before_args + list(args) + self.after_args
     cmd_str = ' '.join(cmd)
 
     err_cmd_str = cmd_str
@@ -69,7 +69,7 @@ class Executable(object):
       raise Error('Error running "%s": %s' % (err_cmd_str, str(e)))
 
   def AppendArg(self, arg):
-    self.extra_args.append(arg)
+    self.after_args.append(arg)
 
   def AppendOptionalArgs(self, option_dict):
     for option, value in option_dict.iteritems():

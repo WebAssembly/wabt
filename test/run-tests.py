@@ -91,6 +91,13 @@ TOOLS = {
       '--spec',
       '--no-error-cmdline',
     ])
+  },
+  'run-gen-wasm': {
+    'EXE': 'test/run-gen-wasm.py',
+    'FLAGS': ' '.join([
+      '--wasm-wast-executable=%(wasm-wast)s',
+      '--no-error-cmdline',
+    ])
   }
 }
 

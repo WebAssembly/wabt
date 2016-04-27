@@ -13,3 +13,6 @@
 [submodule "third_party/CMakeXFind"]
 	path = third_party/CMakeXFind
 	url = https://github.com/julp/CMakeXFind
+[submodule "third_party/ply"]
+	path = third_party/ply
+	url = https://github.com/dabeaz/ply
