@@ -3,6 +3,7 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDERR ;;;
+Error running "sexpr-wasm":
 third_party/testsuite/switch.wast:99:23: syntax error, unexpected (, expecting )
                       (i32.and (i32.const 3) (get_local $i))
                       ^

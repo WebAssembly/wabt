@@ -2,6 +2,7 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/select.wast
 (;; STDERR ;;;
+Error running "d8":
 
 ;;; STDERR ;;)
 (;; STDOUT ;;;

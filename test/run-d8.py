@@ -17,24 +17,17 @@
 
 import argparse
 import os
-import shutil
-import signal
 import subprocess
 import sys
-import tempfile
 
 import find_exe
+import utils
 from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-EXPOSE_WASM = '--expose-wasm'
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
 
-# Get signal names from numbers in Python
-# http://stackoverflow.com/a/2549950
-SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
-                       if v.startswith('SIG') and not v.startswith('SIG_'))
 
 def CleanD8Stdout(stdout):
   def FixLine(line):
@@ -63,74 +56,36 @@ def main(args):
                       help='override d8 executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--no-error-cmdline',
+                      help='don\'t display the subprocess\'s commandline when' +
+                          ' an error occurs', dest='error_cmdline',
+                      action='store_false')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--spec', help='run spec tests.', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(options.executable)
-  d8_exe = find_exe.GetD8Executable(options.d8_executable)
+  sexpr_wasm = utils.Executable(
+      find_exe.GetSexprWasmExecutable(options.executable),
+      error_cmdline=options.error_cmdline)
+  sexpr_wasm.AppendOptionalArgs({
+    '-v': options.verbose,
+    '--spec': options.spec,
+    '--use-libc-allocator': options.use_libc_allocator
+  })
 
-  if options.out_dir:
-    out_dir = options.out_dir
-    out_dir_is_temp = False
-    if not os.path.exists(out_dir):
-      os.makedirs(out_dir)
-  else:
-    out_dir = tempfile.mkdtemp(prefix='run-d8-')
-    out_dir_is_temp = True
+  d8 = utils.Executable(find_exe.GetD8Executable(options.d8_executable),
+                        clean_stdout=CleanD8Stdout,
+                        clean_stderr=CleanD8Stderr,
+                        error_cmdline=options.error_cmdline)
 
-  try:
-    basename_noext = os.path.splitext(os.path.basename(options.file))[0]
-    if options.spec:
-      basename = basename_noext + '.json'
-    else:
-      basename = basename_noext + '.wasm'
-    out_file = os.path.join(out_dir, basename)
+  with utils.TempDirectory(options.out_dir, 'run-d8-') as out_dir:
+    new_ext = '.json' if options.spec else '.wasm'
+    out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
+    sexpr_wasm.RunWithArgs(options.file, '-o', out_file)
 
-    # First compile the file
-    cmd = [sexpr_wasm_exe, '-o', out_file]
-    if options.verbose:
-      cmd.append('-v')
-    if options.spec:
-      cmd.extend(['--spec'])
-    if options.use_libc_allocator:
-      cmd.extend(['--use-libc-allocator'])
-    cmd.append(options.file)
-    try:
-      process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-      _, stderr = process.communicate()
-      if process.returncode != 0:
-        raise Error(stderr)
-    except OSError as e:
-      raise Error(str(e))
-
-    # Now run the generated file
-    if options.spec:
-      cmd = [d8_exe, EXPOSE_WASM, SPEC_JS, '--', out_file]
-    else:
-      cmd = [d8_exe, EXPOSE_WASM, WASM_JS, '--', out_file]
-    try:
-      process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE,
-                                 universal_newlines=True)
-      stdout, stderr = process.communicate()
-      sys.stdout.write(CleanD8Stdout(stdout))
-      msg = CleanD8Stderr(stderr)
-      if process.returncode < 0:
-        # Terminated by signal
-        signame = SIGNAMES.get(-process.returncode, '<unknown>')
-        if msg:
-          msg += '\n\n'
-        raise Error(msg + 'd8 raised signal ' + signame)
-      elif process.returncode > 0:
-        raise Error(msg)
-    except OSError as e:
-      raise Error(str(e))
-
-  finally:
-    if out_dir_is_temp:
-      shutil.rmtree(out_dir)
+    js_file = SPEC_JS if options.spec else WASM_JS
+    d8.RunWithArgs('--expose-wasm', js_file, '--', out_file)
 
   return 0
 

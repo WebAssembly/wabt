@@ -20,70 +20,15 @@ import difflib
 import os
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 
 import find_exe
 import findtests
+import utils
 from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-class Executable(object):
-  def __init__(self, exe):
-    self.exe = exe
-    self.extra_args = []
-
-  def RunWithArgs(self, *args):
-    cmd = [self.exe] + list(args) + self.extra_args
-    cmd_str = ' '.join(cmd)
-    try:
-      process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-      _, stderr = process.communicate()
-      if process.returncode != 0:
-        raise Error('Error running "%s":\n%s' % (cmd_str, stderr))
-    except OSError as e:
-      raise Error('Error running "%s": %s' % (cmd_str, str(e)))
-
-  def AppendArg(self, arg):
-    self.extra_args.append(arg)
-
-
-def Hexdump(data):
-  DUMP_OCTETS_PER_LINE = 16
-  DUMP_OCTETS_PER_GROUP = 2
-
-  p = 0
-  end = len(data)
-  while p < end:
-    line_start = p
-    line_end = p +  DUMP_OCTETS_PER_LINE
-    line = '%07x: ' % p
-    while p < line_end:
-      for i in xrange(DUMP_OCTETS_PER_GROUP):
-        if p < end:
-          line += '%02x' % ord(data[p])
-        else:
-          line += '  '
-        p += 1
-      line += ' '
-    line += ' '
-    p = line_start
-    for i in xrange(DUMP_OCTETS_PER_LINE):
-      if p >= end:
-        break
-      x = data[p]
-      o = ord(x)
-      if o >= 32 and o < 0x7f:
-        line += '%c' % x
-      else:
-        line += '.'
-      p += 1
-    line += '\n'
-    yield line
-
 
 OK = 0
 ERROR = 1
@@ -103,8 +48,8 @@ def FilesAreEqual(filename1, filename2, verbose=False):
   if data1 != data2:
     msg = 'files differ'
     if verbose:
-      hexdump1 = list(Hexdump(data1))
-      hexdump2 = list(Hexdump(data2))
+      hexdump1 = utils.Hexdump(data1)
+      hexdump2 = utils.Hexdump(data2)
       diff_lines = []
       for line in (difflib.unified_diff(
           hexdump1, hexdump2, fromfile=filename1, tofile=filename2)):
@@ -164,53 +109,44 @@ def main(args):
                       help='set the wasm-wast executable to use.')
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
+  parser.add_argument('--no-error-cmdline',
+                      help='don\'t display the subprocess\'s commandline when' +
+                          ' an error occurs', dest='error_cmdline',
+                      action='store_false')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
-  parser.add_argument('file', nargs='?', help='test file.')
+  parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(
-      options.sexpr_wasm_executable)
-  wasm_wast_exe = find_exe.GetWasmWastExecutable(options.wasm_wast_executable)
+  sexpr_wasm = utils.Executable(
+      find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
+      error_cmdline=options.error_cmdline)
+  sexpr_wasm.AppendOptionalArgs({
+    '--debug-names': options.debug_names,
+    '--use-libc-allocator': options.use_libc_allocator
+  })
 
-  sexpr_wasm = Executable(sexpr_wasm_exe)
-  wasm_wast = Executable(wasm_wast_exe)
+  wasm_wast = utils.Executable(
+      find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+      error_cmdline=options.error_cmdline)
+  wasm_wast.AppendOptionalArgs({
+    '--debug-names': options.debug_names,
+    '--generate-names': options.generate_names,
+    '--use-libc-allocator': options.use_libc_allocator
+  })
 
-  if options.out_dir:
-    out_dir = options.out_dir
-    out_dir_is_temp = False
-    if not os.path.exists(out_dir):
-      os.makedirs(out_dir)
-  else:
-    out_dir = tempfile.mkdtemp(prefix='roundtrip-')
-    out_dir_is_temp = True
-
-  if options.use_libc_allocator:
-    sexpr_wasm.AppendArg('--use-libc-allocator')
-    wasm_wast.AppendArg('--use-libc-allocator')
-  if options.debug_names:
-    sexpr_wasm.AppendArg('--debug-names')
-    wasm_wast.AppendArg('--debug-names')
-  if options.generate_names:
-    wasm_wast.AppendArg('--generate-names')
-
-  try:
+  with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
     filename = options.file
-    if not filename:
-      parser.error('expected file')
     if options.stdout:
       result, msg = OneRoundtripToStdout(sexpr_wasm, wasm_wast, out_dir,
                                          filename, options.verbose)
     else:
-      result, msg = TwoRoundtrips(sexpr_wasm, wasm_wast, out_dir, filename,
-                                  options.verbose)
+      result, msg = TwoRoundtrips(sexpr_wasm, wasm_wast, out_dir,
+                                  filename, options.verbose)
     if result == ERROR:
       sys.stderr.write(msg)
     return result
-  finally:
-    if out_dir_is_temp:
-      shutil.rmtree(out_dir)
 
 
 if __name__ == '__main__':

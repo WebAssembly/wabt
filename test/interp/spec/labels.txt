@@ -3,6 +3,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDERR ;;;
+Error running "sexpr-wasm":
 third_party/testsuite/labels.wast:247:18: expected module to be invalid
 (assert_invalid (module (func (loop $l (br $l (i32.const 0))))) "arity mismat...
                  ^^^^^^

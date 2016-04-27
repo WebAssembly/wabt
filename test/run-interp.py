@@ -17,12 +17,11 @@
 
 import argparse
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
 
 import find_exe
+import utils
 from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -38,70 +37,40 @@ def main(args):
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--no-error-cmdline',
+                      help='don\'t display the subprocess\'s commandline when' +
+                          ' an error occurs', dest='error_cmdline',
+                      action='store_false')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  sexpr_wasm_exe = find_exe.GetSexprWasmExecutable(options.executable)
-  wasm_interp_exe = find_exe.GetWasmInterpExecutable(
-      options.wasm_interp_executable)
+  sexpr_wasm = utils.Executable(
+      find_exe.GetSexprWasmExecutable(options.executable),
+      error_cmdline=options.error_cmdline)
+  sexpr_wasm.AppendOptionalArgs({
+    '-v': options.verbose,
+    '--spec': options.spec,
+    '--use-libc-allocator': options.use_libc_allocator
+  })
 
-  if options.out_dir:
-    out_dir = options.out_dir
-    out_dir_is_temp = False
-    if not os.path.exists(out_dir):
-      os.makedirs(out_dir)
-  else:
-    out_dir = tempfile.mkdtemp(prefix='run-interp-')
-    out_dir_is_temp = True
+  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
+      options.wasm_interp_executable),
+      error_cmdline=options.error_cmdline)
+  wasm_interp.AppendOptionalArgs({
+    '--run-all-exports': options.run_all_exports,
+    '--spec': options.spec,
+    '--trace': options.verbose,
+    '--use-libc-allocator': options.use_libc_allocator
+  })
 
-  generated = None
-  try:
-    basename_noext = os.path.splitext(os.path.basename(options.file))[0]
-    if options.spec:
-      basename = basename_noext + '.json'
-    else:
-      basename = basename_noext + '.wasm'
-    out_file = os.path.join(out_dir, basename)
-
-    # First compile the file
-    cmd = [sexpr_wasm_exe, '-o', out_file]
-    if options.verbose:
-      cmd.append('-v')
-    if options.spec:
-      cmd.append('--spec')
-    if options.use_libc_allocator:
-      cmd.append('--use-libc-allocator')
-    cmd.append(options.file)
-    try:
-      process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-      _, stderr = process.communicate()
-      if process.returncode != 0:
-        raise Error(stderr)
-    except OSError as e:
-      raise Error(str(e))
-
-    cmd = [wasm_interp_exe, out_file]
-    if options.run_all_exports:
-      cmd.append('--run-all-exports')
-    if options.spec:
-      cmd.append('--spec')
-    if options.verbose:
-      cmd.append('--trace')
-    try:
-      process = subprocess.Popen(cmd, stderr=subprocess.PIPE,
-                                 universal_newlines=True)
-      _, stderr = process.communicate()
-      if process.returncode != 0:
-        raise Error(stderr)
-    except OSError as e:
-      raise Error(str(e))
-
-  finally:
-    if out_dir_is_temp:
-      shutil.rmtree(out_dir)
+  with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
+    new_ext = '.json' if options.spec else '.wasm'
+    out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
+    sexpr_wasm.RunWithArgs(options.file, '-o', out_file)
+    wasm_interp.RunWithArgs(out_file)
 
   return 0
 

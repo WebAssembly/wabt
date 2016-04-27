@@ -50,24 +50,47 @@ TOOLS = {
   },
   'run-d8': {
     'EXE': 'test/run-d8.py',
-    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s'
+    'FLAGS': ' '.join([
+      '-e', '%(sexpr-wasm)s',
+      '--d8-executable=%(d8)s',
+      '--no-error-cmdline',
+    ])
   },
   'run-d8-spec': {
     'EXE': 'test/run-d8.py',
-    'FLAGS': '-e %(sexpr-wasm)s --d8-executable=%(d8)s --spec'
+    'FLAGS': ' '.join([
+      '-e', '%(sexpr-wasm)s',
+      '--d8-executable=%(d8)s',
+      '--spec',
+      '--no-error-cmdline',
+    ])
   },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
-    'FLAGS': '-v -e %(sexpr-wasm)s --wasm-wast-executable=%(wasm-wast)s'
+    'FLAGS': ' '.join([
+      '-v',
+      '-e', '%(sexpr-wasm)s',
+      '--wasm-wast-executable=%(wasm-wast)s',
+      '--no-error-cmdline',
+    ])
   },
   'run-interp': {
     'EXE': 'test/run-interp.py',
-    'FLAGS': '-e %(sexpr-wasm)s --wasm-interp-executable=%(wasm-interp)s '
-             '--run-all-exports'
+    'FLAGS': ' '.join([
+      '-e', '%(sexpr-wasm)s',
+      '--wasm-interp-executable=%(wasm-interp)s',
+      '--run-all-exports',
+      '--no-error-cmdline',
+    ])
   },
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
-    'FLAGS': '-e %(sexpr-wasm)s --wasm-interp-executable=%(wasm-interp)s --spec'
+    'FLAGS': ' '.join([
+      '-e', '%(sexpr-wasm)s',
+      '--wasm-interp-executable=%(wasm-interp)s',
+      '--spec',
+      '--no-error-cmdline',
+    ])
   }
 }
 
