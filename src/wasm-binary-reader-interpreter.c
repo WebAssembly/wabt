@@ -473,8 +473,14 @@ static void pop_depth(WasmContext* ctx) {
   ctx->depth_stack.size--;
   /* reduce the depth_fixups stack as well, but it may be smaller than
    * depth_stack so only do it conditionally. */
-  if (ctx->depth_fixups.size > ctx->depth_stack.size)
+  if (ctx->depth_fixups.size > ctx->depth_stack.size) {
+    uint32_t from = ctx->depth_stack.size;
+    uint32_t to = ctx->depth_fixups.size;
+    uint32_t i;
+    for (i = from; i < to; ++i)
+      wasm_destroy_uint32_vector(ctx->allocator, &ctx->depth_fixups.data[i]);
     ctx->depth_fixups.size = ctx->depth_stack.size;
+  }
 }
 
 static uint32_t translate_depth(WasmContext* ctx, uint32_t depth) {
