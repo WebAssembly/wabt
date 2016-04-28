@@ -25,9 +25,6 @@
 
 struct WasmAllocator;
 
-typedef size_t WasmLineOffset;
-WASM_DEFINE_VECTOR(line_offset, WasmLineOffset);
-
 typedef enum WasmLexerSourceType {
   WASM_LEXER_SOURCE_TYPE_FILE,
   WASM_LEXER_SOURCE_TYPE_BUFFER,
@@ -49,11 +46,10 @@ typedef struct WasmLexer {
   struct WasmAllocator* allocator;
   WasmLexerSource source;
   const char* filename;
-  WasmLineOffsetVector line_offsets;
   int line;
   int comment_nesting;
-  size_t buffer_file_offset;
-  size_t last_line_file_offset;
+  size_t buffer_file_offset; /* file offset of the start of the buffer */
+  size_t line_file_offset;   /* file offset of the start of the current line */
 
   /* lexing data needed by re2c */
   WasmBool eof;
