@@ -112,8 +112,8 @@ function compile(text) {
       var allocator = wasm.LibcAllocator;
       var eh = new wasm.SourceErrorHandler(onError, 80);
       var buf = wasm.Buffer.fromString(text);
-      var lexer = wasm.Lexer.fromBuffer(allocator, 'test.wast', buf);
-      var script = wasm.parse(lexer, eh);
+      var lexer = wasm.AstLexer.fromBuffer(allocator, 'test.wast', buf);
+      var script = wasm.parseAst(lexer, eh);
       wasm.checkAst(lexer, script, eh);
       var memoryWriter = new wasm.MemoryWriter(allocator);
       var jsWriter = new wasm.JSStringWriter();

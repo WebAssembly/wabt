@@ -227,24 +227,24 @@ var JSStringWriter = function() {
 JSStringWriter.prototype = Object.create(JSWriter.prototype);
 
 
-// Lexer ///////////////////////////////////////////////////////////////////////
-var Lexer = function() {
-  throw "Lexer must be created with $fromBuffer";
+// AstLexer ///////////////////////////////////////////////////////////////////////
+var AstLexer = function() {
+  throw "AstLexer must be created with $fromBuffer";
 };
-Lexer.prototype = Object.create(Object.prototype);
-Lexer.fromBuffer = function(allocator, filename, buffer) {
+AstLexer.prototype = Object.create(Object.prototype);
+AstLexer.fromBuffer = function(allocator, filename, buffer) {
   var $filename = allocateString(filename);
-  var addr = Module._wasm_new_buffer_lexer(allocator.$addr, $filename,
-                                           buffer.$addr, buffer.$size);
+  var addr = Module._wasm_new_ast_buffer_lexer(allocator.$addr, $filename,
+                                               buffer.$addr, buffer.$size);
   if (addr == 0)
-    throw "Lexer.fromBuffer failed";
-  var this_ = Object.create(Lexer.prototype);
+    throw "AstLexer.fromBuffer failed";
+  var this_ = Object.create(AstLexer.prototype);
   this_.$addr = addr;
   this_.$filename = $filename;
   return this_;
 };
-Lexer.prototype.$destroy = function() {
-  Module._wasm_destroy_lexer(this.$addr);
+AstLexer.prototype.$destroy = function() {
+  Module._wasm_destroy_ast_lexer(this.$addr);
   freeString(this.$filename);
 };
 
@@ -469,10 +469,10 @@ Writer.prototype.$moveData = function(dstOffset, srcOffset, size, userData) {
 
 
 // Free functions //////////////////////////////////////////////////////////////
-var parse = function(lexer, errorHandler) {
+var parseAst = function(lexer, errorHandler) {
   var script = new Script();
   var result =
-      Module._wasm_parse(lexer.$addr, script.$addr, errorHandler.$addr);
+      Module._wasm_parse_ast(lexer.$addr, script.$addr, errorHandler.$addr);
   if (result != OK)
     throw "parse failed";
   return script;
@@ -507,10 +507,10 @@ wasm = {
   ERROR: ERROR,
 
   Allocator: Allocator,
+  AstLexer: AstLexer,
   Buffer: Buffer,
   JSStringWriter: JSStringWriter,
   JSWriter: JSWriter,
-  Lexer: Lexer,
   LibcAllocator: LibcAllocator,
   Location: Location,
   MemoryWriter: MemoryWriter,
@@ -524,7 +524,7 @@ wasm = {
 
   checkAst: checkAst,
   markUsedBlocks: markUsedBlocks,
-  parse: parse,
+  parseAst: parseAst,
   writeBinaryScript: writeBinaryScript,
 };
 

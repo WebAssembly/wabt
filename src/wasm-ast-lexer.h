@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WASM_LEXER_H_
-#define WASM_LEXER_H_
+#ifndef WASM_AST_LEXER_H_
+#define WASM_AST_LEXER_H_
 
 #include <stddef.h>
 #include <stdio.h>
@@ -25,13 +25,13 @@
 
 struct WasmAllocator;
 
-typedef enum WasmLexerSourceType {
+typedef enum WasmAstLexerSourceType {
   WASM_LEXER_SOURCE_TYPE_FILE,
   WASM_LEXER_SOURCE_TYPE_BUFFER,
-} WasmLexerSourceType;
+} WasmAstLexerSourceType;
 
-typedef struct WasmLexerSource {
-  WasmLexerSourceType type;
+typedef struct WasmAstLexerSource {
+  WasmAstLexerSourceType type;
   union {
     FILE* file;
     struct {
@@ -40,11 +40,11 @@ typedef struct WasmLexerSource {
       size_t read_offset;
     } buffer;
   };
-} WasmLexerSource;
+} WasmAstLexerSource;
 
-typedef struct WasmLexer {
+typedef struct WasmAstLexer {
   struct WasmAllocator* allocator;
-  WasmLexerSource source;
+  WasmAstLexerSource source;
   const char* filename;
   int line;
   int comment_nesting;
@@ -59,16 +59,17 @@ typedef struct WasmLexer {
   char* token;
   char* cursor;
   char* limit;
-} WasmLexer;
+} WasmAstLexer;
 
 WASM_EXTERN_C_BEGIN
 
-WasmLexer* wasm_new_file_lexer(struct WasmAllocator*, const char* filename);
-WasmLexer* wasm_new_buffer_lexer(struct WasmAllocator*,
-                                 const char* filename,
-                                 const void* data,
-                                 size_t size);
-void wasm_destroy_lexer(WasmLexer*);
+WasmAstLexer* wasm_new_ast_file_lexer(struct WasmAllocator*,
+                                      const char* filename);
+WasmAstLexer* wasm_new_ast_buffer_lexer(struct WasmAllocator*,
+                                        const char* filename,
+                                        const void* data,
+                                        size_t size);
+void wasm_destroy_ast_lexer(WasmAstLexer*);
 WASM_EXTERN_C_END
 
-#endif /* WASM_LEXER_H_ */
+#endif /* WASM_AST_LEXER_H_ */

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "wasm-lexer.h"
+#include "wasm-ast-lexer.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -22,12 +22,12 @@
 #include "wasm-config.h"
 
 #include "wasm-allocator.h"
-#include "wasm-parser.h"
-#include "wasm-parser-lexer-shared.h"
+#include "wasm-ast-parser.h"
+#include "wasm-ast-parser-lexer-shared.h"
 #include "wasm-vector.h"
 
 /* must be included after so some typedefs will be defined */
-#include "wasm-bison-parser.h"
+#include "wasm-ast-parser-gen.h"
 
 /*!max:re2c */
 
@@ -47,7 +47,7 @@
 
 #define ERROR(...) \
   YY_USER_ACTION;  \
-  wasm_parser_error(loc, lexer, parser, __VA_ARGS__)
+  wasm_ast_parser_error(loc, lexer, parser, __VA_ARGS__)
 
 #define BEGIN(c) \
   do {           \
@@ -93,8 +93,8 @@
   lval->literal.text.length = yyleng
 
 static WasmResult fill(WasmLocation* loc,
-                       WasmLexer* lexer,
-                       WasmParser* parser,
+                       WasmAstLexer* lexer,
+                       WasmAstParser* parser,
                        size_t need) {
   if (lexer->eof)
     return WASM_ERROR;
@@ -117,8 +117,8 @@ static WasmResult fill(WasmLocation* loc,
     char* new_buffer = wasm_realloc(lexer->allocator, lexer->buffer,
                                     new_buffer_size, WASM_DEFAULT_ALIGN);
     if (new_buffer == NULL) {
-      wasm_parser_error(loc, lexer, parser,
-                        "unable to reallocate lexer buffer.");
+      wasm_ast_parser_error(loc, lexer, parser,
+                            "unable to reallocate lexer buffer.");
       return WASM_ERROR;
     }
     memmove(new_buffer, lexer->token, lexer->limit - lexer->token);
@@ -166,10 +166,10 @@ static WasmResult fill(WasmLocation* loc,
   return WASM_OK;
 }
 
-int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
-                   WASM_PARSER_LTYPE* loc,
-                   WasmLexer* lexer,
-                   WasmParser* parser) {
+int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
+                       WASM_AST_PARSER_LTYPE* loc,
+                       WasmAstLexer* lexer,
+                       WasmAstParser* parser) {
   enum {
     YYCOND_INIT,
     YYCOND_BAD_TEXT,
@@ -450,11 +450,11 @@ int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
   }
 }
 
-static WasmLexer* wasm_new_lexer(WasmAllocator* allocator,
-                                 WasmLexerSourceType type,
-                                 const char* filename) {
-  WasmLexer* lexer =
-      wasm_alloc_zero(allocator, sizeof(WasmLexer), WASM_DEFAULT_ALIGN);
+static WasmAstLexer* wasm_new_lexer(WasmAllocator* allocator,
+                                    WasmAstLexerSourceType type,
+                                    const char* filename) {
+  WasmAstLexer* lexer =
+      wasm_alloc_zero(allocator, sizeof(WasmAstLexer), WASM_DEFAULT_ALIGN);
   lexer->allocator = allocator;
   lexer->line = 1;
   lexer->filename = filename;
@@ -462,21 +462,24 @@ static WasmLexer* wasm_new_lexer(WasmAllocator* allocator,
   return lexer;
 }
 
-WasmLexer* wasm_new_file_lexer(WasmAllocator* allocator, const char* filename) {
-  WasmLexer* lexer =
+WasmAstLexer* wasm_new_ast_file_lexer(WasmAllocator* allocator,
+                                      const char* filename) {
+  WasmAstLexer* lexer =
       wasm_new_lexer(allocator, WASM_LEXER_SOURCE_TYPE_FILE, filename);
   lexer->source.file = fopen(filename, "r");
   if (!lexer->source.file) {
-    wasm_destroy_lexer(lexer);
+    wasm_destroy_ast_lexer(lexer);
     wasm_free(allocator, lexer);
     return NULL;
   }
   return lexer;
 }
 
-WasmLexer* wasm_new_buffer_lexer(WasmAllocator* allocator, const char* filename,
-                                const void* data, size_t size) {
-  WasmLexer* lexer =
+WasmAstLexer* wasm_new_ast_buffer_lexer(WasmAllocator* allocator,
+                                        const char* filename,
+                                        const void* data,
+                                        size_t size) {
+  WasmAstLexer* lexer =
       wasm_new_lexer(allocator, WASM_LEXER_SOURCE_TYPE_BUFFER, filename);
   lexer->source.buffer.data = data;
   lexer->source.buffer.size = size;
@@ -484,14 +487,14 @@ WasmLexer* wasm_new_buffer_lexer(WasmAllocator* allocator, const char* filename,
   return lexer;
 }
 
-void wasm_destroy_lexer(WasmLexer* lexer) {
+void wasm_destroy_ast_lexer(WasmAstLexer* lexer) {
   if (lexer->source.type == WASM_LEXER_SOURCE_TYPE_FILE && lexer->source.file)
     fclose(lexer->source.file);
   wasm_free(lexer->allocator, lexer->buffer);
   wasm_free(lexer->allocator, lexer);
 }
 
-WasmAllocator* wasm_lexer_get_allocator(WasmLexer* lexer) {
+WasmAllocator* wasm_ast_lexer_get_allocator(WasmAstLexer* lexer) {
   return lexer->allocator;
 }
 
@@ -543,7 +546,7 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
 }
 
 static WasmResult scan_forward_for_line_offset_in_file(
-    WasmLexer* lexer,
+    WasmAstLexer* lexer,
     int line,
     size_t line_start_offset,
     WasmLineOffsetPosition find_position,
@@ -591,7 +594,7 @@ cleanup:
 }
 
 static WasmResult scan_forward_for_line_offset(
-    WasmLexer* lexer,
+    WasmAstLexer* lexer,
     int line,
     size_t line_start_offset,
     WasmLineOffsetPosition find_position,
@@ -613,7 +616,7 @@ static WasmResult scan_forward_for_line_offset(
   }
 }
 
-static WasmResult get_line_start_offset(WasmLexer* lexer,
+static WasmResult get_line_start_offset(WasmAstLexer* lexer,
                                         int line,
                                         size_t* out_offset) {
   int first_line = 1;
@@ -636,7 +639,7 @@ static WasmResult get_line_start_offset(WasmLexer* lexer,
   }
 }
 
-static WasmResult get_offsets_from_line(WasmLexer* lexer,
+static WasmResult get_offsets_from_line(WasmAstLexer* lexer,
                                         int line,
                                         size_t* out_line_start,
                                         size_t* out_line_end) {
@@ -683,12 +686,12 @@ static void clamp_source_line_offsets_to_location(size_t line_start,
   *out_new_line_end = line_end;
 }
 
-WasmResult wasm_lexer_get_source_line(WasmLexer* lexer,
-                                      const WasmLocation* loc,
-                                      size_t line_max_length,
-                                      char* line,
-                                      size_t* out_line_length,
-                                      int* out_column_offset) {
+WasmResult wasm_ast_lexer_get_source_line(WasmAstLexer* lexer,
+                                          const WasmLocation* loc,
+                                          size_t line_max_length,
+                                          char* line,
+                                          size_t* out_line_length,
+                                          int* out_column_offset) {
   WasmResult result;
   size_t line_start; /* inclusive */
   size_t line_end;   /* exclusive */

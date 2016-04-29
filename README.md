@@ -39,7 +39,7 @@ configuration.
 
  - compilers: `gcc`, `clang`, `gcc-i686`, `gcc-fuzz`
  - build types: `debug`, `release`
- - configurations: empty, `asan`, `msan`, `lsan`, `no-flex-bison`, `no-tests`
+ - configurations: empty, `asan`, `msan`, `lsan`, `no-re2c-bison`, `no-tests`
 
 They are combined with dashes, for example:
 
@@ -47,7 +47,7 @@ They are combined with dashes, for example:
 $ make clang-debug
 $ make gcc-i686-release
 $ make clang-debug-lsan
-$ make gcc-debug-no-flex-bison
+$ make gcc-debug-no-re2c-bison
 ```
 
 You can also run CMake yourself, the normal way:
@@ -59,15 +59,15 @@ $ cmake ..
 ...
 ```
 
-If you make changes to `src/wasm-bison-parser.y`, you'll need to install Bison.
+If you make changes to `src/wasm-ast-parser.y`, you'll need to install Bison.
 Before you upload your PR, please run `make update-bison` to update the
 prebuilt C sources in `src/prebuilt/`.
 
-If you make changes to `src/wasm-flex-lexer.l`, you'll need to install Flex.
-Before you upload your PR, please run `make update-flex` to update the prebuilt
-C sources in `src/prebuilt/`.
+If you make changes to `src/wasm-ast-lexer.c`, you'll need to install
+[re2c](http://re2c.org). Before you upload your PR, please run `make
+update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 
-CMake will detect if you don't have Flex or Bison installed and use the
+CMake will detect if you don't have re2c or Bison installed and use the
 prebuilt source files instead.
 
 ## Building d8

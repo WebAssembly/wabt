@@ -30,28 +30,28 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_WASM_PARSER_SRC_PREBUILT_WASM_BISON_PARSER_H_INCLUDED
-# define YY_WASM_PARSER_SRC_PREBUILT_WASM_BISON_PARSER_H_INCLUDED
+#ifndef YY_WASM_AST_PARSER_SRC_PREBUILT_WASM_AST_PARSER_GEN_H_INCLUDED
+# define YY_WASM_AST_PARSER_SRC_PREBUILT_WASM_AST_PARSER_GEN_H_INCLUDED
 /* Debug traces.  */
-#ifndef WASM_PARSER_DEBUG
+#ifndef WASM_AST_PARSER_DEBUG
 # if defined YYDEBUG
 #if YYDEBUG
-#   define WASM_PARSER_DEBUG 1
+#   define WASM_AST_PARSER_DEBUG 1
 #  else
-#   define WASM_PARSER_DEBUG 0
+#   define WASM_AST_PARSER_DEBUG 0
 #  endif
 # else /* ! defined YYDEBUG */
-#  define WASM_PARSER_DEBUG 0
+#  define WASM_AST_PARSER_DEBUG 0
 # endif /* ! defined YYDEBUG */
-#endif  /* ! defined WASM_PARSER_DEBUG */
-#if WASM_PARSER_DEBUG
-extern int wasm_parser_debug;
+#endif  /* ! defined WASM_AST_PARSER_DEBUG */
+#if WASM_AST_PARSER_DEBUG
+extern int wasm_ast_parser_debug;
 #endif
 
 /* Token type.  */
-#ifndef WASM_PARSER_TOKENTYPE
-# define WASM_PARSER_TOKENTYPE
-  enum wasm_parser_tokentype
+#ifndef WASM_AST_PARSER_TOKENTYPE
+# define WASM_AST_PARSER_TOKENTYPE
+  enum wasm_ast_parser_tokentype
   {
     WASM_TOKEN_TYPE_EOF = 0,
     WASM_TOKEN_TYPE_LPAR = 258,
@@ -112,28 +112,28 @@ extern int wasm_parser_debug;
 #endif
 
 /* Value type.  */
-#if ! defined WASM_PARSER_STYPE && ! defined WASM_PARSER_STYPE_IS_DECLARED
-typedef WasmToken WASM_PARSER_STYPE;
-# define WASM_PARSER_STYPE_IS_TRIVIAL 1
-# define WASM_PARSER_STYPE_IS_DECLARED 1
+#if ! defined WASM_AST_PARSER_STYPE && ! defined WASM_AST_PARSER_STYPE_IS_DECLARED
+typedef WasmToken WASM_AST_PARSER_STYPE;
+# define WASM_AST_PARSER_STYPE_IS_TRIVIAL 1
+# define WASM_AST_PARSER_STYPE_IS_DECLARED 1
 #endif
 
 /* Location type.  */
-#if ! defined WASM_PARSER_LTYPE && ! defined WASM_PARSER_LTYPE_IS_DECLARED
-typedef struct WASM_PARSER_LTYPE WASM_PARSER_LTYPE;
-struct WASM_PARSER_LTYPE
+#if ! defined WASM_AST_PARSER_LTYPE && ! defined WASM_AST_PARSER_LTYPE_IS_DECLARED
+typedef struct WASM_AST_PARSER_LTYPE WASM_AST_PARSER_LTYPE;
+struct WASM_AST_PARSER_LTYPE
 {
   int first_line;
   int first_column;
   int last_line;
   int last_column;
 };
-# define WASM_PARSER_LTYPE_IS_DECLARED 1
-# define WASM_PARSER_LTYPE_IS_TRIVIAL 1
+# define WASM_AST_PARSER_LTYPE_IS_DECLARED 1
+# define WASM_AST_PARSER_LTYPE_IS_TRIVIAL 1
 #endif
 
 
 
-int wasm_parser_parse (WasmLexer* lexer, WasmParser* parser);
+int wasm_ast_parser_parse (WasmAstLexer* lexer, WasmAstParser* parser);
 
-#endif /* !YY_WASM_PARSER_SRC_PREBUILT_WASM_BISON_PARSER_H_INCLUDED  */
+#endif /* !YY_WASM_AST_PARSER_SRC_PREBUILT_WASM_AST_PARSER_GEN_H_INCLUDED  */

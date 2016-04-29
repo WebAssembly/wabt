@@ -135,13 +135,13 @@ clean:
 test-everything:
 
 .PHONY: update-bison update-re2c
-update-bison: src/prebuilt/wasm-bison-parser.c
-update-re2c: src/prebuilt/wasm-re2c-lexer.c
+update-bison: src/prebuilt/wasm-ast-parser-gen.c
+update-re2c: src/prebuilt/wasm-ast-lexer-gen.c
 
-src/prebuilt/wasm-bison-parser.c: src/wasm-bison-parser.y
-	bison -o $@ $< --defines=src/prebuilt/wasm-bison-parser.h
+src/prebuilt/wasm-ast-parser-gen.c: src/wasm-ast-parser.y
+	bison -o $@ $< --defines=src/prebuilt/wasm-ast-parser-gen.h
 
-src/prebuilt/wasm-re2c-lexer.c: src/wasm-lexer.c
+src/prebuilt/wasm-ast-lexer-gen.c: src/wasm-ast-lexer.c
 	re2c -bc -o $@ $<
 
 # defaults with simple names

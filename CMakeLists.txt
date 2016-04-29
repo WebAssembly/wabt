@@ -129,21 +129,21 @@ endif ()
 option(RUN_BISON "run bison" ON)
 find_package(BISON 3.0)
 if (RUN_BISON AND BISON_FOUND)
-  set(BISON_PARSER_C ${SEXPR_WASM_BINARY_DIR}/wasm-bison-parser.c)
-  BISON_TARGET(WASM_BISON_PARSER
-    ${SEXPR_WASM_SOURCE_DIR}/src/wasm-bison-parser.y
-    ${BISON_PARSER_C}
-    COMPILE_FLAGS --defines=${SEXPR_WASM_BINARY_DIR}/wasm-bison-parser.h
+  set(WASM_AST_PARSER_GEN_C ${SEXPR_WASM_BINARY_DIR}/wasm-ast-parser-gen.c)
+  BISON_TARGET(WASM_AST_PARSER_GEN_C
+    ${SEXPR_WASM_SOURCE_DIR}/src/wasm-ast-parser.y
+    ${WASM_AST_PARSER_GEN_C}
+    COMPILE_FLAGS --defines=${SEXPR_WASM_BINARY_DIR}/wasm-ast-parser-gen.h
   )
 else ()
-  set(BISON_PARSER_C src/prebuilt/wasm-bison-parser.c)
+  set(WASM_AST_PARSER_GEN_C src/prebuilt/wasm-ast-parser-gen.c)
 endif ()
 
 if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
   # yyerror passes a non-string-literal to a printf-like function, which is a
   # warning.
   set_source_files_properties(
-    ${BISON_PARSER_C}
+    ${WASM_AST_PARSER_GEN_C}
     PROPERTIES
     COMPILE_FLAGS -Wno-format-security
   )
@@ -154,16 +154,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 option(RUN_RE2C "run re2c" ON)
 find_package(RE2C 0.13)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
-  set(WASM_LEXER_C ${SEXPR_WASM_SOURCE_DIR}/src/wasm-lexer.c)
-  set(RE2C_LEXER_C ${SEXPR_WASM_BINARY_DIR}/wasm-re2c-lexer.c)
+  set(WASM_AST_LEXER_C ${SEXPR_WASM_SOURCE_DIR}/src/wasm-ast-lexer.c)
+  set(WASM_AST_LEXER_GEN_C ${SEXPR_WASM_BINARY_DIR}/wasm-ast-lexer-gen.c)
   RE2C_TARGET(
-    NAME RE2C_LEXER_C
-    INPUT ${WASM_LEXER_C}
-    OUTPUT ${RE2C_LEXER_C}
+    NAME WASM_AST_LEXER_GEN_C
+    INPUT ${WASM_AST_LEXER_C}
+    OUTPUT ${WASM_AST_LEXER_GEN_C}
     OPTIONS -bc
   )
 else ()
-  set(RE2C_LEXER_C src/prebuilt/wasm-re2c-lexer.c)
+  set(WASM_AST_LEXER_GEN_C src/prebuilt/wasm-ast-lexer-gen.c)
 endif ()
 
 
@@ -189,9 +189,9 @@ add_executable(sexpr-wasm
   src/wasm-binary-writer-spec.c
   src/wasm-literal.c
   src/wasm-mark-used-blocks.c
-  src/wasm-parser-lexer-shared.c
-  ${BISON_PARSER_C}
-  ${RE2C_LEXER_C}
+  src/wasm-ast-parser-lexer-shared.c
+  ${WASM_AST_PARSER_GEN_C}
+  ${WASM_AST_LEXER_GEN_C}
 )
 add_dependencies(everything sexpr-wasm)
 target_link_libraries(sexpr-wasm wasm-common)
@@ -279,6 +279,7 @@ if (EMSCRIPTEN)
     src/wasm-apply-names.c
     src/wasm-ast.c
     src/wasm-ast-checker.c
+    src/wasm-ast-parser-lexer-shared.c
     src/wasm-ast-writer.c
     src/wasm-binary-reader-ast.c
     src/wasm-binary-reader.c
@@ -288,9 +289,8 @@ if (EMSCRIPTEN)
     src/wasm-generate-names.c
     src/wasm-literal.c
     src/wasm-mark-used-blocks.c
-    src/wasm-parser-lexer-shared.c
-    ${BISON_PARSER_C}
-    ${RE2C_LEXER_C}
+    ${WASM_AST_PARSER_GEN_C}
+    ${WASM_AST_LEXER_GEN_C}
   )
   add_dependencies(everything libwasm)
   target_link_libraries(libwasm wasm-interp-common wasm-common)

@@ -22,7 +22,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wasm-parser-lexer-shared.h"
+#include "wasm-ast-parser-lexer-shared.h"
 
 static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
@@ -88,7 +88,7 @@ typedef struct WasmLabelNode {
 
 typedef struct WasmContext {
   WasmSourceErrorHandler* error_handler;
-  WasmLexer* lexer;
+  WasmAstLexer* lexer;
   const WasmModule* last_module;
   WasmLabelNode* top_label;
   int max_depth;
@@ -102,7 +102,7 @@ static void WASM_PRINTF_FORMAT(3, 4) print_error(WasmContext* ctx,
   ctx->result = WASM_ERROR;
   va_list args;
   va_start(args, fmt);
-  wasm_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
+  wasm_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
 }
 
@@ -933,7 +933,7 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
   }
 }
 
-WasmResult wasm_check_ast(WasmLexer* lexer,
+WasmResult wasm_check_ast(WasmAstLexer* lexer,
                           const struct WasmScript* script,
                           WasmSourceErrorHandler* error_handler) {
   WasmContext ctx;
@@ -948,7 +948,7 @@ WasmResult wasm_check_ast(WasmLexer* lexer,
 }
 
 WasmResult wasm_check_assert_invalid(
-    WasmLexer* lexer,
+    WasmAstLexer* lexer,
     const struct WasmScript* script,
     WasmSourceErrorHandler* assert_invalid_error_handler,
     WasmSourceErrorHandler* error_handler) {

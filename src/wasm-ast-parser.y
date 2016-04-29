@@ -21,22 +21,22 @@
 #include <stdlib.h>
 
 #include "wasm-allocator.h"
+#include "wasm-ast-parser.h"
+#include "wasm-ast-parser-lexer-shared.h"
 #include "wasm-literal.h"
-#include "wasm-parser.h"
-#include "wasm-parser-lexer-shared.h"
 
 #define DUPTEXT(dst, src)                                                   \
   (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
   (dst).length = (src).length
 
-#define CHECK_ALLOC_(cond)                                       \
-  if (!(cond)) {                                                 \
-    WasmLocation loc;                                            \
-    loc.filename = __FILE__;                                     \
-    loc.line = __LINE__;                                         \
-    loc.first_column = loc.last_column = 0;                      \
-    wasm_parser_error(&loc, lexer, parser, "allocation failed"); \
-    YYERROR;                                                     \
+#define CHECK_ALLOC_(cond)                                           \
+  if (!(cond)) {                                                     \
+    WasmLocation loc;                                                \
+    loc.filename = __FILE__;                                         \
+    loc.line = __LINE__;                                             \
+    loc.first_column = loc.last_column = 0;                          \
+    wasm_ast_parser_error(&loc, lexer, parser, "allocation failed"); \
+    YYERROR;                                                         \
   }
 
 #define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
@@ -98,17 +98,17 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
                                          WasmModule* module,
                                          WasmFuncDeclaration* decl);
 
-#define wasm_parser_lex wasm_lexer_lex
+#define wasm_ast_parser_lex wasm_ast_lexer_lex
 
 %}
 
-%define api.prefix {wasm_parser_}
+%define api.prefix {wasm_ast_parser_}
 %define api.pure true
 %define api.value.type {WasmToken}
 %define api.token.prefix {WASM_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {WasmLexer* lexer} {WasmParser* parser}
-%parse-param {WasmLexer* lexer} {WasmParser* parser}
+%lex-param {WasmAstLexer* lexer} {WasmAstParser* parser}
+%parse-param {WasmAstLexer* lexer} {WasmAstParser* parser}
 %locations
 
 %token LPAR "("
@@ -231,8 +231,8 @@ var :
       if (WASM_FAILED(wasm_parse_int32($1.text.start,
                                        $1.text.start + $1.text.length, &index,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
-        wasm_parser_error(&@1, lexer, parser, "invalid int " PRIstringslice,
-                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
+        wasm_ast_parser_error(&@1, lexer, parser, "invalid int " PRIstringslice,
+                              WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
       $$.index = index;
     }
@@ -280,9 +280,9 @@ offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
       if (WASM_FAILED(wasm_parse_int64($1.start, $1.start + $1.length, &$$))) {
-        wasm_parser_error(&@1, lexer, parser,
-                          "invalid offset \"" PRIstringslice "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($1));
+        wasm_ast_parser_error(&@1, lexer, parser,
+                              "invalid offset \"" PRIstringslice "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -291,9 +291,9 @@ align :
   | ALIGN {
       if (WASM_FAILED(wasm_parse_int32($1.start, $1.start + $1.length, &$$,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
-        wasm_parser_error(&@1, lexer, parser,
-                          "invalid alignment \"" PRIstringslice "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($1));
+        wasm_ast_parser_error(&@1, lexer, parser,
+                              "invalid alignment \"" PRIstringslice "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -458,9 +458,9 @@ expr1 :
       if (WASM_FAILED(parse_const($1, $2.type, $2.text.start,
                                   $2.text.start + $2.text.length,
                                   &$$->const_))) {
-        wasm_parser_error(&@2, lexer, parser,
-                          "invalid literal \"" PRIstringslice "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($2.text));
+        wasm_ast_parser_error(&@2, lexer, parser,
+                              "invalid literal \"" PRIstringslice "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($2.text));
       }
       wasm_free(parser->allocator, (char*)$2.text.start);
     }
@@ -679,10 +679,10 @@ segment_address :
       if (WASM_FAILED(wasm_parse_int32($1.text.start,
                                        $1.text.start + $1.text.length, &$$,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
-        wasm_parser_error(&@1, lexer, parser,
-                          "invalid memory segment address \"" PRIstringslice
-                          "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
+        wasm_ast_parser_error(&@1, lexer, parser,
+                              "invalid memory segment address \"" PRIstringslice
+                              "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -708,9 +708,10 @@ initial_pages :
       if (WASM_FAILED(wasm_parse_int32($1.text.start,
                                        $1.text.start + $1.text.length, &$$,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
-        wasm_parser_error(&@1, lexer, parser,
-                          "invalid initial memory pages \"" PRIstringslice "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
+        wasm_ast_parser_error(&@1, lexer, parser,
+                              "invalid initial memory pages \"" PRIstringslice
+                              "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -720,9 +721,9 @@ max_pages :
       if (WASM_FAILED(wasm_parse_int32($1.text.start,
                                        $1.text.start + $1.text.length, &$$,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
-        wasm_parser_error(&@1, lexer, parser,
-                          "invalid max memory pages \"" PRIstringslice "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($1.text));
+        wasm_ast_parser_error(&@1, lexer, parser,
+                              "invalid max memory pages \"" PRIstringslice "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -1029,9 +1030,9 @@ const :
       $$.loc = @2;
       if (WASM_FAILED(parse_const($2, $3.type, $3.text.start,
                                   $3.text.start + $3.text.length, &$$))) {
-        wasm_parser_error(&@3, lexer, parser,
-                          "invalid literal \"" PRIstringslice "\"",
-                          WASM_PRINTF_STRING_SLICE_ARG($3.text));
+        wasm_ast_parser_error(&@3, lexer, parser,
+                              "invalid literal \"" PRIstringslice "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($3.text));
       }
       wasm_free(parser->allocator, (char*)$3.text.start);
     }
@@ -1156,16 +1157,16 @@ static WasmResult dup_string_contents(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-WasmResult wasm_parse(WasmLexer* lexer,
-                      struct WasmScript* out_script,
-                      WasmSourceErrorHandler* error_handler) {
-  WasmParser parser;
+WasmResult wasm_parse_ast(WasmAstLexer* lexer,
+                          struct WasmScript* out_script,
+                          WasmSourceErrorHandler* error_handler) {
+  WasmAstParser parser;
   WASM_ZERO_MEMORY(parser);
-  WasmAllocator* allocator = wasm_lexer_get_allocator(lexer);
+  WasmAllocator* allocator = wasm_ast_lexer_get_allocator(lexer);
   parser.allocator = allocator;
   parser.error_handler = error_handler;
   out_script->allocator = allocator;
-  int result = wasm_parser_parse(lexer, &parser);
+  int result = wasm_ast_parser_parse(lexer, &parser);
   out_script->commands = parser.script.commands;
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
 }

@@ -23,7 +23,7 @@
 
 /* These functions all return WASM_OK on success and WASM_ERROR on failure.
  *
- * NOTE: the functions are written for use with the flex lexer, assuming that
+ * NOTE: the functions are written for use with the re2c lexer, assuming that
  * the literal has already matched the regular expressions defined there. As a
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */

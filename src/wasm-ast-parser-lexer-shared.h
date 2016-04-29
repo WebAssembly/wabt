@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef WASM_PARSER_LEXER_SHARED_H_
-#define WASM_PARSER_LEXER_SHARED_H_
+#ifndef WASM_AST_PARSER_LEXER_SHARED_H_
+#define WASM_AST_PARSER_LEXER_SHARED_H_
 
 #include <stdarg.h>
 
 #include "wasm-ast.h"
+#include "wasm-ast-lexer.h"
 #include "wasm-common.h"
-#include "wasm-lexer.h"
 
-#define WASM_PARSER_STYPE WasmToken
-#define WASM_PARSER_LTYPE WasmLocation
-#define YYSTYPE WASM_PARSER_STYPE
-#define YYLTYPE WASM_PARSER_LTYPE
+#define WASM_AST_PARSER_STYPE WasmToken
+#define WASM_AST_PARSER_LTYPE WasmLocation
+#define YYSTYPE WASM_AST_PARSER_STYPE
+#define YYLTYPE WASM_AST_PARSER_LTYPE
 
 #define WASM_INVALID_LINE_OFFSET ((size_t)~0)
 
@@ -67,35 +67,35 @@ typedef union WasmToken {
   WasmScript script;
 } WasmToken;
 
-typedef struct WasmParser {
+typedef struct WasmAstParser {
   struct WasmAllocator* allocator;
   WasmScript script;
   WasmSourceErrorHandler* error_handler;
   int errors;
-} WasmParser;
+} WasmAstParser;
 
 WASM_EXTERN_C_BEGIN
-struct WasmAllocator* wasm_lexer_get_allocator(WasmLexer* lexer);
-int wasm_lexer_lex(union WasmToken*,
-                   struct WasmLocation*,
-                   WasmLexer*,
-                   struct WasmParser*);
-WasmResult wasm_lexer_get_source_line(WasmLexer*,
-                                      const struct WasmLocation*,
-                                      size_t line_max_length,
-                                      char* line,
-                                      size_t* out_line_length,
-                                      int* out_column_offset);
-void WASM_PRINTF_FORMAT(4, 5) wasm_parser_error(struct WasmLocation*,
-                                                WasmLexer*,
-                                                struct WasmParser*,
-                                                const char*,
-                                                ...);
-void wasm_format_error(WasmSourceErrorHandler*,
-                       const struct WasmLocation*,
-                       WasmLexer*,
-                       const char* format,
-                       va_list);
+struct WasmAllocator* wasm_ast_lexer_get_allocator(WasmAstLexer* lexer);
+int wasm_ast_lexer_lex(union WasmToken*,
+                       struct WasmLocation*,
+                       WasmAstLexer*,
+                       struct WasmAstParser*);
+WasmResult wasm_ast_lexer_get_source_line(WasmAstLexer*,
+                                          const struct WasmLocation*,
+                                          size_t line_max_length,
+                                          char* line,
+                                          size_t* out_line_length,
+                                          int* out_column_offset);
+void WASM_PRINTF_FORMAT(4, 5) wasm_ast_parser_error(struct WasmLocation*,
+                                                    WasmAstLexer*,
+                                                    struct WasmAstParser*,
+                                                    const char*,
+                                                    ...);
+void wasm_ast_format_error(WasmSourceErrorHandler*,
+                           const struct WasmLocation*,
+                           WasmAstLexer*,
+                           const char* format,
+                           va_list);
 WASM_EXTERN_C_END
 
-#endif /* WASM_PARSER_LEXER_SHARED_H_ */
+#endif /* WASM_AST_PARSER_LEXER_SHARED_H_ */

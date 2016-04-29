@@ -3,7 +3,7 @@ sudo: required
 dist: trusty
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq flex bison gcc-4.8-multilib g++-4.8-multilib
+  - sudo apt-get install -qq re2c bison gcc-4.8-multilib g++-4.8-multilib
 script:
   - scripts/download-d8.sh
   - scripts/travis-build.sh

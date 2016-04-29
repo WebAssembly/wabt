@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-#include "wasm-parser-lexer-shared.h"
+#include "wasm-ast-parser-lexer-shared.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-void wasm_parser_error(WasmLocation* loc,
-                       WasmLexer* lexer,
-                       WasmParser* parser,
-                       const char* format,
-                       ...) {
+void wasm_ast_parser_error(WasmLocation* loc,
+                           WasmAstLexer* lexer,
+                           WasmAstParser* parser,
+                           const char* format,
+                           ...) {
   parser->errors++;
   va_list args;
   va_start(args, format);
-  wasm_format_error(parser->error_handler, loc, lexer, format, args);
+  wasm_ast_format_error(parser->error_handler, loc, lexer, format, args);
   va_end(args);
 }
 
-void wasm_format_error(WasmSourceErrorHandler* error_handler,
-                       const struct WasmLocation* loc,
-                       WasmLexer* lexer,
-                       const char* format,
-                       va_list args) {
+void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
+                           const struct WasmLocation* loc,
+                           WasmAstLexer* lexer,
+                           const char* format,
+                           va_list args) {
   va_list args_copy;
   va_copy(args_copy, args);
   char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
@@ -53,9 +53,9 @@ void wasm_format_error(WasmSourceErrorHandler* error_handler,
   size_t source_line_max_length = error_handler->source_line_max_length;
   if (loc) {
     source_line = alloca(source_line_max_length + 1);
-    WasmResult result = wasm_lexer_get_source_line(
-        lexer, loc, source_line_max_length, source_line,
-        &source_line_length, &source_line_column_offset);
+    WasmResult result = wasm_ast_lexer_get_source_line(
+        lexer, loc, source_line_max_length, source_line, &source_line_length,
+        &source_line_column_offset);
     if (WASM_FAILED(result)) {
       /* if this fails, it means that we've probably screwed up the lexer. blow
        * up. */

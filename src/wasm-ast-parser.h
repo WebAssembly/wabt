@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef WASM_PARSER_H_
-#define WASM_PARSER_H_
+#ifndef WASM_AST_PARSER_H_
+#define WASM_AST_PARSER_H_
 
+#include "wasm-ast-lexer.h"
 #include "wasm-common.h"
-#include "wasm-lexer.h"
 
 struct WasmScript;
 
 WASM_EXTERN_C_BEGIN
-WasmResult wasm_parse(WasmLexer* lexer,
-                      struct WasmScript* out_script,
-                      WasmSourceErrorHandler*);
+WasmResult wasm_parse_ast(WasmAstLexer* lexer,
+                          struct WasmScript* out_script,
+                          WasmSourceErrorHandler*);
 WASM_EXTERN_C_END
 
-#endif /* WASM_PARSER_H_ */
+#endif /* WASM_AST_PARSER_H_ */

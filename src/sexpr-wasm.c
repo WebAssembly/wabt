@@ -23,12 +23,12 @@
 
 #include "wasm-ast.h"
 #include "wasm-ast-checker.h"
+#include "wasm-ast-parser.h"
 #include "wasm-binary-writer.h"
 #include "wasm-binary-writer-spec.h"
 #include "wasm-common.h"
 #include "wasm-mark-used-blocks.h"
 #include "wasm-option-parser.h"
-#include "wasm-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-stream.h"
 #include "wasm-writer.h"
@@ -373,12 +373,12 @@ int main(int argc, char** argv) {
     allocator = &stack_allocator.allocator;
   }
 
-  WasmLexer* lexer = wasm_new_file_lexer(allocator, s_infile);
+  WasmAstLexer* lexer = wasm_new_ast_file_lexer(allocator, s_infile);
   if (!lexer)
     WASM_FATAL("unable to read %s\n", s_infile);
 
   WasmScript script;
-  WasmResult result = wasm_parse(lexer, &script, &s_error_handler);
+  WasmResult result = wasm_parse_ast(lexer, &script, &s_error_handler);
 
   if (WASM_SUCCEEDED(result)) {
     result = wasm_check_ast(lexer, &script, &s_error_handler);
@@ -426,7 +426,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  wasm_destroy_lexer(lexer);
+  wasm_destroy_ast_lexer(lexer);
 
   if (s_use_libc_allocator)
     wasm_destroy_script(&script);
