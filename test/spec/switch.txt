@@ -1,11 +1,9 @@
-;;; TODO: support br_table with argument
-;;; ERROR: 1
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
-(;; STDERR ;;;
-Error running "sexpr-wasm":
-third_party/testsuite/switch.wast:99:23: syntax error, unexpected (, expecting )
-                      (i32.and (i32.const 3) (get_local $i))
-                      ^
-
-;;; STDERR ;;)
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/switch.wast:155:41: label variable out of range (max 0)
+(assert_invalid (module (func (br_table 3 (i32.const 0)))) "unknown label")
+                                        ^
+26/26 tests passed.
+;;; STDOUT ;;)

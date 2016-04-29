@@ -44,6 +44,6 @@ test_zero() = 0
 test_one() = 1
 test_add() = 14
 test_sub() = 6
-trap_oob() trapped: invalid function
-trap_sig_mismatch() trapped: function signature mismatch
+trap_oob() trapped: Error: invalid function
+trap_sig_mismatch() trapped: Error: function signature mismatch
 ;;; STDOUT ;;)

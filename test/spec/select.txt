@@ -1,14 +1,5 @@
-;;; ERROR: 1
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/select.wast
-(;; STDERR ;;;
-Error running "d8":
-
-;;; STDERR ;;)
 (;; STDOUT ;;;
-WasmModule::Instantiate(): Compiling WASM function #4:<?> failed:Result = ExprSelect[1] expected type <end>, found ExprI32Const of type i32 @+1
-
-  var module = Wasm.instantiateModule(u8a.buffer, ffi);
-                    ^
-
+28/28 tests passed.
 ;;; STDOUT ;;)

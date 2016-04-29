@@ -1,6 +1,12 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/memory_trap.wast
 (;; STDOUT ;;;
-third_party/testsuite/memory_trap.wast:32: $assert_trap_12 failed, didn't throw
-12/13 tests passed.
+third_party/testsuite/memory_trap.wast:24: $assert_return_0 unexpectedly threw: Error: memory access out of bounds
+third_party/testsuite/memory_trap.wast:24: $assert_return_0 failed.
+third_party/testsuite/memory_trap.wast:25: $assert_return_1 unexpectedly threw: Error: memory access out of bounds
+third_party/testsuite/memory_trap.wast:25: $assert_return_1 failed.
+third_party/testsuite/memory_trap.wast:32: $assert_trap_8 failed, didn't throw
+third_party/testsuite/memory_trap.wast:33: $assert_trap_9 failed, didn't throw
+third_party/testsuite/memory_trap.wast:36: $assert_trap_12 failed, didn't throw
+8/13 tests passed.
 ;;; STDOUT ;;)

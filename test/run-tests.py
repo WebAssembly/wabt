@@ -545,11 +545,6 @@ def main(args):
 
   test_names = findtests.FindTestFiles(SCRIPT_DIR, '.txt', pattern_re)
 
-  # HACK(binji): disable the d8/spec tests for now, as there isn't yet a landed
-  # revision with binary_0xb support
-  test_names = [name for name in test_names
-                if not name.startswith(('d8','spec'))]
-
   if options.list:
     for test_name in test_names:
       print test_name

@@ -30,19 +30,23 @@ var name;
 var f;
 var result;
 
-for (name in module.exports) {
-  f = module.exports[name];
-  if (typeof f !== 'function')
-    continue;
+if (typeof module.exports === 'object') {
+  var exportedFunctions = Object.getOwnPropertyNames(module.exports);
 
-  if (name.lastIndexOf('trap', 0) === 0) {
-    try {
-      result = f();
-      print('Expected ' + name + '() to trap, instead got: ' + result);
-    } catch (e) {
-      print(name + '() trapped: ' + e.toString());
+  for (name of exportedFunctions) {
+    f = module.exports[name];
+    if (typeof f !== 'function')
+      continue;
+
+    if (name.lastIndexOf('trap', 0) === 0) {
+      try {
+        result = f();
+        print('Expected ' + name + '() to trap, instead got: ' + result);
+      } catch (e) {
+        print(name + '() trapped: ' + e.toString());
+      }
+    } else {
+      print(name + '() = ' + f());
     }
-  } else {
-    print(name + '() = ' + f());
   }
 }

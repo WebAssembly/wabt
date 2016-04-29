@@ -1,5 +1,5 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/float_misc.wast
 (;; STDOUT ;;;
-163/163 tests passed.
+323/323 tests passed.
 ;;; STDOUT ;;)

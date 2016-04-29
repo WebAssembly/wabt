@@ -1,5 +1,14 @@
+;;; ERROR: 1
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/functions.wast
+(;; STDERR ;;;
+Error running "d8":
+
+;;; STDERR ;;)
 (;; STDOUT ;;;
-2/2 tests passed.
+WasmModule::Instantiate(): Compiling WASM function #6:<?> failed:Result = arity mismatch in return @+2
+
+  var module = Wasm.instantiateModule(u8a.buffer, ffi);
+                    ^
+
 ;;; STDOUT ;;)

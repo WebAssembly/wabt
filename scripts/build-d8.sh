@@ -50,5 +50,5 @@ gclient sync
 # it.
 unset CC
 cd v8
-GYP_GENERATORS=ninja build/gyp_v8 -Dv8_wasm=1
+GYP_GENERATORS=ninja gypfiles/gyp_v8
 time ninja -C out/${config} d8

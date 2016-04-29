@@ -1,5 +1,5 @@
 ;;; TOOL: run-d8-spec
 ;;; STDIN_FILE: third_party/testsuite/left-to-right.wast
 (;; STDOUT ;;;
-93/93 tests passed.
+95/95 tests passed.
 ;;; STDOUT ;;)

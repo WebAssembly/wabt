@@ -39,5 +39,5 @@ call gclient sync
 
 cd v8
 set GYP_GENERATORS=ninja
-call python build\gyp_v8
+call python gypfiles\gyp_v8
 call ninja -C out\%CONFIG% d8.exe

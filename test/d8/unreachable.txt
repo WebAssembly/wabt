@@ -4,5 +4,5 @@
   (func
     (unreachable)))
 (;; STDOUT ;;;
-trap() trapped: unreachable
+trap() trapped: Error: unreachable
 ;;; STDOUT ;;)
