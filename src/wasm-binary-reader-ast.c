@@ -108,7 +108,8 @@ typedef struct WasmContext {
 
 static void on_error(uint32_t offset, const char* message, void* user_data);
 
-static void print_error(WasmContext* ctx, const char* format, ...) {
+static void WASM_PRINTF_FORMAT(2, 3)
+    print_error(WasmContext* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
   on_error(WASM_UNKNOWN_OFFSET, buffer, ctx);
 }

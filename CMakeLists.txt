@@ -139,6 +139,16 @@ else ()
   set(BISON_PARSER_C src/prebuilt/wasm-bison-parser.c)
 endif ()
 
+if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+  # yyerror passes a non-string-literal to a printf-like function, which is a
+  # warning.
+  set_source_files_properties(
+    ${BISON_PARSER_C}
+    PROPERTIES
+    COMPILE_FLAGS -Wno-format-security
+  )
+endif ()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     ${SEXPR_WASM_SOURCE_DIR}/third_party/CMakeXFind)
 option(RUN_RE2C "run re2c" ON)
@@ -325,7 +335,7 @@ if (BUILD_TESTS AND CMAKE_USE_PTHREADS_INIT)
   )
   add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
   add_dependencies(everything hexfloat_test)
-  set_source_files_properties(hexfloat_test
+  set_source_files_properties(
     test/hexfloat.cc
     PROPERTIES
     COMPILE_FLAGS -std=c++11

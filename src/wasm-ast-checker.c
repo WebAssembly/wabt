@@ -95,10 +95,10 @@ typedef struct WasmContext {
   WasmResult result;
 } WasmContext;
 
-static void print_error(WasmContext* ctx,
-                        const WasmLocation* loc,
-                        const char* fmt,
-                        ...) {
+static void WASM_PRINTF_FORMAT(3, 4) print_error(WasmContext* ctx,
+                                                 const WasmLocation* loc,
+                                                 const char* fmt,
+                                                 ...) {
   ctx->result = WASM_ERROR;
   va_list args;
   va_start(args, fmt);
@@ -426,8 +426,8 @@ static void check_call(WasmContext* ctx,
       wasm_snprintf(func_name, length, " \"" PRIstringslice "\"",
                     WASM_PRINTF_STRING_SLICE_ARG(func->name));
     }
-    print_error(ctx, loc,
-                "too %s parameters to function%s in %s. got %d, expected %d",
+    print_error(ctx, loc, "too %s parameters to function%s in %s. got %" PRIzd
+                          ", expected %" PRIzd,
                 actual_args > expected_args ? "many" : "few", func_name, desc,
                 actual_args, expected_args);
   }
@@ -704,7 +704,7 @@ static void check_func_signature_matches_func_type(
                            "function", i);
     }
   } else {
-    print_error(ctx, &func->loc, "expected %d parameters, got %d",
+    print_error(ctx, &func->loc, "expected %" PRIzd " parameters, got %" PRIzd,
                 wasm_get_func_type_num_params(func_type), num_params);
   }
 }
@@ -883,8 +883,8 @@ static void check_invoke(WasmContext* ctx,
   size_t actual_args = invoke->args.size;
   size_t expected_args = wasm_get_num_params(func);
   if (expected_args != actual_args) {
-    print_error(ctx, &invoke->loc,
-                "too %s parameters to function. got %d, expected %d",
+    print_error(ctx, &invoke->loc, "too %s parameters to function. got %" PRIzd
+                                   ", expected %" PRIzd,
                 actual_args > expected_args ? "many" : "few", actual_args,
                 expected_args);
     return;

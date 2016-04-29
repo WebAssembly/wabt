@@ -86,11 +86,11 @@ WasmResult wasm_lexer_get_source_line(WasmLexer*,
                                       char* line,
                                       size_t* out_line_length,
                                       int* out_column_offset);
-void wasm_parser_error(struct WasmLocation*,
-                       WasmLexer*,
-                       struct WasmParser*,
-                       const char*,
-                       ...);
+void WASM_PRINTF_FORMAT(4, 5) wasm_parser_error(struct WasmLocation*,
+                                                WasmLexer*,
+                                                struct WasmParser*,
+                                                const char*,
+                                                ...);
 void wasm_format_error(WasmSourceErrorHandler*,
                        const struct WasmLocation*,
                        WasmLexer*,

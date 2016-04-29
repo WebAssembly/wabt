@@ -225,14 +225,16 @@ static WasmResult init_thread(WasmAllocator* allocator,
                                       &s_thread_options);
 }
 
-static void squirrel_print(HSQUIRRELVM v, const char* format, ...) {
+static void WASM_PRINTF_FORMAT(2, 3)
+    squirrel_print(HSQUIRRELVM v, const char* format, ...) {
   va_list args;
   va_start(args, format);
   vfprintf(stdout, format, args);
   va_end(args);
 }
 
-static void squirrel_error(HSQUIRRELVM v, const char* format, ...) {
+static void WASM_PRINTF_FORMAT(2, 3)
+    squirrel_error(HSQUIRRELVM v, const char* format, ...) {
   va_list args;
   va_start(args, format);
   vfprintf(stderr, format, args);
@@ -312,7 +314,11 @@ static SQInteger squirrel_errorhandler(HSQUIRRELVM v) {
       const char* funcname =
           stack_info.funcname ? stack_info.funcname : "unknown";
       SQInteger line = stack_info.line;
-      squirrel_error(v, "  #%d: %s:%d: %s()\n", depth, source, line, funcname);
+      squirrel_error(v,
+                     "  #"_PRINT_INT_FMT
+                     ": %s:"_PRINT_INT_FMT
+                     ": %s()\n",
+                     depth, source, line, funcname);
     }
   }
   return 0;

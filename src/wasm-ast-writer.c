@@ -128,7 +128,8 @@ static void write_data_with_next_char(WasmContext* ctx,
   wasm_write_data(&ctx->stream, src, size, NULL);
 }
 
-static void writef(WasmContext* ctx, const char* format, ...) {
+static void WASM_PRINTF_FORMAT(2, 3)
+    writef(WasmContext* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
   /* default to following space */
   write_data_with_next_char(ctx, buffer, length);

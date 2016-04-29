@@ -59,7 +59,7 @@ void wasm_move_data(WasmStream*,
                     size_t src_offset,
                     size_t size);
 
-void wasm_writef(WasmStream*, const char* format, ...);
+void WASM_PRINTF_FORMAT(2, 3) wasm_writef(WasmStream*, const char* format, ...);
 /* specified as uint32_t instead of uint8_t so we can check if the value given
  * is in range before wrapping */
 void wasm_write_u8(WasmStream*, uint32_t value, const char* desc);

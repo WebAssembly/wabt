@@ -60,6 +60,8 @@
 #define WASM_STATIC_ASSERT(x) _Static_assert((x), #x)
 #define WASM_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WASM_LIKELY(x) __builtin_expect(!!(x), 1)
+#define WASM_PRINTF_FORMAT(format_arg, first_arg) \
+  __attribute__((format(printf, (format_arg), (first_arg))))
 
 #if SIZEOF_INT == 4
 #define wasm_clz_u32(x) __builtin_clz(x)
@@ -97,6 +99,7 @@
 #define WASM_STATIC_ASSERT(x) _STATIC_ASSERT(x)
 #define WASM_UNLIKELY(x) (x)
 #define WASM_LIKELY(x) (x)
+#define WASM_PRINTF_FORMAT(format_arg, first_arg)
 
 __inline unsigned long wasm_clz_u32(unsigned long mask) {
   unsigned long index;

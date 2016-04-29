@@ -86,7 +86,8 @@ typedef struct WasmContext {
   WasmUint32Vector target_depths;
 } WasmContext;
 
-static void raise_error(WasmContext* ctx, const char* format, ...) {
+static void WASM_PRINTF_FORMAT(2, 3)
+    raise_error(WasmContext* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
   assert(ctx->reader->on_error);
   ctx->reader->on_error(ctx->offset, buffer, ctx->reader->user_data);

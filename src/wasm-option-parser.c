@@ -49,7 +49,8 @@ static int option_match(const char* s,
   return i;
 }
 
-static void error(WasmOptionParser* parser, const char* format, ...) {
+static void WASM_PRINTF_FORMAT(2, 3)
+    error(WasmOptionParser* parser, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
   parser->on_error(parser, buffer);
 }

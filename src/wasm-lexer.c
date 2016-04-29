@@ -227,7 +227,8 @@ int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
     <i> '"' => BAD_TEXT       { continue; }
     <BAD_TEXT> character      { continue; }
     <BAD_TEXT> "\n" => i      { ERROR("newline in string"); NEWLINE; continue; }
-    <BAD_TEXT> "\\".          { ERROR("bad escape \"%.*s\"", yyleng, yytext); continue; }
+    <BAD_TEXT> "\\".          { ERROR("bad escape \"%.*s\"", (int)yyleng, yytext);
+                                continue; }
     <BAD_TEXT> '"' => i       { TEXT; RETURN(TEXT); }
     <BAD_TEXT> EOF            { ERROR("unexpected EOF"); RETURN(EOF); }
     <BAD_TEXT> [^]            { ERROR("illegal character in string"); continue; }
@@ -441,7 +442,7 @@ int wasm_lexer_lex(WASM_PARSER_STYPE* lval,
     <i> "\n"                  { NEWLINE; continue; }
     <i> [ \t\r]+              { continue; }
     <i> atom                  { ERROR("unexpected token \"%.*s\"",
-                                      yyleng, yytext);
+                                      (int)yyleng, yytext);
                                 continue; }
     <*> EOF                   { RETURN(EOF); }
     <*> [^]                   { ERROR("unexpected char"); continue; }
