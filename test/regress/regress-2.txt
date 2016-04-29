@@ -10,25 +10,25 @@
   (func $memory(param f32)(call 332 ))
   (func $memorGe ))
 (;; STDERR ;;;
-regress/regress-2.txt:3:8: too few parameters to function in call. got 0, expected 1
+regress/regress-2.txt:3:8: too few parameters to function "$memory" in call. got 0, expected 1
   (func(call 2 ))
        ^
-regress/regress-2.txt:4:15: too few parameters to function "$memor" in call. got 0, expected 1
+regress/regress-2.txt:4:15: too few parameters to function "$memory" in call. got 0, expected 1
   (func $memor(call 2 ))
               ^
 regress/regress-2.txt:5:33: function variable out of range (max 9)
   (func $memory(param f32)(call 332 ))
                                 ^^^
-regress/regress-2.txt:6:15: too few parameters to function "$memor" in call. got 0, expected 1
+regress/regress-2.txt:6:15: too few parameters to function "$memory" in call. got 0, expected 1
   (func $memor(call 2 ))
               ^
-regress/regress-2.txt:7:17: too few parameters to function "$memornc" in call. got 0, expected 1
+regress/regress-2.txt:7:17: too few parameters to function "$memory" in call. got 0, expected 1
   (func $memornc(call 2 ))
                 ^
-regress/regress-2.txt:8:15: too few parameters to function "$mYmor" in call. got 0, expected 1
+regress/regress-2.txt:8:15: too few parameters to function "$memory" in call. got 0, expected 1
   (func $mYmor(call 2 ))
               ^
-regress/regress-2.txt:9:154: too few parameters to function "$memo```````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````r" in call. got 0, expected 1
+regress/regress-2.txt:9:154: too few parameters to function "$memory" in call. got 0, expected 1
 ...``````````````````````````````````````````````````````````````````r(call 2 ))
                                                                       ^
 regress/regress-2.txt:10:33: function variable out of range (max 9)

@@ -62,7 +62,7 @@ WASM_STATIC_ASSERT((1 << (WASM_TYPE_I64 - 1)) == WASM_TYPE_SET_I64);
 WASM_STATIC_ASSERT((1 << (WASM_TYPE_F32 - 1)) == WASM_TYPE_SET_F32);
 WASM_STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
 
-#define TYPE_TO_TYPE_SET(type) (1 << ((type) - 1))
+#define TYPE_TO_TYPE_SET(type) (1 << ((type)-1))
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \
   [code] = WASM_TYPE_##rtype,
@@ -89,7 +89,8 @@ typedef struct WasmLabelNode {
 typedef struct WasmContext {
   WasmSourceErrorHandler* error_handler;
   WasmAstLexer* lexer;
-  const WasmModule* last_module;
+  const WasmModule* current_module;
+  const WasmFunc* current_func;
   WasmLabelNode* top_label;
   int max_depth;
   WasmResult result;
@@ -162,64 +163,62 @@ static WasmResult check_var(WasmContext* ctx,
 }
 
 static WasmResult check_func_var(WasmContext* ctx,
-                                 const WasmModule* module,
                                  const WasmVar* var,
                                  const WasmFunc** out_func) {
   int index;
-  if (WASM_FAILED(check_var(ctx, &module->func_bindings, module->funcs.size,
-                            var, "function", &index))) {
-    return WASM_ERROR;
-  }
-
-  if (out_func)
-    *out_func = module->funcs.data[index];
-  return WASM_OK;
-}
-
-static WasmResult check_import_var(WasmContext* ctx,
-                                   const WasmModule* module,
-                                   const WasmVar* var,
-                                   const WasmImport** out_import) {
-  int index;
-  if (WASM_FAILED(check_var(ctx, &module->import_bindings, module->imports.size,
-                            var, "import", &index))) {
-    return WASM_ERROR;
-  }
-
-  if (out_import)
-    *out_import = module->imports.data[index];
-  return WASM_OK;
-}
-
-static WasmResult check_func_type_var(WasmContext* ctx,
-                                      const WasmModule* module,
-                                      const WasmVar* var,
-                                      const WasmFuncType** out_func_type) {
-  int index;
-  if (WASM_FAILED(check_var(ctx, &module->func_type_bindings,
-                            module->func_types.size, var, "function type",
+  if (WASM_FAILED(check_var(ctx, &ctx->current_module->func_bindings,
+                            ctx->current_module->funcs.size, var, "function",
                             &index))) {
     return WASM_ERROR;
   }
 
+  if (out_func)
+    *out_func = ctx->current_module->funcs.data[index];
+  return WASM_OK;
+}
+
+static WasmResult check_import_var(WasmContext* ctx,
+                                   const WasmVar* var,
+                                   const WasmImport** out_import) {
+  int index;
+  if (WASM_FAILED(check_var(ctx, &ctx->current_module->import_bindings,
+                            ctx->current_module->imports.size, var, "import",
+                            &index))) {
+    return WASM_ERROR;
+  }
+
+  if (out_import)
+    *out_import = ctx->current_module->imports.data[index];
+  return WASM_OK;
+}
+
+static WasmResult check_func_type_var(WasmContext* ctx,
+                                      const WasmVar* var,
+                                      const WasmFuncType** out_func_type) {
+  int index;
+  if (WASM_FAILED(check_var(ctx, &ctx->current_module->func_type_bindings,
+                            ctx->current_module->func_types.size, var,
+                            "function type", &index))) {
+    return WASM_ERROR;
+  }
+
   if (out_func_type)
-    *out_func_type = module->func_types.data[index];
+    *out_func_type = ctx->current_module->func_types.data[index];
   return WASM_OK;
 }
 
 static WasmResult check_local_var(WasmContext* ctx,
-                                  const WasmFunc* func,
                                   const WasmVar* var,
                                   WasmType* out_type) {
-  int max_index = wasm_get_num_params_and_locals(func);
-  int index = wasm_get_local_index_by_var(func, var);
+  int max_index = wasm_get_num_params_and_locals(ctx->current_func);
+  int index = wasm_get_local_index_by_var(ctx->current_func, var);
   if (index >= 0 && index < max_index) {
     if (out_type) {
-      int num_params = wasm_get_num_params(func);
-      if (index < num_params)  {
-        *out_type = wasm_get_param_type(func, index);
+      int num_params = wasm_get_num_params(ctx->current_func);
+      if (index < num_params) {
+        *out_type = wasm_get_param_type(ctx->current_func, index);
       } else {
-        *out_type = func->local_types.data[index - num_params];
+        *out_type = ctx->current_func->local_types.data[index - num_params];
       }
     }
     return WASM_OK;
@@ -365,29 +364,23 @@ static void pop_label(WasmContext* ctx) {
 }
 
 static void check_expr(WasmContext* ctx,
-                       const WasmModule* module,
-                       const WasmFunc* func,
                        const WasmExpr* expr,
                        WasmType expected_type,
                        const char* desc);
 
 static void check_expr_opt(WasmContext* ctx,
                            const WasmLocation* loc,
-                           const WasmModule* module,
-                           const WasmFunc* func,
                            const WasmExpr* expr,
                            WasmType expected_type,
                            const char* desc) {
   if (expr)
-    check_expr(ctx, module, func, expr, expected_type, desc);
+    check_expr(ctx, expr, expected_type, desc);
   else
     check_type(ctx, loc, WASM_TYPE_VOID, expected_type, desc);
 }
 
 static void check_br(WasmContext* ctx,
                      const WasmLocation* loc,
-                     const WasmModule* module,
-                     const WasmFunc* func,
                      const WasmVar* var,
                      const WasmExpr* expr,
                      const char* desc) {
@@ -395,13 +388,12 @@ static void check_br(WasmContext* ctx,
   if (WASM_FAILED(check_label_var(ctx, ctx->top_label, var, &node)))
     return;
 
-  check_expr_opt(ctx, loc, module, func, expr, node->expected_type, desc);
+  check_expr_opt(ctx, loc, expr, node->expected_type, desc);
 }
 
 static void check_call(WasmContext* ctx,
                        const WasmLocation* loc,
-                       const WasmModule* module,
-                       const WasmFunc* func,
+                       const WasmStringSlice* callee_name,
                        const WasmFuncSignature* sig,
                        const WasmExprPtrVector* args,
                        WasmType expected_type,
@@ -415,27 +407,24 @@ static void check_call(WasmContext* ctx,
     size_t i;
     for (i = 0; i < actual_args; ++i) {
       wasm_snprintf(buffer, 100, " of argument %" PRIzd " of %s", i, desc);
-      check_expr(ctx, module, func, args->data[i], sig->param_types.data[i],
-                 buffer);
+      check_expr(ctx, args->data[i], sig->param_types.data[i], buffer);
     }
   } else {
-    char* func_name = "";
-    if (func->name.start) {
-      size_t length = func->name.length + 10;
-      func_name = alloca(length);
-      wasm_snprintf(func_name, length, " \"" PRIstringslice "\"",
-                    WASM_PRINTF_STRING_SLICE_ARG(func->name));
+    char* callee_name_str = "";
+    if (callee_name && callee_name->start) {
+      size_t length = callee_name->length + 10;
+      callee_name_str = alloca(length);
+      wasm_snprintf(callee_name_str, length, " \"" PRIstringslice "\"",
+                    WASM_PRINTF_STRING_SLICE_ARG(*callee_name));
     }
     print_error(ctx, loc, "too %s parameters to function%s in %s. got %" PRIzd
                           ", expected %" PRIzd,
-                actual_args > expected_args ? "many" : "few", func_name, desc,
-                actual_args, expected_args);
+                actual_args > expected_args ? "many" : "few", callee_name_str,
+                desc, actual_args, expected_args);
   }
 }
 
 static void check_exprs(WasmContext* ctx,
-                        const WasmModule* module,
-                        const WasmFunc* func,
                         const WasmExprPtrVector* exprs,
                         WasmType expected_type,
                         const char* desc) {
@@ -443,14 +432,12 @@ static void check_exprs(WasmContext* ctx,
     size_t i;
     WasmExprPtr* expr = &exprs->data[0];
     for (i = 0; i < exprs->size - 1; ++i, ++expr)
-      check_expr(ctx, module, func, *expr, WASM_TYPE_VOID, "");
-    check_expr(ctx, module, func, *expr, expected_type, desc);
+      check_expr(ctx, *expr, WASM_TYPE_VOID, "");
+    check_expr(ctx, *expr, expected_type, desc);
   }
 }
 
 static void check_expr(WasmContext* ctx,
-                       const WasmModule* module,
-                       const WasmFunc* func,
                        const WasmExpr* expr,
                        WasmType expected_type,
                        const char* desc) {
@@ -460,10 +447,8 @@ static void check_expr(WasmContext* ctx,
       WasmType type1 = s_opcode_type1[expr->binary.opcode];
       WasmType type2 = s_opcode_type2[expr->binary.opcode];
       check_type(ctx, &expr->loc, rtype, expected_type, desc);
-      check_expr(ctx, module, func, expr->binary.left, type1,
-                 " of argument 0 of binary op");
-      check_expr(ctx, module, func, expr->binary.right, type2,
-                 " of argument 1 of binary op");
+      check_expr(ctx, expr->binary.left, type1, " of argument 0 of binary op");
+      check_expr(ctx, expr->binary.right, type2, " of argument 1 of binary op");
       break;
     }
 
@@ -471,35 +456,31 @@ static void check_expr(WasmContext* ctx,
       WasmLabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->block.label, expected_type,
                  "block");
-      check_exprs(ctx, module, func, &expr->block.exprs, expected_type,
-                  " of block");
+      check_exprs(ctx, &expr->block.exprs, expected_type, " of block");
       pop_label(ctx);
       break;
     }
 
     case WASM_EXPR_TYPE_BR: {
-      check_br(ctx, &expr->loc, module, func, &expr->br.var, expr->br.expr,
-               " of br value");
+      check_br(ctx, &expr->loc, &expr->br.var, expr->br.expr, " of br value");
       break;
     }
 
     case WASM_EXPR_TYPE_BR_IF: {
       check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
-      check_br(ctx, &expr->loc, module, func, &expr->br_if.var,
-               expr->br_if.expr, " of br_if value");
-      check_expr(ctx, module, func, expr->br_if.cond, WASM_TYPE_I32,
-                 " of br_if condition");
+      check_br(ctx, &expr->loc, &expr->br_if.var, expr->br_if.expr,
+               " of br_if value");
+      check_expr(ctx, expr->br_if.cond, WASM_TYPE_I32, " of br_if condition");
       break;
     }
 
     case WASM_EXPR_TYPE_CALL: {
       const WasmFunc* callee;
-      if (WASM_SUCCEEDED(
-              check_func_var(ctx, module, &expr->call.var, &callee))) {
+      if (WASM_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee))) {
         if (wasm_decl_has_func_type(&callee->decl))
-          check_func_type_var(ctx, module, &callee->decl.type_var, NULL);
+          check_func_type_var(ctx, &callee->decl.type_var, NULL);
 
-        check_call(ctx, &expr->loc, module, func, &callee->decl.sig,
+        check_call(ctx, &expr->loc, &callee->name, &callee->decl.sig,
                    &expr->call.args, expected_type, "call");
       }
       break;
@@ -507,24 +488,23 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       const WasmImport* import;
-      if (WASM_SUCCEEDED(
-              check_import_var(ctx, module, &expr->call.var, &import))) {
+      if (WASM_SUCCEEDED(check_import_var(ctx, &expr->call.var, &import))) {
         if (wasm_decl_has_func_type(&import->decl))
-          check_func_type_var(ctx, module, &import->decl.type_var, NULL);
+          check_func_type_var(ctx, &import->decl.type_var, NULL);
 
-        check_call(ctx, &expr->loc, module, func, &import->decl.sig,
+        check_call(ctx, &expr->loc, &import->name, &import->decl.sig,
                    &expr->call.args, expected_type, "call_import");
       }
       break;
     }
 
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
-      check_expr(ctx, module, func, expr->call_indirect.expr, WASM_TYPE_I32,
+      check_expr(ctx, expr->call_indirect.expr, WASM_TYPE_I32,
                  " of function index");
       const WasmFuncType* func_type;
-      if (WASM_SUCCEEDED(check_func_type_var(
-              ctx, module, &expr->call_indirect.var, &func_type))) {
-        check_call(ctx, &expr->loc, module, func, &func_type->sig,
+      if (WASM_SUCCEEDED(
+              check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
+        check_call(ctx, &expr->loc, NULL, &func_type->sig,
                    &expr->call_indirect.args, expected_type, "call_indirect");
       }
       break;
@@ -535,9 +515,9 @@ static void check_expr(WasmContext* ctx,
       WasmType type1 = s_opcode_type1[expr->compare.opcode];
       WasmType type2 = s_opcode_type2[expr->compare.opcode];
       check_type(ctx, &expr->loc, rtype, expected_type, desc);
-      check_expr(ctx, module, func, expr->compare.left, type1,
+      check_expr(ctx, expr->compare.left, type1,
                  " of argument 0 of compare op");
-      check_expr(ctx, module, func, expr->compare.right, type2,
+      check_expr(ctx, expr->compare.right, type2,
                  " of argument 1 of compare op");
       break;
     }
@@ -550,15 +530,13 @@ static void check_expr(WasmContext* ctx,
       WasmType rtype = s_opcode_rtype[expr->convert.opcode];
       WasmType type1 = s_opcode_type1[expr->convert.opcode];
       check_type(ctx, &expr->loc, rtype, expected_type, desc);
-      check_expr(ctx, module, func, expr->convert.expr, type1,
-                 " of convert op");
+      check_expr(ctx, expr->convert.expr, type1, " of convert op");
       break;
     }
 
     case WASM_EXPR_TYPE_GET_LOCAL: {
       WasmType type;
-      if (WASM_SUCCEEDED(
-              check_local_var(ctx, func, &expr->get_local.var, &type))) {
+      if (WASM_SUCCEEDED(check_local_var(ctx, &expr->get_local.var, &type))) {
         check_type(ctx, &expr->loc, type, expected_type, desc);
       }
       break;
@@ -567,18 +545,15 @@ static void check_expr(WasmContext* ctx,
     case WASM_EXPR_TYPE_GROW_MEMORY:
       check_type(ctx, &expr->loc, WASM_TYPE_I32, expected_type,
                  " in grow_memory");
-      check_expr(ctx, module, func, expr->grow_memory.expr, WASM_TYPE_I32,
-                 " of grow_memory");
+      check_expr(ctx, expr->grow_memory.expr, WASM_TYPE_I32, " of grow_memory");
       break;
 
     case WASM_EXPR_TYPE_IF: {
       WasmLabelNode node;
-      check_expr(ctx, module, func, expr->if_.cond, WASM_TYPE_I32,
-                 " of condition");
+      check_expr(ctx, expr->if_.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_.true_.label, expected_type,
                  "if branch");
-      check_exprs(ctx, module, func, &expr->if_.true_.exprs, expected_type,
-                 " of if branch");
+      check_exprs(ctx, &expr->if_.true_.exprs, expected_type, " of if branch");
       pop_label(ctx);
       check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
       break;
@@ -586,17 +561,16 @@ static void check_expr(WasmContext* ctx,
 
     case WASM_EXPR_TYPE_IF_ELSE: {
       WasmLabelNode node;
-      check_expr(ctx, module, func, expr->if_else.cond, WASM_TYPE_I32,
-                 " of condition");
+      check_expr(ctx, expr->if_else.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
                  expected_type, "if true branch");
-      check_exprs(ctx, module, func, &expr->if_else.true_.exprs, expected_type,
-                 " of if branch");
+      check_exprs(ctx, &expr->if_else.true_.exprs, expected_type,
+                  " of if branch");
       pop_label(ctx);
       push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
                  expected_type, "if false branch");
-      check_exprs(ctx, module, func, &expr->if_else.false_.exprs, expected_type,
-                 " of if branch");
+      check_exprs(ctx, &expr->if_else.false_.exprs, expected_type,
+                  " of if branch");
       pop_label(ctx);
       break;
     }
@@ -607,7 +581,7 @@ static void check_expr(WasmContext* ctx,
       check_align(ctx, &expr->loc, expr->load.align);
       check_offset(ctx, &expr->loc, expr->load.offset);
       check_type(ctx, &expr->loc, rtype, expected_type, desc);
-      check_expr(ctx, module, func, expr->load.addr, type1, " of load index");
+      check_expr(ctx, expr->load.addr, type1, " of load index");
       break;
     }
 
@@ -618,8 +592,7 @@ static void check_expr(WasmContext* ctx,
                  "loop outer label");
       push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
                  WASM_TYPE_VOID, "loop inner label");
-      check_exprs(ctx, module, func, &expr->loop.exprs, expected_type,
-                  " of loop");
+      check_exprs(ctx, &expr->loop.exprs, expected_type, " of loop");
       pop_label(ctx);
       pop_label(ctx);
       break;
@@ -635,28 +608,25 @@ static void check_expr(WasmContext* ctx,
       break;
 
     case WASM_EXPR_TYPE_RETURN: {
-      WasmType result_type = wasm_get_result_type(func);
-      check_expr_opt(ctx, &expr->loc, module, func, expr->return_.expr,
-                     result_type, " of return");
+      WasmType result_type = wasm_get_result_type(ctx->current_func);
+      check_expr_opt(ctx, &expr->loc, expr->return_.expr, result_type,
+                     " of return");
       break;
     }
 
     case WASM_EXPR_TYPE_SELECT:
-      check_expr(ctx, module, func, expr->select.cond, WASM_TYPE_I32,
-                 " of condition");
-      check_expr(ctx, module, func, expr->select.true_, expected_type,
+      check_expr(ctx, expr->select.cond, WASM_TYPE_I32, " of condition");
+      check_expr(ctx, expr->select.true_, expected_type,
                  " of argument 0 of select op");
-      check_expr(ctx, module, func, expr->select.false_, expected_type,
+      check_expr(ctx, expr->select.false_, expected_type,
                  " of argment 1 of select op");
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL: {
       WasmType type;
-      if (WASM_SUCCEEDED(
-              check_local_var(ctx, func, &expr->set_local.var, &type))) {
+      if (WASM_SUCCEEDED(check_local_var(ctx, &expr->set_local.var, &type))) {
         check_type(ctx, &expr->loc, type, expected_type, desc);
-        check_expr(ctx, module, func, expr->set_local.expr, type,
-                   " of set_local");
+        check_expr(ctx, expr->set_local.expr, type, " of set_local");
       }
       break;
     }
@@ -668,21 +638,19 @@ static void check_expr(WasmContext* ctx,
       check_align(ctx, &expr->loc, expr->store.align);
       check_offset(ctx, &expr->loc, expr->store.offset);
       check_type(ctx, &expr->loc, rtype, expected_type, desc);
-      check_expr(ctx, module, func, expr->store.addr, type1, " of store index");
-      check_expr(ctx, module, func, expr->store.value, type2,
-                 " of store value");
+      check_expr(ctx, expr->store.addr, type1, " of store index");
+      check_expr(ctx, expr->store.value, type2, " of store value");
       break;
     }
 
     case WASM_EXPR_TYPE_BR_TABLE: {
-      check_expr(ctx, module, func, expr->br_table.key, WASM_TYPE_I32,
-                 " of key");
+      check_expr(ctx, expr->br_table.key, WASM_TYPE_I32, " of key");
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
-        check_br(ctx, &expr->loc, module, func, &expr->br_table.targets.data[i],
+        check_br(ctx, &expr->loc, &expr->br_table.targets.data[i],
                  expr->br_table.expr, " of br_table target");
       }
-      check_br(ctx, &expr->loc, module, func, &expr->br_table.default_target,
+      check_br(ctx, &expr->loc, &expr->br_table.default_target,
                expr->br_table.expr, " of br_table default target");
       break;
     }
@@ -691,7 +659,7 @@ static void check_expr(WasmContext* ctx,
       WasmType rtype = s_opcode_rtype[expr->unary.opcode];
       WasmType type1 = s_opcode_type1[expr->unary.opcode];
       check_type(ctx, &expr->loc, rtype, expected_type, desc);
-      check_expr(ctx, module, func, expr->unary.expr, type1, " of unary op");
+      check_expr(ctx, expr->unary.expr, type1, " of unary op");
       break;
     }
 
@@ -721,49 +689,44 @@ static void check_func_signature_matches_func_type(
 }
 
 static void check_func(WasmContext* ctx,
-                       const WasmModule* module,
                        const WasmLocation* loc,
                        const WasmFunc* func) {
+  ctx->current_func = func;
   if (wasm_decl_has_func_type(&func->decl)) {
     const WasmFuncType* func_type;
-    if (WASM_SUCCEEDED(check_func_type_var(ctx, module, &func->decl.type_var,
-                                           &func_type))) {
+    if (WASM_SUCCEEDED(
+            check_func_type_var(ctx, &func->decl.type_var, &func_type))) {
       if (wasm_decl_has_signature(&func->decl))
-        check_func_signature_matches_func_type(ctx, func, func_type);
+        check_func_signature_matches_func_type(ctx, ctx->current_func,
+                                               func_type);
     }
   }
 
   check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
-  check_exprs(ctx, module, func, &func->exprs, wasm_get_result_type(func),
+  check_exprs(ctx, &func->exprs, wasm_get_result_type(func),
               " of function result");
+  ctx->current_func = NULL;
 }
 
 static void check_import(WasmContext* ctx,
-                         const WasmModule* module,
                          const WasmLocation* loc,
                          const WasmImport* import) {
   if (wasm_decl_has_func_type(&import->decl))
-    check_func_type_var(ctx, module, &import->decl.type_var, NULL);
+    check_func_type_var(ctx, &import->decl.type_var, NULL);
 }
 
-static void check_export(WasmContext* ctx,
-                         const WasmModule* module,
-                         const WasmExport* export) {
-  check_func_var(ctx, module, &export->var, NULL);
+static void check_export(WasmContext* ctx, const WasmExport* export) {
+  check_func_var(ctx, &export->var, NULL);
 }
 
-static void check_table(WasmContext* ctx,
-                        const WasmModule* module,
-                        const WasmVarVector* table) {
+static void check_table(WasmContext* ctx, const WasmVarVector* table) {
   size_t i;
   for (i = 0; i < table->size; ++i)
-    check_func_var(ctx, module, &table->data[i], NULL);
+    check_func_var(ctx, &table->data[i], NULL);
 }
 
-static void check_memory(WasmContext* ctx,
-                         const WasmModule* module,
-                         const WasmMemory* memory) {
+static void check_memory(WasmContext* ctx, const WasmMemory* memory) {
   if (memory->max_pages < memory->initial_pages) {
     print_error(
         ctx, &memory->loc,
@@ -801,19 +764,21 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
   WasmBool seen_table = WASM_FALSE;
   WasmBool seen_start = WASM_FALSE;
 
+  ctx->current_module = module;
+
   WasmModuleField* field;
   for (field = module->first_field; field != NULL; field = field->next) {
     switch (field->type) {
       case WASM_MODULE_FIELD_TYPE_FUNC:
-        check_func(ctx, module, &field->loc, &field->func);
+        check_func(ctx, &field->loc, &field->func);
         break;
 
       case WASM_MODULE_FIELD_TYPE_IMPORT:
-        check_import(ctx, module, &field->loc, &field->import);
+        check_import(ctx, &field->loc, &field->import);
         break;
 
       case WASM_MODULE_FIELD_TYPE_EXPORT:
-        check_export(ctx, module, &field->export_);
+        check_export(ctx, &field->export_);
         break;
 
       case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
@@ -824,14 +789,14 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
       case WASM_MODULE_FIELD_TYPE_TABLE:
         if (seen_table)
           print_error(ctx, &field->loc, "only one table allowed");
-        check_table(ctx, module, &field->table);
+        check_table(ctx, &field->table);
         seen_table = WASM_TRUE;
         break;
 
       case WASM_MODULE_FIELD_TYPE_MEMORY:
         if (seen_memory)
           print_error(ctx, &field->loc, "only one memory block allowed");
-        check_memory(ctx, module, &field->memory);
+        check_memory(ctx, &field->memory);
         seen_memory = WASM_TRUE;
         break;
 
@@ -843,7 +808,7 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
           print_error(ctx, &field->loc, "only one start function allowed");
 
         const WasmFunc* start_func = NULL;
-        check_func_var(ctx, module, &field->start, &start_func);
+        check_func_var(ctx, &field->start, &start_func);
         if (start_func) {
           if (wasm_get_num_params(start_func) != 0)
             print_error(ctx, &field->loc, "start function must be nullary");
@@ -871,13 +836,14 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
 static void check_invoke(WasmContext* ctx,
                          const WasmCommandInvoke* invoke,
                          WasmTypeSet return_type) {
-  if (!ctx->last_module) {
+  if (!ctx->current_module) {
     print_error(ctx, &invoke->loc,
                 "invoke must occur after a module definition");
     return;
   }
 
-  WasmExport* export = wasm_get_export_by_name(ctx->last_module, &invoke->name);
+  WasmExport* export =
+      wasm_get_export_by_name(ctx->current_module, &invoke->name);
   if (!export) {
     print_error(ctx, &invoke->loc,
                 "unknown function export \"" PRIstringslice "\"",
@@ -885,7 +851,7 @@ static void check_invoke(WasmContext* ctx,
     return;
   }
 
-  WasmFunc* func = wasm_get_func_by_var(ctx->last_module, &export->var);
+  WasmFunc* func = wasm_get_func_by_var(ctx->current_module, &export->var);
   if (!func) {
     /* this error will have already been reported, just skip it */
     return;
@@ -913,7 +879,6 @@ static void check_invoke(WasmContext* ctx,
 static void check_command(WasmContext* ctx, const WasmCommand* command) {
   switch (command->type) {
     case WASM_COMMAND_TYPE_MODULE:
-      ctx->last_module = &command->module;
       check_module(ctx, &command->module);
       break;
 
