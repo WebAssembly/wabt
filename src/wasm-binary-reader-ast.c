@@ -52,13 +52,12 @@
       return WASM_ERROR;   \
   } while (0)
 
-#define CHECK_DEPTH(depth)                                            \
-  do {                                                                \
-    if ((depth) >= ctx->max_depth) {                                  \
-      print_error(ctx, "invalid depth: %d (max %" PRIzd ")", (depth), \
-                  ctx->max_depth);                                    \
-      return WASM_ERROR;                                              \
-    }                                                                 \
+#define CHECK_DEPTH(depth)                                                     \
+  do {                                                                         \
+    if ((depth) >= ctx->max_depth) {                                           \
+      print_error(ctx, "invalid depth: %d (max %u)", (depth), ctx->max_depth); \
+      return WASM_ERROR;                                                       \
+    }                                                                          \
   } while (0)
 
 #define CHECK_LOCAL(local_index)                                          \
@@ -161,8 +160,7 @@ static WasmResult pop_into_args(WasmContext* ctx,
                                 WasmExprPtrVector* args) {
   uint32_t num_params = sig->param_types.size;
   if (ctx->expr_stack.size < num_params) {
-    print_error(ctx,
-                "call requires %" PRIzd " args, but only %" PRIzd " on stack",
+    print_error(ctx, "call requires %u args, but only %" PRIzd " on stack",
                 num_params, ctx->expr_stack.size);
     return WASM_ERROR;
   }
