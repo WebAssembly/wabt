@@ -142,7 +142,7 @@ src/prebuilt/wasm-ast-parser-gen.c: src/wasm-ast-parser.y
 	bison -o $@ $< --defines=src/prebuilt/wasm-ast-parser-gen.h
 
 src/prebuilt/wasm-ast-lexer-gen.c: src/wasm-ast-lexer.c
-	re2c -bc -o $@ $<
+	re2c --no-generation-date -bc -o $@ $<
 
 # defaults with simple names
 $(foreach EXECUTABLE,$(EXECUTABLES), \
