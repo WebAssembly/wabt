@@ -38,7 +38,7 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
-#define CHECK_ALLOC_(ctx, cond) \
+#define CHECK_ALLOC_(cond)      \
   do {                          \
     if (!(cond)) {              \
       ALLOC_FAILURE;            \
@@ -47,7 +47,7 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
     }                           \
   } while (0)
 
-#define CHECK_ALLOC(ctx, e) CHECK_ALLOC_(ctx, WASM_SUCCEEDED(e))
+#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
 
 static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -573,8 +573,8 @@ static void write_type_bindings(WasmContext* ctx,
                                 const WasmFunc* func,
                                 const WasmTypeVector* types,
                                 const WasmBindingHash* bindings) {
-  CHECK_ALLOC(ctx, wasm_make_type_binding_reverse_mapping(
-                       ctx->allocator, types, bindings, &ctx->index_to_name));
+  CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
+      ctx->allocator, types, bindings, &ctx->index_to_name));
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:

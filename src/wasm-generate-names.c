@@ -40,9 +40,6 @@
       return WASM_ERROR;   \
   } while (0)
 
-typedef uint32_t WasmUint32;
-WASM_DEFINE_VECTOR(uint32, WasmUint32);
-
 typedef struct WasmContext {
   WasmAllocator* allocator;
   WasmModule* module;

@@ -31,8 +31,6 @@
   } while (0)
 
 #define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
-#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_((v) != NULL)
-#define CHECK_ALLOC_NULL_STR(v) CHECK_ALLOC_((v).start)
 
 #define CHECK_RESULT(expr) \
   do {                     \
@@ -40,12 +38,8 @@
       return WASM_ERROR;   \
   } while (0)
 
-typedef uint32_t WasmUint32;
-WASM_DEFINE_VECTOR(uint32, WasmUint32);
-
 typedef WasmLabel* WasmLabelPtr;
 WASM_DEFINE_VECTOR(label_ptr, WasmLabelPtr);
-
 
 typedef struct WasmContext {
   WasmAllocator* allocator;
