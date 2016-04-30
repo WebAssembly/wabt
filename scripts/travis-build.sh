@@ -21,21 +21,18 @@ set -o errexit
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source ${SCRIPT_DIR}/travis-common.sh
 
-if [ ${CC} = "gcc" ]; then
+if [[ ${COMPILER} = "gcc" ]]; then
   # Build without re2c/bison to test prebuilt C sources
   make gcc-debug-no-re2c-bison
-elif [ ${CC} = "clang" ]; then
+elif [[ ${COMPILER} = "clang" && -z ${SANITIZER:-} ]]; then
   # Test building without GTest submodule
   make clang-debug-no-tests
 fi
 
-for COMPILER in ${COMPILERS}; do
-  for BUILD_TYPE in ${BUILD_TYPES}; do
+for BUILD_TYPE in ${BUILD_TYPES}; do
+  if [[ -n ${SANITIZER:-} ]]; then
+    make ${COMPILER}-${BUILD_TYPE}-${SANITIZER}
+  else
     make ${COMPILER}-${BUILD_TYPE}
-    if [ ${COMPILER} = "clang" ]; then
-      for SANITIZER in ${SANITIZERS}; do
-        make ${CC}-${BUILD_TYPE}-${SANITIZER}
-      done
-    fi
-  done
+  fi
 done

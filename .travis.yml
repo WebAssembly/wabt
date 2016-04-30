@@ -8,6 +8,14 @@ script:
   - scripts/download-d8.sh
   - scripts/travis-build.sh
   - scripts/travis-test.sh
-compiler:
-  - clang
-  - gcc
+matrix:
+  include:
+    - compiler: gcc
+    - compiler: gcc-i686
+    - compiler: clang
+    - compiler: clang
+      env: SANITIZER=asan
+    - compiler: clang
+      env: SANITIZER=msan
+    - compiler: clang
+      env: SANITIZER=lsan
