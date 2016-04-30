@@ -727,6 +727,16 @@ static void check_table(WasmContext* ctx, const WasmVarVector* table) {
 }
 
 static void check_memory(WasmContext* ctx, const WasmMemory* memory) {
+  if (memory->initial_pages > WASM_MAX_PAGES) {
+    print_error(ctx, &memory->loc, "initial pages (%u) must be less than (%u)",
+                memory->initial_pages, WASM_MAX_PAGES);
+  }
+
+  if (memory->max_pages > WASM_MAX_PAGES) {
+    print_error(ctx, &memory->loc, "max pages (%u) must be less than (%u)",
+                memory->max_pages, WASM_MAX_PAGES);
+  }
+
   if (memory->max_pages < memory->initial_pages) {
     print_error(
         ctx, &memory->loc,

@@ -1,0 +1,9 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+0 "ASM"
+version
+(;; STDERR ;;;
+Error running "wasm-wast":
+error: @0x00000004: magic value mismatch
+
+;;; STDERR ;;)

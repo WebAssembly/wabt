@@ -305,10 +305,6 @@ static void in_bytes(WasmContext* ctx,
   ctx->offset += data_size;
 }
 
-static WasmBool is_valid_type(uint8_t type) {
-  return type < WASM_NUM_TYPES;
-}
-
 static WasmBool is_non_void_type(uint8_t type) {
   return type != 0 && type < WASM_NUM_TYPES;
 }
@@ -438,7 +434,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint8_t result_type = WASM_TYPE_VOID;
       if (num_results) {
         in_u8(ctx, &result_type, "function result type");
-        RAISE_ERROR_UNLESS(is_valid_type(result_type),
+        RAISE_ERROR_UNLESS(is_non_void_type(result_type),
                            "expected valid result type");
       }
 
@@ -515,10 +511,17 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     uint32_t initial_size_pages;
     in_u32_leb128(ctx, &initial_size_pages, "memory initial size");
     CALLBACK(on_memory_initial_size_pages, initial_size_pages);
+    RAISE_ERROR_UNLESS(initial_size_pages <= WASM_MAX_PAGES,
+                       "invalid memory initial size");
 
     uint32_t max_size_pages;
     in_u32_leb128(ctx, &max_size_pages, "memory max size");
     CALLBACK(on_memory_max_size_pages, max_size_pages);
+    RAISE_ERROR_UNLESS(max_size_pages <= WASM_MAX_PAGES,
+                       "invalid memory max size");
+
+    RAISE_ERROR_UNLESS(initial_size_pages <= max_size_pages,
+                       "memory initial size must be <= max size");
 
     uint8_t mem_exported;
     in_u8(ctx, &mem_exported, "memory export");

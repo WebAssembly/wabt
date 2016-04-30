@@ -1,0 +1,11 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section("type") { count[1] function params[0] results[1] i32 }
+section("import") { count[1] type[1] str("module") str("func") }
+(;; STDERR ;;;
+Error running "wasm-wast":
+error: @0x0000001d: invalid import signature index
+
+;;; STDERR ;;)

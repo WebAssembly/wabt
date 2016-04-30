@@ -1,0 +1,18 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section("type") { count[1] function params[0] results[0] }
+section("function") { count[1] sig[0] }
+section("code") {
+  count[1]
+  func {
+    local_decls[1]
+    locals[1] void
+  }
+}
+(;; STDERR ;;;
+Error running "wasm-wast":
+error: @0x00000029: expected valid local type
+
+;;; STDERR ;;)

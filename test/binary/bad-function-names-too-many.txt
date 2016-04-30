@@ -1,0 +1,18 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+;;; FLAGS: --debug-names
+magic
+version
+section("type") { count[1] function params[0] results[0] }
+section("function") { count[1] sig[0] }
+section("code") { count[1] func { locals[0] nop } }
+section("name") {
+  count[2]
+  str("f") locals[0]
+  str("g") locals[0]
+}
+(;; STDERR ;;;
+Error running "wasm-wast":
+error: @0x0000002f: function name count > function signature count
+
+;;; STDERR ;;)

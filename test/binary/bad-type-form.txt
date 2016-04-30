@@ -1,0 +1,13 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section("type") {
+  count[1]
+  0x20
+}
+(;; STDERR ;;;
+Error running "wasm-wast":
+error: @0x00000010: unexpected type form
+
+;;; STDERR ;;)

@@ -1,4 +1,4 @@
 (module
-  (memory 65536)
+  (memory 1)
   (export "mem1" memory)
   (export "mem2" memory))

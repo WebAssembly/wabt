@@ -259,8 +259,12 @@ def t_COMMENT(t):
   pass
 
 def t_INT(t):
-  r'\-?([0-9]+|0x[0-9a-fA-F]+)'
-  t.value = int(t.value)
+  r'\-?(0[xX][0-9a-fA-F]+|[0-9]+)'
+  if t.value.lower().startswith('0x'):
+    t.value = int(t.value, 16)
+  else:
+    t.value = int(t.value)
+
   if 0 <= t.value < 256:
     t.type = 'BYTE'
   return t

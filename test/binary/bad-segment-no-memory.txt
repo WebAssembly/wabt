@@ -1,0 +1,10 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section("data") { count[1] addr[0] data[str("hi")] }
+(;; STDERR ;;;
+Error running "wasm-wast":
+error: @0x0000000e: data segment section without memory section
+
+;;; STDERR ;;)
