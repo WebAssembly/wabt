@@ -321,7 +321,7 @@ FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
 
 WasmExpr* wasm_new_empty_expr(struct WasmAllocator* allocator,
                               WasmExprType type) {
-  WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, type);
+  WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, next);
   if (!result)
     return NULL;
   result->type = type;
@@ -358,18 +358,25 @@ void wasm_destroy_func_signature(WasmAllocator* allocator,
   wasm_destroy_type_vector(allocator, &sig->param_types);
 }
 
-void wasm_destroy_block(WasmAllocator* allocator, WasmBlock* block) {
-  wasm_destroy_string_slice(allocator, &block->label);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, block->exprs, expr_ptr);
+void wasm_destroy_expr_list(WasmAllocator* allocator, WasmExpr* first) {
+  WasmExpr* expr = first;
+  while (expr) {
+    WasmExpr* next = expr->next;
+    wasm_destroy_expr(allocator, expr);
+    expr = next;
+  }
 }
 
-void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr);
+void wasm_destroy_block(WasmAllocator* allocator, WasmBlock* block) {
+  wasm_destroy_string_slice(allocator, &block->label);
+  wasm_destroy_expr_list(allocator, block->first);
+}
 
-static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
+void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      wasm_destroy_expr_ptr(allocator, &expr->binary.left);
-      wasm_destroy_expr_ptr(allocator, &expr->binary.right);
+      wasm_destroy_expr(allocator, expr->binary.left);
+      wasm_destroy_expr(allocator, expr->binary.right);
       break;
     case WASM_EXPR_TYPE_BLOCK:
       wasm_destroy_block(allocator, &expr->block);
@@ -377,81 +384,80 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
     case WASM_EXPR_TYPE_BR:
       wasm_destroy_var(allocator, &expr->br.var);
       if (expr->br.expr)
-        wasm_destroy_expr_ptr(allocator, &expr->br.expr);
+        wasm_destroy_expr(allocator, expr->br.expr);
       break;
     case WASM_EXPR_TYPE_BR_IF:
       wasm_destroy_var(allocator, &expr->br_if.var);
-      wasm_destroy_expr_ptr(allocator, &expr->br_if.cond);
+      wasm_destroy_expr(allocator, expr->br_if.cond);
       if (expr->br_if.expr)
-        wasm_destroy_expr_ptr(allocator, &expr->br_if.expr);
+        wasm_destroy_expr(allocator, expr->br_if.expr);
       break;
     case WASM_EXPR_TYPE_CALL:
     case WASM_EXPR_TYPE_CALL_IMPORT:
       wasm_destroy_var(allocator, &expr->call.var);
-      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->call.args, expr_ptr);
+      wasm_destroy_expr_list(allocator, expr->call.first_arg);
       break;
     case WASM_EXPR_TYPE_CALL_INDIRECT:
       wasm_destroy_var(allocator, &expr->call_indirect.var);
-      wasm_destroy_expr_ptr(allocator, &expr->call_indirect.expr);
-      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->call_indirect.args,
-                                       expr_ptr);
+      wasm_destroy_expr(allocator, expr->call_indirect.expr);
+      wasm_destroy_expr_list(allocator, expr->call_indirect.first_arg);
       break;
     case WASM_EXPR_TYPE_COMPARE:
-      wasm_destroy_expr_ptr(allocator, &expr->compare.left);
-      wasm_destroy_expr_ptr(allocator, &expr->compare.right);
+      wasm_destroy_expr(allocator, expr->compare.left);
+      wasm_destroy_expr(allocator, expr->compare.right);
       break;
     case WASM_EXPR_TYPE_CONVERT:
-      wasm_destroy_expr_ptr(allocator, &expr->convert.expr);
+      wasm_destroy_expr(allocator, expr->convert.expr);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL:
       wasm_destroy_var(allocator, &expr->get_local.var);
       break;
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      wasm_destroy_expr_ptr(allocator, &expr->grow_memory.expr);
+      wasm_destroy_expr(allocator, expr->grow_memory.expr);
       break;
     case WASM_EXPR_TYPE_IF:
-      wasm_destroy_expr_ptr(allocator, &expr->if_.cond);
+      wasm_destroy_expr(allocator, expr->if_.cond);
       wasm_destroy_block(allocator, &expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
-      wasm_destroy_expr_ptr(allocator, &expr->if_else.cond);
+      wasm_destroy_expr(allocator, expr->if_else.cond);
       wasm_destroy_block(allocator, &expr->if_else.true_);
       wasm_destroy_block(allocator, &expr->if_else.false_);
       break;
     case WASM_EXPR_TYPE_LOAD:
-      wasm_destroy_expr_ptr(allocator, &expr->load.addr);
+      wasm_destroy_expr(allocator, expr->load.addr);
       break;
     case WASM_EXPR_TYPE_LOOP:
       wasm_destroy_string_slice(allocator, &expr->loop.inner);
       wasm_destroy_string_slice(allocator, &expr->loop.outer);
-      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->loop.exprs, expr_ptr);
+      wasm_destroy_expr_list(allocator, expr->loop.first);
       break;
     case WASM_EXPR_TYPE_RETURN:
       if (expr->return_.expr)
-        wasm_destroy_expr_ptr(allocator, &expr->return_.expr);
+        wasm_destroy_expr(allocator, expr->return_.expr);
       break;
     case WASM_EXPR_TYPE_SELECT:
-      wasm_destroy_expr_ptr(allocator, &expr->select.cond);
-      wasm_destroy_expr_ptr(allocator, &expr->select.true_);
-      wasm_destroy_expr_ptr(allocator, &expr->select.false_);
+      wasm_destroy_expr(allocator, expr->select.cond);
+      wasm_destroy_expr(allocator, expr->select.true_);
+      wasm_destroy_expr(allocator, expr->select.false_);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL:
       wasm_destroy_var(allocator, &expr->set_local.var);
-      wasm_destroy_expr_ptr(allocator, &expr->set_local.expr);
+      wasm_destroy_expr(allocator, expr->set_local.expr);
       break;
     case WASM_EXPR_TYPE_STORE:
-      wasm_destroy_expr_ptr(allocator, &expr->store.addr);
-      wasm_destroy_expr_ptr(allocator, &expr->store.value);
+      wasm_destroy_expr(allocator, expr->store.addr);
+      wasm_destroy_expr(allocator, expr->store.value);
       break;
     case WASM_EXPR_TYPE_BR_TABLE:
-      wasm_destroy_expr_ptr(allocator, &expr->br_table.key);
+      wasm_destroy_expr(allocator, expr->br_table.key);
       if (expr->br_table.expr)
-        wasm_destroy_expr_ptr(allocator, &expr->br_table.expr);
+        wasm_destroy_expr(allocator, expr->br_table.expr);
       WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->br_table.targets, var);
       wasm_destroy_var(allocator, &expr->br_table.default_target);
       break;
     case WASM_EXPR_TYPE_UNARY:
-      wasm_destroy_expr_ptr(allocator, &expr->unary.expr);
+      wasm_destroy_expr(allocator, expr->unary.expr);
       break;
 
     case WASM_EXPR_TYPE_UNREACHABLE:
@@ -460,16 +466,7 @@ static void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
     case WASM_EXPR_TYPE_NOP:
       break;
   }
-}
-
-void wasm_destroy_expr_ptr(WasmAllocator* allocator, WasmExpr** expr) {
-  wasm_destroy_expr(allocator, *expr);
-  wasm_free(allocator, *expr);
-}
-
-void wasm_destroy_expr_ptr_vector_and_elements(WasmAllocator* allocator,
-                                               WasmExprPtrVector* exprs) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *exprs, expr_ptr);
+  wasm_free(allocator, expr);
 }
 
 void wasm_destroy_func_declaration(WasmAllocator* allocator,
@@ -484,7 +481,7 @@ void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
   wasm_destroy_type_vector(allocator, &func->local_types);
   wasm_destroy_binding_hash(allocator, &func->param_bindings);
   wasm_destroy_binding_hash(allocator, &func->local_bindings);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, func->exprs, expr_ptr);
+  wasm_destroy_expr_list(allocator, func->first_expr);
 }
 
 void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
@@ -512,8 +509,7 @@ void wasm_destroy_func_fields(struct WasmAllocator* allocator,
 
     switch (func_field->type) {
       case WASM_FUNC_FIELD_TYPE_EXPRS:
-        WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, func_field->exprs,
-                                         expr_ptr);
+        wasm_destroy_expr_list(allocator, func_field->first_expr);
         break;
 
       case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
@@ -661,11 +657,10 @@ void wasm_destroy_script(WasmScript* script) {
 
 static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor);
 
-static WasmResult visit_exprs(WasmExprPtrVector* exprs,
-                              WasmExprVisitor* visitor) {
-  size_t i;
-  for (i = 0; i < exprs->size; ++i)
-    CHECK_RESULT(visit_expr(exprs->data[i], visitor));
+static WasmResult visit_expr_list(WasmExpr* first, WasmExprVisitor* visitor) {
+  WasmExpr* expr;
+  for (expr = first; expr; expr = expr->next)
+    CHECK_RESULT(visit_expr(expr, visitor));
   return WASM_OK;
 }
 
@@ -680,7 +675,7 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_BLOCK:
       CALLBACK(begin_block_expr);
-      CHECK_RESULT(visit_exprs(&expr->block.exprs, visitor));
+      CHECK_RESULT(visit_expr_list(expr->block.first, visitor));
       CALLBACK(end_block_expr);
       break;
 
@@ -701,20 +696,20 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_CALL:
       CALLBACK(begin_call_expr);
-      CHECK_RESULT(visit_exprs(&expr->call.args, visitor));
+      CHECK_RESULT(visit_expr_list(expr->call.first_arg, visitor));
       CALLBACK(end_call_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL_IMPORT:
       CALLBACK(begin_call_import_expr);
-      CHECK_RESULT(visit_exprs(&expr->call.args, visitor));
+      CHECK_RESULT(visit_expr_list(expr->call.first_arg, visitor));
       CALLBACK(end_call_import_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL_INDIRECT:
       CALLBACK(begin_call_indirect_expr);
       CHECK_RESULT(visit_expr(expr->call_indirect.expr, visitor));
-      CHECK_RESULT(visit_exprs(&expr->call_indirect.args, visitor));
+      CHECK_RESULT(visit_expr_list(expr->call_indirect.first_arg, visitor));
       CALLBACK(end_call_indirect_expr);
       break;
 
@@ -748,15 +743,15 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
     case WASM_EXPR_TYPE_IF:
       CALLBACK(begin_if_expr);
       CHECK_RESULT(visit_expr(expr->if_.cond, visitor));
-      CHECK_RESULT(visit_exprs(&expr->if_.true_.exprs, visitor));
+      CHECK_RESULT(visit_expr_list(expr->if_.true_.first, visitor));
       CALLBACK(end_if_expr);
       break;
 
     case WASM_EXPR_TYPE_IF_ELSE:
       CALLBACK(begin_if_else_expr);
       CHECK_RESULT(visit_expr(expr->if_else.cond, visitor));
-      CHECK_RESULT(visit_exprs(&expr->if_else.true_.exprs, visitor));
-      CHECK_RESULT(visit_exprs(&expr->if_else.false_.exprs, visitor));
+      CHECK_RESULT(visit_expr_list(expr->if_else.true_.first, visitor));
+      CHECK_RESULT(visit_expr_list(expr->if_else.false_.first, visitor));
       CALLBACK(end_if_else_expr);
       break;
 
@@ -768,7 +763,7 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_LOOP:
       CALLBACK(begin_loop_expr);
-      CHECK_RESULT(visit_exprs(&expr->loop.exprs, visitor));
+      CHECK_RESULT(visit_expr_list(expr->loop.first, visitor));
       CALLBACK(end_loop_expr);
       break;
 
@@ -832,5 +827,5 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
 /* TODO(binji): make the visitor non-recursive */
 WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor* visitor) {
-  return visit_exprs(&func->exprs, visitor);
+  return visit_expr_list(func->first_expr, visitor);
 }

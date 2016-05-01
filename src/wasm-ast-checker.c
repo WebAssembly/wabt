@@ -395,19 +395,20 @@ static void check_call(WasmContext* ctx,
                        const WasmLocation* loc,
                        const WasmStringSlice* callee_name,
                        const WasmFuncSignature* sig,
-                       const WasmExprPtrVector* args,
+                       const WasmExpr* first_arg,
+                       size_t num_args,
                        WasmType expected_type,
                        const char* desc) {
-  size_t actual_args = args->size;
   size_t expected_args = sig->param_types.size;
-  if (expected_args == actual_args) {
+  if (expected_args == num_args) {
     char buffer[100];
     wasm_snprintf(buffer, 100, " of %s result", desc);
     check_type(ctx, loc, sig->result_type, expected_type, buffer);
+    const WasmExpr* arg;
     size_t i;
-    for (i = 0; i < actual_args; ++i) {
+    for (i = 0, arg = first_arg; i < num_args; ++i, arg = arg->next) {
       wasm_snprintf(buffer, 100, " of argument %" PRIzd " of %s", i, desc);
-      check_expr(ctx, args->data[i], sig->param_types.data[i], buffer);
+      check_expr(ctx, arg, sig->param_types.data[i], buffer);
     }
   } else {
     char* callee_name_str = "";
@@ -419,21 +420,21 @@ static void check_call(WasmContext* ctx,
     }
     print_error(ctx, loc, "too %s parameters to function%s in %s. got %" PRIzd
                           ", expected %" PRIzd,
-                actual_args > expected_args ? "many" : "few", callee_name_str,
-                desc, actual_args, expected_args);
+                num_args > expected_args ? "many" : "few", callee_name_str,
+                desc, num_args, expected_args);
   }
 }
 
-static void check_exprs(WasmContext* ctx,
-                        const WasmExprPtrVector* exprs,
-                        WasmType expected_type,
-                        const char* desc) {
-  if (exprs->size > 0) {
-    size_t i;
-    WasmExprPtr* expr = &exprs->data[0];
-    for (i = 0; i < exprs->size - 1; ++i, ++expr)
-      check_expr(ctx, *expr, WASM_TYPE_VOID, "");
-    check_expr(ctx, *expr, expected_type, desc);
+static void check_expr_list(WasmContext* ctx,
+                            const WasmExpr* first,
+                            WasmType expected_type,
+                            const char* desc) {
+  const WasmExpr* expr;
+  for (expr = first; expr; expr = expr->next) {
+    if (expr->next)
+      check_expr(ctx, expr, WASM_TYPE_VOID, "");
+    else
+      check_expr(ctx, expr, expected_type, desc);
   }
 }
 
@@ -456,7 +457,7 @@ static void check_expr(WasmContext* ctx,
       WasmLabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->block.label, expected_type,
                  "block");
-      check_exprs(ctx, &expr->block.exprs, expected_type, " of block");
+      check_expr_list(ctx, expr->block.first, expected_type, " of block");
       pop_label(ctx);
       break;
     }
@@ -481,7 +482,8 @@ static void check_expr(WasmContext* ctx,
           check_func_type_var(ctx, &callee->decl.type_var, NULL);
 
         check_call(ctx, &expr->loc, &callee->name, &callee->decl.sig,
-                   &expr->call.args, expected_type, "call");
+                   expr->call.first_arg, expr->call.num_args, expected_type,
+                   "call");
       }
       break;
     }
@@ -493,7 +495,8 @@ static void check_expr(WasmContext* ctx,
           check_func_type_var(ctx, &import->decl.type_var, NULL);
 
         check_call(ctx, &expr->loc, &import->name, &import->decl.sig,
-                   &expr->call.args, expected_type, "call_import");
+                   expr->call.first_arg, expr->call.num_args, expected_type,
+                   "call_import");
       }
       break;
     }
@@ -505,7 +508,8 @@ static void check_expr(WasmContext* ctx,
       if (WASM_SUCCEEDED(
               check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
         check_call(ctx, &expr->loc, NULL, &func_type->sig,
-                   &expr->call_indirect.args, expected_type, "call_indirect");
+                   expr->call_indirect.first_arg, expr->call_indirect.num_args,
+                   expected_type, "call_indirect");
       }
       break;
     }
@@ -553,7 +557,8 @@ static void check_expr(WasmContext* ctx,
       check_expr(ctx, expr->if_.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_.true_.label, expected_type,
                  "if branch");
-      check_exprs(ctx, &expr->if_.true_.exprs, expected_type, " of if branch");
+      check_expr_list(ctx, expr->if_.true_.first, expected_type,
+                      " of if branch");
       pop_label(ctx);
       check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
       break;
@@ -564,13 +569,13 @@ static void check_expr(WasmContext* ctx,
       check_expr(ctx, expr->if_else.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
                  expected_type, "if true branch");
-      check_exprs(ctx, &expr->if_else.true_.exprs, expected_type,
-                  " of if branch");
+      check_expr_list(ctx, expr->if_else.true_.first, expected_type,
+                      " of if branch");
       pop_label(ctx);
       push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
                  expected_type, "if false branch");
-      check_exprs(ctx, &expr->if_else.false_.exprs, expected_type,
-                  " of if branch");
+      check_expr_list(ctx, expr->if_else.false_.first, expected_type,
+                      " of if branch");
       pop_label(ctx);
       break;
     }
@@ -592,7 +597,7 @@ static void check_expr(WasmContext* ctx,
                  "loop outer label");
       push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
                  WASM_TYPE_VOID, "loop inner label");
-      check_exprs(ctx, &expr->loop.exprs, expected_type, " of loop");
+      check_expr_list(ctx, expr->loop.first, expected_type, " of loop");
       pop_label(ctx);
       pop_label(ctx);
       break;
@@ -704,8 +709,8 @@ static void check_func(WasmContext* ctx,
 
   check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
-  check_exprs(ctx, &func->exprs, wasm_get_result_type(func),
-              " of function result");
+  check_expr_list(ctx, func->first_expr, wasm_get_result_type(func),
+                  " of function result");
   ctx->current_func = NULL;
 }
 

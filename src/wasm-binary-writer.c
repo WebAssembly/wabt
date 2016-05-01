@@ -470,7 +470,7 @@ static void remap_locals(WasmContext* ctx, const WasmFunc* func) {
 static void write_expr_list(WasmContext* ctx,
                             const WasmModule* module,
                             const WasmFunc* func,
-                            const WasmExprPtrVector* exprs);
+                            const WasmExpr* first_expr);
 
 static void write_expr_opt(WasmContext* ctx,
                            const WasmModule* module,
@@ -491,7 +491,7 @@ static void write_expr(WasmContext* ctx,
       WasmLabelNode node;
       push_label(ctx, &node, &expr->block.label);
       write_opcode(&ctx->stream, WASM_OPCODE_BLOCK);
-      write_expr_list(ctx, module, func, &expr->block.exprs);
+      write_expr_list(ctx, module, func, expr->block.first);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       pop_label(ctx, &expr->block.label);
       break;
@@ -541,18 +541,18 @@ static void write_expr(WasmContext* ctx,
     case WASM_EXPR_TYPE_CALL: {
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
       assert(index >= 0 && (size_t)index < module->funcs.size);
-      write_expr_list(ctx, module, func, &expr->call.args);
+      write_expr_list(ctx, module, func, expr->call.first_arg);
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_FUNCTION);
-      write_u32_leb128(&ctx->stream, expr->call.args.size, "call arity");
+      write_u32_leb128(&ctx->stream, expr->call.num_args, "call arity");
       write_u32_leb128(&ctx->stream, index, "func index");
       break;
     }
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       int index = wasm_get_import_index_by_var(module, &expr->call.var);
       assert(index >= 0 && (size_t)index < module->imports.size);
-      write_expr_list(ctx, module, func, &expr->call.args);
+      write_expr_list(ctx, module, func, expr->call.first_arg);
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_IMPORT);
-      write_u32_leb128(&ctx->stream, expr->call.args.size, "call_import arity");
+      write_u32_leb128(&ctx->stream, expr->call.num_args, "call_import arity");
       write_u32_leb128(&ctx->stream, index, "import index");
       break;
     }
@@ -561,9 +561,9 @@ static void write_expr(WasmContext* ctx,
           wasm_get_func_type_index_by_var(module, &expr->call_indirect.var);
       assert(index >= 0 && (size_t)index < module->func_types.size);
       write_expr(ctx, module, func, expr->call_indirect.expr);
-      write_expr_list(ctx, module, func, &expr->call_indirect.args);
+      write_expr_list(ctx, module, func, expr->call_indirect.first_arg);
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_INDIRECT);
-      write_u32_leb128(&ctx->stream, expr->call_indirect.args.size,
+      write_u32_leb128(&ctx->stream, expr->call_indirect.num_args,
                        "call_indirect arity");
       write_u32_leb128(&ctx->stream, index, "signature index");
       break;
@@ -621,7 +621,7 @@ static void write_expr(WasmContext* ctx,
       write_expr(ctx, module, func, expr->if_.cond);
       write_opcode(&ctx->stream, WASM_OPCODE_IF);
       push_label(ctx, &node, &expr->if_.true_.label);
-      write_expr_list(ctx, module, func, &expr->if_.true_.exprs);
+      write_expr_list(ctx, module, func, expr->if_.true_.first);
       pop_label(ctx, &expr->if_.true_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       break;
@@ -631,11 +631,11 @@ static void write_expr(WasmContext* ctx,
       write_expr(ctx, module, func, expr->if_else.cond);
       write_opcode(&ctx->stream, WASM_OPCODE_IF);
       push_label(ctx, &node, &expr->if_else.true_.label);
-      write_expr_list(ctx, module, func, &expr->if_else.true_.exprs);
+      write_expr_list(ctx, module, func, expr->if_else.true_.first);
       pop_label(ctx, &expr->if_else.true_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_ELSE);
       push_label(ctx, &node, &expr->if_else.false_.label);
-      write_expr_list(ctx, module, func, &expr->if_else.false_.exprs);
+      write_expr_list(ctx, module, func, expr->if_else.false_.first);
       pop_label(ctx, &expr->if_else.false_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       break;
@@ -661,7 +661,7 @@ static void write_expr(WasmContext* ctx,
       push_label(ctx, &outer, &expr->loop.outer);
       push_label(ctx, &inner, &expr->loop.inner);
       write_opcode(&ctx->stream, WASM_OPCODE_LOOP);
-      write_expr_list(ctx, module, func, &expr->loop.exprs);
+      write_expr_list(ctx, module, func, expr->loop.first);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       pop_label(ctx, &expr->loop.inner);
       pop_label(ctx, &expr->loop.outer);
@@ -718,10 +718,10 @@ static void write_expr(WasmContext* ctx,
 static void write_expr_list(WasmContext* ctx,
                             const WasmModule* module,
                             const WasmFunc* func,
-                            const WasmExprPtrVector* exprs) {
-  size_t i;
-  for (i = 0; i < exprs->size; ++i)
-    write_expr(ctx, module, func, exprs->data[i]);
+                            const WasmExpr* first) {
+  const WasmExpr* expr;
+  for (expr = first; expr; expr = expr->next)
+    write_expr(ctx, module, func, expr);
 }
 
 static void write_expr_opt(WasmContext* ctx,
@@ -784,7 +784,7 @@ static void write_func(WasmContext* ctx,
                        const WasmModule* module,
                        const WasmFunc* func) {
   write_func_locals(ctx, module, func, &func->local_types);
-  write_expr_list(ctx, module, func, &func->exprs);
+  write_expr_list(ctx, module, func, func->first_expr);
 }
 
 static void write_module(WasmContext* ctx, const WasmModule* module) {

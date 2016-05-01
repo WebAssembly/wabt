@@ -131,7 +131,7 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
 %type<export_> export
 %type<export_memory> export_memory
 %type<expr> expr expr1 expr_opt
-%type<exprs> expr_list non_empty_expr_list
+%type<expr_list> expr_list non_empty_expr_list
 %type<func_fields> func_fields
 %type<func> func func_info
 %type<func_sig> func_type
@@ -155,8 +155,8 @@ WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
 %destructor { wasm_destroy_type_vector(parser->allocator, &$$); } value_type_list
 %destructor { wasm_destroy_var(parser->allocator, &$$); } var
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
-%destructor { wasm_destroy_expr_ptr(parser->allocator, &$$); } expr expr1 expr_opt
-%destructor { wasm_destroy_expr_ptr_vector_and_elements(parser->allocator, &$$); } expr_list non_empty_expr_list
+%destructor { wasm_destroy_expr(parser->allocator, $$); } expr expr1 expr_opt
+%destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } expr_list non_empty_expr_list
 %destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment string_contents
@@ -303,40 +303,37 @@ expr1 :
   | BLOCK labeling expr_list {
       $$ = wasm_new_block_expr(parser->allocator);
       $$->block.label = $2;
-      $$->block.exprs = $3;
+      $$->block.first = $3.first;
       CHECK_ALLOC_NULL($$);
     }
   | IF expr expr {
       $$ = wasm_new_if_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_.cond = $2;
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
-                                             &$$->if_.true_.exprs, &$3));
+      $$->if_.true_.first = $3;
     }
   | IF expr LPAR THEN labeling expr_list RPAR {
       $$ = wasm_new_if_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_.cond = $2;
       $$->if_.true_.label = $5;
-      $$->if_.true_.exprs = $6;
+      $$->if_.true_.first = $6.first;
     }
   | IF expr expr expr {
       $$ = wasm_new_if_else_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
-                                             &$$->if_else.true_.exprs, &$3));
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator,
-                                             &$$->if_else.false_.exprs, &$4));
+      $$->if_else.true_.first = $3;
+      $$->if_else.false_.first = $4;
     }
   | IF expr LPAR THEN labeling expr_list RPAR LPAR ELSE labeling expr_list RPAR {
       $$ = wasm_new_if_else_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->if_else.cond = $2;
       $$->if_else.true_.label = $5;
-      $$->if_else.true_.exprs = $6;
+      $$->if_else.true_.first = $6.first;
       $$->if_else.false_.label = $10;
-      $$->if_else.false_.exprs = $11;
+      $$->if_else.false_.first = $11.first;
     }
   | BR_IF var expr {
       $$ = wasm_new_br_if_expr(parser->allocator);
@@ -356,14 +353,14 @@ expr1 :
       CHECK_ALLOC_NULL($$);
       WASM_ZERO_MEMORY($$->loop.outer);
       $$->loop.inner = $2;
-      $$->loop.exprs = $3;
+      $$->loop.first = $3.first;
     }
   | LOOP bind_var bind_var expr_list {
       $$ = wasm_new_loop_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->loop.outer = $2;
       $$->loop.inner = $3;
-      $$->loop.exprs = $4;
+      $$->loop.first = $4.first;
     }
   | BR expr_opt {
       $$ = wasm_new_br_expr(parser->allocator);
@@ -404,20 +401,23 @@ expr1 :
       $$ = wasm_new_call_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
-      $$->call.args = $3;
+      $$->call.first_arg = $3.first;
+      $$->call.num_args = $3.size;
     }
   | CALL_IMPORT var expr_list {
       $$ = wasm_new_call_import_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->call.var = $2;
-      $$->call.args = $3;
+      $$->call.first_arg = $3.first;
+      $$->call.num_args = $3.size;
     }
   | CALL_INDIRECT var expr expr_list {
       $$ = wasm_new_call_indirect_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->call_indirect.var = $2;
       $$->call_indirect.expr = $3;
-      $$->call_indirect.args = $4;
+      $$->call_indirect.first_arg = $4.first;
+      $$->call_indirect.num_args = $4.size;
     }
   | GET_LOCAL var {
       $$ = wasm_new_get_local_expr(parser->allocator);
@@ -514,12 +514,14 @@ expr_opt :
 ;
 non_empty_expr_list :
     expr {
-      WASM_ZERO_MEMORY($$);
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator, &$$, &$1));
+      $$.first = $$.last = $1;
+      $$.size = 1;
     }
   | non_empty_expr_list expr {
       $$ = $1;
-      CHECK_ALLOC(wasm_append_expr_ptr_value(parser->allocator, &$$, &$2));
+      $$.last->next = $2;
+      $$.last = $2;
+      $$.size++;
     }
 ;
 expr_list :
@@ -533,7 +535,7 @@ func_fields :
       $$ = new_func_field(parser->allocator);
       CHECK_ALLOC_NULL($$);
       $$->type = WASM_FUNC_FIELD_TYPE_EXPRS;
-      $$->exprs = $1;
+      $$->first_expr = $1.first;
       $$->next = NULL;
     }
   | LPAR PARAM value_type_list RPAR func_fields {
@@ -590,7 +592,7 @@ func_info :
 
         switch (field->type) {
           case WASM_FUNC_FIELD_TYPE_EXPRS:
-            $$->exprs = field->exprs;
+            $$->first_expr = field->first_expr;
             break;
 
           case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:

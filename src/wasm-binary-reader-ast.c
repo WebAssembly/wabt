@@ -81,7 +81,7 @@ typedef enum WasmLabelType {
 
 typedef struct WasmLabelNode {
   WasmLabelType type;
-  uint32_t expr_stack_size;
+  WasmExpr* expr_stack_top;
   WasmExpr* expr;
 } WasmLabelNode;
 WASM_DEFINE_VECTOR(label_node, WasmLabelNode);
@@ -92,7 +92,7 @@ typedef struct WasmContext {
   WasmModule* module;
 
   WasmFunc* current_func;
-  WasmExprPtrVector expr_stack;
+  WasmExpr* expr_stack_top;
   WasmLabelNodeVector label_stack;
   uint32_t max_depth;
 } WasmContext;
@@ -117,17 +117,19 @@ static WasmResult dup_name(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult push_expr(WasmContext* ctx, WasmExpr* expr) {
-  return wasm_append_expr_ptr_value(ctx->allocator, &ctx->expr_stack, &expr);
+static void push_expr(WasmContext* ctx, WasmExpr* expr) {
+  expr->next = ctx->expr_stack_top;
+  ctx->expr_stack_top = expr;
 }
 
 static WasmResult pop_expr(WasmContext* ctx, WasmExpr** expr) {
-  if (ctx->expr_stack.size == 0) {
+  if (!ctx->expr_stack_top) {
     print_error(ctx, "popping empty stack");
     return WASM_ERROR;
   }
 
-  *expr = ctx->expr_stack.data[--ctx->expr_stack.size];
+  *expr = ctx->expr_stack_top;
+  ctx->expr_stack_top = ctx->expr_stack_top->next;
   return WASM_OK;
 }
 
@@ -140,37 +142,58 @@ static WasmResult pop_expr_if(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult pop_into_expr_vector(WasmContext* ctx,
-                                       uint32_t new_expr_stack_size,
-                                       WasmExprPtrVector* exprs) {
-  uint32_t start = new_expr_stack_size;
-  uint32_t end = ctx->expr_stack.size;
-  assert(start <= end);
-  uint32_t i;
-  for (i = start; i < end; ++i) {
-    WasmExpr* arg = ctx->expr_stack.data[i];
-    CHECK_RESULT(wasm_append_expr_ptr_value(ctx->allocator, exprs, &arg));
+static void pop_into_expr_list(WasmContext* ctx,
+                               WasmExpr* new_expr_stack_top,
+                               WasmExpr** out_first_expr) {
+  /* the stack contains expressions pushed on in execution order, e.g.
+   *
+   *                                          new_expr_stack_top
+   *                                                  |
+   *                                                  V
+   *   expr_stack_top -> expr2 -> expr1 -> expr0 -> other -> NULL
+   *
+   * |out_expr_first| will be set to the first element of the reversed list:
+   *
+   *   out_first_expr -> expr0 -> expr1 -> expr2 -> NULL
+   *   expr_stack_top -> other -> NULL
+   */
+  assert(!*out_first_expr);
+  WasmExpr* first = NULL;
+  WasmExpr* expr = ctx->expr_stack_top;
+  while (expr != new_expr_stack_top) {
+    assert(expr);
+    WasmExpr* next = expr->next;
+    expr->next = first;
+    first = expr;
+    expr = next;
   }
-  ctx->expr_stack.size = new_expr_stack_size;
-  return WASM_OK;
+  ctx->expr_stack_top = new_expr_stack_top;
+  *out_first_expr = first;
 }
 
 static WasmResult pop_into_args(WasmContext* ctx,
                                 WasmFuncSignature* sig,
-                                WasmExprPtrVector* args) {
-  uint32_t num_params = sig->param_types.size;
-  if (ctx->expr_stack.size < num_params) {
-    print_error(ctx, "call requires %u args, but only %" PRIzd " on stack",
-                num_params, ctx->expr_stack.size);
-    return WASM_ERROR;
-  }
+                                WasmExpr** out_first_arg) {
+  assert(!*out_first_arg);
+  size_t num_params = sig->param_types.size;
 
-  uint32_t i;
+  WasmExpr* first = NULL;
+  WasmExpr* expr = ctx->expr_stack_top;
+  size_t i;
   for (i = 0; i < num_params; ++i) {
-    WasmExpr* arg = ctx->expr_stack.data[ctx->expr_stack.size - num_params + i];
-    CHECK_RESULT(wasm_append_expr_ptr_value(ctx->allocator, args, &arg));
+    if (!expr) {
+      print_error(ctx,
+                  "call requires %" PRIzd " args, but only %" PRIzd " on stack",
+                  num_params, i);
+      return WASM_ERROR;
+    }
+    WasmExpr* next = expr->next;
+    expr->next = first;
+    first = expr;
+    expr = next;
   }
-  ctx->expr_stack.size -= num_params;
+  ctx->expr_stack_top = expr;
+  *out_first_arg = first;
   return WASM_OK;
 }
 
@@ -376,7 +399,7 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   WasmContext* ctx = user_data;
-  CHECK_RESULT(pop_into_expr_vector(ctx, 0, &ctx->current_func->exprs));
+  pop_into_expr_list(ctx, NULL, &ctx->current_func->first_expr);
   ctx->current_func = NULL;
   return WASM_OK;
 }
@@ -402,7 +425,7 @@ static WasmResult push_label(WasmContext* ctx,
                              WasmExpr* expr) {
   WasmLabelNode label;
   label.type = type;
-  label.expr_stack_size = ctx->expr_stack.size;
+  label.expr_stack_top = ctx->expr_stack_top;
   label.expr = expr;
   ctx->max_depth += type == WASM_LABEL_TYPE_LOOP ? 2 : 1;
   return wasm_append_label_node_value(ctx->allocator, &ctx->label_stack,
@@ -438,7 +461,8 @@ static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
   CHECK_ALLOC_NULL(result = wasm_new_unary_expr(ctx->allocator));
   result->unary.opcode = opcode;
   result->unary.expr = expr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
@@ -450,7 +474,8 @@ static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
   result->binary.opcode = opcode;
   result->binary.left = left;
   result->binary.right = right;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_compare_expr(WasmOpcode opcode, void* user_data) {
@@ -462,7 +487,8 @@ static WasmResult on_compare_expr(WasmOpcode opcode, void* user_data) {
   result->compare.opcode = opcode;
   result->compare.left = left;
   result->compare.right = right;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_convert_expr(WasmOpcode opcode, void* user_data) {
@@ -472,7 +498,8 @@ static WasmResult on_convert_expr(WasmOpcode opcode, void* user_data) {
   CHECK_ALLOC_NULL(result = wasm_new_convert_expr(ctx->allocator));
   result->convert.opcode = opcode;
   result->convert.expr = expr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_block_expr(void* user_data) {
@@ -517,9 +544,7 @@ static WasmResult on_else_expr(void* user_data) {
   WasmExpr* result;
   CHECK_ALLOC_NULL(result = wasm_new_if_else_expr(ctx->allocator));
   result->if_else.cond = cond;
-  CHECK_RESULT(pop_into_expr_vector(ctx, label->expr_stack_size,
-                                    &result->if_else.true_.exprs));
-
+  pop_into_expr_list(ctx, label->expr_stack_top, &result->if_else.true_.first);
   label->type = WASM_LABEL_TYPE_ELSE;
   label->expr = result;
   return WASM_OK;
@@ -533,23 +558,20 @@ static WasmResult on_end_expr(void* user_data) {
 
   switch (label->type) {
     case WASM_LABEL_TYPE_IF:
-      CHECK_RESULT(pop_into_expr_vector(ctx, label->expr_stack_size,
-                                        &expr->if_.true_.exprs));
+      pop_into_expr_list(ctx, label->expr_stack_top, &expr->if_.true_.first);
       break;
 
     case WASM_LABEL_TYPE_ELSE:
-      CHECK_RESULT(pop_into_expr_vector(ctx, label->expr_stack_size,
-                                        &expr->if_else.false_.exprs));
+      pop_into_expr_list(ctx, label->expr_stack_top,
+                         &expr->if_else.false_.first);
       break;
 
     case WASM_LABEL_TYPE_BLOCK:
-      CHECK_RESULT(pop_into_expr_vector(ctx, label->expr_stack_size,
-                                        &expr->block.exprs));
+      pop_into_expr_list(ctx, label->expr_stack_top, &expr->block.first);
       break;
 
     case WASM_LABEL_TYPE_LOOP:
-      CHECK_RESULT(
-          pop_into_expr_vector(ctx, label->expr_stack_size, &expr->loop.exprs));
+      pop_into_expr_list(ctx, label->expr_stack_top, &expr->loop.first);
       break;
 
     default:
@@ -558,7 +580,8 @@ static WasmResult on_end_expr(void* user_data) {
   }
 
   CHECK_RESULT(pop_label(ctx));
-  return push_expr(ctx, expr);
+  push_expr(ctx, expr);
+  return WASM_OK;
 }
 
 static WasmResult on_br_expr(uint8_t arity, uint32_t depth, void* user_data) {
@@ -570,7 +593,8 @@ static WasmResult on_br_expr(uint8_t arity, uint32_t depth, void* user_data) {
   CHECK_DEPTH(depth);
   result->br.var.index = depth;
   result->br.expr = expr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_br_if_expr(uint8_t arity,
@@ -586,7 +610,8 @@ static WasmResult on_br_if_expr(uint8_t arity,
   result->br_if.var.index = depth;
   result->br_if.cond = cond;
   result->br_if.expr = expr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_br_table_expr(uint8_t arity,
@@ -614,7 +639,8 @@ static WasmResult on_br_table_expr(uint8_t arity,
   result->br_table.default_target.type = WASM_VAR_TYPE_INDEX;
   CHECK_DEPTH(default_target_depth);
   result->br_table.default_target.index = default_target_depth;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_call_expr(uint32_t arity,
@@ -631,8 +657,10 @@ static WasmResult on_call_expr(uint32_t arity,
   CHECK_ALLOC_NULL(result = wasm_new_call_expr(ctx->allocator));
   result->call.var.type = WASM_VAR_TYPE_INDEX;
   result->call.var.index = func_index;
-  CHECK_RESULT(pop_into_args(ctx, &func_type->sig, &result->call.args));
-  return push_expr(ctx, result);
+  result->call.num_args = func_type->sig.param_types.size;
+  CHECK_RESULT(pop_into_args(ctx, &func_type->sig, &result->call.first_arg));
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_call_import_expr(uint32_t arity,
@@ -649,8 +677,10 @@ static WasmResult on_call_import_expr(uint32_t arity,
   CHECK_ALLOC_NULL(result = wasm_new_call_import_expr(ctx->allocator));
   result->call.var.type = WASM_VAR_TYPE_INDEX;
   result->call.var.index = import_index;
-  CHECK_RESULT(pop_into_args(ctx, &func_type->sig, &result->call.args));
-  return push_expr(ctx, result);
+  result->call.num_args = func_type->sig.param_types.size;
+  CHECK_RESULT(pop_into_args(ctx, &func_type->sig, &result->call.first_arg));
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_call_indirect_expr(uint32_t arity,
@@ -664,10 +694,12 @@ static WasmResult on_call_indirect_expr(uint32_t arity,
   CHECK_ALLOC_NULL(result = wasm_new_call_indirect_expr(ctx->allocator));
   result->call_indirect.var.type = WASM_VAR_TYPE_INDEX;
   result->call_indirect.var.index = sig_index;
+  result->call_indirect.num_args = func_type->sig.param_types.size;
   CHECK_RESULT(
-      pop_into_args(ctx, &func_type->sig, &result->call_indirect.args));
+      pop_into_args(ctx, &func_type->sig, &result->call_indirect.first_arg));
   CHECK_RESULT(pop_expr(ctx, &result->call_indirect.expr));
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
@@ -676,7 +708,8 @@ static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
   CHECK_ALLOC_NULL(result);
   result->const_.type = WASM_TYPE_I32;
   result->const_.u32 = value;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
@@ -685,7 +718,8 @@ static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
   CHECK_ALLOC_NULL(result);
   result->const_.type = WASM_TYPE_I64;
   result->const_.u64 = value;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
@@ -694,7 +728,8 @@ static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
   CHECK_ALLOC_NULL(result);
   result->const_.type = WASM_TYPE_F32;
   result->const_.f32_bits = value_bits;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
@@ -703,7 +738,8 @@ static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
   CHECK_ALLOC_NULL(result);
   result->const_.type = WASM_TYPE_F64;
   result->const_.f64_bits = value_bits;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
@@ -713,7 +749,8 @@ static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
   result->get_local.var.type = WASM_VAR_TYPE_INDEX;
   result->get_local.var.index = local_index;
   CHECK_LOCAL(local_index);
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
@@ -725,7 +762,8 @@ static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
   result->set_local.var.index = local_index;
   result->set_local.expr = expr;
   CHECK_LOCAL(local_index);
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_grow_memory_expr(void* user_data) {
@@ -734,7 +772,8 @@ static WasmResult on_grow_memory_expr(void* user_data) {
   CHECK_RESULT(pop_expr(ctx, &expr));
   CHECK_ALLOC_NULL(result = wasm_new_grow_memory_expr(ctx->allocator));
   result->grow_memory.expr = expr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_current_memory_expr(void* user_data) {
@@ -742,7 +781,8 @@ static WasmResult on_current_memory_expr(void* user_data) {
   WasmExpr* result;
   CHECK_ALLOC_NULL(result = wasm_new_empty_expr(ctx->allocator,
                                                 WASM_EXPR_TYPE_CURRENT_MEMORY));
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_load_expr(WasmOpcode opcode,
@@ -757,7 +797,8 @@ static WasmResult on_load_expr(WasmOpcode opcode,
   result->load.align = 1 << alignment_log2;
   result->load.offset = offset;
   result->load.addr = addr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_store_expr(WasmOpcode opcode,
@@ -774,7 +815,8 @@ static WasmResult on_store_expr(WasmOpcode opcode,
   result->store.offset = offset;
   result->store.addr = addr;
   result->store.value = value;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_nop_expr(void* user_data) {
@@ -782,7 +824,8 @@ static WasmResult on_nop_expr(void* user_data) {
   WasmExpr* result;
   CHECK_ALLOC_NULL(result =
                        wasm_new_empty_expr(ctx->allocator, WASM_EXPR_TYPE_NOP));
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_return_expr(uint8_t arity, void* user_data) {
@@ -791,7 +834,8 @@ static WasmResult on_return_expr(uint8_t arity, void* user_data) {
   CHECK_RESULT(pop_expr_if(ctx, &expr, arity == 1));
   CHECK_ALLOC_NULL(result = wasm_new_return_expr(ctx->allocator));
   result->return_.expr = expr;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_select_expr(void* user_data) {
@@ -804,7 +848,8 @@ static WasmResult on_select_expr(void* user_data) {
   result->select.cond = cond;
   result->select.true_ = true_;
   result->select.false_ = false_;
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_unreachable_expr(void* user_data) {
@@ -812,7 +857,8 @@ static WasmResult on_unreachable_expr(void* user_data) {
   WasmExpr* result;
   CHECK_ALLOC_NULL(
       result = wasm_new_empty_expr(ctx->allocator, WASM_EXPR_TYPE_UNREACHABLE));
-  return push_expr(ctx, result);
+  push_expr(ctx, result);
+  return WASM_OK;
 }
 
 static WasmResult on_function_table_count(uint32_t count, void* user_data) {
@@ -1050,6 +1096,6 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
   WasmResult result =
       wasm_read_binary(allocator, data, size, &reader, 1, options);
   wasm_destroy_label_node_vector(allocator, &ctx.label_stack);
-  wasm_destroy_expr_ptr_vector(allocator, &ctx.expr_stack);
+  wasm_destroy_expr_list(allocator, ctx.expr_stack_top);
   return result;
 }

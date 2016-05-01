@@ -44,9 +44,6 @@ WASM_DEFINE_VECTOR(var, WasmVar);
 typedef WasmStringSlice WasmLabel;
 WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
 
-typedef struct WasmExpr* WasmExprPtr;
-WASM_DEFINE_VECTOR(expr_ptr, WasmExprPtr);
-
 typedef struct WasmConst {
   WasmLocation loc;
   WasmType type;
@@ -107,57 +104,59 @@ typedef struct WasmBindingHash {
 
 typedef struct WasmBlock {
   WasmLabel label;
-  WasmExprPtrVector exprs;
+  struct WasmExpr* first;
 } WasmBlock;
 
 typedef struct WasmExpr WasmExpr;
 struct WasmExpr {
   WasmLocation loc;
   WasmExprType type;
+  WasmExpr* next;
   union {
     WasmBlock block;
-    struct { WasmExprPtr cond; WasmBlock true_, false_; } if_else;
-    struct { WasmExprPtr cond; WasmBlock true_; } if_;
-    struct { WasmVar var; WasmExprPtr cond, expr; } br_if;
+    struct { WasmExpr* cond; WasmBlock true_, false_; } if_else;
+    struct { WasmExpr* cond; WasmBlock true_; } if_;
+    struct { WasmVar var; WasmExpr *cond, *expr; } br_if;
     struct {
       WasmLabel inner, outer;
-      WasmExprPtrVector exprs;
+      WasmExpr* first;
     } loop;
-    struct { WasmVar var; WasmExprPtr expr; } br;
-    struct { WasmExprPtr expr; } return_;
+    struct { WasmVar var; WasmExpr* expr; } br;
+    struct { WasmExpr* expr; } return_;
     struct {
-      WasmExprPtr key;
-      WasmExprPtr expr;
+      WasmExpr* key;
+      WasmExpr* expr;
       WasmVarVector targets;
       WasmVar default_target;
     } br_table;
-    struct { WasmVar var; WasmExprPtrVector args; } call;
+    struct { WasmVar var; WasmExpr* first_arg; size_t num_args; } call;
     struct {
       WasmVar var;
-      WasmExprPtr expr;
-      WasmExprPtrVector args;
+      WasmExpr* expr;
+      WasmExpr* first_arg;
+      size_t num_args;
     } call_indirect;
     struct { WasmVar var; } get_local;
-    struct { WasmVar var; WasmExprPtr expr; } set_local;
+    struct { WasmVar var; WasmExpr* expr; } set_local;
     struct {
       WasmOpcode opcode;
       uint32_t align;
       uint64_t offset;
-      WasmExprPtr addr;
+      WasmExpr* addr;
     } load;
     struct {
       WasmOpcode opcode;
       uint32_t align;
       uint64_t offset;
-      WasmExprPtr addr, value;
+      WasmExpr *addr, *value;
     } store;
     WasmConst const_;
-    struct { WasmOpcode opcode; WasmExprPtr expr; } unary;
-    struct { WasmOpcode opcode; WasmExprPtr left, right; } binary;
-    struct { WasmExprPtr cond, true_, false_; } select;
-    struct { WasmOpcode opcode; WasmExprPtr left, right; } compare;
-    struct { WasmOpcode opcode; WasmExprPtr expr; } convert;
-    struct { WasmExprPtr expr; } grow_memory;
+    struct { WasmOpcode opcode; WasmExpr* expr; } unary;
+    struct { WasmOpcode opcode; WasmExpr *left, *right; } binary;
+    struct { WasmExpr *cond, *true_, *false_; } select;
+    struct { WasmOpcode opcode; WasmExpr *left, *right; } compare;
+    struct { WasmOpcode opcode; WasmExpr *expr; } convert;
+    struct { WasmExpr* expr; } grow_memory;
   };
 };
 
@@ -180,7 +179,7 @@ typedef enum WasmFuncFieldType {
 typedef struct WasmFuncField {
   WasmFuncFieldType type;
   union {
-    WasmExprPtrVector exprs;
+    WasmExpr* first_expr;
     WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
     WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
     WasmType result_type;
@@ -219,7 +218,7 @@ typedef struct WasmFunc {
   WasmTypeVector local_types;
   WasmBindingHash param_bindings;
   WasmBindingHash local_bindings;
-  WasmExprPtrVector exprs;
+  WasmExpr* first_expr;
 } WasmFunc;
 typedef WasmFunc* WasmFuncPtr;
 WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
@@ -433,10 +432,9 @@ void wasm_destroy_command_vector_and_elements(struct WasmAllocator*,
                                               WasmCommandVector*);
 void wasm_destroy_command(struct WasmAllocator*, WasmCommand*);
 void wasm_destroy_export(struct WasmAllocator*, WasmExport*);
-void wasm_destroy_expr_ptr_vector_and_elements(struct WasmAllocator*,
-                                               WasmExprPtrVector*);
-void wasm_destroy_expr_ptr(struct WasmAllocator*, WasmExprPtr*);
-void wasm_destroy_func_declaration(WasmAllocator*, WasmFuncDeclaration*);
+void wasm_destroy_expr(struct WasmAllocator*, WasmExpr*);
+void wasm_destroy_expr_list(struct WasmAllocator*, WasmExpr*);
+void wasm_destroy_func_declaration(struct WasmAllocator*, WasmFuncDeclaration*);
 void wasm_destroy_func_fields(struct WasmAllocator*, WasmFuncField*);
 void wasm_destroy_func_signature(struct WasmAllocator*, WasmFuncSignature*);
 void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);

@@ -32,6 +32,12 @@
 
 struct WasmAllocator;
 
+typedef struct WasmExprList {
+  WasmExpr* first;
+  WasmExpr* last;
+  size_t size;
+} WasmExprList;
+
 typedef union WasmToken {
   /* terminals */
   WasmStringSlice text;
@@ -47,8 +53,8 @@ typedef union WasmToken {
   WasmTypeVector types;
   WasmVar var;
   WasmVarVector vars;
-  WasmExprPtr expr;
-  WasmExprPtrVector exprs;
+  WasmExpr* expr;
+  WasmExprList expr_list;
   WasmFuncField* func_fields;
   WasmFunc* func;
   WasmSegment segment;

@@ -291,7 +291,7 @@ static void write_func_sig_space(WasmContext* ctx,
   }
 }
 
-static void write_exprs(WasmContext* ctx, const WasmExprPtrVector* exprs);
+static void write_expr_list(WasmContext* ctx, const WasmExpr* first);
 
 static void write_expr(WasmContext* ctx, const WasmExpr* expr);
 
@@ -303,7 +303,7 @@ static void write_block(WasmContext* ctx,
     writef(ctx, " ;; exit = @%d", ctx->depth);
   write_newline(ctx, FORCE_NEWLINE);
   ctx->depth++;
-  write_exprs(ctx, &block->exprs);
+  write_expr_list(ctx, block->first);
   ctx->depth--;
   write_close_newline(ctx);
 }
@@ -393,9 +393,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_CALL: {
       write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
       write_var(ctx, &expr->call.var, WASM_NEXT_CHAR_NEWLINE);
-      size_t i;
-      for (i = 0; i < expr->call.args.size; ++i)
-        write_expr(ctx, expr->call.args.data[i]);
+      write_expr_list(ctx, expr->call.first_arg);
       write_close_newline(ctx);
       break;
     }
@@ -403,9 +401,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_IMPORT]);
       write_var(ctx, &expr->call.var, WASM_NEXT_CHAR_NEWLINE);
-      size_t i;
-      for (i = 0; i < expr->call.args.size; ++i)
-        write_expr(ctx, expr->call.args.data[i]);
+      write_expr_list(ctx, expr->call.first_arg);
       write_close_newline(ctx);
       break;
     }
@@ -414,9 +410,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
       write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
       write_var(ctx, &expr->call_indirect.var, WASM_NEXT_CHAR_NEWLINE);
       write_expr(ctx, expr->call_indirect.expr);
-      size_t i;
-      for (i = 0; i < expr->call_indirect.args.size; ++i)
-        write_expr(ctx, expr->call_indirect.args.data[i]);
+      write_expr_list(ctx, expr->call_indirect.first_arg);
       write_close_newline(ctx);
       break;
     }
@@ -494,7 +488,7 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
       }
       write_newline(ctx, FORCE_NEWLINE);
       ctx->depth += 2;
-      write_exprs(ctx, &expr->loop.exprs);
+      write_expr_list(ctx, expr->loop.first);
       ctx->depth -= 2;
       write_close_newline(ctx);
       break;
@@ -562,10 +556,10 @@ static void write_expr(WasmContext* ctx, const WasmExpr* expr) {
   }
 }
 
-static void write_exprs(WasmContext* ctx, const WasmExprPtrVector* exprs) {
-  size_t i;
-  for (i = 0; i < exprs->size; ++i)
-    write_expr(ctx, exprs->data[i]);
+static void write_expr_list(WasmContext* ctx, const WasmExpr* first) {
+  const WasmExpr* expr;
+  for (expr = first; expr; expr = expr->next)
+    write_expr(ctx, expr);
 }
 
 static void write_type_bindings(WasmContext* ctx,
@@ -630,7 +624,7 @@ static void write_func(WasmContext* ctx,
                         &func->local_bindings);
   }
   write_newline(ctx, NO_FORCE_NEWLINE);
-  write_exprs(ctx, &func->exprs);
+  write_expr_list(ctx, func->first_expr);
   write_close_newline(ctx);
 }
 
