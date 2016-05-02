@@ -453,14 +453,17 @@ void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
     /* shift sig up so the top 4-bits are at the top of the uint32 */
     sig <<= sizeof(uint32_t) * 8 - F32_SIG_BITS;
 
-    if (exp == F32_MIN_EXP) {
-      /* subnormal */
-      uint32_t leading_zeroes = wasm_clz_u32(sig);
-      sig <<= leading_zeroes + 1;
-      exp -= leading_zeroes;
-    }
-
     if (sig) {
+      if (exp == F32_MIN_EXP) {
+        /* subnormal; shift the significand up, and shift out the implicit 1 */
+        uint32_t leading_zeroes = wasm_clz_u32(sig);
+        if (leading_zeroes < 31)
+          sig <<= leading_zeroes + 1;
+        else
+          sig = 0;
+        exp -= leading_zeroes;
+      }
+
       *p++ = '.';
       while (sig) {
         uint32_t nybble = (sig >> (sizeof(uint32_t) * 8 - 4)) & 0xf;
@@ -780,14 +783,17 @@ void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
     /* shift sig up so the top 4-bits are at the top of the uint32 */
     sig <<= sizeof(uint64_t) * 8 - F64_SIG_BITS;
 
-    if (exp == F64_MIN_EXP) {
-      /* subnormal */
-      uint32_t leading_zeroes = wasm_clz_u64(sig);
-      sig <<= leading_zeroes + 1;
-      exp -= leading_zeroes;
-    }
-
     if (sig) {
+      if (exp == F64_MIN_EXP) {
+        /* subnormal; shift the significand up, and shift out the implicit 1 */
+        uint32_t leading_zeroes = wasm_clz_u64(sig);
+        if (leading_zeroes < 63)
+          sig <<= leading_zeroes + 1;
+        else
+          sig = 0;
+        exp -= leading_zeroes;
+      }
+
       *p++ = '.';
       while (sig) {
         uint32_t nybble = (sig >> (sizeof(uint64_t) * 8 - 4)) & 0xf;
