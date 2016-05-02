@@ -34,6 +34,8 @@ SANITIZERS := ASAN MSAN LSAN UBSAN
 CONFIGS := NORMAL $(SANITIZERS) NO_RE2C_BISON NO_TESTS
 EXECUTABLES := sexpr-wasm wasm-wast wasm-interp wasm-interp-sq hexfloat_test
 
+UBSAN_C_FLAGS := -fsanitize=undefined -fno-sanitize-recover
+
 # directory names
 GCC_DIR := gcc/
 GCC_I686_DIR := gcc-i686/
@@ -63,7 +65,7 @@ NORMAL_FLAG :=
 ASAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address
 MSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=memory -DCMAKE_CXX_FLAGS=-fsanitize=memory
 LSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=leak -DCMAKE_CXX_FLAGS=-fsanitize=leak
-UBSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=undefined -DCMAKE_CXX_FLAGS=-fsanitize=undefined
+UBSAN_FLAG := -DCMAKE_C_FLAGS="${UBSAN_C_FLAGS}" -DCMAKE_CXX_FLAGS="${UBSAN_C_FLAGS}"
 NO_RE2C_BISON_FLAG := -DRUN_BISON=OFF -DRUN_RE2C=OFF
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
