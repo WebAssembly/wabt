@@ -3,4 +3,4 @@
     (block
       (if
         (i32.const 0)
-        (br)))))
+        (br 0)))))

@@ -362,14 +362,6 @@ expr1 :
       $$->loop.inner = $3;
       $$->loop.first = $4.first;
     }
-  | BR expr_opt {
-      $$ = wasm_new_br_expr(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      $$->br.var.loc = @1;
-      $$->br.var.type = WASM_VAR_TYPE_INDEX;
-      $$->br.var.index = 0;
-      $$->br.expr = $2;
-    }
   | BR var expr_opt {
       $$ = wasm_new_br_expr(parser->allocator);
       CHECK_ALLOC_NULL($$);
