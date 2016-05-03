@@ -44,7 +44,7 @@
 
 #define CHECK_ALLOC_(cond)      \
   do {                          \
-    if (!(cond)) {               \
+    if (!(cond)) {              \
       ALLOC_FAILURE;            \
       ctx->result = WASM_ERROR; \
       return;                   \
@@ -54,14 +54,14 @@
 #define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
 #define CHECK_ALLOC_NULL(v) CHECK_ALLOC_((v) != NULL)
 
-typedef struct WasmWriteSpecContext {
+typedef struct Context {
   WasmAllocator* allocator;
   WasmWriter* writer;
   size_t writer_offset;
   const WasmWriteBinaryOptions* options;
   const WasmWriteBinarySpecOptions* spec_options;
   WasmResult result;
-} WasmWriteSpecContext;
+} Context;
 
 static WasmBool is_nan_f32(uint32_t bits) {
   return (bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0;
@@ -327,9 +327,7 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
   return module->funcs.data[func_index];
 }
 
-static void write_module(WasmWriteSpecContext* ctx,
-                         uint32_t index,
-                         WasmModule* module) {
+static void write_module(Context* ctx, uint32_t index, WasmModule* module) {
   WasmResult result;
   WasmWriter* writer = NULL;
   CALLBACK(ctx, on_module_before_write, index, &writer);
@@ -344,7 +342,7 @@ static void write_module(WasmWriteSpecContext* ctx,
   CALLBACK(ctx, on_module_end, index, result);
 }
 
-static void write_commands(WasmWriteSpecContext* ctx, WasmScript* script) {
+static void write_commands(Context* ctx, WasmScript* script) {
   uint32_t i;
   uint32_t num_modules = 0;
   WasmModule* last_module = NULL;
@@ -509,7 +507,7 @@ WasmResult wasm_write_binary_spec_script(
     WasmScript* script,
     const WasmWriteBinaryOptions* options,
     const WasmWriteBinarySpecOptions* spec_options) {
-  WasmWriteSpecContext ctx;
+  Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.options = options;

@@ -88,9 +88,8 @@ static WasmResult parse_const(WasmType type, WasmLiteralType literal_type,
 static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
                                       void** out_data, size_t* out_size);
 
-WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
-                                         WasmModule* module,
-                                         WasmFuncDeclaration* decl);
+static WasmResult copy_signature_from_func_type(
+    WasmAllocator * allocator, WasmModule * module, WasmFuncDeclaration * decl);
 
 #define wasm_ast_parser_lex wasm_ast_lexer_lex
 
@@ -1162,9 +1161,9 @@ WasmResult wasm_parse_ast(WasmAstLexer* lexer,
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
 }
 
-WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
-                                         WasmModule* module,
-                                         WasmFuncDeclaration* decl) {
+static WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
+                                                WasmModule* module,
+                                                WasmFuncDeclaration* decl) {
   /* if a function or import only defines a func type (and no explicit
    * signature), copy the signature over for convenience */
   if (wasm_decl_has_func_type(decl) && !wasm_decl_has_signature(decl)) {

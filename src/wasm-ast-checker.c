@@ -29,14 +29,14 @@ static const char* s_type_names[] = {
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
-typedef enum WasmTypeSet {
+typedef enum TypeSet {
   WASM_TYPE_SET_VOID = 0,
   WASM_TYPE_SET_I32 = 1 << 0,
   WASM_TYPE_SET_I64 = 1 << 1,
   WASM_TYPE_SET_F32 = 1 << 2,
   WASM_TYPE_SET_F64 = 1 << 3,
   WASM_TYPE_SET_ALL = (1 << 4) - 1,
-} WasmTypeSet;
+} TypeSet;
 
 static const char* s_type_set_names[] = {
     "void",
@@ -79,27 +79,25 @@ static WasmType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
 static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-typedef struct WasmLabelNode {
+typedef struct LabelNode {
   const WasmLabel* label;
   WasmType expected_type;
   const char* desc;
-  struct WasmLabelNode* next;
-} WasmLabelNode;
+  struct LabelNode* next;
+} LabelNode;
 
-typedef struct WasmContext {
+typedef struct Context {
   WasmSourceErrorHandler* error_handler;
   WasmAstLexer* lexer;
   const WasmModule* current_module;
   const WasmFunc* current_func;
-  WasmLabelNode* top_label;
+  LabelNode* top_label;
   int max_depth;
   WasmResult result;
-} WasmContext;
+} Context;
 
-static void WASM_PRINTF_FORMAT(3, 4) print_error(WasmContext* ctx,
-                                                 const WasmLocation* loc,
-                                                 const char* fmt,
-                                                 ...) {
+static void WASM_PRINTF_FORMAT(3, 4)
+    print_error(Context* ctx, const WasmLocation* loc, const char* fmt, ...) {
   ctx->result = WASM_ERROR;
   va_list args;
   va_start(args, fmt);
@@ -111,7 +109,7 @@ static WasmBool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static void check_duplicate_bindings(WasmContext* ctx,
+static void check_duplicate_bindings(Context* ctx,
                                      const WasmBindingHash* bindings,
                                      const char* desc) {
   size_t i;
@@ -141,7 +139,7 @@ static void check_duplicate_bindings(WasmContext* ctx,
   }
 }
 
-static WasmResult check_var(WasmContext* ctx,
+static WasmResult check_var(Context* ctx,
                             const WasmBindingHash* bindings,
                             int max_index,
                             const WasmVar* var,
@@ -162,7 +160,7 @@ static WasmResult check_var(WasmContext* ctx,
   return WASM_ERROR;
 }
 
-static WasmResult check_func_var(WasmContext* ctx,
+static WasmResult check_func_var(Context* ctx,
                                  const WasmVar* var,
                                  const WasmFunc** out_func) {
   int index;
@@ -177,7 +175,7 @@ static WasmResult check_func_var(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_import_var(WasmContext* ctx,
+static WasmResult check_import_var(Context* ctx,
                                    const WasmVar* var,
                                    const WasmImport** out_import) {
   int index;
@@ -192,7 +190,7 @@ static WasmResult check_import_var(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_func_type_var(WasmContext* ctx,
+static WasmResult check_func_type_var(Context* ctx,
                                       const WasmVar* var,
                                       const WasmFuncType** out_func_type) {
   int index;
@@ -207,7 +205,7 @@ static WasmResult check_func_type_var(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult check_local_var(WasmContext* ctx,
+static WasmResult check_local_var(Context* ctx,
                                   const WasmVar* var,
                                   WasmType* out_type) {
   int max_index = wasm_get_num_params_and_locals(ctx->current_func);
@@ -235,21 +233,21 @@ static WasmResult check_local_var(WasmContext* ctx,
   return WASM_ERROR;
 }
 
-static void check_align(WasmContext* ctx,
+static void check_align(Context* ctx,
                         const WasmLocation* loc,
                         uint32_t alignment) {
   if (alignment != WASM_USE_NATURAL_ALIGNMENT && !is_power_of_two(alignment))
     print_error(ctx, loc, "alignment must be power-of-two");
 }
 
-static void check_offset(WasmContext* ctx,
+static void check_offset(Context* ctx,
                          const WasmLocation* loc,
                          uint64_t offset) {
   if (offset > UINT32_MAX)
     print_error(ctx, loc, "offset must be less than or equal to 0xffffffff");
 }
 
-static void check_type(WasmContext* ctx,
+static void check_type(Context* ctx,
                        const WasmLocation* loc,
                        WasmType actual,
                        WasmType expected,
@@ -260,10 +258,10 @@ static void check_type(WasmContext* ctx,
   }
 }
 
-static void check_type_set(WasmContext* ctx,
+static void check_type_set(Context* ctx,
                            const WasmLocation* loc,
                            WasmType actual,
-                           WasmTypeSet expected,
+                           TypeSet expected,
                            const char* desc) {
   if (expected != WASM_TYPE_SET_VOID &&
       (TYPE_TO_TYPE_SET(actual) & expected) == 0) {
@@ -272,7 +270,7 @@ static void check_type_set(WasmContext* ctx,
   }
 }
 
-static void check_type_exact(WasmContext* ctx,
+static void check_type_exact(Context* ctx,
                              const WasmLocation* loc,
                              WasmType actual,
                              WasmType expected,
@@ -283,7 +281,7 @@ static void check_type_exact(WasmContext* ctx,
   }
 }
 
-static void check_type_arg_exact(WasmContext* ctx,
+static void check_type_arg_exact(Context* ctx,
                                  const WasmLocation* loc,
                                  WasmType actual,
                                  WasmType expected,
@@ -296,9 +294,9 @@ static void check_type_arg_exact(WasmContext* ctx,
   }
 }
 
-static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
-                                         const WasmStringSlice* name) {
-  WasmLabelNode* node = top_label;
+static LabelNode* find_label_by_name(LabelNode* top_label,
+                                     const WasmStringSlice* name) {
+  LabelNode* node = top_label;
   while (node) {
     if (wasm_string_slices_are_equal(node->label, name))
       return node;
@@ -307,12 +305,11 @@ static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
   return NULL;
 }
 
-static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
-                                        const WasmVar* var) {
+static LabelNode* find_label_by_var(LabelNode* top_label, const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
     return find_label_by_name(top_label, &var->name);
 
-  WasmLabelNode* node = top_label;
+  LabelNode* node = top_label;
   int i = 0;
   while (node && i != var->index) {
     node = node->next;
@@ -321,11 +318,11 @@ static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
   return node;
 }
 
-static WasmResult check_label_var(WasmContext* ctx,
-                                  WasmLabelNode* top_label,
+static WasmResult check_label_var(Context* ctx,
+                                  LabelNode* top_label,
                                   const WasmVar* var,
-                                  WasmLabelNode** out_node) {
-  WasmLabelNode* node = find_label_by_var(top_label, var);
+                                  LabelNode** out_node) {
+  LabelNode* node = find_label_by_var(top_label, var);
   if (node) {
     if (out_node)
       *out_node = node;
@@ -344,9 +341,9 @@ static WasmResult check_label_var(WasmContext* ctx,
   return WASM_ERROR;
 }
 
-static void push_label(WasmContext* ctx,
+static void push_label(Context* ctx,
                        const WasmLocation* loc,
-                       WasmLabelNode* node,
+                       LabelNode* node,
                        const WasmLabel* label,
                        WasmType expected_type,
                        const char* desc) {
@@ -358,17 +355,17 @@ static void push_label(WasmContext* ctx,
   ctx->max_depth++;
 }
 
-static void pop_label(WasmContext* ctx) {
+static void pop_label(Context* ctx) {
   ctx->max_depth--;
   ctx->top_label = ctx->top_label->next;
 }
 
-static void check_expr(WasmContext* ctx,
+static void check_expr(Context* ctx,
                        const WasmExpr* expr,
                        WasmType expected_type,
                        const char* desc);
 
-static void check_expr_opt(WasmContext* ctx,
+static void check_expr_opt(Context* ctx,
                            const WasmLocation* loc,
                            const WasmExpr* expr,
                            WasmType expected_type,
@@ -379,19 +376,19 @@ static void check_expr_opt(WasmContext* ctx,
     check_type(ctx, loc, WASM_TYPE_VOID, expected_type, desc);
 }
 
-static void check_br(WasmContext* ctx,
+static void check_br(Context* ctx,
                      const WasmLocation* loc,
                      const WasmVar* var,
                      const WasmExpr* expr,
                      const char* desc) {
-  WasmLabelNode* node;
+  LabelNode* node;
   if (WASM_FAILED(check_label_var(ctx, ctx->top_label, var, &node)))
     return;
 
   check_expr_opt(ctx, loc, expr, node->expected_type, desc);
 }
 
-static void check_call(WasmContext* ctx,
+static void check_call(Context* ctx,
                        const WasmLocation* loc,
                        const WasmStringSlice* callee_name,
                        const WasmFuncSignature* sig,
@@ -425,7 +422,7 @@ static void check_call(WasmContext* ctx,
   }
 }
 
-static void check_expr_list(WasmContext* ctx,
+static void check_expr_list(Context* ctx,
                             const WasmExpr* first,
                             WasmType expected_type,
                             const char* desc) {
@@ -438,7 +435,7 @@ static void check_expr_list(WasmContext* ctx,
   }
 }
 
-static void check_expr(WasmContext* ctx,
+static void check_expr(Context* ctx,
                        const WasmExpr* expr,
                        WasmType expected_type,
                        const char* desc) {
@@ -454,7 +451,7 @@ static void check_expr(WasmContext* ctx,
     }
 
     case WASM_EXPR_TYPE_BLOCK: {
-      WasmLabelNode node;
+      LabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->block.label, expected_type,
                  "block");
       check_expr_list(ctx, expr->block.first, expected_type, " of block");
@@ -553,7 +550,7 @@ static void check_expr(WasmContext* ctx,
       break;
 
     case WASM_EXPR_TYPE_IF: {
-      WasmLabelNode node;
+      LabelNode node;
       check_expr(ctx, expr->if_.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_.true_.label, expected_type,
                  "if branch");
@@ -565,7 +562,7 @@ static void check_expr(WasmContext* ctx,
     }
 
     case WASM_EXPR_TYPE_IF_ELSE: {
-      WasmLabelNode node;
+      LabelNode node;
       check_expr(ctx, expr->if_else.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
                  expected_type, "if true branch");
@@ -591,8 +588,8 @@ static void check_expr(WasmContext* ctx,
     }
 
     case WASM_EXPR_TYPE_LOOP: {
-      WasmLabelNode outer_node;
-      WasmLabelNode inner_node;
+      LabelNode outer_node;
+      LabelNode inner_node;
       push_label(ctx, &expr->loc, &outer_node, &expr->loop.outer, expected_type,
                  "loop outer label");
       push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
@@ -674,7 +671,7 @@ static void check_expr(WasmContext* ctx,
 }
 
 static void check_func_signature_matches_func_type(
-    WasmContext* ctx,
+    Context* ctx,
     const WasmFunc* func,
     const WasmFuncType* func_type) {
   size_t num_params = wasm_get_num_params(func);
@@ -693,7 +690,7 @@ static void check_func_signature_matches_func_type(
   }
 }
 
-static void check_func(WasmContext* ctx,
+static void check_func(Context* ctx,
                        const WasmLocation* loc,
                        const WasmFunc* func) {
   ctx->current_func = func;
@@ -714,24 +711,24 @@ static void check_func(WasmContext* ctx,
   ctx->current_func = NULL;
 }
 
-static void check_import(WasmContext* ctx,
+static void check_import(Context* ctx,
                          const WasmLocation* loc,
                          const WasmImport* import) {
   if (wasm_decl_has_func_type(&import->decl))
     check_func_type_var(ctx, &import->decl.type_var, NULL);
 }
 
-static void check_export(WasmContext* ctx, const WasmExport* export) {
+static void check_export(Context* ctx, const WasmExport* export) {
   check_func_var(ctx, &export->var, NULL);
 }
 
-static void check_table(WasmContext* ctx, const WasmVarVector* table) {
+static void check_table(Context* ctx, const WasmVarVector* table) {
   size_t i;
   for (i = 0; i < table->size; ++i)
     check_func_var(ctx, &table->data[i], NULL);
 }
 
-static void check_memory(WasmContext* ctx, const WasmMemory* memory) {
+static void check_memory(Context* ctx, const WasmMemory* memory) {
   if (memory->initial_pages > WASM_MAX_PAGES) {
     print_error(ctx, &memory->loc, "initial pages (%u) must be less than (%u)",
                 memory->initial_pages, WASM_MAX_PAGES);
@@ -772,7 +769,7 @@ static void check_memory(WasmContext* ctx, const WasmMemory* memory) {
   }
 }
 
-static void check_module(WasmContext* ctx, const WasmModule* module) {
+static void check_module(Context* ctx, const WasmModule* module) {
   WasmLocation* export_memory_loc = NULL;
   WasmBool seen_memory = WASM_FALSE;
   WasmBool seen_export_memory = WASM_FALSE;
@@ -848,9 +845,9 @@ static void check_module(WasmContext* ctx, const WasmModule* module) {
   check_duplicate_bindings(ctx, &module->func_type_bindings, "function type");
 }
 
-static void check_invoke(WasmContext* ctx,
+static void check_invoke(Context* ctx,
                          const WasmCommandInvoke* invoke,
-                         WasmTypeSet return_type) {
+                         TypeSet return_type) {
   if (!ctx->current_module) {
     print_error(ctx, &invoke->loc,
                 "invoke must occur after a module definition");
@@ -891,7 +888,7 @@ static void check_invoke(WasmContext* ctx,
   }
 }
 
-static void check_command(WasmContext* ctx, const WasmCommand* command) {
+static void check_command(Context* ctx, const WasmCommand* command) {
   switch (command->type) {
     case WASM_COMMAND_TYPE_MODULE:
       check_module(ctx, &command->module);
@@ -927,7 +924,7 @@ static void check_command(WasmContext* ctx, const WasmCommand* command) {
 WasmResult wasm_check_ast(WasmAstLexer* lexer,
                           const struct WasmScript* script,
                           WasmSourceErrorHandler* error_handler) {
-  WasmContext ctx;
+  Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
@@ -943,7 +940,7 @@ WasmResult wasm_check_assert_invalid(
     const struct WasmScript* script,
     WasmSourceErrorHandler* assert_invalid_error_handler,
     WasmSourceErrorHandler* error_handler) {
-  WasmContext ctx;
+  Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
@@ -955,7 +952,7 @@ WasmResult wasm_check_assert_invalid(
     if (command->type != WASM_COMMAND_TYPE_ASSERT_INVALID)
       continue;
 
-    WasmContext ai_ctx;
+    Context ai_ctx;
     WASM_ZERO_MEMORY(ai_ctx);
     ai_ctx.lexer = lexer;
     ai_ctx.error_handler = assert_invalid_error_handler;

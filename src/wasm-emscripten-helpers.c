@@ -30,10 +30,10 @@
 /* TODO(binji): it would be nicer to generate this as static data, but it's not
  * currently easy to do. Maybe use LLVM's python bindings for this? */
 
-#define WASM_DEFINE_SIZEOF(Name, name) \
+#define DEFINE_SIZEOF(Name, name) \
   size_t wasm_sizeof_##name(void) { return sizeof(Name); }
 
-#define WASM_DEFINE_OFFSETOF(Name, name, member) \
+#define DEFINE_OFFSETOF(Name, name, member)      \
   size_t wasm_offsetof_##name##_##member(void) { \
     return offsetof(Name, member);               \
   }
@@ -56,58 +56,58 @@
 #define RSEQ_N() 8, 7, 6, 5, 4, 3, 2, 1, 0
 #define FOREACH(m, S, s, ...) FOREACH_(NARG(__VA_ARGS__), m, S, s, __VA_ARGS__)
 #define FOREACH_(N, m, S, s, ...) CONCAT(FOREACH_, N)(m, S, s, __VA_ARGS__)
-#define WASM_DEFINE_STRUCT0(Name, name) WASM_DEFINE_SIZEOF(Name, name)
-#define WASM_DEFINE_STRUCT(Name, name, ...)  \
-  WASM_DEFINE_SIZEOF(Name, name) \
-  FOREACH(WASM_DEFINE_OFFSETOF, Name, name, __VA_ARGS__)
+#define DEFINE_STRUCT0(Name, name) DEFINE_SIZEOF(Name, name)
+#define DEFINE_STRUCT(Name, name, ...) \
+  DEFINE_SIZEOF(Name, name)            \
+  FOREACH(DEFINE_OFFSETOF, Name, name, __VA_ARGS__)
 
 WASM_EXTERN_C_BEGIN
 
 /* clang-format off */
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmAllocator, allocator,
     alloc, realloc, free, destroy, mark, reset_to_mark, print_stats)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmBinaryErrorHandler, binary_error_handler,
     on_error, user_data)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmLocation, location,
     filename, line, first_column, last_column)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmMemoryWriter, memory_writer,
     base, buf)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmOutputBuffer, output_buffer,
     allocator, start, size, capacity)
 
-WASM_DEFINE_STRUCT0(
+DEFINE_STRUCT0(
     WasmScript, script)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmSourceErrorHandler, source_error_handler,
     on_error, source_line_max_length, user_data)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmStackAllocator, stack_allocator,
     allocator);
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmStream, stream,
     writer, offset, result, log_stream)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmStringSlice, string_slice,
     start, length)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmWriter, writer,
     write_data, move_data)
 
-WASM_DEFINE_STRUCT(
+DEFINE_STRUCT(
     WasmWriteBinaryOptions, write_binary_options,
     log_stream, canonicalize_lebs, remap_locals, write_debug_names)
 /* clang-format on */

@@ -265,7 +265,7 @@ static char* get_module_filename(WasmAllocator* allocator,
   return str;
 }
 
-typedef struct WasmContext {
+typedef struct Context {
   WasmAllocator* allocator;
   WasmMemoryWriter json_writer;
   WasmMemoryWriter module_writer;
@@ -273,10 +273,10 @@ typedef struct WasmContext {
   WasmStringSlice output_filename_noext;
   char* module_filename;
   WasmResult result;
-} WasmContext;
+} Context;
 
 static void on_script_begin(void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
 
   if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->module_writer)))
     WASM_FATAL("unable to open memory writer for writing\n");
@@ -289,7 +289,7 @@ static void on_script_begin(void* user_data) {
 }
 
 static void on_module_begin(uint32_t index, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   wasm_free(ctx->allocator, ctx->module_filename);
   ctx->module_filename =
       get_module_filename(ctx->allocator, &ctx->output_filename_noext, index);
@@ -307,12 +307,12 @@ static void on_command(uint32_t index,
                        const WasmLocation* loc,
                        void* user_data) {
   static const char* s_command_names[] = {
-    "module",
-    "invoke",
-    "assert_invalid",
-    "assert_return",
-    "assert_return_nan",
-    "assert_trap",
+      "module",
+      "invoke",
+      "assert_invalid",
+      "assert_return",
+      "assert_return_nan",
+      "assert_trap",
   };
   WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_command_names) ==
                      WASM_NUM_COMMAND_TYPES);
@@ -325,7 +325,7 @@ static void on_command(uint32_t index,
       "\"file\": \"%s\", "
       "\"line\": %d}";
 
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   if (index != 0)
     wasm_writef(&ctx->json_stream, ",\n");
   wasm_writef(&ctx->json_stream, s_command_format, s_command_names[type],
@@ -335,20 +335,20 @@ static void on_command(uint32_t index,
 static void on_module_before_write(uint32_t index,
                                    WasmWriter** out_writer,
                                    void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   ctx->module_writer.buf.size = 0;
   *out_writer = &ctx->module_writer.base;
 }
 
 static void on_module_end(uint32_t index, WasmResult result, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   wasm_writef(&ctx->json_stream, "\n  ]}");
   if (WASM_SUCCEEDED(result))
     write_buffer_to_file(ctx->module_filename, &ctx->module_writer.buf);
 }
 
 static void on_script_end(void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   wasm_writef(&ctx->json_stream, "\n]}\n");
 
   if (WASM_SUCCEEDED(ctx->result))
@@ -389,7 +389,7 @@ int main(int argc, char** argv) {
 
     if (WASM_SUCCEEDED(result)) {
       if (s_spec) {
-        WasmContext ctx;
+        Context ctx;
         WASM_ZERO_MEMORY(ctx);
         ctx.allocator = allocator;
         ctx.output_filename_noext = strip_extension(s_outfile);

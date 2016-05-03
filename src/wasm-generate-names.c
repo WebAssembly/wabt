@@ -40,13 +40,13 @@
       return WASM_ERROR;   \
   } while (0)
 
-typedef struct WasmContext {
+typedef struct Context {
   WasmAllocator* allocator;
   WasmModule* module;
   WasmExprVisitor visitor;
   WasmStringSliceVector index_to_name;
   uint32_t label_count;
-} WasmContext;
+} Context;
 
 static WasmBool has_name(WasmStringSlice* str) {
   return str->length > 0;
@@ -76,7 +76,6 @@ static WasmResult maybe_generate_name(WasmAllocator* allocator,
     return WASM_OK;
   return generate_name(allocator, prefix, index, str);
 }
-
 
 static WasmResult generate_and_bind_name(WasmAllocator* allocator,
                                          WasmBindingHash* bindings,
@@ -120,14 +119,14 @@ static WasmResult generate_and_bind_local_names(
 }
 
 static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_ALLOC(maybe_generate_name(ctx->allocator, "$B", ctx->label_count++,
                                   &expr->block.label));
   return WASM_OK;
 }
 
 static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_ALLOC(maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
                                   &expr->loop.outer));
   CHECK_ALLOC(maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
@@ -135,7 +134,7 @@ static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult visit_func(WasmContext* ctx,
+static WasmResult visit_func(Context* ctx,
                              uint32_t func_index,
                              WasmFunc* func) {
   CHECK_ALLOC(maybe_generate_and_bind_name(ctx->allocator,
@@ -159,16 +158,16 @@ static WasmResult visit_func(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult visit_func_type(WasmContext* ctx,
+static WasmResult visit_func_type(Context* ctx,
                                   uint32_t func_type_index,
                                   WasmFuncType* func_type) {
-  CHECK_ALLOC(maybe_generate_and_bind_name(ctx->allocator,
-                                  &ctx->module->func_type_bindings, "$t",
-                                  func_type_index, &func_type->name));
+  CHECK_ALLOC(maybe_generate_and_bind_name(
+      ctx->allocator, &ctx->module->func_type_bindings, "$t", func_type_index,
+      &func_type->name));
   return WASM_OK;
 }
 
-static WasmResult visit_import(WasmContext* ctx,
+static WasmResult visit_import(Context* ctx,
                                uint32_t import_index,
                                WasmImport* import) {
   CHECK_ALLOC(maybe_generate_and_bind_name(ctx->allocator,
@@ -177,7 +176,7 @@ static WasmResult visit_import(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult visit_module(WasmContext* ctx, WasmModule* module) {
+static WasmResult visit_module(Context* ctx, WasmModule* module) {
   size_t i;
   for (i = 0; i < module->func_types.size; ++i)
     CHECK_RESULT(visit_func_type(ctx, i, module->func_types.data[i]));
@@ -189,7 +188,7 @@ static WasmResult visit_module(WasmContext* ctx, WasmModule* module) {
 }
 
 WasmResult wasm_generate_names(WasmAllocator* allocator, WasmModule* module) {
-  WasmContext ctx;
+  Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.visitor.user_data = &ctx;

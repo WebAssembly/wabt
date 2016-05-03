@@ -20,9 +20,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#define WASM_TRACE_ALLOCATOR 0
+#define TRACE_ALLOCATOR 0
 
-#if WASM_TRACE_ALLOCATOR
+#if TRACE_ALLOCATOR
 #define TRACEF(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define TRACEF(...)
@@ -36,11 +36,11 @@
 #define CHUNK_SIZE (1024 * 1024)
 #define CHUNK_MAX_AVAIL (CHUNK_SIZE - sizeof(WasmStackAllocatorChunk))
 
-typedef struct WasmStackAllocatorMark {
+typedef struct StackAllocatorMark {
   WasmStackAllocatorChunk* chunk;
   void* chunk_current;
   void* last_allocation;
-} WasmStackAllocatorMark;
+} StackAllocatorMark;
 
 #ifndef NDEBUG
 static WasmBool is_power_of_two(uint32_t x) {
@@ -130,12 +130,12 @@ static void* stack_alloc(WasmAllocator* allocator,
     stack_allocator->last_allocation = result;
   }
 
-#if WASM_TRACE_ALLOCATOR
+#if TRACE_ALLOCATOR
   if (file) {
     TRACEF("%s:%d: stack_alloc(%" PRIzd ", align=%" PRIzd ") => %p\n", file,
            line, size, align, result);
   }
-#endif /* WASM_TRACE_ALLOCATOR */
+#endif /* TRACE_ALLOCATOR */
 
 #if WASM_STACK_ALLOCATOR_STATS
   stack_allocator->alloc_count++;
@@ -167,12 +167,12 @@ static void* stack_realloc(WasmAllocator* allocator,
   if (!result)
     return NULL;
 
-#if WASM_TRACE_ALLOCATOR
+#if TRACE_ALLOCATOR
   if (file) {
     TRACEF("%s:%d: stack_realloc(%p, %" PRIzd ", align=%" PRIzd ") => %p\n",
            file, line, p, size, align, result);
   }
-#endif /* WASM_TRACE_ALLOCATOR */
+#endif /* TRACE_ALLOCATOR */
 
   /* We know that the previously allocated data was at most extending from |p|
    to the end of the chunk. So we can copy at most that many bytes, or the
@@ -237,19 +237,19 @@ WasmAllocatorMark stack_mark(WasmAllocator* allocator) {
 
   /* allocate the space for the mark, but copy the current stack state now, so
    * when we reset we reset before the mark was allocated */
-  WasmStackAllocatorMark mark;
+  StackAllocatorMark mark;
   mark.chunk = stack_allocator->last;
   mark.chunk_current = mark.chunk->current;
   mark.last_allocation = stack_allocator->last_allocation;
 
-  WasmStackAllocatorMark* allocated_mark = stack_alloc(
-      allocator, sizeof(WasmStackAllocatorMark), WASM_DEFAULT_ALIGN, NULL, 0);
+  StackAllocatorMark* allocated_mark = stack_alloc(
+      allocator, sizeof(StackAllocatorMark), WASM_DEFAULT_ALIGN, NULL, 0);
   if (!allocated_mark)
     return NULL;
 #if WASM_STACK_ALLOCATOR_STATS
   /* don't count this allocation */
   stack_allocator->alloc_count--;
-  stack_allocator->total_alloc_bytes -= sizeof(WasmStackAllocatorMark);
+  stack_allocator->total_alloc_bytes -= sizeof(StackAllocatorMark);
 #endif /* WASM_STACK_ALLOCATOR_STATS */
 
   *allocated_mark = mark;
@@ -258,7 +258,7 @@ WasmAllocatorMark stack_mark(WasmAllocator* allocator) {
 
 void stack_reset_to_mark(WasmAllocator* allocator, WasmAllocatorMark mark) {
   WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
-  WasmStackAllocatorMark* stack_mark = (WasmStackAllocatorMark*)mark;
+  StackAllocatorMark* stack_mark = (StackAllocatorMark*)mark;
   WasmStackAllocatorChunk* chunk = stack_allocator->last;
   while (chunk && chunk != stack_mark->chunk) {
     WasmStackAllocatorChunk* prev = chunk->prev;

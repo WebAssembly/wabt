@@ -49,10 +49,10 @@ static WasmBinaryErrorHandler s_error_handler =
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
 
-typedef enum WasmRunVerbosity {
+typedef enum RunVerbosity {
   RUN_QUIET = 0,
   RUN_VERBOSE = 1,
-} WasmRunVerbosity;
+} RunVerbosity;
 
 enum {
   FLAG_VERBOSE,
@@ -305,7 +305,7 @@ static WasmInterpreterResult run_export(
     WasmInterpreterThread* thread,
     WasmInterpreterExport* export,
     WasmInterpreterTypedValue* out_return_value,
-    WasmRunVerbosity verbose) {
+    RunVerbosity verbose) {
   /* pass all zeroes to the function */
   assert(export->sig_index < module->sigs.size);
   WasmInterpreterFuncSignature* sig = &module->sigs.data[export->sig_index];
@@ -367,7 +367,7 @@ static WasmResult run_export_by_name(
     WasmStringSlice* name,
     WasmInterpreterResult* out_iresult,
     WasmInterpreterTypedValue* out_return_value,
-    WasmRunVerbosity verbose) {
+    RunVerbosity verbose) {
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WasmInterpreterExport* export = &module->exports.data[i];
@@ -382,7 +382,7 @@ static WasmResult run_export_by_name(
 
 static void run_all_exports(WasmInterpreterModule* module,
                             WasmInterpreterThread* thread,
-                            WasmRunVerbosity verbose) {
+                            RunVerbosity verbose) {
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WasmInterpreterExport* export = &module->exports.data[i];
@@ -500,12 +500,11 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   while ((p < end) && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')) \
   p++
 
-#define MATCHES(c) \
-  ((p < end) && (*p == c) && (p++))
+#define MATCHES(c) ((p < end) && (*p == c) && (p++))
 
-#define EXPECT(c) \
-  if (!MATCHES(c))    \
-    goto fail;    \
+#define EXPECT(c)  \
+  if (!MATCHES(c)) \
+    goto fail;
 
 #define STRLEN(s) (sizeof(s) - 1)
 
@@ -669,8 +668,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         WasmInterpreterTypedValue return_value;
         WASM_ZERO_MEMORY(return_value);
         EXPECT('}');
-        WasmRunVerbosity verbose =
-            command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
+        RunVerbosity verbose = command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
         result = run_export_by_name(&module, &thread, &command_name, &iresult,
                                     &return_value, verbose);
         if (WASM_FAILED(result)) {

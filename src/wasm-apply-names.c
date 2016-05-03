@@ -38,10 +38,10 @@
       return WASM_ERROR;   \
   } while (0)
 
-typedef WasmLabel* WasmLabelPtr;
-WASM_DEFINE_VECTOR(label_ptr, WasmLabelPtr);
+typedef WasmLabel* LabelPtr;
+WASM_DEFINE_VECTOR(label_ptr, LabelPtr);
 
-typedef struct WasmContext {
+typedef struct Context {
   WasmAllocator* allocator;
   WasmModule* module;
   WasmFunc* current_func;
@@ -49,21 +49,21 @@ typedef struct WasmContext {
   /* mapping from param index to its name, if any, for the current func */
   WasmStringSliceVector param_index_to_name;
   WasmStringSliceVector local_index_to_name;
-  WasmLabelPtrVector labels;
-} WasmContext;
+  LabelPtrVector labels;
+} Context;
 
-static WasmResult push_label(WasmContext* ctx, WasmLabel* label) {
+static WasmResult push_label(Context* ctx, WasmLabel* label) {
   CHECK_ALLOC(
       wasm_append_label_ptr_value(ctx->allocator, &ctx->labels, &label));
   return WASM_OK;
 }
 
-static void pop_label(WasmContext* ctx) {
+static void pop_label(Context* ctx) {
   assert(ctx->labels.size > 0);
   ctx->labels.size--;
 }
 
-static WasmLabel* find_label_by_var(WasmContext* ctx, WasmVar* var) {
+static WasmLabel* find_label_by_var(Context* ctx, WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME) {
     int i;
     for (i = ctx->labels.size - 1; i >= 0; --i) {
@@ -125,7 +125,7 @@ static WasmResult use_name_for_import_var(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-static WasmResult use_name_for_param_and_local_var(WasmContext* ctx,
+static WasmResult use_name_for_param_and_local_var(Context* ctx,
                                                    WasmFunc* func,
                                                    WasmVar* var) {
   int local_index = wasm_get_local_index_by_var(func, var);
@@ -159,47 +159,47 @@ static WasmResult use_name_for_param_and_local_var(WasmContext* ctx,
 }
 
 WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_RESULT(push_label(ctx, &expr->block.label));
   return WASM_OK;
 }
 
 WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   pop_label(ctx);
   return WASM_OK;
 }
 
 WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_RESULT(push_label(ctx, &expr->loop.outer));
   CHECK_RESULT(push_label(ctx, &expr->loop.inner));
   return WASM_OK;
 }
 
 WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   pop_label(ctx);
   pop_label(ctx);
   return WASM_OK;
 }
 
 WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
   CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
   return WASM_OK;
 }
 
 WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
   CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
   return WASM_OK;
 }
 
 WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   size_t i;
   WasmVarVector* targets = &expr->br_table.targets;
   for (i = 0; i < targets->size; ++i) {
@@ -215,41 +215,41 @@ WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
 }
 
 static WasmResult begin_call_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
-  CHECK_RESULT(use_name_for_func_var(ctx->allocator, ctx->module,
-                                     &expr->call.var));
+  Context* ctx = user_data;
+  CHECK_RESULT(
+      use_name_for_func_var(ctx->allocator, ctx->module, &expr->call.var));
   return WASM_OK;
 }
 
 static WasmResult begin_call_import_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_RESULT(
       use_name_for_import_var(ctx->allocator, ctx->module, &expr->call.var));
   return WASM_OK;
 }
 
 static WasmResult begin_call_indirect_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_RESULT(use_name_for_func_type_var(ctx->allocator, ctx->module,
                                           &expr->call_indirect.var));
   return WASM_OK;
 }
 
 static WasmResult on_get_local_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->get_local.var));
   return WASM_OK;
 }
 
 static WasmResult begin_set_local_expr(WasmExpr* expr, void* user_data) {
-  WasmContext* ctx = user_data;
+  Context* ctx = user_data;
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->set_local.var));
   return WASM_OK;
 }
 
-static WasmResult visit_func(WasmContext* ctx,
+static WasmResult visit_func(Context* ctx,
                              uint32_t func_index,
                              WasmFunc* func) {
   ctx->current_func = func;
@@ -273,7 +273,7 @@ static WasmResult visit_func(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult visit_import(WasmContext* ctx,
+static WasmResult visit_import(Context* ctx,
                                uint32_t import_index,
                                WasmImport* import) {
   if (wasm_decl_has_func_type(&import->decl)) {
@@ -283,14 +283,14 @@ static WasmResult visit_import(WasmContext* ctx,
   return WASM_OK;
 }
 
-static WasmResult visit_export(WasmContext* ctx,
+static WasmResult visit_export(Context* ctx,
                                uint32_t export_index,
                                WasmExport* export) {
   CHECK_ALLOC(use_name_for_func_var(ctx->allocator, ctx->module, &export->var));
   return WASM_OK;
 }
 
-static WasmResult visit_module(WasmContext* ctx, WasmModule* module) {
+static WasmResult visit_module(Context* ctx, WasmModule* module) {
   size_t i;
   for (i = 0; i < module->imports.size; ++i)
     CHECK_RESULT(visit_import(ctx, i, module->imports.data[i]));
@@ -307,9 +307,8 @@ static WasmResult visit_module(WasmContext* ctx, WasmModule* module) {
   return WASM_OK;
 }
 
-
 WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
-  WasmContext ctx;
+  Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.module = module;

@@ -33,7 +33,7 @@
 
 #define YYMAXFILL 20
 
-#define WASM_INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
+#define INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
 
 #define YY_USER_ACTION                        \
   {                                           \
@@ -107,7 +107,7 @@ static WasmResult fill(WasmLocation* loc,
     char* old_buffer = lexer->buffer;
     size_t old_buffer_size = lexer->buffer_size;
     size_t new_buffer_size =
-        old_buffer_size ? old_buffer_size * 2 : WASM_INITIAL_LEXER_BUFFER_SIZE;
+        old_buffer_size ? old_buffer_size * 2 : INITIAL_LEXER_BUFFER_SIZE;
     /* make sure there is enough space for the bytes requested (need) and an
      * additional YYMAXFILL bytes which is needed for the re2c lexer
      * implementation when the eof is reached */

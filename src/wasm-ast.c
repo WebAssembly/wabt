@@ -23,7 +23,7 @@
 
 #define INITIAL_HASH_CAPACITY 8
 
-static size_t wasm_hash_name(const WasmStringSlice* name) {
+static size_t hash_name(const WasmStringSlice* name) {
   // FNV-1a hash
   const uint32_t fnv_prime = 0x01000193;
   const uint8_t* bp = (const uint8_t*)name->start;
@@ -36,18 +36,18 @@ static size_t wasm_hash_name(const WasmStringSlice* name) {
   return hval;
 }
 
-static WasmBindingHashEntry* wasm_hash_main_entry(const WasmBindingHash* hash,
-                                                  const WasmStringSlice* name) {
-  return &hash->entries.data[wasm_hash_name(name) % hash->entries.capacity];
+static WasmBindingHashEntry* hash_main_entry(const WasmBindingHash* hash,
+                                             const WasmStringSlice* name) {
+  return &hash->entries.data[hash_name(name) % hash->entries.capacity];
 }
 
 WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry* entry) {
   return !entry->binding.name.start;
 }
 
-static WasmBindingHashEntry* wasm_hash_new_entry(WasmBindingHash* hash,
-                                                 const WasmStringSlice* name) {
-  WasmBindingHashEntry* entry = wasm_hash_main_entry(hash, name);
+static WasmBindingHashEntry* hash_new_entry(WasmBindingHash* hash,
+                                            const WasmStringSlice* name) {
+  WasmBindingHashEntry* entry = hash_main_entry(hash, name);
   if (!wasm_hash_entry_is_free(entry)) {
     assert(hash->free_head);
     WasmBindingHashEntry* free_entry = hash->free_head;
@@ -58,7 +58,7 @@ static WasmBindingHashEntry* wasm_hash_new_entry(WasmBindingHash* hash,
     /* our main position is already claimed. Check to see if the entry in that
      * position is in its main position */
     WasmBindingHashEntry* other_entry =
-        wasm_hash_main_entry(hash, &entry->binding.name);
+        hash_main_entry(hash, &entry->binding.name);
     if (other_entry == entry) {
       /* yes, so add this new entry to the chain, even if it is already there */
       /* add as the second entry in the chain */
@@ -93,9 +93,9 @@ static WasmBindingHashEntry* wasm_hash_new_entry(WasmBindingHash* hash,
   return entry;
 }
 
-static WasmResult wasm_hash_resize(WasmAllocator* allocator,
-                                   WasmBindingHash* hash,
-                                   size_t desired_capacity) {
+static WasmResult hash_resize(WasmAllocator* allocator,
+                              WasmBindingHash* hash,
+                              size_t desired_capacity) {
   WasmBindingHash new_hash;
   WASM_ZERO_MEMORY(new_hash);
   /* TODO(binji): better plural */
@@ -124,7 +124,7 @@ static WasmResult wasm_hash_resize(WasmAllocator* allocator,
       continue;
 
     WasmStringSlice* name = &old_entry->binding.name;
-    WasmBindingHashEntry* new_entry = wasm_hash_new_entry(&new_hash, name);
+    WasmBindingHashEntry* new_entry = hash_new_entry(&new_hash, name);
     new_entry->binding = old_entry->binding;
   }
 
@@ -139,19 +139,18 @@ WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
                                  WasmBindingHash* hash,
                                  const WasmStringSlice* name) {
   if (hash->entries.size == 0) {
-    if (WASM_FAILED(wasm_hash_resize(allocator, hash, INITIAL_HASH_CAPACITY)))
+    if (WASM_FAILED(hash_resize(allocator, hash, INITIAL_HASH_CAPACITY)))
       return NULL;
   }
 
   if (!hash->free_head) {
     /* no more free space, allocate more */
-    if (WASM_FAILED(
-            wasm_hash_resize(allocator, hash, hash->entries.capacity * 2))) {
+    if (WASM_FAILED(hash_resize(allocator, hash, hash->entries.capacity * 2))) {
       return NULL;
     }
   }
 
-  WasmBindingHashEntry* entry = wasm_hash_new_entry(hash, name);
+  WasmBindingHashEntry* entry = hash_new_entry(hash, name);
   assert(entry);
   hash->entries.size++;
   return &entry->binding;
@@ -162,7 +161,7 @@ static int find_binding_index_by_name(const WasmBindingHash* hash,
   if (hash->entries.capacity == 0)
     return -1;
 
-  WasmBindingHashEntry* entry = wasm_hash_main_entry(hash, name);
+  WasmBindingHashEntry* entry = hash_main_entry(hash, name);
   do {
     if (wasm_string_slices_are_equal(&entry->binding.name, name))
       return entry->binding.index;
@@ -328,18 +327,18 @@ WasmExpr* wasm_new_empty_expr(struct WasmAllocator* allocator,
   return result;
 }
 
-static void wasm_destroy_binding_hash_entry(WasmAllocator* allocator,
-                                            WasmBindingHashEntry* entry) {
+static void destroy_binding_hash_entry(WasmAllocator* allocator,
+                                       WasmBindingHashEntry* entry) {
   wasm_destroy_string_slice(allocator, &entry->binding.name);
 }
 
-static void wasm_destroy_binding_hash(WasmAllocator* allocator,
-                                      WasmBindingHash* hash) {
+static void destroy_binding_hash(WasmAllocator* allocator,
+                                 WasmBindingHash* hash) {
   /* Can't use WASM_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
    * capacity. */
   size_t i;
   for (i = 0; i < hash->entries.capacity; ++i)
-    wasm_destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
+    destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
   wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
 }
 
@@ -479,8 +478,8 @@ void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
   wasm_destroy_string_slice(allocator, &func->name);
   wasm_destroy_func_declaration(allocator, &func->decl);
   wasm_destroy_type_vector(allocator, &func->local_types);
-  wasm_destroy_binding_hash(allocator, &func->param_bindings);
-  wasm_destroy_binding_hash(allocator, &func->local_bindings);
+  destroy_binding_hash(allocator, &func->param_bindings);
+  destroy_binding_hash(allocator, &func->local_bindings);
   wasm_destroy_expr_list(allocator, func->first_expr);
 }
 
@@ -545,8 +544,8 @@ void wasm_destroy_memory(WasmAllocator* allocator, WasmMemory* memory) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, memory->segments, segment);
 }
 
-static void wasm_destroy_module_field(WasmAllocator* allocator,
-                                      WasmModuleField* field) {
+static void destroy_module_field(WasmAllocator* allocator,
+                                 WasmModuleField* field) {
   switch (field->type) {
     case WASM_MODULE_FIELD_TYPE_FUNC:
       wasm_destroy_func(allocator, &field->func);
@@ -579,7 +578,7 @@ void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
   WasmModuleField* field = module->first_field;
   while (field != NULL) {
     WasmModuleField* next_field = field->next;
-    wasm_destroy_module_field(allocator, field);
+    destroy_module_field(allocator, field);
     wasm_free(allocator, field);
     field = next_field;
   }
@@ -600,8 +599,8 @@ void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
                                          &module->func_type_bindings.entries);
 }
 
-static void wasm_destroy_invoke(WasmAllocator* allocator,
-                                WasmCommandInvoke* invoke) {
+static void destroy_invoke(WasmAllocator* allocator,
+                           WasmCommandInvoke* invoke) {
   wasm_destroy_string_slice(allocator, &invoke->name);
   wasm_destroy_const_vector(allocator, &invoke->args);
 }
@@ -612,20 +611,20 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       wasm_destroy_module(allocator, &command->module);
       break;
     case WASM_COMMAND_TYPE_INVOKE:
-      wasm_destroy_invoke(allocator, &command->invoke);
+      destroy_invoke(allocator, &command->invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
       wasm_destroy_module(allocator, &command->assert_invalid.module);
       wasm_destroy_string_slice(allocator, &command->assert_invalid.text);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
-      wasm_destroy_invoke(allocator, &command->assert_return.invoke);
+      destroy_invoke(allocator, &command->assert_return.invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-      wasm_destroy_invoke(allocator, &command->assert_return_nan.invoke);
+      destroy_invoke(allocator, &command->assert_return_nan.invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
-      wasm_destroy_invoke(allocator, &command->assert_trap.invoke);
+      destroy_invoke(allocator, &command->assert_trap.invoke);
       wasm_destroy_string_slice(allocator, &command->assert_trap.text);
       break;
     default:
