@@ -104,94 +104,119 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
  * 1 11111111 111...11 => 0xffffffff => -nan(0x7fffff)
  */
 
-#define F32_SIGN_MASK 0x80000000U
+#define F32_INF 0x7f800000U
+#define F32_NEG_INF 0xff800000U
+#define F32_NEG_ONE 0xbf800000U
+#define F32_NEG_ZERO 0x80000000U
+#define F32_QUIET_NAN 0x7fc00000U
 #define F32_QUIET_NAN_BIT 0x00400000U
+#define F32_SIG_BITS 23
+#define F32_SIG_MASK 0x7fffff
+#define F32_SIGN_MASK 0x80000000U
 
 static WASM_INLINE WasmBool is_nan_f32(uint32_t f32_bits) {
-  return (f32_bits > 0x7f800000U && f32_bits < 0x80000000U) ||
-         (f32_bits > 0xff800000U);
+  return (f32_bits > F32_INF && f32_bits < F32_NEG_ZERO) ||
+         (f32_bits > F32_NEG_INF);
+}
+
+static WASM_INLINE WasmBool is_zero_f32(uint32_t f32_bits) {
+  return f32_bits == 0 || f32_bits == F32_NEG_ZERO;
 }
 
 static WASM_INLINE WasmBool is_in_range_i32_trunc_s_f32(uint32_t f32_bits) {
   return (f32_bits < 0x4f000000U) ||
-         (f32_bits >= 0x80000000U && f32_bits <= 0xcf000000U);
+         (f32_bits >= F32_NEG_ZERO && f32_bits <= 0xcf000000U);
 }
 
 static WASM_INLINE WasmBool is_in_range_i64_trunc_s_f32(uint32_t f32_bits) {
   return (f32_bits < 0x5f000000U) ||
-         (f32_bits >= 0x80000000U && f32_bits <= 0xdf000000U);
+         (f32_bits >= F32_NEG_ZERO && f32_bits <= 0xdf000000U);
 }
 
 static WASM_INLINE WasmBool is_in_range_i32_trunc_u_f32(uint32_t f32_bits) {
   return (f32_bits < 0x4f800000U) ||
-         (f32_bits >= 0x80000000U && f32_bits < 0xbf800000);
+         (f32_bits >= F32_NEG_ZERO && f32_bits < F32_NEG_ONE);
 }
 
 static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
   return (f32_bits < 0x5f800000U) ||
-         (f32_bits >= 0x80000000U && f32_bits < 0xbf800000);
+         (f32_bits >= F32_NEG_ZERO && f32_bits < F32_NEG_ONE);
 }
 
 /*
- * 6 66655555555 5544...222221...000
- * 3 21098765432 1098...432109...210
- * ---------------------------------
- * 0 00000000000 0000...000000...000 0x0000000000000000 => 0
- * 0 10000011101 1111...111000...000 0x41dfffffffc00000 => 2147483647               (INT32_MAX)
- * 0 10000011110 1111...111100...000 0x41efffffffe00000 => 4294967295              (UINT32_MAX)
- * 0 10000111101 1111...111111...111 0x43dfffffffffffff => 9223372036854774784     (~INT64_MAX)
- * 0 10000111110 0000...000000...000 0x43e0000000000000 => 9223372036854775808
- * 0 10000111110 1111...111111...111 0x43efffffffffffff => 18446744073709549568   (~UINT64_MAX)
- * 0 10000111111 0000...000000...000 0x43f0000000000000 => 18446744073709551616
- * 0 11111111111 0000...000000...000 0x7ff0000000000000 => inf
- * 0 11111111111 0000...000000...001 0x7ff0000000000001 => nan(0x1)
- * 0 11111111111 1111...111111...111 0x7fffffffffffffff => nan(0xfff...)
- * 1 00000000000 0000...000000...000 0x8000000000000000 => -0
- * 1 01111111110 1111...111111...111 0xbfefffffffffffff => -1 + ulp  (~UINT32_MIN, ~UINT64_MIN)
- * 1 01111111111 0000...000000...000 0xbff0000000000000 => -1
- * 1 10000011110 0000...000000...000 0xc1e0000000000000 => -2147483648              (INT32_MIN)
- * 1 10000111110 0000...000000...000 0xc3e0000000000000 => -9223372036854775808     (INT64_MIN)
- * 1 11111111111 0000...000000...000 0xfff0000000000000 => -inf
- * 1 11111111111 0000...000000...001 0xfff0000000000001 => -nan(0x1)
- * 1 11111111111 1111...111111...111 0xffffffffffffffff => -nan(0xfff...)
+ * 6 66655555555 5544..2..222221...000
+ * 3 21098765432 1098..9..432109...210
+ * -----------------------------------
+ * 0 00000000000 0000..0..000000...000 0x0000000000000000 => 0
+ * 0 10000011101 1111..1..111000...000 0x41dfffffffc00000 => 2147483647               (INT32_MAX)
+ * 0 10000011110 1111..1..111100...000 0x41efffffffe00000 => 4294967295              (UINT32_MAX)
+ * 0 10000111101 1111..1..111111...111 0x43dfffffffffffff => 9223372036854774784     (~INT64_MAX)
+ * 0 10000111110 0000..0..000000...000 0x43e0000000000000 => 9223372036854775808
+ * 0 10000111110 1111..1..111111...111 0x43efffffffffffff => 18446744073709549568   (~UINT64_MAX)
+ * 0 10000111111 0000..0..000000...000 0x43f0000000000000 => 18446744073709551616
+ * 0 10001111110 1111..1..000000...000 0x47efffffe0000000 => 3.402823e+38               (FLT_MAX)
+ * 0 11111111111 0000..0..000000...000 0x7ff0000000000000 => inf
+ * 0 11111111111 0000..0..000000...001 0x7ff0000000000001 => nan(0x1)
+ * 0 11111111111 1111..1..111111...111 0x7fffffffffffffff => nan(0xfff...)
+ * 1 00000000000 0000..0..000000...000 0x8000000000000000 => -0
+ * 1 01111111110 1111..1..111111...111 0xbfefffffffffffff => -1 + ulp  (~UINT32_MIN, ~UINT64_MIN)
+ * 1 01111111111 0000..0..000000...000 0xbff0000000000000 => -1
+ * 1 10000011110 0000..0..000000...000 0xc1e0000000000000 => -2147483648              (INT32_MIN)
+ * 1 10000111110 0000..0..000000...000 0xc3e0000000000000 => -9223372036854775808     (INT64_MIN)
+ * 1 10001111110 1111..1..000000...000 0xc7efffffe0000000 => -3.402823e+38             (-FLT_MAX)
+ * 1 11111111111 0000..0..000000...000 0xfff0000000000000 => -inf
+ * 1 11111111111 0000..0..000000...001 0xfff0000000000001 => -nan(0x1)
+ * 1 11111111111 1111..1..111111...111 0xffffffffffffffff => -nan(0xfff...)
  */
 
-#define F64_SIGN_MASK 0x8000000000000000ULL
+#define F64_INF 0x7ff0000000000000ULL
+#define F64_NEG_INF 0xfff0000000000000ULL
+#define F64_NEG_ONE 0xbff0000000000000ULL
+#define F64_NEG_ZERO 0x8000000000000000ULL
+#define F64_QUIET_NAN 0x7ff8000000000000ULL
 #define F64_QUIET_NAN_BIT 0x0008000000000000ULL
+#define F64_SIG_BITS 52
+#define F64_SIG_MASK 0xfffffffffffffULL
+#define F64_SIGN_MASK 0x8000000000000000ULL
 
 static WASM_INLINE WasmBool is_nan_f64(uint64_t f64_bits) {
-  return (f64_bits > 0x7ff0000000000000ULL &&
-          f64_bits < 0x8000000000000000ULL) ||
-         (f64_bits > 0xfff0000000000000ULL);
+  return (f64_bits > F64_INF && f64_bits < F64_NEG_ZERO) ||
+         (f64_bits > F64_NEG_INF);
+}
+
+static WASM_INLINE WasmBool is_zero_f64(uint64_t f64_bits) {
+  return f64_bits == 0 || f64_bits == F64_NEG_ZERO;
 }
 
 static WASM_INLINE WasmBool is_in_range_i32_trunc_s_f64(uint64_t f64_bits) {
   return (f64_bits <= 0x41dfffffffc00000ULL) ||
-         (f64_bits >= 0x8000000000000000ULL &&
-          f64_bits <= 0xc1e0000000000000ULL);
+         (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc1e0000000000000ULL);
 }
 
 static WASM_INLINE WasmBool is_in_range_i32_trunc_u_f64(uint64_t f64_bits) {
   return (f64_bits <= 0x41efffffffe00000ULL) ||
-         (f64_bits >= 0x8000000000000000ULL &&
-          f64_bits <= 0xbfefffffffffffffULL);
+         (f64_bits >= F64_NEG_ZERO && f64_bits < F64_NEG_ONE);
 }
 
 static WASM_INLINE WasmBool is_in_range_i64_trunc_s_f64(uint64_t f64_bits) {
   return (f64_bits < 0x43e0000000000000ULL) ||
-         (f64_bits >= 0x8000000000000000ULL &&
-          f64_bits <= 0xc3e0000000000000ULL);
+         (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc3e0000000000000ULL);
 }
 
 static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
   return (f64_bits < 0x43f0000000000000ULL) ||
-         (f64_bits >= 0x8000000000000000ULL &&
-          f64_bits <= 0xbfefffffffffffffULL);
+         (f64_bits >= F64_NEG_ZERO && f64_bits < F64_NEG_ONE);
 }
 
+static WASM_INLINE WasmBool is_in_range_f64_demote_f32(uint64_t f64_bits) {
+  return (f64_bits <= 0x47efffffe0000000ULL) ||
+         (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc7efffffe0000000ULL);
+}
 
 #define IS_NAN_F32 is_nan_f32
 #define IS_NAN_F64 is_nan_f64
+#define IS_ZERO_F32 is_zero_f32
+#define IS_ZERO_F64 is_zero_f64
 
 #define DEFINE_BITCAST(name, src, dst) \
   static WASM_INLINE dst name(src x) { \
@@ -437,6 +462,27 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     FLOAT_TYPE_##type rhs = BITCAST_TO_##type(POP_##type()); \
     FLOAT_TYPE_##type lhs = BITCAST_TO_##type(POP_##type()); \
     PUSH_##type(BITCAST_FROM_##type(lhs op rhs));            \
+  } while (0)
+
+#define BINOP_FLOAT_DIV(type)                                    \
+  do {                                                           \
+    VALUE_TYPE_##type rhs = POP_##type();                        \
+    VALUE_TYPE_##type lhs = POP_##type();                        \
+    if (WASM_UNLIKELY(IS_ZERO_##type(rhs))) {                    \
+      if (IS_NAN_##type(lhs)) {                                  \
+        VALUE_TYPE_##type sign = (lhs & type##_SIGN_MASK);       \
+        PUSH_##type(sign | type##_QUIET_NAN);                    \
+      } else if (IS_ZERO_##type(lhs)) {                          \
+        PUSH_##type(type##_QUIET_NAN);                           \
+      } else {                                                   \
+        VALUE_TYPE_##type sign =                                 \
+            (lhs & type##_SIGN_MASK) ^ (rhs & type##_SIGN_MASK); \
+        PUSH_##type(sign | type##_INF);                          \
+      }                                                          \
+    } else {                                                     \
+      PUSH_##type(BITCAST_FROM_##type(BITCAST_TO_##type(lhs) /   \
+                                      BITCAST_TO_##type(rhs)));  \
+    }                                                            \
   } while (0)
 
 #define BINOP_FLOAT_COMPARE(type, op)                        \
@@ -1002,7 +1048,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_F32_DIV:
-        BINOP_FLOAT(F32, / );
+        BINOP_FLOAT_DIV(F32);
         break;
 
       case WASM_OPCODE_F32_MIN:
@@ -1085,7 +1131,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_F64_DIV:
-        BINOP_FLOAT(F64, / );
+        BINOP_FLOAT_DIV(F64);
         break;
 
       case WASM_OPCODE_F64_MIN:
@@ -1263,7 +1309,17 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_F32_DEMOTE_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        PUSH_F32(BITCAST_FROM_F32((float)BITCAST_TO_F64(value)));
+        if (WASM_UNLIKELY(!is_in_range_f64_demote_f32(value))) {
+          uint32_t sign = (value >> 32) & F32_SIGN_MASK;
+          uint32_t tag = 0;
+          if (IS_NAN_F64(value)) {
+            tag = F32_QUIET_NAN_BIT |
+                  ((value >> (F64_SIG_BITS - F32_SIG_BITS)) & F32_SIG_MASK);
+          }
+          PUSH_F32(sign | F32_INF | tag);
+        } else {
+          PUSH_F32(BITCAST_FROM_F32((float)BITCAST_TO_F64(value)));
+        }
         break;
       }
 

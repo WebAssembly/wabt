@@ -62,7 +62,7 @@ WASM_STATIC_ASSERT((1 << (WASM_TYPE_I64 - 1)) == WASM_TYPE_SET_I64);
 WASM_STATIC_ASSERT((1 << (WASM_TYPE_F32 - 1)) == WASM_TYPE_SET_F32);
 WASM_STATIC_ASSERT((1 << (WASM_TYPE_F64 - 1)) == WASM_TYPE_SET_F64);
 
-#define TYPE_TO_TYPE_SET(type) (1 << ((type)-1))
+#define TYPE_TO_TYPE_SET(type) ((type) ? 1 << ((type)-1) : 0)
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \
   [code] = WASM_TYPE_##rtype,

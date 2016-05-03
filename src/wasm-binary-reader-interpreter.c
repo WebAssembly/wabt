@@ -200,7 +200,7 @@ static WasmBool is_expr_discarded(WasmContext* ctx, uint32_t expr_index) {
 
   uint32_t bit_index = expr_index & 31;
   assert(word_index < ctx->discarded_exprs.size);
-  return (ctx->discarded_exprs.data[word_index] & (1 << bit_index))
+  return (ctx->discarded_exprs.data[word_index] & (1U << bit_index))
              ? WASM_TRUE
              : WASM_FALSE;
 }
@@ -510,7 +510,7 @@ static WasmResult set_expr_discarded(WasmContext* ctx, uint32_t expr_index) {
   }
 
   uint32_t bit_index = expr_index & 31;
-  ctx->discarded_exprs.data[word_index] |= 1 << bit_index;
+  ctx->discarded_exprs.data[word_index] |= 1U << bit_index;
   return WASM_OK;
 }
 
