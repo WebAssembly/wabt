@@ -3,14 +3,4 @@
 /third_party/v8/depot_tools
 /fuzz-out
 /emscripten
-/test/parser.out
-/test/parsetab.py
 *.pyc
-
-#Visual Studio Products
-Debug
-Release
-build/
-*.VC.opendb
-*.sdf
-*.vcxproj.user

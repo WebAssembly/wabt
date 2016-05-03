@@ -25,6 +25,7 @@ from utils import Error, Hexdump
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(SCRIPT_DIR)
+OUT_DIR = os.path.join(ROOT_DIR, 'out')
 PLY_DIR = os.path.join(ROOT_DIR, 'third_party', 'ply')
 
 sys.path.append(PLY_DIR)
@@ -427,7 +428,8 @@ def p_data_empty(p):
 def p_error(p):
   print '%d: syntax error, %s' % (p.lineno, p)
 
-parser = yacc.yacc()
+parser = yacc.yacc(tabmodule='gen_wasm', debugfile='gen_wasm_debug.txt',
+                   outputdir=OUT_DIR)
 
 ################################################################################
 
