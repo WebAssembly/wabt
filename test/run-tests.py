@@ -511,6 +511,10 @@ def main(args):
                       action='append')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
+  parser.add_argument('--exe-dir', metavar='PATH',
+                      help='directory to search for all executables. '
+                          'This can be overridden by the other executable '
+                          'flags.')
   parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
                       help='override executable.')
   parser.add_argument('--d8-executable', metavar='PATH',
@@ -552,6 +556,17 @@ def main(args):
   if not test_names:
     print 'no tests match that filter'
     return 1
+
+  if options.exe_dir:
+    if not options.sexpr_wasm_executable:
+      options.sexpr_wasm_executable = os.path.join(options.exe_dir,
+                                                   'sexpr-wasm')
+    if not options.wasm_wast_executable:
+      options.wasm_wast_executable = os.path.join(options.exe_dir,
+                                                  'wasm-wast')
+    if not options.wasm_interp_executable:
+      options.wasm_interp_executable = os.path.join(options.exe_dir,
+                                                    'wasm-interp')
 
   variables = {
     'sexpr-wasm':
