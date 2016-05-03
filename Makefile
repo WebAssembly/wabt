@@ -34,8 +34,6 @@ SANITIZERS := ASAN MSAN LSAN UBSAN
 CONFIGS := NORMAL $(SANITIZERS) NO_RE2C_BISON NO_TESTS
 EXECUTABLES := sexpr-wasm wasm-wast wasm-interp wasm-interp-sq hexfloat_test
 
-UBSAN_C_FLAGS := -fsanitize=undefined -fno-sanitize-recover
-
 # directory names
 GCC_DIR := gcc/
 GCC_I686_DIR := gcc-i686/
@@ -62,10 +60,10 @@ EMSCRIPTEN_FLAG := -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN_DIR}/cmake/Modules/Platfo
 DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
 RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
 NORMAL_FLAG :=
-ASAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=address -DCMAKE_CXX_FLAGS=-fsanitize=address
-MSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=memory -DCMAKE_CXX_FLAGS=-fsanitize=memory
-LSAN_FLAG := -DCMAKE_C_FLAGS=-fsanitize=leak -DCMAKE_CXX_FLAGS=-fsanitize=leak
-UBSAN_FLAG := -DCMAKE_C_FLAGS="${UBSAN_C_FLAGS}" -DCMAKE_CXX_FLAGS="${UBSAN_C_FLAGS}"
+ASAN_FLAG := -DUSE_ASAN=ON
+MSAN_FLAG := -DUSE_MSAN=ON
+LSAN_FLAG := -DUSE_LSAN=ON
+UBSAN_FLAG := -DUSE_UBSAN=ON
 NO_RE2C_BISON_FLAG := -DRUN_BISON=OFF -DRUN_RE2C=OFF
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
