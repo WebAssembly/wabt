@@ -59,7 +59,7 @@ void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
     if (WASM_FAILED(result)) {
       /* if this fails, it means that we've probably screwed up the lexer. blow
        * up. */
-      WASM_FATAL("error getting the source line.");
+      WASM_FATAL("error getting the source line.\n");
     }
   }
 

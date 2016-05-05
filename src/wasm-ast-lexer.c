@@ -531,10 +531,11 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
     }
   }
 
+  WasmResult result = WASM_OK;
   if (p == buffer_end) {
     /* end of buffer */
     if (find_position == WASM_LINE_OFFSET_POSITION_START) {
-      return WASM_ERROR;
+      result = WASM_ERROR;
     } else {
       line_offset = buffer_file_offset + (buffer_end - buffer_start);
     }
@@ -542,7 +543,7 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
 
   *out_line = line;
   *out_line_offset = line_offset;
-  return WASM_OK;
+  return result;
 }
 
 static WasmResult scan_forward_for_line_offset_in_file(
