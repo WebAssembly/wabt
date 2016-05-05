@@ -470,8 +470,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type lhs = POP_##type();                        \
     if (WASM_UNLIKELY(IS_ZERO_##type(rhs))) {                    \
       if (IS_NAN_##type(lhs)) {                                  \
-        VALUE_TYPE_##type sign = (lhs & type##_SIGN_MASK);       \
-        PUSH_##type(sign | type##_QUIET_NAN);                    \
+        PUSH_##type(lhs | type##_QUIET_NAN);                     \
       } else if (IS_ZERO_##type(lhs)) {                          \
         PUSH_##type(type##_QUIET_NAN);                           \
       } else {                                                   \
