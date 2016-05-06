@@ -1132,6 +1132,10 @@ static WasmBinaryReader s_binary_reader = {
     .on_local_name = &on_local_name,
 };
 
+static void wasm_destroy_label_node(WasmAllocator* allocator, LabelNode* node) {
+  wasm_destroy_expr(allocator, node->expr);
+}
+
 WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
                                 const void* data,
                                 size_t size,
@@ -1151,7 +1155,7 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
 
   WasmResult result =
       wasm_read_binary(allocator, data, size, &reader, 1, options);
-  wasm_destroy_label_node_vector(allocator, &ctx.label_stack);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, ctx.label_stack, label_node);
   wasm_destroy_expr_list(allocator, ctx.expr_stack_top);
   return result;
 }
