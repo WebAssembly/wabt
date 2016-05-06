@@ -12,7 +12,6 @@
 "_wasm_init_mem_writer",
 "_wasm_init_stream",
 "_wasm_init_stack_allocator",
-"_wasm_mark_used_blocks",
 "_wasm_new_ast_buffer_lexer",
 "_wasm_offsetof_allocator_alloc",
 "_wasm_offsetof_allocator_destroy",

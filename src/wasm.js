@@ -227,7 +227,7 @@ var JSStringWriter = function() {
 JSStringWriter.prototype = Object.create(JSWriter.prototype);
 
 
-// AstLexer ///////////////////////////////////////////////////////////////////////
+// AstLexer ////////////////////////////////////////////////////////////////////
 var AstLexer = function() {
   throw "AstLexer must be created with $fromBuffer";
 };

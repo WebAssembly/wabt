@@ -119,7 +119,6 @@ function compile(text) {
       var jsWriter = new wasm.JSStringWriter();
       var logStream = new wasm.Stream(jsWriter.writer);
       var options = new wasm.WriteBinaryOptions({logStream: logStream});
-      wasm.markUsedBlocks(allocator, script);
       wasm.writeBinaryScript(allocator, memoryWriter.base, script, options);
       output.textContent = jsWriter.string;
     } catch (e) {
