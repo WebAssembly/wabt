@@ -161,6 +161,7 @@ if (RUN_BISON AND BISON_FOUND)
   )
 else ()
   set(WASM_AST_PARSER_GEN_C src/prebuilt/wasm-ast-parser-gen.c)
+  include_directories(src/prebuilt)
 endif ()
 
 if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)

@@ -1,23 +1,43 @@
 language: c
-sudo: required
-dist: trusty
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq re2c bison gcc-4.8-multilib g++-4.8-multilib
+  - scripts/travis-before-install.sh
 script:
   - scripts/download-d8.sh
   - scripts/travis-build.sh
   - scripts/travis-test.sh
 matrix:
   include:
-    - compiler: gcc
-    - compiler: gcc-i686
-    - compiler: clang
-    - compiler: clang
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: gcc
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: gcc-i686
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: clang
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: clang
       env: SANITIZER=asan
-    - compiler: clang
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: clang
       env: SANITIZER=msan
-    - compiler: clang
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: clang
       env: SANITIZER=lsan
-    - compiler: clang
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: clang
       env: SANITIZER=ubsan
+    - os: osx
+      compiler: clang
