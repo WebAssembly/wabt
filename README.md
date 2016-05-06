@@ -122,7 +122,7 @@ You can use `-h` to get additional help:
 $ out/sexpr-wasm -h
 ```
 
-Or try the [online demo](https://cdn.rawgit.com/WebAssembly/sexpr-wasm-prototype/306c3c68044004962315e90e0bd8bf803f0487db/demo/index.html).
+Or try the [online demo](https://cdn.rawgit.com/WebAssembly/sexpr-wasm-prototype/decc58fed3b2de7e952a143b87ccf7e0b38da36c/demo/index.html).
 
 ## Running wasm-wast
 
