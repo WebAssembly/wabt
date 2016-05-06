@@ -256,7 +256,7 @@ t_RBRACKET = r'\]'
 t_ignore  = ' \t'
 
 def t_COMMENT(t):
-  r'\#.*'
+  r';;.*'
   pass
 
 def t_INT(t):
