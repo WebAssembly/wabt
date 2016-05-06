@@ -33,7 +33,7 @@ while [[ $# > 0 ]]; do
   shift
 done
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 cd ${ROOT_DIR}/third_party/v8

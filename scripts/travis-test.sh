@@ -18,8 +18,8 @@
 set -o nounset
 set -o errexit
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-source ${SCRIPT_DIR}/travis-common.sh
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+source "${SCRIPT_DIR}/travis-common.sh"
 
 log_and_run() {
   echo $*

@@ -18,13 +18,11 @@
 set -o nounset
 set -o errexit
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
-V8_DIR="${ROOT_DIR}/third_party/v8/v8"
 OUT_DIR="${ROOT_DIR}/out"
 
-V8_SHA=$(cd ${V8_DIR} && git rev-parse HEAD)
-BUCKET_URL=https://storage.googleapis.com/webassembly/v8-native-prototype/${V8_SHA}
+source "${SCRIPT_DIR}/d8-common.sh"
 
 Download() {
   local URL=$1
@@ -49,8 +47,8 @@ Download() {
 
 mkdir -p "${OUT_DIR}"
 
-for file in d8 natives_blob.bin snapshot_blob.bin; do
-  Download ${BUCKET_URL}/${file} "${OUT_DIR}/${file}"
+for file in ${D8_FILES}; do
+  Download ${V8_BUCKET_HTTPS_URL}/${file} "${OUT_DIR}/${file}"
 done
 
 # Make d8 executable

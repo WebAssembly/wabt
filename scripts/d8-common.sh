@@ -15,13 +15,18 @@
 # limitations under the License.
 #
 
-set -o nounset
-set -o errexit
-
+OS=$(uname -s)
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-
-source ${SCRIPT_DIR}/d8-common.sh
-
-for file in ${D8_FILES}; do
-  gsutil cp -a public-read ${V8_OUT_DIR}/${file} ${V8_BUCKET_GS_URL}/${file}
-done
+ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
+V8_DIR="${ROOT_DIR}/third_party/v8/v8"
+V8_OUT_DIR="${V8_DIR}/out/Release"
+V8_SHA=$(cd "${V8_DIR}" && git rev-parse HEAD)
+# TODO(binji): other architectures
+V8_HOST_ARCH=x86_64
+V8_TARGET_ARCH=x86_64
+V8_BASE_BUCKET_HTTPS_URL=https://storage.googleapis.com/webassembly/v8
+V8_BASE_BUCKET_GS_URL=gs://webassembly/v8
+V8_BUCKET_PATH=${V8_SHA}/${OS}/${V8_HOST_ARCH}-${V8_TARGET_ARCH}
+V8_BUCKET_GS_URL=${V8_BASE_BUCKET_GS_URL}/${V8_BUCKET_PATH}
+V8_BUCKET_HTTPS_URL=${V8_BASE_BUCKET_HTTPS_URL}/${V8_BUCKET_PATH}
+D8_FILES="d8 natives_blob.bin snapshot_blob.bin"

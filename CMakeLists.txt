@@ -111,7 +111,7 @@ else ()
       )
 
       if (FILE_RESULT EQUAL 0)
-        if (${FILE_OUTPUT} MATCHES "x86-64")
+        if (${FILE_OUTPUT} MATCHES "x86[-_]64")
           set(TARGET_ARCH "x86-64")
         elseif (${FILE_OUTPUT} MATCHES "Intel 80386")
           set(TARGET_ARCH "i386")
