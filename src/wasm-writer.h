@@ -56,7 +56,7 @@ WASM_EXTERN_C_BEGIN
 
 /* WasmFileWriter */
 WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename);
-WasmResult wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file);
+void wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file);
 void wasm_close_file_writer(WasmFileWriter* writer);
 
 /* WasmMemoryWriter */

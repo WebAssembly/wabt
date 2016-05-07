@@ -22,6 +22,9 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
+static WasmFileStream s_stdout_stream;
+static WasmFileStream s_stderr_stream;
+
 void wasm_init_stream(WasmStream* stream,
                       WasmWriter* writer,
                       WasmStream* log_stream) {
@@ -29,6 +32,21 @@ void wasm_init_stream(WasmStream* stream,
   stream->offset = 0;
   stream->result = WASM_OK;
   stream->log_stream = log_stream;
+}
+
+void wasm_init_file_stream_from_existing(WasmFileStream* stream, FILE* file) {
+  wasm_init_file_writer_existing(&stream->writer, file);
+  wasm_init_stream(&stream->base, &stream->writer.base, NULL);
+}
+
+WasmStream* wasm_init_stdout_stream(void) {
+  wasm_init_file_stream_from_existing(&s_stdout_stream, stdout);
+  return &s_stdout_stream.base;
+}
+
+WasmStream* wasm_init_stderr_stream(void) {
+  wasm_init_file_stream_from_existing(&s_stderr_stream, stderr);
+  return &s_stderr_stream.base;
 }
 
 void wasm_write_data_at(WasmStream* stream,

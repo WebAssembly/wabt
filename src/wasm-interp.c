@@ -25,6 +25,7 @@
 #include "wasm-interpreter.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
+#include "wasm-stream.h"
 
 #define INSTRUCTION_QUANTUM 1000
 
@@ -42,6 +43,7 @@ static WasmBool s_trace;
 static WasmBool s_spec;
 static WasmBool s_run_all_exports;
 static WasmBool s_use_libc_allocator;
+static WasmStream* s_stdout_stream;
 
 static WasmBinaryErrorHandler s_error_handler =
     WASM_BINARY_ERROR_HANDLER_DEFAULT;
@@ -274,7 +276,7 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
   uint32_t call_stack_return_top = 0;
   while (iresult == WASM_INTERPRETER_OK) {
     if (s_trace)
-      wasm_trace_pc(module, thread);
+      wasm_trace_pc(module, thread, s_stdout_stream);
     iresult =
         wasm_run_interpreter(module, thread, quantum, call_stack_return_top);
   }
@@ -368,16 +370,13 @@ static WasmResult run_export_by_name(
     WasmInterpreterResult* out_iresult,
     WasmInterpreterTypedValue* out_return_value,
     RunVerbosity verbose) {
-  uint32_t i;
-  for (i = 0; i < module->exports.size; ++i) {
-    WasmInterpreterExport* export = &module->exports.data[i];
-    if (wasm_string_slices_are_equal(name, &export->name)) {
-      *out_iresult =
-          run_export(module, thread, export, out_return_value, verbose);
-      return WASM_OK;
-    }
-  }
-  return WASM_ERROR;
+  WasmInterpreterExport* export =
+      wasm_get_interpreter_export_by_name(module, name);
+  if (!export)
+    return WASM_ERROR;
+
+  *out_iresult = run_export(module, thread, export, out_return_value, verbose);
+  return WASM_OK;
 }
 
 static void run_all_exports(WasmInterpreterModule* module,
@@ -407,8 +406,10 @@ static WasmResult read_module(WasmAllocator* allocator,
                                           &s_error_handler, out_module);
 
     if (WASM_SUCCEEDED(result)) {
-      if (s_verbose)
-        wasm_disassemble_module(out_module, 0, out_module->istream.size);
+      if (s_verbose) {
+        wasm_disassemble_module(out_module, s_stdout_stream, 0,
+                                out_module->istream.size);
+      }
 
       set_all_import_callbacks_to_default(out_module);
       WASM_ZERO_MEMORY(*out_thread);
@@ -786,6 +787,8 @@ int main(int argc, char** argv) {
   WasmAllocator* allocator;
 
   parse_options(argc, argv);
+
+  s_stdout_stream = wasm_init_stdout_stream();
 
   if (s_use_libc_allocator) {
     allocator = &g_wasm_libc_allocator;

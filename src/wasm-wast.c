@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
         if (s_outfile) {
           result = wasm_init_file_writer(&file_writer, s_outfile);
         } else {
-          result = wasm_init_file_writer_existing(&file_writer, stdout);
+          wasm_init_file_writer_existing(&file_writer, stdout);
         }
 
         if (WASM_SUCCEEDED(result)) {

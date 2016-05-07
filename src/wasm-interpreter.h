@@ -23,6 +23,8 @@
 #include "wasm-vector.h"
 #include "wasm-writer.h"
 
+struct WasmStream;
+
 #define FOREACH_INTERPRETER_RESULT(V)                                          \
   V(OK, "ok")                                                                  \
   /* returned from the top-most function */                                    \
@@ -191,12 +193,22 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            uint32_t num_instructions,
                                            uint32_t call_stack_return_top);
 void wasm_trace_pc(WasmInterpreterModule* module,
-                   WasmInterpreterThread* thread);
+                   WasmInterpreterThread* thread,
+                   struct WasmStream* stream);
 void wasm_disassemble_module(WasmInterpreterModule* module,
+                             struct WasmStream* stream,
                              uint32_t from,
                              uint32_t to);
 void wasm_destroy_interpreter_module(WasmAllocator* allocator,
                                      WasmInterpreterModule* module);
+
+WasmInterpreterExport* wasm_get_interpreter_export_by_name(
+    WasmInterpreterModule* module,
+    WasmStringSlice* name);
+WasmInterpreterImport* wasm_get_interpreter_import_by_name(
+    WasmInterpreterModule* module,
+    WasmStringSlice* module_name,
+    WasmStringSlice* func_name);
 WASM_EXTERN_C_END
 
 #endif /* WASM_INTERPRETER_H_ */

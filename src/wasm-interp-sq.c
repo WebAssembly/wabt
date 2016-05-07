@@ -28,6 +28,7 @@
 #include "wasm-interpreter.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
+#include "wasm-stream.h"
 
 #include "squirrel.h"
 #include "sqstdblob.h"
@@ -48,6 +49,7 @@ static WasmInterpreterThreadOptions s_thread_options =
     WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT;
 static WasmBool s_trace;
 static WasmBool s_use_libc_allocator;
+static WasmStream* s_stdout_stream;
 
 static WasmBinaryErrorHandler s_error_handler =
     WASM_BINARY_ERROR_HANDLER_DEFAULT;
@@ -179,7 +181,7 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
   uint32_t call_stack_return_top = thread->call_stack_top;
   while (iresult == WASM_INTERPRETER_OK) {
     if (s_trace)
-      wasm_trace_pc(module, thread);
+      wasm_trace_pc(module, thread, s_stdout_stream);
     iresult =
         wasm_run_interpreter(module, thread, quantum, call_stack_return_top);
   }
@@ -1027,6 +1029,8 @@ int main(int argc, char** argv) {
   WasmAllocator* allocator;
 
   parse_options(argc, argv);
+
+  s_stdout_stream = wasm_init_stdout_stream();
 
   if (s_use_libc_allocator) {
     allocator = &g_wasm_libc_allocator;

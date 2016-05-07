@@ -17,6 +17,8 @@
 #ifndef WASM_STREAM_H_
 #define WASM_STREAM_H_
 
+#include <stdio.h>
+
 #include "wasm-common.h"
 #include "wasm-writer.h"
 
@@ -27,6 +29,11 @@ typedef struct WasmStream {
   /* if non-NULL, log all writes to this stream */
   struct WasmStream* log_stream;
 } WasmStream;
+
+typedef struct WasmFileStream {
+  WasmStream base;
+  WasmFileWriter writer;
+} WasmFileStream;
 
 /* whether to display the ASCII characters in the debug output for
  * wasm_write_memory */
@@ -40,6 +47,9 @@ WASM_EXTERN_C_BEGIN
 void wasm_init_stream(WasmStream* stream,
                       WasmWriter* writer,
                       WasmStream* log_stream);
+void wasm_init_file_stream_from_existing(WasmFileStream* stream, FILE* file);
+WasmStream* wasm_init_stdout_stream(void);
+WasmStream* wasm_init_stderr_stream(void);
 
 /* helper functions for writing to a WasmStream. the |desc| parameter is
  * optional, and will be appended to the log stream if |stream.log_stream| is
