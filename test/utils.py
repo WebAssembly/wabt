@@ -41,7 +41,7 @@ class Executable(object):
     self.clean_stdout = kwargs.get('clean_stdout')
     self.clean_stderr = kwargs.get('clean_stderr')
 
-  def RunWithArgs(self, *args):
+  def RunWithArgsForStdout(self, *args, **kwargs):
     cmd = [self.exe] + self.before_args + list(args) + self.after_args
     cmd_str = ' '.join(cmd)
 
@@ -51,13 +51,13 @@ class Executable(object):
 
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE)
+                                      stderr=subprocess.PIPE,
+                                 **kwargs)
       stdout, stderr = process.communicate()
       if self.clean_stdout:
         stdout = self.clean_stdout(stdout)
       if self.clean_stderr:
         stderr = self.clean_stderr(stderr)
-      sys.stdout.write(stdout)
       if process.returncode < 0:
         # Terminated by signal
         signame = SIGNAMES.get(-process.returncode, '<unknown>')
@@ -67,6 +67,10 @@ class Executable(object):
         raise Error('Error running "%s":\n%s' % (err_cmd_str, stderr))
     except OSError as e:
       raise Error('Error running "%s": %s' % (err_cmd_str, str(e)))
+    return stdout
+
+  def RunWithArgs(self, *args, **kwargs):
+    sys.stdout.write(self.RunWithArgsForStdout(*args, **kwargs))
 
   def AppendArg(self, arg):
     self.after_args.append(arg)
