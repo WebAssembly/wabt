@@ -189,60 +189,50 @@ else ()
   set(WASM_AST_LEXER_GEN_C src/prebuilt/wasm-ast-lexer-gen.c)
 endif ()
 
-
 add_custom_target(everything)
 
-add_library(wasm-common STATIC
+add_library(libwasm STATIC
   src/wasm-allocator.c
+  src/wasm-apply-names.c
+  src/wasm-ast.c
+  src/wasm-ast-checker.c
+  src/wasm-ast-parser-lexer-shared.c
+  src/wasm-ast-writer.c
+  src/wasm-binary-reader-ast.c
+  src/wasm-binary-reader.c
+  src/wasm-binary-reader.c
+  src/wasm-binary-reader-interpreter.c
+  src/wasm-binary-writer.c
+  src/wasm-binary-writer-spec.c
   src/wasm-common.c
   src/wasm-config.c
+  src/wasm-generate-names.c
+  src/wasm-interpreter.c
+  src/wasm-literal.c
   src/wasm-option-parser.c
   src/wasm-stack-allocator.c
   src/wasm-stream.c
   src/wasm-vector.c
   src/wasm-writer.c
+  ${WASM_AST_LEXER_GEN_C}
+  ${WASM_AST_PARSER_GEN_C}
 )
+set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
 # sexpr-wasm
-add_executable(sexpr-wasm
-  src/sexpr-wasm.c
-  src/wasm-ast.c
-  src/wasm-ast-checker.c
-  src/wasm-ast-parser-lexer-shared.c
-  src/wasm-binary-writer.c
-  src/wasm-binary-writer-spec.c
-  src/wasm-literal.c
-  ${WASM_AST_PARSER_GEN_C}
-  ${WASM_AST_LEXER_GEN_C}
-)
+add_executable(sexpr-wasm src/sexpr-wasm.c)
 add_dependencies(everything sexpr-wasm)
-target_link_libraries(sexpr-wasm wasm-common)
+target_link_libraries(sexpr-wasm libwasm)
 
 # wasm-wast
-add_executable(wasm-wast
-  src/wasm-apply-names.c
-  src/wasm-ast.c
-  src/wasm-ast-writer.c
-  src/wasm-binary-reader.c
-  src/wasm-binary-reader-ast.c
-  src/wasm-generate-names.c
-  src/wasm-literal.c
-  src/wasm-wast.c
-)
+add_executable(wasm-wast src/wasm-wast.c)
 add_dependencies(everything wasm-wast)
-target_link_libraries(wasm-wast wasm-common)
-
-# wasm-interp-common
-add_library(wasm-interp-common
-  src/wasm-binary-reader.c
-  src/wasm-binary-reader-interpreter.c
-  src/wasm-interpreter.c
-)
+target_link_libraries(wasm-wast libwasm)
 
 # wasm-interp
 add_executable(wasm-interp src/wasm-interp.c)
 add_dependencies(everything wasm-interp)
-target_link_libraries(wasm-interp wasm-interp-common wasm-common m)
+target_link_libraries(wasm-interp libwasm m)
 
 # stuff that requires squirrel
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
@@ -285,36 +275,17 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
   # wasm-interp-sq
   add_executable(wasm-interp-sq src/wasm-interp-sq.c)
   add_dependencies(everything wasm-interp-sq)
-  target_link_libraries(wasm-interp-sq
-    wasm-interp-common
-    wasm-common
-    libsquirrel
-    m
-  )
+  target_link_libraries(wasm-interp-sq libwasm libsquirrel m)
 endif ()
 
 
 # emscripten stuff
 if (EMSCRIPTEN)
   # just dump everything into one binary so we can reference it from JavaScript
-  add_executable(libwasm
-    src/wasm-apply-names.c
-    src/wasm-ast.c
-    src/wasm-ast-checker.c
-    src/wasm-ast-parser-lexer-shared.c
-    src/wasm-ast-writer.c
-    src/wasm-binary-reader-ast.c
-    src/wasm-binary-reader.c
-    src/wasm-binary-writer.c
-    src/wasm-binary-writer-spec.c
-    src/wasm-emscripten-helpers.c
-    src/wasm-generate-names.c
-    src/wasm-literal.c
-    ${WASM_AST_PARSER_GEN_C}
-    ${WASM_AST_LEXER_GEN_C}
-  )
-  add_dependencies(everything libwasm)
-  target_link_libraries(libwasm wasm-interp-common wasm-common)
+  add_executable(libwasmjs src/wasm-emscripten-helpers.c)
+  add_dependencies(everything libwasmjs)
+  target_link_libraries(libwasmjs libwasm)
+  set_target_properties(libwasmjs PROPERTIES OUTPUT_NAME libwasm)
 
   set(WASM_JS ${SEXPR_WASM_SOURCE_DIR}/src/wasm.js)
   set(EMSCRIPTEN_EXPORTED_JSON
@@ -328,7 +299,7 @@ if (EMSCRIPTEN)
   )
   string(REPLACE ";" " " LIBWASM_LINK_FLAGS_STR "${LIBWASM_LINK_FLAGS}")
 
-  set_target_properties(libwasm
+  set_target_properties(libwasmjs
     PROPERTIES
     LINK_FLAGS "${LIBWASM_LINK_FLAGS_STR}"
     LINK_DEPENDS "${WASM_JS};${EMSCRIPTEN_EXPORTED_JSON}"

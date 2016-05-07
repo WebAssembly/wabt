@@ -213,7 +213,7 @@ static void stack_free(WasmAllocator* allocator,
   chunk->current = p;
 }
 
-void stack_destroy(WasmAllocator* allocator) {
+static void stack_destroy(WasmAllocator* allocator) {
   WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
   /* destroy the free chunks */
   WasmStackAllocatorChunk* chunk = stack_allocator->next_free;
@@ -232,7 +232,7 @@ void stack_destroy(WasmAllocator* allocator) {
   }
 }
 
-WasmAllocatorMark stack_mark(WasmAllocator* allocator) {
+static WasmAllocatorMark stack_mark(WasmAllocator* allocator) {
   WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
 
   /* allocate the space for the mark, but copy the current stack state now, so
@@ -256,7 +256,8 @@ WasmAllocatorMark stack_mark(WasmAllocator* allocator) {
   return allocated_mark;
 }
 
-void stack_reset_to_mark(WasmAllocator* allocator, WasmAllocatorMark mark) {
+static void stack_reset_to_mark(WasmAllocator* allocator,
+                                WasmAllocatorMark mark) {
   WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
   StackAllocatorMark* stack_mark = (StackAllocatorMark*)mark;
   WasmStackAllocatorChunk* chunk = stack_allocator->last;

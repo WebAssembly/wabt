@@ -158,47 +158,47 @@ static WasmResult use_name_for_param_and_local_var(Context* ctx,
   return WASM_OK;
 }
 
-WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(push_label(ctx, &expr->block.label));
   return WASM_OK;
 }
 
-WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
+static WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
   return WASM_OK;
 }
 
-WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(push_label(ctx, &expr->loop.outer));
   CHECK_RESULT(push_label(ctx, &expr->loop.inner));
   return WASM_OK;
 }
 
-WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
+static WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
   pop_label(ctx);
   return WASM_OK;
 }
 
-WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
   CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
   return WASM_OK;
 }
 
-WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
   CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
   return WASM_OK;
 }
 
-WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   size_t i;
   WasmVarVector* targets = &expr->br_table.targets;
