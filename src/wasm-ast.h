@@ -22,9 +22,8 @@
 #include <stdint.h>
 
 #include "wasm-common.h"
+#include "wasm-type-vector.h"
 #include "wasm-vector.h"
-
-WASM_DEFINE_VECTOR(type, WasmType)
 
 typedef enum WasmVarType {
   WASM_VAR_TYPE_INDEX,

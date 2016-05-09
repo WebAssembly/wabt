@@ -317,6 +317,16 @@ static WasmResult on_import_count(uint32_t count, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult trapping_import_callback(
+    WasmInterpreterModule* module,
+    WasmInterpreterImport* import,
+    uint32_t num_args,
+    WasmInterpreterTypedValue* args,
+    WasmInterpreterTypedValue* out_result,
+    void* user_data) {
+  return WASM_ERROR;
+}
+
 static WasmResult on_import(uint32_t index,
                             uint32_t sig_index,
                             WasmStringSlice module_name,
@@ -330,6 +340,8 @@ static WasmResult on_import(uint32_t index,
                                 ctx->allocator, function_name));
   assert(sig_index < ctx->module->sigs.size);
   import->sig_index = sig_index;
+  import->callback = trapping_import_callback;
+  import->user_data = NULL;
   return WASM_OK;
 }
 

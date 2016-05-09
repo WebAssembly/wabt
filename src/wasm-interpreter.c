@@ -1808,6 +1808,10 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
                              uint32_t to) {
   /* TODO(binji): mark function entries */
   /* TODO(binji): track value stack size */
+  if (from >= module->istream.size)
+    return;
+  if (to > module->istream.size)
+    to = module->istream.size;
   const uint8_t* istream = module->istream.start;
   const uint8_t* pc = &istream[from];
 

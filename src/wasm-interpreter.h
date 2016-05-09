@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "wasm-array.h"
+#include "wasm-type-vector.h"
 #include "wasm-vector.h"
 #include "wasm-writer.h"
 
@@ -82,7 +83,6 @@ WASM_STATIC_ASSERT(WASM_LAST_INTERPRETER_OPCODE <= 256);
 
 typedef uint8_t WasmUint8;
 WASM_DEFINE_VECTOR(uint8, WasmUint8);
-WASM_DEFINE_VECTOR(type, WasmType);
 
 /* TODO(binji): identical to WasmFuncSignature. Share? */
 typedef struct WasmInterpreterFuncSignature {
