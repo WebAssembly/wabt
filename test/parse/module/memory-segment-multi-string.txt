@@ -1,0 +1,3 @@
+(module
+  (memory 1
+    (segment 0 "hi" "there" "how" "are" "you")))

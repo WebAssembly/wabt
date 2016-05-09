@@ -23,6 +23,8 @@
 #include "wasm-allocator.h"
 #include "wasm-ast-parser.h"
 #include "wasm-ast-parser-lexer-shared.h"
+#include "wasm-binary-reader-ast.h"
+#include "wasm-binary-reader.h"
 #include "wasm-literal.h"
 
 #define DUPTEXT(dst, src)                                                   \
@@ -83,13 +85,27 @@ static WasmImport* new_import(WasmAllocator* allocator) {
   return wasm_alloc_zero(allocator, sizeof(WasmImport), WASM_DEFAULT_ALIGN);
 }
 
+static WasmTextListNode* new_text_list_node(WasmAllocator* allocator) {
+  return wasm_alloc_zero(allocator, sizeof(WasmTextListNode),
+                         WASM_DEFAULT_ALIGN);
+}
+
 static WasmResult parse_const(WasmType type, WasmLiteralType literal_type,
                               const char* s, const char* end, WasmConst* out);
-static WasmResult dup_string_contents(WasmAllocator*, WasmStringSlice* text,
-                                      void** out_data, size_t* out_size);
+static WasmResult dup_text_list(WasmAllocator*, WasmTextList* text_list,
+                                void** out_data, size_t* out_size);
 
 static WasmResult copy_signature_from_func_type(
-    WasmAllocator * allocator, WasmModule * module, WasmFuncDeclaration * decl);
+    WasmAllocator* allocator, WasmModule* module, WasmFuncDeclaration* decl);
+
+typedef struct BinaryErrorCallbackData {
+  WasmLocation* loc;
+  WasmAstLexer* lexer;
+  WasmAstParser* parser;
+} BinaryErrorCallbackData;
+
+static void on_read_binary_error(uint32_t offset, const char* error,
+                                 void* user_data);
 
 #define wasm_ast_parser_lex wasm_ast_lexer_lex
 
@@ -140,15 +156,17 @@ static WasmResult copy_signature_from_func_type(
 %type<module> module module_fields
 %type<literal> literal
 %type<script> script
-%type<segment> segment string_contents
+%type<segment> segment segment_contents
 %type<segments> segment_list
 %type<text> bind_var labeling quoted_text
+%type<text_list> text_list
 %type<types> value_type_list
 %type<u32> align initial_pages max_pages segment_address
 %type<u64> offset
 %type<vars> table var_list
 %type<var> start type_use var
 
+%destructor { wasm_destroy_text_list(parser->allocator, &$$); } text_list
 %destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling quoted_text
 %destructor { wasm_destroy_string_slice(parser->allocator, &$$.text); } literal
 %destructor { wasm_destroy_type_vector(parser->allocator, &$$); } value_type_list
@@ -158,7 +176,7 @@ static WasmResult copy_signature_from_func_type(
 %destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } expr_list non_empty_expr_list
 %destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
-%destructor { wasm_destroy_segment(parser->allocator, &$$); } segment string_contents
+%destructor { wasm_destroy_segment(parser->allocator, &$$); } segment segment_contents
 %destructor { wasm_destroy_segment_vector_and_elements(parser->allocator, &$$); } segment_list
 %destructor { wasm_destroy_memory(parser->allocator, &$$); } memory
 %destructor { wasm_destroy_func_signature(parser->allocator, &$$); } func_type
@@ -177,6 +195,27 @@ static WasmResult copy_signature_from_func_type(
 %start script_start
 
 %%
+
+text_list :
+    TEXT {
+      WasmTextListNode* node = new_text_list_node(parser->allocator);
+      CHECK_ALLOC_NULL(node);
+      DUPTEXT(node->text, $1);
+      CHECK_ALLOC_STR(node->text);
+      node->next = NULL;
+      $$.first = $$.last = node;
+    }
+  | text_list TEXT {
+      $$ = $1;
+      WasmTextListNode* node = new_text_list_node(parser->allocator);
+      CHECK_ALLOC_NULL(node);
+      DUPTEXT(node->text, $2);
+      CHECK_ALLOC_STR(node->text);
+      node->next = NULL;
+      $$.last->next = node;
+      $$.last = node;
+    }
+;
 
 /* Types */
 
@@ -249,18 +288,24 @@ bind_var :
 
 quoted_text :
     TEXT {
+      WasmTextListNode node;
+      node.text = $1;
+      node.next = NULL;
+      WasmTextList text_list;
+      text_list.first = &node;
+      text_list.last = &node;
       void* data;
       size_t size;
-      CHECK_ALLOC(dup_string_contents(parser->allocator, &$1, &data, &size));
+      CHECK_ALLOC(dup_text_list(parser->allocator, &text_list, &data, &size));
       $$.start = data;
       $$.length = size;
     }
 ;
 
-string_contents :
-    TEXT {
-      CHECK_ALLOC(dup_string_contents(parser->allocator, &$1, &$$.data,
-                                      &$$.size));
+segment_contents :
+    text_list {
+      CHECK_ALLOC(dup_text_list(parser->allocator, &$1, &$$.data, &$$.size));
+      wasm_destroy_text_list(parser->allocator, &$1);
     }
 ;
 
@@ -678,7 +723,7 @@ segment_address :
 ;
 
 segment :
-    LPAR SEGMENT segment_address string_contents RPAR {
+    LPAR SEGMENT segment_address segment_contents RPAR {
       $$.loc = @2;
       $$.data = $4.data;
       $$.size = $4.size;
@@ -956,6 +1001,25 @@ module :
                                                   &import->decl));
       }
     }
+  | LPAR MODULE text_list RPAR {
+      $$ = new_module(parser->allocator);
+      CHECK_ALLOC_NULL($$);
+      void* data;
+      size_t size;
+      CHECK_ALLOC(dup_text_list(parser->allocator, &$3, &data, &size));
+      wasm_destroy_text_list(parser->allocator, &$3);
+      WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
+      BinaryErrorCallbackData user_data;
+      user_data.loc = &@3;
+      user_data.lexer = lexer;
+      user_data.parser = parser;
+      WasmBinaryErrorHandler error_handler;
+      error_handler.on_error = on_read_binary_error;
+      error_handler.user_data = &user_data;
+      wasm_read_binary_ast(parser->allocator, data, size, &options,
+                           &error_handler, $$);
+      wasm_free(parser->allocator, data);
+    }
 ;
 
 
@@ -1077,9 +1141,7 @@ static WasmResult parse_const(WasmType type,
   return WASM_ERROR;
 }
 
-static size_t copy_string_contents(WasmStringSlice* text,
-                                   char* dest,
-                                   size_t size) {
+static size_t copy_string_contents(WasmStringSlice* text, char* dest) {
   const char* src = text->start + 1;
   const char* end = text->start + text->length - 1;
 
@@ -1128,22 +1190,33 @@ static size_t copy_string_contents(WasmStringSlice* text,
   return dest - dest_start;
 }
 
-static WasmResult dup_string_contents(WasmAllocator* allocator,
-                                      WasmStringSlice* text,
-                                      void** out_data,
-                                      size_t* out_size) {
-  const char* src = text->start + 1;
-  const char* end = text->start + text->length - 1;
-  /* Always allocate enough space for the entire string including the escape
-   * characters. It will only get shorter, and this way we only have to iterate
-   * through the string once. */
-  size_t size = end - src;
-  char* result = wasm_alloc(allocator, size, 1);
+static WasmResult dup_text_list(WasmAllocator* allocator,
+                                WasmTextList* text_list,
+                                void** out_data,
+                                size_t* out_size) {
+  /* walk the linked list to see how much total space is needed */
+  size_t total_size = 0;
+  WasmTextListNode* node;
+  for (node = text_list->first; node; node = node->next) {
+    /* Always allocate enough space for the entire string including the escape
+     * characters. It will only get shorter, and this way we only have to
+     * iterate through the string once. */
+    const char* src = node->text.start + 1;
+    const char* end = node->text.start + node->text.length - 1;
+    size_t size = end - src;
+    total_size += size;
+  }
+  char* result = wasm_alloc(allocator, total_size, 1);
   if (!result)
     return WASM_ERROR;
-  size_t actual_size = copy_string_contents(text, result, size);
+
+  char* dest = result;
+  for (node = text_list->first; node; node = node->next) {
+    size_t actual_size = copy_string_contents(&node->text, dest);
+    dest += actual_size;
+  }
   *out_data = result;
-  *out_size = actual_size;
+  *out_size = dest - result;
   return WASM_OK;
 }
 
@@ -1180,4 +1253,16 @@ static WasmResult copy_signature_from_func_type(WasmAllocator* allocator,
     }
   }
   return WASM_OK;
+}
+
+static void on_read_binary_error(uint32_t offset, const char* error,
+                                 void* user_data) {
+  BinaryErrorCallbackData* data = user_data;
+  if (offset == WASM_UNKNOWN_OFFSET) {
+    wasm_ast_parser_error(data->loc, data->lexer, data->parser,
+                          "error in binary module: %s", error);
+  } else {
+    wasm_ast_parser_error(data->loc, data->lexer, data->parser,
+                          "error in binary module: @0x%08x: %s", offset, error);
+  }
 }

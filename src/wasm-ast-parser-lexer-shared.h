@@ -38,6 +38,16 @@ typedef struct WasmExprList {
   size_t size;
 } WasmExprList;
 
+typedef struct WasmTextListNode {
+  WasmStringSlice text;
+  struct WasmTextListNode* next;
+} WasmTextListNode;
+
+typedef struct WasmTextList {
+  WasmTextListNode* first;
+  WasmTextListNode* last;
+} WasmTextList;
+
 typedef union WasmToken {
   /* terminals */
   WasmStringSlice text;
@@ -50,6 +60,7 @@ typedef union WasmToken {
    tokens is a hotspot when parsing large files. */
   uint32_t u32;
   uint64_t u64;
+  WasmTextList text_list;
   WasmTypeVector types;
   WasmVar var;
   WasmVarVector vars;
@@ -102,6 +113,7 @@ void wasm_ast_format_error(WasmSourceErrorHandler*,
                            WasmAstLexer*,
                            const char* format,
                            va_list);
+void wasm_destroy_text_list(WasmAllocator*, WasmTextList*);
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_PARSER_LEXER_SHARED_H_ */

@@ -70,3 +70,13 @@ void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
   }
   va_end(args_copy);
 }
+
+void wasm_destroy_text_list(WasmAllocator* allocator, WasmTextList* text_list) {
+  WasmTextListNode* node = text_list->first;
+  while (node) {
+    WasmTextListNode* next = node->next;
+    wasm_destroy_string_slice(allocator, &node->text);
+    wasm_free(allocator, node);
+    node = next;
+  }
+}
