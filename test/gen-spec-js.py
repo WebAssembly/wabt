@@ -80,7 +80,7 @@ JS_FOOTER = """\
 function createModule(data) {
   var u8a = new Uint8Array(data);
   var ffi = {spectest: {print: print}};
-  return Wasm.instantiateModule(u8a.buffer, ffi);
+  return Wasm.instantiateModule(u8a, ffi);
 }
 
 function assertReturn(module, name, file, line) {
