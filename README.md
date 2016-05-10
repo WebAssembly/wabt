@@ -71,30 +71,33 @@ update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 CMake will detect if you don't have re2c or Bison installed and use the
 prebuilt source files instead.
 
-## Building d8
+## Building a JavaScript engine
 
-d8 can load and run the generated binary-encoded files. Some of the tests rely
-on this executable. To build it:
+The d8 and spidermonkey JavaScript engines can load and run the generated
+binary-encoded files. Some of the tests rely on one of these executables. To
+build it:
 
 ```
 $ scripts/build-d8.sh
+$ scripts/build-sm.sh
 ...
 ```
 
-When it is finished, there will be a d8 executable in the
-`third_party/v8/v8/out/Release` directory.
+When the build script is finished, the d8 exectuable will be in the
+`third_party/v8/v8/out/Release/d8` directory. The spidermonkey executable will
+be in the `third_party/gecko-dev/js/src/build_OPT.OBJ/js/src` directory.
 
 You can also download a prebuilt version (the same one used to test on Travis)
-by running the `download-d8.sh` script::
+by running the `download-d8.sh` or `download-sm.sh` scripts:
 
 ```
 $ scripts/download-d8.sh
+$ scripts/download-sm.sh
 ...
 ```
 
-This downloads the d8 executable into the `out` directory. The test runner will
-look here if there is no d8 executable in the `third_party/v8/v8/out/Release`
-directory.
+This downloads the executable into the `out` directory. The test runner will
+look here if there is no executable in the built directory.
 
 ## Running sexpr-wasm
 
@@ -179,26 +182,26 @@ $ out/wasm-interp -h
 $ out/run-interp.py -h
 ```
 
-## Running WebAssembly in d8
+## Running WebAssembly in a JavaScript engine
 
-The easiest way is to use the `test/run-d8.py` script. This will run
+The easiest way is to use the `test/run-js.py` script. This will run
 `sexpr-wasm` to convert the .wast to binary, then run all its exported
-functions in d8:
+functions in d8 or spidermonkey:
 
 ```
-$ test/run-d8.py test.wast
+$ test/run-js.py test.wast
 test() = 3
 ```
 
 You can also run spec tests:
 
 ```
-$ test/run-d8.py --spec spec-test.wast
+$ test/run-js.py --spec spec-test.wast
 20/20 tests passed.
 ```
 
 Take a look at `test/spec.js` and `test/wast.js`. These are the JavaScript
-scripts that `run-d8.py` uses to run WebAssembly.
+scripts that `run-js.py` uses to run WebAssembly.
 
 ## Running the test suite
 
@@ -274,7 +277,7 @@ $ test/run-tests.py interp/binary
 
 Tests must be placed in the test/ directory, and must have the extension
 `.txt`. The directory structure is mostly for convenience, so for example you
-can type `test/run-tests.py d8` to run all the tests that execute in d8.
+can type `test/run-tests.py interp` to run all the interpreter tests.
 There's otherwise no logic attached to a test being in a given directory.
 
 That being said, try to make the test names self explanatory, and try to test
@@ -313,8 +316,8 @@ The currently supported list of keys:
 The currently supported list of tools:
 
 - `sexpr-wasm`: runs `sexpr-wasm`
-- `run-d8`: runs the `run-d8.py` script
-- `run-d8-spec`: runs the `run-d8.py` script with `--spec` flag
+- `run-js`: runs the `run-js.py` script
+- `run-js-spec`: runs the `run-js.py` script with `--spec` flag
 - `run-roundtrip`: runs the `run-roundtrip.py` script. This does a roundtrip
   conversion using `sexpr-wasm` and `wasm-wast`, making sure the .wasm results
   are identical.
@@ -327,7 +330,7 @@ let's write our test:
 
 ```
 $ cat > test/my-awesome-test.txt << HERE
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 (module
   (export "add2" 0)
   (func (param i32) (result i32)
