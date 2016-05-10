@@ -1,4 +1,4 @@
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 (module
   (func $f32 (result f32)
     (f32.div (f32.const 0) (f32.const 0)))

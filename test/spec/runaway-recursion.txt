@@ -1,3 +1,3 @@
 ;;; SKIP: running via `make test` still locks machine
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 ;;; STDIN_FILE: third_party/testsuite/runaway-recursion.wast

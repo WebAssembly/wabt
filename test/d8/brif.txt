@@ -1,4 +1,4 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 (module
   (func $f (param i32) (result i32)
     (block $exit

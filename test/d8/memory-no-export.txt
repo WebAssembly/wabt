@@ -1,4 +1,4 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 ;;; NOTE: broken in d8
 (module
   (memory 100)

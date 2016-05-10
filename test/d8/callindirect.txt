@@ -1,4 +1,4 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 (module
   (type $v_i (func (result i32)))
   (func $zero (type $v_i) (i32.const 0))

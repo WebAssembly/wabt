@@ -1,4 +1,4 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 (module
   ;; i32
   (export "i32_wrap_i64" $i32_wrap_i64)

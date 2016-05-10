@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 
+/* polyfill from SM to D8 */
+if (typeof arguments == 'undefined') {
+  arguments = scriptArgs;
+}
+
+if (typeof readbuffer == 'undefined') {
+  readbuffer = function(path) { return read(path, 'binary'); };
+}
+
 if (arguments.length != 1) {
-  print('usage: d8 spec.js -- <filename.json>');
+  print('usage: <exe> spec.js -- <filename.json>');
   quit(0);
 }
 
@@ -64,7 +73,7 @@ function createModule(a) {
   var memory = null;
   var u8a = new Uint8Array(a);
   var ffi = {spectest: {print: print}};
-  var module = Wasm.instantiateModule(u8a.buffer, ffi);
+  var module = Wasm.instantiateModule(u8a, ffi);
   memory = module.memory;
   return module;
 }
