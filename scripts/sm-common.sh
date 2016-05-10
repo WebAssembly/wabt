@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 SM_DIR="${ROOT_DIR}/third_party/gecko-dev"
 SM_OUT_DIR="${SM_DIR}/js/src/build_OPT.OBJ/js/src"
-SM_SHA=$(cd "${SM_DIR}" && git rev-parse HEAD)
+SM_SHA=$(cat "${ROOT_DIR}/third_party/gecko-dev.sha1")
 # TODO(binji): other architectures
 SM_HOST_ARCH=x86_64
 SM_TARGET_ARCH=x86_64
