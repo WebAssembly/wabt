@@ -23,27 +23,7 @@ ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 OUT_DIR="${ROOT_DIR}/out"
 
 source "${SCRIPT_DIR}/d8-common.sh"
-
-Download() {
-  local URL=$1
-  local FILENAME=$2
-  echo "Downloading ${URL}..."
-  CURL_ARGS="--fail --location"
-  if [ -t 1 ]; then
-    # Add --progress-bar but only if stdout is a TTY device.
-    CURL_ARGS+=" --progress-bar"
-  else
-    # otherwise suppress all status output, since curl always
-    # assumes a TTY and writes \r and \b characters.
-    CURL_ARGS+=" --silent"
-  fi
-  if which curl > /dev/null ; then
-    curl ${CURL_ARGS} -o "${FILENAME}" "${URL}"
-  else
-    echo "error: could not find 'curl' in your PATH"
-    exit 1
-  fi
-}
+source "${SCRIPT_DIR}/download.sh"
 
 mkdir -p "${OUT_DIR}"
 
