@@ -1,4 +1,4 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 (module
   (export "f32_reinterpret_i32" $f32_reinterpret_i32)
   (func $f32_reinterpret_i32 (result f32)

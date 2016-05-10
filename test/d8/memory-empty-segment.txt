@@ -1,2 +1,2 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 (module (memory 1 (segment 0 "")))

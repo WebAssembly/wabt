@@ -28,7 +28,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WASM_JS = os.path.join(SCRIPT_DIR, 'wasm.js')
 SPEC_JS = os.path.join(SCRIPT_DIR, 'spec.js')
 
-
 def CleanD8Stdout(stdout):
   def FixLine(line):
     idx = line.find('WasmModule::Instantiate()')
@@ -46,14 +45,36 @@ def CleanD8Stderr(stderr):
   return stderr.strip()
 
 
+def GetExeBasename(exe):
+  return os.path.basename(exe)
+
+
+def GetJSExecutable(options):
+  exe = find_exe.GetJSExecutable(options.js_executable)
+  if GetExeBasename(exe) == 'd8':
+    return utils.Executable(exe,
+                            clean_stdout=CleanD8Stdout,
+                            clean_stderr=CleanD8Stderr,
+                            error_cmdline=options.error_cmdline)
+  else:
+    return utils.Executable(exe, error_cmdline=options.error_cmdline)
+
+
+def RunJS(js, js_file, out_file):
+  if GetExeBasename(js.exe) == 'd8':
+    js.RunWithArgs('--expose-wasm', js_file, '--', out_file)
+  else:
+    js.RunWithArgs(js_file, out_file)
+
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
   parser.add_argument('-e', '--executable', metavar='PATH',
                       help='override sexpr-wasm executable.')
-  parser.add_argument('--d8-executable', metavar='PATH',
-                      help='override d8 executable.')
+  parser.add_argument('--js-executable', metavar='PATH',
+                      help='override js executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
@@ -74,18 +95,14 @@ def main(args):
     '--use-libc-allocator': options.use_libc_allocator
   })
 
-  d8 = utils.Executable(find_exe.GetD8Executable(options.d8_executable),
-                        clean_stdout=CleanD8Stdout,
-                        clean_stderr=CleanD8Stderr,
-                        error_cmdline=options.error_cmdline)
-
-  with utils.TempDirectory(options.out_dir, 'run-d8-') as out_dir:
+  js = GetJSExecutable(options)
+  with utils.TempDirectory(options.out_dir, 'run-js-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
     sexpr_wasm.RunWithArgs(options.file, '-o', out_file)
 
     js_file = SPEC_JS if options.spec else WASM_JS
-    d8.RunWithArgs('--expose-wasm', js_file, '--', out_file)
+    RunJS(js, js_file, out_file)
 
   return 0
 

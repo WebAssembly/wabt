@@ -1,4 +1,4 @@
-;;; TOOL: run-d8
+;;; TOOL: run-js
 (module
   (export "if1" $if1)
   (func $if1 (result i32) (local i32)

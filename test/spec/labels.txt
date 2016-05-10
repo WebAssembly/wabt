@@ -1,4 +1,4 @@
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
 assert_invalid error:

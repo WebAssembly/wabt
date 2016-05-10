@@ -1,4 +1,4 @@
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 (module
   (func $i32 (param i32) (result i32)
     (i32.add (get_local 0) (i32.const 1)))

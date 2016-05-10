@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
+/* polyfill from SM to D8 */
+if (typeof arguments == 'undefined') {
+  arguments = scriptArgs;
+}
+
+if (typeof readbuffer == 'undefined') {
+  readbuffer = function(path) { return read(path, 'binary'); };
+}
+
 if (arguments.length != 1) {
-  print('usage: d8 wasm.js -- <filename>');
+  print('usage: <exe> wasm.js -- <filename.wasm>');
+  print('got: ', arguments);
   quit(0);
 }
 

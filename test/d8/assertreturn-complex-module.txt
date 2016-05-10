@@ -1,4 +1,4 @@
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 (module
   (memory 1 (segment 0 "hello") (segment 20 "goodbye"))
   (func $set_m (param i32) (i32.store (i32.const 32) (get_local 0)))

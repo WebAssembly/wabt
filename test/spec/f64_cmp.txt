@@ -1,5 +1,5 @@
 ;;; SLOW:
-;;; TOOL: run-d8-spec
+;;; TOOL: run-js-spec
 ;;; STDIN_FILE: third_party/testsuite/f64_cmp.wast
 (;; STDOUT ;;;
 1944/1944 tests passed.

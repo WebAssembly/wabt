@@ -48,19 +48,19 @@ TOOLS = {
   'sexpr-wasm': {
     'EXE': '%(sexpr-wasm)s'
   },
-  'run-d8': {
-    'EXE': 'test/run-d8.py',
+  'run-js': {
+    'EXE': 'test/run-js.py',
     'FLAGS': ' '.join([
       '-e', '%(sexpr-wasm)s',
-      '--d8-executable=%(d8)s',
+      '--js-executable=%(js)s',
       '--no-error-cmdline',
     ])
   },
-  'run-d8-spec': {
-    'EXE': 'test/run-d8.py',
+  'run-js-spec': {
+    'EXE': 'test/run-js.py',
     'FLAGS': ' '.join([
       '-e', '%(sexpr-wasm)s',
-      '--d8-executable=%(d8)s',
+      '--js-executable=%(js)s',
       '--spec',
       '--no-error-cmdline',
     ])
@@ -101,7 +101,7 @@ TOOLS = {
   }
 }
 
-ROUNDTRIP_TOOLS = ('sexpr-wasm', 'run-d8')
+ROUNDTRIP_TOOLS = ('sexpr-wasm', 'run-js')
 
 
 def Indent(s, spaces):
@@ -517,8 +517,8 @@ def main(args):
                           'flags.')
   parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
                       help='override executable.')
-  parser.add_argument('--d8-executable', metavar='PATH',
-                      help='override d8 executable.')
+  parser.add_argument('--js-executable', metavar='PATH',
+                      help='override js executable.')
   parser.add_argument('--wasm-wast-executable', metavar='PATH',
                       help='override wasm-wast executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
@@ -571,10 +571,8 @@ def main(args):
   variables = {
     'sexpr-wasm':
         find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
-    'd8':
-        find_exe.GetD8Executable(options.d8_executable),
-    'wasm-wast':
-        find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+    'js': find_exe.GetJSExecutable(options.js_executable),
+    'wasm-wast': find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
     'wasm-interp':
         find_exe.GetWasmInterpExecutable(options.wasm_interp_executable),
   }
