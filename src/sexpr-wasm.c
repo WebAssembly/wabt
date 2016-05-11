@@ -383,8 +383,9 @@ int main(int argc, char** argv) {
     result = wasm_check_ast(lexer, &script, &s_error_handler);
 
     if (WASM_SUCCEEDED(result)) {
-      result = wasm_check_assert_invalid(
-          lexer, &script, &s_assert_invalid_error_handler, &s_error_handler);
+      result = wasm_check_assert_invalid(allocator, lexer, &script,
+                                         &s_assert_invalid_error_handler,
+                                         &s_error_handler);
     }
 
     if (WASM_SUCCEEDED(result)) {

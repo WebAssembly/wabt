@@ -77,6 +77,7 @@ typedef union WasmToken {
   WasmExport export_;
   WasmExportMemory export_memory;
   WasmModule* module;
+  WasmRawModule raw_module;
   WasmConst const_;
   WasmConstVector consts;
   WasmCommand* command;

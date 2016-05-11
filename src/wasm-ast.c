@@ -599,6 +599,15 @@ void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
                                          &module->func_type_bindings.entries);
 }
 
+void wasm_destroy_raw_module(WasmAllocator* allocator, WasmRawModule* raw) {
+  if (raw->type == WASM_RAW_MODULE_TYPE_TEXT) {
+    wasm_destroy_module(allocator, raw->text);
+    wasm_free(allocator, raw->text);
+  } else {
+    wasm_free(allocator, raw->binary.data);
+  }
+}
+
 static void destroy_invoke(WasmAllocator* allocator,
                            WasmCommandInvoke* invoke) {
   wasm_destroy_string_slice(allocator, &invoke->name);
@@ -614,7 +623,7 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       destroy_invoke(allocator, &command->invoke);
       break;
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
-      wasm_destroy_module(allocator, &command->assert_invalid.module);
+      wasm_destroy_raw_module(allocator, &command->assert_invalid.module);
       wasm_destroy_string_slice(allocator, &command->assert_invalid.text);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN:

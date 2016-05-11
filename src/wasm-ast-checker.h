@@ -30,6 +30,7 @@ WasmResult wasm_check_ast(WasmAstLexer*,
                           WasmSourceErrorHandler*);
 
 WasmResult wasm_check_assert_invalid(
+    struct WasmAllocator*,
     WasmAstLexer*,
     const struct WasmScript*,
     WasmSourceErrorHandler* assert_invalid_error_handler,

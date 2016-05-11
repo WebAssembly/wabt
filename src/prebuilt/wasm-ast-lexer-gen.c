@@ -5986,6 +5986,9 @@ static WasmResult get_line_start_offset(WasmAstLexer* lexer,
   if (line == current_line) {
     *out_offset = current_offset;
     return WASM_OK;
+  } else if (line == first_line) {
+    *out_offset = first_offset;
+    return WASM_OK;
   } else if (line > current_line) {
     return scan_forward_for_line_offset(lexer, current_line, current_offset,
                                         WASM_LINE_OFFSET_POSITION_START, line,

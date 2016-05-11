@@ -154,6 +154,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<import> import
 %type<memory> memory
 %type<module> module module_fields
+%type<raw_module> raw_module
 %type<literal> literal
 %type<script> script
 %type<segment> segment segment_contents
@@ -184,6 +185,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %destructor { wasm_destroy_import(parser->allocator, $$); wasm_free(parser->allocator, $$); } import
 %destructor { wasm_destroy_export(parser->allocator, &$$); } export
 %destructor { wasm_destroy_module(parser->allocator, $$); wasm_free(parser->allocator, $$); } module module_fields
+%destructor { wasm_destroy_raw_module(parser->allocator, &$$); } raw_module
 %destructor { wasm_destroy_const_vector(parser->allocator, &$$); } const_list
 %destructor { wasm_destroy_command(parser->allocator, $$); wasm_free(parser->allocator, $$); } cmd
 %destructor { wasm_destroy_command_vector_and_elements(parser->allocator, &$$); } cmd_list
@@ -910,118 +912,132 @@ module_fields :
       field->start = $2;
     }
 ;
-module :
+
+raw_module :
     LPAR MODULE module_fields RPAR {
-      $$ = $3;
-      $$->loc = @2;
+      $$.type = WASM_RAW_MODULE_TYPE_TEXT;
+      $$.text = $3;
+      $$.loc = @2;
+      WasmModule* module = $$.text;
 
       /* cache values */
       WasmModuleField* field;
-      for (field = $$->first_field; field; field = field->next) {
+      for (field = module->first_field; field; field = field->next) {
         switch (field->type) {
           case WASM_MODULE_FIELD_TYPE_FUNC: {
             WasmFuncPtr func_ptr = &field->func;
             CHECK_ALLOC(wasm_append_func_ptr_value(parser->allocator,
-                                                   &$$->funcs, &func_ptr));
+                                                   &module->funcs, &func_ptr));
             if (field->func.name.start) {
               WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &$$->func_bindings, &field->func.name);
+                  parser->allocator, &module->func_bindings, &field->func.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$->funcs.size - 1;
+              binding->index = module->funcs.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_IMPORT: {
             WasmImportPtr import_ptr = &field->import;
             CHECK_ALLOC(wasm_append_import_ptr_value(
-                parser->allocator, &$$->imports, &import_ptr));
+                parser->allocator, &module->imports, &import_ptr));
             if (field->import.name.start) {
               WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &$$->import_bindings, &field->import.name);
+                  parser->allocator, &module->import_bindings,
+                  &field->import.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$->imports.size - 1;
+              binding->index = module->imports.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_EXPORT: {
             WasmExportPtr export_ptr = &field->export_;
             CHECK_ALLOC(wasm_append_export_ptr_value(
-                parser->allocator, &$$->exports, &export_ptr));
+                parser->allocator, &module->exports, &export_ptr));
             if (field->export_.name.start) {
-              WasmBinding* binding =
-                  wasm_insert_binding(parser->allocator, &$$->export_bindings,
-                                      &field->export_.name);
+              WasmBinding* binding = wasm_insert_binding(
+                  parser->allocator, &module->export_bindings,
+                  &field->export_.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$->exports.size - 1;
+              binding->index = module->exports.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
-            $$->export_memory = &field->export_memory;
+            module->export_memory = &field->export_memory;
             break;
           case WASM_MODULE_FIELD_TYPE_TABLE:
-            $$->table = &field->table;
+            module->table = &field->table;
             break;
           case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
             WasmFuncTypePtr func_type_ptr = &field->func_type;
             CHECK_ALLOC(wasm_append_func_type_ptr_value(
-                parser->allocator, &$$->func_types, &func_type_ptr));
+                parser->allocator, &module->func_types, &func_type_ptr));
             if (field->func_type.name.start) {
               WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &$$->func_type_bindings,
+                  parser->allocator, &module->func_type_bindings,
                   &field->func_type.name);
               CHECK_ALLOC_NULL(binding);
               binding->loc = field->loc;
-              binding->index = $$->func_types.size - 1;
+              binding->index = module->func_types.size - 1;
             }
             break;
           }
           case WASM_MODULE_FIELD_TYPE_MEMORY:
-            $$->memory = &field->memory;
+            module->memory = &field->memory;
             break;
           case WASM_MODULE_FIELD_TYPE_START:
-            $$->start = &field->start;
+            module->start = &field->start;
             break;
         }
       }
 
       size_t i;
-      for (i = 0; i < $$->funcs.size; ++i) {
-        WasmFunc* func = $$->funcs.data[i];
-        CHECK_ALLOC(
-            copy_signature_from_func_type(parser->allocator, $$, &func->decl));
+      for (i = 0; i < module->funcs.size; ++i) {
+        WasmFunc* func = module->funcs.data[i];
+        CHECK_ALLOC(copy_signature_from_func_type(parser->allocator, module,
+                                                  &func->decl));
       }
 
-      for (i = 0; i < $$->imports.size; ++i) {
-        WasmImport* import = $$->imports.data[i];
-        CHECK_ALLOC(copy_signature_from_func_type(parser->allocator, $$,
+      for (i = 0; i < module->imports.size; ++i) {
+        WasmImport* import = module->imports.data[i];
+        CHECK_ALLOC(copy_signature_from_func_type(parser->allocator, module,
                                                   &import->decl));
       }
     }
   | LPAR MODULE text_list RPAR {
-      $$ = new_module(parser->allocator);
-      CHECK_ALLOC_NULL($$);
-      void* data;
-      size_t size;
-      CHECK_ALLOC(dup_text_list(parser->allocator, &$3, &data, &size));
+      $$.type = WASM_RAW_MODULE_TYPE_BINARY;
+      $$.loc = @2;
+      CHECK_ALLOC(dup_text_list(parser->allocator, &$3, &$$.binary.data,
+                                &$$.binary.size));
       wasm_destroy_text_list(parser->allocator, &$3);
-      WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
-      BinaryErrorCallbackData user_data;
-      user_data.loc = &@3;
-      user_data.lexer = lexer;
-      user_data.parser = parser;
-      WasmBinaryErrorHandler error_handler;
-      error_handler.on_error = on_read_binary_error;
-      error_handler.user_data = &user_data;
-      wasm_read_binary_ast(parser->allocator, data, size, &options,
-                           &error_handler, $$);
-      wasm_free(parser->allocator, data);
     }
 ;
 
+module :
+    raw_module {
+      if ($1.type == WASM_RAW_MODULE_TYPE_TEXT) {
+        $$ = $1.text;
+      } else {
+        assert($1.type == WASM_RAW_MODULE_TYPE_BINARY);
+        $$ = new_module(parser->allocator);
+        CHECK_ALLOC_NULL($$);
+        WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
+        BinaryErrorCallbackData user_data;
+        user_data.loc = &$1.loc;
+        user_data.lexer = lexer;
+        user_data.parser = parser;
+        WasmBinaryErrorHandler error_handler;
+        error_handler.on_error = on_read_binary_error;
+        error_handler.user_data = &user_data;
+        wasm_read_binary_ast(parser->allocator, $1.binary.data, $1.binary.size,
+                             &options, &error_handler, $$);
+        wasm_free(parser->allocator, $1.binary.data);
+      }
+    }
+;
 
 /* Scripts */
 
@@ -1039,12 +1055,11 @@ cmd :
       $$->invoke.name = $3;
       $$->invoke.args = $4;
     }
-  | LPAR ASSERT_INVALID module quoted_text RPAR {
+  | LPAR ASSERT_INVALID raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_INVALID;
-      $$->assert_invalid.module = *$3;
+      $$->assert_invalid.module = $3;
       $$->assert_invalid.text = $4;
-      wasm_free(parser->allocator, $3);
     }
   | LPAR ASSERT_RETURN LPAR INVOKE quoted_text const_list RPAR const_opt RPAR {
       $$ = new_command(parser->allocator);

@@ -22,7 +22,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "wasm-allocator.h"
 #include "wasm-ast-parser-lexer-shared.h"
+#include "wasm-binary-reader-ast.h"
+#include "wasm-binary-reader.h"
 
 static const char* s_type_names[] = {
     "void", "i32", "i64", "f32", "f64",
@@ -88,6 +91,7 @@ typedef struct LabelNode {
 
 typedef struct Context {
   WasmSourceErrorHandler* error_handler;
+  WasmAllocator* allocator;
   WasmAstLexer* lexer;
   const WasmModule* current_module;
   const WasmFunc* current_func;
@@ -845,6 +849,46 @@ static void check_module(Context* ctx, const WasmModule* module) {
   check_duplicate_bindings(ctx, &module->func_type_bindings, "function type");
 }
 
+typedef struct BinaryErrorCallbackData {
+  Context* ctx;
+  WasmLocation* loc;
+} BinaryErrorCallbackData;
+
+static void on_read_binary_error(uint32_t offset, const char* error,
+                                 void* user_data) {
+  BinaryErrorCallbackData* data = user_data;
+  if (offset == WASM_UNKNOWN_OFFSET) {
+    print_error(data->ctx, data->loc, "error in binary module: %s", error);
+  } else {
+    print_error(data->ctx, data->loc, "error in binary module: @0x%08x: %s",
+                offset, error);
+  }
+}
+
+static void check_raw_module(Context* ctx, WasmRawModule* raw) {
+  if (raw->type == WASM_RAW_MODULE_TYPE_TEXT) {
+    check_module(ctx, raw->text);
+  } else {
+    WasmModule module;
+    WASM_ZERO_MEMORY(module);
+    WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
+    BinaryErrorCallbackData user_data;
+    user_data.ctx = ctx;
+    user_data.loc = &raw->loc;
+    WasmBinaryErrorHandler error_handler;
+    error_handler.on_error = on_read_binary_error;
+    error_handler.user_data = &user_data;
+    if (WASM_SUCCEEDED(wasm_read_binary_ast(ctx->allocator, raw->binary.data,
+                                            raw->binary.size, &options,
+                                            &error_handler, &module))) {
+      check_module(ctx, &module);
+    } else {
+      /* error will have been printed by the error_handler */
+    }
+    wasm_destroy_module(ctx->allocator, &module);
+  }
+}
+
 static void check_invoke(Context* ctx,
                          const WasmCommandInvoke* invoke,
                          TypeSet return_type) {
@@ -936,12 +980,14 @@ WasmResult wasm_check_ast(WasmAstLexer* lexer,
 }
 
 WasmResult wasm_check_assert_invalid(
+    WasmAllocator* allocator,
     WasmAstLexer* lexer,
     const struct WasmScript* script,
     WasmSourceErrorHandler* assert_invalid_error_handler,
     WasmSourceErrorHandler* error_handler) {
   Context ctx;
   WASM_ZERO_MEMORY(ctx);
+  ctx.allocator = allocator;
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
   ctx.result = WASM_OK;
@@ -954,10 +1000,11 @@ WasmResult wasm_check_assert_invalid(
 
     Context ai_ctx;
     WASM_ZERO_MEMORY(ai_ctx);
+    ai_ctx.allocator = allocator;
     ai_ctx.lexer = lexer;
     ai_ctx.error_handler = assert_invalid_error_handler;
     ai_ctx.result = WASM_OK;
-    check_module(&ai_ctx, &command->assert_invalid.module);
+    check_raw_module(&ai_ctx, &command->assert_invalid.module);
 
     if (WASM_SUCCEEDED(ai_ctx.result)) {
       print_error(&ctx, &command->assert_invalid.module.loc,

@@ -287,7 +287,6 @@ typedef struct WasmModuleField {
 } WasmModuleField;
 
 typedef struct WasmModule {
-  WasmLocation loc;
   WasmModuleField* first_field;
   WasmModuleField* last_field;
 
@@ -306,6 +305,28 @@ typedef struct WasmModule {
   WasmBindingHash export_bindings;
   WasmBindingHash func_type_bindings;
 } WasmModule;
+
+typedef enum WasmRawModuleType {
+  WASM_RAW_MODULE_TYPE_TEXT,
+  WASM_RAW_MODULE_TYPE_BINARY,
+} WasmRawModuleType;
+
+/* "raw" means that the binary module has not yet been decoded. This is only
+ * necessary when embedded in assert_invalid. In that case we want to defer
+ * decoding errors until wasm_check_assert_invalid is called. This isn't needed
+ * when parsing text, as assert_invalid always assumes that text parsing
+ * succeeds. */
+typedef struct WasmRawModule {
+  WasmLocation loc;
+  WasmRawModuleType type;
+  union {
+    WasmModule* text;
+    struct {
+      void* data;
+      size_t size;
+    } binary;
+  };
+} WasmRawModule;
 
 typedef enum WasmCommandType {
   WASM_COMMAND_TYPE_MODULE,
@@ -331,7 +352,7 @@ typedef struct WasmCommand {
     struct { WasmCommandInvoke invoke; WasmConst expected; } assert_return;
     struct { WasmCommandInvoke invoke; } assert_return_nan;
     struct { WasmCommandInvoke invoke; WasmStringSlice text; } assert_trap;
-    struct { WasmModule module; WasmStringSlice text; } assert_invalid;
+    struct { WasmRawModule module; WasmStringSlice text; } assert_invalid;
   };
 } WasmCommand;
 WASM_DEFINE_VECTOR(command, WasmCommand);
@@ -442,6 +463,7 @@ void wasm_destroy_func(struct WasmAllocator*, WasmFunc*);
 void wasm_destroy_import(struct WasmAllocator*, WasmImport*);
 void wasm_destroy_memory(struct WasmAllocator*, WasmMemory*);
 void wasm_destroy_module(struct WasmAllocator*, WasmModule*);
+void wasm_destroy_raw_module(struct WasmAllocator*, WasmRawModule*);
 void wasm_destroy_segment_vector_and_elements(struct WasmAllocator*,
                                               WasmSegmentVector*);
 void wasm_destroy_segment(struct WasmAllocator*, WasmSegment*);
