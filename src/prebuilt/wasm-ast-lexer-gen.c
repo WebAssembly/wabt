@@ -185,7 +185,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
   
 #line 187 "src/prebuilt/wasm-ast-lexer-gen.c"
 {
-	char yych;
+	unsigned char yych;
 	if (cond < 2) {
 		if (cond < 1) {
 			goto YYCOND_i;

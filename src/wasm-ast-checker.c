@@ -427,15 +427,20 @@ static void check_call(Context* ctx,
 }
 
 static void check_expr_list(Context* ctx,
+                            const WasmLocation* loc,
                             const WasmExpr* first,
                             WasmType expected_type,
                             const char* desc) {
-  const WasmExpr* expr;
-  for (expr = first; expr; expr = expr->next) {
-    if (expr->next)
-      check_expr(ctx, expr, WASM_TYPE_VOID, "");
-    else
-      check_expr(ctx, expr, expected_type, desc);
+  if (first) {
+    const WasmExpr* expr;
+    for (expr = first; expr; expr = expr->next) {
+      if (expr->next)
+        check_expr(ctx, expr, WASM_TYPE_VOID, "");
+      else
+        check_expr(ctx, expr, expected_type, desc);
+    }
+  } else {
+    check_type(ctx, loc, WASM_TYPE_VOID, expected_type, desc);
   }
 }
 
@@ -458,7 +463,8 @@ static void check_expr(Context* ctx,
       LabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->block.label, expected_type,
                  "block");
-      check_expr_list(ctx, expr->block.first, expected_type, " of block");
+      check_expr_list(ctx, &expr->loc, expr->block.first, expected_type,
+                      " of block");
       pop_label(ctx);
       break;
     }
@@ -558,7 +564,7 @@ static void check_expr(Context* ctx,
       check_expr(ctx, expr->if_.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_.true_.label, expected_type,
                  "if branch");
-      check_expr_list(ctx, expr->if_.true_.first, expected_type,
+      check_expr_list(ctx, &expr->loc, expr->if_.true_.first, expected_type,
                       " of if branch");
       pop_label(ctx);
       check_type(ctx, &expr->loc, WASM_TYPE_VOID, expected_type, desc);
@@ -570,12 +576,12 @@ static void check_expr(Context* ctx,
       check_expr(ctx, expr->if_else.cond, WASM_TYPE_I32, " of condition");
       push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
                  expected_type, "if true branch");
-      check_expr_list(ctx, expr->if_else.true_.first, expected_type,
+      check_expr_list(ctx, &expr->loc, expr->if_else.true_.first, expected_type,
                       " of if branch");
       pop_label(ctx);
       push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
                  expected_type, "if false branch");
-      check_expr_list(ctx, expr->if_else.false_.first, expected_type,
+      check_expr_list(ctx, &expr->loc, expr->if_else.false_.first, expected_type,
                       " of if branch");
       pop_label(ctx);
       break;
@@ -598,7 +604,8 @@ static void check_expr(Context* ctx,
                  "loop outer label");
       push_label(ctx, &expr->loc, &inner_node, &expr->loop.inner,
                  WASM_TYPE_VOID, "loop inner label");
-      check_expr_list(ctx, expr->loop.first, expected_type, " of loop");
+      check_expr_list(ctx, &expr->loc, expr->loop.first, expected_type,
+                      " of loop");
       pop_label(ctx);
       pop_label(ctx);
       break;
@@ -680,7 +687,8 @@ static void check_func_signature_matches_func_type(
     const WasmFuncType* func_type) {
   size_t num_params = wasm_get_num_params(func);
   check_type_exact(ctx, &func->loc, wasm_get_result_type(func),
-                   wasm_get_func_type_result_type(func_type), "");
+                   wasm_get_func_type_result_type(func_type),
+                   " of function signature result");
   if (num_params == wasm_get_func_type_num_params(func_type)) {
     size_t i;
     for (i = 0; i < num_params; ++i) {
@@ -710,7 +718,7 @@ static void check_func(Context* ctx,
 
   check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
-  check_expr_list(ctx, func->first_expr, wasm_get_result_type(func),
+  check_expr_list(ctx, &func->loc, func->first_expr, wasm_get_result_type(func),
                   " of function result");
   ctx->current_func = NULL;
 }

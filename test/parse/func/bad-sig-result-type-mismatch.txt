@@ -1,0 +1,12 @@
+;;; ERROR: 1
+(module
+  (type $t (func (param i32) (result f32)))
+  (func (type $t) (param i32) (result i64)))
+(;; STDERR ;;;
+parse/func/bad-sig-result-type-mismatch.txt:4:4: type mismatch of function signature result. got i64, expected f32
+  (func (type $t) (param i32) (result i64)))
+   ^^^^
+parse/func/bad-sig-result-type-mismatch.txt:4:4: type mismatch of function result. got void, expected i64
+  (func (type $t) (param i32) (result i64)))
+   ^^^^
+;;; STDERR ;;)

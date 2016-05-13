@@ -145,10 +145,11 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<consts> const_list
 %type<export_> export
 %type<export_memory> export_memory
+%type<exported_func> func
 %type<expr> expr expr1 expr_opt
 %type<expr_list> expr_list non_empty_expr_list
 %type<func_fields> func_fields
-%type<func> func func_info
+%type<func> func_info
 %type<func_sig> func_type
 %type<func_type> type_def
 %type<import> import
@@ -159,7 +160,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<script> script
 %type<segment> segment segment_contents
 %type<segments> segment_list
-%type<text> bind_var labeling quoted_text
+%type<text> bind_var labeling quoted_text export_opt
 %type<text_list> text_list
 %type<types> value_type_list
 %type<u32> align initial_pages max_pages segment_address
@@ -176,7 +177,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %destructor { wasm_destroy_expr(parser->allocator, $$); } expr expr1 expr_opt
 %destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } expr_list non_empty_expr_list
 %destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields
-%destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func func_info
+%destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment segment_contents
 %destructor { wasm_destroy_segment_vector_and_elements(parser->allocator, &$$); } segment_list
 %destructor { wasm_destroy_memory(parser->allocator, &$$); } memory
@@ -184,6 +185,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %destructor { wasm_destroy_func_type(parser->allocator, &$$); } type_def
 %destructor { wasm_destroy_import(parser->allocator, $$); wasm_free(parser->allocator, $$); } import
 %destructor { wasm_destroy_export(parser->allocator, &$$); } export
+%destructor { wasm_destroy_exported_func(parser->allocator, &$$); } func
 %destructor { wasm_destroy_module(parser->allocator, $$); wasm_free(parser->allocator, $$); } module module_fields
 %destructor { wasm_destroy_raw_module(parser->allocator, &$$); } raw_module
 %destructor { wasm_destroy_const_vector(parser->allocator, &$$); } const_list
@@ -679,31 +681,49 @@ func_info :
     }
 ;
 func :
-    LPAR FUNC type_use func_info RPAR {
-      $$ = $4;
-      $$->loc = @2;
-      $$->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
-      $$->decl.type_var = $3;
+    LPAR FUNC export_opt type_use func_info RPAR {
+      $$.func = $5;
+      $$.func->loc = @2;
+      $$.func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$.func->decl.type_var = $4;
+      $$.export_.name = $3;
+      $$.export_.var.type = WASM_VAR_TYPE_INDEX;
+      $$.export_.var.index = -1;
     }
-  | LPAR FUNC bind_var type_use func_info RPAR {
-      $$ = $5;
-      $$->loc = @2;
-      $$->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
-      $$->decl.type_var = $4;
-      $$->name = $3;
+  | LPAR FUNC export_opt bind_var type_use func_info RPAR {
+      $$.func = $6;
+      $$.func->loc = @2;
+      $$.func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$.func->decl.type_var = $5;
+      $$.func->name = $4;
+      $$.export_.name = $3;
+      $$.export_.var.type = WASM_VAR_TYPE_INDEX;
+      $$.export_.var.index = -1;
     }
-  | LPAR FUNC func_info RPAR {
-      $$ = $3;
-      $$->loc = @2;
-      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+  | LPAR FUNC export_opt func_info RPAR {
+      $$.func = $4;
+      $$.func->loc = @2;
+      $$.func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+      $$.export_.name = $3;
+      $$.export_.var.type = WASM_VAR_TYPE_INDEX;
+      $$.export_.var.index = -1;
     }
-  | LPAR FUNC bind_var func_info RPAR {
-      $$ = $4;
-      $$->loc = @2;
-      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
-      $$->name = $3;
+  | LPAR FUNC export_opt bind_var func_info RPAR {
+      $$.func = $5;
+      $$.func->loc = @2;
+      $$.func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+      $$.func->name = $4;
+      $$.export_.name = $3;
+      $$.export_.var.type = WASM_VAR_TYPE_INDEX;
+      $$.export_.var.index = -1;
     }
 ;
+
+export_opt :
+    /* empty */ { WASM_ZERO_MEMORY($$); }
+  | quoted_text
+;
+
 
 /* Modules */
 
@@ -851,8 +871,40 @@ module_fields :
       CHECK_ALLOC_NULL(field);
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
-      field->func = *$2;
-      wasm_free(parser->allocator, $2);
+      field->func = *$2.func;
+      wasm_free(parser->allocator, $2.func);
+
+      WasmFunc* func_ptr = &field->func;
+      CHECK_ALLOC(
+          wasm_append_func_ptr_value(parser->allocator, &$$->funcs, &func_ptr));
+      if (field->func.name.start) {
+        WasmBinding* binding = wasm_insert_binding(
+            parser->allocator, &$$->func_bindings, &field->func.name);
+        CHECK_ALLOC_NULL(binding);
+        binding->loc = field->loc;
+        binding->index = $$->funcs.size - 1;
+      }
+
+      /* is this function using the export syntactic sugar? */
+      if ($2.export_.name.start != NULL) {
+        WasmModuleField* export_field =
+            wasm_append_module_field(parser->allocator, $$);
+        CHECK_ALLOC_NULL(export_field);
+        export_field->loc = @2;
+        export_field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
+        export_field->export_ = $2.export_;
+        export_field->export_.var.index = $$->funcs.size - 1;
+
+        WasmExport* export_ptr = &export_field->export_;
+        CHECK_ALLOC(wasm_append_export_ptr_value(parser->allocator,
+                                                 &$$->exports, &export_ptr));
+        WasmBinding* binding =
+            wasm_insert_binding(parser->allocator, &$$->export_bindings,
+                                &export_field->export_.name);
+        CHECK_ALLOC_NULL(binding);
+        binding->loc = export_field->loc;
+        binding->index = $$->exports.size - 1;
+      }
     }
   | module_fields import {
       $$ = $1;
@@ -862,6 +914,17 @@ module_fields :
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
       field->import = *$2;
       wasm_free(parser->allocator, $2);
+
+      WasmImport* import_ptr = &field->import;
+      CHECK_ALLOC(wasm_append_import_ptr_value(parser->allocator, &$$->imports,
+                                               &import_ptr));
+      if (field->import.name.start) {
+        WasmBinding* binding = wasm_insert_binding(
+            parser->allocator, &$$->import_bindings, &field->import.name);
+        CHECK_ALLOC_NULL(binding);
+        binding->loc = field->loc;
+        binding->index = $$->imports.size - 1;
+      }
     }
   | module_fields export {
       $$ = $1;
@@ -870,6 +933,17 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
       field->export_ = $2;
+
+      WasmExport* export_ptr = &field->export_;
+      CHECK_ALLOC(wasm_append_export_ptr_value(parser->allocator, &$$->exports,
+                                               &export_ptr));
+      if (field->export_.name.start) {
+        WasmBinding* binding = wasm_insert_binding(
+            parser->allocator, &$$->export_bindings, &field->export_.name);
+        CHECK_ALLOC_NULL(binding);
+        binding->loc = field->loc;
+        binding->index = $$->exports.size - 1;
+      }
     }
   | module_fields export_memory {
       $$ = $1;
@@ -878,6 +952,7 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY;
       field->export_memory = $2;
+      $$->export_memory = &field->export_memory;
     }
   | module_fields table {
       $$ = $1;
@@ -886,6 +961,7 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_TABLE;
       field->table = $2;
+      $$->table = &field->table;
     }
   | module_fields type_def {
       $$ = $1;
@@ -894,6 +970,18 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
       field->func_type = $2;
+
+      WasmFuncType* func_type_ptr = &field->func_type;
+      CHECK_ALLOC(wasm_append_func_type_ptr_value(
+          parser->allocator, &$$->func_types, &func_type_ptr));
+      if (field->func_type.name.start) {
+        WasmBinding* binding =
+            wasm_insert_binding(parser->allocator, &$$->func_type_bindings,
+                                &field->func_type.name);
+        CHECK_ALLOC_NULL(binding);
+        binding->loc = field->loc;
+        binding->index = $$->func_types.size - 1;
+      }
     }
   | module_fields memory {
       $$ = $1;
@@ -902,6 +990,7 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
       field->memory = $2;
+      $$->memory = &field->memory;
     }
   | module_fields start {
       $$ = $1;
@@ -910,6 +999,7 @@ module_fields :
       field->loc = @2;
       field->type = WASM_MODULE_FIELD_TYPE_START;
       field->start = $2;
+      $$->start = &field->start;
     }
 ;
 
@@ -919,80 +1009,6 @@ raw_module :
       $$.text = $3;
       $$.loc = @2;
       WasmModule* module = $$.text;
-
-      /* cache values */
-      WasmModuleField* field;
-      for (field = module->first_field; field; field = field->next) {
-        switch (field->type) {
-          case WASM_MODULE_FIELD_TYPE_FUNC: {
-            WasmFuncPtr func_ptr = &field->func;
-            CHECK_ALLOC(wasm_append_func_ptr_value(parser->allocator,
-                                                   &module->funcs, &func_ptr));
-            if (field->func.name.start) {
-              WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &module->func_bindings, &field->func.name);
-              CHECK_ALLOC_NULL(binding);
-              binding->loc = field->loc;
-              binding->index = module->funcs.size - 1;
-            }
-            break;
-          }
-          case WASM_MODULE_FIELD_TYPE_IMPORT: {
-            WasmImportPtr import_ptr = &field->import;
-            CHECK_ALLOC(wasm_append_import_ptr_value(
-                parser->allocator, &module->imports, &import_ptr));
-            if (field->import.name.start) {
-              WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &module->import_bindings,
-                  &field->import.name);
-              CHECK_ALLOC_NULL(binding);
-              binding->loc = field->loc;
-              binding->index = module->imports.size - 1;
-            }
-            break;
-          }
-          case WASM_MODULE_FIELD_TYPE_EXPORT: {
-            WasmExportPtr export_ptr = &field->export_;
-            CHECK_ALLOC(wasm_append_export_ptr_value(
-                parser->allocator, &module->exports, &export_ptr));
-            if (field->export_.name.start) {
-              WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &module->export_bindings,
-                  &field->export_.name);
-              CHECK_ALLOC_NULL(binding);
-              binding->loc = field->loc;
-              binding->index = module->exports.size - 1;
-            }
-            break;
-          }
-          case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
-            module->export_memory = &field->export_memory;
-            break;
-          case WASM_MODULE_FIELD_TYPE_TABLE:
-            module->table = &field->table;
-            break;
-          case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
-            WasmFuncTypePtr func_type_ptr = &field->func_type;
-            CHECK_ALLOC(wasm_append_func_type_ptr_value(
-                parser->allocator, &module->func_types, &func_type_ptr));
-            if (field->func_type.name.start) {
-              WasmBinding* binding = wasm_insert_binding(
-                  parser->allocator, &module->func_type_bindings,
-                  &field->func_type.name);
-              CHECK_ALLOC_NULL(binding);
-              binding->loc = field->loc;
-              binding->index = module->func_types.size - 1;
-            }
-            break;
-          }
-          case WASM_MODULE_FIELD_TYPE_MEMORY:
-            module->memory = &field->memory;
-            break;
-          case WASM_MODULE_FIELD_TYPE_START:
-            module->start = &field->start;
-            break;
-        }
-      }
 
       size_t i;
       for (i = 0; i < module->funcs.size; ++i) {

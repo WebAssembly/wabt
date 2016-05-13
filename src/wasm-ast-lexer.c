@@ -183,7 +183,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
   /*!re2c
     re2c:condprefix = YYCOND_;
     re2c:condenumprefix = YYCOND_;
-    re2c:define:YYCTYPE = char;
+    re2c:define:YYCTYPE = "unsigned char";
     re2c:define:YYCURSOR = lexer->cursor;
     re2c:define:YYMARKER = lexer->marker;
     re2c:define:YYLIMIT = lexer->limit;

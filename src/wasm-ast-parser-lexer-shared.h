@@ -48,6 +48,11 @@ typedef struct WasmTextList {
   WasmTextListNode* last;
 } WasmTextList;
 
+typedef struct WasmExportedFunc {
+  WasmFunc* func;
+  WasmExport export_;
+} WasmExportedFunc;
+
 typedef union WasmToken {
   /* terminals */
   WasmStringSlice text;
@@ -68,6 +73,7 @@ typedef union WasmToken {
   WasmExprList expr_list;
   WasmFuncField* func_fields;
   WasmFunc* func;
+  WasmExportedFunc exported_func;
   WasmSegment segment;
   WasmSegmentVector segments;
   WasmMemory memory;
@@ -114,6 +120,7 @@ void wasm_ast_format_error(WasmSourceErrorHandler*,
                            WasmAstLexer*,
                            const char* format,
                            va_list);
+void wasm_destroy_exported_func(WasmAllocator*, WasmExportedFunc*);
 void wasm_destroy_text_list(WasmAllocator*, WasmTextList*);
 WASM_EXTERN_C_END
 
