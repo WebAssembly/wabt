@@ -1345,6 +1345,7 @@ resolve();
 
 };
 
+/*
 wasm.ready.then(function() {
   if (false) {
     try {
@@ -1436,3 +1437,4 @@ wasm.ready.then(function() {
 }).catch(function(error) {
   print('ERROR:' + (error.stack ? error.stack : error));
 });
+*/

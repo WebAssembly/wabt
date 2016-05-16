@@ -18,6 +18,9 @@ var defaultIndent = '  ';
 var input = document.getElementById('input');
 var output = document.getElementById('output');
 var select = document.getElementById('select');
+var download = document.getElementById('download');
+var downloadLink = document.getElementById('downloadLink');
+var binaryBlobUrl = null;
 
 function debounce(f, wait) {
   var lastTime = 0;
@@ -90,56 +93,28 @@ function onInputKeyDown(e) {
   }
 }
 
-function onError(loc, error, sourceLine, sourceLineColumnOffset) {
-  var lines = [
-    loc.filename + ':' + loc.line + ':' + loc.firstColumn,
-    error
-  ];
-  if (sourceLine.length > 0) {
-    var numSpaces = loc.firstColumn - 1 - sourceLineColumnOffset;
-    var numCarets =
-        Math.min(loc.lastColumn - loc.firstColumn, sourceLine.length);
-    lines.push(sourceLine);
-    lines.push(' '.repeat(numSpaces) + '^'.repeat(numCarets));
-  }
-  output.textContent += lines.join('\n') + '\n';
-}
-
 function compile(text) {
   wasm.ready.then(function() {
     output.textContent = '';
     try {
-      var allocator = wasm.LibcAllocator;
-      var eh = new wasm.SourceErrorHandler(onError, 80);
-      var buf = wasm.Buffer.fromString(text);
-      var lexer = wasm.AstLexer.fromBuffer(allocator, 'test.wast', buf);
-      var script = wasm.parseAst(lexer, eh);
-      wasm.checkAst(lexer, script, eh);
-      var memoryWriter = new wasm.MemoryWriter(allocator);
-      var jsWriter = new wasm.JSStringWriter();
-      var logStream = new wasm.Stream(jsWriter.writer);
-      var options = new wasm.WriteBinaryOptions({logStream: logStream});
-      wasm.writeBinaryScript(allocator, memoryWriter.base, script, options);
-      output.textContent = jsWriter.string;
+      var stackAllocator = new wasm.StackAllocator(wasm.LibcAllocator);
+      var script = wasm.parseAst(stackAllocator.allocator, 'test.wast', text);
+      script.check();
+      var binaryOutput = script.toBinary({log: true});
+      output.textContent = binaryOutput.log;
+      var blob = new Blob([binaryOutput.buffer]);
+      if (binaryBlobUrl) {
+        URL.revokeObjectURL(binaryBlobUrl);
+      }
+      binaryBlobUrl = URL.createObjectURL(blob);
+      downloadLink.setAttribute('href', binaryBlobUrl);
+      download.classList.remove('disabled');
     } catch (e) {
       output.textContent += e.toString();
+      download.classList.add('disabled');
     } finally {
-      if (options)
-        options.$destroy();
-      if (logStream)
-        logStream.$destroy();
-      if (script)
-        script.$destroy();
-      if (jsWriter)
-        jsWriter.$destroy();
-      if (memoryWriter)
-        memoryWriter.$destroy();
-      if (lexer)
-        lexer.$destroy();
-      if (buf)
-        buf.$destroy();
-      if (eh)
-        eh.$destroy();
+      if (script) script.$destroy();
+      if (stackAllocator) stackAllocator.$destroy();
     }
   });
 }
@@ -209,9 +184,20 @@ function onSelectChanged(e) {
   setExample(this.selectedIndex);
 }
 
+function onDownloadClicked(e) {
+  // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
+  var event = new MouseEvent('click', {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+  });
+  downloadLink.dispatchEvent(event);
+}
+
 input.addEventListener('keydown', onInputKeyDown);
 input.addEventListener('input', onInputInput);
 select.addEventListener('change', onSelectChanged);
+download.addEventListener('click', onDownloadClicked);
 
 for (var i = 0; i < examples.length; ++i) {
   var example = examples[i];

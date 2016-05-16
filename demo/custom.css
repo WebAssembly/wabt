@@ -17,3 +17,7 @@ textarea {
 .container {
   width: 1200px;
 }
+
+.hidden {
+  visibility: hidden;
+}
