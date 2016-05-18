@@ -18,6 +18,7 @@
 #include "wasm-config.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <memory.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -742,20 +743,20 @@ static void check_table(Context* ctx, const WasmVarVector* table) {
 
 static void check_memory(Context* ctx, const WasmMemory* memory) {
   if (memory->initial_pages > WASM_MAX_PAGES) {
-    print_error(ctx, &memory->loc, "initial pages (%u) must be less than (%u)",
+    print_error(ctx, &memory->loc,
+                "initial pages (%" PRIu64 ") must be <= (%u)",
                 memory->initial_pages, WASM_MAX_PAGES);
   }
 
   if (memory->max_pages > WASM_MAX_PAGES) {
-    print_error(ctx, &memory->loc, "max pages (%u) must be less than (%u)",
+    print_error(ctx, &memory->loc, "max pages (%" PRIu64 ") must be <= (%u)",
                 memory->max_pages, WASM_MAX_PAGES);
   }
 
   if (memory->max_pages < memory->initial_pages) {
-    print_error(
-        ctx, &memory->loc,
-        "max pages (%u) must be greater than or equal to initial pages (%u)",
-        memory->max_pages, memory->initial_pages);
+    print_error(ctx, &memory->loc, "max pages (%" PRIu64
+                                   ") must be >= initial pages (%" PRIu64 ")",
+                memory->max_pages, memory->initial_pages);
   }
 
   size_t i;
@@ -769,12 +770,13 @@ static void check_memory(Context* ctx, const WasmMemory* memory) {
     }
     if (segment->addr > memory->initial_pages * WASM_PAGE_SIZE) {
       print_error(ctx, &segment->loc,
-                  "address (%u) greater than initial memory size (%u)",
+                  "address (%u) greater than initial memory size (%" PRIu64 ")",
                   segment->addr, memory->initial_pages * WASM_PAGE_SIZE);
     } else if (segment->addr + segment->size >
                memory->initial_pages * WASM_PAGE_SIZE) {
       print_error(ctx, &segment->loc,
-                  "segment ends past the end of initial memory size (%u)",
+                  "segment ends past the end of initial memory size (%" PRIu64
+                  ")",
                   memory->initial_pages * WASM_PAGE_SIZE);
     }
     last_end = segment->addr + segment->size;

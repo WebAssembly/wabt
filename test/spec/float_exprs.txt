@@ -1,8 +1,8 @@
 ;;; TOOL: run-js-spec
 ;;; STDIN_FILE: third_party/testsuite/float_exprs.wast
 (;; STDOUT ;;;
-third_party/testsuite/float_exprs.wast:153: $assert_return_0 failed.
-third_party/testsuite/float_exprs.wast:154: $assert_return_1 failed.
+third_party/testsuite/float_exprs.wast:191: $assert_return_0 failed.
+third_party/testsuite/float_exprs.wast:192: $assert_return_1 failed.
 $invoke_0 = undefined
 $invoke_1 = undefined
 $invoke_2 = undefined
@@ -13,5 +13,5 @@ $invoke_1 = undefined
 $invoke_2 = undefined
 $invoke_3 = undefined
 $invoke_8 = undefined
-460/462 tests passed.
+610/612 tests passed.
 ;;; STDOUT ;;)

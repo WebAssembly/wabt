@@ -243,8 +243,8 @@ WASM_DEFINE_VECTOR(segment, WasmSegment);
 
 typedef struct WasmMemory {
   WasmLocation loc;
-  uint32_t initial_pages;
-  uint32_t max_pages;
+  uint64_t initial_pages;
+  uint64_t max_pages;
   WasmSegmentVector segments;
 } WasmMemory;
 
