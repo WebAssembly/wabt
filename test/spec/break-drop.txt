@@ -1,0 +1,5 @@
+;;; TOOL: run-js-spec
+;;; STDIN_FILE: third_party/testsuite/break-drop.wast
+(;; STDOUT ;;;
+15/15 tests passed.
+;;; STDOUT ;;)

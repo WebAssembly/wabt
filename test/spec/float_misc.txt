@@ -1,5 +1,5 @@
 ;;; TOOL: run-js-spec
 ;;; STDIN_FILE: third_party/testsuite/float_misc.wast
 (;; STDOUT ;;;
-323/323 tests passed.
+354/354 tests passed.
 ;;; STDOUT ;;)

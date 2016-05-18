@@ -664,9 +664,9 @@ static void write_segment(Context* ctx, const WasmSegment* segment) {
 
 static void write_memory(Context* ctx, const WasmMemory* memory) {
   write_open_space(ctx, "memory");
-  writef(ctx, "%u", memory->initial_pages);
+  writef(ctx, "%" PRIu64, memory->initial_pages);
   if (memory->initial_pages != memory->max_pages)
-    writef(ctx, "%u", memory->max_pages);
+    writef(ctx, "%" PRIu64, memory->max_pages);
   write_newline(ctx, NO_FORCE_NEWLINE);
   size_t i;
   for (i = 0; i < memory->segments.size; ++i) {

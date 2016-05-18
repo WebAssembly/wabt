@@ -1,0 +1,973 @@
+;;; TOOL: run-js-spec
+;;; STDIN_FILE: third_party/testsuite/typecheck.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:5:35: type mismatch of condition. got f32, expected i32
+(assert_invalid (module (func (if (f32.const 0) (nop) (nop)))) "type mismatch")
+                                  ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:8:47: type mismatch of br_if condition. got f32, expected i32
+(assert_invalid (module (func (block (br_if 0 (f32.const 0))))) "type mismatch")
+                                              ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:12:36: type mismatch of key. got f32, expected i32
+  (module (func (block (br_table 0 (f32.const 0)))))
+                                   ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:16:58: type mismatch of argument 0 of call. got f32, expected i32
+...id (module (func (param i32)) (func (call 0 (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:17:75: type mismatch of argument 0 of call_import. got f32, expected i32
+...t "a" "b" (param i32)) (func (call_import 0 (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:24:38: type mismatch of argument 0 of call_indirect. got f32, expected i32
+      (call_indirect 0 (i32.const 0) (f32.const 0))))
+                                     ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:33:28: type mismatch of function index. got f32, expected i32
+    (func (call_indirect 0 (f32.const 0))))
+                           ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:37:52: type mismatch of return. got f32, expected i32
+..._invalid (module (func (result i32) (return (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:40:56: type mismatch of set_local. got f32, expected i32
+...alid (module (func (local i32) (set_local 0 (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:43:52: type mismatch of load index. got f32, expected i32
+..._invalid (module (memory 1) (func (i32.load (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:44:55: type mismatch of load index. got f32, expected i32
+...valid (module (memory 1) (func (i32.load8_s (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:45:55: type mismatch of load index. got f32, expected i32
+...valid (module (memory 1) (func (i32.load8_u (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:46:56: type mismatch of load index. got f32, expected i32
+...alid (module (memory 1) (func (i32.load16_s (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:47:56: type mismatch of load index. got f32, expected i32
+...alid (module (memory 1) (func (i32.load16_u (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:48:52: type mismatch of load index. got f32, expected i32
+..._invalid (module (memory 1) (func (i64.load (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:49:55: type mismatch of load index. got f32, expected i32
+...valid (module (memory 1) (func (i64.load8_s (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:50:55: type mismatch of load index. got f32, expected i32
+...valid (module (memory 1) (func (i64.load8_u (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:51:56: type mismatch of load index. got f32, expected i32
+...alid (module (memory 1) (func (i64.load16_s (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:52:56: type mismatch of load index. got f32, expected i32
+...alid (module (memory 1) (func (i64.load16_u (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:53:56: type mismatch of load index. got f32, expected i32
+...alid (module (memory 1) (func (i64.load32_s (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:54:56: type mismatch of load index. got f32, expected i32
+...alid (module (memory 1) (func (i64.load32_u (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:55:52: type mismatch of load index. got f32, expected i32
+..._invalid (module (memory 1) (func (f32.load (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:56:52: type mismatch of load index. got f32, expected i32
+..._invalid (module (memory 1) (func (f64.load (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:59:53: type mismatch of store index. got f32, expected i32
+... (module (memory 1) (func (i32.store (f32.const 0) (i32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:60:54: type mismatch of store index. got f32, expected i32
+...(module (memory 1) (func (i32.store8 (f32.const 0) (i32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:61:55: type mismatch of store index. got f32, expected i32
+...module (memory 1) (func (i32.store16 (f32.const 0) (i32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:62:53: type mismatch of store index. got f32, expected i32
+... (module (memory 1) (func (i64.store (f32.const 0) (i32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:62:67: type mismatch of store value. got i32, expected i64
+...e (memory 1) (func (i64.store (f32.const 0) (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:63:54: type mismatch of store index. got f32, expected i32
+...(module (memory 1) (func (i64.store8 (f32.const 0) (i64.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:64:55: type mismatch of store index. got f32, expected i32
+...module (memory 1) (func (i64.store16 (f32.const 0) (i64.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:65:55: type mismatch of store index. got f32, expected i32
+...module (memory 1) (func (i64.store32 (f32.const 0) (i64.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:66:53: type mismatch of store index. got f32, expected i32
+... (module (memory 1) (func (f32.store (f32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:67:53: type mismatch of store index. got f32, expected i32
+... (module (memory 1) (func (f64.store (f32.const 0) (f64.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:70:67: type mismatch of store value. got f32, expected i32
+...e (memory 1) (func (i32.store (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:71:68: type mismatch of store value. got f32, expected i32
+... (memory 1) (func (i32.store8 (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:72:69: type mismatch of store value. got f32, expected i32
+...(memory 1) (func (i32.store16 (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:73:67: type mismatch of store value. got f32, expected i64
+...e (memory 1) (func (i64.store (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:74:68: type mismatch of store value. got f64, expected i64
+... (memory 1) (func (i64.store8 (i32.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:75:69: type mismatch of store value. got f64, expected i64
+...(memory 1) (func (i64.store16 (i32.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:76:69: type mismatch of store value. got f64, expected i64
+...(memory 1) (func (i64.store32 (i32.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:77:67: type mismatch of store value. got i32, expected f32
+...e (memory 1) (func (f32.store (i32.const 0) (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:78:67: type mismatch of store value. got i64, expected f64
+...e (memory 1) (func (f64.store (i32.const 0) (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:81:40: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.add (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:81:54: type mismatch of argument 1 of binary op. got f32, expected i32
+...nvalid (module (func (i32.add (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:82:40: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.and (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:82:54: type mismatch of argument 1 of binary op. got f32, expected i32
+...nvalid (module (func (i32.and (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:83:42: type mismatch of argument 0 of binary op. got i64, expected i32
+...ert_invalid (module (func (i32.div_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:83:56: type mismatch of argument 1 of binary op. got f32, expected i32
+...alid (module (func (i32.div_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:84:42: type mismatch of argument 0 of binary op. got i64, expected i32
+...ert_invalid (module (func (i32.div_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:84:56: type mismatch of argument 1 of binary op. got f32, expected i32
+...alid (module (func (i32.div_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:85:40: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.mul (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:85:54: type mismatch of argument 1 of binary op. got f32, expected i32
+...nvalid (module (func (i32.mul (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:86:39: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.or (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:86:53: type mismatch of argument 1 of binary op. got f32, expected i32
+...invalid (module (func (i32.or (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:87:42: type mismatch of argument 0 of binary op. got i64, expected i32
+...ert_invalid (module (func (i32.rem_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:87:56: type mismatch of argument 1 of binary op. got f32, expected i32
+...alid (module (func (i32.rem_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:88:42: type mismatch of argument 0 of binary op. got i64, expected i32
+...ert_invalid (module (func (i32.rem_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:88:56: type mismatch of argument 1 of binary op. got f32, expected i32
+...alid (module (func (i32.rem_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:89:41: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.rotl (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:89:55: type mismatch of argument 1 of binary op. got f32, expected i32
+...valid (module (func (i32.rotl (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:90:41: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.rotr (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:90:55: type mismatch of argument 1 of binary op. got f32, expected i32
+...valid (module (func (i32.rotr (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:91:40: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.shl (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:91:54: type mismatch of argument 1 of binary op. got f32, expected i32
+...nvalid (module (func (i32.shl (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:92:42: type mismatch of argument 0 of binary op. got i64, expected i32
+...ert_invalid (module (func (i32.shr_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:92:56: type mismatch of argument 1 of binary op. got f32, expected i32
+...alid (module (func (i32.shr_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:93:42: type mismatch of argument 0 of binary op. got i64, expected i32
+...ert_invalid (module (func (i32.shr_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:93:56: type mismatch of argument 1 of binary op. got f32, expected i32
+...alid (module (func (i32.shr_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:94:40: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.sub (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:94:54: type mismatch of argument 1 of binary op. got f32, expected i32
+...nvalid (module (func (i32.sub (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:95:40: type mismatch of argument 0 of binary op. got i64, expected i32
+(assert_invalid (module (func (i32.xor (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:95:54: type mismatch of argument 1 of binary op. got f32, expected i32
+...nvalid (module (func (i32.xor (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:96:40: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.add (i32.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:96:54: type mismatch of argument 1 of binary op. got f32, expected i64
+...nvalid (module (func (i64.add (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:97:40: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.and (i32.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:97:54: type mismatch of argument 1 of binary op. got f32, expected i64
+...nvalid (module (func (i64.and (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:98:42: type mismatch of argument 0 of binary op. got i32, expected i64
+...ert_invalid (module (func (i64.div_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:98:56: type mismatch of argument 1 of binary op. got f32, expected i64
+...alid (module (func (i64.div_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:99:42: type mismatch of argument 0 of binary op. got i32, expected i64
+...ert_invalid (module (func (i64.div_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:99:56: type mismatch of argument 1 of binary op. got f32, expected i64
+...alid (module (func (i64.div_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:100:40: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.mul (i32.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:100:54: type mismatch of argument 1 of binary op. got f32, expected i64
+...nvalid (module (func (i64.mul (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:101:39: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.or (i32.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:101:53: type mismatch of argument 1 of binary op. got f32, expected i64
+...invalid (module (func (i64.or (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:102:42: type mismatch of argument 0 of binary op. got i32, expected i64
+...ert_invalid (module (func (i64.rem_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:102:56: type mismatch of argument 1 of binary op. got f32, expected i64
+...alid (module (func (i64.rem_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:103:42: type mismatch of argument 0 of binary op. got i32, expected i64
+...ert_invalid (module (func (i64.rem_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:103:56: type mismatch of argument 1 of binary op. got f32, expected i64
+...alid (module (func (i64.rem_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:104:41: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.rotl (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:104:55: type mismatch of argument 1 of binary op. got f32, expected i64
+...valid (module (func (i64.rotl (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:105:41: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.rotr (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:105:55: type mismatch of argument 1 of binary op. got f32, expected i64
+...valid (module (func (i64.rotr (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:106:40: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.shl (i32.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:106:54: type mismatch of argument 1 of binary op. got f32, expected i64
+...nvalid (module (func (i64.shl (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:107:42: type mismatch of argument 0 of binary op. got i32, expected i64
+...ert_invalid (module (func (i64.shr_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:107:56: type mismatch of argument 1 of binary op. got f32, expected i64
+...alid (module (func (i64.shr_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:108:42: type mismatch of argument 0 of binary op. got i32, expected i64
+...ert_invalid (module (func (i64.shr_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:108:56: type mismatch of argument 1 of binary op. got f32, expected i64
+...alid (module (func (i64.shr_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:109:40: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.sub (i32.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:109:54: type mismatch of argument 1 of binary op. got f32, expected i64
+...nvalid (module (func (i64.sub (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:110:40: type mismatch of argument 0 of binary op. got i32, expected i64
+(assert_invalid (module (func (i64.xor (i32.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:110:54: type mismatch of argument 1 of binary op. got f32, expected i64
+...nvalid (module (func (i64.xor (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:111:40: type mismatch of argument 0 of binary op. got i64, expected f32
+(assert_invalid (module (func (f32.add (i64.const 0) (f64.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:111:54: type mismatch of argument 1 of binary op. got f64, expected f32
+...nvalid (module (func (f32.add (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:112:45: type mismatch of argument 0 of binary op. got i64, expected f32
+..._invalid (module (func (f32.copysign (i64.const 0) (f64.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:112:59: type mismatch of argument 1 of binary op. got f64, expected f32
+...d (module (func (f32.copysign (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:113:40: type mismatch of argument 0 of binary op. got i64, expected f32
+(assert_invalid (module (func (f32.div (i64.const 0) (f64.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:113:54: type mismatch of argument 1 of binary op. got f64, expected f32
+...nvalid (module (func (f32.div (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:114:40: type mismatch of argument 0 of binary op. got i64, expected f32
+(assert_invalid (module (func (f32.max (i64.const 0) (f64.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:114:54: type mismatch of argument 1 of binary op. got f64, expected f32
+...nvalid (module (func (f32.max (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:115:40: type mismatch of argument 0 of binary op. got i64, expected f32
+(assert_invalid (module (func (f32.min (i64.const 0) (f64.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:115:54: type mismatch of argument 1 of binary op. got f64, expected f32
+...nvalid (module (func (f32.min (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:116:40: type mismatch of argument 0 of binary op. got i64, expected f32
+(assert_invalid (module (func (f32.mul (i64.const 0) (f64.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:116:54: type mismatch of argument 1 of binary op. got f64, expected f32
+...nvalid (module (func (f32.mul (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:117:40: type mismatch of argument 0 of binary op. got i64, expected f32
+(assert_invalid (module (func (f32.sub (i64.const 0) (f64.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:117:54: type mismatch of argument 1 of binary op. got f64, expected f32
+...nvalid (module (func (f32.sub (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:118:40: type mismatch of argument 0 of binary op. got i64, expected f64
+(assert_invalid (module (func (f64.add (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:118:54: type mismatch of argument 1 of binary op. got f32, expected f64
+...nvalid (module (func (f64.add (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:119:45: type mismatch of argument 0 of binary op. got i64, expected f64
+..._invalid (module (func (f64.copysign (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:119:59: type mismatch of argument 1 of binary op. got f32, expected f64
+...d (module (func (f64.copysign (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:120:40: type mismatch of argument 0 of binary op. got i64, expected f64
+(assert_invalid (module (func (f64.div (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:120:54: type mismatch of argument 1 of binary op. got f32, expected f64
+...nvalid (module (func (f64.div (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:121:40: type mismatch of argument 0 of binary op. got i64, expected f64
+(assert_invalid (module (func (f64.max (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:121:54: type mismatch of argument 1 of binary op. got f32, expected f64
+...nvalid (module (func (f64.max (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:122:40: type mismatch of argument 0 of binary op. got i64, expected f64
+(assert_invalid (module (func (f64.min (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:122:54: type mismatch of argument 1 of binary op. got f32, expected f64
+...nvalid (module (func (f64.min (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:123:40: type mismatch of argument 0 of binary op. got i64, expected f64
+(assert_invalid (module (func (f64.mul (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:123:54: type mismatch of argument 1 of binary op. got f32, expected f64
+...nvalid (module (func (f64.mul (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:124:40: type mismatch of argument 0 of binary op. got i64, expected f64
+(assert_invalid (module (func (f64.sub (i64.const 0) (f32.const 0)))) "type m...
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:124:54: type mismatch of argument 1 of binary op. got f32, expected f64
+...nvalid (module (func (f64.sub (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:127:40: type mismatch of convert op. got i64, expected i32
+(assert_invalid (module (func (i32.eqz (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:128:40: type mismatch of unary op. got i64, expected i32
+(assert_invalid (module (func (i32.clz (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:129:40: type mismatch of unary op. got i64, expected i32
+(assert_invalid (module (func (i32.ctz (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:130:43: type mismatch of unary op. got i64, expected i32
+(assert_invalid (module (func (i32.popcnt (i64.const 0)))) "type mismatch")
+                                          ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:131:40: type mismatch of convert op. got i32, expected i64
+(assert_invalid (module (func (i64.eqz (i32.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:132:40: type mismatch of unary op. got i32, expected i64
+(assert_invalid (module (func (i64.clz (i32.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:133:40: type mismatch of unary op. got i32, expected i64
+(assert_invalid (module (func (i64.ctz (i32.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:134:43: type mismatch of unary op. got i32, expected i64
+(assert_invalid (module (func (i64.popcnt (i32.const 0)))) "type mismatch")
+                                          ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:135:40: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.abs (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:136:41: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.ceil (i64.const 0)))) "type mismatch")
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:137:42: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.floor (i64.const 0)))) "type mismatch")
+                                         ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:138:44: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.nearest (i64.const 0)))) "type mismatch")
+                                           ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:139:40: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.neg (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:140:41: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.sqrt (i64.const 0)))) "type mismatch")
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:141:42: type mismatch of unary op. got i64, expected f32
+(assert_invalid (module (func (f32.trunc (i64.const 0)))) "type mismatch")
+                                         ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:142:40: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.abs (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:143:41: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.ceil (i64.const 0)))) "type mismatch")
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:144:42: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.floor (i64.const 0)))) "type mismatch")
+                                         ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:145:44: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.nearest (i64.const 0)))) "type mismatch")
+                                           ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:146:40: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.neg (i64.const 0)))) "type mismatch")
+                                       ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:147:41: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.sqrt (i64.const 0)))) "type mismatch")
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:148:42: type mismatch of unary op. got i64, expected f64
+(assert_invalid (module (func (f64.trunc (i64.const 0)))) "type mismatch")
+                                         ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:151:39: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.eq (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:151:53: type mismatch of argument 1 of compare op. got f32, expected i32
+...invalid (module (func (i32.eq (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:152:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.ge_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:152:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.ge_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:153:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.ge_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:153:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.ge_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:154:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.gt_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:154:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.gt_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:155:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.gt_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:155:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.gt_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:156:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.le_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:156:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.le_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:157:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.le_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:157:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.le_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:158:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.lt_s (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:158:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.lt_s (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:159:41: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.lt_u (i64.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:159:55: type mismatch of argument 1 of compare op. got f32, expected i32
+...valid (module (func (i32.lt_u (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:160:39: type mismatch of argument 0 of compare op. got i64, expected i32
+(assert_invalid (module (func (i32.ne (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:160:53: type mismatch of argument 1 of compare op. got f32, expected i32
+...invalid (module (func (i32.ne (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:161:39: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.eq (i32.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:161:53: type mismatch of argument 1 of compare op. got f32, expected i64
+...invalid (module (func (i64.eq (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:162:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.ge_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:162:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.ge_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:163:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.ge_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:163:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.ge_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:164:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.gt_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:164:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.gt_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:165:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.gt_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:165:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.gt_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:166:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.le_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:166:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.le_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:167:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.le_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:167:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.le_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:168:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.lt_s (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:168:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.lt_s (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:169:41: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.lt_u (i32.const 0) (f32.const 0)))) "type ...
+                                        ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:169:55: type mismatch of argument 1 of compare op. got f32, expected i64
+...valid (module (func (i64.lt_u (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:170:39: type mismatch of argument 0 of compare op. got i32, expected i64
+(assert_invalid (module (func (i64.ne (i32.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:170:53: type mismatch of argument 1 of compare op. got f32, expected i64
+...invalid (module (func (i64.ne (i32.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:171:39: type mismatch of argument 0 of compare op. got i64, expected f32
+(assert_invalid (module (func (f32.eq (i64.const 0) (f64.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:171:53: type mismatch of argument 1 of compare op. got f64, expected f32
+...invalid (module (func (f32.eq (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:172:39: type mismatch of argument 0 of compare op. got i64, expected f32
+(assert_invalid (module (func (f32.ge (i64.const 0) (f64.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:172:53: type mismatch of argument 1 of compare op. got f64, expected f32
+...invalid (module (func (f32.ge (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:173:39: type mismatch of argument 0 of compare op. got i64, expected f32
+(assert_invalid (module (func (f32.gt (i64.const 0) (f64.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:173:53: type mismatch of argument 1 of compare op. got f64, expected f32
+...invalid (module (func (f32.gt (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:174:39: type mismatch of argument 0 of compare op. got i64, expected f32
+(assert_invalid (module (func (f32.le (i64.const 0) (f64.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:174:53: type mismatch of argument 1 of compare op. got f64, expected f32
+...invalid (module (func (f32.le (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:175:39: type mismatch of argument 0 of compare op. got i64, expected f32
+(assert_invalid (module (func (f32.lt (i64.const 0) (f64.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:175:53: type mismatch of argument 1 of compare op. got f64, expected f32
+...invalid (module (func (f32.lt (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:176:39: type mismatch of argument 0 of compare op. got i64, expected f32
+(assert_invalid (module (func (f32.ne (i64.const 0) (f64.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:176:53: type mismatch of argument 1 of compare op. got f64, expected f32
+...invalid (module (func (f32.ne (i64.const 0) (f64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:177:39: type mismatch of argument 0 of compare op. got i64, expected f64
+(assert_invalid (module (func (f64.eq (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:177:53: type mismatch of argument 1 of compare op. got f32, expected f64
+...invalid (module (func (f64.eq (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:178:39: type mismatch of argument 0 of compare op. got i64, expected f64
+(assert_invalid (module (func (f64.ge (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:178:53: type mismatch of argument 1 of compare op. got f32, expected f64
+...invalid (module (func (f64.ge (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:179:39: type mismatch of argument 0 of compare op. got i64, expected f64
+(assert_invalid (module (func (f64.gt (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:179:53: type mismatch of argument 1 of compare op. got f32, expected f64
+...invalid (module (func (f64.gt (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:180:39: type mismatch of argument 0 of compare op. got i64, expected f64
+(assert_invalid (module (func (f64.le (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:180:53: type mismatch of argument 1 of compare op. got f32, expected f64
+...invalid (module (func (f64.le (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:181:39: type mismatch of argument 0 of compare op. got i64, expected f64
+(assert_invalid (module (func (f64.lt (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:181:53: type mismatch of argument 1 of compare op. got f32, expected f64
+...invalid (module (func (f64.lt (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:182:39: type mismatch of argument 0 of compare op. got i64, expected f64
+(assert_invalid (module (func (f64.ne (i64.const 0) (f32.const 0)))) "type mi...
+                                      ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:182:53: type mismatch of argument 1 of compare op. got f32, expected f64
+...invalid (module (func (f64.ne (i64.const 0) (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:185:45: type mismatch of convert op. got f32, expected i64
+(assert_invalid (module (func (i32.wrap/i64 (f32.const 0)))) "type mismatch")
+                                            ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:186:48: type mismatch of convert op. got i64, expected f32
+(assert_invalid (module (func (i32.trunc_s/f32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:187:48: type mismatch of convert op. got i64, expected f32
+(assert_invalid (module (func (i32.trunc_u/f32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:188:48: type mismatch of convert op. got i64, expected f64
+(assert_invalid (module (func (i32.trunc_s/f64 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:189:48: type mismatch of convert op. got i64, expected f64
+(assert_invalid (module (func (i32.trunc_u/f64 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:190:52: type mismatch of convert op. got i64, expected f32
+..._invalid (module (func (i32.reinterpret/f32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:191:49: type mismatch of convert op. got f32, expected i32
+...ert_invalid (module (func (i64.extend_s/i32 (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:192:49: type mismatch of convert op. got f32, expected i32
+...ert_invalid (module (func (i64.extend_u/i32 (f32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:193:48: type mismatch of convert op. got i32, expected f32
+(assert_invalid (module (func (i64.trunc_s/f32 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:194:48: type mismatch of convert op. got i32, expected f32
+(assert_invalid (module (func (i64.trunc_u/f32 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:195:48: type mismatch of convert op. got i32, expected f64
+(assert_invalid (module (func (i64.trunc_s/f64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:196:48: type mismatch of convert op. got i32, expected f64
+(assert_invalid (module (func (i64.trunc_u/f64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:197:52: type mismatch of convert op. got i32, expected f64
+..._invalid (module (func (i64.reinterpret/f64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:198:50: type mismatch of convert op. got i64, expected i32
+...rt_invalid (module (func (f32.convert_s/i32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:199:50: type mismatch of convert op. got i64, expected i32
+...rt_invalid (module (func (f32.convert_u/i32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:200:50: type mismatch of convert op. got i32, expected i64
+...rt_invalid (module (func (f32.convert_s/i64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:201:50: type mismatch of convert op. got i32, expected i64
+...rt_invalid (module (func (f32.convert_u/i64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:202:47: type mismatch of convert op. got i32, expected f64
+(assert_invalid (module (func (f32.demote/f64 (i32.const 0)))) "type mismatch")
+                                              ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:203:52: type mismatch of convert op. got i64, expected i32
+..._invalid (module (func (f32.reinterpret/i32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:204:50: type mismatch of convert op. got i64, expected i32
+...rt_invalid (module (func (f64.convert_s/i32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:205:50: type mismatch of convert op. got i64, expected i32
+...rt_invalid (module (func (f64.convert_u/i32 (i64.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:206:50: type mismatch of convert op. got i32, expected i64
+...rt_invalid (module (func (f64.convert_s/i64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:207:50: type mismatch of convert op. got i32, expected i64
+...rt_invalid (module (func (f64.convert_u/i64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:208:48: type mismatch of convert op. got i32, expected f32
+(assert_invalid (module (func (f64.promote/f32 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:209:52: type mismatch of convert op. got i32, expected i64
+..._invalid (module (func (f64.reinterpret/i64 (i32.const 0)))) "type mismatch")
+                                               ^
+assert_invalid error:
+  third_party/testsuite/typecheck.wast:212:55: type mismatch of grow_memory. got f32, expected i32
+...valid (module (memory 1) (func (grow_memory (f32.const 0)))) "type mismatch")
+                                               ^
+0/0 tests passed.
+;;; STDOUT ;;)

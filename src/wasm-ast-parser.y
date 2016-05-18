@@ -163,8 +163,8 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<text> bind_var labeling quoted_text export_opt
 %type<text_list> text_list
 %type<types> value_type_list
-%type<u32> align initial_pages max_pages segment_address
-%type<u64> offset
+%type<u32> align segment_address
+%type<u64> offset initial_pages max_pages
 %type<vars> table var_list
 %type<var> start type_use var
 
@@ -762,9 +762,8 @@ segment_list :
 
 initial_pages :
     INT {
-      if (WASM_FAILED(wasm_parse_int32($1.text.start,
-                                       $1.text.start + $1.text.length, &$$,
-                                       WASM_PARSE_UNSIGNED_ONLY))) {
+      if (WASM_FAILED(wasm_parse_uint64($1.text.start,
+                                        $1.text.start + $1.text.length, &$$))) {
         wasm_ast_parser_error(&@1, lexer, parser,
                               "invalid initial memory pages \"" PRIstringslice
                               "\"",
@@ -775,9 +774,8 @@ initial_pages :
 
 max_pages :
     INT {
-      if (WASM_FAILED(wasm_parse_int32($1.text.start,
-                                       $1.text.start + $1.text.length, &$$,
-                                       WASM_PARSE_UNSIGNED_ONLY))) {
+      if (WASM_FAILED(wasm_parse_uint64($1.text.start,
+                                        $1.text.start + $1.text.length, &$$))) {
         wasm_ast_parser_error(&@1, lexer, parser,
                               "invalid max memory pages \"" PRIstringslice "\"",
                               WASM_PRINTF_STRING_SLICE_ARG($1.text));
