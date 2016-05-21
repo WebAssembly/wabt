@@ -45,6 +45,9 @@ typedef struct WasmAllocator {
   WasmAllocatorMark (*mark)(struct WasmAllocator*);
   void (*reset_to_mark)(struct WasmAllocator*, WasmAllocatorMark);
   void (*print_stats)(struct WasmAllocator*);
+  /* set the location to longjmp to if allocation fails. the return value is 0
+   * for normal execution, and 1 if an allocation failed. */
+  int (*setjmp_handler)(struct WasmAllocator*);
 } WasmAllocator;
 
 extern WasmAllocator g_wasm_libc_allocator;
@@ -86,8 +89,6 @@ static WASM_INLINE void* wasm_alloc_zero_(WasmAllocator* allocator,
                                           const char* file,
                                           int line) {
   void* result = allocator->alloc(allocator, size, align, file, line);
-  if (!result)
-    return NULL;
   memset(result, 0, size);
   return result;
 }
@@ -105,9 +106,6 @@ static WASM_INLINE char* wasm_strndup_(WasmAllocator* allocator,
   }
 
   char* new_s = allocator->alloc(allocator, real_len + 1, 1, file, line);
-  if (!new_s)
-    return NULL;
-
   memcpy(new_s, s, real_len);
   new_s[real_len] = 0;
   return new_s;

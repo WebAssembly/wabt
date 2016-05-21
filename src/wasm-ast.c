@@ -93,16 +93,14 @@ static WasmBindingHashEntry* hash_new_entry(WasmBindingHash* hash,
   return entry;
 }
 
-static WasmResult hash_resize(WasmAllocator* allocator,
-                              WasmBindingHash* hash,
-                              size_t desired_capacity) {
+static void hash_resize(WasmAllocator* allocator,
+                        WasmBindingHash* hash,
+                        size_t desired_capacity) {
   WasmBindingHash new_hash;
   WASM_ZERO_MEMORY(new_hash);
   /* TODO(binji): better plural */
-  if (WASM_FAILED(wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
-                                                   desired_capacity))) {
-    return WASM_ERROR;
-  }
+  wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
+                                   desired_capacity);
 
   /* update the free list */
   size_t i;
@@ -132,22 +130,17 @@ static WasmResult hash_resize(WasmAllocator* allocator,
    * binding vector */
   wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
   *hash = new_hash;
-  return WASM_OK;
 }
 
 WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
                                  WasmBindingHash* hash,
                                  const WasmStringSlice* name) {
-  if (hash->entries.size == 0) {
-    if (WASM_FAILED(hash_resize(allocator, hash, INITIAL_HASH_CAPACITY)))
-      return NULL;
-  }
+  if (hash->entries.size == 0)
+    hash_resize(allocator, hash, INITIAL_HASH_CAPACITY);
 
   if (!hash->free_head) {
     /* no more free space, allocate more */
-    if (WASM_FAILED(hash_resize(allocator, hash, hash->entries.capacity * 2))) {
-      return NULL;
-    }
+    hash_resize(allocator, hash, hash->entries.capacity * 2);
   }
 
   WasmBindingHashEntry* entry = hash_new_entry(hash, name);
@@ -237,16 +230,13 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
   return module->imports.data[index];
 }
 
-WasmResult wasm_make_type_binding_reverse_mapping(
+void wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator* allocator,
     const WasmTypeVector* types,
     const WasmBindingHash* bindings,
     WasmStringSliceVector* out_reverse_mapping) {
   uint32_t num_names = types->size;
-  if (WASM_FAILED(wasm_reserve_string_slices(allocator, out_reverse_mapping,
-                                             num_names))) {
-    return WASM_ERROR;
-  }
+  wasm_reserve_string_slices(allocator, out_reverse_mapping, num_names);
   out_reverse_mapping->size = num_names;
   memset(out_reverse_mapping->data, 0, num_names * sizeof(WasmStringSlice));
 
@@ -261,15 +251,12 @@ WasmResult wasm_make_type_binding_reverse_mapping(
     assert(index < out_reverse_mapping->size);
     out_reverse_mapping->data[index] = entry->binding.name;
   }
-  return WASM_OK;
 }
 
 WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
                                           WasmModule* module) {
   WasmModuleField* result =
       wasm_alloc_zero(allocator, sizeof(WasmModuleField), WASM_DEFAULT_ALIGN);
-  if (!result)
-    return NULL;
   if (!module->first_field)
     module->first_field = result;
   else if (module->last_field)
@@ -310,8 +297,6 @@ WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
 #define DEFINE_NEW_EXPR(type_, name, member)                    \
   WasmExpr* wasm_new_##name##_expr(WasmAllocator* allocator) {  \
     WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, member); \
-    if (!result)                                                \
-      return NULL;                                              \
     result->type = type_;                                       \
     return result;                                              \
   }
@@ -321,8 +306,6 @@ FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
 WasmExpr* wasm_new_empty_expr(struct WasmAllocator* allocator,
                               WasmExprType type) {
   WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, next);
-  if (!result)
-    return NULL;
   result->type = type;
   return result;
 }

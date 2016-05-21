@@ -36,18 +36,6 @@
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
-#define CHECK_ALLOC_(cond)             \
-  do {                                 \
-    if (!(cond)) {                     \
-      ALLOC_FAILURE;                   \
-      ctx->stream.result = WASM_ERROR; \
-      return;                          \
-    }                                  \
-  } while (0)
-
-#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
-#define CHECK_ALLOC_NULL(v) CHECK_ALLOC_((v) != NULL)
-
 WASM_STATIC_ASSERT(WASM_TYPE_VOID == 0);
 WASM_STATIC_ASSERT(WASM_TYPE_I32 == 1);
 WASM_STATIC_ASSERT(WASM_TYPE_I64 == 2);
@@ -347,11 +335,9 @@ static void get_or_create_func_signature(WasmContext* ctx,
   if (index == -1) {
     index = sigs->size;
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
-    CHECK_ALLOC_NULL(sig);
     sig->result_type = result_type;
     WASM_ZERO_MEMORY(sig->param_types);
-    CHECK_ALLOC(
-        wasm_extend_types(ctx->allocator, &sig->param_types, param_types));
+    wasm_extend_types(ctx->allocator, &sig->param_types, param_types);
   }
   *out_index = index;
 }
@@ -381,18 +367,15 @@ static void get_func_signatures(WasmContext* ctx,
   for (i = 0; i < module->func_types.size; ++i) {
     const WasmFuncType* func_type = module->func_types.data[i];
     WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
-    CHECK_ALLOC_NULL(sig);
     sig->result_type = func_type->sig.result_type;
     WASM_ZERO_MEMORY(sig->param_types);
-    CHECK_ALLOC(wasm_extend_types(ctx->allocator, &sig->param_types,
-                                  &func_type->sig.param_types));
+    wasm_extend_types(ctx->allocator, &sig->param_types,
+                      &func_type->sig.param_types);
   }
 
   ctx->import_sig_indexes =
       wasm_realloc(ctx->allocator, ctx->import_sig_indexes,
                    module->imports.size * sizeof(int), WASM_DEFAULT_ALIGN);
-  if (module->imports.size)
-    CHECK_ALLOC_NULL(ctx->import_sig_indexes);
   for (i = 0; i < module->imports.size; ++i) {
     const WasmImport* import = module->imports.data[i];
     ctx->import_sig_indexes[i] =
@@ -402,8 +385,6 @@ static void get_func_signatures(WasmContext* ctx,
   ctx->func_sig_indexes =
       wasm_realloc(ctx->allocator, ctx->func_sig_indexes,
                    module->funcs.size * sizeof(int), WASM_DEFAULT_ALIGN);
-  if (module->funcs.size)
-    CHECK_ALLOC_NULL(ctx->func_sig_indexes);
   for (i = 0; i < module->funcs.size; ++i) {
     const WasmFunc* func = module->funcs.data[i];
     ctx->func_sig_indexes[i] =
@@ -419,14 +400,10 @@ static void remap_locals(WasmContext* ctx, const WasmFunc* func) {
   ctx->remapped_locals = wasm_realloc(ctx->allocator, ctx->remapped_locals,
                                       num_params_and_locals * sizeof(uint32_t),
                                       WASM_DEFAULT_ALIGN);
-  if (num_params_and_locals)
-    CHECK_ALLOC_NULL(ctx->remapped_locals);
 
   ctx->reverse_remapped_locals = wasm_realloc(
       ctx->allocator, ctx->reverse_remapped_locals,
       num_params_and_locals * sizeof(uint32_t), WASM_DEFAULT_ALIGN);
-  if (num_locals)
-    CHECK_ALLOC_NULL(ctx->reverse_remapped_locals);
 
   if (!ctx->options->remap_locals) {
     /* just pass the index straight through */
@@ -955,9 +932,9 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
       if (num_params_and_locals) {
         remap_locals(ctx, func);
 
-        CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
+        wasm_make_type_binding_reverse_mapping(
             ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
-            &index_to_name));
+            &index_to_name);
         size_t j;
         for (j = 0; j < num_params; ++j) {
           WasmStringSlice name = index_to_name.data[j];
@@ -966,9 +943,9 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
                     desc);
         }
 
-        CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
+        wasm_make_type_binding_reverse_mapping(
             ctx->allocator, &func->local_types, &func->local_bindings,
-            &index_to_name));
+            &index_to_name);
         for (j = 0; j < num_locals; ++j) {
           WasmStringSlice name =
               index_to_name.data[ctx->reverse_remapped_locals[num_params + j] -

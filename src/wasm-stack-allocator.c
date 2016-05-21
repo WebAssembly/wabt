@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #define TRACE_ALLOCATOR 0
@@ -58,7 +59,9 @@ static WasmBool allocation_in_chunk(WasmStackAllocatorChunk* chunk, void* p) {
 
 static WasmStackAllocatorChunk* allocate_chunk(
     WasmStackAllocator* stack_allocator,
-    size_t max_avail) {
+    size_t max_avail,
+    const char* file,
+    int line) {
   size_t real_size = max_avail + sizeof(WasmStackAllocatorChunk);
   /* common case of allocating a chunk of exactly CHUNK_SIZE */
   if (real_size == CHUNK_SIZE) {
@@ -71,8 +74,11 @@ static WasmStackAllocatorChunk* allocate_chunk(
 
   WasmStackAllocatorChunk* chunk =
       wasm_alloc(stack_allocator->fallback, real_size, CHUNK_ALIGN);
-  if (!chunk)
-    return NULL;
+  if (!chunk) {
+    if (stack_allocator->has_jmpbuf)
+      longjmp(stack_allocator->jmpbuf, 1);
+    WASM_FATAL("%s:%d: memory allocation failed\n", file, line);
+  }
   /* use the same allocation for the WasmStackAllocatorChunk and its data. + 1
    * skips over the WasmStackAllocatorChunk */
   chunk->start = chunk + 1;
@@ -97,9 +103,7 @@ static void* stack_alloc(WasmAllocator* allocator,
   size_t alloc_size = size + align - 1;
   void* result;
   if (alloc_size >= CHUNK_MAX_AVAIL) {
-    chunk = allocate_chunk(stack_allocator, alloc_size);
-    if (!chunk)
-      return NULL;
+    chunk = allocate_chunk(stack_allocator, alloc_size, file, line);
     result = align_up(chunk->current, align);
     assert((void*)((intptr_t)result + size) <= chunk->end);
     chunk->current = chunk->end;
@@ -116,9 +120,7 @@ static void* stack_alloc(WasmAllocator* allocator,
       result = chunk->current;
       chunk->current = new_current;
     } else {
-      chunk = allocate_chunk(stack_allocator, CHUNK_MAX_AVAIL);
-      if (!chunk)
-        return NULL;
+      chunk = allocate_chunk(stack_allocator, CHUNK_MAX_AVAIL, file, line);
       chunk->prev = stack_allocator->last;
       stack_allocator->last = chunk;
       chunk->current = align_up(chunk->current, align);
@@ -164,8 +166,6 @@ static void* stack_realloc(WasmAllocator* allocator,
 
   assert(chunk);
   void* result = stack_alloc(allocator, size, align, NULL, 0);
-  if (!result)
-    return NULL;
 
 #if TRACE_ALLOCATOR
   if (file) {
@@ -244,8 +244,6 @@ static WasmAllocatorMark stack_mark(WasmAllocator* allocator) {
 
   StackAllocatorMark* allocated_mark = stack_alloc(
       allocator, sizeof(StackAllocatorMark), WASM_DEFAULT_ALIGN, NULL, 0);
-  if (!allocated_mark)
-    return NULL;
 #if WASM_STACK_ALLOCATOR_STATS
   /* don't count this allocation */
   stack_allocator->alloc_count--;
@@ -323,6 +321,12 @@ static void stack_print_stats(WasmAllocator* allocator) {
 #endif /* WASM_STACK_ALLOCATOR_STATS */
 }
 
+static int stack_setjmp_handler(WasmAllocator* allocator) {
+  WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
+  stack_allocator->has_jmpbuf = WASM_TRUE;
+  return setjmp(stack_allocator->jmpbuf);
+}
+
 WasmResult wasm_init_stack_allocator(WasmStackAllocator* stack_allocator,
                                      WasmAllocator* fallback) {
   WASM_ZERO_MEMORY(*stack_allocator);
@@ -333,12 +337,11 @@ WasmResult wasm_init_stack_allocator(WasmStackAllocator* stack_allocator,
   stack_allocator->allocator.mark = stack_mark;
   stack_allocator->allocator.reset_to_mark = stack_reset_to_mark;
   stack_allocator->allocator.print_stats = stack_print_stats;
+  stack_allocator->allocator.setjmp_handler = stack_setjmp_handler;
   stack_allocator->fallback = fallback;
 
   WasmStackAllocatorChunk* chunk =
-      allocate_chunk(stack_allocator, CHUNK_MAX_AVAIL);
-  if (!chunk)
-    return WASM_ERROR;
+      allocate_chunk(stack_allocator, CHUNK_MAX_AVAIL, __FILE__, __LINE__);
   chunk->prev = NULL;
   stack_allocator->first = stack_allocator->last = chunk;
   return WASM_OK;

@@ -43,10 +43,10 @@ WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
                                         WasmInterpreterModule* module,
                                         WasmInterpreterThread* thread,
                                         WasmInterpreterThreadOptions* options) {
-  CHECK_RESULT(wasm_new_interpreter_value_array(allocator, &thread->value_stack,
-                                                options->value_stack_size));
-  CHECK_RESULT(wasm_new_uint32_array(allocator, &thread->call_stack,
-                                     options->call_stack_size));
+  wasm_new_interpreter_value_array(allocator, &thread->value_stack,
+                                   options->value_stack_size);
+  wasm_new_uint32_array(allocator, &thread->call_stack,
+                        options->call_stack_size);
   thread->value_stack_top = 0;
   thread->call_stack_top = 0;
   thread->pc = options->pc;
@@ -62,8 +62,8 @@ WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
     if (sig->param_types.size > max_import_params)
       max_import_params = sig->param_types.size;
   }
-  CHECK_RESULT(wasm_new_interpreter_typed_value_array(
-      allocator, &thread->import_args, max_import_params));
+  wasm_new_interpreter_typed_value_array(allocator, &thread->import_args,
+                                         max_import_params);
   return WASM_OK;
 }
 

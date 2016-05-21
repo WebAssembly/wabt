@@ -490,7 +490,7 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
                                       const WasmStringSlice* name);
 
-WasmResult wasm_make_type_binding_reverse_mapping(
+void wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator*,
     const WasmTypeVector*,
     const WasmBindingHash*,

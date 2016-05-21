@@ -85,35 +85,25 @@ void wasm_close_file_writer(WasmFileWriter* writer) {
   fclose(writer->file);
 }
 
-static WasmResult init_output_buffer(WasmAllocator* allocator,
-                                     WasmOutputBuffer* buf,
-                                     size_t initial_capacity) {
+static void init_output_buffer(WasmAllocator* allocator,
+                               WasmOutputBuffer* buf,
+                               size_t initial_capacity) {
   buf->allocator = allocator;
   buf->start = wasm_alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
-  if (!buf->start) {
-    ERROR("allocation size=%" PRIzd " failed\n", initial_capacity);
-    return WASM_ERROR;
-  }
   buf->size = 0;
   buf->capacity = initial_capacity;
-  return WASM_OK;
 }
 
-static WasmResult ensure_output_buffer_capacity(WasmOutputBuffer* buf,
-                                                size_t ensure_capacity) {
+static void ensure_output_buffer_capacity(WasmOutputBuffer* buf,
+                                          size_t ensure_capacity) {
   if (ensure_capacity > buf->capacity) {
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
     buf->start = wasm_realloc(buf->allocator, buf->start, new_capacity,
                               WASM_DEFAULT_ALIGN);
-    if (!buf->start) {
-      ERROR("allocation size=%" PRIzd " failed\n", new_capacity);
-      return WASM_ERROR;
-    }
     buf->capacity = new_capacity;
   }
-  return WASM_OK;
 }
 
 static WasmResult write_data_to_output_buffer(size_t offset,
@@ -122,8 +112,7 @@ static WasmResult write_data_to_output_buffer(size_t offset,
                                               void* user_data) {
   WasmMemoryWriter* writer = user_data;
   size_t end = offset + size;
-  if (WASM_FAILED(ensure_output_buffer_capacity(&writer->buf, end)))
-    return WASM_ERROR;
+  ensure_output_buffer_capacity(&writer->buf, end);
   memcpy((void*)((size_t)writer->buf.start + offset), data, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
@@ -138,8 +127,7 @@ static WasmResult move_data_in_output_buffer(size_t dst_offset,
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
-  if (WASM_FAILED(ensure_output_buffer_capacity(&writer->buf, end)))
-    return WASM_ERROR;
+  ensure_output_buffer_capacity(&writer->buf, end);
   void* dst = (void*)((size_t)writer->buf.start + dst_offset);
   void* src = (void*)((size_t)writer->buf.start + src_offset);
   memmove(dst, src, size);
@@ -154,8 +142,8 @@ WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;
-  return init_output_buffer(allocator, &writer->buf,
-                            INITIAL_OUTPUT_BUFFER_CAPACITY);
+  init_output_buffer(allocator, &writer->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  return WASM_OK;
 }
 
 void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,

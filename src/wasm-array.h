@@ -31,7 +31,7 @@
   WASM_EXTERN_C_BEGIN                                                        \
   static WASM_INLINE void wasm_destroy_##name##_array(                       \
       struct WasmAllocator* allocator, type##Array* array) WASM_UNUSED;      \
-  static WASM_INLINE WasmResult wasm_new_##name##_array(                     \
+  static WASM_INLINE void wasm_new_##name##_array(                           \
       struct WasmAllocator* allocator, type##Array* array, size_t size)      \
       WASM_UNUSED;                                                           \
   WASM_EXTERN_C_END                                                          \
@@ -40,12 +40,11 @@
                                    type##Array* array) {                     \
     wasm_free(allocator, array->data);                                       \
   }                                                                          \
-  WasmResult wasm_new_##name##_array(struct WasmAllocator* allocator,        \
-                                     type##Array* array, size_t size) {      \
+  void wasm_new_##name##_array(struct WasmAllocator* allocator,              \
+                               type##Array* array, size_t size) {            \
     array->size = size;                                                      \
     array->data =                                                            \
         wasm_alloc_zero(allocator, size * sizeof(type), WASM_DEFAULT_ALIGN); \
-    return array->data ? WASM_OK : WASM_ERROR;                               \
   }
 
 #define WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, v, name) \

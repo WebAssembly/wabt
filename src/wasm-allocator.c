@@ -17,7 +17,9 @@
 #include "wasm-allocator.h"
 
 #include <assert.h>
+#include <setjmp.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,6 +27,9 @@ typedef struct MemInfo {
   void* real_pointer; /* pointer as returned from malloc */
   size_t size;
 } MemInfo;
+
+static WasmBool s_has_jmpbuf;
+static jmp_buf s_jmpbuf;
 
 #ifndef NDEBUG
 static WasmBool is_power_of_two(size_t x) {
@@ -50,8 +55,11 @@ static void* libc_alloc(WasmAllocator* allocator,
     align = sizeof(void*);
 
   void* p = malloc(size + sizeof(MemInfo) + align - 1);
-  if (!p)
-    return NULL;
+  if (!p) {
+    if (s_has_jmpbuf)
+      longjmp(s_jmpbuf, 1);
+    WASM_FATAL("%s:%d: memory allocation failed\n", file, line);
+  }
 
   void* aligned = align_up((void*)((size_t)p + sizeof(MemInfo)), align);
   MemInfo* mem_info = (MemInfo*)aligned - 1;
@@ -86,9 +94,6 @@ static void* libc_realloc(WasmAllocator* allocator,
 
   MemInfo* mem_info = (MemInfo*)p - 1;
   void* new_p = libc_alloc(allocator, size, align, NULL, 0);
-  if (!new_p)
-    return NULL;
-
   size_t copy_size = size > mem_info->size ? mem_info->size : size;
   memcpy(new_p, p, copy_size);
   free(mem_info->real_pointer);
@@ -107,9 +112,14 @@ static void libc_print_stats(WasmAllocator* allocator) {
   /* TODO(binji): nothing for now, implement later */
 }
 
+static int libc_setjmp_handler(WasmAllocator* allocator) {
+  s_has_jmpbuf = WASM_TRUE;
+  return setjmp(s_jmpbuf);
+}
+
 WasmAllocator g_wasm_libc_allocator = {
-    libc_alloc, libc_realloc,       libc_free,       libc_destroy,
-    libc_mark,  libc_reset_to_mark, libc_print_stats};
+    libc_alloc, libc_realloc,       libc_free,        libc_destroy,
+    libc_mark,  libc_reset_to_mark, libc_print_stats, libc_setjmp_handler};
 
 WasmAllocator* wasm_get_libc_allocator(void) {
   return &g_wasm_libc_allocator;

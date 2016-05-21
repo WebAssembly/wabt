@@ -22,16 +22,6 @@
 #include "wasm-allocator.h"
 #include "wasm-ast.h"
 
-#define CHECK_ALLOC_(cond)                                             \
-  do {                                                                 \
-    if (!(cond)) {                                                     \
-      fprintf(stderr, "%s:%d: allocation failed", __FILE__, __LINE__); \
-      return WASM_ERROR;                                               \
-    }                                                                  \
-  } while (0)
-
-#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
-
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WASM_FAILED(expr)) \
@@ -52,10 +42,8 @@ typedef struct Context {
   LabelPtrVector labels;
 } Context;
 
-static WasmResult push_label(Context* ctx, WasmLabel* label) {
-  CHECK_ALLOC(
-      wasm_append_label_ptr_value(ctx->allocator, &ctx->labels, &label));
-  return WASM_OK;
+static void push_label(Context* ctx, WasmLabel* label) {
+  wasm_append_label_ptr_value(ctx->allocator, &ctx->labels, &label);
 }
 
 static void pop_label(Context* ctx) {
@@ -79,20 +67,17 @@ static WasmLabel* find_label_by_var(Context* ctx, WasmVar* var) {
   }
 }
 
-static WasmResult use_name_for_var(WasmAllocator* allocator,
-                                   WasmStringSlice* name,
-                                   WasmVar* var) {
+static void use_name_for_var(WasmAllocator* allocator,
+                             WasmStringSlice* name,
+                             WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME) {
     assert(wasm_string_slices_are_equal(name, &var->name));
-    return WASM_OK;
   }
 
   if (name && name->start) {
     var->type = WASM_VAR_TYPE_NAME;
     var->name = wasm_dup_string_slice(allocator, *name);
-    return var->name.start != NULL ? WASM_OK : WASM_ERROR;
   }
-  return WASM_OK;
 }
 
 static WasmResult use_name_for_func_type_var(WasmAllocator* allocator,
@@ -101,7 +86,7 @@ static WasmResult use_name_for_func_type_var(WasmAllocator* allocator,
   WasmFuncType* func_type = wasm_get_func_type_by_var(module, var);
   if (func_type == NULL)
     return WASM_ERROR;
-  CHECK_ALLOC(use_name_for_var(allocator, &func_type->name, var));
+  use_name_for_var(allocator, &func_type->name, var);
   return WASM_OK;
 }
 
@@ -111,7 +96,7 @@ static WasmResult use_name_for_func_var(WasmAllocator* allocator,
   WasmFunc* func = wasm_get_func_by_var(module, var);
   if (func == NULL)
     return WASM_ERROR;
-  CHECK_ALLOC(use_name_for_var(allocator, &func->name, var));
+  use_name_for_var(allocator, &func->name, var);
   return WASM_OK;
 }
 
@@ -121,7 +106,7 @@ static WasmResult use_name_for_import_var(WasmAllocator* allocator,
   WasmImport* import = wasm_get_import_by_var(module, var);
   if (import == NULL)
     return WASM_ERROR;
-  CHECK_ALLOC(use_name_for_var(allocator, &import->name, var));
+  use_name_for_var(allocator, &import->name, var);
   return WASM_OK;
 }
 
@@ -160,7 +145,7 @@ static WasmResult use_name_for_param_and_local_var(Context* ctx,
 
 static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(push_label(ctx, &expr->block.label));
+  push_label(ctx, &expr->block.label);
   return WASM_OK;
 }
 
@@ -172,8 +157,8 @@ static WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
 
 static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(push_label(ctx, &expr->loop.outer));
-  CHECK_RESULT(push_label(ctx, &expr->loop.inner));
+  push_label(ctx, &expr->loop.outer);
+  push_label(ctx, &expr->loop.inner);
   return WASM_OK;
 }
 
@@ -187,14 +172,14 @@ static WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
 static WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
-  CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
+  use_name_for_var(ctx->allocator, label, &expr->br.var);
   return WASM_OK;
 }
 
 static WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
-  CHECK_RESULT(use_name_for_var(ctx->allocator, label, &expr->br.var));
+  use_name_for_var(ctx->allocator, label, &expr->br.var);
   return WASM_OK;
 }
 
@@ -205,12 +190,11 @@ static WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
   for (i = 0; i < targets->size; ++i) {
     WasmVar* target = &targets->data[i];
     WasmLabel* label = find_label_by_var(ctx, target);
-    CHECK_RESULT(use_name_for_var(ctx->allocator, label, target));
+    use_name_for_var(ctx->allocator, label, target);
   }
 
   WasmLabel* label = find_label_by_var(ctx, &expr->br_table.default_target);
-  CHECK_RESULT(
-      use_name_for_var(ctx->allocator, label, &expr->br_table.default_target));
+  use_name_for_var(ctx->allocator, label, &expr->br_table.default_target);
   return WASM_OK;
 }
 
@@ -260,13 +244,13 @@ static WasmResult visit_func(Context* ctx,
 
   assert(wasm_decl_has_signature(&func->decl));
 
-  CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
+  wasm_make_type_binding_reverse_mapping(
       ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
-      &ctx->param_index_to_name));
+      &ctx->param_index_to_name);
 
-  CHECK_ALLOC(wasm_make_type_binding_reverse_mapping(
-      ctx->allocator, &func->local_types, &func->local_bindings,
-      &ctx->local_index_to_name));
+  wasm_make_type_binding_reverse_mapping(ctx->allocator, &func->local_types,
+                                         &func->local_bindings,
+                                         &ctx->local_index_to_name);
 
   CHECK_RESULT(wasm_visit_func(func, &ctx->visitor));
   ctx->current_func = NULL;
@@ -286,7 +270,7 @@ static WasmResult visit_import(Context* ctx,
 static WasmResult visit_export(Context* ctx,
                                uint32_t export_index,
                                WasmExport* export) {
-  CHECK_ALLOC(use_name_for_func_var(ctx->allocator, ctx->module, &export->var));
+  use_name_for_func_var(ctx->allocator, ctx->module, &export->var);
   return WASM_OK;
 }
 

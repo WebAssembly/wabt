@@ -20,6 +20,8 @@
 #include "wasm-allocator.h"
 #include "wasm-common.h"
 
+#include <setjmp.h>
+
 #define WASM_STACK_ALLOCATOR_STATS 0
 
 typedef struct WasmStackAllocatorChunk {
@@ -39,6 +41,8 @@ typedef struct WasmStackAllocator {
   WasmAllocator* fallback;
   void* last_allocation;
   WasmStackAllocatorChunk* next_free;
+  WasmBool has_jmpbuf;
+  jmp_buf jmpbuf;
 
 #if WASM_STACK_ALLOCATOR_STATS
   /* some random stats */

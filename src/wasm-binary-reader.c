@@ -61,11 +61,6 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
 
-#define CHECK_ALLOC_(cond) \
-  RAISE_ERROR_UNLESS(cond, "%s:%d: allocation failed\n", __FILE__, __LINE__)
-
-#define CHECK_ALLOC(e) CHECK_ALLOC_(WASM_SUCCEEDED(e))
-
 /* clang-format off */
 enum {
 #define V(name) WASM_SECTION_INDEX_##name,
@@ -376,10 +371,10 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     return WASM_ERROR;
   }
 
-  CHECK_ALLOC(wasm_reserve_types(allocator, &ctx->param_types,
-                                 INITIAL_PARAM_TYPES_CAPACITY));
-  CHECK_ALLOC(wasm_reserve_uint32s(allocator, &ctx->target_depths,
-                                   INITIAL_BR_TABLE_TARGET_CAPACITY));
+  wasm_reserve_types(allocator, &ctx->param_types,
+                     INITIAL_PARAM_TYPES_CAPACITY);
+  wasm_reserve_uint32s(allocator, &ctx->target_depths,
+                       INITIAL_BR_TABLE_TARGET_CAPACITY);
 
   CALLBACK0(begin_module);
 
@@ -407,10 +402,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint32_t num_params;
       in_u32_leb128(ctx, &num_params, "function param count");
 
-      if (num_params > ctx->param_types.capacity) {
-        CHECK_ALLOC(
-            wasm_reserve_types(allocator, &ctx->param_types, num_params));
-      }
+      if (num_params > ctx->param_types.capacity)
+        wasm_reserve_types(allocator, &ctx->param_types, num_params);
 
       uint32_t j;
       for (j = 0; j < num_params; ++j) {
@@ -643,8 +636,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               uint32_t num_targets;
               in_u32_leb128(ctx, &num_targets, "br_table target count");
               if (num_targets > ctx->target_depths.capacity) {
-                CHECK_ALLOC(wasm_reserve_uint32s(allocator, &ctx->target_depths,
-                                                 num_targets));
+                wasm_reserve_uint32s(allocator, &ctx->target_depths,
+                                     num_targets);
                 ctx->target_depths.size = num_targets;
               }
 

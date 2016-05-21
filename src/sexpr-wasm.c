@@ -32,15 +32,6 @@
 #include "wasm-stream.h"
 #include "wasm-writer.h"
 
-#define ALLOC_FAILURE \
-  WASM_FATAL("%s:%d: allocation failed\n", __FILE__, __LINE__)
-
-#define CHECK_ALLOC(cond) \
-  do {                    \
-    if ((cond) == NULL)   \
-      ALLOC_FAILURE;      \
-  } while (0)
-
 static const char* s_infile;
 static const char* s_outfile;
 static WasmBool s_dump_module;
@@ -258,8 +249,7 @@ static char* get_module_filename(WasmAllocator* allocator,
                                  WasmStringSlice* filename_noext,
                                  uint32_t index) {
   size_t buflen = filename_noext->length + 20;
-  char* str;
-  CHECK_ALLOC(str = wasm_alloc(allocator, buflen, WASM_DEFAULT_ALIGN));
+  char* str = wasm_alloc(allocator, buflen, WASM_DEFAULT_ALIGN);
   wasm_snprintf(str, buflen, PRIstringslice ".%d.wasm",
                 WASM_PRINTF_STRING_SLICE_ARG(*filename_noext), index);
   return str;
