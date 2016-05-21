@@ -1,0 +1,27 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --generate-names
+(module
+  (func
+    (if (i32.const 1)
+      (then
+        (br 0)))
+    (if (i32.const 2)
+      (then
+        (br 0))
+      (else
+        (br 0)))))
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0)
+    (if
+      (i32.const 1)
+      (then $L0
+        (br $L0)))
+    (if
+      (i32.const 2)
+      (then $L1
+        (br $L1))
+      (else $L2
+        (br $L2)))))
+;;; STDOUT ;;)

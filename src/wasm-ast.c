@@ -734,6 +734,7 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
     case WASM_EXPR_TYPE_IF:
       CALLBACK(begin_if_expr);
       CHECK_RESULT(visit_expr(expr->if_.cond, visitor));
+      CALLBACK(after_if_cond_expr);
       CHECK_RESULT(visit_expr_list(expr->if_.true_.first, visitor));
       CALLBACK(end_if_expr);
       break;
@@ -741,7 +742,9 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
     case WASM_EXPR_TYPE_IF_ELSE:
       CALLBACK(begin_if_else_expr);
       CHECK_RESULT(visit_expr(expr->if_else.cond, visitor));
+      CALLBACK(after_if_else_cond_expr);
       CHECK_RESULT(visit_expr_list(expr->if_else.true_.first, visitor));
+      CALLBACK(after_if_else_true_expr);
       CHECK_RESULT(visit_expr_list(expr->if_else.false_.first, visitor));
       CALLBACK(end_if_else_expr);
       break;

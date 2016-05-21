@@ -115,6 +115,23 @@ static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult begin_if_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
+                      &expr->if_.true_.label);
+  return WASM_OK;
+}
+
+static WasmResult begin_if_else_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
+                      &expr->if_else.true_.label);
+  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
+                      &expr->if_else.false_.label);
+  return WASM_OK;
+}
+
+
 static WasmResult visit_func(Context* ctx,
                              uint32_t func_index,
                              WasmFunc* func) {
@@ -172,6 +189,8 @@ WasmResult wasm_generate_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.visitor.user_data = &ctx;
   ctx.visitor.begin_block_expr = begin_block_expr;
   ctx.visitor.begin_loop_expr = begin_loop_expr;
+  ctx.visitor.begin_if_expr = begin_if_expr;
+  ctx.visitor.begin_if_else_expr = begin_if_else_expr;
   ctx.module = module;
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.index_to_name);

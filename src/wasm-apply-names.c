@@ -178,8 +178,8 @@ static WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
 
 static WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
-  use_name_for_var(ctx->allocator, label, &expr->br.var);
+  WasmLabel* label = find_label_by_var(ctx, &expr->br_if.var);
+  use_name_for_var(ctx->allocator, label, &expr->br_if.var);
   return WASM_OK;
 }
 
@@ -223,6 +223,37 @@ static WasmResult on_get_local_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->get_local.var));
+  return WASM_OK;
+}
+
+static WasmResult after_if_cond_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  push_label(ctx, &expr->if_.true_.label);
+  return WASM_OK;
+}
+
+static WasmResult end_if_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  pop_label(ctx);
+  return WASM_OK;
+}
+
+static WasmResult after_if_else_cond_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  push_label(ctx, &expr->if_else.true_.label);
+  return WASM_OK;
+}
+
+static WasmResult after_if_else_true_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  pop_label(ctx);
+  push_label(ctx, &expr->if_else.false_.label);
+  return WASM_OK;
+}
+
+static WasmResult end_if_else_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  pop_label(ctx);
   return WASM_OK;
 }
 
@@ -308,6 +339,11 @@ WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.visitor.begin_call_import_expr = begin_call_import_expr;
   ctx.visitor.begin_call_indirect_expr = begin_call_indirect_expr;
   ctx.visitor.on_get_local_expr = on_get_local_expr;
+  ctx.visitor.after_if_cond_expr = after_if_cond_expr;
+  ctx.visitor.end_if_expr = end_if_expr;
+  ctx.visitor.after_if_else_cond_expr = after_if_else_cond_expr;
+  ctx.visitor.after_if_else_true_expr = after_if_else_true_expr;
+  ctx.visitor.end_if_else_expr = end_if_else_expr;
   ctx.visitor.begin_set_local_expr = begin_set_local_expr;
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.param_index_to_name);

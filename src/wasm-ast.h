@@ -389,8 +389,11 @@ typedef struct WasmExprVisitor {
   WasmResult (*begin_grow_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_grow_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_if_expr)(WasmExpr*, void* user_data);
+  WasmResult (*after_if_cond_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_if_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_if_else_expr)(WasmExpr*, void* user_data);
+  WasmResult (*after_if_else_cond_expr)(WasmExpr*, void* user_data);
+  WasmResult (*after_if_else_true_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_if_else_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_load_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_load_expr)(WasmExpr*, void* user_data);
