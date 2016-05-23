@@ -366,7 +366,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define GOTO(offset) pc = &istream[offset]
 
-#define PUSH_CALL(o)                                 \
+#define PUSH_CALL()                                  \
   do {                                               \
     TRAP_IF(cs_top >= cs_end, CALL_STACK_EXHAUSTED); \
     (*cs_top++) = (pc - istream);                    \

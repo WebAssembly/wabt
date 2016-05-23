@@ -131,18 +131,25 @@ __inline unsigned long wasm_clz_u64(unsigned __int64 mask) {
 }
 
 __inline unsigned long wasm_ctz_u32(unsigned long mask) {
-  unsigned long index;
-  _BitScanForward(&index, mask);
-  return sizeof(unsigned long) * 8 - (index + 1);
+    unsigned long index;
+    _BitScanForward(&index, mask);
+    return index;
 }
 
 __inline unsigned long wasm_ctz_u64(unsigned __int64 mask) {
 #if _M_X64
-  unsigned long index;
-  _BitScanForward64(&index, mask);
-  return sizeof(unsigned __int64) * 8 - (index + 1);
+    unsigned long index;
+    _BitScanForward64(&index, mask);
+    return index;
 #elif _M_IX86
-  /* TODO(binji): implement */
+    unsigned long low_mask = (unsigned long)mask;
+    if (low_mask) {
+        return wasm_ctz_u32(low_mask);
+    }
+    unsigned long high_mask;
+    memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
+           sizeof(unsigned long));
+    return sizeof(unsigned long) * 8 + wasm_ctz_u32(high_mask);
 #else
 #error unexpected architecture
 #endif
@@ -151,12 +158,19 @@ __inline unsigned long wasm_ctz_u64(unsigned __int64 mask) {
 
 #define wasm_popcount_u32 __popcnt
 #if _M_X64
-#define wasm_popcount_u64 __popcnt64
 #elif _M_IX86
-/* TODO(binji): implement */
+__inline unsigned __int64 __popcnt64(unsigned __int64 value) {
+    unsigned long high_value;
+    unsigned long low_value;
+    memcpy(&high_value, (unsigned char*)&value + sizeof(unsigned long),
+           sizeof(unsigned long));
+    memcpy(&low_value, &value, sizeof(unsigned long));
+    return wasm_popcount_u32(high_value) + wasm_popcount_u32(low_value);
+}
 #else
 #error unexpected architecture
 #endif
+#define wasm_popcount_u64 __popcnt64
 
 /* print format specifier for size_t */
 #if SIZEOF_SIZE_T == 4
