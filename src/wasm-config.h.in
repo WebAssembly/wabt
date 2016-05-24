@@ -93,6 +93,7 @@
 
 #elif COMPILER_IS_MSVC
 
+#include <vcruntime_string.h>
 #define WASM_UNUSED
 #define WASM_WARN_UNUSED _Check_return_
 #define WASM_INLINE __inline

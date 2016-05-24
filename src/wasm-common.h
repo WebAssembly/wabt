@@ -371,6 +371,8 @@ void wasm_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data);
 
+void wasm_initialize_stdio();
+
 WASM_EXTERN_C_END
 
 #endif /* WASM_COMMON_H_ */
