@@ -1,0 +1,9 @@
+;;; TOOL: run-js-spec
+;;; STDIN_FILE: third_party/testsuite/nop.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/nop.wast:18:30: type mismatch in nop. got void, expected i32
+  (module (func (result i32) (nop)))
+                             ^
+2/2 tests passed.
+;;; STDOUT ;;)

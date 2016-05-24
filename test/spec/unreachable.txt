@@ -1,5 +1,5 @@
 ;;; TOOL: run-js-spec
 ;;; STDIN_FILE: third_party/testsuite/unreachable.wast
 (;; STDOUT ;;;
-8/8 tests passed.
+56/56 tests passed.
 ;;; STDOUT ;;)

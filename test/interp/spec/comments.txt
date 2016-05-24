@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/block_comments.wast
+;;; STDIN_FILE: third_party/testsuite/comments.wast
 (;; STDOUT ;;;
 0/0 tests passed.
 ;;; STDOUT ;;)
