@@ -424,7 +424,7 @@ static void squirrel_push_typedvalue(HSQUIRRELVM v,
     }
 
     case WASM_TYPE_I64:
-      sq_pushinteger(v, tv->value.i64);
+      sq_pushinteger(v, (SQInteger)tv->value.i64);
       break;
 
     case WASM_TYPE_F32:
@@ -432,7 +432,7 @@ static void squirrel_push_typedvalue(HSQUIRRELVM v,
       break;
 
     case WASM_TYPE_F64:
-      sq_pushfloat(v, bitcast_u64_to_f64(tv->value.f64_bits));
+      sq_pushfloat(v, (SQFloat)bitcast_u64_to_f64(tv->value.f64_bits));
       break;
   }
 }
@@ -832,26 +832,31 @@ static SQRESULT squirrel_memory_get_addr(HSQUIRRELVM v,
 }
 
 /* TODO(binji): this will truncate values if SQInteger/SQFloat is too small */
-#define DEFINE_MEMORY_GET(name, type, sqop)                            \
+#define DEFINE_MEMORY_GET(name, type, sqtype, sqop)                    \
   static SQInteger name(HSQUIRRELVM v) {                               \
     void* addr;                                                        \
     CHECK_SQ_RESULT(squirrel_memory_get_addr(v, sizeof(type), &addr)); \
     type value;                                                        \
     memcpy(&value, addr, sizeof(value));                               \
-    sqop(v, value);                                                    \
+    sqop(v, (sqtype)value);                                            \
     return 1;                                                          \
   }
 
-DEFINE_MEMORY_GET(squirrel_memory_get_i8, int8_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_u8, uint8_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_i16, int16_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_u16, uint16_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_i32, int32_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_u32, uint32_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_i64, int64_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_u64, uint64_t, sq_pushinteger)
-DEFINE_MEMORY_GET(squirrel_memory_get_f32, float, sq_pushfloat)
-DEFINE_MEMORY_GET(squirrel_memory_get_f64, double, sq_pushfloat)
+#define DEFINE_MEMORY_GET_INTEGER(name, type) \
+  DEFINE_MEMORY_GET(name, type, SQInteger, sq_pushinteger)
+#define DEFINE_MEMORY_GET_FLOAT(name, type) \
+  DEFINE_MEMORY_GET(name, type, SQFloat, sq_pushfloat)
+
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_i8, int8_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_u8, uint8_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_i16, int16_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_u16, uint16_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_i32, int32_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_u32, uint32_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_i64, int64_t)
+DEFINE_MEMORY_GET_INTEGER(squirrel_memory_get_u64, uint64_t)
+DEFINE_MEMORY_GET_FLOAT(squirrel_memory_get_f32, float)
+DEFINE_MEMORY_GET_FLOAT(squirrel_memory_get_f64, double)
 
 #define DEFINE_MEMORY_SET(name, type, sqtype, sqop)                    \
   static SQInteger name(HSQUIRRELVM v) {                               \

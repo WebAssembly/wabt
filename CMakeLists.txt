@@ -232,7 +232,10 @@ target_link_libraries(wasm-wast libwasm)
 # wasm-interp
 add_executable(wasm-interp src/wasm-interp.c)
 add_dependencies(everything wasm-interp)
-target_link_libraries(wasm-interp libwasm m)
+target_link_libraries(wasm-interp libwasm)
+if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+  target_link_libraries(wasm-interp m)
+endif ()
 
 # stuff that requires squirrel
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
@@ -275,7 +278,10 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
   # wasm-interp-sq
   add_executable(wasm-interp-sq src/wasm-interp-sq.c)
   add_dependencies(everything wasm-interp-sq)
-  target_link_libraries(wasm-interp-sq libwasm libsquirrel m)
+  target_link_libraries(wasm-interp-sq libwasm libsquirrel)
+  if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+    target_link_libraries(wasm-interp-sq m)
+  endif ()
 endif ()
 
 

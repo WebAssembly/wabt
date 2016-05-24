@@ -845,9 +845,9 @@ static void write_module(WasmContext* ctx, const WasmModule* module) {
   if (module->memory) {
     WasmBool export_memory = module->export_memory != NULL;
     begin_section(ctx, WASM_SECTION_NAME_MEMORY, leb_size_guess);
-    write_u32_leb128(&ctx->stream, module->memory->initial_pages,
+    write_u32_leb128(&ctx->stream, (uint32_t)module->memory->initial_pages,
                      "min mem pages");
-    write_u32_leb128(&ctx->stream, module->memory->max_pages, "max mem pages");
+    write_u32_leb128(&ctx->stream, (uint32_t)module->memory->max_pages, "max mem pages");
     wasm_write_u8(&ctx->stream, export_memory, "export mem");
     end_section(ctx);
   }
