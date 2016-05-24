@@ -30,6 +30,7 @@ DOWNLOAD_D8_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
 BUILT_SM_EXE = os.path.join(REPO_ROOT_DIR, 'third_party', 'gecko-dev', 'js',
                             'src', 'build_OPT.OBJ', 'js', 'src', 'js')
 DOWNLOAD_SM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'js')
+DOWNLOAD_CHAKRA_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'ch')
 DEFAULT_WASM_WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
 DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
 
@@ -40,6 +41,7 @@ if IS_WINDOWS:
   DOWNLOAD_D8_EXE += '.exe'
   BUILT_SM_EXE += '.exe'
   DOWNLOAD_SM_EXE += '.exe'
+  DOWNLOAD_CHAKRA_EXE += '.exe'
   DEFAULT_WASM_WAST_EXE += '.exe'
   DEFAULT_WASM_INTERP_EXE += '.exe'
 
@@ -74,4 +76,4 @@ def GetWasmInterpExecutable(override=None):
 
 def GetJSExecutable(override=None):
   return FindExeWithFallback('js',
-      [BUILT_D8_EXE, BUILT_SM_EXE, DOWNLOAD_D8_EXE, DOWNLOAD_SM_EXE], override)
+      [BUILT_D8_EXE, BUILT_SM_EXE, DOWNLOAD_D8_EXE, DOWNLOAD_SM_EXE, DOWNLOAD_CHAKRA_EXE], override)

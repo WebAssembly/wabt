@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-/* polyfill from SM to D8 */
+/* polyfill from SM/CH to D8 */
 if (typeof arguments == 'undefined') {
-  arguments = scriptArgs;
+  if (typeof scriptArgs != 'undefined') {
+    arguments = scriptArgs;
+  } else if(typeof WScript != 'undefined') {
+    arguments = WScript.Arguments || [];
+  }
+}
+
+if (typeof quit == 'undefined') {
+  if (typeof WScript != 'undefined') {
+    quit = WScript.quit;
+  }
 }
 
 if (typeof readbuffer == 'undefined') {
@@ -36,34 +46,39 @@ var quiet = false;
 run(arguments[0]);
 
 function run(inPath) {
-  var lastSlash = inPath.lastIndexOf('/');
+  var lastSlash = Math.max(inPath.lastIndexOf('/'), inPath.lastIndexOf('\\'));
   var inDir = lastSlash == -1 ? '.' : inPath.slice(0, lastSlash);
   var data = read(inPath);
   var jsonData = JSON.parse(data);
 
   for (var i = 0; i < jsonData.modules.length; ++i) {
-    var module = jsonData.modules[i];
-    var moduleFile = readbuffer(inDir + '/' + module.filename);
-    var m = createModule(moduleFile);
-    for (var j = 0; j < module.commands.length; ++j) {
-      var command = module.commands[j];
-      switch (command.type) {
-        case 'invoke':
-          invoke(m, command.name);
-          break;
+    var module = jsonData.modules[i] || {};
+    try {
+      var moduleFile = readbuffer(inDir + '/' + module.filename);
+      var m = createModule(moduleFile);
+      for (var j = 0; j < module.commands.length; ++j) {
+        var command = module.commands[j];
+        switch (command.type) {
+          case 'invoke':
+            invoke(m, command.name);
+            break;
 
-        case 'assert_return':
-          assertReturn(m, command.name, command.file, command.line);
-          break;
+          case 'assert_return':
+            assertReturn(m, command.name, command.file, command.line);
+            break;
 
-        case 'assert_return_nan':
-          assertReturn(m, command.name, command.file, command.line);
-          break;
+          case 'assert_return_nan':
+            assertReturn(m, command.name, command.file, command.line);
+            break;
 
-        case 'assert_trap':
-          assertTrap(m, command.name, command.file, command.line);
-          break;
+          case 'assert_trap':
+            assertTrap(m, command.name, command.file, command.line);
+            break;
+        }
       }
+    } catch (e) {
+      print("Unexpected Error while compiling " + module.filename);
+      print(e);
     }
   }
   end();

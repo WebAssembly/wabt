@@ -301,6 +301,17 @@ static void on_module_begin(uint32_t index, void* user_data) {
       get_module_filename(ctx->allocator, &ctx->output_filename_noext, index);
   if (index != 0)
     wasm_writef(&ctx->json_stream, ",\n");
+  const int l = strlen(ctx->module_filename);
+  char* filename = ctx->module_filename;
+  int i = 0;
+  for (; i < l; ++i)
+  {
+      if (filename[i] == '\\')
+      {
+          filename[i] = '/';
+      }
+  }
+
   WasmStringSlice module_basename = get_basename(ctx->module_filename);
   wasm_writef(&ctx->json_stream,
               "  {\"filename\": \"" PRIstringslice "\", \"commands\": [\n",
@@ -334,8 +345,20 @@ static void on_command(uint32_t index,
   Context* ctx = user_data;
   if (index != 0)
     wasm_writef(&ctx->json_stream, ",\n");
+  const int l = strlen(loc->filename);
+  char* filename = wasm_alloc(ctx->allocator, l, WASM_DEFAULT_ALIGN);
+  memcpy(filename, loc->filename, l);
+  int i = 0;
+  for (; i < l; ++i)
+  {
+      if (filename[i] == '\\')
+      {
+          filename[i] = '/';
+      }
+  }
   wasm_writef(&ctx->json_stream, s_command_format, s_command_names[type],
-              WASM_PRINTF_STRING_SLICE_ARG(*name), loc->filename, loc->line);
+              WASM_PRINTF_STRING_SLICE_ARG(*name), filename, loc->line);
+  wasm_free(ctx->allocator, filename);
 }
 
 static void on_module_before_write(uint32_t index,

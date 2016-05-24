@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-/* polyfill from SM to D8 */
+/* polyfill from SM/CH to D8 */
 if (typeof arguments == 'undefined') {
-  arguments = scriptArgs;
+  if (typeof scriptArgs != 'undefined') {
+    arguments = scriptArgs;
+  } else if(typeof WScript != 'undefined') {
+    arguments = WScript.Arguments || [];
+  }
+}
+
+if (typeof quit == 'undefined') {
+  if (typeof WScript != 'undefined') {
+    quit = WScript.quit;
+  }
 }
 
 if (typeof readbuffer == 'undefined') {
