@@ -270,6 +270,8 @@ static WasmResult on_data_segment(uint32_t index,
   Context* ctx = user_data;
   WasmInterpreterMemory* memory = &ctx->module->memory;
   uint8_t* dst_data = memory->data;
+  if ((uint64_t)address + (uint64_t)size > memory->byte_size)
+    return WASM_ERROR;
   memcpy(&dst_data[address], src_data, size);
   return WASM_OK;
 }
@@ -527,15 +529,18 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-
-  /* discard everything except the last expr */
-  uint32_t discard_max = ctx->expr_stack.size - 1;
+  uint32_t discard_max = 0;
 
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
   if (sig->result_type == WASM_TYPE_VOID) {
-    /* discard last expr too */
-    discard_max++;
+    /* discard all expr */
+    discard_max = ctx->expr_stack.size;
+  } else if (ctx->expr_stack.size > 0) {
+    /* discard everything except the last expr */
+    discard_max = ctx->expr_stack.size - 1;
+  } else {
+    return WASM_ERROR;
   }
 
   uint32_t i;
@@ -1850,6 +1855,8 @@ WasmResult wasm_read_binary_interpreter(WasmAllocator* allocator,
     wasm_steal_mem_writer_output_buffer(&ctx.istream_writer,
                                         &out_module->istream);
     out_module->istream.size = ctx.istream_offset;
+  } else {
+    wasm_close_mem_writer(&ctx.istream_writer);
   }
   destroy_context(&ctx);
   return result;

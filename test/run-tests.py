@@ -98,6 +98,14 @@ TOOLS = {
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
     ])
+  },
+  'run-gen-wasm-interp': {
+    'EXE': 'test/run-gen-wasm-interp.py',
+    'FLAGS': ' '.join([
+      '--wasm-interp-executable=%(wasm-interp)s',
+      '--run-all-exports',
+      '--no-error-cmdline',
+    ])
   }
 }
 

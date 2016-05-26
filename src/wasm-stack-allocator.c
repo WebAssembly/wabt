@@ -62,6 +62,7 @@ static WasmStackAllocatorChunk* allocate_chunk(
     size_t max_avail,
     const char* file,
     int line) {
+  assert(max_avail < SIZE_MAX - sizeof(WasmStackAllocatorChunk));
   size_t real_size = max_avail + sizeof(WasmStackAllocatorChunk);
   /* common case of allocating a chunk of exactly CHUNK_SIZE */
   if (real_size == CHUNK_SIZE) {
@@ -100,6 +101,7 @@ static void* stack_alloc(WasmAllocator* allocator,
   WasmStackAllocator* stack_allocator = (WasmStackAllocator*)allocator;
   assert(is_power_of_two(align));
   WasmStackAllocatorChunk* chunk = stack_allocator->last;
+  assert(size < SIZE_MAX - align + 1);
   size_t alloc_size = size + align - 1;
   void* result;
   if (alloc_size >= CHUNK_MAX_AVAIL) {
