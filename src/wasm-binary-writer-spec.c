@@ -278,6 +278,9 @@ static void write_commands(Context* ctx, WasmScript* script) {
       num_assert_funcs = 0;
       ++num_modules;
     } else {
+      if (!last_module)
+        continue;
+
       const char* format = NULL;
       WasmCommandInvoke* invoke = NULL;
       switch (command->type) {

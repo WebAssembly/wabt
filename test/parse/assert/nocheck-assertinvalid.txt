@@ -1,0 +1,10 @@
+;;; FLAGS: --spec --no-check-assert-invalid
+
+;; normally would fail because the module is valid.
+(assert_invalid
+  (module) "foo")
+
+;; normally would print a message displaying why the module was invalid.
+(assert_invalid
+  (module
+    (func (result i32) (i64.const 1))) "bar")

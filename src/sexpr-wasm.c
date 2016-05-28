@@ -42,6 +42,8 @@ static WasmWriteBinarySpecOptions s_write_binary_spec_options =
     WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static WasmBool s_spec;
 static WasmBool s_use_libc_allocator;
+static WasmBool s_check = WASM_TRUE;
+static WasmBool s_check_assert_invalid = WASM_TRUE;
 
 static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
@@ -64,6 +66,8 @@ enum {
   FLAG_NO_CANONICALIZE_LEB128S,
   FLAG_NO_REMAP_LOCALS,
   FLAG_DEBUG_NAMES,
+  FLAG_NO_CHECK,
+  FLAG_NO_CHECK_ASSERT_INVALID,
   NUM_FLAGS
 };
 
@@ -107,6 +111,10 @@ static WasmOption s_options[] = {
      "them to reduce size"},
     {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
      "Write debug names to the generated binary file"},
+    {FLAG_NO_CHECK, 0, "no-check", NULL, NOPE,
+     "Don't check for invalid modules"},
+    {FLAG_NO_CHECK_ASSERT_INVALID, 0, "no-check-assert-invalid", NULL, NOPE,
+     "Don't run the assert_invalid checks"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
@@ -152,6 +160,14 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_DEBUG_NAMES:
       s_write_binary_options.write_debug_names = WASM_TRUE;
+      break;
+
+    case FLAG_NO_CHECK:
+      s_check = WASM_FALSE;
+      break;
+
+    case FLAG_NO_CHECK_ASSERT_INVALID:
+      s_check_assert_invalid = WASM_FALSE;
       break;
   }
 }
@@ -370,9 +386,15 @@ int main(int argc, char** argv) {
   WasmResult result = wasm_parse_ast(lexer, &script, &s_error_handler);
 
   if (WASM_SUCCEEDED(result)) {
-    result = wasm_check_ast(lexer, &script, &s_error_handler);
+    if (s_check) {
+      /* full validation of the module */
+      result = wasm_check_ast(lexer, &script, &s_error_handler);
+    } else {
+      /* minimal checks necessary to ensure we can generate a binary */
+      result = wasm_check_names(lexer, &script, &s_error_handler);
+    }
 
-    if (WASM_SUCCEEDED(result)) {
+    if (WASM_SUCCEEDED(result) && s_check_assert_invalid) {
       result = wasm_check_assert_invalid(allocator, lexer, &script,
                                          &s_assert_invalid_error_handler,
                                          &s_error_handler);

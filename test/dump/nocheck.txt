@@ -1,0 +1,53 @@
+;;; FLAGS: -v --no-check
+(module
+  (func (result i64)
+    (i32.add
+      (f32.const 1)
+      (f64.const 2)))
+  (export "foo" 0))
+(;; STDOUT ;;;
+0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
+0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+; section "type"
+0000008: 04                                         ; string length
+0000009: 7479 7065                                  ; section id: "type"
+000000d: 00                                         ; section size (guess)
+000000e: 01                                         ; num types
+; type 0
+000000f: 40                                         ; function form
+0000010: 00                                         ; num params
+0000011: 01                                         ; num results
+0000012: 02                                         ; result_type
+000000d: 05                                         ; FIXUP section size
+; section "function"
+0000013: 08                                         ; string length
+0000014: 6675 6e63 7469 6f6e                        ; section id: "function"
+000001c: 00                                         ; section size (guess)
+000001d: 01                                         ; num functions
+000001e: 00                                         ; function 0 signature index
+000001c: 02                                         ; FIXUP section size
+; section "export"
+000001f: 06                                         ; string length
+0000020: 6578 706f 7274                             ; section id: "export"
+0000026: 00                                         ; section size (guess)
+0000027: 01                                         ; num exports
+0000028: 00                                         ; export func index
+0000029: 03                                         ; string length
+000002a: 666f 6f                                  foo  ; export name
+0000026: 06                                         ; FIXUP section size
+; section "code"
+000002d: 04                                         ; string length
+000002e: 636f 6465                                  ; section id: "code"
+0000032: 00                                         ; section size (guess)
+0000033: 01                                         ; num functions
+; function body 0
+0000034: 00                                         ; func body size (guess)
+0000035: 00                                         ; local decl count
+0000036: 13                                         ; OPCODE_F32_CONST
+0000037: 0000 803f                                  ; f32 literal
+000003b: 12                                         ; OPCODE_F64_CONST
+000003c: 0000 0000 0000 0040                        ; f64 literal
+0000044: 40                                         ; OPCODE_I32_ADD
+0000034: 10                                         ; FIXUP func body size
+0000032: 12                                         ; FIXUP section size
+;;; STDOUT ;;)

@@ -83,6 +83,11 @@ static WasmType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
 static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+typedef enum CheckType {
+  CHECK_TYPE_NAME,
+  CHECK_TYPE_FULL,
+} CheckType;
+
 typedef struct LabelNode {
   const WasmLabel* label;
   WasmType expected_type;
@@ -91,6 +96,7 @@ typedef struct LabelNode {
 } LabelNode;
 
 typedef struct Context {
+  CheckType check_type;
   WasmSourceErrorHandler* error_handler;
   WasmAllocator* allocator;
   WasmAstLexer* lexer;
@@ -101,13 +107,18 @@ typedef struct Context {
   WasmResult result;
 } Context;
 
-static void WASM_PRINTF_FORMAT(3, 4)
-    print_error(Context* ctx, const WasmLocation* loc, const char* fmt, ...) {
-  ctx->result = WASM_ERROR;
-  va_list args;
-  va_start(args, fmt);
-  wasm_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
-  va_end(args);
+static void WASM_PRINTF_FORMAT(4, 5) print_error(Context* ctx,
+                                                 CheckType check_type,
+                                                 const WasmLocation* loc,
+                                                 const char* fmt,
+                                                 ...) {
+  if (check_type <= ctx->check_type) {
+    ctx->result = WASM_ERROR;
+    va_list args;
+    va_start(args, fmt);
+    wasm_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
+    va_end(args);
+  }
 }
 
 static WasmBool is_power_of_two(uint32_t x) {
@@ -136,8 +147,9 @@ static void check_duplicate_bindings(Context* ctx,
           WasmLocation* a_loc = &a->binding.loc;
           WasmLocation* b_loc = &b->binding.loc;
           WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
-          print_error(ctx, loc, "redefinition of %s \"" PRIstringslice "\"",
-                      desc, WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
+          print_error(ctx, CHECK_TYPE_NAME, loc,
+                      "redefinition of %s \"" PRIstringslice "\"", desc,
+                      WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
         }
       }
     }
@@ -156,12 +168,14 @@ static WasmResult check_var(Context* ctx,
       *out_index = index;
     return WASM_OK;
   }
-  if (var->type == WASM_VAR_TYPE_NAME)
-    print_error(ctx, &var->loc, "undefined %s variable \"" PRIstringslice "\"",
-                desc, WASM_PRINTF_STRING_SLICE_ARG(var->name));
-  else
-    print_error(ctx, &var->loc, "%s variable out of range (max %d)", desc,
-                max_index);
+  if (var->type == WASM_VAR_TYPE_NAME) {
+    print_error(ctx, CHECK_TYPE_NAME, &var->loc,
+                "undefined %s variable \"" PRIstringslice "\"", desc,
+                WASM_PRINTF_STRING_SLICE_ARG(var->name));
+  } else {
+    print_error(ctx, CHECK_TYPE_NAME, &var->loc,
+                "%s variable out of range (max %d)", desc, max_index);
+  }
   return WASM_ERROR;
 }
 
@@ -228,12 +242,12 @@ static WasmResult check_local_var(Context* ctx,
   }
 
   if (var->type == WASM_VAR_TYPE_NAME) {
-    print_error(ctx, &var->loc,
+    print_error(ctx, CHECK_TYPE_NAME, &var->loc,
                 "undefined local variable \"" PRIstringslice "\"",
                 WASM_PRINTF_STRING_SLICE_ARG(var->name));
   } else {
-    print_error(ctx, &var->loc, "local variable out of range (max %d)",
-                max_index);
+    print_error(ctx, CHECK_TYPE_NAME, &var->loc,
+                "local variable out of range (max %d)", max_index);
   }
   return WASM_ERROR;
 }
@@ -242,14 +256,16 @@ static void check_align(Context* ctx,
                         const WasmLocation* loc,
                         uint32_t alignment) {
   if (alignment != WASM_USE_NATURAL_ALIGNMENT && !is_power_of_two(alignment))
-    print_error(ctx, loc, "alignment must be power-of-two");
+    print_error(ctx, CHECK_TYPE_FULL, loc, "alignment must be power-of-two");
 }
 
 static void check_offset(Context* ctx,
                          const WasmLocation* loc,
                          uint64_t offset) {
-  if (offset > UINT32_MAX)
-    print_error(ctx, loc, "offset must be less than or equal to 0xffffffff");
+  if (offset > UINT32_MAX) {
+    print_error(ctx, CHECK_TYPE_FULL, loc,
+                "offset must be less than or equal to 0xffffffff");
+  }
 }
 
 static void check_type(Context* ctx,
@@ -258,7 +274,8 @@ static void check_type(Context* ctx,
                        WasmType expected,
                        const char* desc) {
   if (expected != WASM_TYPE_VOID && actual != expected) {
-    print_error(ctx, loc, "type mismatch%s. got %s, expected %s", desc,
+    print_error(ctx, CHECK_TYPE_FULL, loc,
+                "type mismatch%s. got %s, expected %s", desc,
                 s_type_names[actual], s_type_names[expected]);
   }
 }
@@ -270,7 +287,8 @@ static void check_type_set(Context* ctx,
                            const char* desc) {
   if (expected != WASM_TYPE_SET_VOID &&
       (TYPE_TO_TYPE_SET(actual) & expected) == 0) {
-    print_error(ctx, loc, "type mismatch%s. got %s, expected %s", desc,
+    print_error(ctx, CHECK_TYPE_FULL, loc,
+                "type mismatch%s. got %s, expected %s", desc,
                 s_type_names[actual], s_type_set_names[expected]);
   }
 }
@@ -281,7 +299,8 @@ static void check_type_exact(Context* ctx,
                              WasmType expected,
                              const char* desc) {
   if (actual != expected) {
-    print_error(ctx, loc, "type mismatch%s. got %s, expected %s", desc,
+    print_error(ctx, CHECK_TYPE_FULL, loc,
+                "type mismatch%s. got %s, expected %s", desc,
                 s_type_names[actual], s_type_names[expected]);
   }
 }
@@ -293,7 +312,7 @@ static void check_type_arg_exact(Context* ctx,
                                  const char* desc,
                                  int arg_index) {
   if (actual != expected) {
-    print_error(ctx, loc,
+    print_error(ctx, CHECK_TYPE_FULL, loc,
                 "type mismatch for argument %d of %s. got %s, expected %s",
                 arg_index, desc, s_type_names[actual], s_type_names[expected]);
   }
@@ -335,12 +354,12 @@ static WasmResult check_label_var(Context* ctx,
   }
 
   if (var->type == WASM_VAR_TYPE_NAME) {
-    print_error(ctx, &var->loc,
+    print_error(ctx, CHECK_TYPE_NAME, &var->loc,
                 "undefined label variable \"" PRIstringslice "\"",
                 WASM_PRINTF_STRING_SLICE_ARG(var->name));
   } else {
-    print_error(ctx, &var->loc, "label variable out of range (max %d)",
-                ctx->max_depth);
+    print_error(ctx, CHECK_TYPE_NAME, &var->loc,
+                "label variable out of range (max %d)", ctx->max_depth);
   }
 
   return WASM_ERROR;
@@ -420,8 +439,9 @@ static void check_call(Context* ctx,
       wasm_snprintf(callee_name_str, length, " \"" PRIstringslice "\"",
                     WASM_PRINTF_STRING_SLICE_ARG(*callee_name));
     }
-    print_error(ctx, loc, "too %s parameters to function%s in %s. got %" PRIzd
-                          ", expected %" PRIzd,
+    print_error(ctx, CHECK_TYPE_FULL, loc,
+                "too %s parameters to function%s in %s. got %" PRIzd
+                ", expected %" PRIzd,
                 num_args > expected_args ? "many" : "few", callee_name_str,
                 desc, num_args, expected_args);
   }
@@ -582,8 +602,8 @@ static void check_expr(Context* ctx,
       pop_label(ctx);
       push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
                  expected_type, "if false branch");
-      check_expr_list(ctx, &expr->loc, expr->if_else.false_.first, expected_type,
-                      " of if branch");
+      check_expr_list(ctx, &expr->loc, expr->if_else.false_.first,
+                      expected_type, " of if branch");
       pop_label(ctx);
       break;
     }
@@ -698,7 +718,8 @@ static void check_func_signature_matches_func_type(
                            "function", i);
     }
   } else {
-    print_error(ctx, &func->loc, "expected %" PRIzd " parameters, got %" PRIzd,
+    print_error(ctx, CHECK_TYPE_FULL, &func->loc,
+                "expected %" PRIzd " parameters, got %" PRIzd,
                 wasm_get_func_type_num_params(func_type), num_params);
   }
 }
@@ -743,19 +764,21 @@ static void check_table(Context* ctx, const WasmVarVector* table) {
 
 static void check_memory(Context* ctx, const WasmMemory* memory) {
   if (memory->initial_pages > WASM_MAX_PAGES) {
-    print_error(ctx, &memory->loc,
+    print_error(ctx, CHECK_TYPE_FULL, &memory->loc,
                 "initial pages (%" PRIu64 ") must be <= (%u)",
                 memory->initial_pages, WASM_MAX_PAGES);
   }
 
   if (memory->max_pages > WASM_MAX_PAGES) {
-    print_error(ctx, &memory->loc, "max pages (%" PRIu64 ") must be <= (%u)",
-                memory->max_pages, WASM_MAX_PAGES);
+    print_error(ctx, CHECK_TYPE_FULL, &memory->loc,
+                "max pages (%" PRIu64 ") must be <= (%u)", memory->max_pages,
+                WASM_MAX_PAGES);
   }
 
   if (memory->max_pages < memory->initial_pages) {
-    print_error(ctx, &memory->loc, "max pages (%" PRIu64
-                                   ") must be >= initial pages (%" PRIu64 ")",
+    print_error(ctx, CHECK_TYPE_FULL, &memory->loc,
+                "max pages (%" PRIu64 ") must be >= initial pages (%" PRIu64
+                ")",
                 memory->max_pages, memory->initial_pages);
   }
 
@@ -764,17 +787,17 @@ static void check_memory(Context* ctx, const WasmMemory* memory) {
   for (i = 0; i < memory->segments.size; ++i) {
     const WasmSegment* segment = &memory->segments.data[i];
     if (segment->addr < last_end) {
-      print_error(ctx, &segment->loc,
+      print_error(ctx, CHECK_TYPE_FULL, &segment->loc,
                   "address (%u) less than end of previous segment (%u)",
                   segment->addr, last_end);
     }
     if (segment->addr > memory->initial_pages * WASM_PAGE_SIZE) {
-      print_error(ctx, &segment->loc,
+      print_error(ctx, CHECK_TYPE_FULL, &segment->loc,
                   "address (%u) greater than initial memory size (%" PRIu64 ")",
                   segment->addr, memory->initial_pages * WASM_PAGE_SIZE);
     } else if (segment->addr + segment->size >
                memory->initial_pages * WASM_PAGE_SIZE) {
-      print_error(ctx, &segment->loc,
+      print_error(ctx, CHECK_TYPE_FULL, &segment->loc,
                   "segment ends past the end of initial memory size (%" PRIu64
                   ")",
                   memory->initial_pages * WASM_PAGE_SIZE);
@@ -813,15 +836,19 @@ static void check_module(Context* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_TABLE:
-        if (seen_table)
-          print_error(ctx, &field->loc, "only one table allowed");
+        if (seen_table) {
+          print_error(ctx, CHECK_TYPE_FULL, &field->loc,
+                      "only one table allowed");
+        }
         check_table(ctx, &field->table);
         seen_table = WASM_TRUE;
         break;
 
       case WASM_MODULE_FIELD_TYPE_MEMORY:
-        if (seen_memory)
-          print_error(ctx, &field->loc, "only one memory block allowed");
+        if (seen_memory) {
+          print_error(ctx, CHECK_TYPE_FULL, &field->loc,
+                      "only one memory block allowed");
+        }
         check_memory(ctx, &field->memory);
         seen_memory = WASM_TRUE;
         break;
@@ -830,17 +857,21 @@ static void check_module(Context* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_START: {
-        if (seen_start)
-          print_error(ctx, &field->loc, "only one start function allowed");
+        if (seen_start) {
+          print_error(ctx, CHECK_TYPE_FULL, &field->loc,
+                      "only one start function allowed");
+        }
 
         const WasmFunc* start_func = NULL;
         check_func_var(ctx, &field->start, &start_func);
         if (start_func) {
-          if (wasm_get_num_params(start_func) != 0)
-            print_error(ctx, &field->loc, "start function must be nullary");
+          if (wasm_get_num_params(start_func) != 0) {
+            print_error(ctx, CHECK_TYPE_FULL, &field->loc,
+                        "start function must be nullary");
+          }
 
           if (wasm_get_result_type(start_func) != WASM_TYPE_VOID) {
-            print_error(ctx, &field->loc,
+            print_error(ctx, CHECK_TYPE_FULL, &field->loc,
                         "start function must not return anything");
           }
         }
@@ -850,8 +881,9 @@ static void check_module(Context* ctx, const WasmModule* module) {
     }
   }
 
-  if (seen_export_memory && !seen_memory)
-    print_error(ctx, export_memory_loc, "no memory to export");
+  if (seen_export_memory && !seen_memory) {
+    print_error(ctx, CHECK_TYPE_FULL, export_memory_loc, "no memory to export");
+  }
 
   check_duplicate_bindings(ctx, &module->func_bindings, "function");
   check_duplicate_bindings(ctx, &module->import_bindings, "import");
@@ -864,14 +896,16 @@ typedef struct BinaryErrorCallbackData {
   WasmLocation* loc;
 } BinaryErrorCallbackData;
 
-static void on_read_binary_error(uint32_t offset, const char* error,
+static void on_read_binary_error(uint32_t offset,
+                                 const char* error,
                                  void* user_data) {
   BinaryErrorCallbackData* data = user_data;
   if (offset == WASM_UNKNOWN_OFFSET) {
-    print_error(data->ctx, data->loc, "error in binary module: %s", error);
+    print_error(data->ctx, CHECK_TYPE_FULL, data->loc,
+                "error in binary module: %s", error);
   } else {
-    print_error(data->ctx, data->loc, "error in binary module: @0x%08x: %s",
-                offset, error);
+    print_error(data->ctx, CHECK_TYPE_FULL, data->loc,
+                "error in binary module: @0x%08x: %s", offset, error);
   }
 }
 
@@ -903,7 +937,7 @@ static void check_invoke(Context* ctx,
                          const WasmCommandInvoke* invoke,
                          TypeSet return_type) {
   if (!ctx->current_module) {
-    print_error(ctx, &invoke->loc,
+    print_error(ctx, CHECK_TYPE_FULL, &invoke->loc,
                 "invoke must occur after a module definition");
     return;
   }
@@ -911,7 +945,7 @@ static void check_invoke(Context* ctx,
   WasmExport* export =
       wasm_get_export_by_name(ctx->current_module, &invoke->name);
   if (!export) {
-    print_error(ctx, &invoke->loc,
+    print_error(ctx, CHECK_TYPE_NAME, &invoke->loc,
                 "unknown function export \"" PRIstringslice "\"",
                 WASM_PRINTF_STRING_SLICE_ARG(invoke->name));
     return;
@@ -926,8 +960,9 @@ static void check_invoke(Context* ctx,
   size_t actual_args = invoke->args.size;
   size_t expected_args = wasm_get_num_params(func);
   if (expected_args != actual_args) {
-    print_error(ctx, &invoke->loc, "too %s parameters to function. got %" PRIzd
-                                   ", expected %" PRIzd,
+    print_error(ctx, CHECK_TYPE_FULL, &invoke->loc,
+                "too %s parameters to function. got %" PRIzd
+                ", expected %" PRIzd,
                 actual_args > expected_args ? "many" : "few", actual_args,
                 expected_args);
     return;
@@ -975,11 +1010,27 @@ static void check_command(Context* ctx, const WasmCommand* command) {
   }
 }
 
+WasmResult wasm_check_names(WasmAstLexer* lexer,
+                            const struct WasmScript* script,
+                            WasmSourceErrorHandler* error_handler) {
+  Context ctx;
+  WASM_ZERO_MEMORY(ctx);
+  ctx.check_type = CHECK_TYPE_NAME;
+  ctx.lexer = lexer;
+  ctx.error_handler = error_handler;
+  ctx.result = WASM_OK;
+  size_t i;
+  for (i = 0; i < script->commands.size; ++i)
+    check_command(&ctx, &script->commands.data[i]);
+  return ctx.result;
+}
+
 WasmResult wasm_check_ast(WasmAstLexer* lexer,
                           const struct WasmScript* script,
                           WasmSourceErrorHandler* error_handler) {
   Context ctx;
   WASM_ZERO_MEMORY(ctx);
+  ctx.check_type = CHECK_TYPE_FULL;
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
   ctx.result = WASM_OK;
@@ -997,6 +1048,7 @@ WasmResult wasm_check_assert_invalid(
     WasmSourceErrorHandler* error_handler) {
   Context ctx;
   WASM_ZERO_MEMORY(ctx);
+  ctx.check_type = CHECK_TYPE_FULL;
   ctx.allocator = allocator;
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
@@ -1010,6 +1062,7 @@ WasmResult wasm_check_assert_invalid(
 
     Context ai_ctx;
     WASM_ZERO_MEMORY(ai_ctx);
+    ai_ctx.check_type = CHECK_TYPE_FULL;
     ai_ctx.allocator = allocator;
     ai_ctx.lexer = lexer;
     ai_ctx.error_handler = assert_invalid_error_handler;
@@ -1017,7 +1070,7 @@ WasmResult wasm_check_assert_invalid(
     check_raw_module(&ai_ctx, &command->assert_invalid.module);
 
     if (WASM_SUCCEEDED(ai_ctx.result)) {
-      print_error(&ctx, &command->assert_invalid.module.loc,
+      print_error(&ctx, CHECK_TYPE_FULL, &command->assert_invalid.module.loc,
                   "expected module to be invalid");
     }
   }
