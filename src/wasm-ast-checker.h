@@ -25,10 +25,20 @@ struct WasmModule;
 struct WasmScript;
 
 WASM_EXTERN_C_BEGIN
+/* Only check that names are valid; this is useful if you want to generate
+ * invalid binaries (so they can be validated by the consumer). */
+WasmResult wasm_check_names(WasmAstLexer*,
+                            const struct WasmScript*,
+                            WasmSourceErrorHandler*);
+
+/* perform all checks on the AST; the module is valid if and only if this
+ * function succeeds. */
 WasmResult wasm_check_ast(WasmAstLexer*,
                           const struct WasmScript*,
                           WasmSourceErrorHandler*);
 
+/* Run the assert_invalid spec tests. These always contain an invalid module.
+ * This function succeeds if and only if the contained module is invalid. */
 WasmResult wasm_check_assert_invalid(
     struct WasmAllocator*,
     WasmAstLexer*,
