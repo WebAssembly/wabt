@@ -786,6 +786,7 @@ int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
 
+  wasm_initialize_stdio();
   parse_options(argc, argv);
 
   s_stdout_stream = wasm_init_stdout_stream();

@@ -392,6 +392,7 @@ int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
 
+  wasm_initialize_stdio();
   parse_options(argc, argv);
 
   if (s_use_libc_allocator) {

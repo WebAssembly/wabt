@@ -21,6 +21,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#if COMPILER_IS_MSVC
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 #include "wasm-allocator.h"
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = mem_size,
@@ -149,4 +154,16 @@ void wasm_default_binary_error_callback(uint32_t offset,
     fprintf(stderr, "error: %s\n", error);
   else
     fprintf(stderr, "error: @0x%08x: %s\n", offset, error);
+}
+
+void wasm_initialize_stdio()
+{
+#if COMPILER_IS_MSVC
+    int result = _setmode(_fileno(stdout), _O_BINARY);
+    if (result == -1)
+        perror("Cannot set mode binary to stdout");
+    result = _setmode(_fileno(stderr), _O_BINARY);
+    if (result == -1)
+        perror("Cannot set mode binary to stderr");
+#endif
 }
