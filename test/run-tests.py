@@ -449,23 +449,25 @@ def GetAllTestInfo(test_names, status):
 
   return infos
 
+def RunTest(info, options, variables, temp_dir):
+  timeout = options.timeout
+  if info.slow:
+    timeout *= SLOW_TIMEOUT_MULTIPLIER
 
-def ProcessWorker(i, options, variables, inq, outq, temp_dir):
   try:
-    while True:
+    rel_file_path = info.CreateInputFile(temp_dir)
+    cmd = info.GetCommand(rel_file_path, variables, options.arg)
+    out = RunCommandWithTimeout(cmd, temp_dir, timeout)
+    return out
+  except Exception as e:
+    return e
+
+def ProcessWorker(i, options, variables, inq, outq, temp_dir, runWorkers):
+  try:
+    while runWorkers.value:
       try:
         info = inq.get(False)
-        timeout = options.timeout
-        if info.slow:
-          timeout *= SLOW_TIMEOUT_MULTIPLIER
-
-        try:
-          rel_file_path = info.CreateInputFile(temp_dir)
-          cmd = info.GetCommand(rel_file_path, variables, options.arg)
-          out = RunCommandWithTimeout(cmd, temp_dir, timeout)
-        except Exception as e:
-          outq.put((info, e))
-          continue
+        out = RunTest(info, options, variables, temp_dir)
         outq.put((info, out))
       except Queue.Empty:
         # Seems this can be fired even when the queue isn't actually empty.
@@ -474,8 +476,6 @@ def ProcessWorker(i, options, variables, inq, outq, temp_dir):
           break
   except KeyboardInterrupt:
     pass
-
-
 
 def HandleTestResult(status, info, result, rebase=False):
   try:
@@ -533,6 +533,10 @@ def main(args):
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--no-multithreaded', help='Run all tests in series',
+                      action='store_true')
+  parser.add_argument('--stop', help='Stop on first error',
+                      action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
                       action='store_true')
   parser.add_argument('-r', '--rebase',
@@ -587,22 +591,19 @@ def main(args):
 
   status = Status(options.verbose)
   infos = GetAllTestInfo(test_names, status)
-
-  inq = multiprocessing.Queue()
-  test_count = 0
+  infosToRun = []
   for info in infos:
     if info.skip:
       status.Skipped(info)
       continue
-    inq.put(info)
-    test_count += 1
+    infosToRun.append(info)
 
     if options.roundtrip:
       if info.ShouldCreateRoundtrip():
-        inq.put(info.CreateRoundtripInfo())
-        test_count += 1
+        infosToRun.append(info.CreateRoundtripInfo())
 
-  outq = multiprocessing.Queue()
+  test_count = len(infosToRun)
+
   num_proc = options.jobs
   status.Start(test_count)
 
@@ -615,28 +616,58 @@ def main(args):
     out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
     out_dir_is_temp = True
 
+  allProcs = []
+  continuedErrors = 0
   try:
-    for i, p in enumerate(range(num_proc)):
-      args = (i, options, variables, inq, outq, out_dir)
-      proc = multiprocessing.Process(target=ProcessWorker, args=args)
-      proc.start()
+    if not options.no_multithreaded:
+      inq = multiprocessing.Queue()
+      outq = multiprocessing.Queue()
+      for info in infosToRun:
+        inq.put_nowait(info)
+      runWorkers = multiprocessing.Value('i', 1)
+      for i, p in enumerate(range(num_proc)):
+        args = (i, options, variables, inq, outq, out_dir, runWorkers)
+        proc = multiprocessing.Process(target=ProcessWorker, args=args)
+        allProcs.append(proc)
+        proc.start()
+      inq.close();
 
-    finished_tests = 0
-    while finished_tests < test_count:
-      try:
-        info, result = outq.get(True, 0.01)
-      except Queue.Empty:
-        status.UpdateTimer()
-        continue
+      finished_tests = 0
+      while finished_tests < test_count:
+        try:
+          info, result = outq.get(True, 0.01)
+        except Queue.Empty:
+          status.UpdateTimer()
+          continue
 
-      finished_tests += 1
-      HandleTestResult(status, info, result, options.rebase)
+        finished_tests += 1
+        HandleTestResult(status, info, result, options.rebase)
+        if options.stop and status.failed > continuedErrors:
+          shouldContinue = raw_input('Continue testing? (yes/no): ')
+          if shouldContinue[0] != 'y':
+            with runWorkers.get_lock():
+              runWorkers.value = 0
+            break
+          continuedErrors += 1
+    else:
+      for info in infosToRun:
+        result = RunTest(info, options, variables, out_dir)
+        HandleTestResult(status, info, result, options.rebase)
+        if options.stop and status.failed > continuedErrors:
+          shouldContinue = raw_input('Continue testing? (yes/no): ')
+          if shouldContinue[0] != 'y':
+            break
+          continuedErrors += 1
+
   except KeyboardInterrupt:
     while multiprocessing.active_children():
       time.sleep(0.1)
   finally:
-    while multiprocessing.active_children():
-      time.sleep(0.1)
+    for proc in allProcs:
+      if proc.is_alive():
+        proc.join(5)
+        if proc.is_alive():
+          proc.terminate();
     if out_dir_is_temp:
       shutil.rmtree(out_dir)
 
