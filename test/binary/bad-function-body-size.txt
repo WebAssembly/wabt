@@ -1,0 +1,19 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm-interp
+magic
+version
+section("type") { count[1] function params[0] results[1] i32 }
+section("function") { count[1] sig[0] }
+section("code") {
+  count[1]
+  0x01 ;; malformed 1 byte function body size (should be 5)
+    locals[0]
+    i32.const
+    leb_i32(42)
+    return arity[1]
+}
+(;; STDERR ;;;
+Error running "wasm-interp":
+error: @0x00000028: end_function_body callback failed
+
+;;; STDERR ;;)

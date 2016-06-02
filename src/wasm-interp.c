@@ -397,10 +397,11 @@ static WasmResult read_module(WasmAllocator* allocator,
   WasmResult result;
   void* data;
   size_t size;
+  WASM_ZERO_MEMORY(*out_module);
+  WASM_ZERO_MEMORY(*out_thread);
   result = wasm_read_file(allocator, module_filename, &data, &size);
   if (WASM_SUCCEEDED(result)) {
     WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
-    WASM_ZERO_MEMORY(*out_module);
     result = wasm_read_binary_interpreter(allocator, memory_allocator, data,
                                           size, &s_read_binary_options,
                                           &s_error_handler, out_module);
@@ -412,7 +413,6 @@ static WasmResult read_module(WasmAllocator* allocator,
       }
 
       set_all_import_callbacks_to_default(out_module);
-      WASM_ZERO_MEMORY(*out_thread);
       result = wasm_init_interpreter_thread(allocator, out_module, out_thread,
                                             &s_thread_options);
     }

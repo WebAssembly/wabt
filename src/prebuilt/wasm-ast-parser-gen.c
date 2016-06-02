@@ -3509,7 +3509,7 @@ static void dup_text_list(WasmAllocator* allocator,
      * iterate through the string once. */
     const char* src = node->text.start + 1;
     const char* end = node->text.start + node->text.length - 1;
-    size_t size = end - src;
+    size_t size = (end > src) ? (end - src) : 0;
     total_size += size;
   }
   char* result = wasm_alloc(allocator, total_size, 1);
