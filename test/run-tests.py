@@ -46,15 +46,23 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 # default configurations for tests
 TOOLS = {
   'sexpr-wasm': {
-    'EXE': '%(sexpr-wasm)s'
+    'EXE': '%(sexpr-wasm)s',
+    'VERBOSE-FLAGS': ['-v']
   },
   'run-js': {
     'EXE': 'test/run-js.py',
     'FLAGS': ' '.join([
       '-e', '%(sexpr-wasm)s',
       '--js-executable=%(js)s',
+      '-o', '%(out_dir)s',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-js-spec': {
     'EXE': 'test/run-js.py',
@@ -63,7 +71,14 @@ TOOLS = {
       '--js-executable=%(js)s',
       '--spec',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
@@ -72,7 +87,14 @@ TOOLS = {
       '-e', '%(sexpr-wasm)s',
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-interp': {
     'EXE': 'test/run-interp.py',
@@ -81,7 +103,14 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
@@ -90,14 +119,28 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--spec',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-gen-wasm-interp': {
     'EXE': 'test/run-gen-wasm-interp.py',
@@ -105,7 +148,14 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   }
 }
 
@@ -128,7 +178,7 @@ def AppendBeforeExt(file_path, suffix):
   return file_path_noext + suffix + ext
 
 
-def RunCommandWithTimeout(command, cwd, timeout):
+def RunCommandWithTimeout(command, cwd, timeout, consoleOut = False):
   process = None
   # Cheesy way to be able to set is_timeout from inside KillProcess
   is_timeout = [False]
@@ -153,8 +203,8 @@ def RunCommandWithTimeout(command, cwd, timeout):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE,
-                                                 stderr=subprocess.PIPE,
+    process = subprocess.Popen(command, cwd=cwd, stdout=None if consoleOut else subprocess.PIPE,
+                                                 stderr=None if consoleOut else subprocess.PIPE,
                                universal_newlines=True,
                                **kwargs)
     timer = threading.Timer(timeout, KillProcess)
@@ -190,6 +240,7 @@ class TestInfo(object):
     self.tool = 'sexpr-wasm'
     self.exe = '%(sexpr-wasm)s'
     self.flags = []
+    self.last_cmd = ''
     self.expected_error = 0
     self.slow = False
     self.skip = False
@@ -232,6 +283,8 @@ class TestInfo(object):
       self.slow = True
     elif key == 'SKIP':
       self.skip = True
+    elif key == 'VERBOSE-FLAGS':
+      self.verbose_flags = [shlex.split(level) for level in value]
     elif key in ['TODO', 'NOTE']:
       pass
     elif key == 'TOOL':
@@ -316,13 +369,18 @@ class TestInfo(object):
   def FormatCommand(self, cmd, variables):
     return [arg % variables for arg in cmd]
 
-  def GetCommand(self, filename, variables, extra_args=None):
+  def GetCommand(self, filename, variables, extra_args=None, verbose_level=0):
     cmd = self.GetExecutable()
+    vl = 0
+    while vl < verbose_level and vl < len(self.verbose_flags):
+      cmd += self.verbose_flags[vl]
+      vl += 1
     if extra_args:
       cmd += extra_args
     cmd += self.flags
     cmd += [filename.replace(os.path.sep, '/')]
     cmd = self.FormatCommand(cmd, variables)
+    self.last_cmd = cmd
     return cmd
 
   def CreateInputFile(self, temp_dir):
@@ -404,7 +462,8 @@ class Status(object):
   def Failed(self, info, error_msg):
     self.failed += 1
     self.failed_tests.append(info)
-    self.Clear()
+    if not self.verbose:
+      self.Clear()
     sys.stderr.write('- %s\n%s\n' % (info.name, Indent(error_msg, 2)))
 
   def Skipped(self, info):
@@ -449,15 +508,15 @@ def GetAllTestInfo(test_names, status):
 
   return infos
 
-def RunTest(info, options, variables, temp_dir):
+def RunTest(info, options, variables, temp_dir, verbose_level = 0):
   timeout = options.timeout
   if info.slow:
     timeout *= SLOW_TIMEOUT_MULTIPLIER
 
   try:
     rel_file_path = info.CreateInputFile(temp_dir)
-    cmd = info.GetCommand(rel_file_path, variables, options.arg)
-    out = RunCommandWithTimeout(cmd, temp_dir, timeout)
+    cmd = info.GetCommand(rel_file_path, variables, options.arg, verbose_level)
+    out = RunCommandWithTimeout(cmd, temp_dir, timeout, verbose_level > 0)
     return out
   except Exception as e:
     return e
@@ -616,6 +675,8 @@ def main(args):
     out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
     out_dir_is_temp = True
 
+  variables['out_dir'] = os.path.abspath(out_dir)
+
   allProcs = []
   continuedErrors = 0
   try:
@@ -644,7 +705,7 @@ def main(args):
         HandleTestResult(status, info, result, options.rebase)
         if options.stop and status.failed > continuedErrors:
           shouldContinue = raw_input('Continue testing? (yes/no): ')
-          if shouldContinue[0] != 'y':
+          if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
             with runWorkers.get_lock():
               runWorkers.value = 0
             break
@@ -653,10 +714,16 @@ def main(args):
       for info in infosToRun:
         result = RunTest(info, options, variables, out_dir)
         HandleTestResult(status, info, result, options.rebase)
-        if options.stop and status.failed > continuedErrors:
-          shouldContinue = raw_input('Continue testing? (yes/no): ')
-          if shouldContinue[0] != 'y':
-            break
+        if status.failed > continuedErrors:
+          if options.stop:
+            rerunVerbose = raw_input('Rerun with verbose option? (yes/no): ')
+            if len(rerunVerbose) != 0 and rerunVerbose[0] != 'n':
+              RunTest(info, options, variables, out_dir, 2)
+            shouldContinue = raw_input('Continue testing? (yes/no): ')
+            if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
+              break
+          elif options.verbose:
+            RunTest(info, options, variables, out_dir, 1)
           continuedErrors += 1
 
   except KeyboardInterrupt:
@@ -678,7 +745,7 @@ def main(args):
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info in status.failed_tests:
-      sys.stderr.write('- %s\n' % info.name)
+      sys.stderr.write('- %s\n    %s\n' % (info.name, ' '.join(info.last_cmd)))
     ret = 1
 
   status.Print()
