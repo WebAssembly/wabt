@@ -66,7 +66,7 @@ def RunJS(js, js_file, out_file):
   if js.basename == 'd8':
     js.RunWithArgs('--expose-wasm', js_file, '--', out_file)
   elif js.basename == 'ch':
-    js.RunWithArgs(js_file, '-args', out_file, '-endargs')
+    js.RunWithArgs('-on:WasmLazyTrap', js_file, '-args', out_file, '-endargs')
   else:
     js.RunWithArgs(js_file, out_file)
 
@@ -80,6 +80,8 @@ def main(args):
   parser.add_argument('--js-executable', metavar='PATH',
                       help='override js executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
+                      action='store_true')
+  parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
@@ -100,6 +102,9 @@ def main(args):
   })
 
   js = GetJSExecutable(options)
+  js.verbose = options.print_cmd
+  sexpr_wasm.verbose = options.print_cmd
+
   with utils.TempDirectory(options.out_dir, 'run-js-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)

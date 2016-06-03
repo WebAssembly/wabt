@@ -66,7 +66,11 @@ if (typeof module.exports === 'object') {
         print(name + '() trapped: ' + e.toString());
       }
     } else {
-      print(name + '() = ' + f());
+      try {
+        print(name + '() = ' + f());
+      } catch (e) {
+        print(name + '() trapped unexpectedly: ' + e.toString());
+      }
     }
   }
 }

@@ -41,10 +41,13 @@ class Executable(object):
     self.error_cmdline = kwargs.get('error_cmdline', True)
     self.clean_stdout = kwargs.get('clean_stdout')
     self.clean_stderr = kwargs.get('clean_stderr')
+    self.verbose = False
 
   def _RunWithArgsInternal(self, *args, **kwargs):
     cmd = [self.exe] + self.before_args + list(args) + self.after_args
     cmd_str = ' '.join(cmd)
+    if self.verbose:
+      print cmd_str
 
     err_cmd_str = cmd_str.replace('.exe', '')
     if not self.error_cmdline:

@@ -117,10 +117,10 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-  expected_lines = expected.splitlines(1)
-  actual_lines = actual.splitlines(1)
+  expected_lines = [line for line in expected.splitlines() if len(line) > 0]
+  actual_lines = [line for line in actual.splitlines() if len(line) > 0]
   return list(difflib.unified_diff(expected_lines, actual_lines,
-                                   fromfile='expected', tofile='actual'))
+                                   fromfile='expected', tofile='actual', lineterm=''))
 
 
 def AppendBeforeExt(file_path, suffix):
@@ -128,7 +128,7 @@ def AppendBeforeExt(file_path, suffix):
   return file_path_noext + suffix + ext
 
 
-def RunCommandWithTimeout(command, cwd, timeout):
+def RunCommandWithTimeout(command, cwd, timeout, consoleOut = False):
   process = None
   # Cheesy way to be able to set is_timeout from inside KillProcess
   is_timeout = [False]
@@ -153,8 +153,8 @@ def RunCommandWithTimeout(command, cwd, timeout):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE,
-                                                 stderr=subprocess.PIPE,
+    process = subprocess.Popen(command, cwd=cwd, stdout=None if consoleOut else subprocess.PIPE,
+                                                 stderr=None if consoleOut else subprocess.PIPE,
                                universal_newlines=True,
                                **kwargs)
     timer = threading.Timer(timeout, KillProcess)
@@ -323,6 +323,7 @@ class TestInfo(object):
     cmd += self.flags
     cmd += [filename.replace(os.path.sep, '/')]
     cmd = self.FormatCommand(cmd, variables)
+    self.last_cmd = cmd
     return cmd
 
   def CreateInputFile(self, temp_dir):
@@ -366,11 +367,13 @@ class TestInfo(object):
     msg = ''
     if self.expected_stderr != stderr:
       diff_lines = DiffLines(self.expected_stderr, stderr)
-      msg += 'STDERR MISMATCH:\n' + ''.join(diff_lines)
+      if len(diff_lines) > 0:
+        msg += 'STDERR MISMATCH:\n' + '\n'.join(diff_lines)
 
     if self.expected_stdout != stdout:
       diff_lines = DiffLines(self.expected_stdout, stdout)
-      msg += 'STDOUT MISMATCH:\n' + ''.join(diff_lines)
+      if len(diff_lines) > 0:
+        msg += 'STDOUT MISMATCH:\n' + '\n'.join(diff_lines)
 
     if msg:
       raise Error(msg)
@@ -404,7 +407,8 @@ class Status(object):
   def Failed(self, info, error_msg):
     self.failed += 1
     self.failed_tests.append(info)
-    self.Clear()
+    if not self.verbose:
+      self.Clear()
     sys.stderr.write('- %s\n%s\n' % (info.name, Indent(error_msg, 2)))
 
   def Skipped(self, info):
@@ -449,7 +453,7 @@ def GetAllTestInfo(test_names, status):
 
   return infos
 
-def RunTest(info, options, variables, temp_dir):
+def RunTest(info, options, variables, temp_dir, verboseLevel = 0):
   timeout = options.timeout
   if info.slow:
     timeout *= SLOW_TIMEOUT_MULTIPLIER
@@ -457,7 +461,13 @@ def RunTest(info, options, variables, temp_dir):
   try:
     rel_file_path = info.CreateInputFile(temp_dir)
     cmd = info.GetCommand(rel_file_path, variables, options.arg)
-    out = RunCommandWithTimeout(cmd, temp_dir, timeout)
+    if verboseLevel > 0:
+        if verboseLevel > 1:
+          cmd.append("-v")
+        cmd.append("--print-cmd")
+        cmd.append("-o")
+        cmd.append(os.path.abspath(temp_dir))
+    out = RunCommandWithTimeout(cmd, temp_dir, timeout, verboseLevel > 0)
     return out
   except Exception as e:
     return e
@@ -644,7 +654,7 @@ def main(args):
         HandleTestResult(status, info, result, options.rebase)
         if options.stop and status.failed > continuedErrors:
           shouldContinue = raw_input('Continue testing? (yes/no): ')
-          if shouldContinue[0] != 'y':
+          if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
             with runWorkers.get_lock():
               runWorkers.value = 0
             break
@@ -653,10 +663,16 @@ def main(args):
       for info in infosToRun:
         result = RunTest(info, options, variables, out_dir)
         HandleTestResult(status, info, result, options.rebase)
-        if options.stop and status.failed > continuedErrors:
-          shouldContinue = raw_input('Continue testing? (yes/no): ')
-          if shouldContinue[0] != 'y':
-            break
+        if status.failed > continuedErrors:
+          if options.stop:
+            rerunVerbose = raw_input('Rerun with verbose option? (yes/no): ')
+            if len(rerunVerbose) != 0 and rerunVerbose[0] != 'n':
+              RunTest(info, options, variables, out_dir, 2)
+            shouldContinue = raw_input('Continue testing? (yes/no): ')
+            if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
+              break
+          elif options.verbose:
+            RunTest(info, options, variables, out_dir, 1)
           continuedErrors += 1
 
   except KeyboardInterrupt:
@@ -678,7 +694,7 @@ def main(args):
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info in status.failed_tests:
-      sys.stderr.write('- %s\n' % info.name)
+      sys.stderr.write('- %s\n    %s\n' % (info.name, ' '.join(info.last_cmd)))
     ret = 1
 
   status.Print()
