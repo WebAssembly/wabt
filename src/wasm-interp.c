@@ -116,7 +116,7 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wasm_print_help(parser);
+      wasm_print_help(parser, "wasm-interp");
       exit(0);
       break;
 
@@ -172,7 +172,7 @@ static void parse_options(int argc, char** argv) {
     WASM_FATAL("--spec and --run-all-exports are incompatible.\n");
 
   if (!s_infile) {
-    wasm_print_help(&parser);
+    wasm_print_help(&parser, "wasm-interp");
     WASM_FATAL("No filename given.\n");
   }
 }

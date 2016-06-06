@@ -60,7 +60,7 @@ WASM_EXTERN_C_BEGIN
 void wasm_parse_options(WasmOptionParser* parser,
                         int argc,
                         char** argv);
-void wasm_print_help(WasmOptionParser* parser);
+void wasm_print_help(WasmOptionParser* parser, const char* program_name);
 WASM_EXTERN_C_END
 
 #endif /* WASM_OPTION_PARSER_H_ */
