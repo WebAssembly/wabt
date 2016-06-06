@@ -54,12 +54,12 @@ TOOLS = {
     'FLAGS': ' '.join([
       '-e', '%(sexpr-wasm)s',
       '--js-executable=%(js)s',
+      '-o', '%(out_dir)s',
       '--no-error-cmdline',
     ]),
     'VERBOSE-FLAGS': [
       ' '.join([
         '--print-cmd',
-        '-o', '%(out_dir)s'
       ]),
       '-v'
     ]
@@ -71,11 +71,11 @@ TOOLS = {
       '--js-executable=%(js)s',
       '--spec',
       '--no-error-cmdline',
+      '-o', '%(out_dir)s',
     ]),
     'VERBOSE-FLAGS': [
       ' '.join([
         '--print-cmd',
-        '-o', '%(out_dir)s'
       ]),
       '-v'
     ]
@@ -87,11 +87,11 @@ TOOLS = {
       '-e', '%(sexpr-wasm)s',
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
+      '-o', '%(out_dir)s',
     ]),
     'VERBOSE-FLAGS': [
       ' '.join([
         '--print-cmd',
-        '-o', '%(out_dir)s'
       ]),
       '-v'
     ]
@@ -103,11 +103,11 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
+      '-o', '%(out_dir)s',
     ]),
     'VERBOSE-FLAGS': [
       ' '.join([
         '--print-cmd',
-        '-o', '%(out_dir)s'
       ]),
       '-v'
     ]
@@ -119,11 +119,11 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--spec',
       '--no-error-cmdline',
+      '-o', '%(out_dir)s',
     ]),
     'VERBOSE-FLAGS': [
       ' '.join([
         '--print-cmd',
-        '-o', '%(out_dir)s'
       ]),
       '-v'
     ]
@@ -133,11 +133,11 @@ TOOLS = {
     'FLAGS': ' '.join([
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
+      '-o', '%(out_dir)s',
     ]),
     'VERBOSE-FLAGS': [
       ' '.join([
         '--print-cmd',
-        '-o', '%(out_dir)s'
       ]),
       '-v'
     ]
@@ -148,7 +148,14 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   }
 }
 
@@ -233,6 +240,7 @@ class TestInfo(object):
     self.tool = 'sexpr-wasm'
     self.exe = '%(sexpr-wasm)s'
     self.flags = []
+    self.last_cmd = ''
     self.expected_error = 0
     self.slow = False
     self.skip = False
@@ -417,12 +425,12 @@ class TestInfo(object):
     if self.expected_stderr != stderr:
       diff_lines = DiffLines(self.expected_stderr, stderr)
       if len(diff_lines) > 0:
-        msg += 'STDERR MISMATCH:\n' + '\n'.join(diff_lines)
+        msg += 'STDERR MISMATCH:\n' + '\n'.join(diff_lines) + '\n'
 
     if self.expected_stdout != stdout:
       diff_lines = DiffLines(self.expected_stdout, stdout)
       if len(diff_lines) > 0:
-        msg += 'STDOUT MISMATCH:\n' + '\n'.join(diff_lines)
+        msg += 'STDOUT MISMATCH:\n' + '\n'.join(diff_lines) + '\n'
 
     if msg:
       raise Error(msg)
@@ -509,7 +517,6 @@ def RunTest(info, options, variables, temp_dir, verbose_level = 0):
 
   try:
     rel_file_path = info.CreateInputFile(temp_dir)
-    variables['out_dir'] = os.path.abspath(temp_dir)
     cmd = info.GetCommand(rel_file_path, variables, options.arg, verbose_level)
     out = RunCommandWithTimeout(cmd, temp_dir, timeout, verbose_level > 0)
     return out
@@ -669,6 +676,8 @@ def main(args):
   else:
     out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
     out_dir_is_temp = True
+
+  variables['out_dir'] = os.path.abspath(out_dir)
 
   allProcs = []
   continuedErrors = 0
