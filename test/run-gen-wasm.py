@@ -42,6 +42,8 @@ def main(args):
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
+  parser.add_argument('--print-cmd', help='print the commands that are run.',
+                      action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
@@ -59,6 +61,9 @@ def main(args):
     '--generate-names': options.generate_names,
     '--use-libc-allocator': options.use_libc_allocator
   })
+
+  gen_wasm.verbose = options.print_cmd
+  wasm_wast.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)

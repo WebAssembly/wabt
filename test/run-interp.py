@@ -41,6 +41,8 @@ def main(args):
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
+  parser.add_argument('--print-cmd', help='print the commands that are run.',
+                      action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
@@ -65,6 +67,9 @@ def main(args):
     '--trace': options.verbose,
     '--use-libc-allocator': options.use_libc_allocator
   })
+
+  sexpr_wasm.verbose = options.print_cmd
+  wasm_interp.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
