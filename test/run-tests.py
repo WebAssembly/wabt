@@ -46,7 +46,8 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 # default configurations for tests
 TOOLS = {
   'sexpr-wasm': {
-    'EXE': '%(sexpr-wasm)s'
+    'EXE': '%(sexpr-wasm)s',
+    'VERBOSE-FLAGS': ['-v']
   },
   'run-js': {
     'EXE': 'test/run-js.py',
@@ -54,7 +55,14 @@ TOOLS = {
       '-e', '%(sexpr-wasm)s',
       '--js-executable=%(js)s',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+        '-o', '%(out_dir)s'
+      ]),
+      '-v'
+    ]
   },
   'run-js-spec': {
     'EXE': 'test/run-js.py',
@@ -63,7 +71,14 @@ TOOLS = {
       '--js-executable=%(js)s',
       '--spec',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+        '-o', '%(out_dir)s'
+      ]),
+      '-v'
+    ]
   },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
@@ -72,7 +87,14 @@ TOOLS = {
       '-e', '%(sexpr-wasm)s',
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+        '-o', '%(out_dir)s'
+      ]),
+      '-v'
+    ]
   },
   'run-interp': {
     'EXE': 'test/run-interp.py',
@@ -81,7 +103,14 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+        '-o', '%(out_dir)s'
+      ]),
+      '-v'
+    ]
   },
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
@@ -90,14 +119,28 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--spec',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+        '-o', '%(out_dir)s'
+      ]),
+      '-v'
+    ]
   },
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+        '-o', '%(out_dir)s'
+      ]),
+      '-v'
+    ]
   },
   'run-gen-wasm-interp': {
     'EXE': 'test/run-gen-wasm-interp.py',
@@ -232,6 +275,8 @@ class TestInfo(object):
       self.slow = True
     elif key == 'SKIP':
       self.skip = True
+    elif key == 'VERBOSE-FLAGS':
+      self.verbose_flags = [shlex.split(level) for level in value]
     elif key in ['TODO', 'NOTE']:
       pass
     elif key == 'TOOL':
@@ -316,8 +361,12 @@ class TestInfo(object):
   def FormatCommand(self, cmd, variables):
     return [arg % variables for arg in cmd]
 
-  def GetCommand(self, filename, variables, extra_args=None):
+  def GetCommand(self, filename, variables, extra_args=None, verbose_level=0):
     cmd = self.GetExecutable()
+    vl = 0
+    while vl < verbose_level and vl < len(self.verbose_flags):
+      cmd += self.verbose_flags[vl]
+      vl += 1
     if extra_args:
       cmd += extra_args
     cmd += self.flags
@@ -453,21 +502,16 @@ def GetAllTestInfo(test_names, status):
 
   return infos
 
-def RunTest(info, options, variables, temp_dir, verboseLevel = 0):
+def RunTest(info, options, variables, temp_dir, verbose_level = 0):
   timeout = options.timeout
   if info.slow:
     timeout *= SLOW_TIMEOUT_MULTIPLIER
 
   try:
     rel_file_path = info.CreateInputFile(temp_dir)
-    cmd = info.GetCommand(rel_file_path, variables, options.arg)
-    if verboseLevel > 0:
-        if verboseLevel > 1:
-          cmd.append("-v")
-        cmd.append("--print-cmd")
-        cmd.append("-o")
-        cmd.append(os.path.abspath(temp_dir))
-    out = RunCommandWithTimeout(cmd, temp_dir, timeout, verboseLevel > 0)
+    variables['out_dir'] = os.path.abspath(temp_dir)
+    cmd = info.GetCommand(rel_file_path, variables, options.arg, verbose_level)
+    out = RunCommandWithTimeout(cmd, temp_dir, timeout, verbose_level > 0)
     return out
   except Exception as e:
     return e
