@@ -51,18 +51,22 @@ def GetExeBasename(exe):
 
 def GetJSExecutable(options):
   exe = find_exe.GetJSExecutable(options.js_executable)
-  if GetExeBasename(exe) == 'd8':
+  basename = GetExeBasename(exe)
+  if basename == 'd8':
     return utils.Executable(exe,
+                            basename=basename,
                             clean_stdout=CleanD8Stdout,
                             clean_stderr=CleanD8Stderr,
                             error_cmdline=options.error_cmdline)
   else:
-    return utils.Executable(exe, error_cmdline=options.error_cmdline)
+    return utils.Executable(exe, basename=basename, error_cmdline=options.error_cmdline)
 
 
 def RunJS(js, js_file, out_file):
-  if GetExeBasename(js.exe) == 'd8':
+  if js.basename == 'd8':
     js.RunWithArgs('--expose-wasm', js_file, '--', out_file)
+  elif js.basename == 'ch':
+    js.RunWithArgs('-on:WasmLazyTrap', js_file, '-args', out_file, '-endargs')
   else:
     js.RunWithArgs(js_file, out_file)
 
@@ -76,6 +80,8 @@ def main(args):
   parser.add_argument('--js-executable', metavar='PATH',
                       help='override js executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
+                      action='store_true')
+  parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
@@ -96,6 +102,9 @@ def main(args):
   })
 
   js = GetJSExecutable(options)
+  js.verbose = options.print_cmd
+  sexpr_wasm.verbose = options.print_cmd
+
   with utils.TempDirectory(options.out_dir, 'run-js-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)

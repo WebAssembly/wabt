@@ -46,15 +46,23 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 # default configurations for tests
 TOOLS = {
   'sexpr-wasm': {
-    'EXE': '%(sexpr-wasm)s'
+    'EXE': '%(sexpr-wasm)s',
+    'VERBOSE-FLAGS': ['-v']
   },
   'run-js': {
     'EXE': 'test/run-js.py',
     'FLAGS': ' '.join([
       '-e', '%(sexpr-wasm)s',
       '--js-executable=%(js)s',
+      '-o', '%(out_dir)s',
       '--no-error-cmdline',
-    ])
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-js-spec': {
     'EXE': 'test/run-js.py',
@@ -63,7 +71,14 @@ TOOLS = {
       '--js-executable=%(js)s',
       '--spec',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
@@ -72,7 +87,14 @@ TOOLS = {
       '-e', '%(sexpr-wasm)s',
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-interp': {
     'EXE': 'test/run-interp.py',
@@ -81,7 +103,14 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
@@ -90,14 +119,28 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--spec',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
       '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   },
   'run-gen-wasm-interp': {
     'EXE': 'test/run-gen-wasm-interp.py',
@@ -105,7 +148,14 @@ TOOLS = {
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
-    ])
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
   }
 }
 
@@ -117,10 +167,10 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-  expected_lines = expected.splitlines(1)
-  actual_lines = actual.splitlines(1)
+  expected_lines = [line for line in expected.splitlines() if len(line) > 0]
+  actual_lines = [line for line in actual.splitlines() if len(line) > 0]
   return list(difflib.unified_diff(expected_lines, actual_lines,
-                                   fromfile='expected', tofile='actual'))
+                                   fromfile='expected', tofile='actual', lineterm=''))
 
 
 def AppendBeforeExt(file_path, suffix):
@@ -128,7 +178,7 @@ def AppendBeforeExt(file_path, suffix):
   return file_path_noext + suffix + ext
 
 
-def RunCommandWithTimeout(command, cwd, timeout):
+def RunCommandWithTimeout(command, cwd, timeout, consoleOut = False):
   process = None
   # Cheesy way to be able to set is_timeout from inside KillProcess
   is_timeout = [False]
@@ -153,8 +203,8 @@ def RunCommandWithTimeout(command, cwd, timeout):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE,
-                                                 stderr=subprocess.PIPE,
+    process = subprocess.Popen(command, cwd=cwd, stdout=None if consoleOut else subprocess.PIPE,
+                                                 stderr=None if consoleOut else subprocess.PIPE,
                                universal_newlines=True,
                                **kwargs)
     timer = threading.Timer(timeout, KillProcess)
@@ -190,6 +240,7 @@ class TestInfo(object):
     self.tool = 'sexpr-wasm'
     self.exe = '%(sexpr-wasm)s'
     self.flags = []
+    self.last_cmd = ''
     self.expected_error = 0
     self.slow = False
     self.skip = False
@@ -232,6 +283,8 @@ class TestInfo(object):
       self.slow = True
     elif key == 'SKIP':
       self.skip = True
+    elif key == 'VERBOSE-FLAGS':
+      self.verbose_flags = [shlex.split(level) for level in value]
     elif key in ['TODO', 'NOTE']:
       pass
     elif key == 'TOOL':
@@ -316,13 +369,18 @@ class TestInfo(object):
   def FormatCommand(self, cmd, variables):
     return [arg % variables for arg in cmd]
 
-  def GetCommand(self, filename, variables, extra_args=None):
+  def GetCommand(self, filename, variables, extra_args=None, verbose_level=0):
     cmd = self.GetExecutable()
+    vl = 0
+    while vl < verbose_level and vl < len(self.verbose_flags):
+      cmd += self.verbose_flags[vl]
+      vl += 1
     if extra_args:
       cmd += extra_args
     cmd += self.flags
     cmd += [filename.replace(os.path.sep, '/')]
     cmd = self.FormatCommand(cmd, variables)
+    self.last_cmd = cmd
     return cmd
 
   def CreateInputFile(self, temp_dir):
@@ -366,11 +424,13 @@ class TestInfo(object):
     msg = ''
     if self.expected_stderr != stderr:
       diff_lines = DiffLines(self.expected_stderr, stderr)
-      msg += 'STDERR MISMATCH:\n' + ''.join(diff_lines)
+      if len(diff_lines) > 0:
+        msg += 'STDERR MISMATCH:\n' + '\n'.join(diff_lines) + '\n'
 
     if self.expected_stdout != stdout:
       diff_lines = DiffLines(self.expected_stdout, stdout)
-      msg += 'STDOUT MISMATCH:\n' + ''.join(diff_lines)
+      if len(diff_lines) > 0:
+        msg += 'STDOUT MISMATCH:\n' + '\n'.join(diff_lines) + '\n'
 
     if msg:
       raise Error(msg)
@@ -404,7 +464,8 @@ class Status(object):
   def Failed(self, info, error_msg):
     self.failed += 1
     self.failed_tests.append(info)
-    self.Clear()
+    if not self.verbose:
+      self.Clear()
     sys.stderr.write('- %s\n%s\n' % (info.name, Indent(error_msg, 2)))
 
   def Skipped(self, info):
@@ -449,23 +510,25 @@ def GetAllTestInfo(test_names, status):
 
   return infos
 
+def RunTest(info, options, variables, temp_dir, verbose_level = 0):
+  timeout = options.timeout
+  if info.slow:
+    timeout *= SLOW_TIMEOUT_MULTIPLIER
 
-def ProcessWorker(i, options, variables, inq, outq, temp_dir):
   try:
-    while True:
+    rel_file_path = info.CreateInputFile(temp_dir)
+    cmd = info.GetCommand(rel_file_path, variables, options.arg, verbose_level)
+    out = RunCommandWithTimeout(cmd, temp_dir, timeout, verbose_level > 0)
+    return out
+  except Exception as e:
+    return e
+
+def ProcessWorker(i, options, variables, inq, outq, temp_dir, runWorkers):
+  try:
+    while runWorkers.value:
       try:
         info = inq.get(False)
-        timeout = options.timeout
-        if info.slow:
-          timeout *= SLOW_TIMEOUT_MULTIPLIER
-
-        try:
-          rel_file_path = info.CreateInputFile(temp_dir)
-          cmd = info.GetCommand(rel_file_path, variables, options.arg)
-          out = RunCommandWithTimeout(cmd, temp_dir, timeout)
-        except Exception as e:
-          outq.put((info, e))
-          continue
+        out = RunTest(info, options, variables, temp_dir)
         outq.put((info, out))
       except Queue.Empty:
         # Seems this can be fired even when the queue isn't actually empty.
@@ -474,8 +537,6 @@ def ProcessWorker(i, options, variables, inq, outq, temp_dir):
           break
   except KeyboardInterrupt:
     pass
-
-
 
 def HandleTestResult(status, info, result, rebase=False):
   try:
@@ -533,6 +594,10 @@ def main(args):
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--no-multithreaded', help='Run all tests in series',
+                      action='store_true')
+  parser.add_argument('--stop', help='Stop on first error',
+                      action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
                       action='store_true')
   parser.add_argument('-r', '--rebase',
@@ -587,22 +652,19 @@ def main(args):
 
   status = Status(options.verbose)
   infos = GetAllTestInfo(test_names, status)
-
-  inq = multiprocessing.Queue()
-  test_count = 0
+  infosToRun = []
   for info in infos:
     if info.skip:
       status.Skipped(info)
       continue
-    inq.put(info)
-    test_count += 1
+    infosToRun.append(info)
 
     if options.roundtrip:
       if info.ShouldCreateRoundtrip():
-        inq.put(info.CreateRoundtripInfo())
-        test_count += 1
+        infosToRun.append(info.CreateRoundtripInfo())
 
-  outq = multiprocessing.Queue()
+  test_count = len(infosToRun)
+
   num_proc = options.jobs
   status.Start(test_count)
 
@@ -615,28 +677,66 @@ def main(args):
     out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
     out_dir_is_temp = True
 
+  variables['out_dir'] = os.path.abspath(out_dir)
+
+  allProcs = []
+  continuedErrors = 0
   try:
-    for i, p in enumerate(range(num_proc)):
-      args = (i, options, variables, inq, outq, out_dir)
-      proc = multiprocessing.Process(target=ProcessWorker, args=args)
-      proc.start()
+    if not options.no_multithreaded:
+      inq = multiprocessing.Queue()
+      outq = multiprocessing.Queue()
+      for info in infosToRun:
+        inq.put_nowait(info)
+      runWorkers = multiprocessing.Value('i', 1)
+      for i, p in enumerate(range(num_proc)):
+        args = (i, options, variables, inq, outq, out_dir, runWorkers)
+        proc = multiprocessing.Process(target=ProcessWorker, args=args)
+        allProcs.append(proc)
+        proc.start()
+      inq.close();
 
-    finished_tests = 0
-    while finished_tests < test_count:
-      try:
-        info, result = outq.get(True, 0.01)
-      except Queue.Empty:
-        status.UpdateTimer()
-        continue
+      finished_tests = 0
+      while finished_tests < test_count:
+        try:
+          info, result = outq.get(True, 0.01)
+        except Queue.Empty:
+          status.UpdateTimer()
+          continue
 
-      finished_tests += 1
-      HandleTestResult(status, info, result, options.rebase)
+        finished_tests += 1
+        HandleTestResult(status, info, result, options.rebase)
+        if options.stop and status.failed > continuedErrors:
+          shouldContinue = raw_input('Continue testing? (yes/no): ')
+          if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
+            with runWorkers.get_lock():
+              runWorkers.value = 0
+            break
+          continuedErrors += 1
+    else:
+      for info in infosToRun:
+        result = RunTest(info, options, variables, out_dir)
+        HandleTestResult(status, info, result, options.rebase)
+        if status.failed > continuedErrors:
+          if options.stop:
+            rerunVerbose = raw_input('Rerun with verbose option? (yes/no): ')
+            if len(rerunVerbose) != 0 and rerunVerbose[0] != 'n':
+              RunTest(info, options, variables, out_dir, 2)
+            shouldContinue = raw_input('Continue testing? (yes/no): ')
+            if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
+              break
+          elif options.verbose:
+            RunTest(info, options, variables, out_dir, 1)
+          continuedErrors += 1
+
   except KeyboardInterrupt:
     while multiprocessing.active_children():
       time.sleep(0.1)
   finally:
-    while multiprocessing.active_children():
-      time.sleep(0.1)
+    for proc in allProcs:
+      if proc.is_alive():
+        proc.join(5)
+        if proc.is_alive():
+          proc.terminate();
     if out_dir_is_temp:
       shutil.rmtree(out_dir)
 
@@ -647,7 +747,7 @@ def main(args):
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info in status.failed_tests:
-      sys.stderr.write('- %s\n' % info.name)
+      sys.stderr.write('- %s\n    %s\n' % (info.name, ' '.join(info.last_cmd)))
     ret = 1
 
   status.Print()

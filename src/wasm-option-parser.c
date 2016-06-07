@@ -161,17 +161,10 @@ void wasm_parse_options(WasmOptionParser* parser,
   }
 }
 
-static const char* trim_argv0(const char* argv0) {
-  char* last_slash = strrchr(argv0, '/');
-  if (last_slash)
-    return last_slash + 1;
-  return argv0;
-}
-
-void wasm_print_help(WasmOptionParser* parser) {
+void wasm_print_help(WasmOptionParser* parser, const char* program_name) {
   int i;
   /* TODO(binji): do something more generic for filename here */
-  printf("usage: %s [options] filename\n\n", trim_argv0(parser->argv0));
+  printf("usage: %s [options] filename\n\n", program_name);
   printf("%s\n", parser->description);
   printf("options:\n");
 

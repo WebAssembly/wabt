@@ -89,7 +89,7 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wasm_print_help(parser);
+      wasm_print_help(parser, "wasm-wast");
       exit(0);
       break;
 
@@ -132,7 +132,7 @@ static void parse_options(int argc, char** argv) {
   wasm_parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wasm_print_help(&parser);
+    wasm_print_help(&parser, "wasm-wast");
     WASM_FATAL("No filename given.\n");
   }
 }
@@ -142,6 +142,7 @@ int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
 
+  wasm_initialize_stdio();
   parse_options(argc, argv);
 
   if (s_use_libc_allocator) {
