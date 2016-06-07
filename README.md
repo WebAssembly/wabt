@@ -14,6 +14,7 @@ Clone as normal, but don't forget to update/init submodules as well:
 
 ```
 $ git clone https://github.com/WebAssembly/sexpr-wasm-prototype
+$ cd sexpr-wasm-prototype
 $ git submodule update --init
 ```
 
