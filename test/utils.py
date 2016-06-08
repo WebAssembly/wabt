@@ -37,6 +37,7 @@ class Executable(object):
     self.exe = exe
     self.before_args = list(before_args)
     self.after_args = []
+    self.basename = kwargs.get('basename', os.path.basename(exe)).replace('.exe', '')
     self.error_cmdline = kwargs.get('error_cmdline', True)
     self.clean_stdout = kwargs.get('clean_stdout')
     self.clean_stderr = kwargs.get('clean_stderr')
@@ -45,9 +46,9 @@ class Executable(object):
     cmd = [self.exe] + self.before_args + list(args) + self.after_args
     cmd_str = ' '.join(cmd)
 
-    err_cmd_str = cmd_str
+    err_cmd_str = cmd_str.replace('.exe', '')
     if not self.error_cmdline:
-      err_cmd_str = os.path.basename(self.exe)
+      err_cmd_str = self.basename
 
     stdout = ''
     stderr = ''

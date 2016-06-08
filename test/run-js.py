@@ -51,18 +51,22 @@ def GetExeBasename(exe):
 
 def GetJSExecutable(options):
   exe = find_exe.GetJSExecutable(options.js_executable)
-  if GetExeBasename(exe) == 'd8':
+  basename = GetExeBasename(exe)
+  if basename == 'd8':
     return utils.Executable(exe,
+                            basename=basename,
                             clean_stdout=CleanD8Stdout,
                             clean_stderr=CleanD8Stderr,
                             error_cmdline=options.error_cmdline)
   else:
-    return utils.Executable(exe, error_cmdline=options.error_cmdline)
+    return utils.Executable(exe, basename=basename, error_cmdline=options.error_cmdline)
 
 
 def RunJS(js, js_file, out_file):
-  if GetExeBasename(js.exe) == 'd8':
+  if js.basename == 'd8':
     js.RunWithArgs('--expose-wasm', js_file, '--', out_file)
+  elif js.basename == 'ch':
+    js.RunWithArgs('-on:WasmLazyTrap', js_file, '-args', out_file, '-endargs')
   else:
     js.RunWithArgs(js_file, out_file)
 
