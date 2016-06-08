@@ -47,6 +47,8 @@ if IS_WINDOWS:
 def FindExeWithFallback(name, default_exe_list, override_exe=None):
   result = override_exe
   if result is not None:
+    if IS_WINDOWS and os.path.splitext(result)[1] != '.exe':
+      result += '.exe'
     if os.path.exists(result):
       return os.path.abspath(result)
     raise Error('%s executable not found.\nsearch path: %s\n' % (name, result))
