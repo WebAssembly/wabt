@@ -28,6 +28,7 @@
 #include "wasm-stream.h"
 
 #define INSTRUCTION_QUANTUM 1000
+#define PROGRAM_NAME "wasm-interp"
 
 #define V(name, str) str,
 static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
@@ -116,7 +117,7 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wasm_print_help(parser, "wasm-interp");
+      wasm_print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -172,7 +173,7 @@ static void parse_options(int argc, char** argv) {
     WASM_FATAL("--spec and --run-all-exports are incompatible.\n");
 
   if (!s_infile) {
-    wasm_print_help(&parser, "wasm-interp");
+    wasm_print_help(&parser, PROGRAM_NAME);
     WASM_FATAL("No filename given.\n");
   }
 }
@@ -786,7 +787,7 @@ int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
 
-  wasm_initialize_stdio();
+  wasm_init_stdio();
   parse_options(argc, argv);
 
   s_stdout_stream = wasm_init_stdout_stream();

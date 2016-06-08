@@ -117,8 +117,8 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-  expected_lines = [line for line in expected.splitlines() if len(line) > 0]
-  actual_lines = [line for line in actual.splitlines() if len(line) > 0]
+  expected_lines = [line for line in expected.splitlines() if line]
+  actual_lines = [line for line in actual.splitlines() if line]
   return list(difflib.unified_diff(expected_lines, actual_lines,
                                    fromfile='expected', tofile='actual', lineterm=''))
 

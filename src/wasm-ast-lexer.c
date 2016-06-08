@@ -515,7 +515,7 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
   int line = buffer_line;
   int line_offset = 0;
   const char* p;
-  size_t is_previous_carriage = 0;
+  WasmBool is_previous_carriage = 0;
   for (p = buffer_start; p < buffer_end; ++p) {
     if (*p == '\n') {
       if (find_position == WASM_LINE_OFFSET_POSITION_START) {
@@ -530,7 +530,7 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
         }
       }
     }
-    is_previous_carriage = (size_t)(*p == '\r');
+    is_previous_carriage = *p == '\r';
   }
 
   WasmResult result = WASM_OK;
