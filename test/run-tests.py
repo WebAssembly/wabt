@@ -508,25 +508,25 @@ def GetAllTestInfo(test_names, status):
 
   return infos
 
-def RunTest(info, options, variables, temp_dir, verbose_level = 0):
+def RunTest(info, options, variables, verbose_level = 0):
   timeout = options.timeout
   if info.slow:
     timeout *= SLOW_TIMEOUT_MULTIPLIER
 
   try:
-    rel_file_path = info.CreateInputFile(temp_dir)
+    rel_file_path = info.CreateInputFile(variables['out_dir'])
     cmd = info.GetCommand(rel_file_path, variables, options.arg, verbose_level)
-    out = RunCommandWithTimeout(cmd, temp_dir, timeout, verbose_level > 0)
+    out = RunCommandWithTimeout(cmd, variables['out_dir'], timeout, verbose_level > 0)
     return out
   except Exception as e:
     return e
 
-def ProcessWorker(i, options, variables, inq, outq, temp_dir, runWorkers):
+def ProcessWorker(i, options, variables, inq, outq, should_run):
   try:
-    while runWorkers.value:
+    while should_run.value:
       try:
         info = inq.get(False)
-        out = RunTest(info, options, variables, temp_dir)
+        out = RunTest(info, options, variables)
         outq.put((info, out))
       except Queue.Empty:
         # Seems this can be fired even when the queue isn't actually empty.
@@ -570,6 +570,105 @@ def HandleTestResult(status, info, result, rebase=False):
   except Exception as e:
     status.Failed(info, str(e))
 
+#Source: http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
+def YesNoPrompt(question, default='yes'):
+  """Ask a yes/no question via raw_input() and return their answer.
+
+  "question" is a string that is presented to the user.
+  "default" is the presumed answer if the user just hits <Enter>.
+    It must be "yes" (the default), "no" or None (meaning
+    an answer is required of the user).
+
+  The "answer" return value is True for "yes" or False for "no".
+  """
+  valid = {'yes': True, 'y': True, 'ye': True,
+           'no': False, 'n': False}
+  if default is None:
+    prompt = ' [y/n] '
+  elif default == 'yes':
+    prompt = ' [Y/n] '
+  elif default == 'no':
+    prompt = ' [y/N] '
+  else:
+    raise ValueError('invalid default answer: \'%s\'' % default)
+
+  while True:
+    sys.stdout.write(question + prompt)
+    choice = raw_input().lower()
+    if default is not None and choice == '':
+      return valid[default]
+    elif choice in valid:
+      return valid[choice]
+    else:
+      sys.stdout.write('Please respond with \'yes\' or \'no\' '
+                       '(or \'y\' or \'n\').\n')
+
+def WaitWorkersTerminate(workers, timeout=5):
+  for worker in workers:
+    if worker.is_alive():
+      worker.join(timeout)
+      if worker.is_alive():
+        worker.terminate()
+
+def RunMultiProcess(infos_to_run, test_count, status, options, variables):
+  should_stop_on_error = options.stop_interactive
+  continued_errors = 0
+  num_proc = options.jobs
+
+  all_procs = []
+  try:
+    inq = multiprocessing.Queue()
+    outq = multiprocessing.Queue()
+    for info in infos_to_run:
+      inq.put_nowait(info)
+    should_run = multiprocessing.Value('i', 1)
+    for i, p in enumerate(range(num_proc)):
+      args = (i, options, variables, inq, outq, should_run)
+      proc = multiprocessing.Process(target=ProcessWorker, args=args)
+      all_procs.append(proc)
+      proc.start()
+    inq.close()
+
+    finished_tests = 0
+    while finished_tests < test_count:
+      try:
+        info, result = outq.get(True, 0.01)
+      except Queue.Empty:
+        status.UpdateTimer()
+        continue
+
+      finished_tests += 1
+      HandleTestResult(status, info, result, options.rebase)
+      if should_stop_on_error and status.failed > continued_errors:
+        should_continue = YesNoPrompt(question='Continue testing?', default='yes')
+        if not should_continue:
+          with should_run.get_lock():
+            should_run.value = 0
+          break
+        continued_errors += 1
+  except KeyboardInterrupt:
+    WaitWorkersTerminate(all_procs)
+  finally:
+    WaitWorkersTerminate(all_procs)
+
+def RunSingleProcess(infos_to_run, status, options, variables):
+  should_stop_on_error = options.stop_interactive
+  continued_errors = 0
+
+  for info in infos_to_run:
+    result = RunTest(info, options, variables)
+    HandleTestResult(status, info, result, options.rebase)
+    if status.failed > continued_errors:
+      if should_stop_on_error:
+        rerun_verbose = YesNoPrompt(question='Rerun with verbose option?', default='no')
+        if rerun_verbose:
+          RunTest(info, options, variables, verbose_level=2)
+        should_continue = YesNoPrompt(question='Continue testing?', default='yes')
+        if not should_continue:
+          break
+      elif options.verbose:
+        RunTest(info, options, variables, verbose_level=1)
+      continued_errors += 1
 
 def main(args):
   parser = argparse.ArgumentParser()
@@ -592,9 +691,8 @@ def main(args):
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
-  parser.add_argument('--no-multithreaded', help='Run all tests in series',
-                      action='store_true')
-  parser.add_argument('--stop', help='Stop on first error',
+  parser.add_argument('--stop-interactive',
+                      help='Enter interactive mode on errors. Extra options with \'--jobs 1\'',
                       action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
                       action='store_true')
@@ -650,20 +748,18 @@ def main(args):
 
   status = Status(options.verbose)
   infos = GetAllTestInfo(test_names, status)
-  infosToRun = []
+  infos_to_run = []
   for info in infos:
     if info.skip:
       status.Skipped(info)
       continue
-    infosToRun.append(info)
+    infos_to_run.append(info)
 
     if options.roundtrip:
       if info.ShouldCreateRoundtrip():
-        infosToRun.append(info.CreateRoundtripInfo())
+        infos_to_run.append(info.CreateRoundtripInfo())
 
-  test_count = len(infosToRun)
-
-  num_proc = options.jobs
+  test_count = len(infos_to_run)
   status.Start(test_count)
 
   if options.out_dir:
@@ -674,67 +770,16 @@ def main(args):
   else:
     out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
     out_dir_is_temp = True
-
   variables['out_dir'] = os.path.abspath(out_dir)
 
-  allProcs = []
-  continuedErrors = 0
   try:
-    if not options.no_multithreaded:
-      inq = multiprocessing.Queue()
-      outq = multiprocessing.Queue()
-      for info in infosToRun:
-        inq.put_nowait(info)
-      runWorkers = multiprocessing.Value('i', 1)
-      for i, p in enumerate(range(num_proc)):
-        args = (i, options, variables, inq, outq, out_dir, runWorkers)
-        proc = multiprocessing.Process(target=ProcessWorker, args=args)
-        allProcs.append(proc)
-        proc.start()
-      inq.close();
-
-      finished_tests = 0
-      while finished_tests < test_count:
-        try:
-          info, result = outq.get(True, 0.01)
-        except Queue.Empty:
-          status.UpdateTimer()
-          continue
-
-        finished_tests += 1
-        HandleTestResult(status, info, result, options.rebase)
-        if options.stop and status.failed > continuedErrors:
-          shouldContinue = raw_input('Continue testing? (yes/no): ')
-          if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
-            with runWorkers.get_lock():
-              runWorkers.value = 0
-            break
-          continuedErrors += 1
+    if options.jobs > 1:
+      RunMultiProcess(infos_to_run, test_count, status, options, variables)
     else:
-      for info in infosToRun:
-        result = RunTest(info, options, variables, out_dir)
-        HandleTestResult(status, info, result, options.rebase)
-        if status.failed > continuedErrors:
-          if options.stop:
-            rerunVerbose = raw_input('Rerun with verbose option? (yes/no): ')
-            if len(rerunVerbose) != 0 and rerunVerbose[0] != 'n':
-              RunTest(info, options, variables, out_dir, 2)
-            shouldContinue = raw_input('Continue testing? (yes/no): ')
-            if len(shouldContinue) != 0 and shouldContinue[0] != 'y':
-              break
-          elif options.verbose:
-            RunTest(info, options, variables, out_dir, 1)
-          continuedErrors += 1
-
-  except KeyboardInterrupt:
-    while multiprocessing.active_children():
-      time.sleep(0.1)
+      RunSingleProcess(infos_to_run, status, options, variables)
+  except:
+    print '\nInterrupted testing\n'
   finally:
-    for proc in allProcs:
-      if proc.is_alive():
-        proc.join(5)
-        if proc.is_alive():
-          proc.terminate();
     if out_dir_is_temp:
       shutil.rmtree(out_dir)
 
