@@ -1,3 +1,0 @@
-;;; SKIP: v8-native throws memory access out of bounds
-;;; TOOL: run-js-spec
-;;; STDIN_FILE: third_party/testsuite/resizing.wast

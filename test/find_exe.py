@@ -24,24 +24,12 @@ IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_SEXPR_WASM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
-BUILT_D8_EXE = os.path.join(REPO_ROOT_DIR, 'third_party', 'v8', 'v8', 'out',
-                            'Release', 'd8')
-DOWNLOAD_D8_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'd8')
-BUILT_SM_EXE = os.path.join(REPO_ROOT_DIR, 'third_party', 'gecko-dev', 'js',
-                            'src', 'build_OPT.OBJ', 'js', 'src', 'js')
-DOWNLOAD_SM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'js')
-DOWNLOAD_CHAKRA_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'ch')
 DEFAULT_WASM_WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
 DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
 
 
 if IS_WINDOWS:
   DEFAULT_SEXPR_WASM_EXE += '.exe'
-  BUILT_D8_EXE += '.exe'
-  DOWNLOAD_D8_EXE += '.exe'
-  BUILT_SM_EXE += '.exe'
-  DOWNLOAD_SM_EXE += '.exe'
-  DOWNLOAD_CHAKRA_EXE += '.exe'
   DEFAULT_WASM_WAST_EXE += '.exe'
   DEFAULT_WASM_INTERP_EXE += '.exe'
 
@@ -74,8 +62,3 @@ def GetWasmWastExecutable(override=None):
 
 def GetWasmInterpExecutable(override=None):
   return FindExeWithFallback('wasm-interp', [DEFAULT_WASM_INTERP_EXE], override)
-
-
-def GetJSExecutable(override=None):
-  return FindExeWithFallback('js',
-      [BUILT_D8_EXE, BUILT_SM_EXE, DOWNLOAD_D8_EXE, DOWNLOAD_SM_EXE, DOWNLOAD_CHAKRA_EXE], override)

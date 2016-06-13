@@ -1,9 +1,0 @@
-;;; TOOL: run-js-spec
-;;; STDIN_FILE: third_party/testsuite/imports.wast
-(;; STDOUT ;;;
-14 42
-13
-25 53
-24
-2/2 tests passed.
-;;; STDOUT ;;)

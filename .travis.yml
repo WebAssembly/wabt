@@ -2,7 +2,6 @@ language: c
 before_install:
   - scripts/travis-before-install.sh
 script:
-  - scripts/download-d8.sh
   - scripts/travis-build.sh
   - scripts/travis-test.sh
 matrix:

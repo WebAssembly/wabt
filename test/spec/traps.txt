@@ -1,5 +1,0 @@
-;;; TOOL: run-js-spec
-;;; STDIN_FILE: third_party/testsuite/traps.wast
-(;; STDOUT ;;;
-20/20 tests passed.
-;;; STDOUT ;;)

@@ -1,5 +1,0 @@
-;;; TOOL: run-js-spec
-;;; STDIN_FILE: third_party/testsuite/i32.wast
-(;; STDOUT ;;;
-326/326 tests passed.
-;;; STDOUT ;;)

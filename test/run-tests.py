@@ -49,37 +49,6 @@ TOOLS = {
     'EXE': '%(sexpr-wasm)s',
     'VERBOSE-FLAGS': ['-v']
   },
-  'run-js': {
-    'EXE': 'test/run-js.py',
-    'FLAGS': ' '.join([
-      '-e', '%(sexpr-wasm)s',
-      '--js-executable=%(js)s',
-      '-o', '%(out_dir)s',
-      '--no-error-cmdline',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-js-spec': {
-    'EXE': 'test/run-js.py',
-    'FLAGS': ' '.join([
-      '-e', '%(sexpr-wasm)s',
-      '--js-executable=%(js)s',
-      '--spec',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': ' '.join([
@@ -159,7 +128,7 @@ TOOLS = {
   }
 }
 
-ROUNDTRIP_TOOLS = ('sexpr-wasm', 'run-js')
+ROUNDTRIP_TOOLS = ('sexpr-wasm',)
 
 
 def Indent(s, spaces):
@@ -685,8 +654,6 @@ def main(args):
                           'flags.')
   parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
                       help='override executable.')
-  parser.add_argument('--js-executable', metavar='PATH',
-                      help='override js executable.')
   parser.add_argument('--wasm-wast-executable', metavar='PATH',
                       help='override wasm-wast executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
@@ -742,7 +709,6 @@ def main(args):
   variables = {
     'sexpr-wasm':
         find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
-    'js': find_exe.GetJSExecutable(options.js_executable),
     'wasm-wast': find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
     'wasm-interp':
         find_exe.GetWasmInterpExecutable(options.wasm_interp_executable),
