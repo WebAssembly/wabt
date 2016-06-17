@@ -18,8 +18,7 @@ $ cd sexpr-wasm-prototype
 $ git submodule update --init
 ```
 
-This will fetch the v8, testsuite and gtest repos, which are needed for some
-tests.
+This will fetch the testsuite and gtest repos, which are needed for some tests.
 
 ## Building
 
@@ -71,34 +70,6 @@ update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 
 CMake will detect if you don't have re2c or Bison installed and use the
 prebuilt source files instead.
-
-## Building a JavaScript engine
-
-The d8 and spidermonkey JavaScript engines can load and run the generated
-binary-encoded files. Some of the tests rely on one of these executables. To
-build it:
-
-```
-$ scripts/build-d8.sh
-$ scripts/build-sm.sh
-...
-```
-
-When the build script is finished, the d8 exectuable will be in the
-`third_party/v8/v8/out/Release/d8` directory. The spidermonkey executable will
-be in the `third_party/gecko-dev/js/src/build_OPT.OBJ/js/src` directory.
-
-You can also download a prebuilt version (the same one used to test on Travis)
-by running the `download-d8.sh` or `download-sm.sh` scripts:
-
-```
-$ scripts/download-d8.sh
-$ scripts/download-sm.sh
-...
-```
-
-This downloads the executable into the `out` directory. The test runner will
-look here if there is no executable in the built directory.
 
 ## Running sexpr-wasm
 
@@ -182,27 +153,6 @@ You can use `-h` to get additional help:
 $ out/wasm-interp -h
 $ out/run-interp.py -h
 ```
-
-## Running WebAssembly in a JavaScript engine
-
-The easiest way is to use the `test/run-js.py` script. This will run
-`sexpr-wasm` to convert the .wast to binary, then run all its exported
-functions in d8 or spidermonkey:
-
-```
-$ test/run-js.py test.wast
-test() = 3
-```
-
-You can also run spec tests:
-
-```
-$ test/run-js.py --spec spec-test.wast
-20/20 tests passed.
-```
-
-Take a look at `test/spec.js` and `test/wast.js`. These are the JavaScript
-scripts that `run-js.py` uses to run WebAssembly.
 
 ## Running the test suite
 
@@ -317,8 +267,6 @@ The currently supported list of keys:
 The currently supported list of tools:
 
 - `sexpr-wasm`: runs `sexpr-wasm`
-- `run-js`: runs the `run-js.py` script
-- `run-js-spec`: runs the `run-js.py` script with `--spec` flag
 - `run-roundtrip`: runs the `run-roundtrip.py` script. This does a roundtrip
   conversion using `sexpr-wasm` and `wasm-wast`, making sure the .wasm results
   are identical.
@@ -331,7 +279,7 @@ let's write our test:
 
 ```
 $ cat > test/my-awesome-test.txt << HERE
-;;; TOOL: run-js-spec
+;;; TOOL: run-interp-spec
 (module
   (export "add2" 0)
   (func (param i32) (result i32)

@@ -1,9 +1,0 @@
-;;; TOOL: run-js-spec
-(module
-  (func (param i32) (result i32) (get_local 0))
-  (export "f" 0))
-(assert_return (invoke "f" (i32.const 10)) (i32.const 10))
-(assert_return (invoke "f" (i32.const -100)) (i32.const -100))
-(;; STDOUT ;;;
-2/2 tests passed.
-;;; STDOUT ;;)

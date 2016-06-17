@@ -1,8 +1,0 @@
-;;; TOOL: run-js
-(module
-  (export "trap" 0)
-  (func
-    (unreachable)))
-(;; STDOUT ;;;
-trap() trapped: Error: unreachable
-;;; STDOUT ;;)

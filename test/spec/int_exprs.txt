@@ -1,5 +1,0 @@
-;;; TOOL: run-js-spec
-;;; STDIN_FILE: third_party/testsuite/int_exprs.wast
-(;; STDOUT ;;;
-79/79 tests passed.
-;;; STDOUT ;;)

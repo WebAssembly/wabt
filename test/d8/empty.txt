@@ -1,7 +1,0 @@
-;;; TOOL: run-js
-(module
-  (export "f" 0)
-  (func))
-(;; STDOUT ;;;
-f() = undefined
-;;; STDOUT ;;)

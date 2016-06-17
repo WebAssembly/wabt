@@ -1,5 +1,0 @@
-;;; TOOL: run-js-spec
-;;; STDIN_FILE: third_party/testsuite/forward.wast
-(;; STDOUT ;;;
-4/4 tests passed.
-;;; STDOUT ;;)
