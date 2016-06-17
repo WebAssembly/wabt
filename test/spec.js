@@ -46,7 +46,7 @@ var quiet = false;
 run(arguments[0]);
 
 function run(inPath) {
-  var lastSlash = inPath.lastIndexOf('/');
+  var lastSlash = Math.max(inPath.lastIndexOf('/'), inPath.lastIndexOf('\\'));
   var inDir = lastSlash == -1 ? '.' : inPath.slice(0, lastSlash);
   var data = read(inPath);
   var jsonData = JSON.parse(data);

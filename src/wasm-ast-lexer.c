@@ -466,7 +466,7 @@ WasmAstLexer* wasm_new_ast_file_lexer(WasmAllocator* allocator,
                                       const char* filename) {
   WasmAstLexer* lexer =
       wasm_new_lexer(allocator, WASM_LEXER_SOURCE_TYPE_FILE, filename);
-  lexer->source.file = fopen(filename, "r");
+  lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
     wasm_destroy_ast_lexer(lexer);
     wasm_free(allocator, lexer);
@@ -515,6 +515,7 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
   int line = buffer_line;
   int line_offset = 0;
   const char* p;
+  WasmBool is_previous_carriage = 0;
   for (p = buffer_start; p < buffer_end; ++p) {
     if (*p == '\n') {
       if (find_position == WASM_LINE_OFFSET_POSITION_START) {
@@ -524,11 +525,12 @@ static WasmResult scan_forward_for_line_offset_in_buffer(
         }
       } else {
         if (line++ == find_line) {
-          line_offset = buffer_file_offset + (p - buffer_start);
+          line_offset = buffer_file_offset + (p - buffer_start) - is_previous_carriage;
           break;
         }
       }
     }
+    is_previous_carriage = *p == '\r';
   }
 
   WasmResult result = WASM_OK;

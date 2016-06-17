@@ -32,6 +32,8 @@
 #include "wasm-stream.h"
 #include "wasm-writer.h"
 
+#define PROGRAM_NAME "sexpr-wasm"
+
 static const char* s_infile;
 static const char* s_outfile;
 static WasmBool s_dump_module;
@@ -130,7 +132,7 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wasm_print_help(parser);
+      wasm_print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -193,7 +195,7 @@ static void parse_options(int argc, char** argv) {
   wasm_parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wasm_print_help(&parser);
+    wasm_print_help(&parser, PROGRAM_NAME);
     WASM_FATAL("No filename given.\n");
   }
 }
@@ -271,6 +273,16 @@ static char* get_module_filename(WasmAllocator* allocator,
   return str;
 }
 
+static char* convert_backslash_to_forward_slash(char* buffer, const int buf_size) {
+  int i = 0;
+  for (; i < buf_size; ++i) {
+    if (buffer[i] == '\\') {
+      buffer[i] = '/';
+    }
+  }
+  return buffer;
+}
+
 typedef struct Context {
   WasmAllocator* allocator;
   WasmMemoryWriter json_writer;
@@ -283,7 +295,6 @@ typedef struct Context {
 
 static void on_script_begin(void* user_data) {
   Context* ctx = user_data;
-
   if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->module_writer)))
     WASM_FATAL("unable to open memory writer for writing\n");
 
@@ -301,6 +312,10 @@ static void on_module_begin(uint32_t index, void* user_data) {
       get_module_filename(ctx->allocator, &ctx->output_filename_noext, index);
   if (index != 0)
     wasm_writef(&ctx->json_stream, ",\n");
+  ctx->module_filename =
+      convert_backslash_to_forward_slash(ctx->module_filename,
+                                         strlen(ctx->module_filename));
+
   WasmStringSlice module_basename = get_basename(ctx->module_filename);
   wasm_writef(&ctx->json_stream,
               "  {\"filename\": \"" PRIstringslice "\", \"commands\": [\n",
@@ -334,8 +349,13 @@ static void on_command(uint32_t index,
   Context* ctx = user_data;
   if (index != 0)
     wasm_writef(&ctx->json_stream, ",\n");
+  const int l = strlen(loc->filename);
+  char* filename = wasm_alloc(ctx->allocator, l + 1, WASM_DEFAULT_ALIGN);
+  memcpy(filename, loc->filename, l + 1);
+  filename = convert_backslash_to_forward_slash(filename, l);
   wasm_writef(&ctx->json_stream, s_command_format, s_command_names[type],
-              WASM_PRINTF_STRING_SLICE_ARG(*name), loc->filename, loc->line);
+              WASM_PRINTF_STRING_SLICE_ARG(*name), filename, loc->line);
+  wasm_free(ctx->allocator, filename);
 }
 
 static void on_module_before_write(uint32_t index,
@@ -369,6 +389,7 @@ int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
 
+  wasm_init_stdio();
   parse_options(argc, argv);
 
   if (s_use_libc_allocator) {

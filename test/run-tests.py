@@ -117,10 +117,10 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-  expected_lines = expected.splitlines(1)
-  actual_lines = actual.splitlines(1)
+  expected_lines = [line for line in expected.splitlines() if line]
+  actual_lines = [line for line in actual.splitlines() if line]
   return list(difflib.unified_diff(expected_lines, actual_lines,
-                                   fromfile='expected', tofile='actual'))
+                                   fromfile='expected', tofile='actual', lineterm=''))
 
 
 def AppendBeforeExt(file_path, suffix):
@@ -366,11 +366,13 @@ class TestInfo(object):
     msg = ''
     if self.expected_stderr != stderr:
       diff_lines = DiffLines(self.expected_stderr, stderr)
-      msg += 'STDERR MISMATCH:\n' + ''.join(diff_lines)
+      if len(diff_lines) > 0:
+        msg += 'STDERR MISMATCH:\n' + '\n'.join(diff_lines) + '\n'
 
     if self.expected_stdout != stdout:
       diff_lines = DiffLines(self.expected_stdout, stdout)
-      msg += 'STDOUT MISMATCH:\n' + ''.join(diff_lines)
+      if len(diff_lines) > 0:
+        msg += 'STDOUT MISMATCH:\n' + '\n'.join(diff_lines) + '\n'
 
     if msg:
       raise Error(msg)
