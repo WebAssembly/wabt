@@ -43,6 +43,8 @@ def main(args):
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
+  parser.add_argument('--print-cmd', help='print the commands that are run.',
+                      action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -58,6 +60,9 @@ def main(args):
     '--trace': options.verbose,
     '--use-libc-allocator': options.use_libc_allocator
   })
+
+  gen_wasm.verbose = options.print_cmd
+  wasm_interp.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-interp-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
