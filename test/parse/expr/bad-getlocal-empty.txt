@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (local i32) (get_local)))
 (;; STDERR ;;;
-parse/expr/bad-getlocal-empty.txt:2:37: syntax error, unexpected ), expecting INT or VAR
+parse/expr/bad-getlocal-empty.txt:2:37: syntax error, unexpected ), expecting NAT or VAR
 (module (func (local i32) (get_local)))
                                     ^
 ;;; STDERR ;;)

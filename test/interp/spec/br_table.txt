@@ -1,0 +1,69 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/br_table.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1261:12: type mismatch of br_table default target. got void, expected i32
+    (block (br_table 0 (i32.const 1)) (i32.const 1))
+           ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1267:28: type mismatch of br_table target. got i64, expected i32
+    (block (br_table 0 0 0 (i64.const 1) (i32.const 1)) (i32.const 1))
+                           ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1267:28: type mismatch of br_table target. got i64, expected i32
+    (block (br_table 0 0 0 (i64.const 1) (i32.const 1)) (i32.const 1))
+                           ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1267:28: type mismatch of br_table default target. got i64, expected i32
+    (block (br_table 0 0 0 (i64.const 1) (i32.const 1)) (i32.const 1))
+                           ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1274:28: type mismatch in nop. got void, expected i32
+    (block (br_table 0 0 0 (nop)))
+                           ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1280:24: type mismatch of key. got i64, expected i32
+    (block (br_table 0 (i64.const 0)))
+                       ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1286:40: type mismatch in nop. got void, expected i32
+    (block (br_table 0 0 (i32.const 0) (nop)) (i32.const 1))
+                                       ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1292:40: type mismatch of key. got i64, expected i32
+    (block (br_table 0 0 (i32.const 0) (i64.const 0)) (i32.const 1))
+                                       ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1299:22: label variable out of range (max 1)
+    (block (br_table 2 1 (i32.const 1)))
+                     ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1299:24: label variable out of range (max 1)
+    (block (br_table 2 1 (i32.const 1)))
+                       ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1305:31: label variable out of range (max 2)
+    (block (block (br_table 0 5 (i32.const 1))))
+                              ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1311:24: label variable out of range (max 1)
+    (block (br_table 0 0x100000001 0 (i32.const 1)))
+                       ^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1318:22: label variable out of range (max 1)
+    (block (br_table 1 2 (i32.const 1)))
+                     ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1318:24: label variable out of range (max 1)
+    (block (br_table 1 2 (i32.const 1)))
+                       ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1324:31: label variable out of range (max 2)
+    (block (block (br_table 0 5 (i32.const 1))))
+                              ^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1330:26: label variable out of range (max 1)
+    (block (br_table 0 0 0x100000001 (i32.const 1)))
+                         ^^^^^^^^^^^
+146/146 tests passed.
+;;; STDOUT ;;)

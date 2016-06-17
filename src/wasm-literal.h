@@ -39,7 +39,10 @@ WasmResult wasm_parse_int32(const char* s,
                             const char* end,
                             uint32_t* out,
                             WasmParseIntType parse_type);
-WasmResult wasm_parse_int64(const char* s, const char* end, uint64_t* out);
+WasmResult wasm_parse_int64(const char* s,
+                            const char* end,
+                            uint64_t* out,
+                            WasmParseIntType parse_type);
 WasmResult wasm_parse_uint64(const char* s, const char* end, uint64_t* out);
 WasmResult wasm_parse_float(WasmLiteralType literal_type,
                             const char* s,

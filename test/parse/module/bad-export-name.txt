@@ -4,7 +4,7 @@
 parse/module/bad-export-name.txt:2:23: unexpected token "foo"
 (module (export "foo" foo))
                       ^^^
-parse/module/bad-export-name.txt:2:26: syntax error, unexpected ), expecting INT or VAR or MEMORY
+parse/module/bad-export-name.txt:2:26: syntax error, unexpected ), expecting NAT or VAR or MEMORY
 (module (export "foo" foo))
                          ^
 ;;; STDERR ;;)

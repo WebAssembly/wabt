@@ -1,0 +1,97 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/set_local.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/set_local.wast:133:65: type mismatch of function result. got i32, expected i64
+...$type-local-num-vs-num (result i64) (local i32) (set_local 0 (i32.const 0))))
+                                                   ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:137:61: type mismatch of convert op. got f32, expected i32
+...nc $type-local-num-vs-num (local f32) (i32.eqz (set_local 0 (f32.const 0)))))
+                                                  ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:141:65: type mismatch of unary op. got i64, expected f64
+...type-local-num-vs-num (local f64 i64) (f64.neg (set_local 1 (i64.const 0)))))
+                                                  ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:146:70: type mismatch in nop. got void, expected i32
+  (module (func $type-local-arg-void-vs-num (local i32) (set_local 0 (nop))))
+                                                                     ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:150:69: type mismatch of set_local. got f32, expected i32
+...le (func $type-local-arg-num-vs-num (local i32) (set_local 0 (f32.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:154:69: type mismatch of set_local. got f64, expected f32
+...le (func $type-local-arg-num-vs-num (local f32) (set_local 0 (f64.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:158:73: type mismatch of set_local. got f64, expected i64
+...func $type-local-arg-num-vs-num (local f64 i64) (set_local 1 (f64.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:166:65: type mismatch of function result. got i32, expected i64
+  (module (func $type-param-num-vs-num (param i32) (result i64) (get_local 0)))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:170:61: type mismatch of convert op. got f32, expected i32
+  (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
+                                                            ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:174:65: type mismatch of unary op. got i64, expected f64
+  (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:179:70: type mismatch in nop. got void, expected i32
+  (module (func $type-param-arg-void-vs-num (param i32) (set_local 0 (nop))))
+                                                                     ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:183:69: type mismatch of set_local. got f32, expected i32
+...le (func $type-param-arg-num-vs-num (param i32) (set_local 0 (f32.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:187:69: type mismatch of set_local. got f64, expected f32
+...le (func $type-param-arg-num-vs-num (param f32) (set_local 0 (f64.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:191:73: type mismatch of set_local. got f64, expected i64
+...func $type-param-arg-num-vs-num (param f64 i64) (set_local 1 (f64.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:199:59: local variable out of range (max 2)
+  (module (func $unbound-local (local i32 i64) (get_local 3)))
+                                                          ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:203:57: local variable out of range (max 2)
+  (module (func $large-local (local i32 i64) (get_local 14324343)))
+                                                        ^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:208:59: local variable out of range (max 2)
+  (module (func $unbound-param (param i32 i64) (get_local 2)))
+                                                          ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:212:57: local variable out of range (max 2)
+  (module (func $large-param (local i32 i64) (get_local 714324343)))
+                                                        ^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:217:71: local variable out of range (max 3)
+  (module (func $unbound-mixed (param i32) (local i32 i64) (get_local 3)))
+                                                                      ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:221:69: local variable out of range (max 3)
+  (module (func $large-mixed (param i64) (local i32 i64) (get_local 214324343)))
+                                                                    ^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:226:81: type mismatch of set_local. got f32, expected i32
+...pe-mixed-arg-num-vs-num (param f32) (local i32) (set_local 1 (f32.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:230:85: type mismatch of set_local. got f32, expected i32
+...ixed-arg-num-vs-num (param i64 i32) (local f32) (set_local 1 (f32.const 0))))
+                                                                ^
+assert_invalid error:
+  third_party/testsuite/set_local.wast:234:85: type mismatch of set_local. got i64, expected f64
+...ixed-arg-num-vs-num (param i64) (local f64 i64) (set_local 1 (i64.const 0))))
+                                                                ^
+11/11 tests passed.
+;;; STDOUT ;;)

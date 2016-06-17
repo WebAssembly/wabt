@@ -1,0 +1,73 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/loop.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/loop.wast:262:46: type mismatch of loop. got void, expected i32
+  (module (func $type-empty-i32 (result i32) (loop)))
+                                             ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:266:46: type mismatch of loop. got void, expected i64
+  (module (func $type-empty-i64 (result i64) (loop)))
+                                             ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:270:46: type mismatch of loop. got void, expected f32
+  (module (func $type-empty-f32 (result f32) (loop)))
+                                             ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:274:46: type mismatch of loop. got void, expected f64
+  (module (func $type-empty-f64 (result f64) (loop)))
+                                             ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:280:11: type mismatch in nop. got void, expected i32
+    (loop (nop))
+          ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:286:11: type mismatch of loop. got f32, expected i32
+    (loop (f32.const 0))
+          ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:292:32: type mismatch in nop. got void, expected i32
+    (loop (br 1 (i32.const 1)) (nop))
+                               ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:298:32: type mismatch of loop. got f32, expected i32
+    (loop (br 1 (i32.const 1)) (f32.const 0))
+                               ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:305:11: type mismatch of br value. got void, expected i32
+    (loop (br 1))
+          ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:311:11: type mismatch of br value. got void, expected i32
+    (loop (br 1) (i32.const 1))
+          ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:317:17: type mismatch of br value. got i64, expected i32
+    (loop (br 1 (i64.const 1)) (i32.const 1))
+                ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:323:17: type mismatch of br value. got i64, expected i32
+    (loop (br 1 (i64.const 1)) (br 1 (i32.const 1)))
+                ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:329:38: type mismatch of br value. got f64, expected i32
+    (loop (br 1 (i32.const 1)) (br 1 (f64.const 1)))
+                                     ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:336:17: type mismatch of br value. got void, expected i32
+    (loop (loop (br 3)) (br 1 (i32.const 1)))
+                ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:342:23: type mismatch of br value. got i64, expected i32
+    (loop (loop (br 3 (i64.const 1))) (br 1 (i32.const 1)))
+                      ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:348:20: type mismatch of br value. got void, expected i32
+    (i32.ctz (loop (br 1)))
+                   ^
+assert_invalid error:
+  third_party/testsuite/loop.wast:354:5: type mismatch of function result. got i64, expected i32
+    (i64.ctz (loop (br 1 (i64.const 9))))
+    ^
+47/47 tests passed.
+;;; STDOUT ;;)

@@ -108,7 +108,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 
 %token LPAR "("
 %token RPAR ")"
-%token INT FLOAT TEXT VAR VALUE_TYPE
+%token NAT INT FLOAT TEXT VAR VALUE_TYPE
 %token NOP BLOCK IF THEN ELSE LOOP BR BR_IF BR_TABLE CASE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
@@ -123,7 +123,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<text> ALIGN OFFSET TEXT VAR
 %type<type> SELECT
 %type<type> CONST VALUE_TYPE
-%type<literal> INT FLOAT
+%type<literal> NAT INT FLOAT
 
 %type<command> cmd
 %type<commands> cmd_list
@@ -134,7 +134,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<exported_func> func
 %type<expr> expr expr1 expr_opt
 %type<expr_list> expr_list non_empty_expr_list
-%type<func_fields> func_fields
+%type<func_fields> func_fields func_body
 %type<func> func_info
 %type<func_sig> func_type
 %type<func_type> type_def
@@ -162,7 +162,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
 %destructor { wasm_destroy_expr(parser->allocator, $$); } expr expr1 expr_opt
 %destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } expr_list non_empty_expr_list
-%destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields
+%destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields func_body
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment segment_contents
 %destructor { wasm_destroy_segment_vector_and_elements(parser->allocator, &$$); } segment_list
@@ -233,6 +233,10 @@ literal :
       $$.type = $1.type;
       DUPTEXT($$.text, $1.text);
     }
+  | NAT {
+      $$.type = $1.type;
+      DUPTEXT($$.text, $1.text);
+    }
   | FLOAT {
       $$.type = $1.type;
       DUPTEXT($$.text, $1.text);
@@ -240,11 +244,11 @@ literal :
 ;
 
 var :
-    INT {
+    NAT {
       $$.loc = @1;
       $$.type = WASM_VAR_TYPE_INDEX;
-      uint32_t index;
-      if (WASM_FAILED(wasm_parse_int32($1.text.start,
+      uint64_t index;
+      if (WASM_FAILED(wasm_parse_int64($1.text.start,
                                        $1.text.start + $1.text.length, &index,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
         wasm_ast_parser_error(&@1, lexer, parser, "invalid int " PRIstringslice,
@@ -300,10 +304,11 @@ labeling :
 offset :
     /* empty */ { $$ = 0; }
   | OFFSET {
-      if (WASM_FAILED(wasm_parse_int64($1.start, $1.start + $1.length, &$$))) {
-        wasm_ast_parser_error(&@1, lexer, parser,
-                              "invalid offset \"" PRIstringslice "\"",
-                              WASM_PRINTF_STRING_SLICE_ARG($1));
+    if (WASM_FAILED(wasm_parse_int64($1.start, $1.start + $1.length, &$$,
+                                     WASM_PARSE_SIGNED_AND_UNSIGNED))) {
+      wasm_ast_parser_error(&@1, lexer, parser,
+                            "invalid offset \"" PRIstringslice "\"",
+                            WASM_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -520,11 +525,12 @@ expr_list :
 
 /* Functions */
 func_fields :
-    expr_list {
+    func_body
+  | LPAR RESULT VALUE_TYPE RPAR func_body {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_EXPRS;
-      $$->first_expr = $1.first;
-      $$->next = NULL;
+      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPE;
+      $$->result_type = $3;
+      $$->next = $5;
     }
   | LPAR PARAM value_type_list RPAR func_fields {
       $$ = new_func_field(parser->allocator);
@@ -540,19 +546,21 @@ func_fields :
       $$->bound_type.type = $4;
       $$->next = $6;
     }
-  | LPAR RESULT VALUE_TYPE RPAR func_fields {
+;
+func_body :
+    expr_list {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPE;
-      $$->result_type = $3;
-      $$->next = $5;
+      $$->type = WASM_FUNC_FIELD_TYPE_EXPRS;
+      $$->first_expr = $1.first;
+      $$->next = NULL;
     }
-  | LPAR LOCAL value_type_list RPAR func_fields {
+  | LPAR LOCAL value_type_list RPAR func_body {
       $$ = new_func_field(parser->allocator);
       $$->type = WASM_FUNC_FIELD_TYPE_LOCAL_TYPES;
       $$->types = $3;
       $$->next = $5;
     }
-  | LPAR LOCAL bind_var VALUE_TYPE RPAR func_fields {
+  | LPAR LOCAL bind_var VALUE_TYPE RPAR func_body {
       $$ = new_func_field(parser->allocator);
       $$->type = WASM_FUNC_FIELD_TYPE_BOUND_LOCAL;
       $$->bound_type.loc = @2;
@@ -677,7 +685,7 @@ start :
 ;
 
 segment_address :
-    INT {
+    NAT {
       if (WASM_FAILED(wasm_parse_int32($1.text.start,
                                        $1.text.start + $1.text.length, &$$,
                                        WASM_PARSE_UNSIGNED_ONLY))) {
@@ -706,7 +714,7 @@ segment_list :
 ;
 
 initial_pages :
-    INT {
+    NAT {
       if (WASM_FAILED(wasm_parse_uint64($1.text.start,
                                         $1.text.start + $1.text.length, &$$))) {
         wasm_ast_parser_error(&@1, lexer, parser,
@@ -718,7 +726,7 @@ initial_pages :
 ;
 
 max_pages :
-    INT {
+    NAT {
       if (WASM_FAILED(wasm_parse_uint64($1.text.start,
                                         $1.text.start + $1.text.length, &$$))) {
         wasm_ast_parser_error(&@1, lexer, parser,
@@ -1084,7 +1092,8 @@ static WasmResult parse_const(WasmType type,
       return wasm_parse_int32(s, end, &out->u32,
                               WASM_PARSE_SIGNED_AND_UNSIGNED);
     case WASM_TYPE_I64:
-      return wasm_parse_int64(s, end, &out->u64);
+      return wasm_parse_int64(s, end, &out->u64,
+                              WASM_PARSE_SIGNED_AND_UNSIGNED);
     case WASM_TYPE_F32:
       return wasm_parse_float(literal_type, s, end, &out->f32_bits);
     case WASM_TYPE_F64:
