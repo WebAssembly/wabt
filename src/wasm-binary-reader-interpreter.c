@@ -908,7 +908,7 @@ static WasmResult on_return_expr(uint8_t arity, void* user_data) {
     WasmType value = pop_expr_if(ctx, arity == 1);
     CHECK_RESULT(check_type(ctx, sig->result_type, value, "return"));
   }
-  push_expr(ctx, sig->result_type, WASM_OPCODE_RETURN);
+  push_expr(ctx, WASM_TYPE_ANY, WASM_OPCODE_RETURN);
   return WASM_OK;
 }
 
@@ -989,6 +989,14 @@ static void adjust_value_stack(Context* ctx, int32_t amount) {
            ctx->current_func->param_and_local_types.size);
   }
 #endif
+}
+
+static void adjust_value_stack_for_nonlocal_continuation(Context* ctx) {
+  /* adjust stack up; these operations type-check as ANY, so they can be used in
+   * any operation. No value will actually be pushed, and the expressions that
+   * use the result won't ever be executed. But it will make the stack the
+   * "normal" size, so we won't have to special case it anywhere else. */
+  adjust_value_stack(ctx, is_expr_discarded(ctx, ctx->expr_count) ? 0 : 1);
 }
 
 static EmitLabel* get_emit_label(Context* ctx, uint32_t depth) {
@@ -1325,7 +1333,7 @@ static WasmResult on_emit_br_expr(uint8_t arity,
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_BR]);
   CHECK_RESULT(emit_br(ctx, translate_emit_depth(ctx, depth)));
-  /* non-local continuation, so it's not necessary to adjust the value stack */
+  adjust_value_stack_for_nonlocal_continuation(ctx);
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1375,6 +1383,7 @@ static WasmResult on_emit_br_table_expr(uint8_t arity,
     CHECK_RESULT(emit_br_table_offset(ctx, translate_emit_depth(ctx, depth)));
   }
 
+  adjust_value_stack_for_nonlocal_continuation(ctx);
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1569,8 +1578,7 @@ static WasmResult on_emit_return_expr(uint8_t arity, void* user_data) {
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
   CHECK_RESULT(emit_return(ctx, sig->result_type));
-  /* non-local continuation, so it's not necessary to adjust the value stack */
-  CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
+  adjust_value_stack_for_nonlocal_continuation(ctx);
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1591,11 +1599,7 @@ static WasmResult on_emit_unreachable_expr(void* user_data) {
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_UNREACHABLE]);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_UNREACHABLE));
-  /* adjust stack up; unreachable type-checks as ANY, so it can be used in any
-   * operation. No value will actually be pushed, and the expressions that use
-   * the result won't ever be executed. But it will make the stack the "normal"
-   * size, so we won't have to special case it anywhere else. */
-  adjust_value_stack(ctx, is_expr_discarded(ctx, ctx->expr_count) ? 0 : 1);
+  adjust_value_stack_for_nonlocal_continuation(ctx);
   ctx->expr_count++;
   return WASM_OK;
 }

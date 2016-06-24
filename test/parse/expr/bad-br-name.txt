@@ -4,7 +4,7 @@
 parse/expr/bad-br-name.txt:2:31: unexpected token "foo"
 (module (func (block $foo (br foo))))
                               ^^^
-parse/expr/bad-br-name.txt:2:34: syntax error, unexpected ), expecting INT or VAR
+parse/expr/bad-br-name.txt:2:34: syntax error, unexpected ), expecting NAT or VAR
 (module (func (block $foo (br foo))))
                                  ^
 ;;; STDERR ;;)

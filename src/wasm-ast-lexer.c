@@ -201,15 +201,16 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     tick =      "`";
     escape =    [nt\\'"];
     character = [^"\\\x00-\x1f\x7f] | "\\" escape | "\\" hexdigit hexdigit;
-    sign =      [+-]?;
-    num =       sign digit+;
-    hexnum =    sign "0x" hexdigit+;
-    int =       num | hexnum;
-    float0 =    num "." digit*;
-    float1 =    num ("." digit*)? [eE] num;
-    hexfloat =  sign "0x" hexdigit+ "."? hexdigit* "p" sign digit+;
-    infinity =  sign "infinity";
-    nan =       sign "nan" | sign "nan:0x" hexdigit+;
+    sign =      [+-];
+    num =       digit+;
+    hexnum =    "0x" hexdigit+;
+    nat =       num | hexnum;
+    int =       sign nat;
+    float0 =    sign? num "." digit*;
+    float1 =    sign? num ("." digit*)? [eE] sign? num;
+    hexfloat =  sign? "0x" hexdigit+ "."? hexdigit* "p" sign? digit+;
+    infinity =  sign? ("inf" | "infinity");
+    nan =       sign? "nan" | sign? "nan:0x" hexdigit+;
     float =     float0 | float1;
     text =      '"' character* '"';
     atom =      (letter | digit | "_" | tick | symbol)+;
@@ -218,6 +219,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
 
     <i> "("                   { RETURN(LPAR); }
     <i> ")"                   { RETURN(RPAR); }
+    <i> nat                   { LITERAL(INT); RETURN(NAT); }
     <i> int                   { LITERAL(INT); RETURN(INT); }
     <i> float                 { LITERAL(FLOAT); RETURN(FLOAT); }
     <i> hexfloat              { LITERAL(HEXFLOAT); RETURN(FLOAT); }

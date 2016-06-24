@@ -4,7 +4,7 @@
 parse/module/bad-memory-segment-address.txt:2:30: unexpected token "foo"
 (module (memory 100 (segment foo)))
                              ^^^
-parse/module/bad-memory-segment-address.txt:2:33: syntax error, unexpected ), expecting INT
+parse/module/bad-memory-segment-address.txt:2:33: syntax error, unexpected ), expecting NAT
 (module (memory 100 (segment foo)))
                                 ^
 ;;; STDERR ;;)

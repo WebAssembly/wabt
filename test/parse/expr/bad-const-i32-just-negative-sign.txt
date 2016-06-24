@@ -5,7 +5,7 @@
 parse/expr/bad-const-i32-just-negative-sign.txt:3:20: unexpected token "-"
   (func (i32.const -)))
                    ^
-parse/expr/bad-const-i32-just-negative-sign.txt:3:21: syntax error, unexpected ), expecting INT or FLOAT
+parse/expr/bad-const-i32-just-negative-sign.txt:3:21: syntax error, unexpected ), expecting NAT or INT or FLOAT
   (func (i32.const -)))
                     ^
 ;;; STDERR ;;)

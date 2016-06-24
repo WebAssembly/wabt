@@ -2,8 +2,20 @@
 ;;; STDIN_FILE: third_party/testsuite/nop.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/nop.wast:18:30: type mismatch in nop. got void, expected i32
-  (module (func (result i32) (nop)))
-                             ^
-2/2 tests passed.
+  third_party/testsuite/nop.wast:87:40: type mismatch in nop. got void, expected i32
+  (module (func $type-i32 (result i32) (nop)))
+                                       ^
+assert_invalid error:
+  third_party/testsuite/nop.wast:91:40: type mismatch in nop. got void, expected i64
+  (module (func $type-i64 (result i64) (nop)))
+                                       ^
+assert_invalid error:
+  third_party/testsuite/nop.wast:95:40: type mismatch in nop. got void, expected f32
+  (module (func $type-f32 (result f32) (nop)))
+                                       ^
+assert_invalid error:
+  third_party/testsuite/nop.wast:99:40: type mismatch in nop. got void, expected f64
+  (module (func $type-f64 (result f64) (nop)))
+                                       ^
+20/20 tests passed.
 ;;; STDOUT ;;)

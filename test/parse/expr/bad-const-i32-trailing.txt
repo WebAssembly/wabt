@@ -4,7 +4,7 @@
 parse/expr/bad-const-i32-trailing.txt:2:26: unexpected token "100x"
 (module (func (i32.const 100x)))
                          ^^^^
-parse/expr/bad-const-i32-trailing.txt:2:30: syntax error, unexpected ), expecting INT or FLOAT
+parse/expr/bad-const-i32-trailing.txt:2:30: syntax error, unexpected ), expecting NAT or INT or FLOAT
 (module (func (i32.const 100x)))
                              ^
 ;;; STDERR ;;)

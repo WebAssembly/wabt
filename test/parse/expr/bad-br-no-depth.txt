@@ -4,7 +4,7 @@
     (block
       (br))))
 (;; STDERR ;;;
-parse/expr/bad-br-no-depth.txt:5:10: syntax error, unexpected ), expecting INT or VAR
+parse/expr/bad-br-no-depth.txt:5:10: syntax error, unexpected ), expecting NAT or VAR
       (br))))
          ^
 ;;; STDERR ;;)

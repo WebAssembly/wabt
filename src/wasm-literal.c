@@ -115,10 +115,16 @@ WasmResult wasm_parse_uint64(const char* s, const char* end, uint64_t* out) {
   return WASM_OK;
 }
 
-WasmResult wasm_parse_int64(const char* s, const char* end, uint64_t* out) {
+WasmResult wasm_parse_int64(const char* s,
+                            const char* end,
+                            uint64_t* out,
+                            WasmParseIntType parse_type) {
   WasmBool has_sign = WASM_FALSE;
-  if (*s == '-') {
-    has_sign = WASM_TRUE;
+  if (*s == '-' || *s == '+') {
+    if (parse_type == WASM_PARSE_UNSIGNED_ONLY)
+      return WASM_ERROR;
+    if (*s == '-')
+      has_sign = WASM_TRUE;
     s++;
   }
   uint64_t value = 0;
@@ -138,10 +144,11 @@ WasmResult wasm_parse_int32(const char* s,
                             WasmParseIntType parse_type) {
   uint64_t value;
   WasmBool has_sign = WASM_FALSE;
-  if (*s == '-') {
+  if (*s == '-' || *s == '+') {
     if (parse_type == WASM_PARSE_UNSIGNED_ONLY)
       return WASM_ERROR;
-    has_sign = WASM_TRUE;
+    if (*s == '-')
+      has_sign = WASM_TRUE;
     s++;
   }
   if (WASM_FAILED(wasm_parse_uint64(s, end, &value)))

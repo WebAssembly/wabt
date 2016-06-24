@@ -228,7 +228,7 @@ static void write_quoted_string_slice(Context* ctx,
 
 static void write_var(Context* ctx, const WasmVar* var, NextChar next_char) {
   if (var->type == WASM_VAR_TYPE_INDEX) {
-    writef(ctx, "%d", var->index);
+    writef(ctx, "%" PRId64, var->index);
     ctx->next_char = next_char;
   } else {
     write_string_slice(ctx, &var->name, next_char);
@@ -237,7 +237,8 @@ static void write_var(Context* ctx, const WasmVar* var, NextChar next_char) {
 
 static void write_br_var(Context* ctx, const WasmVar* var, NextChar next_char) {
   if (var->type == WASM_VAR_TYPE_INDEX) {
-    writef(ctx, "%d (;@%d;)", var->index, ctx->depth - var->index - 1);
+    writef(ctx, "%" PRId64 " (;@%" PRId64 ";)", var->index,
+           ctx->depth - var->index - 1);
     ctx->next_char = next_char;
   } else {
     write_string_slice(ctx, &var->name, next_char);

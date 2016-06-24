@@ -34,7 +34,7 @@ typedef struct WasmVar {
   WasmLocation loc;
   WasmVarType type;
   union {
-    int index;
+    int64_t index;
     WasmStringSlice name;
   };
 } WasmVar;
