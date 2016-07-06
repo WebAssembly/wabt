@@ -34,35 +34,27 @@ assert_invalid error:
     (block (br_table 0 0 (i32.const 0) (i64.const 0)) (i32.const 1))
                                        ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1299:22: label variable out of range (max 1)
+  third_party/testsuite/br_table.wast:1299:22: label variable out of range (max 2)
     (block (br_table 2 1 (i32.const 1)))
                      ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1299:24: label variable out of range (max 1)
-    (block (br_table 2 1 (i32.const 1)))
-                       ^
-assert_invalid error:
-  third_party/testsuite/br_table.wast:1305:31: label variable out of range (max 2)
+  third_party/testsuite/br_table.wast:1305:31: label variable out of range (max 3)
     (block (block (br_table 0 5 (i32.const 1))))
                               ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1311:24: label variable out of range (max 1)
+  third_party/testsuite/br_table.wast:1311:24: label variable out of range (max 2)
     (block (br_table 0 0x100000001 0 (i32.const 1)))
                        ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1318:22: label variable out of range (max 1)
-    (block (br_table 1 2 (i32.const 1)))
-                     ^
-assert_invalid error:
-  third_party/testsuite/br_table.wast:1318:24: label variable out of range (max 1)
+  third_party/testsuite/br_table.wast:1318:24: label variable out of range (max 2)
     (block (br_table 1 2 (i32.const 1)))
                        ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1324:31: label variable out of range (max 2)
+  third_party/testsuite/br_table.wast:1324:31: label variable out of range (max 3)
     (block (block (br_table 0 5 (i32.const 1))))
                               ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1330:26: label variable out of range (max 1)
+  third_party/testsuite/br_table.wast:1330:26: label variable out of range (max 2)
     (block (br_table 0 0 0x100000001 (i32.const 1)))
                          ^^^^^^^^^^^
 146/146 tests passed.

@@ -100,6 +100,7 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
 WASM_DEFINE_VECTOR(uint32_vector, Uint32Vector);
 
 typedef enum LabelType {
+  LABEL_TYPE_FUNC,
   LABEL_TYPE_BLOCK,
   LABEL_TYPE_LOOP,
   LABEL_TYPE_IF,
@@ -107,7 +108,7 @@ typedef enum LabelType {
 } LabelType;
 
 static const char* s_label_type_name[] = {
-    "block", "loop", "if", "else",
+    "func", "block", "loop", "if", "else",
 };
 
 /* used for the typecheck pass */
@@ -524,12 +525,17 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
                            &sig->param_types.data[i]);
   }
 
+  /* push implicit func label (equivalent to return) */
+  push_typecheck_label(ctx, LABEL_TYPE_FUNC, sig->result_type);
+
   return WASM_OK;
 }
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   uint32_t discard_max = 0;
+
+  pop_typecheck_label(ctx);
 
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
@@ -1012,11 +1018,11 @@ static uint32_t translate_emit_depth(Context* ctx, uint32_t depth) {
   return translate_depth(ctx, ctx->emit_label_stack.size, depth);
 }
 
-static WasmResult push_emit_label(Context* ctx,
-                                  LabelType label_type,
-                                  uint32_t offset,
-                                  uint32_t fixup_offset,
-                                  WasmBool has_value) {
+static void push_emit_label(Context* ctx,
+                            LabelType label_type,
+                            uint32_t offset,
+                            uint32_t fixup_offset,
+                            WasmBool has_value) {
   EmitLabel* label =
       wasm_append_emit_label(ctx->allocator, &ctx->emit_label_stack);
   label->label_type = label_type;
@@ -1025,7 +1031,6 @@ static WasmResult push_emit_label(Context* ctx,
   label->has_value = has_value;
   label->fixup_offset = fixup_offset;
   LOGF("   : +depth %" PRIzd "\n", ctx->emit_label_stack.size - 1);
-  return WASM_OK;
 }
 
 static void pop_emit_label(Context* ctx) {
@@ -1177,6 +1182,9 @@ static WasmResult begin_emit_function_body(uint32_t index, void* user_data) {
   for (i = 0; i < fixups->size; ++i)
     CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], func->offset));
 
+  push_emit_label(ctx, LABEL_TYPE_FUNC, WASM_INVALID_OFFSET, 0,
+                  sig->result_type != WASM_TYPE_VOID);
+
   return WASM_OK;
 }
 
@@ -1184,7 +1192,12 @@ static WasmResult end_emit_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
+  fixup_top_emit_label(ctx, get_istream_offset(ctx));
+  EmitLabel* label = top_emit_label(ctx);
+  ctx->value_stack_size = label->value_stack_size;
+  adjust_value_stack(ctx, label->has_value ? 1 : 0);
   CHECK_RESULT(emit_return(ctx, sig->result_type));
+  pop_emit_label(ctx);
   ctx->current_func = NULL;
   ctx->value_stack_size = 0;
   return WASM_OK;
@@ -1211,6 +1224,12 @@ static WasmResult on_emit_local_decl(uint32_t decl_index,
     CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_ALLOCA));
     CHECK_RESULT(emit_i32(ctx, func->local_count));
     adjust_value_stack(ctx, func->local_count);
+
+    /* adjust the "return" label to include the locals in the value stack; this
+     * way they'll be discarded when the function returns. */
+    EmitLabel* label = top_emit_label(ctx);
+    assert(label->label_type == LABEL_TYPE_FUNC);
+    label->value_stack_size += func->local_count;
   }
   return WASM_OK;
 }
@@ -1238,8 +1257,8 @@ static WasmResult on_emit_block_expr(void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_BLOCK]);
-  CHECK_RESULT(push_emit_label(ctx, LABEL_TYPE_BLOCK, WASM_INVALID_OFFSET, 0,
-                               !is_expr_discarded(ctx, ctx->expr_count)));
+  push_emit_label(ctx, LABEL_TYPE_BLOCK, WASM_INVALID_OFFSET, 0,
+                  !is_expr_discarded(ctx, ctx->expr_count));
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1249,10 +1268,9 @@ static WasmResult on_emit_loop_expr(void* user_data) {
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_LOOP]);
 
-  CHECK_RESULT(push_emit_label(ctx, LABEL_TYPE_LOOP, WASM_INVALID_OFFSET, 0,
-                               !is_expr_discarded(ctx, ctx->expr_count)));
-  CHECK_RESULT(push_emit_label(ctx, LABEL_TYPE_LOOP, get_istream_offset(ctx), 0,
-                               WASM_FALSE));
+  push_emit_label(ctx, LABEL_TYPE_LOOP, WASM_INVALID_OFFSET, 0,
+                  !is_expr_discarded(ctx, ctx->expr_count));
+  push_emit_label(ctx, LABEL_TYPE_LOOP, get_istream_offset(ctx), 0, WASM_FALSE);
 
   ctx->expr_count++;
   return WASM_OK;
@@ -1268,9 +1286,8 @@ static WasmResult on_emit_if_expr(void* user_data) {
   uint32_t fixup_offset = get_istream_offset(ctx);
   CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
 
-  CHECK_RESULT(push_emit_label(ctx, LABEL_TYPE_IF, WASM_INVALID_OFFSET,
-                               fixup_offset,
-                               !is_expr_discarded(ctx, ctx->expr_count)));
+  push_emit_label(ctx, LABEL_TYPE_IF, WASM_INVALID_OFFSET, fixup_offset,
+                  !is_expr_discarded(ctx, ctx->expr_count));
 
   ctx->expr_count++;
   return WASM_OK;

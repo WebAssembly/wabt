@@ -599,6 +599,7 @@ static void write_func(Context* ctx,
                         &func->local_bindings);
   }
   write_newline(ctx, NO_FORCE_NEWLINE);
+  ctx->depth = 1; /* for the implicit "return" label */
   write_expr_list(ctx, func->first_expr);
   write_close_newline(ctx);
 }

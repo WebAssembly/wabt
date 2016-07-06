@@ -68,13 +68,15 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #endif
 
 typedef enum LabelType {
+  LABEL_TYPE_FUNC,
   LABEL_TYPE_BLOCK,
   LABEL_TYPE_IF,
   LABEL_TYPE_ELSE,
   LABEL_TYPE_LOOP,
 } LabelType;
 
-static const char* s_label_type_name[] = {"block", "if", "else", "loop"};
+static const char* s_label_type_name[] = {"func", "block", "if", "else",
+                                          "loop"};
 
 typedef struct LabelNode {
   LabelType type;
@@ -421,12 +423,14 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
   ctx->current_func = ctx->module->funcs.data[index];
   ctx->expr_stack_size = 0;
   LOGF("func %d\n", index);
+  push_label(ctx, LABEL_TYPE_FUNC, NULL);
   return WASM_OK;
 }
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   pop_into_expr_list(ctx, NULL, &ctx->current_func->first_expr);
+  CHECK_RESULT(pop_label(ctx));
   ctx->current_func = NULL;
   return WASM_OK;
 }
@@ -1092,7 +1096,8 @@ static WasmBinaryReader s_binary_reader = {
 };
 
 static void wasm_destroy_label_node(WasmAllocator* allocator, LabelNode* node) {
-  wasm_destroy_expr(allocator, node->expr);
+  if (node->expr)
+    wasm_destroy_expr(allocator, node->expr);
 }
 
 WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,

@@ -1,0 +1,10 @@
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/of_string-overflow-u32.fail.wast
+(;; STDERR ;;;
+Error running "sexpr-wasm":
+third_party/testsuite/of_string-overflow-u32.fail.wast:1:26: invalid literal "4294967296"
+(module (func (i32.const 4294967296)))
+                         ^^^^^^^^^^
+
+;;; STDERR ;;)

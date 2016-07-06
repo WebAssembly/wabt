@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/switch.wast:155:41: label variable out of range (max 0)
+  third_party/testsuite/switch.wast:155:41: label variable out of range (max 1)
 (assert_invalid (module (func (br_table 3 (i32.const 0)))) "unknown label")
                                         ^
 26/26 tests passed.
