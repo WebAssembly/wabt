@@ -46,6 +46,13 @@ uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment) {
   return alignment;
 }
 
+WasmStringSlice wasm_empty_string_slice(void) {
+  WasmStringSlice result;
+  result.start = "";
+  result.length = 0;
+  return result;
+}
+
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice* a,
                                       const WasmStringSlice* b) {
   return a->start && b->start && a->length == b->length &&

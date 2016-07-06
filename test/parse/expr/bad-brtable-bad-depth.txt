@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module
-  (func
-    (block
-      (br_table 1 (i32.const 0)))))
+  (func    ;; depth 1 (implicit)
+    (block ;; depth 0
+      (br_table 2 (i32.const 0)))))
 (;; STDERR ;;;
-parse/expr/bad-brtable-bad-depth.txt:5:17: label variable out of range (max 1)
-      (br_table 1 (i32.const 0)))))
+parse/expr/bad-brtable-bad-depth.txt:5:17: label variable out of range (max 2)
+      (br_table 2 (i32.const 0)))))
                 ^
 ;;; STDERR ;;)

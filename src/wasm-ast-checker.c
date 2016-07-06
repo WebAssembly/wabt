@@ -740,8 +740,15 @@ static void check_func(Context* ctx,
 
   check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
-  check_expr_list(ctx, &func->loc, func->first_expr, wasm_get_result_type(func),
+  WasmType result_type = wasm_get_result_type(func);
+  /* The function has an implicit label; branching to it is equivalent to the
+   * returning from the function. */
+  LabelNode node;
+  WasmLabel label = wasm_empty_string_slice();
+  push_label(ctx, &func->loc, &node, &label, result_type, "func");
+  check_expr_list(ctx, &func->loc, func->first_expr, result_type,
                   " of function result");
+  pop_label(ctx);
   ctx->current_func = NULL;
 }
 

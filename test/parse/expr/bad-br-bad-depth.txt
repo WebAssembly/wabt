@@ -1,11 +1,11 @@
 ;;; ERROR: 1
 (module
-  (func
+  (func      ;; 2 (implicit)
     (block   ;; 1
       (block ;; 0
-        (br 2)))))
+        (br 3)))))
 (;; STDERR ;;;
-parse/expr/bad-br-bad-depth.txt:6:13: label variable out of range (max 2)
-        (br 2)))))
+parse/expr/bad-br-bad-depth.txt:6:13: label variable out of range (max 3)
+        (br 3)))))
             ^
 ;;; STDERR ;;)

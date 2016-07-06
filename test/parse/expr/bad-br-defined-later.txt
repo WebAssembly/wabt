@@ -1,9 +1,10 @@
 ;;; ERROR: 1
-(module (func
-  (br 0)
-  (block (nop))))
+(module
+  (func
+    (br 1)
+    (block (nop))))
 (;; STDERR ;;;
-parse/expr/bad-br-defined-later.txt:3:7: label variable out of range (max 0)
-  (br 0)
-      ^
+parse/expr/bad-br-defined-later.txt:4:9: label variable out of range (max 1)
+    (br 1)
+        ^
 ;;; STDERR ;;)

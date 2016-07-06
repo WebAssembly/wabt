@@ -346,6 +346,7 @@ WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment);
  * |opcode|, else return |alignment| */
 uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment);
 
+WasmStringSlice wasm_empty_string_slice(void);
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice*,
                                       const WasmStringSlice*);
 void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);

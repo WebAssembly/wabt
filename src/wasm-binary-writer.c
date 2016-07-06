@@ -760,8 +760,12 @@ static void write_func_locals(WasmContext* ctx,
 static void write_func(WasmContext* ctx,
                        const WasmModule* module,
                        const WasmFunc* func) {
+  WasmLabelNode node;
+  WasmLabel label = wasm_empty_string_slice();
   write_func_locals(ctx, module, func, &func->local_types);
+  push_label(ctx, &node, &label);
   write_expr_list(ctx, module, func, func->first_expr);
+  pop_label(ctx, &label);
 }
 
 static void write_module(WasmContext* ctx, const WasmModule* module) {

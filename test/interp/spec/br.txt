@@ -10,15 +10,15 @@ assert_invalid error:
     (block (br 0 (i64.const 1)) (i32.const 1))
                  ^
 assert_invalid error:
-  third_party/testsuite/br.wast:354:36: label variable out of range (max 0)
+  third_party/testsuite/br.wast:354:36: label variable out of range (max 1)
   (module (func $unbound-label (br 1)))
                                    ^
 assert_invalid error:
-  third_party/testsuite/br.wast:358:57: label variable out of range (max 2)
+  third_party/testsuite/br.wast:358:57: label variable out of range (max 3)
   (module (func $unbound-nested-label (block (block (br 5)))))
                                                         ^
 assert_invalid error:
-  third_party/testsuite/br.wast:362:34: label variable out of range (max 0)
+  third_party/testsuite/br.wast:362:34: label variable out of range (max 1)
   (module (func $large-label (br 0x100000001)))
                                  ^^^^^^^^^^^
 64/64 tests passed.
