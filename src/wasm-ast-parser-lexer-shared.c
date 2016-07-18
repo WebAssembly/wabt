@@ -51,7 +51,7 @@ void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
   size_t source_line_length = 0;
   int source_line_column_offset = 0;
   size_t source_line_max_length = error_handler->source_line_max_length;
-  if (loc) {
+  if (loc && lexer) {
     source_line = alloca(source_line_max_length + 1);
     WasmResult result = wasm_ast_lexer_get_source_line(
         lexer, loc, source_line_max_length, source_line, &source_line_length,
