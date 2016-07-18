@@ -115,9 +115,10 @@ static WasmResult use_name_for_param_and_local_var(Context* ctx,
                                                    WasmVar* var) {
   int local_index = wasm_get_local_index_by_var(func, var);
   assert(local_index >= 0 &&
-         (size_t)local_index < wasm_get_num_params_and_locals(func));
+         (size_t)local_index <
+             wasm_get_num_params_and_locals(ctx->module, func));
 
-  uint32_t num_params = wasm_get_num_params(func);
+  uint32_t num_params = wasm_get_num_params(ctx->module, func);
   WasmStringSlice* name;
   if ((uint32_t)local_index < num_params) {
     /* param */

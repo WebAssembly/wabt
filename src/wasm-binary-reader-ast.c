@@ -53,7 +53,7 @@
   do {                                                                    \
     assert(wasm_decl_has_func_type(&ctx->current_func->decl));            \
     uint32_t max_local_index =                                            \
-        wasm_get_num_params_and_locals(ctx->current_func);                \
+        wasm_get_num_params_and_locals(ctx->module, ctx->current_func);   \
     if ((local_index) >= max_local_index) {                               \
       print_error(ctx, "invalid local_index: %d (max %d)", (local_index), \
                   max_local_index);                                       \
@@ -990,7 +990,7 @@ static WasmResult on_local_names_count(uint32_t index,
   WasmModule* module = ctx->module;
   assert(index < module->funcs.size);
   WasmFunc* func = module->funcs.data[index];
-  uint32_t num_params_and_locals = wasm_get_num_params_and_locals(func);
+  uint32_t num_params_and_locals = wasm_get_num_params_and_locals(module, func);
   if (count > num_params_and_locals) {
     print_error(ctx, "expected local name count (%d) <= local count (%d)",
                 count, num_params_and_locals);
@@ -1006,7 +1006,7 @@ static WasmResult on_local_name(uint32_t func_index,
   Context* ctx = user_data;
   WasmModule* module = ctx->module;
   WasmFunc* func = module->funcs.data[func_index];
-  uint32_t num_params = wasm_get_num_params(func);
+  uint32_t num_params = wasm_get_num_params(module, func);
   WasmStringSlice new_name;
   dup_name(ctx, &name, &new_name);
   WasmBindingHash* bindings;

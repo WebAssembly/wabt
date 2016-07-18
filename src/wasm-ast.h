@@ -509,23 +509,58 @@ wasm_decl_has_signature(const WasmFuncDeclaration* decl) {
   return decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
 }
 
-
-static WASM_INLINE size_t wasm_get_num_params(const WasmFunc* func) {
-  return func->decl.sig.param_types.size;
+static WASM_INLINE const WasmFuncSignature* wasm_decl_get_signature(
+    const WasmModule* module,
+    const WasmFuncDeclaration* decl) {
+  if (wasm_decl_has_func_type(decl)) {
+    const WasmFuncType* func_type =
+        wasm_get_func_type_by_var(module, &decl->type_var);
+    if (!func_type)
+      return NULL;
+    return &func_type->sig;
+  } else if (wasm_decl_has_signature(decl)) {
+    return &decl->sig;
+  } else {
+    return NULL;
+  }
 }
 
-static WASM_INLINE size_t wasm_get_num_params_and_locals(const WasmFunc* func) {
-  return wasm_get_num_params(func) + func->local_types.size;
+static WASM_INLINE size_t wasm_get_num_params(const WasmModule* module,
+                                              const WasmFunc* func) {
+  const WasmFuncSignature* sig = wasm_decl_get_signature(module, &func->decl);
+  assert(sig);
+  return sig->param_types.size;
 }
 
-static WASM_INLINE WasmType wasm_get_param_type(const WasmFunc* func,
+static WASM_INLINE size_t wasm_get_num_locals(const WasmFunc* func) {
+  return func->local_types.size;
+}
+
+static WASM_INLINE size_t
+wasm_get_num_params_and_locals(const WasmModule* module, const WasmFunc* func) {
+  return wasm_get_num_params(module, func) + wasm_get_num_locals(func);
+}
+
+static WASM_INLINE WasmType wasm_get_param_type(const WasmModule* module,
+                                                const WasmFunc* func,
                                                 int index) {
-  assert((size_t)index < wasm_get_num_params(func));
-  return func->decl.sig.param_types.data[index];
+  const WasmFuncSignature* sig = wasm_decl_get_signature(module, &func->decl);
+  assert(sig);
+  assert((size_t)index < sig->param_types.size);
+  return sig->param_types.data[index];
 }
 
-static WASM_INLINE WasmType wasm_get_result_type(const WasmFunc* func) {
-  return func->decl.sig.result_type;
+static WASM_INLINE WasmType wasm_get_local_type(const WasmFunc* func,
+                                                int index) {
+  assert((size_t)index < wasm_get_num_locals(func));
+  return func->local_types.data[index];
+}
+
+static WASM_INLINE WasmType wasm_get_result_type(const WasmModule* module,
+                                                 const WasmFunc* func) {
+  const WasmFuncSignature* sig = wasm_decl_get_signature(module, &func->decl);
+  assert(sig);
+  return sig->result_type;
 }
 
 static WASM_INLINE WasmType

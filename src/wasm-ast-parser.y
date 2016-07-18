@@ -81,9 +81,6 @@ static WasmResult parse_const(WasmType type, WasmLiteralType literal_type,
 static void dup_text_list(WasmAllocator*, WasmTextList* text_list,
                           void** out_data, size_t* out_size);
 
-static void copy_signature_from_func_type(
-    WasmAllocator* allocator, WasmModule* module, WasmFuncDeclaration* decl);
-
 typedef struct BinaryErrorCallbackData {
   WasmLocation* loc;
   WasmAstLexer* lexer;
@@ -944,18 +941,6 @@ raw_module :
       $$.type = WASM_RAW_MODULE_TYPE_TEXT;
       $$.text = $3;
       $$.loc = @2;
-      WasmModule* module = $$.text;
-
-      size_t i;
-      for (i = 0; i < module->funcs.size; ++i) {
-        WasmFunc* func = module->funcs.data[i];
-        copy_signature_from_func_type(parser->allocator, module, &func->decl);
-      }
-
-      for (i = 0; i < module->imports.size; ++i) {
-        WasmImport* import = module->imports.data[i];
-        copy_signature_from_func_type(parser->allocator, module, &import->decl);
-      }
     }
   | LPAR MODULE text_list RPAR {
       $$.type = WASM_RAW_MODULE_TYPE_BINARY;
@@ -1192,25 +1177,6 @@ WasmResult wasm_parse_ast(WasmAstLexer* lexer,
   int result = wasm_ast_parser_parse(lexer, &parser);
   out_script->commands = parser.script.commands;
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
-}
-
-static void copy_signature_from_func_type(WasmAllocator* allocator,
-                                          WasmModule* module,
-                                          WasmFuncDeclaration* decl) {
-  /* if a function or import only defines a func type (and no explicit
-   * signature), copy the signature over for convenience */
-  if (wasm_decl_has_func_type(decl) && !wasm_decl_has_signature(decl)) {
-    int index = wasm_get_func_type_index_by_var(module, &decl->type_var);
-    if (index >= 0 && (size_t)index < module->func_types.size) {
-      WasmFuncType* func_type = module->func_types.data[index];
-      decl->sig.result_type = func_type->sig.result_type;
-      wasm_extend_types(allocator, &decl->sig.param_types,
-                        &func_type->sig.param_types);
-    } else {
-      /* technically not OK, but we'll catch this error later in the AST
-       * checker */
-    }
-  }
 }
 
 static void on_read_binary_error(uint32_t offset, const char* error,
