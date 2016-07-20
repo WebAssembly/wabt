@@ -17,6 +17,7 @@
 #include "wasm-binary-reader.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -26,11 +27,14 @@
 #include "wasm-allocator.h"
 #include "wasm-binary.h"
 #include "wasm-config.h"
+#include "wasm-stream.h"
 #include "wasm-vector.h"
 
 #if HAVE_ALLOCA
 #include <alloca.h>
 #endif
+
+#define INDENT_SIZE 2
 
 #define INITIAL_PARAM_TYPES_CAPACITY 128
 #define INITIAL_BR_TABLE_TARGET_CAPACITY 1000
@@ -54,12 +58,28 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
               : WASM_OK),                                                \
       #member " callback failed")
 
+#define FORWARD0(member)                                                   \
+  return ctx->reader->member ? ctx->reader->member(ctx->reader->user_data) \
+                             : WASM_OK
+
+#define FORWARD(member, ...)                                            \
+  return ctx->reader->member                                            \
+             ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
+             : WASM_OK
+
 #define RAISE_ERROR(...) \
   (ctx->reader->on_error ? raise_error(ctx, __VA_ARGS__) : (void)0)
 
 #define RAISE_ERROR_UNLESS(cond, ...) \
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
+
+static const char* s_type_names[] = {"void", "i32", "i64", "f32", "f64"};
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
+
+#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
+static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
 
 /* clang-format off */
 enum {
@@ -79,6 +99,12 @@ typedef struct Context {
   WasmTypeVector param_types;
   Uint32Vector target_depths;
 } Context;
+
+typedef struct LoggingContext {
+  WasmStream* stream;
+  WasmBinaryReader* reader;
+  int indent;
+} LoggingContext;
 
 static void WASM_PRINTF_FORMAT(2, 3)
     raise_error(Context* ctx, const char* format, ...) {
@@ -352,19 +378,746 @@ static void destroy_context(WasmAllocator* allocator, Context* ctx) {
   wasm_destroy_uint32_vector(allocator, &ctx->target_depths);
 }
 
+
+/* Logging */
+
+static void indent(LoggingContext* ctx) {
+  ctx->indent += INDENT_SIZE;
+}
+
+static void dedent(LoggingContext* ctx) {
+  ctx->indent -= INDENT_SIZE;
+  assert(ctx->indent >= 0);
+}
+static void write_indent(LoggingContext* ctx) {
+  static char s_indent[] =
+      "                                                                       "
+      "                                                                       ";
+  static size_t s_indent_len = sizeof(s_indent) - 1;
+  size_t indent = ctx->indent;
+  while (indent > s_indent_len) {
+    wasm_write_data(ctx->stream, s_indent, s_indent_len, NULL);
+    indent -= s_indent_len;
+  }
+  if (indent > 0) {
+    wasm_write_data(ctx->stream, s_indent, indent, NULL);
+  }
+}
+
+#define LOGF_NOINDENT(...) wasm_writef(ctx->stream, __VA_ARGS__)
+
+#define LOGF(...)               \
+  do {                          \
+    write_indent(ctx);          \
+    LOGF_NOINDENT(__VA_ARGS__); \
+  } while (0)
+
+static void logging_on_error(uint32_t offset,
+                             const char* message,
+                             void* user_data) {
+  LoggingContext* ctx = user_data;
+  FORWARD(on_error, offset, message);
+}
+
+static WasmResult logging_begin_module(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_module\n");
+  indent(ctx);
+  FORWARD0(begin_module);
+}
+
+static WasmResult logging_end_module(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_module\n");
+  FORWARD0(end_module);
+}
+
+static WasmResult logging_begin_memory_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_memory_section\n");
+  indent(ctx);
+  FORWARD0(begin_memory_section);
+}
+
+static WasmResult logging_on_memory_initial_size_pages(uint32_t pages,
+                                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_memory_initial_size_pages(%u)\n", pages);
+  FORWARD(on_memory_initial_size_pages, pages);
+}
+
+static WasmResult logging_on_memory_max_size_pages(uint32_t pages,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_memory_max_size_pages(%u)\n", pages);
+  FORWARD(on_memory_max_size_pages, pages);
+}
+
+static WasmResult logging_on_memory_exported(WasmBool exported,
+                                             void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_memory_exported(%u)\n", exported);
+  FORWARD(on_memory_exported, exported);
+}
+
+static WasmResult logging_end_memory_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_memory_section\n");
+  FORWARD0(end_memory_section);
+}
+
+static WasmResult logging_begin_data_segment_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_data_segment_section\n");
+  indent(ctx);
+  FORWARD0(begin_data_segment_section);
+}
+
+static WasmResult logging_on_data_segment_count(uint32_t count,
+                                                void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_data_segment_count(%u)\n", count);
+  FORWARD(on_data_segment_count, count);
+}
+
+static WasmResult logging_on_data_segment(uint32_t index,
+                                          uint32_t address,
+                                          const void* data,
+                                          uint32_t size,
+                                          void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_data_segment(index:%u, address:%u, size:%u)\n", index, address,
+       size);
+  FORWARD(on_data_segment, index, address, data, size);
+}
+
+static WasmResult logging_end_data_segment_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_data_segment_section\n");
+  FORWARD0(end_data_segment_section);
+}
+
+static WasmResult logging_begin_signature_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_signature_section\n");
+  indent(ctx);
+  FORWARD0(begin_signature_section);
+}
+
+static WasmResult logging_on_signature_count(uint32_t count, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_signature_count(%u)\n", count);
+  FORWARD(on_signature_count, count);
+}
+
+static WasmResult logging_on_signature(uint32_t index,
+                                       WasmType result_type,
+                                       uint32_t param_count,
+                                       WasmType* param_types,
+                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_signature(index: %u, %s (", index, s_type_names[result_type]);
+  uint32_t i;
+  for (i = 0; i < param_count; ++i) {
+    LOGF_NOINDENT("%s", s_type_names[result_type]);
+    if (i != param_count - 1)
+      LOGF_NOINDENT(", ");
+  }
+  LOGF_NOINDENT("))\n");
+  FORWARD(on_signature, index, result_type, param_count, param_types);
+}
+
+static WasmResult logging_end_signature_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_signature_section\n");
+  FORWARD0(end_signature_section);
+}
+
+static WasmResult logging_begin_import_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_import_section\n");
+  indent(ctx);
+  FORWARD0(begin_import_section);
+}
+
+static WasmResult logging_on_import_count(uint32_t count, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_import_count(%u)\n", count);
+  FORWARD(on_import_count, count);
+}
+
+static WasmResult logging_on_import(uint32_t index,
+                                    uint32_t sig_index,
+                                    WasmStringSlice module_name,
+                                    WasmStringSlice function_name,
+                                    void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_import(index: %u, sig_index: %u, module: \"" PRIstringslice
+       "\", function: \"" PRIstringslice "\")\n",
+       index, sig_index, WASM_PRINTF_STRING_SLICE_ARG(module_name),
+       WASM_PRINTF_STRING_SLICE_ARG(function_name));
+  FORWARD(on_import, index, sig_index, module_name, function_name);
+}
+
+static WasmResult logging_end_import_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_import_section\n");
+  FORWARD0(end_import_section);
+}
+
+static WasmResult logging_begin_function_signatures_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_function_signatures_section\n");
+  indent(ctx);
+  FORWARD0(begin_function_signatures_section);
+}
+
+static WasmResult logging_on_function_signatures_count(uint32_t count,
+                                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_signatures_count(%u)\n", count);
+  FORWARD(on_function_signatures_count, count);
+}
+
+static WasmResult logging_on_function_signature(uint32_t index,
+                                                uint32_t sig_index,
+                                                void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_signature(index: %u, sig_index: %u)\n", index, sig_index);
+  FORWARD(on_function_signature, index, sig_index);
+}
+
+static WasmResult logging_end_function_signatures_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_function_signatures_section\n");
+  FORWARD0(end_function_signatures_section);
+}
+
+static WasmResult logging_begin_function_bodies_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_function_bodies_section\n");
+  indent(ctx);
+  FORWARD0(begin_function_bodies_section);
+}
+
+static WasmResult logging_on_function_bodies_count(uint32_t count,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_bodies_count(%u)\n", count);
+  FORWARD(on_function_bodies_count, count);
+}
+
+static WasmResult logging_begin_function_body_pass(uint32_t index,
+                                                   uint32_t pass,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_function_body_pass(index: %u, pass: %u)\n", index, pass);
+  indent(ctx);
+  FORWARD(begin_function_body_pass, index, pass);
+}
+
+static WasmResult logging_begin_function_body(uint32_t index, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_function_body(%u)\n", index);
+  indent(ctx);
+  FORWARD(begin_function_body, index);
+}
+
+static WasmResult logging_on_local_decl_count(uint32_t count, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_local_decl_count(%u)\n", count);
+  FORWARD(on_local_decl_count, count);
+}
+
+static WasmResult logging_on_local_decl(uint32_t decl_index,
+                                        uint32_t count,
+                                        WasmType type,
+                                        void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_local_decl(index: %u, count: %u, type: %s)\n", decl_index, count,
+       s_type_names[type]);
+  FORWARD(on_local_decl, decl_index, count, type);
+}
+
+static WasmResult logging_on_binary_expr(WasmOpcode opcode, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_binary_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
+  FORWARD(on_binary_expr, opcode);
+}
+
+static WasmResult logging_on_block_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_block_expr\n");
+  FORWARD0(on_block_expr);
+}
+
+static WasmResult logging_on_br_expr(uint8_t arity,
+                                     uint32_t depth,
+                                     void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_br_expr(arity: %u, depth: %u)\n", arity, depth);
+  FORWARD(on_br_expr, arity, depth);
+}
+
+static WasmResult logging_on_br_if_expr(uint8_t arity,
+                                        uint32_t depth,
+                                        void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_br_if_expr(arity: %u, depth: %u)\n", arity, depth);
+  FORWARD(on_br_if_expr, arity, depth);
+}
+
+static WasmResult logging_on_br_table_expr(uint8_t arity,
+                                           uint32_t num_targets,
+                                           uint32_t* target_depths,
+                                           uint32_t default_target_depth,
+                                           void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_br_table_expr(arity: %u, num_targets: %u, depths: [", arity,
+       num_targets);
+  uint32_t i;
+  for (i = 0; i < num_targets; ++i) {
+    LOGF_NOINDENT("%u", target_depths[i]);
+    if (i != num_targets - 1)
+      LOGF_NOINDENT(", ");
+  }
+  LOGF_NOINDENT("], default: %u)\n", default_target_depth);
+  FORWARD(on_br_table_expr, arity, num_targets, target_depths,
+          default_target_depth);
+}
+
+static WasmResult logging_on_call_expr(uint32_t arity,
+                                       uint32_t func_index,
+                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_call_expr(arity: %u, func_index: %u)\n", arity, func_index);
+  FORWARD(on_call_expr, arity, func_index);
+}
+
+static WasmResult logging_on_call_import_expr(uint32_t arity,
+                                              uint32_t import_index,
+                                              void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_call_import_expr(arity: %u, import_index: %u)\n", arity,
+       import_index);
+  FORWARD(on_call_import_expr, arity, import_index);
+}
+
+static WasmResult logging_on_call_indirect_expr(uint32_t arity,
+                                                uint32_t sig_index,
+                                                void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_call_indirect_expr(arity: %u, sig_index: %u)\n", arity,
+       sig_index);
+  FORWARD(on_call_indirect_expr, arity, sig_index);
+}
+
+static WasmResult logging_on_compare_expr(WasmOpcode opcode, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_compare_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
+  FORWARD(on_compare_expr, opcode);
+}
+
+static WasmResult logging_on_convert_expr(WasmOpcode opcode, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_convert_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
+  FORWARD(on_convert_expr, opcode);
+}
+
+static WasmResult logging_on_else_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_else_expr\n");
+  FORWARD0(on_else_expr);
+}
+
+static WasmResult logging_on_end_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_end_expr\n");
+  FORWARD0(on_end_expr);
+}
+
+static WasmResult logging_on_f32_const_expr(uint32_t value_bits,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  float value;
+  memcpy(&value, &value_bits, sizeof(value));
+  LOGF("on_f32_const_expr(%g (0x04%x))\n", value, value_bits);
+  FORWARD(on_f32_const_expr, value_bits);
+}
+
+static WasmResult logging_on_f64_const_expr(uint64_t value_bits,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  float value;
+  memcpy(&value, &value_bits, sizeof(value));
+  LOGF("on_f64_const_expr(%g (0x08%" PRIx64 "))\n", value, value_bits);
+  FORWARD(on_f64_const_expr, value_bits);
+}
+
+static WasmResult logging_on_get_local_expr(uint32_t local_index,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_get_local_expr(index: %u)\n", local_index);
+  FORWARD(on_get_local_expr, local_index);
+}
+
+static WasmResult logging_on_grow_memory_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_grow_memory_expr\n");
+  FORWARD0(on_grow_memory_expr);
+}
+
+static WasmResult logging_on_i32_const_expr(uint32_t value, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_i32_const_expr(%u (0x%x))\n", value, value);
+  FORWARD(on_i32_const_expr, value);
+}
+
+static WasmResult logging_on_i64_const_expr(uint64_t value, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_i64_const_expr(%" PRIu64 " (0x%" PRIx64 "))\n", value, value);
+  FORWARD(on_i64_const_expr, value);
+}
+
+static WasmResult logging_on_if_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_if_expr\n");
+  FORWARD0(on_if_expr);
+}
+
+static WasmResult logging_on_load_expr(WasmOpcode opcode,
+                                       uint32_t alignment_log2,
+                                       uint32_t offset,
+                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
+       s_opcode_name[opcode], opcode, alignment_log2, offset);
+  FORWARD(on_load_expr, opcode, alignment_log2, offset);
+}
+
+static WasmResult logging_on_loop_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_loop_expr\n");
+  FORWARD0(on_loop_expr);
+}
+
+static WasmResult logging_on_current_memory_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_current_memory_expr\n");
+  FORWARD0(on_current_memory_expr);
+}
+
+static WasmResult logging_on_nop_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_nop_expr\n");
+  FORWARD0(on_nop_expr);
+}
+
+static WasmResult logging_on_return_expr(uint8_t arity, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_return_expr(%u)\n", arity);
+  FORWARD(on_return_expr, arity);
+}
+
+static WasmResult logging_on_select_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_select_expr\n");
+  FORWARD0(on_select_expr);
+}
+
+static WasmResult logging_on_set_local_expr(uint32_t local_index,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_set_local_expr(index: %u)\n", local_index);
+  FORWARD(on_set_local_expr, local_index);
+}
+
+static WasmResult logging_on_store_expr(WasmOpcode opcode,
+                                        uint32_t alignment_log2,
+                                        uint32_t offset,
+                                        void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
+       s_opcode_name[opcode], opcode, alignment_log2, offset);
+  FORWARD(on_store_expr, opcode, alignment_log2, offset);
+}
+
+static WasmResult logging_on_unary_expr(WasmOpcode opcode, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_unary_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
+  FORWARD(on_unary_expr, opcode);
+}
+
+static WasmResult logging_on_unreachable_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_unreachable_expr\n");
+  FORWARD0(on_unreachable_expr);
+}
+
+static WasmResult logging_end_function_body(uint32_t index, void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_function_body(%u)\n", index);
+  FORWARD(end_function_body, index);
+}
+
+static WasmResult logging_end_function_body_pass(uint32_t index,
+                                                 uint32_t pass,
+                                                 void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_function_body_pass(index: %u, pass: %u)\n", index, pass);
+  FORWARD(end_function_body_pass, index, pass);
+}
+
+static WasmResult logging_end_function_bodies_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_function_bodies_section\n");
+  FORWARD0(end_function_bodies_section);
+}
+
+static WasmResult logging_begin_function_table_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_function_table_section\n");
+  indent(ctx);
+  FORWARD0(begin_function_table_section);
+}
+
+static WasmResult logging_on_function_table_count(uint32_t count,
+                                                  void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_table_count(%u)\n", count);
+  FORWARD(on_function_table_count, count);
+}
+
+static WasmResult logging_on_function_table_entry(uint32_t index,
+                                                  uint32_t func_index,
+                                                  void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_table_entry(index: %u, func_index: %u)\n", index,
+       func_index);
+  FORWARD(on_function_table_entry, index, func_index);
+}
+
+static WasmResult logging_end_function_table_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_function_table_section\n");
+  FORWARD0(end_function_table_section);
+}
+
+static WasmResult logging_begin_start_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_start_section\n");
+  indent(ctx);
+  FORWARD0(begin_start_section);
+}
+
+static WasmResult logging_on_start_function(uint32_t func_index,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_start_function(func_index: %u)\n", func_index);
+  FORWARD(on_start_function, func_index);
+}
+
+static WasmResult logging_end_start_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_start_section\n");
+  FORWARD0(end_start_section);
+}
+
+static WasmResult logging_begin_export_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_export_section\n");
+  indent(ctx);
+  FORWARD0(begin_export_section);
+}
+
+static WasmResult logging_on_export_count(uint32_t count, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_export_count(%u)\n", count);
+  FORWARD(on_export_count, count);
+}
+
+static WasmResult logging_on_export(uint32_t index,
+                                    uint32_t func_index,
+                                    WasmStringSlice name,
+                                    void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_export(index: %u, func_index: %u, name: \"" PRIstringslice "\")\n",
+       index, func_index, WASM_PRINTF_STRING_SLICE_ARG(name));
+  FORWARD(on_export, index, func_index, name);
+}
+
+static WasmResult logging_end_export_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_export_section\n");
+  FORWARD0(end_export_section);
+}
+
+static WasmResult logging_begin_names_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_names_section\n");
+  indent(ctx);
+  FORWARD0(begin_names_section);
+}
+
+static WasmResult logging_on_function_names_count(uint32_t count,
+                                                  void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_names_count(%u)\n", count);
+  FORWARD(on_function_names_count, count);
+}
+
+static WasmResult logging_on_function_name(uint32_t index,
+                                           WasmStringSlice name,
+                                           void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_function_name(index: %u, name: \"" PRIstringslice "\")\n", index,
+       WASM_PRINTF_STRING_SLICE_ARG(name));
+  FORWARD(on_function_name, index, name);
+}
+
+static WasmResult logging_on_local_names_count(uint32_t index,
+                                               uint32_t count,
+                                               void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_local_names_count(index: %u, count: %u)\n", index, count);
+  FORWARD(on_local_names_count, index, count);
+}
+
+static WasmResult logging_on_local_name(uint32_t func_index,
+                                        uint32_t local_index,
+                                        WasmStringSlice name,
+                                        void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_local_name(func_index: %u, local_index: %u, name: \"" PRIstringslice
+       "\")\n",
+       func_index, local_index, WASM_PRINTF_STRING_SLICE_ARG(name));
+  FORWARD(on_local_name, func_index, local_index, name);
+}
+
+static WasmResult logging_end_names_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_names_section\n");
+  FORWARD0(end_names_section);
+}
+
+static WasmBinaryReader s_logging_binary_reader = {
+    .user_data = NULL,
+    .on_error = &logging_on_error,
+    .begin_module = &logging_begin_module,
+    .end_module = &logging_end_module,
+    .begin_memory_section = &logging_begin_memory_section,
+    .on_memory_initial_size_pages = &logging_on_memory_initial_size_pages,
+    .on_memory_max_size_pages = &logging_on_memory_max_size_pages,
+    .on_memory_exported = &logging_on_memory_exported,
+    .end_memory_section = &logging_end_memory_section,
+    .begin_data_segment_section = &logging_begin_data_segment_section,
+    .on_data_segment_count = &logging_on_data_segment_count,
+    .on_data_segment = &logging_on_data_segment,
+    .end_data_segment_section = &logging_end_data_segment_section,
+    .begin_signature_section = &logging_begin_signature_section,
+    .on_signature_count = &logging_on_signature_count,
+    .on_signature = &logging_on_signature,
+    .end_signature_section = &logging_end_signature_section,
+    .begin_import_section = &logging_begin_import_section,
+    .on_import_count = &logging_on_import_count,
+    .on_import = &logging_on_import,
+    .end_import_section = &logging_end_import_section,
+    .begin_function_signatures_section =
+        &logging_begin_function_signatures_section,
+    .on_function_signatures_count = &logging_on_function_signatures_count,
+    .on_function_signature = &logging_on_function_signature,
+    .end_function_signatures_section = &logging_end_function_signatures_section,
+    .begin_function_bodies_section = &logging_begin_function_bodies_section,
+    .on_function_bodies_count = &logging_on_function_bodies_count,
+    .begin_function_body_pass = &logging_begin_function_body_pass,
+    .begin_function_body = &logging_begin_function_body,
+    .on_local_decl_count = &logging_on_local_decl_count,
+    .on_local_decl = &logging_on_local_decl,
+    .on_binary_expr = &logging_on_binary_expr,
+    .on_block_expr = &logging_on_block_expr,
+    .on_br_expr = &logging_on_br_expr,
+    .on_br_if_expr = &logging_on_br_if_expr,
+    .on_br_table_expr = &logging_on_br_table_expr,
+    .on_call_expr = &logging_on_call_expr,
+    .on_call_import_expr = &logging_on_call_import_expr,
+    .on_call_indirect_expr = &logging_on_call_indirect_expr,
+    .on_compare_expr = &logging_on_compare_expr,
+    .on_convert_expr = &logging_on_convert_expr,
+    .on_else_expr = &logging_on_else_expr,
+    .on_end_expr = &logging_on_end_expr,
+    .on_f32_const_expr = &logging_on_f32_const_expr,
+    .on_f64_const_expr = &logging_on_f64_const_expr,
+    .on_get_local_expr = &logging_on_get_local_expr,
+    .on_grow_memory_expr = &logging_on_grow_memory_expr,
+    .on_i32_const_expr = &logging_on_i32_const_expr,
+    .on_i64_const_expr = &logging_on_i64_const_expr,
+    .on_if_expr = &logging_on_if_expr,
+    .on_load_expr = &logging_on_load_expr,
+    .on_loop_expr = &logging_on_loop_expr,
+    .on_current_memory_expr = &logging_on_current_memory_expr,
+    .on_nop_expr = &logging_on_nop_expr,
+    .on_return_expr = &logging_on_return_expr,
+    .on_select_expr = &logging_on_select_expr,
+    .on_set_local_expr = &logging_on_set_local_expr,
+    .on_store_expr = &logging_on_store_expr,
+    .on_unary_expr = &logging_on_unary_expr,
+    .on_unreachable_expr = &logging_on_unreachable_expr,
+    .end_function_body = &logging_end_function_body,
+    .end_function_body_pass = &logging_end_function_body_pass,
+    .end_function_bodies_section = &logging_end_function_bodies_section,
+    .begin_function_table_section = &logging_begin_function_table_section,
+    .on_function_table_count = &logging_on_function_table_count,
+    .on_function_table_entry = &logging_on_function_table_entry,
+    .end_function_table_section = &logging_end_function_table_section,
+    .begin_start_section = &logging_begin_start_section,
+    .on_start_function = &logging_on_start_function,
+    .end_start_section = &logging_end_start_section,
+    .begin_export_section = &logging_begin_export_section,
+    .on_export_count = &logging_on_export_count,
+    .on_export = &logging_on_export,
+    .end_export_section = &logging_end_export_section,
+    .begin_names_section = &logging_begin_names_section,
+    .on_function_names_count = &logging_on_function_names_count,
+    .on_function_name = &logging_on_function_name,
+    .on_local_names_count = &logging_on_local_names_count,
+    .on_local_name = &logging_on_local_name,
+    .end_names_section = &logging_end_names_section,
+};
+
 WasmResult wasm_read_binary(WasmAllocator* allocator,
                             const void* data,
                             size_t size,
                             WasmBinaryReader* reader,
                             uint32_t num_function_passes,
                             const WasmReadBinaryOptions* options) {
+  LoggingContext logging_context;
+  WASM_ZERO_MEMORY(logging_context);
+  logging_context.reader = reader;
+  logging_context.stream = options->log_stream;
+
+  WasmBinaryReader logging_reader = s_logging_binary_reader;
+  logging_reader.user_data = &logging_context;
+
   Context context;
   WASM_ZERO_MEMORY(context);
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
   ctx->data = data;
   ctx->size = size;
-  ctx->reader = reader;
+  ctx->reader = options->log_stream ? &logging_reader : reader;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
     destroy_context(allocator, ctx);
