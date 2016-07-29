@@ -70,11 +70,11 @@ assert_invalid error:
       (call_indirect 0 (i32.const 0) (i32.const 1) (f64.const 1))
                                                    ^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:328:46: function type variable out of range (max 0)
+  third_party/testsuite/call_indirect.wast:328:46: function type variable out of range (max 1)
   (module (func $unbound-type (call_indirect 1 (i32.const 0))))
                                              ^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:332:44: function type variable out of range (max 0)
+  third_party/testsuite/call_indirect.wast:332:44: function type variable out of range (max 1)
   (module (func $large-type (call_indirect 10001232130000 (i32.const 0))))
                                            ^^^^^^^^^^^^^^
 41/41 tests passed.

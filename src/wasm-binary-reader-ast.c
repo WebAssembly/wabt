@@ -51,7 +51,6 @@
 
 #define CHECK_LOCAL(local_index)                                          \
   do {                                                                    \
-    assert(wasm_decl_has_func_type(&ctx->current_func->decl));            \
     uint32_t max_local_index =                                            \
         wasm_get_num_params_and_locals(ctx->module, ctx->current_func);   \
     if ((local_index) >= max_local_index) {                               \
@@ -351,20 +350,23 @@ static WasmResult on_import(uint32_t index,
                             WasmStringSlice function_name,
                             void* user_data) {
   Context* ctx = user_data;
+  assert(index < ctx->module->imports.capacity);
+  assert(sig_index < ctx->module->func_types.size);
+
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
   field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
 
   WasmImport* import = &field->import;
   WASM_ZERO_MEMORY(*import);
-  import->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
   import->module_name = wasm_dup_string_slice(ctx->allocator, module_name);
   import->func_name = wasm_dup_string_slice(ctx->allocator, function_name);
+  import->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
+                       WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
   import->decl.type_var.type = WASM_VAR_TYPE_INDEX;
-  assert(sig_index < ctx->module->func_types.size);
   import->decl.type_var.index = sig_index;
+  import->decl.sig = ctx->module->func_types.data[sig_index]->sig;
 
-  assert(index < ctx->module->imports.capacity);
   WasmImportPtr* import_ptr =
       wasm_append_import_ptr(ctx->allocator, &ctx->module->imports);
   *import_ptr = import;
@@ -382,6 +384,9 @@ static WasmResult on_function_signature(uint32_t index,
                                         uint32_t sig_index,
                                         void* user_data) {
   Context* ctx = user_data;
+  assert(index < ctx->module->funcs.capacity);
+  assert(sig_index < ctx->module->func_types.size);
+
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
   field->type = WASM_MODULE_FIELD_TYPE_FUNC;
@@ -389,21 +394,11 @@ static WasmResult on_function_signature(uint32_t index,
   WasmFunc* func = &field->func;
   WASM_ZERO_MEMORY(*func);
   func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
-                     WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
+                     WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
   func->decl.type_var.type = WASM_VAR_TYPE_INDEX;
-  assert(sig_index < ctx->module->func_types.size);
   func->decl.type_var.index = sig_index;
+  func->decl.sig = ctx->module->func_types.data[sig_index]->sig;
 
-  /* copy the signature from the function type */
-  WasmFuncSignature* sig = &ctx->module->func_types.data[sig_index]->sig;
-  size_t i;
-  for (i = 0; i < sig->param_types.size; ++i) {
-    wasm_append_type_value(ctx->allocator, &func->decl.sig.param_types,
-                           &sig->param_types.data[i]);
-  }
-  func->decl.sig.result_type = sig->result_type;
-
-  assert(index < ctx->module->funcs.capacity);
   WasmFuncPtr* func_ptr =
       wasm_append_func_ptr(ctx->allocator, &ctx->module->funcs);
   *func_ptr = func;

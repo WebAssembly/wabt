@@ -1,5 +1,4 @@
 ;;; FLAGS: -dv
-;; int->float reinterpret unsupported currently
 (module
   (func
     (f32.reinterpret/i32 (i32.const 0))

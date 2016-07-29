@@ -165,27 +165,6 @@ typedef struct WasmBoundType {
   WasmType type;
 } WasmBoundType;
 
-/* only used for parsing */
-typedef enum WasmFuncFieldType {
-  WASM_FUNC_FIELD_TYPE_EXPRS,
-  WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
-  WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
-  WASM_FUNC_FIELD_TYPE_RESULT_TYPE,
-  WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
-  WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
-} WasmFuncFieldType;
-
-typedef struct WasmFuncField {
-  WasmFuncFieldType type;
-  union {
-    WasmExpr* first_expr;
-    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
-    WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
-    WasmType result_type;
-  };
-  struct WasmFuncField* next;
-} WasmFuncField;
-
 typedef struct WasmFuncSignature {
   WasmType result_type;
   WasmTypeVector param_types;
@@ -200,7 +179,8 @@ WASM_DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
 
 enum {
   WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE = 1,
-  WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE = 2,
+  /* set if the signature is owned by module */
+  WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE = 2,
 };
 typedef uint32_t WasmFuncDeclarationFlags;
 
@@ -420,6 +400,11 @@ WasmBinding* wasm_insert_binding(struct WasmAllocator*,
 WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry*);
 
 WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
+/* ownership of the function signature is passed to the module */
+WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator*,
+                                             WasmLocation*,
+                                             WasmModule*,
+                                             WasmFuncSignature*);
 
 /* WasmExpr creation functions */
 WasmExpr* wasm_new_binary_expr(struct WasmAllocator*);
@@ -458,7 +443,6 @@ void wasm_destroy_export(struct WasmAllocator*, WasmExport*);
 void wasm_destroy_expr(struct WasmAllocator*, WasmExpr*);
 void wasm_destroy_expr_list(struct WasmAllocator*, WasmExpr*);
 void wasm_destroy_func_declaration(struct WasmAllocator*, WasmFuncDeclaration*);
-void wasm_destroy_func_fields(struct WasmAllocator*, WasmFuncField*);
 void wasm_destroy_func_signature(struct WasmAllocator*, WasmFuncSignature*);
 void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);
 void wasm_destroy_func(struct WasmAllocator*, WasmFunc*);
@@ -482,6 +466,11 @@ int wasm_get_index_from_var(const WasmBindingHash* bindings,
 int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var);
+int wasm_get_func_type_index_by_sig(const WasmModule* module,
+                                    const WasmFuncSignature* sig);
+int wasm_get_func_type_index_by_decl(const WasmModule* module,
+                                     const WasmFuncDeclaration* decl);
+
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
 
@@ -505,31 +494,23 @@ wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
 }
 
 static WASM_INLINE WasmBool
-wasm_decl_has_signature(const WasmFuncDeclaration* decl) {
-  return decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
-}
-
-static WASM_INLINE const WasmFuncSignature* wasm_decl_get_signature(
-    const WasmModule* module,
-    const WasmFuncDeclaration* decl) {
-  if (wasm_decl_has_func_type(decl)) {
-    const WasmFuncType* func_type =
-        wasm_get_func_type_by_var(module, &decl->type_var);
-    if (!func_type)
-      return NULL;
-    return &func_type->sig;
-  } else if (wasm_decl_has_signature(decl)) {
-    return &decl->sig;
-  } else {
-    return NULL;
+wasm_signatures_are_equal(const WasmFuncSignature* sig1,
+                          const WasmFuncSignature* sig2) {
+  if (sig1->result_type != sig2->result_type)
+    return WASM_FALSE;
+  if (sig1->param_types.size != sig2->param_types.size)
+    return WASM_FALSE;
+  size_t i;
+  for (i = 0; i < sig1->param_types.size; ++i) {
+    if (sig1->param_types.data[i] != sig2->param_types.data[i])
+      return WASM_FALSE;
   }
+  return WASM_TRUE;
 }
 
 static WASM_INLINE size_t wasm_get_num_params(const WasmModule* module,
                                               const WasmFunc* func) {
-  const WasmFuncSignature* sig = wasm_decl_get_signature(module, &func->decl);
-  assert(sig);
-  return sig->param_types.size;
+  return func->decl.sig.param_types.size;
 }
 
 static WASM_INLINE size_t wasm_get_num_locals(const WasmFunc* func) {
@@ -544,10 +525,8 @@ wasm_get_num_params_and_locals(const WasmModule* module, const WasmFunc* func) {
 static WASM_INLINE WasmType wasm_get_param_type(const WasmModule* module,
                                                 const WasmFunc* func,
                                                 int index) {
-  const WasmFuncSignature* sig = wasm_decl_get_signature(module, &func->decl);
-  assert(sig);
-  assert((size_t)index < sig->param_types.size);
-  return sig->param_types.data[index];
+  assert((size_t)index < func->decl.sig.param_types.size);
+  return func->decl.sig.param_types.data[index];
 }
 
 static WASM_INLINE WasmType wasm_get_local_type(const WasmFunc* func,
@@ -558,9 +537,7 @@ static WASM_INLINE WasmType wasm_get_local_type(const WasmFunc* func,
 
 static WASM_INLINE WasmType wasm_get_result_type(const WasmModule* module,
                                                  const WasmFunc* func) {
-  const WasmFuncSignature* sig = wasm_decl_get_signature(module, &func->decl);
-  assert(sig);
-  return sig->result_type;
+  return func->decl.sig.result_type;
 }
 
 static WASM_INLINE WasmType

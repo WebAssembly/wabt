@@ -20,13 +20,13 @@
 0000013: 40                                         ; function form
 0000014: 01                                         ; num params
 0000015: 01                                         ; param type
-0000016: 01                                         ; num results
-0000017: 01                                         ; result_type
+0000016: 00                                         ; num results
 ; type 1
-0000018: 40                                         ; function form
-0000019: 01                                         ; num params
-000001a: 01                                         ; param type
-000001b: 00                                         ; num results
+0000017: 40                                         ; function form
+0000018: 01                                         ; num params
+0000019: 01                                         ; param type
+000001a: 01                                         ; num results
+000001b: 01                                         ; result_type
 ; type 2
 000001c: 40                                         ; function form
 000001d: 02                                         ; num params
@@ -40,7 +40,7 @@
 0000028: 0000 0000 00                               ; section size (guess)
 000002d: 01                                         ; num imports
 ; import header 0
-000002e: 01                                         ; import signature index
+000002e: 00                                         ; import signature index
 000002f: 05                                         ; string length
 0000030: 7374 6469 6f                             stdio  ; import module name
 0000035: 05                                         ; string length
@@ -52,8 +52,8 @@
 0000044: 0000 0000 00                               ; section size (guess)
 0000049: 03                                         ; num functions
 000004a: 02                                         ; function 0 signature index
-000004b: 01                                         ; function 1 signature index
-000004c: 01                                         ; function 2 signature index
+000004b: 00                                         ; function 1 signature index
+000004c: 00                                         ; function 2 signature index
 0000044: 8480 8080 00                               ; FIXUP section size
 ; section "table"
 000004d: 05                                         ; string length
@@ -94,7 +94,7 @@
 000008f: 01                                         ; remapped local index
 0000090: 17                                         ; OPCODE_CALL_INDIRECT
 0000091: 01                                         ; call_indirect arity
-0000092: 00                                         ; signature index
+0000092: 01                                         ; signature index
 0000086: 8880 8080 00                               ; FIXUP func body size
 ; function body 1
 0000093: 0000 0000 00                               ; func body size (guess)
@@ -117,14 +117,14 @@
 0000080: a480 8080 00                               ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0b00 0000 0474 7970 658f 8080  
-0000010: 8000 0340 0101 0101 4001 0100 4002 0101  
-0000020: 0006 696d 706f 7274 8e80 8080 0001 0105  
+0000010: 8000 0340 0101 0040 0101 0101 4002 0101  
+0000020: 0006 696d 706f 7274 8e80 8080 0001 0005  
 0000030: 7374 6469 6f05 7072 696e 7408 6675 6e63  
-0000040: 7469 6f6e 8480 8080 0003 0201 0105 7461  
+0000040: 7469 6f6e 8480 8080 0003 0200 0005 7461  
 0000050: 626c 6583 8080 8000 0201 0206 6d65 6d6f  
 0000060: 7279 8380 8080 0064 6400 0665 7870 6f72  
 0000070: 7485 8080 8000 0100 0266 3104 636f 6465  
 0000080: a480 8080 0003 8880 8080 0000 1400 1401  
-0000090: 1701 0086 8080 8000 0014 0010 0140 8680  
+0000090: 1701 0186 8080 8000 0014 0010 0140 8680  
 00000a0: 8080 0000 1400 1002 42                   
 ;;; STDOUT ;;)

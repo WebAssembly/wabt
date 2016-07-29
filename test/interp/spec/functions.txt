@@ -1,5 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/functions.wast
-(;; STDOUT ;;;
-10/10 tests passed.
-;;; STDOUT ;;)
