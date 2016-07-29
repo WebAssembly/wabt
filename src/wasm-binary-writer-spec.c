@@ -48,15 +48,6 @@ typedef struct Context {
   WasmResult result;
 } Context;
 
-static WasmBool is_nan_f32(uint32_t bits) {
-  return (bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0;
-}
-
-static WasmBool is_nan_f64(uint64_t bits) {
-  return (bits & 0x7ff0000000000000LL) == 0x7ff0000000000000LL &&
-         (bits & 0x000fffffffffffffLL) != 0;
-}
-
 static WasmExpr* create_const_expr(WasmAllocator* allocator,
                                    WasmConst* const_) {
   WasmExpr* expr = wasm_new_const_expr(allocator);
@@ -353,16 +344,14 @@ static void write_commands(Context* ctx, WasmScript* script) {
             WasmExpr* const_expr =
                 create_const_expr(script->allocator, expected);
 
-            if (expected->type == WASM_TYPE_F32 &&
-                is_nan_f32(expected->f32_bits)) {
+            if (expected->type == WASM_TYPE_F32) {
               caller->first_expr = create_eq_expr(
                   script->allocator, WASM_TYPE_I32,
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F32,
                                           invoke_expr),
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F32,
                                           const_expr));
-            } else if (expected->type == WASM_TYPE_F64 &&
-                       is_nan_f64(expected->f64_bits)) {
+            } else if (expected->type == WASM_TYPE_F64) {
               caller->first_expr = create_eq_expr(
                   script->allocator, WASM_TYPE_I64,
                   create_reinterpret_expr(script->allocator, WASM_TYPE_F64,

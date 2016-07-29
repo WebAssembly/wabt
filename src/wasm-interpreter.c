@@ -523,22 +523,27 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define MIN_OP <
 #define MAX_OP >
 
-#define MINMAX_FLOAT(type, op)                                               \
-  do {                                                                       \
-    VALUE_TYPE_##type rhs = POP_##type();                                    \
-    VALUE_TYPE_##type lhs = POP_##type();                                    \
-    VALUE_TYPE_##type result;                                                \
-    if (WASM_UNLIKELY(IS_NAN_##type(lhs))) {                                 \
-      result = lhs | type##_QUIET_NAN_BIT;                                   \
-    } else if (WASM_UNLIKELY(IS_NAN_##type(rhs))) {                          \
-      result = rhs | type##_QUIET_NAN_BIT;                                   \
-    } else {                                                                 \
-      FLOAT_TYPE_##type float_rhs = BITCAST_TO_##type(rhs);                  \
-      FLOAT_TYPE_##type float_lhs = BITCAST_TO_##type(lhs);                  \
-      result = BITCAST_FROM_##type(float_lhs op##_OP float_rhs ? float_lhs   \
-                                                               : float_rhs); \
-    }                                                                        \
-    PUSH_##type(result);                                                     \
+#define MINMAX_FLOAT(type, op)                                                 \
+  do {                                                                         \
+    VALUE_TYPE_##type rhs = POP_##type();                                      \
+    VALUE_TYPE_##type lhs = POP_##type();                                      \
+    VALUE_TYPE_##type result;                                                  \
+    if (WASM_UNLIKELY(IS_NAN_##type(lhs))) {                                   \
+      result = lhs | type##_QUIET_NAN_BIT;                                     \
+    } else if (WASM_UNLIKELY(IS_NAN_##type(rhs))) {                            \
+      result = rhs | type##_QUIET_NAN_BIT;                                     \
+    } else if ((lhs ^ rhs) & type##_SIGN_MASK) {                               \
+      /* min(-0.0, 0.0) => -0.0; since we know the sign bits are different, we \
+       * can just use the inverse integer comparison (because the sign bit is  \
+       * set when the value is negative) */                                    \
+      result = !(lhs op##_OP rhs) ? lhs : rhs;                                 \
+    } else {                                                                   \
+      FLOAT_TYPE_##type float_rhs = BITCAST_TO_##type(rhs);                    \
+      FLOAT_TYPE_##type float_lhs = BITCAST_TO_##type(lhs);                    \
+      result = BITCAST_FROM_##type(float_lhs op##_OP float_rhs ? float_lhs     \
+                                                               : float_rhs);   \
+    }                                                                          \
+    PUSH_##type(result);                                                       \
   } while (0)
 
 static WASM_INLINE uint32_t read_u32_at(const uint8_t* pc) {
