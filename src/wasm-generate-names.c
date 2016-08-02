@@ -109,9 +109,7 @@ static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
 static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
-                      &expr->loop.outer);
-  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
-                      &expr->loop.inner);
+                      &expr->loop.label);
   return WASM_OK;
 }
 

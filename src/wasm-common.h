@@ -146,7 +146,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
  *  tr  t1    t2   m  code  NAME text
  *  ============================ */
 #define WASM_FOREACH_OPCODE(V)                                          \
-  V(___, ___, ___, 0, 0x00, NOP, "nop")                                 \
+  V(___, ___, ___, 0, 0x00, UNREACHABLE, "unreachable")                 \
   V(___, ___, ___, 0, 0x01, BLOCK, "block")                             \
   V(___, ___, ___, 0, 0x02, LOOP, "loop")                               \
   V(___, ___, ___, 0, 0x03, IF, "if")                                   \
@@ -156,7 +156,8 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x07, BR_IF, "br_if")                             \
   V(___, ___, ___, 0, 0x08, BR_TABLE, "br_table")                       \
   V(___, ___, ___, 0, 0x09, RETURN, "return")                           \
-  V(___, ___, ___, 0, 0x0a, UNREACHABLE, "unreachable")                 \
+  V(___, ___, ___, 0, 0x0a, NOP, "nop")                                 \
+  V(___, ___, ___, 0, 0x0b, DROP, "drop")                               \
   V(___, ___, ___, 0, 0x0f, END, "end")                                 \
   V(I32, ___, ___, 0, 0x10, I32_CONST, "i32.const")                     \
   V(I64, ___, ___, 0, 0x11, I64_CONST, "i64.const")                     \
@@ -167,6 +168,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x16, CALL_FUNCTION, "call")                      \
   V(___, ___, ___, 0, 0x17, CALL_INDIRECT, "call_indirect")             \
   V(___, ___, ___, 0, 0x18, CALL_IMPORT, "call_import")                 \
+  V(___, ___, ___, 0, 0x19, TEE_LOCAL, "tee_local")                     \
   V(I32, I32, ___, 1, 0x20, I32_LOAD8_S, "i32.load8_s")                 \
   V(I32, I32, ___, 1, 0x21, I32_LOAD8_U, "i32.load8_u")                 \
   V(I32, I32, ___, 2, 0x22, I32_LOAD16_S, "i32.load16_s")               \

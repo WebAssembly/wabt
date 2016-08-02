@@ -4,7 +4,7 @@
   (func $quux
     (call_import 0 (i32.const 0))))
 (;; STDERR ;;;
-parse/expr/bad-callimport-too-few-named.txt:5:5: too few parameters to function in call_import. got 1, expected 2
+parse/expr/bad-callimport-too-few-named.txt:5:6: type stack size too small at call_import. got 1, expected at least 2
     (call_import 0 (i32.const 0))))
-    ^
+     ^^^^^^^^^^^
 ;;; STDERR ;;)

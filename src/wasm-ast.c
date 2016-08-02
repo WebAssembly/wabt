@@ -310,21 +310,19 @@ WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_BR_IF, br_if, br_if)                         \
   V(WASM_EXPR_TYPE_BR_TABLE, br_table, br_table)                \
   V(WASM_EXPR_TYPE_CALL, call, call)                            \
-  V(WASM_EXPR_TYPE_CALL_IMPORT, call_import, call)              \
+  V(WASM_EXPR_TYPE_CALL_IMPORT, call_import, call_import)       \
   V(WASM_EXPR_TYPE_CALL_INDIRECT, call_indirect, call_indirect) \
   V(WASM_EXPR_TYPE_COMPARE, compare, compare)                   \
   V(WASM_EXPR_TYPE_CONST, const, const_)                        \
   V(WASM_EXPR_TYPE_CONVERT, convert, convert)                   \
   V(WASM_EXPR_TYPE_GET_LOCAL, get_local, get_local)             \
-  V(WASM_EXPR_TYPE_GROW_MEMORY, grow_memory, grow_memory)       \
-  V(WASM_EXPR_TYPE_IF_ELSE, if_else, if_else)                   \
   V(WASM_EXPR_TYPE_IF, if, if_)                                 \
+  V(WASM_EXPR_TYPE_IF_ELSE, if_else, if_else)                   \
   V(WASM_EXPR_TYPE_LOAD, load, load)                            \
   V(WASM_EXPR_TYPE_LOOP, loop, loop)                            \
-  V(WASM_EXPR_TYPE_RETURN, return, return_)                     \
-  V(WASM_EXPR_TYPE_SELECT, select, select)                      \
   V(WASM_EXPR_TYPE_SET_LOCAL, set_local, set_local)             \
   V(WASM_EXPR_TYPE_STORE, store, store)                         \
+  V(WASM_EXPR_TYPE_TEE_LOCAL, tee_local, tee_local)             \
   V(WASM_EXPR_TYPE_UNARY, unary, unary)
 
 #define DEFINE_NEW_EXPR(type_, name, member)                    \
@@ -335,6 +333,24 @@ WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator* allocator,
   }
 FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
 #undef DEFINE_NEW_EXPR
+
+#define FOREACH_EMPTY_EXPR_TYPE(V)                 \
+  V(WASM_EXPR_TYPE_CURRENT_MEMORY, current_memory) \
+  V(WASM_EXPR_TYPE_DROP, drop)                     \
+  V(WASM_EXPR_TYPE_GROW_MEMORY, grow_memory)       \
+  V(WASM_EXPR_TYPE_NOP, nop)                       \
+  V(WASM_EXPR_TYPE_RETURN, return )                \
+  V(WASM_EXPR_TYPE_SELECT, select)                 \
+  V(WASM_EXPR_TYPE_UNREACHABLE, unreachable)
+
+#define DEFINE_NEW_EMPTY_EXPR(type_, name)                     \
+  WasmExpr* wasm_new_##name##_expr(WasmAllocator* allocator) { \
+    WasmExpr* result = ALLOC_EXPR_TYPE_ZERO(allocator, next);  \
+    result->type = type_;                                      \
+    return result;                                             \
+  }
+FOREACH_EMPTY_EXPR_TYPE(DEFINE_NEW_EMPTY_EXPR)
+#undef DEFINE_NEW_EMPTY_EXPR
 
 WasmExpr* wasm_new_empty_expr(struct WasmAllocator* allocator,
                               WasmExprType type) {
@@ -389,96 +405,58 @@ void wasm_destroy_block(WasmAllocator* allocator, WasmBlock* block) {
 
 void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
   switch (expr->type) {
-    case WASM_EXPR_TYPE_BINARY:
-      wasm_destroy_expr(allocator, expr->binary.left);
-      wasm_destroy_expr(allocator, expr->binary.right);
-      break;
     case WASM_EXPR_TYPE_BLOCK:
       wasm_destroy_block(allocator, &expr->block);
       break;
     case WASM_EXPR_TYPE_BR:
       wasm_destroy_var(allocator, &expr->br.var);
-      if (expr->br.expr)
-        wasm_destroy_expr(allocator, expr->br.expr);
       break;
     case WASM_EXPR_TYPE_BR_IF:
       wasm_destroy_var(allocator, &expr->br_if.var);
-      wasm_destroy_expr(allocator, expr->br_if.cond);
-      if (expr->br_if.expr)
-        wasm_destroy_expr(allocator, expr->br_if.expr);
+      break;
+    case WASM_EXPR_TYPE_BR_TABLE:
+      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->br_table.targets, var);
+      wasm_destroy_var(allocator, &expr->br_table.default_target);
       break;
     case WASM_EXPR_TYPE_CALL:
     case WASM_EXPR_TYPE_CALL_IMPORT:
-      wasm_destroy_var(allocator, &expr->call.var);
-      wasm_destroy_expr_list(allocator, expr->call.first_arg);
-      break;
     case WASM_EXPR_TYPE_CALL_INDIRECT:
-      wasm_destroy_var(allocator, &expr->call_indirect.var);
-      wasm_destroy_expr(allocator, expr->call_indirect.expr);
-      wasm_destroy_expr_list(allocator, expr->call_indirect.first_arg);
-      break;
-    case WASM_EXPR_TYPE_COMPARE:
-      wasm_destroy_expr(allocator, expr->compare.left);
-      wasm_destroy_expr(allocator, expr->compare.right);
-      break;
-    case WASM_EXPR_TYPE_CONVERT:
-      wasm_destroy_expr(allocator, expr->convert.expr);
+      wasm_destroy_var(allocator, &expr->call.var);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL:
       wasm_destroy_var(allocator, &expr->get_local.var);
       break;
-    case WASM_EXPR_TYPE_GROW_MEMORY:
-      wasm_destroy_expr(allocator, expr->grow_memory.expr);
-      break;
     case WASM_EXPR_TYPE_IF:
-      wasm_destroy_expr(allocator, expr->if_.cond);
       wasm_destroy_block(allocator, &expr->if_.true_);
       break;
     case WASM_EXPR_TYPE_IF_ELSE:
-      wasm_destroy_expr(allocator, expr->if_else.cond);
       wasm_destroy_block(allocator, &expr->if_else.true_);
       wasm_destroy_block(allocator, &expr->if_else.false_);
       break;
-    case WASM_EXPR_TYPE_LOAD:
-      wasm_destroy_expr(allocator, expr->load.addr);
-      break;
     case WASM_EXPR_TYPE_LOOP:
-      wasm_destroy_string_slice(allocator, &expr->loop.inner);
-      wasm_destroy_string_slice(allocator, &expr->loop.outer);
-      wasm_destroy_expr_list(allocator, expr->loop.first);
-      break;
-    case WASM_EXPR_TYPE_RETURN:
-      if (expr->return_.expr)
-        wasm_destroy_expr(allocator, expr->return_.expr);
-      break;
-    case WASM_EXPR_TYPE_SELECT:
-      wasm_destroy_expr(allocator, expr->select.cond);
-      wasm_destroy_expr(allocator, expr->select.true_);
-      wasm_destroy_expr(allocator, expr->select.false_);
+      wasm_destroy_block(allocator, &expr->loop);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL:
       wasm_destroy_var(allocator, &expr->set_local.var);
-      wasm_destroy_expr(allocator, expr->set_local.expr);
       break;
-    case WASM_EXPR_TYPE_STORE:
-      wasm_destroy_expr(allocator, expr->store.addr);
-      wasm_destroy_expr(allocator, expr->store.value);
-      break;
-    case WASM_EXPR_TYPE_BR_TABLE:
-      wasm_destroy_expr(allocator, expr->br_table.key);
-      if (expr->br_table.expr)
-        wasm_destroy_expr(allocator, expr->br_table.expr);
-      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, expr->br_table.targets, var);
-      wasm_destroy_var(allocator, &expr->br_table.default_target);
-      break;
-    case WASM_EXPR_TYPE_UNARY:
-      wasm_destroy_expr(allocator, expr->unary.expr);
+    case WASM_EXPR_TYPE_TEE_LOCAL:
+      wasm_destroy_var(allocator, &expr->tee_local.var);
       break;
 
-    case WASM_EXPR_TYPE_UNREACHABLE:
+    case WASM_EXPR_TYPE_BINARY:
+    case WASM_EXPR_TYPE_COMPARE:
     case WASM_EXPR_TYPE_CONST:
+    case WASM_EXPR_TYPE_CONVERT:
+    case WASM_EXPR_TYPE_DROP:
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
+    case WASM_EXPR_TYPE_GROW_MEMORY:
+    case WASM_EXPR_TYPE_LOAD:
     case WASM_EXPR_TYPE_NOP:
+    case WASM_EXPR_TYPE_RETURN:
+    case WASM_EXPR_TYPE_SELECT:
+    case WASM_EXPR_TYPE_STORE:
+    case WASM_EXPR_TYPE_UNARY:
+    case WASM_EXPR_TYPE_UNREACHABLE:
       break;
   }
   wasm_free(allocator, expr);
@@ -661,10 +639,7 @@ static WasmResult visit_expr_list(WasmExpr* first, WasmExprVisitor* visitor) {
 static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      CALLBACK(begin_binary_expr);
-      CHECK_RESULT(visit_expr(expr->binary.left, visitor));
-      CHECK_RESULT(visit_expr(expr->binary.right, visitor));
-      CALLBACK(end_binary_expr);
+      CALLBACK(on_binary_expr);
       break;
 
     case WASM_EXPR_TYPE_BLOCK:
@@ -674,44 +649,31 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       break;
 
     case WASM_EXPR_TYPE_BR:
-      CALLBACK(begin_br_expr);
-      if (expr->br.expr)
-        CHECK_RESULT(visit_expr(expr->br.expr, visitor));
-      CALLBACK(end_br_expr);
+      CALLBACK(on_br_expr);
       break;
 
     case WASM_EXPR_TYPE_BR_IF:
-      CALLBACK(begin_br_if_expr);
-      if (expr->br_if.expr)
-        CHECK_RESULT(visit_expr(expr->br_if.expr, visitor));
-      CHECK_RESULT(visit_expr(expr->br_if.cond, visitor));
-      CALLBACK(end_br_if_expr);
+      CALLBACK(on_br_if_expr);
+      break;
+
+    case WASM_EXPR_TYPE_BR_TABLE:
+      CALLBACK(on_br_table_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL:
-      CALLBACK(begin_call_expr);
-      CHECK_RESULT(visit_expr_list(expr->call.first_arg, visitor));
-      CALLBACK(end_call_expr);
+      CALLBACK(on_call_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL_IMPORT:
-      CALLBACK(begin_call_import_expr);
-      CHECK_RESULT(visit_expr_list(expr->call.first_arg, visitor));
-      CALLBACK(end_call_import_expr);
+      CALLBACK(on_call_import_expr);
       break;
 
     case WASM_EXPR_TYPE_CALL_INDIRECT:
-      CALLBACK(begin_call_indirect_expr);
-      CHECK_RESULT(visit_expr(expr->call_indirect.expr, visitor));
-      CHECK_RESULT(visit_expr_list(expr->call_indirect.first_arg, visitor));
-      CALLBACK(end_call_indirect_expr);
+      CALLBACK(on_call_indirect_expr);
       break;
 
     case WASM_EXPR_TYPE_COMPARE:
-      CALLBACK(begin_compare_expr);
-      CHECK_RESULT(visit_expr(expr->compare.left, visitor));
-      CHECK_RESULT(visit_expr(expr->compare.right, visitor));
-      CALLBACK(end_compare_expr);
+      CALLBACK(on_compare_expr);
       break;
 
     case WASM_EXPR_TYPE_CONST:
@@ -719,9 +681,15 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       break;
 
     case WASM_EXPR_TYPE_CONVERT:
-      CALLBACK(begin_convert_expr);
-      CHECK_RESULT(visit_expr(expr->convert.expr, visitor));
-      CALLBACK(end_convert_expr);
+      CALLBACK(on_convert_expr);
+      break;
+
+    case WASM_EXPR_TYPE_CURRENT_MEMORY:
+      CALLBACK(on_current_memory_expr);
+      break;
+
+    case WASM_EXPR_TYPE_DROP:
+      CALLBACK(on_drop_expr);
       break;
 
     case WASM_EXPR_TYPE_GET_LOCAL:
@@ -729,23 +697,17 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       break;
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      CALLBACK(begin_grow_memory_expr);
-      CHECK_RESULT(visit_expr(expr->grow_memory.expr, visitor));
-      CALLBACK(end_grow_memory_expr);
+      CALLBACK(on_grow_memory_expr);
       break;
 
     case WASM_EXPR_TYPE_IF:
       CALLBACK(begin_if_expr);
-      CHECK_RESULT(visit_expr(expr->if_.cond, visitor));
-      CALLBACK(after_if_cond_expr);
       CHECK_RESULT(visit_expr_list(expr->if_.true_.first, visitor));
       CALLBACK(end_if_expr);
       break;
 
     case WASM_EXPR_TYPE_IF_ELSE:
       CALLBACK(begin_if_else_expr);
-      CHECK_RESULT(visit_expr(expr->if_else.cond, visitor));
-      CALLBACK(after_if_else_cond_expr);
       CHECK_RESULT(visit_expr_list(expr->if_else.true_.first, visitor));
       CALLBACK(after_if_else_true_expr);
       CHECK_RESULT(visit_expr_list(expr->if_else.false_.first, visitor));
@@ -753,9 +715,7 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       break;
 
     case WASM_EXPR_TYPE_LOAD:
-      CALLBACK(begin_load_expr);
-      CHECK_RESULT(visit_expr(expr->load.addr, visitor));
-      CALLBACK(end_load_expr);
+      CALLBACK(on_load_expr);
       break;
 
     case WASM_EXPR_TYPE_LOOP:
@@ -764,54 +724,32 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       CALLBACK(end_loop_expr);
       break;
 
-    case WASM_EXPR_TYPE_CURRENT_MEMORY:
-      CALLBACK(on_current_memory_expr);
-      break;
-
     case WASM_EXPR_TYPE_NOP:
       CALLBACK(on_nop_expr);
       break;
 
     case WASM_EXPR_TYPE_RETURN:
-      CALLBACK(begin_return_expr);
-      if (expr->return_.expr)
-        CHECK_RESULT(visit_expr(expr->return_.expr, visitor));
-      CALLBACK(end_return_expr);
+      CALLBACK(on_return_expr);
       break;
 
     case WASM_EXPR_TYPE_SELECT:
-      CALLBACK(begin_select_expr);
-      CHECK_RESULT(visit_expr(expr->select.true_, visitor));
-      CHECK_RESULT(visit_expr(expr->select.false_, visitor));
-      CHECK_RESULT(visit_expr(expr->select.cond, visitor));
-      CALLBACK(end_select_expr);
+      CALLBACK(on_select_expr);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:
-      CALLBACK(begin_set_local_expr);
-      CHECK_RESULT(visit_expr(expr->set_local.expr, visitor));
-      CALLBACK(end_set_local_expr);
+      CALLBACK(on_set_local_expr);
       break;
 
     case WASM_EXPR_TYPE_STORE:
-      CALLBACK(begin_store_expr);
-      CHECK_RESULT(visit_expr(expr->store.addr, visitor));
-      CHECK_RESULT(visit_expr(expr->store.value, visitor));
-      CALLBACK(end_store_expr);
+      CALLBACK(on_store_expr);
       break;
 
-    case WASM_EXPR_TYPE_BR_TABLE:
-      CALLBACK(begin_br_table_expr);
-      CHECK_RESULT(visit_expr(expr->br_table.key, visitor));
-      if (expr->br_table.expr)
-        CHECK_RESULT(visit_expr(expr->br_table.expr, visitor));
-      CALLBACK(end_br_table_expr);
+    case WASM_EXPR_TYPE_TEE_LOCAL:
+      CALLBACK(on_tee_local_expr);
       break;
 
     case WASM_EXPR_TYPE_UNARY:
-      CALLBACK(begin_unary_expr);
-      CHECK_RESULT(visit_expr(expr->unary.expr, visitor));
-      CALLBACK(end_unary_expr);
+      CALLBACK(on_unary_expr);
       break;
 
     case WASM_EXPR_TYPE_UNREACHABLE:

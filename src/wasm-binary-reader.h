@@ -122,6 +122,7 @@ typedef struct WasmBinaryReader {
                                       void* user_data);
   WasmResult (*on_compare_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_convert_expr)(WasmOpcode opcode, void* user_data);
+  WasmResult (*on_drop_expr)(void* user_data);
   WasmResult (*on_else_expr)(void* user_data);
   WasmResult (*on_end_expr)(void* user_data);
   WasmResult (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
@@ -145,6 +146,7 @@ typedef struct WasmBinaryReader {
                               uint32_t alignment_log2,
                               uint32_t offset,
                               void* user_data);
+  WasmResult (*on_tee_local_expr)(uint32_t local_index, void* user_data);
   WasmResult (*on_unary_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_unreachable_expr)(void* user_data);
   WasmResult (*end_function_body)(uint32_t index, void* user_data);

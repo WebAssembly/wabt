@@ -1,12 +1,10 @@
 ;;; ERROR: 1
 (module
   (start 0)
-  (func (result i32)))
+  (func (result i32)
+    (i32.const 0)))
 (;; STDERR ;;;
 parse/module/bad-start-not-void.txt:3:3: start function must not return anything
   (start 0)
   ^^^^^^^^^
-parse/module/bad-start-not-void.txt:4:4: type mismatch of function result. got void, expected i32
-  (func (result i32)))
-   ^^^^
 ;;; STDERR ;;)

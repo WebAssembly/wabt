@@ -4,7 +4,7 @@
   (func $baz
     (call_indirect $t (i32.const 0) (i32.const 1) (i32.const 2) (i32.const 3))))
 (;; STDERR ;;;
-parse/expr/bad-callindirect-too-many-named.txt:5:5: too many parameters to function in call_indirect. got 3, expected 2
-    (call_indirect $t (i32.const 0) (i32.const 1) (i32.const 2) (i32.const 3))))
-    ^
+parse/expr/bad-callindirect-too-many-named.txt:4:4: type mismatch at function result. got i32, expected void
+  (func $baz
+   ^^^^
 ;;; STDERR ;;)
