@@ -139,6 +139,10 @@ static void write_puts_space(Context* ctx, const char* s) {
   write_puts(ctx, s, NEXT_CHAR_SPACE);
 }
 
+static void write_puts_newline(Context* ctx, const char* s) {
+  write_puts(ctx, s, NEXT_CHAR_NEWLINE);
+}
+
 static void write_newline(Context* ctx, WasmBool force) {
   if (ctx->next_char == NEXT_CHAR_FORCE_NEWLINE)
     write_next_char(ctx);
@@ -274,15 +278,18 @@ static void write_expr(Context* ctx, const WasmExpr* expr);
 
 static void write_block(Context* ctx,
                         const WasmBlock* block,
-                        const char* text) {
-  write_open_space(ctx, text);
+                        const char* start_text,
+                        const char* end_text) {
+  if (start_text)
+    write_puts_space(ctx, start_text);
   if (!write_string_slice_opt(ctx, &block->label, NEXT_CHAR_SPACE))
     writef(ctx, " ;; exit = @%d", ctx->depth);
   write_newline(ctx, FORCE_NEWLINE);
   ctx->depth++;
   write_expr_list(ctx, block->first);
   ctx->depth--;
-  write_close_newline(ctx);
+  if (end_text)
+    write_puts_newline(ctx, end_text);
 }
 
 static void write_const(Context* ctx, const WasmConst* const_) {
@@ -326,76 +333,53 @@ static void write_const(Context* ctx, const WasmConst* const_) {
 static void write_expr(Context* ctx, const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      write_open_newline(ctx, s_opcode_name[expr->binary.opcode]);
-      write_expr(ctx, expr->binary.left);
-      write_expr(ctx, expr->binary.right);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->binary.opcode]);
       break;
 
     case WASM_EXPR_TYPE_BLOCK:
-      write_block(ctx, &expr->block, s_opcode_name[WASM_OPCODE_BLOCK]);
+      write_block(ctx, &expr->block, s_opcode_name[WASM_OPCODE_BLOCK],
+                  s_opcode_name[WASM_OPCODE_END]);
       break;
 
     case WASM_EXPR_TYPE_BR:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
+      writef(ctx, "%d", expr->br.arity);
       write_br_var(ctx, &expr->br.var, NEXT_CHAR_NEWLINE);
-      if (expr->br.expr)
-        write_expr(ctx, expr->br.expr);
-      write_close_newline(ctx);
       break;
 
     case WASM_EXPR_TYPE_BR_IF:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_BR_IF]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR_IF]);
+      writef(ctx, "%d", expr->br_if.arity);
       write_br_var(ctx, &expr->br_if.var, NEXT_CHAR_NEWLINE);
-      if (expr->br_if.expr)
-        write_expr(ctx, expr->br_if.expr);
-      write_expr(ctx, expr->br_if.cond);
-      write_close_newline(ctx);
       break;
 
     case WASM_EXPR_TYPE_BR_TABLE: {
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_BR_TABLE]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR_TABLE]);
+      writef(ctx, "%d", expr->br_table.arity);
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i)
         write_br_var(ctx, &expr->br_table.targets.data[i], NEXT_CHAR_SPACE);
       write_br_var(ctx, &expr->br_table.default_target, NEXT_CHAR_NEWLINE);
-      if (expr->br_table.expr)
-        write_expr(ctx, expr->br_table.expr);
-      write_expr(ctx, expr->br_table.key);
-      write_close_newline(ctx);
       break;
     }
 
-    case WASM_EXPR_TYPE_CALL: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
+    case WASM_EXPR_TYPE_CALL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
       write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
-      write_expr_list(ctx, expr->call.first_arg);
-      write_close_newline(ctx);
       break;
-    }
 
-    case WASM_EXPR_TYPE_CALL_IMPORT: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_IMPORT]);
-      write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
-      write_expr_list(ctx, expr->call.first_arg);
-      write_close_newline(ctx);
+    case WASM_EXPR_TYPE_CALL_IMPORT:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_IMPORT]);
+      write_var(ctx, &expr->call_import.var, NEXT_CHAR_NEWLINE);
       break;
-    }
 
-    case WASM_EXPR_TYPE_CALL_INDIRECT: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
+    case WASM_EXPR_TYPE_CALL_INDIRECT:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
       write_var(ctx, &expr->call_indirect.var, NEXT_CHAR_NEWLINE);
-      write_expr(ctx, expr->call_indirect.expr);
-      write_expr_list(ctx, expr->call_indirect.first_arg);
-      write_close_newline(ctx);
       break;
-    }
 
     case WASM_EXPR_TYPE_COMPARE:
-      write_open_newline(ctx, s_opcode_name[expr->compare.opcode]);
-      write_expr(ctx, expr->compare.left);
-      write_expr(ctx, expr->compare.right);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->compare.opcode]);
       break;
 
     case WASM_EXPR_TYPE_CONST:
@@ -403,126 +387,89 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_CONVERT:
-      write_open_newline(ctx, s_opcode_name[expr->convert.opcode]);
-      write_expr(ctx, expr->convert.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->convert.opcode]);
+      break;
+
+    case WASM_EXPR_TYPE_DROP:
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_DROP]);
       break;
 
     case WASM_EXPR_TYPE_GET_LOCAL:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
-      write_var(ctx, &expr->get_local.var, NEXT_CHAR_NONE);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
+      write_var(ctx, &expr->get_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_GROW_MEMORY]);
-      write_expr(ctx, expr->grow_memory.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_GROW_MEMORY]);
       break;
 
-    case WASM_EXPR_TYPE_IF: {
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_IF]);
-      write_expr(ctx, expr->if_.cond);
-      write_block(ctx, &expr->if_.true_, "then");
-      write_close_newline(ctx);
+    case WASM_EXPR_TYPE_IF:
+      write_block(ctx, &expr->if_.true_, s_opcode_name[WASM_OPCODE_IF],
+                  s_opcode_name[WASM_OPCODE_ELSE]);
       break;
-    }
 
-    case WASM_EXPR_TYPE_IF_ELSE: {
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_IF]);
-      write_expr(ctx, expr->if_else.cond);
-      write_block(ctx, &expr->if_else.true_, "then");
-      write_block(ctx, &expr->if_else.false_, "else");
-      write_close_newline(ctx);
+    case WASM_EXPR_TYPE_IF_ELSE:
+      write_block(ctx, &expr->if_else.true_, s_opcode_name[WASM_OPCODE_IF],
+                  s_opcode_name[WASM_OPCODE_ELSE]);
+      write_block(ctx, &expr->if_else.false_, NULL,
+                  s_opcode_name[WASM_OPCODE_END]);
       break;
-    }
 
     case WASM_EXPR_TYPE_LOAD:
-      write_open_space(ctx, s_opcode_name[expr->load.opcode]);
+      write_puts_space(ctx, s_opcode_name[expr->load.opcode]);
       if (expr->load.offset)
         writef(ctx, "offset=%" PRIu64, expr->load.offset);
       if (!wasm_is_naturally_aligned(expr->load.opcode, expr->load.align))
         writef(ctx, "align=%u", expr->load.align);
-      write_newline(ctx, NO_FORCE_NEWLINE);
-      write_expr(ctx, expr->load.addr);
-      write_close_newline(ctx);
+      write_newline(ctx, FORCE_NEWLINE);
       break;
 
-    case WASM_EXPR_TYPE_LOOP: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_LOOP]);
-      WasmBool has_outer_name =
-          write_string_slice_opt(ctx, &expr->loop.outer, NEXT_CHAR_SPACE);
-      WasmBool has_inner_name =
-          write_string_slice_opt(ctx, &expr->loop.inner, NEXT_CHAR_SPACE);
-      if (!has_outer_name || !has_inner_name) {
-        writef(ctx, " ;;");
-        if (!has_outer_name)
-          writef(ctx, "exit = @%d", ctx->depth);
-        if (!has_inner_name) {
-          writef(ctx, "cont = @%d", ctx->depth + 1);
-        }
-      }
-      write_newline(ctx, FORCE_NEWLINE);
-      ctx->depth += 2;
-      write_expr_list(ctx, expr->loop.first);
-      ctx->depth -= 2;
-      write_close_newline(ctx);
+    case WASM_EXPR_TYPE_LOOP:
+      write_block(ctx, &expr->loop, s_opcode_name[WASM_OPCODE_LOOP],
+                  s_opcode_name[WASM_OPCODE_END]);
       break;
-    }
 
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
       break;
 
     case WASM_EXPR_TYPE_NOP:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_NOP]);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_NOP]);
       break;
 
     case WASM_EXPR_TYPE_RETURN:
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_RETURN]);
-      if (expr->return_.expr)
-        write_expr(ctx, expr->return_.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_RETURN]);
       break;
 
     case WASM_EXPR_TYPE_SELECT:
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_SELECT]);
-      write_expr(ctx, expr->select.true_);
-      write_expr(ctx, expr->select.false_);
-      write_expr(ctx, expr->select.cond);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_SELECT]);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
       write_var(ctx, &expr->set_local.var, NEXT_CHAR_NEWLINE);
-      write_expr(ctx, expr->set_local.expr);
-      write_close_newline(ctx);
       break;
 
     case WASM_EXPR_TYPE_STORE:
-      write_open_space(ctx, s_opcode_name[expr->store.opcode]);
+      write_puts_space(ctx, s_opcode_name[expr->store.opcode]);
       if (expr->store.offset)
         writef(ctx, "offset=%" PRIu64, expr->store.offset);
       if (!wasm_is_naturally_aligned(expr->store.opcode, expr->store.align))
         writef(ctx, "align=%u", expr->store.align);
-      write_newline(ctx, NO_FORCE_NEWLINE);
-      write_expr(ctx, expr->store.addr);
-      write_expr(ctx, expr->store.value);
-      write_close_newline(ctx);
+      write_newline(ctx, FORCE_NEWLINE);
+      break;
+
+    case WASM_EXPR_TYPE_TEE_LOCAL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_TEE_LOCAL]);
+      write_var(ctx, &expr->tee_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_UNARY:
-      write_open_newline(ctx, s_opcode_name[expr->unary.opcode]);
-      write_expr(ctx, expr->unary.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->unary.opcode]);
       break;
 
     case WASM_EXPR_TYPE_UNREACHABLE:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_UNREACHABLE]);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_UNREACHABLE]);
       break;
 
     default:

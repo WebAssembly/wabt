@@ -68,6 +68,7 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_CONST,
   WASM_EXPR_TYPE_CONVERT,
   WASM_EXPR_TYPE_CURRENT_MEMORY,
+  WASM_EXPR_TYPE_DROP,
   WASM_EXPR_TYPE_GET_LOCAL,
   WASM_EXPR_TYPE_GROW_MEMORY,
   WASM_EXPR_TYPE_IF,
@@ -79,6 +80,7 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_SELECT,
   WASM_EXPR_TYPE_SET_LOCAL,
   WASM_EXPR_TYPE_STORE,
+  WASM_EXPR_TYPE_TEE_LOCAL,
   WASM_EXPR_TYPE_UNARY,
   WASM_EXPR_TYPE_UNREACHABLE,
 } WasmExprType;
@@ -112,50 +114,20 @@ struct WasmExpr {
   WasmExprType type;
   WasmExpr* next;
   union {
-    WasmBlock block;
-    struct { WasmExpr* cond; WasmBlock true_, false_; } if_else;
-    struct { WasmExpr* cond; WasmBlock true_; } if_;
-    struct { WasmVar var; WasmExpr *cond, *expr; } br_if;
+    struct { WasmOpcode opcode; } binary, compare, convert, unary;
+    WasmBlock block, loop;
+    struct { WasmVar var; uint8_t arity; } br, br_if;
     struct {
-      WasmLabel inner, outer;
-      WasmExpr* first;
-    } loop;
-    struct { WasmVar var; WasmExpr* expr; } br;
-    struct { WasmExpr* expr; } return_;
-    struct {
-      WasmExpr* key;
-      WasmExpr* expr;
       WasmVarVector targets;
       WasmVar default_target;
+      uint8_t arity;
     } br_table;
-    struct { WasmVar var; WasmExpr* first_arg; size_t num_args; } call;
-    struct {
-      WasmVar var;
-      WasmExpr* expr;
-      WasmExpr* first_arg;
-      size_t num_args;
-    } call_indirect;
-    struct { WasmVar var; } get_local;
-    struct { WasmVar var; WasmExpr* expr; } set_local;
-    struct {
-      WasmOpcode opcode;
-      uint32_t align;
-      uint64_t offset;
-      WasmExpr* addr;
-    } load;
-    struct {
-      WasmOpcode opcode;
-      uint32_t align;
-      uint64_t offset;
-      WasmExpr *addr, *value;
-    } store;
+    struct { WasmVar var; } call, call_import, call_indirect;
     WasmConst const_;
-    struct { WasmOpcode opcode; WasmExpr* expr; } unary;
-    struct { WasmOpcode opcode; WasmExpr *left, *right; } binary;
-    struct { WasmExpr *cond, *true_, *false_; } select;
-    struct { WasmOpcode opcode; WasmExpr *left, *right; } compare;
-    struct { WasmOpcode opcode; WasmExpr *expr; } convert;
-    struct { WasmExpr* expr; } grow_memory;
+    struct { WasmVar var; } get_local, set_local, tee_local;
+    struct { WasmBlock true_; } if_;
+    struct { WasmBlock true_, false_; } if_else;
+    struct { WasmOpcode opcode; uint32_t align; uint64_t offset; } load, store;
   };
 };
 
@@ -343,53 +315,37 @@ typedef struct WasmScript {
 
 typedef struct WasmExprVisitor {
   void* user_data;
-  WasmResult (*begin_binary_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_binary_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_binary_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_block_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_block_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_br_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_br_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_br_if_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_br_if_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_br_table_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_br_table_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_call_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_call_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_call_import_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_call_import_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_call_indirect_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_call_indirect_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_compare_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_compare_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_br_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_br_if_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_br_table_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_call_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_call_import_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_call_indirect_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_compare_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_const_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_convert_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_convert_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_convert_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_current_memory_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_drop_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_get_local_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_grow_memory_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_grow_memory_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_grow_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_if_expr)(WasmExpr*, void* user_data);
-  WasmResult (*after_if_cond_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_if_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_if_else_expr)(WasmExpr*, void* user_data);
-  WasmResult (*after_if_else_cond_expr)(WasmExpr*, void* user_data);
   WasmResult (*after_if_else_true_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_if_else_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_load_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_load_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_load_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_loop_expr)(WasmExpr*, void* user_data);
   WasmResult (*end_loop_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_nop_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_return_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_return_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_select_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_select_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_set_local_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_set_local_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_store_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_store_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_unary_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_unary_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_return_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_select_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_set_local_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_store_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_tee_local_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_unary_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_unreachable_expr)(WasmExpr*, void* user_data);
 } WasmExprVisitor;
 
@@ -418,19 +374,22 @@ WasmExpr* wasm_new_call_indirect_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_compare_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_const_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_convert_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_current_memory_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_drop_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_get_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_grow_memory_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_if_else_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_if_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_if_else_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_load_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_loop_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_nop_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_return_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_tee_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_unary_expr(struct WasmAllocator*);
-/* for nop, unreachable and current_memory */
-WasmExpr* wasm_new_empty_expr(struct WasmAllocator*, WasmExprType);
+WasmExpr* wasm_new_unreachable_expr(struct WasmAllocator*);
 
 /* destruction functions. not needed unless you're creating your own AST
  elements */

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (if (i32.const 0) (nop) (nop) (nop))))
 (;; STDERR ;;;
-parse/expr/bad-if-too-many.txt:2:45: syntax error, unexpected (, expecting )
+parse/expr/bad-if-too-many.txt:2:50: syntax error, unexpected ), expecting ELSE
 (module (func (if (i32.const 0) (nop) (nop) (nop))))
-                                            ^
+                                                 ^
 ;;; STDERR ;;)

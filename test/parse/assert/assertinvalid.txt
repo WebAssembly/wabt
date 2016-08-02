@@ -1,17 +1,22 @@
 ;;; FLAGS: --spec
 (assert_invalid
-  (module (func (i32.const 1)) (export "foo" 1))
+  (module
+    (func
+      (drop (i32.const 1)))
+    (export "foo" 1))
   "unknown function 1") ;; string is ignored
 (assert_invalid
-  (module (func (result i32) (nop)))
+  (module
+    (func (result i32)
+      (nop)))
   "type mismatch")
 (;; STDOUT ;;;
 assert_invalid error:
-  parse/assert/assertinvalid.txt:3:46: function variable out of range (max 1)
-  (module (func (i32.const 1)) (export "foo" 1))
-                                             ^
+  parse/assert/assertinvalid.txt:6:19: function variable out of range (max 1)
+    (export "foo" 1))
+                  ^
 assert_invalid error:
-  parse/assert/assertinvalid.txt:6:30: type mismatch in nop. got void, expected i32
-  (module (func (result i32) (nop)))
-                             ^
+  parse/assert/assertinvalid.txt:10:6: type mismatch at function result. got void, expected i32
+    (func (result i32)
+     ^^^^
 ;;; STDOUT ;;)
