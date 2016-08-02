@@ -1,6 +1,6 @@
 (module
   (func
-    (select (i32.const 2) (i32.const 3) (i32.const 1))
-    (select (i64.const 2) (i64.const 3) (i32.const 1))
-    (select (f32.const 2) (f32.const 3) (i32.const 1))
-    (select (f64.const 2) (f64.const 3) (i32.const 1))))
+    (drop (select (i32.const 2) (i32.const 3) (i32.const 1)))
+    (drop (select (i64.const 2) (i64.const 3) (i32.const 1)))
+    (drop (select (f32.const 2) (f32.const 3) (i32.const 1)))
+    (drop (select (f64.const 2) (f64.const 3) (i32.const 1)))))

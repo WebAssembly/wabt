@@ -158,8 +158,7 @@ static WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
 
 static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  push_label(ctx, &expr->loop.outer);
-  push_label(ctx, &expr->loop.inner);
+  push_label(ctx, &expr->loop.label);
   return WASM_OK;
 }
 
@@ -170,21 +169,21 @@ static WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult begin_br_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_br_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br.var);
   use_name_for_var(ctx->allocator, label, &expr->br.var);
   return WASM_OK;
 }
 
-static WasmResult begin_br_if_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_br_if_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   WasmLabel* label = find_label_by_var(ctx, &expr->br_if.var);
   use_name_for_var(ctx->allocator, label, &expr->br_if.var);
   return WASM_OK;
 }
 
-static WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_br_table_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   size_t i;
   WasmVarVector* targets = &expr->br_table.targets;
@@ -199,24 +198,24 @@ static WasmResult begin_br_table_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult begin_call_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_call_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(
       use_name_for_func_var(ctx->allocator, ctx->module, &expr->call.var));
   return WASM_OK;
 }
 
-static WasmResult begin_call_import_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_call_import_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(
       use_name_for_import_var(ctx->allocator, ctx->module, &expr->call.var));
   return WASM_OK;
 }
 
-static WasmResult begin_call_indirect_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_call_indirect_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(use_name_for_func_type_var(ctx->allocator, ctx->module,
-                                          &expr->call_indirect.var));
+  CHECK_RESULT(
+      use_name_for_func_type_var(ctx->allocator, ctx->module, &expr->call.var));
   return WASM_OK;
 }
 
@@ -227,7 +226,7 @@ static WasmResult on_get_local_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult after_if_cond_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_if_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   push_label(ctx, &expr->if_.true_.label);
   return WASM_OK;
@@ -239,7 +238,7 @@ static WasmResult end_if_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult after_if_else_cond_expr(WasmExpr* expr, void* user_data) {
+static WasmResult begin_if_else_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   push_label(ctx, &expr->if_else.true_.label);
   return WASM_OK;
@@ -258,7 +257,7 @@ static WasmResult end_if_else_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult begin_set_local_expr(WasmExpr* expr, void* user_data) {
+static WasmResult on_set_local_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->set_local.var));
@@ -331,19 +330,19 @@ WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.visitor.end_block_expr = end_block_expr;
   ctx.visitor.begin_loop_expr = begin_loop_expr;
   ctx.visitor.end_loop_expr = end_loop_expr;
-  ctx.visitor.begin_br_expr = begin_br_expr;
-  ctx.visitor.begin_br_if_expr = begin_br_if_expr;
-  ctx.visitor.begin_br_table_expr = begin_br_table_expr;
-  ctx.visitor.begin_call_expr = begin_call_expr;
-  ctx.visitor.begin_call_import_expr = begin_call_import_expr;
-  ctx.visitor.begin_call_indirect_expr = begin_call_indirect_expr;
+  ctx.visitor.on_br_expr = on_br_expr;
+  ctx.visitor.on_br_if_expr = on_br_if_expr;
+  ctx.visitor.on_br_table_expr = on_br_table_expr;
+  ctx.visitor.on_call_expr = on_call_expr;
+  ctx.visitor.on_call_import_expr = on_call_import_expr;
+  ctx.visitor.on_call_indirect_expr = on_call_indirect_expr;
   ctx.visitor.on_get_local_expr = on_get_local_expr;
-  ctx.visitor.after_if_cond_expr = after_if_cond_expr;
+  ctx.visitor.begin_if_expr = begin_if_expr;
   ctx.visitor.end_if_expr = end_if_expr;
-  ctx.visitor.after_if_else_cond_expr = after_if_else_cond_expr;
+  ctx.visitor.begin_if_else_expr = begin_if_else_expr;
   ctx.visitor.after_if_else_true_expr = after_if_else_true_expr;
   ctx.visitor.end_if_else_expr = end_if_else_expr;
-  ctx.visitor.begin_set_local_expr = begin_set_local_expr;
+  ctx.visitor.on_set_local_expr = on_set_local_expr;
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.param_index_to_name);
   wasm_destroy_string_slice_vector(allocator, &ctx.local_index_to_name);

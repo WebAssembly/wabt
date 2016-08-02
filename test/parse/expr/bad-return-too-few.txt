@@ -3,7 +3,7 @@
   (func (result i32)
     (return)))
 (;; STDERR ;;;
-parse/expr/bad-return-too-few.txt:4:5: type mismatch of return. got void, expected i32
+parse/expr/bad-return-too-few.txt:4:6: type stack size too small at return. got 0, expected at least 1
     (return)))
-    ^
+     ^^^^^^
 ;;; STDERR ;;)

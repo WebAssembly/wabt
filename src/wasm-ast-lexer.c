@@ -198,7 +198,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     hexdigit =  [0-9a-fA-F];
     letter =    [a-zA-Z];
     symbol =    [+\-*\/\\\^~=<>!?@#$%&|:`.];
-    tick =      "`";
+    tick =      "'";
     escape =    [nt\\'"];
     character = [^"\\\x00-\x1f\x7f] | "\\" escape | "\\" hexdigit hexdigit;
     sign =      [+-];
@@ -248,13 +248,15 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "br"                  { RETURN(BR); }
     <i> "br_if"               { RETURN(BR_IF); }
     <i> "br_table"            { RETURN(BR_TABLE); }
-    <i> "case"                { RETURN(CASE); }
     <i> "call"                { RETURN(CALL); }
     <i> "call_import"         { RETURN(CALL_IMPORT); }
     <i> "call_indirect"       { RETURN(CALL_INDIRECT); }
+    <i> "drop"                { RETURN(DROP); }
+    <i> "end"                 { RETURN(END); }
     <i> "return"              { RETURN(RETURN); }
     <i> "get_local"           { RETURN(GET_LOCAL); }
     <i> "set_local"           { RETURN(SET_LOCAL); }
+    <i> "tee_local"           { RETURN(TEE_LOCAL); }
     <i> "i32.load"            { OPCODE(I32_LOAD); RETURN(LOAD); }
     <i> "i64.load"            { OPCODE(I64_LOAD); RETURN(LOAD); }
     <i> "f32.load"            { OPCODE(F32_LOAD); RETURN(LOAD); }

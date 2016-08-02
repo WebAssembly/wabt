@@ -62,6 +62,15 @@
 
 #define USE_NATURAL_ALIGNMENT (~0)
 
+static WasmExprList join_exprs1(WasmLocation* loc, WasmExpr* expr1);
+static WasmExprList join_exprs2(WasmLocation* loc, WasmExprList* expr1,
+                                WasmExpr* expr2);
+static WasmExprList join_exprs3(WasmLocation* loc, WasmExprList* expr1,
+                                WasmExprList* expr2, WasmExpr* expr3);
+static WasmExprList join_exprs4(WasmLocation* loc, WasmExprList* expr1,
+                                WasmExprList* expr2, WasmExprList* expr3,
+                                WasmExpr* expr4);
+
 static WasmFuncField* new_func_field(WasmAllocator* allocator) {
   return wasm_alloc_zero(allocator, sizeof(WasmFuncField), WASM_DEFAULT_ALIGN);
 }
@@ -122,13 +131,13 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %token LPAR "("
 %token RPAR ")"
 %token NAT INT FLOAT TEXT VAR VALUE_TYPE
-%token NOP BLOCK IF THEN ELSE LOOP BR BR_IF BR_TABLE CASE
+%token NOP DROP BLOCK END IF THEN ELSE LOOP BR BR_IF BR_TABLE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
-%token GET_LOCAL SET_LOCAL LOAD STORE OFFSET ALIGN
+%token GET_LOCAL SET_LOCAL TEE_LOCAL LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
+%token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token FUNC START TYPE PARAM RESULT LOCAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
-%token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
 %token EOF 0 "EOF"
 
@@ -145,8 +154,8 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<export_> export
 %type<export_memory> export_memory
 %type<exported_func> func
-%type<expr> expr expr1 expr_opt
-%type<expr_list> expr_list non_empty_expr_list
+%type<expr> op
+%type<expr_list> expr expr1 expr_list
 %type<func_fields> func_fields func_body
 %type<func> func_info
 %type<func_sig> func_type
@@ -159,22 +168,22 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<script> script
 %type<segment> segment segment_contents
 %type<segments> segment_list
-%type<text> bind_var labeling quoted_text export_opt
+%type<text> bind_var labeling labeling1 quoted_text export_opt
 %type<text_list> text_list
 %type<types> value_type_list
-%type<u32> align segment_address
+%type<u32> nat align segment_address
 %type<u64> offset initial_pages max_pages
 %type<vars> table var_list
 %type<var> start type_use var
 
 %destructor { wasm_destroy_text_list(parser->allocator, &$$); } text_list
-%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling quoted_text
+%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } bind_var labeling labeling1 quoted_text
 %destructor { wasm_destroy_string_slice(parser->allocator, &$$.text); } literal
 %destructor { wasm_destroy_type_vector(parser->allocator, &$$); } value_type_list
 %destructor { wasm_destroy_var(parser->allocator, &$$); } var
 %destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } table var_list
-%destructor { wasm_destroy_expr(parser->allocator, $$); } expr expr1 expr_opt
-%destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } expr_list non_empty_expr_list
+%destructor { wasm_destroy_expr(parser->allocator, $$); } op
+%destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } expr expr1 expr_list
 %destructor { wasm_destroy_func_fields(parser->allocator, $$); } func_fields func_body
 %destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } func_info
 %destructor { wasm_destroy_segment(parser->allocator, &$$); } segment segment_contents
@@ -241,12 +250,23 @@ func_type :
 
 /* Expressions */
 
+nat :
+    NAT {
+      if (WASM_FAILED(wasm_parse_int32($1.text.start,
+                                       $1.text.start + $1.text.length, &$$,
+                                       WASM_PARSE_UNSIGNED_ONLY))) {
+        wasm_ast_parser_error(&@1, lexer, parser, "invalid int " PRIstringslice,
+                              WASM_PRINTF_STRING_SLICE_ARG($1.text));
+      }
+    }
+;
+
 literal :
-    INT {
+    NAT {
       $$.type = $1.type;
       DUPTEXT($$.text, $1.text);
     }
-  | NAT {
+  | INT {
       $$.type = $1.type;
       DUPTEXT($$.text, $1.text);
     }
@@ -311,8 +331,9 @@ segment_contents :
 
 labeling :
     /* empty */ %prec LOW { WASM_ZERO_MEMORY($$); }
-  | bind_var { $$ = $1; }
+  | labeling1
 ;
+labeling1 : bind_var ;
 
 offset :
     /* empty */ { $$ = 0; }
@@ -338,130 +359,107 @@ align :
 ;
 
 expr :
-    LPAR expr1 RPAR { $$ = $2; $$->loc = @1; }
+    op { $$ = join_exprs1(&@1, $1); }
+  | LPAR expr1 RPAR { $$ = $2; }
 ;
-expr1 :
-    NOP {
-      $$ = wasm_new_empty_expr(parser->allocator, WASM_EXPR_TYPE_NOP);
+op :
+    UNREACHABLE {
+      $$ = wasm_new_unreachable_expr(parser->allocator);
     }
-  | BLOCK labeling expr_list {
+  | NOP {
+      $$ = wasm_new_nop_expr(parser->allocator);
+    }
+  | DROP {
+      $$ = wasm_new_drop_expr(parser->allocator);
+    }
+  | BLOCK labeling expr_list END {
       $$ = wasm_new_block_expr(parser->allocator);
       $$->block.label = $2;
       $$->block.first = $3.first;
     }
-  | IF expr expr {
-      $$ = wasm_new_if_expr(parser->allocator);
-      $$->if_.cond = $2;
-      $$->if_.true_.first = $3;
-    }
-  | IF expr LPAR THEN labeling expr_list RPAR {
-      $$ = wasm_new_if_expr(parser->allocator);
-      $$->if_.cond = $2;
-      $$->if_.true_.label = $5;
-      $$->if_.true_.first = $6.first;
-    }
-  | IF expr expr expr {
-      $$ = wasm_new_if_else_expr(parser->allocator);
-      $$->if_else.cond = $2;
-      $$->if_else.true_.first = $3;
-      $$->if_else.false_.first = $4;
-    }
-  | IF expr LPAR THEN labeling expr_list RPAR LPAR ELSE labeling expr_list RPAR {
-      $$ = wasm_new_if_else_expr(parser->allocator);
-      $$->if_else.cond = $2;
-      $$->if_else.true_.label = $5;
-      $$->if_else.true_.first = $6.first;
-      $$->if_else.false_.label = $10;
-      $$->if_else.false_.first = $11.first;
-    }
-  | BR_IF var expr {
-      $$ = wasm_new_br_if_expr(parser->allocator);
-      $$->br_if.var = $2;
-      $$->br_if.cond = $3;
-    }
-  | BR_IF var expr expr {
-      $$ = wasm_new_br_if_expr(parser->allocator);
-      $$->br_if.var = $2;
-      $$->br_if.expr = $3;
-      $$->br_if.cond = $4;
-    }
-  | LOOP labeling expr_list {
+  | LOOP labeling expr_list END {
       $$ = wasm_new_loop_expr(parser->allocator);
-      WASM_ZERO_MEMORY($$->loop.outer);
-      $$->loop.inner = $2;
+      $$->loop.label = $2;
       $$->loop.first = $3.first;
     }
-  | LOOP bind_var bind_var expr_list {
-      $$ = wasm_new_loop_expr(parser->allocator);
-      $$->loop.outer = $2;
-      $$->loop.inner = $3;
-      $$->loop.first = $4.first;
+  | LOOP labeling1 labeling1 expr_list END {
+      $$ = wasm_new_block_expr(parser->allocator);
+      $$->block.label = $2;
+      WasmExpr* loop = wasm_new_loop_expr(parser->allocator);
+      loop->loc = @1;
+      loop->loop.label = $3;
+      loop->loop.first = $4.first;
+      $$->block.first = loop;
     }
-  | BR var expr_opt {
+  | BR nat var {
       $$ = wasm_new_br_expr(parser->allocator);
-      $$->br.var = $2;
-      $$->br.expr = $3;
+      $$->br.arity = $2;
+      $$->br.var = $3;
     }
-  | RETURN expr_opt {
+  | BR_IF nat var {
+      $$ = wasm_new_br_if_expr(parser->allocator);
+      $$->br_if.arity = $2;
+      $$->br_if.var = $3;
+    }
+  | BR_TABLE nat var_list var {
+      $$ = wasm_new_br_table_expr(parser->allocator);
+      $$->br_table.arity = $2;
+      $$->br_table.targets = $3;
+      $$->br_table.default_target = $4;
+    }
+  | RETURN {
       $$ = wasm_new_return_expr(parser->allocator);
-      $$->return_.expr = $2;
     }
-  | BR_TABLE var_list var expr {
-      $$ = wasm_new_br_table_expr(parser->allocator);
-      $$->br_table.key = $4;
-      $$->br_table.expr = NULL;
-      $$->br_table.targets = $2;
-      $$->br_table.default_target = $3;
+  | IF labeling expr_list END {
+      $$ = wasm_new_if_expr(parser->allocator);
+      $$->if_.true_.label = $2;
+      $$->if_.true_.first = $3.first;
     }
-  | BR_TABLE var_list var expr expr {
-      $$ = wasm_new_br_table_expr(parser->allocator);
-      $$->br_table.key = $5;
-      $$->br_table.expr = $4;
-      $$->br_table.targets = $2;
-      $$->br_table.default_target = $3;
+  | IF labeling expr_list ELSE labeling expr_list END {
+      $$ = wasm_new_if_else_expr(parser->allocator);
+      $$->if_else.true_.label = $2;
+      $$->if_else.true_.first = $3.first;
+      $$->if_else.false_.label = $5;
+      $$->if_else.false_.first = $6.first;
     }
-  | CALL var expr_list {
+  | SELECT {
+      $$ = wasm_new_select_expr(parser->allocator);
+    }
+  | CALL var {
       $$ = wasm_new_call_expr(parser->allocator);
       $$->call.var = $2;
-      $$->call.first_arg = $3.first;
-      $$->call.num_args = $3.size;
     }
-  | CALL_IMPORT var expr_list {
-      $$ = wasm_new_call_import_expr(parser->allocator);
-      $$->call.var = $2;
-      $$->call.first_arg = $3.first;
-      $$->call.num_args = $3.size;
+  | CALL_IMPORT var {
+      $$ = wasm_new_call_expr(parser->allocator);
+      $$->call_import.var = $2;
     }
-  | CALL_INDIRECT var expr expr_list {
+  | CALL_INDIRECT var {
       $$ = wasm_new_call_indirect_expr(parser->allocator);
       $$->call_indirect.var = $2;
-      $$->call_indirect.expr = $3;
-      $$->call_indirect.first_arg = $4.first;
-      $$->call_indirect.num_args = $4.size;
     }
   | GET_LOCAL var {
       $$ = wasm_new_get_local_expr(parser->allocator);
       $$->get_local.var = $2;
     }
-  | SET_LOCAL var expr {
+  | SET_LOCAL var {
       $$ = wasm_new_set_local_expr(parser->allocator);
       $$->set_local.var = $2;
-      $$->set_local.expr = $3;
     }
-  | LOAD offset align expr {
+  | TEE_LOCAL var {
+      $$ = wasm_new_tee_local_expr(parser->allocator);
+      $$->tee_local.var = $2;
+    }
+  | LOAD offset align {
       $$ = wasm_new_load_expr(parser->allocator);
       $$->load.opcode = $1;
       $$->load.offset = $2;
       $$->load.align = $3;
-      $$->load.addr = $4;
     }
-  | STORE offset align expr expr {
-      $$ = wasm_new_store_expr(parser->allocator);
+  | STORE offset align {
+      $$ = wasm_new_load_expr(parser->allocator);
       $$->store.opcode = $1;
       $$->store.offset = $2;
       $$->store.align = $3;
-      $$->store.addr = $4;
-      $$->store.value = $5;
     }
   | CONST literal {
       $$ = wasm_new_const_expr(parser->allocator);
@@ -475,65 +473,236 @@ expr1 :
       }
       wasm_free(parser->allocator, (char*)$2.text.start);
     }
-  | UNARY expr {
+  | UNARY {
       $$ = wasm_new_unary_expr(parser->allocator);
       $$->unary.opcode = $1;
-      $$->unary.expr = $2;
     }
-  | BINARY expr expr {
+  | BINARY {
       $$ = wasm_new_binary_expr(parser->allocator);
       $$->binary.opcode = $1;
-      $$->binary.left = $2;
-      $$->binary.right = $3;
     }
-  | SELECT expr expr expr {
-      $$ = wasm_new_select_expr(parser->allocator);
-      $$->select.true_ = $2;
-      $$->select.false_ = $3;
-      $$->select.cond = $4;
-    }
-  | COMPARE expr expr {
+  | COMPARE {
       $$ = wasm_new_compare_expr(parser->allocator);
       $$->compare.opcode = $1;
-      $$->compare.left = $2;
-      $$->compare.right = $3;
     }
-  | CONVERT expr {
+  | CONVERT {
       $$ = wasm_new_convert_expr(parser->allocator);
       $$->convert.opcode = $1;
-      $$->convert.expr = $2;
-    }
-  | UNREACHABLE {
-      $$ = wasm_new_empty_expr(parser->allocator, WASM_EXPR_TYPE_UNREACHABLE);
     }
   | CURRENT_MEMORY {
-      $$ = wasm_new_empty_expr(parser->allocator,
-                               WASM_EXPR_TYPE_CURRENT_MEMORY);
+      $$ = wasm_new_current_memory_expr(parser->allocator);
+    }
+  | GROW_MEMORY {
+      $$ = wasm_new_grow_memory_expr(parser->allocator);
+    }
+;
+expr1 :
+    UNREACHABLE {
+      $$ = join_exprs1(&@1, wasm_new_unreachable_expr(parser->allocator));
+    }
+  | NOP {
+      $$ = join_exprs1(&@1, wasm_new_nop_expr(parser->allocator));
+    }
+  | DROP expr {
+      $$ = join_exprs2(&@1, &$2, wasm_new_drop_expr(parser->allocator));
+    }
+  | BLOCK labeling expr_list {
+      WasmExpr* expr = wasm_new_block_expr(parser->allocator);
+      expr->block.label = $2;
+      expr->block.first = $3.first;
+      $$ = join_exprs1(&@1, expr);
+    }
+  | LOOP labeling expr_list {
+      WasmExpr* expr = wasm_new_loop_expr(parser->allocator);
+      expr->loop.label = $2;
+      expr->loop.first = $3.first;
+      $$ = join_exprs1(&@1, expr);
+    }
+  | LOOP labeling1 labeling1 expr_list {
+      WasmExpr* block = wasm_new_block_expr(parser->allocator);
+      block->block.label = $2;
+      WasmExpr* loop = wasm_new_loop_expr(parser->allocator);
+      loop->loc = @1;
+      loop->loop.label = $3;
+      loop->loop.first = $4.first;
+      block->block.first = loop;
+      $$ = join_exprs1(&@1, block);
+    }
+  | BR var {
+      WasmExpr* expr = wasm_new_br_expr(parser->allocator);
+      expr->br.arity = 0;
+      expr->br.var = $2;
+      $$ = join_exprs1(&@1, expr);
+    }
+  | BR var expr {
+      WasmExpr* expr = wasm_new_br_expr(parser->allocator);
+      expr->br.arity = 1;
+      expr->br.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | BR_IF var expr {
+      WasmExpr* expr = wasm_new_br_if_expr(parser->allocator);
+      expr->br_if.arity = 0;
+      expr->br_if.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | BR_IF var expr expr {
+      WasmExpr* expr = wasm_new_br_if_expr(parser->allocator);
+      expr->br_if.arity = 1;
+      expr->br_if.var = $2;
+      $$ = join_exprs3(&@1, &$3, &$4, expr);
+    }
+  | BR_TABLE var_list var expr {
+      WasmExpr* expr = wasm_new_br_table_expr(parser->allocator);
+      expr->br_table.arity = 0;
+      expr->br_table.targets = $2;
+      expr->br_table.default_target = $3;
+      $$ = join_exprs2(&@1, &$4, expr);
+    }
+  | BR_TABLE var_list var expr expr {
+      WasmExpr* expr = wasm_new_br_table_expr(parser->allocator);
+      expr->br_table.arity = 1;
+      expr->br_table.targets = $2;
+      expr->br_table.default_target = $3;
+      $$ = join_exprs3(&@1, &$4, &$5, expr);
+    }
+  | RETURN {
+      WasmExpr* expr = wasm_new_return_expr(parser->allocator);
+      $$ = join_exprs1(&@1, expr);
+    }
+  | RETURN expr {
+      WasmExpr* expr = wasm_new_return_expr(parser->allocator);
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | IF expr expr {
+      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      expr->if_.true_.first = $3.first;
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | IF expr expr expr {
+      WasmExpr* expr = wasm_new_if_else_expr(parser->allocator);
+      expr->if_else.true_.first = $3.first;
+      expr->if_else.false_.first = $4.first;
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | IF expr LPAR THEN labeling expr_list RPAR {
+      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      expr->if_.true_.label = $5;
+      expr->if_.true_.first = $6.first;
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | IF expr LPAR THEN labeling expr_list RPAR LPAR ELSE labeling expr_list RPAR {
+      WasmExpr* expr = wasm_new_if_else_expr(parser->allocator);
+      expr->if_else.true_.label = $5;
+      expr->if_else.true_.first = $6.first;
+      expr->if_else.false_.label = $10;
+      expr->if_else.false_.first = $11.first;
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | IF expr_list ELSE expr_list {
+      WasmExpr* expr = wasm_new_if_else_expr(parser->allocator);
+      expr->if_else.true_.first = $2.first;
+      expr->if_else.false_.first = $4.first;
+      $$ = join_exprs1(&@1, expr);
+    }
+  | SELECT expr expr expr {
+      $$ = join_exprs4(&@1, &$2, &$3, &$4,
+                       wasm_new_select_expr(parser->allocator));
+    }
+  | CALL var expr_list {
+      WasmExpr* expr = wasm_new_call_expr(parser->allocator);
+      expr->call.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | CALL_IMPORT var expr_list {
+      WasmExpr* expr = wasm_new_call_import_expr(parser->allocator);
+      expr->call_import.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | CALL_INDIRECT var expr expr_list {
+      WasmExpr* expr = wasm_new_call_indirect_expr(parser->allocator);
+      expr->call_indirect.var = $2;
+      $$ = join_exprs3(&@1, &$3, &$4, expr);
+    }
+  | GET_LOCAL var {
+      WasmExpr* expr = wasm_new_get_local_expr(parser->allocator);
+      expr->get_local.var = $2;
+      $$ = join_exprs1(&@1, expr);
+    }
+  | SET_LOCAL var expr {
+      WasmExpr* expr = wasm_new_set_local_expr(parser->allocator);
+      expr->set_local.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | TEE_LOCAL var expr {
+      WasmExpr* expr = wasm_new_tee_local_expr(parser->allocator);
+      expr->tee_local.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | LOAD offset align expr {
+      WasmExpr* expr = wasm_new_load_expr(parser->allocator);
+      expr->load.opcode = $1;
+      expr->load.offset = $2;
+      expr->load.align = $3;
+      $$ = join_exprs2(&@1, &$4, expr);
+    }
+  | STORE offset align expr expr {
+      WasmExpr* expr = wasm_new_store_expr(parser->allocator);
+      expr->store.opcode = $1;
+      expr->store.offset = $2;
+      expr->store.align = $3;
+      $$ = join_exprs3(&@1, &$4, &$5, expr);
+    }
+  | CONST literal {
+      WasmExpr* expr = wasm_new_const_expr(parser->allocator);
+      expr->const_.loc = @1;
+      if (WASM_FAILED(parse_const($1, $2.type, $2.text.start,
+                                  $2.text.start + $2.text.length,
+                                  &expr->const_))) {
+        wasm_ast_parser_error(&@2, lexer, parser,
+                              "invalid literal \"" PRIstringslice "\"",
+                              WASM_PRINTF_STRING_SLICE_ARG($2.text));
+      }
+      wasm_free(parser->allocator, (char*)$2.text.start);
+      $$ = join_exprs1(&@1, expr);
+    }
+  | UNARY expr {
+      WasmExpr* expr = wasm_new_unary_expr(parser->allocator);
+      expr->unary.opcode = $1;
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | BINARY expr expr {
+      WasmExpr* expr = wasm_new_binary_expr(parser->allocator);
+      expr->binary.opcode = $1;
+      $$ = join_exprs3(&@1, &$2, &$3, expr);
+    }
+  | COMPARE expr expr {
+      WasmExpr* expr = wasm_new_compare_expr(parser->allocator);
+      expr->compare.opcode = $1;
+      $$ = join_exprs3(&@1, &$2, &$3, expr);
+    }
+  | CONVERT expr {
+      WasmExpr* expr = wasm_new_convert_expr(parser->allocator);
+      expr->convert.opcode = $1;
+      $$ = join_exprs2(&@1, &$2, expr);
+    }
+  | CURRENT_MEMORY {
+      WasmExpr* expr = wasm_new_current_memory_expr(parser->allocator);
+      $$ = join_exprs1(&@1, expr);
     }
   | GROW_MEMORY expr {
-      $$ = wasm_new_grow_memory_expr(parser->allocator);
-      $$->grow_memory.expr = $2;
-    }
-;
-expr_opt :
-    /* empty */ { $$ = NULL; }
-  | expr
-;
-non_empty_expr_list :
-    expr {
-      $$.first = $$.last = $1;
-      $$.size = 1;
-    }
-  | non_empty_expr_list expr {
-      $$ = $1;
-      $$.last->next = $2;
-      $$.last = $2;
-      $$.size++;
+      WasmExpr* expr = wasm_new_grow_memory_expr(parser->allocator);
+      $$ = join_exprs2(&@1, &$2, expr);
     }
 ;
 expr_list :
     /* empty */ { WASM_ZERO_MEMORY($$); }
-  | non_empty_expr_list
+  | expr expr_list {
+      $$.first = $1.first;
+      $1.last->next = $2.first;
+      $$.last = $2.last ? $2.last : $1.first;
+      $$.size = $1.size + $2.size;
+    }
 ;
 
 /* Functions */
@@ -1106,6 +1275,68 @@ script_start :
 ;
 
 %%
+
+static void append_expr_list(WasmExprList* expr_list, WasmExprList* expr) {
+  if (!expr->first)
+    return;
+  if (expr_list->last)
+    expr_list->last->next = expr->first;
+  else
+    expr_list->first = expr->first;
+  expr_list->last = expr->last;
+  expr_list->size += expr->size;
+}
+
+static void append_expr(WasmExprList* expr_list, WasmExpr* expr) {
+  if (expr_list->last)
+    expr_list->last->next = expr;
+  else
+    expr_list->first = expr;
+  expr_list->last = expr;
+  expr_list->size++;
+}
+
+static WasmExprList join_exprs1(WasmLocation* loc, WasmExpr* expr1) {
+  WasmExprList result;
+  WASM_ZERO_MEMORY(result);
+  append_expr(&result, expr1);
+  expr1->loc = *loc;
+  return result;
+}
+
+static WasmExprList join_exprs2(WasmLocation* loc, WasmExprList* expr1,
+                                WasmExpr* expr2) {
+  WasmExprList result;
+  WASM_ZERO_MEMORY(result);
+  append_expr_list(&result, expr1);
+  append_expr(&result, expr2);
+  expr2->loc = *loc;
+  return result;
+}
+
+static WasmExprList join_exprs3(WasmLocation* loc, WasmExprList* expr1,
+                                WasmExprList* expr2, WasmExpr* expr3) {
+  WasmExprList result;
+  WASM_ZERO_MEMORY(result);
+  append_expr_list(&result, expr1);
+  append_expr_list(&result, expr2);
+  append_expr(&result, expr3);
+  expr3->loc = *loc;
+  return result;
+}
+
+static WasmExprList join_exprs4(WasmLocation* loc, WasmExprList* expr1,
+                                WasmExprList* expr2, WasmExprList* expr3,
+                                WasmExpr* expr4) {
+  WasmExprList result;
+  WASM_ZERO_MEMORY(result);
+  append_expr_list(&result, expr1);
+  append_expr_list(&result, expr2);
+  append_expr_list(&result, expr3);
+  append_expr(&result, expr4);
+  expr4->loc = *loc;
+  return result;
+}
 
 static WasmResult parse_const(WasmType type,
                               WasmLiteralType literal_type,

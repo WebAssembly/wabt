@@ -1,1 +1,3 @@
-(module (func (local $foo i32) (get_local $foo)))
+(module
+  (func (local $foo i32)
+    (drop (get_local $foo))))

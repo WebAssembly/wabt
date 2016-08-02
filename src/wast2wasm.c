@@ -400,10 +400,10 @@ int main(int argc, char** argv) {
   if (WASM_SUCCEEDED(result)) {
     if (s_check) {
       /* full validation of the module */
-      result = wasm_check_ast(lexer, &script, &s_error_handler);
+      result = wasm_check_ast(allocator, lexer, &script, &s_error_handler);
     } else {
       /* minimal checks necessary to ensure we can generate a binary */
-      result = wasm_check_names(lexer, &script, &s_error_handler);
+      result = wasm_check_names(allocator, lexer, &script, &s_error_handler);
     }
 
     if (WASM_SUCCEEDED(result) && s_check_assert_invalid) {
