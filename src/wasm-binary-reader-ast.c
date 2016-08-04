@@ -662,7 +662,7 @@ static WasmResult on_call_expr(uint32_t arity,
   LOGF("%" PRIzd ": call:%d %d\n", ctx->expr_stack_size, arity, func_index);
   assert(func_index < ctx->module->funcs.size);
   WasmFunc* func = ctx->module->funcs.data[func_index];
-  uint32_t sig_index = func->decl.type_var.index;
+  uint32_t sig_index = (uint32_t)func->decl.type_var.index;
   assert(sig_index < ctx->module->func_types.size);
   WasmFuncType* func_type = ctx->module->func_types.data[sig_index];
 
@@ -684,7 +684,7 @@ static WasmResult on_call_import_expr(uint32_t arity,
        import_index);
   assert(import_index < ctx->module->imports.size);
   WasmImport* import = ctx->module->imports.data[import_index];
-  uint32_t sig_index = import->decl.type_var.index;
+  uint32_t sig_index = (uint32_t)import->decl.type_var.index;
   assert(sig_index < ctx->module->func_types.size);
   WasmFuncType* func_type = ctx->module->func_types.data[sig_index];
 

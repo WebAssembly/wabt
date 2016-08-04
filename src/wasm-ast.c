@@ -167,7 +167,7 @@ static int find_binding_index_by_name(const WasmBindingHash* hash,
 int wasm_get_index_from_var(const WasmBindingHash* hash, const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
     return find_binding_index_by_name(hash, &var->name);
-  return var->index;
+  return (int)var->index;
 }
 
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
@@ -193,7 +193,7 @@ int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var) {
 
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_INDEX)
-    return var->index;
+    return (int)var->index;
 
   int result = find_binding_index_by_name(&func->param_bindings, &var->name);
   if (result != -1)
