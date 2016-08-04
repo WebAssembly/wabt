@@ -416,7 +416,9 @@ static void logging_on_error(uint32_t offset,
                              const char* message,
                              void* user_data) {
   LoggingContext* ctx = user_data;
-  FORWARD(on_error, offset, message);
+  if (ctx->reader->on_error) {
+    ctx->reader->on_error(offset, message, ctx->reader->user_data);
+  }
 }
 
 static WasmResult logging_begin_module(void* user_data) {
