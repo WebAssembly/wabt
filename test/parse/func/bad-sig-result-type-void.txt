@@ -6,7 +6,4 @@
 parse/func/bad-sig-result-type-void.txt:4:4: type mismatch between function result and function type result. got void, expected f32
   (func (type $t) (param i32)))
    ^^^^
-parse/func/bad-sig-result-type-void.txt:4:4: type mismatch of function result. got void, expected f32
-  (func (type $t) (param i32)))
-   ^^^^
 ;;; STDERR ;;)

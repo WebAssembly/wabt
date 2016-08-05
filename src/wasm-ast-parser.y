@@ -81,6 +81,11 @@ static WasmResult parse_const(WasmType type, WasmLiteralType literal_type,
 static void dup_text_list(WasmAllocator*, WasmTextList* text_list,
                           void** out_data, size_t* out_size);
 
+static WasmBool is_empty_signature(WasmFuncSignature* sig);
+
+static void append_implicit_func_declaration(WasmAllocator*, WasmLocation*,
+                                             WasmModule*, WasmFuncDeclaration*);
+
 typedef struct BinaryErrorCallbackData {
   WasmLocation* loc;
   WasmAstLexer* lexer;
@@ -573,15 +578,9 @@ func_info :
     func_fields {
       $$ = new_func(parser->allocator);
       WasmFuncField* field = $1;
+
       while (field) {
         WasmFuncField* next = field->next;
-
-        if (field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES ||
-            field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM ||
-            field->type == WASM_FUNC_FIELD_TYPE_RESULT_TYPE) {
-          $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
-        }
-
         switch (field->type) {
           case WASM_FUNC_FIELD_TYPE_EXPRS:
             $$->first_expr = field->first_expr;
@@ -653,7 +652,6 @@ func :
   | LPAR FUNC export_opt func_info RPAR {
       $$.func = $4;
       $$.func->loc = @2;
-      $$.func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
       $$.export_.name = $3;
       $$.export_.var.type = WASM_VAR_TYPE_INDEX;
       $$.export_.var.index = -1;
@@ -661,7 +659,6 @@ func :
   | LPAR FUNC export_opt bind_var func_info RPAR {
       $$.func = $5;
       $$.func->loc = @2;
-      $$.func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
       $$.func->name = $4;
       $$.export_.name = $3;
       $$.export_.var.type = WASM_VAR_TYPE_INDEX;
@@ -783,7 +780,6 @@ import :
       $$ = new_import(parser->allocator);
       $$->module_name = $3;
       $$->func_name = $4;
-      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
       $$->decl.sig = $5;
     }
   | LPAR IMPORT bind_var quoted_text quoted_text func_type RPAR  /* Sugar */ {
@@ -791,7 +787,6 @@ import :
       $$->name = $3;
       $$->module_name = $4;
       $$->func_name = $5;
-      $$->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
       $$->decl.sig = $6;
     }
 ;
@@ -820,6 +815,9 @@ module_fields :
       field->type = WASM_MODULE_FIELD_TYPE_FUNC;
       field->func = *$2.func;
       wasm_free(parser->allocator, $2.func);
+
+      append_implicit_func_declaration(parser->allocator, &@2, $$,
+                                       &field->func.decl);
 
       WasmFunc* func_ptr = &field->func;
       wasm_append_func_ptr_value(parser->allocator, &$$->funcs, &func_ptr);
@@ -856,6 +854,9 @@ module_fields :
       field->type = WASM_MODULE_FIELD_TYPE_IMPORT;
       field->import = *$2;
       wasm_free(parser->allocator, $2);
+
+      append_implicit_func_declaration(parser->allocator, &@2, $$,
+                                       &field->import.decl);
 
       WasmImport* import_ptr = &field->import;
       wasm_append_import_ptr_value(parser->allocator, &$$->imports,
@@ -941,6 +942,35 @@ raw_module :
       $$.type = WASM_RAW_MODULE_TYPE_TEXT;
       $$.text = $3;
       $$.loc = @2;
+
+      /* resolve func type variables where the signature was not specified
+       * explicitly */
+      size_t i;
+      for (i = 0; i < $3->funcs.size; ++i) {
+        WasmFunc* func = $3->funcs.data[i];
+        if (wasm_decl_has_func_type(&func->decl) &&
+            is_empty_signature(&func->decl.sig)) {
+          WasmFuncType* func_type =
+              wasm_get_func_type_by_var($3, &func->decl.type_var);
+          if (func_type) {
+            func->decl.sig = func_type->sig;
+            func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
+          }
+        }
+      }
+
+      for (i = 0; i < $3->imports.size; ++i) {
+        WasmImport* import = $3->imports.data[i];
+        if (wasm_decl_has_func_type(&import->decl) &&
+            is_empty_signature(&import->decl.sig)) {
+          WasmFuncType* func_type =
+              wasm_get_func_type_by_var($3, &import->decl.type_var);
+          if (func_type) {
+            import->decl.sig = func_type->sig;
+            import->decl.flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
+          }
+        }
+      }
     }
   | LPAR MODULE text_list RPAR {
       $$.type = WASM_RAW_MODULE_TYPE_BINARY;
@@ -1163,6 +1193,30 @@ static void dup_text_list(WasmAllocator* allocator,
   }
   *out_data = result;
   *out_size = dest - result;
+}
+
+static WasmBool is_empty_signature(WasmFuncSignature* sig) {
+  return sig->result_type == WASM_TYPE_VOID && sig->param_types.size == 0;
+}
+
+static void append_implicit_func_declaration(WasmAllocator* allocator,
+                                             WasmLocation* loc,
+                                             WasmModule* module,
+                                             WasmFuncDeclaration* decl) {
+  if (wasm_decl_has_func_type(decl))
+    return;
+
+  int sig_index = wasm_get_func_type_index_by_decl(module, decl);
+  if (sig_index == -1) {
+    wasm_append_implicit_func_type(allocator, loc, module, &decl->sig);
+  } else {
+    /* signature already exists, share that one and destroy this one */
+    wasm_destroy_func_signature(allocator, &decl->sig);
+    WasmFuncSignature* sig = &module->func_types.data[sig_index]->sig;
+    decl->sig = *sig;
+  }
+
+  decl->flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
 }
 
 WasmResult wasm_parse_ast(WasmAstLexer* lexer,

@@ -222,6 +222,24 @@ WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
   return module->func_types.data[index];
 }
 
+int wasm_get_func_type_index_by_sig(const WasmModule* module,
+                                    const WasmFuncSignature* sig) {
+  size_t i;
+  for (i = 0; i < module->func_types.size; ++i)
+    if (wasm_signatures_are_equal(&module->func_types.data[i]->sig, sig))
+      return i;
+  return -1;
+}
+
+int wasm_get_func_type_index_by_decl(const WasmModule* module,
+                                     const WasmFuncDeclaration* decl) {
+  if (wasm_decl_has_func_type(decl)) {
+    return wasm_get_func_type_index_by_var(module, &decl->type_var);
+  } else {
+    return wasm_get_func_type_index_by_sig(module, &decl->sig);
+  }
+}
+
 WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
                                      const WasmVar* var) {
   int index = wasm_get_index_from_var(&module->import_bindings, var);
@@ -263,6 +281,21 @@ WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
     module->last_field->next = result;
   module->last_field = result;
   return result;
+}
+
+WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator* allocator,
+                                             WasmLocation* loc,
+                                             WasmModule* module,
+                                             WasmFuncSignature* sig) {
+  WasmModuleField* field = wasm_append_module_field(allocator, module);
+  field->loc = *loc;
+  field->type = WASM_MODULE_FIELD_TYPE_FUNC_TYPE;
+  field->func_type.sig = *sig;
+
+  WasmFuncType* func_type_ptr = &field->func_type;
+  wasm_append_func_type_ptr_value(allocator, &module->func_types,
+                                  &func_type_ptr);
+  return func_type_ptr;
 }
 
 #define ALLOC_EXPR_TYPE_ZERO(allocator, member)                                \
@@ -454,7 +487,8 @@ void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
 void wasm_destroy_func_declaration(WasmAllocator* allocator,
                                    WasmFuncDeclaration* decl) {
   wasm_destroy_var(allocator, &decl->type_var);
-  wasm_destroy_func_signature(allocator, &decl->sig);
+  if (!(decl->flags & WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE))
+    wasm_destroy_func_signature(allocator, &decl->sig);
 }
 
 void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
@@ -481,37 +515,6 @@ void wasm_destroy_export(WasmAllocator* allocator, WasmExport* export) {
 void wasm_destroy_func_type(WasmAllocator* allocator, WasmFuncType* func_type) {
   wasm_destroy_string_slice(allocator, &func_type->name);
   wasm_destroy_func_signature(allocator, &func_type->sig);
-}
-
-void wasm_destroy_func_fields(struct WasmAllocator* allocator,
-                              WasmFuncField* func_field) {
-  /* destroy the entire linked-list */
-  while (func_field) {
-    WasmFuncField* next_func_field = func_field->next;
-
-    switch (func_field->type) {
-      case WASM_FUNC_FIELD_TYPE_EXPRS:
-        wasm_destroy_expr_list(allocator, func_field->first_expr);
-        break;
-
-      case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
-      case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES:
-        wasm_destroy_type_vector(allocator, &func_field->types);
-        break;
-
-      case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
-      case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL:
-        wasm_destroy_string_slice(allocator, &func_field->bound_type.name);
-        break;
-
-      case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
-        /* nothing to free */
-        break;
-    }
-
-    wasm_free(allocator, func_field);
-    func_field = next_func_field;
-  }
 }
 
 void wasm_destroy_segment(WasmAllocator* allocator, WasmSegment* segment) {

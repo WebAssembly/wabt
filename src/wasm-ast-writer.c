@@ -584,14 +584,12 @@ static void write_func(Context* ctx,
     write_var(ctx, &func->decl.type_var, NEXT_CHAR_NONE);
     write_close_space(ctx);
   }
-  if (wasm_decl_has_signature(&func->decl)) {
-    write_type_bindings(ctx, "param", func, &func->decl.sig.param_types,
-                        &func->param_bindings);
-    if (wasm_get_result_type(module, func) != WASM_TYPE_VOID) {
-      write_open_space(ctx, "result");
-      write_type(ctx, wasm_get_result_type(module, func), NEXT_CHAR_NONE);
-      write_close_space(ctx);
-    }
+  write_type_bindings(ctx, "param", func, &func->decl.sig.param_types,
+                      &func->param_bindings);
+  if (wasm_get_result_type(module, func) != WASM_TYPE_VOID) {
+    write_open_space(ctx, "result");
+    write_type(ctx, wasm_get_result_type(module, func), NEXT_CHAR_NONE);
+    write_close_space(ctx);
   }
   write_newline(ctx, NO_FORCE_NEWLINE);
   if (func->local_types.size) {

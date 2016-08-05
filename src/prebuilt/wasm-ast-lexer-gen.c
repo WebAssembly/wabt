@@ -6010,7 +6010,6 @@ WasmAstLexer* wasm_new_ast_file_lexer(WasmAllocator* allocator,
   lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
     wasm_destroy_ast_lexer(lexer);
-    wasm_free(allocator, lexer);
     return NULL;
   }
   return lexer;

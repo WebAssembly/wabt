@@ -11,5 +11,5 @@ $invoke_1()
 $invoke_2() 
 $invoke_3() 
 $invoke_8() 
-612/612 tests passed.
+694/694 tests passed.
 ;;; STDOUT ;;)

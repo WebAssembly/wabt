@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/float_misc.wast
 (;; STDOUT ;;;
-354/354 tests passed.
+425/425 tests passed.
 ;;; STDOUT ;;)

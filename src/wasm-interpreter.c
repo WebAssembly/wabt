@@ -133,7 +133,9 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
  * 1 11111111 111...11 => 0xffffffff => -nan(0x7fffff)
  */
 
+#define F32_MAX 0x7f7fffffU
 #define F32_INF 0x7f800000U
+#define F32_NEG_MAX 0xff7fffffU
 #define F32_NEG_INF 0xff800000U
 #define F32_NEG_ONE 0xbf800000U
 #define F32_NEG_ZERO 0x80000000U
@@ -240,6 +242,20 @@ static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
 static WASM_INLINE WasmBool is_in_range_f64_demote_f32(uint64_t f64_bits) {
   return (f64_bits <= 0x47efffffe0000000ULL) ||
          (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc7efffffe0000000ULL);
+}
+
+/* The WebAssembly rounding mode means that these values (which are > F32_MAX)
+ * should be rounded to F32_MAX and not set to infinity. Unfortunately, UBSAN
+ * complains that the value is not representable as a float, so we'll special
+ * case them. */
+static WASM_INLINE WasmBool
+is_in_range_f64_demote_f32_round_to_f32_max(uint64_t f64_bits) {
+  return f64_bits > 0x47efffffe0000000ULL && f64_bits < 0x47effffff0000000ULL;
+}
+
+static WASM_INLINE WasmBool
+is_in_range_f64_demote_f32_round_to_neg_f32_max(uint64_t f64_bits) {
+  return f64_bits > 0xc7efffffe0000000ULL && f64_bits < 0xc7effffff0000000ULL;
 }
 
 #define IS_NAN_F32 is_nan_f32
@@ -1342,7 +1358,13 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_F32_DEMOTE_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        if (WASM_UNLIKELY(!is_in_range_f64_demote_f32(value))) {
+        if (WASM_LIKELY(is_in_range_f64_demote_f32(value))) {
+          PUSH_F32(BITCAST_FROM_F32((float)BITCAST_TO_F64(value)));
+        } else if (is_in_range_f64_demote_f32_round_to_f32_max(value)) {
+          PUSH_F32(F32_MAX);
+        } else if (is_in_range_f64_demote_f32_round_to_neg_f32_max(value)) {
+          PUSH_F32(F32_NEG_MAX);
+        } else {
           uint32_t sign = (value >> 32) & F32_SIGN_MASK;
           uint32_t tag = 0;
           if (IS_NAN_F64(value)) {
@@ -1350,8 +1372,6 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                   ((value >> (F64_SIG_BITS - F32_SIG_BITS)) & F32_SIG_MASK);
           }
           PUSH_F32(sign | F32_INF | tag);
-        } else {
-          PUSH_F32(BITCAST_FROM_F32((float)BITCAST_TO_F64(value)));
         }
         break;
       }

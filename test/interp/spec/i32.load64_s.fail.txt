@@ -1,0 +1,13 @@
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/i32.load64_s.fail.wast
+(;; STDERR ;;;
+Error running "sexpr-wasm":
+third_party/testsuite/i32.load64_s.fail.wast:1:52: unexpected token "i32.load64_s"
+(module (memory 1) (func (param i32) (result i32) (i32.load64_s (get_local 0))))
+                                                   ^^^^^^^^^^^^
+third_party/testsuite/i32.load64_s.fail.wast:1:65: syntax error, unexpected (
+(module (memory 1) (func (param i32) (result i32) (i32.load64_s (get_local 0))))
+                                                                ^
+
+;;; STDERR ;;)

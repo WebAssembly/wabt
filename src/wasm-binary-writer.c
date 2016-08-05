@@ -70,19 +70,9 @@ typedef struct Context {
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
 
-  int* import_sig_indexes;
-  int* func_sig_indexes;
   uint32_t* remapped_locals;         /* from unpacked -> packed index */
   uint32_t* reverse_remapped_locals; /* from packed -> unpacked index */
 } Context;
-
-WASM_DEFINE_VECTOR(func_signature, WasmFuncSignature);
-
-static void destroy_func_signature_vector_and_elements(
-    WasmAllocator* allocator,
-    WasmFuncSignatureVector* sigs) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *sigs, func_signature);
-}
 
 static void write_header(Context* ctx, const char* name, int index) {
   if (ctx->log_stream) {
@@ -303,93 +293,6 @@ static void push_label(Context* ctx,
 static void pop_label(Context* ctx, const WasmLabel* label) {
   ctx->max_depth--;
   pop_unused_label(ctx, label);
-}
-
-static int find_func_signature(const WasmFuncSignatureVector* sigs,
-                               const WasmType result_type,
-                               const WasmTypeVector* param_types) {
-  size_t i;
-  for (i = 0; i < sigs->size; ++i) {
-    const WasmFuncSignature* sig2 = &sigs->data[i];
-    if (sig2->result_type != result_type)
-      continue;
-    if (sig2->param_types.size != param_types->size)
-      continue;
-    size_t j;
-    for (j = 0; j < param_types->size; ++j) {
-      if (sig2->param_types.data[j] != param_types->data[j])
-        break;
-    }
-    if (j == param_types->size)
-      return i;
-  }
-  return -1;
-}
-
-static void get_or_create_func_signature(Context* ctx,
-                                         WasmFuncSignatureVector* sigs,
-                                         WasmType result_type,
-                                         const WasmTypeVector* param_types,
-                                         int* out_index) {
-  int index = find_func_signature(sigs, result_type, param_types);
-  if (index == -1) {
-    index = sigs->size;
-    WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
-    sig->result_type = result_type;
-    WASM_ZERO_MEMORY(sig->param_types);
-    wasm_extend_types(ctx->allocator, &sig->param_types, param_types);
-  }
-  *out_index = index;
-}
-
-static int get_signature_index(Context* ctx,
-                               const WasmModule* module,
-                               WasmFuncSignatureVector* sigs,
-                               const WasmFuncDeclaration* decl) {
-  int index = -1;
-  if (wasm_decl_has_signature(decl)) {
-    get_or_create_func_signature(ctx, sigs, decl->sig.result_type,
-                                 &decl->sig.param_types, &index);
-  } else {
-    assert(wasm_decl_has_func_type(decl));
-    index = wasm_get_func_type_index_by_var(module, &decl->type_var);
-    assert(index != -1);
-  }
-  return index;
-}
-
-static void get_func_signatures(Context* ctx,
-                                const WasmModule* module,
-                                WasmFuncSignatureVector* sigs) {
-  /* function types are not deduped; we don't want the signature index to match
-   if they were specified separately in the source */
-  size_t i;
-  for (i = 0; i < module->func_types.size; ++i) {
-    const WasmFuncType* func_type = module->func_types.data[i];
-    WasmFuncSignature* sig = wasm_append_func_signature(ctx->allocator, sigs);
-    sig->result_type = func_type->sig.result_type;
-    WASM_ZERO_MEMORY(sig->param_types);
-    wasm_extend_types(ctx->allocator, &sig->param_types,
-                      &func_type->sig.param_types);
-  }
-
-  ctx->import_sig_indexes =
-      wasm_realloc(ctx->allocator, ctx->import_sig_indexes,
-                   module->imports.size * sizeof(int), WASM_DEFAULT_ALIGN);
-  for (i = 0; i < module->imports.size; ++i) {
-    const WasmImport* import = module->imports.data[i];
-    ctx->import_sig_indexes[i] =
-        get_signature_index(ctx, module, sigs, &import->decl);
-  }
-
-  ctx->func_sig_indexes =
-      wasm_realloc(ctx->allocator, ctx->func_sig_indexes,
-                   module->funcs.size * sizeof(int), WASM_DEFAULT_ALIGN);
-  for (i = 0; i < module->funcs.size; ++i) {
-    const WasmFunc* func = module->funcs.data[i];
-    ctx->func_sig_indexes[i] =
-        get_signature_index(ctx, module, sigs, &func->decl);
-  }
 }
 
 static void remap_locals(Context* ctx,
@@ -779,14 +682,12 @@ static void write_module(Context* ctx, const WasmModule* module) {
   wasm_write_u32(&ctx->stream, WASM_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   wasm_write_u32(&ctx->stream, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
 
-  WasmFuncSignatureVector sigs;
-  WASM_ZERO_MEMORY(sigs);
-  get_func_signatures(ctx, module, &sigs);
-  if (sigs.size) {
+  if (module->func_types.size) {
     begin_section(ctx, WASM_SECTION_NAME_TYPE, leb_size_guess);
-    write_u32_leb128(&ctx->stream, sigs.size, "num types");
-    for (i = 0; i < sigs.size; ++i) {
-      const WasmFuncSignature* sig = &sigs.data[i];
+    write_u32_leb128(&ctx->stream, module->func_types.size, "num types");
+    for (i = 0; i < module->func_types.size; ++i) {
+      const WasmFuncType* func_type = module->func_types.data[i];
+      const WasmFuncSignature* sig = &func_type->sig;
       write_header(ctx, "type", i);
       wasm_write_u8(&ctx->stream, WASM_BINARY_TYPE_FORM_FUNCTION,
                     "function form");
@@ -812,7 +713,8 @@ static void write_module(Context* ctx, const WasmModule* module) {
     for (i = 0; i < module->imports.size; ++i) {
       const WasmImport* import = module->imports.data[i];
       write_header(ctx, "import header", i);
-      write_u32_leb128(&ctx->stream, ctx->import_sig_indexes[i],
+      write_u32_leb128(&ctx->stream,
+                       wasm_get_func_type_index_by_decl(module, &import->decl),
                        "import signature index");
       write_str(&ctx->stream, import->module_name.start,
                 import->module_name.length, WASM_PRINT_CHARS,
@@ -828,10 +730,13 @@ static void write_module(Context* ctx, const WasmModule* module) {
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
 
     for (i = 0; i < module->funcs.size; ++i) {
+      const WasmFunc* func = module->funcs.data[i];
       char desc[100];
       wasm_snprintf(desc, sizeof(desc), "function %" PRIzd " signature index",
                     i);
-      write_u32_leb128(&ctx->stream, ctx->func_sig_indexes[i], desc);
+      write_u32_leb128(&ctx->stream,
+                       wasm_get_func_type_index_by_decl(module, &func->decl),
+                       desc);
     }
     end_section(ctx);
   }
@@ -938,12 +843,9 @@ static void write_module(Context* ctx, const WasmModule* module) {
       write_u32_leb128(&ctx->stream, num_params_and_locals, "num locals");
 
       if (num_params_and_locals) {
-        const WasmFuncSignature* sig =
-            wasm_decl_get_signature(module, &func->decl);
         remap_locals(ctx, module, func);
-
         wasm_make_type_binding_reverse_mapping(
-            ctx->allocator, &sig->param_types, &func->param_bindings,
+            ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
             &index_to_name);
         size_t j;
         for (j = 0; j < num_params; ++j) {
@@ -971,7 +873,6 @@ static void write_module(Context* ctx, const WasmModule* module) {
 
     wasm_destroy_string_slice_vector(ctx->allocator, &index_to_name);
   }
-  destroy_func_signature_vector_and_elements(ctx->allocator, &sigs);
 }
 
 static void write_commands(Context* ctx, const WasmScript* script) {
@@ -995,8 +896,6 @@ static void write_commands(Context* ctx, const WasmScript* script) {
 }
 
 static void cleanup_context(Context* ctx) {
-  wasm_free(ctx->allocator, ctx->import_sig_indexes);
-  wasm_free(ctx->allocator, ctx->func_sig_indexes);
   wasm_free(ctx->allocator, ctx->remapped_locals);
   wasm_free(ctx->allocator, ctx->reverse_remapped_locals);
 }

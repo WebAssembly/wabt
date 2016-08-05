@@ -53,6 +53,26 @@ typedef struct WasmExportedFunc {
   WasmExport export_;
 } WasmExportedFunc;
 
+typedef enum WasmFuncFieldType {
+  WASM_FUNC_FIELD_TYPE_EXPRS,
+  WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
+  WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
+  WASM_FUNC_FIELD_TYPE_RESULT_TYPE,
+  WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
+  WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
+} WasmFuncFieldType;
+
+typedef struct WasmFuncField {
+  WasmFuncFieldType type;
+  union {
+    WasmExpr* first_expr;
+    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
+    WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
+    WasmType result_type;
+  };
+  struct WasmFuncField* next;
+} WasmFuncField;
+
 typedef union WasmToken {
   /* terminals */
   WasmStringSlice text;
@@ -122,6 +142,7 @@ void wasm_ast_format_error(WasmSourceErrorHandler*,
                            va_list);
 void wasm_destroy_exported_func(WasmAllocator*, WasmExportedFunc*);
 void wasm_destroy_text_list(WasmAllocator*, WasmTextList*);
+void wasm_destroy_func_fields(WasmAllocator*, WasmFuncField*);
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_PARSER_LEXER_SHARED_H_ */

@@ -86,3 +86,34 @@ void wasm_destroy_text_list(WasmAllocator* allocator, WasmTextList* text_list) {
     node = next;
   }
 }
+
+void wasm_destroy_func_fields(struct WasmAllocator* allocator,
+                              WasmFuncField* func_field) {
+  /* destroy the entire linked-list */
+  while (func_field) {
+    WasmFuncField* next_func_field = func_field->next;
+
+    switch (func_field->type) {
+      case WASM_FUNC_FIELD_TYPE_EXPRS:
+        wasm_destroy_expr_list(allocator, func_field->first_expr);
+        break;
+
+      case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
+      case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES:
+        wasm_destroy_type_vector(allocator, &func_field->types);
+        break;
+
+      case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
+      case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL:
+        wasm_destroy_string_slice(allocator, &func_field->bound_type.name);
+        break;
+
+      case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
+        /* nothing to free */
+        break;
+    }
+
+    wasm_free(allocator, func_field);
+    func_field = next_func_field;
+  }
+}

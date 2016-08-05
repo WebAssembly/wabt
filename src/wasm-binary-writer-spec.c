@@ -223,11 +223,27 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
                                      WasmModule* module,
                                      WasmType result_type,
                                      WasmStringSlice export_name) {
+  WasmFuncType* func_type;
+  WasmFuncSignature sig;
+  WASM_ZERO_MEMORY(sig);
+  sig.result_type = result_type;
+  int sig_index = wasm_get_func_type_index_by_sig(module, &sig);
+  if (sig_index == -1) {
+    WasmLocation loc;
+    WASM_ZERO_MEMORY(loc);
+    func_type = wasm_append_implicit_func_type(allocator, &loc, module, &sig);
+    sig_index = module->func_types.size - 1;
+  } else {
+    func_type = module->func_types.data[sig_index];
+  }
+
   WasmModuleField* func_field =
       append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_FUNC);
   WasmFunc* func = &func_field->func;
-  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_SIGNATURE;
-  func->decl.sig.result_type = result_type;
+  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+  func->decl.type_var.type = WASM_VAR_TYPE_INDEX;
+  func->decl.type_var.index = sig_index;
+  func->decl.sig = func_type->sig;
   int func_index = module->funcs.size - 1;
 
   WasmModuleField* export_field =

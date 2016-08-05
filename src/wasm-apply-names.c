@@ -274,8 +274,6 @@ static WasmResult visit_func(Context* ctx,
                                             &func->decl.type_var));
   }
 
-  assert(wasm_decl_has_signature(&func->decl));
-
   wasm_make_type_binding_reverse_mapping(
       ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
       &ctx->param_index_to_name);

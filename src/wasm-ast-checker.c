@@ -508,17 +508,9 @@ static void check_expr(Context* ctx,
     case WASM_EXPR_TYPE_CALL: {
       const WasmFunc* callee;
       if (WASM_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee))) {
-        const WasmFuncSignature* sig =
-            wasm_decl_get_signature(ctx->current_module, &callee->decl);
-        if (sig) {
-          check_call(ctx, &expr->loc, &callee->name, sig, expr->call.first_arg,
-                     expr->call.num_args, expected_type, "call");
-        } else {
-          assert(wasm_decl_has_func_type(&callee->decl));
-          /* We already know this will fail. Call anyway to print and log the
-           * error. */
-          check_func_type_var(ctx, &callee->decl.type_var, NULL);
-        }
+        check_call(ctx, &expr->loc, &callee->name, &callee->decl.sig,
+                   expr->call.first_arg, expr->call.num_args, expected_type,
+                   "call");
       }
       break;
     }
@@ -526,17 +518,9 @@ static void check_expr(Context* ctx,
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       const WasmImport* import;
       if (WASM_SUCCEEDED(check_import_var(ctx, &expr->call.var, &import))) {
-        const WasmFuncSignature* sig =
-            wasm_decl_get_signature(ctx->current_module, &import->decl);
-        if (sig) {
-          check_call(ctx, &expr->loc, &import->name, sig, expr->call.first_arg,
-                     expr->call.num_args, expected_type, "call_import");
-        } else {
-          assert(wasm_decl_has_func_type(&import->decl));
-          /* We already know this will fail. Call anyway to print and log the
-           * error. */
-          check_func_type_var(ctx, &import->decl.type_var, NULL);
-        }
+        check_call(ctx, &expr->loc, &import->name, &import->decl.sig,
+                   expr->call.first_arg, expr->call.num_args, expected_type,
+                   "call_import");
       }
       break;
     }
@@ -746,26 +730,22 @@ static void check_func(Context* ctx,
     const WasmFuncType* func_type;
     if (WASM_SUCCEEDED(
             check_func_type_var(ctx, &func->decl.type_var, &func_type))) {
-      if (wasm_decl_has_signature(&func->decl))
-        check_func_signature_matches_func_type(ctx, &func->loc, &func->decl.sig,
-                                               func_type);
+      check_func_signature_matches_func_type(ctx, &func->loc, &func->decl.sig,
+                                             func_type);
     }
   }
 
   check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
-  const WasmFuncSignature* sig =
-      wasm_decl_get_signature(ctx->current_module, &func->decl);
-  if (sig) {
-    /* The function has an implicit label; branching to it is equivalent to the
-     * returning from the function. */
-    LabelNode node;
-    WasmLabel label = wasm_empty_string_slice();
-    push_label(ctx, &func->loc, &node, &label, sig->result_type, "func");
-    check_expr_list(ctx, &func->loc, func->first_expr, sig->result_type,
-                    " of function result");
-    pop_label(ctx);
-  }
+  /* The function has an implicit label; branching to it is equivalent to the
+   * returning from the function. */
+  LabelNode node;
+  WasmLabel label = wasm_empty_string_slice();
+  push_label(ctx, &func->loc, &node, &label, func->decl.sig.result_type,
+             "func");
+  check_expr_list(ctx, &func->loc, func->first_expr, func->decl.sig.result_type,
+                  " of function result");
+  pop_label(ctx);
   ctx->current_func = NULL;
 }
 
