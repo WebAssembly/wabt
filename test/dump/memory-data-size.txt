@@ -5,7 +5,7 @@
 (module (memory 5))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
 0000008: 06                                         ; string length
 0000009: 6d65 6d6f 7279                             ; section id: "memory"
@@ -15,7 +15,7 @@
 0000012: 00                                         ; export mem
 000000f: 03                                         ; FIXUP section size
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
 0000008: 06                                         ; string length
 0000009: 6d65 6d6f 7279                             ; section id: "memory"
@@ -25,7 +25,7 @@
 0000012: 00                                         ; export mem
 000000f: 03                                         ; FIXUP section size
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
 0000008: 06                                         ; string length
 0000009: 6d65 6d6f 7279                             ; section id: "memory"
@@ -35,7 +35,7 @@
 0000012: 00                                         ; export mem
 000000f: 03                                         ; FIXUP section size
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
 0000008: 06                                         ; string length
 0000009: 6d65 6d6f 7279                             ; section id: "memory"

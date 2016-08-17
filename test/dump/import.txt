@@ -4,7 +4,7 @@
   (import "ignored" "test2" (param i32) (result i32)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -44,7 +44,7 @@
 000003c: 7465 7374 32                             test2  ; import function name
 0000022: 1e                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 650d 0240  
+0000000: 0061 736d 0c00 0000 0474 7970 650d 0240  
 0000010: 0401 0203 0400 4001 0101 0106 696d 706f  
 0000020: 7274 1e02 0007 6967 6e6f 7265 6404 7465  
 0000030: 7374 0107 6967 6e6f 7265 6405 7465 7374  

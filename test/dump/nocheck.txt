@@ -7,7 +7,7 @@
   (export "foo" 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"

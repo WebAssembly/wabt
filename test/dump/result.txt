@@ -6,7 +6,7 @@
   (func (result f64) (f64.const 0)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -74,7 +74,7 @@
 0000044: 0a                                         ; FIXUP func body size
 0000033: 1b                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6511 0440  
+0000000: 0061 736d 0c00 0000 0474 7970 6511 0440  
 0000010: 0001 0140 0001 0240 0001 0340 0001 0408  
 0000020: 6675 6e63 7469 6f6e 0504 0001 0203 0463  
 0000030: 6f64 651b 0403 0010 0003 0011 0006 0013  

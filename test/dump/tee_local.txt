@@ -1,6 +1,9 @@
 ;;; FLAGS: -dv
 (module
-  (func (local i32 i64 i64 f32 f32 f32 f64 f64 f64 f64)))
+  (func
+    (local i32)
+    (drop
+      (tee_local 0 (i32.const 0)))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
@@ -28,19 +31,18 @@
 0000024: 01                                         ; num functions
 ; function body 0
 0000025: 00                                         ; func body size (guess)
-0000026: 04                                         ; local decl count
+0000026: 01                                         ; local decl count
 0000027: 01                                         ; local type count
 0000028: 01                                         ; WASM_TYPE_I32
-0000029: 02                                         ; local type count
-000002a: 02                                         ; WASM_TYPE_I64
-000002b: 03                                         ; local type count
-000002c: 03                                         ; WASM_TYPE_F32
-000002d: 04                                         ; local type count
-000002e: 04                                         ; WASM_TYPE_F64
-0000025: 09                                         ; FIXUP func body size
-0000023: 0b                                         ; FIXUP section size
+0000029: 10                                         ; OPCODE_I32_CONST
+000002a: 00                                         ; i32 literal
+000002b: 19                                         ; OPCODE_TEE_LOCAL
+000002c: 00                                         ; local index
+000002d: 0b                                         ; OPCODE_DROP
+0000025: 08                                         ; FIXUP func body size
+0000023: 0a                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 650b 0109 0401 0102 0203 0304 04    
+0000020: 6f64 650a 0108 0101 0110 0019 000b       
 ;;; STDOUT ;;)

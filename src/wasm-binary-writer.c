@@ -484,8 +484,7 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_TEE_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       write_opcode(&ctx->stream, WASM_OPCODE_TEE_LOCAL);
-      write_u32_leb128(&ctx->stream, ctx->remapped_locals[index],
-                       "remapped local index");
+      write_u32_leb128(&ctx->stream, index, "local index");
       break;
     }
     case WASM_EXPR_TYPE_UNARY:
