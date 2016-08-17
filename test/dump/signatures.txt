@@ -13,7 +13,7 @@
   (type (func (param i32) (result f64))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -67,7 +67,7 @@
 0000033: 04                                         ; result_type
 000000d: 26                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6526 0940  
+0000000: 0061 736d 0c00 0000 0474 7970 6526 0940  
 0000010: 0101 0040 0102 0040 0103 0040 0104 0040  
 0000020: 0001 0140 0001 0240 0001 0340 0001 0440  
 0000030: 0101 0104                                

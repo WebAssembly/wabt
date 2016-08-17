@@ -2,11 +2,15 @@
 (module
   (func
     (if (i32.const 1)
-      (then (i32.const 2) (i32.const 3))
-      (else (i32.const 4) (i32.const 5)))))
+      (then
+        (drop (i32.const 2))
+        (drop (i32.const 3)))
+      (else
+        (drop (i32.const 4))
+        (drop (i32.const 5))))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -37,19 +41,23 @@
 0000029: 03                                         ; OPCODE_IF
 000002a: 10                                         ; OPCODE_I32_CONST
 000002b: 02                                         ; i32 literal
-000002c: 10                                         ; OPCODE_I32_CONST
-000002d: 03                                         ; i32 literal
-000002e: 04                                         ; OPCODE_ELSE
-000002f: 10                                         ; OPCODE_I32_CONST
-0000030: 04                                         ; i32 literal
+000002c: 0b                                         ; OPCODE_DROP
+000002d: 10                                         ; OPCODE_I32_CONST
+000002e: 03                                         ; i32 literal
+000002f: 0b                                         ; OPCODE_DROP
+0000030: 04                                         ; OPCODE_ELSE
 0000031: 10                                         ; OPCODE_I32_CONST
-0000032: 05                                         ; i32 literal
-0000033: 0f                                         ; OPCODE_END
-0000025: 0e                                         ; FIXUP func body size
-0000023: 10                                         ; FIXUP section size
+0000032: 04                                         ; i32 literal
+0000033: 0b                                         ; OPCODE_DROP
+0000034: 10                                         ; OPCODE_I32_CONST
+0000035: 05                                         ; i32 literal
+0000036: 0b                                         ; OPCODE_DROP
+0000037: 0f                                         ; OPCODE_END
+0000025: 12                                         ; FIXUP func body size
+0000023: 14                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000000: 0061 736d 0c00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 6510 010e 0010 0103 1002 1003 0410  
-0000030: 0410 050f                                
+0000020: 6f64 6514 0112 0010 0103 1002 0b10 030b  
+0000030: 0410 040b 1005 0b0f                      
 ;;; STDOUT ;;)

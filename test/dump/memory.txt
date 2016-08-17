@@ -3,7 +3,7 @@
   (memory 1 (segment 10 "hello") (segment 20 "goodbye")))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "memory"
 0000008: 06                                         ; string length
 0000009: 6d65 6d6f 7279                             ; section id: "memory"
@@ -29,7 +29,7 @@
 0000023: 676f 6f64 6279 65                          ; segment data
 0000018: 11                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 066d 656d 6f72 7903  
+0000000: 0061 736d 0c00 0000 066d 656d 6f72 7903  
 0000010: 0101 0004 6461 7461 1102 0a05 6865 6c6c  
 0000020: 6f14 0767 6f6f 6462 7965                 
 ;;; STDOUT ;;)

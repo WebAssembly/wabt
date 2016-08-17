@@ -2,16 +2,13 @@
 (module
   (import "foo" "bar" (param i32 f32) (result i32))
   (func (result i32)
-    ;; input import 0 -> output func 0
-    (call_import 0 (i32.const 1) (f32.const 2))
-    ;; input func 0 -> output func 1
-    ;; imports and funcs have different name/number spaces in the input format,
-    ;; but use the same number-space for the output format. Imports always come
-    ;; first.
+    ;; call import 0
+    (drop (call_import 0 (i32.const 1) (f32.const 2)))
+    ;; call func 0
     (call 0)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -62,17 +59,16 @@
 0000042: 13                                         ; OPCODE_F32_CONST
 0000043: 0000 0040                                  ; f32 literal
 0000047: 18                                         ; OPCODE_CALL_IMPORT
-0000048: 02                                         ; call_import arity
-0000049: 00                                         ; import index
+0000048: 00                                         ; import index
+0000049: 0b                                         ; OPCODE_DROP
 000004a: 16                                         ; OPCODE_CALL_FUNCTION
-000004b: 00                                         ; call arity
-000004c: 00                                         ; func index
-000003e: 0e                                         ; FIXUP func body size
-000003c: 10                                         ; FIXUP section size
+000004b: 00                                         ; func index
+000003e: 0d                                         ; FIXUP func body size
+000003c: 0f                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 650b 0240  
+0000000: 0061 736d 0c00 0000 0474 7970 650b 0240  
 0000010: 0201 0301 0140 0001 0106 696d 706f 7274  
 0000020: 0a01 0003 666f 6f03 6261 7208 6675 6e63  
-0000030: 7469 6f6e 0201 0104 636f 6465 1001 0e00  
-0000040: 1001 1300 0000 4018 0200 1600 00         
+0000030: 7469 6f6e 0201 0104 636f 6465 0f01 0d00  
+0000040: 1001 1300 0000 4018 000b 1600            
 ;;; STDOUT ;;)

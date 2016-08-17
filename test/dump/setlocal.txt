@@ -16,7 +16,7 @@
     (set_local 7 (i64.const 0))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -91,7 +91,7 @@
 0000025: 43                                         ; FIXUP func body size
 0000023: 45                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000000: 0061 736d 0c00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
 0000020: 6f64 6545 0143 0701 0401 0301 0202 0101  
 0000030: 0301 0401 0212 0000 0000 0000 0000 1500  
