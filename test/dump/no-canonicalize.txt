@@ -5,12 +5,15 @@
   (export "f1" $f1)
   (table $f2 $f3)
   (type $t (func (param i32) (result i32)))
-  (func $f1 (param i32 i32) (call_indirect $t (get_local 0) (get_local 1)))
-  (func $f2 (param i32) (i32.add (get_local 0) (i32.const 1)))
-  (func $f3 (param i32) (i32.mul (get_local 0) (i32.const 2))))
+  (func $f1 (param i32 i32)
+    (drop (call_indirect $t (get_local 0) (get_local 1))))
+  (func $f2 (param i32)
+    (drop (i32.add (get_local 0) (i32.const 1))))
+  (func $f3 (param i32)
+    (drop (i32.mul (get_local 0) (i32.const 2)))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -93,8 +96,8 @@
 000008e: 14                                         ; OPCODE_GET_LOCAL
 000008f: 01                                         ; local index
 0000090: 17                                         ; OPCODE_CALL_INDIRECT
-0000091: 01                                         ; call_indirect arity
-0000092: 01                                         ; signature index
+0000091: 01                                         ; signature index
+0000092: 0b                                         ; OPCODE_DROP
 0000086: 8880 8080 00                               ; FIXUP func body size
 ; function body 1
 0000093: 0000 0000 00                               ; func body size (guess)
@@ -104,19 +107,21 @@
 000009b: 10                                         ; OPCODE_I32_CONST
 000009c: 01                                         ; i32 literal
 000009d: 40                                         ; OPCODE_I32_ADD
-0000093: 8680 8080 00                               ; FIXUP func body size
+000009e: 0b                                         ; OPCODE_DROP
+0000093: 8780 8080 00                               ; FIXUP func body size
 ; function body 2
-000009e: 0000 0000 00                               ; func body size (guess)
-00000a3: 00                                         ; local decl count
-00000a4: 14                                         ; OPCODE_GET_LOCAL
-00000a5: 00                                         ; local index
-00000a6: 10                                         ; OPCODE_I32_CONST
-00000a7: 02                                         ; i32 literal
-00000a8: 42                                         ; OPCODE_I32_MUL
-000009e: 8680 8080 00                               ; FIXUP func body size
-0000080: a480 8080 00                               ; FIXUP section size
+000009f: 0000 0000 00                               ; func body size (guess)
+00000a4: 00                                         ; local decl count
+00000a5: 14                                         ; OPCODE_GET_LOCAL
+00000a6: 00                                         ; local index
+00000a7: 10                                         ; OPCODE_I32_CONST
+00000a8: 02                                         ; i32 literal
+00000a9: 42                                         ; OPCODE_I32_MUL
+00000aa: 0b                                         ; OPCODE_DROP
+000009f: 8780 8080 00                               ; FIXUP func body size
+0000080: a680 8080 00                               ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 658f 8080  
+0000000: 0061 736d 0c00 0000 0474 7970 658f 8080  
 0000010: 8000 0340 0101 0040 0101 0101 4002 0101  
 0000020: 0006 696d 706f 7274 8e80 8080 0001 0005  
 0000030: 7374 6469 6f05 7072 696e 7408 6675 6e63  
@@ -124,7 +129,7 @@
 0000050: 626c 6583 8080 8000 0201 0206 6d65 6d6f  
 0000060: 7279 8380 8080 0064 6400 0665 7870 6f72  
 0000070: 7485 8080 8000 0100 0266 3104 636f 6465  
-0000080: a480 8080 0003 8880 8080 0000 1400 1401  
-0000090: 1701 0186 8080 8000 0014 0010 0140 8680  
-00000a0: 8080 0000 1400 1002 42                   
+0000080: a680 8080 0003 8880 8080 0000 1400 1401  
+0000090: 1701 0b87 8080 8000 0014 0010 0140 0b87  
+00000a0: 8080 8000 0014 0010 0242 0b              
 ;;; STDOUT ;;)

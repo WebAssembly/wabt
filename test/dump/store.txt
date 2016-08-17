@@ -12,7 +12,7 @@
     (f64.store (i32.const 0) (f64.const 0))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -104,7 +104,7 @@
 0000025: 4a                                         ; FIXUP func body size
 0000023: 4c                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000000: 0061 736d 0c00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
 0000020: 6f64 654c 014a 0010 0010 002e 0000 1000  
 0000030: 1000 2f01 0010 0010 0033 0200 1000 1100  

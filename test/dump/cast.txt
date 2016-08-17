@@ -1,13 +1,13 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (f32.reinterpret/i32 (i32.const 0))
-    (i32.reinterpret/f32 (f32.const 0))
-    (f64.reinterpret/i64 (i64.const 0))
-    (i64.reinterpret/f64 (f64.const 0))))
+    (drop (f32.reinterpret/i32 (i32.const 0)))
+    (drop (i32.reinterpret/f32 (f32.const 0)))
+    (drop (f64.reinterpret/i64 (i64.const 0)))
+    (drop (i64.reinterpret/f64 (f64.const 0)))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
 ; section "type"
 0000008: 04                                         ; string length
 0000009: 7479 7065                                  ; section id: "type"
@@ -36,20 +36,25 @@
 0000027: 10                                         ; OPCODE_I32_CONST
 0000028: 00                                         ; i32 literal
 0000029: ad                                         ; OPCODE_F32_REINTERPRET_I32
-000002a: 13                                         ; OPCODE_F32_CONST
-000002b: 0000 0000                                  ; f32 literal
-000002f: b4                                         ; OPCODE_I32_REINTERPRET_F32
-0000030: 11                                         ; OPCODE_I64_CONST
-0000031: 00                                         ; i64 literal
-0000032: b3                                         ; OPCODE_F64_REINTERPRET_I64
-0000033: 12                                         ; OPCODE_F64_CONST
-0000034: 0000 0000 0000 0000                        ; f64 literal
-000003c: b5                                         ; OPCODE_I64_REINTERPRET_F64
-0000025: 17                                         ; FIXUP func body size
-0000023: 19                                         ; FIXUP section size
+000002a: 0b                                         ; OPCODE_DROP
+000002b: 13                                         ; OPCODE_F32_CONST
+000002c: 0000 0000                                  ; f32 literal
+0000030: b4                                         ; OPCODE_I32_REINTERPRET_F32
+0000031: 0b                                         ; OPCODE_DROP
+0000032: 11                                         ; OPCODE_I64_CONST
+0000033: 00                                         ; i64 literal
+0000034: b3                                         ; OPCODE_F64_REINTERPRET_I64
+0000035: 0b                                         ; OPCODE_DROP
+0000036: 12                                         ; OPCODE_F64_CONST
+0000037: 0000 0000 0000 0000                        ; f64 literal
+000003f: b5                                         ; OPCODE_I64_REINTERPRET_F64
+0000040: 0b                                         ; OPCODE_DROP
+0000025: 1b                                         ; FIXUP func body size
+0000023: 1d                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
+0000000: 0061 736d 0c00 0000 0474 7970 6504 0140  
 0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 6519 0117 0010 00ad 1300 0000 00b4  
-0000030: 1100 b312 0000 0000 0000 0000 b5         
+0000020: 6f64 651d 011b 0010 00ad 0b13 0000 0000  
+0000030: b40b 1100 b30b 1200 0000 0000 0000 00b5  
+0000040: 0b                                       
 ;;; STDOUT ;;)
