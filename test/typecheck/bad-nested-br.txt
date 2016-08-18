@@ -12,7 +12,7 @@
     ;; return statement here, or a value returned from (br $outer).
   ))
 (;; STDERR ;;;
-typecheck/bad-nested-br.txt:8:13: type mismatch of br value. got void, expected i32
-            (br $outer))
-            ^
+typecheck/bad-nested-br.txt:3:4: unable to join type void (type of last operation) with type i32 (function signature result type).
+  (func (result i32)
+   ^^^^
 ;;; STDERR ;;)

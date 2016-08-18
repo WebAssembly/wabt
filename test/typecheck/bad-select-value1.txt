@@ -1,9 +1,10 @@
 ;;; ERROR: 1
 (module
-  (func (result i64)
-    (select (i64.const 0) (f32.const 0) (i32.const 0))))
+  (func
+    (drop
+      (select (i64.const 0) (f32.const 0) (i32.const 0)))))
 (;; STDERR ;;;
-typecheck/bad-select-value1.txt:4:27: type mismatch of argment 1 of select op. got f32, expected i64
-    (select (i64.const 0) (f32.const 0) (i32.const 0))))
-                          ^
+typecheck/bad-select-value1.txt:5:8: type mismatch at select. got i64, expected f32
+      (select (i64.const 0) (f32.const 0) (i32.const 0)))))
+       ^^^^^^
 ;;; STDERR ;;)

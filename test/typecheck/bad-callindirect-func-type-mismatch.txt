@@ -3,7 +3,7 @@
   (type $t (func))
   (func (call_indirect $t (f32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-callindirect-func-type-mismatch.txt:4:27: type mismatch of function index. got f32, expected i32
+typecheck/bad-callindirect-func-type-mismatch.txt:4:10: type mismatch at call_indirect function index. got f32, expected i32
   (func (call_indirect $t (f32.const 0))))
-                          ^
+         ^^^^^^^^^^^^^
 ;;; STDERR ;;)

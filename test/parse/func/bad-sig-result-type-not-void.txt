@@ -7,7 +7,7 @@ parse/func/bad-sig-result-type-not-void.txt:4:4: type mismatch between function 
 
   (func (type $t) (param i32) (result f32)))
    ^^^^
-parse/func/bad-sig-result-type-not-void.txt:4:4: type mismatch at function result. got void, expected f32
+parse/func/bad-sig-result-type-not-void.txt:4:4: unable to join type void (type of last operation) with type f32 (function signature result type).
   (func (type $t) (param i32) (result f32)))
    ^^^^
 ;;; STDERR ;;)
