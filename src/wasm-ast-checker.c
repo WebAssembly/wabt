@@ -58,6 +58,10 @@ static WasmCheckType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
 static WasmCheckType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
+static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
+
 typedef size_t WasmSizeT;
 WASM_DEFINE_VECTOR(size_t, WasmSizeT);
 
@@ -69,7 +73,6 @@ typedef enum CheckStyle {
 typedef struct LabelNode {
   const WasmLabel* label;
   WasmCheckType type;
-  const char* desc;
   struct LabelNode* next;
 } LabelNode;
 
@@ -301,12 +304,10 @@ static void push_label(Context* ctx,
                        const WasmLocation* loc,
                        LabelNode* node,
                        const WasmLabel* label,
-                       WasmCheckType type,
-                       const char* desc) {
+                       WasmCheckType type) {
   node->label = label;
   node->next = ctx->top_label;
   node->type = type;
-  node->desc = desc;
   ctx->top_label = node;
   ctx->max_depth++;
 }
@@ -402,8 +403,9 @@ static void check_assert_return_nan_type(Context* ctx,
 static WasmCheckType join_type(Context* ctx,
                                const WasmLocation* loc,
                                WasmCheckType t1,
+                               const char* t1_desc,
                                WasmCheckType t2,
-                               const char* desc) {
+                               const char* t2_desc) {
   if (t1 == WASM_CHECK_TYPE_ANY) {
     return t2;
   } else if (t2 == WASM_CHECK_TYPE_ANY) {
@@ -412,8 +414,8 @@ static WasmCheckType join_type(Context* ctx,
     return t1;
   } else {
     print_error(ctx, CHECK_STYLE_FULL, loc,
-                "type mismatch at %s. got %s, expected %s", desc,
-                s_type_names[t1], s_type_names[t2]);
+                "unable to join type %s (%s) with type %s (%s).",
+                s_type_names[t1], t1_desc, s_type_names[t2], t2_desc);
     return t1;
   }
 }
@@ -542,20 +544,24 @@ static WasmCheckType check_block(Context* ctx,
 static void check_expr(Context* ctx, const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY: {
-      WasmCheckType rtype = s_opcode_rtype[expr->binary.opcode];
-      WasmCheckType type1 = s_opcode_type1[expr->binary.opcode];
-      WasmCheckType type2 = s_opcode_type2[expr->binary.opcode];
-      transform_stack(ctx, &expr->loc, "binary", 2, 1, type1, type2, rtype);
+      WasmOpcode opcode = expr->binary.opcode;
+      WasmCheckType rtype = s_opcode_rtype[opcode];
+      WasmCheckType type1 = s_opcode_type1[opcode];
+      WasmCheckType type2 = s_opcode_type2[opcode];
+      transform_stack(ctx, &expr->loc, s_opcode_name[opcode], 2, 1, type1,
+                      type2, rtype);
       break;
     }
 
     case WASM_EXPR_TYPE_BLOCK: {
       LabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->block.label,
-                 WASM_CHECK_TYPE_ANY, "block");
+                 WASM_CHECK_TYPE_ANY);
       WasmCheckType rtype =
           check_block(ctx, &expr->loc, expr->block.first, "block");
-      rtype = join_type(ctx, &expr->loc, node.type, rtype, "block");
+      rtype = join_type(ctx, &expr->loc, node.type,
+                        "joined type of block's br* targets", rtype,
+                        "block's result type");
       pop_label(ctx);
       push_type(ctx, rtype);
       break;
@@ -627,17 +633,19 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
               check_func_type_var(ctx, &expr->call.var, &func_type))) {
         WasmCheckType type = pop_type(ctx);
         check_type(ctx, &expr->loc, type, WASM_CHECK_TYPE_I32,
-                   "function index");
+                   "call_indirect function index");
         check_call(ctx, &expr->loc, NULL, &func_type->sig, "call_indirect");
       }
       break;
     }
 
     case WASM_EXPR_TYPE_COMPARE: {
-      WasmCheckType rtype = s_opcode_rtype[expr->compare.opcode];
-      WasmCheckType type1 = s_opcode_type1[expr->compare.opcode];
-      WasmCheckType type2 = s_opcode_type2[expr->compare.opcode];
-      transform_stack(ctx, &expr->loc, "compare", 2, 1, type1, type2, rtype);
+      WasmOpcode opcode = expr->compare.opcode;
+      WasmCheckType rtype = s_opcode_rtype[opcode];
+      WasmCheckType type1 = s_opcode_type1[opcode];
+      WasmCheckType type2 = s_opcode_type2[opcode];
+      transform_stack(ctx, &expr->loc, s_opcode_name[opcode], 2, 1, type1,
+                      type2, rtype);
       break;
     }
 
@@ -646,9 +654,11 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_CONVERT: {
-      WasmCheckType rtype = s_opcode_rtype[expr->convert.opcode];
-      WasmCheckType type1 = s_opcode_type1[expr->convert.opcode];
-      transform_stack(ctx, &expr->loc, "convert", 1, 1, type1, rtype);
+      WasmOpcode opcode = expr->convert.opcode;
+      WasmCheckType rtype = s_opcode_rtype[opcode];
+      WasmCheckType type1 = s_opcode_type1[opcode];
+      transform_stack(ctx, &expr->loc, s_opcode_name[opcode], 1, 1, type1,
+                      rtype);
       break;
     }
 
@@ -674,13 +684,13 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_IF: {
       LabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->if_.true_.label,
-                 WASM_CHECK_TYPE_ANY, "if branch");
+                 WASM_CHECK_TYPE_ANY);
       WasmCheckType rtype =
-          check_block(ctx, &expr->loc, expr->if_.true_.first, "if expression");
-      rtype = join_type(ctx, &expr->loc, rtype, WASM_CHECK_TYPE_VOID,
-                        "if expression");
+          check_block(ctx, &expr->loc, expr->if_.true_.first, "if");
+      rtype = join_type(ctx, &expr->loc, rtype, "if true branch type",
+                        WASM_CHECK_TYPE_VOID, "if false branch type");
       pop_label(ctx);
-      transform_stack(ctx, &expr->loc, "if expression", 1, 1,
+      transform_stack(ctx, &expr->loc, "if condition", 1, 1,
                       WASM_CHECK_TYPE_I32, rtype);
       break;
     }
@@ -688,35 +698,46 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_IF_ELSE: {
       LabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->if_else.true_.label,
-                 WASM_CHECK_TYPE_ANY, "if true branch");
-      WasmCheckType rtype1 = check_block(
+                 WASM_CHECK_TYPE_ANY);
+      WasmCheckType rtype_true = check_block(
           ctx, &expr->loc, expr->if_else.true_.first, "if true branch");
       pop_label(ctx);
+      WasmCheckType true_type =
+          join_type(ctx, &expr->loc, node.type,
+                    "joined type of if true branch's br* targets", rtype_true,
+                    "if true branch last operation type");
       push_label(ctx, &expr->loc, &node, &expr->if_else.false_.label,
-                 WASM_CHECK_TYPE_ANY, "if false branch");
-      WasmCheckType rtype2 = check_block(
+                 WASM_CHECK_TYPE_ANY);
+      WasmCheckType rtype_false = check_block(
           ctx, &expr->loc, expr->if_else.false_.first, "if false branch");
+      WasmCheckType false_type =
+          join_type(ctx, &expr->loc, node.type,
+                    "joined type of if false branch's br* targets", rtype_false,
+                    "if false branch last operation type");
       pop_label(ctx);
       WasmCheckType rtype =
-          join_type(ctx, &expr->loc, rtype1, rtype2, "of if expression");
-      transform_stack(ctx, &expr->loc, "if expression", 1, 1,
+          join_type(ctx, &expr->loc, true_type, "if true branch type",
+                    false_type, "if false branch type");
+      transform_stack(ctx, &expr->loc, "if condition", 1, 1,
                       WASM_CHECK_TYPE_I32, rtype);
       break;
     }
 
     case WASM_EXPR_TYPE_LOAD: {
-      WasmCheckType rtype = s_opcode_rtype[expr->load.opcode];
-      WasmCheckType type1 = s_opcode_type1[expr->load.opcode];
+      WasmOpcode opcode = expr->load.opcode;
+      WasmCheckType rtype = s_opcode_rtype[opcode];
+      WasmCheckType type1 = s_opcode_type1[opcode];
       check_align(ctx, &expr->loc, expr->load.align);
       check_offset(ctx, &expr->loc, expr->load.offset);
-      transform_stack(ctx, &expr->loc, "load", 1, 1, type1, rtype);
+      transform_stack(ctx, &expr->loc, s_opcode_name[opcode], 1, 1, type1,
+                      rtype);
       break;
     }
 
     case WASM_EXPR_TYPE_LOOP: {
       LabelNode node;
       push_label(ctx, &expr->loc, &node, &expr->loop.label,
-                 WASM_CHECK_TYPE_VOID, "loop label");
+                 WASM_CHECK_TYPE_VOID);
       WasmCheckType rtype =
           check_block(ctx, &expr->loc, expr->loop.first, "loop");
       pop_label(ctx);
@@ -758,11 +779,13 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_STORE: {
-      WasmCheckType type1 = s_opcode_type1[expr->store.opcode];
-      WasmCheckType type2 = s_opcode_type2[expr->store.opcode];
+      WasmOpcode opcode = expr->store.opcode;
+      WasmCheckType type1 = s_opcode_type1[opcode];
+      WasmCheckType type2 = s_opcode_type2[opcode];
       check_align(ctx, &expr->loc, expr->store.align);
       check_offset(ctx, &expr->loc, expr->store.offset);
-      transform_stack(ctx, &expr->loc, "store", 2, 0, type1, type2);
+      transform_stack(ctx, &expr->loc, s_opcode_name[opcode], 2, 0, type1,
+                      type2);
       break;
     }
 
@@ -774,9 +797,11 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_UNARY: {
-      WasmCheckType rtype = s_opcode_rtype[expr->unary.opcode];
-      WasmCheckType type1 = s_opcode_type1[expr->unary.opcode];
-      transform_stack(ctx, &expr->loc, "unary", 1, 1, type1, rtype);
+      WasmOpcode opcode = expr->unary.opcode;
+      WasmCheckType rtype = s_opcode_rtype[opcode];
+      WasmCheckType type1 = s_opcode_type1[opcode];
+      transform_stack(ctx, &expr->loc, s_opcode_name[opcode], 1, 1, type1,
+                      rtype);
       break;
     }
 
@@ -835,12 +860,11 @@ static void check_func(Context* ctx,
    * returning from the function. */
   LabelNode node;
   WasmLabel label = wasm_empty_string_slice();
-  push_label(ctx, &func->loc, &node, &label, func->decl.sig.result_type,
-             "func");
+  push_label(ctx, &func->loc, &node, &label, func->decl.sig.result_type);
   WasmCheckType rtype =
       check_block(ctx, &func->loc, func->first_expr, "function result");
-  join_type(ctx, &func->loc, rtype, func->decl.sig.result_type,
-            "function result");
+  join_type(ctx, &func->loc, rtype, "type of last operation",
+            func->decl.sig.result_type, "function signature result type");
   pop_label(ctx);
   ctx->current_func = NULL;
 }

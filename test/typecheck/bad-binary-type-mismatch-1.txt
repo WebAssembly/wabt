@@ -1,9 +1,9 @@
 ;;; ERROR: 1
 (module
   (func
-    (i32.add (f32.const 0) (i32.const 0))))
+    (drop (i32.add (f32.const 0) (i32.const 0)))))
 (;; STDERR ;;;
-typecheck/bad-binary-type-mismatch-1.txt:4:14: type mismatch of argument 0 of binary op. got f32, expected i32
-    (i32.add (f32.const 0) (i32.const 0))))
-             ^
+typecheck/bad-binary-type-mismatch-1.txt:4:12: type mismatch at i32.add. got f32, expected i32
+    (drop (i32.add (f32.const 0) (i32.const 0)))))
+           ^^^^^^^
 ;;; STDERR ;;)

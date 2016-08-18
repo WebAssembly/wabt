@@ -4,7 +4,7 @@
   (func $baz
     (call_indirect $t (i32.const 0) (i32.const 1) (i32.const 2) (i32.const 3))))
 (;; STDERR ;;;
-parse/expr/bad-callindirect-too-many-named.txt:4:4: type mismatch at function result. got i32, expected void
+parse/expr/bad-callindirect-too-many-named.txt:4:4: unable to join type i32 (type of last operation) with type void (function signature result type).
   (func $baz
    ^^^^
 ;;; STDERR ;;)

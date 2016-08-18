@@ -1,9 +1,10 @@
 ;;; ERROR: 1
 (module
   (func
-    (i32.load (f32.const 0))))
+    (drop
+      (i32.load (f32.const 0)))))
 (;; STDERR ;;;
-typecheck/bad-load-type-mismatch.txt:4:15: type mismatch of load index. got f32, expected i32
-    (i32.load (f32.const 0))))
-              ^
+typecheck/bad-load-type-mismatch.txt:5:8: type mismatch at i32.load. got f32, expected i32
+      (i32.load (f32.const 0)))))
+       ^^^^^^^^
 ;;; STDERR ;;)
