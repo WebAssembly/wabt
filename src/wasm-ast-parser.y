@@ -430,7 +430,7 @@ op :
       $$->call.var = $2;
     }
   | CALL_IMPORT var {
-      $$ = wasm_new_call_expr(parser->allocator);
+      $$ = wasm_new_call_import_expr(parser->allocator);
       $$->call_import.var = $2;
     }
   | CALL_INDIRECT var {
@@ -456,7 +456,7 @@ op :
       $$->load.align = $3;
     }
   | STORE offset align {
-      $$ = wasm_new_load_expr(parser->allocator);
+      $$ = wasm_new_store_expr(parser->allocator);
       $$->store.opcode = $1;
       $$->store.offset = $2;
       $$->store.align = $3;

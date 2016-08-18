@@ -620,7 +620,8 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_CALL_IMPORT: {
       const WasmImport* import;
-      if (WASM_SUCCEEDED(check_import_var(ctx, &expr->call.var, &import))) {
+      if (WASM_SUCCEEDED(
+              check_import_var(ctx, &expr->call_import.var, &import))) {
         check_call(ctx, &expr->loc, &import->name, &import->decl.sig,
                    "call_import");
       }
@@ -630,7 +631,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
       const WasmFuncType* func_type;
       if (WASM_SUCCEEDED(
-              check_func_type_var(ctx, &expr->call.var, &func_type))) {
+              check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
         WasmCheckType type = pop_type(ctx);
         check_type(ctx, &expr->loc, type, WASM_CHECK_TYPE_I32,
                    "call_indirect function index");
