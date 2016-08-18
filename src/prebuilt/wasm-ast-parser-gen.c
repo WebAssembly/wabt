@@ -2375,7 +2375,7 @@ yyreduce:
   case 44:
 #line 432 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_call_expr(parser->allocator);
+      (yyval.expr) = wasm_new_call_import_expr(parser->allocator);
       (yyval.expr)->call_import.var = (yyvsp[0].var);
     }
 #line 2382 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
@@ -2431,7 +2431,7 @@ yyreduce:
   case 50:
 #line 458 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_load_expr(parser->allocator);
+      (yyval.expr) = wasm_new_store_expr(parser->allocator);
       (yyval.expr)->store.opcode = (yyvsp[-2].opcode);
       (yyval.expr)->store.offset = (yyvsp[-1].u64);
       (yyval.expr)->store.align = (yyvsp[0].u32);
