@@ -15,7 +15,7 @@
   (import $i0 "foo" "bar" (type $t0))
   (func $f0 (type $t0))
   (func $f1 (type $t1) (result i32)
-    (call_indirect $t0
-      (i32.const 0))
-    (i32.const 1)))
+    i32.const 0
+    call_indirect $t0
+    i32.const 1))
 ;;; STDOUT ;;)

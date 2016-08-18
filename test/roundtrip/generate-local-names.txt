@@ -4,10 +4,10 @@
   (func (param i32) (param f32)
     (local f64)
     (local i64)
-    (get_local 0)
-    (get_local 1)
-    (get_local 2)
-    (get_local 3)
+    (drop (get_local 0))
+    (drop (get_local 1))
+    (drop (get_local 2))
+    (drop (get_local 3))
     (set_local 0 (i32.const 1))
     (set_local 1 (f32.const 1))
     (set_local 2 (f64.const 1))
@@ -17,16 +17,20 @@
   (type $t0 (func (param i32 f32)))
   (func $f0 (type $t0) (param $p0 i32) (param $p1 f32)
     (local $l0 f64) (local $l1 i64)
-    (get_local $p0)
-    (get_local $p1)
-    (get_local $l0)
-    (get_local $l1)
-    (set_local $p0
-      (i32.const 1))
-    (set_local $p1
-      (f32.const 0x1p+0))
-    (set_local $l0
-      (f64.const 0x1p+0))
-    (set_local $l1
-      (i64.const 1))))
+    get_local $p0
+    drop
+    get_local $p1
+    drop
+    get_local $l0
+    drop
+    get_local $l1
+    drop
+    i32.const 1
+    set_local $p0
+    f32.const 0x1p+0
+    set_local $p1
+    f64.const 0x1p+0
+    set_local $l0
+    i64.const 1
+    set_local $l1))
 ;;; STDOUT ;;)

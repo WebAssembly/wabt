@@ -368,9 +368,7 @@ static WasmResult on_br_table_expr(uint8_t arity,
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_call_expr(uint32_t arity,
-                               uint32_t func_index,
-                               void* user_data) {
+static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
   assert(func_index < ctx->module->funcs.size);
   WasmExpr* expr = wasm_new_call_expr(ctx->allocator);
@@ -379,20 +377,16 @@ static WasmResult on_call_expr(uint32_t arity,
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_call_import_expr(uint32_t arity,
-                                      uint32_t import_index,
-                                      void* user_data) {
+static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
   Context* ctx = user_data;
   assert(import_index < ctx->module->imports.size);
   WasmExpr* expr = wasm_new_call_import_expr(ctx->allocator);
-  expr->call.var.type = WASM_VAR_TYPE_INDEX;
-  expr->call.var.index = import_index;
+  expr->call_import.var.type = WASM_VAR_TYPE_INDEX;
+  expr->call_import.var.index = import_index;
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_call_indirect_expr(uint32_t arity,
-                                        uint32_t sig_index,
-                                        void* user_data) {
+static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = user_data;
   assert(sig_index < ctx->module->func_types.size);
   WasmExpr* expr = wasm_new_call_indirect_expr(ctx->allocator);
@@ -443,6 +437,20 @@ static WasmResult on_else_expr(void* user_data) {
 
   WasmExpr* if_else_expr = wasm_new_if_else_expr(ctx->allocator);
   if_else_expr->if_else.true_.first = if_expr->if_.true_.first;
+
+  /* find the expression that points to the if_expr, and have it point to the
+   * new if_else_expr instead */
+  WasmExpr* prev = NULL;
+  if (prev == if_expr) {
+    *label->first = if_else_expr;
+  } else {
+    for (prev = *label->first; prev && prev->next != if_expr;
+         prev = prev->next) {
+    }
+    assert(prev);
+    prev->next = if_else_expr;
+  }
+  label->last = if_else_expr;
   wasm_free(ctx->allocator, if_expr);
   push_label(ctx, &if_else_expr->if_else.false_.first);
   return WASM_OK;
@@ -533,7 +541,7 @@ static WasmResult on_nop_expr(void* user_data) {
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_return_expr(uint8_t arity, void* user_data) {
+static WasmResult on_return_expr(void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_return_expr(ctx->allocator);
   return append_expr(ctx, expr);

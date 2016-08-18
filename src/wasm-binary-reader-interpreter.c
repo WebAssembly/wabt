@@ -763,9 +763,7 @@ static WasmResult on_br_table_expr(uint8_t arity,
   return WASM_OK;
 }
 
-static WasmResult on_call_expr(uint32_t arity,
-                               uint32_t func_index,
-                               void* user_data) {
+static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
   assert(func_index < ctx->funcs.size);
   InterpreterFunc* func = get_func(ctx, func_index);
@@ -781,9 +779,7 @@ static WasmResult on_call_expr(uint32_t arity,
   return WASM_OK;
 }
 
-static WasmResult on_call_import_expr(uint32_t arity,
-                                      uint32_t import_index,
-                                      void* user_data) {
+static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
   Context* ctx = user_data;
   assert(import_index < ctx->module->imports.size);
   WasmInterpreterImport* import = get_import(ctx, import_index);
@@ -800,9 +796,7 @@ static WasmResult on_call_import_expr(uint32_t arity,
   return WASM_OK;
 }
 
-static WasmResult on_call_indirect_expr(uint32_t arity,
-                                        uint32_t sig_index,
-                                        void* user_data) {
+static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterFuncSignature* sig = get_signature(ctx, sig_index);
 
@@ -906,12 +900,12 @@ static WasmResult on_nop_expr(void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_return_expr(uint8_t arity, void* user_data) {
+static WasmResult on_return_expr(void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
   if (get_value_count(sig->result_type)) {
-    WasmType value = pop_expr_if(ctx, arity == 1);
+    WasmType value = pop_expr(ctx);
     CHECK_RESULT(check_type(ctx, sig->result_type, value, "return"));
   }
   push_expr(ctx, WASM_TYPE_ANY, WASM_OPCODE_RETURN);
@@ -1405,9 +1399,7 @@ static WasmResult on_emit_br_table_expr(uint8_t arity,
   return WASM_OK;
 }
 
-static WasmResult on_emit_call_expr(uint32_t arity,
-                                    uint32_t func_index,
-                                    void* user_data) {
+static WasmResult on_emit_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
@@ -1422,8 +1414,7 @@ static WasmResult on_emit_call_expr(uint32_t arity,
   return WASM_OK;
 }
 
-static WasmResult on_emit_call_import_expr(uint32_t arity,
-                                           uint32_t import_index,
+static WasmResult on_emit_call_import_expr(uint32_t import_index,
                                            void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
@@ -1439,8 +1430,7 @@ static WasmResult on_emit_call_import_expr(uint32_t arity,
   return WASM_OK;
 }
 
-static WasmResult on_emit_call_indirect_expr(uint32_t arity,
-                                             uint32_t sig_index,
+static WasmResult on_emit_call_indirect_expr(uint32_t sig_index,
                                              void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
@@ -1588,7 +1578,7 @@ static WasmResult on_emit_nop_expr(void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_emit_return_expr(uint8_t arity, void* user_data) {
+static WasmResult on_emit_return_expr(void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_RETURN]);

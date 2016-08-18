@@ -694,30 +694,25 @@ static WasmResult logging_on_br_table_expr(uint8_t arity,
           default_target_depth);
 }
 
-static WasmResult logging_on_call_expr(uint32_t arity,
-                                       uint32_t func_index,
+static WasmResult logging_on_call_expr(uint32_t func_index,
                                        void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_call_expr(arity: %u, func_index: %u)\n", arity, func_index);
-  FORWARD(on_call_expr, arity, func_index);
+  LOGF("on_call_expr(func_index: %u)\n", func_index);
+  FORWARD(on_call_expr, func_index);
 }
 
-static WasmResult logging_on_call_import_expr(uint32_t arity,
-                                              uint32_t import_index,
+static WasmResult logging_on_call_import_expr(uint32_t import_index,
                                               void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_call_import_expr(arity: %u, import_index: %u)\n", arity,
-       import_index);
-  FORWARD(on_call_import_expr, arity, import_index);
+  LOGF("on_call_import_expr(import_index: %u)\n", import_index);
+  FORWARD(on_call_import_expr, import_index);
 }
 
-static WasmResult logging_on_call_indirect_expr(uint32_t arity,
-                                                uint32_t sig_index,
+static WasmResult logging_on_call_indirect_expr(uint32_t sig_index,
                                                 void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_call_indirect_expr(arity: %u, sig_index: %u)\n", arity,
-       sig_index);
-  FORWARD(on_call_indirect_expr, arity, sig_index);
+  LOGF("on_call_indirect_expr(sig_index: %u)\n", sig_index);
+  FORWARD(on_call_indirect_expr, sig_index);
 }
 
 static WasmResult logging_on_compare_expr(WasmOpcode opcode, void* user_data) {
@@ -821,10 +816,10 @@ static WasmResult logging_on_nop_expr(void* user_data) {
   FORWARD0(on_nop_expr);
 }
 
-static WasmResult logging_on_return_expr(uint8_t arity, void* user_data) {
+static WasmResult logging_on_return_expr(void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_return_expr(%u)\n", arity);
-  FORWARD(on_return_expr, arity);
+  LOGF("on_return_expr\n");
+  FORWARD0(on_return_expr);
 }
 
 static WasmResult logging_on_select_expr(void* user_data) {
@@ -1345,8 +1340,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           uint8_t opcode;
           in_u8(ctx, &opcode, "opcode");
           switch (opcode) {
-            case WASM_OPCODE_NOP:
-              CALLBACK0(on_nop_expr);
+            case WASM_OPCODE_UNREACHABLE:
+              CALLBACK0(on_unreachable_expr);
               break;
 
             case WASM_OPCODE_BLOCK:
@@ -1414,15 +1409,16 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
             }
 
-            case WASM_OPCODE_RETURN: {
-              uint8_t arity;
-              in_u8(ctx, &arity, "return arity");
-              CALLBACK(on_return_expr, arity);
+            case WASM_OPCODE_RETURN:
+              CALLBACK0(on_return_expr);
               break;
-            }
 
-            case WASM_OPCODE_UNREACHABLE:
-              CALLBACK0(on_unreachable_expr);
+            case WASM_OPCODE_NOP:
+              CALLBACK0(on_nop_expr);
+              break;
+
+            case WASM_OPCODE_DROP:
+              CALLBACK0(on_drop_expr);
               break;
 
             case WASM_OPCODE_END:
@@ -1472,35 +1468,36 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             }
 
             case WASM_OPCODE_CALL_FUNCTION: {
-              uint32_t arity;
-              in_u32_leb128(ctx, &arity, "call_function arity");
               uint32_t func_index;
               in_u32_leb128(ctx, &func_index, "call_function function index");
               RAISE_ERROR_UNLESS(func_index < num_function_signatures,
                                  "invalid call_function function index");
-              CALLBACK(on_call_expr, arity, func_index);
+              CALLBACK(on_call_expr, func_index);
               break;
             }
 
             case WASM_OPCODE_CALL_INDIRECT: {
-              uint32_t arity;
-              in_u32_leb128(ctx, &arity, "call_indirect arity");
               uint32_t sig_index;
               in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
               RAISE_ERROR_UNLESS(sig_index < num_function_signatures,
                                  "invalid call_indirect signature index");
-              CALLBACK(on_call_indirect_expr, arity, sig_index);
+              CALLBACK(on_call_indirect_expr, sig_index);
               break;
             }
 
             case WASM_OPCODE_CALL_IMPORT: {
-              uint32_t arity;
-              in_u32_leb128(ctx, &arity, "call_import arity");
               uint32_t import_index;
               in_u32_leb128(ctx, &import_index, "call_import import index");
               RAISE_ERROR_UNLESS(import_index < num_imports,
                                  "invalid call_import import index");
-              CALLBACK(on_call_import_expr, arity, import_index);
+              CALLBACK(on_call_import_expr, import_index);
+              break;
+            }
+
+            case WASM_OPCODE_TEE_LOCAL: {
+              uint32_t local_index;
+              in_u32_leb128(ctx, &local_index, "tee_local local index");
+              CALLBACK(on_tee_local_expr, local_index);
               break;
             }
 
