@@ -1,9 +1,9 @@
 ;;; ERROR: 1
 (module
   (func
-    (f32.lt (f32.const 0) (i32.const 0))))
+    (drop (f32.lt (f32.const 0) (i32.const 0)))))
 (;; STDERR ;;;
-typecheck/bad-compare-type-mismatch-2.txt:4:27: type mismatch of argument 1 of compare op. got i32, expected f32
-    (f32.lt (f32.const 0) (i32.const 0))))
-                          ^
+typecheck/bad-compare-type-mismatch-2.txt:4:12: type mismatch at f32.lt. got i32, expected f32
+    (drop (f32.lt (f32.const 0) (i32.const 0)))))
+           ^^^^^^
 ;;; STDERR ;;)

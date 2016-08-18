@@ -1,13 +1,12 @@
 ;;; ERROR: 1
 (module
-  (func (local f32)
-    (set_local 0
-      (block
-        (if (i32.const 0)
-          (br 0)
-          (f32.const 0.0))))))
+  (func
+    (block $b
+      (if (i32.const 0)
+        (br $b)
+        (f32.const 0.0)))))
 (;; STDERR ;;;
-typecheck/bad-if-value-void.txt:7:11: type mismatch of br value. got void, expected f32
-          (br 0)
-          ^
+typecheck/bad-if-value-void.txt:4:6: unable to join type void (joined type of block's br* targets) with type f32 (block's result type).
+    (block $b
+     ^^^^^
 ;;; STDERR ;;)

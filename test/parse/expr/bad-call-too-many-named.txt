@@ -3,13 +3,13 @@
   (func $foo (param i32 i64)
     (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
 (;; STDERR ;;;
-parse/expr/bad-call-too-many-named.txt:4:6: type mismatch at call. got i64, expected i32
+parse/expr/bad-call-too-many-named.txt:4:6: type mismatch for argument 0 of call. got i64, expected i32
     (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
      ^^^^
-parse/expr/bad-call-too-many-named.txt:4:6: type mismatch at call. got f32, expected i64
+parse/expr/bad-call-too-many-named.txt:4:6: type mismatch for argument 1 of call. got f32, expected i64
     (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
      ^^^^
-parse/expr/bad-call-too-many-named.txt:3:4: type mismatch at function result. got i32, expected void
+parse/expr/bad-call-too-many-named.txt:3:4: unable to join type i32 (type of last operation) with type void (function signature result type).
   (func $foo (param i32 i64)
    ^^^^
 ;;; STDERR ;;)

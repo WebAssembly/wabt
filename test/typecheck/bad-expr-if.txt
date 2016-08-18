@@ -4,9 +4,9 @@
     (i32.add
       (i32.const 1)
       (if (i32.const 2)
-        (i32.const 3)))))
+        (drop (i32.const 3))))))
 (;; STDERR ;;;
-typecheck/bad-expr-if.txt:6:7: type mismatch of argument 1 of binary op. got void, expected i32
-      (if (i32.const 2)
-      ^
+typecheck/bad-expr-if.txt:4:6: type stack size too small at i32.add. got 1, expected at least 2
+    (i32.add
+     ^^^^^^^
 ;;; STDERR ;;)

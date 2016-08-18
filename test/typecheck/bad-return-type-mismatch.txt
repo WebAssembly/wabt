@@ -3,7 +3,7 @@
   (func (result i32)
     (return (f32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-return-type-mismatch.txt:4:13: type mismatch of return. got f32, expected i32
+typecheck/bad-return-type-mismatch.txt:4:6: type mismatch at return. got f32, expected i32
     (return (f32.const 0))))
-            ^
+     ^^^^^^
 ;;; STDERR ;;)
