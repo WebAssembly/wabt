@@ -183,15 +183,15 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I64, I32, ___, 8, 0x2b, I64_LOAD, "i64.load")                       \
   V(F32, I32, ___, 4, 0x2c, F32_LOAD, "f32.load")                       \
   V(F64, I32, ___, 8, 0x2d, F64_LOAD, "f64.load")                       \
-  V(I32, I32, I32, 1, 0x2e, I32_STORE8, "i32.store8")                   \
-  V(I32, I32, I32, 2, 0x2f, I32_STORE16, "i32.store16")                 \
-  V(I64, I32, I64, 1, 0x30, I64_STORE8, "i64.store8")                   \
-  V(I64, I32, I64, 2, 0x31, I64_STORE16, "i64.store16")                 \
-  V(I64, I32, I64, 4, 0x32, I64_STORE32, "i64.store32")                 \
-  V(I32, I32, I32, 4, 0x33, I32_STORE, "i32.store")                     \
-  V(I64, I32, I64, 8, 0x34, I64_STORE, "i64.store")                     \
-  V(F32, I32, F32, 4, 0x35, F32_STORE, "f32.store")                     \
-  V(F64, I32, F64, 8, 0x36, F64_STORE, "f64.store")                     \
+  V(___, I32, I32, 1, 0x2e, I32_STORE8, "i32.store8")                   \
+  V(___, I32, I32, 2, 0x2f, I32_STORE16, "i32.store16")                 \
+  V(___, I32, I64, 1, 0x30, I64_STORE8, "i64.store8")                   \
+  V(___, I32, I64, 2, 0x31, I64_STORE16, "i64.store16")                 \
+  V(___, I32, I64, 4, 0x32, I64_STORE32, "i64.store32")                 \
+  V(___, I32, I32, 4, 0x33, I32_STORE, "i32.store")                     \
+  V(___, I32, I64, 8, 0x34, I64_STORE, "i64.store")                     \
+  V(___, I32, F32, 4, 0x35, F32_STORE, "f32.store")                     \
+  V(___, I32, F64, 8, 0x36, F64_STORE, "f64.store")                     \
   V(I32, ___, ___, 0, 0x3b, CURRENT_MEMORY, "current_memory")           \
   V(I32, I32, ___, 0, 0x39, GROW_MEMORY, "grow_memory")                 \
   V(I32, I32, I32, 0, 0x40, I32_ADD, "i32.add")                         \

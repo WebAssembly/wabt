@@ -12,10 +12,10 @@
   (func (param i32) (param $param1 i64)
     (local f32)
     (local $local1 f64)
-    (call_import 0)
-    (call 0 (i32.const 0))
-    (call_indirect 0 (i32.const 0) (i32.const 1))
-    (get_local 1)
+    (drop (call_import 0))
+    (drop (call 0 (i32.const 0)))
+    (drop (call_indirect 0 (i32.const 0) (i32.const 1)))
+    (drop (get_local 1))
     (set_local 2 (f32.const 0)))
   (export "baz" 0)
   (export "quux" 1))
@@ -27,18 +27,22 @@
   (type $t2 (func (param i32 i64)))
   (import $i0 "foo" "bar" (type $t1))
   (func $func0 (type $t0) (param $p0 i32) (result f32)
-    (f32.const 0x1p+0))
+    f32.const 0x1p+0)
   (func $f1 (type $t2) (param $p0 i32) (param $param1 i64)
     (local $l0 f32) (local $local1 f64)
-    (call_import $i0)
-    (call $func0
-      (i32.const 0))
-    (call_indirect $t0
-      (i32.const 0)
-      (i32.const 1))
-    (get_local $param1)
-    (set_local $l0
-      (f32.const 0x0p+0)))
+    call_import $i0
+    drop
+    i32.const 0
+    call $func0
+    drop
+    i32.const 0
+    i32.const 1
+    call_indirect $t0
+    drop
+    get_local $param1
+    drop
+    f32.const 0x0p+0
+    set_local $l0)
   (table $func0)
   (export "baz" $func0)
   (export "quux" $f1))

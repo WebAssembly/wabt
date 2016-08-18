@@ -10,7 +10,7 @@ section("code") {
     locals[0]
     i32.const
     leb_i32(-420)
-    return arity[1]
+    return
   }
 }
 (;; STDOUT ;;;
