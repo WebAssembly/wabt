@@ -14,8 +14,8 @@
   (import $i0 "an" "import" (type $t0))
   (import $i1 "another" "import" (type $t1))
   (func $f0 (type $t2)
-    (call_import $i0
-      (i32.const 0))
-    (call_import $i1
-      (f32.const 0x0p+0))))
+    i32.const 0
+    call_import $i0
+    f32.const 0x0p+0
+    call_import $i1))
 ;;; STDOUT ;;)
