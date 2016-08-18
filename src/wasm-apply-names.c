@@ -165,7 +165,6 @@ static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
 static WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
-  pop_label(ctx);
   return WASM_OK;
 }
 
@@ -207,15 +206,15 @@ static WasmResult on_call_expr(WasmExpr* expr, void* user_data) {
 
 static WasmResult on_call_import_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(
-      use_name_for_import_var(ctx->allocator, ctx->module, &expr->call.var));
+  CHECK_RESULT(use_name_for_import_var(ctx->allocator, ctx->module,
+                                       &expr->call_import.var));
   return WASM_OK;
 }
 
 static WasmResult on_call_indirect_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(
-      use_name_for_func_type_var(ctx->allocator, ctx->module, &expr->call.var));
+  CHECK_RESULT(use_name_for_func_type_var(ctx->allocator, ctx->module,
+                                          &expr->call_indirect.var));
   return WASM_OK;
 }
 

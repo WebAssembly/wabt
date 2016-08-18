@@ -419,9 +419,13 @@ void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       wasm_destroy_var(allocator, &expr->br_table.default_target);
       break;
     case WASM_EXPR_TYPE_CALL:
-    case WASM_EXPR_TYPE_CALL_IMPORT:
-    case WASM_EXPR_TYPE_CALL_INDIRECT:
       wasm_destroy_var(allocator, &expr->call.var);
+      break;
+    case WASM_EXPR_TYPE_CALL_IMPORT:
+      wasm_destroy_var(allocator, &expr->call_import.var);
+      break;
+    case WASM_EXPR_TYPE_CALL_INDIRECT:
+      wasm_destroy_var(allocator, &expr->call_indirect.var);
       break;
     case WASM_EXPR_TYPE_GET_LOCAL:
       wasm_destroy_var(allocator, &expr->get_local.var);

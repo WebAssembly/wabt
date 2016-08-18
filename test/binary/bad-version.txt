@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
 magic
-0xc 0 0 0
+0xd 0 0 0
 (;; STDERR ;;;
 Error running "wasm-wast":
 error: @0x00000008: version mismatch

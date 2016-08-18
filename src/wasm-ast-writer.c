@@ -295,32 +295,32 @@ static void write_block(Context* ctx,
 static void write_const(Context* ctx, const WasmConst* const_) {
   switch (const_->type) {
     case WASM_TYPE_I32:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_I32_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_I32_CONST]);
       writef(ctx, "%d", (int32_t)const_->u32);
-      write_close_newline(ctx);
+      write_newline(ctx, FORCE_NEWLINE);
       break;
 
     case WASM_TYPE_I64:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_I64_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_I64_CONST]);
       writef(ctx, "%" PRId64, (int64_t)const_->u64);
-      write_close_newline(ctx);
+      write_newline(ctx, FORCE_NEWLINE);
       break;
 
     case WASM_TYPE_F32: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_F32_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_F32_CONST]);
       char buffer[128];
       wasm_write_float_hex(buffer, 128, const_->f32_bits);
       write_puts_space(ctx, buffer);
-      write_close_newline(ctx);
+      write_newline(ctx, FORCE_NEWLINE);
       break;
     }
 
     case WASM_TYPE_F64: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_F64_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_F64_CONST]);
       char buffer[128];
       wasm_write_double_hex(buffer, 128, const_->f64_bits);
       write_puts_space(ctx, buffer);
-      write_close_newline(ctx);
+      write_newline(ctx, FORCE_NEWLINE);
       break;
     }
 

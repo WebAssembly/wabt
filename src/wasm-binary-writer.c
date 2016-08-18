@@ -357,7 +357,7 @@ static void write_expr(Context* ctx,
       break;
     }
     case WASM_EXPR_TYPE_CALL_IMPORT: {
-      int index = wasm_get_import_index_by_var(module, &expr->call.var);
+      int index = wasm_get_import_index_by_var(module, &expr->call_import.var);
       assert(index >= 0 && (size_t)index < module->imports.size);
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_IMPORT);
       write_u32_leb128(&ctx->stream, index, "import index");
