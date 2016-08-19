@@ -118,7 +118,7 @@
     (i64.const 0))  ;; deliberate type-check error
 )
 (;; STDERR ;;;
-regress/regress-5.txt:118:5: type mismatch of function result. got i64, expected i32
-    (i64.const 0))  ;; deliberate type-check error
-    ^
+regress/regress-5.txt:117:4: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  (func (result i32)
+   ^^^^
 ;;; STDERR ;;)
