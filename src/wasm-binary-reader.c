@@ -727,6 +727,12 @@ static WasmResult logging_on_convert_expr(WasmOpcode opcode, void* user_data) {
   FORWARD(on_convert_expr, opcode);
 }
 
+static WasmResult logging_on_drop_expr(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_drop_expr\n");
+  FORWARD0(on_drop_expr);
+}
+
 static WasmResult logging_on_else_expr(void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("on_else_expr\n");
@@ -843,6 +849,13 @@ static WasmResult logging_on_store_expr(WasmOpcode opcode,
   LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
        s_opcode_name[opcode], opcode, alignment_log2, offset);
   FORWARD(on_store_expr, opcode, alignment_log2, offset);
+}
+
+static WasmResult logging_on_tee_local_expr(uint32_t local_index,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_tee_local_expr(index: %u)\n", local_index);
+  FORWARD(on_tee_local_expr, local_index);
 }
 
 static WasmResult logging_on_unary_expr(WasmOpcode opcode, void* user_data) {
@@ -1053,6 +1066,7 @@ static WasmBinaryReader s_logging_binary_reader = {
     .on_call_indirect_expr = &logging_on_call_indirect_expr,
     .on_compare_expr = &logging_on_compare_expr,
     .on_convert_expr = &logging_on_convert_expr,
+    .on_drop_expr = &logging_on_drop_expr,
     .on_else_expr = &logging_on_else_expr,
     .on_end_expr = &logging_on_end_expr,
     .on_f32_const_expr = &logging_on_f32_const_expr,
@@ -1070,6 +1084,7 @@ static WasmBinaryReader s_logging_binary_reader = {
     .on_select_expr = &logging_on_select_expr,
     .on_set_local_expr = &logging_on_set_local_expr,
     .on_store_expr = &logging_on_store_expr,
+    .on_tee_local_expr = &logging_on_tee_local_expr,
     .on_unary_expr = &logging_on_unary_expr,
     .on_unreachable_expr = &logging_on_unreachable_expr,
     .end_function_body = &logging_end_function_body,

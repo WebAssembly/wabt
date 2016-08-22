@@ -605,8 +605,7 @@ static WasmResult on_block_expr(void* user_data) {
 static WasmResult on_loop_expr(void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": loop (#%u)\n", ctx->expr_stack.size, ctx->expr_count);
-  push_typecheck_label(ctx, LABEL_TYPE_LOOP, WASM_TYPE_ANY);  /* exit */
-  push_typecheck_label(ctx, LABEL_TYPE_LOOP, WASM_TYPE_VOID); /* continue */
+  push_typecheck_label(ctx, LABEL_TYPE_LOOP, WASM_TYPE_VOID);
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -659,15 +658,8 @@ static WasmResult on_end_expr(void* user_data) {
     return WASM_ERROR;
   }
 
-  if (label->label_type == LABEL_TYPE_LOOP) {
-    /* pop the "continue" label now; any type checking we do below only applies
-     * to the exit label */
-    pop_typecheck_label(ctx);
-    label = top_typecheck_label(ctx);
-    assert(label->label_type == LABEL_TYPE_LOOP);
-  } else if (label->label_type == LABEL_TYPE_IF) {
+  if (label->label_type == LABEL_TYPE_IF)
     label->type = WASM_TYPE_VOID;
-  }
 
   if (label->expr_stack_size < ctx->expr_stack.size) {
     ExprNode* last_expr = &ctx->expr_stack.data[ctx->expr_stack.size - 1];
@@ -813,6 +805,12 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult on_drop_expr(void* user_data) {
+  Context* ctx = user_data;
+  pop_expr(ctx);
+  return WASM_OK;
+}
+
 static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
   push_expr(ctx, WASM_TYPE_I32, WASM_OPCODE_I32_CONST);
@@ -851,7 +849,17 @@ static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
   WasmType type = get_local_index_type(ctx->current_func, local_index);
   WasmType value = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, type, value, "set_local"));
-  push_expr(ctx, type, WASM_OPCODE_SET_LOCAL);
+  ctx->expr_count++;
+  return WASM_OK;
+}
+
+static WasmResult on_tee_local_expr(uint32_t local_index, void* user_data) {
+  Context* ctx = user_data;
+  CHECK_LOCAL(ctx, local_index);
+  WasmType type = get_local_index_type(ctx->current_func, local_index);
+  WasmType value = pop_expr(ctx);
+  CHECK_RESULT(check_type(ctx, type, value, "tee_local"));
+  push_expr(ctx, type, WASM_OPCODE_TEE_LOCAL);
   return WASM_OK;
 }
 
@@ -1261,11 +1269,7 @@ static WasmResult on_emit_loop_expr(void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
        s_opcode_name[WASM_OPCODE_LOOP]);
-
-  push_emit_label(ctx, LABEL_TYPE_LOOP, WASM_INVALID_OFFSET, 0,
-                  !is_expr_discarded(ctx, ctx->expr_count));
   push_emit_label(ctx, LABEL_TYPE_LOOP, get_istream_offset(ctx), 0, WASM_FALSE);
-
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1311,10 +1315,6 @@ static WasmResult on_emit_end_expr(void* user_data) {
   EmitLabel* label = top_emit_label(ctx);
   switch (label->label_type) {
     case LABEL_TYPE_LOOP:
-      /* pop the continue label */
-      pop_emit_label(ctx);
-      label = top_emit_label(ctx);
-      assert(label->label_type == LABEL_TYPE_LOOP);
       break;
 
     case LABEL_TYPE_IF:
@@ -1449,6 +1449,14 @@ static WasmResult on_emit_call_indirect_expr(uint32_t sig_index,
   return WASM_OK;
 }
 
+static WasmResult on_emit_drop_expr(void *user_data) {
+  Context* ctx = user_data;
+  LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
+       s_opcode_name[WASM_OPCODE_DROP]);
+  CHECK_RESULT(emit_discard(ctx));
+  return WASM_OK;
+}
+
 static WasmResult on_emit_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
@@ -1517,6 +1525,18 @@ static WasmResult on_emit_set_local_expr(uint32_t local_index,
        s_opcode_name[WASM_OPCODE_SET_LOCAL]);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_SET_LOCAL));
   CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
+  adjust_value_stack(ctx, -1);
+  ctx->expr_count++;
+  return WASM_OK;
+}
+
+static WasmResult on_emit_tee_local_expr(uint32_t local_index,
+                                         void* user_data) {
+  Context* ctx = user_data;
+  LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
+       s_opcode_name[WASM_OPCODE_TEE_LOCAL]);
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_TEE_LOCAL));
+  CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
   CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
   ctx->expr_count++;
   return WASM_OK;
@@ -1554,7 +1574,6 @@ static WasmResult on_emit_store_expr(WasmOpcode opcode,
   CHECK_RESULT(emit_opcode(ctx, opcode));
   CHECK_RESULT(emit_i32(ctx, offset));
   adjust_value_stack(ctx, -1);
-  CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1723,6 +1742,8 @@ static WasmBinaryReader s_binary_reader = {
     .on_call_indirect_expr = &on_call_indirect_expr,
     .on_compare_expr = &on_binary_expr,
     .on_convert_expr = &on_unary_expr,
+    .on_current_memory_expr = &on_current_memory_expr,
+    .on_drop_expr = &on_drop_expr,
     .on_else_expr = &on_else_expr,
     .on_end_expr = &on_end_expr,
     .on_f32_const_expr = &on_f32_const_expr,
@@ -1734,12 +1755,12 @@ static WasmBinaryReader s_binary_reader = {
     .on_if_expr = &on_if_expr,
     .on_load_expr = &on_load_expr,
     .on_loop_expr = &on_loop_expr,
-    .on_current_memory_expr = &on_current_memory_expr,
     .on_nop_expr = &on_nop_expr,
     .on_return_expr = &on_return_expr,
     .on_select_expr = &on_select_expr,
     .on_set_local_expr = &on_set_local_expr,
     .on_store_expr = &on_store_expr,
+    .on_tee_local_expr = &on_tee_local_expr,
     .on_unary_expr = &on_unary_expr,
     .on_unreachable_expr = &on_unreachable_expr,
     .end_function_body = &end_function_body,
@@ -1771,6 +1792,8 @@ static WasmBinaryReader s_binary_reader_emit = {
     .on_call_indirect_expr = &on_emit_call_indirect_expr,
     .on_compare_expr = &on_emit_binary_expr,
     .on_convert_expr = &on_emit_unary_expr,
+    .on_current_memory_expr = &on_emit_current_memory_expr,
+    .on_drop_expr = &on_emit_drop_expr,
     .on_else_expr = &on_emit_else_expr,
     .on_end_expr = &on_emit_end_expr,
     .on_f32_const_expr = &on_emit_f32_const_expr,
@@ -1782,12 +1805,12 @@ static WasmBinaryReader s_binary_reader_emit = {
     .on_if_expr = &on_emit_if_expr,
     .on_load_expr = &on_emit_load_expr,
     .on_loop_expr = &on_emit_loop_expr,
-    .on_current_memory_expr = &on_emit_current_memory_expr,
     .on_nop_expr = &on_emit_nop_expr,
     .on_return_expr = &on_emit_return_expr,
     .on_select_expr = &on_emit_select_expr,
     .on_set_local_expr = &on_emit_set_local_expr,
     .on_store_expr = &on_emit_store_expr,
+    .on_tee_local_expr = &on_emit_tee_local_expr,
     .on_unary_expr = &on_emit_unary_expr,
     .on_unreachable_expr = &on_emit_unreachable_expr,
     .end_function_body = &end_emit_function_body,

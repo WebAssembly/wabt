@@ -49,6 +49,9 @@ static WasmStream* s_stdout_stream;
 static WasmBinaryErrorHandler s_error_handler =
     WASM_BINARY_ERROR_HANDLER_DEFAULT;
 
+static WasmFileWriter s_log_stream_writer;
+static WasmStream s_log_stream;
+
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
 
@@ -114,6 +117,9 @@ static void on_option(struct WasmOptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
+      wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
+      wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      s_read_binary_options.log_stream = &s_log_stream;
       break;
 
     case FLAG_HELP:
