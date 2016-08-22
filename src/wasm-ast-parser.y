@@ -700,7 +700,7 @@ expr_list :
   | expr expr_list {
       $$.first = $1.first;
       $1.last->next = $2.first;
-      $$.last = $2.last ? $2.last : $1.first;
+      $$.last = $2.last ? $2.last : $1.last;
       $$.size = $1.size + $2.size;
     }
 ;

@@ -410,7 +410,6 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
             MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
     void* dst = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
     memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                        \
-    PUSH_##type(value);                                                    \
   } while (0)
 
 #define BINOP(rtype, type, op)            \
@@ -684,7 +683,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
       }
 
-      case WASM_OPCODE_SET_LOCAL:
+      case WASM_OPCODE_SET_LOCAL: {
+        WasmInterpreterValue value = POP();
+        /* -1 because we just popped a value off the stack */
+        PICK(read_u32(&pc) - 1) = value;
+        break;
+      }
+
+      case WASM_OPCODE_TEE_LOCAL:
         PICK(read_u32(&pc)) = TOP();
         break;
 
