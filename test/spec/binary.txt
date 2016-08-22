@@ -27,11 +27,11 @@ assert_invalid error:
                  ^^^^^^
 assert_invalid error:
   third_party/testsuite/binary.wast:11:18: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_invalid (module "\00asm\0b") "unexpected end")
+(assert_invalid (module "\00asm\0c") "unexpected end")
                  ^^^^^^
 assert_invalid error:
   third_party/testsuite/binary.wast:12:18: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_invalid (module "\00asm\0b\00\00") "unexpected end")
+(assert_invalid (module "\00asm\0c\00\00") "unexpected end")
                  ^^^^^^
 assert_invalid error:
   third_party/testsuite/binary.wast:13:18: error in binary module: @0x00000008: bad wasm file version: 0x10 (expected 0xb)

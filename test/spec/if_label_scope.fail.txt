@@ -6,5 +6,8 @@ Error running "wast2wasm":
 third_party/testsuite/if_label_scope.fail.wast:6:19: undefined label variable "$l"
         (else (br $l (i32.const 42)))
                   ^^
+third_party/testsuite/if_label_scope.fail.wast:2:4: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (func
+   ^^^^
 
 ;;; STDERR ;;)
