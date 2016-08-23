@@ -117,8 +117,10 @@ function assertTrap(module, name, file, line) {
 function invoke(module, name) {
   try {
     var invokeResult = module.exports[name]();
+    passed++;
   } catch(e) {
-    print(file + ":" + line + ": " + name + " unexpectedly threw: " + e);
+    print(name + " unexpectedly threw: " + e);
+    failed++;
   }
 
   if (!quiet)
