@@ -177,6 +177,24 @@ static WasmResult check_func_var(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult check_global_var(Context* ctx,
+                                   const WasmVar* var,
+                                   const WasmGlobal** out_global,
+                                   int* out_global_index) {
+  int index;
+  if (WASM_FAILED(check_var(ctx, &ctx->current_module->global_bindings,
+                            ctx->current_module->globals.size, var, "global",
+                            &index))) {
+    return WASM_ERROR;
+  }
+
+  if (out_global)
+    *out_global = ctx->current_module->globals.data[index];
+  if (out_global_index)
+    *out_global_index = index;
+  return WASM_OK;
+}
+
 static WasmResult check_import_var(Context* ctx,
                                    const WasmVar* var,
                                    const WasmImport** out_import) {
@@ -669,6 +687,15 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
     }
 
+    case WASM_EXPR_TYPE_GET_GLOBAL: {
+      const WasmGlobal* global;
+      if (WASM_SUCCEEDED(
+              check_global_var(ctx, &expr->get_global.var, &global, NULL))) {
+        push_type(ctx, global->type);
+      }
+      break;
+    }
+
     case WASM_EXPR_TYPE_GET_LOCAL: {
       WasmCheckType type;
       if (WASM_SUCCEEDED(check_local_var(ctx, &expr->get_local.var, &type))) {
@@ -772,6 +799,17 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
     }
 
+    case WASM_EXPR_TYPE_SET_GLOBAL: {
+      WasmCheckType type = WASM_TYPE_I32;
+      const WasmGlobal* global;
+      if (WASM_SUCCEEDED(
+              check_global_var(ctx, &expr->set_global.var, &global, NULL))) {
+        type = global->type;
+      }
+      transform_stack(ctx, &expr->loc, "set_global", 1, 0, type);
+      break;
+    }
+
     case WASM_EXPR_TYPE_SET_LOCAL: {
       WasmCheckType type = WASM_TYPE_I32;
       check_local_var(ctx, &expr->set_local.var, &type);
@@ -870,6 +908,53 @@ static void check_func(Context* ctx,
   ctx->current_func = NULL;
 }
 
+static void check_global(Context* ctx,
+                         const WasmLocation* loc,
+                         const WasmGlobal* global,
+                         int global_index) {
+  WasmCheckType type = WASM_CHECK_TYPE_VOID;
+  WasmBool invalid_expr = WASM_TRUE;
+  WasmExpr* expr = global->init_expr;
+
+  if (expr->next == NULL) {
+    switch (expr->type) {
+      case WASM_EXPR_TYPE_CONST:
+        type = expr->const_.type;
+        invalid_expr = WASM_FALSE;
+        break;
+
+      case WASM_EXPR_TYPE_GET_GLOBAL: {
+        const WasmGlobal* ref_global = NULL;
+        int ref_global_index;
+        if (WASM_SUCCEEDED(check_global_var(ctx, &expr->get_global.var,
+                                            &ref_global, &ref_global_index))) {
+          type = ref_global->type;
+          /* globals can only reference previously defined globals */
+          if (ref_global_index >= global_index) {
+            print_error(ctx, CHECK_STYLE_FULL, loc,
+                        "global can only be defined in terms of a previously "
+                        "defined global.");
+          }
+        }
+        invalid_expr = WASM_FALSE;
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+  if (invalid_expr) {
+    print_error(ctx, CHECK_STYLE_FULL, loc,
+                "invalid global initializer expression. Must be *.const or "
+                "get_global.");
+  } else {
+    check_type(ctx, &expr->loc, type, global->type,
+               "global initializer expression");
+  }
+}
+
 static void check_import(Context* ctx,
                          const WasmLocation* loc,
                          const WasmImport* import) {
@@ -937,6 +1022,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
   WasmBool seen_export_memory = WASM_FALSE;
   WasmBool seen_table = WASM_FALSE;
   WasmBool seen_start = WASM_FALSE;
+  int global_index = 0;
 
   ctx->current_module = module;
 
@@ -945,6 +1031,10 @@ static void check_module(Context* ctx, const WasmModule* module) {
     switch (field->type) {
       case WASM_MODULE_FIELD_TYPE_FUNC:
         check_func(ctx, &field->loc, &field->func);
+        break;
+
+      case WASM_MODULE_FIELD_TYPE_GLOBAL:
+        check_global(ctx, &field->loc, &field->global, global_index++);
         break;
 
       case WASM_MODULE_FIELD_TYPE_IMPORT:

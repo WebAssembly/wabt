@@ -182,6 +182,10 @@ int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var) {
   return wasm_get_index_from_var(&module->func_bindings, var);
 }
 
+int wasm_get_global_index_by_var(const WasmModule* module, const WasmVar* var) {
+  return wasm_get_index_from_var(&module->global_bindings, var);
+}
+
 int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var) {
   return wasm_get_index_from_var(&module->func_type_bindings, var);
@@ -212,6 +216,14 @@ WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
   if (index < 0 || (size_t)index >= module->funcs.size)
     return NULL;
   return module->funcs.data[index];
+}
+
+WasmGlobalPtr wasm_get_global_by_var(const WasmModule* module,
+                                     const WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->global_bindings, var);
+  if (index < 0 || (size_t)index >= module->globals.size)
+    return NULL;
+  return module->globals.data[index];
 }
 
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
@@ -315,11 +327,13 @@ WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator* allocator,
   V(WASM_EXPR_TYPE_COMPARE, compare, compare)                   \
   V(WASM_EXPR_TYPE_CONST, const, const_)                        \
   V(WASM_EXPR_TYPE_CONVERT, convert, convert)                   \
+  V(WASM_EXPR_TYPE_GET_GLOBAL, get_global, get_global)          \
   V(WASM_EXPR_TYPE_GET_LOCAL, get_local, get_local)             \
   V(WASM_EXPR_TYPE_IF, if, if_)                                 \
   V(WASM_EXPR_TYPE_IF_ELSE, if_else, if_else)                   \
   V(WASM_EXPR_TYPE_LOAD, load, load)                            \
   V(WASM_EXPR_TYPE_LOOP, loop, loop)                            \
+  V(WASM_EXPR_TYPE_SET_GLOBAL, set_global, set_global)          \
   V(WASM_EXPR_TYPE_SET_LOCAL, set_local, set_local)             \
   V(WASM_EXPR_TYPE_STORE, store, store)                         \
   V(WASM_EXPR_TYPE_TEE_LOCAL, tee_local, tee_local)             \
@@ -427,6 +441,9 @@ void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
     case WASM_EXPR_TYPE_CALL_INDIRECT:
       wasm_destroy_var(allocator, &expr->call_indirect.var);
       break;
+    case WASM_EXPR_TYPE_GET_GLOBAL:
+      wasm_destroy_var(allocator, &expr->get_global.var);
+      break;
     case WASM_EXPR_TYPE_GET_LOCAL:
       wasm_destroy_var(allocator, &expr->get_local.var);
       break;
@@ -439,6 +456,9 @@ void wasm_destroy_expr(WasmAllocator* allocator, WasmExpr* expr) {
       break;
     case WASM_EXPR_TYPE_LOOP:
       wasm_destroy_block(allocator, &expr->loop);
+      break;
+    case WASM_EXPR_TYPE_SET_GLOBAL:
+      wasm_destroy_var(allocator, &expr->set_global.var);
       break;
     case WASM_EXPR_TYPE_SET_LOCAL:
       wasm_destroy_var(allocator, &expr->set_local.var);
@@ -482,6 +502,11 @@ void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
   wasm_destroy_expr_list(allocator, func->first_expr);
 }
 
+void wasm_destroy_global(WasmAllocator* allocator, WasmGlobal* global) {
+  wasm_destroy_string_slice(allocator, &global->name);
+  wasm_destroy_expr_list(allocator, global->init_expr);
+}
+
 void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
   wasm_destroy_string_slice(allocator, &import->name);
   wasm_destroy_string_slice(allocator, &import->module_name);
@@ -517,6 +542,9 @@ static void destroy_module_field(WasmAllocator* allocator,
   switch (field->type) {
     case WASM_MODULE_FIELD_TYPE_FUNC:
       wasm_destroy_func(allocator, &field->func);
+      break;
+    case WASM_MODULE_FIELD_TYPE_GLOBAL:
+      wasm_destroy_global(allocator, &field->global);
       break;
     case WASM_MODULE_FIELD_TYPE_IMPORT:
       wasm_destroy_import(allocator, &field->import);
@@ -696,6 +724,10 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
       CALLBACK(on_drop_expr);
       break;
 
+    case WASM_EXPR_TYPE_GET_GLOBAL:
+      CALLBACK(on_get_global_expr);
+      break;
+
     case WASM_EXPR_TYPE_GET_LOCAL:
       CALLBACK(on_get_local_expr);
       break;
@@ -738,6 +770,10 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_SELECT:
       CALLBACK(on_select_expr);
+      break;
+
+    case WASM_EXPR_TYPE_SET_GLOBAL:
+      CALLBACK(on_set_global_expr);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:

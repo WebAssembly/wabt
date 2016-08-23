@@ -100,6 +100,16 @@ static WasmResult use_name_for_func_var(WasmAllocator* allocator,
   return WASM_OK;
 }
 
+static WasmResult use_name_for_global_var(WasmAllocator* allocator,
+                                          WasmModule* module,
+                                          WasmVar* var) {
+  WasmGlobal* global = wasm_get_global_by_var(module, var);
+  if (global == NULL)
+    return WASM_ERROR;
+  use_name_for_var(allocator, &global->name, var);
+  return WASM_OK;
+}
+
 static WasmResult use_name_for_import_var(WasmAllocator* allocator,
                                           WasmModule* module,
                                           WasmVar* var) {
@@ -218,6 +228,13 @@ static WasmResult on_call_indirect_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult on_get_global_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  CHECK_RESULT(use_name_for_global_var(ctx->allocator, ctx->module,
+                                       &expr->get_global.var));
+  return WASM_OK;
+}
+
 static WasmResult on_get_local_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
@@ -256,10 +273,24 @@ static WasmResult end_if_else_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult on_set_global_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  CHECK_RESULT(use_name_for_global_var(ctx->allocator, ctx->module,
+                                       &expr->set_global.var));
+  return WASM_OK;
+}
+
 static WasmResult on_set_local_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->set_local.var));
+  return WASM_OK;
+}
+
+static WasmResult on_tee_local_expr(WasmExpr* expr, void* user_data) {
+  Context* ctx = user_data;
+  CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
+                                                &expr->tee_local.var));
   return WASM_OK;
 }
 
@@ -335,13 +366,16 @@ WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.visitor.on_call_expr = on_call_expr;
   ctx.visitor.on_call_import_expr = on_call_import_expr;
   ctx.visitor.on_call_indirect_expr = on_call_indirect_expr;
+  ctx.visitor.on_get_global_expr = on_get_global_expr;
   ctx.visitor.on_get_local_expr = on_get_local_expr;
   ctx.visitor.begin_if_expr = begin_if_expr;
   ctx.visitor.end_if_expr = end_if_expr;
   ctx.visitor.begin_if_else_expr = begin_if_else_expr;
   ctx.visitor.after_if_else_true_expr = after_if_else_true_expr;
   ctx.visitor.end_if_else_expr = end_if_else_expr;
+  ctx.visitor.on_set_global_expr = on_set_global_expr;
   ctx.visitor.on_set_local_expr = on_set_local_expr;
+  ctx.visitor.on_tee_local_expr = on_tee_local_expr;
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.param_index_to_name);
   wasm_destroy_string_slice_vector(allocator, &ctx.local_index_to_name);

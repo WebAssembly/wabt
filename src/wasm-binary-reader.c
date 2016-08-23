@@ -470,6 +470,88 @@ static WasmResult logging_end_memory_section(void* user_data) {
   FORWARD0(end_memory_section);
 }
 
+static WasmResult logging_begin_global_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_global_section\n");
+  indent(ctx);
+  FORWARD0(begin_global_section);
+}
+
+static WasmResult logging_on_global_count(uint32_t count, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_global_count(%u)\n", count);
+  FORWARD(on_global_count, count);
+}
+
+static WasmResult logging_begin_global(uint32_t index,
+                                       WasmType type,
+                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("begin_global(index: %u, type: %s)\n", index, s_type_names[type]);
+  FORWARD(begin_global, index, type);
+}
+
+static WasmResult logging_on_global_f32_const_expr(uint32_t index,
+                                                   uint32_t value_bits,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  float value;
+  memcpy(&value, &value_bits, sizeof(value));
+  LOGF("on_global_f32_const_expr(index: %u, value: %g (0x04%x))\n", index,
+       value, value_bits);
+  FORWARD(on_global_f32_const_expr, index, value_bits);
+}
+
+static WasmResult logging_on_global_f64_const_expr(uint32_t index,
+                                                   uint64_t value_bits,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  double value;
+  memcpy(&value, &value_bits, sizeof(value));
+  LOGF("on_global_f64_const_expr(index: %u value: %g (0x08%" PRIx64 "))\n",
+       index, value, value_bits);
+  FORWARD(on_global_f64_const_expr, index, value_bits);
+}
+
+static WasmResult logging_on_global_get_global_expr(uint32_t index,
+                                                    uint32_t global_index,
+                                                    void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_global_get_global_expr(index: %u global_index: %u)\n", index,
+       global_index);
+  FORWARD(on_global_get_global_expr, index, global_index);
+}
+
+static WasmResult logging_on_global_i32_const_expr(uint32_t index,
+                                                   uint32_t value,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_global_i32_const_expr(index: %u, value: %u)\n", index, value);
+  FORWARD(on_global_i32_const_expr, index, value);
+}
+
+static WasmResult logging_on_global_i64_const_expr(uint32_t index,
+                                                   uint64_t value,
+                                                   void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_global_i64_const_expr(index: %u, value: %" PRIu64 ")\n", index,
+       value);
+  FORWARD(on_global_i64_const_expr, index, value);
+}
+
+static WasmResult logging_end_global(uint32_t index, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("end_global(%u)\n", index);
+  FORWARD(end_global, index);
+}
+
+static WasmResult logging_end_global_section(void* user_data) {
+  LoggingContext* ctx = user_data;
+  dedent(ctx);
+  LOGF("end_global_section\n");
+  FORWARD0(end_global_section);
+}
+
 static WasmResult logging_begin_data_segment_section(void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("begin_data_segment_section\n");
@@ -757,10 +839,17 @@ static WasmResult logging_on_f32_const_expr(uint32_t value_bits,
 static WasmResult logging_on_f64_const_expr(uint64_t value_bits,
                                             void* user_data) {
   LoggingContext* ctx = user_data;
-  float value;
+  double value;
   memcpy(&value, &value_bits, sizeof(value));
   LOGF("on_f64_const_expr(%g (0x08%" PRIx64 "))\n", value, value_bits);
   FORWARD(on_f64_const_expr, value_bits);
+}
+
+static WasmResult logging_on_get_global_expr(uint32_t global_index,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_get_global_expr(index: %u)\n", global_index);
+  FORWARD(on_get_global_expr, global_index);
 }
 
 static WasmResult logging_on_get_local_expr(uint32_t local_index,
@@ -832,6 +921,13 @@ static WasmResult logging_on_select_expr(void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("on_select_expr\n");
   FORWARD0(on_select_expr);
+}
+
+static WasmResult logging_on_set_global_expr(uint32_t global_index,
+                                            void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_set_global_expr(index: %u)\n", global_index);
+  FORWARD(on_set_global_expr, global_index);
 }
 
 static WasmResult logging_on_set_local_expr(uint32_t local_index,
@@ -1033,6 +1129,16 @@ static WasmBinaryReader s_logging_binary_reader = {
     .on_memory_max_size_pages = &logging_on_memory_max_size_pages,
     .on_memory_exported = &logging_on_memory_exported,
     .end_memory_section = &logging_end_memory_section,
+    .begin_global_section = &logging_begin_global_section,
+    .on_global_count = &logging_on_global_count,
+    .begin_global = &logging_begin_global,
+    .on_global_f32_const_expr = &logging_on_global_f32_const_expr,
+    .on_global_f64_const_expr = &logging_on_global_f64_const_expr,
+    .on_global_get_global_expr = &logging_on_global_get_global_expr,
+    .on_global_i32_const_expr = &logging_on_global_i32_const_expr,
+    .on_global_i64_const_expr = &logging_on_global_i64_const_expr,
+    .end_global = &logging_end_global,
+    .end_global_section = &logging_end_global_section,
     .begin_data_segment_section = &logging_begin_data_segment_section,
     .on_data_segment_count = &logging_on_data_segment_count,
     .on_data_segment = &logging_on_data_segment,
@@ -1071,6 +1177,7 @@ static WasmBinaryReader s_logging_binary_reader = {
     .on_end_expr = &logging_on_end_expr,
     .on_f32_const_expr = &logging_on_f32_const_expr,
     .on_f64_const_expr = &logging_on_f64_const_expr,
+    .on_get_global_expr = &logging_on_get_global_expr,
     .on_get_local_expr = &logging_on_get_local_expr,
     .on_grow_memory_expr = &logging_on_grow_memory_expr,
     .on_i32_const_expr = &logging_on_i32_const_expr,
@@ -1082,6 +1189,7 @@ static WasmBinaryReader s_logging_binary_reader = {
     .on_nop_expr = &logging_on_nop_expr,
     .on_return_expr = &logging_on_return_expr,
     .on_select_expr = &logging_on_select_expr,
+    .on_set_global_expr = &logging_on_set_global_expr,
     .on_set_local_expr = &logging_on_set_local_expr,
     .on_store_expr = &logging_on_store_expr,
     .on_tee_local_expr = &logging_on_tee_local_expr,
@@ -1282,6 +1390,70 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(end_memory_section);
   }
 
+  uint32_t num_globals;
+  if (skip_until_section(ctx, WASM_SECTION_INDEX_GLOBAL)) {
+    CALLBACK0(begin_global_section);
+    uint32_t i;
+    in_u32_leb128(ctx, &num_globals, "global count");
+    CALLBACK(on_global_count, num_globals);
+    for (i = 0; i < num_globals; ++i) {
+      uint8_t global_type;
+      in_u8(ctx, &global_type, "global type");
+      CALLBACK(begin_global, i, global_type);
+
+      uint8_t opcode;
+      in_u8(ctx, &opcode, "opcode");
+      switch (opcode) {
+        case WASM_OPCODE_I32_CONST: {
+          uint32_t value = 0;
+          in_i32_leb128(ctx, &value, "global i32.const value");
+          CALLBACK(on_global_i32_const_expr, i, value);
+          break;
+        }
+
+        case WASM_OPCODE_I64_CONST: {
+          uint64_t value = 0;
+          in_i64_leb128(ctx, &value, "global i64.const value");
+          CALLBACK(on_global_i64_const_expr, i, value);
+          break;
+        }
+
+        case WASM_OPCODE_F32_CONST: {
+          uint32_t value_bits = 0;
+          in_f32(ctx, &value_bits, "global f32.const value");
+          CALLBACK(on_global_f32_const_expr, i, value_bits);
+          break;
+        }
+
+        case WASM_OPCODE_F64_CONST: {
+          uint64_t value_bits = 0;
+          in_f64(ctx, &value_bits, "global f64.const value");
+          CALLBACK(on_global_f64_const_expr, i, value_bits);
+          break;
+        }
+
+        case WASM_OPCODE_GET_GLOBAL: {
+          uint32_t global_index;
+          in_u32_leb128(ctx, &global_index, "global get_global index");
+          CALLBACK(on_global_get_global_expr, i, global_index);
+          break;
+        }
+
+        default:
+          RAISE_ERROR(
+              "unexpected opcode in global initializer expression: %d (0x%x)",
+              opcode, opcode);
+          break;
+      }
+      in_u8(ctx, &opcode, "opcode");
+      RAISE_ERROR_UNLESS(
+          opcode == WASM_OPCODE_END,
+          "expected END opcode after global initializer expression");
+      CALLBACK(end_global, i);
+    }
+    CALLBACK0(end_global_section);
+  }
+
   /* export */
   uint32_t num_exports = 0;
   if (skip_until_section(ctx, WASM_SECTION_INDEX_EXPORT)) {
@@ -1466,10 +1638,24 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
             }
 
+            case WASM_OPCODE_GET_GLOBAL: {
+              uint32_t global_index;
+              in_u32_leb128(ctx, &global_index, "get_global global index");
+              CALLBACK(on_get_global_expr, global_index);
+              break;
+            }
+
             case WASM_OPCODE_GET_LOCAL: {
               uint32_t local_index;
               in_u32_leb128(ctx, &local_index, "get_local local index");
               CALLBACK(on_get_local_expr, local_index);
+              break;
+            }
+
+            case WASM_OPCODE_SET_GLOBAL: {
+              uint32_t global_index;
+              in_u32_leb128(ctx, &global_index, "set_global global index");
+              CALLBACK(on_set_global_expr, global_index);
               break;
             }
 
