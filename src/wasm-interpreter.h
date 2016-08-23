@@ -152,6 +152,7 @@ typedef struct WasmInterpreterModule {
   WasmInterpreterFuncTableEntryArray func_table;
   WasmInterpreterImportArray imports;
   WasmInterpreterExportArray exports;
+  WasmInterpreterTypedValueArray globals;
   WasmOutputBuffer istream;
   uint32_t start_func_offset; /* == WASM_INVALID_OFFSET if not defined */
 } WasmInterpreterModule;

@@ -1,2 +1,21 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/globals.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/globals.wast:36:11: invalid global initializer expression. Must be *.const or get_global.
+  (module (global f32 (f32.neg (f32.const 0))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/globals.wast:41:11: invalid global initializer expression. Must be *.const or get_global.
+  (module (global f32 (get_local 0)))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/globals.wast:46:24: type mismatch at global initializer expression. got f32, expected i32
+  (module (global i32 (f32.const 0)))
+                       ^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/globals.wast:51:11: global can only be defined in terms of a previously defined global.
+  (module (global i32 (get_global 0)))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12/12 tests passed.
+;;; STDOUT ;;)

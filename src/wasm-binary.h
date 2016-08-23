@@ -26,6 +26,7 @@
 #define WASM_SECTION_NAME_FUNCTION "function"
 #define WASM_SECTION_NAME_TABLE "table"
 #define WASM_SECTION_NAME_MEMORY "memory"
+#define WASM_SECTION_NAME_GLOBAL "global"
 #define WASM_SECTION_NAME_EXPORT "export"
 #define WASM_SECTION_NAME_START "start"
 #define WASM_SECTION_NAME_CODE "code"
@@ -38,6 +39,7 @@
   V(FUNCTION)                   \
   V(TABLE)                      \
   V(MEMORY)                     \
+  V(GLOBAL)                     \
   V(EXPORT)                     \
   V(START)                      \
   V(CODE)                       \

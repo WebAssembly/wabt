@@ -396,6 +396,11 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_DROP]);
       break;
 
+    case WASM_EXPR_TYPE_GET_GLOBAL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_GET_GLOBAL]);
+      write_var(ctx, &expr->get_global.var, NEXT_CHAR_NEWLINE);
+      break;
+
     case WASM_EXPR_TYPE_GET_LOCAL:
       write_puts_space(ctx, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
       write_var(ctx, &expr->get_local.var, NEXT_CHAR_NEWLINE);
@@ -445,6 +450,11 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_SELECT:
       write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_SELECT]);
+      break;
+
+    case WASM_EXPR_TYPE_SET_GLOBAL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_SET_GLOBAL]);
+      write_var(ctx, &expr->set_global.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:
@@ -551,6 +561,22 @@ static void write_func(Context* ctx,
   write_close_newline(ctx);
 }
 
+static void write_global(Context* ctx,
+                         const WasmModule* module,
+                         int global_index,
+                         const WasmGlobal* global) {
+  write_open_space(ctx, "global");
+  write_string_slice_or_index(ctx, &global->name, global_index,
+                              NEXT_CHAR_SPACE);
+  write_type(ctx, global->type, NEXT_CHAR_SPACE);
+  write_puts(ctx, "(", NEXT_CHAR_NONE);
+  write_expr(ctx, global->init_expr);
+  /* clear the next char, so we don't write a newline after the expr */
+  ctx->next_char = NEXT_CHAR_NONE;
+  write_puts(ctx, ")", NEXT_CHAR_NONE);
+  write_close_newline(ctx);
+}
+
 static void write_import(Context* ctx,
                          int import_index,
                          const WasmImport* import) {
@@ -636,6 +662,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
   write_open_newline(ctx, "module");
   const WasmModuleField* field;
   int func_index = 0;
+  int global_index = 0;
   int import_index = 0;
   int export_index = 0;
   int func_type_index = 0;
@@ -643,6 +670,9 @@ static void write_module(Context* ctx, const WasmModule* module) {
     switch (field->type) {
       case WASM_MODULE_FIELD_TYPE_FUNC:
         write_func(ctx, module, func_index++, &field->func);
+        break;
+      case WASM_MODULE_FIELD_TYPE_GLOBAL:
+        write_global(ctx, module, global_index++, &field->global);
         break;
       case WASM_MODULE_FIELD_TYPE_IMPORT:
         write_import(ctx, import_index++, &field->import);

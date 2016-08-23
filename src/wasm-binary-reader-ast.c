@@ -145,6 +145,90 @@ static WasmResult on_memory_max_size_pages(uint32_t pages, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult on_global_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_reserve_global_ptrs(ctx->allocator, &ctx->module->globals, count);
+  return WASM_OK;
+}
+
+static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.capacity);
+
+  WasmModuleField* field =
+      wasm_append_module_field(ctx->allocator, ctx->module);
+  field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
+
+  WasmGlobal* global = &field->global;
+  WASM_ZERO_MEMORY(*global);
+  global->type = type;
+
+  WasmGlobalPtr* global_ptr =
+      wasm_append_global_ptr(ctx->allocator, &ctx->module->globals);
+  *global_ptr = global;
+  return WASM_OK;
+}
+
+static WasmResult on_global_f32_const_expr(uint32_t index,
+                                           uint32_t value,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  WasmGlobal* global = ctx->module->globals.data[index];
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_F32;
+  expr->const_.f32_bits = value;
+  global->init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_global_f64_const_expr(uint32_t index,
+                                           uint64_t value,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  WasmGlobal* global = ctx->module->globals.data[index];
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_F64;
+  expr->const_.f64_bits = value;
+  global->init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_global_get_global_expr(uint32_t index,
+                                            uint32_t global_index,
+                                            void* user_data) {
+  Context* ctx = user_data;
+  WasmGlobal* global = ctx->module->globals.data[index];
+  WasmExpr* expr = wasm_new_get_global_expr(ctx->allocator);
+  expr->get_global.var.type = WASM_VAR_TYPE_INDEX;
+  expr->get_global.var.index = global_index;
+  global->init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_global_i32_const_expr(uint32_t index,
+                                           uint32_t value,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  WasmGlobal* global = ctx->module->globals.data[index];
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_I32;
+  expr->const_.u32 = value;
+  global->init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_global_i64_const_expr(uint32_t index,
+                                           uint64_t value,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  WasmGlobal* global = ctx->module->globals.data[index];
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_I64;
+  expr->const_.u64 = value;
+  global->init_expr = expr;
+  return WASM_OK;
+}
+
 static WasmResult on_memory_exported(WasmBool exported, void* user_data) {
   Context* ctx = user_data;
   if (exported) {
@@ -477,6 +561,14 @@ static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
   return append_expr(ctx, expr);
 }
 
+static WasmResult on_get_global_expr(uint32_t global_index, void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_get_global_expr(ctx->allocator);
+  expr->get_global.var.type = WASM_VAR_TYPE_INDEX;
+  expr->get_global.var.index = global_index;
+  return append_expr(ctx, expr);
+}
+
 static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_get_local_expr(ctx->allocator);
@@ -550,6 +642,14 @@ static WasmResult on_return_expr(void* user_data) {
 static WasmResult on_select_expr(void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_select_expr(ctx->allocator);
+  return append_expr(ctx, expr);
+}
+
+static WasmResult on_set_global_expr(uint32_t global_index, void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_set_global_expr(ctx->allocator);
+  expr->set_global.var.type = WASM_VAR_TYPE_INDEX;
+  expr->set_global.var.index = global_index;
   return append_expr(ctx, expr);
 }
 
@@ -749,6 +849,14 @@ static WasmBinaryReader s_binary_reader = {
     .on_memory_max_size_pages = &on_memory_max_size_pages,
     .on_memory_exported = &on_memory_exported,
 
+    .on_global_count = &on_global_count,
+    .begin_global = &begin_global,
+    .on_global_f32_const_expr = &on_global_f32_const_expr,
+    .on_global_f64_const_expr = &on_global_f64_const_expr,
+    .on_global_get_global_expr = &on_global_get_global_expr,
+    .on_global_i32_const_expr = &on_global_i32_const_expr,
+    .on_global_i64_const_expr = &on_global_i64_const_expr,
+
     .on_data_segment_count = &on_data_segment_count,
     .on_data_segment = &on_data_segment,
 
@@ -780,6 +888,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_end_expr = &on_end_expr,
     .on_f32_const_expr = &on_f32_const_expr,
     .on_f64_const_expr = &on_f64_const_expr,
+    .on_get_global_expr = &on_get_global_expr,
     .on_get_local_expr = &on_get_local_expr,
     .on_grow_memory_expr = &on_grow_memory_expr,
     .on_i32_const_expr = &on_i32_const_expr,
@@ -790,6 +899,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_nop_expr = &on_nop_expr,
     .on_return_expr = &on_return_expr,
     .on_select_expr = &on_select_expr,
+    .on_set_global_expr = &on_set_global_expr,
     .on_set_local_expr = &on_set_local_expr,
     .on_store_expr = &on_store_expr,
     .on_tee_local_expr = &on_tee_local_expr,

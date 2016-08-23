@@ -153,6 +153,14 @@ static WasmResult visit_func(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult visit_global(Context* ctx,
+                               uint32_t global_index,
+                               WasmGlobal* global) {
+  maybe_generate_and_bind_name(ctx->allocator, &ctx->module->global_bindings,
+                               "$g", global_index, &global->name);
+  return WASM_OK;
+}
+
 static WasmResult visit_func_type(Context* ctx,
                                   uint32_t func_type_index,
                                   WasmFuncType* func_type) {
@@ -171,6 +179,8 @@ static WasmResult visit_import(Context* ctx,
 
 static WasmResult visit_module(Context* ctx, WasmModule* module) {
   size_t i;
+  for (i = 0; i < module->globals.size; ++i)
+    CHECK_RESULT(visit_global(ctx, i, module->globals.data[i]));
   for (i = 0; i < module->func_types.size; ++i)
     CHECK_RESULT(visit_func_type(ctx, i, module->func_types.data[i]));
   for (i = 0; i < module->imports.size; ++i)

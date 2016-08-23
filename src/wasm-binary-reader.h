@@ -49,6 +49,28 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_memory_exported)(WasmBool exported, void* user_data);
   WasmResult (*end_memory_section)(void* user_data);
 
+  /* global section */
+  WasmResult (*begin_global_section)(void* user_data);
+  WasmResult (*on_global_count)(uint32_t count, void* user_data);
+  WasmResult (*begin_global)(uint32_t index, WasmType type, void* user_data);
+  WasmResult (*on_global_f32_const_expr)(uint32_t index,
+                                         uint32_t value,
+                                         void* user_data);
+  WasmResult (*on_global_f64_const_expr)(uint32_t index,
+                                         uint64_t value,
+                                         void* user_data);
+  WasmResult (*on_global_get_global_expr)(uint32_t index,
+                                          uint32_t global_index,
+                                          void* user_data);
+  WasmResult (*on_global_i32_const_expr)(uint32_t index,
+                                         uint32_t value,
+                                         void* user_data);
+  WasmResult (*on_global_i64_const_expr)(uint32_t index,
+                                         uint64_t value,
+                                         void* user_data);
+  WasmResult (*end_global)(uint32_t index, void* user_data);
+  WasmResult (*end_global_section)(void* user_data);
+
   /* data segment section */
   WasmResult (*begin_data_segment_section)(void* user_data);
   WasmResult (*on_data_segment_count)(uint32_t count, void* user_data);
@@ -121,6 +143,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_end_expr)(void* user_data);
   WasmResult (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
   WasmResult (*on_f64_const_expr)(uint64_t value_bits, void* user_data);
+  WasmResult (*on_get_global_expr)(uint32_t global_index, void* user_data);
   WasmResult (*on_get_local_expr)(uint32_t local_index, void* user_data);
   WasmResult (*on_grow_memory_expr)(void* user_data);
   WasmResult (*on_i32_const_expr)(uint32_t value, void* user_data);
@@ -135,6 +158,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_nop_expr)(void* user_data);
   WasmResult (*on_return_expr)(void* user_data);
   WasmResult (*on_select_expr)(void* user_data);
+  WasmResult (*on_set_global_expr)(uint32_t global_index, void* user_data);
   WasmResult (*on_set_local_expr)(uint32_t local_index, void* user_data);
   WasmResult (*on_store_expr)(WasmOpcode opcode,
                               uint32_t alignment_log2,

@@ -61,6 +61,16 @@
     }                                                                       \
   } while (0)
 
+#define CHECK_GLOBAL(ctx, global_index)                                       \
+  do {                                                                        \
+    uint32_t max_global_index = (ctx)->module->globals.size;                  \
+    if ((global_index) >= max_global_index) {                                 \
+      print_error((ctx), "invalid global_index: %d (max %d)", (global_index), \
+                  max_global_index);                                          \
+      return WASM_ERROR;                                                      \
+    }                                                                         \
+  } while (0)
+
 #define WASM_TYPE_ANY WASM_NUM_TYPES
 
 static const char* s_type_names[] = {
@@ -233,6 +243,11 @@ static WasmType get_local_index_type(InterpreterFunc* func,
   return func->param_and_local_types.data[local_index];
 }
 
+static WasmType get_global_index_type(Context* ctx, uint32_t global_index) {
+  assert(global_index < ctx->module->globals.size);
+  return ctx->module->globals.data[global_index].type;
+}
+
 static uint32_t translate_depth(Context* ctx, size_t size, uint32_t depth) {
   assert(depth < size);
   return size - 1 - depth;
@@ -260,6 +275,74 @@ static WasmResult on_memory_initial_size_pages(uint32_t pages,
   memory->byte_size = pages * WASM_PAGE_SIZE;
   memory->data = wasm_alloc_zero(ctx->memory_allocator, memory->byte_size,
                                  WASM_DEFAULT_ALIGN);
+  return WASM_OK;
+}
+
+static WasmResult on_global_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_new_interpreter_typed_value_array(ctx->allocator, &ctx->module->globals,
+                                         count);
+  return WASM_OK;
+}
+
+static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  typed_value->type = type;
+  return WASM_OK;
+}
+
+static WasmResult on_global_f32_const_expr(uint32_t index,
+                                           uint32_t value_bits,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  typed_value->value.f32_bits = value_bits;
+  return WASM_OK;
+}
+
+static WasmResult on_global_f64_const_expr(uint32_t index,
+                                           uint64_t value_bits,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  typed_value->value.f64_bits = value_bits;
+  return WASM_OK;
+}
+
+static WasmResult on_global_get_global_expr(uint32_t index,
+                                            uint32_t global_index,
+                                            void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  assert(global_index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  WasmInterpreterTypedValue* ref_typed_value =
+      &ctx->module->globals.data[global_index];
+  typed_value->value = ref_typed_value->value;
+  return WASM_OK;
+}
+
+static WasmResult on_global_i32_const_expr(uint32_t index,
+                                           uint32_t value,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  typed_value->value.i32 = value;
+  return WASM_OK;
+}
+
+static WasmResult on_global_i64_const_expr(uint32_t index,
+                                           uint64_t value,
+                                           void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  typed_value->value.i64 = value;
   return WASM_OK;
 }
 
@@ -832,6 +915,24 @@ static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
 static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
   Context* ctx = user_data;
   push_expr(ctx, WASM_TYPE_F64, WASM_OPCODE_F64_CONST);
+  return WASM_OK;
+}
+
+static WasmResult on_get_global_expr(uint32_t global_index, void* user_data) {
+  Context* ctx = user_data;
+  CHECK_GLOBAL(ctx, global_index);
+  WasmType type = get_global_index_type(ctx, global_index);
+  push_expr(ctx, type, WASM_OPCODE_GET_GLOBAL);
+  return WASM_OK;
+}
+
+static WasmResult on_set_global_expr(uint32_t global_index, void* user_data) {
+  Context* ctx = user_data;
+  CHECK_GLOBAL(ctx, global_index);
+  WasmType type = get_global_index_type(ctx, global_index);
+  WasmType value = pop_expr(ctx);
+  CHECK_RESULT(check_type(ctx, type, value, "set_global"));
+  ctx->expr_count++;
   return WASM_OK;
 }
 
@@ -1505,6 +1606,19 @@ static WasmResult on_emit_f64_const_expr(uint64_t value_bits, void* user_data) {
   return WASM_OK;
 }
 
+static WasmResult on_emit_get_global_expr(uint32_t global_index,
+                                         void* user_data) {
+  Context* ctx = user_data;
+  LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
+       s_opcode_name[WASM_OPCODE_GET_GLOBAL]);
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_GET_GLOBAL));
+  CHECK_RESULT(emit_i32(ctx, global_index));
+  adjust_value_stack(ctx, 1);
+  CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
+  ctx->expr_count++;
+  return WASM_OK;
+}
+
 static WasmResult on_emit_get_local_expr(uint32_t local_index,
                                          void* user_data) {
   Context* ctx = user_data;
@@ -1514,6 +1628,18 @@ static WasmResult on_emit_get_local_expr(uint32_t local_index,
   CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
   adjust_value_stack(ctx, 1);
   CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
+  ctx->expr_count++;
+  return WASM_OK;
+}
+
+static WasmResult on_emit_set_global_expr(uint32_t global_index,
+                                         void* user_data) {
+  Context* ctx = user_data;
+  LOGF("%3" PRIzd ": %s\n", ctx->value_stack_size,
+       s_opcode_name[WASM_OPCODE_SET_GLOBAL]);
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_SET_GLOBAL));
+  CHECK_RESULT(emit_i32(ctx, global_index));
+  adjust_value_stack(ctx, -1);
   ctx->expr_count++;
   return WASM_OK;
 }
@@ -1717,6 +1843,14 @@ static WasmBinaryReader s_binary_reader = {
 
     .on_memory_initial_size_pages = &on_memory_initial_size_pages,
 
+    .on_global_count = &on_global_count,
+    .begin_global = &begin_global,
+    .on_global_f32_const_expr = &on_global_f32_const_expr,
+    .on_global_f64_const_expr = &on_global_f64_const_expr,
+    .on_global_get_global_expr = &on_global_get_global_expr,
+    .on_global_i32_const_expr = &on_global_i32_const_expr,
+    .on_global_i64_const_expr = &on_global_i64_const_expr,
+
     .on_data_segment = &on_data_segment,
 
     .on_signature_count = &on_signature_count,
@@ -1748,6 +1882,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_end_expr = &on_end_expr,
     .on_f32_const_expr = &on_f32_const_expr,
     .on_f64_const_expr = &on_f64_const_expr,
+    .on_get_global_expr = &on_get_global_expr,
     .on_get_local_expr = &on_get_local_expr,
     .on_grow_memory_expr = &on_grow_memory_expr,
     .on_i32_const_expr = &on_i32_const_expr,
@@ -1758,6 +1893,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_nop_expr = &on_nop_expr,
     .on_return_expr = &on_return_expr,
     .on_select_expr = &on_select_expr,
+    .on_set_global_expr = &on_set_global_expr,
     .on_set_local_expr = &on_set_local_expr,
     .on_store_expr = &on_store_expr,
     .on_tee_local_expr = &on_tee_local_expr,
@@ -1798,6 +1934,7 @@ static WasmBinaryReader s_binary_reader_emit = {
     .on_end_expr = &on_emit_end_expr,
     .on_f32_const_expr = &on_emit_f32_const_expr,
     .on_f64_const_expr = &on_emit_f64_const_expr,
+    .on_get_global_expr = &on_emit_get_global_expr,
     .on_get_local_expr = &on_emit_get_local_expr,
     .on_grow_memory_expr = &on_emit_grow_memory_expr,
     .on_i32_const_expr = &on_emit_i32_const_expr,
@@ -1808,6 +1945,7 @@ static WasmBinaryReader s_binary_reader_emit = {
     .on_nop_expr = &on_emit_nop_expr,
     .on_return_expr = &on_emit_return_expr,
     .on_select_expr = &on_emit_select_expr,
+    .on_set_global_expr = &on_emit_set_global_expr,
     .on_set_local_expr = &on_emit_set_local_expr,
     .on_store_expr = &on_emit_store_expr,
     .on_tee_local_expr = &on_emit_tee_local_expr,

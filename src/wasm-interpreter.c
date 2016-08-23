@@ -677,6 +677,20 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         PUSH_F64(read_u64(&pc));
         break;
 
+      case WASM_OPCODE_GET_GLOBAL: {
+        uint32_t index = read_u32(&pc);
+        assert(index < module->globals.size);
+        PUSH(module->globals.data[index].value);
+        break;
+      }
+
+      case WASM_OPCODE_SET_GLOBAL: {
+        uint32_t index = read_u32(&pc);
+        assert(index < module->globals.size);
+        module->globals.data[index].value = POP();
+        break;
+      }
+
       case WASM_OPCODE_GET_LOCAL: {
         WasmInterpreterValue value = PICK(read_u32(&pc));
         PUSH(value);

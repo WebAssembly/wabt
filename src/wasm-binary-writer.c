@@ -408,6 +408,12 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_DROP:
       write_opcode(&ctx->stream, WASM_OPCODE_DROP);
       break;
+    case WASM_EXPR_TYPE_GET_GLOBAL: {
+      int index = wasm_get_global_index_by_var(module, &expr->get_global.var);
+      write_opcode(&ctx->stream, WASM_OPCODE_GET_GLOBAL);
+      write_u32_leb128(&ctx->stream, index, "global index");
+      break;
+    }
     case WASM_EXPR_TYPE_GET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       write_opcode(&ctx->stream, WASM_OPCODE_GET_LOCAL);
@@ -466,6 +472,12 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_SELECT:
       write_opcode(&ctx->stream, WASM_OPCODE_SELECT);
       break;
+    case WASM_EXPR_TYPE_SET_GLOBAL: {
+      int index = wasm_get_global_index_by_var(module, &expr->get_global.var);
+      write_opcode(&ctx->stream, WASM_OPCODE_SET_GLOBAL);
+      write_u32_leb128(&ctx->stream, index, "global index");
+      break;
+    }
     case WASM_EXPR_TYPE_SET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       write_opcode(&ctx->stream, WASM_OPCODE_SET_LOCAL);
@@ -649,6 +661,19 @@ static void write_module(Context* ctx, const WasmModule* module) {
     write_u32_leb128(&ctx->stream, (uint32_t)module->memory->max_pages,
                      "max mem pages");
     wasm_write_u8(&ctx->stream, export_memory, "export mem");
+    end_section(ctx);
+  }
+
+  if (module->globals.size) {
+    begin_section(ctx, WASM_SECTION_NAME_GLOBAL, leb_size_guess);
+    write_u32_leb128(&ctx->stream, module->globals.size, "num globals");
+
+    for (i = 0; i < module->globals.size; ++i) {
+      const WasmGlobal* global = module->globals.data[i];
+      wasm_write_u8(&ctx->stream, global->type, s_type_names[global->type]);
+      write_expr(ctx, module, NULL, global->init_expr);
+      write_opcode(&ctx->stream, WASM_OPCODE_END);
+    }
     end_section(ctx);
   }
 

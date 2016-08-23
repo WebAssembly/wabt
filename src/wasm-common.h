@@ -316,7 +316,9 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, I32, I32, 0, 0xb7, I32_ROTL, "i32.rotl")                       \
   V(I64, I64, I64, 0, 0xb8, I64_ROTR, "i64.rotr")                       \
   V(I64, I64, I64, 0, 0xb9, I64_ROTL, "i64.rotl")                       \
-  V(I32, I64, ___, 0, 0xba, I64_EQZ, "i64.eqz")
+  V(I32, I64, ___, 0, 0xba, I64_EQZ, "i64.eqz")                         \
+  V(___, ___, ___, 0, 0xbb, GET_GLOBAL, "get_global")                   \
+  V(___, ___, ___, 0, 0xbc, SET_GLOBAL, "set_global")
 
 typedef enum WasmOpcode {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \

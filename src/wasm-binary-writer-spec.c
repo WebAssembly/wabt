@@ -197,6 +197,7 @@ static WasmModuleField* append_module_field(
       break;
     }
 
+    case WASM_MODULE_FIELD_TYPE_GLOBAL:
     case WASM_MODULE_FIELD_TYPE_TABLE:
     case WASM_MODULE_FIELD_TYPE_MEMORY:
     case WASM_MODULE_FIELD_TYPE_START:
