@@ -257,6 +257,8 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "get_local"           { RETURN(GET_LOCAL); }
     <i> "set_local"           { RETURN(SET_LOCAL); }
     <i> "tee_local"           { RETURN(TEE_LOCAL); }
+    <i> "get_global"          { RETURN(GET_GLOBAL); }
+    <i> "set_global"          { RETURN(SET_GLOBAL); }
     <i> "i32.load"            { OPCODE(I32_LOAD); RETURN(LOAD); }
     <i> "i64.load"            { OPCODE(I64_LOAD); RETURN(LOAD); }
     <i> "f32.load"            { OPCODE(F32_LOAD); RETURN(LOAD); }
@@ -418,6 +420,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "param"               { RETURN(PARAM); }
     <i> "result"              { RETURN(RESULT); }
     <i> "local"               { RETURN(LOCAL); }
+    <i> "global"              { RETURN(GLOBAL); }
     <i> "module"              { RETURN(MODULE); }
     <i> "memory"              { RETURN(MEMORY); }
     <i> "segment"             { RETURN(SEGMENT); }

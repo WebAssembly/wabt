@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module (func (set_global $f (i32.const 1))))
+(;; STDERR ;;;
+parse/expr/bad-setglobal-name-undefined.txt:2:27: undefined global variable "$f"
+(module (func (set_global $f (i32.const 1))))
+                          ^^
+;;; STDERR ;;)

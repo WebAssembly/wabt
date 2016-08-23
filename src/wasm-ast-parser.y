@@ -133,10 +133,11 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %token NAT INT FLOAT TEXT VAR VALUE_TYPE
 %token NOP DROP BLOCK END IF THEN ELSE LOOP BR BR_IF BR_TABLE
 %token CALL CALL_IMPORT CALL_INDIRECT RETURN
-%token GET_LOCAL SET_LOCAL TEE_LOCAL LOAD STORE OFFSET ALIGN
+%token GET_LOCAL SET_LOCAL TEE_LOCAL GET_GLOBAL SET_GLOBAL
+%token LOAD STORE OFFSET ALIGN
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
-%token FUNC START TYPE PARAM RESULT LOCAL
+%token FUNC START TYPE PARAM RESULT LOCAL GLOBAL
 %token MODULE MEMORY SEGMENT IMPORT EXPORT TABLE
 %token ASSERT_INVALID ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP INVOKE
 %token EOF 0 "EOF"
@@ -160,6 +161,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<func> func_info
 %type<func_sig> func_type
 %type<func_type> type_def
+%type<global> global
 %type<import> import
 %type<memory> memory
 %type<module> module module_fields
@@ -449,6 +451,14 @@ op :
       $$ = wasm_new_tee_local_expr(parser->allocator);
       $$->tee_local.var = $2;
     }
+  | GET_GLOBAL var {
+      $$ = wasm_new_get_global_expr(parser->allocator);
+      $$->get_global.var = $2;
+    }
+  | SET_GLOBAL var {
+      $$ = wasm_new_set_global_expr(parser->allocator);
+      $$->set_global.var = $2;
+    }
   | LOAD offset align {
       $$ = wasm_new_load_expr(parser->allocator);
       $$->load.opcode = $1;
@@ -637,6 +647,16 @@ expr1 :
   | TEE_LOCAL var expr {
       WasmExpr* expr = wasm_new_tee_local_expr(parser->allocator);
       expr->tee_local.var = $2;
+      $$ = join_exprs2(&@1, &$3, expr);
+    }
+  | GET_GLOBAL var {
+      WasmExpr* expr = wasm_new_get_global_expr(parser->allocator);
+      expr->get_global.var = $2;
+      $$ = join_exprs1(&@1, expr);
+    }
+  | SET_GLOBAL var expr {
+      WasmExpr* expr = wasm_new_set_global_expr(parser->allocator);
+      expr->set_global.var = $2;
       $$ = join_exprs2(&@1, &$3, expr);
     }
   | LOAD offset align expr {
@@ -858,6 +878,20 @@ start :
     LPAR START var RPAR { $$ = $3; }
 ;
 
+global :
+    LPAR GLOBAL VALUE_TYPE expr RPAR {
+      $$.loc = @2;
+      $$.type = $3;
+      $$.init_expr = $4.first;
+    }
+  | LPAR GLOBAL bind_var VALUE_TYPE expr RPAR {
+      $$.loc = @2;
+      $$.name = $3;
+      $$.type = $4;
+      $$.init_expr = $5.first;
+    }
+;
+
 segment_address :
     NAT {
       if (WASM_FAILED(wasm_parse_int32($1.text.start,
@@ -1025,6 +1059,23 @@ module_fields :
                                 &export_field->export_.name);
         binding->loc = export_field->loc;
         binding->index = $$->exports.size - 1;
+      }
+    }
+  | module_fields global {
+      $$ = $1;
+      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
+      field->loc = @2;
+      field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
+      field->global = $2;
+
+      WasmGlobal* global_ptr = &field->global;
+      wasm_append_global_ptr_value(parser->allocator, &$$->globals,
+                                   &global_ptr);
+      if (field->global.name.start) {
+        WasmBinding* binding = wasm_insert_binding(
+            parser->allocator, &$$->global_bindings, &field->global.name);
+        binding->loc = field->loc;
+        binding->index = $$->globals.size - 1;
       }
     }
   | module_fields import {

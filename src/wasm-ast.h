@@ -69,6 +69,7 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_CONVERT,
   WASM_EXPR_TYPE_CURRENT_MEMORY,
   WASM_EXPR_TYPE_DROP,
+  WASM_EXPR_TYPE_GET_GLOBAL,
   WASM_EXPR_TYPE_GET_LOCAL,
   WASM_EXPR_TYPE_GROW_MEMORY,
   WASM_EXPR_TYPE_IF,
@@ -78,6 +79,7 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_NOP,
   WASM_EXPR_TYPE_RETURN,
   WASM_EXPR_TYPE_SELECT,
+  WASM_EXPR_TYPE_SET_GLOBAL,
   WASM_EXPR_TYPE_SET_LOCAL,
   WASM_EXPR_TYPE_STORE,
   WASM_EXPR_TYPE_TEE_LOCAL,
@@ -124,18 +126,13 @@ struct WasmExpr {
     } br_table;
     struct { WasmVar var; } call, call_import, call_indirect;
     WasmConst const_;
+    struct { WasmVar var; } get_global, set_global;
     struct { WasmVar var; } get_local, set_local, tee_local;
     struct { WasmBlock true_; } if_;
     struct { WasmBlock true_, false_; } if_else;
     struct { WasmOpcode opcode; uint32_t align; uint64_t offset; } load, store;
   };
 };
-
-typedef struct WasmBoundType {
-  WasmLocation loc;
-  WasmStringSlice name;
-  WasmType type;
-} WasmBoundType;
 
 typedef struct WasmFuncSignature {
   WasmType result_type;
@@ -173,6 +170,15 @@ typedef struct WasmFunc {
 } WasmFunc;
 typedef WasmFunc* WasmFuncPtr;
 WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
+
+typedef struct WasmGlobal {
+  WasmLocation loc;
+  WasmStringSlice name;
+  WasmType type;
+  WasmExpr* init_expr;
+} WasmGlobal;
+typedef WasmGlobal* WasmGlobalPtr;
+WASM_DEFINE_VECTOR(global_ptr, WasmGlobalPtr);
 
 typedef struct WasmImport {
   WasmLocation loc;
@@ -212,6 +218,7 @@ typedef struct WasmExportMemory {
 
 typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_FUNC,
+  WASM_MODULE_FIELD_TYPE_GLOBAL,
   WASM_MODULE_FIELD_TYPE_IMPORT,
   WASM_MODULE_FIELD_TYPE_EXPORT,
   WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY,
@@ -227,6 +234,7 @@ typedef struct WasmModuleField {
   struct WasmModuleField* next;
   union {
     WasmFunc func;
+    WasmGlobal global;
     WasmImport import;
     WasmExport export_;
     WasmExportMemory export_memory;
@@ -243,6 +251,7 @@ typedef struct WasmModule {
 
   /* cached for convenience */
   WasmFuncPtrVector funcs;
+  WasmGlobalPtrVector globals;
   WasmImportPtrVector imports;
   WasmExportPtrVector exports;
   WasmFuncTypePtrVector func_types;
@@ -252,6 +261,7 @@ typedef struct WasmModule {
   WasmExportMemory* export_memory;
 
   WasmBindingHash func_bindings;
+  WasmBindingHash global_bindings;
   WasmBindingHash import_bindings;
   WasmBindingHash export_bindings;
   WasmBindingHash func_type_bindings;
@@ -329,6 +339,7 @@ typedef struct WasmExprVisitor {
   WasmResult (*on_convert_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_current_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_drop_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_get_global_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_get_local_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_grow_memory_expr)(WasmExpr*, void* user_data);
   WasmResult (*begin_if_expr)(WasmExpr*, void* user_data);
@@ -342,6 +353,7 @@ typedef struct WasmExprVisitor {
   WasmResult (*on_nop_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_return_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_select_expr)(WasmExpr*, void* user_data);
+  WasmResult (*on_set_global_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_set_local_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_store_expr)(WasmExpr*, void* user_data);
   WasmResult (*on_tee_local_expr)(WasmExpr*, void* user_data);
@@ -376,6 +388,7 @@ WasmExpr* wasm_new_const_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_convert_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_current_memory_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_drop_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_get_global_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_get_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_grow_memory_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_if_expr(struct WasmAllocator*);
@@ -385,6 +398,7 @@ WasmExpr* wasm_new_loop_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_nop_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_return_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
+WasmExpr* wasm_new_set_global_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
 WasmExpr* wasm_new_tee_local_expr(struct WasmAllocator*);
@@ -423,6 +437,7 @@ WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor*);
 int wasm_get_index_from_var(const WasmBindingHash* bindings,
                             const WasmVar* var);
 int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
+int wasm_get_global_index_by_var(const WasmModule* func, const WasmVar* var);
 int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var);
 int wasm_get_func_type_index_by_sig(const WasmModule* module,
@@ -434,6 +449,8 @@ int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
+WasmGlobalPtr wasm_get_global_by_var(const WasmModule* func,
+                                     const WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
                                           const WasmVar* var);
 WasmImportPtr wasm_get_import_by_var(const WasmModule* module,

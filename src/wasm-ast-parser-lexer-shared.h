@@ -62,6 +62,12 @@ typedef enum WasmFuncFieldType {
   WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
 } WasmFuncFieldType;
 
+typedef struct WasmBoundType {
+  WasmLocation loc;
+  WasmStringSlice name;
+  WasmType type;
+} WasmBoundType;
+
 typedef struct WasmFuncField {
   WasmFuncFieldType type;
   union {
@@ -99,6 +105,7 @@ typedef union WasmToken {
   WasmMemory memory;
   WasmFuncSignature func_sig;
   WasmFuncType func_type;
+  WasmGlobal global;
   WasmImport* import;
   WasmExport export_;
   WasmExportMemory export_memory;
