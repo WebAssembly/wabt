@@ -3,12 +3,11 @@
 magic
 version
 section("memory") {
+  has_max[0]
   initial[leb_u32(65537)]
-  max[0]
-  export[0]
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000013: invalid memory initial size
+error: @0x00000014: invalid memory initial size
 
 ;;; STDERR ;;)

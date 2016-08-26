@@ -179,8 +179,7 @@ static WasmResult check_func_var(Context* ctx,
 
 static WasmResult check_global_var(Context* ctx,
                                    const WasmVar* var,
-                                   const WasmGlobal** out_global,
-                                   int* out_global_index) {
+                                   const WasmGlobal** out_global) {
   int index;
   if (WASM_FAILED(check_var(ctx, &ctx->current_module->global_bindings,
                             ctx->current_module->globals.size, var, "global",
@@ -190,8 +189,6 @@ static WasmResult check_global_var(Context* ctx,
 
   if (out_global)
     *out_global = ctx->current_module->globals.data[index];
-  if (out_global_index)
-    *out_global_index = index;
   return WASM_OK;
 }
 
@@ -690,7 +687,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_GET_GLOBAL: {
       const WasmGlobal* global;
       if (WASM_SUCCEEDED(
-              check_global_var(ctx, &expr->get_global.var, &global, NULL))) {
+              check_global_var(ctx, &expr->get_global.var, &global))) {
         push_type(ctx, global->type);
       }
       break;
@@ -803,7 +800,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       WasmCheckType type = WASM_TYPE_I32;
       const WasmGlobal* global;
       if (WASM_SUCCEEDED(
-              check_global_var(ctx, &expr->set_global.var, &global, NULL))) {
+              check_global_var(ctx, &expr->set_global.var, &global))) {
         type = global->type;
       }
       transform_stack(ctx, &expr->loc, "set_global", 1, 0, type);
@@ -888,7 +885,7 @@ static void check_func(Context* ctx,
     const WasmFuncType* func_type;
     if (WASM_SUCCEEDED(
             check_func_type_var(ctx, &func->decl.type_var, &func_type))) {
-      check_func_signature_matches_func_type(ctx, &func->loc, &func->decl.sig,
+      check_func_signature_matches_func_type(ctx, loc, &func->decl.sig,
                                              func_type);
     }
   }
@@ -899,45 +896,35 @@ static void check_func(Context* ctx,
    * returning from the function. */
   LabelNode node;
   WasmLabel label = wasm_empty_string_slice();
-  push_label(ctx, &func->loc, &node, &label, func->decl.sig.result_type);
+  push_label(ctx, loc, &node, &label, func->decl.sig.result_type);
   WasmCheckType rtype =
-      check_block(ctx, &func->loc, func->first_expr, "function result");
-  join_type(ctx, &func->loc, rtype, "type of last operation",
+      check_block(ctx, loc, func->first_expr, "function result");
+  join_type(ctx, loc, rtype, "type of last operation",
             func->decl.sig.result_type, "function signature result type");
   pop_label(ctx);
   ctx->current_func = NULL;
 }
 
-static void check_global(Context* ctx,
-                         const WasmLocation* loc,
-                         const WasmGlobal* global,
-                         int global_index) {
-  WasmCheckType type = WASM_CHECK_TYPE_VOID;
-  WasmBool invalid_expr = WASM_TRUE;
-  WasmExpr* expr = global->init_expr;
-
+static WasmResult check_const_expr(Context* ctx,
+                                   const WasmExpr* expr,
+                                   const char* desc,
+                                   WasmCheckType* out_type) {
   if (expr->next == NULL) {
     switch (expr->type) {
       case WASM_EXPR_TYPE_CONST:
-        type = expr->const_.type;
-        invalid_expr = WASM_FALSE;
-        break;
+        if (out_type)
+          *out_type = expr->const_.type;
+        return WASM_OK;
 
       case WASM_EXPR_TYPE_GET_GLOBAL: {
         const WasmGlobal* ref_global = NULL;
-        int ref_global_index;
-        if (WASM_SUCCEEDED(check_global_var(ctx, &expr->get_global.var,
-                                            &ref_global, &ref_global_index))) {
-          type = ref_global->type;
-          /* globals can only reference previously defined globals */
-          if (ref_global_index >= global_index) {
-            print_error(ctx, CHECK_STYLE_FULL, loc,
-                        "global can only be defined in terms of a previously "
-                        "defined global.");
-          }
+        if (WASM_SUCCEEDED(
+                check_global_var(ctx, &expr->get_global.var, &ref_global))) {
+          if (out_type)
+            *out_type = ref_global->type;
+          return WASM_OK;
         }
-        invalid_expr = WASM_FALSE;
-        break;
+        return WASM_ERROR;
       }
 
       default:
@@ -945,13 +932,61 @@ static void check_global(Context* ctx,
     }
   }
 
-  if (invalid_expr) {
-    print_error(ctx, CHECK_STYLE_FULL, loc,
-                "invalid global initializer expression. Must be *.const or "
-                "get_global.");
-  } else {
-    check_type(ctx, &expr->loc, type, global->type,
-               "global initializer expression");
+  print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
+              "invalid %s, must be a constant expression; either *.const or "
+              "get_global.",
+              desc);
+  return WASM_ERROR;
+}
+
+static WasmResult eval_const_expr_i32(Context* ctx,
+                                      const WasmExpr* expr,
+                                      const char* desc,
+                                      uint32_t* out_value) {
+  switch (expr->type) {
+    case WASM_EXPR_TYPE_CONST:
+      if (expr->const_.type != WASM_TYPE_I32) {
+        print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
+                    "%s must be of type i32; got %s.", desc,
+                    s_type_names[expr->const_.type]);
+        return WASM_ERROR;
+      }
+      *out_value = expr->const_.u32;
+      return WASM_OK;
+
+    case WASM_EXPR_TYPE_GET_GLOBAL: {
+      const WasmGlobal* global = NULL;
+      if (WASM_FAILED(check_global_var(ctx, &expr->get_global.var, &global)))
+        return WASM_ERROR;
+
+      if (global->type != WASM_TYPE_I32) {
+        print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
+                    "%s must be of type i32; got %s.", desc,
+                    s_type_names[expr->const_.type]);
+        return WASM_ERROR;
+      }
+
+      /* TODO(binji): handle infinite recursion */
+      return eval_const_expr_i32(ctx, global->init_expr, desc, out_value);
+    }
+
+    default:
+      print_error(
+          ctx, CHECK_STYLE_FULL, &expr->loc,
+          "invalid %s, must be a constant expression; either *.const or "
+          "get_global.",
+          desc);
+      return WASM_ERROR;
+  }
+}
+
+static void check_global(Context* ctx,
+                         const WasmLocation* loc,
+                         const WasmGlobal* global) {
+  WasmCheckType type;
+  if (WASM_SUCCEEDED(check_const_expr(
+          ctx, global->init_expr, "global initializer expression", &type))) {
+    check_type(ctx, loc, type, global->type, "global initializer expression");
   }
 }
 
@@ -966,53 +1001,110 @@ static void check_export(Context* ctx, const WasmExport* export) {
   check_func_var(ctx, &export->var, NULL);
 }
 
-static void check_table(Context* ctx, const WasmVarVector* table) {
-  size_t i;
-  for (i = 0; i < table->size; ++i)
-    check_func_var(ctx, &table->data[i], NULL);
+static void check_limits(Context* ctx,
+                         const WasmLocation* loc,
+                         const WasmLimits* limits,
+                         uint64_t absolute_max,
+                         const char* desc) {
+  if (limits->initial > absolute_max) {
+    print_error(ctx, CHECK_STYLE_FULL, loc,
+                "initial %s (%" PRIu64 ") must be <= (%" PRIu64 ")", desc,
+                limits->initial, absolute_max);
+  }
+
+  if (limits->has_max) {
+    if (limits->max > absolute_max) {
+      print_error(ctx, CHECK_STYLE_FULL, loc,
+                  "max %s (%" PRIu64 ") must be <= (%" PRIu64 ")", desc,
+                  limits->max, absolute_max);
+    }
+
+    if (limits->max < limits->initial) {
+      print_error(ctx, CHECK_STYLE_FULL, loc,
+                  "max %s (%" PRIu64 ") must be >= initial %s (%" PRIu64 ")",
+                  desc, limits->max, desc, limits->initial);
+    }
+  }
 }
 
-static void check_memory(Context* ctx, const WasmMemory* memory) {
-  if (memory->initial_pages > WASM_MAX_PAGES) {
-    print_error(ctx, CHECK_STYLE_FULL, &memory->loc,
-                "initial pages (%" PRIu64 ") must be <= (%u)",
-                memory->initial_pages, WASM_MAX_PAGES);
-  }
+static void check_table(Context* ctx,
+                        const WasmLocation* loc,
+                        const WasmTable* table) {
+  check_limits(ctx, loc, &table->elem_limits, UINT32_MAX, "elems");
+}
 
-  if (memory->max_pages > WASM_MAX_PAGES) {
-    print_error(ctx, CHECK_STYLE_FULL, &memory->loc,
-                "max pages (%" PRIu64 ") must be <= (%u)", memory->max_pages,
-                WASM_MAX_PAGES);
-  }
+static void check_elem_segments(Context* ctx, const WasmModule* module) {
+  const WasmTable* table = module->table;
 
-  if (memory->max_pages < memory->initial_pages) {
-    print_error(ctx, CHECK_STYLE_FULL, &memory->loc,
-                "max pages (%" PRIu64 ") must be >= initial pages (%" PRIu64
-                ")",
-                memory->max_pages, memory->initial_pages);
-  }
-
-  size_t i;
+  WasmModuleField* field;
   uint32_t last_end = 0;
-  for (i = 0; i < memory->segments.size; ++i) {
-    const WasmSegment* segment = &memory->segments.data[i];
-    if (segment->addr < last_end) {
-      print_error(ctx, CHECK_STYLE_FULL, &segment->loc,
-                  "address (%u) less than end of previous segment (%u)",
-                  segment->addr, last_end);
+  for (field = module->first_field; field; field = field->next) {
+    if (field->type != WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT)
+      continue;
+
+    WasmElemSegment* elem_segment = &field->elem_segment;
+    uint32_t offset = 0;
+    if (WASM_SUCCEEDED(eval_const_expr_i32(
+            ctx, elem_segment->offset, "elem segment expression", &offset))) {
+      if (offset < last_end) {
+        print_error(
+            ctx, CHECK_STYLE_FULL, &field->loc,
+            "segment offset (%u) less than end of previous segment (%u)",
+            offset, last_end);
+      }
+
+      uint64_t max =
+          table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
+
+      if (offset + elem_segment->vars.size > max) {
+        print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                    "segment ends past the end of table max size (%" PRIu64 ")",
+                    max);
+      }
+
+      last_end = offset + elem_segment->vars.size;
     }
-    if (segment->addr > memory->initial_pages * WASM_PAGE_SIZE) {
-      print_error(ctx, CHECK_STYLE_FULL, &segment->loc,
-                  "address (%u) greater than initial memory size (%" PRIu64 ")",
-                  segment->addr, memory->initial_pages * WASM_PAGE_SIZE);
-    } else if (segment->addr + segment->size >
-               memory->initial_pages * WASM_PAGE_SIZE) {
-      print_error(ctx, CHECK_STYLE_FULL, &segment->loc,
-                  "segment ends past the end of initial memory size (%" PRIu64
-                  ")",
-                  memory->initial_pages * WASM_PAGE_SIZE);
+  }
+}
+
+static void check_memory(Context* ctx,
+                         const WasmLocation* loc,
+                         const WasmMemory* memory) {
+  check_limits(ctx, loc, &memory->page_limits, WASM_MAX_PAGES, "pages");
+}
+
+static void check_data_segments(Context* ctx, const WasmModule* module) {
+  const WasmMemory* memory = module->memory;
+
+  WasmModuleField* field;
+  uint32_t last_end = 0;
+  for (field = module->first_field; field; field = field->next) {
+    if (field->type != WASM_MODULE_FIELD_TYPE_DATA_SEGMENT)
+      continue;
+
+    WasmDataSegment* data_segment = &field->data_segment;
+    uint32_t offset = 0;
+    if (WASM_SUCCEEDED(eval_const_expr_i32(
+            ctx, data_segment->offset, "data segment expression", &offset))) {
+      if (offset < last_end) {
+        print_error(
+            ctx, CHECK_STYLE_FULL, &field->loc,
+            "segment offset (%u) less than end of previous segment (%u)",
+            offset, last_end);
+      }
+
+      uint32_t max = memory->page_limits.has_max ? memory->page_limits.max
+                                                 : WASM_MAX_PAGES;
+      const uint64_t memory_max_size = max * WASM_PAGE_SIZE;
+      if (offset + data_segment->size > memory_max_size) {
+        print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                    "segment ends past the end of memory max size (%" PRIu64
+                    ")",
+                    memory_max_size);
+      }
+
+      last_end = offset + data_segment->size;
     }
-    last_end = segment->addr + segment->size;
   }
 }
 
@@ -1022,7 +1114,6 @@ static void check_module(Context* ctx, const WasmModule* module) {
   WasmBool seen_export_memory = WASM_FALSE;
   WasmBool seen_table = WASM_FALSE;
   WasmBool seen_start = WASM_FALSE;
-  int global_index = 0;
 
   ctx->current_module = module;
 
@@ -1034,7 +1125,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_GLOBAL:
-        check_global(ctx, &field->loc, &field->global, global_index++);
+        check_global(ctx, &field->loc, &field->global);
         break;
 
       case WASM_MODULE_FIELD_TYPE_IMPORT:
@@ -1055,8 +1146,12 @@ static void check_module(Context* ctx, const WasmModule* module) {
           print_error(ctx, CHECK_STYLE_FULL, &field->loc,
                       "only one table allowed");
         }
-        check_table(ctx, &field->table);
+        check_table(ctx, &field->loc, &field->table);
         seen_table = WASM_TRUE;
+        break;
+
+      case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+        /* checked below */
         break;
 
       case WASM_MODULE_FIELD_TYPE_MEMORY:
@@ -1064,8 +1159,12 @@ static void check_module(Context* ctx, const WasmModule* module) {
           print_error(ctx, CHECK_STYLE_FULL, &field->loc,
                       "only one memory block allowed");
         }
-        check_memory(ctx, &field->memory);
+        check_memory(ctx, &field->loc, &field->memory);
         seen_memory = WASM_TRUE;
+        break;
+
+      case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
+        /* checked below */
         break;
 
       case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
@@ -1096,6 +1195,9 @@ static void check_module(Context* ctx, const WasmModule* module) {
       }
     }
   }
+
+  check_elem_segments(ctx, module);
+  check_data_segments(ctx, module);
 
   if (seen_export_memory && !seen_memory) {
     print_error(ctx, CHECK_STYLE_FULL, export_memory_loc,

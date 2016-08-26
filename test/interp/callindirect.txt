@@ -14,7 +14,7 @@
   (func $binary (param i32 i32 i32) (result i32)
     (call_indirect $ii_i (get_local 0) (get_local 1) (get_local 2)))
 
-  (table $zero $one $add $sub)
+  (table anyfunc (elem $zero $one $add $sub))
 
   (export "test_zero" $test_zero)
   (func $test_zero (result i32)

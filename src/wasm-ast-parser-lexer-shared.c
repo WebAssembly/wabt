@@ -117,3 +117,15 @@ void wasm_destroy_func_fields(struct WasmAllocator* allocator,
     func_field = next_func_field;
   }
 }
+
+void wasm_destroy_memory_data_segment_pair(WasmAllocator* allocator,
+                                           WasmMemoryDataSegmentPair* pair) {
+  if (pair->has_data_segment)
+    wasm_destroy_data_segment(allocator, &pair->data_segment);
+}
+
+void wasm_destroy_table_elem_segment_pair(WasmAllocator* allocator,
+                                          WasmTableElemSegmentPair* pair) {
+  if (pair->has_elem_segment)
+    wasm_destroy_elem_segment(allocator, &pair->elem_segment);
+}

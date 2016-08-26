@@ -524,17 +524,9 @@ void wasm_destroy_func_type(WasmAllocator* allocator, WasmFuncType* func_type) {
   wasm_destroy_func_signature(allocator, &func_type->sig);
 }
 
-void wasm_destroy_segment(WasmAllocator* allocator, WasmSegment* segment) {
-  wasm_free(allocator, segment->data);
-}
-
-void wasm_destroy_segment_vector_and_elements(WasmAllocator* allocator,
-                                              WasmSegmentVector* segments) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *segments, segment);
-}
-
-void wasm_destroy_memory(WasmAllocator* allocator, WasmMemory* memory) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, memory->segments, segment);
+void wasm_destroy_data_segment(WasmAllocator* allocator,
+                               WasmDataSegment* data) {
+  wasm_free(allocator, data->data);
 }
 
 static void destroy_module_field(WasmAllocator* allocator,
@@ -555,14 +547,20 @@ static void destroy_module_field(WasmAllocator* allocator,
     case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
       wasm_destroy_string_slice(allocator, &field->export_memory.name);
       break;
-    case WASM_MODULE_FIELD_TYPE_TABLE:
-      WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, field->table, var);
-      break;
     case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
       wasm_destroy_func_type(allocator, &field->func_type);
       break;
+    case WASM_MODULE_FIELD_TYPE_TABLE:
+      /* nothing to destroy */
+      break;
+    case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+      wasm_destroy_elem_segment(allocator, &field->elem_segment);
+      break;
     case WASM_MODULE_FIELD_TYPE_MEMORY:
-      wasm_destroy_memory(allocator, &field->memory);
+      /* nothing to destroy */
+      break;
+    case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
+      wasm_destroy_data_segment(allocator, &field->data_segment);
       break;
     case WASM_MODULE_FIELD_TYPE_START:
       wasm_destroy_var(allocator, &field->start);
@@ -641,6 +639,11 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
 void wasm_destroy_command_vector_and_elements(WasmAllocator* allocator,
                                               WasmCommandVector* commands) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, *commands, command);
+}
+
+void wasm_destroy_elem_segment(WasmAllocator* allocator, WasmElemSegment* segment) {
+  wasm_destroy_expr_list(allocator, segment->offset);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, segment->vars, var);
 }
 
 void wasm_destroy_script(WasmScript* script) {

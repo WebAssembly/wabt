@@ -238,6 +238,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "i64"                 { TYPE(I64); RETURN(VALUE_TYPE); }
     <i> "f32"                 { TYPE(F32); RETURN(VALUE_TYPE); }
     <i> "f64"                 { TYPE(F64); RETURN(VALUE_TYPE); }
+    <i> "anyfunc"             { RETURN(ANYFUNC); }
     <i> "nop"                 { RETURN(NOP); }
     <i> "block"               { RETURN(BLOCK); }
     <i> "if"                  { RETURN(IF); }
@@ -282,8 +283,8 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "i32.store16"         { OPCODE(I32_STORE16); RETURN(STORE); }
     <i> "i64.store16"         { OPCODE(I64_STORE16); RETURN(STORE); }
     <i> "i64.store32"         { OPCODE(I64_STORE32); RETURN(STORE); }
-    <i> "offset="digits       { TEXT_AT(7); RETURN(OFFSET); }
-    <i> "align="digits        { TEXT_AT(6); RETURN(ALIGN); }
+    <i> "offset="digits       { TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
+    <i> "align="digits        { TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
     <i> "i32.const"           { TYPE(I32); RETURN(CONST); }
     <i> "i64.const"           { TYPE(I64); RETURN(CONST); }
     <i> "f32.const"           { TYPE(F32); RETURN(CONST); }
@@ -422,12 +423,14 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "local"               { RETURN(LOCAL); }
     <i> "global"              { RETURN(GLOBAL); }
     <i> "module"              { RETURN(MODULE); }
+    <i> "table"               { RETURN(TABLE); }
     <i> "memory"              { RETURN(MEMORY); }
-    <i> "segment"             { RETURN(SEGMENT); }
     <i> "start"               { RETURN(START); }
+    <i> "elem"                { RETURN(ELEM); }
+    <i> "data"                { RETURN(DATA); }
+    <i> "offset"              { RETURN(OFFSET); }
     <i> "import"              { RETURN(IMPORT); }
     <i> "export"              { RETURN(EXPORT); }
-    <i> "table"               { RETURN(TABLE); }
     <i> "assert_invalid"      { RETURN(ASSERT_INVALID); }
     <i> "assert_return"       { RETURN(ASSERT_RETURN); }
     <i> "assert_return_nan"   { RETURN(ASSERT_RETURN_NAN); }

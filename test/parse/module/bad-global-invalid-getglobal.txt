@@ -5,7 +5,4 @@
 parse/module/bad-global-invalid-getglobal.txt:3:27: global variable out of range (max 1)
   (global i32 (get_global 1)))
                           ^
-parse/module/bad-global-invalid-getglobal.txt:3:16: type mismatch at global initializer expression. got void, expected i32
-  (global i32 (get_global 1)))
-               ^^^^^^^^^^
 ;;; STDERR ;;)

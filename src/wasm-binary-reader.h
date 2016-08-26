@@ -42,46 +42,8 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_module)(void* user_data);
   WasmResult (*end_module)(void* user_data);
 
-  /* memory section */
-  WasmResult (*begin_memory_section)(void* user_data);
-  WasmResult (*on_memory_initial_size_pages)(uint32_t pages, void* user_data);
-  WasmResult (*on_memory_max_size_pages)(uint32_t pages, void* user_data);
-  WasmResult (*on_memory_exported)(WasmBool exported, void* user_data);
-  WasmResult (*end_memory_section)(void* user_data);
-
-  /* global section */
-  WasmResult (*begin_global_section)(void* user_data);
-  WasmResult (*on_global_count)(uint32_t count, void* user_data);
-  WasmResult (*begin_global)(uint32_t index, WasmType type, void* user_data);
-  WasmResult (*on_global_f32_const_expr)(uint32_t index,
-                                         uint32_t value,
-                                         void* user_data);
-  WasmResult (*on_global_f64_const_expr)(uint32_t index,
-                                         uint64_t value,
-                                         void* user_data);
-  WasmResult (*on_global_get_global_expr)(uint32_t index,
-                                          uint32_t global_index,
-                                          void* user_data);
-  WasmResult (*on_global_i32_const_expr)(uint32_t index,
-                                         uint32_t value,
-                                         void* user_data);
-  WasmResult (*on_global_i64_const_expr)(uint32_t index,
-                                         uint64_t value,
-                                         void* user_data);
-  WasmResult (*end_global)(uint32_t index, void* user_data);
-  WasmResult (*end_global_section)(void* user_data);
-
-  /* data segment section */
-  WasmResult (*begin_data_segment_section)(void* user_data);
-  WasmResult (*on_data_segment_count)(uint32_t count, void* user_data);
-  WasmResult (*on_data_segment)(uint32_t index,
-                                uint32_t address,
-                                const void* data,
-                                uint32_t size,
-                                void* user_data);
-  WasmResult (*end_data_segment_section)(void* user_data);
-
   /* signatures section */
+  /* TODO(binji): rename to "type" section */
   WasmResult (*begin_signature_section)(void* user_data);
   WasmResult (*on_signature_count)(uint32_t count, void* user_data);
   WasmResult (*on_signature)(uint32_t index,
@@ -91,7 +53,7 @@ typedef struct WasmBinaryReader {
                              void* user_data);
   WasmResult (*end_signature_section)(void* user_data);
 
-  /* imports section */
+  /* import section */
   WasmResult (*begin_import_section)(void* user_data);
   WasmResult (*on_import_count)(uint32_t count, void* user_data);
   WasmResult (*on_import)(uint32_t index,
@@ -102,6 +64,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*end_import_section)(void* user_data);
 
   /* function signatures section */
+  /* TODO(binji): rename to "function" section */
   WasmResult (*begin_function_signatures_section)(void* user_data);
   WasmResult (*on_function_signatures_count)(uint32_t count, void* user_data);
   WasmResult (*on_function_signature)(uint32_t index,
@@ -109,7 +72,48 @@ typedef struct WasmBinaryReader {
                                       void* user_data);
   WasmResult (*end_function_signatures_section)(void* user_data);
 
+  /* table section */
+  WasmResult (*begin_table_section)(void* user_data);
+  WasmResult (*on_table_elem_type)(uint32_t elem_type, void* user_data);
+  WasmResult (*on_table_limits)(WasmBool has_max,
+                                uint32_t initial,
+                                uint32_t max,
+                                void* user_data);
+  WasmResult (*end_table_section)(void* user_data);
+
+  /* memory section */
+  WasmResult (*begin_memory_section)(void* user_data);
+  WasmResult (*on_memory_limits)(WasmBool has_max,
+                                 uint32_t initial,
+                                 uint32_t max,
+                                 void* user_data);
+  WasmResult (*end_memory_section)(void* user_data);
+
+  /* global section */
+  WasmResult (*begin_global_section)(void* user_data);
+  WasmResult (*on_global_count)(uint32_t count, void* user_data);
+  WasmResult (*begin_global)(uint32_t index, WasmType type, void* user_data);
+  WasmResult (*begin_global_init_expr)(uint32_t index, void* user_data);
+  WasmResult (*end_global_init_expr)(uint32_t index, void* user_data);
+  WasmResult (*end_global)(uint32_t index, void* user_data);
+  WasmResult (*end_global_section)(void* user_data);
+
+  /* exports section */
+  WasmResult (*begin_export_section)(void* user_data);
+  WasmResult (*on_export_count)(uint32_t count, void* user_data);
+  WasmResult (*on_export)(uint32_t index,
+                          uint32_t func_index,
+                          WasmStringSlice name,
+                          void* user_data);
+  WasmResult (*end_export_section)(void* user_data);
+
+  /* start section */
+  WasmResult (*begin_start_section)(void* user_data);
+  WasmResult (*on_start_function)(uint32_t func_index, void* user_data);
+  WasmResult (*end_start_section)(void* user_data);
+
   /* function bodies section */
+  /* TODO(binji): rename to code section */
   WasmResult (*begin_function_bodies_section)(void* user_data);
   WasmResult (*on_function_bodies_count)(uint32_t count, void* user_data);
   WasmResult (*begin_function_body_pass)(uint32_t index,
@@ -173,27 +177,35 @@ typedef struct WasmBinaryReader {
                                        void* user_data);
   WasmResult (*end_function_bodies_section)(void* user_data);
 
-  /* function table section */
-  WasmResult (*begin_function_table_section)(void* user_data);
-  WasmResult (*on_function_table_count)(uint32_t count, void* user_data);
-  WasmResult (*on_function_table_entry)(uint32_t index,
-                                        uint32_t func_index,
-                                        void* user_data);
-  WasmResult (*end_function_table_section)(void* user_data);
+  /* elem section */
+  WasmResult (*begin_elem_section)(void* user_data);
+  WasmResult (*on_elem_segment_count)(uint32_t count, void* user_data);
+  WasmResult (*begin_elem_segment)(uint32_t index,
+                                   uint32_t table_index,
+                                   void* user_data);
+  WasmResult (*begin_elem_segment_init_expr)(uint32_t index, void* user_data);
+  WasmResult (*end_elem_segment_init_expr)(uint32_t index, void* user_data);
+  WasmResult (*on_elem_segment_function_index_count)(uint32_t index,
+                                                     uint32_t count,
+                                                     void* user_data);
+  WasmResult (*on_elem_segment_function_index)(uint32_t index,
+                                               uint32_t func_index,
+                                               void* user_data);
+  WasmResult (*end_elem_segment)(uint32_t index, void* user_data);
+  WasmResult (*end_elem_section)(void* user_data);
 
-  /* start section */
-  WasmResult (*begin_start_section)(void* user_data);
-  WasmResult (*on_start_function)(uint32_t func_index, void* user_data);
-  WasmResult (*end_start_section)(void* user_data);
-
-  /* exports section */
-  WasmResult (*begin_export_section)(void* user_data);
-  WasmResult (*on_export_count)(uint32_t count, void* user_data);
-  WasmResult (*on_export)(uint32_t index,
-                          uint32_t func_index,
-                          WasmStringSlice name,
-                          void* user_data);
-  WasmResult (*end_export_section)(void* user_data);
+  /* data section */
+  WasmResult (*begin_data_section)(void* user_data);
+  WasmResult (*on_data_segment_count)(uint32_t count, void* user_data);
+  WasmResult (*begin_data_segment)(uint32_t index, void* user_data);
+  WasmResult (*begin_data_segment_init_expr)(uint32_t index, void* user_data);
+  WasmResult (*end_data_segment_init_expr)(uint32_t index, void* user_data);
+  WasmResult (*on_data_segment_data)(uint32_t index,
+                                     const void* data,
+                                     uint32_t size,
+                                     void* user_data);
+  WasmResult (*end_data_segment)(uint32_t index, void* user_data);
+  WasmResult (*end_data_section)(void* user_data);
 
   /* names section */
   WasmResult (*begin_names_section)(void* user_data);
@@ -210,6 +222,23 @@ typedef struct WasmBinaryReader {
                               void* user_data);
   WasmResult (*end_names_section)(void* user_data);
 
+  /* init_expr - used by elem, data and global sections; these functions are
+   * only called between calls to begin_*_init_expr and end_*_init_expr */
+  WasmResult (*on_init_expr_f32_const_expr)(uint32_t index,
+                                            uint32_t value,
+                                            void* user_data);
+  WasmResult (*on_init_expr_f64_const_expr)(uint32_t index,
+                                            uint64_t value,
+                                            void* user_data);
+  WasmResult (*on_init_expr_get_global_expr)(uint32_t index,
+                                             uint32_t global_index,
+                                             void* user_data);
+  WasmResult (*on_init_expr_i32_const_expr)(uint32_t index,
+                                            uint32_t value,
+                                            void* user_data);
+  WasmResult (*on_init_expr_i64_const_expr)(uint32_t index,
+                                            uint64_t value,
+                                            void* user_data);
 } WasmBinaryReader;
 
 WASM_EXTERN_C_BEGIN

@@ -1,2 +1,2 @@
 ;;; TOOL: run-interp
-(module (memory 1 (segment 0 "")))
+(module (memory (data "")))

@@ -5,6 +5,6 @@ version
 section("data") { count[1] addr[0] data[str("hi")] }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000000e: data segment section without memory section
+error: @0x0000000e: data section without memory section
 
 ;;; STDERR ;;)

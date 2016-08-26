@@ -1,10 +1,12 @@
 ;;; ERROR: 1
-(module (memory 100 (segment foo)))
+(module
+  (memory 100)
+  (data foo))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-address.txt:2:30: unexpected token "foo"
-(module (memory 100 (segment foo)))
-                             ^^^
-parse/module/bad-memory-segment-address.txt:2:33: syntax error, unexpected ), expecting NAT
-(module (memory 100 (segment foo)))
-                                ^
+parse/module/bad-memory-segment-address.txt:4:9: unexpected token "foo"
+  (data foo))
+        ^^^
+parse/module/bad-memory-segment-address.txt:4:12: syntax error, unexpected ), expecting (
+  (data foo))
+           ^
 ;;; STDERR ;;)

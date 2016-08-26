@@ -16,7 +16,7 @@ assert_invalid error:
     (export "foo" 1))
                   ^
 assert_invalid error:
-  parse/assert/assertinvalid.txt:10:6: unable to join type void (type of last operation) with type i32 (function signature result type).
+  parse/assert/assertinvalid.txt:10:5: unable to join type void (type of last operation) with type i32 (function signature result type).
     (func (result i32)
-     ^^^^
+    ^^^^^^^^
 ;;; STDOUT ;;)

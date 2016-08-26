@@ -4,7 +4,7 @@
   (func)
   (func
     (call 0))
-  (table 0 1 0)
+  (table anyfunc (elem 0 1 0))
   (export "zero" 0)
   (export "one" 1))
 (;; STDOUT ;;;
@@ -13,7 +13,8 @@
   (func $f0 (type $t0))
   (func $f1 (type $t0)
     call $f0)
-  (table $f0 $f1 $f0)
+  (table 3 3 anyfunc)
   (export "zero" $f0)
-  (export "one" $f1))
+  (export "one" $f1)
+  (elem (i32.const 0) $f0 $f1 $f0))
 ;;; STDOUT ;;)

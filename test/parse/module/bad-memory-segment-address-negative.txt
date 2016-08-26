@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (memory 100 (segment -1 "foo")))
+(module
+  (memory 100)
+  (data (i32.const -1) "foo"))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-address-negative.txt:2:30: syntax error, unexpected INT, expecting NAT
-(module (memory 100 (segment -1 "foo")))
-                             ^^
+parse/module/bad-memory-segment-address-negative.txt:4:3: segment ends past the end of memory max size (4294901760)
+  (data (i32.const -1) "foo"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

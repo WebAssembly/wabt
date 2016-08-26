@@ -160,7 +160,6 @@ typedef struct WasmFuncDeclaration {
 } WasmFuncDeclaration;
 
 typedef struct WasmFunc {
-  WasmLocation loc;
   WasmStringSlice name;
   WasmFuncDeclaration decl;
   WasmTypeVector local_types;
@@ -172,7 +171,6 @@ typedef WasmFunc* WasmFuncPtr;
 WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
 
 typedef struct WasmGlobal {
-  WasmLocation loc;
   WasmStringSlice name;
   WasmType type;
   WasmExpr* init_expr;
@@ -181,7 +179,6 @@ typedef WasmGlobal* WasmGlobalPtr;
 WASM_DEFINE_VECTOR(global_ptr, WasmGlobalPtr);
 
 typedef struct WasmImport {
-  WasmLocation loc;
   WasmStringSlice name;
   WasmStringSlice module_name;
   WasmStringSlice func_name;
@@ -189,21 +186,6 @@ typedef struct WasmImport {
 } WasmImport;
 typedef WasmImport* WasmImportPtr;
 WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
-
-typedef struct WasmSegment {
-  WasmLocation loc;
-  uint32_t addr;
-  void* data;
-  size_t size;
-} WasmSegment;
-WASM_DEFINE_VECTOR(segment, WasmSegment);
-
-typedef struct WasmMemory {
-  WasmLocation loc;
-  uint64_t initial_pages;
-  uint64_t max_pages;
-  WasmSegmentVector segments;
-} WasmMemory;
 
 typedef struct WasmExport {
   WasmStringSlice name;
@@ -216,15 +198,46 @@ typedef struct WasmExportMemory {
   WasmStringSlice name;
 } WasmExportMemory;
 
+typedef struct WasmLimits {
+  uint64_t initial;
+  uint64_t max;
+  WasmBool has_max;
+} WasmLimits;
+
+typedef struct WasmTable {
+  WasmLimits elem_limits;
+} WasmTable;
+
+typedef struct WasmElemSegment {
+  WasmExpr* offset;
+  WasmVarVector vars;
+} WasmElemSegment;
+typedef WasmElemSegment* WasmElemSegmentPtr;
+WASM_DEFINE_VECTOR(elem_segment_ptr, WasmElemSegmentPtr);
+
+typedef struct WasmMemory {
+  WasmLimits page_limits;
+} WasmMemory;
+
+typedef struct WasmDataSegment {
+  WasmExpr* offset;
+  void* data;
+  size_t size;
+} WasmDataSegment;
+typedef WasmDataSegment* WasmDataSegmentPtr;
+WASM_DEFINE_VECTOR(data_segment_ptr, WasmDataSegmentPtr);
+
 typedef enum WasmModuleFieldType {
   WASM_MODULE_FIELD_TYPE_FUNC,
   WASM_MODULE_FIELD_TYPE_GLOBAL,
   WASM_MODULE_FIELD_TYPE_IMPORT,
   WASM_MODULE_FIELD_TYPE_EXPORT,
   WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY,
-  WASM_MODULE_FIELD_TYPE_TABLE,
   WASM_MODULE_FIELD_TYPE_FUNC_TYPE,
+  WASM_MODULE_FIELD_TYPE_TABLE,
+  WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT,
   WASM_MODULE_FIELD_TYPE_MEMORY,
+  WASM_MODULE_FIELD_TYPE_DATA_SEGMENT,
   WASM_MODULE_FIELD_TYPE_START,
 } WasmModuleFieldType;
 
@@ -238,9 +251,11 @@ typedef struct WasmModuleField {
     WasmImport import;
     WasmExport export_;
     WasmExportMemory export_memory;
-    WasmVarVector table;
     WasmFuncType func_type;
+    WasmTable table;
+    WasmElemSegment elem_segment;
     WasmMemory memory;
+    WasmDataSegment data_segment;
     WasmVar start;
   };
 } WasmModuleField;
@@ -255,8 +270,10 @@ typedef struct WasmModule {
   WasmImportPtrVector imports;
   WasmExportPtrVector exports;
   WasmFuncTypePtrVector func_types;
-  WasmVarVector* table;
+  WasmTable* table;
+  WasmElemSegmentPtrVector elem_segments;
   WasmMemory* memory;
+  WasmDataSegmentPtrVector data_segments;
   WasmVar* start;
   WasmExportMemory* export_memory;
 
@@ -412,6 +429,7 @@ void wasm_destroy_block(struct WasmAllocator*, struct WasmBlock*);
 void wasm_destroy_command_vector_and_elements(struct WasmAllocator*,
                                               WasmCommandVector*);
 void wasm_destroy_command(struct WasmAllocator*, WasmCommand*);
+void wasm_destroy_elem_segment(struct WasmAllocator*, WasmElemSegment*);
 void wasm_destroy_export(struct WasmAllocator*, WasmExport*);
 void wasm_destroy_expr(struct WasmAllocator*, WasmExpr*);
 void wasm_destroy_expr_list(struct WasmAllocator*, WasmExpr*);
@@ -420,12 +438,9 @@ void wasm_destroy_func_signature(struct WasmAllocator*, WasmFuncSignature*);
 void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);
 void wasm_destroy_func(struct WasmAllocator*, WasmFunc*);
 void wasm_destroy_import(struct WasmAllocator*, WasmImport*);
-void wasm_destroy_memory(struct WasmAllocator*, WasmMemory*);
+void wasm_destroy_data_segment(struct WasmAllocator*, WasmDataSegment*);
 void wasm_destroy_module(struct WasmAllocator*, WasmModule*);
 void wasm_destroy_raw_module(struct WasmAllocator*, WasmRawModule*);
-void wasm_destroy_segment_vector_and_elements(struct WasmAllocator*,
-                                              WasmSegmentVector*);
-void wasm_destroy_segment(struct WasmAllocator*, WasmSegment*);
 void wasm_destroy_var_vector_and_elements(struct WasmAllocator*,
                                           WasmVarVector*);
 void wasm_destroy_var(struct WasmAllocator*, WasmVar*);

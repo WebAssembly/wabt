@@ -44,6 +44,7 @@ NAMED_VALUES = {
   'i64': 2,
   'f32': 3,
   'f64': 4,
+  'anyfunc': 0x20,
   'function': 0x40,
   'magic': (0, 0x61, 0x73, 0x6d),
   'version': (0xc, 0, 0, 0),
