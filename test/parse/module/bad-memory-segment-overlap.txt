@@ -1,7 +1,10 @@
 ;;; ERROR: 1
-(module (memory 1 (segment 0 "hello") (segment 3 "hi")))
+(module
+  (memory 1)
+  (data (i32.const 0) "hello")
+  (data (i32.const 3) "hi"))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-overlap.txt:2:40: address (3) less than end of previous segment (5)
-(module (memory 1 (segment 0 "hello") (segment 3 "hi")))
-                                       ^^^^^^^
+parse/module/bad-memory-segment-overlap.txt:5:3: segment offset (3) less than end of previous segment (5)
+  (data (i32.const 3) "hi"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

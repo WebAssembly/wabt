@@ -333,6 +333,17 @@ static WasmResult visit_export(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult visit_elem_segment(Context* ctx,
+                                     uint32_t elem_segment_index,
+                                     WasmElemSegment* segment) {
+  size_t i;
+  for (i = 0; i < segment->vars.size; ++i) {
+    CHECK_RESULT(use_name_for_func_var(ctx->allocator, ctx->module,
+                                       &segment->vars.data[i]));
+  }
+  return WASM_OK;
+}
+
 static WasmResult visit_module(Context* ctx, WasmModule* module) {
   size_t i;
   for (i = 0; i < module->imports.size; ++i)
@@ -341,12 +352,8 @@ static WasmResult visit_module(Context* ctx, WasmModule* module) {
     CHECK_RESULT(visit_func(ctx, i, module->funcs.data[i]));
   for (i = 0; i < module->exports.size; ++i)
     CHECK_RESULT(visit_export(ctx, i, module->exports.data[i]));
-  if (module->table) {
-    for (i = 0; i < module->table->size; ++i) {
-      CHECK_RESULT(use_name_for_func_var(ctx->allocator, ctx->module,
-                                         &module->table->data[i]));
-    }
-  }
+  for (i = 0; i < module->elem_segments.size; ++i)
+    CHECK_RESULT(visit_elem_segment(ctx, i, module->elem_segments.data[i]));
   return WASM_OK;
 }
 

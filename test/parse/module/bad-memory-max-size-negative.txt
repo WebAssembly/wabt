@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (memory 100 -5))
 (;; STDERR ;;;
-parse/module/bad-memory-max-size-negative.txt:2:21: syntax error, unexpected INT, expecting ( or )
+parse/module/bad-memory-max-size-negative.txt:2:21: syntax error, unexpected INT, expecting )
 (module (memory 100 -5))
                     ^^
 ;;; STDERR ;;)

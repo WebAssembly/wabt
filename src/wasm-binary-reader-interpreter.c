@@ -176,6 +176,8 @@ typedef struct Context {
   uint32_t start_func_index;
   WasmMemoryWriter istream_writer;
   uint32_t istream_offset;
+  WasmInterpreterTypedValue init_expr_value;
+  uint32_t table_offset;
 } Context;
 
 static TypecheckLabel* get_typecheck_label(Context* ctx, uint32_t depth) {
@@ -258,106 +260,12 @@ static uint32_t translate_local_index(Context* ctx, uint32_t local_index) {
   return ctx->value_stack_size - local_index;
 }
 
-void on_error(uint32_t offset, const char* message, void* user_data) {
+static void on_error(uint32_t offset, const char* message, void* user_data) {
   Context* ctx = user_data;
   if (ctx->error_handler->on_error) {
     ctx->error_handler->on_error(offset, message,
                                  ctx->error_handler->user_data);
   }
-}
-
-static WasmResult on_memory_initial_size_pages(uint32_t pages,
-                                               void* user_data) {
-  Context* ctx = user_data;
-  WasmInterpreterMemory* memory = &ctx->module->memory;
-  memory->allocator = ctx->memory_allocator;
-  memory->page_size = pages;
-  memory->byte_size = pages * WASM_PAGE_SIZE;
-  memory->data = wasm_alloc_zero(ctx->memory_allocator, memory->byte_size,
-                                 WASM_DEFAULT_ALIGN);
-  return WASM_OK;
-}
-
-static WasmResult on_global_count(uint32_t count, void* user_data) {
-  Context* ctx = user_data;
-  wasm_new_interpreter_typed_value_array(ctx->allocator, &ctx->module->globals,
-                                         count);
-  return WASM_OK;
-}
-
-static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.size);
-  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
-  typed_value->type = type;
-  return WASM_OK;
-}
-
-static WasmResult on_global_f32_const_expr(uint32_t index,
-                                           uint32_t value_bits,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.size);
-  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
-  typed_value->value.f32_bits = value_bits;
-  return WASM_OK;
-}
-
-static WasmResult on_global_f64_const_expr(uint32_t index,
-                                           uint64_t value_bits,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.size);
-  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
-  typed_value->value.f64_bits = value_bits;
-  return WASM_OK;
-}
-
-static WasmResult on_global_get_global_expr(uint32_t index,
-                                            uint32_t global_index,
-                                            void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.size);
-  assert(global_index < ctx->module->globals.size);
-  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
-  WasmInterpreterTypedValue* ref_typed_value =
-      &ctx->module->globals.data[global_index];
-  typed_value->value = ref_typed_value->value;
-  return WASM_OK;
-}
-
-static WasmResult on_global_i32_const_expr(uint32_t index,
-                                           uint32_t value,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.size);
-  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
-  typed_value->value.i32 = value;
-  return WASM_OK;
-}
-
-static WasmResult on_global_i64_const_expr(uint32_t index,
-                                           uint64_t value,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.size);
-  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
-  typed_value->value.i64 = value;
-  return WASM_OK;
-}
-
-static WasmResult on_data_segment(uint32_t index,
-                                  uint32_t address,
-                                  const void* src_data,
-                                  uint32_t size,
-                                  void* user_data) {
-  Context* ctx = user_data;
-  WasmInterpreterMemory* memory = &ctx->module->memory;
-  uint8_t* dst_data = memory->data;
-  if ((uint64_t)address + (uint64_t)size > memory->byte_size)
-    return WASM_ERROR;
-  memcpy(&dst_data[address], src_data, size);
-  return WASM_OK;
 }
 
 static WasmResult on_signature_count(uint32_t count, void* user_data) {
@@ -431,6 +339,167 @@ static WasmResult on_function_signature(uint32_t index,
   InterpreterFunc* func = get_func(ctx, index);
   func->offset = WASM_INVALID_OFFSET;
   func->sig_index = sig_index;
+  return WASM_OK;
+}
+
+static WasmResult on_table_limits(WasmBool has_max,
+                                  uint32_t initial_elems,
+                                  uint32_t max_elems,
+                                  void* user_data) {
+  Context* ctx = user_data;
+  wasm_new_interpreter_func_table_entry_array(
+      ctx->allocator, &ctx->module->func_table, initial_elems);
+  return WASM_OK;
+}
+
+static WasmResult on_memory_limits(WasmBool has_max,
+                                   uint32_t initial_pages,
+                                   uint32_t max_pages,
+                                   void* user_data) {
+  Context* ctx = user_data;
+  WasmInterpreterMemory* memory = &ctx->module->memory;
+  memory->allocator = ctx->memory_allocator;
+  memory->page_size = initial_pages;
+  memory->byte_size = initial_pages * WASM_PAGE_SIZE;
+  memory->data = wasm_alloc_zero(ctx->memory_allocator, memory->byte_size,
+                                 WASM_DEFAULT_ALIGN);
+  return WASM_OK;
+}
+
+static WasmResult on_global_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_new_interpreter_typed_value_array(ctx->allocator, &ctx->module->globals,
+                                         count);
+  return WASM_OK;
+}
+
+static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  typed_value->type = type;
+  return WASM_OK;
+}
+
+static WasmResult end_global_init_expr(uint32_t index, void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* typed_value = &ctx->module->globals.data[index];
+  *typed_value = ctx->init_expr_value;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_f32_const_expr(uint32_t index,
+                                              uint32_t value_bits,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  ctx->init_expr_value.type = WASM_TYPE_F32;
+  ctx->init_expr_value.value.f32_bits = value_bits;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_f64_const_expr(uint32_t index,
+                                              uint64_t value_bits,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  ctx->init_expr_value.type = WASM_TYPE_F64;
+  ctx->init_expr_value.value.f64_bits = value_bits;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_get_global_expr(uint32_t index,
+                                               uint32_t global_index,
+                                               void* user_data) {
+  Context* ctx = user_data;
+  assert(global_index < ctx->module->globals.size);
+  WasmInterpreterTypedValue* ref_typed_value =
+      &ctx->module->globals.data[global_index];
+  ctx->init_expr_value = *ref_typed_value;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_i32_const_expr(uint32_t index,
+                                              uint32_t value,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  ctx->init_expr_value.type = WASM_TYPE_I32;
+  ctx->init_expr_value.value.i32 = value;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_i64_const_expr(uint32_t index,
+                                              uint64_t value,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  ctx->init_expr_value.type = WASM_TYPE_I64;
+  ctx->init_expr_value.value.i64 = value;
+  return WASM_OK;
+}
+
+static WasmResult on_export_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_new_interpreter_export_array(ctx->allocator, &ctx->module->exports,
+                                    count);
+  return WASM_OK;
+}
+
+static WasmResult on_export(uint32_t index,
+                            uint32_t func_index,
+                            WasmStringSlice name,
+                            void* user_data) {
+  Context* ctx = user_data;
+  WasmInterpreterExport* export = &ctx->module->exports.data[index];
+  InterpreterFunc* func = get_func(ctx, func_index);
+  export->name = wasm_dup_string_slice(ctx->allocator, name);
+  export->func_index = func_index;
+  export->sig_index = func->sig_index;
+  export->func_offset = WASM_INVALID_OFFSET;
+  return WASM_OK;
+}
+
+static WasmResult on_start_function(uint32_t func_index, void* user_data) {
+  Context* ctx = user_data;
+  /* can't get the function offset yet, because we haven't parsed the
+   * functions. Just store the function index and resolve it later in
+   * end_function_bodies_section. */
+  assert(func_index < ctx->funcs.size);
+  ctx->start_func_index = func_index;
+  return WASM_OK;
+}
+
+static WasmResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
+  Context* ctx = user_data;
+  assert(ctx->init_expr_value.type == WASM_TYPE_I32);
+  ctx->table_offset = ctx->init_expr_value.value.i32;
+  return WASM_OK;
+}
+
+static WasmResult on_elem_segment_function_index(uint32_t index,
+                                                 uint32_t func_index,
+                                                 void* user_data) {
+  Context* ctx = user_data;
+  assert(ctx->table_offset < ctx->module->func_table.size);
+  assert(index < ctx->module->func_table.size);
+  WasmInterpreterFuncTableEntry* entry =
+      &ctx->module->func_table.data[ctx->table_offset++];
+  InterpreterFunc* func = get_func(ctx, func_index);
+  entry->sig_index = func->sig_index;
+  entry->func_offset = func->offset;
+  return WASM_OK;
+}
+
+static WasmResult on_data_segment_data(uint32_t index,
+                                       const void* src_data,
+                                       uint32_t size,
+                                       void* user_data) {
+  Context* ctx = user_data;
+  WasmInterpreterMemory* memory = &ctx->module->memory;
+  assert(ctx->init_expr_value.type == WASM_TYPE_I32);
+  uint32_t address = ctx->init_expr_value.value.i32;
+  uint8_t* dst_data = memory->data;
+  if ((uint64_t)address + (uint64_t)size > memory->byte_size)
+    return WASM_ERROR;
+  memcpy(&dst_data[address], src_data, size);
   return WASM_OK;
 }
 
@@ -1756,58 +1825,6 @@ static WasmResult on_emit_unreachable_expr(void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_function_table_count(uint32_t count, void* user_data) {
-  Context* ctx = user_data;
-  wasm_new_interpreter_func_table_entry_array(ctx->allocator,
-                                              &ctx->module->func_table, count);
-  return WASM_OK;
-}
-
-static WasmResult on_function_table_entry(uint32_t index,
-                                          uint32_t func_index,
-                                          void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->func_table.size);
-  WasmInterpreterFuncTableEntry* entry = &ctx->module->func_table.data[index];
-  InterpreterFunc* func = get_func(ctx, func_index);
-  entry->sig_index = func->sig_index;
-  /* the function offset isn't known yet, so temporarily store the func index
-   * in func_offset and resolve after the last function body */
-  entry->func_offset = func_index;
-  return WASM_OK;
-}
-
-static WasmResult on_start_function(uint32_t func_index, void* user_data) {
-  Context* ctx = user_data;
-  /* can't get the function offset yet, because we haven't parsed the
-   * functions. Just store the function index and resolve it later in
-   * end_function_bodies_section. */
-  assert(func_index < ctx->funcs.size);
-  ctx->start_func_index = func_index;
-  return WASM_OK;
-}
-
-static WasmResult on_export_count(uint32_t count, void* user_data) {
-  Context* ctx = user_data;
-  wasm_new_interpreter_export_array(ctx->allocator, &ctx->module->exports,
-                                    count);
-  return WASM_OK;
-}
-
-static WasmResult on_export(uint32_t index,
-                            uint32_t func_index,
-                            WasmStringSlice name,
-                            void* user_data) {
-  Context* ctx = user_data;
-  WasmInterpreterExport* export = &ctx->module->exports.data[index];
-  InterpreterFunc* func = get_func(ctx, func_index);
-  export->name = wasm_dup_string_slice(ctx->allocator, name);
-  export->func_index = func_index;
-  export->sig_index = func->sig_index;
-  export->func_offset = WASM_INVALID_OFFSET;
-  return WASM_OK;
-}
-
 static WasmResult end_function_bodies_section(void* user_data) {
   Context* ctx = user_data;
 
@@ -1825,134 +1842,129 @@ static WasmResult end_function_bodies_section(void* user_data) {
     InterpreterFunc* func = get_func(ctx, export->func_index);
     export->func_offset = func->offset;
   }
-
-  /* resolve the function table entry offsets */
-  for (i = 0; i < ctx->module->func_table.size; ++i) {
-    WasmInterpreterFuncTableEntry* entry = &ctx->module->func_table.data[i];
-    /* function index is stored in func_offset temporarily */
-    InterpreterFunc* func = get_func(ctx, entry->func_offset);
-    entry->func_offset = func->offset;
-  }
-
   return WASM_OK;
 }
 
 static WasmBinaryReader s_binary_reader = {
     .user_data = NULL,
-    .on_error = &on_error,
+    .on_error = on_error,
 
-    .on_memory_initial_size_pages = &on_memory_initial_size_pages,
+    .on_signature_count = on_signature_count,
+    .on_signature = on_signature,
 
-    .on_global_count = &on_global_count,
-    .begin_global = &begin_global,
-    .on_global_f32_const_expr = &on_global_f32_const_expr,
-    .on_global_f64_const_expr = &on_global_f64_const_expr,
-    .on_global_get_global_expr = &on_global_get_global_expr,
-    .on_global_i32_const_expr = &on_global_i32_const_expr,
-    .on_global_i64_const_expr = &on_global_i64_const_expr,
+    .on_import_count = on_import_count,
+    .on_import = on_import,
 
-    .on_data_segment = &on_data_segment,
+    .on_function_signatures_count = on_function_signatures_count,
+    .on_function_signature = on_function_signature,
 
-    .on_signature_count = &on_signature_count,
-    .on_signature = &on_signature,
+    .on_table_limits = on_table_limits,
 
-    .on_import_count = &on_import_count,
-    .on_import = &on_import,
+    .on_memory_limits = on_memory_limits,
 
-    .on_function_signatures_count = &on_function_signatures_count,
-    .on_function_signature = &on_function_signature,
+    .on_global_count = on_global_count,
+    .begin_global = begin_global,
+    .end_global_init_expr = end_global_init_expr,
 
-    .on_function_bodies_count = &on_function_bodies_count,
-    .begin_function_body_pass = &begin_function_body_pass,
-    .begin_function_body = &begin_function_body,
-    .on_local_decl = &on_local_decl,
-    .on_binary_expr = &on_binary_expr,
-    .on_block_expr = &on_block_expr,
-    .on_br_expr = &on_br_expr,
-    .on_br_if_expr = &on_br_if_expr,
-    .on_br_table_expr = &on_br_table_expr,
-    .on_call_expr = &on_call_expr,
-    .on_call_import_expr = &on_call_import_expr,
-    .on_call_indirect_expr = &on_call_indirect_expr,
-    .on_compare_expr = &on_binary_expr,
-    .on_convert_expr = &on_unary_expr,
-    .on_current_memory_expr = &on_current_memory_expr,
-    .on_drop_expr = &on_drop_expr,
-    .on_else_expr = &on_else_expr,
-    .on_end_expr = &on_end_expr,
-    .on_f32_const_expr = &on_f32_const_expr,
-    .on_f64_const_expr = &on_f64_const_expr,
-    .on_get_global_expr = &on_get_global_expr,
-    .on_get_local_expr = &on_get_local_expr,
-    .on_grow_memory_expr = &on_grow_memory_expr,
-    .on_i32_const_expr = &on_i32_const_expr,
-    .on_i64_const_expr = &on_i64_const_expr,
-    .on_if_expr = &on_if_expr,
-    .on_load_expr = &on_load_expr,
-    .on_loop_expr = &on_loop_expr,
-    .on_nop_expr = &on_nop_expr,
-    .on_return_expr = &on_return_expr,
-    .on_select_expr = &on_select_expr,
-    .on_set_global_expr = &on_set_global_expr,
-    .on_set_local_expr = &on_set_local_expr,
-    .on_store_expr = &on_store_expr,
-    .on_tee_local_expr = &on_tee_local_expr,
-    .on_unary_expr = &on_unary_expr,
-    .on_unreachable_expr = &on_unreachable_expr,
-    .end_function_body = &end_function_body,
-    .end_function_bodies_section = &end_function_bodies_section,
-    .end_function_body_pass = &end_function_body_pass,
+    .on_export_count = on_export_count,
+    .on_export = on_export,
 
-    .on_function_table_count = &on_function_table_count,
-    .on_function_table_entry = &on_function_table_entry,
+    .on_start_function = on_start_function,
 
-    .on_start_function = &on_start_function,
+    .on_function_bodies_count = on_function_bodies_count,
+    .begin_function_body_pass = begin_function_body_pass,
+    .begin_function_body = begin_function_body,
+    .on_local_decl = on_local_decl,
+    .on_binary_expr = on_binary_expr,
+    .on_block_expr = on_block_expr,
+    .on_br_expr = on_br_expr,
+    .on_br_if_expr = on_br_if_expr,
+    .on_br_table_expr = on_br_table_expr,
+    .on_call_expr = on_call_expr,
+    .on_call_import_expr = on_call_import_expr,
+    .on_call_indirect_expr = on_call_indirect_expr,
+    .on_compare_expr = on_binary_expr,
+    .on_convert_expr = on_unary_expr,
+    .on_current_memory_expr = on_current_memory_expr,
+    .on_drop_expr = on_drop_expr,
+    .on_else_expr = on_else_expr,
+    .on_end_expr = on_end_expr,
+    .on_f32_const_expr = on_f32_const_expr,
+    .on_f64_const_expr = on_f64_const_expr,
+    .on_get_global_expr = on_get_global_expr,
+    .on_get_local_expr = on_get_local_expr,
+    .on_grow_memory_expr = on_grow_memory_expr,
+    .on_i32_const_expr = on_i32_const_expr,
+    .on_i64_const_expr = on_i64_const_expr,
+    .on_if_expr = on_if_expr,
+    .on_load_expr = on_load_expr,
+    .on_loop_expr = on_loop_expr,
+    .on_nop_expr = on_nop_expr,
+    .on_return_expr = on_return_expr,
+    .on_select_expr = on_select_expr,
+    .on_set_global_expr = on_set_global_expr,
+    .on_set_local_expr = on_set_local_expr,
+    .on_store_expr = on_store_expr,
+    .on_tee_local_expr = on_tee_local_expr,
+    .on_unary_expr = on_unary_expr,
+    .on_unreachable_expr = on_unreachable_expr,
+    .end_function_body = end_function_body,
+    .end_function_bodies_section = end_function_bodies_section,
+    .end_function_body_pass = end_function_body_pass,
 
-    .on_export_count = &on_export_count,
-    .on_export = &on_export,
+    .end_elem_segment_init_expr = end_elem_segment_init_expr,
+    .on_elem_segment_function_index = on_elem_segment_function_index,
+
+    .on_data_segment_data = on_data_segment_data,
+
+    .on_init_expr_f32_const_expr = on_init_expr_f32_const_expr,
+    .on_init_expr_f64_const_expr = on_init_expr_f64_const_expr,
+    .on_init_expr_get_global_expr = on_init_expr_get_global_expr,
+    .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
+    .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,
 };
 
 static WasmBinaryReader s_binary_reader_emit = {
-    .on_error = &on_error,
-    .begin_function_body_pass = &begin_function_body_pass,
-    .begin_function_body = &begin_emit_function_body,
-    .on_local_decl_count = &on_emit_local_decl_count,
-    .on_local_decl = &on_emit_local_decl,
-    .on_binary_expr = &on_emit_binary_expr,
-    .on_block_expr = &on_emit_block_expr,
-    .on_br_expr = &on_emit_br_expr,
-    .on_br_if_expr = &on_emit_br_if_expr,
-    .on_br_table_expr = &on_emit_br_table_expr,
-    .on_call_expr = &on_emit_call_expr,
-    .on_call_import_expr = &on_emit_call_import_expr,
-    .on_call_indirect_expr = &on_emit_call_indirect_expr,
-    .on_compare_expr = &on_emit_binary_expr,
-    .on_convert_expr = &on_emit_unary_expr,
-    .on_current_memory_expr = &on_emit_current_memory_expr,
-    .on_drop_expr = &on_emit_drop_expr,
-    .on_else_expr = &on_emit_else_expr,
-    .on_end_expr = &on_emit_end_expr,
-    .on_f32_const_expr = &on_emit_f32_const_expr,
-    .on_f64_const_expr = &on_emit_f64_const_expr,
-    .on_get_global_expr = &on_emit_get_global_expr,
-    .on_get_local_expr = &on_emit_get_local_expr,
-    .on_grow_memory_expr = &on_emit_grow_memory_expr,
-    .on_i32_const_expr = &on_emit_i32_const_expr,
-    .on_i64_const_expr = &on_emit_i64_const_expr,
-    .on_if_expr = &on_emit_if_expr,
-    .on_load_expr = &on_emit_load_expr,
-    .on_loop_expr = &on_emit_loop_expr,
-    .on_nop_expr = &on_emit_nop_expr,
-    .on_return_expr = &on_emit_return_expr,
-    .on_select_expr = &on_emit_select_expr,
-    .on_set_global_expr = &on_emit_set_global_expr,
-    .on_set_local_expr = &on_emit_set_local_expr,
-    .on_store_expr = &on_emit_store_expr,
-    .on_tee_local_expr = &on_emit_tee_local_expr,
-    .on_unary_expr = &on_emit_unary_expr,
-    .on_unreachable_expr = &on_emit_unreachable_expr,
-    .end_function_body = &end_emit_function_body,
-    .end_function_body_pass = &end_function_body_pass,
+    .on_error = on_error,
+    .begin_function_body_pass = begin_function_body_pass,
+    .begin_function_body = begin_emit_function_body,
+    .on_local_decl_count = on_emit_local_decl_count,
+    .on_local_decl = on_emit_local_decl,
+    .on_binary_expr = on_emit_binary_expr,
+    .on_block_expr = on_emit_block_expr,
+    .on_br_expr = on_emit_br_expr,
+    .on_br_if_expr = on_emit_br_if_expr,
+    .on_br_table_expr = on_emit_br_table_expr,
+    .on_call_expr = on_emit_call_expr,
+    .on_call_import_expr = on_emit_call_import_expr,
+    .on_call_indirect_expr = on_emit_call_indirect_expr,
+    .on_compare_expr = on_emit_binary_expr,
+    .on_convert_expr = on_emit_unary_expr,
+    .on_current_memory_expr = on_emit_current_memory_expr,
+    .on_drop_expr = on_emit_drop_expr,
+    .on_else_expr = on_emit_else_expr,
+    .on_end_expr = on_emit_end_expr,
+    .on_f32_const_expr = on_emit_f32_const_expr,
+    .on_f64_const_expr = on_emit_f64_const_expr,
+    .on_get_global_expr = on_emit_get_global_expr,
+    .on_get_local_expr = on_emit_get_local_expr,
+    .on_grow_memory_expr = on_emit_grow_memory_expr,
+    .on_i32_const_expr = on_emit_i32_const_expr,
+    .on_i64_const_expr = on_emit_i64_const_expr,
+    .on_if_expr = on_emit_if_expr,
+    .on_load_expr = on_emit_load_expr,
+    .on_loop_expr = on_emit_loop_expr,
+    .on_nop_expr = on_emit_nop_expr,
+    .on_return_expr = on_emit_return_expr,
+    .on_select_expr = on_emit_select_expr,
+    .on_set_global_expr = on_emit_set_global_expr,
+    .on_set_local_expr = on_emit_set_local_expr,
+    .on_store_expr = on_emit_store_expr,
+    .on_tee_local_expr = on_emit_tee_local_expr,
+    .on_unary_expr = on_emit_unary_expr,
+    .on_unreachable_expr = on_emit_unreachable_expr,
+    .end_function_body = end_emit_function_body,
+    .end_function_body_pass = end_function_body_pass,
 };
 
 static WasmResult begin_function_body_pass(uint32_t index,

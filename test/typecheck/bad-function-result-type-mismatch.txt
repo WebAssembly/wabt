@@ -3,7 +3,7 @@
   (func (result i32)
     (f32.const 0)))
 (;; STDERR ;;;
-typecheck/bad-function-result-type-mismatch.txt:3:4: unable to join type f32 (type of last operation) with type i32 (function signature result type).
+typecheck/bad-function-result-type-mismatch.txt:3:3: unable to join type f32 (type of last operation) with type i32 (function signature result type).
   (func (result i32)
-   ^^^^
+  ^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

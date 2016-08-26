@@ -29,9 +29,9 @@
 000001f: 06                                         ; string length
 0000020: 6d65 6d6f 7279                             ; section id: "memory"
 0000026: 00                                         ; section size (guess)
-0000027: 01                                         ; min mem pages
-0000028: 02                                         ; max mem pages
-0000029: 00                                         ; export mem
+0000027: 01                                         ; memory flags
+0000028: 01                                         ; memory initial pages
+0000029: 02                                         ; memory max pages
 0000026: 03                                         ; FIXUP section size
 ; section "code"
 000002a: 04                                         ; string length
@@ -50,6 +50,6 @@
 ;; dump
 0000000: 0061 736d 0c00 0000 0474 7970 6505 0140  
 0000010: 0101 0008 6675 6e63 7469 6f6e 0201 0006  
-0000020: 6d65 6d6f 7279 0301 0200 0463 6f64 6507  
+0000020: 6d65 6d6f 7279 0301 0102 0463 6f64 6507  
 0000030: 0105 0014 0039 0b                        
 ;;; STDOUT ;;)
