@@ -53,6 +53,7 @@ typedef struct Context {
   WasmFunc* current_func;
   LabelNodeVector label_stack;
   uint32_t max_depth;
+  WasmExpr** current_init_expr;
 } Context;
 
 static void on_error(uint32_t offset, const char* message, void* user_data);
@@ -120,150 +121,6 @@ static void on_error(uint32_t offset, const char* message, void* user_data) {
     ctx->error_handler->on_error(offset, message,
                                  ctx->error_handler->user_data);
   }
-}
-
-static WasmResult begin_memory_section(void* user_data) {
-  Context* ctx = user_data;
-  WasmModuleField* field =
-      wasm_append_module_field(ctx->allocator, ctx->module);
-  field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
-  assert(ctx->module->memory == NULL);
-  ctx->module->memory = &field->memory;
-  return WASM_OK;
-}
-
-static WasmResult on_memory_initial_size_pages(uint32_t pages,
-                                               void* user_data) {
-  Context* ctx = user_data;
-  ctx->module->memory->initial_pages = pages;
-  return WASM_OK;
-}
-
-static WasmResult on_memory_max_size_pages(uint32_t pages, void* user_data) {
-  Context* ctx = user_data;
-  ctx->module->memory->max_pages = pages;
-  return WASM_OK;
-}
-
-static WasmResult on_global_count(uint32_t count, void* user_data) {
-  Context* ctx = user_data;
-  wasm_reserve_global_ptrs(ctx->allocator, &ctx->module->globals, count);
-  return WASM_OK;
-}
-
-static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->globals.capacity);
-
-  WasmModuleField* field =
-      wasm_append_module_field(ctx->allocator, ctx->module);
-  field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
-
-  WasmGlobal* global = &field->global;
-  WASM_ZERO_MEMORY(*global);
-  global->type = type;
-
-  WasmGlobalPtr* global_ptr =
-      wasm_append_global_ptr(ctx->allocator, &ctx->module->globals);
-  *global_ptr = global;
-  return WASM_OK;
-}
-
-static WasmResult on_global_f32_const_expr(uint32_t index,
-                                           uint32_t value,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  WasmGlobal* global = ctx->module->globals.data[index];
-  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
-  expr->const_.type = WASM_TYPE_F32;
-  expr->const_.f32_bits = value;
-  global->init_expr = expr;
-  return WASM_OK;
-}
-
-static WasmResult on_global_f64_const_expr(uint32_t index,
-                                           uint64_t value,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  WasmGlobal* global = ctx->module->globals.data[index];
-  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
-  expr->const_.type = WASM_TYPE_F64;
-  expr->const_.f64_bits = value;
-  global->init_expr = expr;
-  return WASM_OK;
-}
-
-static WasmResult on_global_get_global_expr(uint32_t index,
-                                            uint32_t global_index,
-                                            void* user_data) {
-  Context* ctx = user_data;
-  WasmGlobal* global = ctx->module->globals.data[index];
-  WasmExpr* expr = wasm_new_get_global_expr(ctx->allocator);
-  expr->get_global.var.type = WASM_VAR_TYPE_INDEX;
-  expr->get_global.var.index = global_index;
-  global->init_expr = expr;
-  return WASM_OK;
-}
-
-static WasmResult on_global_i32_const_expr(uint32_t index,
-                                           uint32_t value,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  WasmGlobal* global = ctx->module->globals.data[index];
-  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
-  expr->const_.type = WASM_TYPE_I32;
-  expr->const_.u32 = value;
-  global->init_expr = expr;
-  return WASM_OK;
-}
-
-static WasmResult on_global_i64_const_expr(uint32_t index,
-                                           uint64_t value,
-                                           void* user_data) {
-  Context* ctx = user_data;
-  WasmGlobal* global = ctx->module->globals.data[index];
-  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
-  expr->const_.type = WASM_TYPE_I64;
-  expr->const_.u64 = value;
-  global->init_expr = expr;
-  return WASM_OK;
-}
-
-static WasmResult on_memory_exported(WasmBool exported, void* user_data) {
-  Context* ctx = user_data;
-  if (exported) {
-    WasmModuleField* field =
-        wasm_append_module_field(ctx->allocator, ctx->module);
-    field->type = WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY;
-    /* TODO(binji): refactor */
-    field->export_memory.name.start = wasm_strndup(ctx->allocator, "memory", 6);
-    field->export_memory.name.length = 6;
-    assert(ctx->module->export_memory == NULL);
-    ctx->module->export_memory = &field->export_memory;
-  }
-  return WASM_OK;
-}
-
-static WasmResult on_data_segment_count(uint32_t count, void* user_data) {
-  Context* ctx = user_data;
-  wasm_reserve_segments(ctx->allocator, &ctx->module->memory->segments, count);
-  return WASM_OK;
-}
-
-static WasmResult on_data_segment(uint32_t index,
-                                  uint32_t address,
-                                  const void* data,
-                                  uint32_t size,
-                                  void* user_data) {
-  Context* ctx = user_data;
-  assert(index < ctx->module->memory->segments.capacity);
-  WasmSegment* segment =
-      wasm_append_segment(ctx->allocator, &ctx->module->memory->segments);
-  segment->addr = address;
-  segment->data = wasm_alloc(ctx->allocator, size, WASM_DEFAULT_ALIGN);
-  segment->size = size;
-  memcpy(segment->data, data, size);
-  return WASM_OK;
 }
 
 static WasmResult on_signature_count(uint32_t count, void* user_data) {
@@ -362,6 +219,132 @@ static WasmResult on_function_signature(uint32_t index,
   WasmFuncPtr* func_ptr =
       wasm_append_func_ptr(ctx->allocator, &ctx->module->funcs);
   *func_ptr = func;
+  return WASM_OK;
+}
+
+static WasmResult begin_table_section(void* user_data) {
+  Context* ctx = user_data;
+  WasmModuleField* field =
+      wasm_append_module_field(ctx->allocator, ctx->module);
+  field->type = WASM_MODULE_FIELD_TYPE_TABLE;
+  assert(ctx->module->table == NULL);
+  ctx->module->table = &field->table;
+  return WASM_OK;
+}
+
+static WasmResult on_table_limits(WasmBool has_max,
+                                  uint32_t initial,
+                                  uint32_t max,
+                                  void* user_data) {
+  Context* ctx = user_data;
+  WasmLimits* limits = &ctx->module->table->elem_limits;
+  limits->has_max = has_max;
+  limits->initial = initial;
+  limits->max = max;
+  return WASM_OK;
+}
+
+static WasmResult begin_memory_section(void* user_data) {
+  Context* ctx = user_data;
+  WasmModuleField* field =
+      wasm_append_module_field(ctx->allocator, ctx->module);
+  field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
+  assert(ctx->module->memory == NULL);
+  ctx->module->memory = &field->memory;
+  return WASM_OK;
+}
+
+static WasmResult on_memory_limits(WasmBool has_max,
+                                   uint32_t initial,
+                                   uint32_t max,
+                                   void* user_data) {
+  Context* ctx = user_data;
+  WasmLimits* limits = &ctx->module->memory->page_limits;
+  limits->has_max = has_max;
+  limits->initial = initial;
+  limits->max = max;
+  return WASM_OK;
+}
+
+static WasmResult on_global_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_reserve_global_ptrs(ctx->allocator, &ctx->module->globals, count);
+  return WASM_OK;
+}
+
+static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->globals.capacity);
+
+  WasmModuleField* field =
+      wasm_append_module_field(ctx->allocator, ctx->module);
+  field->type = WASM_MODULE_FIELD_TYPE_GLOBAL;
+
+  WasmGlobal* global = &field->global;
+  WASM_ZERO_MEMORY(*global);
+  global->type = type;
+
+  WasmGlobalPtr* global_ptr =
+      wasm_append_global_ptr(ctx->allocator, &ctx->module->globals);
+  *global_ptr = global;
+  return WASM_OK;
+}
+
+static WasmResult begin_global_init_expr(uint32_t index,
+                                               void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->globals.size - 1);
+  WasmGlobal* global = ctx->module->globals.data[index];
+  ctx->current_init_expr = &global->init_expr;
+  return WASM_OK;
+}
+
+static WasmResult end_global_init_expr(uint32_t index, void* user_data) {
+  Context* ctx = user_data;
+  ctx->current_init_expr = NULL;
+  return WASM_OK;
+}
+
+static WasmResult on_export_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_reserve_export_ptrs(ctx->allocator, &ctx->module->exports, count);
+  return WASM_OK;
+}
+
+static WasmResult on_export(uint32_t index,
+                            uint32_t func_index,
+                            WasmStringSlice name,
+                            void* user_data) {
+  Context* ctx = user_data;
+  WasmModuleField* field =
+      wasm_append_module_field(ctx->allocator, ctx->module);
+  field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
+
+  WasmExport* export = &field->export_;
+  WASM_ZERO_MEMORY(*export);
+  export->name = wasm_dup_string_slice(ctx->allocator, name);
+  export->var.type = WASM_VAR_TYPE_INDEX;
+  assert(func_index < ctx->module->funcs.size);
+  export->var.index = func_index;
+
+  assert(index < ctx->module->exports.capacity);
+  WasmExportPtr* export_ptr =
+      wasm_append_export_ptr(ctx->allocator, &ctx->module->exports);
+  *export_ptr = export;
+  return WASM_OK;
+}
+
+static WasmResult on_start_function(uint32_t func_index, void* user_data) {
+  Context* ctx = user_data;
+  WasmModuleField* field =
+      wasm_append_module_field(ctx->allocator, ctx->module);
+  field->type = WASM_MODULE_FIELD_TYPE_START;
+
+  field->start.type = WASM_VAR_TYPE_INDEX;
+  assert(func_index < ctx->module->funcs.size);
+  field->start.index = func_index;
+
+  ctx->module->start = &field->start;
   return WASM_OK;
 }
 
@@ -701,71 +684,116 @@ static WasmResult end_function_body(uint32_t index, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_function_table_count(uint32_t count, void* user_data) {
+static WasmResult on_elem_segment_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_reserve_elem_segment_ptrs(ctx->allocator, &ctx->module->elem_segments,
+                                 count);
+  return WASM_OK;
+}
+
+static WasmResult begin_elem_segment(uint32_t index,
+                                     uint32_t table_index,
+                                     void* user_data) {
   Context* ctx = user_data;
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
-  field->type = WASM_MODULE_FIELD_TYPE_TABLE;
+  field->type = WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT;
 
-  assert(ctx->module->table == NULL);
-  ctx->module->table = &field->table;
-
-  wasm_reserve_vars(ctx->allocator, &field->table, count);
+  WasmElemSegment* segment = &field->elem_segment;
+  WASM_ZERO_MEMORY(*segment);
+  assert(index == ctx->module->elem_segments.size);
+  assert(index < ctx->module->elem_segments.capacity);
+  WasmElemSegmentPtr* segment_ptr =
+      wasm_append_elem_segment_ptr(ctx->allocator, &ctx->module->elem_segments);
+  *segment_ptr = segment;
   return WASM_OK;
 }
 
-static WasmResult on_function_table_entry(uint32_t index,
-                                          uint32_t func_index,
-                                          void* user_data) {
+static WasmResult begin_elem_segment_init_expr(uint32_t index,
+                                               void* user_data) {
   Context* ctx = user_data;
-  assert(index < ctx->module->table->capacity);
-  WasmVar* func_var = wasm_append_var(ctx->allocator, ctx->module->table);
-  func_var->type = WASM_VAR_TYPE_INDEX;
-  assert(func_index < ctx->module->funcs.size);
-  func_var->index = func_index;
+  assert(index == ctx->module->elem_segments.size - 1);
+  WasmElemSegment* segment = ctx->module->elem_segments.data[index];
+  ctx->current_init_expr = &segment->offset;
   return WASM_OK;
 }
 
-static WasmResult on_start_function(uint32_t func_index, void* user_data) {
+static WasmResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
+  Context* ctx = user_data;
+  ctx->current_init_expr = NULL;
+  return WASM_OK;
+}
+
+static WasmResult on_elem_segment_function_index_count(uint32_t index,
+                                                       uint32_t count,
+                                                       void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->elem_segments.size - 1);
+  WasmElemSegment* segment = ctx->module->elem_segments.data[index];
+  wasm_reserve_vars(ctx->allocator, &segment->vars, count);
+  return WASM_OK;
+}
+
+static WasmResult on_elem_segment_function_index(uint32_t index,
+                                                 uint32_t func_index,
+                                                 void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->elem_segments.size - 1);
+  WasmElemSegment* segment = ctx->module->elem_segments.data[index];
+  WasmVar* var = wasm_append_var(ctx->allocator, &segment->vars);
+  var->type = WASM_VAR_TYPE_INDEX;
+  var->index = func_index;
+  return WASM_OK;
+}
+
+static WasmResult on_data_segment_count(uint32_t count, void* user_data) {
+  Context* ctx = user_data;
+  wasm_reserve_data_segment_ptrs(ctx->allocator, &ctx->module->data_segments,
+                                 count);
+  return WASM_OK;
+}
+
+static WasmResult begin_data_segment(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
-  field->type = WASM_MODULE_FIELD_TYPE_START;
+  field->type = WASM_MODULE_FIELD_TYPE_DATA_SEGMENT;
 
-  field->start.type = WASM_VAR_TYPE_INDEX;
-  assert(func_index < ctx->module->funcs.size);
-  field->start.index = func_index;
-
-  ctx->module->start = &field->start;
+  WasmDataSegment* segment = &field->data_segment;
+  WASM_ZERO_MEMORY(*segment);
+  assert(index == ctx->module->data_segments.size);
+  assert(index < ctx->module->data_segments.capacity);
+  WasmDataSegmentPtr* segment_ptr =
+      wasm_append_data_segment_ptr(ctx->allocator, &ctx->module->data_segments);
+  *segment_ptr = segment;
   return WASM_OK;
 }
 
-static WasmResult on_export_count(uint32_t count, void* user_data) {
+static WasmResult begin_data_segment_init_expr(uint32_t index,
+                                               void* user_data) {
   Context* ctx = user_data;
-  wasm_reserve_export_ptrs(ctx->allocator, &ctx->module->exports, count);
+  assert(index == ctx->module->data_segments.size - 1);
+  WasmDataSegment* segment = ctx->module->data_segments.data[index];
+  ctx->current_init_expr = &segment->offset;
   return WASM_OK;
 }
 
-static WasmResult on_export(uint32_t index,
-                            uint32_t func_index,
-                            WasmStringSlice name,
-                            void* user_data) {
+static WasmResult end_data_segment_init_expr(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  WasmModuleField* field =
-      wasm_append_module_field(ctx->allocator, ctx->module);
-  field->type = WASM_MODULE_FIELD_TYPE_EXPORT;
+  ctx->current_init_expr = NULL;
+  return WASM_OK;
+}
 
-  WasmExport* export = &field->export_;
-  WASM_ZERO_MEMORY(*export);
-  export->name = wasm_dup_string_slice(ctx->allocator, name);
-  export->var.type = WASM_VAR_TYPE_INDEX;
-  assert(func_index < ctx->module->funcs.size);
-  export->var.index = func_index;
-
-  assert(index < ctx->module->exports.capacity);
-  WasmExportPtr* export_ptr =
-      wasm_append_export_ptr(ctx->allocator, &ctx->module->exports);
-  *export_ptr = export;
+static WasmResult on_data_segment_data(uint32_t index,
+                                       const void* data,
+                                       uint32_t size,
+                                       void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->data_segments.size - 1);
+  WasmDataSegment* segment = ctx->module->data_segments.data[index];
+  segment->data = wasm_alloc(ctx->allocator, size, WASM_DEFAULT_ALIGN);
+  segment->size = size;
+  memcpy(segment->data, data, size);
   return WASM_OK;
 }
 
@@ -813,6 +841,61 @@ static WasmResult on_local_names_count(uint32_t index,
   return WASM_OK;
 }
 
+static WasmResult on_init_expr_f32_const_expr(uint32_t index,
+                                              uint32_t value,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_F32;
+  expr->const_.f32_bits = value;
+  *ctx->current_init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_f64_const_expr(uint32_t index,
+                                              uint64_t value,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_F64;
+  expr->const_.f64_bits = value;
+  *ctx->current_init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_get_global_expr(uint32_t index,
+                                               uint32_t global_index,
+                                               void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_get_global_expr(ctx->allocator);
+  expr->get_global.var.type = WASM_VAR_TYPE_INDEX;
+  expr->get_global.var.index = global_index;
+  *ctx->current_init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_i32_const_expr(uint32_t index,
+                                              uint32_t value,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_I32;
+  expr->const_.u32 = value;
+  *ctx->current_init_expr = expr;
+  return WASM_OK;
+}
+
+static WasmResult on_init_expr_i64_const_expr(uint32_t index,
+                                              uint64_t value,
+                                              void* user_data) {
+  Context* ctx = user_data;
+  WasmExpr* expr = wasm_new_const_expr(ctx->allocator);
+  expr->const_.type = WASM_TYPE_I64;
+  expr->const_.u64 = value;
+  *ctx->current_init_expr = expr;
+  return WASM_OK;
+}
+
 static WasmResult on_local_name(uint32_t func_index,
                                 uint32_t local_index,
                                 WasmStringSlice name,
@@ -842,83 +925,95 @@ static WasmResult on_local_name(uint32_t func_index,
 
 static WasmBinaryReader s_binary_reader = {
     .user_data = NULL,
-    .on_error = &on_error,
+    .on_error = on_error,
 
-    .begin_memory_section = &begin_memory_section,
-    .on_memory_initial_size_pages = &on_memory_initial_size_pages,
-    .on_memory_max_size_pages = &on_memory_max_size_pages,
-    .on_memory_exported = &on_memory_exported,
+    .on_signature_count = on_signature_count,
+    .on_signature = on_signature,
 
-    .on_global_count = &on_global_count,
-    .begin_global = &begin_global,
-    .on_global_f32_const_expr = &on_global_f32_const_expr,
-    .on_global_f64_const_expr = &on_global_f64_const_expr,
-    .on_global_get_global_expr = &on_global_get_global_expr,
-    .on_global_i32_const_expr = &on_global_i32_const_expr,
-    .on_global_i64_const_expr = &on_global_i64_const_expr,
+    .on_import_count = on_import_count,
+    .on_import = on_import,
 
-    .on_data_segment_count = &on_data_segment_count,
-    .on_data_segment = &on_data_segment,
+    .on_function_signatures_count = on_function_signatures_count,
+    .on_function_signature = on_function_signature,
 
-    .on_signature_count = &on_signature_count,
-    .on_signature = &on_signature,
+    .begin_table_section = begin_table_section,
+    .on_table_limits = on_table_limits,
 
-    .on_import_count = &on_import_count,
-    .on_import = &on_import,
+    .begin_memory_section = begin_memory_section,
+    .on_memory_limits = on_memory_limits,
 
-    .on_function_signatures_count = &on_function_signatures_count,
-    .on_function_signature = &on_function_signature,
+    .on_global_count = on_global_count,
+    .begin_global = begin_global,
+    .begin_global_init_expr = begin_global_init_expr,
+    .end_global_init_expr = end_global_init_expr,
 
-    .on_function_bodies_count = &on_function_bodies_count,
-    .begin_function_body = &begin_function_body,
-    .on_local_decl = &on_local_decl,
-    .on_binary_expr = &on_binary_expr,
-    .on_block_expr = &on_block_expr,
-    .on_br_expr = &on_br_expr,
-    .on_br_if_expr = &on_br_if_expr,
-    .on_br_table_expr = &on_br_table_expr,
-    .on_call_expr = &on_call_expr,
-    .on_call_import_expr = &on_call_import_expr,
-    .on_call_indirect_expr = &on_call_indirect_expr,
-    .on_compare_expr = &on_compare_expr,
-    .on_convert_expr = &on_convert_expr,
-    .on_current_memory_expr = &on_current_memory_expr,
-    .on_drop_expr = &on_drop_expr,
-    .on_else_expr = &on_else_expr,
-    .on_end_expr = &on_end_expr,
-    .on_f32_const_expr = &on_f32_const_expr,
-    .on_f64_const_expr = &on_f64_const_expr,
-    .on_get_global_expr = &on_get_global_expr,
-    .on_get_local_expr = &on_get_local_expr,
-    .on_grow_memory_expr = &on_grow_memory_expr,
-    .on_i32_const_expr = &on_i32_const_expr,
-    .on_i64_const_expr = &on_i64_const_expr,
-    .on_if_expr = &on_if_expr,
-    .on_load_expr = &on_load_expr,
-    .on_loop_expr = &on_loop_expr,
-    .on_nop_expr = &on_nop_expr,
-    .on_return_expr = &on_return_expr,
-    .on_select_expr = &on_select_expr,
-    .on_set_global_expr = &on_set_global_expr,
-    .on_set_local_expr = &on_set_local_expr,
-    .on_store_expr = &on_store_expr,
-    .on_tee_local_expr = &on_tee_local_expr,
-    .on_unary_expr = &on_unary_expr,
-    .on_unreachable_expr = &on_unreachable_expr,
-    .end_function_body = &end_function_body,
+    .on_export_count = on_export_count,
+    .on_export = on_export,
 
-    .on_function_table_count = &on_function_table_count,
-    .on_function_table_entry = &on_function_table_entry,
+    .on_start_function = on_start_function,
 
-    .on_start_function = &on_start_function,
+    .on_function_bodies_count = on_function_bodies_count,
+    .begin_function_body = begin_function_body,
+    .on_local_decl = on_local_decl,
+    .on_binary_expr = on_binary_expr,
+    .on_block_expr = on_block_expr,
+    .on_br_expr = on_br_expr,
+    .on_br_if_expr = on_br_if_expr,
+    .on_br_table_expr = on_br_table_expr,
+    .on_call_expr = on_call_expr,
+    .on_call_import_expr = on_call_import_expr,
+    .on_call_indirect_expr = on_call_indirect_expr,
+    .on_compare_expr = on_compare_expr,
+    .on_convert_expr = on_convert_expr,
+    .on_current_memory_expr = on_current_memory_expr,
+    .on_drop_expr = on_drop_expr,
+    .on_else_expr = on_else_expr,
+    .on_end_expr = on_end_expr,
+    .on_f32_const_expr = on_f32_const_expr,
+    .on_f64_const_expr = on_f64_const_expr,
+    .on_get_global_expr = on_get_global_expr,
+    .on_get_local_expr = on_get_local_expr,
+    .on_grow_memory_expr = on_grow_memory_expr,
+    .on_i32_const_expr = on_i32_const_expr,
+    .on_i64_const_expr = on_i64_const_expr,
+    .on_if_expr = on_if_expr,
+    .on_load_expr = on_load_expr,
+    .on_loop_expr = on_loop_expr,
+    .on_nop_expr = on_nop_expr,
+    .on_return_expr = on_return_expr,
+    .on_select_expr = on_select_expr,
+    .on_set_global_expr = on_set_global_expr,
+    .on_set_local_expr = on_set_local_expr,
+    .on_store_expr = on_store_expr,
+    .on_tee_local_expr = on_tee_local_expr,
+    .on_unary_expr = on_unary_expr,
+    .on_unreachable_expr = on_unreachable_expr,
+    .end_function_body = end_function_body,
 
-    .on_export_count = &on_export_count,
-    .on_export = &on_export,
+    .on_elem_segment_count = on_elem_segment_count,
+    .begin_elem_segment = begin_elem_segment,
+    .begin_elem_segment_init_expr = begin_elem_segment_init_expr,
+    .end_elem_segment_init_expr = end_elem_segment_init_expr,
+    .on_elem_segment_function_index_count =
+        on_elem_segment_function_index_count,
+    .on_elem_segment_function_index = on_elem_segment_function_index,
 
-    .on_function_names_count = &on_function_names_count,
-    .on_function_name = &on_function_name,
-    .on_local_names_count = &on_local_names_count,
-    .on_local_name = &on_local_name,
+    .on_data_segment_count = on_data_segment_count,
+    .begin_data_segment = begin_data_segment,
+    .begin_data_segment_init_expr = begin_data_segment_init_expr,
+    .end_data_segment_init_expr = end_data_segment_init_expr,
+    .on_data_segment_data = on_data_segment_data,
+
+    .on_function_names_count = on_function_names_count,
+    .on_function_name = on_function_name,
+    .on_local_names_count = on_local_names_count,
+    .on_local_name = on_local_name,
+
+    .on_init_expr_f32_const_expr = on_init_expr_f32_const_expr,
+    .on_init_expr_f64_const_expr = on_init_expr_f64_const_expr,
+    .on_init_expr_get_global_expr = on_init_expr_get_global_expr,
+    .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
+    .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,
 };
 
 static void wasm_destroy_label_node(WasmAllocator* allocator, LabelNode* node) {

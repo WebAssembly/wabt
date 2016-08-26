@@ -196,30 +196,30 @@ endif ()
 add_custom_target(everything)
 
 add_library(libwasm STATIC
-  src/wasm-allocator.c
-  src/wasm-apply-names.c
   src/wasm-ast.c
-  src/wasm-ast-checker.c
   src/wasm-ast-parser-lexer-shared.c
-  src/wasm-ast-writer.c
-  src/wasm-binary-reader-ast.c
+  ${WASM_AST_LEXER_GEN_C}
+  ${WASM_AST_PARSER_GEN_C}
+  src/wasm-ast-checker.c
   src/wasm-binary-reader.c
-  src/wasm-binary-reader.c
-  src/wasm-binary-reader-interpreter.c
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
+  src/wasm-binary-reader-ast.c
+  src/wasm-ast-writer.c
+  src/wasm-binary-reader-interpreter.c
+  src/wasm-interpreter.c
+  src/wasm-apply-names.c
+  src/wasm-generate-names.c
+
+  src/wasm-allocator.c
   src/wasm-common.c
   src/wasm-config.c
-  src/wasm-generate-names.c
-  src/wasm-interpreter.c
   src/wasm-literal.c
   src/wasm-option-parser.c
   src/wasm-stack-allocator.c
   src/wasm-stream.c
   src/wasm-vector.c
   src/wasm-writer.c
-  ${WASM_AST_LEXER_GEN_C}
-  ${WASM_AST_PARSER_GEN_C}
 )
 set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 

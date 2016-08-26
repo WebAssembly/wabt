@@ -6,7 +6,7 @@
 typecheck/bad-if-condition-type-mismatch.txt:4:6: type mismatch at if condition. got f32, expected i32
     (if (f32.const 0) (i32.const 0) (i32.const 0))))
      ^^
-typecheck/bad-if-condition-type-mismatch.txt:3:4: unable to join type i32 (type of last operation) with type void (function signature result type).
+typecheck/bad-if-condition-type-mismatch.txt:3:3: unable to join type i32 (type of last operation) with type void (function signature result type).
   (func
-   ^^^^
+  ^^^^^
 ;;; STDERR ;;)

@@ -1,1 +1,2 @@
-(module (memory 1 (segment 0 "hello, world!")))
+(module
+  (memory (data "hello, world!")))

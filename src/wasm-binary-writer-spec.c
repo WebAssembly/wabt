@@ -202,6 +202,8 @@ static WasmModuleField* append_module_field(
     case WASM_MODULE_FIELD_TYPE_MEMORY:
     case WASM_MODULE_FIELD_TYPE_START:
     case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
+    case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+    case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
       /* not supported */
       assert(0);
       break;

@@ -4,7 +4,7 @@
   (func
     (call_import 0 (i32.const 0) (i32.const 1) (i32.const 2))))
 (;; STDERR ;;;
-parse/expr/bad-callimport-too-many.txt:4:4: unable to join type i32 (type of last operation) with type void (function signature result type).
+parse/expr/bad-callimport-too-many.txt:4:3: unable to join type i32 (type of last operation) with type void (function signature result type).
   (func
-   ^^^^
+  ^^^^^
 ;;; STDERR ;;)

@@ -19,7 +19,9 @@
 
 #define WASM_BINARY_MAGIC 0x6d736100
 #define WASM_BINARY_VERSION 0x0c
+#define WASM_BINARY_ELEM_TYPE_ANYFUNC 0x20
 #define WASM_BINARY_TYPE_FORM_FUNCTION 0x40
+#define WASM_BINARY_LIMITS_HAS_MAX_FLAG 0x1
 
 #define WASM_SECTION_NAME_TYPE "type"
 #define WASM_SECTION_NAME_IMPORT "import"
@@ -30,6 +32,7 @@
 #define WASM_SECTION_NAME_EXPORT "export"
 #define WASM_SECTION_NAME_START "start"
 #define WASM_SECTION_NAME_CODE "code"
+#define WASM_SECTION_NAME_ELEM "elem"
 #define WASM_SECTION_NAME_DATA "data"
 #define WASM_SECTION_NAME_NAME "name"
 
@@ -43,6 +46,7 @@
   V(EXPORT)                     \
   V(START)                      \
   V(CODE)                       \
+  V(ELEM)                       \
   V(DATA)                       \
   V(NAME)
 

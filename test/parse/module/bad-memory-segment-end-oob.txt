@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (memory 1 (segment 65531 "56789a")))
+(module
+  (memory 1 1)
+  (data (i32.const 65531) "56789a"))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-end-oob.txt:2:20: segment ends past the end of initial memory size (65536)
-(module (memory 1 (segment 65531 "56789a")))
-                   ^^^^^^^
+parse/module/bad-memory-segment-end-oob.txt:4:3: segment ends past the end of memory max size (65536)
+  (data (i32.const 65531) "56789a"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

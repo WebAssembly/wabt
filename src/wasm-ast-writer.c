@@ -497,6 +497,14 @@ static void write_expr_list(Context* ctx, const WasmExpr* first) {
     write_expr(ctx, expr);
 }
 
+static void write_init_expr(Context* ctx, const WasmExpr* expr) {
+  write_puts(ctx, "(", NEXT_CHAR_NONE);
+  write_expr(ctx, expr);
+  /* clear the next char, so we don't write a newline after the expr */
+  ctx->next_char = NEXT_CHAR_NONE;
+  write_puts(ctx, ")", NEXT_CHAR_SPACE);
+}
+
 static void write_type_bindings(Context* ctx,
                                 const char* prefix,
                                 const WasmFunc* func,
@@ -569,11 +577,7 @@ static void write_global(Context* ctx,
   write_string_slice_or_index(ctx, &global->name, global_index,
                               NEXT_CHAR_SPACE);
   write_type(ctx, global->type, NEXT_CHAR_SPACE);
-  write_puts(ctx, "(", NEXT_CHAR_NONE);
-  write_expr(ctx, global->init_expr);
-  /* clear the next char, so we don't write a newline after the expr */
-  ctx->next_char = NEXT_CHAR_NONE;
-  write_puts(ctx, ")", NEXT_CHAR_NONE);
+  write_init_expr(ctx, global->init_expr);
   write_close_newline(ctx);
 }
 
@@ -611,32 +615,38 @@ static void write_export_memory(Context* ctx, const WasmExportMemory* export) {
   write_close_newline(ctx);
 }
 
-static void write_table(Context* ctx, const WasmVarVector* table) {
+static void write_limits(Context* ctx, const WasmLimits* limits) {
+  writef(ctx, "%" PRIu64, limits->initial);
+  if (limits->has_max)
+    writef(ctx, "%" PRIu64, limits->max);
+}
+
+static void write_table(Context* ctx, const WasmTable* table) {
   write_open_space(ctx, "table");
-  size_t i;
-  for (i = 0; i < table->size; ++i)
-    write_var(ctx, &table->data[i], NEXT_CHAR_SPACE);
+  write_limits(ctx, &table->elem_limits);
+  write_puts_space(ctx, "anyfunc");
   write_close_newline(ctx);
 }
 
-static void write_segment(Context* ctx, const WasmSegment* segment) {
-  write_open_space(ctx, "segment");
-  writef(ctx, "%u", segment->addr);
-  write_quoted_data(ctx, segment->data, segment->size);
+static void write_elem_segment(Context* ctx, const WasmElemSegment* segment) {
+  write_open_space(ctx, "elem");
+  write_init_expr(ctx, segment->offset);
+  size_t i;
+  for (i = 0; i < segment->vars.size; ++i)
+    write_var(ctx, &segment->vars.data[i], NEXT_CHAR_SPACE);
   write_close_newline(ctx);
 }
 
 static void write_memory(Context* ctx, const WasmMemory* memory) {
   write_open_space(ctx, "memory");
-  writef(ctx, "%" PRIu64, memory->initial_pages);
-  if (memory->initial_pages != memory->max_pages)
-    writef(ctx, "%" PRIu64, memory->max_pages);
-  write_newline(ctx, NO_FORCE_NEWLINE);
-  size_t i;
-  for (i = 0; i < memory->segments.size; ++i) {
-    const WasmSegment* segment = &memory->segments.data[i];
-    write_segment(ctx, segment);
-  }
+  write_limits(ctx, &memory->page_limits);
+  write_close_newline(ctx);
+}
+
+static void write_data_segment(Context* ctx, const WasmDataSegment* segment) {
+  write_open_space(ctx, "data");
+  write_init_expr(ctx, segment->offset);
+  write_quoted_data(ctx, segment->data, segment->size);
   write_close_newline(ctx);
 }
 
@@ -686,8 +696,14 @@ static void write_module(Context* ctx, const WasmModule* module) {
       case WASM_MODULE_FIELD_TYPE_TABLE:
         write_table(ctx, &field->table);
         break;
+      case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+        write_elem_segment(ctx, &field->elem_segment);
+        break;
       case WASM_MODULE_FIELD_TYPE_MEMORY:
         write_memory(ctx, &field->memory);
+        break;
+      case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
+        write_data_segment(ctx, &field->data_segment);
         break;
       case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
         write_func_type(ctx, func_type_index++, &field->func_type);
