@@ -15,12 +15,17 @@
 # limitations under the License.
 #
 
+from __future__ import print_function
 import argparse
 import difflib
 import fnmatch
 import multiprocessing
 import os
-import Queue
+try:
+  import Queue
+except ImportError:
+  # Python3?
+  import queue as Queue
 import re
 import shlex
 import shutil
@@ -260,7 +265,7 @@ class TestInfo(object):
       if not value in TOOLS:
         raise Error('Unknown tool: %s' % value)
       self.tool = value
-      for tool_key, tool_value in TOOLS[value].iteritems():
+      for tool_key, tool_value in TOOLS[value].items():
         self.ParseDirective(tool_key, tool_value)
     else:
       raise Error('Unknown directive: %s' % key)
@@ -367,8 +372,8 @@ class TestInfo(object):
       with open(self.input_filename, 'rb') as input_filename:
         file_.write(input_filename.read())
     else:
-      file_.write('\n' * self.header.count('\n'))
-      file_.write(self.input_)
+      file_.write(('\n' * self.header.count('\n')).encode('ascii'))
+      file_.write(self.input_.encode('ascii'))
     file_.flush()
     file_.close()
 
@@ -689,10 +694,10 @@ def main(args):
 
   if options.list:
     for test_name in test_names:
-      print test_name
+      print(test_name)
     return 0
   if not test_names:
-    print 'no tests match that filter'
+    print('no tests match that filter')
     return 1
 
   if options.exe_dir:
@@ -746,7 +751,7 @@ def main(args):
     else:
       RunSingleProcess(infos_to_run, status, options, variables)
   except:
-    print '\nInterrupted testing\n'
+    print('\nInterrupted testing\n')
   finally:
     if out_dir_is_temp:
       shutil.rmtree(out_dir)

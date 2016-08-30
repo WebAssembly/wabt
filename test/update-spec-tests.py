@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 
+from __future__ import print_function
 import argparse
 import os
 import sys
@@ -47,7 +48,7 @@ def main(args):
   for removed_test_name in spec_tests - testsuite_tests:
     test_filename = os.path.join(SPEC_TEST_DIR, removed_test_name + '.txt')
     if options.verbose:
-      print 'Removing %s' % test_filename
+      print('Removing %s' % test_filename)
     os.remove(test_filename)
 
   for added_test_name in testsuite_tests - spec_tests:
@@ -55,7 +56,7 @@ def main(args):
                                  added_test_name + '.wast')
     test_filename = os.path.join(SPEC_TEST_DIR, added_test_name + '.txt')
     if options.verbose:
-      print 'Adding %s' % test_filename
+      print('Adding %s' % test_filename)
     with open(test_filename, 'w') as f:
       if added_test_name.endswith('.fail'):
         f.write(';;; ERROR: 1\n')

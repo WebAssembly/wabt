@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 
+from __future__ import print_function
 import argparse
-import cStringIO
 import os
 import struct
 import sys
@@ -294,7 +294,7 @@ def t_newline(t):
   t.lexer.lineno += len(t.value)
 
 def t_error(t):
-  print "Illegal character '%s'" % t.value[0]
+  print("Illegal character '%s'" % t.value[0])
   t.lexer.skip(1)
 
 lexer = lex.lex()
@@ -426,7 +426,7 @@ def p_data_empty(p):
   p[0] = []
 
 def p_error(p):
-  print '%d: syntax error, %s' % (p.lineno, p)
+  print('%d: syntax error, %s' % (p.lineno, p))
 
 parser = yacc.yacc(tabmodule='gen_wasm', debugfile='gen_wasm_debug.txt',
                    outputdir=OUT_DIR)
@@ -437,8 +437,8 @@ def Run(input_file_name):
   with open(input_file_name) as input_file:
     input_data = input_file.read()
   data = parser.parse(input_data)
-  # convert to string
-  data = ''.join(chr(x) for x in data)
+  # convert to bytes
+  data = bytearray(data)
   return data
 
 def main(args):

@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 
+from __future__ import print_function
 import contextlib
 import os
 import shutil
@@ -47,7 +48,7 @@ class Executable(object):
     cmd = [self.exe] + self.before_args + list(args) + self.after_args
     cmd_str = ' '.join(cmd)
     if self.verbose:
-      print cmd_str
+      print(cmd_str)
 
     err_cmd_str = cmd_str.replace('.exe', '')
     if not self.error_cmdline:
@@ -61,6 +62,8 @@ class Executable(object):
                                       stderr=subprocess.PIPE,
                                  **kwargs)
       stdout, stderr = process.communicate()
+      stdout = stdout.decode('ascii')
+      stderr = stderr.decode('ascii')
       if self.clean_stdout:
         stdout = self.clean_stdout(stdout)
       if self.clean_stderr:
@@ -92,7 +95,7 @@ class Executable(object):
     self.after_args.append(arg)
 
   def AppendOptionalArgs(self, option_dict):
-    for option, value in option_dict.iteritems():
+    for option, value in option_dict.items():
       if value:
         self.AppendArg(option)
 
