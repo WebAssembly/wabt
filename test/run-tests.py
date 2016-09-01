@@ -144,7 +144,8 @@ def DiffLines(expected, actual):
   expected_lines = [line for line in expected.splitlines() if line]
   actual_lines = [line for line in actual.splitlines() if line]
   return list(difflib.unified_diff(expected_lines, actual_lines,
-                                   fromfile='expected', tofile='actual', lineterm=''))
+                                   fromfile='expected', tofile='actual',
+                                   lineterm=''))
 
 
 def AppendBeforeExt(file_path, suffix):
@@ -152,7 +153,7 @@ def AppendBeforeExt(file_path, suffix):
   return file_path_noext + suffix + ext
 
 
-def RunCommandWithTimeout(command, cwd, timeout, consoleOut = False):
+def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
   process = None
   # Cheesy way to be able to set is_timeout from inside KillProcess
   is_timeout = [False]
@@ -177,8 +178,10 @@ def RunCommandWithTimeout(command, cwd, timeout, consoleOut = False):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, stdout=None if consoleOut else subprocess.PIPE,
-                                                 stderr=None if consoleOut else subprocess.PIPE,
+    process = subprocess.Popen(command,
+                               cwd=cwd,
+                               stdout=None if console_out else subprocess.PIPE,
+                               stderr=None if console_out else subprocess.PIPE,
                                universal_newlines=True,
                                **kwargs)
     timer = threading.Timer(timeout, KillProcess)
@@ -198,7 +201,6 @@ def RunCommandWithTimeout(command, cwd, timeout, consoleOut = False):
     KillProcess(False)
 
   return stdout, stderr, returncode, duration
-
 
 
 class TestInfo(object):
@@ -492,7 +494,8 @@ def RunTest(info, options, variables, verbose_level = 0):
   try:
     rel_file_path = info.CreateInputFile(variables['out_dir'])
     cmd = info.GetCommand(rel_file_path, variables, options.arg, verbose_level)
-    out = RunCommandWithTimeout(cmd, variables['out_dir'], timeout, verbose_level > 0)
+    out = RunCommandWithTimeout(cmd, variables['out_dir'], timeout,
+                                verbose_level > 0)
     return out
   except Exception as e:
     return e
@@ -529,7 +532,7 @@ def HandleTestResult(status, info, result, rebase=False):
         raise Error(stderr)
     else:
       if returncode != info.expected_error:
-#This test has already failed, but diff it anyway.
+        # This test has already failed, but diff it anyway.
         msg = 'expected error code %d, got %d.' % (info.expected_error,
                                                    returncode)
         try:
@@ -616,7 +619,8 @@ def RunMultiProcess(infos_to_run, test_count, status, options, variables):
       finished_tests += 1
       HandleTestResult(status, info, result, options.rebase)
       if should_stop_on_error and status.failed > continued_errors:
-        should_continue = YesNoPrompt(question='Continue testing?', default='yes')
+        should_continue = YesNoPrompt(question='Continue testing?',
+                                      default='yes')
         if not should_continue:
           with should_run.get_lock():
             should_run.value = 0
@@ -636,10 +640,12 @@ def RunSingleProcess(infos_to_run, status, options, variables):
     HandleTestResult(status, info, result, options.rebase)
     if status.failed > continued_errors:
       if should_stop_on_error:
-        rerun_verbose = YesNoPrompt(question='Rerun with verbose option?', default='no')
+        rerun_verbose = YesNoPrompt(question='Rerun with verbose option?',
+                                    default='no')
         if rerun_verbose:
           RunTest(info, options, variables, verbose_level=2)
-        should_continue = YesNoPrompt(question='Continue testing?', default='yes')
+        should_continue = YesNoPrompt(question='Continue testing?',
+                                      default='yes')
         if not should_continue:
           break
       elif options.verbose:
@@ -666,7 +672,8 @@ def main(args):
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--stop-interactive',
-                      help='Enter interactive mode on errors. Extra options with \'--jobs 1\'',
+                      help='Enter interactive mode on errors. '
+                           'Extra options with \'--jobs 1\'',
                       action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
                       action='store_true')
