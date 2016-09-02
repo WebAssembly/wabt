@@ -2,80 +2,92 @@
 ;;; STDIN_FILE: third_party/testsuite/call_indirect.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:201:38: type mismatch of call_indirect result. got void, expected i32
+  third_party/testsuite/call_indirect.wast:231:22: found call_indirect operator, but no table
+    (func $no-table (call_indirect 0 (i32.const 0)))
+                     ^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/call_indirect.wast:240:30: type stack size too small at i32.eqz. got 0, expected at least 1
     (func $type-void-vs-num (i32.eqz (call_indirect 0 (i32.const 0))))
-                                     ^
+                             ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:208:37: type mismatch of call_indirect result. got i64, expected i32
+  third_party/testsuite/call_indirect.wast:240:5: unable to join type i32 (type of last operation) with type void (function signature result type).
+    (func $type-void-vs-num (i32.eqz (call_indirect 0 (i32.const 0))))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/call_indirect.wast:248:29: type mismatch at i32.eqz. got i64, expected i32
     (func $type-num-vs-num (i32.eqz (call_indirect 0 (i32.const 0))))
-                                    ^
+                            ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:216:25: too few parameters to function in call_indirect. got 0, expected 1
+  third_party/testsuite/call_indirect.wast:248:5: unable to join type i32 (type of last operation) with type void (function signature result type).
+    (func $type-num-vs-num (i32.eqz (call_indirect 0 (i32.const 0))))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/call_indirect.wast:257:26: type stack size too small at call_indirect. got 0, expected at least 1
     (func $arity-0-vs-1 (call_indirect 0 (i32.const 0)))
-                        ^
+                         ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:223:25: too few parameters to function in call_indirect. got 0, expected 2
+  third_party/testsuite/call_indirect.wast:265:26: type stack size too small at call_indirect. got 0, expected at least 2
     (func $arity-0-vs-2 (call_indirect 0 (i32.const 0)))
-                        ^
+                         ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:230:25: too many parameters to function in call_indirect. got 1, expected 0
-    (func $arity-1-vs-0 (call_indirect 0 (i32.const 0) (i32.const 1)))
-                        ^
+  third_party/testsuite/call_indirect.wast:273:5: unable to join type i32 (type of last operation) with type void (function signature result type).
+    (func $arity-1-vs-0 (call_indirect 0 (i32.const 1) (i32.const 0)))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:238:7: too many parameters to function in call_indirect. got 2, expected 0
-      (call_indirect 0 (i32.const 0) (f64.const 2) (i32.const 1))
-      ^
+  third_party/testsuite/call_indirect.wast:281:5: maximum arity for function result is 1, got 2
+    (func $arity-2-vs-0
+    ^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:248:7: too many parameters to function in call_indirect. got 3, expected 2
-      (call_indirect 0 (i32.const 0) (nop) (i32.const 1) (i32.const 2))
-      ^
+  third_party/testsuite/call_indirect.wast:281:5: unable to join type i32 (type of last operation) with type void (function signature result type).
+    (func $arity-2-vs-0
+    ^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:257:7: too many parameters to function in call_indirect. got 3, expected 2
-      (call_indirect 0 (i32.const 0) (i32.const 1) (nop) (i32.const 2))
-      ^
+  third_party/testsuite/call_indirect.wast:307:35: type stack size too small at call_indirect. got 0, expected at least 1
+    (func $type-func-void-vs-i32 (call_indirect 0 (i32.const 1) (nop)))
+                                  ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:266:7: too many parameters to function in call_indirect. got 3, expected 2
-      (call_indirect 0 (i32.const 0) (i32.const 1) (i32.const 2) (nop))
-      ^
+  third_party/testsuite/call_indirect.wast:315:34: type mismatch at call_indirect function index. got i64, expected i32
+    (func $type-func-num-vs-i32 (call_indirect 0 (i32.const 0) (i64.const 1)))
+                                 ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:275:51: type mismatch in nop. got void, expected i32
-    (func $type-func-void-vs-i32 (call_indirect 0 (nop) (i32.const 1)))
-                                                  ^
+  third_party/testsuite/call_indirect.wast:325:8: type stack size too small at call_indirect. got 1, expected at least 2
+      (call_indirect 0 (nop) (i32.const 1) (i32.const 0))
+       ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:282:50: type mismatch of function index. got i64, expected i32
-    (func $type-func-num-vs-i32 (call_indirect 0 (i64.const 1) (i32.const 0)))
-                                                 ^
+  third_party/testsuite/call_indirect.wast:335:8: type stack size too small at call_indirect. got 1, expected at least 2
+      (call_indirect 0 (i32.const 1) (nop) (i32.const 0))
+       ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:291:38: type mismatch in nop. got void, expected i32
-      (call_indirect 0 (i32.const 0) (nop) (i32.const 1))
-                                     ^
+  third_party/testsuite/call_indirect.wast:345:8: type mismatch for argument 0 of call_indirect. got f64, expected i32
+      (call_indirect 0 (f64.const 1) (i32.const 1) (i32.const 0))
+       ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:300:52: type mismatch in nop. got void, expected i32
-      (call_indirect 0 (i32.const 0) (i32.const 1) (nop))
-                                                   ^
+  third_party/testsuite/call_indirect.wast:345:8: type mismatch for argument 1 of call_indirect. got i32, expected f64
+      (call_indirect 0 (f64.const 1) (i32.const 1) (i32.const 0))
+       ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:309:38: type mismatch of argument 0 of call_indirect. got f64, expected i32
-      (call_indirect 0 (i32.const 0) (f64.const 1) (i32.const 1))
-                                     ^
+  third_party/testsuite/call_indirect.wast:355:8: type mismatch for argument 0 of call_indirect. got i32, expected f64
+      (call_indirect 0 (i32.const 1) (f64.const 1) (i32.const 0))
+       ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:309:52: type mismatch of argument 1 of call_indirect. got i32, expected f64
-      (call_indirect 0 (i32.const 0) (f64.const 1) (i32.const 1))
-                                                   ^
+  third_party/testsuite/call_indirect.wast:355:8: type mismatch for argument 1 of call_indirect. got f64, expected i32
+      (call_indirect 0 (i32.const 1) (f64.const 1) (i32.const 0))
+       ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:318:38: type mismatch of argument 0 of call_indirect. got i32, expected f64
-      (call_indirect 0 (i32.const 0) (i32.const 1) (f64.const 1))
-                                     ^
+  third_party/testsuite/call_indirect.wast:367:40: function type variable out of range (max 1)
+    (func $unbound-type (call_indirect 1 (i32.const 0)))
+                                       ^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:318:52: type mismatch of argument 1 of call_indirect. got f64, expected i32
-      (call_indirect 0 (i32.const 0) (i32.const 1) (f64.const 1))
-                                                   ^
+  third_party/testsuite/call_indirect.wast:367:5: unable to join type i32 (type of last operation) with type void (function signature result type).
+    (func $unbound-type (call_indirect 1 (i32.const 0)))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:328:46: function type variable out of range (max 1)
-  (module (func $unbound-type (call_indirect 1 (i32.const 0))))
-                                             ^
+  third_party/testsuite/call_indirect.wast:374:38: function type variable out of range (max 1)
+    (func $large-type (call_indirect 10001232130000 (i32.const 0)))
+                                     ^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call_indirect.wast:332:44: function type variable out of range (max 1)
-  (module (func $large-type (call_indirect 10001232130000 (i32.const 0))))
-                                           ^^^^^^^^^^^^^^
-41/41 tests passed.
+  third_party/testsuite/call_indirect.wast:374:5: unable to join type i32 (type of last operation) with type void (function signature result type).
+    (func $large-type (call_indirect 10001232130000 (i32.const 0)))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+48/48 tests passed.
 ;;; STDOUT ;;)

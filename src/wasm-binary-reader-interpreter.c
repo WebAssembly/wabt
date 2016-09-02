@@ -607,12 +607,14 @@ static void pop_typecheck_label(Context* ctx) {
 }
 
 static void push_expr(Context* ctx, WasmType type, WasmOpcode opcode) {
-  LOGF("%3" PRIzd ": push %s:%s (#%u)\n", ctx->expr_stack.size,
-       s_opcode_name[opcode], s_type_names[type], ctx->expr_count);
-  ExprNode* expr;
-  expr = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
-  expr->index = ctx->expr_count;
-  expr->type = type;
+  if (type != WASM_TYPE_VOID) {
+    LOGF("%3" PRIzd ": push %s:%s (#%u)\n", ctx->expr_stack.size,
+         s_opcode_name[opcode], s_type_names[type], ctx->expr_count);
+    ExprNode* expr;
+    expr = wasm_append_expr_node(ctx->allocator, &ctx->expr_stack);
+    expr->index = ctx->expr_count;
+    expr->type = type;
+  }
   ctx->expr_count++;
 }
 
@@ -944,6 +946,9 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterFuncSignature* sig = get_signature(ctx, sig_index);
 
+  WasmType entry_index = pop_expr(ctx);
+  CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, entry_index, "call_indirect"));
+
   uint32_t i;
   for (i = sig->param_types.size; i > 0; --i) {
     WasmType arg = pop_expr(ctx);
@@ -951,8 +956,6 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
         check_type(ctx, sig->param_types.data[i - 1], arg, "call_indirect"));
   }
 
-  WasmType entry_index = pop_expr(ctx);
-  CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, entry_index, "call_indirect"));
   push_expr(ctx, sig->result_type, WASM_OPCODE_CALL_INDIRECT);
   return WASM_OK;
 }
@@ -1608,11 +1611,8 @@ static WasmResult on_emit_call_indirect_expr(uint32_t sig_index,
   WasmInterpreterFuncSignature* sig = get_signature(ctx, sig_index);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_INDIRECT));
   CHECK_RESULT(emit_i32(ctx, sig_index));
-  uint32_t result_count = get_value_count(sig->result_type);
-  /* the callee cleans up the params for us, but we have to clean up the
-   * function table index */
-  adjust_value_stack(ctx, result_count - sig->param_types.size);
-  CHECK_RESULT(emit_discard_keep(ctx, 1, result_count));
+  adjust_value_stack(ctx,
+                     get_value_count(sig->result_type) - sig->param_types.size);
   adjust_value_stack(ctx, -1);
   CHECK_RESULT(maybe_emit_discard(ctx, ctx->expr_count));
   ctx->expr_count++;

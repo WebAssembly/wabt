@@ -2,21 +2,21 @@
 ;;; STDIN_FILE: third_party/testsuite/block.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/block.wast:129:12: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:129:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-empty-i32 (result i32) (block)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:133:12: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/block.wast:133:11: unable to join type void (type of last operation) with type i64 (function signature result type).
   (module (func $type-empty-i64 (result i64) (block)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:137:12: unable to join type void (type of last operation) with type f32 (function signature result type).
+  third_party/testsuite/block.wast:137:11: unable to join type void (type of last operation) with type f32 (function signature result type).
   (module (func $type-empty-f32 (result f32) (block)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:141:12: unable to join type void (type of last operation) with type f64 (function signature result type).
+  third_party/testsuite/block.wast:141:11: unable to join type void (type of last operation) with type f64 (function signature result type).
   (module (func $type-empty-f64 (result f64) (block)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:147:6: maximum arity for block is 1, got 2
     (block (i64.const 1) (i64.const 2)) i64.add
@@ -34,49 +34,49 @@ assert_invalid error:
     (block (nop) (i32.const 7) (nop) (i32.const 8)) i32.add
                                                     ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:159:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:159:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-value-num-vs-void
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:165:12: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:165:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-value-void-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:171:12: unable to join type f32 (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:171:11: unable to join type f32 (type of last operation) with type i32 (function signature result type).
   (module (func $type-value-num-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:199:13: type stack size too small at br. got 0, expected at least 1
     (block (br 0 (nop)))
             ^^
 assert_invalid error:
-  third_party/testsuite/block.wast:198:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:198:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-break-last-void-vs-empty
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:204:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:204:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-break-last-num-vs-empty
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:210:12: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:210:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-last-empty-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:218:13: type stack size too small at br. got 0, expected at least 1
     (block (br 0 (nop)))
             ^^
 assert_invalid error:
-  third_party/testsuite/block.wast:217:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:217:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-break-void-vs-empty
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:223:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:223:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-break-num-vs-empty
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:229:12: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:229:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-empty-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:237:13: type stack size too small at br. got 0, expected at least 1
     (block (br 0 (nop)) (i32.const 1))
@@ -86,17 +86,17 @@ assert_invalid error:
     (block (br 0 (nop)) (i32.const 1))
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:242:12: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:242:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-num-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:249:13: type stack size too small at br. got 0, expected at least 1
     (block (br 0 (nop)) (br 0 (i32.const 1)))
             ^^
 assert_invalid error:
-  third_party/testsuite/block.wast:254:12: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:254:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-first-num-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:276:20: type stack size too small at br. got 0, expected at least 1
     (block (block (br 1 (nop))) (br 0))
@@ -106,25 +106,25 @@ assert_invalid error:
     (block (block (br 1 (nop))) (br 0))
                                  ^^
 assert_invalid error:
-  third_party/testsuite/block.wast:275:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:275:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-break-nested-void-vs-empty
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:281:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/block.wast:281:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-break-nested-num-vs-empty
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:287:12: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:287:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-nested-empty-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:295:20: type stack size too small at br. got 0, expected at least 1
     (block (block (br 1 (nop))) (br 0 (i32.const 1)))
                    ^^
 assert_invalid error:
-  third_party/testsuite/block.wast:300:12: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:300:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-nested-num-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/block.wast:308:6: type stack size too small at i32.ctz. got 0, expected at least 1
     (i32.ctz (block (br 0)))
@@ -138,12 +138,12 @@ assert_invalid error:
     (i64.ctz (block (br 0 (nop))))
      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:314:12: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:314:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-operand-void-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/block.wast:320:12: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/block.wast:320:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
   (module (func $type-break-operand-num-vs-num (result i32)
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 14/14 tests passed.
 ;;; STDOUT ;;)

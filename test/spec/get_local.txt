@@ -2,45 +2,45 @@
 ;;; STDIN_FILE: third_party/testsuite/get_local.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/get_local.wast:91:12: unable to join type i32 (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/get_local.wast:91:11: unable to join type i32 (type of last operation) with type i64 (function signature result type).
   (module (func $type-local-num-vs-num (result i64) (local i32) (get_local 0)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/get_local.wast:95:53: type mismatch at i32.eqz. got f32, expected i32
   (module (func $type-local-num-vs-num (local f32) (i32.eqz (get_local 0))))
                                                     ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:95:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:95:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-local-num-vs-num (local f32) (i32.eqz (get_local 0))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/get_local.wast:99:57: type mismatch at f64.neg. got i64, expected f64
   (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (get_local 1))))
                                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:99:12: unable to join type f64 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:99:11: unable to join type f64 (type of last operation) with type void (function signature result type).
   (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (get_local 1))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:107:12: unable to join type i32 (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/get_local.wast:107:11: unable to join type i32 (type of last operation) with type i64 (function signature result type).
   (module (func $type-param-num-vs-num (param i32) (result i64) (get_local 0)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/get_local.wast:111:53: type mismatch at i32.eqz. got f32, expected i32
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
                                                     ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:111:12: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:111:11: unable to join type i32 (type of last operation) with type void (function signature result type).
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/get_local.wast:115:57: type mismatch at f64.neg. got i64, expected f64
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
                                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:115:12: unable to join type f64 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:115:11: unable to join type f64 (type of last operation) with type void (function signature result type).
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
   third_party/testsuite/get_local.wast:123:59: local variable out of range (max 2)
   (module (func $unbound-local (local i32 i64) (get_local 3)))
