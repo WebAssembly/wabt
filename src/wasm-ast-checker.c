@@ -645,6 +645,10 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
       const WasmFuncType* func_type;
+      if (!ctx->current_module->table) {
+        print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
+                    "found call_indirect operator, but no table");
+      }
       if (WASM_SUCCEEDED(
               check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
         WasmCheckType type = pop_type(ctx);

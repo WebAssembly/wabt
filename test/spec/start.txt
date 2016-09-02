@@ -2,9 +2,9 @@
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/start.wast:2:39: function variable out of range (max 1)
-  (module (func (i32.const 1)) (start 1))
-                                      ^
+  third_party/testsuite/start.wast:2:25: function variable out of range (max 1)
+  (module (func) (start 1))
+                        ^
 assert_invalid error:
   third_party/testsuite/start.wast:8:5: start function must not return anything
     (start $main)

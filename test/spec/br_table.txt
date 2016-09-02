@@ -2,59 +2,95 @@
 ;;; STDIN_FILE: third_party/testsuite/br_table.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1261:12: type mismatch of br_table default target. got void, expected i32
-    (block (br_table 0 (i32.const 1)) (i32.const 1))
-           ^
+  third_party/testsuite/br_table.wast:1288:11: unable to join type void (type of last operation) with type i32 (function signature result type).
+  (module (func $type-arg-empty-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1267:28: type mismatch of br_table target. got i64, expected i32
-    (block (br_table 0 0 0 (i64.const 1) (i32.const 1)) (i32.const 1))
-                           ^
+  third_party/testsuite/br_table.wast:1295:13: type stack size too small at br_table. got 1, expected at least 2
+    (block (br_table 0 (nop) (i32.const 1)))
+            ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1267:28: type mismatch of br_table target. got i64, expected i32
-    (block (br_table 0 0 0 (i64.const 1) (i32.const 1)) (i32.const 1))
-                           ^
+  third_party/testsuite/br_table.wast:1294:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-arg-void-vs-empty
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1267:28: type mismatch of br_table default target. got i64, expected i32
-    (block (br_table 0 0 0 (i64.const 1) (i32.const 1)) (i32.const 1))
-                           ^
+  third_party/testsuite/br_table.wast:1300:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-arg-num-vs-empty
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1274:28: type mismatch in nop. got void, expected i32
+  third_party/testsuite/br_table.wast:1316:13: type stack size too small at br_table. got 1, expected at least 2
+    (block (br_table 0 (nop) (i32.const 1)) (i32.const 1))
+            ^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1316:6: maximum arity for block is 1, got 2
+    (block (br_table 0 (nop) (i32.const 1)) (i32.const 1))
+     ^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1321:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  (module (func $type-arg-num-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1329:13: type stack size too small at br_table. got 0, expected at least 1
     (block (br_table 0 0 0 (nop)))
-                           ^
+            ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1280:24: type mismatch of key. got i64, expected i32
+  third_party/testsuite/br_table.wast:1329:6: unable to join type void (joined type of block's br* targets) with type i32 (block's result type).
+    (block (br_table 0 0 0 (nop)))
+     ^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1335:13: type mismatch at br_table. got i64, expected i32
     (block (br_table 0 (i64.const 0)))
-                       ^
+            ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1286:40: type mismatch in nop. got void, expected i32
+  third_party/testsuite/br_table.wast:1341:13: type stack size too small at br_table. got 1, expected at least 2
     (block (br_table 0 0 (i32.const 0) (nop)) (i32.const 1))
-                                       ^
+            ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1292:40: type mismatch of key. got i64, expected i32
+  third_party/testsuite/br_table.wast:1341:6: maximum arity for block is 1, got 2
+    (block (br_table 0 0 (i32.const 0) (nop)) (i32.const 1))
+     ^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1347:13: type mismatch at br_table. got i64, expected i32
     (block (br_table 0 0 (i32.const 0) (i64.const 0)) (i32.const 1))
-                                       ^
+            ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1299:22: label variable out of range (max 2)
+  third_party/testsuite/br_table.wast:1354:54: type mismatch at br_table. got i64, expected i32
+    (block (i64.const 1) (i64.const 2) (i64.const 3) br_table 2 0 0)
+                                                     ^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1355:5: type stack size too small at i64.add. got 1, expected at least 2
+    i64.add
+    ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1361:66: type mismatch at br_table. got i64, expected i32
+    (block (nop) (i32.const 7) (nop) (i32.const 8) (i64.const 3) br_table 2 0)
+                                                                 ^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1362:5: type stack size too small at i32.add. got 1, expected at least 2
+    i32.add
+    ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_table.wast:1369:22: label variable out of range (max 2)
     (block (br_table 2 1 (i32.const 1)))
                      ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1305:31: label variable out of range (max 3)
+  third_party/testsuite/br_table.wast:1375:31: label variable out of range (max 3)
     (block (block (br_table 0 5 (i32.const 1))))
                               ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1311:24: label variable out of range (max 2)
+  third_party/testsuite/br_table.wast:1381:24: label variable out of range (max 2)
     (block (br_table 0 0x100000001 0 (i32.const 1)))
                        ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1318:24: label variable out of range (max 2)
+  third_party/testsuite/br_table.wast:1388:24: label variable out of range (max 2)
     (block (br_table 1 2 (i32.const 1)))
                        ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1324:31: label variable out of range (max 3)
+  third_party/testsuite/br_table.wast:1394:31: label variable out of range (max 3)
     (block (block (br_table 0 5 (i32.const 1))))
                               ^
 assert_invalid error:
-  third_party/testsuite/br_table.wast:1330:26: label variable out of range (max 2)
+  third_party/testsuite/br_table.wast:1400:26: label variable out of range (max 2)
     (block (br_table 0 0 0x100000001 (i32.const 1)))
                          ^^^^^^^^^^^
 146/146 tests passed.

@@ -2,56 +2,56 @@
 ;;; STDIN_FILE: third_party/testsuite/store_retval.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:4:12: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/store_retval.wast:4:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func (param i32) (result i32) (set_local 0 (i32.const 1))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:8:12: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/store_retval.wast:8:11: unable to join type void (type of last operation) with type i64 (function signature result type).
   (module (func (param i64) (result i64) (set_local 0 (i64.const 1))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:12:12: unable to join type void (type of last operation) with type f32 (function signature result type).
+  third_party/testsuite/store_retval.wast:12:11: unable to join type void (type of last operation) with type f32 (function signature result type).
   (module (func (param f32) (result f32) (set_local 0 (f32.const 1))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:16:12: unable to join type void (type of last operation) with type f64 (function signature result type).
+  third_party/testsuite/store_retval.wast:16:11: unable to join type void (type of last operation) with type f64 (function signature result type).
   (module (func (param f64) (result f64) (set_local 0 (f64.const 1))))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:21:23: unable to join type void (type of last operation) with type i32 (function signature result type).
-  (module (memory 1) (func (param i32) (result i32) (i32.store (i32.const 0) ...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:21:22: unable to join type void (type of last operation) with type i32 (function signature result type).
+...y 1) (func (param i32) (result i32) (i32.store (i32.const 0) (i32.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:25:23: unable to join type void (type of last operation) with type i64 (function signature result type).
-  (module (memory 1) (func (param i64) (result i64) (i64.store (i32.const 0) ...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:25:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+...y 1) (func (param i64) (result i64) (i64.store (i32.const 0) (i64.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:29:23: unable to join type void (type of last operation) with type f32 (function signature result type).
-  (module (memory 1) (func (param f32) (result f32) (f32.store (i32.const 0) ...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:29:22: unable to join type void (type of last operation) with type f32 (function signature result type).
+...y 1) (func (param f32) (result f32) (f32.store (i32.const 0) (f32.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:33:23: unable to join type void (type of last operation) with type f64 (function signature result type).
-  (module (memory 1) (func (param f64) (result f64) (f64.store (i32.const 0) ...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:33:22: unable to join type void (type of last operation) with type f64 (function signature result type).
+...y 1) (func (param f64) (result f64) (f64.store (i32.const 0) (f64.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:38:23: unable to join type void (type of last operation) with type i32 (function signature result type).
-  (module (memory 1) (func (param i32) (result i32) (i32.store8 (i32.const 0)...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:38:22: unable to join type void (type of last operation) with type i32 (function signature result type).
+... 1) (func (param i32) (result i32) (i32.store8 (i32.const 0) (i32.const 1))))
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:42:23: unable to join type void (type of last operation) with type i32 (function signature result type).
-  (module (memory 1) (func (param i32) (result i32) (i32.store16 (i32.const 0...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:42:22: unable to join type void (type of last operation) with type i32 (function signature result type).
+...1) (func (param i32) (result i32) (i32.store16 (i32.const 0) (i32.const 1))))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:46:23: unable to join type void (type of last operation) with type i64 (function signature result type).
-  (module (memory 1) (func (param i64) (result i64) (i64.store8 (i32.const 0)...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:46:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+... 1) (func (param i64) (result i64) (i64.store8 (i32.const 0) (i64.const 1))))
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:50:23: unable to join type void (type of last operation) with type i64 (function signature result type).
-  (module (memory 1) (func (param i64) (result i64) (i64.store16 (i32.const 0...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:50:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+...1) (func (param i64) (result i64) (i64.store16 (i32.const 0) (i64.const 1))))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:54:23: unable to join type void (type of last operation) with type i64 (function signature result type).
-  (module (memory 1) (func (param i64) (result i64) (i64.store32 (i32.const 0...
-                      ^^^^
+  third_party/testsuite/store_retval.wast:54:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+...1) (func (param i64) (result i64) (i64.store32 (i32.const 0) (i64.const 1))))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 0/0 tests passed.
 ;;; STDOUT ;;)

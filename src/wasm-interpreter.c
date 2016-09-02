@@ -594,6 +594,22 @@ static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
   *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
 }
 
+static WasmBool signatures_are_equal(WasmInterpreterModule* module,
+                                     uint32_t sig_index_0,
+                                     uint32_t sig_index_1) {
+  WasmInterpreterFuncSignature* sig_0 = &module->sigs.data[sig_index_0];
+  WasmInterpreterFuncSignature* sig_1 = &module->sigs.data[sig_index_1];
+  if (sig_0->result_type != sig_1->result_type)
+    return WASM_FALSE;
+  if (sig_0->param_types.size != sig_1->param_types.size)
+    return WASM_FALSE;
+  size_t i;
+  for (i = 0; i < sig_0->param_types.size; ++i)
+    if (sig_0->param_types.data[i] != sig_1->param_types.data[i])
+      return WASM_FALSE;
+  return WASM_TRUE;
+}
+
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            WasmInterpreterThread* thread,
                                            uint32_t num_instructions,
@@ -718,14 +734,12 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       case WASM_OPCODE_CALL_INDIRECT: {
         uint32_t sig_index = read_u32(&pc);
         assert(sig_index < module->sigs.size);
-        WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
-        uint32_t num_args = sig->param_types.size;
-        VALUE_TYPE_I32 entry_index = PICK(num_args + 1).i32;
+        VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= module->func_table.size, UNDEFINED_TABLE_INDEX);
         WasmInterpreterFuncTableEntry* entry =
             &module->func_table.data[entry_index];
-        TRAP_IF(entry->sig_index != sig_index,
-                INDIRECT_CALL_SIGNATURE_MISMATCH);
+        TRAP_UNLESS(signatures_are_equal(module, entry->sig_index, sig_index),
+                    INDIRECT_CALL_SIGNATURE_MISMATCH);
         PUSH_CALL();
         GOTO(entry->func_offset);
         break;
