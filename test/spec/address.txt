@@ -2,9 +2,9 @@
 ;;; STDIN_FILE: third_party/testsuite/address.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/address.wast:34:63: offset must be less than or equal to 0xffffffff
-...memory 1) (func $bad1 (param $i i32) (i32.load offset=4294967296 (get_loca...
-                                        ^
+  third_party/testsuite/address.wast:35:70: offset must be less than or equal to 0xffffffff
+...func $bad1 (param $i i32) (drop (i32.load offset=4294967296 (get_local $i)...
+                                    ^^^^^^^^
 called import spectest.print(i32:97)
 called import spectest.print(i32:98)
 called import spectest.print(i32:99)
