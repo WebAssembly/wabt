@@ -237,54 +237,6 @@ if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
   target_link_libraries(wasm-interp m)
 endif ()
 
-# stuff that requires squirrel
-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/squirrel/squirrel)
-  add_library(libsquirrel STATIC
-    third_party/squirrel/squirrel/sqapi.cpp
-    third_party/squirrel/squirrel/sqcompiler.cpp
-    third_party/squirrel/squirrel/sqlexer.cpp
-    third_party/squirrel/squirrel/sqstate.cpp
-    third_party/squirrel/squirrel/sqbaselib.cpp
-    third_party/squirrel/squirrel/sqdebug.cpp
-    third_party/squirrel/squirrel/sqmem.cpp
-    third_party/squirrel/squirrel/sqtable.cpp
-    third_party/squirrel/squirrel/sqclass.cpp
-    third_party/squirrel/squirrel/sqfuncstate.cpp
-    third_party/squirrel/squirrel/sqobject.cpp
-    third_party/squirrel/squirrel/sqvm.cpp
-    third_party/squirrel/sqstdlib/sqstdaux.cpp
-    third_party/squirrel/sqstdlib/sqstdio.cpp
-    third_party/squirrel/sqstdlib/sqstdrex.cpp
-    third_party/squirrel/sqstdlib/sqstdstring.cpp
-    third_party/squirrel/sqstdlib/sqstdblob.cpp
-    third_party/squirrel/sqstdlib/sqstdmath.cpp
-    third_party/squirrel/sqstdlib/sqstdstream.cpp
-    third_party/squirrel/sqstdlib/sqstdsystem.cpp
-  )
-  set_target_properties(libsquirrel PROPERTIES OUTPUT_NAME squirrel)
-  include_directories(third_party/squirrel/include)
-
-  if (COMPILER_IS_GNU)
-    set_target_properties(libsquirrel
-      PROPERTIES
-      COMPILE_FLAGS -Wno-strict-aliasing
-    )
-  endif ()
-
-  # standalone squirrel interpreter
-  add_executable(sq EXCLUDE_FROM_ALL third_party/squirrel/sq/sq.c)
-  target_link_libraries(sq libsquirrel)
-
-  # wasm-interp-sq
-  add_executable(wasm-interp-sq src/wasm-interp-sq.c)
-  add_dependencies(everything wasm-interp-sq)
-  target_link_libraries(wasm-interp-sq libwasm libsquirrel)
-  if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
-    target_link_libraries(wasm-interp-sq m)
-  endif ()
-endif ()
-
-
 # emscripten stuff
 if (EMSCRIPTEN)
   # just dump everything into one binary so we can reference it from JavaScript
