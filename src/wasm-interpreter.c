@@ -28,8 +28,7 @@ static const char* s_opcode_name[] = {
     [WASM_OPCODE_ALLOCA] = "alloca",
     [WASM_OPCODE_BR_UNLESS] = "br_unless",
     [WASM_OPCODE_DATA] = "data",
-    [WASM_OPCODE_DISCARD] = "discard",
-    [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
+    [WASM_OPCODE_DROP_KEEP] = "drop_keep",
 };
 #undef V
 
@@ -372,12 +371,12 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define POP_I64() (POP().i64)
 #define POP_F32() (POP().f32_bits)
 #define POP_F64() (POP().f64_bits)
-#define DISCARD_KEEP(discard, keep) \
-  do {                              \
-    assert((keep) <= 1);            \
-    if ((keep) == 1)                \
-      PICK((discard) + 1) = TOP();  \
-    vs_top -= (discard);            \
+#define DROP_KEEP(drop, keep)   \
+  do {                          \
+    assert((keep) <= 1);        \
+    if ((keep) == 1)            \
+      PICK((drop) + 1) = TOP(); \
+    vs_top -= (drop);           \
   } while (0)
 
 #define GOTO(offset) pc = &istream[offset]
@@ -587,10 +586,10 @@ static WASM_INLINE uint64_t read_u64(const uint8_t** pc) {
 
 static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
                                             uint32_t* out_offset,
-                                            uint32_t* out_discard,
+                                            uint32_t* out_drop,
                                             uint8_t* out_keep) {
   *out_offset = read_u32_at(pc + WASM_TABLE_ENTRY_OFFSET_OFFSET);
-  *out_discard = read_u32_at(pc + WASM_TABLE_ENTRY_DISCARD_OFFSET);
+  *out_drop = read_u32_at(pc + WASM_TABLE_ENTRY_DROP_OFFSET);
   *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
 }
 
@@ -657,10 +656,10 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
             (key >= num_targets ? num_targets : key) * WASM_TABLE_ENTRY_SIZE;
         const uint8_t* entry = istream + table_offset + key_offset;
         uint32_t new_pc;
-        uint32_t discard_count;
+        uint32_t drop_count;
         uint8_t keep_count;
-        read_table_entry_at(entry, &new_pc, &discard_count, &keep_count);
-        DISCARD_KEEP(discard_count, keep_count);
+        read_table_entry_at(entry, &new_pc, &drop_count, &keep_count);
+        DROP_KEEP(drop_count, keep_count);
         GOTO(new_pc);
         break;
       }
@@ -715,8 +714,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_SET_LOCAL: {
         WasmInterpreterValue value = POP();
-        /* -1 because we just popped a value off the stack */
-        PICK(read_u32(&pc) - 1) = value;
+        PICK(read_u32(&pc)) = value;
         break;
       }
 
@@ -1502,14 +1500,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
       }
 
-      case WASM_OPCODE_DISCARD:
+      case WASM_OPCODE_DROP:
         (void)POP();
         break;
 
-      case WASM_OPCODE_DISCARD_KEEP: {
-        uint32_t discard_count = read_u32(&pc);
+      case WASM_OPCODE_DROP_KEEP: {
+        uint32_t drop_count = read_u32(&pc);
         uint8_t keep_count = *pc++;
-        DISCARD_KEEP(discard_count, keep_count);
+        DROP_KEEP(drop_count, keep_count);
         break;
       }
 
@@ -1575,7 +1573,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_RETURN:
     case WASM_OPCODE_UNREACHABLE:
     case WASM_OPCODE_CURRENT_MEMORY:
-    case WASM_OPCODE_DISCARD:
+    case WASM_OPCODE_DROP:
       wasm_writef(stream, "%s\n", s_opcode_name[opcode]);
       break;
 
@@ -1845,7 +1843,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
                   read_u32_at(pc), TOP().i32);
       break;
 
-    case WASM_OPCODE_DISCARD_KEEP:
+    case WASM_OPCODE_DROP_KEEP:
       wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode],
                   read_u32_at(pc), *(pc + 4));
       break;
@@ -1905,7 +1903,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_RETURN:
       case WASM_OPCODE_UNREACHABLE:
       case WASM_OPCODE_CURRENT_MEMORY:
-      case WASM_OPCODE_DISCARD:
+      case WASM_OPCODE_DROP:
         wasm_writef(stream, "%s\n", s_opcode_name[opcode]);
         break;
 
@@ -2120,11 +2118,10 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
                     read_u32(&pc));
         break;
 
-      case WASM_OPCODE_DISCARD_KEEP: {
-        uint32_t discard = read_u32(&pc);
+      case WASM_OPCODE_DROP_KEEP: {
+        uint32_t drop = read_u32(&pc);
         uint32_t keep = *pc++;
-        wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode], discard,
-                    keep);
+        wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode], drop, keep);
         break;
       }
 
@@ -2139,11 +2136,11 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
           for (i = 0; i < num_entries; ++i) {
             wasm_writef(stream, "%4" PRIzd "| ", pc - istream);
             uint32_t offset;
-            uint32_t discard;
+            uint32_t drop;
             uint8_t keep;
-            read_table_entry_at(pc, &offset, &discard, &keep);
-            wasm_writef(stream, "  entry %d: offset: %u discard: %u keep: %u\n",
-                        i, offset, discard, keep);
+            read_table_entry_at(pc, &offset, &drop, &keep);
+            wasm_writef(stream, "  entry %d: offset: %u drop: %u keep: %u\n", i,
+                        offset, drop, keep);
             pc += WASM_TABLE_ENTRY_SIZE;
           }
         } else {
