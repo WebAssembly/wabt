@@ -27,6 +27,17 @@
 #include "wasm-binary-reader.h"
 #include "wasm-literal.h"
 
+/* the default value for YYMAXDEPTH is 10000, which can be easily hit since our
+   grammar is right-recursive.
+
+   we can increase YYMAXDEPTH, but the generated parser says that "results are
+   undefined" if YYSTACK_ALLOC_MAXIMUM < YYSTACK_BYTES(YYMAXDEPTH) with
+   infinite-precision arithmetic. That's tricky to write a static assertion
+   for, so let's "just" limit YYSTACK_BYTES(YYMAXDEPTH) to UINT32_MAX and use
+   64-bit arithmetic. this static assert is done at the end of the file, so all
+   defines are available. */
+#define YYMAXDEPTH 10000000
+
 #define DUPTEXT(dst, src)                                                   \
   (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
   (dst).length = (src).length
@@ -1244,3 +1255,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
                           "error in binary module: @0x%08x: %s", offset, error);
   }
 }
+
+/* see comment above definition of YYMAXDEPTH at the top of this file */
+WASM_STATIC_ASSERT(YYSTACK_ALLOC_MAXIMUM >= UINT32_MAX);
+WASM_STATIC_ASSERT(YYSTACK_BYTES((uint64_t)YYMAXDEPTH) <= UINT32_MAX);
