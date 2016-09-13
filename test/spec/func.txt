@@ -2,116 +2,184 @@
 ;;; STDIN_FILE: third_party/testsuite/func.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/func.wast:337:65: type mismatch of function result. got i32, expected i64
+  third_party/testsuite/func.wast:313:11: unable to join type i32 (type of last operation) with type i64 (function signature result type).
   (module (func $type-local-num-vs-num (result i64) (local i32) (get_local 0)))
-                                                                ^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:341:61: type mismatch of convert op. got f32, expected i32
+  third_party/testsuite/func.wast:317:53: type mismatch at i32.eqz. got f32, expected i32
   (module (func $type-local-num-vs-num (local f32) (i32.eqz (get_local 0))))
-                                                            ^
+                                                    ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:345:65: type mismatch of unary op. got i64, expected f64
+  third_party/testsuite/func.wast:317:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-local-num-vs-num (local f32) (i32.eqz (get_local 0))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:321:57: type mismatch at f64.neg. got i64, expected f64
   (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (get_local 1))))
-                                                                ^
+                                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:353:65: type mismatch of function result. got i32, expected i64
+  third_party/testsuite/func.wast:321:11: unable to join type f64 (type of last operation) with type void (function signature result type).
+  (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (get_local 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:329:11: unable to join type i32 (type of last operation) with type i64 (function signature result type).
   (module (func $type-param-num-vs-num (param i32) (result i64) (get_local 0)))
-                                                                ^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:357:61: type mismatch of convert op. got f32, expected i32
+  third_party/testsuite/func.wast:333:53: type mismatch at i32.eqz. got f32, expected i32
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
-                                                            ^
+                                                    ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:361:65: type mismatch of unary op. got i64, expected f64
+  third_party/testsuite/func.wast:333:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:337:57: type mismatch at f64.neg. got i64, expected f64
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
-                                                                ^
+                                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:369:12: type mismatch of function result. got void, expected i32
+  third_party/testsuite/func.wast:337:11: unable to join type f64 (type of last operation) with type void (function signature result type).
+  (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:345:11: multiple result values not currently supported.
+  (module (func $type-multiple-result (result i32 i32) (unreachable)))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:351:5: multiple result values not currently supported.
+    (func $type-multiple-result (type 0) (unreachable))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:358:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-empty-i32 (result i32)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:373:12: type mismatch of function result. got void, expected i64
+  third_party/testsuite/func.wast:362:11: unable to join type void (type of last operation) with type i64 (function signature result type).
   (module (func $type-empty-i64 (result i64)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:377:12: type mismatch of function result. got void, expected f32
+  third_party/testsuite/func.wast:366:11: unable to join type void (type of last operation) with type f32 (function signature result type).
   (module (func $type-empty-f32 (result f32)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:381:12: type mismatch of function result. got void, expected f64
+  third_party/testsuite/func.wast:370:11: unable to join type void (type of last operation) with type f64 (function signature result type).
   (module (func $type-empty-f64 (result f64)))
-           ^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:387:5: type mismatch in nop. got void, expected i32
-    (nop)
-    ^
+  third_party/testsuite/func.wast:375:11: unable to join type void (type of last operation) with type i32 (function signature result type).
+  (module (func $type-value-void-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:393:5: type mismatch of function result. got f32, expected i32
-    (f32.const 0)
-    ^
+  third_party/testsuite/func.wast:381:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-value-num-vs-void
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:399:28: type mismatch in nop. got void, expected i32
-    (return (i32.const 1)) (nop)
-                           ^
+  third_party/testsuite/func.wast:387:11: unable to join type f32 (type of last operation) with type i32 (function signature result type).
+  (module (func $type-value-num-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:405:28: type mismatch of function result. got f32, expected i32
-    (return (i32.const 1)) (f32.const 0)
-                           ^
-assert_invalid error:
-  third_party/testsuite/func.wast:411:26: type mismatch in nop. got void, expected i32
-    (br 0 (i32.const 1)) (nop)
-                         ^
-assert_invalid error:
-  third_party/testsuite/func.wast:417:26: type mismatch of function result. got f32, expected i32
-    (br 0 (i32.const 1)) (f32.const 0)
-                         ^
-assert_invalid error:
-  third_party/testsuite/func.wast:424:5: type mismatch of return. got void, expected i32
+  third_party/testsuite/func.wast:426:6: type stack size too small at return. got 0, expected at least 1
     (return)
-    ^
+     ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:430:5: type mismatch of return. got void, expected i32
+  third_party/testsuite/func.wast:432:6: type stack size too small at return. got 0, expected at least 1
+    (return (nop))
+     ^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:438:6: type mismatch at return. got i64, expected i32
+    (return (i64.const 0))
+     ^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:445:6: type stack size too small at return. got 0, expected at least 1
     (return) (i32.const 1)
-    ^
+     ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:436:13: type mismatch of return. got i64, expected i32
+  third_party/testsuite/func.wast:444:11: maximum arity for function result is 1, got 2
+  (module (func $type-return-empty-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:451:6: type stack size too small at return. got 0, expected at least 1
+    (return (nop)) (i32.const 1)
+     ^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:450:11: maximum arity for function result is 1, got 2
+  (module (func $type-return-void-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:457:6: type mismatch at return. got i64, expected i32
     (return (i64.const 1)) (i32.const 1)
-            ^
+     ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:442:13: type mismatch of return. got i64, expected i32
+  third_party/testsuite/func.wast:463:6: type mismatch at return. got i64, expected i32
     (return (i64.const 1)) (return (i32.const 1))
-            ^
+     ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:448:36: type mismatch of return. got f64, expected i32
-    (return (i32.const 1)) (return (f64.const 1))
-                                   ^
+  third_party/testsuite/func.wast:478:6: type mismatch at br value. got i32, expected void
+    (br 0 (nop))
+     ^^
 assert_invalid error:
-  third_party/testsuite/func.wast:455:5: type mismatch of br value. got void, expected i32
+  third_party/testsuite/func.wast:478:6: type stack size too small at br. got 0, expected at least 1
+    (br 0 (nop))
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:477:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-break-last-void-vs-empty
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:484:6: type mismatch at br value. got i32, expected void
+    (br 0 (i32.const 0))
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:490:6: type mismatch at br value. got void, expected i32
     (br 0)
-    ^
+     ^^
 assert_invalid error:
-  third_party/testsuite/func.wast:461:5: type mismatch of br value. got void, expected i32
+  third_party/testsuite/func.wast:496:6: type stack size too small at br. got 0, expected at least 1
+    (br 0 (nop))
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:502:6: type mismatch at br value. got f32, expected i32
+    (br 0 (f32.const 0))
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:508:6: type mismatch at br value. got i64, expected void
+    (br 0 (i64.const 1))
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:514:6: type mismatch at br value. got i64, expected void
+    (br 0 (i64.const 1))
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:520:6: type mismatch at br value. got void, expected i32
     (br 0) (i32.const 1)
-    ^
+     ^^
 assert_invalid error:
-  third_party/testsuite/func.wast:467:11: type mismatch of br value. got i64, expected i32
+  third_party/testsuite/func.wast:526:6: type stack size too small at br. got 0, expected at least 1
+    (br 0 (nop)) (i32.const 1)
+     ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:525:11: maximum arity for function result is 1, got 2
+  (module (func $type-break-void-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/func.wast:532:6: type mismatch at br value. got i64, expected i32
     (br 0 (i64.const 1)) (i32.const 1)
-          ^
+     ^^
 assert_invalid error:
-  third_party/testsuite/func.wast:473:11: type mismatch of br value. got i64, expected i32
+  third_party/testsuite/func.wast:538:6: type mismatch at br value. got i64, expected i32
     (br 0 (i64.const 1)) (br 0 (i32.const 1))
-          ^
+     ^^
 assert_invalid error:
-  third_party/testsuite/func.wast:479:32: type mismatch of br value. got f64, expected i32
-    (br 0 (i32.const 1)) (br 0 (f64.const 1))
-                               ^
-assert_invalid error:
-  third_party/testsuite/func.wast:486:12: type mismatch of br value. got void, expected i32
+  third_party/testsuite/func.wast:553:13: type mismatch at br value. got void, expected i32
     (block (br 1)) (br 0 (i32.const 1))
-           ^
+            ^^
 assert_invalid error:
-  third_party/testsuite/func.wast:492:18: type mismatch of br value. got i64, expected i32
+  third_party/testsuite/func.wast:559:13: type stack size too small at br. got 0, expected at least 1
+    (block (br 1 (nop))) (br 0 (i32.const 1))
+            ^^
+assert_invalid error:
+  third_party/testsuite/func.wast:565:13: type mismatch at br value. got i64, expected i32
     (block (br 1 (i64.const 1))) (br 0 (i32.const 1))
-                 ^
-82/82 tests passed.
+            ^^
+66/66 tests passed.
 ;;; STDOUT ;;)

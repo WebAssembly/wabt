@@ -179,7 +179,8 @@ static WasmResult check_func_var(Context* ctx,
 
 static WasmResult check_global_var(Context* ctx,
                                    const WasmVar* var,
-                                   const WasmGlobal** out_global) {
+                                   const WasmGlobal** out_global,
+                                   int* out_global_index) {
   int index;
   if (WASM_FAILED(check_var(ctx, &ctx->current_module->global_bindings,
                             ctx->current_module->globals.size, var, "global",
@@ -189,6 +190,8 @@ static WasmResult check_global_var(Context* ctx,
 
   if (out_global)
     *out_global = ctx->current_module->globals.data[index];
+  if (out_global_index)
+    *out_global_index = index;
   return WASM_OK;
 }
 
@@ -683,7 +686,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_DROP: {
-      WasmType type = top_type(ctx);
+      WasmCheckType type = top_type(ctx);
       transform_stack(ctx, &expr->loc, "drop", 1, 0, type);
       break;
     }
@@ -691,7 +694,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_GET_GLOBAL: {
       const WasmGlobal* global;
       if (WASM_SUCCEEDED(
-              check_global_var(ctx, &expr->get_global.var, &global))) {
+              check_global_var(ctx, &expr->get_global.var, &global, NULL))) {
         push_type(ctx, global->type);
       }
       break;
@@ -804,7 +807,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       WasmCheckType type = WASM_TYPE_I32;
       const WasmGlobal* global;
       if (WASM_SUCCEEDED(
-              check_global_var(ctx, &expr->set_global.var, &global))) {
+              check_global_var(ctx, &expr->set_global.var, &global, NULL))) {
         type = global->type;
       }
       transform_stack(ctx, &expr->loc, "set_global", 1, 0, type);
@@ -885,6 +888,10 @@ static void check_func(Context* ctx,
                        const WasmLocation* loc,
                        const WasmFunc* func) {
   ctx->current_func = func;
+  if (wasm_get_result_type(ctx->current_module, func) == WASM_TYPE_MULTIPLE) {
+    print_error(ctx, CHECK_STYLE_FULL, loc,
+                "multiple result values not currently supported.");
+  }
   if (wasm_decl_has_func_type(&func->decl)) {
     const WasmFuncType* func_type;
     if (WASM_SUCCEEDED(
@@ -909,44 +916,15 @@ static void check_func(Context* ctx,
   ctx->current_func = NULL;
 }
 
-static WasmResult check_const_expr(Context* ctx,
-                                   const WasmExpr* expr,
-                                   const char* desc,
-                                   WasmCheckType* out_type) {
-  if (expr->next == NULL) {
-    switch (expr->type) {
-      case WASM_EXPR_TYPE_CONST:
-        if (out_type)
-          *out_type = expr->const_.type;
-        return WASM_OK;
-
-      case WASM_EXPR_TYPE_GET_GLOBAL: {
-        const WasmGlobal* ref_global = NULL;
-        if (WASM_SUCCEEDED(
-                check_global_var(ctx, &expr->get_global.var, &ref_global))) {
-          if (out_type)
-            *out_type = ref_global->type;
-          return WASM_OK;
-        }
-        return WASM_ERROR;
-      }
-
-      default:
-        break;
-    }
-  }
-
-  print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
-              "invalid %s, must be a constant expression; either *.const or "
-              "get_global.",
-              desc);
-  return WASM_ERROR;
-}
-
 static WasmResult eval_const_expr_i32(Context* ctx,
                                       const WasmExpr* expr,
                                       const char* desc,
                                       uint32_t* out_value) {
+  if (expr->next != NULL) {
+    expr = expr->next;
+    goto invalid_expr;
+  }
+
   switch (expr->type) {
     case WASM_EXPR_TYPE_CONST:
       if (expr->const_.type != WASM_TYPE_I32) {
@@ -960,7 +938,8 @@ static WasmResult eval_const_expr_i32(Context* ctx,
 
     case WASM_EXPR_TYPE_GET_GLOBAL: {
       const WasmGlobal* global = NULL;
-      if (WASM_FAILED(check_global_var(ctx, &expr->get_global.var, &global)))
+      if (WASM_FAILED(
+              check_global_var(ctx, &expr->get_global.var, &global, NULL)))
         return WASM_ERROR;
 
       if (global->type != WASM_TYPE_I32) {
@@ -974,6 +953,7 @@ static WasmResult eval_const_expr_i32(Context* ctx,
       return eval_const_expr_i32(ctx, global->init_expr, desc, out_value);
     }
 
+    invalid_expr:
     default:
       print_error(
           ctx, CHECK_STYLE_FULL, &expr->loc,
@@ -986,11 +966,48 @@ static WasmResult eval_const_expr_i32(Context* ctx,
 
 static void check_global(Context* ctx,
                          const WasmLocation* loc,
-                         const WasmGlobal* global) {
-  WasmCheckType type;
-  if (WASM_SUCCEEDED(check_const_expr(
-          ctx, global->init_expr, "global initializer expression", &type))) {
-    check_type(ctx, loc, type, global->type, "global initializer expression");
+                         const WasmGlobal* global,
+                         int global_index) {
+  WasmCheckType type = WASM_CHECK_TYPE_VOID;
+  WasmBool invalid_expr = WASM_TRUE;
+  WasmExpr* expr = global->init_expr;
+
+  if (expr->next == NULL) {
+    switch (expr->type) {
+      case WASM_EXPR_TYPE_CONST:
+        type = expr->const_.type;
+        invalid_expr = WASM_FALSE;
+        break;
+
+      case WASM_EXPR_TYPE_GET_GLOBAL: {
+        const WasmGlobal* ref_global = NULL;
+        int ref_global_index;
+        if (WASM_SUCCEEDED(check_global_var(ctx, &expr->get_global.var,
+                                            &ref_global, &ref_global_index))) {
+          type = ref_global->type;
+          /* globals can only reference previously defined globals */
+          if (ref_global_index >= global_index) {
+            print_error(ctx, CHECK_STYLE_FULL, loc,
+                        "global can only be defined in terms of a previously "
+                        "defined global.");
+          }
+        }
+        invalid_expr = WASM_FALSE;
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+  if (invalid_expr) {
+    print_error(ctx, CHECK_STYLE_FULL, loc,
+                "invalid global initializer expression. Must be *.const or "
+                "get_global.");
+  } else {
+    check_type(ctx, &expr->loc, type, global->type,
+               "global initializer expression");
   }
 }
 
@@ -1046,6 +1063,12 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
     if (field->type != WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT)
       continue;
 
+    if (!table) {
+      print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                  "elem segment cannot be specified without table section");
+      break;
+    }
+
     WasmElemSegment* elem_segment = &field->elem_segment;
     uint32_t offset = 0;
     if (WASM_SUCCEEDED(eval_const_expr_i32(
@@ -1058,7 +1081,7 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
       }
 
       uint64_t max =
-          table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
+          table->elem_limits.has_max ? table->elem_limits.initial : UINT32_MAX;
 
       if (offset + elem_segment->vars.size > max) {
         print_error(ctx, CHECK_STYLE_FULL, &field->loc,
@@ -1086,6 +1109,12 @@ static void check_data_segments(Context* ctx, const WasmModule* module) {
     if (field->type != WASM_MODULE_FIELD_TYPE_DATA_SEGMENT)
       continue;
 
+    if (!memory) {
+      print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                  "data segment cannot be specified without memory section");
+      break;
+    }
+
     WasmDataSegment* data_segment = &field->data_segment;
     uint32_t offset = 0;
     if (WASM_SUCCEEDED(eval_const_expr_i32(
@@ -1097,7 +1126,7 @@ static void check_data_segments(Context* ctx, const WasmModule* module) {
             offset, last_end);
       }
 
-      uint32_t max = memory->page_limits.has_max ? memory->page_limits.max
+      uint32_t max = memory->page_limits.has_max ? memory->page_limits.initial
                                                  : WASM_MAX_PAGES;
       const uint64_t memory_max_size = max * WASM_PAGE_SIZE;
       if (offset + data_segment->size > memory_max_size) {
@@ -1118,6 +1147,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
   WasmBool seen_export_memory = WASM_FALSE;
   WasmBool seen_table = WASM_FALSE;
   WasmBool seen_start = WASM_FALSE;
+  int global_index = 0;
 
   ctx->current_module = module;
 
@@ -1129,7 +1159,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_GLOBAL:
-        check_global(ctx, &field->loc, &field->global);
+        check_global(ctx, &field->loc, &field->global, global_index++);
         break;
 
       case WASM_MODULE_FIELD_TYPE_IMPORT:

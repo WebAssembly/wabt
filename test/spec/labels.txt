@@ -2,40 +2,44 @@
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/labels.wast:307:36: type mismatch of unary op. got void, expected f32
+  third_party/testsuite/labels.wast:304:28: type stack size too small at f32.neg. got 0, expected at least 1
   (module (func (block $l (f32.neg (br_if $l (i32.const 1))) (nop))))
-                                   ^
+                           ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/labels.wast:311:40: type mismatch of block. got void, expected f32
+  third_party/testsuite/labels.wast:304:18: unable to join type void (joined type of block's br* targets) with type f32 (block's result type).
+  (module (func (block $l (f32.neg (br_if $l (i32.const 1))) (nop))))
+                 ^^^^^
+assert_invalid error:
+  third_party/testsuite/labels.wast:308:31: unable to join type f32 (joined type of block's br* targets) with type void (block's result type).
   (module (func (result f32) (block $l (br_if $l (f32.const 0) (i32.const 1)))))
-                                       ^
+                              ^^^^^
 assert_invalid error:
-  third_party/testsuite/labels.wast:315:40: type mismatch of block. got void, expected i32
+  third_party/testsuite/labels.wast:312:31: unable to join type f32 (joined type of block's br* targets) with type void (block's result type).
   (module (func (result i32) (block $l (br_if $l (f32.const 0) (i32.const 1)))))
-                                       ^
+                              ^^^^^
 assert_invalid error:
-  third_party/testsuite/labels.wast:315:50: type mismatch of br_if value. got f32, expected i32
+  third_party/testsuite/labels.wast:312:11: unable to join type f32 (type of last operation) with type i32 (function signature result type).
   (module (func (result i32) (block $l (br_if $l (f32.const 0) (i32.const 1)))))
-                                                 ^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/labels.wast:319:36: type mismatch of unary op. got void, expected f32
+  third_party/testsuite/labels.wast:316:28: type stack size too small at f32.neg. got 0, expected at least 1
   (module (func (block $l (f32.neg (br_if $l (f32.const 0) (i32.const 1))))))
-                                   ^
+                           ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/labels.wast:325:17: type mismatch of block. got f32, expected i32
+  third_party/testsuite/labels.wast:316:11: unable to join type f32 (type of last operation) with type void (function signature result type).
+  (module (func (block $l (f32.neg (br_if $l (f32.const 0) (i32.const 1))))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/labels.wast:322:18: type stack size too small at f32.neg. got 0, expected at least 1
       (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0))))
-                ^
+                 ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/labels.wast:325:26: type mismatch of unary op. got void, expected f32
-      (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0))))
-                         ^
+  third_party/testsuite/labels.wast:321:5: unable to join type f32 (type of last operation) with type i32 (function signature result type).
+    (func (param i32) (result i32)
+    ^
 assert_invalid error:
-  third_party/testsuite/labels.wast:325:36: type mismatch of br_if value. got f32, expected i32
-      (block $l (f32.neg (br_if $l (f32.const 0) (get_local 0))))
-                                   ^
-assert_invalid error:
-  third_party/testsuite/labels.wast:333:36: type mismatch of block. got void, expected f32
+  third_party/testsuite/labels.wast:330:18: type stack size too small at f32.neg. got 0, expected at least 1
       (block $l (f32.neg (block $i (br_if $l (f32.const 3) (get_local 0)))))
-                                   ^
-26/26 tests passed.
+                 ^^^^^^^
+25/25 tests passed.
 ;;; STDOUT ;;)
