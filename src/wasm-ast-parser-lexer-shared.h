@@ -69,7 +69,7 @@ typedef enum WasmFuncFieldType {
   WASM_FUNC_FIELD_TYPE_EXPRS,
   WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
   WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
-  WASM_FUNC_FIELD_TYPE_RESULT_TYPE,
+  WASM_FUNC_FIELD_TYPE_RESULT_TYPES,
   WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
   WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
 } WasmFuncFieldType;
@@ -83,10 +83,9 @@ typedef struct WasmBoundType {
 typedef struct WasmFuncField {
   WasmFuncFieldType type;
   union {
-    WasmExpr* first_expr;
-    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
+    WasmExpr* first_expr;     /* WASM_FUNC_FIELD_TYPE_EXPRS */
+    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_*_TYPES */
     WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
-    WasmType result_type;
   };
   struct WasmFuncField* next;
 } WasmFuncField;

@@ -116,6 +116,8 @@ static WasmBool is_empty_signature(WasmFuncSignature* sig);
 static void append_implicit_func_declaration(WasmAllocator*, WasmLocation*,
                                              WasmModule*, WasmFuncDeclaration*);
 
+static WasmType get_result_type_from_type_vector(WasmTypeVector* types);
+
 typedef struct BinaryErrorCallbackData {
   WasmLocation* loc;
   WasmAstLexer* lexer;
@@ -263,11 +265,14 @@ func_type :
       $$.result_type = WASM_TYPE_VOID;
       $$.param_types = $3;
     }
-  | LPAR PARAM value_type_list RPAR LPAR RESULT VALUE_TYPE RPAR {
-      $$.result_type = $7;
+  | LPAR PARAM value_type_list RPAR LPAR RESULT value_type_list RPAR {
       $$.param_types = $3;
+      $$.result_type = get_result_type_from_type_vector(&$7);
     }
-  | LPAR RESULT VALUE_TYPE RPAR { WASM_ZERO_MEMORY($$); $$.result_type = $3; }
+  | LPAR RESULT value_type_list RPAR {
+      WASM_ZERO_MEMORY($$);
+      $$.result_type = get_result_type_from_type_vector(&$3);
+    }
 ;
 
 
@@ -748,10 +753,10 @@ const_expr :
 /* Functions */
 func_fields :
     func_body
-  | LPAR RESULT VALUE_TYPE RPAR func_body {
+  | LPAR RESULT value_type_list RPAR func_body {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPE;
-      $$->result_type = $3;
+      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPES;
+      $$->types = $3;
       $$->next = $5;
     }
   | LPAR PARAM value_type_list RPAR func_fields {
@@ -838,8 +843,9 @@ func_info :
             break;
           }
 
-          case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
-            $$->decl.sig.result_type = field->result_type;
+          case WASM_FUNC_FIELD_TYPE_RESULT_TYPES:
+            $$->decl.sig.result_type =
+                get_result_type_from_type_vector(&field->types);
             break;
         }
 
@@ -1605,6 +1611,15 @@ static void append_implicit_func_declaration(WasmAllocator* allocator,
   }
 
   decl->flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
+}
+
+static WasmType get_result_type_from_type_vector(WasmTypeVector* types) {
+  /* TODO(binji): handle multiple result types more cleanly */
+  switch (types->size) {
+    case 0: return WASM_TYPE_VOID; break;
+    case 1: return types->data[0]; break;
+    default: return WASM_TYPE_MULTIPLE; break;
+  }
 }
 
 WasmResult wasm_parse_ast(WasmAstLexer* lexer,

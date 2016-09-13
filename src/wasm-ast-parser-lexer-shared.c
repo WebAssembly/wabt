@@ -100,16 +100,13 @@ void wasm_destroy_func_fields(struct WasmAllocator* allocator,
 
       case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
       case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES:
+      case WASM_FUNC_FIELD_TYPE_RESULT_TYPES:
         wasm_destroy_type_vector(allocator, &func_field->types);
         break;
 
       case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
       case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL:
         wasm_destroy_string_slice(allocator, &func_field->bound_type.name);
-        break;
-
-      case WASM_FUNC_FIELD_TYPE_RESULT_TYPE:
-        /* nothing to free */
         break;
     }
 

@@ -44,10 +44,6 @@ struct WasmStream;
   V(TRAP_UNREACHABLE, "unreachable executed")                                  \
   /* call indirect signature doesn't match function table signature */         \
   V(TRAP_INDIRECT_CALL_SIGNATURE_MISMATCH, "indirect call signature mismatch") \
-  /* growing the memory would overflow the memory size type */                 \
-  V(TRAP_MEMORY_SIZE_OVERFLOW, "memory size overflow")                         \
-  /* out of memory */                                                          \
-  V(TRAP_OUT_OF_MEMORY, "memory size exceeds implementation limit")            \
   /* ran out of call stack frames (probably infinite recursion) */             \
   V(TRAP_CALL_STACK_EXHAUSTED, "call stack exhausted")                         \
   /* ran out of value stack space */                                           \
@@ -95,6 +91,7 @@ typedef struct WasmInterpreterMemory {
   void* data;
   uint32_t page_size;
   uint32_t byte_size;
+  uint32_t max_page_size;
 } WasmInterpreterMemory;
 
 typedef struct WasmInterpreterFuncTableEntry {

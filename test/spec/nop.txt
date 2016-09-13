@@ -2,20 +2,20 @@
 ;;; STDIN_FILE: third_party/testsuite/nop.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/nop.wast:87:40: type mismatch in nop. got void, expected i32
+  third_party/testsuite/nop.wast:246:11: unable to join type void (type of last operation) with type i32 (function signature result type).
   (module (func $type-i32 (result i32) (nop)))
-                                       ^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/nop.wast:91:40: type mismatch in nop. got void, expected i64
+  third_party/testsuite/nop.wast:250:11: unable to join type void (type of last operation) with type i64 (function signature result type).
   (module (func $type-i64 (result i64) (nop)))
-                                       ^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/nop.wast:95:40: type mismatch in nop. got void, expected f32
+  third_party/testsuite/nop.wast:254:11: unable to join type void (type of last operation) with type f32 (function signature result type).
   (module (func $type-f32 (result f32) (nop)))
-                                       ^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/nop.wast:99:40: type mismatch in nop. got void, expected f64
+  third_party/testsuite/nop.wast:258:11: unable to join type void (type of last operation) with type f64 (function signature result type).
   (module (func $type-f64 (result f64) (nop)))
-                                       ^
-20/20 tests passed.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+50/50 tests passed.
 ;;; STDOUT ;;)
