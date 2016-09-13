@@ -3,7 +3,7 @@
   (func (result i32 i32)
     (return (i32.const 0) (i32.const 0) (i32.const 0))))
 (;; STDERR ;;;
-parse/expr/bad-return-too-many.txt:3:21: syntax error, unexpected VALUE_TYPE, expecting )
+parse/expr/bad-return-too-many.txt:3:3: multiple result values not currently supported.
   (func (result i32 i32)
-                    ^^^
+  ^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

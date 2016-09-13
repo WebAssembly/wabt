@@ -2,7 +2,7 @@
 (module
   (global i32 (f32.const 1)))
 (;; STDERR ;;;
-typecheck/bad-global-type-mismatch.txt:3:3: type mismatch at global initializer expression. got f32, expected i32
+typecheck/bad-global-type-mismatch.txt:3:16: type mismatch at global initializer expression. got f32, expected i32
   (global i32 (f32.const 1)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^^^
 ;;; STDERR ;;)
