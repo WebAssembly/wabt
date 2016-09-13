@@ -2,60 +2,96 @@
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/memory.wast:12:12: max pages (0) must be >= initial pages (1)
+  third_party/testsuite/memory.wast:22:11: data segment cannot be specified without memory section
+  (module (data (i32.const 0)))
+          ^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:26:11: data segment cannot be specified without memory section
+  (module (data (i32.const 0) ""))
+          ^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:30:11: data segment cannot be specified without memory section
+  (module (data (i32.const 0) "x"))
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:35:29: data segment expression must be of type i32; got i64.
+  (module (memory 1) (data (i64.const 0)))
+                            ^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:39:29: invalid data segment expression, must be a constant expression; either *.const or get_global.
+  (module (memory 1) (data (i32.ctz (i32.const 0))))
+                            ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:43:29: invalid data segment expression, must be a constant expression; either *.const or get_global.
+  (module (memory 1) (data (nop)))
+                            ^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:48:11: max pages (0) must be >= initial pages (1)
   (module (memory 1 0))
-           ^^^^^^
+          ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:16:24: segment ends past the end of initial memory size (0)
-  (module (memory 0 0 (segment 0 "a")))
-                       ^^^^^^^
+  third_party/testsuite/memory.wast:52:24: segment ends past the end of memory max size (0)
+  (module (memory 0 0) (data (i32.const 0) "a"))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:20:40: address (98304) greater than initial memory size (65536)
-  (module (memory 1 2 (segment 0 "a") (segment 98304 "b")))
-                                       ^^^^^^^
+  third_party/testsuite/memory.wast:56:49: segment ends past the end of memory max size (65536)
+  (module (memory 1 2) (data (i32.const 0) "a") (data (i32.const 98304) "b"))
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:24:42: address (0) less than end of previous segment (3)
-  (module (memory 1 2 (segment 0 "abc") (segment 0 "def")))
-                                         ^^^^^^^
+  third_party/testsuite/memory.wast:60:51: segment offset (0) less than end of previous segment (3)
+  (module (memory 1 2) (data (i32.const 0) "abc") (data (i32.const 0) "def"))
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:28:41: address (0) less than end of previous segment (5)
-  (module (memory 1 2 (segment 3 "ab") (segment 0 "de")))
-                                        ^^^^^^^
+  third_party/testsuite/memory.wast:64:50: segment offset (0) less than end of previous segment (5)
+  (module (memory 1 2) (data (i32.const 3) "ab") (data (i32.const 0) "de"))
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:32:56: address (1) less than end of previous segment (3)
-  (module (memory 1 2 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
-                                                       ^^^^^^^
+  third_party/testsuite/memory.wast:70:55: segment offset (1) less than end of previous segment (3)
+    (data (i32.const 0) "a") (data (i32.const 2) "b") (data (i32.const 1) "c")
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:36:12: max pages (65536) must be <= (65535)
+  third_party/testsuite/memory.wast:75:11: max pages (65536) must be <= (65535)
   (module (memory 0 65536))
-           ^^^^^^
+          ^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:40:12: max pages (2147483648) must be <= (65535)
+  third_party/testsuite/memory.wast:79:11: max pages (2147483648) must be <= (65535)
   (module (memory 0 2147483648))
-           ^^^^^^
+          ^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:44:12: max pages (4294967296) must be <= (65535)
-  (module (memory 0 4294967296))
-           ^^^^^^
+  third_party/testsuite/memory.wast:83:11: max pages (4294967295) must be <= (65535)
+  (module (memory 0 4294967295))
+          ^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:55:28: alignment must be power-of-two
-  (module (memory 0) (func (i64.load align=0 (i32.const 0))))
-                           ^
+  third_party/testsuite/memory.wast:94:35: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load align=0 (i32.const 0)))))
+                                  ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:59:28: alignment must be power-of-two
-  (module (memory 0) (func (i64.load align=3 (i32.const 0))))
-                           ^
+  third_party/testsuite/memory.wast:98:35: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load align=3 (i32.const 0)))))
+                                  ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:63:28: alignment must be power-of-two
-  (module (memory 0) (func (i64.load align=5 (i32.const 0))))
-                           ^
+  third_party/testsuite/memory.wast:102:35: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load align=5 (i32.const 0)))))
+                                  ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:67:28: alignment must be power-of-two
-  (module (memory 0) (func (i64.load align=6 (i32.const 0))))
-                           ^
+  third_party/testsuite/memory.wast:106:35: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load align=6 (i32.const 0)))))
+                                  ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/memory.wast:71:28: alignment must be power-of-two
-  (module (memory 0) (func (i64.load align=7 (i32.const 0))))
-                           ^
-24/24 tests passed.
+  third_party/testsuite/memory.wast:110:35: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load align=7 (i32.const 0)))))
+                                  ^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:115:22: unable to join type i64 (type of last operation) with type void (function signature result type).
+  (module (memory 0) (func (i64.load align=16 (i32.const 0))))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:119:22: unable to join type i64 (type of last operation) with type void (function signature result type).
+  (module (memory 0) (func (i64.load align=32 (i32.const 0))))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/memory.wast:123:22: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (memory 0) (func (i32.load align=8 (i32.const 0))))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+27/27 tests passed.
 ;;; STDOUT ;;)

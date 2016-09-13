@@ -347,6 +347,12 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define CHECK_STACK() TRAP_IF(vs_top >= vs_end, VALUE_STACK_EXHAUSTED)
 
+#define PUSH_NEG_1_AND_BREAK_IF(cond) \
+  if (WASM_UNLIKELY(cond)) {          \
+    PUSH_I32(-1);                     \
+    break;                            \
+  }
+
 #define PUSH(v)        \
   do {                 \
     CHECK_STACK();     \
@@ -874,13 +880,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t old_byte_size = module->memory.byte_size;
         VALUE_TYPE_I32 grow_pages = POP_I32();
         uint32_t new_page_size = old_page_size + grow_pages;
-        TRAP_IF((uint64_t)new_page_size * WASM_PAGE_SIZE > UINT32_MAX,
-                MEMORY_SIZE_OVERFLOW);
+        PUSH_NEG_1_AND_BREAK_IF(new_page_size > module->memory.max_page_size);
+        PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WASM_PAGE_SIZE >
+                                UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
         WasmAllocator* allocator = module->memory.allocator;
         void* new_data = wasm_realloc(allocator, module->memory.data,
                                       new_byte_size, WASM_DEFAULT_ALIGN);
-        TRAP_IF(new_data == NULL, OUT_OF_MEMORY);
+        PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
         module->memory.data = new_data;
@@ -1601,6 +1608,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
       break;
 
     case WASM_OPCODE_SET_LOCAL:
+    case WASM_OPCODE_TEE_LOCAL:
       wasm_writef(stream, "%s $%u, %u\n", s_opcode_name[opcode],
                   read_u32_at(pc), TOP().i32);
       break;
@@ -1931,6 +1939,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_SET_LOCAL:
+      case WASM_OPCODE_TEE_LOCAL:
         wasm_writef(stream, "%s $%u, %%[-1]\n", s_opcode_name[opcode],
                     read_u32(&pc));
         break;

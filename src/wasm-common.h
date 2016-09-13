@@ -132,6 +132,9 @@ enum {
   WASM_TYPE_F64,
   WASM_NUM_TYPES,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
+  /* used when parsing multiple return types to signify an error */
+  /* TODO(binji): remove and support properly */
+  WASM_TYPE_MULTIPLE = WASM_NUM_TYPES,
 };
 typedef unsigned char WasmType;
 

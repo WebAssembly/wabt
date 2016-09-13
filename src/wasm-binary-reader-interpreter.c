@@ -276,13 +276,12 @@ static WasmResult emit_drop_keep(Context* ctx, uint32_t drop, uint8_t keep) {
   return WASM_OK;
 }
 
-static WasmResult emit_return(Context* ctx, WasmType result_type) {
+static WasmResult drop_exprs_for_return(Context* ctx, WasmType result_type) {
   /* drop the locals and params, but keep the return value, if any */
   uint32_t keep_count = get_value_count(result_type);
   assert(ctx->expr_stack.size >= keep_count);
   uint32_t drop_count = ctx->expr_stack.size - keep_count;
   CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
-  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_RETURN));
   return WASM_OK;
 }
 
@@ -455,6 +454,7 @@ static WasmResult on_memory_limits(WasmBool has_max,
   memory->allocator = ctx->memory_allocator;
   memory->page_size = initial_pages;
   memory->byte_size = initial_pages * WASM_PAGE_SIZE;
+  memory->max_page_size = has_max ? max_pages : WASM_MAX_PAGES;
   memory->data = wasm_alloc_zero(ctx->memory_allocator, memory->byte_size,
                                  WASM_DEFAULT_ALIGN);
   return WASM_OK;
@@ -677,32 +677,28 @@ static void pop_label(Context* ctx) {
   }
 }
 
-static void push_expr(Context* ctx, WasmType type, WasmOpcode opcode) {
-  /* TODO: refactor to remove opcode param */
-  if (type != WASM_TYPE_VOID) {
-    Label* label = top_label(ctx);
-    if (ctx->expr_stack.size > label->expr_stack_size) {
-      WasmType top_type = ctx->expr_stack.data[ctx->expr_stack.size - 1];
-      if (top_type == WASM_TYPE_ANY)
-        return;
-    }
-
-    LOGF("%3" PRIzd ": push %s:%s\n", ctx->expr_stack.size,
-         s_opcode_name[opcode], s_type_names[type]);
-    wasm_append_type_value(ctx->allocator, &ctx->expr_stack, &type);
-  }
-}
-
 static WasmType top_expr(Context* ctx) {
   Label* label = top_label(ctx);
   assert(ctx->expr_stack.size > label->expr_stack_size);
   return ctx->expr_stack.data[ctx->expr_stack.size - 1];
 }
 
+static WasmBool top_expr_is_any(Context* ctx) {
+  Label* label = top_label(ctx);
+  if (ctx->expr_stack.size > label->expr_stack_size) {
+    WasmType top_type = ctx->expr_stack.data[ctx->expr_stack.size - 1];
+    if (top_type == WASM_TYPE_ANY)
+      return WASM_TRUE;
+  }
+  return WASM_FALSE;
+}
+
 static WasmType pop_expr(Context* ctx) {
   WasmType type = top_expr(ctx);
-  LOGF("%3" PRIzd ": pop  %s\n", ctx->expr_stack.size, s_type_names[type]);
-  ctx->expr_stack.size--;
+  if (type != WASM_TYPE_ANY) {
+    LOGF("%3" PRIzd ": pop  %s\n", ctx->expr_stack.size, s_type_names[type]);
+    ctx->expr_stack.size--;
+  }
   return type;
 }
 
@@ -712,10 +708,29 @@ static WasmType top_expr_if(Context* ctx, WasmBool cond) {
   return WASM_TYPE_VOID;
 }
 
-static WasmResult check_end(Context* ctx, WasmType* top_type) {
+static void push_expr(Context* ctx, WasmType type, WasmOpcode opcode) {
+  /* TODO: refactor to remove opcode param */
+  if (type != WASM_TYPE_VOID) {
+    if (top_expr_is_any(ctx))
+      return;
+
+    LOGF("%3" PRIzd ": push %s:%s\n", ctx->expr_stack.size,
+         s_opcode_name[opcode], s_type_names[type]);
+    wasm_append_type_value(ctx->allocator, &ctx->expr_stack, &type);
+  }
+}
+
+static WasmResult check_end(Context* ctx,
+                            WasmType* top_type,
+                            size_t stack_size_adjustment) {
   Label* label = top_label(ctx);
-  assert(ctx->expr_stack.size >= label->expr_stack_size);
-  size_t stack_size = ctx->expr_stack.size - label->expr_stack_size;
+  /* the stack_size_adjustment is typically 0; it is non-zero when checking the
+   * implicit function label. The function label stack size does not include
+   * the parameters, so it will appear as though there are too many values on
+   * the stack if the stack size is not adjusted. */
+  size_t label_stack_size = label->expr_stack_size + stack_size_adjustment;
+  assert(ctx->expr_stack.size >= label_stack_size);
+  size_t stack_size = ctx->expr_stack.size - label_stack_size;
   if (stack_size == 0) {
     *top_type = WASM_TYPE_VOID;
     return WASM_OK;
@@ -741,9 +756,13 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 
   ctx->current_func = func;
   ctx->depth_fixups.size = 0;
-  ctx->expr_stack.size = sig->param_types.size;
+  ctx->expr_stack.size = 0;
   ctx->label_stack.size = 0;
   ctx->depth = 0;
+
+  /* push implicit func label (equivalent to return) */
+  push_label(ctx, LABEL_TYPE_FUNC, sig->result_type, WASM_INVALID_OFFSET,
+             WASM_INVALID_OFFSET);
 
   /* fixup function references */
   uint32_t i;
@@ -753,25 +772,33 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 
   /* append param types */
   for (i = 0; i < sig->param_types.size; ++i) {
-    wasm_append_type_value(ctx->allocator, &func->param_and_local_types,
-                           &sig->param_types.data[i]);
+    WasmType type = sig->param_types.data[i];
+    wasm_append_type_value(ctx->allocator, &func->param_and_local_types, &type);
+    wasm_append_type_value(ctx->allocator, &ctx->expr_stack, &type);
   }
 
-  /* push implicit func label (equivalent to return) */
-  push_label(ctx, LABEL_TYPE_FUNC, sig->result_type, WASM_INVALID_OFFSET,
-             WASM_INVALID_OFFSET);
   return WASM_OK;
 }
 
 static WasmResult end_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
+  Label* label = top_label(ctx);
+  if (!label || label->label_type != LABEL_TYPE_FUNC) {
+    print_error(ctx, "unexpected function end");
+    return WASM_ERROR;
+  }
+
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
 
   WasmType top_type;
-  CHECK_RESULT(check_end(ctx, &top_type));
-  CHECK_RESULT(check_type(ctx, sig->result_type, top_type, "implicit return"));
-  CHECK_RESULT(emit_return(ctx, sig->result_type));
+  CHECK_RESULT(check_end(ctx, &top_type, sig->param_types.size));
+  unify_type(&label->type, top_type);
+  CHECK_RESULT(
+      check_type(ctx, sig->result_type, label->type, "implicit return"));
+  CHECK_RESULT(drop_exprs_for_return(ctx, sig->result_type));
+  fixup_top_label(ctx, get_istream_offset(ctx));
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_RETURN));
   pop_label(ctx);
   ctx->current_func = NULL;
   ctx->expr_stack.size = 0;
@@ -815,7 +842,6 @@ static WasmResult on_local_decl(uint32_t decl_index,
 static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
   const char* opcode_name = s_opcode_name[opcode];
-  LOGF("%3" PRIzd ": %s\n", ctx->expr_stack.size, opcode_name);
   WasmType value = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, s_opcode_type1[opcode], value, opcode_name));
   CHECK_RESULT(emit_opcode(ctx, opcode));
@@ -826,7 +852,6 @@ static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
 static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
   const char* opcode_name = s_opcode_name[opcode];
-  LOGF("%3" PRIzd ": %s\n", ctx->expr_stack.size, opcode_name);
   WasmType right = pop_expr(ctx);
   WasmType left = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, s_opcode_type1[opcode], left, opcode_name));
@@ -838,7 +863,6 @@ static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
 
 static WasmResult on_block_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": block\n", ctx->expr_stack.size);
   push_label(ctx, LABEL_TYPE_BLOCK, WASM_TYPE_ANY, WASM_INVALID_OFFSET,
              WASM_INVALID_OFFSET);
   return WASM_OK;
@@ -846,7 +870,6 @@ static WasmResult on_block_expr(void* user_data) {
 
 static WasmResult on_loop_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": loop\n", ctx->expr_stack.size);
   push_label(ctx, LABEL_TYPE_LOOP, WASM_TYPE_VOID, get_istream_offset(ctx),
              WASM_INVALID_OFFSET);
   return WASM_OK;
@@ -854,7 +877,6 @@ static WasmResult on_loop_expr(void* user_data) {
 
 static WasmResult on_if_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": if\n", ctx->expr_stack.size);
   WasmType cond = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, cond, "if"));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_UNLESS));
@@ -867,7 +889,6 @@ static WasmResult on_if_expr(void* user_data) {
 
 static WasmResult on_else_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": else\n", ctx->expr_stack.size);
   Label* label = top_label(ctx);
   if (!label || label->label_type != LABEL_TYPE_IF) {
     print_error(ctx, "unexpected else operator");
@@ -875,7 +896,7 @@ static WasmResult on_else_expr(void* user_data) {
   }
 
   WasmType top_type;
-  CHECK_RESULT(check_end(ctx, &top_type));
+  CHECK_RESULT(check_end(ctx, &top_type, 0));
   CHECK_RESULT(
       unify_and_check_type(ctx, &label->type, top_type, "if true branch"));
 
@@ -892,7 +913,6 @@ static WasmResult on_else_expr(void* user_data) {
 
 static WasmResult on_end_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": end\n", ctx->expr_stack.size);
   Label* label = top_label(ctx);
   if (!label || label->label_type == LABEL_TYPE_FUNC) {
     print_error(ctx, "unexpected end operator");
@@ -903,9 +923,12 @@ static WasmResult on_end_expr(void* user_data) {
     label->type = WASM_TYPE_VOID;
 
   WasmType top_type;
-  CHECK_RESULT(check_end(ctx, &top_type));
-  CHECK_RESULT(unify_and_check_type(ctx, &label->type, top_type,
-                                    s_label_type_name[label->label_type]));
+  CHECK_RESULT(check_end(ctx, &top_type, 0));
+  if (label->label_type != LABEL_TYPE_LOOP) {
+    CHECK_RESULT(unify_and_check_type(ctx, &label->type, top_type,
+                                      s_label_type_name[label->label_type]));
+    top_type = label->type;
+  }
 
   if (label->label_type == LABEL_TYPE_IF ||
       label->label_type == LABEL_TYPE_ELSE) {
@@ -916,13 +939,12 @@ static WasmResult on_end_expr(void* user_data) {
   fixup_top_label(ctx, get_istream_offset(ctx));
   ctx->expr_stack.size = label->expr_stack_size;
   pop_label(ctx);
-  push_expr(ctx, label->type, WASM_OPCODE_END);
+  push_expr(ctx, top_type, WASM_OPCODE_END);
   return WASM_OK;
 }
 
 static WasmResult on_br_expr(uint8_t arity, uint32_t depth, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": br\n", ctx->expr_stack.size);
   WasmType value = top_expr_if(ctx, arity > 0);
   CHECK_DEPTH(ctx, depth);
   depth = translate_depth(ctx, depth);
@@ -937,7 +959,6 @@ static WasmResult on_br_if_expr(uint8_t arity,
                                 uint32_t depth,
                                 void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": br_if\n", ctx->expr_stack.size);
   WasmType cond = pop_expr(ctx);
   WasmType value = top_expr_if(ctx, arity > 0);
   CHECK_DEPTH(ctx, depth);
@@ -953,8 +974,10 @@ static WasmResult on_br_if_expr(uint8_t arity,
   CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset, get_istream_offset(ctx)));
   /* clean up the value (if any), when the branch isn't taken */
   CHECK_RESULT(emit_drop_keep(ctx, arity, 0));
-  ctx->expr_stack.size -= arity;
-  push_expr(ctx, WASM_TYPE_VOID, WASM_OPCODE_BR_IF);
+  /* don't pop the top expr from the stack if it is ANY; we want that to
+   * propagate through */
+  if (!top_expr_is_any(ctx))
+    ctx->expr_stack.size -= arity;
   return WASM_OK;
 }
 
@@ -964,7 +987,6 @@ static WasmResult on_br_table_expr(uint8_t arity,
                                    uint32_t default_target_depth,
                                    void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": br_table\n", ctx->expr_stack.size);
   WasmType key = pop_expr(ctx);
   WasmType value = top_expr_if(ctx, arity > 0);
   CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, key, "br_table"));
@@ -994,7 +1016,6 @@ static WasmResult on_br_table_expr(uint8_t arity,
 
 static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": call\n", ctx->expr_stack.size);
   assert(func_index < ctx->funcs.size);
   InterpreterFunc* func = get_func(ctx, func_index);
   WasmInterpreterFuncSignature* sig = get_func_signature(ctx, func);
@@ -1013,7 +1034,6 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
 
 static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": call_import\n", ctx->expr_stack.size);
   assert(import_index < ctx->module->imports.size);
   WasmInterpreterImport* import = get_import(ctx, import_index);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, import->sig_index);
@@ -1033,7 +1053,6 @@ static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
 
 static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": call_indirect\n", ctx->expr_stack.size);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, sig_index);
   WasmType entry_index = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, entry_index, "call_indirect"));
@@ -1053,7 +1072,6 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
 
 static WasmResult on_drop_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": drop\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_DROP));
   pop_expr(ctx);
   return WASM_OK;
@@ -1061,7 +1079,6 @@ static WasmResult on_drop_expr(void* user_data) {
 
 static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": i32.const\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I32_CONST));
   CHECK_RESULT(emit_i32(ctx, value));
   push_expr(ctx, WASM_TYPE_I32, WASM_OPCODE_I32_CONST);
@@ -1070,7 +1087,6 @@ static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
 
 static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": i64.const\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_I64_CONST));
   CHECK_RESULT(emit_i64(ctx, value));
   push_expr(ctx, WASM_TYPE_I64, WASM_OPCODE_I64_CONST);
@@ -1079,7 +1095,6 @@ static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
 
 static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": f32.const\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_F32_CONST));
   CHECK_RESULT(emit_i32(ctx, value_bits));
   push_expr(ctx, WASM_TYPE_F32, WASM_OPCODE_F32_CONST);
@@ -1088,7 +1103,6 @@ static WasmResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
 
 static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": f64.const\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_F64_CONST));
   CHECK_RESULT(emit_i64(ctx, value_bits));
   push_expr(ctx, WASM_TYPE_F64, WASM_OPCODE_F64_CONST);
@@ -1097,7 +1111,6 @@ static WasmResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
 
 static WasmResult on_get_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": get_global\n", ctx->expr_stack.size);
   CHECK_GLOBAL(ctx, global_index);
   WasmType type = get_global_index_type(ctx, global_index);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_GET_GLOBAL));
@@ -1108,7 +1121,6 @@ static WasmResult on_get_global_expr(uint32_t global_index, void* user_data) {
 
 static WasmResult on_set_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": set_global\n", ctx->expr_stack.size);
   CHECK_GLOBAL(ctx, global_index);
   WasmType type = get_global_index_type(ctx, global_index);
   WasmType value = pop_expr(ctx);
@@ -1120,7 +1132,6 @@ static WasmResult on_set_global_expr(uint32_t global_index, void* user_data) {
 
 static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": get_local\n", ctx->expr_stack.size);
   CHECK_LOCAL(ctx, local_index);
   WasmType type = get_local_index_type(ctx->current_func, local_index);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_GET_LOCAL));
@@ -1131,7 +1142,6 @@ static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
 
 static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": set_local\n", ctx->expr_stack.size);
   CHECK_LOCAL(ctx, local_index);
   WasmType type = get_local_index_type(ctx->current_func, local_index);
   WasmType value = pop_expr(ctx);
@@ -1143,10 +1153,9 @@ static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
 
 static WasmResult on_tee_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": tee_local\n", ctx->expr_stack.size);
   CHECK_LOCAL(ctx, local_index);
   WasmType type = get_local_index_type(ctx->current_func, local_index);
-  WasmType value = pop_expr(ctx);
+  WasmType value = top_expr(ctx);
   CHECK_RESULT(check_type(ctx, type, value, "tee_local"));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_TEE_LOCAL));
   CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
@@ -1155,7 +1164,6 @@ static WasmResult on_tee_local_expr(uint32_t local_index, void* user_data) {
 
 static WasmResult on_grow_memory_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": grow_memory\n", ctx->expr_stack.size);
   WasmType value = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, value, "grow_memory"));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_GROW_MEMORY));
@@ -1168,7 +1176,6 @@ static WasmResult on_load_expr(WasmOpcode opcode,
                                uint32_t offset,
                                void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": %s\n", ctx->expr_stack.size, s_opcode_name[opcode]);
   WasmType addr = pop_expr(ctx);
   CHECK_RESULT(check_type(ctx, WASM_TYPE_I32, addr, s_opcode_name[opcode]));
   CHECK_RESULT(emit_opcode(ctx, opcode));
@@ -1182,7 +1189,6 @@ static WasmResult on_store_expr(WasmOpcode opcode,
                                 uint32_t offset,
                                 void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": %s\n", ctx->expr_stack.size, s_opcode_name[opcode]);
   WasmType value = pop_expr(ctx);
   WasmType addr = pop_expr(ctx);
   WasmType type = s_opcode_rtype[opcode];
@@ -1196,7 +1202,6 @@ static WasmResult on_store_expr(WasmOpcode opcode,
 
 static WasmResult on_current_memory_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": current_memory\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CURRENT_MEMORY));
   push_expr(ctx, WASM_TYPE_I32, WASM_OPCODE_CURRENT_MEMORY);
   return WASM_OK;
@@ -1205,27 +1210,25 @@ static WasmResult on_current_memory_expr(void* user_data) {
 static WasmResult on_nop_expr(void* user_data) {
   Context* ctx = user_data;
   WASM_USE(ctx);
-  LOGF("%3" PRIzd ": nop\n", ctx->expr_stack.size);
   return WASM_OK;
 }
 
 static WasmResult on_return_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": return\n", ctx->expr_stack.size);
   WasmInterpreterFuncSignature* sig =
       get_func_signature(ctx, ctx->current_func);
   if (get_value_count(sig->result_type)) {
     WasmType value = top_expr(ctx);
     CHECK_RESULT(check_type(ctx, sig->result_type, value, "return"));
   }
-  CHECK_RESULT(emit_return(ctx, sig->result_type));
+  CHECK_RESULT(drop_exprs_for_return(ctx, sig->result_type));
+  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_RETURN));
   push_expr(ctx, WASM_TYPE_ANY, WASM_OPCODE_RETURN);
   return WASM_OK;
 }
 
 static WasmResult on_select_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": select\n", ctx->expr_stack.size);
   WasmType cond = pop_expr(ctx);
   WasmType right = pop_expr(ctx);
   WasmType left = pop_expr(ctx);
@@ -1240,7 +1243,6 @@ static WasmResult on_select_expr(void* user_data) {
 
 static WasmResult on_unreachable_expr(void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": unreachable\n", ctx->expr_stack.size);
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_UNREACHABLE));
   push_expr(ctx, WASM_TYPE_ANY, WASM_OPCODE_UNREACHABLE);
   return WASM_OK;
