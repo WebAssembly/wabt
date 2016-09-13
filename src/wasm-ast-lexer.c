@@ -239,6 +239,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "f32"                 { TYPE(F32); RETURN(VALUE_TYPE); }
     <i> "f64"                 { TYPE(F64); RETURN(VALUE_TYPE); }
     <i> "anyfunc"             { RETURN(ANYFUNC); }
+    <i> "mut"                 { RETURN(MUT); }
     <i> "nop"                 { RETURN(NOP); }
     <i> "block"               { RETURN(BLOCK); }
     <i> "if"                  { RETURN(IF); }
@@ -431,11 +432,16 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "offset"              { RETURN(OFFSET); }
     <i> "import"              { RETURN(IMPORT); }
     <i> "export"              { RETURN(EXPORT); }
+    <i> "register"            { RETURN(REGISTER); }
+    <i> "invoke"              { RETURN(INVOKE); }
+    <i> "get"                 { RETURN(GET); }
     <i> "assert_invalid"      { RETURN(ASSERT_INVALID); }
+    <i> "assert_unlinkable"   { RETURN(ASSERT_UNLINKABLE); }
     <i> "assert_return"       { RETURN(ASSERT_RETURN); }
     <i> "assert_return_nan"   { RETURN(ASSERT_RETURN_NAN); }
     <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
-    <i> "invoke"              { RETURN(INVOKE); }
+    <i> "input"               { RETURN(INPUT); }
+    <i> "output"              { RETURN(OUTPUT); }
     <i> name                  { TEXT; RETURN(VAR); }
 
     <i> ";;" => LINE_COMMENT  { continue; }
