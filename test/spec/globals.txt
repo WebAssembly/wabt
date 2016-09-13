@@ -2,11 +2,11 @@
 ;;; STDIN_FILE: third_party/testsuite/globals.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/globals.wast:36:11: invalid global initializer expression. Must be *.const or get_global.
+  third_party/testsuite/globals.wast:36:11: invalid global initializer expression, must be a constant expression; either *.const or get_global.
   (module (global f32 (f32.neg (f32.const 0))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:41:11: invalid global initializer expression. Must be *.const or get_global.
+  third_party/testsuite/globals.wast:41:11: invalid global initializer expression, must be a constant expression; either *.const or get_global.
   (module (global f32 (get_local 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:

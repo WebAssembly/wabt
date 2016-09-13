@@ -891,6 +891,8 @@ static void check_func(Context* ctx,
   if (wasm_get_result_type(ctx->current_module, func) == WASM_TYPE_MULTIPLE) {
     print_error(ctx, CHECK_STYLE_FULL, loc,
                 "multiple result values not currently supported.");
+    /* don't run any other checks, the won't test the result_type properly */
+    return;
   }
   if (wasm_decl_has_func_type(&func->decl)) {
     const WasmFuncType* func_type;
@@ -914,6 +916,15 @@ static void check_func(Context* ctx,
             func->decl.sig.result_type, "function signature result type");
   pop_label(ctx);
   ctx->current_func = NULL;
+}
+
+static void print_const_expr_error(Context* ctx,
+                                   const WasmLocation* loc,
+                                   const char* desc) {
+  print_error(ctx, CHECK_STYLE_FULL, loc,
+              "invalid %s, must be a constant expression; either *.const or "
+              "get_global.",
+              desc);
 }
 
 static WasmResult eval_const_expr_i32(Context* ctx,
@@ -955,11 +966,7 @@ static WasmResult eval_const_expr_i32(Context* ctx,
 
     invalid_expr:
     default:
-      print_error(
-          ctx, CHECK_STYLE_FULL, &expr->loc,
-          "invalid %s, must be a constant expression; either *.const or "
-          "get_global.",
-          desc);
+      print_const_expr_error(ctx, &expr->loc, desc);
       return WASM_ERROR;
   }
 }
@@ -968,47 +975,44 @@ static void check_global(Context* ctx,
                          const WasmLocation* loc,
                          const WasmGlobal* global,
                          int global_index) {
+  static const char s_desc[] = "global initializer expression";
   WasmCheckType type = WASM_CHECK_TYPE_VOID;
-  WasmBool invalid_expr = WASM_TRUE;
   WasmExpr* expr = global->init_expr;
 
-  if (expr->next == NULL) {
-    switch (expr->type) {
-      case WASM_EXPR_TYPE_CONST:
-        type = expr->const_.type;
-        invalid_expr = WASM_FALSE;
-        break;
+  if (expr->next != NULL) {
+    print_const_expr_error(ctx, loc, s_desc);
+    return;
+  }
 
-      case WASM_EXPR_TYPE_GET_GLOBAL: {
-        const WasmGlobal* ref_global = NULL;
-        int ref_global_index;
-        if (WASM_SUCCEEDED(check_global_var(ctx, &expr->get_global.var,
-                                            &ref_global, &ref_global_index))) {
-          type = ref_global->type;
-          /* globals can only reference previously defined globals */
-          if (ref_global_index >= global_index) {
-            print_error(ctx, CHECK_STYLE_FULL, loc,
-                        "global can only be defined in terms of a previously "
-                        "defined global.");
-          }
-        }
-        invalid_expr = WASM_FALSE;
-        break;
+  switch (expr->type) {
+    case WASM_EXPR_TYPE_CONST:
+      type = expr->const_.type;
+      break;
+
+    case WASM_EXPR_TYPE_GET_GLOBAL: {
+      const WasmGlobal* ref_global = NULL;
+      int ref_global_index;
+      if (WASM_FAILED(check_global_var(ctx, &expr->get_global.var, &ref_global,
+                                       &ref_global_index))) {
+        return;
       }
 
-      default:
-        break;
+      type = ref_global->type;
+      /* globals can only reference previously defined globals */
+      if (ref_global_index >= global_index) {
+        print_error(ctx, CHECK_STYLE_FULL, loc,
+                    "global can only be defined in terms of a previously "
+                    "defined global.");
+      }
+      break;
     }
+
+    default:
+      print_const_expr_error(ctx, loc, s_desc);
+      return;
   }
 
-  if (invalid_expr) {
-    print_error(ctx, CHECK_STYLE_FULL, loc,
-                "invalid global initializer expression. Must be *.const or "
-                "get_global.");
-  } else {
-    check_type(ctx, &expr->loc, type, global->type,
-               "global initializer expression");
-  }
+  check_type(ctx, &expr->loc, type, global->type, s_desc);
 }
 
 static void check_import(Context* ctx,

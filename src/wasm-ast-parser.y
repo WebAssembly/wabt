@@ -598,11 +598,7 @@ expr1 :
       // split_var_list_as_br_table_targets(expr, $2);
       $$ = join_exprs3(&@1, &$4, &$5, expr);
     }
-  | RETURN {
-      WasmExpr* expr = wasm_new_return_expr(parser->allocator);
-      $$ = join_exprs1(&@1, expr);
-    }
-  | RETURN expr {
+  | RETURN expr_list {
       WasmExpr* expr = wasm_new_return_expr(parser->allocator);
       $$ = join_exprs2(&@1, &$2, expr);
     }

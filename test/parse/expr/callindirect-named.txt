@@ -1,3 +1,4 @@
 (module
+  (table anyfunc (elem 0))
   (type $t (func (param i32)))
   (func $g (call_indirect $t (i32.const 0) (i32.const 0))))
