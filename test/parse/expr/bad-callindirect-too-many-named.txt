@@ -1,10 +1,11 @@
 ;;; ERROR: 1
 (module
+  (table anyfunc (elem 0))
   (type $t (func (param i32 i32)))
   (func $baz
     (call_indirect $t (i32.const 0) (i32.const 1) (i32.const 2) (i32.const 3))))
 (;; STDERR ;;;
-parse/expr/bad-callindirect-too-many-named.txt:4:3: unable to join type i32 (type of last operation) with type void (function signature result type).
+parse/expr/bad-callindirect-too-many-named.txt:5:3: unable to join type i32 (type of last operation) with type void (function signature result type).
   (func $baz
   ^^^^^^^^^^
 ;;; STDERR ;;)

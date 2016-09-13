@@ -140,7 +140,7 @@ def Hexdump(data):
     while p < line_end:
       for i in xrange(DUMP_OCTETS_PER_GROUP):
         if p < end:
-          line += '%02x' % ord(data[p])
+          line += '%02x' % data[p]
         else:
           line += '  '
         p += 1
@@ -151,8 +151,7 @@ def Hexdump(data):
       if p >= end:
         break
       x = data[p]
-      o = ord(x)
-      if o >= 32 and o < 0x7f:
+      if x >= 32 and x < 0x7f:
         line += '%c' % x
       else:
         line += '.'
