@@ -71,9 +71,16 @@ void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
   va_end(args_copy);
 }
 
+void wasm_destroy_optional_export(WasmAllocator* allocator,
+                                  WasmOptionalExport* export_) {
+  if (export_->has_export)
+    wasm_destroy_export(allocator, &export_->export_);
+}
+
 void wasm_destroy_exported_func(WasmAllocator* allocator,
                                 WasmExportedFunc* exported_func) {
-  wasm_destroy_export(allocator, &exported_func->export_);
+  wasm_destroy_optional_export(allocator, &exported_func->export_);
+  wasm_destroy_func(allocator, exported_func->func);
   wasm_free(allocator, exported_func->func);
 }
 
@@ -115,14 +122,18 @@ void wasm_destroy_func_fields(struct WasmAllocator* allocator,
   }
 }
 
-void wasm_destroy_memory_data_segment_pair(WasmAllocator* allocator,
-                                           WasmMemoryDataSegmentPair* pair) {
-  if (pair->has_data_segment)
-    wasm_destroy_data_segment(allocator, &pair->data_segment);
+void wasm_destroy_exported_memory(WasmAllocator* allocator,
+                                  WasmExportedMemory* memory) {
+  wasm_destroy_memory(allocator, &memory->memory);
+  wasm_destroy_optional_export(allocator, &memory->export_);
+  if (memory->has_data_segment)
+    wasm_destroy_data_segment(allocator, &memory->data_segment);
 }
 
-void wasm_destroy_table_elem_segment_pair(WasmAllocator* allocator,
-                                          WasmTableElemSegmentPair* pair) {
-  if (pair->has_elem_segment)
-    wasm_destroy_elem_segment(allocator, &pair->elem_segment);
+void wasm_destroy_exported_table(WasmAllocator* allocator,
+                                 WasmExportedTable* table) {
+  wasm_destroy_table(allocator, &table->table);
+  wasm_destroy_optional_export(allocator, &table->export_);
+  if (table->has_elem_segment)
+    wasm_destroy_elem_segment(allocator, &table->elem_segment);
 }
