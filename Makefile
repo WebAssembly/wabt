@@ -142,7 +142,7 @@ update-bison: src/prebuilt/wasm-ast-parser-gen.c
 update-re2c: src/prebuilt/wasm-ast-lexer-gen.c
 
 src/prebuilt/wasm-ast-parser-gen.c: src/wasm-ast-parser.y
-	bison -o $@ $< --defines=src/prebuilt/wasm-ast-parser-gen.h
+	bison -o $@ $< --defines=src/prebuilt/wasm-ast-parser-gen.h --report=state
 
 src/prebuilt/wasm-ast-lexer-gen.c: src/wasm-ast-lexer.c
 	re2c --no-generation-date -bc -o $@ $<
