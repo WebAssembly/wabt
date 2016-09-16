@@ -89,9 +89,9 @@
 0000086: 0000 0000 00                               ; func body size (guess)
 000008b: 00                                         ; local decl count
 000008c: 14                                         ; OPCODE_GET_LOCAL
-000008d: 00                                         ; remapped local index
+000008d: 00                                         ; local index
 000008e: 14                                         ; OPCODE_GET_LOCAL
-000008f: 01                                         ; remapped local index
+000008f: 01                                         ; local index
 0000090: 17                                         ; OPCODE_CALL_INDIRECT
 0000091: 01                                         ; call_indirect arity
 0000092: 01                                         ; signature index
@@ -100,7 +100,7 @@
 0000093: 0000 0000 00                               ; func body size (guess)
 0000098: 00                                         ; local decl count
 0000099: 14                                         ; OPCODE_GET_LOCAL
-000009a: 00                                         ; remapped local index
+000009a: 00                                         ; local index
 000009b: 10                                         ; OPCODE_I32_CONST
 000009c: 01                                         ; i32 literal
 000009d: 40                                         ; OPCODE_I32_ADD
@@ -109,7 +109,7 @@
 000009e: 0000 0000 00                               ; func body size (guess)
 00000a3: 00                                         ; local decl count
 00000a4: 14                                         ; OPCODE_GET_LOCAL
-00000a5: 00                                         ; remapped local index
+00000a5: 00                                         ; local index
 00000a6: 10                                         ; OPCODE_I32_CONST
 00000a7: 02                                         ; i32 literal
 00000a8: 42                                         ; OPCODE_I32_MUL

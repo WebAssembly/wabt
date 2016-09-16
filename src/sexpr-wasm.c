@@ -66,7 +66,6 @@ enum {
   FLAG_SPEC,
   FLAG_USE_LIBC_ALLOCATOR,
   FLAG_NO_CANONICALIZE_LEB128S,
-  FLAG_NO_REMAP_LOCALS,
   FLAG_DEBUG_NAMES,
   FLAG_NO_CHECK,
   FLAG_NO_CHECK_ASSERT_INVALID,
@@ -107,10 +106,6 @@ static WasmOption s_options[] = {
      "use malloc, free, etc. instead of stack allocator"},
     {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", NULL, NOPE,
      "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
-    {FLAG_NO_REMAP_LOCALS, 0, "no-remap-locals", NULL, NOPE,
-     "If set, function locals are written in source order, instead of "
-     "packing "
-     "them to reduce size"},
     {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
      "Write debug names to the generated binary file"},
     {FLAG_NO_CHECK, 0, "no-check", NULL, NOPE,
@@ -154,10 +149,6 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_NO_CANONICALIZE_LEB128S:
       s_write_binary_options.canonicalize_lebs = WASM_FALSE;
-      break;
-
-    case FLAG_NO_REMAP_LOCALS:
-      s_write_binary_options.remap_locals = WASM_FALSE;
       break;
 
     case FLAG_DEBUG_NAMES:

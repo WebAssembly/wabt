@@ -41,7 +41,7 @@
 0000031: 00                                         ; func body size (guess)
 0000032: 00                                         ; local decl count
 0000033: 14                                         ; OPCODE_GET_LOCAL
-0000034: 00                                         ; remapped local index
+0000034: 00                                         ; local index
 0000035: 39                                         ; OPCODE_GROW_MEMORY
 0000031: 04                                         ; FIXUP func body size
 000002f: 06                                         ; FIXUP section size

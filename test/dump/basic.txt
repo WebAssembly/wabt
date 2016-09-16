@@ -67,9 +67,9 @@
 000004c: 02                                         ; alignment
 000004d: 00                                         ; store offset
 000004e: 14                                         ; OPCODE_GET_LOCAL
-000004f: 00                                         ; remapped local index
+000004f: 00                                         ; local index
 0000050: 14                                         ; OPCODE_GET_LOCAL
-0000051: 01                                         ; remapped local index
+0000051: 01                                         ; local index
 0000052: 40                                         ; OPCODE_I32_ADD
 000003f: 13                                         ; FIXUP func body size
 000003d: 15                                         ; FIXUP section size

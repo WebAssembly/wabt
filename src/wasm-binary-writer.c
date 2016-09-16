@@ -69,9 +69,6 @@ typedef struct Context {
 
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
-
-  uint32_t* remapped_locals;         /* from unpacked -> packed index */
-  uint32_t* reverse_remapped_locals; /* from packed -> unpacked index */
 } Context;
 
 static void write_header(Context* ctx, const char* name, int index) {
@@ -295,60 +292,6 @@ static void pop_label(Context* ctx, const WasmLabel* label) {
   pop_unused_label(ctx, label);
 }
 
-static void remap_locals(Context* ctx,
-                         const WasmModule* module,
-                         const WasmFunc* func) {
-  uint32_t i;
-  uint32_t num_params = wasm_get_num_params(module, func);
-  uint32_t num_locals = func->local_types.size;
-  uint32_t num_params_and_locals = num_params + num_locals;
-  ctx->remapped_locals = wasm_realloc(ctx->allocator, ctx->remapped_locals,
-                                      num_params_and_locals * sizeof(uint32_t),
-                                      WASM_DEFAULT_ALIGN);
-
-  ctx->reverse_remapped_locals = wasm_realloc(
-      ctx->allocator, ctx->reverse_remapped_locals,
-      num_params_and_locals * sizeof(uint32_t), WASM_DEFAULT_ALIGN);
-
-  if (!ctx->options->remap_locals) {
-    /* just pass the index straight through */
-    for (i = 0; i < num_params_and_locals; ++i)
-      ctx->remapped_locals[i] = i;
-    for (i = 0; i < num_params_and_locals; ++i)
-      ctx->reverse_remapped_locals[i] = i;
-    return;
-  }
-
-  uint32_t max[WASM_NUM_TYPES];
-  WASM_ZERO_MEMORY(max);
-  for (i = 0; i < num_locals; ++i) {
-    WasmType type = func->local_types.data[i];
-    max[type]++;
-  }
-
-  /* params don't need remapping */
-  for (i = 0; i < num_params; ++i) {
-    ctx->remapped_locals[i] = i;
-    ctx->reverse_remapped_locals[i] = i;
-  }
-
-  uint32_t start[WASM_NUM_TYPES];
-  start[WASM_TYPE_I32] = num_params;
-  start[WASM_TYPE_I64] = start[WASM_TYPE_I32] + max[WASM_TYPE_I32];
-  start[WASM_TYPE_F32] = start[WASM_TYPE_I64] + max[WASM_TYPE_I64];
-  start[WASM_TYPE_F64] = start[WASM_TYPE_F32] + max[WASM_TYPE_F32];
-
-  uint32_t seen[WASM_NUM_TYPES];
-  WASM_ZERO_MEMORY(seen);
-  for (i = 0; i < num_locals; ++i) {
-    WasmType type = func->local_types.data[i];
-    uint32_t unpacked_index = num_params + i;
-    uint32_t packed_index = start[type] + seen[type]++;
-    ctx->remapped_locals[unpacked_index] = packed_index;
-    ctx->reverse_remapped_locals[packed_index] = unpacked_index;
-  }
-}
-
 static void write_expr_list(Context* ctx,
                             const WasmModule* module,
                             const WasmFunc* func,
@@ -490,8 +433,7 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_GET_LOCAL: {
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       write_opcode(&ctx->stream, WASM_OPCODE_GET_LOCAL);
-      write_u32_leb128(&ctx->stream, ctx->remapped_locals[index],
-                       "remapped local index");
+      write_u32_leb128(&ctx->stream, index, "local index");
       break;
     }
     case WASM_EXPR_TYPE_GROW_MEMORY:
@@ -567,8 +509,7 @@ static void write_expr(Context* ctx,
       int index = wasm_get_local_index_by_var(func, &expr->get_local.var);
       write_expr(ctx, module, func, expr->set_local.expr);
       write_opcode(&ctx->stream, WASM_OPCODE_SET_LOCAL);
-      write_u32_leb128(&ctx->stream, ctx->remapped_locals[index],
-                       "remapped local index");
+      write_u32_leb128(&ctx->stream, index, "local index");
       break;
     }
     case WASM_EXPR_TYPE_STORE: {
@@ -618,8 +559,6 @@ static void write_func_locals(Context* ctx,
                               const WasmModule* module,
                               const WasmFunc* func,
                               const WasmTypeVector* local_types) {
-  remap_locals(ctx, module, func);
-
   if (local_types->size == 0) {
     write_u32_leb128(&ctx->stream, 0, "local decl count");
     return;
@@ -629,8 +568,7 @@ static void write_func_locals(Context* ctx,
 
 #define FIRST_LOCAL_INDEX (num_params)
 #define LAST_LOCAL_INDEX (num_params + local_types->size)
-#define GET_LOCAL_TYPE(x) \
-  (local_types->data[ctx->reverse_remapped_locals[x] - num_params])
+#define GET_LOCAL_TYPE(x) (local_types->data[x - num_params])
 
   /* loop through once to count the number of local declaration runs */
   WasmType current_type = GET_LOCAL_TYPE(FIRST_LOCAL_INDEX);
@@ -843,14 +781,13 @@ static void write_module(Context* ctx, const WasmModule* module) {
       write_u32_leb128(&ctx->stream, num_params_and_locals, "num locals");
 
       if (num_params_and_locals) {
-        remap_locals(ctx, module, func);
         wasm_make_type_binding_reverse_mapping(
             ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
             &index_to_name);
         size_t j;
         for (j = 0; j < num_params; ++j) {
           WasmStringSlice name = index_to_name.data[j];
-          wasm_snprintf(desc, sizeof(desc), "remapped local name %" PRIzd, j);
+          wasm_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
           write_str(&ctx->stream, name.start, name.length, WASM_PRINT_CHARS,
                     desc);
         }
@@ -859,10 +796,8 @@ static void write_module(Context* ctx, const WasmModule* module) {
             ctx->allocator, &func->local_types, &func->local_bindings,
             &index_to_name);
         for (j = 0; j < num_locals; ++j) {
-          WasmStringSlice name =
-              index_to_name.data[ctx->reverse_remapped_locals[num_params + j] -
-                                 num_params];
-          wasm_snprintf(desc, sizeof(desc), "remapped local name %" PRIzd,
+          WasmStringSlice name = index_to_name.data[j];
+          wasm_snprintf(desc, sizeof(desc), "local name %" PRIzd,
                         num_params + j);
           write_str(&ctx->stream, name.start, name.length, WASM_PRINT_CHARS,
                     desc);
@@ -895,11 +830,6 @@ static void write_commands(Context* ctx, const WasmScript* script) {
   }
 }
 
-static void cleanup_context(Context* ctx) {
-  wasm_free(ctx->allocator, ctx->remapped_locals);
-  wasm_free(ctx->allocator, ctx->reverse_remapped_locals);
-}
-
 WasmResult wasm_write_binary_module(WasmAllocator* allocator,
                                     WasmWriter* writer,
                                     const WasmModule* module,
@@ -910,10 +840,7 @@ WasmResult wasm_write_binary_module(WasmAllocator* allocator,
   ctx.options = options;
   ctx.log_stream = options->log_stream;
   wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
-
   write_module(&ctx, module);
-
-  cleanup_context(&ctx);
   return ctx.stream.result;
 }
 
@@ -927,9 +854,6 @@ WasmResult wasm_write_binary_script(WasmAllocator* allocator,
   ctx.options = options;
   ctx.log_stream = options->log_stream;
   wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
-
   write_commands(&ctx, script);
-
-  cleanup_context(&ctx);
   return ctx.stream.result;
 }
