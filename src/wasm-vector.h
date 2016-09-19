@@ -80,12 +80,12 @@
   }                                                                            \
   void wasm_resize_##name##_vector(struct WasmAllocator* allocator,            \
                                    type##Vector* vec, size_t size) {           \
-    wasm_resize_vector(allocator, (void**) & vec->data, &vec->size,            \
+    wasm_resize_vector(allocator, (void**)&vec->data, &vec->size,              \
                        &vec->capacity, size, sizeof(type));                    \
   }                                                                            \
   void wasm_reserve_##name##s(struct WasmAllocator* allocator,                 \
                               type##Vector* vec, size_t desired) {             \
-    wasm_ensure_capacity(allocator, (void**) & vec->data, &vec->capacity,      \
+    wasm_ensure_capacity(allocator, (void**)&vec->data, &vec->capacity,        \
                          desired, sizeof(type));                               \
   }                                                                            \
   type* wasm_append_##name(struct WasmAllocator* allocator,                    \
@@ -100,7 +100,7 @@
   }                                                                            \
   void wasm_extend_##name##s(struct WasmAllocator* allocator,                  \
                              type##Vector* dst, const type##Vector* src) {     \
-    wasm_extend_elements(allocator, (void**) & dst->data, &dst->size,          \
+    wasm_extend_elements(allocator, (void**)&dst->data, &dst->size,            \
                          &dst->capacity, (const void**)&src->data, src->size,  \
                          sizeof(type));                                        \
   }

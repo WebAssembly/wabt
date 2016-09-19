@@ -53,6 +53,10 @@ WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+#define V(NAME, code) [code] = #NAME,
+static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
+#undef V
+
 typedef struct WasmLabelNode {
   const WasmLabel* label;
   int depth;
@@ -227,16 +231,39 @@ static void write_opcode(WasmStream* stream, uint8_t opcode) {
   wasm_write_u8(stream, opcode, s_opcode_name[opcode]);
 }
 
-static void begin_section(Context* ctx,
-                          const char* name,
-                          size_t leb_size_guess) {
+static void write_inline_signature_type(WasmStream* stream,
+                                        const WasmBlockSignature* sig) {
+  if (sig->size == 0) {
+    wasm_write_u8(stream, 0, s_type_names[WASM_TYPE_VOID]);
+  } else if (sig->size == 1) {
+    wasm_write_u8(stream, sig->data[0], s_type_names[sig->data[0]]);
+  } else {
+    /* this is currently unrepresentable */
+    wasm_write_u8(stream, 0xff, "INVALID INLINE SIGNATURE");
+  }
+}
+
+static void begin_known_section(Context* ctx,
+                                WasmBinarySection section_code,
+                                size_t leb_size_guess) {
+  assert(ctx->last_section_leb_size_guess == 0);
+  char desc[100];
+  wasm_snprintf(desc, sizeof(desc), "section \"%s\" (%u)",
+                s_section_name[section_code], section_code);
+  write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
+  ctx->last_section_leb_size_guess = leb_size_guess;
+  ctx->last_section_offset =
+      write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
+}
+
+static void begin_user_section(Context* ctx,
+                               const char* name,
+                               size_t leb_size_guess) {
   assert(ctx->last_section_leb_size_guess == 0);
   char desc[100];
   wasm_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
   ctx->last_section_leb_size_guess = leb_size_guess;
-  wasm_snprintf(desc, sizeof(desc), "section id: \"%s\"", name);
-  write_str(&ctx->stream, name, strlen(name), WASM_DONT_PRINT_CHARS, desc);
   ctx->last_section_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
 }
@@ -308,6 +335,7 @@ static void write_expr(Context* ctx,
       WasmLabelNode node;
       push_label(ctx, &node, &expr->block.label);
       write_opcode(&ctx->stream, WASM_OPCODE_BLOCK);
+      write_inline_signature_type(&ctx->stream, &expr->block.sig);
       write_expr_list(ctx, module, func, expr->block.first);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       pop_label(ctx, &expr->block.label);
@@ -317,7 +345,6 @@ static void write_expr(Context* ctx,
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br.var);
       assert(node);
       write_opcode(&ctx->stream, WASM_OPCODE_BR);
-      wasm_write_u8(&ctx->stream, expr->br.arity, "br arity");
       write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
                        "break depth");
       break;
@@ -326,14 +353,12 @@ static void write_expr(Context* ctx,
       WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br_if.var);
       assert(node);
       write_opcode(&ctx->stream, WASM_OPCODE_BR_IF);
-      wasm_write_u8(&ctx->stream, expr->br_if.arity, "br_if arity");
       write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
                        "break depth");
       break;
     }
     case WASM_EXPR_TYPE_BR_TABLE: {
       write_opcode(&ctx->stream, WASM_OPCODE_BR_TABLE);
-      wasm_write_u8(&ctx->stream, expr->br_table.arity, "br_table arity");
       write_u32_leb128(&ctx->stream, expr->br_table.targets.size,
                        "num targets");
       size_t i;
@@ -354,13 +379,6 @@ static void write_expr(Context* ctx,
       assert(index >= 0 && (size_t)index < module->funcs.size);
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_FUNCTION);
       write_u32_leb128(&ctx->stream, index, "func index");
-      break;
-    }
-    case WASM_EXPR_TYPE_CALL_IMPORT: {
-      int index = wasm_get_import_index_by_var(module, &expr->call_import.var);
-      assert(index >= 0 && (size_t)index < module->imports.size);
-      write_opcode(&ctx->stream, WASM_OPCODE_CALL_IMPORT);
-      write_u32_leb128(&ctx->stream, index, "import index");
       break;
     }
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
@@ -426,22 +444,14 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_IF: {
       WasmLabelNode node;
       write_opcode(&ctx->stream, WASM_OPCODE_IF);
+      write_inline_signature_type(&ctx->stream, &expr->if_.true_.sig);
       push_label(ctx, &node, &expr->if_.true_.label);
       write_expr_list(ctx, module, func, expr->if_.true_.first);
+      if (expr->if_.false_) {
+        write_opcode(&ctx->stream, WASM_OPCODE_ELSE);
+        write_expr_list(ctx, module, func, expr->if_.false_);
+      }
       pop_label(ctx, &expr->if_.true_.label);
-      write_opcode(&ctx->stream, WASM_OPCODE_END);
-      break;
-    }
-    case WASM_EXPR_TYPE_IF_ELSE: {
-      WasmLabelNode node;
-      write_opcode(&ctx->stream, WASM_OPCODE_IF);
-      push_label(ctx, &node, &expr->if_else.true_.label);
-      write_expr_list(ctx, module, func, expr->if_else.true_.first);
-      pop_label(ctx, &expr->if_else.true_.label);
-      write_opcode(&ctx->stream, WASM_OPCODE_ELSE);
-      push_label(ctx, &node, &expr->if_else.false_.label);
-      write_expr_list(ctx, module, func, expr->if_else.false_.first);
-      pop_label(ctx, &expr->if_else.false_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       break;
     }
@@ -458,6 +468,7 @@ static void write_expr(Context* ctx,
       WasmLabelNode node;
       push_label(ctx, &node, &expr->loop.label);
       write_opcode(&ctx->stream, WASM_OPCODE_LOOP);
+      write_inline_signature_type(&ctx->stream, &expr->loop.sig);
       write_expr_list(ctx, module, func, expr->loop.first);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       pop_label(ctx, &expr->loop.label);
@@ -533,7 +544,7 @@ static void write_func_locals(Context* ctx,
     return;
   }
 
-  uint32_t num_params = wasm_get_num_params(module, func);
+  uint32_t num_params = wasm_get_num_params(func);
 
 #define FIRST_LOCAL_INDEX (num_params)
 #define LAST_LOCAL_INDEX (num_params + local_types->size)
@@ -580,6 +591,30 @@ static void write_func(Context* ctx,
   pop_label(ctx, &label);
 }
 
+static void write_table(Context* ctx, const WasmTable* table) {
+  const WasmLimits* limits = &table->elem_limits;
+  wasm_write_u8(&ctx->stream, WASM_BINARY_ELEM_TYPE_ANYFUNC, "table elem type");
+  uint32_t flags = limits->has_max ? WASM_BINARY_LIMITS_HAS_MAX_FLAG : 0;
+  write_u32_leb128(&ctx->stream, flags, "table flags");
+  write_u32_leb128(&ctx->stream, limits->initial, "table initial elems");
+  if (limits->has_max)
+    write_u32_leb128(&ctx->stream, limits->max, "table max elems");
+}
+
+static void write_memory(Context* ctx, const WasmMemory* memory) {
+  const WasmLimits* limits = &memory->page_limits;
+  uint32_t flags = limits->has_max ? WASM_BINARY_LIMITS_HAS_MAX_FLAG : 0;
+  write_u32_leb128(&ctx->stream, flags, "memory flags");
+  write_u32_leb128(&ctx->stream, limits->initial, "memory initial pages");
+  if (limits->has_max)
+    write_u32_leb128(&ctx->stream, limits->max, "memory max pages");
+}
+
+static void write_global_header(Context* ctx, const WasmGlobal* global) {
+  wasm_write_u8(&ctx->stream, global->type, s_type_names[global->type]);
+  wasm_write_u8(&ctx->stream, global->mutable_, "global mutability");
+}
+
 static void write_module(Context* ctx, const WasmModule* module) {
   /* TODO(binji): better leb size guess. Some sections we know will only be 1
    byte, but others we can be fairly certain will be larger. */
@@ -590,7 +625,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
   wasm_write_u32(&ctx->stream, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
 
   if (module->func_types.size) {
-    begin_section(ctx, WASM_SECTION_NAME_TYPE, leb_size_guess);
+    begin_known_section(ctx, WASM_BINARY_SECTION_TYPE, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->func_types.size, "num types");
     for (i = 0; i < module->func_types.size; ++i) {
       const WasmFuncType* func_type = module->func_types.data[i];
@@ -599,41 +634,56 @@ static void write_module(Context* ctx, const WasmModule* module) {
       wasm_write_u8(&ctx->stream, WASM_BINARY_TYPE_FORM_FUNCTION,
                     "function form");
 
-      uint32_t num_params = sig->param_types.size;
-      write_u32_leb128(&ctx->stream, num_params, "num params");
       size_t j;
+      uint32_t num_params = sig->param_types.size;
+      uint32_t num_results = sig->result_types.size;
+      write_u32_leb128(&ctx->stream, num_params, "num params");
       for (j = 0; j < num_params; ++j)
         wasm_write_u8(&ctx->stream, sig->param_types.data[j], "param type");
 
-      uint32_t num_results = sig->result_type == WASM_TYPE_VOID ? 0 : 1;
       write_u32_leb128(&ctx->stream, num_results, "num results");
-      if (num_results)
-        wasm_write_u8(&ctx->stream, sig->result_type, "result_type");
+      for (j = 0; j < num_params; ++j)
+        wasm_write_u8(&ctx->stream, sig->result_types.data[j], "result type");
     }
     end_section(ctx);
   }
 
   if (module->imports.size) {
-    begin_section(ctx, WASM_SECTION_NAME_IMPORT, leb_size_guess);
+    begin_known_section(ctx, WASM_BINARY_SECTION_IMPORT, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->imports.size, "num imports");
 
     for (i = 0; i < module->imports.size; ++i) {
       const WasmImport* import = module->imports.data[i];
       write_header(ctx, "import header", i);
-      write_u32_leb128(&ctx->stream,
-                       wasm_get_func_type_index_by_decl(module, &import->decl),
-                       "import signature index");
       write_str(&ctx->stream, import->module_name.start,
                 import->module_name.length, WASM_PRINT_CHARS,
                 "import module name");
-      write_str(&ctx->stream, import->func_name.start, import->func_name.length,
-                WASM_PRINT_CHARS, "import function name");
+      write_str(&ctx->stream, import->field_name.start,
+                import->field_name.length, WASM_PRINT_CHARS,
+                "import field name");
+      wasm_write_u8(&ctx->stream, import->kind, "import kind");
+      switch (import->kind) {
+        case WASM_EXTERNAL_KIND_FUNC:
+          write_u32_leb128(&ctx->stream, wasm_get_func_type_index_by_decl(
+                                             module, &import->func.decl),
+                           "import signature index");
+          break;
+        case WASM_EXTERNAL_KIND_TABLE:
+          write_table(ctx, &import->table);
+          break;
+        case WASM_EXTERNAL_KIND_MEMORY:
+          write_memory(ctx, &import->memory);
+          break;
+        case WASM_EXTERNAL_KIND_GLOBAL:
+          write_global_header(ctx, &import->global);
+          break;
+      }
     }
     end_section(ctx);
   }
 
   if (module->funcs.size) {
-    begin_section(ctx, WASM_SECTION_NAME_FUNCTION, leb_size_guess);
+    begin_known_section(ctx, WASM_BINARY_SECTION_FUNCTION, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
 
     for (i = 0; i < module->funcs.size; ++i) {
@@ -648,53 +698,52 @@ static void write_module(Context* ctx, const WasmModule* module) {
     end_section(ctx);
   }
 
-  if (module->table) {
-    begin_section(ctx, WASM_SECTION_NAME_TABLE, leb_size_guess);
-    WasmLimits* limits = &module->table->elem_limits;
-    wasm_write_u8(&ctx->stream, WASM_BINARY_ELEM_TYPE_ANYFUNC,
-                  "table elem type");
-    uint32_t flags = limits->has_max ? WASM_BINARY_LIMITS_HAS_MAX_FLAG : 0;
-    write_u32_leb128(&ctx->stream, flags, "table flags");
-    write_u32_leb128(&ctx->stream, limits->initial, "table initial elems");
-    if (limits->has_max)
-      write_u32_leb128(&ctx->stream, limits->max, "table max elems");
+  if (module->tables.size) {
+    begin_known_section(ctx, WASM_BINARY_SECTION_TABLE, leb_size_guess);
+    write_u32_leb128(&ctx->stream, module->tables.size, "num tables");
+    for (i = 0; i < module->tables.size; ++i) {
+      const WasmTable* table = module->tables.data[i];
+      write_header(ctx, "table", i);
+      write_table(ctx, table);
+    }
     end_section(ctx);
   }
 
-  if (module->memory) {
-    begin_section(ctx, WASM_SECTION_NAME_MEMORY, leb_size_guess);
-    WasmLimits* limits = &module->memory->page_limits;
-    uint32_t flags = limits->has_max ? WASM_BINARY_LIMITS_HAS_MAX_FLAG : 0;
-    write_u32_leb128(&ctx->stream, flags, "memory flags");
-    write_u32_leb128(&ctx->stream, limits->initial, "memory initial pages");
-    if (limits->has_max)
-      write_u32_leb128(&ctx->stream, limits->max, "memory max pages");
+  if (module->memories.size) {
+    begin_known_section(ctx, WASM_BINARY_SECTION_MEMORY, leb_size_guess);
+    write_u32_leb128(&ctx->stream, module->memories.size, "num memories");
+    for (i = 0; i < module->memories.size; ++i) {
+      const WasmMemory* memory = module->memories.data[i];
+      write_header(ctx, "memory", i);
+      write_memory(ctx, memory);
+    }
     end_section(ctx);
   }
 
   if (module->globals.size) {
-    begin_section(ctx, WASM_SECTION_NAME_GLOBAL, leb_size_guess);
+    begin_known_section(ctx, WASM_BINARY_SECTION_GLOBAL, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->globals.size, "num globals");
 
     for (i = 0; i < module->globals.size; ++i) {
       const WasmGlobal* global = module->globals.data[i];
-      wasm_write_u8(&ctx->stream, global->type, s_type_names[global->type]);
+      write_global_header(ctx, global);
       write_init_expr(ctx, module, global->init_expr);
     }
     end_section(ctx);
   }
 
   if (module->exports.size) {
-    begin_section(ctx, WASM_SECTION_NAME_EXPORT, leb_size_guess);
+    begin_known_section(ctx, WASM_BINARY_SECTION_EXPORT, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->exports.size, "num exports");
 
     for (i = 0; i < module->exports.size; ++i) {
       const WasmExport* export = module->exports.data[i];
       int func_index = wasm_get_func_index_by_var(module, &export->var);
       assert(func_index >= 0 && (size_t)func_index < module->funcs.size);
-      write_u32_leb128(&ctx->stream, func_index, "export func index");
       write_str(&ctx->stream, export->name.start, export->name.length,
                 WASM_PRINT_CHARS, "export name");
+      wasm_write_u8(&ctx->stream, export->kind, "export kind");
+      write_u32_leb128(&ctx->stream, func_index, "export index");
     }
     end_section(ctx);
   }
@@ -702,14 +751,37 @@ static void write_module(Context* ctx, const WasmModule* module) {
   if (module->start) {
     int start_func_index = wasm_get_func_index_by_var(module, module->start);
     if (start_func_index != -1) {
-      begin_section(ctx, WASM_SECTION_NAME_START, leb_size_guess);
+      begin_known_section(ctx, WASM_BINARY_SECTION_START, leb_size_guess);
       write_u32_leb128(&ctx->stream, start_func_index, "start func index");
       end_section(ctx);
     }
   }
 
+  if (module->tables.size && module->elem_segments.size) {
+    begin_known_section(ctx, WASM_BINARY_SECTION_ELEM, leb_size_guess);
+    write_u32_leb128(&ctx->stream, module->elem_segments.size,
+                     "num elem segments");
+    for (i = 0; i < module->elem_segments.size; ++i) {
+      WasmElemSegment* segment = module->elem_segments.data[i];
+      int table_index =
+          wasm_get_table_index_by_var(module, &segment->table_var);
+      write_header(ctx, "elem segment header", i);
+      write_u32_leb128(&ctx->stream, table_index, "table index");
+      write_init_expr(ctx, module, segment->offset);
+      write_u32_leb128(&ctx->stream, segment->vars.size,
+                       "num function indices");
+      size_t j;
+      for (j = 0; j < segment->vars.size; ++j) {
+        int index = wasm_get_func_index_by_var(module, &segment->vars.data[j]);
+        assert(index >= 0 && (size_t)index < module->funcs.size);
+        write_u32_leb128(&ctx->stream, index, "function index");
+      }
+    }
+    end_section(ctx);
+  }
+
   if (module->funcs.size) {
-    begin_section(ctx, WASM_SECTION_NAME_CODE, leb_size_guess);
+    begin_known_section(ctx, WASM_BINARY_SECTION_CODE, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
 
     for (i = 0; i < module->funcs.size; ++i) {
@@ -727,34 +799,16 @@ static void write_module(Context* ctx, const WasmModule* module) {
     end_section(ctx);
   }
 
-  if (module->table && module->elem_segments.size) {
-    begin_section(ctx, WASM_SECTION_NAME_ELEM, leb_size_guess);
-    write_u32_leb128(&ctx->stream, module->elem_segments.size,
-                     "num elem segments");
-    for (i = 0; i < module->elem_segments.size; ++i) {
-      WasmElemSegment* segment = module->elem_segments.data[i];
-      write_header(ctx, "elem segment header", i);
-      write_u32_leb128(&ctx->stream, 0, "table index");
-      write_init_expr(ctx, module, segment->offset);
-      write_u32_leb128(&ctx->stream, segment->vars.size,
-                       "num function indices");
-      size_t j;
-      for (j = 0; j < segment->vars.size; ++j) {
-        int index = wasm_get_func_index_by_var(module, &segment->vars.data[j]);
-        assert(index >= 0 && (size_t)index < module->funcs.size);
-        write_u32_leb128(&ctx->stream, index, "function index");
-      }
-    }
-    end_section(ctx);
-  }
-
-  if (module->memory && module->data_segments.size) {
-    begin_section(ctx, WASM_SECTION_NAME_DATA, leb_size_guess);
+  if (module->memories.size && module->data_segments.size) {
+    begin_known_section(ctx, WASM_BINARY_SECTION_DATA, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->data_segments.size,
                      "num data segments");
     for (i = 0; i < module->data_segments.size; ++i) {
       const WasmDataSegment* segment = module->data_segments.data[i];
       write_header(ctx, "data segment header", i);
+      int memory_index =
+          wasm_get_memory_index_by_var(module, &segment->memory_var);
+      write_u32_leb128(&ctx->stream, memory_index, "memory index");
       write_init_expr(ctx, module, segment->offset);
       write_u32_leb128(&ctx->stream, segment->size, "data segment size");
       write_header(ctx, "data segment data", i);
@@ -769,14 +823,13 @@ static void write_module(Context* ctx, const WasmModule* module) {
     WASM_ZERO_MEMORY(index_to_name);
 
     char desc[100];
-    begin_section(ctx, WASM_SECTION_NAME_NAME, leb_size_guess);
+    begin_user_section(ctx, WASM_BINARY_SECTION_NAME, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
       const WasmFunc* func = module->funcs.data[i];
-      uint32_t num_params = wasm_get_num_params(module, func);
+      uint32_t num_params = wasm_get_num_params(func);
       uint32_t num_locals = func->local_types.size;
-      uint32_t num_params_and_locals =
-          wasm_get_num_params_and_locals(module, func);
+      uint32_t num_params_and_locals = wasm_get_num_params_and_locals(func);
 
       wasm_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
       write_str(&ctx->stream, func->name.start, func->name.length,
