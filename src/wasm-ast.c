@@ -491,18 +491,18 @@ void wasm_destroy_global(WasmAllocator* allocator, WasmGlobal* global) {
 void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
   wasm_destroy_string_slice(allocator, &import->name);
   wasm_destroy_string_slice(allocator, &import->module_name);
-  wasm_destroy_string_slice(allocator, &import->item_name);
+  wasm_destroy_string_slice(allocator, &import->field_name);
   switch (import->kind) {
-    case WASM_IMPORT_KIND_FUNC:
+    case WASM_EXTERNAL_KIND_FUNC:
       wasm_destroy_func(allocator, &import->func);
       break;
-    case WASM_IMPORT_KIND_TABLE:
+    case WASM_EXTERNAL_KIND_TABLE:
       wasm_destroy_table(allocator, &import->table);
       break;
-    case WASM_IMPORT_KIND_MEMORY:
+    case WASM_EXTERNAL_KIND_MEMORY:
       wasm_destroy_memory(allocator, &import->memory);
       break;
-    case WASM_IMPORT_KIND_GLOBAL:
+    case WASM_EXTERNAL_KIND_GLOBAL:
       wasm_destroy_global(allocator, &import->global);
       break;
   }

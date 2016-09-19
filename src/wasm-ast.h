@@ -175,12 +175,6 @@ typedef struct WasmGlobal {
 typedef WasmGlobal* WasmGlobalPtr;
 WASM_DEFINE_VECTOR(global_ptr, WasmGlobalPtr);
 
-typedef struct WasmLimits {
-  uint64_t initial;
-  uint64_t max;
-  WasmBool has_max;
-} WasmLimits;
-
 typedef struct WasmTable {
   WasmStringSlice name;
   WasmLimits elem_limits;
@@ -212,18 +206,11 @@ typedef struct WasmDataSegment {
 typedef WasmDataSegment* WasmDataSegmentPtr;
 WASM_DEFINE_VECTOR(data_segment_ptr, WasmDataSegmentPtr);
 
-typedef enum WasmImportKind {
-  WASM_IMPORT_KIND_FUNC,
-  WASM_IMPORT_KIND_TABLE,
-  WASM_IMPORT_KIND_MEMORY,
-  WASM_IMPORT_KIND_GLOBAL,
-} WasmImportKind;
-
 typedef struct WasmImport {
   WasmStringSlice name;
   WasmStringSlice module_name;
-  WasmStringSlice item_name;
-  WasmImportKind kind;
+  WasmStringSlice field_name;
+  WasmExternalKind kind;
   union {
     /* an imported func is has the type WasmFunc so it can be more easily
      * included in the Module's vector of funcs; but only the
@@ -237,16 +224,9 @@ typedef struct WasmImport {
 typedef WasmImport* WasmImportPtr;
 WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
 
-typedef enum WasmExportKind {
-  WASM_EXPORT_KIND_FUNC,
-  WASM_EXPORT_KIND_TABLE,
-  WASM_EXPORT_KIND_MEMORY,
-  WASM_EXPORT_KIND_GLOBAL,
-} WasmExportKind;
-
 typedef struct WasmExport {
   WasmStringSlice name;
-  WasmExportKind kind;
+  WasmExternalKind kind;
   WasmVar var;
 } WasmExport;
 typedef WasmExport* WasmExportPtr;
@@ -504,6 +484,8 @@ int wasm_get_func_type_index_by_sig(const WasmModule* module,
                                     const WasmFuncSignature* sig);
 int wasm_get_func_type_index_by_decl(const WasmModule* module,
                                      const WasmFuncDeclaration* decl);
+int wasm_get_table_index_by_var(const WasmModule* module, const WasmVar* var);
+int wasm_get_memory_index_by_var(const WasmModule* module, const WasmVar* var);
 
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);

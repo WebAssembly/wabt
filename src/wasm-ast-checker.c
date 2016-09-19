@@ -618,35 +618,28 @@ static void check_call(Context* ctx,
 
 static void check_expr(Context* ctx, const WasmExpr* expr);
 
-static WasmType check_block(Context* ctx,
-                                 const WasmLocation* loc,
-                                 const WasmExpr* first,
-                                 const char* desc) {
+static void check_block(Context* ctx,
+                        const WasmLocation* loc,
+                        const WasmExpr* first,
+                        const char* desc) {
   if (first) {
+    WasmBool check_result = WASM_TRUE;
     size_t limit = push_type_stack_limit(ctx);
     const WasmExpr* expr;
     for (expr = first; expr; expr = expr->next) {
       check_expr(ctx, expr);
       /* stop typechecking if we hit unreachable code */
-      if (top_type(ctx) == WASM_TYPE_ANY)
+      if (top_type(ctx) == WASM_TYPE_ANY) {
+        check_result = WASM_FALSE;
         break;
-    }
-    WasmType result = top_type(ctx);
-    if (result != WASM_TYPE_ANY) {
-      size_t result_arity = ctx->type_stack.size - limit;
-      if (result_arity > 1) {
-        print_error(ctx, CHECK_STYLE_FULL, loc,
-                    "maximum arity for %s is 1, got %" PRIzd, desc,
-                    result_arity);
-      } else if (result_arity == 0) {
-        result = WASM_TYPE_VOID;
       }
+    }
+    if (check_result) {
+      assert(ctx->top_label != NULL);
+      check_n_types(ctx, loc, ctx->top_label->sig, desc);
     }
     ctx->type_stack.size = limit;
     pop_type_stack_limit(ctx);
-    return result;
-  } else {
-    return WASM_TYPE_VOID;
   }
 }
 
@@ -1105,17 +1098,17 @@ static void check_import(Context* ctx,
                          const WasmLocation* loc,
                          const WasmImport* import) {
   switch (import->kind) {
-    case WASM_IMPORT_KIND_FUNC:
+    case WASM_EXTERNAL_KIND_FUNC:
       if (wasm_decl_has_func_type(&import->func.decl))
         check_func_type_var(ctx, &import->func.decl.type_var, NULL);
       break;
-    case WASM_IMPORT_KIND_TABLE:
+    case WASM_EXTERNAL_KIND_TABLE:
       check_table(ctx, loc, &import->table);
       break;
-    case WASM_IMPORT_KIND_MEMORY:
+    case WASM_EXTERNAL_KIND_MEMORY:
       check_memory(ctx, loc, &import->memory);
       break;
-    case WASM_IMPORT_KIND_GLOBAL:
+    case WASM_EXTERNAL_KIND_GLOBAL:
       check_global(ctx, loc, &import->global);
       break;
   }
