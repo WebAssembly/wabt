@@ -138,6 +138,20 @@ enum {
 };
 typedef unsigned char WasmType;
 
+/* matches binary format, do not change */
+typedef enum WasmExternalKind {
+  WASM_EXTERNAL_KIND_FUNC = 0,
+  WASM_EXTERNAL_KIND_TABLE = 1,
+  WASM_EXTERNAL_KIND_MEMORY = 2,
+  WASM_EXTERNAL_KIND_GLOBAL = 3,
+} WasmExternalKind;
+
+typedef struct WasmLimits {
+  uint64_t initial;
+  uint64_t max;
+  WasmBool has_max;
+} WasmLimits;
+
 enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
 /*

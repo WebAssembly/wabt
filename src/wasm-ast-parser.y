@@ -88,7 +88,7 @@
       WasmModuleField* export_field;                                    \
       APPEND_FIELD_TO_LIST(module, export_field, EXPORT, export_, loc_, \
                            (value).export_.export_);                    \
-      export_field->export_.kind = WASM_EXPORT_KIND_##KIND;             \
+      export_field->export_.kind = WASM_EXTERNAL_KIND_##KIND;           \
       export_field->export_.var.index = index_;                         \
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
                             &export_field->export_);                    \
@@ -940,32 +940,32 @@ import_kind :
     LPAR FUNC bind_var_opt type_use RPAR {
       $$ = new_import(parser->allocator);
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_FUNC;
+      $$->kind = WASM_EXTERNAL_KIND_FUNC;
       $$->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $4;
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new_import(parser->allocator);
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_FUNC;
+      $$->kind = WASM_EXTERNAL_KIND_FUNC;
       $$->func.decl.sig = $4;
     }
   | LPAR TABLE bind_var_opt table_sig RPAR {
       $$ = new_import(parser->allocator);
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_TABLE;
+      $$->kind = WASM_EXTERNAL_KIND_TABLE;
       $$->table = $4;
     }
   | LPAR MEMORY bind_var_opt memory_sig RPAR {
       $$ = new_import(parser->allocator);
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_MEMORY;
+      $$->kind = WASM_EXTERNAL_KIND_MEMORY;
       $$->memory = $4;
     }
   | LPAR GLOBAL bind_var_opt global_type RPAR {
       $$ = new_import(parser->allocator);
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_GLOBAL;
+      $$->kind = WASM_EXTERNAL_KIND_GLOBAL;
       $$->global = $4;
     }
 ;
@@ -973,37 +973,37 @@ import :
     LPAR IMPORT quoted_text quoted_text import_kind RPAR {
       $$ = $5;
       $$->module_name = $3;
-      $$->item_name = $4;
+      $$->field_name = $4;
     }
   | LPAR FUNC bind_var_opt inline_import type_use RPAR {
       $$ = $4;
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_FUNC;
+      $$->kind = WASM_EXTERNAL_KIND_FUNC;
       $$->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $5;
     }
   | LPAR FUNC bind_var_opt inline_import func_sig RPAR {
       $$ = $4;
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_FUNC;
+      $$->kind = WASM_EXTERNAL_KIND_FUNC;
       $$->func.decl.sig = $5;
     }
   | LPAR TABLE bind_var_opt inline_import table_sig RPAR {
       $$ = $4;
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_TABLE;
+      $$->kind = WASM_EXTERNAL_KIND_TABLE;
       $$->table = $5;
     }
   | LPAR MEMORY bind_var_opt inline_import memory_sig RPAR {
       $$ = $4;
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_MEMORY;
+      $$->kind = WASM_EXTERNAL_KIND_MEMORY;
       $$->memory = $5;
     }
   | LPAR GLOBAL bind_var_opt inline_import global_type RPAR {
       $$ = $4;
       $$->name = $3;
-      $$->kind = WASM_IMPORT_KIND_GLOBAL;
+      $$->kind = WASM_EXTERNAL_KIND_GLOBAL;
       $$->global = $5;
     }
 ;
@@ -1012,29 +1012,29 @@ inline_import :
     LPAR IMPORT quoted_text quoted_text RPAR {
       $$ = new_import(parser->allocator);
       $$->module_name = $3;
-      $$->item_name = $4;
+      $$->field_name = $4;
     }
 ;
 
 export_kind :
     LPAR FUNC var RPAR {
       WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXPORT_KIND_FUNC;
+      $$.kind = WASM_EXTERNAL_KIND_FUNC;
       $$.var = $3;
     }
   | LPAR TABLE var RPAR {
       WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXPORT_KIND_TABLE;
+      $$.kind = WASM_EXTERNAL_KIND_TABLE;
       $$.var = $3;
     }
   | LPAR MEMORY var RPAR {
       WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXPORT_KIND_MEMORY;
+      $$.kind = WASM_EXTERNAL_KIND_MEMORY;
       $$.var = $3;
     }
   | LPAR GLOBAL var RPAR {
       WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXPORT_KIND_GLOBAL;
+      $$.kind = WASM_EXTERNAL_KIND_GLOBAL;
       $$.var = $3;
     }
 ;
@@ -1167,22 +1167,22 @@ module_fields :
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, IMPORT, import, @2, *$2);
       switch ($2->kind) {
-        case WASM_IMPORT_KIND_FUNC:
+        case WASM_EXTERNAL_KIND_FUNC:
           append_implicit_func_declaration(parser->allocator, &@2, $$,
                                            &$2->func.decl);
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
           INSERT_BINDING($$, func, funcs, @2, *$2);
           break;
-        case WASM_IMPORT_KIND_TABLE:
+        case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
           INSERT_BINDING($$, table, tables, @2, *$2);
           break;
-        case WASM_IMPORT_KIND_MEMORY:
+        case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING($$, memory, memories, @2, *$2);
           break;
-        case WASM_IMPORT_KIND_GLOBAL:
+        case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING($$, global, globals, @2, *$2);
@@ -1225,7 +1225,7 @@ raw_module :
 
       for (i = 0; i < $4->imports.size; ++i) {
         WasmImport* import = $4->imports.data[i];
-        if (import->kind == WASM_IMPORT_KIND_FUNC &&
+        if (import->kind == WASM_EXTERNAL_KIND_FUNC &&
             wasm_decl_has_func_type(&import->func.decl) &&
             is_empty_signature(&import->func.decl.sig)) {
           WasmFuncType* func_type =
