@@ -227,11 +227,19 @@ set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 add_executable(wast2wasm src/wast2wasm.c)
 add_dependencies(everything wast2wasm)
 target_link_libraries(wast2wasm libwasm)
+add_custom_command( TARGET wast2wasm 
+                    POST_BUILD
+                    COMMAND ln -sf wast2wasm sexpr-wasm)
 
 # wasm2wast
 add_executable(wasm2wast src/wasm2wast.c)
 add_dependencies(everything wasm2wast)
 target_link_libraries(wasm2wast libwasm)
+add_custom_command( TARGET wasm2wast 
+                    POST_BUILD
+                    COMMAND ln -sf wasm2wast wasm-wast)
+
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm-wast" "sexpr-wasm")
 
 # wasm-interp
 add_executable(wasm-interp src/wasm-interp.c)
