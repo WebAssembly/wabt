@@ -32,7 +32,7 @@
 #include "wasm-stream.h"
 #include "wasm-writer.h"
 
-#define PROGRAM_NAME "sexpr-wasm"
+#define PROGRAM_NAME "wast2wasm"
 
 static const char* s_infile;
 static const char* s_outfile;
@@ -78,18 +78,18 @@ static const char s_description[] =
     "\n"
     "examples:\n"
     "  # parse and typecheck test.wast\n"
-    "  $ sexpr-wasm test.wast\n"
+    "  $ wast2wasm test.wast\n"
     "\n"
     "  # parse test.wast and write to binary file test.wasm\n"
-    "  $ sexpr-wasm test.wast -o test.wasm\n"
+    "  $ wast2wasm test.wast -o test.wasm\n"
     "\n"
     "  # parse spec-test.wast, and write verbose output to stdout (including\n"
     "  # the meaning of every byte)\n"
-    "  $ sexpr-wasm spec-test.wast -v\n"
+    "  $ wast2wasm spec-test.wast -v\n"
     "\n"
     "  # parse spec-test.wast, and write files to spec-test.json. Modules are\n"
     "  # written to spec-test.0.wasm, spec-test.1.wasm, etc.\n"
-    "  $ sexpr-wasm spec-test.wast --spec -o spec-test.json\n";
+    "  $ wast2wasm spec-test.wast --spec -o spec-test.json\n";
 
 static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,

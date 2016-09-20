@@ -23,7 +23,7 @@ from utils import Error
 IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
-DEFAULT_SEXPR_WASM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'sexpr-wasm')
+DEFAULT_SEXPR_WASM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wast2wasm')
 DEFAULT_WASM_WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-wast')
 DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
 
@@ -53,7 +53,7 @@ def FindExeWithFallback(name, default_exe_list, override_exe=None):
 
 
 def GetSexprWasmExecutable(override=None):
-  return FindExeWithFallback('sexpr-wasm', [DEFAULT_SEXPR_WASM_EXE], override)
+  return FindExeWithFallback('wast2wasm', [DEFAULT_SEXPR_WASM_EXE], override)
 
 
 def GetWasmWastExecutable(override=None):

@@ -223,10 +223,10 @@ add_library(libwasm STATIC
 )
 set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
-# sexpr-wasm
-add_executable(sexpr-wasm src/sexpr-wasm.c)
-add_dependencies(everything sexpr-wasm)
-target_link_libraries(sexpr-wasm libwasm)
+# wast2wasm
+add_executable(wast2wasm src/wast2wasm.c)
+add_dependencies(everything wast2wasm)
+target_link_libraries(wast2wasm libwasm)
 
 # wasm-wast
 add_executable(wasm-wast src/wasm-wast.c)
@@ -301,9 +301,9 @@ find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-      -e $<TARGET_FILE:sexpr-wasm>
+      -e $<TARGET_FILE:wast2wasm>
       --wasm-wast $<TARGET_FILE:wasm-wast>
       --wasm-interp $<TARGET_FILE:wasm-interp>
-  DEPENDS sexpr-wasm wasm-wast wasm-interp
+  DEPENDS wast2wasm wasm-wast wasm-interp
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )

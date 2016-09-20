@@ -1,25 +1,25 @@
-;;; EXE: %(sexpr-wasm)s
+;;; EXE: %(wast2wasm)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
-usage: sexpr-wasm [options] filename
+usage: wast2wasm [options] filename
 
   read a file in the wasm s-expression format, check it for errors, and
   convert it to the wasm binary format.
 
 examples:
   # parse and typecheck test.wast
-  $ sexpr-wasm test.wast
+  $ wast2wasm test.wast
 
   # parse test.wast and write to binary file test.wasm
-  $ sexpr-wasm test.wast -o test.wasm
+  $ wast2wasm test.wast -o test.wasm
 
   # parse spec-test.wast, and write verbose output to stdout (including
   # the meaning of every byte)
-  $ sexpr-wasm spec-test.wast -v
+  $ wast2wasm spec-test.wast -v
 
   # parse spec-test.wast, and write files to spec-test.json. Modules are
   # written to spec-test.0.wasm, spec-test.1.wasm, etc.
-  $ sexpr-wasm spec-test.wast --spec -o spec-test.json
+  $ wast2wasm spec-test.wast --spec -o spec-test.json
 
 options:
   -v, --verbose                        use multiple times for more info

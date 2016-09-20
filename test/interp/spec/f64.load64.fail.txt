@@ -2,7 +2,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/f64.load64.fail.wast
 (;; STDERR ;;;
-Error running "sexpr-wasm":
+Error running "wast2wasm":
 third_party/testsuite/f64.load64.fail.wast:1:52: unexpected token "f64.load64"
 (module (memory 1) (func (param i32) (result f64) (f64.load64 (get_local 0))))
                                                    ^^^^^^^^^^
