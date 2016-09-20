@@ -49,8 +49,8 @@ set_run_test_args() {
   RUN_TEST_ARGS=""
   local EXE_DIR=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}
 
-  SEXPR_WASM=${EXE_DIR}/wast2wasm
-  WASM_WAST=${EXE_DIR}/wasm2wast
+  SEXPR_WASM=${EXE_DIR}/sexpr-wasm
+  WASM_WAST=${EXE_DIR}/wasm-wast
   WASM_INTERP=${EXE_DIR}/wasm-interp
 
   check_and_add_flag "--sexpr-wasm" ${SEXPR_WASM} && \
