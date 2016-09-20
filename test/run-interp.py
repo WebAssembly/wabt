@@ -32,7 +32,7 @@ def main(args):
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
   parser.add_argument('-e', '--executable', metavar='PATH',
-                      help='override wast2wasm executable.')
+                      help='override sexpr-wasm executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',

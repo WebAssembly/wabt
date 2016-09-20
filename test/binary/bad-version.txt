@@ -3,7 +3,7 @@
 magic
 0xc 0 0 0
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000008: version mismatch
 
 ;;; STDERR ;;)

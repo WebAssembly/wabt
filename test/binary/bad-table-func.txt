@@ -6,7 +6,7 @@ section("type") { count[1] function params[0] results[0] }
 section("function") { count[1] type[0] }
 section("table") { count[1] func[1] }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000027: invalid function table function index
 
 ;;; STDERR ;;)

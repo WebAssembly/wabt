@@ -4,7 +4,7 @@ magic
 version
 section("type") { count[1] function params[0] results[2] i32 i32 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000012: result count must be 0 or 1
 
 ;;; STDERR ;;)

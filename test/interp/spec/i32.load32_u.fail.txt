@@ -2,7 +2,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/i32.load32_u.fail.wast
 (;; STDERR ;;;
-Error running "wast2wasm":
+Error running "sexpr-wasm":
 third_party/testsuite/i32.load32_u.fail.wast:1:52: unexpected token "i32.load32_u"
 (module (memory 1) (func (param i32) (result i32) (i32.load32_u (get_local 0))))
                                                    ^^^^^^^^^^^^

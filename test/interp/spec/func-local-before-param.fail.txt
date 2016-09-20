@@ -2,7 +2,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/func-local-before-param.fail.wast
 (;; STDERR ;;;
-Error running "wast2wasm":
+Error running "sexpr-wasm":
 third_party/testsuite/func-local-before-param.fail.wast:1:28: syntax error, unexpected PARAM
 (module (func (local i32) (param i32)))
                            ^^^^^

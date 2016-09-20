@@ -6,7 +6,7 @@ section("type") { count[1] function params[0] results[0] }
 section("function") { count[1] sig[0] }
 section("export") { count[1] func[1] str("foo") }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000028: invalid export function index
 
 ;;; STDERR ;;)

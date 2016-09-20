@@ -101,10 +101,10 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('-e', '--wast2wasm-executable', metavar='PATH',
-                      help='set the wast2wasm executable to use.')
-  parser.add_argument('--wasm2wast-executable', metavar='PATH',
-                      help='set the wasm2wast executable to use.')
+  parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
+                      help='set the sexpr-wasm executable to use.')
+  parser.add_argument('--wasm-wast-executable', metavar='PATH',
+                      help='set the wasm-wast executable to use.')
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
   parser.add_argument('--no-error-cmdline',

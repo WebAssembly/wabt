@@ -53,8 +53,8 @@ set_run_test_args() {
   WASM_WAST=${EXE_DIR}/wasm2wast
   WASM_INTERP=${EXE_DIR}/wasm-interp
 
-  check_and_add_flag "--wast2wasm" ${SEXPR_WASM} && \
-      check_and_add_flag "--wasm2wast" ${WASM_WAST} && \
+  check_and_add_flag "--sexpr-wasm" ${SEXPR_WASM} && \
+      check_and_add_flag "--wasm-wast" ${WASM_WAST} && \
       check_and_add_flag "--wasm-interp" ${WASM_INTERP}
 }
 

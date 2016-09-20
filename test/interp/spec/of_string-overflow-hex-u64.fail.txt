@@ -2,7 +2,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/of_string-overflow-hex-u64.fail.wast
 (;; STDERR ;;;
-Error running "wast2wasm":
+Error running "sexpr-wasm":
 third_party/testsuite/of_string-overflow-hex-u64.fail.wast:1:26: invalid literal "0x10000000000000000"
 (module (func (i64.const 0x10000000000000000)))
                          ^^^^^^^^^^^^^^^^^^^

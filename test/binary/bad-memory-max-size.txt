@@ -8,7 +8,7 @@ section("memory") {
   export[0]
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000014: invalid memory max size
 
 ;;; STDERR ;;)

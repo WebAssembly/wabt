@@ -7,7 +7,7 @@ section("type") {
   0x20
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000010: unexpected type form
 
 ;;; STDERR ;;)

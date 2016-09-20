@@ -50,16 +50,16 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 
 # default configurations for tests
 TOOLS = {
-  'wast2wasm': {
-    'EXE': '%(wast2wasm)s',
+  'sexpr-wasm': {
+    'EXE': '%(sexpr-wasm)s',
     'VERBOSE-FLAGS': ['-v']
   },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': ' '.join([
       '-v',
-      '-e', '%(wast2wasm)s',
-      '--wasm2wast-executable=%(wasm2wast)s',
+      '-e', '%(sexpr-wasm)s',
+      '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -73,7 +73,7 @@ TOOLS = {
   'run-interp': {
     'EXE': 'test/run-interp.py',
     'FLAGS': ' '.join([
-      '-e', '%(wast2wasm)s',
+      '-e', '%(sexpr-wasm)s',
       '--wasm-interp-executable=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
@@ -89,7 +89,7 @@ TOOLS = {
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
     'FLAGS': ' '.join([
-      '-e', '%(wast2wasm)s',
+      '-e', '%(sexpr-wasm)s',
       '--wasm-interp-executable=%(wasm-interp)s',
       '--spec',
       '--no-error-cmdline',
@@ -105,7 +105,7 @@ TOOLS = {
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
-      '--wasm2wast-executable=%(wasm2wast)s',
+      '--wasm-wast-executable=%(wasm-wast)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -133,7 +133,7 @@ TOOLS = {
   }
 }
 
-ROUNDTRIP_TOOLS = ('wast2wasm',)
+ROUNDTRIP_TOOLS = ('sexpr-wasm',)
 
 
 def Indent(s, spaces):
@@ -213,8 +213,8 @@ class TestInfo(object):
     self.input_ = []
     self.expected_stdout = ''
     self.expected_stderr = ''
-    self.tool = 'wast2wasm'
-    self.exe = '%(wast2wasm)s'
+    self.tool = 'sexpr-wasm'
+    self.exe = '%(sexpr-wasm)s'
     self.flags = []
     self.last_cmd = ''
     self.expected_error = 0
@@ -234,7 +234,7 @@ class TestInfo(object):
     result.expected_stderr = ''
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
-    result.flags = ['-e', '%(wast2wasm)s', '--wasm2wast', '%(wasm2wast)s',
+    result.flags = ['-e', '%(sexpr-wasm)s', '--wasm-wast', '%(wasm-wast)s',
                     '-v']
     result.expected_error = 0
     result.slow = self.slow
@@ -663,10 +663,10 @@ def main(args):
                       help='directory to search for all executables. '
                           'This can be overridden by the other executable '
                           'flags.')
-  parser.add_argument('-e', '--wast2wasm-executable', metavar='PATH',
+  parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
                       help='override executable.')
-  parser.add_argument('--wasm2wast-executable', metavar='PATH',
-                      help='override wasm2wast executable.')
+  parser.add_argument('--wasm-wast-executable', metavar='PATH',
+                      help='override wasm-wast executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
@@ -710,18 +710,18 @@ def main(args):
   if options.exe_dir:
     if not options.sexpr_wasm_executable:
       options.sexpr_wasm_executable = os.path.join(options.exe_dir,
-                                                   'wast2wasm')
+                                                   'sexpr-wasm')
     if not options.wasm_wast_executable:
       options.wasm_wast_executable = os.path.join(options.exe_dir,
-                                                  'wasm2wast')
+                                                  'wasm-wast')
     if not options.wasm_interp_executable:
       options.wasm_interp_executable = os.path.join(options.exe_dir,
                                                     'wasm-interp')
 
   variables = {
-    'wast2wasm':
+    'sexpr-wasm':
         find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
-    'wasm2wast': find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+    'wasm-wast': find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
     'wasm-interp':
         find_exe.GetWasmInterpExecutable(options.wasm_interp_executable),
   }
@@ -748,7 +748,7 @@ def main(args):
     if not os.path.exists(out_dir):
       os.makedirs(out_dir)
   else:
-    out_dir = tempfile.mkdtemp(prefix='wast2wasm-')
+    out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
     out_dir_is_temp = True
   variables['out_dir'] = os.path.abspath(out_dir)
 

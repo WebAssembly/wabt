@@ -6,7 +6,7 @@ section("type") { count[1] function params[0] results[0] }
 section("function") { count[1] sig[0] }
 section("start") { func[1] }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm-wast":
 error: @0x00000026: invalid start function index
 
 ;;; STDERR ;;)

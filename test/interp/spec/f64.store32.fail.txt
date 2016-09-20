@@ -2,7 +2,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/f64.store32.fail.wast
 (;; STDERR ;;;
-Error running "wast2wasm":
+Error running "sexpr-wasm":
 third_party/testsuite/f64.store32.fail.wast:1:51: unexpected token "f64.store32"
 ... 1) (func (param i32) (param f32) (f64.store32 (get_local 0) (get_local 1))))
                                       ^^^^^^^^^^^
