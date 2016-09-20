@@ -8,7 +8,7 @@ section("memory") {
   export[0]
 }
 (;; STDERR ;;;
-Error running "wasm-wast":
+Error running "wasm2wast":
 error: @0x00000013: invalid memory initial size
 
 ;;; STDERR ;;)

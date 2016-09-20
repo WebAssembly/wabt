@@ -59,7 +59,7 @@ TOOLS = {
     'FLAGS': ' '.join([
       '-v',
       '-e', '%(wast2wasm)s',
-      '--wasm-wast-executable=%(wasm-wast)s',
+      '--wasm2wast-executable=%(wasm2wast)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -105,7 +105,7 @@ TOOLS = {
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
-      '--wasm-wast-executable=%(wasm-wast)s',
+      '--wasm2wast-executable=%(wasm2wast)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -234,7 +234,7 @@ class TestInfo(object):
     result.expected_stderr = ''
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
-    result.flags = ['-e', '%(wast2wasm)s', '--wasm-wast', '%(wasm-wast)s',
+    result.flags = ['-e', '%(wast2wasm)s', '--wasm2wast', '%(wasm2wast)s',
                     '-v']
     result.expected_error = 0
     result.slow = self.slow
@@ -665,8 +665,8 @@ def main(args):
                           'flags.')
   parser.add_argument('-e', '--wast2wasm-executable', metavar='PATH',
                       help='override executable.')
-  parser.add_argument('--wasm-wast-executable', metavar='PATH',
-                      help='override wasm-wast executable.')
+  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+                      help='override wasm2wast executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
@@ -713,7 +713,7 @@ def main(args):
                                                    'wast2wasm')
     if not options.wasm_wast_executable:
       options.wasm_wast_executable = os.path.join(options.exe_dir,
-                                                  'wasm-wast')
+                                                  'wasm2wast')
     if not options.wasm_interp_executable:
       options.wasm_interp_executable = os.path.join(options.exe_dir,
                                                     'wasm-interp')
@@ -721,7 +721,7 @@ def main(args):
   variables = {
     'wast2wasm':
         find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
-    'wasm-wast': find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+    'wasm2wast': find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
     'wasm-interp':
         find_exe.GetWasmInterpExecutable(options.wasm_interp_executable),
   }

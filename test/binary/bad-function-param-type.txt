@@ -7,7 +7,7 @@ section("type") {
   function params[1] void results[0]
 }
 (;; STDERR ;;;
-Error running "wasm-wast":
+Error running "wasm2wast":
 error: @0x00000012: expected valid param type
 
 ;;; STDERR ;;)

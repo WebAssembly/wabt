@@ -31,7 +31,7 @@
 #include "wasm-stream.h"
 #include "wasm-writer.h"
 
-#define PROGRAM_NAME "wasm-wast"
+#define PROGRAM_NAME "wasm2wast"
 
 static int s_verbose;
 static const char* s_infile;
@@ -66,10 +66,10 @@ static const char s_description[] =
     "\n"
     "examples:\n"
     "  # parse binary file test.wasm and write s-expression file test.wast\n"
-    "  $ wasm-wast test.wasm -o test.wast\n"
+    "  $ wasm2wast test.wasm -o test.wast\n"
     "\n"
     "  # parse test.wasm and write test.wast, using the debug names, if any\n"
-    "  $ wasm-wast test.wasm --debug-names -o test.wast\n";
+    "  $ wasm2wast test.wasm --debug-names -o test.wast\n";
 
 static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,

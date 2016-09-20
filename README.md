@@ -5,7 +5,7 @@
 A suite of build tools for WebAssembly, including:
 
  - **wast2wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
- - **wasm-wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
+ - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
 
 ## Cloning
@@ -99,22 +99,22 @@ $ out/wast2wasm -h
 
 Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wast2wasm-prototype/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
 
-## Running wasm-wast
+## Running wasm2wast
 
 Some examples:
 
 ```
 # parse binary file test.wasm and write s-expression file test.wast
-$ out/wasm-wast test.wasm -o test.wast
+$ out/wasm2wast test.wasm -o test.wast
 
 # parse test.wasm and write test.wast, using the debug names, if any
-$ out/wasm-wast test.wasm --debug-names -o test.wast
+$ out/wasm2wast test.wasm --debug-names -o test.wast
 ```
 
 You can use `-h` to get additional help:
 
 ```
-$ out/wasm-wast -h
+$ out/wasm2wast -h
 ```
 
 ## Running wasm-interp
@@ -268,7 +268,7 @@ The currently supported list of tools:
 
 - `wast2wasm`: runs `wast2wasm`
 - `run-roundtrip`: runs the `run-roundtrip.py` script. This does a roundtrip
-  conversion using `wast2wasm` and `wasm-wast`, making sure the .wasm results
+  conversion using `wast2wasm` and `wasm2wast`, making sure the .wasm results
   are identical.
 - `run-interp`: runs the `run-interp.py` script, running all exported functions
 - `run-interp-spec`: runs the `run-interp.py` script with the `--spec` flag

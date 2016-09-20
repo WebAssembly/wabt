@@ -36,8 +36,8 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wasm-wast-executable', metavar='PATH',
-                      help='set the wasm-wast executable to use.')
+  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+                      help='set the wasm2wast executable to use.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
