@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/WebAssembly/wast2wasm-prototype.svg?branch=master)](https://travis-ci.org/WebAssembly/wast2wasm-prototype)
+[![Build Status](https://travis-ci.org/WebAssembly/sexpr-wasm-prototype.svg?branch=master)](https://travis-ci.org/WebAssembly/sexpr-wasm-prototype)
 
-# wast2wasm-prototype
+# sexpr-wasm-prototype
 
 A suite of build tools for WebAssembly, including:
 
@@ -13,8 +13,8 @@ A suite of build tools for WebAssembly, including:
 Clone as normal, but don't forget to update/init submodules as well:
 
 ```
-$ git clone https://github.com/WebAssembly/wast2wasm-prototype
-$ cd wast2wasm-prototype
+$ git clone https://github.com/WebAssembly/sexpr-wasm-prototype
+$ cd sexpr-wasm-prototype
 $ git submodule update --init
 ```
 
@@ -97,7 +97,7 @@ You can use `-h` to get additional help:
 $ out/wast2wasm -h
 ```
 
-Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wast2wasm-prototype/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
+Or try the [online demo](https://cdn.rawgit.com/WebAssembly/sexpr-wasm-prototype/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
 
 ## Running wasm2wast
 
