@@ -1,4 +1,4 @@
-;;; EXE: %(wasm2wast)s
+;;; EXE: %(wasm-wast)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
 usage: wasm2wast [options] filename

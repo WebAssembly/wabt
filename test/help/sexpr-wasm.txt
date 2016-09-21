@@ -1,4 +1,4 @@
-;;; EXE: %(wast2wasm)s
+;;; EXE: %(sexpr-wasm)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
 usage: wast2wasm [options] filename
