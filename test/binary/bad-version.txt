@@ -4,6 +4,6 @@ magic
 0xc 0 0 0
 (;; STDERR ;;;
 Error running "wasm-wast":
-error: @0x00000008: version mismatch
+error: @0x00000008: bad wasm file version: 0xc (expected 0xb)
 
 ;;; STDERR ;;)

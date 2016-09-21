@@ -1135,10 +1135,12 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   uint32_t magic;
   in_u32(ctx, &magic, "magic");
-  RAISE_ERROR_UNLESS(magic == WASM_BINARY_MAGIC, "magic value mismatch");
+  RAISE_ERROR_UNLESS(magic == WASM_BINARY_MAGIC, "bad magic value");
   uint32_t version;
   in_u32(ctx, &version, "version");
-  RAISE_ERROR_UNLESS(version == WASM_BINARY_VERSION, "version mismatch");
+  RAISE_ERROR_UNLESS(version == WASM_BINARY_VERSION,
+                     "bad wasm file version: %#x (expected %#x)",
+                     version, WASM_BINARY_VERSION);
 
   /* type */
   uint32_t num_signatures = 0;

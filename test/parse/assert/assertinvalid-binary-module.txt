@@ -1,7 +1,7 @@
 (assert_invalid (module "\00ASM") "bad magic")
 (;; STDOUT ;;;
 assert_invalid error:
-  parse/assert/assertinvalid-binary-module.txt:1:18: error in binary module: @0x00000004: magic value mismatch
+  parse/assert/assertinvalid-binary-module.txt:1:18: error in binary module: @0x00000004: bad magic value
 (assert_invalid (module "\00ASM") "bad magic")
                  ^^^^^^
 ;;; STDOUT ;;)
