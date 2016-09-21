@@ -130,9 +130,10 @@ static WasmResult on_signature_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_signature(uint32_t index,
-                               WasmType result_type,
                                uint32_t param_count,
                                WasmType* param_types,
+                               uint32_t result_count,
+                               WasmType* result_types,
                                void* user_data) {
   Context* ctx = user_data;
   WasmModuleField* field =
@@ -141,12 +142,17 @@ static WasmResult on_signature(uint32_t index,
 
   WasmFuncType* func_type = &field->func_type;
   WASM_ZERO_MEMORY(*func_type);
-  func_type->sig.result_type = result_type;
 
   wasm_reserve_types(ctx->allocator, &func_type->sig.param_types, param_count);
   func_type->sig.param_types.size = param_count;
   memcpy(func_type->sig.param_types.data, param_types,
          param_count * sizeof(WasmType));
+
+  wasm_reserve_types(ctx->allocator, &func_type->sig.result_types,
+                     result_count);
+  func_type->sig.result_types.size = result_count;
+  memcpy(func_type->sig.result_types.data, result_types,
+         result_count * sizeof(WasmType));
 
   assert(index < ctx->module->func_types.capacity);
   WasmFuncTypePtr* func_type_ptr =
@@ -162,13 +168,11 @@ static WasmResult on_import_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_import(uint32_t index,
-                            uint32_t sig_index,
                             WasmStringSlice module_name,
-                            WasmStringSlice function_name,
+                            WasmStringSlice field_name,
                             void* user_data) {
   Context* ctx = user_data;
   assert(index < ctx->module->imports.capacity);
-  assert(sig_index < ctx->module->func_types.size);
 
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
@@ -177,16 +181,63 @@ static WasmResult on_import(uint32_t index,
   WasmImport* import = &field->import;
   WASM_ZERO_MEMORY(*import);
   import->module_name = wasm_dup_string_slice(ctx->allocator, module_name);
-  import->func_name = wasm_dup_string_slice(ctx->allocator, function_name);
-  import->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
-                       WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
-  import->decl.type_var.type = WASM_VAR_TYPE_INDEX;
-  import->decl.type_var.index = sig_index;
-  import->decl.sig = ctx->module->func_types.data[sig_index]->sig;
+  import->field_name = wasm_dup_string_slice(ctx->allocator, field_name);
 
   WasmImportPtr* import_ptr =
       wasm_append_import_ptr(ctx->allocator, &ctx->module->imports);
   *import_ptr = import;
+  return WASM_OK;
+}
+
+static WasmResult on_import_func(uint32_t index,
+                                 uint32_t sig_index,
+                                 void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->imports.size - 1);
+  assert(sig_index < ctx->module->func_types.size);
+  WasmImport* import = ctx->module->imports.data[index];
+
+  import->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
+                            WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
+  import->func.decl.type_var.type = WASM_VAR_TYPE_INDEX;
+  import->func.decl.type_var.index = sig_index;
+  import->func.decl.sig = ctx->module->func_types.data[sig_index]->sig;
+  return WASM_OK;
+}
+
+static WasmResult on_import_table(uint32_t index,
+                                  uint32_t elem_type,
+                                  const WasmLimits* elem_limits,
+                                  void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->imports.size - 1);
+  WasmImport* import = ctx->module->imports.data[index];
+
+  import->table.elem_limits = *elem_limits;
+  return WASM_OK;
+}
+
+static WasmResult on_import_memory(uint32_t index,
+                                   const WasmLimits* page_limits,
+                                   void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->imports.size - 1);
+  WasmImport* import = ctx->module->imports.data[index];
+
+  import->memory.page_limits = *page_limits;
+  return WASM_OK;
+}
+
+static WasmResult on_import_global(uint32_t index,
+                                   WasmType type,
+                                   WasmBool mutable_,
+                                   void* user_data) {
+  Context* ctx = user_data;
+  assert(index == ctx->module->imports.size - 1);
+  WasmImport* import = ctx->module->imports.data[index];
+
+  import->global.type = type;
+  import->global.mutable_ = mutable_;
   return WASM_OK;
 }
 
@@ -222,47 +273,56 @@ static WasmResult on_function_signature(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult begin_table_section(void* user_data) {
+static WasmResult on_table_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
+  wasm_reserve_table_ptrs(ctx->allocator, &ctx->module->tables, count);
+  return WASM_OK;
+}
+
+static WasmResult on_table(uint32_t index,
+                           uint32_t elem_type,
+                           const WasmLimits* elem_limits,
+                           void* user_data) {
+  Context* ctx = user_data;
+  assert(index < ctx->module->tables.capacity);
+
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
   field->type = WASM_MODULE_FIELD_TYPE_TABLE;
-  assert(ctx->module->table == NULL);
-  ctx->module->table = &field->table;
+
+  WasmTable* table = &field->table;
+  WASM_ZERO_MEMORY(*table);
+  table->elem_limits = *elem_limits;
+
+  WasmTablePtr* table_ptr =
+      wasm_append_table_ptr(ctx->allocator, &ctx->module->tables);
+  *table_ptr = table;
   return WASM_OK;
 }
 
-static WasmResult on_table_limits(WasmBool has_max,
-                                  uint32_t initial,
-                                  uint32_t max,
-                                  void* user_data) {
+static WasmResult on_memory_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  WasmLimits* limits = &ctx->module->table->elem_limits;
-  limits->has_max = has_max;
-  limits->initial = initial;
-  limits->max = max;
+  wasm_reserve_memory_ptrs(ctx->allocator, &ctx->module->memories, count);
   return WASM_OK;
 }
 
-static WasmResult begin_memory_section(void* user_data) {
+static WasmResult on_memory(uint32_t index,
+                            const WasmLimits* page_limits,
+                            void* user_data) {
   Context* ctx = user_data;
+  assert(index < ctx->module->memories.capacity);
+
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
   field->type = WASM_MODULE_FIELD_TYPE_MEMORY;
-  assert(ctx->module->memory == NULL);
-  ctx->module->memory = &field->memory;
-  return WASM_OK;
-}
 
-static WasmResult on_memory_limits(WasmBool has_max,
-                                   uint32_t initial,
-                                   uint32_t max,
-                                   void* user_data) {
-  Context* ctx = user_data;
-  WasmLimits* limits = &ctx->module->memory->page_limits;
-  limits->has_max = has_max;
-  limits->initial = initial;
-  limits->max = max;
+  WasmMemory* memory = &field->memory;
+  WASM_ZERO_MEMORY(*memory);
+  memory->page_limits = *page_limits;
+
+  WasmMemoryPtr* memory_ptr =
+      wasm_append_memory_ptr(ctx->allocator, &ctx->module->memories);
+  *memory_ptr = memory;
   return WASM_OK;
 }
 
@@ -272,7 +332,10 @@ static WasmResult on_global_count(uint32_t count, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
+static WasmResult begin_global(uint32_t index,
+                               WasmType type,
+                               WasmBool mutable_,
+                               void* user_data) {
   Context* ctx = user_data;
   assert(index < ctx->module->globals.capacity);
 
@@ -283,6 +346,7 @@ static WasmResult begin_global(uint32_t index, WasmType type, void* user_data) {
   WasmGlobal* global = &field->global;
   WASM_ZERO_MEMORY(*global);
   global->type = type;
+  global->mutable_ = mutable_;
 
   WasmGlobalPtr* global_ptr =
       wasm_append_global_ptr(ctx->allocator, &ctx->module->globals);
@@ -312,7 +376,8 @@ static WasmResult on_export_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_export(uint32_t index,
-                            uint32_t func_index,
+                            WasmExternalKind kind,
+                            uint32_t item_index,
                             WasmStringSlice name,
                             void* user_data) {
   Context* ctx = user_data;
@@ -323,9 +388,26 @@ static WasmResult on_export(uint32_t index,
   WasmExport* export = &field->export_;
   WASM_ZERO_MEMORY(*export);
   export->name = wasm_dup_string_slice(ctx->allocator, name);
+  switch (kind) {
+    case WASM_EXTERNAL_KIND_FUNC:
+      assert(item_index < ctx->module->funcs.size);
+      break;
+    case WASM_EXTERNAL_KIND_TABLE:
+      assert(item_index < ctx->module->funcs.size);
+      break;
+    case WASM_EXTERNAL_KIND_MEMORY:
+      assert(item_index < ctx->module->memories.size);
+      break;
+    case WASM_EXTERNAL_KIND_GLOBAL:
+      assert(item_index < ctx->module->globals.size);
+      break;
+    case WASM_NUM_EXTERNAL_KINDS:
+      assert(0);
+      break;
+  }
   export->var.type = WASM_VAR_TYPE_INDEX;
-  assert(func_index < ctx->module->funcs.size);
-  export->var.index = func_index;
+  export->var.index = item_index;
+  export->kind = kind;
 
   assert(index < ctx->module->exports.capacity);
   WasmExportPtr* export_ptr =
@@ -386,43 +468,44 @@ static WasmResult on_binary_expr(WasmOpcode opcode, void* user_data) {
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_block_expr(void* user_data) {
+static WasmResult on_block_expr(uint32_t num_types,
+                                WasmType* sig_types,
+                                void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_block_expr(ctx->allocator);
+  WasmTypeVector src;
+  WASM_ZERO_MEMORY(src);
+  src.size = num_types;
+  src.data = sig_types;
+  wasm_extend_types(ctx->allocator, &expr->block.sig, &src);
   append_expr(ctx, expr);
   push_label(ctx, &expr->block.first);
   return WASM_OK;
 }
 
-static WasmResult on_br_expr(uint8_t arity, uint32_t depth, void* user_data) {
+static WasmResult on_br_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_br_expr(ctx->allocator);
   expr->br.var.type = WASM_VAR_TYPE_INDEX;
-  expr->br.arity = arity;
   expr->br.var.index = depth;
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_br_if_expr(uint8_t arity,
-                                uint32_t depth,
-                                void* user_data) {
+static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_br_if_expr(ctx->allocator);
-  expr->br_if.arity = arity;
   expr->br_if.var.type = WASM_VAR_TYPE_INDEX;
   expr->br_if.var.index = depth;
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_br_table_expr(uint8_t arity,
-                                   uint32_t num_targets,
+static WasmResult on_br_table_expr(uint32_t num_targets,
                                    uint32_t* target_depths,
                                    uint32_t default_target_depth,
                                    void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_br_table_expr(ctx->allocator);
   wasm_reserve_vars(ctx->allocator, &expr->br_table.targets, num_targets);
-  expr->br_table.arity = arity;
   expr->br_table.targets.size = num_targets;
   uint32_t i;
   for (i = 0; i < num_targets; ++i) {
@@ -441,15 +524,6 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   WasmExpr* expr = wasm_new_call_expr(ctx->allocator);
   expr->call.var.type = WASM_VAR_TYPE_INDEX;
   expr->call.var.index = func_index;
-  return append_expr(ctx, expr);
-}
-
-static WasmResult on_call_import_expr(uint32_t import_index, void* user_data) {
-  Context* ctx = user_data;
-  assert(import_index < ctx->module->imports.size);
-  WasmExpr* expr = wasm_new_call_import_expr(ctx->allocator);
-  expr->call_import.var.type = WASM_VAR_TYPE_INDEX;
-  expr->call_import.var.index = import_index;
   return append_expr(ctx, expr);
 }
 
@@ -489,11 +563,7 @@ static WasmResult on_drop_expr(void* user_data) {
 }
 
 static WasmResult on_else_expr(void* user_data) {
-  /* destroy the if expr, replace it with an if_else */
-  /* TODO(binji): remove if_else and just have false branch be an empty block
-   * for if without else? */
   Context* ctx = user_data;
-  CHECK_RESULT(pop_label(ctx));
   LabelNode* label;
   CHECK_RESULT(top_label(ctx, &label));
   WasmExpr* if_expr = label->last;
@@ -501,25 +571,6 @@ static WasmResult on_else_expr(void* user_data) {
     print_error(ctx, "else expression without matching if");
     return WASM_ERROR;
   }
-
-  WasmExpr* if_else_expr = wasm_new_if_else_expr(ctx->allocator);
-  if_else_expr->if_else.true_.first = if_expr->if_.true_.first;
-
-  /* find the expression that points to the if_expr, and have it point to the
-   * new if_else_expr instead */
-  WasmExpr* prev = NULL;
-  if (prev == if_expr) {
-    *label->first = if_else_expr;
-  } else {
-    for (prev = *label->first; prev && prev->next != if_expr;
-         prev = prev->next) {
-    }
-    assert(prev);
-    prev->next = if_else_expr;
-  }
-  label->last = if_else_expr;
-  wasm_free(ctx->allocator, if_expr);
-  push_label(ctx, &if_else_expr->if_else.false_.first);
   return WASM_OK;
 }
 
@@ -582,9 +633,16 @@ static WasmResult on_i64_const_expr(uint64_t value, void* user_data) {
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_if_expr(void* user_data) {
+static WasmResult on_if_expr(uint32_t num_types,
+                             WasmType* sig_types,
+                             void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_if_expr(ctx->allocator);
+  WasmTypeVector src;
+  WASM_ZERO_MEMORY(src);
+  src.size = num_types;
+  src.data = sig_types;
+  wasm_extend_types(ctx->allocator, &expr->if_.true_.sig, &src);
   append_expr(ctx, expr);
   push_label(ctx, &expr->if_.true_.first);
   return WASM_OK;
@@ -602,9 +660,16 @@ static WasmResult on_load_expr(WasmOpcode opcode,
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_loop_expr(void* user_data) {
+static WasmResult on_loop_expr(uint32_t num_types,
+                               WasmType* sig_types,
+                               void* user_data) {
   Context* ctx = user_data;
   WasmExpr* expr = wasm_new_loop_expr(ctx->allocator);
+  WasmTypeVector src;
+  WASM_ZERO_MEMORY(src);
+  src.size = num_types;
+  src.data = sig_types;
+  wasm_extend_types(ctx->allocator, &expr->loop.sig, &src);
   append_expr(ctx, expr);
   push_label(ctx, &expr->loop.first);
   return WASM_OK;
@@ -701,6 +766,9 @@ static WasmResult begin_elem_segment(uint32_t index,
 
   WasmElemSegment* segment = &field->elem_segment;
   WASM_ZERO_MEMORY(*segment);
+  segment->table_var.type = WASM_VAR_TYPE_INDEX;
+  segment->table_var.index = table_index;
+
   assert(index == ctx->module->elem_segments.size);
   assert(index < ctx->module->elem_segments.capacity);
   WasmElemSegmentPtr* segment_ptr =
@@ -753,7 +821,9 @@ static WasmResult on_data_segment_count(uint32_t count, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult begin_data_segment(uint32_t index, void* user_data) {
+static WasmResult begin_data_segment(uint32_t index,
+                                     uint32_t memory_index,
+                                     void* user_data) {
   Context* ctx = user_data;
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
@@ -761,6 +831,9 @@ static WasmResult begin_data_segment(uint32_t index, void* user_data) {
 
   WasmDataSegment* segment = &field->data_segment;
   WASM_ZERO_MEMORY(*segment);
+  segment->memory_var.type = WASM_VAR_TYPE_INDEX;
+  segment->memory_var.index = memory_index;
+
   assert(index == ctx->module->data_segments.size);
   assert(index < ctx->module->data_segments.capacity);
   WasmDataSegmentPtr* segment_ptr =
@@ -832,7 +905,7 @@ static WasmResult on_local_names_count(uint32_t index,
   WasmModule* module = ctx->module;
   assert(index < module->funcs.size);
   WasmFunc* func = module->funcs.data[index];
-  uint32_t num_params_and_locals = wasm_get_num_params_and_locals(module, func);
+  uint32_t num_params_and_locals = wasm_get_num_params_and_locals(func);
   if (count > num_params_and_locals) {
     print_error(ctx, "expected local name count (%d) <= local count (%d)",
                 count, num_params_and_locals);
@@ -903,7 +976,7 @@ static WasmResult on_local_name(uint32_t func_index,
   Context* ctx = user_data;
   WasmModule* module = ctx->module;
   WasmFunc* func = module->funcs.data[func_index];
-  uint32_t num_params = wasm_get_num_params(module, func);
+  uint32_t num_params = wasm_get_num_params(func);
   WasmStringSlice new_name;
   dup_name(ctx, &name, &new_name);
   WasmBindingHash* bindings;
@@ -932,15 +1005,19 @@ static WasmBinaryReader s_binary_reader = {
 
     .on_import_count = on_import_count,
     .on_import = on_import,
+    .on_import_func = on_import_func,
+    .on_import_table = on_import_table,
+    .on_import_memory = on_import_memory,
+    .on_import_global = on_import_global,
 
     .on_function_signatures_count = on_function_signatures_count,
     .on_function_signature = on_function_signature,
 
-    .begin_table_section = begin_table_section,
-    .on_table_limits = on_table_limits,
+    .on_table_count = on_table_count,
+    .on_table = on_table,
 
-    .begin_memory_section = begin_memory_section,
-    .on_memory_limits = on_memory_limits,
+    .on_memory_count = on_memory_count,
+    .on_memory = on_memory,
 
     .on_global_count = on_global_count,
     .begin_global = begin_global,
@@ -961,7 +1038,6 @@ static WasmBinaryReader s_binary_reader = {
     .on_br_if_expr = on_br_if_expr,
     .on_br_table_expr = on_br_table_expr,
     .on_call_expr = on_call_expr,
-    .on_call_import_expr = on_call_import_expr,
     .on_call_indirect_expr = on_call_indirect_expr,
     .on_compare_expr = on_compare_expr,
     .on_convert_expr = on_convert_expr,

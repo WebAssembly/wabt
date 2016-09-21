@@ -1187,6 +1187,9 @@ module_fields :
                                 &field->import.global);
           INSERT_BINDING($$, global, globals, @2, *$2);
           break;
+        case WASM_NUM_EXTERNAL_KINDS:
+          assert(0);
+          break;
       }
       wasm_free(parser->allocator, $2);
       APPEND_ITEM_TO_VECTOR($$, Import, import, imports, &field->import);

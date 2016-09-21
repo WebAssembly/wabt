@@ -677,6 +677,9 @@ static void write_module(Context* ctx, const WasmModule* module) {
         case WASM_EXTERNAL_KIND_GLOBAL:
           write_global_header(ctx, &import->global);
           break;
+        case WASM_NUM_EXTERNAL_KINDS:
+          assert(0);
+          break;
       }
     }
     end_section(ctx);

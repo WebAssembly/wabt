@@ -81,8 +81,8 @@ WASM_DEFINE_VECTOR(uint8, WasmUint8);
 
 /* TODO(binji): identical to WasmFuncSignature. Share? */
 typedef struct WasmInterpreterFuncSignature {
-  WasmType result_type;
   WasmTypeVector param_types;
+  WasmTypeVector result_types;
 } WasmInterpreterFuncSignature;
 WASM_DEFINE_ARRAY(interpreter_func_signature, WasmInterpreterFuncSignature);
 
@@ -114,6 +114,12 @@ typedef struct WasmInterpreterTypedValue {
 } WasmInterpreterTypedValue;
 WASM_DEFINE_ARRAY(interpreter_typed_value, WasmInterpreterTypedValue);
 
+typedef struct WasmInterpreterGlobal {
+  WasmInterpreterTypedValue typed_value;
+  WasmBool mutable_;
+} WasmInterpreterGlobal;
+WASM_DEFINE_ARRAY(interpreter_global, WasmInterpreterGlobal);
+
 struct WasmInterpreterModule;
 struct WasmInterpreterImport;
 
@@ -127,7 +133,7 @@ typedef WasmResult (*WasmInterpreterImportCallback)(
 
 typedef struct WasmInterpreterImport {
   WasmStringSlice module_name;
-  WasmStringSlice func_name;
+  WasmStringSlice field_name;
   uint32_t sig_index;
   WasmInterpreterImportCallback callback;
   void* user_data;
@@ -148,7 +154,7 @@ typedef struct WasmInterpreterModule {
   WasmInterpreterFuncTableEntryArray func_table;
   WasmInterpreterImportArray imports;
   WasmInterpreterExportArray exports;
-  WasmInterpreterTypedValueArray globals;
+  WasmInterpreterGlobalArray globals;
   WasmOutputBuffer istream;
   uint32_t start_func_offset; /* == WASM_INVALID_OFFSET if not defined */
 } WasmInterpreterModule;

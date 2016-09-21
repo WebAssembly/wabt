@@ -125,11 +125,11 @@ typedef struct WasmBinaryErrorHandler {
 
 /* matches binary format, do not change */
 enum {
-  WASM_TYPE_VOID,
-  WASM_TYPE_I32,
-  WASM_TYPE_I64,
-  WASM_TYPE_F32,
-  WASM_TYPE_F64,
+  WASM_TYPE_VOID = 0,
+  WASM_TYPE_I32 = 1,
+  WASM_TYPE_I64 = 2,
+  WASM_TYPE_F32 = 3,
+  WASM_TYPE_F64 = 4,
   WASM_NUM_TYPES,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
   /* used when parsing multiple return types to signify an error */
@@ -144,6 +144,7 @@ typedef enum WasmExternalKind {
   WASM_EXTERNAL_KIND_TABLE = 1,
   WASM_EXTERNAL_KIND_MEMORY = 2,
   WASM_EXTERNAL_KIND_GLOBAL = 3,
+  WASM_NUM_EXTERNAL_KINDS,
 } WasmExternalKind;
 
 typedef struct WasmLimits {

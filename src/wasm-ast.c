@@ -505,6 +505,9 @@ void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
     case WASM_EXTERNAL_KIND_GLOBAL:
       wasm_destroy_global(allocator, &import->global);
       break;
+    case WASM_NUM_EXTERNAL_KINDS:
+      assert(0);
+      break;
   }
 }
 
