@@ -4,8 +4,8 @@
 
 A suite of build tools for WebAssembly, including:
 
- - **sexpr-wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
- - **wasm-wast**: the inverse of sexpr-wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
+ - **wast2wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
+ - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
 
 ## Cloning
@@ -71,50 +71,50 @@ update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 CMake will detect if you don't have re2c or Bison installed and use the
 prebuilt source files instead.
 
-## Running sexpr-wasm
+## Running wast2wasm
 
 Some examples:
 
 ```
 # parse and typecheck test.wast
-$ out/sexpr-wasm test.wast
+$ out/wast2wasm test.wast
 
 # parse test.wast and write to binary file test.wasm
-$ out/sexpr-wasm test.wast -o test.wasm
+$ out/wast2wasm test.wast -o test.wasm
 
 # parse spec-test.wast, and write verbose output to stdout (including the
 # meaning of every byte)
-$ out/sexpr-wasm spec-test.wast -v
+$ out/wast2wasm spec-test.wast -v
 
 # parse spec-test.wast, and write files to spec-test.json. Modules are written
 # to spec-test.0.wasm, spec-test.1.wasm, etc.
-$ out/sexpr-wasm spec-test.wast --spec -o spec-test.json
+$ out/wast2wasm spec-test.wast --spec -o spec-test.json
 ```
 
 You can use `-h` to get additional help:
 
 ```
-$ out/sexpr-wasm -h
+$ out/wast2wasm -h
 ```
 
 Or try the [online demo](https://cdn.rawgit.com/WebAssembly/sexpr-wasm-prototype/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
 
-## Running wasm-wast
+## Running wasm2wast
 
 Some examples:
 
 ```
 # parse binary file test.wasm and write s-expression file test.wast
-$ out/wasm-wast test.wasm -o test.wast
+$ out/wasm2wast test.wasm -o test.wast
 
 # parse test.wasm and write test.wast, using the debug names, if any
-$ out/wasm-wast test.wasm --debug-names -o test.wast
+$ out/wasm2wast test.wasm --debug-names -o test.wast
 ```
 
 You can use `-h` to get additional help:
 
 ```
-$ out/wasm-wast -h
+$ out/wasm2wast -h
 ```
 
 ## Running wasm-interp
@@ -251,12 +251,12 @@ expected stderr
 ```
 
 The test runner will copy the input to a temporary file and pass it as an
-argument to the executable (which by default is `out/sexpr-wasm`).
+argument to the executable (which by default is `out/wast2wasm`).
 
 The currently supported list of keys:
 
 - `TOOL`: a set of preconfigured keys, see below.
-- `EXE`: the executable to run, defaults to out/sexpr-wasm
+- `EXE`: the executable to run, defaults to out/wast2wasm
 - `STDIN_FILE`: the file to use for STDIN instead of the contents of this file.
 - `FLAGS`: additional flags to pass to the executable
 - `ERROR`: the expected return value from the executable, defaults to 0
@@ -266,9 +266,9 @@ The currently supported list of keys:
 
 The currently supported list of tools:
 
-- `sexpr-wasm`: runs `sexpr-wasm`
+- `wast2wasm`: runs `wast2wasm`
 - `run-roundtrip`: runs the `run-roundtrip.py` script. This does a roundtrip
-  conversion using `sexpr-wasm` and `wasm-wast`, making sure the .wasm results
+  conversion using `wast2wasm` and `wasm2wast`, making sure the .wasm results
   are identical.
 - `run-interp`: runs the `run-interp.py` script, running all exported functions
 - `run-interp-spec`: runs the `run-interp.py` script with the `--spec` flag

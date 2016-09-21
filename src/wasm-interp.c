@@ -470,7 +470,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
     return WASM_ERROR;
 
   /* an extremely simple JSON parser that only knows how to parse the expected
-   * format from sexpr-wasm */
+   * format from wast2wasm */
   enum {
     INITIAL,
     TOP_OBJECT,

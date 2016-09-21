@@ -223,15 +223,26 @@ add_library(libwasm STATIC
 )
 set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
-# sexpr-wasm
-add_executable(sexpr-wasm src/sexpr-wasm.c)
-add_dependencies(everything sexpr-wasm)
-target_link_libraries(sexpr-wasm libwasm)
+# wast2wasm
+add_executable(wast2wasm src/wast2wasm.c)
+add_dependencies(everything wast2wasm)
+target_link_libraries(wast2wasm libwasm)
 
-# wasm-wast
-add_executable(wasm-wast src/wasm-wast.c)
-add_dependencies(everything wasm-wast)
-target_link_libraries(wasm-wast libwasm)
+# wasm2wast
+add_executable(wasm2wast src/wasm2wast.c)
+add_dependencies(everything wasm2wast)
+target_link_libraries(wasm2wast libwasm)
+
+if (NOT WIN32)
+add_custom_command( TARGET wast2wasm 
+                    POST_BUILD
+                    COMMAND ln -sf wast2wasm sexpr-wasm)
+add_custom_command( TARGET wasm2wast 
+                    POST_BUILD
+                    COMMAND ln -sf wasm2wast wasm-wast)
+
+endif ()
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm-wast" "sexpr-wasm")
 
 # wasm-interp
 add_executable(wasm-interp src/wasm-interp.c)
@@ -301,9 +312,9 @@ find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-      -e $<TARGET_FILE:sexpr-wasm>
-      --wasm-wast $<TARGET_FILE:wasm-wast>
+      -e $<TARGET_FILE:wast2wasm>
+      --wasm2wast $<TARGET_FILE:wasm2wast>
       --wasm-interp $<TARGET_FILE:wasm-interp>
-  DEPENDS sexpr-wasm wasm-wast wasm-interp
+  DEPENDS wast2wasm wasm2wast wasm-interp
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )

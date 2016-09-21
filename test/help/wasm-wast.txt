@@ -1,17 +1,17 @@
 ;;; EXE: %(wasm-wast)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
-usage: wasm-wast [options] filename
+usage: wasm2wast [options] filename
 
   read a file in the wasm binary format, and convert it to the wasm
   s-expression file format.
 
 examples:
   # parse binary file test.wasm and write s-expression file test.wast
-  $ wasm-wast test.wasm -o test.wast
+  $ wasm2wast test.wasm -o test.wast
 
   # parse test.wasm and write test.wast, using the debug names, if any
-  $ wasm-wast test.wasm --debug-names -o test.wast
+  $ wasm2wast test.wasm --debug-names -o test.wast
 
 options:
   -v, --verbose                   use multiple times for more info
