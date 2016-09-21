@@ -3,7 +3,7 @@
   "\00ASM"
   "\0b\00\00\00")
 (;; STDERR ;;;
-parse/module/bad-binary-module-magic.txt:2:2: error in binary module: @0x00000004: magic value mismatch
+parse/module/bad-binary-module-magic.txt:2:2: error in binary module: @0x00000004: bad magic value
 (module
  ^^^^^^
 ;;; STDERR ;;)
