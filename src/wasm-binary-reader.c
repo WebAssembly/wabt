@@ -85,6 +85,11 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
 
+static const char* s_external_kind_name[] = {"func", "table", "memory",
+                                             "global"};
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_external_kind_name) ==
+                   WASM_NUM_EXTERNAL_KINDS);
+
 typedef struct Context {
   const uint8_t* data;
   size_t size;
@@ -315,8 +320,16 @@ static void in_bytes(Context* ctx,
   ctx->offset += data_size;
 }
 
+static WasmBool is_valid_external_kind(uint8_t kind) {
+  return kind < WASM_NUM_EXTERNAL_KINDS;
+}
+
 static WasmBool is_concrete_type(uint8_t type) {
   return type != WASM_TYPE_VOID && type < WASM_NUM_TYPES;
+}
+
+static WasmBool is_inline_sig_type(uint8_t type) {
+  return type < WASM_NUM_TYPES;
 }
 
 static WasmBool skip_until_section(Context* ctx,
@@ -426,13 +439,6 @@ static void logging_on_error(uint32_t offset,
     FORWARD0(end_##name);                                 \
   }
 
-#define LOGGING_UINT8_DESC(name, desc)                               \
-  static WasmResult logging_##name(uint8_t value, void* user_data) { \
-    LoggingContext* ctx = user_data;                                 \
-    LOGF(#name "(" desc ": %u)\n", value);                           \
-    FORWARD(name, value);                                            \
-  }
-
 #define LOGGING_UINT32(name)                                          \
   static WasmResult logging_##name(uint32_t value, void* user_data) { \
     LoggingContext* ctx = user_data;                                  \
@@ -505,7 +511,6 @@ LOGGING_UINT32(begin_function_body)
 LOGGING_UINT32(end_function_body)
 LOGGING_UINT32(on_local_decl_count)
 LOGGING_OPCODE(on_binary_expr)
-LOGGING_UINT8_DESC(on_block_expr, "sig_type")
 LOGGING_UINT32_DESC(on_call_expr, "func_index")
 LOGGING_UINT32_DESC(on_call_import_expr, "import_index")
 LOGGING_UINT32_DESC(on_call_indirect_expr, "sig_index")
@@ -518,8 +523,6 @@ LOGGING0(on_end_expr)
 LOGGING_UINT32_DESC(on_get_global_expr, "index")
 LOGGING_UINT32_DESC(on_get_local_expr, "index")
 LOGGING0(on_grow_memory_expr)
-LOGGING_UINT8_DESC(on_if_expr, "sig_type")
-LOGGING_UINT8_DESC(on_loop_expr, "sig_type")
 LOGGING0(on_nop_expr)
 LOGGING0(on_return_expr)
 LOGGING0(on_select_expr)
@@ -562,21 +565,33 @@ static void sprint_limits(char* dst, size_t size, const WasmLimits* limits) {
   assert((size_t)result < size);
 }
 
-static WasmResult logging_on_signature(uint32_t index,
-                                       WasmType result_type,
-                                       uint32_t param_count,
-                                       WasmType* param_types,
-                                       void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_signature(index: %u, %s (", index, s_type_names[result_type]);
+static void log_types(LoggingContext* ctx,
+                      uint32_t type_count,
+                      WasmType* types) {
   uint32_t i;
-  for (i = 0; i < param_count; ++i) {
-    LOGF_NOINDENT("%s", s_type_names[result_type]);
-    if (i != param_count - 1)
+  LOGF_NOINDENT("[");
+  for (i = 0; i < type_count; ++i) {
+    LOGF_NOINDENT("%s", s_type_names[types[i]]);
+    if (i != type_count - 1)
       LOGF_NOINDENT(", ");
   }
-  LOGF_NOINDENT("))\n");
-  FORWARD(on_signature, index, result_type, param_count, param_types);
+  LOGF_NOINDENT("]");
+}
+
+static WasmResult logging_on_signature(uint32_t index,
+                                       uint32_t param_count,
+                                       WasmType* param_types,
+                                       uint32_t result_count,
+                                       WasmType* result_types,
+                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_signature(index: %u, params: ", index);
+  log_types(ctx, param_count, param_types);
+  LOGF_NOINDENT(", results: ");
+  log_types(ctx, result_count, result_types);
+  LOGF_NOINDENT(")\n");
+  FORWARD(on_signature, index, param_count, param_types, result_count,
+          result_types);
 }
 
 static WasmResult logging_on_import(uint32_t index,
@@ -655,13 +670,16 @@ static WasmResult logging_begin_global(uint32_t index,
 }
 
 static WasmResult logging_on_export(uint32_t index,
-                                    uint32_t func_index,
+                                    WasmExternalKind kind,
+                                    uint32_t item_index,
                                     WasmStringSlice name,
                                     void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_export(index: %u, func_index: %u, name: \"" PRIstringslice "\")\n",
-       index, func_index, WASM_PRINTF_STRING_SLICE_ARG(name));
-  FORWARD(on_export, index, func_index, name);
+  LOGF("on_export(index: %u, kind: %s, item_index: %u, name: \"" PRIstringslice
+       "\")\n",
+       index, s_external_kind_name[kind], item_index,
+       WASM_PRINTF_STRING_SLICE_ARG(name));
+  FORWARD(on_export, index, kind, item_index, name);
 }
 
 static WasmResult logging_begin_function_body_pass(uint32_t index,
@@ -681,6 +699,16 @@ static WasmResult logging_on_local_decl(uint32_t decl_index,
   LOGF("on_local_decl(index: %u, count: %u, type: %s)\n", decl_index, count,
        s_type_names[type]);
   FORWARD(on_local_decl, decl_index, count, type);
+}
+
+static WasmResult logging_on_block_expr(uint32_t num_types,
+                                        WasmType* sig_types,
+                                        void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_block_expr(sig: ");
+  log_types(ctx, num_types, sig_types);
+  LOGF(")");
+  FORWARD(on_block_expr, num_types, sig_types);
 }
 
 static WasmResult logging_on_br_expr(uint32_t depth, void* user_data) {
@@ -741,6 +769,16 @@ static WasmResult logging_on_i64_const_expr(uint64_t value, void* user_data) {
   FORWARD(on_i64_const_expr, value);
 }
 
+static WasmResult logging_on_if_expr(uint32_t num_types,
+                                     WasmType* sig_types,
+                                     void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_if_expr(sig: ");
+  log_types(ctx, num_types, sig_types);
+  LOGF(")");
+  FORWARD(on_if_expr, num_types, sig_types);
+}
+
 static WasmResult logging_on_load_expr(WasmOpcode opcode,
                                        uint32_t alignment_log2,
                                        uint32_t offset,
@@ -749,6 +787,16 @@ static WasmResult logging_on_load_expr(WasmOpcode opcode,
   LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
        s_opcode_name[opcode], opcode, alignment_log2, offset);
   FORWARD(on_load_expr, opcode, alignment_log2, offset);
+}
+
+static WasmResult logging_on_loop_expr(uint32_t num_types,
+                                       WasmType* sig_types,
+                                       void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_loop_expr(sig: ");
+  log_types(ctx, num_types, sig_types);
+  LOGF(")");
+  FORWARD(on_loop_expr, num_types, sig_types);
 }
 
 static WasmResult logging_on_store_expr(WasmOpcode opcode,
@@ -1154,8 +1202,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                            "expected valid result type");
       }
 
-      CALLBACK(on_signature, i, (WasmType)result_type, num_params,
-               ctx->param_types.data);
+      CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
+               &result_type);
     }
     CALLBACK0(end_signature_section);
   }
@@ -1294,15 +1342,39 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     in_u32_leb128(ctx, &num_exports, "export count");
     CALLBACK(on_export_count, num_exports);
     for (i = 0; i < num_exports; ++i) {
-      uint32_t func_index;
-      in_u32_leb128(ctx, &func_index, "export function index");
-      RAISE_ERROR_UNLESS(func_index < num_function_signatures,
-                         "invalid export function index");
-
       WasmStringSlice name;
       in_str(ctx, &name, "export item name");
 
-      CALLBACK(on_export, i, func_index, name);
+      uint8_t external_kind;
+      in_u8(ctx, &external_kind, "export external kind");
+      RAISE_ERROR_UNLESS(is_valid_external_kind(external_kind),
+                         "invalid export external kind");
+
+      uint32_t item_index;
+      in_u32_leb128(ctx, &item_index, "export item index");
+      switch (external_kind) {
+        case WASM_EXTERNAL_KIND_FUNC:
+          RAISE_ERROR_UNLESS(item_index < num_function_signatures,
+                             "invalid export func index");
+          break;
+        case WASM_EXTERNAL_KIND_TABLE:
+          RAISE_ERROR_UNLESS(item_index < num_tables,
+                             "invalid export table index");
+          break;
+        case WASM_EXTERNAL_KIND_MEMORY:
+          RAISE_ERROR_UNLESS(item_index < num_memories,
+                             "invalid export memory index");
+          break;
+        case WASM_EXTERNAL_KIND_GLOBAL:
+          RAISE_ERROR_UNLESS(item_index < num_globals,
+                             "invalid export global index");
+          break;
+        case WASM_NUM_EXTERNAL_KINDS:
+          assert(0);
+          break;
+      }
+
+      CALLBACK(on_export, i, external_kind, item_index, name);
     }
     CALLBACK0(end_export_section);
   }
@@ -1364,21 +1436,30 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             case WASM_OPCODE_BLOCK: {
               uint8_t sig_type;
               in_u8(ctx, &sig_type, "block signature type");
-              CALLBACK(on_block_expr, sig_type);
+              RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
+                                 "expected valid block signature type");
+              uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
+              CALLBACK(on_block_expr, num_types, &sig_type);
               break;
             }
 
             case WASM_OPCODE_LOOP: {
               uint8_t sig_type;
               in_u8(ctx, &sig_type, "loop signature type");
-              CALLBACK(on_loop_expr, sig_type);
+              RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
+                                 "expected valid block signature type");
+              uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
+              CALLBACK(on_loop_expr, num_types, &sig_type);
               break;
             }
 
             case WASM_OPCODE_IF: {
               uint8_t sig_type;
               in_u8(ctx, &sig_type, "if signature type");
-              CALLBACK(on_if_expr, sig_type);
+              RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
+                                 "expected valid block signature type");
+              uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
+              CALLBACK(on_if_expr, num_types, &sig_type);
               break;
             }
 

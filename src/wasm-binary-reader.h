@@ -47,9 +47,10 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_signature_section)(void* user_data);
   WasmResult (*on_signature_count)(uint32_t count, void* user_data);
   WasmResult (*on_signature)(uint32_t index,
-                             WasmType result_type,
                              uint32_t param_count,
                              WasmType* param_types,
+                             uint32_t result_count,
+                             WasmType* result_types,
                              void* user_data);
   WasmResult (*end_signature_section)(void* user_data);
 
@@ -118,6 +119,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_export_section)(void* user_data);
   WasmResult (*on_export_count)(uint32_t count, void* user_data);
   WasmResult (*on_export)(uint32_t index,
+                          WasmExternalKind kind,
                           uint32_t item_index,
                           WasmStringSlice name,
                           void* user_data);
@@ -145,7 +147,9 @@ typedef struct WasmBinaryReader {
   /* function expressions; called between begin_function_body and
    end_function_body */
   WasmResult (*on_binary_expr)(WasmOpcode opcode, void* user_data);
-  WasmResult (*on_block_expr)(uint8_t sig_type, void* user_data);
+  WasmResult (*on_block_expr)(uint32_t num_types,
+                              WasmType* sig_types,
+                              void* user_data);
   WasmResult (*on_br_expr)(uint32_t depth, void* user_data);
   WasmResult (*on_br_if_expr)(uint32_t depth, void* user_data);
   WasmResult (*on_br_table_expr)(uint32_t num_targets,
@@ -167,12 +171,16 @@ typedef struct WasmBinaryReader {
   WasmResult (*on_grow_memory_expr)(void* user_data);
   WasmResult (*on_i32_const_expr)(uint32_t value, void* user_data);
   WasmResult (*on_i64_const_expr)(uint64_t value, void* user_data);
-  WasmResult (*on_if_expr)(uint8_t sig_type, void* user_data);
+  WasmResult (*on_if_expr)(uint32_t num_types,
+                           WasmType* sig_types,
+                           void* user_data);
   WasmResult (*on_load_expr)(WasmOpcode opcode,
                              uint32_t alignment_log2,
                              uint32_t offset,
                              void* user_data);
-  WasmResult (*on_loop_expr)(uint8_t sig_type, void* user_data);
+  WasmResult (*on_loop_expr)(uint32_t num_types,
+                             WasmType* sig_types,
+                             void* user_data);
   WasmResult (*on_current_memory_expr)(void* user_data);
   WasmResult (*on_nop_expr)(void* user_data);
   WasmResult (*on_return_expr)(void* user_data);
