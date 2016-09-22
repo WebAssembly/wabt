@@ -3,7 +3,7 @@
   (import "bar" "baz" (func $foo (param i32)))
   (import "quux" "blorf" (func $foo (param f32))))
 (;; STDERR ;;;
-parse/module/bad-import-redefinition.txt:4:3: redefinition of function "$foo"
+parse/module/bad-import-func-redefinition.txt:4:3: redefinition of function "$foo"
   (import "quux" "blorf" (func $foo (param f32))))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)
