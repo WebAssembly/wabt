@@ -54,9 +54,6 @@ static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-typedef size_t WasmSizeT;
-WASM_DEFINE_VECTOR(size_t, WasmSizeT);
-
 typedef enum CheckStyle {
   CHECK_STYLE_NAME,
   CHECK_STYLE_FULL,
@@ -66,9 +63,11 @@ typedef struct LabelNode {
   const WasmLabel* label;
   const WasmTypeVector* sig;
   struct LabelNode* next;
+  size_t type_stack_limit;
 } LabelNode;
 
 typedef enum ActionResultKind {
+  ACTION_RESULT_KIND_ERROR,
   ACTION_RESULT_KIND_TYPES,
   ACTION_RESULT_KIND_TYPE,
 } ActionResultKind;
@@ -89,7 +88,6 @@ typedef struct Context {
   const WasmModule* current_module;
   const WasmFunc* current_func;
   int current_global_index;
-  WasmSizeTVector type_stack_limit;
   WasmTypeVector type_stack;
   LabelNode* top_label;
   int max_depth;
@@ -346,6 +344,7 @@ static void push_label(Context* ctx,
   node->label = label;
   node->next = ctx->top_label;
   node->sig = sig;
+  node->type_stack_limit = ctx->type_stack.size;
   ctx->top_label = node;
   ctx->max_depth++;
 }
@@ -356,18 +355,8 @@ static void pop_label(Context* ctx) {
 }
 
 static size_t type_stack_limit(Context* ctx) {
-  return ctx->type_stack_limit.data[ctx->type_stack_limit.size - 1];
-}
-
-static size_t push_type_stack_limit(Context* ctx) {
-  size_t limit = ctx->type_stack.size;
-  wasm_append_size_t_value(ctx->allocator, &ctx->type_stack_limit, &limit);
-  return limit;
-}
-
-static void pop_type_stack_limit(Context* ctx) {
-  assert(ctx->type_stack_limit.size > 0);
-  ctx->type_stack_limit.size--;
+  assert(ctx->top_label != NULL);
+  return ctx->top_label->type_stack_limit;
 }
 
 static WasmResult check_type_stack_limit(Context* ctx,
@@ -381,6 +370,21 @@ static WasmResult check_type_stack_limit(Context* ctx,
                 "type stack size too small at %s. got %" PRIzd
                 ", expected at least %" PRIzd,
                 desc, avail, expected);
+    return WASM_ERROR;
+  }
+  return WASM_OK;
+}
+
+static WasmResult check_type_stack_limit_exact(Context* ctx,
+                                               const WasmLocation* loc,
+                                               size_t expected,
+                                               const char* desc) {
+  size_t limit = type_stack_limit(ctx);
+  size_t avail = ctx->type_stack.size - limit;
+  if (expected != avail) {
+    print_error(ctx, CHECK_STYLE_FULL, loc,
+                "type stack at end of %s is %" PRIzd ". expected %" PRIzd, desc,
+                avail, expected);
     return WASM_ERROR;
   }
   return WASM_OK;
@@ -583,7 +587,8 @@ static WasmResult check_br(Context* ctx,
   WasmResult result = check_label_var(ctx, ctx->top_label, var, &node);
   if (WASM_SUCCEEDED(result)) {
     check_n_types(ctx, loc, node->sig, desc);
-    *out_sig = node->sig;
+    if (out_sig)
+      *out_sig = node->sig;
   }
   return result;
 }
@@ -624,7 +629,6 @@ static void check_block(Context* ctx,
                         const char* desc) {
   if (first) {
     WasmBool check_result = WASM_TRUE;
-    size_t limit = push_type_stack_limit(ctx);
     const WasmExpr* expr;
     for (expr = first; expr; expr = expr->next) {
       check_expr(ctx, expr);
@@ -637,9 +641,9 @@ static void check_block(Context* ctx,
     if (check_result) {
       assert(ctx->top_label != NULL);
       check_n_types(ctx, loc, ctx->top_label->sig, desc);
+      check_type_stack_limit_exact(ctx, loc, ctx->top_label->sig->size, desc);
     }
-    ctx->type_stack.size = limit;
-    pop_type_stack_limit(ctx);
+    ctx->type_stack.size = ctx->top_label->type_stack_limit;
   }
 }
 
@@ -750,6 +754,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_IF: {
       LabelNode node;
+      pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "if condition");
       push_label(ctx, &expr->loc, &node, &expr->if_.true_.label,
                  &expr->if_.true_.sig);
       check_block(ctx, &expr->loc, expr->if_.true_.first, "if true branch");
@@ -770,6 +775,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       push_label(ctx, &expr->loc, &node, &expr->loop.label, &expr->loop.sig);
       check_block(ctx, &expr->loc, expr->loop.first, "loop");
       pop_label(ctx);
+      push_types(ctx, &expr->block.sig);
       break;
     }
 
@@ -880,7 +886,7 @@ static void check_func(Context* ctx,
   LabelNode node;
   WasmLabel label = wasm_empty_string_slice();
   push_label(ctx, loc, &node, &label, &func->decl.sig.result_types);
-  check_block(ctx, loc, func->first_expr, "function result");
+  check_block(ctx, loc, func->first_expr, "function");
   pop_label(ctx);
   ctx->current_func = NULL;
 }
@@ -1117,8 +1123,24 @@ static void check_import(Context* ctx,
   }
 }
 
-static void check_export(Context* ctx, const WasmExport* export) {
-  check_func_var(ctx, &export->var, NULL);
+static void check_export(Context* ctx, const WasmExport* export_) {
+  switch (export_->kind) {
+    case WASM_EXTERNAL_KIND_FUNC:
+      check_func_var(ctx, &export_->var, NULL);
+      break;
+    case WASM_EXTERNAL_KIND_TABLE:
+      check_table_var(ctx, &export_->var, NULL);
+      break;
+    case WASM_EXTERNAL_KIND_MEMORY:
+      check_memory_var(ctx, &export_->var, NULL);
+      break;
+    case WASM_EXTERNAL_KIND_GLOBAL:
+      check_global_var(ctx, &export_->var, NULL, NULL);
+      break;
+    case WASM_NUM_EXTERNAL_KINDS:
+      assert(0);
+      break;
+  }
 }
 
 static void check_module(Context* ctx, const WasmModule* module) {
@@ -1314,8 +1336,9 @@ static ActionResult check_action(Context* ctx, const WasmAction* action) {
 
   switch (action->type) {
     case WASM_ACTION_TYPE_INVOKE:
-      result.kind = ACTION_RESULT_KIND_TYPES;
       result.types = check_invoke(ctx, action);
+      result.kind =
+          result.types ? ACTION_RESULT_KIND_TYPES : ACTION_RESULT_KIND_ERROR;
       break;
 
     case WASM_ACTION_TYPE_GET:
@@ -1356,6 +1379,10 @@ static void check_command(Context* ctx, const WasmCommand* command) {
           check_const_type(ctx, &action->loc, result.type,
                            &command->assert_return.expected, "action");
           break;
+
+        case ACTION_RESULT_KIND_ERROR:
+          /* error occurred, don't do any further checks */
+          break;
       }
       break;
     }
@@ -1379,7 +1406,8 @@ static void check_command(Context* ctx, const WasmCommand* command) {
         }
       }
 
-      if (result.type != WASM_TYPE_ANY)
+      if (result.kind == ACTION_RESULT_KIND_TYPE &&
+          result.type != WASM_TYPE_ANY)
         check_assert_return_nan_type(ctx, &action->loc, result.type, "action");
       break;
     }

@@ -1,4 +1,0 @@
-(module
-  (func
-    (block
-      (br_table 0 (i32.const 0)))))

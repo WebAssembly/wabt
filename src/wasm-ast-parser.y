@@ -97,6 +97,15 @@
     }                                                                   \
   while (0)
 
+#define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)               \
+  do {                                                                 \
+    if ((module)->kinds.size != (module)->num_##kind##_imports) {      \
+      wasm_ast_parser_error(&loc_, lexer, parser,                      \
+                            "imported " #kind                          \
+                            " must occur before all defined " #kinds); \
+    }                                                                  \
+  } while (0)
+
 #define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
 #define YYFREE(p) wasm_free(parser->allocator, p)
 
@@ -1172,20 +1181,28 @@ module_fields :
                                            &$2->func.decl);
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
           INSERT_BINDING($$, func, funcs, @2, *$2);
+          $$->num_func_imports++;
+          CHECK_IMPORT_ORDERING($$, func, funcs, @2);
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
           INSERT_BINDING($$, table, tables, @2, *$2);
+          $$->num_table_imports++;
+          CHECK_IMPORT_ORDERING($$, table, tables, @2);
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING($$, memory, memories, @2, *$2);
+          $$->num_memory_imports++;
+          CHECK_IMPORT_ORDERING($$, memory, memories, @2);
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING($$, global, globals, @2, *$2);
+          $$->num_global_imports++;
+          CHECK_IMPORT_ORDERING($$, global, globals, @2);
           break;
         case WASM_NUM_EXTERNAL_KINDS:
           assert(0);

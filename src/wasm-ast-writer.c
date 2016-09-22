@@ -270,7 +270,8 @@ static void write_types(Context* ctx,
       write_open_space(ctx, name);
     for (i = 0; i < types->size; ++i)
       write_type(ctx, types->data[i], NEXT_CHAR_SPACE);
-    write_close_space(ctx);
+    if (name)
+      write_close_space(ctx);
   }
 }
 
@@ -658,6 +659,7 @@ static void write_import(Context* ctx, const WasmImport* import) {
   write_quoted_string_slice(ctx, &import->field_name, NEXT_CHAR_SPACE);
   switch (import->kind) {
     case WASM_EXTERNAL_KIND_FUNC:
+      write_open_space(ctx, "func");
       if (wasm_decl_has_func_type(&import->func.decl)) {
         write_open_space(ctx, "type");
         write_var(ctx, &import->func.decl.type_var, NEXT_CHAR_NONE);
@@ -665,6 +667,7 @@ static void write_import(Context* ctx, const WasmImport* import) {
       } else {
         write_func_sig_space(ctx, &import->func.decl.sig);
       }
+      write_close_space(ctx);
       break;
 
     case WASM_EXTERNAL_KIND_TABLE:
@@ -692,9 +695,14 @@ static void write_import(Context* ctx, const WasmImport* import) {
 }
 
 static void write_export(Context* ctx, const WasmExport* export) {
+  static const char* s_kind_names[] = {"func", "table", "memory", "global"};
+  WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_kind_names) == WASM_NUM_EXTERNAL_KINDS);
   write_open_space(ctx, "export");
   write_quoted_string_slice(ctx, &export->name, NEXT_CHAR_SPACE);
+  assert(export->kind < WASM_ARRAY_SIZE(s_kind_names));
+  write_open_space(ctx, s_kind_names[export->kind]);
   write_var(ctx, &export->var, NEXT_CHAR_SPACE);
+  write_close_space(ctx);
   write_close_newline(ctx);
 }
 

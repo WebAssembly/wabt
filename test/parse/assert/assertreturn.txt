@@ -1,9 +1,9 @@
 ;;; FLAGS: --spec
 (module
   (func $foo (result i32) (i32.const 0))
-  (export "foo" $foo)
+  (export "foo" (func $foo))
   (func $bar (param f32) (result f32) (get_local 0))
-  (export "bar" $bar))
+  (export "bar" (func $bar)))
 
 (assert_return (invoke "foo") (i32.const 0))
 (assert_return (invoke "bar" (f32.const 0)) (f32.const 0))

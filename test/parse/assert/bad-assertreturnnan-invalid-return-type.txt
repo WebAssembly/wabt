@@ -2,11 +2,11 @@
 ;;; FLAGS: --spec
 (module
   (func $foo (result i32) (i32.const 0))
-  (export "foo" $foo))
+  (export "foo" (func $foo)))
 
 (assert_return_nan (invoke "foo"))
 (;; STDERR ;;;
-parse/assert/bad-assertreturnnan-invalid-return-type.txt:7:21: type mismatch at invoke. got i32, expected f32 or f64
+parse/assert/bad-assertreturnnan-invalid-return-type.txt:7:21: type mismatch at action. got i32, expected f32 or f64
 (assert_return_nan (invoke "foo"))
                     ^^^^^^
 ;;; STDERR ;;)

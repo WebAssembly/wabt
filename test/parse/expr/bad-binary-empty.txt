@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module (func (i32.add)))
-(;; STDERR ;;;
-parse/expr/bad-binary-empty.txt:2:23: syntax error, unexpected )
-(module (func (i32.add)))
-                      ^
-;;; STDERR ;;)

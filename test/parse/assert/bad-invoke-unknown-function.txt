@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 ;;; FLAGS: --spec
 (module
-  (export "foo" $foo)
+  (export "foo" (func $foo))
   (func $foo))
 
 (invoke "bar")

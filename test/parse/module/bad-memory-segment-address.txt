@@ -6,7 +6,7 @@
 parse/module/bad-memory-segment-address.txt:4:9: unexpected token "foo"
   (data foo))
         ^^^
-parse/module/bad-memory-segment-address.txt:4:12: syntax error, unexpected ), expecting (
+parse/module/bad-memory-segment-address.txt:4:12: syntax error, unexpected ), expecting ( or NAT or VAR
   (data foo))
            ^
 ;;; STDERR ;;)

@@ -1,7 +1,10 @@
 ;;; ERROR: 1
 (module (func (i32.add (i32.const 0))))
 (;; STDERR ;;;
-parse/expr/bad-binary-one-expr.txt:2:37: syntax error, unexpected )
+parse/expr/bad-binary-one-expr.txt:2:16: type stack size too small at i32.add. got 1, expected at least 2
 (module (func (i32.add (i32.const 0))))
-                                    ^
+               ^^^^^^^
+parse/expr/bad-binary-one-expr.txt:2:9: type stack at end of function is 2. expected 0
+(module (func (i32.add (i32.const 0))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

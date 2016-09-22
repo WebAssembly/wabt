@@ -1,6 +1,6 @@
 ;;; FLAGS: --spec
 (module
-  (export "test" $test)
+  (export "test" (func $test))
   (func $test (param i32) (result i32)
     (i32.add (get_local 0) (i32.const 100))))
 

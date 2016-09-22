@@ -1,9 +1,0 @@
-;;; ERROR: 1
-(module
-  (func $foo (param i32) (param f32)
-    (call 0 (i32.const 0))))
-(;; STDERR ;;;
-parse/expr/bad-call-too-few-named.txt:4:6: type stack size too small at call. got 1, expected at least 2
-    (call 0 (i32.const 0))))
-     ^^^^
-;;; STDERR ;;)
