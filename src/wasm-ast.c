@@ -186,6 +186,14 @@ int wasm_get_global_index_by_var(const WasmModule* module, const WasmVar* var) {
   return wasm_get_index_from_var(&module->global_bindings, var);
 }
 
+int wasm_get_table_index_by_var(const WasmModule* module, const WasmVar* var) {
+  return wasm_get_index_from_var(&module->table_bindings, var);
+}
+
+int wasm_get_memory_index_by_var(const WasmModule* module, const WasmVar* var) {
+  return wasm_get_index_from_var(&module->memory_bindings, var);
+}
+
 int wasm_get_func_type_index_by_var(const WasmModule* module,
                                     const WasmVar* var) {
   return wasm_get_index_from_var(&module->func_type_bindings, var);
@@ -220,6 +228,22 @@ WasmGlobalPtr wasm_get_global_by_var(const WasmModule* module,
   if (index < 0 || (size_t)index >= module->globals.size)
     return NULL;
   return module->globals.data[index];
+}
+
+WasmTablePtr wasm_get_table_by_var(const WasmModule* module,
+                                   const WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->table_bindings, var);
+  if (index < 0 || (size_t)index >= module->tables.size)
+    return NULL;
+  return module->tables.data[index];
+}
+
+WasmMemoryPtr wasm_get_memory_by_var(const WasmModule* module,
+                                   const WasmVar* var) {
+  int index = wasm_get_index_from_var(&module->memory_bindings, var);
+  if (index < 0 || (size_t)index >= module->memories.size)
+    return NULL;
+  return module->memories.data[index];
 }
 
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,

@@ -202,6 +202,9 @@ static WasmResult on_import_func(uint32_t index,
   import->func.decl.type_var.type = WASM_VAR_TYPE_INDEX;
   import->func.decl.type_var.index = sig_index;
   import->func.decl.sig = ctx->module->func_types.data[sig_index]->sig;
+
+  WasmFuncPtr func_ptr = &import->func;
+  wasm_append_func_ptr_value(ctx->allocator, &ctx->module->funcs, &func_ptr);
   return WASM_OK;
 }
 
@@ -212,8 +215,10 @@ static WasmResult on_import_table(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->imports.size - 1);
   WasmImport* import = ctx->module->imports.data[index];
-
   import->table.elem_limits = *elem_limits;
+
+  WasmTablePtr table_ptr = &import->table;
+  wasm_append_table_ptr_value(ctx->allocator, &ctx->module->tables, &table_ptr);
   return WASM_OK;
 }
 
@@ -223,8 +228,11 @@ static WasmResult on_import_memory(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->imports.size - 1);
   WasmImport* import = ctx->module->imports.data[index];
-
   import->memory.page_limits = *page_limits;
+
+  WasmMemoryPtr memory_ptr = &import->memory;
+  wasm_append_memory_ptr_value(ctx->allocator, &ctx->module->memories,
+                               &memory_ptr);
   return WASM_OK;
 }
 
@@ -235,9 +243,12 @@ static WasmResult on_import_global(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->imports.size - 1);
   WasmImport* import = ctx->module->imports.data[index];
-
   import->global.type = type;
   import->global.mutable_ = mutable_;
+
+  WasmGlobalPtr global_ptr = &import->global;
+  wasm_append_global_ptr_value(ctx->allocator, &ctx->module->globals,
+                               &global_ptr);
   return WASM_OK;
 }
 

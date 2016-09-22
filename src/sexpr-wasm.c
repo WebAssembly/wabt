@@ -320,7 +320,8 @@ static void on_command(uint32_t index,
                        void* user_data) {
   static const char* s_command_names[] = {
       "module",
-      "invoke",
+      "action",
+      "register",
       "assert_invalid",
       "assert_return",
       "assert_return_nan",

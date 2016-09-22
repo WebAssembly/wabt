@@ -486,7 +486,6 @@ int wasm_get_func_type_index_by_decl(const WasmModule* module,
                                      const WasmFuncDeclaration* decl);
 int wasm_get_table_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_memory_index_by_var(const WasmModule* module, const WasmVar* var);
-
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
 
@@ -495,6 +494,10 @@ WasmGlobalPtr wasm_get_global_by_var(const WasmModule* func,
                                      const WasmVar* var);
 WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
                                           const WasmVar* var);
+WasmTablePtr wasm_get_table_by_var(const WasmModule* module,
+                                   const WasmVar* var);
+WasmMemoryPtr wasm_get_memory_by_var(const WasmModule* module,
+                                     const WasmVar* var);
 WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
                                      const WasmVar* var);
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
@@ -509,19 +512,6 @@ void wasm_make_type_binding_reverse_mapping(
 static WASM_INLINE WasmBool
 wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
   return decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
-}
-
-static WASM_INLINE WasmBool
-wasm_type_vectors_are_equal(const WasmTypeVector* types1,
-                            const WasmTypeVector* types2) {
-  if (types1->size != types2->size)
-    return WASM_FALSE;
-  size_t i;
-  for (i = 0; i < types1->size; ++i) {
-    if (types1->data[i] != types2->data[i])
-      return WASM_FALSE;
-  }
-  return WASM_TRUE;
 }
 
 static WASM_INLINE WasmBool

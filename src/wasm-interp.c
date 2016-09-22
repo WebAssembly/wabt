@@ -231,15 +231,21 @@ static void print_typed_value(WasmInterpreterTypedValue* tv) {
   }
 }
 
-static WasmResult default_import_callback(WasmInterpreterModule* module,
-                                          WasmInterpreterImport* import,
-                                          uint32_t num_args,
-                                          WasmInterpreterTypedValue* args,
-                                          WasmInterpreterTypedValue* out_result,
-                                          void* user_data) {
+static WasmResult default_import_callback(
+    WasmInterpreterModule* module,
+    WasmInterpreterImport* import,
+    uint32_t num_args,
+    WasmInterpreterTypedValue* args,
+    uint32_t num_results,
+    WasmInterpreterTypedValue* out_results,
+    void* user_data) {
+  assert(import->sig_index < module->sigs.size);
+  WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
+  memset(out_results, 0, sizeof(WasmInterpreterTypedValue) * num_results);
+
   printf("called import " PRIstringslice "." PRIstringslice "(",
          WASM_PRINTF_STRING_SLICE_ARG(import->module_name),
-         WASM_PRINTF_STRING_SLICE_ARG(import->func_name));
+         WASM_PRINTF_STRING_SLICE_ARG(import->field_name));
   uint32_t i;
   for (i = 0; i < num_args; ++i) {
     print_typed_value(&args[i]);
@@ -247,21 +253,14 @@ static WasmResult default_import_callback(WasmInterpreterModule* module,
       printf(", ");
   }
 
-  assert(import->sig_index < module->sigs.size);
-  WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
-
-  WasmInterpreterTypedValue result;
-  WASM_ZERO_MEMORY(result);
-  result.type = sig->result_type;
-
-  if (sig->result_type != WASM_TYPE_VOID) {
-    printf(") => ");
-    print_typed_value(&result);
-    printf("\n");
-  } else {
-    printf(")\n");
+  printf(") => (");
+  for (i = 0; i < num_results; ++i) {
+    out_results[i].type = sig->result_types.data[i];
+    print_typed_value(&out_results[i]);
+    if (i != num_results - 1)
+      printf(", ");
   }
-  *out_result = result;
+  printf(")\n");
   return WASM_OK;
 }
 
@@ -310,10 +309,11 @@ static WasmResult run_start_function(WasmInterpreterModule* module,
 }
 
 static WasmInterpreterResult run_export(
+    WasmAllocator* allocator,
     WasmInterpreterModule* module,
     WasmInterpreterThread* thread,
     WasmInterpreterExport* export,
-    WasmInterpreterTypedValue* out_return_value,
+    WasmInterpreterTypedValueVector* out_results,
     RunVerbosity verbose) {
   /* pass all zeroes to the function */
   assert(export->sig_index < module->sigs.size);
@@ -339,23 +339,25 @@ static WasmInterpreterResult run_export(
       if (i != num_params - 1)
         printf(", ");
     }
-    if (sig->result_type != WASM_TYPE_VOID)
-      printf(") => ");
-    else
-      printf(") ");
+    printf(") => ");
   }
 
   if (result == WASM_INTERPRETER_RETURNED) {
-    out_return_value->type = sig->result_type;
+    uint32_t expected_results = sig->result_types.size;
+    assert(expected_results == thread->value_stack.size);
+    wasm_resize_interpreter_typed_value_vector(allocator, out_results,
+                                               expected_results);
+    uint32_t i;
+    for (i = 0; i < expected_results; ++i) {
+      /* copy as many results as the caller wants */
+      out_results->data[i].type = sig->result_types.data[i];
+      out_results->data[i].value = thread->value_stack.data[i];
 
-    if (sig->result_type != WASM_TYPE_VOID) {
-      assert(thread->value_stack_top == 1);
-      out_return_value->value = thread->value_stack.data[0];
-
-      if (verbose)
-        print_typed_value(out_return_value);
-    } else {
-      assert(thread->value_stack_top == 0);
+      if (verbose) {
+        print_typed_value(&out_results->data[i]);
+        if (i != expected_results - 1)
+          printf(", ");
+      }
     }
 
     if (verbose)
@@ -371,29 +373,31 @@ static WasmInterpreterResult run_export(
 }
 
 static WasmResult run_export_by_name(
+    WasmAllocator* allocator,
     WasmInterpreterModule* module,
     WasmInterpreterThread* thread,
     WasmStringSlice* name,
     WasmInterpreterResult* out_iresult,
-    WasmInterpreterTypedValue* out_return_value,
+    WasmInterpreterTypedValueVector* out_results,
     RunVerbosity verbose) {
   WasmInterpreterExport* export =
       wasm_get_interpreter_export_by_name(module, name);
   if (!export)
     return WASM_ERROR;
 
-  *out_iresult = run_export(module, thread, export, out_return_value, verbose);
+  *out_iresult =
+      run_export(allocator, module, thread, export, out_results, verbose);
   return WASM_OK;
 }
 
-static void run_all_exports(WasmInterpreterModule* module,
+static void run_all_exports(WasmAllocator* allocator,
+                            WasmInterpreterModule* module,
                             WasmInterpreterThread* thread,
                             RunVerbosity verbose) {
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WasmInterpreterExport* export = &module->exports.data[i];
-    WasmInterpreterTypedValue return_value;
-    run_export(module, thread, export, &return_value, verbose);
+    run_export(allocator, module, thread, export, NULL, verbose);
   }
 }
 
@@ -445,7 +449,7 @@ static WasmResult read_and_run_module(WasmAllocator* allocator,
     result = run_start_function(&module, &thread);
 
   if (WASM_SUCCEEDED(result) && s_run_all_exports)
-    run_all_exports(&module, &thread, RUN_VERBOSE);
+    run_all_exports(allocator, &module, &thread, RUN_VERBOSE);
   destroy_module_and_thread(allocator, &module, &thread);
   return result;
 }
@@ -458,6 +462,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WasmStringSlice command_file;
   WasmStringSlice command_name;
   WasmAllocatorMark module_mark;
+  WasmInterpreterTypedValueVector result_values;
   uint32_t command_line_no;
   WasmBool has_module = WASM_FALSE;
   uint32_t passed = 0;
@@ -468,6 +473,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WASM_ZERO_MEMORY(command_file);
   WASM_ZERO_MEMORY(command_name);
   WASM_ZERO_MEMORY(module_mark);
+  WASM_ZERO_MEMORY(result_values);
 
   void* data;
   size_t size;
@@ -673,12 +679,10 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
 
       case END_COMMAND_OBJECT: {
         WasmInterpreterResult iresult;
-        WasmInterpreterTypedValue return_value;
-        WASM_ZERO_MEMORY(return_value);
         EXPECT('}');
         RunVerbosity verbose = command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
-        result = run_export_by_name(&module, &thread, &command_name, &iresult,
-                                    &return_value, verbose);
+        result = run_export_by_name(allocator, &module, &thread, &command_name,
+                                    &iresult, &result_values, verbose);
         if (WASM_FAILED(result)) {
           FAILED("unknown export");
           failed++;
@@ -698,10 +702,13 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
             if (iresult != WASM_INTERPRETER_RETURNED) {
               FAILED("trapped");
               failed++;
-            } else if (return_value.type != WASM_TYPE_I32) {
+            } else if (result_values.size != 1) {
+              FAILED("result arity mismatch");
+              failed++;
+            } else if (result_values.data[0].type != WASM_TYPE_I32) {
               FAILED("type mismatch");
               failed++;
-            } else if (return_value.value.i32 != 1) {
+            } else if (result_values.data[0].value.i32 != 1) {
               FAILED("didn't return 1");
               failed++;
             } else {
