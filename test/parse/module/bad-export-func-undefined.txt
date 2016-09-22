@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (export "foo" (func 0)))
 (;; STDERR ;;;
-parse/module/bad-export-undefined.txt:2:29: function variable out of range (max 0)
+parse/module/bad-export-func-undefined.txt:2:29: function variable out of range (max 0)
 (module (export "foo" (func 0)))
                             ^
 ;;; STDERR ;;)

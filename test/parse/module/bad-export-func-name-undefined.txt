@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (export "foo" (func $foo)))
 (;; STDERR ;;;
-parse/module/bad-export-name-undefined.txt:2:29: undefined function variable "$foo"
+parse/module/bad-export-func-name-undefined.txt:2:29: undefined function variable "$foo"
 (module (export "foo" (func $foo)))
                             ^^^^
 ;;; STDERR ;;)
