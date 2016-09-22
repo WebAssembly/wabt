@@ -2,7 +2,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/func-local-after-body.fail.wast
 (;; STDERR ;;;
-Error running "sexpr-wasm":
+Error running "wast2wasm":
 third_party/testsuite/func-local-after-body.fail.wast:1:22: syntax error, unexpected LOCAL
 (module (func (nop) (local i32)))
                      ^^^^^

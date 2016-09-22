@@ -58,38 +58,38 @@ def FilesAreEqual(filename1, filename2, verbose=False):
   return (OK, '')
 
 
-def TwoRoundtrips(sexpr_wasm, wasm_wast, out_dir, filename, verbose):
+def TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
   wast2_file = os.path.join(out_dir, basename_noext + '-2.wast')
   wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
   try:
-    sexpr_wasm.RunWithArgs('-o', wasm1_file, filename)
+    wast2wasm.RunWithArgs('-o', wasm1_file, filename)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
     return (SKIPPED, None)
   try:
-    wasm_wast.RunWithArgs('-o', wast2_file, wasm1_file)
-    sexpr_wasm.RunWithArgs('-o', wasm3_file, wast2_file)
+    wasm2wast.RunWithArgs('-o', wast2_file, wasm1_file)
+    wast2wasm.RunWithArgs('-o', wasm3_file, wast2_file)
   except Error as e:
     return (ERROR, str(e))
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
-def OneRoundtripToStdout(sexpr_wasm, wasm_wast, out_dir, filename, verbose):
+def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
   try:
-    sexpr_wasm.RunWithArgs('-o', wasm_file, filename)
+    wast2wasm.RunWithArgs('-o', wasm_file, filename)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
     return (SKIPPED, None)
   try:
-    wasm_wast.RunWithArgs(wasm_file)
+    wasm2wast.RunWithArgs(wasm_file)
   except Error as e:
     return (ERROR, str(e))
   return (OK, '')
@@ -101,10 +101,10 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('-e', '--sexpr-wasm-executable', metavar='PATH',
-                      help='set the sexpr-wasm executable to use.')
-  parser.add_argument('--wasm-wast-executable', metavar='PATH',
-                      help='set the wasm-wast executable to use.')
+  parser.add_argument('--wast2wasm-executable', metavar='PATH',
+                      help='set the wast2wasm executable to use.')
+  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+                      help='set the wasm2wast executable to use.')
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
   parser.add_argument('--no-error-cmdline',
@@ -119,33 +119,33 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  sexpr_wasm = utils.Executable(
-      find_exe.GetSexprWasmExecutable(options.sexpr_wasm_executable),
+  wast2wasm = utils.Executable(
+      find_exe.GetSexprWasmExecutable(options.wast2wasm_executable),
       error_cmdline=options.error_cmdline)
-  sexpr_wasm.AppendOptionalArgs({
+  wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
     '--use-libc-allocator': options.use_libc_allocator
   })
 
-  wasm_wast = utils.Executable(
-      find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+  wasm2wast = utils.Executable(
+      find_exe.GetWasmWastExecutable(options.wasm2wast_executable),
       error_cmdline=options.error_cmdline)
-  wasm_wast.AppendOptionalArgs({
+  wasm2wast.AppendOptionalArgs({
     '--debug-names': options.debug_names,
     '--generate-names': options.generate_names,
     '--use-libc-allocator': options.use_libc_allocator
   })
 
-  sexpr_wasm.verbose = options.print_cmd
-  wasm_wast.verbose = options.print_cmd
+  wast2wasm.verbose = options.print_cmd
+  wasm2wast.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
     filename = options.file
     if options.stdout:
-      result, msg = OneRoundtripToStdout(sexpr_wasm, wasm_wast, out_dir,
+      result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
                                          filename, options.verbose)
     else:
-      result, msg = TwoRoundtrips(sexpr_wasm, wasm_wast, out_dir,
+      result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir,
                                   filename, options.verbose)
     if result == ERROR:
       sys.stderr.write(msg)

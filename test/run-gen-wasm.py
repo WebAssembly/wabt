@@ -36,8 +36,8 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wasm-wast-executable', metavar='PATH',
-                      help='set the wasm-wast executable to use.')
+  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+                      help='set the wasm2wast executable to use.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
@@ -53,22 +53,22 @@ def main(args):
   gen_wasm = utils.Executable(
       sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
 
-  wasm_wast = utils.Executable(
-      find_exe.GetWasmWastExecutable(options.wasm_wast_executable),
+  wasm2wast = utils.Executable(
+      find_exe.GetWasmWastExecutable(options.wasm2wast_executable),
       error_cmdline=options.error_cmdline)
-  wasm_wast.AppendOptionalArgs({
+  wasm2wast.AppendOptionalArgs({
     '--debug-names': options.debug_names,
     '--generate-names': options.generate_names,
     '--use-libc-allocator': options.use_libc_allocator
   })
 
   gen_wasm.verbose = options.print_cmd
-  wasm_wast.verbose = options.print_cmd
+  wasm2wast.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     gen_wasm.RunWithArgs(options.file, '-o', out_file)
-    wasm_wast.RunWithArgs(out_file)
+    wasm2wast.RunWithArgs(out_file)
 
 if __name__ == '__main__':
   try:

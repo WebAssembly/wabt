@@ -242,7 +242,7 @@ add_custom_command( TARGET wasm2wast
                     COMMAND ln -sf wasm2wast wasm-wast)
 
 endif ()
-set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm-wast" "sexpr-wasm")
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm2wast" "wast2wasm")
 
 # wasm-interp
 add_executable(wasm-interp src/wasm-interp.c)
@@ -312,7 +312,7 @@ find_package(PythonInterp 2.7 REQUIRED)
 set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
 add_custom_target(run-tests
   COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-      -e $<TARGET_FILE:wast2wasm>
+      --wast2wasm $<TARGET_FILE:wast2wasm>
       --wasm2wast $<TARGET_FILE:wasm2wast>
       --wasm-interp $<TARGET_FILE:wasm-interp>
   DEPENDS wast2wasm wasm2wast wasm-interp
