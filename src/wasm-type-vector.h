@@ -22,4 +22,21 @@
 
 WASM_DEFINE_VECTOR(type, WasmType)
 
+WASM_EXTERN_C_BEGIN
+
+static WASM_INLINE WasmBool
+wasm_type_vectors_are_equal(const WasmTypeVector* types1,
+                            const WasmTypeVector* types2) {
+  if (types1->size != types2->size)
+    return WASM_FALSE;
+  size_t i;
+  for (i = 0; i < types1->size; ++i) {
+    if (types1->data[i] != types2->data[i])
+      return WASM_FALSE;
+  }
+  return WASM_TRUE;
+}
+
+WASM_EXTERN_C_END
+
 #endif /* WASM_TYPE_VECTOR_H_ */

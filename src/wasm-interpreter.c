@@ -94,7 +94,7 @@ WasmInterpreterImport* wasm_get_interpreter_import_by_name(
   for (i = 0; i < module->imports.size; ++i) {
     WasmInterpreterImport* import = &module->imports.data[i];
     if (wasm_string_slices_are_equal(module_name, &import->module_name) &&
-        wasm_string_slices_are_equal(func_name, &import->func_name)) {
+        wasm_string_slices_are_equal(func_name, &import->field_name)) {
       return import;
     }
   }
@@ -604,15 +604,10 @@ static WasmBool signatures_are_equal(WasmInterpreterModule* module,
                                      uint32_t sig_index_1) {
   WasmInterpreterFuncSignature* sig_0 = &module->sigs.data[sig_index_0];
   WasmInterpreterFuncSignature* sig_1 = &module->sigs.data[sig_index_1];
-  if (sig_0->result_type != sig_1->result_type)
-    return WASM_FALSE;
-  if (sig_0->param_types.size != sig_1->param_types.size)
-    return WASM_FALSE;
-  size_t i;
-  for (i = 0; i < sig_0->param_types.size; ++i)
-    if (sig_0->param_types.data[i] != sig_1->param_types.data[i])
-      return WASM_FALSE;
-  return WASM_TRUE;
+  return wasm_type_vectors_are_equal(&sig_0->param_types,
+                                     &sig_1->param_types) &&
+         wasm_type_vectors_are_equal(&sig_0->result_types,
+                                     &sig_1->result_types);
 }
 
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
@@ -701,14 +696,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       case WASM_OPCODE_GET_GLOBAL: {
         uint32_t index = read_u32(&pc);
         assert(index < module->globals.size);
-        PUSH(module->globals.data[index].value);
+        PUSH(module->globals.data[index].typed_value.value);
         break;
       }
 
       case WASM_OPCODE_SET_GLOBAL: {
         uint32_t index = read_u32(&pc);
         assert(index < module->globals.size);
-        module->globals.data[index].value = POP();
+        module->globals.data[index].typed_value.value = POP();
         break;
       }
 
@@ -756,6 +751,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t sig_index = import->sig_index;
         assert(sig_index < module->sigs.size);
         WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
+
         uint32_t num_args = sig->param_types.size;
         uint32_t i;
         assert(num_args <= thread->import_args.size);
@@ -765,16 +761,21 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
           arg->type = sig->param_types.data[i - 1];
           arg->value = value;
         }
+
+        uint32_t num_results = sig->result_types.size;
+        WasmInterpreterTypedValue* call_result_values =
+            alloca(sizeof(WasmInterpreterTypedValue) * num_results);
+
         assert(import->callback);
-        WasmInterpreterTypedValue call_result_value;
-        WasmResult call_result =
-            import->callback(module, import, num_args, thread->import_args.data,
-                             &call_result_value, import->user_data);
+        WasmResult call_result = import->callback(
+            module, import, num_args, thread->import_args.data, num_results,
+            call_result_values, import->user_data);
         TRAP_IF(call_result != WASM_OK, IMPORT_TRAPPED);
-        if (sig->result_type != WASM_TYPE_VOID) {
-          TRAP_IF(call_result_value.type != sig->result_type,
+
+        for (i = 0; i < num_results; ++i) {
+          TRAP_IF(call_result_values[i].type != sig->result_types.data[i],
                   IMPORT_RESULT_TYPE_MISMATCH);
-          PUSH(call_result_value.value);
+          PUSH(call_result_values[i].value);
         }
         break;
       }
@@ -2179,12 +2180,13 @@ static void wasm_destroy_interpreter_func_signature(
     WasmAllocator* allocator,
     WasmInterpreterFuncSignature* sig) {
   wasm_destroy_type_vector(allocator, &sig->param_types);
+  wasm_destroy_type_vector(allocator, &sig->result_types);
 }
 
 static void wasm_destroy_interpreter_import(WasmAllocator* allocator,
                                             WasmInterpreterImport* import) {
   wasm_destroy_string_slice(allocator, &import->module_name);
-  wasm_destroy_string_slice(allocator, &import->func_name);
+  wasm_destroy_string_slice(allocator, &import->field_name);
 }
 
 static void wasm_destroy_interpreter_export(WasmAllocator* allocator,
