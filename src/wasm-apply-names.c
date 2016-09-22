@@ -110,13 +110,23 @@ static WasmResult use_name_for_global_var(WasmAllocator* allocator,
   return WASM_OK;
 }
 
-static WasmResult use_name_for_import_var(WasmAllocator* allocator,
+static WasmResult use_name_for_table_var(WasmAllocator* allocator,
+                                         WasmModule* module,
+                                         WasmVar* var) {
+  WasmTable* table = wasm_get_table_by_var(module, var);
+  if (table == NULL)
+    return WASM_ERROR;
+  use_name_for_var(allocator, &table->name, var);
+  return WASM_OK;
+}
+
+static WasmResult use_name_for_memory_var(WasmAllocator* allocator,
                                           WasmModule* module,
                                           WasmVar* var) {
-  WasmImport* import = wasm_get_import_by_var(module, var);
-  if (import == NULL)
+  WasmMemory* memory = wasm_get_memory_by_var(module, var);
+  if (memory == NULL)
     return WASM_ERROR;
-  use_name_for_var(allocator, &import->name, var);
+  use_name_for_var(allocator, &memory->name, var);
   return WASM_OK;
 }
 
@@ -125,10 +135,9 @@ static WasmResult use_name_for_param_and_local_var(Context* ctx,
                                                    WasmVar* var) {
   int local_index = wasm_get_local_index_by_var(func, var);
   assert(local_index >= 0 &&
-         (size_t)local_index <
-             wasm_get_num_params_and_locals(ctx->module, func));
+         (size_t)local_index < wasm_get_num_params_and_locals(func));
 
-  uint32_t num_params = wasm_get_num_params(ctx->module, func);
+  uint32_t num_params = wasm_get_num_params(func);
   WasmStringSlice* name;
   if ((uint32_t)local_index < num_params) {
     /* param */
@@ -214,13 +223,6 @@ static WasmResult on_call_expr(WasmExpr* expr, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_call_import_expr(WasmExpr* expr, void* user_data) {
-  Context* ctx = user_data;
-  CHECK_RESULT(use_name_for_import_var(ctx->allocator, ctx->module,
-                                       &expr->call_import.var));
-  return WASM_OK;
-}
-
 static WasmResult on_call_indirect_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(use_name_for_func_type_var(ctx->allocator, ctx->module,
@@ -249,25 +251,6 @@ static WasmResult begin_if_expr(WasmExpr* expr, void* user_data) {
 }
 
 static WasmResult end_if_expr(WasmExpr* expr, void* user_data) {
-  Context* ctx = user_data;
-  pop_label(ctx);
-  return WASM_OK;
-}
-
-static WasmResult begin_if_else_expr(WasmExpr* expr, void* user_data) {
-  Context* ctx = user_data;
-  push_label(ctx, &expr->if_else.true_.label);
-  return WASM_OK;
-}
-
-static WasmResult after_if_else_true_expr(WasmExpr* expr, void* user_data) {
-  Context* ctx = user_data;
-  pop_label(ctx);
-  push_label(ctx, &expr->if_else.false_.label);
-  return WASM_OK;
-}
-
-static WasmResult end_if_else_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
   return WASM_OK;
@@ -319,9 +302,10 @@ static WasmResult visit_func(Context* ctx,
 static WasmResult visit_import(Context* ctx,
                                uint32_t import_index,
                                WasmImport* import) {
-  if (wasm_decl_has_func_type(&import->decl)) {
+  if (import->kind == WASM_EXTERNAL_KIND_FUNC &&
+      wasm_decl_has_func_type(&import->func.decl)) {
     CHECK_RESULT(use_name_for_func_type_var(ctx->allocator, ctx->module,
-                                            &import->decl.type_var));
+                                            &import->func.decl.type_var));
   }
   return WASM_OK;
 }
@@ -337,10 +321,20 @@ static WasmResult visit_elem_segment(Context* ctx,
                                      uint32_t elem_segment_index,
                                      WasmElemSegment* segment) {
   size_t i;
+  CHECK_RESULT(
+      use_name_for_table_var(ctx->allocator, ctx->module, &segment->table_var));
   for (i = 0; i < segment->vars.size; ++i) {
     CHECK_RESULT(use_name_for_func_var(ctx->allocator, ctx->module,
                                        &segment->vars.data[i]));
   }
+  return WASM_OK;
+}
+
+static WasmResult visit_data_segment(Context* ctx,
+                                     uint32_t data_segment_index,
+                                     WasmDataSegment* segment) {
+  CHECK_RESULT(use_name_for_memory_var(ctx->allocator, ctx->module,
+                                       &segment->memory_var));
   return WASM_OK;
 }
 
@@ -354,6 +348,8 @@ static WasmResult visit_module(Context* ctx, WasmModule* module) {
     CHECK_RESULT(visit_export(ctx, i, module->exports.data[i]));
   for (i = 0; i < module->elem_segments.size; ++i)
     CHECK_RESULT(visit_elem_segment(ctx, i, module->elem_segments.data[i]));
+  for (i = 0; i < module->data_segments.size; ++i)
+    CHECK_RESULT(visit_data_segment(ctx, i, module->data_segments.data[i]));
   return WASM_OK;
 }
 
@@ -371,15 +367,11 @@ WasmResult wasm_apply_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.visitor.on_br_if_expr = on_br_if_expr;
   ctx.visitor.on_br_table_expr = on_br_table_expr;
   ctx.visitor.on_call_expr = on_call_expr;
-  ctx.visitor.on_call_import_expr = on_call_import_expr;
   ctx.visitor.on_call_indirect_expr = on_call_indirect_expr;
   ctx.visitor.on_get_global_expr = on_get_global_expr;
   ctx.visitor.on_get_local_expr = on_get_local_expr;
   ctx.visitor.begin_if_expr = begin_if_expr;
   ctx.visitor.end_if_expr = end_if_expr;
-  ctx.visitor.begin_if_else_expr = begin_if_else_expr;
-  ctx.visitor.after_if_else_true_expr = after_if_else_true_expr;
-  ctx.visitor.end_if_else_expr = end_if_else_expr;
   ctx.visitor.on_set_global_expr = on_set_global_expr;
   ctx.visitor.on_set_local_expr = on_set_local_expr;
   ctx.visitor.on_tee_local_expr = on_tee_local_expr;

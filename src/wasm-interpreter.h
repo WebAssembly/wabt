@@ -113,6 +113,7 @@ typedef struct WasmInterpreterTypedValue {
   WasmInterpreterValue value;
 } WasmInterpreterTypedValue;
 WASM_DEFINE_ARRAY(interpreter_typed_value, WasmInterpreterTypedValue);
+WASM_DEFINE_VECTOR(interpreter_typed_value, WasmInterpreterTypedValue);
 
 typedef struct WasmInterpreterGlobal {
   WasmInterpreterTypedValue typed_value;
@@ -128,7 +129,8 @@ typedef WasmResult (*WasmInterpreterImportCallback)(
     struct WasmInterpreterImport* import,
     uint32_t num_args,
     WasmInterpreterTypedValue* args,
-    WasmInterpreterTypedValue* out_result,
+    uint32_t num_results,
+    WasmInterpreterTypedValue* out_results,
     void* user_data);
 
 typedef struct WasmInterpreterImport {
