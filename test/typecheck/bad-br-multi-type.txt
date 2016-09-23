@@ -5,7 +5,10 @@
       (br 0 (i32.const 1))
       (f32.const 2))))
 (;; STDERR ;;;
-typecheck/bad-br-multi-type.txt:3:3: unable to join type i32 (type of last operation) with type f32 (function signature result type).
+typecheck/bad-br-multi-type.txt:3:3: type stack size too small at function. got 0, expected at least 1
+  (func (result f32)
+  ^^^^^^^^^^^^^^^^^^
+typecheck/bad-br-multi-type.txt:3:3: type stack at end of function is 0. expected 1
   (func (result f32)
   ^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)
