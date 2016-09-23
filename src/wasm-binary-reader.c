@@ -1053,6 +1053,9 @@ static void read_init_expr(Context* ctx, uint32_t index) {
       break;
     }
 
+    case WASM_OPCODE_END:
+      return;
+
     default:
       RAISE_ERROR("unexpected opcode in initializer expression: %d (0x%x)",
                   opcode, opcode);

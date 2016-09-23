@@ -1,4 +1,9 @@
 (module
+  (global i32)
+  (global i64)
+  (global f32)
+  (global f64)
+
   (global i32 (i32.const 1))
   (global i64 (i64.const 2))
   (global f32 (f32.const 3))

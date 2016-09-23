@@ -129,14 +129,14 @@
                                    &dummy);                             \
   } while (0)
 
-#define INSERT_BINDING(module, kind, kinds, loc_, item)                 \
-  do                                                                    \
-    if ((item).name.start) {                                            \
-      WasmBinding* binding = wasm_insert_binding(                       \
-          parser->allocator, &(module)->kind##_bindings, &(item).name); \
-      binding->loc = loc_;                                              \
-      binding->index = (module)->kinds.size - 1;                        \
-    }                                                                   \
+#define INSERT_BINDING(module, kind, kinds, loc_, name)            \
+  do                                                               \
+    if ((name).start) {                                            \
+      WasmBinding* binding = wasm_insert_binding(                  \
+          parser->allocator, &(module)->kind##_bindings, &(name)); \
+      binding->loc = loc_;                                         \
+      binding->index = (module)->kinds.size - 1;                   \
+    }                                                              \
   while (0)
 
 #define APPEND_INLINE_EXPORT(module, KIND, loc_, value, index_)         \
@@ -150,7 +150,7 @@
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
                             &export_field->export_);                    \
       INSERT_BINDING(module, export, exports, export_field->loc,        \
-                     export_field->export_);                            \
+                     export_field->export_.name);                       \
     }                                                                   \
   while (0)
 
@@ -3294,8 +3294,8 @@ yyreduce:
 #line 949 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
-      (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_FUNC;
+      (yyval.import)->func.name = (yyvsp[-2].text);
       (yyval.import)->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       (yyval.import)->func.decl.type_var = (yyvsp[-1].var);
     }
@@ -3306,8 +3306,8 @@ yyreduce:
 #line 956 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
-      (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_FUNC;
+      (yyval.import)->func.name = (yyvsp[-2].text);
       (yyval.import)->func.decl.sig = (yyvsp[-1].func_sig);
     }
 #line 3314 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
@@ -3317,9 +3317,9 @@ yyreduce:
 #line 962 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
-      (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_TABLE;
       (yyval.import)->table = (yyvsp[-1].table);
+      (yyval.import)->table.name = (yyvsp[-2].text);
     }
 #line 3325 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3328,9 +3328,9 @@ yyreduce:
 #line 968 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
-      (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_MEMORY;
       (yyval.import)->memory = (yyvsp[-1].memory);
+      (yyval.import)->memory.name = (yyvsp[-2].text);
     }
 #line 3336 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3339,9 +3339,9 @@ yyreduce:
 #line 974 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
-      (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_GLOBAL;
       (yyval.import)->global = (yyvsp[-1].global);
+      (yyval.import)->global.name = (yyvsp[-2].text);
     }
 #line 3347 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3360,8 +3360,8 @@ yyreduce:
 #line 987 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_FUNC;
+      (yyval.import)->func.name = (yyvsp[-3].text);
       (yyval.import)->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       (yyval.import)->func.decl.type_var = (yyvsp[-1].var);
     }
@@ -3372,8 +3372,8 @@ yyreduce:
 #line 994 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_FUNC;
+      (yyval.import)->func.name = (yyvsp[-3].text);
       (yyval.import)->func.decl.sig = (yyvsp[-1].func_sig);
     }
 #line 3380 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
@@ -3383,9 +3383,9 @@ yyreduce:
 #line 1000 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_TABLE;
       (yyval.import)->table = (yyvsp[-1].table);
+      (yyval.import)->table.name = (yyvsp[-3].text);
     }
 #line 3391 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3394,9 +3394,9 @@ yyreduce:
 #line 1006 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_MEMORY;
       (yyval.import)->memory = (yyvsp[-1].memory);
+      (yyval.import)->memory.name = (yyvsp[-3].text);
     }
 #line 3402 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3405,9 +3405,9 @@ yyreduce:
 #line 1012 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_GLOBAL;
       (yyval.import)->global = (yyvsp[-1].global);
+      (yyval.import)->global.name = (yyvsp[-3].text);
     }
 #line 3413 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3530,7 +3530,7 @@ yyreduce:
       APPEND_FIELD_TO_LIST((yyval.module), field, FUNC_TYPE, func_type, (yylsp[0]), (yyvsp[0].func_type));
       APPEND_ITEM_TO_VECTOR((yyval.module), FuncType, func_type, func_types,
                             &field->func_type);
-      INSERT_BINDING((yyval.module), func_type, func_types, (yylsp[0]), (yyvsp[0].func_type));
+      INSERT_BINDING((yyval.module), func_type, func_types, (yylsp[0]), (yyvsp[0].func_type).name);
     }
 #line 3536 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
@@ -3542,7 +3542,7 @@ yyreduce:
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, GLOBAL, global, (yylsp[0]), (yyvsp[0].exported_global).global);
       APPEND_ITEM_TO_VECTOR((yyval.module), Global, global, globals, &field->global);
-      INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), (yyvsp[0].exported_global).global);
+      INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), (yyvsp[0].exported_global).global.name);
       APPEND_INLINE_EXPORT((yyval.module), GLOBAL, (yylsp[0]), (yyvsp[0].exported_global), (yyval.module)->globals.size - 1);
     }
 #line 3549 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
@@ -3555,7 +3555,7 @@ yyreduce:
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, TABLE, table, (yylsp[0]), (yyvsp[0].exported_table).table);
       APPEND_ITEM_TO_VECTOR((yyval.module), Table, table, tables, &field->table);
-      INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), (yyvsp[0].exported_table).table);
+      INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), (yyvsp[0].exported_table).table.name);
       APPEND_INLINE_EXPORT((yyval.module), TABLE, (yylsp[0]), (yyvsp[0].exported_table), (yyval.module)->tables.size - 1);
 
       if ((yyvsp[0].exported_table).has_elem_segment) {
@@ -3577,7 +3577,7 @@ yyreduce:
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, MEMORY, memory, (yylsp[0]), (yyvsp[0].exported_memory).memory);
       APPEND_ITEM_TO_VECTOR((yyval.module), Memory, memory, memories, &field->memory);
-      INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), (yyvsp[0].exported_memory).memory);
+      INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), (yyvsp[0].exported_memory).memory.name);
       APPEND_INLINE_EXPORT((yyval.module), MEMORY, (yylsp[0]), (yyvsp[0].exported_memory), (yyval.module)->memories.size - 1);
 
       if ((yyvsp[0].exported_memory).has_data_segment) {
@@ -3601,7 +3601,7 @@ yyreduce:
       append_implicit_func_declaration(parser->allocator, &(yylsp[0]), (yyval.module),
                                        &field->func.decl);
       APPEND_ITEM_TO_VECTOR((yyval.module), Func, func, funcs, &field->func);
-      INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), *(yyvsp[0].exported_func).func);
+      INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), (yyvsp[0].exported_func).func->name);
       APPEND_INLINE_EXPORT((yyval.module), FUNC, (yylsp[0]), (yyvsp[0].exported_func), (yyval.module)->funcs.size - 1);
     }
 #line 3608 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
@@ -3653,27 +3653,27 @@ yyreduce:
           append_implicit_func_declaration(parser->allocator, &(yylsp[0]), (yyval.module),
                                            &(yyvsp[0].import)->func.decl);
           APPEND_ITEM_TO_VECTOR((yyval.module), Func, func, funcs, &field->import.func);
-          INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), *(yyvsp[0].import));
+          INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), (yyvsp[0].import)->func.name);
           (yyval.module)->num_func_imports++;
           CHECK_IMPORT_ORDERING((yyval.module), func, funcs, (yylsp[0]));
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR((yyval.module), Table, table, tables, &field->import.table);
-          INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), *(yyvsp[0].import));
+          INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), (yyvsp[0].import)->table.name);
           (yyval.module)->num_table_imports++;
           CHECK_IMPORT_ORDERING((yyval.module), table, tables, (yylsp[0]));
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR((yyval.module), Memory, memory, memories,
                                 &field->import.memory);
-          INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), *(yyvsp[0].import));
+          INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), (yyvsp[0].import)->memory.name);
           (yyval.module)->num_memory_imports++;
           CHECK_IMPORT_ORDERING((yyval.module), memory, memories, (yylsp[0]));
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR((yyval.module), Global, global, globals,
                                 &field->import.global);
-          INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), *(yyvsp[0].import));
+          INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), (yyvsp[0].import)->global.name);
           (yyval.module)->num_global_imports++;
           CHECK_IMPORT_ORDERING((yyval.module), global, globals, (yylsp[0]));
           break;
@@ -3694,7 +3694,7 @@ yyreduce:
       WasmModuleField* field = wasm_append_module_field(parser->allocator, (yyval.module));
       APPEND_FIELD_TO_LIST((yyval.module), field, EXPORT, export_, (yylsp[0]), (yyvsp[0].export_));
       APPEND_ITEM_TO_VECTOR((yyval.module), Export, export, exports, &field->export_);
-      INSERT_BINDING((yyval.module), export, exports, (yylsp[0]), (yyvsp[0].export_));
+      INSERT_BINDING((yyval.module), export, exports, (yylsp[0]), (yyvsp[0].export_).name);
     }
 #line 3700 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;

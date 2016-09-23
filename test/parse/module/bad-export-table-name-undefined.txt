@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module (export "foo" (table $bar)))
+(;; STDERR ;;;
+parse/module/bad-export-table-name-undefined.txt:2:30: undefined table variable "$bar"
+(module (export "foo" (table $bar)))
+                             ^^^^
+;;; STDERR ;;)

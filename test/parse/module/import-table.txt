@@ -1,0 +1,3 @@
+(module
+  (import "foo" "1" (table 0 anyfunc))
+  (import "foo" "2" (table 0 10 anyfunc)))
