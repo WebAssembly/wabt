@@ -10,13 +10,7 @@
     (if (call_import $import) (nop))
     (if (call_indirect $indirect (i32.const 0)) (nop))))
 (;; STDERR ;;;
-typecheck/bad-call-result-mismatch.txt:9:6: type mismatch at if condition. got i64, expected i32
-    (if (call $direct) (nop))
-     ^^
-typecheck/bad-call-result-mismatch.txt:10:6: type mismatch at if condition. got f32, expected i32
-    (if (call_import $import) (nop))
-     ^^
-typecheck/bad-call-result-mismatch.txt:11:6: type mismatch at if condition. got i64, expected i32
-    (if (call_indirect $indirect (i32.const 0)) (nop))))
-     ^^
+typecheck/bad-call-result-mismatch.txt:3:11: syntax error, unexpected VAR, expecting TEXT
+  (import $import "foo" "bar" (result f32))
+          ^^^^^^^
 ;;; STDERR ;;)

@@ -5,29 +5,30 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
-; section "memory"
-0000008: 06                                         ; string length
-0000009: 6d65 6d6f 7279                             ; section id: "memory"
+; section "MEMORY" (5)
+0000008: 05                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 01                                         ; num memories
+; memory 0
+000000b: 01                                         ; memory flags
+000000c: 01                                         ; memory initial pages
+000000d: 01                                         ; memory max pages
+0000009: 04                                         ; FIXUP section size
+; section "DATA" (11)
+000000e: 0b                                         ; section code
 000000f: 00                                         ; section size (guess)
-0000010: 01                                         ; memory flags
-0000011: 01                                         ; memory initial pages
-0000012: 01                                         ; memory max pages
-000000f: 03                                         ; FIXUP section size
-; section "data"
-0000013: 04                                         ; string length
-0000014: 6461 7461                                  ; section id: "data"
-0000018: 00                                         ; section size (guess)
-0000019: 01                                         ; num data segments
+0000010: 01                                         ; num data segments
 ; data segment header 0
-000001a: 10                                         ; OPCODE_I32_CONST
-000001b: 00                                         ; i32 literal
-000001c: 0f                                         ; OPCODE_END
-000001d: 0b                                         ; data segment size
+0000011: 00                                         ; memory index
+0000012: 10                                         ; OPCODE_I32_CONST
+0000013: 00                                         ; i32 literal
+0000014: 0f                                         ; OPCODE_END
+0000015: 0b                                         ; data segment size
 ; data segment data 0
-000001e: 0001 0203 0405 0607 0809 0a                ; data segment data
-0000018: 10                                         ; FIXUP section size
+0000016: 0001 0203 0405 0607 0809 0a                ; data segment data
+000000f: 11                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 066d 656d 6f72 7903  
-0000010: 0101 0104 6461 7461 1001 1000 0f0b 0001  
-0000020: 0203 0405 0607 0809 0a                   
+0000000: 0061 736d 0c00 0000 0504 0101 0101 0b11  
+0000010: 0100 1000 0f0b 0001 0203 0405 0607 0809  
+0000020: 0a                                       
 ;;; STDOUT ;;)

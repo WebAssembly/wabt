@@ -59,7 +59,15 @@ typedef enum CheckStyle {
   CHECK_STYLE_FULL,
 } CheckStyle;
 
+typedef enum LabelType {
+  LABEL_TYPE_FUNC,
+  LABEL_TYPE_BLOCK,
+  LABEL_TYPE_LOOP,
+  LABEL_TYPE_IF,
+} LabelType;
+
 typedef struct LabelNode {
+  LabelType label_type;
   const WasmLabel* label;
   const WasmTypeVector* sig;
   struct LabelNode* next;
@@ -339,8 +347,10 @@ static WasmResult check_label_var(Context* ctx,
 static void push_label(Context* ctx,
                        const WasmLocation* loc,
                        LabelNode* node,
+                       LabelType label_type,
                        const WasmLabel* label,
                        const WasmTypeVector* sig) {
+  node->label_type = label_type;
   node->label = label;
   node->next = ctx->top_label;
   node->sig = sig;
@@ -586,7 +596,10 @@ static WasmResult check_br(Context* ctx,
   LabelNode* node;
   WasmResult result = check_label_var(ctx, ctx->top_label, var, &node);
   if (WASM_SUCCEEDED(result)) {
-    check_n_types(ctx, loc, node->sig, desc);
+    if (node->label_type != LABEL_TYPE_LOOP) {
+      check_n_types(ctx, loc, node->sig, desc);
+    }
+
     if (out_sig)
       *out_sig = node->sig;
   }
@@ -655,7 +668,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_BLOCK: {
       LabelNode node;
-      push_label(ctx, &expr->loc, &node, &expr->block.label,
+      push_label(ctx, &expr->loc, &node, LABEL_TYPE_BLOCK, &expr->block.label,
                  &expr->block.sig);
       check_block(ctx, &expr->loc, expr->block.first, "block");
       pop_label(ctx);
@@ -755,7 +768,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_IF: {
       LabelNode node;
       pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "if condition");
-      push_label(ctx, &expr->loc, &node, &expr->if_.true_.label,
+      push_label(ctx, &expr->loc, &node, LABEL_TYPE_IF, &expr->if_.true_.label,
                  &expr->if_.true_.sig);
       check_block(ctx, &expr->loc, expr->if_.true_.first, "if true branch");
       check_block(ctx, &expr->loc, expr->if_.false_, "if false branch");
@@ -772,7 +785,8 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
 
     case WASM_EXPR_TYPE_LOOP: {
       LabelNode node;
-      push_label(ctx, &expr->loc, &node, &expr->loop.label, &expr->loop.sig);
+      push_label(ctx, &expr->loc, &node, LABEL_TYPE_LOOP, &expr->loop.label,
+                 &expr->loop.sig);
       check_block(ctx, &expr->loc, expr->loop.first, "loop");
       pop_label(ctx);
       push_types(ctx, &expr->block.sig);
@@ -885,7 +899,8 @@ static void check_func(Context* ctx,
    * returning from the function. */
   LabelNode node;
   WasmLabel label = wasm_empty_string_slice();
-  push_label(ctx, loc, &node, &label, &func->decl.sig.result_types);
+  push_label(ctx, loc, &node, LABEL_TYPE_FUNC, &label,
+             &func->decl.sig.result_types);
   check_block(ctx, loc, func->first_expr, "function");
   pop_label(ctx);
   ctx->current_func = NULL;

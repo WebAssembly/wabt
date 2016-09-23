@@ -632,14 +632,15 @@ def RunMultiProcess(infos_to_run, test_count, status, options, variables):
     WaitWorkersTerminate(all_procs)
 
 def RunSingleProcess(infos_to_run, status, options, variables):
-  should_stop_on_error = options.stop_interactive
   continued_errors = 0
 
   for info in infos_to_run:
     result = RunTest(info, options, variables)
     HandleTestResult(status, info, result, options.rebase)
     if status.failed > continued_errors:
-      if should_stop_on_error:
+      if options.fail_fast:
+        break
+      elif options.stop_interactive:
         rerun_verbose = YesNoPrompt(question='Rerun with verbose option?',
                                     default='no')
         if rerun_verbose:
@@ -671,6 +672,10 @@ def main(args):
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('-f', '--fail-fast',
+                      help='Exit on first failure. '
+                           'Extra options with \'--jobs 1\'',
+                      action='store_true')
   parser.add_argument('--stop-interactive',
                       help='Enter interactive mode on errors. '
                            'Extra options with \'--jobs 1\'',
@@ -690,6 +695,12 @@ def main(args):
   parser.add_argument('patterns', metavar='pattern', nargs='*',
                       help='test patterns.')
   options = parser.parse_args(args)
+
+  if options.jobs != 1:
+    if options.fail_fast:
+      parser.error('--fail-fast only works with -j1')
+    if options.stop_interactive:
+      parser.error('--stop-interactive only works with -j1')
 
   if options.patterns:
     pattern_re = '|'.join(fnmatch.translate('*%s*' % p)

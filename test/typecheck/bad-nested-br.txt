@@ -12,7 +12,10 @@
     ;; return statement here, or a value returned from (br $outer).
   ))
 (;; STDERR ;;;
-typecheck/bad-nested-br.txt:3:3: unable to join type void (type of last operation) with type i32 (function signature result type).
+typecheck/bad-nested-br.txt:3:3: type stack size too small at function. got 0, expected at least 1
+  (func (result i32)
+  ^
+typecheck/bad-nested-br.txt:3:3: type stack at end of function is 0. expected 1
   (func (result i32)
   ^
 ;;; STDERR ;;)
