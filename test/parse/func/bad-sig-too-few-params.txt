@@ -3,7 +3,7 @@
   (type $t (func (param i32 f32)))
   (func (type $t) (param i32)))
 (;; STDERR ;;;
-parse/func/bad-sig-too-few-params.txt:4:3: expected 2 parameters, got 1
+parse/func/bad-sig-too-few-params.txt:4:3: expected 2 arguments, got 1
   (func (type $t) (param i32)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

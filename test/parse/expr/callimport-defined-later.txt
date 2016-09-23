@@ -1,4 +1,10 @@
+;;; ERROR: 1
 (module
   (func
-    (call_import 0 (f32.const 0)))
-  (import "foo" "bar" (param f32)))
+    (call $baz (f32.const 0)))
+  (import "foo" "bar" (func $baz (param f32))))
+(;; STDERR ;;;
+parse/expr/callimport-defined-later.txt:5:3: imported func must occur before all defined funcs
+  (import "foo" "bar" (func $baz (param f32))))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)

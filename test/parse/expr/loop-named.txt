@@ -1,5 +1,4 @@
 (module
   (func
     (loop (nop))
-    (loop $inner (nop))
-    (loop $inner $outer (nop))))
+    (loop $inner (nop))))

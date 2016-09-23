@@ -707,7 +707,7 @@ static WasmResult logging_on_block_expr(uint32_t num_types,
   LoggingContext* ctx = user_data;
   LOGF("on_block_expr(sig: ");
   log_types(ctx, num_types, sig_types);
-  LOGF(")");
+  LOGF_NOINDENT(")\n");
   FORWARD(on_block_expr, num_types, sig_types);
 }
 
@@ -775,7 +775,7 @@ static WasmResult logging_on_if_expr(uint32_t num_types,
   LoggingContext* ctx = user_data;
   LOGF("on_if_expr(sig: ");
   log_types(ctx, num_types, sig_types);
-  LOGF(")");
+  LOGF_NOINDENT(")\n");
   FORWARD(on_if_expr, num_types, sig_types);
 }
 
@@ -795,7 +795,7 @@ static WasmResult logging_on_loop_expr(uint32_t num_types,
   LoggingContext* ctx = user_data;
   LOGF("on_loop_expr(sig: ");
   log_types(ctx, num_types, sig_types);
-  LOGF(")");
+  LOGF_NOINDENT(")\n");
   FORWARD(on_loop_expr, num_types, sig_types);
 }
 
@@ -1390,6 +1390,36 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(end_start_section);
   }
 
+  /* elem */
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM, NULL)) {
+    RAISE_ERROR_UNLESS(num_tables > 0, "elem section without table section");
+    CALLBACK0(begin_elem_section);
+    uint32_t i, num_elem_segments;
+    in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
+    CALLBACK(on_elem_segment_count, num_elem_segments);
+    for (i = 0; i < num_elem_segments; ++i) {
+      uint32_t table_index;
+      in_u32_leb128(ctx, &table_index, "elem segment table index");
+      CALLBACK(begin_elem_segment, i, table_index);
+      CALLBACK(begin_elem_segment_init_expr, i);
+      read_init_expr(ctx, i);
+      CALLBACK(end_elem_segment_init_expr, i);
+
+      uint32_t j, num_function_indexes;
+      in_u32_leb128(ctx, &num_function_indexes,
+                    "elem segment function index count");
+      CALLBACK(on_elem_segment_function_index_count, i,
+               num_function_indexes);
+      for (j = 0; j < num_function_indexes; ++j) {
+        uint32_t func_index;
+        in_u32_leb128(ctx, &func_index, "elem segment function index");
+        CALLBACK(on_elem_segment_function_index, i, func_index);
+      }
+      CALLBACK(end_elem_segment, i);
+    }
+    CALLBACK0(end_elem_section);
+  }
+
   /* code */
   uint32_t num_function_bodies = 0;
   if (skip_until_section(ctx, WASM_BINARY_SECTION_CODE, NULL)) {
@@ -1811,36 +1841,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       }
     }
     CALLBACK0(end_function_bodies_section);
-  }
-
-  /* elem */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM, NULL)) {
-    RAISE_ERROR_UNLESS(num_tables > 0, "elem section without table section");
-    CALLBACK0(begin_elem_section);
-    uint32_t i, num_elem_segments;
-    in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
-    CALLBACK(on_elem_segment_count, num_elem_segments);
-    for (i = 0; i < num_elem_segments; ++i) {
-      uint32_t table_index;
-      in_u32_leb128(ctx, &table_index, "elem segment table index");
-      CALLBACK(begin_elem_segment, i, table_index);
-      CALLBACK(begin_elem_segment_init_expr, i);
-      read_init_expr(ctx, i);
-      CALLBACK(end_elem_segment_init_expr, i);
-
-      uint32_t j, num_function_indexes;
-      in_u32_leb128(ctx, &num_function_indexes,
-                    "elem segment function index count");
-      CALLBACK(on_elem_segment_function_index_count, i,
-               num_function_indexes);
-      for (j = 0; j < num_function_indexes; ++j) {
-        uint32_t func_index;
-        in_u32_leb128(ctx, &func_index, "elem segment function index");
-        CALLBACK(on_elem_segment_function_index, i, func_index);
-      }
-      CALLBACK(end_elem_segment, i);
-    }
-    CALLBACK0(end_elem_section);
   }
 
   /* data */

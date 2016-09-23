@@ -3,11 +3,7 @@
   (type $t (func (param i32) (result f32)))
   (func (type $t) (param i32) (result i64)))
 (;; STDERR ;;;
-parse/func/bad-sig-result-type-mismatch.txt:4:3: type mismatch between function result type (i64) and function type result type (f32)
-
-  (func (type $t) (param i32) (result i64)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-parse/func/bad-sig-result-type-mismatch.txt:4:3: unable to join type void (type of last operation) with type i64 (function signature result type).
+parse/func/bad-sig-result-type-mismatch.txt:4:3: type mismatch for result 0 of function. got i64, expected f32
   (func (type $t) (param i32) (result i64)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

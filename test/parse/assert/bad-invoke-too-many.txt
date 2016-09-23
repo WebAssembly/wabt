@@ -2,7 +2,7 @@
 ;;; FLAGS: --spec
 (module
   (func (param i32))
-  (export "foo" 0))
+  (export "foo" (func 0)))
 (invoke "foo" (i32.const 0) (i32.const 1))
 (;; STDERR ;;;
 parse/assert/bad-invoke-too-many.txt:6:2: too many parameters to function. got 2, expected 1
