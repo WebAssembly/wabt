@@ -4,6 +4,6 @@ magic
 0xd 0 0 0
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000008: bad wasm file version: 0xc (expected 0xb)
+error: @0x00000008: bad wasm file version: 0xd (expected 0xc)
 
 ;;; STDERR ;;)

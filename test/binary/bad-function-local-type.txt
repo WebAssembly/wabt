@@ -2,9 +2,9 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("type") { count[1] function params[0] results[0] }
-section("function") { count[1] sig[0] }
-section("code") {
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] sig[0] }
+section(CODE) {
   count[1]
   func {
     local_decls[1]
@@ -13,6 +13,6 @@ section("code") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000029: expected valid local type
+error: @0x00000019: expected valid local type
 
 ;;; STDERR ;;)

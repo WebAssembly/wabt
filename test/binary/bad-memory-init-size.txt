@@ -2,12 +2,13 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("memory") {
+section(MEMORY) {
+  count[1]
   has_max[0]
   initial[leb_u32(65537)]
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000014: invalid memory initial size
+error: @0x0000000f: invalid memory initial size
 
 ;;; STDERR ;;)

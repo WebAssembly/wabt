@@ -49,6 +49,26 @@ NAMED_VALUES = {
   'magic': (0, 0x61, 0x73, 0x6d),
   'version': (0xc, 0, 0, 0),
 
+  # section codes
+  'UNKNOWN': 0,
+  'TYPE': 1,
+  'IMPORT': 2,
+  'FUNCTION': 3,
+  'TABLE': 4,
+  'MEMORY': 5,
+  'GLOBAL': 6,
+  'EXPORT': 7,
+  'START': 8,
+  'ELEM': 9,
+  'CODE': 10,
+  'DATA': 11,
+
+  # external kinds
+  'func_kind': 0,
+  'table_kind': 1,
+  'memory_kind': 2,
+  'global_kind': 3,
+
   "unreachable": 0x00,
   "block": 0x01,
   "loop": 0x02,
@@ -368,13 +388,24 @@ def p_data_named_value(p):
     p[0].append(p[2])
 
 def p_data_section(p):
+  'data : data SECTION LPAREN NAMED_VALUE RPAREN LBRACE data RBRACE'
+  p[0] = p[1]
+  section_data = p[7]
+  p[0].append(p[4])
+  WriteLebU32(p[0], len(section_data))
+  p[0].extend(section_data)
+
+def p_data_user_section(p):
   'data : data SECTION LPAREN STRING RPAREN LBRACE data RBRACE'
   p[0] = p[1]
   name = p[4]
   section_data = p[7]
-  WriteLebU32(p[0], len(name))
-  WriteString(p[0], name)
-  WriteLebU32(p[0], len(section_data))
+  p[0].append(0)  # 0 is the section code for "unknown"
+  section_name_data = []
+  WriteLebU32(section_name_data, len(name))
+  WriteString(section_name_data, name)
+  WriteLebU32(p[0], len(section_name_data) + len(section_data))
+  p[0].extend(section_name_data)
   p[0].extend(section_data)
 
 def p_data_func(p):

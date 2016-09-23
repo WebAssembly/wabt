@@ -2,13 +2,14 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("memory") {
+section(MEMORY) {
+  count[1]
   has_max[1]
   initial[2]
   max[1]
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000013: memory initial size must be <= max size
+error: @0x0000000e: memory initial size must be <= max size
 
 ;;; STDERR ;;)
