@@ -12,7 +12,7 @@ section("code") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-wast":
+Error running "wasm2wast":
 error: @0x00000029: expected valid local type
 
 ;;; STDERR ;;)

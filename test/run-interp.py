@@ -31,8 +31,8 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('-e', '--executable', metavar='PATH',
-                      help='override sexpr-wasm executable.')
+  parser.add_argument('--wast2wasm-executable', metavar='PATH',
+                      help='override wast2wasm executable.')
   parser.add_argument('--wasm-interp-executable', metavar='PATH',
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
@@ -49,10 +49,10 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  sexpr_wasm = utils.Executable(
-      find_exe.GetSexprWasmExecutable(options.executable),
+  wast2wasm = utils.Executable(
+      find_exe.GetSexprWasmExecutable(options.wast2wasm_executable),
       error_cmdline=options.error_cmdline)
-  sexpr_wasm.AppendOptionalArgs({
+  wast2wasm.AppendOptionalArgs({
     '-v': options.verbose,
     '--spec': options.spec,
     '--use-libc-allocator': options.use_libc_allocator
@@ -68,13 +68,13 @@ def main(args):
     '--use-libc-allocator': options.use_libc_allocator
   })
 
-  sexpr_wasm.verbose = options.print_cmd
+  wast2wasm.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
-    sexpr_wasm.RunWithArgs(options.file, '-o', out_file)
+    wast2wasm.RunWithArgs(options.file, '-o', out_file)
     wasm_interp.RunWithArgs(out_file)
 
   return 0

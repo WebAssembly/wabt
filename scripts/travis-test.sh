@@ -49,13 +49,13 @@ set_run_test_args() {
   RUN_TEST_ARGS=""
   local EXE_DIR=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}
 
-  SEXPR_WASM=${EXE_DIR}/sexpr-wasm
-  WASM_WAST=${EXE_DIR}/wasm-wast
+  WAST2WASM=${EXE_DIR}/wast2wasm
+  WASM2WAST=${EXE_DIR}/wasm2wast
   WASM_INTERP=${EXE_DIR}/wasm-interp
 
-  check_and_add_flag "--sexpr-wasm" ${SEXPR_WASM} && \
-      check_and_add_flag "--wasm-wast" ${WASM_WAST} && \
-      check_and_add_flag "--wasm-interp" ${WASM_INTERP}
+  check_and_add_flag "--wast2wasm-executable" ${WAST2WASM} && \
+      check_and_add_flag "--wasm2wast-executable" ${WASM2WAST} && \
+      check_and_add_flag "--wasm-interp-executable" ${WASM_INTERP}
 }
 
 if [ ${CC} = "gcc" ]; then

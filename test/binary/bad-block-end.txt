@@ -15,7 +15,7 @@ section("code") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-wast":
+Error running "wasm2wast":
 error: popping past block label
 error: @0x0000002c: on_br_expr callback failed
 
