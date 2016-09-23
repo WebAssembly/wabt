@@ -16,12 +16,12 @@
   (func $f0 (type $t0)
     i32.const 1
     if $L0
-      br 0 $L0
+      br $L0
     end
     i32.const 2
     if $L1
-      br 0 $L1
-    else $L2
-      br 0 $L2
+      br $L1
+    else
+      br $L1
     end))
 ;;; STDOUT ;;)
