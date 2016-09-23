@@ -453,12 +453,11 @@ static void logging_on_error(uint32_t offset,
     FORWARD(name, value);                                             \
   }
 
-
 #define LOGGING_UINT32_UINT32(name, desc0, desc1)                    \
   static WasmResult logging_##name(uint32_t value0, uint32_t value1, \
                                    void* user_data) {                \
     LoggingContext* ctx = user_data;                                 \
-    LOGF(#name "(" desc0 ": %u, " desc1 ": %u\n", value0, value1);   \
+    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);  \
     FORWARD(name, value0, value1);                                   \
   }
 
@@ -1215,6 +1214,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* import */
   uint32_t num_imports = 0;
+  uint32_t num_func_imports = 0;
   if (skip_until_section(ctx, WASM_BINARY_SECTION_IMPORT, NULL)) {
     CALLBACK0(begin_import_section);
     uint32_t i;
@@ -1236,6 +1236,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           RAISE_ERROR_UNLESS(sig_index < num_signatures,
                              "invalid import signature index");
           CALLBACK(on_import_func, i, sig_index);
+          num_func_imports++;
           break;
         }
 
@@ -1620,8 +1621,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             case WASM_OPCODE_CALL_FUNCTION: {
               uint32_t func_index;
               in_u32_leb128(ctx, &func_index, "call_function function index");
-              RAISE_ERROR_UNLESS(func_index < num_function_signatures,
-                                 "invalid call_function function index");
+              RAISE_ERROR_UNLESS(
+                  func_index < num_func_imports + num_function_signatures,
+                  "invalid call_function function index");
               CALLBACK(on_call_expr, func_index);
               break;
             }
@@ -1629,18 +1631,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             case WASM_OPCODE_CALL_INDIRECT: {
               uint32_t sig_index;
               in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
-              RAISE_ERROR_UNLESS(sig_index < num_function_signatures,
+              RAISE_ERROR_UNLESS(sig_index < num_signatures,
                                  "invalid call_indirect signature index");
               CALLBACK(on_call_indirect_expr, sig_index);
-              break;
-            }
-
-            case WASM_OPCODE_CALL_IMPORT: {
-              uint32_t import_index;
-              in_u32_leb128(ctx, &import_index, "call_import import index");
-              RAISE_ERROR_UNLESS(import_index < num_imports,
-                                 "invalid call_import import index");
-              CALLBACK(on_call_import_expr, import_index);
               break;
             }
 
