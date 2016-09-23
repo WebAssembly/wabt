@@ -6,5 +6,5 @@
 (;; STDERR ;;;
 typecheck/bad-callindirect-func-type-mismatch.txt:5:10: type mismatch at call_indirect function index. got f32, expected i32
   (func (call_indirect $t (f32.const 0))))
-         ^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)
