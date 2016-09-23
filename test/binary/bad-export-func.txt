@@ -2,11 +2,11 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("type") { count[1] function params[0] results[0] }
-section("function") { count[1] sig[0] }
-section("export") { count[1] func[1] str("foo") }
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] sig[0] }
+section(EXPORT) { count[1] str("foo") func_kind func[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000028: invalid export function index
+error: @0x0000001b: invalid export func index
 
 ;;; STDERR ;;)

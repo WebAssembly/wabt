@@ -2,10 +2,10 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("type") { count[1] function params[1] i32 results[1] i32 }
-section("function") { count[1] type[1] }
+section(TYPE) { count[1] function params[1] i32 results[1] i32 }
+section(FUNCTION) { count[1] type[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000020: invalid function signature index
+error: @0x00000014: invalid function signature index
 
 ;;; STDERR ;;)

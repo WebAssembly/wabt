@@ -2,14 +2,14 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("type") { count[1] function params[0] results[0] }
-section("function") { count[2] func[0] func[0] }
-section("code") {
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[2] func[0] func[0] }
+section(CODE) {
   count[1]
   func { locals[0] }
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000026: function signature count != function body count
+error: @0x00000016: function signature count != function body count
 
 ;;; STDERR ;;)
