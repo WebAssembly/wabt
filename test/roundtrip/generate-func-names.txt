@@ -5,16 +5,16 @@
   (func
     (call 0))
   (table anyfunc (elem 0 1 0))
-  (export "zero" 0)
-  (export "one" 1))
+  (export "zero" (func 0))
+  (export "one" (func 1)))
 (;; STDOUT ;;;
 (module
   (type $t0 (func))
   (func $f0 (type $t0))
   (func $f1 (type $t0)
     call $f0)
-  (table 3 3 anyfunc)
-  (export "zero" $f0)
-  (export "one" $f1)
+  (table $T0 3 3 anyfunc)
+  (export "zero" (func $f0))
+  (export "one" (func $f1))
   (elem (i32.const 0) $f0 $f1 $f0))
 ;;; STDOUT ;;)

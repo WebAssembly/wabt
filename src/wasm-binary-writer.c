@@ -264,9 +264,12 @@ static void begin_user_section(Context* ctx,
   char desc[100];
   wasm_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
+  wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_UNKNOWN, "user section code");
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
+  write_str(&ctx->stream, name, strlen(name), WASM_PRINT_CHARS,
+            "user section name");
 }
 
 static void end_section(Context* ctx) {

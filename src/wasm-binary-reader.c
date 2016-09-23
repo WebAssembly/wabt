@@ -352,8 +352,9 @@ static WasmBool handle_unknown_section(Context* ctx,
     CALLBACK0(begin_names_section);
     uint32_t i, num_functions;
     in_u32_leb128(ctx, &num_functions, "function name count");
-    RAISE_ERROR_UNLESS(num_functions <= ctx->num_function_signatures,
-                       "function name count > function signature count");
+    RAISE_ERROR_UNLESS(
+        num_functions <= ctx->num_func_imports + ctx->num_function_signatures,
+        "function name count > function signature count");
     CALLBACK(on_function_names_count, num_functions);
     for (i = 0; i < num_functions; ++i) {
       WasmStringSlice function_name;

@@ -4,7 +4,7 @@
   (table anyfunc (elem 0))
   (type (func))
   (type (func (result i32)))
-  (import "foo" "bar" (type 0))
+  (import "foo" "bar" (func (type 0)))
   (func (type 0))
   (func (type 1)
     (call_indirect 0 (i32.const 0))
@@ -13,12 +13,12 @@
 (module
   (type $t0 (func))
   (type $t1 (func (result i32)))
-  (import $i0 "foo" "bar" (type $t0))
-  (func $f0 (type $t0))
-  (func $f1 (type $t1) (result i32)
+  (import "foo" "bar" (func $f0 (type $t0)))
+  (func $f1 (type $t0))
+  (func $f2 (type $t1) (result i32)
     i32.const 0
     call_indirect $t0
     i32.const 1)
-  (table 1 1 anyfunc)
+  (table $T0 1 1 anyfunc)
   (elem (i32.const 0) $f0))
 ;;; STDOUT ;;)
