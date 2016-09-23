@@ -532,7 +532,8 @@ static void write_expr_list(Context* ctx,
 static void write_init_expr(Context* ctx,
                             const WasmModule* module,
                             const WasmExpr* expr) {
-  write_expr(ctx, module, NULL, expr);
+  if (expr)
+    write_expr(ctx, module, NULL, expr);
   write_opcode(&ctx->stream, WASM_OPCODE_END);
 }
 

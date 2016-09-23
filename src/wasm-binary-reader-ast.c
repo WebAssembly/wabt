@@ -214,6 +214,7 @@ static WasmResult on_import_func(uint32_t index,
   assert(sig_index < ctx->module->func_types.size);
   WasmImport* import = ctx->module->imports.data[index];
 
+  import->kind = WASM_EXTERNAL_KIND_FUNC;
   import->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
                             WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
   import->func.decl.type_var.type = WASM_VAR_TYPE_INDEX;
@@ -233,6 +234,7 @@ static WasmResult on_import_table(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->imports.size - 1);
   WasmImport* import = ctx->module->imports.data[index];
+  import->kind = WASM_EXTERNAL_KIND_TABLE;
   import->table.elem_limits = *elem_limits;
 
   WasmTablePtr table_ptr = &import->table;
@@ -247,6 +249,7 @@ static WasmResult on_import_memory(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->imports.size - 1);
   WasmImport* import = ctx->module->imports.data[index];
+  import->kind = WASM_EXTERNAL_KIND_MEMORY;
   import->memory.page_limits = *page_limits;
 
   WasmMemoryPtr memory_ptr = &import->memory;
@@ -263,6 +266,7 @@ static WasmResult on_import_global(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->imports.size - 1);
   WasmImport* import = ctx->module->imports.data[index];
+  import->kind = WASM_EXTERNAL_KIND_GLOBAL;
   import->global.type = type;
   import->global.mutable_ = mutable_;
 
@@ -426,7 +430,7 @@ static WasmResult on_export(uint32_t index,
       assert(item_index < ctx->module->funcs.size);
       break;
     case WASM_EXTERNAL_KIND_TABLE:
-      assert(item_index < ctx->module->funcs.size);
+      assert(item_index < ctx->module->tables.size);
       break;
     case WASM_EXTERNAL_KIND_MEMORY:
       assert(item_index < ctx->module->memories.size);

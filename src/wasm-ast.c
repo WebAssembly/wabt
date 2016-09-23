@@ -513,7 +513,6 @@ void wasm_destroy_global(WasmAllocator* allocator, WasmGlobal* global) {
 }
 
 void wasm_destroy_import(WasmAllocator* allocator, WasmImport* import) {
-  wasm_destroy_string_slice(allocator, &import->name);
   wasm_destroy_string_slice(allocator, &import->module_name);
   wasm_destroy_string_slice(allocator, &import->field_name);
   switch (import->kind) {

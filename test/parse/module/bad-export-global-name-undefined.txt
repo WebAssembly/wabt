@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module (export "foo" (global $bar)))
+(;; STDERR ;;;
+parse/module/bad-export-global-name-undefined.txt:2:31: undefined global variable "$bar"
+(module (export "foo" (global $bar)))
+                              ^^^^
+;;; STDERR ;;)
