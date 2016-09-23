@@ -2,7 +2,7 @@
 ;;; FLAGS: --spec
 (module
   (func (param i32))
-  (export "foo" 0))
+  (export "foo" (func 0)))
 (invoke "foo")
 (;; STDERR ;;;
 parse/assert/bad-invoke-too-few.txt:6:2: too few parameters to function. got 0, expected 1

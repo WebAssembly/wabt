@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module (func (f32.convert_s/i32)))
-(;; STDERR ;;;
-parse/expr/bad-convert-empty.txt:2:33: syntax error, unexpected )
-(module (func (f32.convert_s/i32)))
-                                ^
-;;; STDERR ;;)

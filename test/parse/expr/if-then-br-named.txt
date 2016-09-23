@@ -1,4 +1,4 @@
 (module
   (func
-    (if (i32.const 1)
-      (then $then (br $then)))))
+    (if $exit (i32.const 1)
+      (then (br $exit)))))

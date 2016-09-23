@@ -1,5 +1,5 @@
 ;;; FLAGS: --spec
 (module
-  (export "f" 0)
+  (export "f" (func 0))
   (func (result i32) (return (i32.const 0))))
 (assert_return (invoke "f") (i32.const 0))

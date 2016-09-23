@@ -1,8 +1,8 @@
 ;;; ERROR: 1
 (module
-  (export "mem" memory))
+  (export "mem" (memory 0)))
 (;; STDERR ;;;
-parse/module/bad-export-memory-no-memory.txt:3:3: no memory to export
-  (export "mem" memory))
-  ^^^^^^^^^^^^^^^^^^^^^
+parse/module/bad-export-memory-no-memory.txt:3:25: memory variable out of range (max 0)
+  (export "mem" (memory 0)))
+                        ^
 ;;; STDERR ;;)

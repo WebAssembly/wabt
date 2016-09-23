@@ -1,4 +1,4 @@
 (module
   (func (result i32)
-    (block $exit
+    (block $exit i32
       (br 0 (i32.const 0)))))

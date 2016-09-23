@@ -2,7 +2,7 @@
 ;;; FLAGS: --spec
 (module
   (func $foo (param i32) (result i32) (get_local 0))
-  (export "foo" $foo))
+  (export "foo" (func $foo)))
 (assert_return (invoke "foo") (i32.const 0))
 (;; STDERR ;;;
 parse/assert/bad-assertreturn-too-few.txt:6:17: too few parameters to function. got 0, expected 1
