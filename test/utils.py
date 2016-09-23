@@ -127,6 +127,9 @@ def ChangeDir(path, new_dir):
 
 
 def Hexdump(data):
+  if type(data) is str:
+    data = bytearray(data, 'ascii')
+
   DUMP_OCTETS_PER_LINE = 16
   DUMP_OCTETS_PER_GROUP = 2
 

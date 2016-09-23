@@ -268,6 +268,11 @@ typedef struct WasmModule {
   WasmModuleField* first_field;
   WasmModuleField* last_field;
 
+  uint32_t num_func_imports;
+  uint32_t num_table_imports;
+  uint32_t num_memory_imports;
+  uint32_t num_global_imports;
+
   /* cached for convenience; the pointers are shared with values that are
    * stored in either WasmModuleField or WasmImport. */
   WasmFuncPtrVector funcs;

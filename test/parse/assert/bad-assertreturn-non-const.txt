@@ -2,7 +2,7 @@
 ;;; FLAGS: --spec
 (module
   (func $bar (param f32) (result f32) (get_local 0))
-  (export "bar" $bar))
+  (export "bar" (func $bar)))
 
 ;; NOT ok to use more complex exprs
 (assert_return

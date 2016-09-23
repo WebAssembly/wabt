@@ -3,11 +3,7 @@
   (type $t (func (param i32)))
   (func (type $t) (param i32) (result f32)))
 (;; STDERR ;;;
-parse/func/bad-sig-result-type-not-void.txt:4:3: type mismatch between function result type (f32) and function type result type (void)
-
-  (func (type $t) (param i32) (result f32)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-parse/func/bad-sig-result-type-not-void.txt:4:3: unable to join type void (type of last operation) with type f32 (function signature result type).
+parse/func/bad-sig-result-type-not-void.txt:4:3: expected 0 results, got 1
   (func (type $t) (param i32) (result f32)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -1,5 +1,6 @@
 (module
   (func (result i32)
-    (if (i32.const 1)
-      (then $then (br $then (i32.const 1)))
-      (else $else (br $else (i32.const 2))))))
+    (if $exit i32
+      (i32.const 1)
+      (then (br $exit (i32.const 1)))
+      (else (br $exit (i32.const 2))))))

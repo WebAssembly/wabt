@@ -39,7 +39,16 @@ static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 #endif
 
+typedef enum LabelType {
+  LABEL_TYPE_FUNC,
+  LABEL_TYPE_BLOCK,
+  LABEL_TYPE_LOOP,
+  LABEL_TYPE_IF,
+  LABEL_TYPE_ELSE,
+} LabelType;
+
 typedef struct LabelNode {
+  LabelType label_type;
   WasmExpr** first;
   WasmExpr* last;
 } LabelNode;
@@ -64,8 +73,9 @@ static void WASM_PRINTF_FORMAT(2, 3)
   on_error(WASM_UNKNOWN_OFFSET, buffer, ctx);
 }
 
-static void push_label(Context* ctx, WasmExpr** first) {
+static void push_label(Context* ctx, LabelType label_type, WasmExpr** first) {
   LabelNode label;
+  label.label_type = label_type;
   label.first = first;
   label.last = NULL;
   ctx->max_depth++;
@@ -83,14 +93,21 @@ static WasmResult pop_label(Context* ctx) {
   return WASM_OK;
 }
 
-static WasmResult top_label(Context* ctx, LabelNode** label) {
-  if (ctx->label_stack.size == 0) {
-    print_error(ctx, "accessing empty label stack");
+static WasmResult get_label_at(Context* ctx,
+                               LabelNode** label,
+                               uint32_t depth) {
+  if (depth > ctx->label_stack.size) {
+    print_error(ctx, "accessing stack depth: %u > max: %" PRIzd, depth,
+                ctx->label_stack.size);
     return WASM_ERROR;
   }
 
-  *label = &ctx->label_stack.data[ctx->label_stack.size - 1];
+  *label = &ctx->label_stack.data[ctx->label_stack.size - depth - 1];
   return WASM_OK;
+}
+
+static WasmResult top_label(Context* ctx, LabelNode** label) {
+  return get_label_at(ctx, label, 0);
 }
 
 static void dup_name(Context* ctx,
@@ -205,6 +222,7 @@ static WasmResult on_import_func(uint32_t index,
 
   WasmFuncPtr func_ptr = &import->func;
   wasm_append_func_ptr_value(ctx->allocator, &ctx->module->funcs, &func_ptr);
+  ctx->module->num_func_imports++;
   return WASM_OK;
 }
 
@@ -219,6 +237,7 @@ static WasmResult on_import_table(uint32_t index,
 
   WasmTablePtr table_ptr = &import->table;
   wasm_append_table_ptr_value(ctx->allocator, &ctx->module->tables, &table_ptr);
+  ctx->module->num_table_imports++;
   return WASM_OK;
 }
 
@@ -233,6 +252,7 @@ static WasmResult on_import_memory(uint32_t index,
   WasmMemoryPtr memory_ptr = &import->memory;
   wasm_append_memory_ptr_value(ctx->allocator, &ctx->module->memories,
                                &memory_ptr);
+  ctx->module->num_memory_imports++;
   return WASM_OK;
 }
 
@@ -249,6 +269,7 @@ static WasmResult on_import_global(uint32_t index,
   WasmGlobalPtr global_ptr = &import->global;
   wasm_append_global_ptr_value(ctx->allocator, &ctx->module->globals,
                                &global_ptr);
+  ctx->module->num_global_imports++;
   return WASM_OK;
 }
 
@@ -369,7 +390,8 @@ static WasmResult begin_global_init_expr(uint32_t index,
                                                void* user_data) {
   Context* ctx = user_data;
   assert(index == ctx->module->globals.size - 1);
-  WasmGlobal* global = ctx->module->globals.data[index];
+  WasmGlobal* global =
+      ctx->module->globals.data[index + ctx->module->num_global_imports];
   ctx->current_init_expr = &global->init_expr;
   return WASM_OK;
 }
@@ -443,7 +465,7 @@ static WasmResult on_start_function(uint32_t func_index, void* user_data) {
 
 static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  assert(count == ctx->module->funcs.size);
+  assert(ctx->module->num_func_imports + count == ctx->module->funcs.size);
   (void)ctx;
   return WASM_OK;
 }
@@ -451,8 +473,9 @@ static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
 static WasmResult begin_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   assert(index < ctx->module->funcs.size);
-  ctx->current_func = ctx->module->funcs.data[index];
-  push_label(ctx, &ctx->current_func->first_expr);
+  ctx->current_func =
+      ctx->module->funcs.data[index + ctx->module->num_func_imports];
+  push_label(ctx, LABEL_TYPE_FUNC, &ctx->current_func->first_expr);
   return WASM_OK;
 }
 
@@ -490,7 +513,7 @@ static WasmResult on_block_expr(uint32_t num_types,
   src.data = sig_types;
   wasm_extend_types(ctx->allocator, &expr->block.sig, &src);
   append_expr(ctx, expr);
-  push_label(ctx, &expr->block.first);
+  push_label(ctx, LABEL_TYPE_BLOCK, &expr->block.first);
   return WASM_OK;
 }
 
@@ -577,11 +600,18 @@ static WasmResult on_else_expr(void* user_data) {
   Context* ctx = user_data;
   LabelNode* label;
   CHECK_RESULT(top_label(ctx, &label));
-  WasmExpr* if_expr = label->last;
-  if (if_expr->type != WASM_EXPR_TYPE_IF) {
+  if (label->label_type != LABEL_TYPE_IF) {
     print_error(ctx, "else expression without matching if");
     return WASM_ERROR;
   }
+
+  LabelNode* parent_label;
+  CHECK_RESULT(get_label_at(ctx, &parent_label, 1));
+  assert(parent_label->last->type == WASM_EXPR_TYPE_IF);
+
+  label->label_type = LABEL_TYPE_ELSE;
+  label->first = &parent_label->last->if_.false_;
+  label->last = NULL;
   return WASM_OK;
 }
 
@@ -655,7 +685,7 @@ static WasmResult on_if_expr(uint32_t num_types,
   src.data = sig_types;
   wasm_extend_types(ctx->allocator, &expr->if_.true_.sig, &src);
   append_expr(ctx, expr);
-  push_label(ctx, &expr->if_.true_.first);
+  push_label(ctx, LABEL_TYPE_IF, &expr->if_.true_.first);
   return WASM_OK;
 }
 
@@ -682,7 +712,7 @@ static WasmResult on_loop_expr(uint32_t num_types,
   src.data = sig_types;
   wasm_extend_types(ctx->allocator, &expr->loop.sig, &src);
   append_expr(ctx, expr);
-  push_label(ctx, &expr->loop.first);
+  push_label(ctx, LABEL_TYPE_LOOP, &expr->loop.first);
   return WASM_OK;
 }
 

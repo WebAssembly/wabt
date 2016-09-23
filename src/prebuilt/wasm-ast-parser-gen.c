@@ -154,6 +154,15 @@
     }                                                                   \
   while (0)
 
+#define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)               \
+  do {                                                                 \
+    if ((module)->kinds.size != (module)->num_##kind##_imports) {      \
+      wasm_ast_parser_error(&loc_, lexer, parser,                      \
+                            "imported " #kind                          \
+                            " must occur before all defined " #kinds); \
+    }                                                                  \
+  } while (0)
+
 #define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
 #define YYFREE(p) wasm_free(parser->allocator, p)
 
@@ -210,7 +219,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 #define wasm_ast_parser_lex wasm_ast_lexer_lex
 
 
-#line 214 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:339  */
+#line 223 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -355,7 +364,7 @@ int wasm_ast_parser_parse (WasmAstLexer* lexer, WasmAstParser* parser);
 
 /* Copy the second part of user declarations.  */
 
-#line 359 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:358  */
+#line 368 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -661,23 +670,23 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   264,   264,   270,   280,   281,   285,   303,   304,   310,
-     313,   318,   325,   328,   329,   333,   338,   345,   348,   351,
-     356,   363,   369,   380,   384,   388,   395,   400,   407,   408,
-     414,   415,   418,   422,   423,   427,   428,   438,   439,   450,
-     451,   452,   455,   458,   461,   464,   467,   471,   475,   480,
-     483,   487,   491,   495,   499,   503,   507,   511,   517,   523,
-     535,   539,   543,   547,   551,   554,   559,   564,   569,   574,
-     582,   590,   594,   597,   603,   609,   618,   624,   629,   635,
-     640,   646,   654,   655,   663,   664,   672,   677,   678,   684,
-     690,   700,   706,   712,   722,   777,   786,   793,   800,   810,
-     813,   817,   822,   831,   837,   857,   862,   871,   878,   898,
-     920,   927,   940,   947,   953,   959,   965,   973,   978,   985,
-     991,   997,  1003,  1012,  1020,  1025,  1030,  1035,  1042,  1049,
-    1053,  1056,  1067,  1071,  1078,  1082,  1085,  1093,  1101,  1118,
-    1134,  1145,  1152,  1159,  1165,  1194,  1204,  1241,  1251,  1276,
-    1277,  1281,  1289,  1299,  1305,  1310,  1316,  1322,  1328,  1333,
-    1341,  1342,  1350,  1362,  1363,  1370,  1379
+       0,   273,   273,   279,   289,   290,   294,   312,   313,   319,
+     322,   327,   334,   337,   338,   342,   347,   354,   357,   360,
+     365,   372,   378,   389,   393,   397,   404,   409,   416,   417,
+     423,   424,   427,   431,   432,   436,   437,   447,   448,   459,
+     460,   461,   464,   467,   470,   473,   476,   480,   484,   489,
+     492,   496,   500,   504,   508,   512,   516,   520,   526,   532,
+     544,   548,   552,   556,   560,   563,   568,   573,   578,   583,
+     591,   599,   603,   606,   612,   618,   627,   633,   638,   644,
+     649,   655,   663,   664,   672,   673,   681,   686,   687,   693,
+     699,   709,   715,   721,   731,   786,   795,   802,   809,   819,
+     822,   826,   831,   840,   846,   866,   871,   880,   887,   907,
+     929,   936,   949,   956,   962,   968,   974,   982,   987,   994,
+    1000,  1006,  1012,  1021,  1029,  1034,  1039,  1044,  1051,  1058,
+    1062,  1065,  1076,  1080,  1087,  1091,  1094,  1102,  1110,  1127,
+    1143,  1154,  1161,  1168,  1174,  1214,  1224,  1261,  1271,  1296,
+    1297,  1301,  1309,  1319,  1325,  1330,  1336,  1342,  1348,  1353,
+    1361,  1362,  1370,  1382,  1383,  1390,  1399
 };
 #endif
 
@@ -1596,327 +1605,327 @@ yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocatio
   switch (yytype)
     {
           case 5: /* NAT  */
-#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).literal).text); }
-#line 1602 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1611 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 6: /* INT  */
-#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).literal).text); }
-#line 1608 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1617 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 7: /* FLOAT  */
-#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).literal).text); }
-#line 1614 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1623 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 8: /* TEXT  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1620 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1629 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 9: /* VAR  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1626 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1635 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 35: /* OFFSET_EQ_NAT  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1632 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1641 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 36: /* ALIGN_EQ_NAT  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1638 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1647 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 73: /* non_empty_text_list  */
-#line 248 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 257 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_text_list(parser->allocator, &((*yyvaluep).text_list)); }
-#line 1644 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1653 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 74: /* text_list  */
-#line 248 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 257 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_text_list(parser->allocator, &((*yyvaluep).text_list)); }
-#line 1650 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1659 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 75: /* quoted_text  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1656 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1665 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 76: /* value_type_list  */
-#line 249 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 258 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_type_vector(parser->allocator, &((*yyvaluep).types)); }
-#line 1662 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1671 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 79: /* func_type  */
-#line 239 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 248 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_func_signature(parser->allocator, &((*yyvaluep).func_sig)); }
-#line 1668 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1677 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 80: /* func_sig  */
-#line 239 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 248 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_func_signature(parser->allocator, &((*yyvaluep).func_sig)); }
-#line 1674 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1683 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 84: /* type_use  */
-#line 251 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 260 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_var(parser->allocator, &((*yyvaluep).var)); }
-#line 1680 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1689 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 86: /* literal  */
-#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).literal).text); }
-#line 1686 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1695 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 87: /* var  */
-#line 251 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 260 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_var(parser->allocator, &((*yyvaluep).var)); }
-#line 1692 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1701 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 88: /* var_list  */
-#line 250 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 259 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_var_vector_and_elements(parser->allocator, &((*yyvaluep).vars)); }
-#line 1698 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1707 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 89: /* bind_var_opt  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1704 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1713 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 90: /* bind_var  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1710 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1719 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 91: /* labeling_opt  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1716 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1725 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 94: /* instr  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1722 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1731 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 95: /* plain_instr  */
-#line 235 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 244 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr(parser->allocator, ((*yyvaluep).expr)); }
-#line 1728 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1737 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 96: /* block_instr  */
-#line 235 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 244 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr(parser->allocator, ((*yyvaluep).expr)); }
-#line 1734 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1743 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 97: /* block  */
-#line 226 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 235 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_block(parser->allocator, &((*yyvaluep).block)); }
-#line 1740 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1749 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 98: /* expr  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1746 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1755 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 99: /* expr1  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1752 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1761 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 100: /* if_  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1758 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1767 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 101: /* instr_list  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1764 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1773 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 102: /* expr_list  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1770 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1779 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 103: /* const_expr  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1776 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1785 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 104: /* func_fields  */
-#line 237 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 246 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_func_fields(parser->allocator, ((*yyvaluep).func_fields)); }
-#line 1782 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1791 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 105: /* func_body  */
-#line 237 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 246 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_func_fields(parser->allocator, ((*yyvaluep).func_fields)); }
-#line 1788 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1797 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 106: /* func_info  */
-#line 238 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_func(parser->allocator, ((*yyvaluep).func)); wasm_free(parser->allocator, ((*yyvaluep).func)); }
-#line 1794 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1803 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 107: /* func  */
-#line 232 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 241 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_exported_func(parser->allocator, &((*yyvaluep).exported_func)); }
-#line 1800 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1809 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 108: /* offset  */
-#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 245 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_expr_list(parser->allocator, ((*yyvaluep).expr_list).first); }
-#line 1806 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1815 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 109: /* elem  */
-#line 230 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 239 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_elem_segment(parser->allocator, &((*yyvaluep).elem_segment)); }
-#line 1812 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1821 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 110: /* table  */
-#line 234 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 243 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_exported_table(parser->allocator, &((*yyvaluep).exported_table)); }
-#line 1818 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1827 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 111: /* data  */
-#line 242 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 251 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_data_segment(parser->allocator, &((*yyvaluep).data_segment)); }
-#line 1824 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1833 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 112: /* memory  */
-#line 233 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 242 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_exported_memory(parser->allocator, &((*yyvaluep).exported_memory)); }
-#line 1830 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1839 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 114: /* import_kind  */
-#line 241 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 250 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_import(parser->allocator, ((*yyvaluep).import)); wasm_free(parser->allocator, ((*yyvaluep).import)); }
-#line 1836 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1845 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 115: /* import  */
-#line 241 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 250 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_import(parser->allocator, ((*yyvaluep).import)); wasm_free(parser->allocator, ((*yyvaluep).import)); }
-#line 1842 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1851 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 116: /* inline_import  */
-#line 241 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 250 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_import(parser->allocator, ((*yyvaluep).import)); wasm_free(parser->allocator, ((*yyvaluep).import)); }
-#line 1848 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1857 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 117: /* export_kind  */
-#line 231 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 240 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_export(parser->allocator, &((*yyvaluep).export_)); }
-#line 1854 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1863 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 118: /* export  */
-#line 231 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 240 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_export(parser->allocator, &((*yyvaluep).export_)); }
-#line 1860 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1869 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 121: /* type_def  */
-#line 240 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 249 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_func_type(parser->allocator, &((*yyvaluep).func_type)); }
-#line 1866 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1875 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 122: /* start  */
-#line 251 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 260 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_var(parser->allocator, &((*yyvaluep).var)); }
-#line 1872 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1881 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 123: /* module_fields  */
-#line 243 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 252 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_module(parser->allocator, ((*yyvaluep).module)); wasm_free(parser->allocator, ((*yyvaluep).module)); }
-#line 1878 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1887 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 124: /* raw_module  */
-#line 244 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_raw_module(parser->allocator, &((*yyvaluep).raw_module)); }
-#line 1884 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1893 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 125: /* module  */
-#line 243 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 252 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_module(parser->allocator, ((*yyvaluep).module)); wasm_free(parser->allocator, ((*yyvaluep).module)); }
-#line 1890 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1899 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 126: /* script_var_opt  */
-#line 247 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_string_slice(parser->allocator, &((*yyvaluep).text)); }
-#line 1896 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1905 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 128: /* cmd  */
-#line 227 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 236 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_command(parser->allocator, ((*yyvaluep).command)); wasm_free(parser->allocator, ((*yyvaluep).command)); }
-#line 1902 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1911 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 129: /* cmd_list  */
-#line 228 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 237 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_command_vector_and_elements(parser->allocator, &((*yyvaluep).commands)); }
-#line 1908 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1917 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 131: /* const_list  */
-#line 229 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 238 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_const_vector(parser->allocator, &((*yyvaluep).consts)); }
-#line 1914 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1923 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
     case 132: /* script  */
-#line 246 "src/wasm-ast-parser.y" /* yacc.c:1257  */
+#line 255 "src/wasm-ast-parser.y" /* yacc.c:1257  */
       { wasm_destroy_script(&((*yyvaluep).script)); }
-#line 1920 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
+#line 1929 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1257  */
         break;
 
 
@@ -2208,18 +2217,18 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 264 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 273 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmTextListNode* node = new_text_list_node(parser->allocator);
       DUPTEXT(node->text, (yyvsp[0].text));
       node->next = NULL;
       (yyval.text_list).first = (yyval.text_list).last = node;
     }
-#line 2219 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2228 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 270 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 279 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.text_list) = (yyvsp[-1].text_list);
       WasmTextListNode* node = new_text_list_node(parser->allocator);
@@ -2228,17 +2237,17 @@ yyreduce:
       (yyval.text_list).last->next = node;
       (yyval.text_list).last = node;
     }
-#line 2232 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2241 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 280 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 289 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.text_list).first = (yyval.text_list).last = NULL; }
-#line 2238 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2247 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 285 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 294 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmTextListNode node;
       node.text = (yyvsp[0].text);
@@ -2252,130 +2261,130 @@ yyreduce:
       (yyval.text).start = data;
       (yyval.text).length = size;
     }
-#line 2256 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2265 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 303 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 312 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.types)); }
-#line 2262 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2271 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 304 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 313 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.types) = (yyvsp[-1].types);
       wasm_append_type_value(parser->allocator, &(yyval.types), &(yyvsp[0].type));
     }
-#line 2271 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2280 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 310 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 319 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {}
-#line 2277 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2286 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 313 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 322 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.global));
       (yyval.global).type = (yyvsp[0].type);
       (yyval.global).mutable_ = WASM_FALSE;
     }
-#line 2287 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2296 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 318 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 327 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.global));
       (yyval.global).type = (yyvsp[-1].type);
       (yyval.global).mutable_ = WASM_TRUE;
     }
-#line 2297 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2306 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 325 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 334 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.func_sig) = (yyvsp[-1].func_sig); }
-#line 2303 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2312 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 328 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 337 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.func_sig)); }
-#line 2309 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2318 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 329 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 338 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.func_sig));
       (yyval.func_sig).param_types = (yyvsp[-1].types);
     }
-#line 2318 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2327 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 333 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 342 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.func_sig));
       (yyval.func_sig).param_types = (yyvsp[-5].types);
       (yyval.func_sig).result_types = (yyvsp[-1].types);
     }
-#line 2328 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2337 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 338 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 347 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.func_sig));
       (yyval.func_sig).result_types = (yyvsp[-1].types);
     }
-#line 2337 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2346 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 345 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 354 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.table).elem_limits = (yyvsp[-1].limits); }
-#line 2343 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2352 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 348 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 357 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.memory).page_limits = (yyvsp[0].limits); }
-#line 2349 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2358 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 351 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 360 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.limits).has_max = WASM_FALSE;
       (yyval.limits).initial = (yyvsp[0].u64);
       (yyval.limits).max = 0;
     }
-#line 2359 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2368 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 356 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 365 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.limits).has_max = WASM_TRUE;
       (yyval.limits).initial = (yyvsp[-1].u64);
       (yyval.limits).max = (yyvsp[0].u64);
     }
-#line 2369 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2378 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 363 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 372 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.var) = (yyvsp[-1].var); }
-#line 2375 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2384 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 369 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 378 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       if (WASM_FAILED(wasm_parse_uint64((yyvsp[0].literal).text.start,
                                         (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &(yyval.u64)))) {
@@ -2384,20 +2393,11 @@ yyreduce:
                               WASM_PRINTF_STRING_SLICE_ARG((yyvsp[0].literal).text));
       }
     }
-#line 2388 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
-    break;
-
-  case 23:
-#line 380 "src/wasm-ast-parser.y" /* yacc.c:1646  */
-    {
-      (yyval.literal).type = (yyvsp[0].literal).type;
-      DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
-    }
 #line 2397 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 24:
-#line 384 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 23:
+#line 389 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.literal).type = (yyvsp[0].literal).type;
       DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
@@ -2405,8 +2405,8 @@ yyreduce:
 #line 2406 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 25:
-#line 388 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 24:
+#line 393 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.literal).type = (yyvsp[0].literal).type;
       DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
@@ -2414,67 +2414,76 @@ yyreduce:
 #line 2415 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
+  case 25:
+#line 397 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+    {
+      (yyval.literal).type = (yyvsp[0].literal).type;
+      DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
+    }
+#line 2424 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+    break;
+
   case 26:
-#line 395 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 404 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
       (yyval.var).type = WASM_VAR_TYPE_INDEX;
       (yyval.var).index = (yyvsp[0].u64);
     }
-#line 2425 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2434 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 400 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 409 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
       (yyval.var).type = WASM_VAR_TYPE_NAME;
       DUPTEXT((yyval.var).name, (yyvsp[0].text));
     }
-#line 2435 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2444 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 407 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 416 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.vars)); }
-#line 2441 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2450 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 408 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 417 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.vars) = (yyvsp[-1].vars);
       wasm_append_var_value(parser->allocator, &(yyval.vars), &(yyvsp[0].var));
     }
-#line 2450 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2459 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 414 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 423 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.text)); }
-#line 2456 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2465 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 418 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 427 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 2462 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2471 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 422 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 431 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.text)); }
-#line 2468 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2477 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 427 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 436 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.u64) = 0; }
-#line 2474 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2483 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 428 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 437 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
     if (WASM_FAILED(wasm_parse_int64((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u64),
                                      WASM_PARSE_SIGNED_AND_UNSIGNED))) {
@@ -2483,17 +2492,17 @@ yyreduce:
                             WASM_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
       }
     }
-#line 2487 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2496 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 438 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 447 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.u32) = USE_NATURAL_ALIGNMENT; }
-#line 2493 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2502 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 439 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 448 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       if (WASM_FAILED(wasm_parse_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32),
                                        WASM_PARSE_UNSIGNED_ONLY))) {
@@ -2502,182 +2511,182 @@ yyreduce:
                               WASM_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
       }
     }
-#line 2506 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2515 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 450 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 459 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = join_exprs1(&(yylsp[0]), (yyvsp[0].expr)); }
-#line 2512 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2521 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 451 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 460 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = join_exprs1(&(yylsp[0]), (yyvsp[0].expr)); }
-#line 2518 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2527 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 452 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 461 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = (yyvsp[0].expr_list); }
-#line 2524 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2533 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 455 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 464 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_unreachable_expr(parser->allocator);
     }
-#line 2532 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2541 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 458 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 467 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_nop_expr(parser->allocator);
     }
-#line 2540 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2549 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 461 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 470 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_drop_expr(parser->allocator);
     }
-#line 2548 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2557 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 464 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 473 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_select_expr(parser->allocator);
-    }
-#line 2556 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
-    break;
-
-  case 46:
-#line 467 "src/wasm-ast-parser.y" /* yacc.c:1646  */
-    {
-      (yyval.expr) = wasm_new_br_expr(parser->allocator);
-      (yyval.expr)->br.var = (yyvsp[0].var);
     }
 #line 2565 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 47:
-#line 471 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 46:
+#line 476 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_br_if_expr(parser->allocator);
-      (yyval.expr)->br_if.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_br_expr(parser->allocator);
+      (yyval.expr)->br.var = (yyvsp[0].var);
     }
 #line 2574 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
+  case 47:
+#line 480 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+    {
+      (yyval.expr) = wasm_new_br_if_expr(parser->allocator);
+      (yyval.expr)->br_if.var = (yyvsp[0].var);
+    }
+#line 2583 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+    break;
+
   case 48:
-#line 475 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 484 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_br_table_expr(parser->allocator);
       (yyval.expr)->br_table.targets = (yyvsp[-1].vars);
       (yyval.expr)->br_table.default_target = (yyvsp[0].var);
     }
-#line 2584 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2593 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 480 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 489 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_return_expr(parser->allocator);
-    }
-#line 2592 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
-    break;
-
-  case 50:
-#line 483 "src/wasm-ast-parser.y" /* yacc.c:1646  */
-    {
-      (yyval.expr) = wasm_new_call_expr(parser->allocator);
-      (yyval.expr)->call.var = (yyvsp[0].var);
     }
 #line 2601 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 51:
-#line 487 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 50:
+#line 492 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_call_indirect_expr(parser->allocator);
-      (yyval.expr)->call_indirect.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_call_expr(parser->allocator);
+      (yyval.expr)->call.var = (yyvsp[0].var);
     }
 #line 2610 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 52:
-#line 491 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 51:
+#line 496 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_get_local_expr(parser->allocator);
-      (yyval.expr)->get_local.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_call_indirect_expr(parser->allocator);
+      (yyval.expr)->call_indirect.var = (yyvsp[0].var);
     }
 #line 2619 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 53:
-#line 495 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 52:
+#line 500 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_set_local_expr(parser->allocator);
-      (yyval.expr)->set_local.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_get_local_expr(parser->allocator);
+      (yyval.expr)->get_local.var = (yyvsp[0].var);
     }
 #line 2628 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 54:
-#line 499 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 53:
+#line 504 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_tee_local_expr(parser->allocator);
-      (yyval.expr)->tee_local.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_set_local_expr(parser->allocator);
+      (yyval.expr)->set_local.var = (yyvsp[0].var);
     }
 #line 2637 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 55:
-#line 503 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 54:
+#line 508 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_get_global_expr(parser->allocator);
-      (yyval.expr)->get_global.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_tee_local_expr(parser->allocator);
+      (yyval.expr)->tee_local.var = (yyvsp[0].var);
     }
 #line 2646 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 56:
-#line 507 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 55:
+#line 512 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.expr) = wasm_new_set_global_expr(parser->allocator);
-      (yyval.expr)->set_global.var = (yyvsp[0].var);
+      (yyval.expr) = wasm_new_get_global_expr(parser->allocator);
+      (yyval.expr)->get_global.var = (yyvsp[0].var);
     }
 #line 2655 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
+  case 56:
+#line 516 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+    {
+      (yyval.expr) = wasm_new_set_global_expr(parser->allocator);
+      (yyval.expr)->set_global.var = (yyvsp[0].var);
+    }
+#line 2664 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+    break;
+
   case 57:
-#line 511 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 520 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_load_expr(parser->allocator);
       (yyval.expr)->load.opcode = (yyvsp[-2].opcode);
       (yyval.expr)->load.offset = (yyvsp[-1].u64);
       (yyval.expr)->load.align = (yyvsp[0].u32);
     }
-#line 2666 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2675 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 517 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 526 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_store_expr(parser->allocator);
       (yyval.expr)->store.opcode = (yyvsp[-2].opcode);
       (yyval.expr)->store.offset = (yyvsp[-1].u64);
       (yyval.expr)->store.align = (yyvsp[0].u32);
     }
-#line 2677 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2686 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 523 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 532 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_const_expr(parser->allocator);
       (yyval.expr)->const_.loc = (yylsp[-1]);
@@ -2690,150 +2699,150 @@ yyreduce:
       }
       wasm_free(parser->allocator, (char*)(yyvsp[0].literal).text.start);
     }
-#line 2694 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2703 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 535 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 544 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_unary_expr(parser->allocator);
       (yyval.expr)->unary.opcode = (yyvsp[0].opcode);
     }
-#line 2703 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2712 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 539 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 548 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_binary_expr(parser->allocator);
       (yyval.expr)->binary.opcode = (yyvsp[0].opcode);
     }
-#line 2712 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2721 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 543 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 552 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_compare_expr(parser->allocator);
       (yyval.expr)->compare.opcode = (yyvsp[0].opcode);
     }
-#line 2721 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2730 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 547 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 556 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_convert_expr(parser->allocator);
       (yyval.expr)->convert.opcode = (yyvsp[0].opcode);
     }
-#line 2730 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2739 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 551 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 560 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_current_memory_expr(parser->allocator);
     }
-#line 2738 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2747 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 554 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 563 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_grow_memory_expr(parser->allocator);
     }
-#line 2746 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2755 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 559 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 568 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_block_expr(parser->allocator);
       (yyval.expr)->block = (yyvsp[-1].block);
       (yyval.expr)->block.label = (yyvsp[-2].text);
     }
-#line 2756 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2765 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 564 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 573 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_loop_expr(parser->allocator);
       (yyval.expr)->loop = (yyvsp[-1].block);
       (yyval.expr)->loop.label = (yyvsp[-2].text);
     }
-#line 2766 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2775 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 569 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 578 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_if_expr(parser->allocator);
       (yyval.expr)->if_.true_ = (yyvsp[-1].block);
       (yyval.expr)->if_.true_.label = (yyvsp[-2].text);
     }
-#line 2776 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2785 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 574 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 583 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = wasm_new_if_expr(parser->allocator);
       (yyval.expr)->if_.true_ = (yyvsp[-3].block);
       (yyval.expr)->if_.true_.label = (yyvsp[-4].text);
       (yyval.expr)->if_.false_ = (yyvsp[-1].expr_list).first;
     }
-#line 2787 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2796 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 582 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 591 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.block));
       (yyval.block).sig = (yyvsp[-1].types);
       (yyval.block).first = (yyvsp[0].expr_list).first;
     }
-#line 2797 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2806 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 590 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 599 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = (yyvsp[-1].expr_list); }
-#line 2803 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2812 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 594 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 603 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = join_exprs2(&(yylsp[-1]), &(yyvsp[0].expr_list), (yyvsp[-1].expr));
     }
-#line 2811 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2820 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 597 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 606 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_block_expr(parser->allocator);
       expr->block = (yyvsp[0].block);
       expr->block.label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), expr);
     }
-#line 2822 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2831 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 603 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 612 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_loop_expr(parser->allocator);
       expr->loop = (yyvsp[0].block);
       expr->loop.label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), expr);
     }
-#line 2833 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2842 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 609 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 618 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[0].expr_list);
       WasmExpr* if_ = (yyvsp[0].expr_list).last;
@@ -2841,96 +2850,79 @@ yyreduce:
       if_->if_.true_.label = (yyvsp[-2].text);
       if_->if_.true_.sig = (yyvsp[-1].types);
     }
-#line 2845 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2854 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 618 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 627 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_if_expr(parser->allocator);
       expr->if_.true_.first = (yyvsp[-5].expr_list).first;
       expr->if_.false_ = (yyvsp[-1].expr_list).first;
       (yyval.expr_list) = join_exprs1(&(yylsp[-7]), expr);
     }
-#line 2856 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2865 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 624 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 633 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_if_expr(parser->allocator);
       expr->if_.true_.first = (yyvsp[-1].expr_list).first;
       (yyval.expr_list) = join_exprs1(&(yylsp[-3]), expr);
     }
-#line 2866 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2875 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 629 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 638 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_if_expr(parser->allocator);
       expr->if_.true_.first = (yyvsp[-5].expr_list).first;
       expr->if_.false_ = (yyvsp[-1].expr_list).first;
       (yyval.expr_list) = join_exprs2(&(yylsp[-8]), &(yyvsp[-8].expr_list), expr);
     }
-#line 2877 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2886 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 635 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 644 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_if_expr(parser->allocator);
       expr->if_.true_.first = (yyvsp[-1].expr_list).first;
       (yyval.expr_list) = join_exprs2(&(yylsp[-4]), &(yyvsp[-4].expr_list), expr);
     }
-#line 2887 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2896 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 640 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 649 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_if_expr(parser->allocator);
       expr->if_.true_.first = (yyvsp[-1].expr_list).first;
       expr->if_.false_ = (yyvsp[0].expr_list).first;
       (yyval.expr_list) = join_exprs2(&(yylsp[-2]), &(yyvsp[-2].expr_list), expr);
     }
-#line 2898 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2907 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 646 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 655 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_if_expr(parser->allocator);
       expr->if_.true_.first = (yyvsp[0].expr_list).first;
       (yyval.expr_list) = join_exprs2(&(yylsp[-1]), &(yyvsp[-1].expr_list), expr);
     }
-#line 2908 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2917 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 654 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 663 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.expr_list)); }
-#line 2914 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2923 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 655 "src/wasm-ast-parser.y" /* yacc.c:1646  */
-    {
-      (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
-      (yyvsp[-1].expr_list).last->next = (yyvsp[0].expr_list).first;
-      (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
-      (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
-    }
-#line 2925 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
-    break;
-
-  case 84:
-#line 663 "src/wasm-ast-parser.y" /* yacc.c:1646  */
-    { WASM_ZERO_MEMORY((yyval.expr_list)); }
-#line 2931 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
-    break;
-
-  case 85:
 #line 664 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
@@ -2938,33 +2930,50 @@ yyreduce:
       (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
       (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
     }
-#line 2942 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2934 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+    break;
+
+  case 84:
+#line 672 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+    { WASM_ZERO_MEMORY((yyval.expr_list)); }
+#line 2940 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+    break;
+
+  case 85:
+#line 673 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+    {
+      (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
+      (yyvsp[-1].expr_list).last->next = (yyvsp[0].expr_list).first;
+      (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
+      (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
+    }
+#line 2951 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 678 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 687 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field(parser->allocator);
       (yyval.func_fields)->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPES;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 2953 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2962 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 684 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 693 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field(parser->allocator);
       (yyval.func_fields)->type = WASM_FUNC_FIELD_TYPE_PARAM_TYPES;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 2964 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2973 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 690 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 699 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field(parser->allocator);
       (yyval.func_fields)->type = WASM_FUNC_FIELD_TYPE_BOUND_PARAM;
@@ -2973,33 +2982,33 @@ yyreduce:
       (yyval.func_fields)->bound_type.type = (yyvsp[-2].type);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 2977 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2986 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 700 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 709 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field(parser->allocator);
       (yyval.func_fields)->type = WASM_FUNC_FIELD_TYPE_EXPRS;
       (yyval.func_fields)->first_expr = (yyvsp[0].expr_list).first;
       (yyval.func_fields)->next = NULL;
     }
-#line 2988 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 2997 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 706 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 715 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field(parser->allocator);
       (yyval.func_fields)->type = WASM_FUNC_FIELD_TYPE_LOCAL_TYPES;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 2999 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3008 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 712 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 721 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field(parser->allocator);
       (yyval.func_fields)->type = WASM_FUNC_FIELD_TYPE_BOUND_LOCAL;
@@ -3008,11 +3017,11 @@ yyreduce:
       (yyval.func_fields)->bound_type.type = (yyvsp[-2].type);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 3012 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3021 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 722 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 731 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = new_func(parser->allocator);
       WasmFuncField* field = (yyvsp[0].func_fields);
@@ -3066,11 +3075,11 @@ yyreduce:
         field = next;
       }
     }
-#line 3070 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3079 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 777 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 786 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
@@ -3079,11 +3088,11 @@ yyreduce:
       (yyval.exported_func).func->name = (yyvsp[-4].text);
       (yyval.exported_func).export_ = (yyvsp[-3].optional_export);
     }
-#line 3083 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3092 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 786 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 795 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
@@ -3091,72 +3100,72 @@ yyreduce:
       (yyval.exported_func).func->decl.type_var = (yyvsp[-2].var);
       (yyval.exported_func).func->name = (yyvsp[-3].text);
     }
-#line 3095 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3104 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 793 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 802 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
       (yyval.exported_func).func->name = (yyvsp[-3].text);
       (yyval.exported_func).export_ = (yyvsp[-2].optional_export);
     }
-#line 3106 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3115 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 800 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 809 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
       (yyval.exported_func).func->name = (yyvsp[-2].text);
     }
-#line 3116 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3125 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 810 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 819 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[-1].expr_list);
     }
-#line 3124 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3133 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 817 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 826 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.elem_segment).table_var = (yyvsp[-3].var);
       (yyval.elem_segment).offset = (yyvsp[-2].expr_list).first;
       (yyval.elem_segment).vars = (yyvsp[-1].vars);
     }
-#line 3134 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3143 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 822 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 831 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.elem_segment).table_var.type = WASM_VAR_TYPE_INDEX;
       (yyval.elem_segment).table_var.index = 0;
       (yyval.elem_segment).offset = (yyvsp[-2].expr_list).first;
       (yyval.elem_segment).vars = (yyvsp[-1].vars);
     }
-#line 3145 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3154 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 831 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 840 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_table).table = (yyvsp[-1].table);
       (yyval.exported_table).table.name = (yyvsp[-3].text);
       (yyval.exported_table).has_elem_segment = WASM_FALSE;
       (yyval.exported_table).export_ = (yyvsp[-2].optional_export);
     }
-#line 3156 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3165 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 838 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 847 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_const_expr(parser->allocator);
       expr->loc = (yylsp[-8]);
@@ -3173,32 +3182,32 @@ yyreduce:
       (yyval.exported_table).elem_segment.vars = (yyvsp[-2].vars);
       (yyval.exported_table).export_ = (yyvsp[-6].optional_export);
     }
-#line 3177 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3186 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 857 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 866 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.data_segment).memory_var = (yyvsp[-3].var);
       (yyval.data_segment).offset = (yyvsp[-2].expr_list).first;
       dup_text_list(parser->allocator, &(yyvsp[-1].text_list), &(yyval.data_segment).data, &(yyval.data_segment).size);
     }
-#line 3187 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3196 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 862 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 871 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.data_segment).memory_var.type = WASM_VAR_TYPE_INDEX;
       (yyval.data_segment).memory_var.index = 0;
       (yyval.data_segment).offset = (yyvsp[-2].expr_list).first;
       dup_text_list(parser->allocator, &(yyvsp[-1].text_list), &(yyval.data_segment).data, &(yyval.data_segment).size);
     }
-#line 3198 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3207 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 871 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 880 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_memory));
       (yyval.exported_memory).memory = (yyvsp[-1].memory);
@@ -3206,11 +3215,11 @@ yyreduce:
       (yyval.exported_memory).has_data_segment = WASM_FALSE;
       (yyval.exported_memory).export_ = (yyvsp[-2].optional_export);
     }
-#line 3210 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3219 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 878 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 887 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_const_expr(parser->allocator);
       expr->loc = (yylsp[-7]);
@@ -3230,11 +3239,11 @@ yyreduce:
       (yyval.exported_memory).memory.page_limits.has_max = WASM_TRUE;
       (yyval.exported_memory).export_ = (yyvsp[-5].optional_export);
     }
-#line 3234 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3243 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 898 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 907 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WasmExpr* expr = wasm_new_const_expr(parser->allocator);
       expr->loc = (yylsp[-6]);
@@ -3254,11 +3263,11 @@ yyreduce:
       (yyval.exported_memory).memory.page_limits.has_max = WASM_TRUE;
       (yyval.exported_memory).export_.has_export = WASM_FALSE;
     }
-#line 3258 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3267 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 920 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 929 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_global));
       (yyval.exported_global).global = (yyvsp[-2].global);
@@ -3266,11 +3275,11 @@ yyreduce:
       (yyval.exported_global).global.init_expr = (yyvsp[-1].expr_list).first;
       (yyval.exported_global).export_ = (yyvsp[-3].optional_export);
     }
-#line 3270 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3279 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 927 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 936 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.exported_global));
       (yyval.exported_global).global = (yyvsp[-2].global);
@@ -3278,11 +3287,11 @@ yyreduce:
       (yyval.exported_global).global.init_expr = (yyvsp[-1].expr_list).first;
       (yyval.exported_global).export_.has_export = WASM_FALSE;
     }
-#line 3282 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3291 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 940 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 949 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
       (yyval.import)->name = (yyvsp[-2].text);
@@ -3290,65 +3299,65 @@ yyreduce:
       (yyval.import)->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       (yyval.import)->func.decl.type_var = (yyvsp[-1].var);
     }
-#line 3294 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3303 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 947 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 956 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
       (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_FUNC;
       (yyval.import)->func.decl.sig = (yyvsp[-1].func_sig);
     }
-#line 3305 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3314 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 953 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 962 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
       (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_TABLE;
       (yyval.import)->table = (yyvsp[-1].table);
     }
-#line 3316 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3325 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 959 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 968 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
       (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_MEMORY;
       (yyval.import)->memory = (yyvsp[-1].memory);
     }
-#line 3327 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3336 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 965 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 974 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
       (yyval.import)->name = (yyvsp[-2].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_GLOBAL;
       (yyval.import)->global = (yyvsp[-1].global);
     }
-#line 3338 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3347 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 973 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 982 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-1].import);
       (yyval.import)->module_name = (yyvsp[-3].text);
       (yyval.import)->field_name = (yyvsp[-2].text);
     }
-#line 3348 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3357 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 978 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 987 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->name = (yyvsp[-3].text);
@@ -3356,165 +3365,165 @@ yyreduce:
       (yyval.import)->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       (yyval.import)->func.decl.type_var = (yyvsp[-1].var);
     }
-#line 3360 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3369 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 985 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 994 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_FUNC;
       (yyval.import)->func.decl.sig = (yyvsp[-1].func_sig);
     }
-#line 3371 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3380 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 991 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1000 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_TABLE;
       (yyval.import)->table = (yyvsp[-1].table);
     }
-#line 3382 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3391 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 997 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1006 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_MEMORY;
       (yyval.import)->memory = (yyvsp[-1].memory);
     }
-#line 3393 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3402 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 1003 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1012 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->name = (yyvsp[-3].text);
       (yyval.import)->kind = WASM_EXTERNAL_KIND_GLOBAL;
       (yyval.import)->global = (yyvsp[-1].global);
     }
-#line 3404 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3413 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 1012 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1021 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import(parser->allocator);
       (yyval.import)->module_name = (yyvsp[-2].text);
       (yyval.import)->field_name = (yyvsp[-1].text);
     }
-#line 3414 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3423 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 1020 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1029 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.export_));
       (yyval.export_).kind = WASM_EXTERNAL_KIND_FUNC;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3424 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3433 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 1025 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1034 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.export_));
       (yyval.export_).kind = WASM_EXTERNAL_KIND_TABLE;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3434 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3443 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 1030 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1039 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.export_));
       (yyval.export_).kind = WASM_EXTERNAL_KIND_MEMORY;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3444 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3453 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 1035 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1044 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.export_));
       (yyval.export_).kind = WASM_EXTERNAL_KIND_GLOBAL;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3454 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3463 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 1042 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1051 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = (yyvsp[-1].export_);
       (yyval.export_).name = (yyvsp[-2].text);
     }
-#line 3463 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3472 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 1049 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1058 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { 
       WASM_ZERO_MEMORY((yyval.optional_export));
       (yyval.optional_export).has_export = WASM_FALSE;
     }
-#line 3472 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3481 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 1056 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1065 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.optional_export));
       (yyval.optional_export).has_export = WASM_TRUE;
       (yyval.optional_export).export_.name = (yyvsp[-1].text);
     }
-#line 3482 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
-    break;
-
-  case 132:
-#line 1067 "src/wasm-ast-parser.y" /* yacc.c:1646  */
-    {
-      WASM_ZERO_MEMORY((yyval.func_type));
-      (yyval.func_type).sig = (yyvsp[-1].func_sig);
-    }
 #line 3491 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
-  case 133:
-#line 1071 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+  case 132:
+#line 1076 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.func_type).name = (yyvsp[-2].text);
+      WASM_ZERO_MEMORY((yyval.func_type));
       (yyval.func_type).sig = (yyvsp[-1].func_sig);
     }
 #line 3500 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
+  case 133:
+#line 1080 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+    {
+      (yyval.func_type).name = (yyvsp[-2].text);
+      (yyval.func_type).sig = (yyvsp[-1].func_sig);
+    }
+#line 3509 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+    break;
+
   case 134:
-#line 1078 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1087 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { (yyval.var) = (yyvsp[-1].var); }
-#line 3506 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3515 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 1082 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1091 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = new_module(parser->allocator);
     }
-#line 3514 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3523 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 1085 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1094 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3523,11 +3532,11 @@ yyreduce:
                             &field->func_type);
       INSERT_BINDING((yyval.module), func_type, func_types, (yylsp[0]), (yyvsp[0].func_type));
     }
-#line 3527 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3536 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 1093 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1102 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3536,11 +3545,11 @@ yyreduce:
       INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), (yyvsp[0].exported_global).global);
       APPEND_INLINE_EXPORT((yyval.module), GLOBAL, (yylsp[0]), (yyvsp[0].exported_global), (yyval.module)->globals.size - 1);
     }
-#line 3540 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3549 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 1101 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1110 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3558,11 +3567,11 @@ yyreduce:
       }
 
     }
-#line 3562 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3571 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 1118 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1127 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3579,11 +3588,11 @@ yyreduce:
                               &data_segment_field->data_segment);
       }
     }
-#line 3583 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3592 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 1134 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1143 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3595,11 +3604,11 @@ yyreduce:
       INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), *(yyvsp[0].exported_func).func);
       APPEND_INLINE_EXPORT((yyval.module), FUNC, (yylsp[0]), (yyvsp[0].exported_func), (yyval.module)->funcs.size - 1);
     }
-#line 3599 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3608 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 1145 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1154 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3607,11 +3616,11 @@ yyreduce:
       APPEND_ITEM_TO_VECTOR((yyval.module), ElemSegment, elem_segment, elem_segments,
                             &field->elem_segment);
     }
-#line 3611 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3620 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 1152 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1161 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3619,22 +3628,22 @@ yyreduce:
       APPEND_ITEM_TO_VECTOR((yyval.module), DataSegment, data_segment, data_segments,
                             &field->data_segment);
     }
-#line 3623 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3632 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 1159 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1168 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, START, start, (yylsp[0]), (yyvsp[0].var));
       (yyval.module)->start = &field->start;
     }
-#line 3634 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3643 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 1165 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1174 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field;
@@ -3645,30 +3654,41 @@ yyreduce:
                                            &(yyvsp[0].import)->func.decl);
           APPEND_ITEM_TO_VECTOR((yyval.module), Func, func, funcs, &field->import.func);
           INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), *(yyvsp[0].import));
+          (yyval.module)->num_func_imports++;
+          CHECK_IMPORT_ORDERING((yyval.module), func, funcs, (yylsp[0]));
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR((yyval.module), Table, table, tables, &field->import.table);
           INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), *(yyvsp[0].import));
+          (yyval.module)->num_table_imports++;
+          CHECK_IMPORT_ORDERING((yyval.module), table, tables, (yylsp[0]));
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR((yyval.module), Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), *(yyvsp[0].import));
+          (yyval.module)->num_memory_imports++;
+          CHECK_IMPORT_ORDERING((yyval.module), memory, memories, (yylsp[0]));
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR((yyval.module), Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), *(yyvsp[0].import));
+          (yyval.module)->num_global_imports++;
+          CHECK_IMPORT_ORDERING((yyval.module), global, globals, (yylsp[0]));
+          break;
+        case WASM_NUM_EXTERNAL_KINDS:
+          assert(0);
           break;
       }
       wasm_free(parser->allocator, (yyvsp[0].import));
       APPEND_ITEM_TO_VECTOR((yyval.module), Import, import, imports, &field->import);
     }
-#line 3668 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3688 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 1194 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1214 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WasmModuleField* field = wasm_append_module_field(parser->allocator, (yyval.module));
@@ -3676,11 +3696,11 @@ yyreduce:
       APPEND_ITEM_TO_VECTOR((yyval.module), Export, export, exports, &field->export_);
       INSERT_BINDING((yyval.module), export, exports, (yylsp[0]), (yyvsp[0].export_));
     }
-#line 3680 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3700 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 1204 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1224 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.raw_module).type = WASM_RAW_MODULE_TYPE_TEXT;
       (yyval.raw_module).text = (yyvsp[-1].module);
@@ -3718,11 +3738,11 @@ yyreduce:
         }
       }
     }
-#line 3722 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3742 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 1241 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1261 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.raw_module).type = WASM_RAW_MODULE_TYPE_BINARY;
       (yyval.raw_module).binary.name = (yyvsp[-2].text);
@@ -3730,11 +3750,11 @@ yyreduce:
       dup_text_list(parser->allocator, &(yyvsp[-1].text_list), &(yyval.raw_module).binary.data, &(yyval.raw_module).binary.size);
       wasm_destroy_text_list(parser->allocator, &(yyvsp[-1].text_list));
     }
-#line 3734 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3754 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 1251 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1271 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       if ((yyvsp[0].raw_module).type == WASM_RAW_MODULE_TYPE_TEXT) {
         (yyval.module) = (yyvsp[0].raw_module).text;
@@ -3755,23 +3775,23 @@ yyreduce:
         (yyval.module)->name = (yyvsp[0].raw_module).binary.name;
       }
     }
-#line 3759 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3779 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 1276 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1296 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.text)); }
-#line 3765 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3785 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 1277 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1297 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 3771 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3791 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 1281 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1301 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.action));
       (yyval.action).loc = (yylsp[-4]);
@@ -3780,11 +3800,11 @@ yyreduce:
       (yyval.action).invoke.name = (yyvsp[-2].text);
       (yyval.action).invoke.args = (yyvsp[-1].consts);
     }
-#line 3784 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3804 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 1289 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1309 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.action));
       (yyval.action).loc = (yylsp[-3]);
@@ -3792,102 +3812,102 @@ yyreduce:
       (yyval.action).type = WASM_ACTION_TYPE_GET;
       (yyval.action).invoke.name = (yyvsp[-1].text);
     }
-#line 3796 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3816 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 1299 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1319 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_MODULE;
       (yyval.command)->module = *(yyvsp[0].module);
       wasm_free(parser->allocator, (yyvsp[0].module));
     }
-#line 3807 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3827 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 1305 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1325 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_ACTION;
       (yyval.command)->action = (yyvsp[0].action);
     }
-#line 3817 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3837 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 1310 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1330 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_REGISTER;
       (yyval.command)->register_.module_name = (yyvsp[-2].text);
       (yyval.command)->register_.module_var_name = (yyvsp[-1].text);
     }
-#line 3828 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3848 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 1316 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1336 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_ASSERT_INVALID;
       (yyval.command)->assert_invalid.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_invalid.text = (yyvsp[-1].text);
     }
-#line 3839 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3859 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 1322 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1342 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_ASSERT_RETURN;
       (yyval.command)->assert_return.action = (yyvsp[-2].action);
       (yyval.command)->assert_return.expected = (yyvsp[-1].consts);
     }
-#line 3850 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3870 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 1328 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1348 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
       (yyval.command)->assert_return_nan.action = (yyvsp[-1].action);
     }
-#line 3860 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3880 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 1333 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1353 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command(parser->allocator);
       (yyval.command)->type = WASM_COMMAND_TYPE_ASSERT_TRAP;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 3871 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3891 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 1341 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1361 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.commands)); }
-#line 3877 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3897 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 1342 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1362 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.commands) = (yyvsp[-1].commands);
       wasm_append_command_value(parser->allocator, &(yyval.commands), (yyvsp[0].command));
       wasm_free(parser->allocator, (yyvsp[0].command));
     }
-#line 3887 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3907 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 162:
-#line 1350 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1370 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
       if (WASM_FAILED(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
@@ -3898,35 +3918,35 @@ yyreduce:
       }
       wasm_free(parser->allocator, (char*)(yyvsp[-1].literal).text.start);
     }
-#line 3902 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3922 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 163:
-#line 1362 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1382 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.consts)); }
-#line 3908 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3928 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 1363 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1383 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.consts) = (yyvsp[-1].consts);
       wasm_append_const_value(parser->allocator, &(yyval.consts), &(yyvsp[0].const_));
     }
-#line 3917 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3937 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1370 "src/wasm-ast-parser.y" /* yacc.c:1646  */
+#line 1390 "src/wasm-ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script).commands = (yyvsp[0].commands);
       parser->script = (yyval.script);
     }
-#line 3926 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3946 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
 
-#line 3930 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 3950 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4161,7 +4181,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1382 "src/wasm-ast-parser.y" /* yacc.c:1906  */
+#line 1402 "src/wasm-ast-parser.y" /* yacc.c:1906  */
 
 
 static void append_expr_list(WasmExprList* expr_list, WasmExprList* expr) {

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (memory -100))
 (;; STDERR ;;;
-parse/module/bad-memory-init-size-negative.txt:2:17: syntax error, unexpected INT, expecting ( or NAT
+parse/module/bad-memory-init-size-negative.txt:2:17: syntax error, unexpected INT, expecting NAT
 (module (memory -100))
                 ^^^^
 ;;; STDERR ;;)

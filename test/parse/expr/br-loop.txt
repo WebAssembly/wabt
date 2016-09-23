@@ -1,19 +1,4 @@
 (module
   (func
     (loop $exit
-      (br $exit))
-    (loop $outer $inner
-      (br $inner)
-      (br $outer))))
-
-(;
-loop $exit
-  br $exit
-end
-block $outer
-  loop $inner
-    br $inner
-    br $outer
-  end
-end
-;)
+      (br $exit))))
