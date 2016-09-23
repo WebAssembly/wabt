@@ -8,7 +8,7 @@
     ;; case 1
     (i32.const 2)))
 (;; STDERR ;;;
-typecheck/bad-brtable-type-mismatch.txt:5:15: type mismatch at br_table. got f32, expected i32
+typecheck/bad-brtable-type-mismatch.txt:5:15: type mismatch at br_table key. got f32, expected i32
       (block (br_table 0 1 (f32.const 0)))
-              ^^^^^^^^
+              ^^^^^^^^^^^^
 ;;; STDERR ;;)

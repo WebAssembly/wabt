@@ -8,5 +8,5 @@
 (;; STDERR ;;;
 typecheck/bad-callindirect-type-mismatch.txt:7:12: type mismatch for argument 0 of call_indirect. got f32, expected i32
     (drop (call_indirect $t (f32.const 0) (i32.const 0)))))
-           ^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

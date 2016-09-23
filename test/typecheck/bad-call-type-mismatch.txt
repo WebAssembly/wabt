@@ -5,5 +5,5 @@
 (;; STDERR ;;;
 typecheck/bad-call-type-mismatch.txt:4:6: type mismatch for argument 0 of call. got i64, expected i32
     (call 0 (i64.const 0) (i64.const 0))))
-     ^^^^
+     ^^^^^^
 ;;; STDERR ;;)
