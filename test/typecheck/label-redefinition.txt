@@ -1,7 +1,8 @@
 (module
   (func (result i32)
-    (block $l1
-      (i32.add (block $l1
-		 (i32.const 2))
-	       (block $l1
-		 (br $l1 (i32.const 3)))))))
+    (block $l1 i32
+      (i32.add
+        (block $l1 i32
+          (i32.const 2))
+        (block $l1 i32
+          (br $l1 (i32.const 3)))))))
