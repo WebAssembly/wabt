@@ -207,7 +207,6 @@ typedef WasmDataSegment* WasmDataSegmentPtr;
 WASM_DEFINE_VECTOR(data_segment_ptr, WasmDataSegmentPtr);
 
 typedef struct WasmImport {
-  WasmStringSlice name;
   WasmStringSlice module_name;
   WasmStringSlice field_name;
   WasmExternalKind kind;

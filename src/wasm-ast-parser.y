@@ -72,14 +72,14 @@
                                    &dummy);                             \
   } while (0)
 
-#define INSERT_BINDING(module, kind, kinds, loc_, item)                 \
-  do                                                                    \
-    if ((item).name.start) {                                            \
-      WasmBinding* binding = wasm_insert_binding(                       \
-          parser->allocator, &(module)->kind##_bindings, &(item).name); \
-      binding->loc = loc_;                                              \
-      binding->index = (module)->kinds.size - 1;                        \
-    }                                                                   \
+#define INSERT_BINDING(module, kind, kinds, loc_, name)            \
+  do                                                               \
+    if ((name).start) {                                            \
+      WasmBinding* binding = wasm_insert_binding(                  \
+          parser->allocator, &(module)->kind##_bindings, &(name)); \
+      binding->loc = loc_;                                         \
+      binding->index = (module)->kinds.size - 1;                   \
+    }                                                              \
   while (0)
 
 #define APPEND_INLINE_EXPORT(module, KIND, loc_, value, index_)         \
@@ -93,7 +93,7 @@
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
                             &export_field->export_);                    \
       INSERT_BINDING(module, export, exports, export_field->loc,        \
-                     export_field->export_);                            \
+                     export_field->export_.name);                       \
     }                                                                   \
   while (0)
 
@@ -948,34 +948,34 @@ global :
 import_kind :
     LPAR FUNC bind_var_opt type_use RPAR {
       $$ = new_import(parser->allocator);
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->func.name = $3;
       $$->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $4;
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new_import(parser->allocator);
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->func.name = $3;
       $$->func.decl.sig = $4;
     }
   | LPAR TABLE bind_var_opt table_sig RPAR {
       $$ = new_import(parser->allocator);
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_TABLE;
       $$->table = $4;
+      $$->table.name = $3;
     }
   | LPAR MEMORY bind_var_opt memory_sig RPAR {
       $$ = new_import(parser->allocator);
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_MEMORY;
       $$->memory = $4;
+      $$->memory.name = $3;
     }
   | LPAR GLOBAL bind_var_opt global_type RPAR {
       $$ = new_import(parser->allocator);
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_GLOBAL;
       $$->global = $4;
+      $$->global.name = $3;
     }
 ;
 import :
@@ -986,34 +986,34 @@ import :
     }
   | LPAR FUNC bind_var_opt inline_import type_use RPAR {
       $$ = $4;
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->func.name = $3;
       $$->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $5;
     }
   | LPAR FUNC bind_var_opt inline_import func_sig RPAR {
       $$ = $4;
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->func.name = $3;
       $$->func.decl.sig = $5;
     }
   | LPAR TABLE bind_var_opt inline_import table_sig RPAR {
       $$ = $4;
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_TABLE;
       $$->table = $5;
+      $$->table.name = $3;
     }
   | LPAR MEMORY bind_var_opt inline_import memory_sig RPAR {
       $$ = $4;
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_MEMORY;
       $$->memory = $5;
+      $$->memory.name = $3;
     }
   | LPAR GLOBAL bind_var_opt inline_import global_type RPAR {
       $$ = $4;
-      $$->name = $3;
       $$->kind = WASM_EXTERNAL_KIND_GLOBAL;
       $$->global = $5;
+      $$->global.name = $3;
     }
 ;
 
@@ -1097,14 +1097,14 @@ module_fields :
       APPEND_FIELD_TO_LIST($$, field, FUNC_TYPE, func_type, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, FuncType, func_type, func_types,
                             &field->func_type);
-      INSERT_BINDING($$, func_type, func_types, @2, $2);
+      INSERT_BINDING($$, func_type, func_types, @2, $2.name);
     }
   | module_fields global {
       $$ = $1;
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, GLOBAL, global, @2, $2.global);
       APPEND_ITEM_TO_VECTOR($$, Global, global, globals, &field->global);
-      INSERT_BINDING($$, global, globals, @2, $2.global);
+      INSERT_BINDING($$, global, globals, @2, $2.global.name);
       APPEND_INLINE_EXPORT($$, GLOBAL, @2, $2, $$->globals.size - 1);
     }
   | module_fields table {
@@ -1112,7 +1112,7 @@ module_fields :
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, TABLE, table, @2, $2.table);
       APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->table);
-      INSERT_BINDING($$, table, tables, @2, $2.table);
+      INSERT_BINDING($$, table, tables, @2, $2.table.name);
       APPEND_INLINE_EXPORT($$, TABLE, @2, $2, $$->tables.size - 1);
 
       if ($2.has_elem_segment) {
@@ -1129,7 +1129,7 @@ module_fields :
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, MEMORY, memory, @2, $2.memory);
       APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories, &field->memory);
-      INSERT_BINDING($$, memory, memories, @2, $2.memory);
+      INSERT_BINDING($$, memory, memories, @2, $2.memory.name);
       APPEND_INLINE_EXPORT($$, MEMORY, @2, $2, $$->memories.size - 1);
 
       if ($2.has_data_segment) {
@@ -1148,7 +1148,7 @@ module_fields :
       append_implicit_func_declaration(parser->allocator, &@2, $$,
                                        &field->func.decl);
       APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->func);
-      INSERT_BINDING($$, func, funcs, @2, *$2.func);
+      INSERT_BINDING($$, func, funcs, @2, $2.func->name);
       APPEND_INLINE_EXPORT($$, FUNC, @2, $2, $$->funcs.size - 1);
     }
   | module_fields elem {
@@ -1180,27 +1180,27 @@ module_fields :
           append_implicit_func_declaration(parser->allocator, &@2, $$,
                                            &$2->func.decl);
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
-          INSERT_BINDING($$, func, funcs, @2, *$2);
+          INSERT_BINDING($$, func, funcs, @2, $2->func.name);
           $$->num_func_imports++;
           CHECK_IMPORT_ORDERING($$, func, funcs, @2);
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
-          INSERT_BINDING($$, table, tables, @2, *$2);
+          INSERT_BINDING($$, table, tables, @2, $2->table.name);
           $$->num_table_imports++;
           CHECK_IMPORT_ORDERING($$, table, tables, @2);
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
-          INSERT_BINDING($$, memory, memories, @2, *$2);
+          INSERT_BINDING($$, memory, memories, @2, $2->memory.name);
           $$->num_memory_imports++;
           CHECK_IMPORT_ORDERING($$, memory, memories, @2);
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
-          INSERT_BINDING($$, global, globals, @2, *$2);
+          INSERT_BINDING($$, global, globals, @2, $2->global.name);
           $$->num_global_imports++;
           CHECK_IMPORT_ORDERING($$, global, globals, @2);
           break;
@@ -1216,7 +1216,7 @@ module_fields :
       WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
       APPEND_FIELD_TO_LIST($$, field, EXPORT, export_, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, Export, export, exports, &field->export_);
-      INSERT_BINDING($$, export, exports, @2, $2);
+      INSERT_BINDING($$, export, exports, @2, $2.name);
     }
 ;
 

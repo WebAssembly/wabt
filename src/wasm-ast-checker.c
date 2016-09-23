@@ -950,6 +950,8 @@ static void check_global(Context* ctx,
   static const char s_desc[] = "global initializer expression";
   WasmType type = WASM_TYPE_VOID;
   WasmExpr* expr = global->init_expr;
+  if (!expr)
+    return;
 
   if (expr->next != NULL) {
     print_const_expr_error(ctx, loc, s_desc);

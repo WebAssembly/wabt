@@ -513,11 +513,13 @@ static void write_expr_list(Context* ctx, const WasmExpr* first) {
 }
 
 static void write_init_expr(Context* ctx, const WasmExpr* expr) {
-  write_puts(ctx, "(", NEXT_CHAR_NONE);
-  write_expr(ctx, expr);
-  /* clear the next char, so we don't write a newline after the expr */
-  ctx->next_char = NEXT_CHAR_NONE;
-  write_puts(ctx, ")", NEXT_CHAR_SPACE);
+  if (expr) {
+    write_puts(ctx, "(", NEXT_CHAR_NONE);
+    write_expr(ctx, expr);
+    /* clear the next char, so we don't write a newline after the expr */
+    ctx->next_char = NEXT_CHAR_NONE;
+    write_puts(ctx, ")", NEXT_CHAR_SPACE);
+  }
 }
 
 static void write_type_bindings(Context* ctx,
@@ -582,11 +584,15 @@ static void write_func(Context* ctx,
 
 static void write_begin_global(Context* ctx, const WasmGlobal* global) {
   write_open_space(ctx, "global");
-  if (global->mutable_)
-    write_puts(ctx, "mut", NEXT_CHAR_SPACE);
   write_string_slice_or_index(ctx, &global->name, ctx->global_index++,
                               NEXT_CHAR_SPACE);
-  write_type(ctx, global->type, NEXT_CHAR_SPACE);
+  if (global->mutable_) {
+    write_open_space(ctx, "mut");
+    write_type(ctx, global->type, NEXT_CHAR_SPACE);
+    write_close_space(ctx);
+  } else {
+    write_type(ctx, global->type, NEXT_CHAR_SPACE);
+  }
 }
 
 static void write_global(Context* ctx, const WasmGlobal* global) {
@@ -654,12 +660,13 @@ static void write_import(Context* ctx, const WasmImport* import) {
       assert(0);
       break;
   }
-  write_string_slice_or_index(ctx, &import->name, index, NEXT_CHAR_SPACE);
   write_quoted_string_slice(ctx, &import->module_name, NEXT_CHAR_SPACE);
   write_quoted_string_slice(ctx, &import->field_name, NEXT_CHAR_SPACE);
   switch (import->kind) {
     case WASM_EXTERNAL_KIND_FUNC:
       write_open_space(ctx, "func");
+      write_string_slice_or_index(ctx, &import->func.name, index,
+                                  NEXT_CHAR_SPACE);
       if (wasm_decl_has_func_type(&import->func.decl)) {
         write_open_space(ctx, "type");
         write_var(ctx, &import->func.decl.type_var, NEXT_CHAR_NONE);
@@ -671,15 +678,11 @@ static void write_import(Context* ctx, const WasmImport* import) {
       break;
 
     case WASM_EXTERNAL_KIND_TABLE:
-      write_open_space(ctx, "table");
       write_table(ctx, &import->table);
-      write_close_space(ctx);
       break;
 
     case WASM_EXTERNAL_KIND_MEMORY:
-      write_open_space(ctx, "memory");
       write_memory(ctx, &import->memory);
-      write_close_space(ctx);
       break;
 
     case WASM_EXTERNAL_KIND_GLOBAL:
