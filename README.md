@@ -8,7 +8,7 @@ WABT (we pronounce it "wabbit") is suite of tools for WebAssembly, including:
  - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
 
-These tools are intended for use in or for development of toolchains or other
+These tools are intended for use in (or for development of) toolchains or other
 systems that want to manipulate WebAssembly files. Unlike the WebAssembly spec
 interpreter (which is written to be as simple, declarative and "speccy" as
 possible), they are written in C (possibly C++ in the future) and designed for
