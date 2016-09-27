@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/WebAssembly/sexpr-wasm-prototype.svg?branch=master)](https://travis-ci.org/WebAssembly/sexpr-wasm-prototype)
+[![Build Status](https://travis-ci.org/WebAssembly/wabt.svg?branch=master)](https://travis-ci.org/WebAssembly/wabt)
 
 # WABT: The WebAssembly Binary Toolkit
 
