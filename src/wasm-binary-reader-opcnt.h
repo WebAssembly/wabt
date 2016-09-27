@@ -29,7 +29,9 @@ WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   size_t size,
                                   const struct WasmReadBinaryOptions* options,
                                   WasmBinaryErrorHandler*,
-                                  struct WasmModule* out_module);
+                                  size_t* opcode_counts,
+                                  size_t opcode_counts_size);
+
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_READER_OPCNT_H_ */

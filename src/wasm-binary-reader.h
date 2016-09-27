@@ -146,6 +146,7 @@ typedef struct WasmBinaryReader {
 
   /* function expressions; called between begin_function_body and
    end_function_body */
+  WasmResult (*on_opcode)(WasmOpcode Opcode, void* user_data);
   WasmResult (*on_binary_expr)(WasmOpcode opcode, void* user_data);
   WasmResult (*on_block_expr)(uint32_t num_types,
                               WasmType* sig_types,

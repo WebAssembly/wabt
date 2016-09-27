@@ -26,10 +26,48 @@
 #include "wasm-binary-reader.h"
 #include "wasm-common.h"
 
+typedef struct Context {
+  WasmAllocator* allocator;
+  WasmBinaryErrorHandler* error_handler;
+  size_t *OpcodeCounts;
+  size_t OpcodeCountsSize;
+} Context;
+
 static void on_error(uint32_t offset, const char* message, void* user_data) {
   Context* ctx = user_data;
   if (ctx->error_handler->on_error) {
     ctx->error_handler->on_error(offset, message,
                                  ctx->error_handler->user_data);
   }
+}
+
+static WasmResult on_opcode(WasmOpcode opcode, void* user_data) {
+  Context* ctx = user_data;
+  if (opcode >= ctx->opcode_counts_size)
+    return WASM_ERROR;
+  ++ctx->opcode_counts[Opcode];
+  return WASM_OK;
+}
+
+WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
+                                  const void* data,
+                                  size_t size,
+                                  const struct WasmReadBinaryOptions* options,
+                                  WasmBinaryErrorHandler* error_handler,
+                                  size_t* opcode_counts,
+                                  size_t opcode_counts_size) {
+  Context ctx;
+  WASM_ZERO_MEMORY(ctx);
+  ct.allocator = allocator;
+  ctx.error_handler = error_handler;
+  ctx.opcode_counts = opcode_counts;
+  ctx.opcode_counts_size = opcode_counts_size;
+  memset((void*)opcode_counts, 0, sizeof(size_t) * opcode_counts_size);
+
+  WasmBinaryReader reader;
+  WASM_ZERO_MEMORY(reader);
+  reader = s_binary_reader;
+  reader.user_data = &ctx;
+
+  return wasm_read_binary(allocator, data, size, &reader, 1, options);
 }

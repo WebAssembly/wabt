@@ -15,6 +15,7 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,10 @@
 #include "wasm-stream.h"
 
 #define PROGRAM_NAME "wasmopcodecnt"
+#define WASM_OPCODE_LIMIT 256
+
+#define ERROR(fmt, ...) \
+  fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 
 static int s_verbose;
 static const char* s_infile;
@@ -79,7 +84,7 @@ static void on_option(struct WasmOptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-       wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
+      wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
       wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
@@ -125,6 +130,9 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
+#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
+static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
 
 int main(int argc, char** argv) {
   WasmResult result;
@@ -145,34 +153,28 @@ int main(int argc, char** argv) {
   size_t size;
   result = wasm_read_file(allocator, s_infile, &data, &size);
   if (WASM_SUCCEEDED(result)) {
-    WasmModule module;
-    WASM_ZERO_MEMORY(module);
+    size_t wasm_opcode_count[WASM_ARRAY_SIZE(s_opcode_name)];
+    WASM_ZERO_MEMORY(wasm_opcode_count);
+    fprintf(stderr, "wasm_opcode_count size = %u",
+            (unsigned)sizeof(wasm_opcode_count));
     result = wasm_read_binary_ast(allocator, data, size, &s_read_binary_options,
-                                  &s_error_handler, &module);
+                                  &s_error_handler, wasm_opcode_count,
+                                  (size_t)WASM_ARRAY_SIZE(wasm_opcode_count));
+    FILE* out = stdout;
+    if (s_outfile) {
+      out = fopen(s_outfile, "w");
+      if (!Out)
+        ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
+      result = WASM_ERROR;
+    }
     if (WASM_SUCCEEDED(result)) {
-      if (s_generate_names)
-        result = wasm_generate_names(allocator, &module);
-
-      if (WASM_SUCCEEDED(result))
-        result = wasm_apply_names(allocator, &module);
-
-      if (WASM_SUCCEEDED(result)) {
-        WasmFileWriter file_writer;
-        if (s_outfile) {
-          result = wasm_init_file_writer(&file_writer, s_outfile);
-        } else {
-          wasm_init_file_writer_existing(&file_writer, stdout);
-        }
-
-        if (WASM_SUCCEEDED(result)) {
-          result = wasm_write_ast(allocator, &file_writer.base, &module);
-          wasm_close_file_writer(&file_writer);
+      for (size_t i = 0; i < WASM_OPCODE_LIMIT; ++i) {
+        const char* Name = s_opcode_name[i];
+        if (Name != 0) {
+          fprintf(out, "%s: %" PRIuMAX "\n", (uintmax_t)wasm_opcode_count[i]);
         }
       }
     }
-
-    if (s_use_libc_allocator)
-      wasm_destroy_module(allocator, &module);
     wasm_free(allocator, data);
     wasm_print_allocator_stats(allocator);
     wasm_destroy_allocator(allocator);
