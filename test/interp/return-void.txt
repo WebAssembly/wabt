@@ -6,24 +6,20 @@
       (return))
     (i32.store (i32.const 0) (i32.const 1)))
 
-  (func $test1
+  (func (export "test1")
     (call $store_unless (i32.const 0)))
-  (export "test1" $test1)
 
-  (func $check1 (result i32)
+  (func (export "check1") (result i32)
     (i32.load (i32.const 0)))
-  (export "check1" $check1)
 
-  (func $test2
+  (func (export "test2")
     (call $store_unless (i32.const 1)))
-  (export "test2" $test2)
 
-  (func $check2 (result i32)
-    (i32.load (i32.const 0)))
-  (export "check2" $check2))
+  (func (export "check2") (result i32)
+    (i32.load (i32.const 0))))
 (;; STDOUT ;;;
-test1() 
+test1() => 
 check1() => i32:0
-test2() 
+test2() => 
 check2() => i32:1
 ;;; STDOUT ;;)

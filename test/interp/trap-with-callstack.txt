@@ -8,14 +8,12 @@
 
   (func $f (call $trap))
   (func $g (call $f))
-  (func $h (call $g))
-  (export "h" $h)
+  (func (export "h") (call $g))
 
   ;; this function should run properly, even after h traps.
-  (func $i (result i32)
-    (i32.const 22))
-  (export "i" $i))
+  (func (export "i") (result i32)
+    (i32.const 22)))
 (;; STDOUT ;;;
-h() error: integer divide by zero
+h() => error: integer divide by zero
 i() => i32:22
 ;;; STDOUT ;;)

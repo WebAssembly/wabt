@@ -16,28 +16,22 @@
 
   (table anyfunc (elem $zero $one $add $sub))
 
-  (export "test_zero" $test_zero)
-  (func $test_zero (result i32)
+  (func (export "test_zero") (result i32)
     (call $nullary (i32.const 0)))
 
-  (export "test_one" $test_one)
-  (func $test_one (result i32)
+  (func (export "test_one") (result i32)
     (call $nullary (i32.const 1)))
 
-  (export "test_add" $test_add)
-  (func $test_add (result i32)
+  (func (export "test_add") (result i32)
     (call $binary (i32.const 10) (i32.const 4) (i32.const 2)))
 
-  (export "test_sub" $test_sub)
-  (func $test_sub (result i32)
+  (func (export "test_sub") (result i32)
     (call $binary (i32.const 10) (i32.const 4) (i32.const 3)))
 
-  (export "trap_oob" $trap_oob)
-  (func $trap_oob (result i32)
+  (func (export "trap_oob") (result i32)
     (call $binary (i32.const 10) (i32.const 4) (i32.const 4)))
 
-  (export "trap_sig_mismatch" $trap_sig_mismatch)
-  (func $trap_sig_mismatch (result i32)
+  (func (export "trap_sig_mismatch") (result i32)
     (call $binary (i32.const 10) (i32.const 4) (i32.const 0))))
 (;; STDOUT ;;;
 test_zero() => i32:0

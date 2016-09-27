@@ -1,7 +1,6 @@
 ;;; TOOL: run-interp
 (module
-  (export "if1" $if1)
-  (func $if1 (result i32) (local i32)
+  (func (export "if1") (result i32) (local i32)
     (set_local 0 (i32.const 0))
     (if (i32.const 1)
       (set_local 0 (i32.add (get_local 0)
@@ -11,8 +10,7 @@
                             (i32.const 1))))
     (return (get_local 0)))
 
-  (export "if2" $if2)
-  (func $if2 (result i32) (local i32 i32)
+  (func (export "if2") (result i32) (local i32 i32)
     (if (i32.const 1)
       (set_local 0 (i32.const 1))
       (set_local 0 (i32.const 2)))
