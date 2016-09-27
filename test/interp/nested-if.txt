@@ -6,8 +6,7 @@
 ;; straightforward.
 
 (module
-  (export "f" $f)
-  (func $f (result i32)
+  (func (export "f") (result i32)
     (block $exit
       (if                     ;; outer if
         (i32.const 1)

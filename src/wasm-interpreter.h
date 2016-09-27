@@ -70,6 +70,7 @@ enum {
   /* push space on the value stack for N entries */
   WASM_OPCODE_ALLOCA = WASM_LAST_OPCODE,
   WASM_OPCODE_BR_UNLESS,
+  WASM_OPCODE_CALL_IMPORT,
   WASM_OPCODE_DATA,
   WASM_OPCODE_DROP_KEEP,
   WASM_LAST_INTERPRETER_OPCODE,
@@ -96,6 +97,7 @@ typedef struct WasmInterpreterMemory {
 
 typedef struct WasmInterpreterFuncTableEntry {
   uint32_t sig_index;
+  uint32_t func_index;
   uint32_t func_offset;
 } WasmInterpreterFuncTableEntry;
 WASM_DEFINE_ARRAY(interpreter_func_table_entry, WasmInterpreterFuncTableEntry);

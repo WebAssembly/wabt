@@ -8,12 +8,10 @@
       (get_local 0)
       (get_local 1)))
 
-  (func $h (result i32)
+  (func (export "h") (result i32)
     (call $g
       (i32.const 1)
-      (call $f)))
-
-  (export "h" $h))
+      (call $f))))
 (;; STDOUT ;;;
 h() => i32:43
 ;;; STDOUT ;;)

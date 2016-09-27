@@ -188,7 +188,6 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x15, SET_LOCAL, "set_local")                     \
   V(___, ___, ___, 0, 0x16, CALL_FUNCTION, "call")                      \
   V(___, ___, ___, 0, 0x17, CALL_INDIRECT, "call_indirect")             \
-  V(___, ___, ___, 0, 0x18, CALL_IMPORT, "call_import")                 \
   V(___, ___, ___, 0, 0x19, TEE_LOCAL, "tee_local")                     \
   V(I32, I32, ___, 1, 0x20, I32_LOAD8_S, "i32.load8_s")                 \
   V(I32, I32, ___, 1, 0x21, I32_LOAD8_U, "i32.load8_u")                 \

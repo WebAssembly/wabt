@@ -343,6 +343,10 @@ static WasmBool is_inline_sig_type(uint8_t type) {
   return type < WASM_NUM_TYPES;
 }
 
+static uint32_t num_total_funcs(Context* ctx) {
+  return ctx->num_func_imports + ctx->num_function_signatures;
+}
+
 static WasmBool handle_unknown_section(Context* ctx,
                                        WasmStringSlice* section_name) {
   if (ctx->options->read_debug_names &&
@@ -352,9 +356,8 @@ static WasmBool handle_unknown_section(Context* ctx,
     CALLBACK0(begin_names_section);
     uint32_t i, num_functions;
     in_u32_leb128(ctx, &num_functions, "function name count");
-    RAISE_ERROR_UNLESS(
-        num_functions <= ctx->num_func_imports + ctx->num_function_signatures,
-        "function name count > function signature count");
+    RAISE_ERROR_UNLESS(num_functions <= num_total_funcs(ctx),
+                       "function name count > function signature count");
     CALLBACK(on_function_names_count, num_functions);
     for (i = 0; i < num_functions; ++i) {
       WasmStringSlice function_name;
@@ -1409,7 +1412,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       in_u32_leb128(ctx, &item_index, "export item index");
       switch (external_kind) {
         case WASM_EXTERNAL_KIND_FUNC:
-          RAISE_ERROR_UNLESS(item_index < ctx->num_function_signatures,
+          RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
                              "invalid export func index");
           break;
         case WASM_EXTERNAL_KIND_TABLE:
