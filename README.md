@@ -1,20 +1,30 @@
 [![Build Status](https://travis-ci.org/WebAssembly/sexpr-wasm-prototype.svg?branch=master)](https://travis-ci.org/WebAssembly/sexpr-wasm-prototype)
 
-# sexpr-wasm-prototype
+# WABT: The WebAssembly Binary Toolkit
 
-A suite of build tools for WebAssembly, including:
+WABT (we pronounce it "wabbit") is suite of tools for WebAssembly, including:
 
  - **wast2wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
  - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
+
+These tools are intended for use in (or for development of) toolchains or other
+systems that want to manipulate WebAssembly files. Unlike the WebAssembly spec
+interpreter (which is written to be as simple, declarative and "speccy" as
+possible), they are written in C (possibly C++ in the future) and designed for
+easier integration into other systems. Unlike
+[Binaryen](https://github.com/WebAssembly/binaryen) these tools do not aim to
+provide an optimization platform or a higher-level compiler target; instead
+they aim for full fidelity and compliance with the spec (e.g. 1:1 round-trips
+with no changes to instructions).
 
 ## Cloning
 
 Clone as normal, but don't forget to update/init submodules as well:
 
 ```
-$ git clone https://github.com/WebAssembly/sexpr-wasm-prototype
-$ cd sexpr-wasm-prototype
+$ git clone https://github.com/WebAssembly/wabt
+$ cd wabt
 $ git submodule update --init
 ```
 
@@ -97,7 +107,7 @@ You can use `-h` to get additional help:
 $ out/wast2wasm -h
 ```
 
-Or try the [online demo](https://cdn.rawgit.com/WebAssembly/sexpr-wasm-prototype/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
+Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
 
 ## Running wasm2wast
 
