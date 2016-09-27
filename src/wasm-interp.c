@@ -239,8 +239,9 @@ static WasmResult default_import_callback(
     uint32_t num_results,
     WasmInterpreterTypedValue* out_results,
     void* user_data) {
-  assert(import->sig_index < module->sigs.size);
-  WasmInterpreterFuncSignature* sig = &module->sigs.data[import->sig_index];
+  assert(import->func.sig_index < module->sigs.size);
+  WasmInterpreterFuncSignature* sig =
+      &module->sigs.data[import->func.sig_index];
   memset(out_results, 0, sizeof(WasmInterpreterTypedValue) * num_results);
 
   printf("called import " PRIstringslice "." PRIstringslice "(",
@@ -267,9 +268,9 @@ static WasmResult default_import_callback(
 static void set_all_import_callbacks_to_default(WasmInterpreterModule* module) {
   uint32_t i;
   for (i = 0; i < module->imports.size; ++i) {
-    WasmInterpreterImport* import = &module->imports.data[i];
-    import->callback = default_import_callback;
-    import->user_data = NULL;
+    WasmInterpreterImport* import = module->func_imports.data[i];
+    import->func.callback = default_import_callback;
+    import->func.user_data = NULL;
   }
 }
 
@@ -279,7 +280,7 @@ static WasmInterpreterResult run_function(WasmInterpreterModule* module,
   thread->pc = offset;
   WasmInterpreterResult iresult = WASM_INTERPRETER_OK;
   uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
-  uint32_t call_stack_return_top = 0;
+  uint32_t* call_stack_return_top = thread->call_stack_top;
   while (iresult == WASM_INTERPRETER_OK) {
     if (s_trace)
       wasm_trace_pc(module, thread, s_stdout_stream);
@@ -308,76 +309,140 @@ static WasmResult run_start_function(WasmInterpreterModule* module,
   return result;
 }
 
+static WasmInterpreterFuncSignature* get_export_signature(
+    WasmInterpreterModule* module,
+    WasmInterpreterExport* export) {
+  uint32_t func_index = export->func.index;
+  uint32_t sig_index;
+  if (func_index < module->func_imports.size) {
+    WasmInterpreterImport* import = module->func_imports.data[func_index];
+    sig_index = import->func.sig_index;
+  } else {
+    func_index -= module->func_imports.size;
+    WasmInterpreterFunc* func = &module->funcs.data[func_index];
+    sig_index = func->sig_index;
+  }
+  assert(sig_index < module->sigs.size);
+  return &module->sigs.data[sig_index];
+}
+
 static WasmInterpreterResult run_export(
+    WasmAllocator* allocator,
+    WasmInterpreterModule* module,
+    WasmInterpreterThread* thread,
+    WasmInterpreterExport* export,
+    WasmInterpreterFuncSignature* sig,
+    WasmInterpreterTypedValueVector* out_results) {
+  assert(export->kind == WASM_EXTERNAL_KIND_FUNC);
+  uint32_t func_index = export->func.index;
+  if (func_index < module->func_imports.size) {
+    /* run exported import function */
+    WasmInterpreterImport* import = module->func_imports.data[func_index];
+
+    size_t num_args = sig->param_types.size;
+    size_t num_results = sig->result_types.size;
+
+    if (out_results) {
+      wasm_resize_interpreter_typed_value_vector(allocator, out_results,
+                                                 num_results);
+    }
+
+    WasmInterpreterTypedValue* args =
+        wasm_alloc_zero(allocator, sizeof(WasmInterpreterTypedValue) * num_args,
+                        WASM_DEFAULT_ALIGN);
+    size_t i;
+    for (i = 0; i < num_args; ++i)
+      args[i].type = sig->param_types.data[i];
+
+    WasmResult result =
+        import->func.callback(module, import, num_args, args, out_results->size,
+                              out_results->data, import->func.user_data);
+    wasm_free(allocator, args);
+    return result == WASM_OK ? WASM_INTERPRETER_RETURNED
+                             : WASM_INTERPRETER_TRAP_IMPORT_TRAPPED;
+  } else {
+    /* run exported defined function */
+    func_index -= module->func_imports.size;
+    WasmInterpreterFunc* func = &module->funcs.data[func_index];
+
+    assert(sig->param_types.size < thread->value_stack.size);
+    size_t num_args = sig->param_types.size;
+    thread->value_stack_top = &thread->value_stack.data[num_args];
+    memset(thread->value_stack.data, 0,
+           num_args * sizeof(WasmInterpreterValue));
+
+    WasmInterpreterResult result = run_function(module, thread, func->offset);
+
+    if (result == WASM_INTERPRETER_RETURNED) {
+      size_t expected_results = sig->result_types.size;
+      size_t value_stack_depth =
+          thread->value_stack_top - thread->value_stack.data;
+      WASM_USE(value_stack_depth);
+      assert(expected_results == value_stack_depth);
+
+      if (out_results) {
+        wasm_resize_interpreter_typed_value_vector(allocator, out_results,
+                                                   expected_results);
+        size_t i;
+        for (i = 0; i < expected_results; ++i) {
+          WasmInterpreterTypedValue actual_result;
+          actual_result.type = sig->result_types.data[i];
+          actual_result.value = thread->value_stack.data[i];
+
+          if (out_results) {
+            /* copy as many results as the caller wants */
+            out_results->data[i] = actual_result;
+          }
+        }
+      }
+    }
+
+    thread->value_stack_top = thread->value_stack.data;
+    thread->call_stack_top = thread->call_stack.data;
+
+    return result;
+  }
+}
+
+static WasmInterpreterResult run_export_wrapper(
     WasmAllocator* allocator,
     WasmInterpreterModule* module,
     WasmInterpreterThread* thread,
     WasmInterpreterExport* export,
     WasmInterpreterTypedValueVector* out_results,
     RunVerbosity verbose) {
-  /* pass all zeroes to the function */
-  assert(export->sig_index < module->sigs.size);
-  WasmInterpreterFuncSignature* sig = &module->sigs.data[export->sig_index];
-  assert(sig->param_types.size < thread->value_stack.size);
-  uint32_t num_params = sig->param_types.size;
-  thread->value_stack_top = num_params;
-  memset(thread->value_stack.data, 0,
-         num_params * sizeof(WasmInterpreterValue));
-
   if (s_trace) {
     printf(">>> running export \"" PRIstringslice "\":\n",
            WASM_PRINTF_STRING_SLICE_ARG(export->name));
   }
+
+  WasmInterpreterFuncSignature* sig = get_export_signature(module, export);
   WasmInterpreterResult result =
-      run_function(module, thread, export->func_offset);
+      run_export(allocator, module, thread, export, sig, out_results);
 
   if (verbose) {
     printf(PRIstringslice "(", WASM_PRINTF_STRING_SLICE_ARG(export->name));
-    uint32_t i;
-    for (i = 0; i < num_params; ++i) {
+    size_t i;
+    for (i = 0; i < sig->param_types.size; ++i) {
       printf("0");
-      if (i != num_params - 1)
+      if (i != sig->param_types.size - 1)
         printf(", ");
     }
     printf(") => ");
-  }
 
-  if (result == WASM_INTERPRETER_RETURNED) {
-    uint32_t expected_results = sig->result_types.size;
-    assert(expected_results == thread->value_stack_top);
-
-    if (out_results) {
-      wasm_resize_interpreter_typed_value_vector(allocator, out_results,
-                                                 expected_results);
-    }
-
-    uint32_t i;
-    for (i = 0; i < expected_results; ++i) {
-      WasmInterpreterTypedValue actual_result;
-      actual_result.type = sig->result_types.data[i];
-      actual_result.value = thread->value_stack.data[i];
-
-      if (out_results) {
-        /* copy as many results as the caller wants */
-        out_results->data[i] = actual_result;
-      }
-
-      if (verbose) {
-        print_typed_value(&actual_result);
-        if (i != expected_results - 1)
+    if (result == WASM_INTERPRETER_RETURNED) {
+      assert(out_results);
+      for (i = 0; i < out_results->size; ++i) {
+        print_typed_value(&out_results->data[i]);
+        if (i != out_results->size - 1)
           printf(", ");
       }
-    }
-
-    if (verbose)
       printf("\n");
-  } else {
-    /* trap */
-    if (verbose)
+    } else {
+      /* trap */
       printf("error: %s\n", s_trap_strings[result]);
+    }
   }
-  thread->value_stack_top = 0;
-  thread->call_stack_top = 0;
   return result;
 }
 
@@ -394,8 +459,8 @@ static WasmResult run_export_by_name(
   if (!export)
     return WASM_ERROR;
 
-  *out_iresult =
-      run_export(allocator, module, thread, export, out_results, verbose);
+  *out_iresult = run_export_wrapper(allocator, module, thread, export,
+                                    out_results, verbose);
   return WASM_OK;
 }
 
@@ -403,11 +468,14 @@ static void run_all_exports(WasmAllocator* allocator,
                             WasmInterpreterModule* module,
                             WasmInterpreterThread* thread,
                             RunVerbosity verbose) {
+  WasmInterpreterTypedValueVector results;
+  WASM_ZERO_MEMORY(results);
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WasmInterpreterExport* export = &module->exports.data[i];
-    run_export(allocator, module, thread, export, NULL, verbose);
+    run_export_wrapper(allocator, module, thread, export, &results, verbose);
   }
+  wasm_destroy_interpreter_typed_value_vector(allocator, &results);
 }
 
 static WasmResult read_module(WasmAllocator* allocator,

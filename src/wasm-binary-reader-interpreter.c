@@ -133,23 +133,13 @@ typedef struct Label {
 } Label;
 WASM_DEFINE_VECTOR(label, Label);
 
-typedef struct InterpreterFunc {
-  uint32_t sig_index;
-  uint32_t offset;
-  uint32_t local_decl_count;
-  uint32_t local_count;
-  WasmTypeVector param_and_local_types;
-} InterpreterFunc;
-WASM_DEFINE_ARRAY(interpreter_func, InterpreterFunc);
-
 typedef struct Context {
   WasmAllocator* allocator;
   WasmBinaryReader* reader;
   WasmBinaryErrorHandler* error_handler;
   WasmAllocator* memory_allocator;
   WasmInterpreterModule* module;
-  InterpreterFuncArray funcs;
-  InterpreterFunc* current_func;
+  WasmInterpreterFunc* current_func;
   WasmTypeVector type_stack;
   LabelVector label_stack;
   Uint32VectorVector func_fixups;
@@ -160,6 +150,7 @@ typedef struct Context {
   uint32_t istream_offset;
   WasmInterpreterTypedValue init_expr_value;
   uint32_t table_offset;
+  uint32_t num_func_imports;
 } Context;
 
 static Label* get_label(Context* ctx, uint32_t depth) {
@@ -178,14 +169,15 @@ static void print_error(Context* ctx, const char* format, ...) {
   on_error(WASM_INVALID_OFFSET, buffer, ctx);
 }
 
-static InterpreterFunc* get_func(Context* ctx, uint32_t func_index) {
-  assert(func_index < ctx->funcs.size);
-  return &ctx->funcs.data[func_index];
+static WasmInterpreterFunc* get_func(Context* ctx, uint32_t func_index) {
+  assert(func_index < ctx->module->funcs.size);
+  return &ctx->module->funcs.data[func_index];
 }
 
-static WasmInterpreterExport* get_export(Context* ctx, uint32_t export_index) {
-  assert(export_index < ctx->module->exports.size);
-  return &ctx->module->exports.data[export_index];
+static WasmInterpreterImport* get_func_import(Context* ctx,
+                                              uint32_t func_index) {
+  assert(func_index < ctx->module->func_imports.size);
+  return ctx->module->func_imports.data[func_index];
 }
 
 static WasmInterpreterFuncSignature* get_signature(Context* ctx,
@@ -194,12 +186,13 @@ static WasmInterpreterFuncSignature* get_signature(Context* ctx,
   return &ctx->module->sigs.data[sig_index];
 }
 
-static WasmInterpreterFuncSignature* get_func_signature(Context* ctx,
-                                                        InterpreterFunc* func) {
+static WasmInterpreterFuncSignature* get_func_signature(
+    Context* ctx,
+    WasmInterpreterFunc* func) {
   return get_signature(ctx, func->sig_index);
 }
 
-static WasmType get_local_type_by_index(InterpreterFunc* func,
+static WasmType get_local_type_by_index(WasmInterpreterFunc* func,
                                         uint32_t local_index) {
   assert(local_index < func->param_and_local_types.size);
   return func->param_and_local_types.data[local_index];
@@ -345,7 +338,7 @@ static WasmResult fixup_top_label(Context* ctx, uint32_t offset) {
 }
 
 static WasmResult emit_func_offset(Context* ctx,
-                                   InterpreterFunc* func,
+                                   WasmInterpreterFunc* func,
                                    uint32_t func_index) {
   if (func->offset == WASM_INVALID_OFFSET)
     CHECK_RESULT(append_fixup(ctx, &ctx->func_fixups, func_index));
@@ -424,9 +417,10 @@ static WasmResult on_import_func(uint32_t index,
   assert(index < ctx->module->imports.size);
   WasmInterpreterImport* import = &ctx->module->imports.data[index];
   assert(sig_index < ctx->module->sigs.size);
-  import->sig_index = sig_index;
-  import->callback = trapping_import_callback;
-  import->user_data = NULL;
+  import->kind = WASM_EXTERNAL_KIND_FUNC;
+  import->func.sig_index = sig_index;
+  import->func.callback = trapping_import_callback;
+  import->func.user_data = NULL;
   return WASM_OK;
 }
 
@@ -454,10 +448,75 @@ static WasmResult on_import_global(uint32_t index,
   return WASM_ERROR;
 }
 
+static WasmResult end_import_section(void* user_data) {
+  Context* ctx = user_data;
+  uint32_t num_func_imports = 0;
+  uint32_t i;
+  for (i = 0; i < ctx->module->imports.size; ++i) {
+    WasmInterpreterImport* import = &ctx->module->imports.data[i];
+    switch (import->kind) {
+      case WASM_EXTERNAL_KIND_FUNC:
+        num_func_imports++;
+        break;
+
+      case WASM_EXTERNAL_KIND_TABLE:
+        /* TODO */
+        assert(0);
+        break;
+
+      case WASM_EXTERNAL_KIND_MEMORY:
+        /* TODO */
+        assert(0);
+        break;
+
+      case WASM_EXTERNAL_KIND_GLOBAL:
+        /* TODO */
+        assert(0);
+        break;
+
+      case WASM_NUM_EXTERNAL_KINDS:
+        assert(0);
+        break;
+    }
+  }
+
+  wasm_new_interpreter_import_ptr_array(
+      ctx->allocator, &ctx->module->func_imports, num_func_imports);
+
+  for (i = 0; i < ctx->module->imports.size; ++i) {
+    WasmInterpreterImport* import = &ctx->module->imports.data[i];
+    switch (import->kind) {
+      case WASM_EXTERNAL_KIND_FUNC:
+        ctx->module->func_imports.data[i] = import;
+        break;
+
+      case WASM_EXTERNAL_KIND_TABLE:
+        /* TODO */
+        assert(0);
+        break;
+
+      case WASM_EXTERNAL_KIND_MEMORY:
+        /* TODO */
+        assert(0);
+        break;
+
+      case WASM_EXTERNAL_KIND_GLOBAL:
+        /* TODO */
+        assert(0);
+        break;
+
+      case WASM_NUM_EXTERNAL_KINDS:
+        assert(0);
+        break;
+    }
+  }
+  return WASM_OK;
+}
+
 static WasmResult on_function_signatures_count(uint32_t count,
                                                void* user_data) {
   Context* ctx = user_data;
-  wasm_new_interpreter_func_array(ctx->allocator, &ctx->funcs, count);
+  wasm_new_interpreter_func_array(ctx->allocator, &ctx->module->funcs, count);
   wasm_resize_uint32_vector_vector(ctx->allocator, &ctx->func_fixups, count);
   return WASM_OK;
 }
@@ -467,7 +526,7 @@ static WasmResult on_function_signature(uint32_t index,
                                         void* user_data) {
   Context* ctx = user_data;
   assert(sig_index < ctx->module->sigs.size);
-  InterpreterFunc* func = get_func(ctx, index);
+  WasmInterpreterFunc* func = get_func(ctx, index);
   func->offset = WASM_INVALID_OFFSET;
   func->sig_index = sig_index;
   return WASM_OK;
@@ -478,8 +537,8 @@ static WasmResult on_table(uint32_t index,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   Context* ctx = user_data;
-  wasm_new_interpreter_func_table_entry_array(
-      ctx->allocator, &ctx->module->func_table, elem_limits->initial);
+  wasm_new_uint32_array(ctx->allocator, &ctx->module->func_table,
+                        elem_limits->initial);
   return WASM_OK;
 }
 
@@ -587,32 +646,8 @@ static WasmResult on_export(uint32_t index,
   Context* ctx = user_data;
   WasmInterpreterExport* export = &ctx->module->exports.data[index];
   export->name = wasm_dup_string_slice(ctx->allocator, name);
-
-  switch (kind) {
-    case WASM_EXTERNAL_KIND_FUNC: {
-      InterpreterFunc* func = get_func(ctx, item_index);
-      export->func_index = item_index;
-      export->sig_index = func->sig_index;
-      export->func_offset = WASM_INVALID_OFFSET;
-      break;
-    }
-
-    case WASM_EXTERNAL_KIND_TABLE:
-      /* TODO */
-      break;
-
-    case WASM_EXTERNAL_KIND_MEMORY:
-      /* TODO */
-      break;
-
-    case WASM_EXTERNAL_KIND_GLOBAL:
-      /* TODO */
-      break;
-
-    case WASM_NUM_EXTERNAL_KINDS:
-      assert(0);
-      break;
-  }
+  export->kind = kind;
+  export->func.index = item_index;
   return WASM_OK;
 }
 
@@ -621,7 +656,7 @@ static WasmResult on_start_function(uint32_t func_index, void* user_data) {
   /* can't get the function offset yet, because we haven't parsed the
    * functions. Just store the function index and resolve it later in
    * end_function_bodies_section. */
-  assert(func_index < ctx->funcs.size);
+  assert(func_index < ctx->module->funcs.size);
   ctx->start_func_index = func_index;
   return WASM_OK;
 }
@@ -639,12 +674,8 @@ static WasmResult on_elem_segment_function_index(uint32_t index,
   Context* ctx = user_data;
   assert(ctx->table_offset < ctx->module->func_table.size);
   assert(index < ctx->module->func_table.size);
-  WasmInterpreterFuncTableEntry* entry =
-      &ctx->module->func_table.data[ctx->table_offset++];
-  InterpreterFunc* func = get_func(ctx, func_index);
-  entry->sig_index = func->sig_index;
-  entry->func_index = func_index;
-  entry->func_offset = WASM_INVALID_OFFSET;
+  uint32_t* entry = &ctx->module->func_table.data[ctx->table_offset++];
+  *entry = func_index;
   return WASM_OK;
 }
 
@@ -665,7 +696,7 @@ static WasmResult on_data_segment_data(uint32_t index,
 
 static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  assert(count == ctx->funcs.size);
+  assert(count == ctx->module->funcs.size);
   WASM_USE(ctx);
   return WASM_OK;
 }
@@ -868,7 +899,7 @@ static WasmResult check_opcode2(Context* ctx, WasmOpcode opcode) {
 
 static WasmResult begin_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  InterpreterFunc* func = get_func(ctx, index);
+  WasmInterpreterFunc* func = get_func(ctx, index);
   WasmInterpreterFuncSignature* sig = get_signature(ctx, func->sig_index);
 
   func->offset = get_istream_offset(ctx);
@@ -921,7 +952,7 @@ static WasmResult end_function_body(uint32_t index, void* user_data) {
 
 static WasmResult on_local_decl_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  InterpreterFunc* func = ctx->current_func;
+  WasmInterpreterFunc* func = ctx->current_func;
   func->local_decl_count = count;
   return WASM_OK;
 }
@@ -932,7 +963,7 @@ static WasmResult on_local_decl(uint32_t decl_index,
                                 void* user_data) {
   Context* ctx = user_data;
   LOGF("%3" PRIzd ": alloca\n", ctx->type_stack.size);
-  InterpreterFunc* func = ctx->current_func;
+  WasmInterpreterFunc* func = ctx->current_func;
   func->local_count += count;
 
   uint32_t i;
@@ -1134,8 +1165,21 @@ static WasmResult on_br_table_expr(uint32_t num_targets,
 
 static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
-  InterpreterFunc* func = get_func(ctx, func_index);
-  WasmInterpreterFuncSignature* sig = get_func_signature(ctx, func);
+  WasmInterpreterFunc* func;
+  WasmBool is_import;
+  uint32_t sig_index;
+  if (func_index < ctx->module->func_imports.size) {
+    is_import = WASM_TRUE;
+    WasmInterpreterImport* import = get_func_import(ctx, func_index);
+    sig_index = import->func.sig_index;
+  } else {
+    is_import = WASM_FALSE;
+    func_index -= ctx->module->func_imports.size;
+    func = get_func(ctx, func_index);
+    sig_index = func->sig_index;
+  }
+
+  WasmInterpreterFuncSignature* sig = get_signature(ctx, sig_index);
   CHECK_RESULT(check_type_stack_limit(ctx, sig->param_types.size, "call"));
 
   uint32_t i;
@@ -1144,9 +1188,15 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
     CHECK_RESULT(check_type(ctx, sig->param_types.data[i - 1], arg, "call"));
   }
 
-  CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_FUNCTION));
-  CHECK_RESULT(emit_func_offset(ctx, func, func_index));
+  if (is_import) {
+    CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_IMPORT));
+    CHECK_RESULT(emit_i32(ctx, func_index));
+  } else {
+    CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_FUNCTION));
+    CHECK_RESULT(emit_func_offset(ctx, func, func_index));
+  }
   push_types(ctx, &sig->result_types);
+
   return WASM_OK;
 }
 
@@ -1346,24 +1396,9 @@ static WasmResult end_function_bodies_section(void* user_data) {
 
   /* resolve the start function offset */
   if (ctx->start_func_index != INVALID_FUNC_INDEX) {
-    InterpreterFunc* func = get_func(ctx, ctx->start_func_index);
+    WasmInterpreterFunc* func = get_func(ctx, ctx->start_func_index);
     assert(func->offset != WASM_INVALID_OFFSET);
     ctx->module->start_func_offset = func->offset;
-  }
-
-  /* resolve the export function offsets */
-  uint32_t i;
-  for (i = 0; i < ctx->module->exports.size; ++i) {
-    WasmInterpreterExport* export = get_export(ctx, i);
-    InterpreterFunc* func = get_func(ctx, export->func_index);
-    export->func_offset = func->offset;
-  }
-
-  /* resolve the table element offsets */
-  for (i = 0; i < ctx->module->func_table.size; ++i) {
-    WasmInterpreterFuncTableEntry* entry = &ctx->module->func_table.data[i];
-    InterpreterFunc* func = get_func(ctx, entry->func_index);
-    entry->func_offset = func->offset;
   }
   return WASM_OK;
 }
@@ -1381,6 +1416,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_import_table = on_import_table,
     .on_import_memory = on_import_memory,
     .on_import_global = on_import_global,
+    .end_import_section = end_import_section,
 
     .on_function_signatures_count = on_function_signatures_count,
     .on_function_signature = on_function_signature,
@@ -1449,15 +1485,9 @@ static WasmBinaryReader s_binary_reader = {
     .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,
 };
 
-static void wasm_destroy_interpreter_func(WasmAllocator* allocator,
-                                          InterpreterFunc* func) {
-  wasm_destroy_type_vector(allocator, &func->param_and_local_types);
-}
-
 static void destroy_context(Context* ctx) {
   wasm_destroy_type_vector(ctx->allocator, &ctx->type_stack);
   wasm_destroy_label_vector(ctx->allocator, &ctx->label_stack);
-  WASM_DESTROY_ARRAY_AND_ELEMENTS(ctx->allocator, ctx->funcs, interpreter_func);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->depth_fixups,
                                    uint32_vector);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->func_fixups,

@@ -56,7 +56,9 @@ void* wasm_append_element(WasmAllocator* allocator,
                           size_t* capacity,
                           size_t elt_byte_size) {
   wasm_ensure_capacity(allocator, data, capacity, *size + 1, elt_byte_size);
-  return (void*)((size_t)*data + (*size)++ * elt_byte_size);
+  void* p = (void*)((size_t)*data + (*size)++ * elt_byte_size);
+  memset(p, 0, elt_byte_size);
+  return p;
 }
 
 void wasm_extend_elements(WasmAllocator* allocator,

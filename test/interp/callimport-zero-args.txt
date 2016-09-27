@@ -7,6 +7,6 @@
       (i32.const 13)
       (call $imported))))
 (;; STDOUT ;;;
-called import foo.bar() => i32:0
+called import foo.bar() => (i32:0)
 f() => i32:13
 ;;; STDOUT ;;)

@@ -712,7 +712,7 @@ def main(args):
 
   # HACK(binji): exclude interp/ and spec/ tests
   test_names = [test_name for test_name in test_names
-                if not test_name.startswith(('interp', 'spec'))]
+                if not test_name.startswith('spec')]
   # HACK(binji)
 
   if options.list:
