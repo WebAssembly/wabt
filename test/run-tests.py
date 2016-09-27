@@ -745,7 +745,7 @@ def main(args):
     if not os.path.exists(out_dir):
       os.makedirs(out_dir)
   else:
-    out_dir = tempfile.mkdtemp(prefix='sexpr-wasm-')
+    out_dir = tempfile.mkdtemp(prefix='wabt-')
     out_dir_is_temp = True
   variables['out_dir'] = os.path.abspath(out_dir)
 
