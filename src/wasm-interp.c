@@ -344,17 +344,26 @@ static WasmInterpreterResult run_export(
 
   if (result == WASM_INTERPRETER_RETURNED) {
     uint32_t expected_results = sig->result_types.size;
-    assert(expected_results == thread->value_stack.size);
-    wasm_resize_interpreter_typed_value_vector(allocator, out_results,
-                                               expected_results);
+    assert(expected_results == thread->value_stack_top);
+
+    if (out_results) {
+      wasm_resize_interpreter_typed_value_vector(allocator, out_results,
+                                                 expected_results);
+    }
+
     uint32_t i;
     for (i = 0; i < expected_results; ++i) {
-      /* copy as many results as the caller wants */
-      out_results->data[i].type = sig->result_types.data[i];
-      out_results->data[i].value = thread->value_stack.data[i];
+      WasmInterpreterTypedValue actual_result;
+      actual_result.type = sig->result_types.data[i];
+      actual_result.value = thread->value_stack.data[i];
+
+      if (out_results) {
+        /* copy as many results as the caller wants */
+        out_results->data[i] = actual_result;
+      }
 
       if (verbose) {
-        print_typed_value(&out_results->data[i]);
+        print_typed_value(&actual_result);
         if (i != expected_results - 1)
           printf(", ");
       }

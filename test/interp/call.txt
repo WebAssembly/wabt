@@ -1,7 +1,6 @@
 ;;; TOOL: run-interp
 (module
-  (export "call" $call)
-  (func $call (result i32)
+  (func (export "call") (result i32)
     (call $helper (i32.const 1) (i64.const 2) (f32.const 3) (f64.const 4)))
 
   (func $helper (param i32 i64 f32 f64) (result i32)
@@ -13,12 +12,11 @@
                     (i32.trunc_s/f32 (get_local 2)))
                 (i32.trunc_s/f64 (get_local 3)))))
 
-  (export "fac10" $fac10)
-  (func $fac10 (result i32)
+  (func (export "fac10") (result i32)
     (call $fac (i32.const 10)))
 
   (func $fac (param i32) (result i32)
-    (if (i32.gt_s (get_local 0) (i32.const 0))
+    (if i32 (i32.gt_s (get_local 0) (i32.const 0))
       (return (i32.mul
                   (get_local 0)
                   (call $fac (i32.sub (get_local 0) (i32.const 1)))))

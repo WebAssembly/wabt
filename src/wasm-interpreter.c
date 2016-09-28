@@ -27,6 +27,7 @@ static const char* s_opcode_name[] = {
     WASM_FOREACH_OPCODE(V)
     [WASM_OPCODE_ALLOCA] = "alloca",
     [WASM_OPCODE_BR_UNLESS] = "br_unless",
+    [WASM_OPCODE_CALL_IMPORT] = "call_import",
     [WASM_OPCODE_DATA] = "data",
     [WASM_OPCODE_DROP_KEEP] = "drop_keep",
 };

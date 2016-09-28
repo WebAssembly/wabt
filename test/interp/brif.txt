@@ -6,12 +6,10 @@
       (return (i32.const 1)))
     (return (i32.const 2)))
 
-  (export "test1" $test1)
-  (func $test1 (result i32)
+  (func (export "test1") (result i32)
     (call $f (i32.const 0)))
 
-  (export "test2" $test2)
-  (func $test2 (result i32)
+  (func (export "test2") (result i32)
     (call $f (i32.const 1))))
 (;; STDOUT ;;;
 test1() => i32:1
