@@ -366,6 +366,9 @@ static WasmType get_action_info_result_type(const ActionInfo* info) {
     case WASM_ACTION_TYPE_GET:
       return info->result_type;
   }
+  /* Add return type to make some compilers happy. */
+  assert(0);
+  return WASM_ACTION_TYPE_GET;
 }
 
 static void append_action_expr(WasmAllocator* allocator,
