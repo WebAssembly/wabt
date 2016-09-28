@@ -96,7 +96,9 @@
  * point.  Otherwise is not defined.
  */
 #if __has_builtin(__builtin_unreachable)
-# define WABT_BUILTIN_UNREACHABLE __builtin_unreachable()
+# define WABT_UNREACHABLE __builtin_unreachable()
+#else
+#error("Compiler doesn't support WABT_BUILTIN_UNREACHABLE")
 #endif
 
 #elif COMPILER_IS_MSVC
@@ -110,10 +112,6 @@
 #define WASM_LIKELY(x) (x)
 #define WASM_PRINTF_FORMAT(format_arg, first_arg)
 
-/* WABT_BUILTIN_UNREACHABLE - Expands to an expression which states
- * that it is undefined behavior for the compiler to reach this
- * point.  Otherwise is not defined.
- */
 #define WABT_BUILTIN_UNREACHABLE __assume(false)
 
 __inline unsigned long wasm_clz_u32(unsigned long mask) {
