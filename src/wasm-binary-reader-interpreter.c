@@ -709,6 +709,7 @@ static void pop_label(Context* ctx) {
 
 static WasmType top_type(Context* ctx) {
   Label* label = top_label(ctx);
+  WASM_USE(label);
   assert(ctx->type_stack.size > label->type_stack_limit);
   return ctx->type_stack.data[ctx->type_stack.size - 1];
 }
