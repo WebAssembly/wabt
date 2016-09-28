@@ -1516,6 +1516,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         while (ctx->offset < end_offset) {
           uint8_t opcode;
           in_u8(ctx, &opcode, "opcode");
+          CALLBACK(on_opcode, opcode);
           switch (opcode) {
             case WASM_OPCODE_UNREACHABLE:
               CALLBACK0(on_unreachable_expr);
