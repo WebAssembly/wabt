@@ -67,12 +67,24 @@ static const char s_description[] =
     "  $ wasmopcodecnt test.wasm -o test.dist\n";
 
 static WasmOption s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+    {FLAG_VERBOSE,
+     'v',
+     "verbose",
+     NULL,
+     NOPE,
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
+    {FLAG_OUTPUT,
+     'o',
+     "output",
+     "FILENAME",
+     YEP,
      "output file for the generated wast file, by default use stdout"},
-    {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
+    {FLAG_USE_LIBC_ALLOCATOR,
+     0,
+     "use-libc-allocator",
+     NULL,
+     NOPE,
      "use malloc, free, etc. instead of stack allocator"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
@@ -154,9 +166,9 @@ int main(int argc, char** argv) {
   if (WASM_SUCCEEDED(result)) {
     size_t wasm_opcode_count[WASM_ARRAY_SIZE(s_opcode_name)];
     WASM_ZERO_MEMORY(wasm_opcode_count);
-    result = wasm_read_binary_opcnt(allocator, data, size, &s_read_binary_options,
-                                    &s_error_handler, wasm_opcode_count,
-                                    (size_t)WASM_ARRAY_SIZE(wasm_opcode_count));
+    result = wasm_read_binary_opcnt(
+        allocator, data, size, &s_read_binary_options, &s_error_handler,
+        wasm_opcode_count, (size_t)WASM_ARRAY_SIZE(wasm_opcode_count));
     FILE* out = stdout;
     if (s_outfile) {
       out = fopen(s_outfile, "w");
