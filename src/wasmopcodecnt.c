@@ -22,6 +22,7 @@
 
 #include "wasm-allocator.h"
 #include "wasm-binary-reader.h"
+#include "wasm-binary-reader-opcnt.h"
 #include "wasm-option-parser.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-stream.h"
@@ -40,7 +41,6 @@ static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
 
 static WasmBool s_use_libc_allocator;
-static WasmBool s_generate_names;
 
 static WasmBinaryErrorHandler s_error_handler =
     WASM_BINARY_ERROR_HANDLER_DEFAULT;
@@ -157,13 +157,13 @@ int main(int argc, char** argv) {
     WASM_ZERO_MEMORY(wasm_opcode_count);
     fprintf(stderr, "wasm_opcode_count size = %u",
             (unsigned)sizeof(wasm_opcode_count));
-    result = wasm_read_binary_ast(allocator, data, size, &s_read_binary_options,
-                                  &s_error_handler, wasm_opcode_count,
-                                  (size_t)WASM_ARRAY_SIZE(wasm_opcode_count));
+    result = wasm_read_binary_opcnt(allocator, data, size, &s_read_binary_options,
+                                    &s_error_handler, wasm_opcode_count,
+                                    (size_t)WASM_ARRAY_SIZE(wasm_opcode_count));
     FILE* out = stdout;
     if (s_outfile) {
       out = fopen(s_outfile, "w");
-      if (!Out)
+      if (!out)
         ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
       result = WASM_ERROR;
     }
@@ -171,7 +171,8 @@ int main(int argc, char** argv) {
       for (size_t i = 0; i < WASM_OPCODE_LIMIT; ++i) {
         const char* Name = s_opcode_name[i];
         if (Name != 0) {
-          fprintf(out, "%s: %" PRIuMAX "\n", (uintmax_t)wasm_opcode_count[i]);
+          fprintf(out, "%s: %" PRIuMAX "\n", Name,
+                  (uintmax_t)wasm_opcode_count[i]);
         }
       }
     }

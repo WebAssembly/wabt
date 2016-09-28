@@ -29,8 +29,8 @@
 typedef struct Context {
   WasmAllocator* allocator;
   WasmBinaryErrorHandler* error_handler;
-  size_t *OpcodeCounts;
-  size_t OpcodeCountsSize;
+  size_t *opcode_counts;
+  size_t opcode_counts_size;
 } Context;
 
 static void on_error(uint32_t offset, const char* message, void* user_data) {
@@ -45,9 +45,15 @@ static WasmResult on_opcode(WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
   if (opcode >= ctx->opcode_counts_size)
     return WASM_ERROR;
-  ++ctx->opcode_counts[Opcode];
+  ++ctx->opcode_counts[opcode];
   return WASM_OK;
 }
+
+static WasmBinaryReader s_binary_reader = {
+  .user_data = NULL,
+  .on_error = on_error,
+  .on_opcode = on_opcode
+};
 
 WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   const void* data,
@@ -58,7 +64,7 @@ WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   size_t opcode_counts_size) {
   Context ctx;
   WASM_ZERO_MEMORY(ctx);
-  ct.allocator = allocator;
+  ctx.allocator = allocator;
   ctx.error_handler = error_handler;
   ctx.opcode_counts = opcode_counts;
   ctx.opcode_counts_size = opcode_counts_size;

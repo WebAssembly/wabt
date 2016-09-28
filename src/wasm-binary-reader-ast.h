@@ -23,9 +23,6 @@ struct WasmAllocator;
 struct WasmModule;
 struct WasmReadBinaryOptions;
 
-typedef struct Context {
-  WasmAllocator* allocator;
-
 WASM_EXTERN_C_BEGIN
 WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
                                 const void* data,
