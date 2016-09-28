@@ -79,7 +79,7 @@ static WasmOption s_options[] = {
      "output",
      "FILENAME",
      YEP,
-     "output file for the generated wast file, by default use stdout"},
+     "output file for the opcode counts, by default use stdout"},
     {FLAG_USE_LIBC_ALLOCATOR,
      0,
      "use-libc-allocator",
@@ -180,8 +180,8 @@ int main(int argc, char** argv) {
       for (size_t i = 0; i < WASM_ARRAY_SIZE(wasm_opcode_count); ++i) {
         if (wasm_opcode_count[i] == 0)
           continue;
-        fprintf(out, "%s: %" PRIuMAX "\n", s_opcode_name[i],
-                (uintmax_t)wasm_opcode_count[i]);
+        fprintf(out, "%s: %" PRIzd "\n", s_opcode_name[i],
+                wasm_opcode_count[i]);
       }
     }
     wasm_free(allocator, data);

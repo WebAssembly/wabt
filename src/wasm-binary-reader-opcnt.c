@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "wasm-binary-reader-ast.h"
+#include "wasm-binary-reader-opcnt.h"
 
 #include <assert.h>
 #include <inttypes.h>
