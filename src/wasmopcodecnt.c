@@ -177,7 +177,8 @@ int main(int argc, char** argv) {
       result = WASM_ERROR;
     }
     if (WASM_SUCCEEDED(result)) {
-      for (size_t i = 0; i < WASM_ARRAY_SIZE(wasm_opcode_count); ++i) {
+      size_t i;
+      for (i = 0; i < WASM_ARRAY_SIZE(wasm_opcode_count); ++i) {
         if (wasm_opcode_count[i] == 0)
           continue;
         fprintf(out, "%s: %" PRIzd "\n", s_opcode_name[i],
