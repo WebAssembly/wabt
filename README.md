@@ -20,12 +20,11 @@ with no changes to instructions).
 
 ## Cloning
 
-Clone as normal, but don't forget to update/init submodules as well:
+Clone as normal, but don't forget to get the submodules as well:
 
 ```
-$ git clone https://github.com/WebAssembly/wabt
+$ git clone --recursive https://github.com/WebAssembly/wabt
 $ cd wabt
-$ git submodule update --init
 ```
 
 This will fetch the testsuite and gtest repos, which are needed for some tests.
