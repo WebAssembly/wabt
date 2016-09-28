@@ -28,7 +28,6 @@
 #include "wasm-stream.h"
 
 #define PROGRAM_NAME "wasmopcodecnt"
-#define WASM_OPCODE_LIMIT 256
 
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
@@ -60,7 +59,7 @@ enum {
 };
 
 static const char s_description[] =
-    "  Read a file in the was binary format, and count opcode usage for\n"
+    "  Read a file in the wasm binary format, and count opcode usage for\n"
     "  instructions.\n"
     "\n"
     "examples:\n"
@@ -155,8 +154,6 @@ int main(int argc, char** argv) {
   if (WASM_SUCCEEDED(result)) {
     size_t wasm_opcode_count[WASM_ARRAY_SIZE(s_opcode_name)];
     WASM_ZERO_MEMORY(wasm_opcode_count);
-    fprintf(stderr, "wasm_opcode_count size = %u",
-            (unsigned)sizeof(wasm_opcode_count));
     result = wasm_read_binary_opcnt(allocator, data, size, &s_read_binary_options,
                                     &s_error_handler, wasm_opcode_count,
                                     (size_t)WASM_ARRAY_SIZE(wasm_opcode_count));
@@ -168,12 +165,11 @@ int main(int argc, char** argv) {
       result = WASM_ERROR;
     }
     if (WASM_SUCCEEDED(result)) {
-      for (size_t i = 0; i < WASM_OPCODE_LIMIT; ++i) {
-        const char* Name = s_opcode_name[i];
-        if (Name != 0) {
-          fprintf(out, "%s: %" PRIuMAX "\n", Name,
-                  (uintmax_t)wasm_opcode_count[i]);
-        }
+      for (size_t i = 0; i < WASM_ARRAY_SIZE(wasm_opcode_count); ++i) {
+        if (wasm_opcode_count[i] == 0)
+          continue;
+        fprintf(out, "%s: %" PRIuMAX "\n", s_opcode_name[i],
+                (uintmax_t)wasm_opcode_count[i]);
       }
     }
     wasm_free(allocator, data);
