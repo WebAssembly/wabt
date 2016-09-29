@@ -5,7 +5,7 @@
   (export "foo" 0))
 (invoke "foo" (f32.const 1.5))
 (;; STDERR ;;;
-typecheck/bad-invoke-type-mismatch.txt:6:16: type mismatch for argument 0 of invoke. got f32, expected i32
-(invoke "foo" (f32.const 1.5))
-               ^^^^^^^^^
+typecheck/bad-invoke-type-mismatch.txt:5:17: syntax error, unexpected NAT, expecting (
+  (export "foo" 0))
+                ^
 ;;; STDERR ;;)

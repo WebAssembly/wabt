@@ -1,5 +1,5 @@
 (module
   (func (result i32)
-    (block $exit
+    (block $exit i32
       (br_if 0 (i32.const 0) (i32.const 0))
       (i32.const 1))))

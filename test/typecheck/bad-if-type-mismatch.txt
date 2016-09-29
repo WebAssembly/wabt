@@ -1,11 +1,18 @@
 ;;; ERROR: 1
 (module
-  (func (result i32)
-    (if (i32.const 0)
-      (f32.const 0)
-      (i32.const 0))))
+  (func
+    (drop
+      (if (i32.const 0)
+        (f32.const 0)
+        (i32.const 0)))))
 (;; STDERR ;;;
-typecheck/bad-if-type-mismatch.txt:5:7: type mismatch of if branch. got f32, expected i32
-      (f32.const 0)
-      ^
+typecheck/bad-if-type-mismatch.txt:5:11: type stack at end of if true branch is 1. expected 0
+      (if (i32.const 0)
+          ^^^^^^^^^^^^^
+typecheck/bad-if-type-mismatch.txt:5:11: type stack at end of if false branch is 1. expected 0
+      (if (i32.const 0)
+          ^^^^^^^^^^^^^
+typecheck/bad-if-type-mismatch.txt:4:6: type stack size too small at drop. got 0, expected at least 1
+    (drop
+     ^^^^
 ;;; STDERR ;;)

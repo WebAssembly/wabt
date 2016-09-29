@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module (func (get_global 0)))
+(;; STDERR ;;;
+parse/expr/bad-getglobal-undefined.txt:2:27: global variable out of range (max 0)
+(module (func (get_global 0)))
+                          ^
+;;; STDERR ;;)

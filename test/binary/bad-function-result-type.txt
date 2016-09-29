@@ -2,12 +2,12 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("type") {
+section(TYPE) {
   count[1]
   function params[1] i32 results[1] void
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000014: expected valid result type
+error: @0x00000010: expected valid result type
 
 ;;; STDERR ;;)

@@ -24,7 +24,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_DIR = SCRIPT_DIR
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 TESTSUITE_DIR = os.path.join(REPO_ROOT_DIR, 'third_party', 'testsuite')
-SPEC_TEST_DIR = os.path.join(TEST_DIR, 'interp', 'spec')
+SPEC_TEST_DIR = os.path.join(TEST_DIR, 'spec')
 
 
 def GetFilesWithExtension(src_dir, want_ext):

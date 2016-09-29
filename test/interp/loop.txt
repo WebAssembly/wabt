@@ -1,7 +1,6 @@
 ;;; TOOL: run-interp
 (module
-  (export "loop" $loop)
-  (func $loop (result i32)
+  (func (export "loop") (result i32)
     (local i32 i32)
     ;; loop statements now require an explicit branch to the top
     (loop $cont

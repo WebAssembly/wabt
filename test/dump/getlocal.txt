@@ -1,83 +1,89 @@
 ;;; FLAGS: -dv
 (module
   (func
+    ;; by default, sexpr-wasm will remap locals so all similar types are
+    ;; grouped together, in the order i32, i64, f32, f64.
     ;; i32               0   1
     ;; i64           2                   3
     ;; f32       4               5
     ;; f64   6                       7
     (local f64 f32 i64 i32 i32 f32 f64 i64)
-    (get_local 0)
-    (get_local 1)
-    (get_local 2)
-    (get_local 3)
-    (get_local 4)
-    (get_local 5)
-    (get_local 6)
-    (get_local 7)))
+    (drop (get_local 0))
+    (drop (get_local 1))
+    (drop (get_local 2))
+    (drop (get_local 3))
+    (drop (get_local 4))
+    (drop (get_local 5))
+    (drop (get_local 6))
+    (drop (get_local 7))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 01                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 01                                         ; num types
 ; type 0
-000000f: 40                                         ; function form
-0000010: 00                                         ; num params
-0000011: 00                                         ; num results
-000000d: 04                                         ; FIXUP section size
-; section "function"
-0000012: 08                                         ; string length
-0000013: 6675 6e63 7469 6f6e                        ; section id: "function"
-000001b: 00                                         ; section size (guess)
-000001c: 01                                         ; num functions
-000001d: 00                                         ; function 0 signature index
-000001b: 02                                         ; FIXUP section size
-; section "code"
-000001e: 04                                         ; string length
-000001f: 636f 6465                                  ; section id: "code"
-0000023: 00                                         ; section size (guess)
-0000024: 01                                         ; num functions
+000000b: 40                                         ; function form
+000000c: 00                                         ; num params
+000000d: 00                                         ; num results
+0000009: 04                                         ; FIXUP section size
+; section "FUNCTION" (3)
+000000e: 03                                         ; section code
+000000f: 00                                         ; section size (guess)
+0000010: 01                                         ; num functions
+0000011: 00                                         ; function 0 signature index
+000000f: 02                                         ; FIXUP section size
+; section "CODE" (10)
+0000012: 0a                                         ; section code
+0000013: 00                                         ; section size (guess)
+0000014: 01                                         ; num functions
 ; function body 0
-0000025: 00                                         ; func body size (guess)
-0000026: 07                                         ; local decl count
-0000027: 01                                         ; local type count
-0000028: 04                                         ; WASM_TYPE_F64
-0000029: 01                                         ; local type count
-000002a: 03                                         ; WASM_TYPE_F32
-000002b: 01                                         ; local type count
-000002c: 02                                         ; WASM_TYPE_I64
-000002d: 02                                         ; local type count
-000002e: 01                                         ; WASM_TYPE_I32
-000002f: 01                                         ; local type count
-0000030: 03                                         ; WASM_TYPE_F32
-0000031: 01                                         ; local type count
-0000032: 04                                         ; WASM_TYPE_F64
-0000033: 01                                         ; local type count
-0000034: 02                                         ; WASM_TYPE_I64
-0000035: 14                                         ; OPCODE_GET_LOCAL
-0000036: 00                                         ; local index
+0000015: 00                                         ; func body size (guess)
+0000016: 07                                         ; local decl count
+0000017: 01                                         ; local type count
+0000018: 04                                         ; WASM_TYPE_F64
+0000019: 01                                         ; local type count
+000001a: 03                                         ; WASM_TYPE_F32
+000001b: 01                                         ; local type count
+000001c: 02                                         ; WASM_TYPE_I64
+000001d: 02                                         ; local type count
+000001e: 01                                         ; WASM_TYPE_I32
+000001f: 01                                         ; local type count
+0000020: 03                                         ; WASM_TYPE_F32
+0000021: 01                                         ; local type count
+0000022: 04                                         ; WASM_TYPE_F64
+0000023: 01                                         ; local type count
+0000024: 02                                         ; WASM_TYPE_I64
+0000025: 14                                         ; OPCODE_GET_LOCAL
+0000026: 00                                         ; local index
+0000027: 0b                                         ; OPCODE_DROP
+0000028: 14                                         ; OPCODE_GET_LOCAL
+0000029: 01                                         ; local index
+000002a: 0b                                         ; OPCODE_DROP
+000002b: 14                                         ; OPCODE_GET_LOCAL
+000002c: 02                                         ; local index
+000002d: 0b                                         ; OPCODE_DROP
+000002e: 14                                         ; OPCODE_GET_LOCAL
+000002f: 03                                         ; local index
+0000030: 0b                                         ; OPCODE_DROP
+0000031: 14                                         ; OPCODE_GET_LOCAL
+0000032: 04                                         ; local index
+0000033: 0b                                         ; OPCODE_DROP
+0000034: 14                                         ; OPCODE_GET_LOCAL
+0000035: 05                                         ; local index
+0000036: 0b                                         ; OPCODE_DROP
 0000037: 14                                         ; OPCODE_GET_LOCAL
-0000038: 01                                         ; local index
-0000039: 14                                         ; OPCODE_GET_LOCAL
-000003a: 02                                         ; local index
-000003b: 14                                         ; OPCODE_GET_LOCAL
-000003c: 03                                         ; local index
-000003d: 14                                         ; OPCODE_GET_LOCAL
-000003e: 04                                         ; local index
-000003f: 14                                         ; OPCODE_GET_LOCAL
-0000040: 05                                         ; local index
-0000041: 14                                         ; OPCODE_GET_LOCAL
-0000042: 06                                         ; local index
-0000043: 14                                         ; OPCODE_GET_LOCAL
-0000044: 07                                         ; local index
-0000025: 1f                                         ; FIXUP func body size
-0000023: 21                                         ; FIXUP section size
+0000038: 06                                         ; local index
+0000039: 0b                                         ; OPCODE_DROP
+000003a: 14                                         ; OPCODE_GET_LOCAL
+000003b: 07                                         ; local index
+000003c: 0b                                         ; OPCODE_DROP
+0000015: 27                                         ; FIXUP func body size
+0000013: 29                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
-0000010: 0000 0866 756e 6374 696f 6e02 0100 0463  
-0000020: 6f64 6521 011f 0701 0401 0301 0202 0101  
-0000030: 0301 0401 0214 0014 0114 0214 0314 0414  
-0000040: 0514 0614 07                             
+0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
+0000010: 0100 0a29 0127 0701 0401 0301 0202 0101  
+0000020: 0301 0401 0214 000b 1401 0b14 020b 1403  
+0000030: 0b14 040b 1405 0b14 060b 1407 0b         
 ;;; STDOUT ;;)

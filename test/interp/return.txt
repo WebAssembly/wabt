@@ -9,17 +9,14 @@
 
     (return (i32.const 3)))
 
-  (func $test1 (result i32)
+  (func (export "test1") (result i32)
     (call $f (i32.const 0)))
-  (export "test1" $test1)
 
-  (func $test2 (result i32)
+  (func (export "test2") (result i32)
     (call $f (i32.const 1)))
-  (export "test2" $test2)
 
-  (func $test3 (result i32)
-    (call $f (i32.const 5)))
-  (export "test3" $test3))
+  (func (export "test3") (result i32)
+    (call $f (i32.const 5))))
 (;; STDOUT ;;;
 test1() => i32:1
 test2() => i32:2

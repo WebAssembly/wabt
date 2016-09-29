@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module (export "foo" (table 0)))
+(;; STDERR ;;;
+parse/module/bad-export-table-undefined.txt:2:30: table variable out of range (max 0)
+(module (export "foo" (table 0)))
+                             ^
+;;; STDERR ;;)

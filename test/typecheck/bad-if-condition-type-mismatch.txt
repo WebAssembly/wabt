@@ -3,7 +3,13 @@
   (func
     (if (f32.const 0) (i32.const 0) (i32.const 0))))
 (;; STDERR ;;;
-typecheck/bad-if-condition-type-mismatch.txt:4:9: type mismatch of condition. got f32, expected i32
+typecheck/bad-if-condition-type-mismatch.txt:4:9: type mismatch at if condition. got f32, expected i32
     (if (f32.const 0) (i32.const 0) (i32.const 0))))
-        ^
+        ^^^^^^^^^^^^^
+typecheck/bad-if-condition-type-mismatch.txt:4:9: type stack at end of if true branch is 1. expected 0
+    (if (f32.const 0) (i32.const 0) (i32.const 0))))
+        ^^^^^^^^^^^^^
+typecheck/bad-if-condition-type-mismatch.txt:4:9: type stack at end of if false branch is 1. expected 0
+    (if (f32.const 0) (i32.const 0) (i32.const 0))))
+        ^^^^^^^^^^^^^
 ;;; STDERR ;;)

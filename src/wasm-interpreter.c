@@ -27,9 +27,9 @@ static const char* s_opcode_name[] = {
     WASM_FOREACH_OPCODE(V)
     [WASM_OPCODE_ALLOCA] = "alloca",
     [WASM_OPCODE_BR_UNLESS] = "br_unless",
+    [WASM_OPCODE_CALL_IMPORT] = "call_import",
     [WASM_OPCODE_DATA] = "data",
-    [WASM_OPCODE_DISCARD] = "discard",
-    [WASM_OPCODE_DISCARD_KEEP] = "discard_keep",
+    [WASM_OPCODE_DROP_KEEP] = "drop_keep",
 };
 #undef V
 
@@ -95,7 +95,7 @@ WasmInterpreterImport* wasm_get_interpreter_import_by_name(
   for (i = 0; i < module->imports.size; ++i) {
     WasmInterpreterImport* import = &module->imports.data[i];
     if (wasm_string_slices_are_equal(module_name, &import->module_name) &&
-        wasm_string_slices_are_equal(func_name, &import->func_name)) {
+        wasm_string_slices_are_equal(func_name, &import->field_name)) {
       return import;
     }
   }
@@ -348,6 +348,12 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define CHECK_STACK() TRAP_IF(vs_top >= vs_end, VALUE_STACK_EXHAUSTED)
 
+#define PUSH_NEG_1_AND_BREAK_IF(cond) \
+  if (WASM_UNLIKELY(cond)) {          \
+    PUSH_I32(-1);                     \
+    break;                            \
+  }
+
 #define PUSH(v)        \
   do {                 \
     CHECK_STACK();     \
@@ -372,12 +378,12 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define POP_I64() (POP().i64)
 #define POP_F32() (POP().f32_bits)
 #define POP_F64() (POP().f64_bits)
-#define DISCARD_KEEP(discard, keep) \
-  do {                              \
-    assert((keep) <= 1);            \
-    if ((keep) == 1)                \
-      PICK((discard) + 1) = TOP();  \
-    vs_top -= (discard);            \
+#define DROP_KEEP(drop, keep)   \
+  do {                          \
+    assert((keep) <= 1);        \
+    if ((keep) == 1)            \
+      PICK((drop) + 1) = TOP(); \
+    vs_top -= (drop);           \
   } while (0)
 
 #define GOTO(offset) pc = &istream[offset]
@@ -410,7 +416,6 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
             MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
     void* dst = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
     memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                        \
-    PUSH_##type(value);                                                    \
   } while (0)
 
 #define BINOP(rtype, type, op)            \
@@ -588,11 +593,22 @@ static WASM_INLINE uint64_t read_u64(const uint8_t** pc) {
 
 static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
                                             uint32_t* out_offset,
-                                            uint32_t* out_discard,
+                                            uint32_t* out_drop,
                                             uint8_t* out_keep) {
   *out_offset = read_u32_at(pc + WASM_TABLE_ENTRY_OFFSET_OFFSET);
-  *out_discard = read_u32_at(pc + WASM_TABLE_ENTRY_DISCARD_OFFSET);
+  *out_drop = read_u32_at(pc + WASM_TABLE_ENTRY_DROP_OFFSET);
   *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
+}
+
+static WasmBool signatures_are_equal(WasmInterpreterModule* module,
+                                     uint32_t sig_index_0,
+                                     uint32_t sig_index_1) {
+  WasmInterpreterFuncSignature* sig_0 = &module->sigs.data[sig_index_0];
+  WasmInterpreterFuncSignature* sig_1 = &module->sigs.data[sig_index_1];
+  return wasm_type_vectors_are_equal(&sig_0->param_types,
+                                     &sig_1->param_types) &&
+         wasm_type_vectors_are_equal(&sig_0->result_types,
+                                     &sig_1->result_types);
 }
 
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
@@ -642,10 +658,10 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
             (key >= num_targets ? num_targets : key) * WASM_TABLE_ENTRY_SIZE;
         const uint8_t* entry = istream + table_offset + key_offset;
         uint32_t new_pc;
-        uint32_t discard_count;
+        uint32_t drop_count;
         uint8_t keep_count;
-        read_table_entry_at(entry, &new_pc, &discard_count, &keep_count);
-        DISCARD_KEEP(discard_count, keep_count);
+        read_table_entry_at(entry, &new_pc, &drop_count, &keep_count);
+        DROP_KEEP(drop_count, keep_count);
         GOTO(new_pc);
         break;
       }
@@ -678,13 +694,33 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         PUSH_F64(read_u64(&pc));
         break;
 
+      case WASM_OPCODE_GET_GLOBAL: {
+        uint32_t index = read_u32(&pc);
+        assert(index < module->globals.size);
+        PUSH(module->globals.data[index].typed_value.value);
+        break;
+      }
+
+      case WASM_OPCODE_SET_GLOBAL: {
+        uint32_t index = read_u32(&pc);
+        assert(index < module->globals.size);
+        module->globals.data[index].typed_value.value = POP();
+        break;
+      }
+
       case WASM_OPCODE_GET_LOCAL: {
         WasmInterpreterValue value = PICK(read_u32(&pc));
         PUSH(value);
         break;
       }
 
-      case WASM_OPCODE_SET_LOCAL:
+      case WASM_OPCODE_SET_LOCAL: {
+        WasmInterpreterValue value = POP();
+        PICK(read_u32(&pc)) = value;
+        break;
+      }
+
+      case WASM_OPCODE_TEE_LOCAL:
         PICK(read_u32(&pc)) = TOP();
         break;
 
@@ -698,14 +734,12 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       case WASM_OPCODE_CALL_INDIRECT: {
         uint32_t sig_index = read_u32(&pc);
         assert(sig_index < module->sigs.size);
-        WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
-        uint32_t num_args = sig->param_types.size;
-        VALUE_TYPE_I32 entry_index = PICK(num_args + 1).i32;
+        VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= module->func_table.size, UNDEFINED_TABLE_INDEX);
         WasmInterpreterFuncTableEntry* entry =
             &module->func_table.data[entry_index];
-        TRAP_IF(entry->sig_index != sig_index,
-                INDIRECT_CALL_SIGNATURE_MISMATCH);
+        TRAP_UNLESS(signatures_are_equal(module, entry->sig_index, sig_index),
+                    INDIRECT_CALL_SIGNATURE_MISMATCH);
         PUSH_CALL();
         GOTO(entry->func_offset);
         break;
@@ -718,6 +752,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t sig_index = import->sig_index;
         assert(sig_index < module->sigs.size);
         WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
+
         uint32_t num_args = sig->param_types.size;
         uint32_t i;
         assert(num_args <= thread->import_args.size);
@@ -727,16 +762,21 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
           arg->type = sig->param_types.data[i - 1];
           arg->value = value;
         }
+
+        uint32_t num_results = sig->result_types.size;
+        WasmInterpreterTypedValue* call_result_values =
+            alloca(sizeof(WasmInterpreterTypedValue) * num_results);
+
         assert(import->callback);
-        WasmInterpreterTypedValue call_result_value;
-        WasmResult call_result =
-            import->callback(module, import, num_args, thread->import_args.data,
-                             &call_result_value, import->user_data);
+        WasmResult call_result = import->callback(
+            module, import, num_args, thread->import_args.data, num_results,
+            call_result_values, import->user_data);
         TRAP_IF(call_result != WASM_OK, IMPORT_TRAPPED);
-        if (sig->result_type != WASM_TYPE_VOID) {
-          TRAP_IF(call_result_value.type != sig->result_type,
+
+        for (i = 0; i < num_results; ++i) {
+          TRAP_IF(call_result_values[i].type != sig->result_types.data[i],
                   IMPORT_RESULT_TYPE_MISMATCH);
-          PUSH(call_result_value.value);
+          PUSH(call_result_values[i].value);
         }
         break;
       }
@@ -842,13 +882,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         uint32_t old_byte_size = module->memory.byte_size;
         VALUE_TYPE_I32 grow_pages = POP_I32();
         uint32_t new_page_size = old_page_size + grow_pages;
-        TRAP_IF((uint64_t)new_page_size * WASM_PAGE_SIZE > UINT32_MAX,
-                MEMORY_SIZE_OVERFLOW);
+        PUSH_NEG_1_AND_BREAK_IF(new_page_size > module->memory.max_page_size);
+        PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WASM_PAGE_SIZE >
+                                UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
         WasmAllocator* allocator = module->memory.allocator;
         void* new_data = wasm_realloc(allocator, module->memory.data,
                                       new_byte_size, WASM_DEFAULT_ALIGN);
-        TRAP_IF(new_data == NULL, OUT_OF_MEMORY);
+        PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
         module->memory.data = new_data;
@@ -1468,14 +1509,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
       }
 
-      case WASM_OPCODE_DISCARD:
+      case WASM_OPCODE_DROP:
         (void)POP();
         break;
 
-      case WASM_OPCODE_DISCARD_KEEP: {
-        uint32_t discard_count = read_u32(&pc);
+      case WASM_OPCODE_DROP_KEEP: {
+        uint32_t drop_count = read_u32(&pc);
         uint8_t keep_count = *pc++;
-        DISCARD_KEEP(discard_count, keep_count);
+        DROP_KEEP(drop_count, keep_count);
         break;
       }
 
@@ -1541,7 +1582,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_RETURN:
     case WASM_OPCODE_UNREACHABLE:
     case WASM_OPCODE_CURRENT_MEMORY:
-    case WASM_OPCODE_DISCARD:
+    case WASM_OPCODE_DROP:
       wasm_writef(stream, "%s\n", s_opcode_name[opcode]);
       break;
 
@@ -1569,6 +1610,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
       break;
 
     case WASM_OPCODE_SET_LOCAL:
+    case WASM_OPCODE_TEE_LOCAL:
       wasm_writef(stream, "%s $%u, %u\n", s_opcode_name[opcode],
                   read_u32_at(pc), TOP().i32);
       break;
@@ -1811,7 +1853,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
                   read_u32_at(pc), TOP().i32);
       break;
 
-    case WASM_OPCODE_DISCARD_KEEP:
+    case WASM_OPCODE_DROP_KEEP:
       wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode],
                   read_u32_at(pc), *(pc + 4));
       break;
@@ -1871,7 +1913,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_RETURN:
       case WASM_OPCODE_UNREACHABLE:
       case WASM_OPCODE_CURRENT_MEMORY:
-      case WASM_OPCODE_DISCARD:
+      case WASM_OPCODE_DROP:
         wasm_writef(stream, "%s\n", s_opcode_name[opcode]);
         break;
 
@@ -1899,6 +1941,7 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_SET_LOCAL:
+      case WASM_OPCODE_TEE_LOCAL:
         wasm_writef(stream, "%s $%u, %%[-1]\n", s_opcode_name[opcode],
                     read_u32(&pc));
         break;
@@ -2086,11 +2129,10 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
                     read_u32(&pc));
         break;
 
-      case WASM_OPCODE_DISCARD_KEEP: {
-        uint32_t discard = read_u32(&pc);
+      case WASM_OPCODE_DROP_KEEP: {
+        uint32_t drop = read_u32(&pc);
         uint32_t keep = *pc++;
-        wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode], discard,
-                    keep);
+        wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode], drop, keep);
         break;
       }
 
@@ -2105,11 +2147,11 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
           for (i = 0; i < num_entries; ++i) {
             wasm_writef(stream, "%4" PRIzd "| ", pc - istream);
             uint32_t offset;
-            uint32_t discard;
+            uint32_t drop;
             uint8_t keep;
-            read_table_entry_at(pc, &offset, &discard, &keep);
-            wasm_writef(stream, "  entry %d: offset: %u discard: %u keep: %u\n",
-                        i, offset, discard, keep);
+            read_table_entry_at(pc, &offset, &drop, &keep);
+            wasm_writef(stream, "  entry %d: offset: %u drop: %u keep: %u\n", i,
+                        offset, drop, keep);
             pc += WASM_TABLE_ENTRY_SIZE;
           }
         } else {
@@ -2139,12 +2181,13 @@ static void wasm_destroy_interpreter_func_signature(
     WasmAllocator* allocator,
     WasmInterpreterFuncSignature* sig) {
   wasm_destroy_type_vector(allocator, &sig->param_types);
+  wasm_destroy_type_vector(allocator, &sig->result_types);
 }
 
 static void wasm_destroy_interpreter_import(WasmAllocator* allocator,
                                             WasmInterpreterImport* import) {
   wasm_destroy_string_slice(allocator, &import->module_name);
-  wasm_destroy_string_slice(allocator, &import->func_name);
+  wasm_destroy_string_slice(allocator, &import->field_name);
 }
 
 static void wasm_destroy_interpreter_export(WasmAllocator* allocator,

@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (memory 1 (segment 80000 "hi")))
+(module
+  (memory 1 1)
+  (data (i32.const 80000) "hi"))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-address-oob.txt:2:20: address (80000) greater than initial memory size (65536)
-(module (memory 1 (segment 80000 "hi")))
-                   ^^^^^^^
+parse/module/bad-memory-segment-address-oob.txt:4:3: segment ends past the end of memory max size (65536)
+  (data (i32.const 80000) "hi"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

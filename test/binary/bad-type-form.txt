@@ -2,12 +2,12 @@
 ;;; TOOL: run-gen-wasm
 magic
 version
-section("type") {
+section(TYPE) {
   count[1]
   0x20
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000010: unexpected type form
+error: @0x0000000c: unexpected type form
 
 ;;; STDERR ;;)

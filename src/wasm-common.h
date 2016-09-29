@@ -41,6 +41,9 @@
 #define WASM_UNKNOWN_OFFSET ((uint32_t)~0)
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
 #define WASM_MAX_PAGES 0x0ffff /* # of pages that fit in 32-bit address space */
+#define WASM_BYTES_TO_PAGES(x) ((x) >> 16)
+#define WASM_ALIGN_UP_TO_PAGE(x) \
+  (((x) + WASM_PAGE_SIZE - 1) & ~(WASM_PAGE_SIZE - 1))
 
 #define PRIstringslice "%.*s"
 #define WASM_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
@@ -122,15 +125,33 @@ typedef struct WasmBinaryErrorHandler {
 
 /* matches binary format, do not change */
 enum {
-  WASM_TYPE_VOID,
-  WASM_TYPE_I32,
-  WASM_TYPE_I64,
-  WASM_TYPE_F32,
-  WASM_TYPE_F64,
+  WASM_TYPE_VOID = 0,
+  WASM_TYPE_I32 = 1,
+  WASM_TYPE_I64 = 2,
+  WASM_TYPE_F32 = 3,
+  WASM_TYPE_F64 = 4,
   WASM_NUM_TYPES,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
+  /* used when parsing multiple return types to signify an error */
+  /* TODO(binji): remove and support properly */
+  WASM_TYPE_MULTIPLE = WASM_NUM_TYPES,
 };
 typedef unsigned char WasmType;
+
+/* matches binary format, do not change */
+typedef enum WasmExternalKind {
+  WASM_EXTERNAL_KIND_FUNC = 0,
+  WASM_EXTERNAL_KIND_TABLE = 1,
+  WASM_EXTERNAL_KIND_MEMORY = 2,
+  WASM_EXTERNAL_KIND_GLOBAL = 3,
+  WASM_NUM_EXTERNAL_KINDS,
+} WasmExternalKind;
+
+typedef struct WasmLimits {
+  uint64_t initial;
+  uint64_t max;
+  WasmBool has_max;
+} WasmLimits;
 
 enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
@@ -146,7 +167,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
  *  tr  t1    t2   m  code  NAME text
  *  ============================ */
 #define WASM_FOREACH_OPCODE(V)                                          \
-  V(___, ___, ___, 0, 0x00, NOP, "nop")                                 \
+  V(___, ___, ___, 0, 0x00, UNREACHABLE, "unreachable")                 \
   V(___, ___, ___, 0, 0x01, BLOCK, "block")                             \
   V(___, ___, ___, 0, 0x02, LOOP, "loop")                               \
   V(___, ___, ___, 0, 0x03, IF, "if")                                   \
@@ -156,7 +177,8 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x07, BR_IF, "br_if")                             \
   V(___, ___, ___, 0, 0x08, BR_TABLE, "br_table")                       \
   V(___, ___, ___, 0, 0x09, RETURN, "return")                           \
-  V(___, ___, ___, 0, 0x0a, UNREACHABLE, "unreachable")                 \
+  V(___, ___, ___, 0, 0x0a, NOP, "nop")                                 \
+  V(___, ___, ___, 0, 0x0b, DROP, "drop")                               \
   V(___, ___, ___, 0, 0x0f, END, "end")                                 \
   V(I32, ___, ___, 0, 0x10, I32_CONST, "i32.const")                     \
   V(I64, ___, ___, 0, 0x11, I64_CONST, "i64.const")                     \
@@ -166,7 +188,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(___, ___, ___, 0, 0x15, SET_LOCAL, "set_local")                     \
   V(___, ___, ___, 0, 0x16, CALL_FUNCTION, "call")                      \
   V(___, ___, ___, 0, 0x17, CALL_INDIRECT, "call_indirect")             \
-  V(___, ___, ___, 0, 0x18, CALL_IMPORT, "call_import")                 \
+  V(___, ___, ___, 0, 0x19, TEE_LOCAL, "tee_local")                     \
   V(I32, I32, ___, 1, 0x20, I32_LOAD8_S, "i32.load8_s")                 \
   V(I32, I32, ___, 1, 0x21, I32_LOAD8_U, "i32.load8_u")                 \
   V(I32, I32, ___, 2, 0x22, I32_LOAD16_S, "i32.load16_s")               \
@@ -181,15 +203,15 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I64, I32, ___, 8, 0x2b, I64_LOAD, "i64.load")                       \
   V(F32, I32, ___, 4, 0x2c, F32_LOAD, "f32.load")                       \
   V(F64, I32, ___, 8, 0x2d, F64_LOAD, "f64.load")                       \
-  V(I32, I32, I32, 1, 0x2e, I32_STORE8, "i32.store8")                   \
-  V(I32, I32, I32, 2, 0x2f, I32_STORE16, "i32.store16")                 \
-  V(I64, I32, I64, 1, 0x30, I64_STORE8, "i64.store8")                   \
-  V(I64, I32, I64, 2, 0x31, I64_STORE16, "i64.store16")                 \
-  V(I64, I32, I64, 4, 0x32, I64_STORE32, "i64.store32")                 \
-  V(I32, I32, I32, 4, 0x33, I32_STORE, "i32.store")                     \
-  V(I64, I32, I64, 8, 0x34, I64_STORE, "i64.store")                     \
-  V(F32, I32, F32, 4, 0x35, F32_STORE, "f32.store")                     \
-  V(F64, I32, F64, 8, 0x36, F64_STORE, "f64.store")                     \
+  V(___, I32, I32, 1, 0x2e, I32_STORE8, "i32.store8")                   \
+  V(___, I32, I32, 2, 0x2f, I32_STORE16, "i32.store16")                 \
+  V(___, I32, I64, 1, 0x30, I64_STORE8, "i64.store8")                   \
+  V(___, I32, I64, 2, 0x31, I64_STORE16, "i64.store16")                 \
+  V(___, I32, I64, 4, 0x32, I64_STORE32, "i64.store32")                 \
+  V(___, I32, I32, 4, 0x33, I32_STORE, "i32.store")                     \
+  V(___, I32, I64, 8, 0x34, I64_STORE, "i64.store")                     \
+  V(___, I32, F32, 4, 0x35, F32_STORE, "f32.store")                     \
+  V(___, I32, F64, 8, 0x36, F64_STORE, "f64.store")                     \
   V(I32, ___, ___, 0, 0x3b, CURRENT_MEMORY, "current_memory")           \
   V(I32, I32, ___, 0, 0x39, GROW_MEMORY, "grow_memory")                 \
   V(I32, I32, I32, 0, 0x40, I32_ADD, "i32.add")                         \
@@ -314,7 +336,9 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, I32, I32, 0, 0xb7, I32_ROTL, "i32.rotl")                       \
   V(I64, I64, I64, 0, 0xb8, I64_ROTR, "i64.rotr")                       \
   V(I64, I64, I64, 0, 0xb9, I64_ROTL, "i64.rotl")                       \
-  V(I32, I64, ___, 0, 0xba, I64_EQZ, "i64.eqz")
+  V(I32, I64, ___, 0, 0xba, I64_EQZ, "i64.eqz")                         \
+  V(___, ___, ___, 0, 0xbb, GET_GLOBAL, "get_global")                   \
+  V(___, ___, ___, 0, 0xbc, SET_GLOBAL, "set_global")
 
 typedef enum WasmOpcode {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \

@@ -1,0 +1,5 @@
+(module
+  (global i32)
+  (global (mut f32))
+  (export "global0" (global 0))
+  (export "global1" (global 1)))

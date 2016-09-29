@@ -1,9 +1,0 @@
-;;; ERROR: 1
-(module
-  (import $foo "bar" "baz" (param i32))
-  (import $foo "quux" "blorf" (param f32)))
-(;; STDERR ;;;
-parse/module/bad-import-redefinition.txt:4:3: redefinition of import "$foo"
-  (import $foo "quux" "blorf" (param f32)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-;;; STDERR ;;)

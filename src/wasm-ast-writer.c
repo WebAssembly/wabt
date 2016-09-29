@@ -66,6 +66,13 @@ typedef struct Context {
   NextChar next_char;
   int depth;
   WasmStringSliceVector index_to_name;
+
+  int func_index;
+  int global_index;
+  int export_index;
+  int table_index;
+  int memory_index;
+  int func_type_index;
 } Context;
 
 static void indent(Context* ctx) {
@@ -137,6 +144,10 @@ static void write_puts(Context* ctx, const char* s, NextChar next_char) {
 
 static void write_puts_space(Context* ctx, const char* s) {
   write_puts(ctx, s, NEXT_CHAR_SPACE);
+}
+
+static void write_puts_newline(Context* ctx, const char* s) {
+  write_puts(ctx, s, NEXT_CHAR_NEWLINE);
 }
 
 static void write_newline(Context* ctx, WasmBool force) {
@@ -250,70 +261,90 @@ static void write_type(Context* ctx, WasmType type, NextChar next_char) {
   write_puts(ctx, s_types[type], next_char);
 }
 
+static void write_types(Context* ctx,
+                        const WasmTypeVector* types,
+                        const char* name) {
+  if (types->size) {
+    size_t i;
+    if (name)
+      write_open_space(ctx, name);
+    for (i = 0; i < types->size; ++i)
+      write_type(ctx, types->data[i], NEXT_CHAR_SPACE);
+    if (name)
+      write_close_space(ctx);
+  }
+}
+
 static void write_func_sig_space(Context* ctx,
                                  const WasmFuncSignature* func_sig) {
-  if (func_sig->param_types.size) {
-    size_t i;
-    write_open_space(ctx, "param");
-    for (i = 0; i < func_sig->param_types.size; ++i) {
-      write_type(ctx, func_sig->param_types.data[i], NEXT_CHAR_SPACE);
-    }
-    write_close_space(ctx);
-  }
-
-  if (func_sig->result_type != WASM_TYPE_VOID) {
-    write_open_space(ctx, "result");
-    write_type(ctx, func_sig->result_type, NEXT_CHAR_NONE);
-    write_close_space(ctx);
-  }
+  write_types(ctx, &func_sig->param_types, "param");
+  write_types(ctx, &func_sig->result_types, "result");
 }
 
 static void write_expr_list(Context* ctx, const WasmExpr* first);
 
 static void write_expr(Context* ctx, const WasmExpr* expr);
 
-static void write_block(Context* ctx,
-                        const WasmBlock* block,
-                        const char* text) {
-  write_open_space(ctx, text);
-  if (!write_string_slice_opt(ctx, &block->label, NEXT_CHAR_SPACE))
+static void write_begin_block(Context* ctx,
+                              const WasmBlock* block,
+                              const char* text) {
+  if (text)
+    write_puts_space(ctx, text);
+  WasmBool has_label =
+      write_string_slice_opt(ctx, &block->label, NEXT_CHAR_SPACE);
+  write_types(ctx, &block->sig, NULL);
+  if (!has_label)
     writef(ctx, " ;; exit = @%d", ctx->depth);
   write_newline(ctx, FORCE_NEWLINE);
   ctx->depth++;
-  write_expr_list(ctx, block->first);
+  indent(ctx);
+}
+
+static void write_end_block(Context* ctx, const char* text) {
+  dedent(ctx);
   ctx->depth--;
-  write_close_newline(ctx);
+  if (text)
+    write_puts_newline(ctx, text);
+}
+
+static void write_block(Context* ctx,
+                        const WasmBlock* block,
+                        const char* start_text,
+                        const char* end_text) {
+  write_begin_block(ctx, block, start_text);
+  write_expr_list(ctx, block->first);
+  write_end_block(ctx, end_text);
 }
 
 static void write_const(Context* ctx, const WasmConst* const_) {
   switch (const_->type) {
     case WASM_TYPE_I32:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_I32_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_I32_CONST]);
       writef(ctx, "%d", (int32_t)const_->u32);
-      write_close_newline(ctx);
+      write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
     case WASM_TYPE_I64:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_I64_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_I64_CONST]);
       writef(ctx, "%" PRId64, (int64_t)const_->u64);
-      write_close_newline(ctx);
+      write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
     case WASM_TYPE_F32: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_F32_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_F32_CONST]);
       char buffer[128];
       wasm_write_float_hex(buffer, 128, const_->f32_bits);
       write_puts_space(ctx, buffer);
-      write_close_newline(ctx);
+      write_newline(ctx, NO_FORCE_NEWLINE);
       break;
     }
 
     case WASM_TYPE_F64: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_F64_CONST]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_F64_CONST]);
       char buffer[128];
       wasm_write_double_hex(buffer, 128, const_->f64_bits);
       write_puts_space(ctx, buffer);
-      write_close_newline(ctx);
+      write_newline(ctx, NO_FORCE_NEWLINE);
       break;
     }
 
@@ -326,76 +357,45 @@ static void write_const(Context* ctx, const WasmConst* const_) {
 static void write_expr(Context* ctx, const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      write_open_newline(ctx, s_opcode_name[expr->binary.opcode]);
-      write_expr(ctx, expr->binary.left);
-      write_expr(ctx, expr->binary.right);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->binary.opcode]);
       break;
 
     case WASM_EXPR_TYPE_BLOCK:
-      write_block(ctx, &expr->block, s_opcode_name[WASM_OPCODE_BLOCK]);
+      write_block(ctx, &expr->block, s_opcode_name[WASM_OPCODE_BLOCK],
+                  s_opcode_name[WASM_OPCODE_END]);
       break;
 
     case WASM_EXPR_TYPE_BR:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
       write_br_var(ctx, &expr->br.var, NEXT_CHAR_NEWLINE);
-      if (expr->br.expr)
-        write_expr(ctx, expr->br.expr);
-      write_close_newline(ctx);
       break;
 
     case WASM_EXPR_TYPE_BR_IF:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_BR_IF]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR_IF]);
       write_br_var(ctx, &expr->br_if.var, NEXT_CHAR_NEWLINE);
-      if (expr->br_if.expr)
-        write_expr(ctx, expr->br_if.expr);
-      write_expr(ctx, expr->br_if.cond);
-      write_close_newline(ctx);
       break;
 
     case WASM_EXPR_TYPE_BR_TABLE: {
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_BR_TABLE]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR_TABLE]);
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i)
         write_br_var(ctx, &expr->br_table.targets.data[i], NEXT_CHAR_SPACE);
       write_br_var(ctx, &expr->br_table.default_target, NEXT_CHAR_NEWLINE);
-      if (expr->br_table.expr)
-        write_expr(ctx, expr->br_table.expr);
-      write_expr(ctx, expr->br_table.key);
-      write_close_newline(ctx);
       break;
     }
 
-    case WASM_EXPR_TYPE_CALL: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
+    case WASM_EXPR_TYPE_CALL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
       write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
-      write_expr_list(ctx, expr->call.first_arg);
-      write_close_newline(ctx);
       break;
-    }
 
-    case WASM_EXPR_TYPE_CALL_IMPORT: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_IMPORT]);
-      write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
-      write_expr_list(ctx, expr->call.first_arg);
-      write_close_newline(ctx);
-      break;
-    }
-
-    case WASM_EXPR_TYPE_CALL_INDIRECT: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
+    case WASM_EXPR_TYPE_CALL_INDIRECT:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
       write_var(ctx, &expr->call_indirect.var, NEXT_CHAR_NEWLINE);
-      write_expr(ctx, expr->call_indirect.expr);
-      write_expr_list(ctx, expr->call_indirect.first_arg);
-      write_close_newline(ctx);
       break;
-    }
 
     case WASM_EXPR_TYPE_COMPARE:
-      write_open_newline(ctx, s_opcode_name[expr->compare.opcode]);
-      write_expr(ctx, expr->compare.left);
-      write_expr(ctx, expr->compare.right);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->compare.opcode]);
       break;
 
     case WASM_EXPR_TYPE_CONST:
@@ -403,126 +403,100 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_CONVERT:
-      write_open_newline(ctx, s_opcode_name[expr->convert.opcode]);
-      write_expr(ctx, expr->convert.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->convert.opcode]);
+      break;
+
+    case WASM_EXPR_TYPE_DROP:
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_DROP]);
+      break;
+
+    case WASM_EXPR_TYPE_GET_GLOBAL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_GET_GLOBAL]);
+      write_var(ctx, &expr->get_global.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_GET_LOCAL:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
-      write_var(ctx, &expr->get_local.var, NEXT_CHAR_NONE);
-      write_close_newline(ctx);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
+      write_var(ctx, &expr->get_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_GROW_MEMORY]);
-      write_expr(ctx, expr->grow_memory.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_GROW_MEMORY]);
       break;
 
-    case WASM_EXPR_TYPE_IF: {
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_IF]);
-      write_expr(ctx, expr->if_.cond);
-      write_block(ctx, &expr->if_.true_, "then");
-      write_close_newline(ctx);
+    case WASM_EXPR_TYPE_IF:
+      write_begin_block(ctx, &expr->if_.true_, s_opcode_name[WASM_OPCODE_IF]);
+      write_expr_list(ctx, expr->if_.true_.first);
+      if (expr->if_.false_) {
+        dedent(ctx);
+        write_puts_space(ctx, s_opcode_name[WASM_OPCODE_ELSE]);
+        indent(ctx);
+        write_newline(ctx, FORCE_NEWLINE);
+        write_expr_list(ctx, expr->if_.false_);
+      }
+      write_end_block(ctx, s_opcode_name[WASM_OPCODE_END]);
       break;
-    }
-
-    case WASM_EXPR_TYPE_IF_ELSE: {
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_IF]);
-      write_expr(ctx, expr->if_else.cond);
-      write_block(ctx, &expr->if_else.true_, "then");
-      write_block(ctx, &expr->if_else.false_, "else");
-      write_close_newline(ctx);
-      break;
-    }
 
     case WASM_EXPR_TYPE_LOAD:
-      write_open_space(ctx, s_opcode_name[expr->load.opcode]);
+      write_puts_space(ctx, s_opcode_name[expr->load.opcode]);
       if (expr->load.offset)
         writef(ctx, "offset=%" PRIu64, expr->load.offset);
       if (!wasm_is_naturally_aligned(expr->load.opcode, expr->load.align))
         writef(ctx, "align=%u", expr->load.align);
       write_newline(ctx, NO_FORCE_NEWLINE);
-      write_expr(ctx, expr->load.addr);
-      write_close_newline(ctx);
       break;
 
-    case WASM_EXPR_TYPE_LOOP: {
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_LOOP]);
-      WasmBool has_outer_name =
-          write_string_slice_opt(ctx, &expr->loop.outer, NEXT_CHAR_SPACE);
-      WasmBool has_inner_name =
-          write_string_slice_opt(ctx, &expr->loop.inner, NEXT_CHAR_SPACE);
-      if (!has_outer_name || !has_inner_name) {
-        writef(ctx, " ;;");
-        if (!has_outer_name)
-          writef(ctx, "exit = @%d", ctx->depth);
-        if (!has_inner_name) {
-          writef(ctx, "cont = @%d", ctx->depth + 1);
-        }
-      }
-      write_newline(ctx, FORCE_NEWLINE);
-      ctx->depth += 2;
-      write_expr_list(ctx, expr->loop.first);
-      ctx->depth -= 2;
-      write_close_newline(ctx);
+    case WASM_EXPR_TYPE_LOOP:
+      write_block(ctx, &expr->loop, s_opcode_name[WASM_OPCODE_LOOP],
+                  s_opcode_name[WASM_OPCODE_END]);
       break;
-    }
 
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
       break;
 
     case WASM_EXPR_TYPE_NOP:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_NOP]);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_NOP]);
       break;
 
     case WASM_EXPR_TYPE_RETURN:
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_RETURN]);
-      if (expr->return_.expr)
-        write_expr(ctx, expr->return_.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_RETURN]);
       break;
 
     case WASM_EXPR_TYPE_SELECT:
-      write_open_newline(ctx, s_opcode_name[WASM_OPCODE_SELECT]);
-      write_expr(ctx, expr->select.true_);
-      write_expr(ctx, expr->select.false_);
-      write_expr(ctx, expr->select.cond);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_SELECT]);
+      break;
+
+    case WASM_EXPR_TYPE_SET_GLOBAL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_SET_GLOBAL]);
+      write_var(ctx, &expr->set_global.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
       write_var(ctx, &expr->set_local.var, NEXT_CHAR_NEWLINE);
-      write_expr(ctx, expr->set_local.expr);
-      write_close_newline(ctx);
       break;
 
     case WASM_EXPR_TYPE_STORE:
-      write_open_space(ctx, s_opcode_name[expr->store.opcode]);
+      write_puts_space(ctx, s_opcode_name[expr->store.opcode]);
       if (expr->store.offset)
         writef(ctx, "offset=%" PRIu64, expr->store.offset);
       if (!wasm_is_naturally_aligned(expr->store.opcode, expr->store.align))
         writef(ctx, "align=%u", expr->store.align);
       write_newline(ctx, NO_FORCE_NEWLINE);
-      write_expr(ctx, expr->store.addr);
-      write_expr(ctx, expr->store.value);
-      write_close_newline(ctx);
+      break;
+
+    case WASM_EXPR_TYPE_TEE_LOCAL:
+      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_TEE_LOCAL]);
+      write_var(ctx, &expr->tee_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_UNARY:
-      write_open_newline(ctx, s_opcode_name[expr->unary.opcode]);
-      write_expr(ctx, expr->unary.expr);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[expr->unary.opcode]);
       break;
 
     case WASM_EXPR_TYPE_UNREACHABLE:
-      write_open_space(ctx, s_opcode_name[WASM_OPCODE_UNREACHABLE]);
-      write_close_newline(ctx);
+      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_UNREACHABLE]);
       break;
 
     default:
@@ -536,6 +510,16 @@ static void write_expr_list(Context* ctx, const WasmExpr* first) {
   const WasmExpr* expr;
   for (expr = first; expr; expr = expr->next)
     write_expr(ctx, expr);
+}
+
+static void write_init_expr(Context* ctx, const WasmExpr* expr) {
+  if (expr) {
+    write_puts(ctx, "(", NEXT_CHAR_NONE);
+    write_expr(ctx, expr);
+    /* clear the next char, so we don't write a newline after the expr */
+    ctx->next_char = NEXT_CHAR_NONE;
+    write_puts(ctx, ")", NEXT_CHAR_SPACE);
+  }
 }
 
 static void write_type_bindings(Context* ctx,
@@ -575,10 +559,10 @@ static void write_type_bindings(Context* ctx,
 
 static void write_func(Context* ctx,
                        const WasmModule* module,
-                       int func_index,
                        const WasmFunc* func) {
   write_open_space(ctx, "func");
-  write_string_slice_or_index(ctx, &func->name, func_index, NEXT_CHAR_SPACE);
+  write_string_slice_or_index(ctx, &func->name, ctx->func_index,
+                              NEXT_CHAR_SPACE);
   if (wasm_decl_has_func_type(&func->decl)) {
     write_open_space(ctx, "type");
     write_var(ctx, &func->decl.type_var, NEXT_CHAR_NONE);
@@ -586,11 +570,7 @@ static void write_func(Context* ctx,
   }
   write_type_bindings(ctx, "param", func, &func->decl.sig.param_types,
                       &func->param_bindings);
-  if (wasm_get_result_type(module, func) != WASM_TYPE_VOID) {
-    write_open_space(ctx, "result");
-    write_type(ctx, wasm_get_result_type(module, func), NEXT_CHAR_NONE);
-    write_close_space(ctx);
-  }
+  write_types(ctx, &func->decl.sig.result_types, "result");
   write_newline(ctx, NO_FORCE_NEWLINE);
   if (func->local_types.size) {
     write_type_bindings(ctx, "local", func, &func->local_types,
@@ -602,74 +582,136 @@ static void write_func(Context* ctx,
   write_close_newline(ctx);
 }
 
-static void write_import(Context* ctx,
-                         int import_index,
-                         const WasmImport* import) {
-  write_open_space(ctx, "import");
-  write_string_slice_or_index(ctx, &import->name, import_index,
+static void write_begin_global(Context* ctx, const WasmGlobal* global) {
+  write_open_space(ctx, "global");
+  write_string_slice_or_index(ctx, &global->name, ctx->global_index++,
                               NEXT_CHAR_SPACE);
-  write_quoted_string_slice(ctx, &import->module_name, NEXT_CHAR_SPACE);
-  write_quoted_string_slice(ctx, &import->func_name, NEXT_CHAR_SPACE);
-  if (wasm_decl_has_func_type(&import->decl)) {
-    write_open_space(ctx, "type");
-    write_var(ctx, &import->decl.type_var, NEXT_CHAR_NONE);
+  if (global->mutable_) {
+    write_open_space(ctx, "mut");
+    write_type(ctx, global->type, NEXT_CHAR_SPACE);
     write_close_space(ctx);
   } else {
-    write_func_sig_space(ctx, &import->decl.sig);
+    write_type(ctx, global->type, NEXT_CHAR_SPACE);
   }
+}
+
+static void write_global(Context* ctx, const WasmGlobal* global) {
+  write_begin_global(ctx, global);
+  write_init_expr(ctx, global->init_expr);
   write_close_newline(ctx);
 }
 
-static void write_export(Context* ctx,
-                         int export_index,
-                         const WasmExport* export) {
-  write_open_space(ctx, "export");
-  write_quoted_string_slice(ctx, &export->name, NEXT_CHAR_SPACE);
-  write_var(ctx, &export->var, NEXT_CHAR_SPACE);
-  write_close_newline(ctx);
+static void write_limits(Context* ctx, const WasmLimits* limits) {
+  writef(ctx, "%" PRIu64, limits->initial);
+  if (limits->has_max)
+    writef(ctx, "%" PRIu64, limits->max);
 }
 
-static void write_export_memory(Context* ctx, const WasmExportMemory* export) {
-  write_open_space(ctx, "export");
-  write_quoted_string_slice(ctx, &export->name, NEXT_CHAR_SPACE);
-  write_puts_space(ctx, "memory");
-  write_close_newline(ctx);
-}
-
-static void write_table(Context* ctx, const WasmVarVector* table) {
+static void write_table(Context* ctx, const WasmTable* table) {
   write_open_space(ctx, "table");
-  size_t i;
-  for (i = 0; i < table->size; ++i)
-    write_var(ctx, &table->data[i], NEXT_CHAR_SPACE);
+  write_string_slice_or_index(ctx, &table->name, ctx->table_index++,
+                              NEXT_CHAR_SPACE);
+  write_limits(ctx, &table->elem_limits);
+  write_puts_space(ctx, "anyfunc");
   write_close_newline(ctx);
 }
 
-static void write_segment(Context* ctx, const WasmSegment* segment) {
-  write_open_space(ctx, "segment");
-  writef(ctx, "%u", segment->addr);
-  write_quoted_data(ctx, segment->data, segment->size);
+static void write_elem_segment(Context* ctx, const WasmElemSegment* segment) {
+  write_open_space(ctx, "elem");
+  write_init_expr(ctx, segment->offset);
+  size_t i;
+  for (i = 0; i < segment->vars.size; ++i)
+    write_var(ctx, &segment->vars.data[i], NEXT_CHAR_SPACE);
   write_close_newline(ctx);
 }
 
 static void write_memory(Context* ctx, const WasmMemory* memory) {
   write_open_space(ctx, "memory");
-  writef(ctx, "%" PRIu64, memory->initial_pages);
-  if (memory->initial_pages != memory->max_pages)
-    writef(ctx, "%" PRIu64, memory->max_pages);
-  write_newline(ctx, NO_FORCE_NEWLINE);
-  size_t i;
-  for (i = 0; i < memory->segments.size; ++i) {
-    const WasmSegment* segment = &memory->segments.data[i];
-    write_segment(ctx, segment);
+  write_string_slice_or_index(ctx, &memory->name, ctx->memory_index++,
+                              NEXT_CHAR_SPACE);
+  write_limits(ctx, &memory->page_limits);
+  write_close_newline(ctx);
+}
+
+static void write_data_segment(Context* ctx, const WasmDataSegment* segment) {
+  write_open_space(ctx, "data");
+  write_init_expr(ctx, segment->offset);
+  write_quoted_data(ctx, segment->data, segment->size);
+  write_close_newline(ctx);
+}
+
+static void write_import(Context* ctx, const WasmImport* import) {
+  write_open_space(ctx, "import");
+  uint32_t index = 0;
+  switch (import->kind) {
+    case WASM_EXTERNAL_KIND_FUNC:
+      index = ctx->func_index;
+      break;
+    case WASM_EXTERNAL_KIND_TABLE:
+      index = ctx->table_index;
+      break;
+    case WASM_EXTERNAL_KIND_MEMORY:
+      index = ctx->memory_index;
+      break;
+    case WASM_EXTERNAL_KIND_GLOBAL:
+      index = ctx->global_index;
+      break;
+    case WASM_NUM_EXTERNAL_KINDS:
+      assert(0);
+      break;
+  }
+  write_quoted_string_slice(ctx, &import->module_name, NEXT_CHAR_SPACE);
+  write_quoted_string_slice(ctx, &import->field_name, NEXT_CHAR_SPACE);
+  switch (import->kind) {
+    case WASM_EXTERNAL_KIND_FUNC:
+      write_open_space(ctx, "func");
+      write_string_slice_or_index(ctx, &import->func.name, index,
+                                  NEXT_CHAR_SPACE);
+      if (wasm_decl_has_func_type(&import->func.decl)) {
+        write_open_space(ctx, "type");
+        write_var(ctx, &import->func.decl.type_var, NEXT_CHAR_NONE);
+        write_close_space(ctx);
+      } else {
+        write_func_sig_space(ctx, &import->func.decl.sig);
+      }
+      write_close_space(ctx);
+      break;
+
+    case WASM_EXTERNAL_KIND_TABLE:
+      write_table(ctx, &import->table);
+      break;
+
+    case WASM_EXTERNAL_KIND_MEMORY:
+      write_memory(ctx, &import->memory);
+      break;
+
+    case WASM_EXTERNAL_KIND_GLOBAL:
+      write_begin_global(ctx, &import->global);
+      write_close_space(ctx);
+      break;
+
+    case WASM_NUM_EXTERNAL_KINDS:
+      assert(0);
+      break;
   }
   write_close_newline(ctx);
 }
 
-static void write_func_type(Context* ctx,
-                            int func_type_index,
-                            const WasmFuncType* func_type) {
+static void write_export(Context* ctx, const WasmExport* export) {
+  static const char* s_kind_names[] = {"func", "table", "memory", "global"};
+  WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_kind_names) == WASM_NUM_EXTERNAL_KINDS);
+  write_open_space(ctx, "export");
+  write_quoted_string_slice(ctx, &export->name, NEXT_CHAR_SPACE);
+  assert(export->kind < WASM_ARRAY_SIZE(s_kind_names));
+  write_open_space(ctx, s_kind_names[export->kind]);
+  write_var(ctx, &export->var, NEXT_CHAR_SPACE);
+  write_close_space(ctx);
+  write_close_newline(ctx);
+}
+
+static void write_func_type(Context* ctx, const WasmFuncType* func_type) {
   write_open_space(ctx, "type");
-  write_string_slice_or_index(ctx, &func_type->name, func_type_index,
+  write_string_slice_or_index(ctx, &func_type->name, ctx->func_type_index++,
                               NEXT_CHAR_SPACE);
   write_open_space(ctx, "func");
   write_func_sig_space(ctx, &func_type->sig);
@@ -686,32 +728,34 @@ static void write_start_function(Context* ctx, const WasmVar* start) {
 static void write_module(Context* ctx, const WasmModule* module) {
   write_open_newline(ctx, "module");
   const WasmModuleField* field;
-  int func_index = 0;
-  int import_index = 0;
-  int export_index = 0;
-  int func_type_index = 0;
   for (field = module->first_field; field != NULL; field = field->next) {
     switch (field->type) {
       case WASM_MODULE_FIELD_TYPE_FUNC:
-        write_func(ctx, module, func_index++, &field->func);
+        write_func(ctx, module, &field->func);
+        break;
+      case WASM_MODULE_FIELD_TYPE_GLOBAL:
+        write_global(ctx, &field->global);
         break;
       case WASM_MODULE_FIELD_TYPE_IMPORT:
-        write_import(ctx, import_index++, &field->import);
+        write_import(ctx, &field->import);
         break;
       case WASM_MODULE_FIELD_TYPE_EXPORT:
-        write_export(ctx, export_index++, &field->export_);
-        break;
-      case WASM_MODULE_FIELD_TYPE_EXPORT_MEMORY:
-        write_export_memory(ctx, &field->export_memory);
+        write_export(ctx, &field->export_);
         break;
       case WASM_MODULE_FIELD_TYPE_TABLE:
         write_table(ctx, &field->table);
         break;
+      case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+        write_elem_segment(ctx, &field->elem_segment);
+        break;
       case WASM_MODULE_FIELD_TYPE_MEMORY:
         write_memory(ctx, &field->memory);
         break;
+      case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
+        write_data_segment(ctx, &field->data_segment);
+        break;
       case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
-        write_func_type(ctx, func_type_index++, &field->func_type);
+        write_func_type(ctx, &field->func_type);
         break;
       case WASM_MODULE_FIELD_TYPE_START:
         write_start_function(ctx, &field->start);

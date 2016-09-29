@@ -1,52 +1,51 @@
 ;;; FLAGS: -dv
 (module
-  (import "ignored" "test" (param i32 i64 f32 f64))
-  (import "ignored" "test2" (param i32) (result i32)))
+  (import "ignored" "test" (func (param i32 i64 f32 f64)))
+  (import "ignored" "test2" (func (param i32) (result i32))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 02                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 02                                         ; num types
 ; type 0
-000000f: 40                                         ; function form
-0000010: 04                                         ; num params
-0000011: 01                                         ; param type
-0000012: 02                                         ; param type
-0000013: 03                                         ; param type
-0000014: 04                                         ; param type
-0000015: 00                                         ; num results
+000000b: 40                                         ; function form
+000000c: 04                                         ; num params
+000000d: 01                                         ; param type
+000000e: 02                                         ; param type
+000000f: 03                                         ; param type
+0000010: 04                                         ; param type
+0000011: 00                                         ; num results
 ; type 1
-0000016: 40                                         ; function form
-0000017: 01                                         ; num params
-0000018: 01                                         ; param type
-0000019: 01                                         ; num results
-000001a: 01                                         ; result_type
-000000d: 0d                                         ; FIXUP section size
-; section "import"
-000001b: 06                                         ; string length
-000001c: 696d 706f 7274                             ; section id: "import"
-0000022: 00                                         ; section size (guess)
-0000023: 02                                         ; num imports
+0000012: 40                                         ; function form
+0000013: 01                                         ; num params
+0000014: 01                                         ; param type
+0000015: 01                                         ; num results
+0000016: 01                                         ; result type
+0000009: 0d                                         ; FIXUP section size
+; section "IMPORT" (2)
+0000017: 02                                         ; section code
+0000018: 00                                         ; section size (guess)
+0000019: 02                                         ; num imports
 ; import header 0
-0000024: 00                                         ; import signature index
-0000025: 07                                         ; string length
-0000026: 6967 6e6f 7265 64                        ignored  ; import module name
-000002d: 04                                         ; string length
-000002e: 7465 7374                                test  ; import function name
+000001a: 07                                         ; string length
+000001b: 6967 6e6f 7265 64                        ignored  ; import module name
+0000022: 04                                         ; string length
+0000023: 7465 7374                                test  ; import field name
+0000027: 00                                         ; import kind
+0000028: 00                                         ; import signature index
 ; import header 1
-0000032: 01                                         ; import signature index
-0000033: 07                                         ; string length
-0000034: 6967 6e6f 7265 64                        ignored  ; import module name
-000003b: 05                                         ; string length
-000003c: 7465 7374 32                             test2  ; import function name
-0000022: 1e                                         ; FIXUP section size
+0000029: 07                                         ; string length
+000002a: 6967 6e6f 7265 64                        ignored  ; import module name
+0000031: 05                                         ; string length
+0000032: 7465 7374 32                             test2  ; import field name
+0000037: 00                                         ; import kind
+0000038: 01                                         ; import signature index
+0000018: 20                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 650d 0240  
-0000010: 0401 0203 0400 4001 0101 0106 696d 706f  
-0000020: 7274 1e02 0007 6967 6e6f 7265 6404 7465  
-0000030: 7374 0107 6967 6e6f 7265 6405 7465 7374  
-0000040: 32                                       
+0000000: 0061 736d 0c00 0000 010d 0240 0401 0203  
+0000010: 0400 4001 0101 0102 2002 0769 676e 6f72  
+0000020: 6564 0474 6573 7400 0007 6967 6e6f 7265  
+0000030: 6405 7465 7374 3200 01                   
 ;;; STDOUT ;;)

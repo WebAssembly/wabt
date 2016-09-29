@@ -2,16 +2,19 @@
 ;;; TOOL: run-gen-wasm-interp
 magic
 version
-section("memory") {
+section(MEMORY) {
+  count[1]
+  has_max[0]
   initial[0]
-  max[1]
-  export[0]
 }
-section("data") {
-  count[1] addr[0] data[str("overflow")]
+section(DATA) {
+  count[1]
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("overflow")]
 }
 (;; STDERR ;;;
 Error running "wasm-interp":
-error: @0x00000024: on_data_segment callback failed
+error: @0x0000001d: on_data_segment_data callback failed
 
 ;;; STDERR ;;)

@@ -48,27 +48,56 @@ typedef struct WasmTextList {
   WasmTextListNode* last;
 } WasmTextList;
 
+typedef struct WasmOptionalExport {
+  WasmExport export_;
+  WasmBool has_export;
+} WasmOptionalExport;
+
 typedef struct WasmExportedFunc {
   WasmFunc* func;
-  WasmExport export_;
+  WasmOptionalExport export_;
 } WasmExportedFunc;
+
+typedef struct WasmExportedGlobal {
+  WasmGlobal global;
+  WasmOptionalExport export_;
+} WasmExportedGlobal;
+
+typedef struct WasmExportedTable {
+  WasmTable table;
+  WasmElemSegment elem_segment;
+  WasmOptionalExport export_;
+  WasmBool has_elem_segment;
+} WasmExportedTable;
+
+typedef struct WasmExportedMemory {
+  WasmMemory memory;
+  WasmDataSegment data_segment;
+  WasmOptionalExport export_;
+  WasmBool has_data_segment;
+} WasmExportedMemory;
 
 typedef enum WasmFuncFieldType {
   WASM_FUNC_FIELD_TYPE_EXPRS,
   WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
   WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
-  WASM_FUNC_FIELD_TYPE_RESULT_TYPE,
+  WASM_FUNC_FIELD_TYPE_RESULT_TYPES,
   WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
   WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
 } WasmFuncFieldType;
 
+typedef struct WasmBoundType {
+  WasmLocation loc;
+  WasmStringSlice name;
+  WasmType type;
+} WasmBoundType;
+
 typedef struct WasmFuncField {
   WasmFuncFieldType type;
   union {
-    WasmExpr* first_expr;
-    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_{PARAM,LOCAL}_TYPES */
+    WasmExpr* first_expr;     /* WASM_FUNC_FIELD_TYPE_EXPRS */
+    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_*_TYPES */
     WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
-    WasmType result_type;
   };
   struct WasmFuncField* next;
 } WasmFuncField;
@@ -83,32 +112,40 @@ typedef union WasmToken {
   /* non-terminals */
   /* some of these use pointers to keep the size of WasmToken down; copying the
    tokens is a hotspot when parsing large files. */
-  uint32_t u32;
-  uint64_t u64;
-  WasmTextList text_list;
-  WasmTypeVector types;
-  WasmVar var;
-  WasmVarVector vars;
+  WasmAction action;
+  WasmBlock block;
+  WasmCommand* command;
+  WasmCommandVector commands;
+  WasmConst const_;
+  WasmConstVector consts;
+  WasmDataSegment data_segment;
+  WasmElemSegment elem_segment;
+  WasmExport export_;
+  WasmExportedFunc exported_func;
+  WasmExportedGlobal exported_global;
+  WasmExportedMemory exported_memory;
+  WasmExportedTable exported_table;
   WasmExpr* expr;
   WasmExprList expr_list;
   WasmFuncField* func_fields;
   WasmFunc* func;
-  WasmExportedFunc exported_func;
-  WasmSegment segment;
-  WasmSegmentVector segments;
-  WasmMemory memory;
   WasmFuncSignature func_sig;
   WasmFuncType func_type;
+  WasmGlobal global;
   WasmImport* import;
-  WasmExport export_;
-  WasmExportMemory export_memory;
+  WasmLimits limits;
+  WasmOptionalExport optional_export;
+  WasmMemory memory;
   WasmModule* module;
   WasmRawModule raw_module;
-  WasmConst const_;
-  WasmConstVector consts;
-  WasmCommand* command;
-  WasmCommandVector commands;
   WasmScript script;
+  WasmTable table;
+  WasmTextList text_list;
+  WasmTypeVector types;
+  uint32_t u32;
+  uint64_t u64;
+  WasmVar var;
+  WasmVarVector vars;
 } WasmToken;
 
 typedef struct WasmAstParser {
@@ -140,9 +177,13 @@ void wasm_ast_format_error(WasmSourceErrorHandler*,
                            WasmAstLexer*,
                            const char* format,
                            va_list);
+void wasm_destroy_optional_export(WasmAllocator*, WasmOptionalExport*);
 void wasm_destroy_exported_func(WasmAllocator*, WasmExportedFunc*);
-void wasm_destroy_text_list(WasmAllocator*, WasmTextList*);
+void wasm_destroy_exported_global(WasmAllocator*, WasmExportedFunc*);
+void wasm_destroy_exported_memory(WasmAllocator*, WasmExportedMemory*);
+void wasm_destroy_exported_table(WasmAllocator*, WasmExportedTable*);
 void wasm_destroy_func_fields(WasmAllocator*, WasmFuncField*);
+void wasm_destroy_text_list(WasmAllocator*, WasmTextList*);
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_PARSER_LEXER_SHARED_H_ */

@@ -1,30 +1,24 @@
 ;;; TOOL: run-interp
 
-;; The br expression breaks out of its if, without a value. Normally, the type
-;; of the true branch would be i32, because the last statement has the type
-;; i32. Since the br has no value, though, the true branch also has no value
-;; so (i32.const 2) must be discarded. Since the true branch has no value, the
-;; false branch must not have a value either, so (i32.const 3) is discarded as
-;; well.
+;; This used to test an odd case that forced dropping the (i32.const 3) of the
+;; else branch. Now that drops are explicit, this case is straightforward.
 
 (module
   (func $f (param i32) (result i32)
     (local i32)
-    (if
+    (if $l
       (get_local 0)
-      (then $l
+      (then
         (br $l)
         (i32.const 2))
       (else
-        (i32.const 3)))
+        (drop (i32.const 3))))
     (i32.const 2))
 
-  (export "e1" $e1)
-  (func $e1 (result i32)
+  (func (export "e1") (result i32)
     (call $f (i32.const 0)))
 
-  (export "e2" $e2)
-  (func $e2 (result i32)
+  (func (export "e2") (result i32)
     (call $f (i32.const 1))))
 (;; STDOUT ;;;
 e1() => i32:2

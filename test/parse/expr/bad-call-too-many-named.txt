@@ -1,9 +1,0 @@
-;;; ERROR: 1
-(module
-  (func $foo (param i32 i64)
-    (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
-(;; STDERR ;;;
-parse/expr/bad-call-too-many-named.txt:4:5: too many parameters to function "$foo" in call. got 3, expected 2
-    (call 0 (i32.const 0) (i64.const 0) (f32.const 0))))
-    ^
-;;; STDERR ;;)

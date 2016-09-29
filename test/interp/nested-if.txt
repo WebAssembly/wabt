@@ -1,21 +1,16 @@
 ;;; TOOL: run-interp
 
-;; This tests two paths branching to the same location, with different value
-;; stack heights.
-
-;; The (i32.const 2) value needs to be discarded because the false branch of the
-;; outer if does not return a value. However, in a bottom-up parser, this is not
-;; known until the inner if expression is reduced. So the previously generated
-;; code for the true branch of the outer if must be fixed-up later, when the
-;; outer if expression is reduced.
+;; This used to test an odd case where a nested if would return a void, so the
+;; true branch of the outer if would have to be dropped its instructions had
+;; already been generated. Now that drops are explicit, this case is
+;; straightforward.
 
 (module
-  (export "f" $f)
-  (func $f (result i32)
+  (func (export "f") (result i32)
     (block $exit
       (if                     ;; outer if
         (i32.const 1)
-        (i32.const 2)
+        (drop (i32.const 2))
         (if                   ;; inner if
           (i32.const 3)
           (br $exit))))

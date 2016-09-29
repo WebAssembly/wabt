@@ -1,0 +1,53 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/br.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/br.wast:371:11: unable to join type void (type of last operation) with type i32 (function signature result type).
+  (module (func $type-arg-empty-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:378:13: type stack size too small at br. got 0, expected at least 1
+    (block (br 0 (nop)))
+            ^^
+assert_invalid error:
+  third_party/testsuite/br.wast:377:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-arg-void-vs-empty
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:383:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $type-arg-num-vs-empty
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:399:13: type stack size too small at br. got 0, expected at least 1
+    (block (br 0 (nop)) (i32.const 1))
+            ^^
+assert_invalid error:
+  third_party/testsuite/br.wast:399:6: maximum arity for block is 1, got 2
+    (block (br 0 (nop)) (i32.const 1))
+     ^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:404:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
+  (module (func $type-arg-num-vs-num (result i32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:412:48: type stack size too small at i64.add. got 1, expected at least 2
+    (block (i64.const 1) (i64.const 2) br 2 0) i64.add
+                                               ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:418:60: type stack size too small at i32.add. got 1, expected at least 2
+    (block (nop) (i32.const 7) (nop) (i32.const 8) br 2 0) i32.add
+                                                           ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br.wast:424:36: label variable out of range (max 1)
+  (module (func $unbound-label (br 1)))
+                                   ^
+assert_invalid error:
+  third_party/testsuite/br.wast:428:57: label variable out of range (max 3)
+  (module (func $unbound-nested-label (block (block (br 5)))))
+                                                        ^
+assert_invalid error:
+  third_party/testsuite/br.wast:432:34: label variable out of range (max 1)
+  (module (func $large-label (br 0x100000001)))
+                                 ^^^^^^^^^^^
+64/64 tests passed.
+;;; STDOUT ;;)

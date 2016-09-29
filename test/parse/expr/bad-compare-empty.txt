@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module (func (i32.eq)))
-(;; STDERR ;;;
-parse/expr/bad-compare-empty.txt:2:22: syntax error, unexpected ), expecting (
-(module (func (i32.eq)))
-                     ^
-;;; STDERR ;;)

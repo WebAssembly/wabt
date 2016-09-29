@@ -1,0 +1,13 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/select.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/select.wast:62:27: type stack size too small at select. got 1, expected at least 3
+  (module (func $arity-0 (select (nop) (nop) (i32.const 1))))
+                          ^^^^^^
+assert_invalid error:
+  third_party/testsuite/select.wast:62:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func $arity-0 (select (nop) (nop) (i32.const 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+28/28 tests passed.
+;;; STDOUT ;;)

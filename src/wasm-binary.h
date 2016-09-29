@@ -18,30 +18,34 @@
 #define WASM_BINARY_H_
 
 #define WASM_BINARY_MAGIC 0x6d736100
-#define WASM_BINARY_VERSION 0x0b
+#define WASM_BINARY_VERSION 0x0c
+#define WASM_BINARY_ELEM_TYPE_ANYFUNC 0x20
 #define WASM_BINARY_TYPE_FORM_FUNCTION 0x40
+#define WASM_BINARY_LIMITS_HAS_MAX_FLAG 0x1
 
-#define WASM_SECTION_NAME_TYPE "type"
-#define WASM_SECTION_NAME_IMPORT "import"
-#define WASM_SECTION_NAME_FUNCTION "function"
-#define WASM_SECTION_NAME_TABLE "table"
-#define WASM_SECTION_NAME_MEMORY "memory"
-#define WASM_SECTION_NAME_EXPORT "export"
-#define WASM_SECTION_NAME_START "start"
-#define WASM_SECTION_NAME_CODE "code"
-#define WASM_SECTION_NAME_DATA "data"
-#define WASM_SECTION_NAME_NAME "name"
+#define WASM_BINARY_SECTION_NAME "name"
 
-#define WASM_FOREACH_SECTION(V) \
-  V(TYPE)                       \
-  V(IMPORT)                     \
-  V(FUNCTION)                   \
-  V(TABLE)                      \
-  V(MEMORY)                     \
-  V(EXPORT)                     \
-  V(START)                      \
-  V(CODE)                       \
-  V(DATA)                       \
-  V(NAME)
+#define WASM_FOREACH_BINARY_SECTION(V) \
+  V(UNKNOWN, 0)                        \
+  V(TYPE, 1)                           \
+  V(IMPORT, 2)                         \
+  V(FUNCTION, 3)                       \
+  V(TABLE, 4)                          \
+  V(MEMORY, 5)                         \
+  V(GLOBAL, 6)                         \
+  V(EXPORT, 7)                         \
+  V(START, 8)                          \
+  V(ELEM, 9)                           \
+  V(CODE, 10)                          \
+  V(DATA, 11)
+
+/* clang-format off */
+typedef enum WasmBinarySection {
+#define V(NAME, code) WASM_BINARY_SECTION_##NAME = code,
+  WASM_FOREACH_BINARY_SECTION(V)
+#undef V
+  WASM_NUM_BINARY_SECTIONS
+} WasmBinarySection;
+/* clang-format on */
 
 #endif /* WASM_BINARY_H_ */

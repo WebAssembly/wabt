@@ -1,0 +1,29 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/break-drop.wast
+(;; STDOUT ;;;
+assert_invalid error:
+  third_party/testsuite/break-drop.wast:17:25: type stack size too small at br. got 0, expected at least 1
+  (module (func (block (br 0 (nop)))))
+                        ^^
+assert_invalid error:
+  third_party/testsuite/break-drop.wast:17:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func (block (br 0 (nop)))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/break-drop.wast:22:25: type stack size too small at br_if. got 1, expected at least 2
+  (module (func (block (br_if 0 (nop) (i32.const 0)))))
+                        ^^^^^
+assert_invalid error:
+  third_party/testsuite/break-drop.wast:22:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func (block (br_if 0 (nop) (i32.const 0)))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/break-drop.wast:27:25: type stack size too small at br_table. got 1, expected at least 2
+  (module (func (block (br_table 0 (nop) (i32.const 0)))))
+                        ^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/break-drop.wast:27:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  (module (func (block (br_table 0 (nop) (i32.const 0)))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3/3 tests passed.
+;;; STDOUT ;;)

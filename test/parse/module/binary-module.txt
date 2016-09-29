@@ -1,16 +1,16 @@
 (module
-  "\00asm"          ;; magic
-  "\0b\00\00\00"    ;; version
-  "\04type\05"      ;; "type" section, 5 bytes
-  "\01\40\00\01\01" ;; 1 type, function, no params, i32 result
-  "\08function\02"  ;; "function" section, 2 bytes
-  "\01\00"          ;; 1 function, type 0
-  "\06export\07"    ;; "export" section, 7 bytes
-  "\01\00\04main"   ;; 1 export, function 0, named "main"
-  "\04code\08"      ;; "code" section, 8 bytes
-  "\01"             ;; 1 function
-  "\06\00"          ;; 0 locals
-  "\10"             ;; i32.const
-  "\dc\7c"          ;; -420
-  "\09\01"          ;; return arity 1
+  "\00asm"            ;; magic
+  "\0c\00\00\00"      ;; version
+  "\01\05"            ;; type section, 5 bytes
+  "\01\40\00\01\01"   ;; 1 type, function, no params, i32 result
+  "\03\02"            ;; function section, 2 bytes
+  "\01\00"            ;; 1 function, type 0
+  "\07\07"            ;; export section, 7 bytes
+  "\01\04main\00\00"  ;; 1 export, function 0, named "main"
+  "\0a\07"            ;; code section, 7 bytes
+  "\01"               ;; 1 function
+  "\05\00"            ;; 0 locals
+  "\10"               ;; i32.const
+  "\dc\7c"            ;; -420
+  "\09"               ;; return
 )

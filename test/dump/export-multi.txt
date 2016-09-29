@@ -1,54 +1,51 @@
 ;;; FLAGS: -dv
 (module
   (func (nop))
-  (export "a" 0)
-  (export "b" 0))
+  (export "a" (func 0))
+  (export "b" (func 0)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 01                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 01                                         ; num types
 ; type 0
-000000f: 40                                         ; function form
-0000010: 00                                         ; num params
-0000011: 00                                         ; num results
-000000d: 04                                         ; FIXUP section size
-; section "function"
-0000012: 08                                         ; string length
-0000013: 6675 6e63 7469 6f6e                        ; section id: "function"
-000001b: 00                                         ; section size (guess)
-000001c: 01                                         ; num functions
-000001d: 00                                         ; function 0 signature index
-000001b: 02                                         ; FIXUP section size
-; section "export"
-000001e: 06                                         ; string length
-000001f: 6578 706f 7274                             ; section id: "export"
-0000025: 00                                         ; section size (guess)
-0000026: 02                                         ; num exports
-0000027: 00                                         ; export func index
-0000028: 01                                         ; string length
-0000029: 61                                       a  ; export name
-000002a: 00                                         ; export func index
-000002b: 01                                         ; string length
-000002c: 62                                       b  ; export name
-0000025: 07                                         ; FIXUP section size
-; section "code"
-000002d: 04                                         ; string length
-000002e: 636f 6465                                  ; section id: "code"
-0000032: 00                                         ; section size (guess)
-0000033: 01                                         ; num functions
+000000b: 40                                         ; function form
+000000c: 00                                         ; num params
+000000d: 00                                         ; num results
+0000009: 04                                         ; FIXUP section size
+; section "FUNCTION" (3)
+000000e: 03                                         ; section code
+000000f: 00                                         ; section size (guess)
+0000010: 01                                         ; num functions
+0000011: 00                                         ; function 0 signature index
+000000f: 02                                         ; FIXUP section size
+; section "EXPORT" (7)
+0000012: 07                                         ; section code
+0000013: 00                                         ; section size (guess)
+0000014: 02                                         ; num exports
+0000015: 01                                         ; string length
+0000016: 61                                       a  ; export name
+0000017: 00                                         ; export kind
+0000018: 00                                         ; export func index
+0000019: 01                                         ; string length
+000001a: 62                                       b  ; export name
+000001b: 00                                         ; export kind
+000001c: 00                                         ; export func index
+0000013: 09                                         ; FIXUP section size
+; section "CODE" (10)
+000001d: 0a                                         ; section code
+000001e: 00                                         ; section size (guess)
+000001f: 01                                         ; num functions
 ; function body 0
-0000034: 00                                         ; func body size (guess)
-0000035: 00                                         ; local decl count
-0000036: 00                                         ; OPCODE_NOP
-0000034: 02                                         ; FIXUP func body size
-0000032: 04                                         ; FIXUP section size
+0000020: 00                                         ; func body size (guess)
+0000021: 00                                         ; local decl count
+0000022: 0a                                         ; OPCODE_NOP
+0000020: 02                                         ; FIXUP func body size
+000001e: 04                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6504 0140  
-0000010: 0000 0866 756e 6374 696f 6e02 0100 0665  
-0000020: 7870 6f72 7407 0200 0161 0001 6204 636f  
-0000030: 6465 0401 0200 00                        
+0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
+0000010: 0100 0709 0201 6100 0001 6200 000a 0401  
+0000020: 0200 0a                                  
 ;;; STDOUT ;;)

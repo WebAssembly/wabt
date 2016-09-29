@@ -3,7 +3,7 @@
   (local i32)
   (set_local 0)))
 (;; STDERR ;;;
-parse/expr/bad-setlocal-no-value.txt:4:15: syntax error, unexpected ), expecting (
+parse/expr/bad-setlocal-no-value.txt:4:4: type stack size too small at set_local. got 0, expected at least 1
   (set_local 0)))
-              ^
+   ^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -4,75 +4,87 @@
   (func (type $t))
   (func (param i32 i64))
   (func (result f64) (f64.const 0))
-  (table 0 0 1 2))
+  (table anyfunc (elem 0 0 1 2)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 03                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 03                                         ; num types
 ; type 0
-000000f: 40                                         ; function form
-0000010: 01                                         ; num params
-0000011: 01                                         ; param type
-0000012: 00                                         ; num results
+000000b: 40                                         ; function form
+000000c: 01                                         ; num params
+000000d: 01                                         ; param type
+000000e: 00                                         ; num results
 ; type 1
-0000013: 40                                         ; function form
-0000014: 02                                         ; num params
-0000015: 01                                         ; param type
-0000016: 02                                         ; param type
-0000017: 00                                         ; num results
+000000f: 40                                         ; function form
+0000010: 02                                         ; num params
+0000011: 01                                         ; param type
+0000012: 02                                         ; param type
+0000013: 00                                         ; num results
 ; type 2
-0000018: 40                                         ; function form
-0000019: 00                                         ; num params
-000001a: 01                                         ; num results
-000001b: 04                                         ; result_type
-000000d: 0e                                         ; FIXUP section size
-; section "function"
-000001c: 08                                         ; string length
-000001d: 6675 6e63 7469 6f6e                        ; section id: "function"
-0000025: 00                                         ; section size (guess)
-0000026: 03                                         ; num functions
-0000027: 00                                         ; function 0 signature index
-0000028: 01                                         ; function 1 signature index
-0000029: 02                                         ; function 2 signature index
-0000025: 04                                         ; FIXUP section size
-; section "table"
-000002a: 05                                         ; string length
-000002b: 7461 626c 65                               ; section id: "table"
-0000030: 00                                         ; section size (guess)
-0000031: 04                                         ; num function table entries
-0000032: 00                                         ; function table entry
-0000033: 00                                         ; function table entry
-0000034: 01                                         ; function table entry
-0000035: 02                                         ; function table entry
-0000030: 05                                         ; FIXUP section size
-; section "code"
-0000036: 04                                         ; string length
-0000037: 636f 6465                                  ; section id: "code"
-000003b: 00                                         ; section size (guess)
-000003c: 03                                         ; num functions
+0000014: 40                                         ; function form
+0000015: 00                                         ; num params
+0000016: 01                                         ; num results
+0000017: 04                                         ; result type
+0000009: 0e                                         ; FIXUP section size
+; section "FUNCTION" (3)
+0000018: 03                                         ; section code
+0000019: 00                                         ; section size (guess)
+000001a: 03                                         ; num functions
+000001b: 00                                         ; function 0 signature index
+000001c: 01                                         ; function 1 signature index
+000001d: 02                                         ; function 2 signature index
+0000019: 04                                         ; FIXUP section size
+; section "TABLE" (4)
+000001e: 04                                         ; section code
+000001f: 00                                         ; section size (guess)
+0000020: 01                                         ; num tables
+; table 0
+0000021: 20                                         ; table elem type
+0000022: 01                                         ; table flags
+0000023: 04                                         ; table initial elems
+0000024: 04                                         ; table max elems
+000001f: 05                                         ; FIXUP section size
+; section "ELEM" (9)
+0000025: 09                                         ; section code
+0000026: 00                                         ; section size (guess)
+0000027: 01                                         ; num elem segments
+; elem segment header 0
+0000028: 00                                         ; table index
+0000029: 10                                         ; OPCODE_I32_CONST
+000002a: 00                                         ; i32 literal
+000002b: 0f                                         ; OPCODE_END
+000002c: 04                                         ; num function indices
+000002d: 00                                         ; function index
+000002e: 00                                         ; function index
+000002f: 01                                         ; function index
+0000030: 02                                         ; function index
+0000026: 0a                                         ; FIXUP section size
+; section "CODE" (10)
+0000031: 0a                                         ; section code
+0000032: 00                                         ; section size (guess)
+0000033: 03                                         ; num functions
 ; function body 0
-000003d: 00                                         ; func body size (guess)
-000003e: 00                                         ; local decl count
-000003d: 01                                         ; FIXUP func body size
+0000034: 00                                         ; func body size (guess)
+0000035: 00                                         ; local decl count
+0000034: 01                                         ; FIXUP func body size
 ; function body 1
-000003f: 00                                         ; func body size (guess)
-0000040: 00                                         ; local decl count
-000003f: 01                                         ; FIXUP func body size
+0000036: 00                                         ; func body size (guess)
+0000037: 00                                         ; local decl count
+0000036: 01                                         ; FIXUP func body size
 ; function body 2
-0000041: 00                                         ; func body size (guess)
-0000042: 00                                         ; local decl count
-0000043: 12                                         ; OPCODE_F64_CONST
-0000044: 0000 0000 0000 0000                        ; f64 literal
-0000041: 0a                                         ; FIXUP func body size
-000003b: 10                                         ; FIXUP section size
+0000038: 00                                         ; func body size (guess)
+0000039: 00                                         ; local decl count
+000003a: 12                                         ; OPCODE_F64_CONST
+000003b: 0000 0000 0000 0000                        ; f64 literal
+0000038: 0a                                         ; FIXUP func body size
+0000032: 10                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 650e 0340  
-0000010: 0101 0040 0201 0200 4000 0104 0866 756e  
-0000020: 6374 696f 6e04 0300 0102 0574 6162 6c65  
-0000030: 0504 0000 0102 0463 6f64 6510 0301 0001  
-0000040: 000a 0012 0000 0000 0000 0000            
+0000000: 0061 736d 0c00 0000 010e 0340 0101 0040  
+0000010: 0201 0200 4000 0104 0304 0300 0102 0405  
+0000020: 0120 0104 0409 0a01 0010 000f 0400 0001  
+0000030: 020a 1003 0100 0100 0a00 1200 0000 0000  
+0000040: 0000 00                                  
 ;;; STDOUT ;;)

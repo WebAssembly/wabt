@@ -1,66 +1,66 @@
 ;;; FLAGS: -dv
 (module
   (func (result i32)
-    (loop $exit $cont
+    (block $exit i32 (loop $cont i32
       (if (i32.const 1)
         (br $cont))
       (if (i32.const 3)
         (br $exit (i32.const 4)))
-      (i32.const 5))))
+      (i32.const 5)))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 01                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 01                                         ; num types
 ; type 0
-000000f: 40                                         ; function form
-0000010: 00                                         ; num params
-0000011: 01                                         ; num results
-0000012: 01                                         ; result_type
-000000d: 05                                         ; FIXUP section size
-; section "function"
-0000013: 08                                         ; string length
-0000014: 6675 6e63 7469 6f6e                        ; section id: "function"
-000001c: 00                                         ; section size (guess)
-000001d: 01                                         ; num functions
-000001e: 00                                         ; function 0 signature index
-000001c: 02                                         ; FIXUP section size
-; section "code"
-000001f: 04                                         ; string length
-0000020: 636f 6465                                  ; section id: "code"
-0000024: 00                                         ; section size (guess)
-0000025: 01                                         ; num functions
+000000b: 40                                         ; function form
+000000c: 00                                         ; num params
+000000d: 01                                         ; num results
+000000e: 01                                         ; result type
+0000009: 05                                         ; FIXUP section size
+; section "FUNCTION" (3)
+000000f: 03                                         ; section code
+0000010: 00                                         ; section size (guess)
+0000011: 01                                         ; num functions
+0000012: 00                                         ; function 0 signature index
+0000010: 02                                         ; FIXUP section size
+; section "CODE" (10)
+0000013: 0a                                         ; section code
+0000014: 00                                         ; section size (guess)
+0000015: 01                                         ; num functions
 ; function body 0
-0000026: 00                                         ; func body size (guess)
-0000027: 00                                         ; local decl count
-0000028: 02                                         ; OPCODE_LOOP
-0000029: 10                                         ; OPCODE_I32_CONST
-000002a: 01                                         ; i32 literal
-000002b: 03                                         ; OPCODE_IF
-000002c: 06                                         ; OPCODE_BR
-000002d: 00                                         ; br arity
-000002e: 01                                         ; break depth
+0000016: 00                                         ; func body size (guess)
+0000017: 00                                         ; local decl count
+0000018: 01                                         ; OPCODE_BLOCK
+0000019: 01                                         ; WASM_TYPE_I32
+000001a: 02                                         ; OPCODE_LOOP
+000001b: 01                                         ; WASM_TYPE_I32
+000001c: 10                                         ; OPCODE_I32_CONST
+000001d: 01                                         ; i32 literal
+000001e: 03                                         ; OPCODE_IF
+000001f: 00                                         ; WASM_TYPE_VOID
+0000020: 06                                         ; OPCODE_BR
+0000021: 01                                         ; break depth
+0000022: 0f                                         ; OPCODE_END
+0000023: 10                                         ; OPCODE_I32_CONST
+0000024: 03                                         ; i32 literal
+0000025: 03                                         ; OPCODE_IF
+0000026: 00                                         ; WASM_TYPE_VOID
+0000027: 10                                         ; OPCODE_I32_CONST
+0000028: 04                                         ; i32 literal
+0000029: 06                                         ; OPCODE_BR
+000002a: 02                                         ; break depth
+000002b: 0f                                         ; OPCODE_END
+000002c: 10                                         ; OPCODE_I32_CONST
+000002d: 05                                         ; i32 literal
+000002e: 0f                                         ; OPCODE_END
 000002f: 0f                                         ; OPCODE_END
-0000030: 10                                         ; OPCODE_I32_CONST
-0000031: 03                                         ; i32 literal
-0000032: 03                                         ; OPCODE_IF
-0000033: 10                                         ; OPCODE_I32_CONST
-0000034: 04                                         ; i32 literal
-0000035: 06                                         ; OPCODE_BR
-0000036: 01                                         ; br arity
-0000037: 02                                         ; break depth
-0000038: 0f                                         ; OPCODE_END
-0000039: 10                                         ; OPCODE_I32_CONST
-000003a: 05                                         ; i32 literal
-000003b: 0f                                         ; OPCODE_END
-0000026: 15                                         ; FIXUP func body size
-0000024: 17                                         ; FIXUP section size
+0000016: 19                                         ; FIXUP func body size
+0000014: 1b                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6505 0140  
-0000010: 0001 0108 6675 6e63 7469 6f6e 0201 0004  
-0000020: 636f 6465 1701 1500 0210 0103 0600 010f  
-0000030: 1003 0310 0406 0102 0f10 050f            
+0000000: 0061 736d 0c00 0000 0105 0140 0001 0103  
+0000010: 0201 000a 1b01 1900 0101 0201 1001 0300  
+0000020: 0601 0f10 0303 0010 0406 020f 1005 0f0f  
 ;;; STDOUT ;;)

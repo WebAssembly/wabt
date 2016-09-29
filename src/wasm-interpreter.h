@@ -44,10 +44,6 @@ struct WasmStream;
   V(TRAP_UNREACHABLE, "unreachable executed")                                  \
   /* call indirect signature doesn't match function table signature */         \
   V(TRAP_INDIRECT_CALL_SIGNATURE_MISMATCH, "indirect call signature mismatch") \
-  /* growing the memory would overflow the memory size type */                 \
-  V(TRAP_MEMORY_SIZE_OVERFLOW, "memory size overflow")                         \
-  /* out of memory */                                                          \
-  V(TRAP_OUT_OF_MEMORY, "memory size exceeds implementation limit")            \
   /* ran out of call stack frames (probably infinite recursion) */             \
   V(TRAP_CALL_STACK_EXHAUSTED, "call stack exhausted")                         \
   /* ran out of value stack space */                                           \
@@ -67,16 +63,16 @@ typedef enum WasmInterpreterResult {
 #define WASM_INVALID_OFFSET ((uint32_t)~0)
 #define WASM_TABLE_ENTRY_SIZE (sizeof(uint32_t) * 2 + sizeof(uint8_t))
 #define WASM_TABLE_ENTRY_OFFSET_OFFSET 0
-#define WASM_TABLE_ENTRY_DISCARD_OFFSET sizeof(uint32_t)
+#define WASM_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)
 #define WASM_TABLE_ENTRY_KEEP_OFFSET (sizeof(uint32_t) * 2)
 
 enum {
   /* push space on the value stack for N entries */
   WASM_OPCODE_ALLOCA = WASM_LAST_OPCODE,
   WASM_OPCODE_BR_UNLESS,
+  WASM_OPCODE_CALL_IMPORT,
   WASM_OPCODE_DATA,
-  WASM_OPCODE_DISCARD,
-  WASM_OPCODE_DISCARD_KEEP,
+  WASM_OPCODE_DROP_KEEP,
   WASM_LAST_INTERPRETER_OPCODE,
 };
 WASM_STATIC_ASSERT(WASM_LAST_INTERPRETER_OPCODE <= 256);
@@ -86,8 +82,8 @@ WASM_DEFINE_VECTOR(uint8, WasmUint8);
 
 /* TODO(binji): identical to WasmFuncSignature. Share? */
 typedef struct WasmInterpreterFuncSignature {
-  WasmType result_type;
   WasmTypeVector param_types;
+  WasmTypeVector result_types;
 } WasmInterpreterFuncSignature;
 WASM_DEFINE_ARRAY(interpreter_func_signature, WasmInterpreterFuncSignature);
 
@@ -96,10 +92,12 @@ typedef struct WasmInterpreterMemory {
   void* data;
   uint32_t page_size;
   uint32_t byte_size;
+  uint32_t max_page_size;
 } WasmInterpreterMemory;
 
 typedef struct WasmInterpreterFuncTableEntry {
   uint32_t sig_index;
+  uint32_t func_index;
   uint32_t func_offset;
 } WasmInterpreterFuncTableEntry;
 WASM_DEFINE_ARRAY(interpreter_func_table_entry, WasmInterpreterFuncTableEntry);
@@ -117,6 +115,13 @@ typedef struct WasmInterpreterTypedValue {
   WasmInterpreterValue value;
 } WasmInterpreterTypedValue;
 WASM_DEFINE_ARRAY(interpreter_typed_value, WasmInterpreterTypedValue);
+WASM_DEFINE_VECTOR(interpreter_typed_value, WasmInterpreterTypedValue);
+
+typedef struct WasmInterpreterGlobal {
+  WasmInterpreterTypedValue typed_value;
+  WasmBool mutable_;
+} WasmInterpreterGlobal;
+WASM_DEFINE_ARRAY(interpreter_global, WasmInterpreterGlobal);
 
 struct WasmInterpreterModule;
 struct WasmInterpreterImport;
@@ -126,12 +131,13 @@ typedef WasmResult (*WasmInterpreterImportCallback)(
     struct WasmInterpreterImport* import,
     uint32_t num_args,
     WasmInterpreterTypedValue* args,
-    WasmInterpreterTypedValue* out_result,
+    uint32_t num_results,
+    WasmInterpreterTypedValue* out_results,
     void* user_data);
 
 typedef struct WasmInterpreterImport {
   WasmStringSlice module_name;
-  WasmStringSlice func_name;
+  WasmStringSlice field_name;
   uint32_t sig_index;
   WasmInterpreterImportCallback callback;
   void* user_data;
@@ -152,6 +158,7 @@ typedef struct WasmInterpreterModule {
   WasmInterpreterFuncTableEntryArray func_table;
   WasmInterpreterImportArray imports;
   WasmInterpreterExportArray exports;
+  WasmInterpreterGlobalArray globals;
   WasmOutputBuffer istream;
   uint32_t start_func_offset; /* == WASM_INVALID_OFFSET if not defined */
 } WasmInterpreterModule;

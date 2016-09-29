@@ -1,7 +1,0 @@
-;;; ERROR: 1
-(module (func (f32.neg)))
-(;; STDERR ;;;
-parse/expr/bad-unary-empty.txt:2:23: syntax error, unexpected ), expecting (
-(module (func (f32.neg)))
-                      ^
-;;; STDERR ;;)

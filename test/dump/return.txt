@@ -5,53 +5,47 @@
   (func (return)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 02                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 02                                         ; num types
 ; type 0
+000000b: 40                                         ; function form
+000000c: 00                                         ; num params
+000000d: 01                                         ; num results
+000000e: 01                                         ; result type
+; type 1
 000000f: 40                                         ; function form
 0000010: 00                                         ; num params
-0000011: 01                                         ; num results
-0000012: 01                                         ; result_type
-; type 1
-0000013: 40                                         ; function form
-0000014: 00                                         ; num params
-0000015: 00                                         ; num results
-000000d: 08                                         ; FIXUP section size
-; section "function"
-0000016: 08                                         ; string length
-0000017: 6675 6e63 7469 6f6e                        ; section id: "function"
-000001f: 00                                         ; section size (guess)
-0000020: 02                                         ; num functions
-0000021: 00                                         ; function 0 signature index
-0000022: 01                                         ; function 1 signature index
-000001f: 03                                         ; FIXUP section size
-; section "code"
-0000023: 04                                         ; string length
-0000024: 636f 6465                                  ; section id: "code"
-0000028: 00                                         ; section size (guess)
-0000029: 02                                         ; num functions
+0000011: 00                                         ; num results
+0000009: 08                                         ; FIXUP section size
+; section "FUNCTION" (3)
+0000012: 03                                         ; section code
+0000013: 00                                         ; section size (guess)
+0000014: 02                                         ; num functions
+0000015: 00                                         ; function 0 signature index
+0000016: 01                                         ; function 1 signature index
+0000013: 03                                         ; FIXUP section size
+; section "CODE" (10)
+0000017: 0a                                         ; section code
+0000018: 00                                         ; section size (guess)
+0000019: 02                                         ; num functions
 ; function body 0
-000002a: 00                                         ; func body size (guess)
-000002b: 00                                         ; local decl count
-000002c: 10                                         ; OPCODE_I32_CONST
-000002d: 2a                                         ; i32 literal
-000002e: 09                                         ; OPCODE_RETURN
-000002f: 01                                         ; return arity
-000002a: 05                                         ; FIXUP func body size
+000001a: 00                                         ; func body size (guess)
+000001b: 00                                         ; local decl count
+000001c: 10                                         ; OPCODE_I32_CONST
+000001d: 2a                                         ; i32 literal
+000001e: 09                                         ; OPCODE_RETURN
+000001a: 04                                         ; FIXUP func body size
 ; function body 1
-0000030: 00                                         ; func body size (guess)
-0000031: 00                                         ; local decl count
-0000032: 09                                         ; OPCODE_RETURN
-0000033: 00                                         ; return arity
-0000030: 03                                         ; FIXUP func body size
-0000028: 0b                                         ; FIXUP section size
+000001f: 00                                         ; func body size (guess)
+0000020: 00                                         ; local decl count
+0000021: 09                                         ; OPCODE_RETURN
+000001f: 02                                         ; FIXUP func body size
+0000018: 09                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 6508 0240  
-0000010: 0001 0140 0000 0866 756e 6374 696f 6e03  
-0000020: 0200 0104 636f 6465 0b02 0500 102a 0901  
-0000030: 0300 0900                                
+0000000: 0061 736d 0c00 0000 0108 0240 0001 0140  
+0000010: 0000 0303 0200 010a 0902 0400 102a 0902  
+0000020: 0009                                     
 ;;; STDOUT ;;)

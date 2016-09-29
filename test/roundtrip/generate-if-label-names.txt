@@ -14,14 +14,14 @@
 (module
   (type $t0 (func))
   (func $f0 (type $t0)
-    (if
-      (i32.const 1)
-      (then $L0
-        (br $L0)))
-    (if
-      (i32.const 2)
-      (then $L1
-        (br $L1))
-      (else $L2
-        (br $L2)))))
+    i32.const 1
+    if $L0
+      br $L0
+    end
+    i32.const 2
+    if $L1
+      br $L1
+    else
+      br $L1
+    end))
 ;;; STDOUT ;;)

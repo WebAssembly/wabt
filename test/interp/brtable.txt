@@ -15,17 +15,10 @@
     ;; default
     (return (i32.const 2)))
 
-  (export "test0" $test0)
-  (func $test0 (result i32) (call $f (i32.const 0)))
-
-  (export "test1" $test1)
-  (func $test1 (result i32) (call $f (i32.const 1)))
-
-  (export "test2" $test2)
-  (func $test2 (result i32) (call $f (i32.const 2)))
-
-  (export "test3" $test3)
-  (func $test3 (result i32) (call $f (i32.const 3))))
+  (func (export "test0") (result i32) (call $f (i32.const 0)))
+  (func (export "test1") (result i32) (call $f (i32.const 1)))
+  (func (export "test2") (result i32) (call $f (i32.const 2)))
+  (func (export "test3") (result i32) (call $f (i32.const 3))))
 (;; STDOUT ;;;
 test0() => i32:0
 test1() => i32:1

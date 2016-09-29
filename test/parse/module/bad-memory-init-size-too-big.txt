@@ -1,10 +1,7 @@
 ;;; ERROR: 1
 (module (memory 65537))
 (;; STDERR ;;;
-parse/module/bad-memory-init-size-too-big.txt:2:10: initial pages (65537) must be <= (65535)
+parse/module/bad-memory-init-size-too-big.txt:2:9: initial pages (65537) must be <= (65535)
 (module (memory 65537))
-         ^^^^^^
-parse/module/bad-memory-init-size-too-big.txt:2:10: max pages (65537) must be <= (65535)
-(module (memory 65537))
-         ^^^^^^
+        ^^^^^^^^^^^^^^
 ;;; STDERR ;;)

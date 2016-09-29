@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module
+  (global i32 (i32.add (i32.const 1) (i32.const 2))))
+(;; STDERR ;;;
+parse/module/bad-global-invalid-expr.txt:3:3: invalid global initializer expression, must be a constant expression; either *.const or get_global.
+  (global i32 (i32.add (i32.const 1) (i32.const 2))))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)

@@ -81,14 +81,14 @@ WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-/* clang-format off */
-enum {
-#define V(name) WASM_SECTION_INDEX_##name,
-  WASM_FOREACH_SECTION(V)
+#define V(NAME, code) [code] = #NAME,
+static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
-  WASM_NUM_SECTIONS
-};
-/* clang-format on */
+
+static const char* s_external_kind_name[] = {"func", "table", "memory",
+                                             "global"};
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_external_kind_name) ==
+                   WASM_NUM_EXTERNAL_KINDS);
 
 typedef struct Context {
   const uint8_t* data;
@@ -98,6 +98,17 @@ typedef struct Context {
   jmp_buf error_jmp_buf;
   WasmTypeVector param_types;
   Uint32Vector target_depths;
+  const WasmReadBinaryOptions* options;
+  WasmBool name_section_ok;
+  uint32_t num_signatures;
+  uint32_t num_imports;
+  uint32_t num_func_imports;
+  uint32_t num_function_signatures;
+  uint32_t num_tables;
+  uint32_t num_memories;
+  uint32_t num_globals;
+  uint32_t num_exports;
+  uint32_t num_function_bodies;
 } Context;
 
 typedef struct LoggingContext {
@@ -320,57 +331,99 @@ static void in_bytes(Context* ctx,
   ctx->offset += data_size;
 }
 
-static WasmBool is_non_void_type(uint8_t type) {
-  return type != 0 && type < WASM_NUM_TYPES;
+static WasmBool is_valid_external_kind(uint8_t kind) {
+  return kind < WASM_NUM_EXTERNAL_KINDS;
 }
 
-static WasmBool is_bool(uint8_t value) {
-  return value < 2;
+static WasmBool is_concrete_type(uint8_t type) {
+  return type != WASM_TYPE_VOID && type < WASM_NUM_TYPES;
 }
 
-static WasmBool skip_until_section(Context* ctx, int section_index) {
+static WasmBool is_inline_sig_type(uint8_t type) {
+  return type < WASM_NUM_TYPES;
+}
+
+static uint32_t num_total_funcs(Context* ctx) {
+  return ctx->num_func_imports + ctx->num_function_signatures;
+}
+
+static WasmBool handle_unknown_section(Context* ctx,
+                                       WasmStringSlice* section_name) {
+  if (ctx->options->read_debug_names &&
+      ctx->name_section_ok &&
+      strncmp(section_name->start, WASM_BINARY_SECTION_NAME,
+              section_name->length) == 0) {
+    CALLBACK0(begin_names_section);
+    uint32_t i, num_functions;
+    in_u32_leb128(ctx, &num_functions, "function name count");
+    RAISE_ERROR_UNLESS(num_functions <= num_total_funcs(ctx),
+                       "function name count > function signature count");
+    CALLBACK(on_function_names_count, num_functions);
+    for (i = 0; i < num_functions; ++i) {
+      WasmStringSlice function_name;
+      in_str(ctx, &function_name, "function name");
+      CALLBACK(on_function_name, i, function_name);
+
+      uint32_t num_locals;
+      in_u32_leb128(ctx, &num_locals, "local name count");
+      CALLBACK(on_local_names_count, i, num_locals);
+      uint32_t j;
+      for (j = 0; j < num_locals; ++j) {
+        WasmStringSlice local_name;
+        in_str(ctx, &local_name, "local name");
+        CALLBACK(on_local_name, i, j, local_name);
+      }
+    }
+    CALLBACK0(end_names_section);
+    return WASM_TRUE;
+  }
+
+  return WASM_FALSE;
+}
+
+static WasmBool skip_until_section(Context* ctx,
+                                   WasmBinarySection expected_code) {
   uint32_t section_start_offset = ctx->offset;
+  uint32_t section_code;
   uint32_t section_size = 0;
   if (ctx->offset == ctx->size) {
     /* ok, no more sections */
     return WASM_FALSE;
   }
 
-  WasmStringSlice section_name;
-  in_str(ctx, &section_name, "section name");
+  in_u32_leb128(ctx, &section_code, "section code");
   in_u32_leb128(ctx, &section_size, "section size");
-
+  uint32_t payload_start_offset = ctx->offset;
   if (ctx->offset + section_size > ctx->size)
     RAISE_ERROR("invalid section size: extends past end");
 
-  int index = -1;
-#define V(name)                                                  \
-  else if (strncmp(section_name.start, WASM_SECTION_NAME_##name, \
-                   section_name.length) == 0) {                  \
-    index = WASM_SECTION_INDEX_##name;                           \
-  }
-  if (0) {
-  }
-  WASM_FOREACH_SECTION(V)
-#undef V
-
-  if (index == -1) {
-    /* ok, unknown section, skip it. */
-    ctx->offset += section_size;
-    return 0;
-  } else if (index < section_index) {
-    RAISE_ERROR("section " PRIstringslice " out of order",
-                WASM_PRINTF_STRING_SLICE_ARG(section_name));
-  } else if (index > section_index) {
-    /* ok, future section. Reset the offset. */
-    /* TODO(binji): slightly inefficient to re-read the section later. But
-     there aren't many so it probably doesn't matter */
-    ctx->offset = section_start_offset;
+  if (section_code == WASM_BINARY_SECTION_UNKNOWN) {
+    WasmStringSlice section_name;
+    in_str(ctx, &section_name, "section name");
+    if (!handle_unknown_section(ctx, &section_name)) {
+      /* section wasn't handled, so skip it and try again. */
+      ctx->offset = payload_start_offset + section_size;
+      return skip_until_section(ctx, expected_code);
+    }
     return WASM_FALSE;
-  }
+  } else {
+    /* section is known, check if it is valid. */
+    if (section_code >= WASM_NUM_BINARY_SECTIONS) {
+      RAISE_ERROR("invalid section code: %u; max is %u", section_code,
+                  WASM_NUM_BINARY_SECTIONS - 1);
+    }
 
-  assert(index == section_index);
-  return WASM_TRUE;
+    if (section_code == expected_code) {
+      return WASM_TRUE;
+    } else if (section_code < expected_code) {
+      RAISE_ERROR("section %s out of order", s_section_name[section_code]);
+      return WASM_FALSE;
+    } else {
+      /* ok, future section. Reset the offset. */
+      ctx->offset = section_start_offset;
+      return WASM_FALSE;
+    }
+  }
 }
 
 static void destroy_context(WasmAllocator* allocator, Context* ctx) {
@@ -421,198 +474,262 @@ static void logging_on_error(uint32_t offset,
   }
 }
 
-static WasmResult logging_begin_module(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_module\n");
-  indent(ctx);
-  FORWARD0(begin_module);
+#define LOGGING_BEGIN(name)                                 \
+  static WasmResult logging_begin_##name(void* user_data) { \
+    LoggingContext* ctx = user_data;                        \
+    LOGF("begin_" #name "\n");                              \
+    indent(ctx);                                            \
+    FORWARD0(begin_##name);                                 \
+  }
+
+#define LOGGING_END(name)                                 \
+  static WasmResult logging_end_##name(void* user_data) { \
+    LoggingContext* ctx = user_data;                      \
+    dedent(ctx);                                          \
+    LOGF("end_" #name "\n");                              \
+    FORWARD0(end_##name);                                 \
+  }
+
+#define LOGGING_UINT32(name)                                          \
+  static WasmResult logging_##name(uint32_t value, void* user_data) { \
+    LoggingContext* ctx = user_data;                                  \
+    LOGF(#name "(%u)\n", value);                                      \
+    FORWARD(name, value);                                             \
+  }
+
+#define LOGGING_UINT32_DESC(name, desc)                               \
+  static WasmResult logging_##name(uint32_t value, void* user_data) { \
+    LoggingContext* ctx = user_data;                                  \
+    LOGF(#name "(" desc ": %u)\n", value);                            \
+    FORWARD(name, value);                                             \
+  }
+
+#define LOGGING_UINT32_UINT32(name, desc0, desc1)                    \
+  static WasmResult logging_##name(uint32_t value0, uint32_t value1, \
+                                   void* user_data) {                \
+    LoggingContext* ctx = user_data;                                 \
+    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);  \
+    FORWARD(name, value0, value1);                                   \
+  }
+
+#define LOGGING_OPCODE(name)                                             \
+  static WasmResult logging_##name(WasmOpcode opcode, void* user_data) { \
+    LoggingContext* ctx = user_data;                                     \
+    LOGF(#name "(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);        \
+    FORWARD(name, opcode);                                               \
+  }
+
+#define LOGGING0(name)                                \
+  static WasmResult logging_##name(void* user_data) { \
+    LoggingContext* ctx = user_data;                  \
+    LOGF(#name "\n");                                 \
+    FORWARD0(name);                                   \
+  }
+
+LOGGING_BEGIN(module)
+LOGGING_END(module)
+LOGGING_BEGIN(signature_section)
+LOGGING_UINT32(on_signature_count)
+LOGGING_END(signature_section)
+LOGGING_BEGIN(import_section)
+LOGGING_UINT32(on_import_count)
+LOGGING_UINT32_UINT32(on_import_func, "index", "sig_index")
+LOGGING_END(import_section)
+LOGGING_BEGIN(function_signatures_section)
+LOGGING_UINT32(on_function_signatures_count)
+LOGGING_UINT32_UINT32(on_function_signature, "index", "sig_index")
+LOGGING_END(function_signatures_section)
+LOGGING_BEGIN(table_section)
+LOGGING_END(table_section)
+LOGGING_BEGIN(memory_section)
+LOGGING_END(memory_section)
+LOGGING_BEGIN(global_section)
+LOGGING_UINT32(on_global_count)
+LOGGING_UINT32(begin_global_init_expr)
+LOGGING_UINT32(end_global_init_expr)
+LOGGING_UINT32(end_global)
+LOGGING_END(global_section)
+LOGGING_BEGIN(export_section)
+LOGGING_UINT32(on_export_count)
+LOGGING_END(export_section)
+LOGGING_BEGIN(start_section)
+LOGGING_UINT32(on_start_function)
+LOGGING_END(start_section)
+LOGGING_BEGIN(function_bodies_section)
+LOGGING_UINT32(on_function_bodies_count)
+LOGGING_UINT32(begin_function_body)
+LOGGING_UINT32(end_function_body)
+LOGGING_UINT32(on_local_decl_count)
+LOGGING_OPCODE(on_binary_expr)
+LOGGING_UINT32_DESC(on_call_expr, "func_index")
+LOGGING_UINT32_DESC(on_call_import_expr, "import_index")
+LOGGING_UINT32_DESC(on_call_indirect_expr, "sig_index")
+LOGGING_OPCODE(on_compare_expr)
+LOGGING_OPCODE(on_convert_expr)
+LOGGING0(on_current_memory_expr)
+LOGGING0(on_drop_expr)
+LOGGING0(on_else_expr)
+LOGGING0(on_end_expr)
+LOGGING_UINT32_DESC(on_get_global_expr, "index")
+LOGGING_UINT32_DESC(on_get_local_expr, "index")
+LOGGING0(on_grow_memory_expr)
+LOGGING0(on_nop_expr)
+LOGGING0(on_return_expr)
+LOGGING0(on_select_expr)
+LOGGING_UINT32_DESC(on_set_global_expr, "index")
+LOGGING_UINT32_DESC(on_set_local_expr, "index")
+LOGGING_UINT32_DESC(on_tee_local_expr, "index")
+LOGGING0(on_unreachable_expr)
+LOGGING_OPCODE(on_unary_expr)
+LOGGING_END(function_bodies_section)
+LOGGING_BEGIN(elem_section)
+LOGGING_UINT32(on_elem_segment_count)
+LOGGING_UINT32_UINT32(begin_elem_segment, "index", "table_index")
+LOGGING_UINT32(begin_elem_segment_init_expr)
+LOGGING_UINT32(end_elem_segment_init_expr)
+LOGGING_UINT32_UINT32(on_elem_segment_function_index_count, "index", "count")
+LOGGING_UINT32_UINT32(on_elem_segment_function_index, "index", "func_index")
+LOGGING_UINT32(end_elem_segment)
+LOGGING_END(elem_section)
+LOGGING_BEGIN(data_section)
+LOGGING_UINT32(on_data_segment_count)
+LOGGING_UINT32_UINT32(begin_data_segment, "index", "memory_index")
+LOGGING_UINT32(begin_data_segment_init_expr)
+LOGGING_UINT32(end_data_segment_init_expr)
+LOGGING_UINT32(end_data_segment)
+LOGGING_END(data_section)
+LOGGING_BEGIN(names_section)
+LOGGING_UINT32(on_function_names_count)
+LOGGING_UINT32_UINT32(on_local_names_count, "index", "count")
+LOGGING_END(names_section)
+LOGGING_UINT32_UINT32(on_init_expr_get_global_expr, "index", "global_index")
+
+static void sprint_limits(char* dst, size_t size, const WasmLimits* limits) {
+  int result;
+  if (limits->has_max) {
+    result = wasm_snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
+                           limits->initial, limits->max);
+  } else {
+    result = wasm_snprintf(dst, size, "initial: %" PRIu64, limits->initial);
+  }
+  assert((size_t)result < size);
 }
 
-static WasmResult logging_end_module(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_module\n");
-  FORWARD0(end_module);
-}
-
-static WasmResult logging_begin_memory_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_memory_section\n");
-  indent(ctx);
-  FORWARD0(begin_memory_section);
-}
-
-static WasmResult logging_on_memory_initial_size_pages(uint32_t pages,
-                                                       void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_memory_initial_size_pages(%u)\n", pages);
-  FORWARD(on_memory_initial_size_pages, pages);
-}
-
-static WasmResult logging_on_memory_max_size_pages(uint32_t pages,
-                                                   void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_memory_max_size_pages(%u)\n", pages);
-  FORWARD(on_memory_max_size_pages, pages);
-}
-
-static WasmResult logging_on_memory_exported(WasmBool exported,
-                                             void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_memory_exported(%u)\n", exported);
-  FORWARD(on_memory_exported, exported);
-}
-
-static WasmResult logging_end_memory_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_memory_section\n");
-  FORWARD0(end_memory_section);
-}
-
-static WasmResult logging_begin_data_segment_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_data_segment_section\n");
-  indent(ctx);
-  FORWARD0(begin_data_segment_section);
-}
-
-static WasmResult logging_on_data_segment_count(uint32_t count,
-                                                void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_data_segment_count(%u)\n", count);
-  FORWARD(on_data_segment_count, count);
-}
-
-static WasmResult logging_on_data_segment(uint32_t index,
-                                          uint32_t address,
-                                          const void* data,
-                                          uint32_t size,
-                                          void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_data_segment(index:%u, address:%u, size:%u)\n", index, address,
-       size);
-  FORWARD(on_data_segment, index, address, data, size);
-}
-
-static WasmResult logging_end_data_segment_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_data_segment_section\n");
-  FORWARD0(end_data_segment_section);
-}
-
-static WasmResult logging_begin_signature_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_signature_section\n");
-  indent(ctx);
-  FORWARD0(begin_signature_section);
-}
-
-static WasmResult logging_on_signature_count(uint32_t count, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_signature_count(%u)\n", count);
-  FORWARD(on_signature_count, count);
+static void log_types(LoggingContext* ctx,
+                      uint32_t type_count,
+                      WasmType* types) {
+  uint32_t i;
+  LOGF_NOINDENT("[");
+  for (i = 0; i < type_count; ++i) {
+    LOGF_NOINDENT("%s", s_type_names[types[i]]);
+    if (i != type_count - 1)
+      LOGF_NOINDENT(", ");
+  }
+  LOGF_NOINDENT("]");
 }
 
 static WasmResult logging_on_signature(uint32_t index,
-                                       WasmType result_type,
                                        uint32_t param_count,
                                        WasmType* param_types,
+                                       uint32_t result_count,
+                                       WasmType* result_types,
                                        void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_signature(index: %u, %s (", index, s_type_names[result_type]);
-  uint32_t i;
-  for (i = 0; i < param_count; ++i) {
-    LOGF_NOINDENT("%s", s_type_names[result_type]);
-    if (i != param_count - 1)
-      LOGF_NOINDENT(", ");
-  }
-  LOGF_NOINDENT("))\n");
-  FORWARD(on_signature, index, result_type, param_count, param_types);
-}
-
-static WasmResult logging_end_signature_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_signature_section\n");
-  FORWARD0(end_signature_section);
-}
-
-static WasmResult logging_begin_import_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_import_section\n");
-  indent(ctx);
-  FORWARD0(begin_import_section);
-}
-
-static WasmResult logging_on_import_count(uint32_t count, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_import_count(%u)\n", count);
-  FORWARD(on_import_count, count);
+  LOGF("on_signature(index: %u, params: ", index);
+  log_types(ctx, param_count, param_types);
+  LOGF_NOINDENT(", results: ");
+  log_types(ctx, result_count, result_types);
+  LOGF_NOINDENT(")\n");
+  FORWARD(on_signature, index, param_count, param_types, result_count,
+          result_types);
 }
 
 static WasmResult logging_on_import(uint32_t index,
-                                    uint32_t sig_index,
                                     WasmStringSlice module_name,
-                                    WasmStringSlice function_name,
+                                    WasmStringSlice field_name,
                                     void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_import(index: %u, sig_index: %u, module: \"" PRIstringslice
-       "\", function: \"" PRIstringslice "\")\n",
-       index, sig_index, WASM_PRINTF_STRING_SLICE_ARG(module_name),
-       WASM_PRINTF_STRING_SLICE_ARG(function_name));
-  FORWARD(on_import, index, sig_index, module_name, function_name);
+  LOGF("on_import(index: %u, module: \"" PRIstringslice
+       "\", field: \"" PRIstringslice "\")\n",
+       index, WASM_PRINTF_STRING_SLICE_ARG(module_name),
+       WASM_PRINTF_STRING_SLICE_ARG(field_name));
+  FORWARD(on_import, index, module_name, field_name);
 }
 
-static WasmResult logging_end_import_section(void* user_data) {
+static WasmResult logging_on_import_table(uint32_t index,
+                                          uint32_t elem_type,
+                                          const WasmLimits* elem_limits,
+                                          void* user_data) {
   LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_import_section\n");
-  FORWARD0(end_import_section);
+  char buf[100];
+  sprint_limits(buf, sizeof(buf), elem_limits);
+  LOGF("on_import_table(index: %u, elem_type: %u, %s)\n", index, elem_type,
+       buf);
+  FORWARD(on_import_table, index, elem_type, elem_limits);
 }
 
-static WasmResult logging_begin_function_signatures_section(void* user_data) {
+static WasmResult logging_on_import_memory(uint32_t index,
+                                           const WasmLimits* page_limits,
+                                           void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("begin_function_signatures_section\n");
-  indent(ctx);
-  FORWARD0(begin_function_signatures_section);
+  char buf[100];
+  sprint_limits(buf, sizeof(buf), page_limits);
+  LOGF("on_import_memory(index: %u, %s)\n", index, buf);
+  FORWARD(on_import_memory, index, page_limits);
 }
 
-static WasmResult logging_on_function_signatures_count(uint32_t count,
-                                                       void* user_data) {
+static WasmResult logging_on_import_global(uint32_t index,
+                                           WasmType type,
+                                           WasmBool mutable_,
+                                           void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_function_signatures_count(%u)\n", count);
-  FORWARD(on_function_signatures_count, count);
+  LOGF("on_import_global(index: %u, type: %s, mutable: %s)\n", index,
+       s_type_names[type], mutable_ ? "true" : "false");
+  FORWARD(on_import_global, index, type, mutable_);
 }
 
-static WasmResult logging_on_function_signature(uint32_t index,
-                                                uint32_t sig_index,
-                                                void* user_data) {
+static WasmResult logging_on_table(uint32_t index,
+                                   uint32_t elem_type,
+                                   const WasmLimits* elem_limits,
+                                   void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_function_signature(index: %u, sig_index: %u)\n", index, sig_index);
-  FORWARD(on_function_signature, index, sig_index);
+  char buf[100];
+  sprint_limits(buf, sizeof(buf), elem_limits);
+  LOGF("on_table(index: %u, elem_type: %u, %s)\n", index, elem_type, buf);
+  FORWARD(on_table, index, elem_type, elem_limits);
 }
 
-static WasmResult logging_end_function_signatures_section(void* user_data) {
+static WasmResult logging_on_memory(uint32_t index,
+                                    const WasmLimits* page_limits,
+                                    void* user_data) {
   LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_function_signatures_section\n");
-  FORWARD0(end_function_signatures_section);
+  char buf[100];
+  sprint_limits(buf, sizeof(buf), page_limits);
+  LOGF("on_memory(index: %u, %s)\n", index, buf);
+  FORWARD(on_memory, index, page_limits);
 }
 
-static WasmResult logging_begin_function_bodies_section(void* user_data) {
+static WasmResult logging_begin_global(uint32_t index,
+                                       WasmType type,
+                                       WasmBool mutable_,
+                                       void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("begin_function_bodies_section\n");
-  indent(ctx);
-  FORWARD0(begin_function_bodies_section);
+  LOGF("begin_global(index: %u, type: %s, mutable: %s)\n", index,
+       s_type_names[type], mutable_ ? "true" : "false");
+  FORWARD(begin_global, index, mutable_, type);
 }
 
-static WasmResult logging_on_function_bodies_count(uint32_t count,
-                                                   void* user_data) {
+static WasmResult logging_on_export(uint32_t index,
+                                    WasmExternalKind kind,
+                                    uint32_t item_index,
+                                    WasmStringSlice name,
+                                    void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_function_bodies_count(%u)\n", count);
-  FORWARD(on_function_bodies_count, count);
+  LOGF("on_export(index: %u, kind: %s, item_index: %u, name: \"" PRIstringslice
+       "\")\n",
+       index, s_external_kind_name[kind], item_index,
+       WASM_PRINTF_STRING_SLICE_ARG(name));
+  FORWARD(on_export, index, kind, item_index, name);
 }
 
 static WasmResult logging_begin_function_body_pass(uint32_t index,
@@ -622,19 +739,6 @@ static WasmResult logging_begin_function_body_pass(uint32_t index,
   LOGF("begin_function_body_pass(index: %u, pass: %u)\n", index, pass);
   indent(ctx);
   FORWARD(begin_function_body_pass, index, pass);
-}
-
-static WasmResult logging_begin_function_body(uint32_t index, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_function_body(%u)\n", index);
-  indent(ctx);
-  FORWARD(begin_function_body, index);
-}
-
-static WasmResult logging_on_local_decl_count(uint32_t count, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_local_decl_count(%u)\n", count);
-  FORWARD(on_local_decl_count, count);
 }
 
 static WasmResult logging_on_local_decl(uint32_t decl_index,
@@ -647,42 +751,34 @@ static WasmResult logging_on_local_decl(uint32_t decl_index,
   FORWARD(on_local_decl, decl_index, count, type);
 }
 
-static WasmResult logging_on_binary_expr(WasmOpcode opcode, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_binary_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
-  FORWARD(on_binary_expr, opcode);
-}
-
-static WasmResult logging_on_block_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_block_expr\n");
-  FORWARD0(on_block_expr);
-}
-
-static WasmResult logging_on_br_expr(uint8_t arity,
-                                     uint32_t depth,
-                                     void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_br_expr(arity: %u, depth: %u)\n", arity, depth);
-  FORWARD(on_br_expr, arity, depth);
-}
-
-static WasmResult logging_on_br_if_expr(uint8_t arity,
-                                        uint32_t depth,
+static WasmResult logging_on_block_expr(uint32_t num_types,
+                                        WasmType* sig_types,
                                         void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_br_if_expr(arity: %u, depth: %u)\n", arity, depth);
-  FORWARD(on_br_if_expr, arity, depth);
+  LOGF("on_block_expr(sig: ");
+  log_types(ctx, num_types, sig_types);
+  LOGF_NOINDENT(")\n");
+  FORWARD(on_block_expr, num_types, sig_types);
 }
 
-static WasmResult logging_on_br_table_expr(uint8_t arity,
-                                           uint32_t num_targets,
+static WasmResult logging_on_br_expr(uint32_t depth, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_br_expr(depth: %u)\n", depth);
+  FORWARD(on_br_expr, depth);
+}
+
+static WasmResult logging_on_br_if_expr(uint32_t depth, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_br_if_expr(depth: %u)\n", depth);
+  FORWARD(on_br_if_expr, depth);
+}
+
+static WasmResult logging_on_br_table_expr(uint32_t num_targets,
                                            uint32_t* target_depths,
                                            uint32_t default_target_depth,
                                            void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_br_table_expr(arity: %u, num_targets: %u, depths: [", arity,
-       num_targets);
+  LOGF("on_br_table_expr(num_targets: %u, depths: [", num_targets);
   uint32_t i;
   for (i = 0; i < num_targets; ++i) {
     LOGF_NOINDENT("%u", target_depths[i]);
@@ -690,58 +786,7 @@ static WasmResult logging_on_br_table_expr(uint8_t arity,
       LOGF_NOINDENT(", ");
   }
   LOGF_NOINDENT("], default: %u)\n", default_target_depth);
-  FORWARD(on_br_table_expr, arity, num_targets, target_depths,
-          default_target_depth);
-}
-
-static WasmResult logging_on_call_expr(uint32_t arity,
-                                       uint32_t func_index,
-                                       void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_call_expr(arity: %u, func_index: %u)\n", arity, func_index);
-  FORWARD(on_call_expr, arity, func_index);
-}
-
-static WasmResult logging_on_call_import_expr(uint32_t arity,
-                                              uint32_t import_index,
-                                              void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_call_import_expr(arity: %u, import_index: %u)\n", arity,
-       import_index);
-  FORWARD(on_call_import_expr, arity, import_index);
-}
-
-static WasmResult logging_on_call_indirect_expr(uint32_t arity,
-                                                uint32_t sig_index,
-                                                void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_call_indirect_expr(arity: %u, sig_index: %u)\n", arity,
-       sig_index);
-  FORWARD(on_call_indirect_expr, arity, sig_index);
-}
-
-static WasmResult logging_on_compare_expr(WasmOpcode opcode, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_compare_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
-  FORWARD(on_compare_expr, opcode);
-}
-
-static WasmResult logging_on_convert_expr(WasmOpcode opcode, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_convert_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
-  FORWARD(on_convert_expr, opcode);
-}
-
-static WasmResult logging_on_else_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_else_expr\n");
-  FORWARD0(on_else_expr);
-}
-
-static WasmResult logging_on_end_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_end_expr\n");
-  FORWARD0(on_end_expr);
+  FORWARD(on_br_table_expr, num_targets, target_depths, default_target_depth);
 }
 
 static WasmResult logging_on_f32_const_expr(uint32_t value_bits,
@@ -756,23 +801,10 @@ static WasmResult logging_on_f32_const_expr(uint32_t value_bits,
 static WasmResult logging_on_f64_const_expr(uint64_t value_bits,
                                             void* user_data) {
   LoggingContext* ctx = user_data;
-  float value;
+  double value;
   memcpy(&value, &value_bits, sizeof(value));
   LOGF("on_f64_const_expr(%g (0x08%" PRIx64 "))\n", value, value_bits);
   FORWARD(on_f64_const_expr, value_bits);
-}
-
-static WasmResult logging_on_get_local_expr(uint32_t local_index,
-                                            void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_get_local_expr(index: %u)\n", local_index);
-  FORWARD(on_get_local_expr, local_index);
-}
-
-static WasmResult logging_on_grow_memory_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_grow_memory_expr\n");
-  FORWARD0(on_grow_memory_expr);
 }
 
 static WasmResult logging_on_i32_const_expr(uint32_t value, void* user_data) {
@@ -787,10 +819,14 @@ static WasmResult logging_on_i64_const_expr(uint64_t value, void* user_data) {
   FORWARD(on_i64_const_expr, value);
 }
 
-static WasmResult logging_on_if_expr(void* user_data) {
+static WasmResult logging_on_if_expr(uint32_t num_types,
+                                     WasmType* sig_types,
+                                     void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_if_expr\n");
-  FORWARD0(on_if_expr);
+  LOGF("on_if_expr(sig: ");
+  log_types(ctx, num_types, sig_types);
+  LOGF_NOINDENT(")\n");
+  FORWARD(on_if_expr, num_types, sig_types);
 }
 
 static WasmResult logging_on_load_expr(WasmOpcode opcode,
@@ -803,41 +839,14 @@ static WasmResult logging_on_load_expr(WasmOpcode opcode,
   FORWARD(on_load_expr, opcode, alignment_log2, offset);
 }
 
-static WasmResult logging_on_loop_expr(void* user_data) {
+static WasmResult logging_on_loop_expr(uint32_t num_types,
+                                       WasmType* sig_types,
+                                       void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_loop_expr\n");
-  FORWARD0(on_loop_expr);
-}
-
-static WasmResult logging_on_current_memory_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_current_memory_expr\n");
-  FORWARD0(on_current_memory_expr);
-}
-
-static WasmResult logging_on_nop_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_nop_expr\n");
-  FORWARD0(on_nop_expr);
-}
-
-static WasmResult logging_on_return_expr(uint8_t arity, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_return_expr(%u)\n", arity);
-  FORWARD(on_return_expr, arity);
-}
-
-static WasmResult logging_on_select_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_select_expr\n");
-  FORWARD0(on_select_expr);
-}
-
-static WasmResult logging_on_set_local_expr(uint32_t local_index,
-                                            void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_set_local_expr(index: %u)\n", local_index);
-  FORWARD(on_set_local_expr, local_index);
+  LOGF("on_loop_expr(sig: ");
+  log_types(ctx, num_types, sig_types);
+  LOGF_NOINDENT(")\n");
+  FORWARD(on_loop_expr, num_types, sig_types);
 }
 
 static WasmResult logging_on_store_expr(WasmOpcode opcode,
@@ -850,25 +859,6 @@ static WasmResult logging_on_store_expr(WasmOpcode opcode,
   FORWARD(on_store_expr, opcode, alignment_log2, offset);
 }
 
-static WasmResult logging_on_unary_expr(WasmOpcode opcode, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_unary_expr(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);
-  FORWARD(on_unary_expr, opcode);
-}
-
-static WasmResult logging_on_unreachable_expr(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_unreachable_expr\n");
-  FORWARD0(on_unreachable_expr);
-}
-
-static WasmResult logging_end_function_body(uint32_t index, void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_function_body(%u)\n", index);
-  FORWARD(end_function_body, index);
-}
-
 static WasmResult logging_end_function_body_pass(uint32_t index,
                                                  uint32_t pass,
                                                  void* user_data) {
@@ -878,106 +868,13 @@ static WasmResult logging_end_function_body_pass(uint32_t index,
   FORWARD(end_function_body_pass, index, pass);
 }
 
-static WasmResult logging_end_function_bodies_section(void* user_data) {
+static WasmResult logging_on_data_segment_data(uint32_t index,
+                                               const void* data,
+                                               uint32_t size,
+                                               void* user_data) {
   LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_function_bodies_section\n");
-  FORWARD0(end_function_bodies_section);
-}
-
-static WasmResult logging_begin_function_table_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_function_table_section\n");
-  indent(ctx);
-  FORWARD0(begin_function_table_section);
-}
-
-static WasmResult logging_on_function_table_count(uint32_t count,
-                                                  void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_function_table_count(%u)\n", count);
-  FORWARD(on_function_table_count, count);
-}
-
-static WasmResult logging_on_function_table_entry(uint32_t index,
-                                                  uint32_t func_index,
-                                                  void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_function_table_entry(index: %u, func_index: %u)\n", index,
-       func_index);
-  FORWARD(on_function_table_entry, index, func_index);
-}
-
-static WasmResult logging_end_function_table_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_function_table_section\n");
-  FORWARD0(end_function_table_section);
-}
-
-static WasmResult logging_begin_start_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_start_section\n");
-  indent(ctx);
-  FORWARD0(begin_start_section);
-}
-
-static WasmResult logging_on_start_function(uint32_t func_index,
-                                            void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_start_function(func_index: %u)\n", func_index);
-  FORWARD(on_start_function, func_index);
-}
-
-static WasmResult logging_end_start_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_start_section\n");
-  FORWARD0(end_start_section);
-}
-
-static WasmResult logging_begin_export_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_export_section\n");
-  indent(ctx);
-  FORWARD0(begin_export_section);
-}
-
-static WasmResult logging_on_export_count(uint32_t count, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_export_count(%u)\n", count);
-  FORWARD(on_export_count, count);
-}
-
-static WasmResult logging_on_export(uint32_t index,
-                                    uint32_t func_index,
-                                    WasmStringSlice name,
-                                    void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_export(index: %u, func_index: %u, name: \"" PRIstringslice "\")\n",
-       index, func_index, WASM_PRINTF_STRING_SLICE_ARG(name));
-  FORWARD(on_export, index, func_index, name);
-}
-
-static WasmResult logging_end_export_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_export_section\n");
-  FORWARD0(end_export_section);
-}
-
-static WasmResult logging_begin_names_section(void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("begin_names_section\n");
-  indent(ctx);
-  FORWARD0(begin_names_section);
-}
-
-static WasmResult logging_on_function_names_count(uint32_t count,
-                                                  void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_function_names_count(%u)\n", count);
-  FORWARD(on_function_names_count, count);
+  LOGF("on_data_segment_data(index:%u, size:%u)\n", index, size);
+  FORWARD(on_data_segment_data, index, data, size);
 }
 
 static WasmResult logging_on_function_name(uint32_t index,
@@ -987,14 +884,6 @@ static WasmResult logging_on_function_name(uint32_t index,
   LOGF("on_function_name(index: %u, name: \"" PRIstringslice "\")\n", index,
        WASM_PRINTF_STRING_SLICE_ARG(name));
   FORWARD(on_function_name, index, name);
-}
-
-static WasmResult logging_on_local_names_count(uint32_t index,
-                                               uint32_t count,
-                                               void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_local_names_count(index: %u, count: %u)\n", index, count);
-  FORWARD(on_local_names_count, index, count);
 }
 
 static WasmResult logging_on_local_name(uint32_t func_index,
@@ -1008,96 +897,285 @@ static WasmResult logging_on_local_name(uint32_t func_index,
   FORWARD(on_local_name, func_index, local_index, name);
 }
 
-static WasmResult logging_end_names_section(void* user_data) {
+static WasmResult logging_on_init_expr_f32_const_expr(uint32_t index,
+                                                      uint32_t value_bits,
+                                                      void* user_data) {
   LoggingContext* ctx = user_data;
-  dedent(ctx);
-  LOGF("end_names_section\n");
-  FORWARD0(end_names_section);
+  float value;
+  memcpy(&value, &value_bits, sizeof(value));
+  LOGF("on_init_expr_f32_const_expr(index: %u, value: %g (0x04%x))\n", index,
+       value, value_bits);
+  FORWARD(on_init_expr_f32_const_expr, index, value_bits);
+}
+
+static WasmResult logging_on_init_expr_f64_const_expr(uint32_t index,
+                                                      uint64_t value_bits,
+                                                      void* user_data) {
+  LoggingContext* ctx = user_data;
+  double value;
+  memcpy(&value, &value_bits, sizeof(value));
+  LOGF("on_init_expr_f64_const_expr(index: %u value: %g (0x08%" PRIx64 "))\n",
+       index, value, value_bits);
+  FORWARD(on_init_expr_f64_const_expr, index, value_bits);
+}
+
+static WasmResult logging_on_init_expr_i32_const_expr(uint32_t index,
+                                                      uint32_t value,
+                                                      void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_init_expr_i32_const_expr(index: %u, value: %u)\n", index, value);
+  FORWARD(on_init_expr_i32_const_expr, index, value);
+}
+
+static WasmResult logging_on_init_expr_i64_const_expr(uint32_t index,
+                                                      uint64_t value,
+                                                      void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_init_expr_i64_const_expr(index: %u, value: %" PRIu64 ")\n", index,
+       value);
+  FORWARD(on_init_expr_i64_const_expr, index, value);
 }
 
 static WasmBinaryReader s_logging_binary_reader = {
     .user_data = NULL,
-    .on_error = &logging_on_error,
-    .begin_module = &logging_begin_module,
-    .end_module = &logging_end_module,
-    .begin_memory_section = &logging_begin_memory_section,
-    .on_memory_initial_size_pages = &logging_on_memory_initial_size_pages,
-    .on_memory_max_size_pages = &logging_on_memory_max_size_pages,
-    .on_memory_exported = &logging_on_memory_exported,
-    .end_memory_section = &logging_end_memory_section,
-    .begin_data_segment_section = &logging_begin_data_segment_section,
-    .on_data_segment_count = &logging_on_data_segment_count,
-    .on_data_segment = &logging_on_data_segment,
-    .end_data_segment_section = &logging_end_data_segment_section,
-    .begin_signature_section = &logging_begin_signature_section,
-    .on_signature_count = &logging_on_signature_count,
-    .on_signature = &logging_on_signature,
-    .end_signature_section = &logging_end_signature_section,
-    .begin_import_section = &logging_begin_import_section,
-    .on_import_count = &logging_on_import_count,
-    .on_import = &logging_on_import,
-    .end_import_section = &logging_end_import_section,
+    .on_error = logging_on_error,
+    .begin_module = logging_begin_module,
+    .end_module = logging_end_module,
+
+    .begin_signature_section = logging_begin_signature_section,
+    .on_signature_count = logging_on_signature_count,
+    .on_signature = logging_on_signature,
+    .end_signature_section = logging_end_signature_section,
+
+    .begin_import_section = logging_begin_import_section,
+    .on_import_count = logging_on_import_count,
+    .on_import = logging_on_import,
+    .on_import_func = logging_on_import_func,
+    .on_import_table = logging_on_import_table,
+    .on_import_memory = logging_on_import_memory,
+    .on_import_global = logging_on_import_global,
+    .end_import_section = logging_end_import_section,
+
     .begin_function_signatures_section =
-        &logging_begin_function_signatures_section,
-    .on_function_signatures_count = &logging_on_function_signatures_count,
-    .on_function_signature = &logging_on_function_signature,
-    .end_function_signatures_section = &logging_end_function_signatures_section,
-    .begin_function_bodies_section = &logging_begin_function_bodies_section,
-    .on_function_bodies_count = &logging_on_function_bodies_count,
-    .begin_function_body_pass = &logging_begin_function_body_pass,
-    .begin_function_body = &logging_begin_function_body,
-    .on_local_decl_count = &logging_on_local_decl_count,
-    .on_local_decl = &logging_on_local_decl,
-    .on_binary_expr = &logging_on_binary_expr,
-    .on_block_expr = &logging_on_block_expr,
-    .on_br_expr = &logging_on_br_expr,
-    .on_br_if_expr = &logging_on_br_if_expr,
-    .on_br_table_expr = &logging_on_br_table_expr,
-    .on_call_expr = &logging_on_call_expr,
-    .on_call_import_expr = &logging_on_call_import_expr,
-    .on_call_indirect_expr = &logging_on_call_indirect_expr,
-    .on_compare_expr = &logging_on_compare_expr,
-    .on_convert_expr = &logging_on_convert_expr,
-    .on_else_expr = &logging_on_else_expr,
-    .on_end_expr = &logging_on_end_expr,
-    .on_f32_const_expr = &logging_on_f32_const_expr,
-    .on_f64_const_expr = &logging_on_f64_const_expr,
-    .on_get_local_expr = &logging_on_get_local_expr,
-    .on_grow_memory_expr = &logging_on_grow_memory_expr,
-    .on_i32_const_expr = &logging_on_i32_const_expr,
-    .on_i64_const_expr = &logging_on_i64_const_expr,
-    .on_if_expr = &logging_on_if_expr,
-    .on_load_expr = &logging_on_load_expr,
-    .on_loop_expr = &logging_on_loop_expr,
-    .on_current_memory_expr = &logging_on_current_memory_expr,
-    .on_nop_expr = &logging_on_nop_expr,
-    .on_return_expr = &logging_on_return_expr,
-    .on_select_expr = &logging_on_select_expr,
-    .on_set_local_expr = &logging_on_set_local_expr,
-    .on_store_expr = &logging_on_store_expr,
-    .on_unary_expr = &logging_on_unary_expr,
-    .on_unreachable_expr = &logging_on_unreachable_expr,
-    .end_function_body = &logging_end_function_body,
-    .end_function_body_pass = &logging_end_function_body_pass,
-    .end_function_bodies_section = &logging_end_function_bodies_section,
-    .begin_function_table_section = &logging_begin_function_table_section,
-    .on_function_table_count = &logging_on_function_table_count,
-    .on_function_table_entry = &logging_on_function_table_entry,
-    .end_function_table_section = &logging_end_function_table_section,
-    .begin_start_section = &logging_begin_start_section,
-    .on_start_function = &logging_on_start_function,
-    .end_start_section = &logging_end_start_section,
-    .begin_export_section = &logging_begin_export_section,
-    .on_export_count = &logging_on_export_count,
-    .on_export = &logging_on_export,
-    .end_export_section = &logging_end_export_section,
-    .begin_names_section = &logging_begin_names_section,
-    .on_function_names_count = &logging_on_function_names_count,
-    .on_function_name = &logging_on_function_name,
-    .on_local_names_count = &logging_on_local_names_count,
-    .on_local_name = &logging_on_local_name,
-    .end_names_section = &logging_end_names_section,
+        logging_begin_function_signatures_section,
+    .on_function_signatures_count = logging_on_function_signatures_count,
+    .on_function_signature = logging_on_function_signature,
+    .end_function_signatures_section = logging_end_function_signatures_section,
+
+    .begin_table_section = logging_begin_table_section,
+    .on_table = logging_on_table,
+    .end_table_section = logging_end_table_section,
+
+    .begin_memory_section = logging_begin_memory_section,
+    .on_memory = logging_on_memory,
+    .end_memory_section = logging_end_memory_section,
+
+    .begin_global_section = logging_begin_global_section,
+    .on_global_count = logging_on_global_count,
+    .begin_global = logging_begin_global,
+    .begin_global_init_expr = logging_begin_global_init_expr,
+    .end_global_init_expr = logging_end_global_init_expr,
+    .end_global = logging_end_global,
+    .end_global_section = logging_end_global_section,
+
+    .begin_export_section = logging_begin_export_section,
+    .on_export_count = logging_on_export_count,
+    .on_export = logging_on_export,
+    .end_export_section = logging_end_export_section,
+
+    .begin_start_section = logging_begin_start_section,
+    .on_start_function = logging_on_start_function,
+    .end_start_section = logging_end_start_section,
+
+    .begin_function_bodies_section = logging_begin_function_bodies_section,
+    .on_function_bodies_count = logging_on_function_bodies_count,
+    .begin_function_body_pass = logging_begin_function_body_pass,
+    .begin_function_body = logging_begin_function_body,
+    .on_local_decl_count = logging_on_local_decl_count,
+    .on_local_decl = logging_on_local_decl,
+    .on_binary_expr = logging_on_binary_expr,
+    .on_block_expr = logging_on_block_expr,
+    .on_br_expr = logging_on_br_expr,
+    .on_br_if_expr = logging_on_br_if_expr,
+    .on_br_table_expr = logging_on_br_table_expr,
+    .on_call_expr = logging_on_call_expr,
+    .on_call_import_expr = logging_on_call_import_expr,
+    .on_call_indirect_expr = logging_on_call_indirect_expr,
+    .on_compare_expr = logging_on_compare_expr,
+    .on_convert_expr = logging_on_convert_expr,
+    .on_drop_expr = logging_on_drop_expr,
+    .on_else_expr = logging_on_else_expr,
+    .on_end_expr = logging_on_end_expr,
+    .on_f32_const_expr = logging_on_f32_const_expr,
+    .on_f64_const_expr = logging_on_f64_const_expr,
+    .on_get_global_expr = logging_on_get_global_expr,
+    .on_get_local_expr = logging_on_get_local_expr,
+    .on_grow_memory_expr = logging_on_grow_memory_expr,
+    .on_i32_const_expr = logging_on_i32_const_expr,
+    .on_i64_const_expr = logging_on_i64_const_expr,
+    .on_if_expr = logging_on_if_expr,
+    .on_load_expr = logging_on_load_expr,
+    .on_loop_expr = logging_on_loop_expr,
+    .on_current_memory_expr = logging_on_current_memory_expr,
+    .on_nop_expr = logging_on_nop_expr,
+    .on_return_expr = logging_on_return_expr,
+    .on_select_expr = logging_on_select_expr,
+    .on_set_global_expr = logging_on_set_global_expr,
+    .on_set_local_expr = logging_on_set_local_expr,
+    .on_store_expr = logging_on_store_expr,
+    .on_tee_local_expr = logging_on_tee_local_expr,
+    .on_unary_expr = logging_on_unary_expr,
+    .on_unreachable_expr = logging_on_unreachable_expr,
+    .end_function_body = logging_end_function_body,
+    .end_function_body_pass = logging_end_function_body_pass,
+    .end_function_bodies_section = logging_end_function_bodies_section,
+
+    .begin_elem_section = logging_begin_elem_section,
+    .on_elem_segment_count = logging_on_elem_segment_count,
+    .begin_elem_segment = logging_begin_elem_segment,
+    .begin_elem_segment_init_expr = logging_begin_elem_segment_init_expr,
+    .end_elem_segment_init_expr = logging_end_elem_segment_init_expr,
+    .on_elem_segment_function_index_count =
+        logging_on_elem_segment_function_index_count,
+    .on_elem_segment_function_index = logging_on_elem_segment_function_index,
+    .end_elem_segment = logging_end_elem_segment,
+    .end_elem_section = logging_end_elem_section,
+
+    .begin_data_section = logging_begin_data_section,
+    .on_data_segment_count = logging_on_data_segment_count,
+    .begin_data_segment = logging_begin_data_segment,
+    .begin_data_segment_init_expr = logging_begin_data_segment_init_expr,
+    .end_data_segment_init_expr = logging_end_data_segment_init_expr,
+    .on_data_segment_data = logging_on_data_segment_data,
+    .end_data_segment = logging_end_data_segment,
+    .end_data_section = logging_end_data_section,
+
+    .begin_names_section = logging_begin_names_section,
+    .on_function_names_count = logging_on_function_names_count,
+    .on_function_name = logging_on_function_name,
+    .on_local_names_count = logging_on_local_names_count,
+    .on_local_name = logging_on_local_name,
+    .end_names_section = logging_end_names_section,
+
+    .on_init_expr_f32_const_expr = logging_on_init_expr_f32_const_expr,
+    .on_init_expr_f64_const_expr = logging_on_init_expr_f64_const_expr,
+    .on_init_expr_get_global_expr = logging_on_init_expr_get_global_expr,
+    .on_init_expr_i32_const_expr = logging_on_init_expr_i32_const_expr,
+    .on_init_expr_i64_const_expr = logging_on_init_expr_i64_const_expr,
 };
+
+static void read_init_expr(Context* ctx, uint32_t index) {
+  uint8_t opcode;
+  in_u8(ctx, &opcode, "opcode");
+  switch (opcode) {
+    case WASM_OPCODE_I32_CONST: {
+      uint32_t value = 0;
+      in_i32_leb128(ctx, &value, "init_expr i32.const value");
+      CALLBACK(on_init_expr_i32_const_expr, index, value);
+      break;
+    }
+
+    case WASM_OPCODE_I64_CONST: {
+      uint64_t value = 0;
+      in_i64_leb128(ctx, &value, "init_expr i64.const value");
+      CALLBACK(on_init_expr_i64_const_expr, index, value);
+      break;
+    }
+
+    case WASM_OPCODE_F32_CONST: {
+      uint32_t value_bits = 0;
+      in_f32(ctx, &value_bits, "init_expr f32.const value");
+      CALLBACK(on_init_expr_f32_const_expr, index, value_bits);
+      break;
+    }
+
+    case WASM_OPCODE_F64_CONST: {
+      uint64_t value_bits = 0;
+      in_f64(ctx, &value_bits, "init_expr f64.const value");
+      CALLBACK(on_init_expr_f64_const_expr, index, value_bits);
+      break;
+    }
+
+    case WASM_OPCODE_GET_GLOBAL: {
+      uint32_t global_index;
+      in_u32_leb128(ctx, &global_index, "init_expr get_global index");
+      CALLBACK(on_init_expr_get_global_expr, index, global_index);
+      break;
+    }
+
+    case WASM_OPCODE_END:
+      return;
+
+    default:
+      RAISE_ERROR("unexpected opcode in initializer expression: %d (0x%x)",
+                  opcode, opcode);
+      break;
+  }
+
+  in_u8(ctx, &opcode, "opcode");
+  RAISE_ERROR_UNLESS(opcode == WASM_OPCODE_END,
+                     "expected END opcode after initializer expression");
+}
+
+static void read_table(Context* ctx,
+                       uint32_t* out_elem_type,
+                       WasmLimits* out_elem_limits) {
+  in_u32_leb128(ctx, out_elem_type, "table elem type");
+  RAISE_ERROR_UNLESS(*out_elem_type == WASM_BINARY_ELEM_TYPE_ANYFUNC,
+                     "table elem type must by anyfunc (0x20)");
+
+  uint32_t flags;
+  uint32_t initial;
+  uint32_t max = 0;
+  in_u32_leb128(ctx, &flags, "table flags");
+  in_u32_leb128(ctx, &initial, "table initial elem count");
+  WasmBool has_max = flags & WASM_BINARY_LIMITS_HAS_MAX_FLAG;
+  if (has_max) {
+    in_u32_leb128(ctx, &max, "table max elem count");
+    RAISE_ERROR_UNLESS(initial <= max,
+                       "table initial elem count must be <= max elem count");
+  }
+
+  out_elem_limits->has_max = has_max;
+  out_elem_limits->initial = initial;
+  out_elem_limits->max = max;
+}
+
+static void read_memory(Context* ctx, WasmLimits* out_page_limits) {
+  uint32_t flags;
+  uint32_t initial;
+  uint32_t max = 0;
+  in_u32_leb128(ctx, &flags, "memory flags");
+  in_u32_leb128(ctx, &initial, "memory initial page count");
+  WasmBool has_max = flags & WASM_BINARY_LIMITS_HAS_MAX_FLAG;
+  RAISE_ERROR_UNLESS(initial <= WASM_MAX_PAGES, "invalid memory initial size");
+  if (has_max) {
+    in_u32_leb128(ctx, &max, "memory max page count");
+    RAISE_ERROR_UNLESS(max <= WASM_MAX_PAGES, "invalid memory max size");
+    RAISE_ERROR_UNLESS(initial <= max,
+                       "memory initial size must be <= max size");
+  }
+
+  out_page_limits->has_max = has_max;
+  out_page_limits->initial = initial;
+  out_page_limits->max = max;
+}
+
+static void read_global_header(Context* ctx,
+                               uint8_t* out_type,
+                               WasmBool* out_mutable) {
+  uint8_t global_type;
+  uint8_t mutable_;
+  in_u8(ctx, &global_type, "global type");
+  RAISE_ERROR_UNLESS(is_concrete_type(global_type),
+                     "expected valid global type");
+
+  in_u8(ctx, &mutable_, "global mutability");
+  RAISE_ERROR_UNLESS(mutable_ <= 1, "global mutability must be 0 or 1");
+
+  *out_type = global_type;
+  *out_mutable = mutable_;
+}
 
 WasmResult wasm_read_binary(WasmAllocator* allocator,
                             const void* data,
@@ -1120,6 +1198,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   ctx->data = data;
   ctx->size = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
+  ctx->options = options;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
     destroy_context(allocator, ctx);
@@ -1143,14 +1222,13 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                      version, WASM_BINARY_VERSION);
 
   /* type */
-  uint32_t num_signatures = 0;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_TYPE)) {
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_TYPE)) {
     CALLBACK0(begin_signature_section);
     uint32_t i;
-    in_u32_leb128(ctx, &num_signatures, "type count");
-    CALLBACK(on_signature_count, num_signatures);
+    in_u32_leb128(ctx, &ctx->num_signatures, "type count");
+    CALLBACK(on_signature_count, ctx->num_signatures);
 
-    for (i = 0; i < num_signatures; ++i) {
+    for (i = 0; i < ctx->num_signatures; ++i) {
       uint8_t form;
       in_u8(ctx, &form, "type form");
       RAISE_ERROR_UNLESS(form == WASM_BINARY_TYPE_FORM_FUNCTION,
@@ -1166,7 +1244,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       for (j = 0; j < num_params; ++j) {
         uint8_t param_type;
         in_u8(ctx, &param_type, "function param type");
-        RAISE_ERROR_UNLESS(is_non_void_type(param_type),
+        RAISE_ERROR_UNLESS(is_concrete_type(param_type),
                            "expected valid param type");
         ctx->param_types.data[j] = param_type;
       }
@@ -1178,144 +1256,238 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint8_t result_type = WASM_TYPE_VOID;
       if (num_results) {
         in_u8(ctx, &result_type, "function result type");
-        RAISE_ERROR_UNLESS(is_non_void_type(result_type),
+        RAISE_ERROR_UNLESS(is_concrete_type(result_type),
                            "expected valid result type");
       }
 
-      CALLBACK(on_signature, i, (WasmType)result_type, num_params,
-               ctx->param_types.data);
+      CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
+               &result_type);
     }
     CALLBACK0(end_signature_section);
   }
 
   /* import */
-  uint32_t num_imports = 0;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_IMPORT)) {
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_IMPORT)) {
     CALLBACK0(begin_import_section);
     uint32_t i;
-    in_u32_leb128(ctx, &num_imports, "import count");
-    CALLBACK(on_import_count, num_imports);
-    for (i = 0; i < num_imports; ++i) {
-      uint32_t sig_index;
-      in_u32_leb128(ctx, &sig_index, "import signature index");
-      RAISE_ERROR_UNLESS(sig_index < num_signatures,
-                         "invalid import signature index");
-
+    in_u32_leb128(ctx, &ctx->num_imports, "import count");
+    CALLBACK(on_import_count, ctx->num_imports);
+    for (i = 0; i < ctx->num_imports; ++i) {
       WasmStringSlice module_name;
       in_str(ctx, &module_name, "import module name");
+      WasmStringSlice field_name;
+      in_str(ctx, &field_name, "import field name");
+      CALLBACK(on_import, i, module_name, field_name);
 
-      WasmStringSlice function_name;
-      in_str(ctx, &function_name, "import function name");
+      uint32_t kind;
+      in_u32_leb128(ctx, &kind, "import kind");
+      switch (kind) {
+        case WASM_EXTERNAL_KIND_FUNC: {
+          uint32_t sig_index;
+          in_u32_leb128(ctx, &sig_index, "import signature index");
+          RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
+                             "invalid import signature index");
+          CALLBACK(on_import_func, i, sig_index);
+          ctx->num_func_imports++;
+          break;
+        }
 
-      CALLBACK(on_import, i, sig_index, module_name, function_name);
+        case WASM_EXTERNAL_KIND_TABLE: {
+          uint32_t elem_type;
+          WasmLimits elem_limits;
+          read_table(ctx, &elem_type, &elem_limits);
+          CALLBACK(on_import_table, i, elem_type, &elem_limits);
+          break;
+        }
+
+        case WASM_EXTERNAL_KIND_MEMORY: {
+          WasmLimits page_limits;
+          read_memory(ctx, &page_limits);
+          CALLBACK(on_import_memory, i, &page_limits);
+          break;
+        }
+
+        case WASM_EXTERNAL_KIND_GLOBAL: {
+          uint8_t type;
+          WasmBool mutable_;
+          read_global_header(ctx, &type, &mutable_);
+          CALLBACK(on_import_global, i, type, mutable_);
+          break;
+        }
+
+        default:
+          RAISE_ERROR("invalid import kind: %d", kind);
+      }
+
     }
     CALLBACK0(end_import_section);
   }
 
   /* function */
-  uint32_t num_function_signatures = 0;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_FUNCTION)) {
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_FUNCTION)) {
     CALLBACK0(begin_function_signatures_section);
     uint32_t i;
-    in_u32_leb128(ctx, &num_function_signatures, "function signature count");
-    CALLBACK(on_function_signatures_count, num_function_signatures);
-    for (i = 0; i < num_function_signatures; ++i) {
+    in_u32_leb128(ctx, &ctx->num_function_signatures,
+                  "function signature count");
+    CALLBACK(on_function_signatures_count, ctx->num_function_signatures);
+    for (i = 0; i < ctx->num_function_signatures; ++i) {
       uint32_t sig_index;
       in_u32_leb128(ctx, &sig_index, "function signature index");
-      RAISE_ERROR_UNLESS(sig_index < num_signatures,
+      RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                          "invalid function signature index");
       CALLBACK(on_function_signature, i, sig_index);
     }
     CALLBACK0(end_function_signatures_section);
   }
 
+  /* only allow the name section to come after the function signatures have
+   * been specified */
+  ctx->name_section_ok = WASM_TRUE;
+
   /* table */
-  uint32_t num_function_table_entries;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_TABLE)) {
-    CALLBACK0(begin_function_table_section);
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_TABLE)) {
+    CALLBACK0(begin_table_section);
     uint32_t i;
-    in_u32_leb128(ctx, &num_function_table_entries,
-                  "function table entry count");
-    CALLBACK(on_function_table_count, num_function_table_entries);
-    for (i = 0; i < num_function_table_entries; ++i) {
-      uint32_t func_index;
-      in_u32_leb128(ctx, &func_index, "function table function index");
-      RAISE_ERROR_UNLESS(func_index < num_function_signatures,
-                         "invalid function table function index");
-      CALLBACK(on_function_table_entry, i, func_index);
+    in_u32_leb128(ctx, &ctx->num_tables, "table count");
+    RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count must be 0 or 1");
+    CALLBACK(on_table_count, ctx->num_tables);
+    for (i = 0; i < ctx->num_tables; ++i) {
+      uint32_t elem_type;
+      WasmLimits elem_limits;
+      read_table(ctx, &elem_type, &elem_limits);
+      CALLBACK(on_table, i, elem_type, &elem_limits);
     }
-    CALLBACK0(end_function_table_section);
+    CALLBACK0(end_table_section);
   }
 
   /* memory */
-  WasmBool seen_memory_section = WASM_FALSE;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_MEMORY)) {
-    seen_memory_section = WASM_TRUE;
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_MEMORY)) {
     CALLBACK0(begin_memory_section);
-    uint32_t initial_size_pages;
-    in_u32_leb128(ctx, &initial_size_pages, "memory initial size");
-    CALLBACK(on_memory_initial_size_pages, initial_size_pages);
-    RAISE_ERROR_UNLESS(initial_size_pages <= WASM_MAX_PAGES,
-                       "invalid memory initial size");
-
-    uint32_t max_size_pages;
-    in_u32_leb128(ctx, &max_size_pages, "memory max size");
-    CALLBACK(on_memory_max_size_pages, max_size_pages);
-    RAISE_ERROR_UNLESS(max_size_pages <= WASM_MAX_PAGES,
-                       "invalid memory max size");
-
-    RAISE_ERROR_UNLESS(initial_size_pages <= max_size_pages,
-                       "memory initial size must be <= max size");
-
-    uint8_t mem_exported;
-    in_u8(ctx, &mem_exported, "memory export");
-    RAISE_ERROR_UNLESS(is_bool(mem_exported), "expected valid mem export flag");
-    CALLBACK(on_memory_exported, mem_exported);
+    uint32_t i;
+    in_u32_leb128(ctx, &ctx->num_memories, "memory count");
+    RAISE_ERROR_UNLESS(ctx->num_memories, "memory count must be 0 or 1");
+    CALLBACK(on_memory_count, ctx->num_memories);
+    for (i = 0; i < ctx->num_memories; ++i) {
+      WasmLimits page_limits;
+      read_memory(ctx, &page_limits);
+      CALLBACK(on_memory, i, &page_limits);
+    }
     CALLBACK0(end_memory_section);
   }
 
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_GLOBAL)) {
+    CALLBACK0(begin_global_section);
+    uint32_t i;
+    in_u32_leb128(ctx, &ctx->num_globals, "global count");
+    CALLBACK(on_global_count, ctx->num_globals);
+    for (i = 0; i < ctx->num_globals; ++i) {
+      uint8_t global_type;
+      WasmBool mutable_;
+      read_global_header(ctx, &global_type, &mutable_);
+      CALLBACK(begin_global, i, global_type, mutable_);
+      CALLBACK(begin_global_init_expr, i);
+      read_init_expr(ctx, i);
+      CALLBACK(end_global_init_expr, i);
+      CALLBACK(end_global, i);
+    }
+    CALLBACK0(end_global_section);
+  }
+
   /* export */
-  uint32_t num_exports = 0;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_EXPORT)) {
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_EXPORT)) {
     CALLBACK0(begin_export_section);
     uint32_t i;
-    in_u32_leb128(ctx, &num_exports, "export count");
-    CALLBACK(on_export_count, num_exports);
-    for (i = 0; i < num_exports; ++i) {
-      uint32_t func_index;
-      in_u32_leb128(ctx, &func_index, "export function index");
-      RAISE_ERROR_UNLESS(func_index < num_function_signatures,
-                         "invalid export function index");
-
+    in_u32_leb128(ctx, &ctx->num_exports, "export count");
+    CALLBACK(on_export_count, ctx->num_exports);
+    for (i = 0; i < ctx->num_exports; ++i) {
       WasmStringSlice name;
-      in_str(ctx, &name, "export function name");
+      in_str(ctx, &name, "export item name");
 
-      CALLBACK(on_export, i, func_index, name);
+      uint8_t external_kind;
+      in_u8(ctx, &external_kind, "export external kind");
+      RAISE_ERROR_UNLESS(is_valid_external_kind(external_kind),
+                         "invalid export external kind");
+
+      uint32_t item_index;
+      in_u32_leb128(ctx, &item_index, "export item index");
+      switch (external_kind) {
+        case WASM_EXTERNAL_KIND_FUNC:
+          RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
+                             "invalid export func index");
+          break;
+        case WASM_EXTERNAL_KIND_TABLE:
+          RAISE_ERROR_UNLESS(item_index < ctx->num_tables,
+                             "invalid export table index");
+          break;
+        case WASM_EXTERNAL_KIND_MEMORY:
+          RAISE_ERROR_UNLESS(item_index < ctx->num_memories,
+                             "invalid export memory index");
+          break;
+        case WASM_EXTERNAL_KIND_GLOBAL:
+          RAISE_ERROR_UNLESS(item_index < ctx->num_globals,
+                             "invalid export global index");
+          break;
+        case WASM_NUM_EXTERNAL_KINDS:
+          assert(0);
+          break;
+      }
+
+      CALLBACK(on_export, i, external_kind, item_index, name);
     }
     CALLBACK0(end_export_section);
   }
 
   /* start */
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_START)) {
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_START)) {
     CALLBACK0(begin_start_section);
     uint32_t func_index;
     in_u32_leb128(ctx, &func_index, "start function index");
-    RAISE_ERROR_UNLESS(func_index < num_function_signatures,
+    RAISE_ERROR_UNLESS(func_index < ctx->num_function_signatures,
                        "invalid start function index");
     CALLBACK(on_start_function, func_index);
     CALLBACK0(end_start_section);
   }
 
+  /* elem */
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM)) {
+    RAISE_ERROR_UNLESS(ctx->num_tables > 0,
+                       "elem section without table section");
+    CALLBACK0(begin_elem_section);
+    uint32_t i, num_elem_segments;
+    in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
+    CALLBACK(on_elem_segment_count, num_elem_segments);
+    for (i = 0; i < num_elem_segments; ++i) {
+      uint32_t table_index;
+      in_u32_leb128(ctx, &table_index, "elem segment table index");
+      CALLBACK(begin_elem_segment, i, table_index);
+      CALLBACK(begin_elem_segment_init_expr, i);
+      read_init_expr(ctx, i);
+      CALLBACK(end_elem_segment_init_expr, i);
+
+      uint32_t j, num_function_indexes;
+      in_u32_leb128(ctx, &num_function_indexes,
+                    "elem segment function index count");
+      CALLBACK(on_elem_segment_function_index_count, i,
+               num_function_indexes);
+      for (j = 0; j < num_function_indexes; ++j) {
+        uint32_t func_index;
+        in_u32_leb128(ctx, &func_index, "elem segment function index");
+        CALLBACK(on_elem_segment_function_index, i, func_index);
+      }
+      CALLBACK(end_elem_segment, i);
+    }
+    CALLBACK0(end_elem_section);
+  }
+
   /* code */
-  uint32_t num_function_bodies = 0;
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_CODE)) {
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_CODE)) {
     CALLBACK0(begin_function_bodies_section);
     uint32_t i;
-    in_u32_leb128(ctx, &num_function_bodies, "function body count");
-    RAISE_ERROR_UNLESS(num_function_signatures == num_function_bodies,
+    in_u32_leb128(ctx, &ctx->num_function_bodies, "function body count");
+    RAISE_ERROR_UNLESS(ctx->num_function_signatures == ctx->num_function_bodies,
                        "function signature count != function body count");
-    CALLBACK(on_function_bodies_count, num_function_bodies);
-    for (i = 0; i < num_function_bodies; ++i) {
+    CALLBACK(on_function_bodies_count, ctx->num_function_bodies);
+    for (i = 0; i < ctx->num_function_bodies; ++i) {
       uint32_t j;
       uint32_t func_offset = ctx->offset;
       for (j = 0; j < num_function_passes; ++j) {
@@ -1336,7 +1508,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           in_u32_leb128(ctx, &num_local_types, "local type count");
           uint8_t local_type;
           in_u8(ctx, &local_type, "local type");
-          RAISE_ERROR_UNLESS(is_non_void_type(local_type),
+          RAISE_ERROR_UNLESS(is_concrete_type(local_type),
                              "expected valid local type");
           CALLBACK(on_local_decl, k, num_local_types, local_type);
         }
@@ -1344,22 +1516,41 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         while (ctx->offset < end_offset) {
           uint8_t opcode;
           in_u8(ctx, &opcode, "opcode");
+          CALLBACK(on_opcode, opcode);
           switch (opcode) {
-            case WASM_OPCODE_NOP:
-              CALLBACK0(on_nop_expr);
+            case WASM_OPCODE_UNREACHABLE:
+              CALLBACK0(on_unreachable_expr);
               break;
 
-            case WASM_OPCODE_BLOCK:
-              CALLBACK0(on_block_expr);
+            case WASM_OPCODE_BLOCK: {
+              uint8_t sig_type;
+              in_u8(ctx, &sig_type, "block signature type");
+              RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
+                                 "expected valid block signature type");
+              uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
+              CALLBACK(on_block_expr, num_types, &sig_type);
               break;
+            }
 
-            case WASM_OPCODE_LOOP:
-              CALLBACK0(on_loop_expr);
+            case WASM_OPCODE_LOOP: {
+              uint8_t sig_type;
+              in_u8(ctx, &sig_type, "loop signature type");
+              RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
+                                 "expected valid block signature type");
+              uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
+              CALLBACK(on_loop_expr, num_types, &sig_type);
               break;
+            }
 
-            case WASM_OPCODE_IF:
-              CALLBACK0(on_if_expr);
+            case WASM_OPCODE_IF: {
+              uint8_t sig_type;
+              in_u8(ctx, &sig_type, "if signature type");
+              RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
+                                 "expected valid block signature type");
+              uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
+              CALLBACK(on_if_expr, num_types, &sig_type);
               break;
+            }
 
             case WASM_OPCODE_ELSE:
               CALLBACK0(on_else_expr);
@@ -1370,26 +1561,20 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
 
             case WASM_OPCODE_BR: {
-              uint8_t arity;
-              in_u8(ctx, &arity, "br arity");
               uint32_t depth;
               in_u32_leb128(ctx, &depth, "br depth");
-              CALLBACK(on_br_expr, arity, depth);
+              CALLBACK(on_br_expr, depth);
               break;
             }
 
             case WASM_OPCODE_BR_IF: {
-              uint8_t arity;
-              in_u8(ctx, &arity, "br_if arity");
               uint32_t depth;
               in_u32_leb128(ctx, &depth, "br_if depth");
-              CALLBACK(on_br_if_expr, arity, depth);
+              CALLBACK(on_br_if_expr, depth);
               break;
             }
 
             case WASM_OPCODE_BR_TABLE: {
-              uint8_t arity;
-              in_u8(ctx, &arity, "br_table arity");
               uint32_t num_targets;
               in_u32_leb128(ctx, &num_targets, "br_table target count");
               if (num_targets > ctx->target_depths.capacity) {
@@ -1409,20 +1594,21 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               in_u32(ctx, &default_target_depth,
                      "br_table default target depth");
 
-              CALLBACK(on_br_table_expr, arity, num_targets,
-                       ctx->target_depths.data, default_target_depth);
+              CALLBACK(on_br_table_expr, num_targets, ctx->target_depths.data,
+                       default_target_depth);
               break;
             }
 
-            case WASM_OPCODE_RETURN: {
-              uint8_t arity;
-              in_u8(ctx, &arity, "return arity");
-              CALLBACK(on_return_expr, arity);
+            case WASM_OPCODE_RETURN:
+              CALLBACK0(on_return_expr);
               break;
-            }
 
-            case WASM_OPCODE_UNREACHABLE:
-              CALLBACK0(on_unreachable_expr);
+            case WASM_OPCODE_NOP:
+              CALLBACK0(on_nop_expr);
+              break;
+
+            case WASM_OPCODE_DROP:
+              CALLBACK0(on_drop_expr);
               break;
 
             case WASM_OPCODE_END:
@@ -1457,10 +1643,24 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
             }
 
+            case WASM_OPCODE_GET_GLOBAL: {
+              uint32_t global_index;
+              in_u32_leb128(ctx, &global_index, "get_global global index");
+              CALLBACK(on_get_global_expr, global_index);
+              break;
+            }
+
             case WASM_OPCODE_GET_LOCAL: {
               uint32_t local_index;
               in_u32_leb128(ctx, &local_index, "get_local local index");
               CALLBACK(on_get_local_expr, local_index);
+              break;
+            }
+
+            case WASM_OPCODE_SET_GLOBAL: {
+              uint32_t global_index;
+              in_u32_leb128(ctx, &global_index, "set_global global index");
+              CALLBACK(on_set_global_expr, global_index);
               break;
             }
 
@@ -1472,35 +1672,28 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             }
 
             case WASM_OPCODE_CALL_FUNCTION: {
-              uint32_t arity;
-              in_u32_leb128(ctx, &arity, "call_function arity");
               uint32_t func_index;
               in_u32_leb128(ctx, &func_index, "call_function function index");
-              RAISE_ERROR_UNLESS(func_index < num_function_signatures,
+              RAISE_ERROR_UNLESS(func_index < ctx->num_func_imports +
+                                                  ctx->num_function_signatures,
                                  "invalid call_function function index");
-              CALLBACK(on_call_expr, arity, func_index);
+              CALLBACK(on_call_expr, func_index);
               break;
             }
 
             case WASM_OPCODE_CALL_INDIRECT: {
-              uint32_t arity;
-              in_u32_leb128(ctx, &arity, "call_indirect arity");
               uint32_t sig_index;
               in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
-              RAISE_ERROR_UNLESS(sig_index < num_function_signatures,
+              RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                                  "invalid call_indirect signature index");
-              CALLBACK(on_call_indirect_expr, arity, sig_index);
+              CALLBACK(on_call_indirect_expr, sig_index);
               break;
             }
 
-            case WASM_OPCODE_CALL_IMPORT: {
-              uint32_t arity;
-              in_u32_leb128(ctx, &arity, "call_import arity");
-              uint32_t import_index;
-              in_u32_leb128(ctx, &import_index, "call_import import index");
-              RAISE_ERROR_UNLESS(import_index < num_imports,
-                                 "invalid call_import import index");
-              CALLBACK(on_call_import_expr, arity, import_index);
+            case WASM_OPCODE_TEE_LOCAL: {
+              uint32_t local_index;
+              in_u32_leb128(ctx, &local_index, "tee_local local index");
+              CALLBACK(on_tee_local_expr, local_index);
               break;
             }
 
@@ -1702,51 +1895,28 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   }
 
   /* data */
-  if (skip_until_section(ctx, WASM_SECTION_INDEX_DATA)) {
-    RAISE_ERROR_UNLESS(seen_memory_section,
-                       "data segment section without memory section");
-    CALLBACK0(begin_data_segment_section);
+  if (skip_until_section(ctx, WASM_BINARY_SECTION_DATA)) {
+    RAISE_ERROR_UNLESS(ctx->num_memories > 0,
+                       "data section without memory section");
+    CALLBACK0(begin_data_section);
     uint32_t i, num_data_segments;
     in_u32_leb128(ctx, &num_data_segments, "data segment count");
     CALLBACK(on_data_segment_count, num_data_segments);
     for (i = 0; i < num_data_segments; ++i) {
-      uint32_t address;
-      in_u32_leb128(ctx, &address, "data segment address");
+      uint32_t memory_index;
+      in_u32_leb128(ctx, &memory_index, "data segment memory index");
+      CALLBACK(begin_data_segment, i, memory_index);
+      CALLBACK(begin_data_segment_init_expr, i);
+      read_init_expr(ctx, i);
+      CALLBACK(end_data_segment_init_expr, i);
 
       uint32_t data_size;
       const void* data;
       in_bytes(ctx, &data, &data_size, "data segment data");
-
-      CALLBACK(on_data_segment, i, address, data, data_size);
+      CALLBACK(on_data_segment_data, i, data, data_size);
+      CALLBACK(end_data_segment, i);
     }
-    CALLBACK0(end_data_segment_section);
-  }
-
-  /* name */
-  if (options->read_debug_names &&
-      skip_until_section(ctx, WASM_SECTION_INDEX_NAME)) {
-    CALLBACK0(begin_names_section);
-    uint32_t i, num_functions;
-    in_u32_leb128(ctx, &num_functions, "function name count");
-    RAISE_ERROR_UNLESS(num_functions <= num_function_signatures,
-                       "function name count > function signature count");
-    CALLBACK(on_function_names_count, num_functions);
-    for (i = 0; i < num_functions; ++i) {
-      WasmStringSlice function_name;
-      in_str(ctx, &function_name, "function name");
-      CALLBACK(on_function_name, i, function_name);
-
-      uint32_t num_locals;
-      in_u32_leb128(ctx, &num_locals, "local name count");
-      CALLBACK(on_local_names_count, i, num_locals);
-      uint32_t j;
-      for (j = 0; j < num_locals; ++j) {
-        WasmStringSlice local_name;
-        in_str(ctx, &local_name, "local name");
-        CALLBACK(on_local_name, i, j, local_name);
-      }
-    }
-    CALLBACK0(end_names_section);
+    CALLBACK0(end_data_section);
   }
 
   CALLBACK0(end_module);

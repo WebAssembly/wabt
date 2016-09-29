@@ -198,7 +198,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     hexdigit =  [0-9a-fA-F];
     letter =    [a-zA-Z];
     symbol =    [+\-*\/\\\^~=<>!?@#$%&|:`.];
-    tick =      "`";
+    tick =      "'";
     escape =    [nt\\'"];
     character = [^"\\\x00-\x1f\x7f] | "\\" escape | "\\" hexdigit hexdigit;
     sign =      [+-];
@@ -238,6 +238,8 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "i64"                 { TYPE(I64); RETURN(VALUE_TYPE); }
     <i> "f32"                 { TYPE(F32); RETURN(VALUE_TYPE); }
     <i> "f64"                 { TYPE(F64); RETURN(VALUE_TYPE); }
+    <i> "anyfunc"             { RETURN(ANYFUNC); }
+    <i> "mut"                 { RETURN(MUT); }
     <i> "nop"                 { RETURN(NOP); }
     <i> "block"               { RETURN(BLOCK); }
     <i> "if"                  { RETURN(IF); }
@@ -248,13 +250,17 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "br"                  { RETURN(BR); }
     <i> "br_if"               { RETURN(BR_IF); }
     <i> "br_table"            { RETURN(BR_TABLE); }
-    <i> "case"                { RETURN(CASE); }
     <i> "call"                { RETURN(CALL); }
     <i> "call_import"         { RETURN(CALL_IMPORT); }
     <i> "call_indirect"       { RETURN(CALL_INDIRECT); }
+    <i> "drop"                { RETURN(DROP); }
+    <i> "end"                 { RETURN(END); }
     <i> "return"              { RETURN(RETURN); }
     <i> "get_local"           { RETURN(GET_LOCAL); }
     <i> "set_local"           { RETURN(SET_LOCAL); }
+    <i> "tee_local"           { RETURN(TEE_LOCAL); }
+    <i> "get_global"          { RETURN(GET_GLOBAL); }
+    <i> "set_global"          { RETURN(SET_GLOBAL); }
     <i> "i32.load"            { OPCODE(I32_LOAD); RETURN(LOAD); }
     <i> "i64.load"            { OPCODE(I64_LOAD); RETURN(LOAD); }
     <i> "f32.load"            { OPCODE(F32_LOAD); RETURN(LOAD); }
@@ -278,8 +284,8 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "i32.store16"         { OPCODE(I32_STORE16); RETURN(STORE); }
     <i> "i64.store16"         { OPCODE(I64_STORE16); RETURN(STORE); }
     <i> "i64.store32"         { OPCODE(I64_STORE32); RETURN(STORE); }
-    <i> "offset="digits       { TEXT_AT(7); RETURN(OFFSET); }
-    <i> "align="digits        { TEXT_AT(6); RETURN(ALIGN); }
+    <i> "offset="digits       { TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
+    <i> "align="digits        { TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
     <i> "i32.const"           { TYPE(I32); RETURN(CONST); }
     <i> "i64.const"           { TYPE(I64); RETURN(CONST); }
     <i> "f32.const"           { TYPE(F32); RETURN(CONST); }
@@ -416,18 +422,26 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "param"               { RETURN(PARAM); }
     <i> "result"              { RETURN(RESULT); }
     <i> "local"               { RETURN(LOCAL); }
+    <i> "global"              { RETURN(GLOBAL); }
     <i> "module"              { RETURN(MODULE); }
+    <i> "table"               { RETURN(TABLE); }
     <i> "memory"              { RETURN(MEMORY); }
-    <i> "segment"             { RETURN(SEGMENT); }
     <i> "start"               { RETURN(START); }
+    <i> "elem"                { RETURN(ELEM); }
+    <i> "data"                { RETURN(DATA); }
+    <i> "offset"              { RETURN(OFFSET); }
     <i> "import"              { RETURN(IMPORT); }
     <i> "export"              { RETURN(EXPORT); }
-    <i> "table"               { RETURN(TABLE); }
+    <i> "register"            { RETURN(REGISTER); }
+    <i> "invoke"              { RETURN(INVOKE); }
+    <i> "get"                 { RETURN(GET); }
     <i> "assert_invalid"      { RETURN(ASSERT_INVALID); }
+    <i> "assert_unlinkable"   { RETURN(ASSERT_UNLINKABLE); }
     <i> "assert_return"       { RETURN(ASSERT_RETURN); }
     <i> "assert_return_nan"   { RETURN(ASSERT_RETURN_NAN); }
     <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
-    <i> "invoke"              { RETURN(INVOKE); }
+    <i> "input"               { RETURN(INPUT); }
+    <i> "output"              { RETURN(OUTPUT); }
     <i> name                  { TEXT; RETURN(VAR); }
 
     <i> ";;" => LINE_COMMENT  { continue; }

@@ -109,9 +109,7 @@ static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
 static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
-                      &expr->loop.outer);
-  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
-                      &expr->loop.inner);
+                      &expr->loop.label);
   return WASM_OK;
 }
 
@@ -119,15 +117,6 @@ static WasmResult begin_if_expr(WasmExpr* expr, void* user_data) {
   Context* ctx = user_data;
   maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
                       &expr->if_.true_.label);
-  return WASM_OK;
-}
-
-static WasmResult begin_if_else_expr(WasmExpr* expr, void* user_data) {
-  Context* ctx = user_data;
-  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
-                      &expr->if_else.true_.label);
-  maybe_generate_name(ctx->allocator, "$L", ctx->label_count++,
-                      &expr->if_else.false_.label);
   return WASM_OK;
 }
 
@@ -155,6 +144,14 @@ static WasmResult visit_func(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult visit_global(Context* ctx,
+                               uint32_t global_index,
+                               WasmGlobal* global) {
+  maybe_generate_and_bind_name(ctx->allocator, &ctx->module->global_bindings,
+                               "$g", global_index, &global->name);
+  return WASM_OK;
+}
+
 static WasmResult visit_func_type(Context* ctx,
                                   uint32_t func_type_index,
                                   WasmFuncType* func_type) {
@@ -163,22 +160,34 @@ static WasmResult visit_func_type(Context* ctx,
   return WASM_OK;
 }
 
-static WasmResult visit_import(Context* ctx,
-                               uint32_t import_index,
-                               WasmImport* import) {
-  maybe_generate_and_bind_name(ctx->allocator, &ctx->module->import_bindings,
-                               "$i", import_index, &import->name);
+static WasmResult visit_table(Context* ctx,
+                              uint32_t table_index,
+                              WasmTable* table) {
+  maybe_generate_and_bind_name(ctx->allocator, &ctx->module->table_bindings,
+                               "$T", table_index, &table->name);
+  return WASM_OK;
+}
+
+static WasmResult visit_memory(Context* ctx,
+                               uint32_t memory_index,
+                               WasmMemory* memory) {
+  maybe_generate_and_bind_name(ctx->allocator, &ctx->module->memory_bindings,
+                               "$M", memory_index, &memory->name);
   return WASM_OK;
 }
 
 static WasmResult visit_module(Context* ctx, WasmModule* module) {
   size_t i;
+  for (i = 0; i < module->globals.size; ++i)
+    CHECK_RESULT(visit_global(ctx, i, module->globals.data[i]));
   for (i = 0; i < module->func_types.size; ++i)
     CHECK_RESULT(visit_func_type(ctx, i, module->func_types.data[i]));
-  for (i = 0; i < module->imports.size; ++i)
-    CHECK_RESULT(visit_import(ctx, i, module->imports.data[i]));
   for (i = 0; i < module->funcs.size; ++i)
     CHECK_RESULT(visit_func(ctx, i, module->funcs.data[i]));
+  for (i = 0; i < module->tables.size; ++i)
+    CHECK_RESULT(visit_table(ctx, i, module->tables.data[i]));
+  for (i = 0; i < module->memories.size; ++i)
+    CHECK_RESULT(visit_memory(ctx, i, module->memories.data[i]));
   return WASM_OK;
 }
 
@@ -190,7 +199,6 @@ WasmResult wasm_generate_names(WasmAllocator* allocator, WasmModule* module) {
   ctx.visitor.begin_block_expr = begin_block_expr;
   ctx.visitor.begin_loop_expr = begin_loop_expr;
   ctx.visitor.begin_if_expr = begin_if_expr;
-  ctx.visitor.begin_if_else_expr = begin_if_else_expr;
   ctx.module = module;
   WasmResult result = visit_module(&ctx, module);
   wasm_destroy_string_slice_vector(allocator, &ctx.index_to_name);

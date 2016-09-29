@@ -1,78 +1,70 @@
 ;;; FLAGS: -dv
 (module
-  (import "foo" "bar" (param i32 f32) (result i32))
+  (import "foo" "bar" (func (param i32 f32) (result i32)))
   (func (result i32)
-    ;; input import 0 -> output func 0
-    (call_import 0 (i32.const 1) (f32.const 2))
-    ;; input func 0 -> output func 1
-    ;; imports and funcs have different name/number spaces in the input format,
-    ;; but use the same number-space for the output format. Imports always come
-    ;; first.
-    (call 0)))
+    ;; call imported func
+    (drop (call 0 (i32.const 1) (f32.const 2)))
+    ;; call local func
+    (call 1)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0b00 0000                                  ; WASM_BINARY_VERSION
-; section "type"
-0000008: 04                                         ; string length
-0000009: 7479 7065                                  ; section id: "type"
-000000d: 00                                         ; section size (guess)
-000000e: 02                                         ; num types
+0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                         ; section code
+0000009: 00                                         ; section size (guess)
+000000a: 02                                         ; num types
 ; type 0
-000000f: 40                                         ; function form
-0000010: 02                                         ; num params
-0000011: 01                                         ; param type
-0000012: 03                                         ; param type
-0000013: 01                                         ; num results
-0000014: 01                                         ; result_type
+000000b: 40                                         ; function form
+000000c: 02                                         ; num params
+000000d: 01                                         ; param type
+000000e: 03                                         ; param type
+000000f: 01                                         ; num results
+0000010: 01                                         ; result type
 ; type 1
-0000015: 40                                         ; function form
-0000016: 00                                         ; num params
-0000017: 01                                         ; num results
-0000018: 01                                         ; result_type
-000000d: 0b                                         ; FIXUP section size
-; section "import"
-0000019: 06                                         ; string length
-000001a: 696d 706f 7274                             ; section id: "import"
-0000020: 00                                         ; section size (guess)
-0000021: 01                                         ; num imports
+0000011: 40                                         ; function form
+0000012: 00                                         ; num params
+0000013: 01                                         ; num results
+0000014: 01                                         ; result type
+0000009: 0b                                         ; FIXUP section size
+; section "IMPORT" (2)
+0000015: 02                                         ; section code
+0000016: 00                                         ; section size (guess)
+0000017: 01                                         ; num imports
 ; import header 0
-0000022: 00                                         ; import signature index
-0000023: 03                                         ; string length
-0000024: 666f 6f                                  foo  ; import module name
-0000027: 03                                         ; string length
-0000028: 6261 72                                  bar  ; import function name
-0000020: 0a                                         ; FIXUP section size
-; section "function"
-000002b: 08                                         ; string length
-000002c: 6675 6e63 7469 6f6e                        ; section id: "function"
-0000034: 00                                         ; section size (guess)
-0000035: 01                                         ; num functions
-0000036: 01                                         ; function 0 signature index
-0000034: 02                                         ; FIXUP section size
-; section "code"
-0000037: 04                                         ; string length
-0000038: 636f 6465                                  ; section id: "code"
-000003c: 00                                         ; section size (guess)
-000003d: 01                                         ; num functions
+0000018: 03                                         ; string length
+0000019: 666f 6f                                  foo  ; import module name
+000001c: 03                                         ; string length
+000001d: 6261 72                                  bar  ; import field name
+0000020: 00                                         ; import kind
+0000021: 00                                         ; import signature index
+0000016: 0b                                         ; FIXUP section size
+; section "FUNCTION" (3)
+0000022: 03                                         ; section code
+0000023: 00                                         ; section size (guess)
+0000024: 01                                         ; num functions
+0000025: 01                                         ; function 0 signature index
+0000023: 02                                         ; FIXUP section size
+; section "CODE" (10)
+0000026: 0a                                         ; section code
+0000027: 00                                         ; section size (guess)
+0000028: 01                                         ; num functions
 ; function body 0
-000003e: 00                                         ; func body size (guess)
-000003f: 00                                         ; local decl count
-0000040: 10                                         ; OPCODE_I32_CONST
-0000041: 01                                         ; i32 literal
-0000042: 13                                         ; OPCODE_F32_CONST
-0000043: 0000 0040                                  ; f32 literal
-0000047: 18                                         ; OPCODE_CALL_IMPORT
-0000048: 02                                         ; call_import arity
-0000049: 00                                         ; import index
-000004a: 16                                         ; OPCODE_CALL_FUNCTION
-000004b: 00                                         ; call arity
-000004c: 00                                         ; func index
-000003e: 0e                                         ; FIXUP func body size
-000003c: 10                                         ; FIXUP section size
+0000029: 00                                         ; func body size (guess)
+000002a: 00                                         ; local decl count
+000002b: 10                                         ; OPCODE_I32_CONST
+000002c: 01                                         ; i32 literal
+000002d: 13                                         ; OPCODE_F32_CONST
+000002e: 0000 0040                                  ; f32 literal
+0000032: 16                                         ; OPCODE_CALL_FUNCTION
+0000033: 00                                         ; func index
+0000034: 0b                                         ; OPCODE_DROP
+0000035: 16                                         ; OPCODE_CALL_FUNCTION
+0000036: 01                                         ; func index
+0000029: 0d                                         ; FIXUP func body size
+0000027: 0f                                         ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0b00 0000 0474 7970 650b 0240  
-0000010: 0201 0301 0140 0001 0106 696d 706f 7274  
-0000020: 0a01 0003 666f 6f03 6261 7208 6675 6e63  
-0000030: 7469 6f6e 0201 0104 636f 6465 1001 0e00  
-0000040: 1001 1300 0000 4018 0200 1600 00         
+0000000: 0061 736d 0c00 0000 010b 0240 0201 0301  
+0000010: 0140 0001 0102 0b01 0366 6f6f 0362 6172  
+0000020: 0000 0302 0101 0a0f 010d 0010 0113 0000  
+0000030: 0040 1600 0b16 01                        
 ;;; STDOUT ;;)
