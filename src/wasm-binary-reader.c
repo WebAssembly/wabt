@@ -192,6 +192,7 @@ static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
     ctx->offset += 5;
   } else {
     /* past the end */
+    *out_value = 0;
     RAISE_ERROR("unable to read u32 leb128: %s", desc);
   }
 }
