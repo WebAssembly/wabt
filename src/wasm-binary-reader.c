@@ -1125,8 +1125,8 @@ static void read_table(Context* ctx,
   RAISE_ERROR_UNLESS(*out_elem_type == WASM_BINARY_ELEM_TYPE_ANYFUNC,
                      "table elem type must by anyfunc (0x20)");
 
-  uint32_t flags;
-  uint32_t initial;
+  uint32_t flags = 0;
+  uint32_t initial = 0;
   uint32_t max = 0;
   in_u32_leb128(ctx, &flags, "table flags");
   in_u32_leb128(ctx, &initial, "table initial elem count");
@@ -1143,8 +1143,8 @@ static void read_table(Context* ctx,
 }
 
 static void read_memory(Context* ctx, WasmLimits* out_page_limits) {
-  uint32_t flags;
-  uint32_t initial;
+  uint32_t flags = 0;
+  uint32_t initial = 0;
   uint32_t max = 0;
   in_u32_leb128(ctx, &flags, "memory flags");
   in_u32_leb128(ctx, &initial, "memory initial page count");
