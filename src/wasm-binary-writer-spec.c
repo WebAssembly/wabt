@@ -284,7 +284,8 @@ static WasmFunc* append_nullary_func(WasmAllocator* allocator,
   WasmModuleField* func_field =
       append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_FUNC);
   WasmFunc* func = &func_field->func;
-  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
+                     WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
   func->decl.type_var.type = WASM_VAR_TYPE_INDEX;
   func->decl.type_var.index = sig_index;
   func->decl.sig = func_type->sig;

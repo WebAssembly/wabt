@@ -299,17 +299,6 @@ static WasmResult visit_func(Context* ctx,
   return WASM_OK;
 }
 
-static WasmResult visit_import(Context* ctx,
-                               uint32_t import_index,
-                               WasmImport* import) {
-  if (import->kind == WASM_EXTERNAL_KIND_FUNC &&
-      wasm_decl_has_func_type(&import->func.decl)) {
-    CHECK_RESULT(use_name_for_func_type_var(ctx->allocator, ctx->module,
-                                            &import->func.decl.type_var));
-  }
-  return WASM_OK;
-}
-
 static WasmResult visit_export(Context* ctx,
                                uint32_t export_index,
                                WasmExport* export) {
@@ -340,8 +329,6 @@ static WasmResult visit_data_segment(Context* ctx,
 
 static WasmResult visit_module(Context* ctx, WasmModule* module) {
   size_t i;
-  for (i = 0; i < module->imports.size; ++i)
-    CHECK_RESULT(visit_import(ctx, i, module->imports.data[i]));
   for (i = 0; i < module->funcs.size; ++i)
     CHECK_RESULT(visit_func(ctx, i, module->funcs.data[i]));
   for (i = 0; i < module->exports.size; ++i)

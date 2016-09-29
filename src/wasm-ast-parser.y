@@ -232,6 +232,9 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<vars> var_list
 %type<var> start type_use var
 
+/* These non-terminals use the types below that have destructors, but the
+ * memory is shared with the lexer, so should not be destroyed. */
+%destructor {} ALIGN_EQ_NAT OFFSET_EQ_NAT TEXT VAR NAT INT FLOAT
 %destructor { wasm_destroy_block(parser->allocator, &$$); } <block>
 %destructor { wasm_destroy_command(parser->allocator, $$); wasm_free(parser->allocator, $$); } <command>
 %destructor { wasm_destroy_command_vector_and_elements(parser->allocator, &$$); } <commands>
@@ -867,12 +870,14 @@ data :
       $$.memory_var = $3;
       $$.offset = $4.first;
       dup_text_list(parser->allocator, &$5, &$$.data, &$$.size);
+      wasm_destroy_text_list(parser->allocator, &$5);
     }
   | LPAR DATA offset text_list RPAR {
       $$.memory_var.type = WASM_VAR_TYPE_INDEX;
       $$.memory_var.index = 0;
       $$.offset = $3.first;
       dup_text_list(parser->allocator, &$4, &$$.data, &$$.size);
+      wasm_destroy_text_list(parser->allocator, &$4);
     }
 ;
 
@@ -895,6 +900,7 @@ memory :
       $$.data_segment.offset = expr;
       dup_text_list(parser->allocator, &$7, &$$.data_segment.data,
                     &$$.data_segment.size);
+      wasm_destroy_text_list(parser->allocator, &$7);
       uint32_t byte_size = WASM_ALIGN_UP_TO_PAGE($$.data_segment.size);
       uint32_t page_size = WASM_BYTES_TO_PAGES(byte_size);
       $$.memory.name = $3;
@@ -915,6 +921,7 @@ memory :
       $$.data_segment.offset = expr;
       dup_text_list(parser->allocator, &$6, &$$.data_segment.data,
                     &$$.data_segment.size);
+      wasm_destroy_text_list(parser->allocator, &$6);
       uint32_t byte_size = WASM_ALIGN_UP_TO_PAGE($$.data_segment.size);
       uint32_t page_size = WASM_BYTES_TO_PAGES(byte_size);
       $$.memory.name = $3;
@@ -1144,12 +1151,12 @@ module_fields :
       $$ = $1;
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, FUNC, func, @2, *$2.func);
-      wasm_free(parser->allocator, $2.func);
       append_implicit_func_declaration(parser->allocator, &@2, $$,
                                        &field->func.decl);
       APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->func);
       INSERT_BINDING($$, func, funcs, @2, $2.func->name);
       APPEND_INLINE_EXPORT($$, FUNC, @2, $2, $$->funcs.size - 1);
+      wasm_free(parser->allocator, $2.func);
     }
   | module_fields elem {
       $$ = $1;
@@ -1178,29 +1185,29 @@ module_fields :
       switch ($2->kind) {
         case WASM_EXTERNAL_KIND_FUNC:
           append_implicit_func_declaration(parser->allocator, &@2, $$,
-                                           &$2->func.decl);
+                                           &field->import.func.decl);
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
-          INSERT_BINDING($$, func, funcs, @2, $2->func.name);
+          INSERT_BINDING($$, func, funcs, @2, field->import.func.name);
           $$->num_func_imports++;
           CHECK_IMPORT_ORDERING($$, func, funcs, @2);
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
-          INSERT_BINDING($$, table, tables, @2, $2->table.name);
+          INSERT_BINDING($$, table, tables, @2, field->import.table.name);
           $$->num_table_imports++;
           CHECK_IMPORT_ORDERING($$, table, tables, @2);
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
-          INSERT_BINDING($$, memory, memories, @2, $2->memory.name);
+          INSERT_BINDING($$, memory, memories, @2, field->import.memory.name);
           $$->num_memory_imports++;
           CHECK_IMPORT_ORDERING($$, memory, memories, @2);
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
-          INSERT_BINDING($$, global, globals, @2, $2->global.name);
+          INSERT_BINDING($$, global, globals, @2, field->import.global.name);
           $$->num_global_imports++;
           CHECK_IMPORT_ORDERING($$, global, globals, @2);
           break;
@@ -1239,21 +1246,6 @@ raw_module :
           if (func_type) {
             func->decl.sig = func_type->sig;
             func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
-          }
-        }
-      }
-
-      for (i = 0; i < $4->imports.size; ++i) {
-        WasmImport* import = $4->imports.data[i];
-        if (import->kind == WASM_EXTERNAL_KIND_FUNC &&
-            wasm_decl_has_func_type(&import->func.decl) &&
-            is_empty_signature(&import->func.decl.sig)) {
-          WasmFuncType* func_type =
-              wasm_get_func_type_by_var($4, &import->func.decl.type_var);
-          if (func_type) {
-            import->func.decl.sig = func_type->sig;
-            import->func.decl.flags |=
-                WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
           }
         }
       }
