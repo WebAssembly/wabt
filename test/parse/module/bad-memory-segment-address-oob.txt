@@ -3,7 +3,7 @@
   (memory 1 1)
   (data (i32.const 80000) "hi"))
 (;; STDERR ;;;
-parse/module/bad-memory-segment-address-oob.txt:4:3: segment ends past the end of memory max size (65536)
+parse/module/bad-memory-segment-address-oob.txt:4:3: segment ends past the end of memory (65536)
   (data (i32.const 80000) "hi"))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)
