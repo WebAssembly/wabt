@@ -1,3 +1,4 @@
+;;; SKIP: exports not working properly in interpreter yet
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/exports.wast
 (;; STDOUT ;;;

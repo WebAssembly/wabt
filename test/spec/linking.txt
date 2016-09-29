@@ -1,0 +1,3 @@
+;;; SKIP: linking not working yet
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/linking.wast

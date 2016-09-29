@@ -40,7 +40,7 @@
 
 #define WASM_UNKNOWN_OFFSET ((uint32_t)~0)
 #define WASM_PAGE_SIZE 0x10000 /* 64k */
-#define WASM_MAX_PAGES 0x0ffff /* # of pages that fit in 32-bit address space */
+#define WASM_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space */
 #define WASM_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WASM_ALIGN_UP_TO_PAGE(x) \
   (((x) + WASM_PAGE_SIZE - 1) & ~(WASM_PAGE_SIZE - 1))

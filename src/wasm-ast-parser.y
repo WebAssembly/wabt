@@ -89,6 +89,7 @@
       APPEND_FIELD_TO_LIST(module, export_field, EXPORT, export_, loc_, \
                            (value).export_.export_);                    \
       export_field->export_.kind = WASM_EXTERNAL_KIND_##KIND;           \
+      export_field->export_.var.loc = loc_;                             \
       export_field->export_.var.index = index_;                         \
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
                             &export_field->export_);                    \
@@ -97,13 +98,13 @@
     }                                                                   \
   while (0)
 
-#define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)               \
-  do {                                                                 \
-    if ((module)->kinds.size != (module)->num_##kind##_imports) {      \
-      wasm_ast_parser_error(&loc_, lexer, parser,                      \
-                            "imported " #kind                          \
-                            " must occur before all defined " #kinds); \
-    }                                                                  \
+#define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)           \
+  do {                                                             \
+    if ((module)->kinds.size != (module)->num_##kind##_imports) {  \
+      wasm_ast_parser_error(                                       \
+          &loc_, lexer, parser,                                    \
+          "imports must occur before all non-import definitions"); \
+    }                                                              \
   } while (0)
 
 #define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
@@ -827,11 +828,14 @@ offset :
 
 elem :
     LPAR ELEM var offset var_list RPAR {
+      WASM_ZERO_MEMORY($$);
       $$.table_var = $3;
       $$.offset = $4.first;
       $$.vars = $5;
     }
   | LPAR ELEM offset var_list RPAR {
+      WASM_ZERO_MEMORY($$);
+      $$.table_var.loc = @2;
       $$.table_var.type = WASM_VAR_TYPE_INDEX;
       $$.table_var.index = 0;
       $$.offset = $3.first;
@@ -867,12 +871,15 @@ table :
 
 data :
     LPAR DATA var offset text_list RPAR {
+      WASM_ZERO_MEMORY($$);
       $$.memory_var = $3;
       $$.offset = $4.first;
       dup_text_list(parser->allocator, &$5, &$$.data, &$$.size);
       wasm_destroy_text_list(parser->allocator, &$5);
     }
   | LPAR DATA offset text_list RPAR {
+      WASM_ZERO_MEMORY($$);
+      $$.memory_var.loc = @2;
       $$.memory_var.type = WASM_VAR_TYPE_INDEX;
       $$.memory_var.index = 0;
       $$.offset = $3.first;
@@ -1182,6 +1189,10 @@ module_fields :
       $$ = $1;
       WasmModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, IMPORT, import, @2, *$2);
+      CHECK_IMPORT_ORDERING($$, func, funcs, @2);
+      CHECK_IMPORT_ORDERING($$, table, tables, @2);
+      CHECK_IMPORT_ORDERING($$, memory, memories, @2);
+      CHECK_IMPORT_ORDERING($$, global, globals, @2);
       switch ($2->kind) {
         case WASM_EXTERNAL_KIND_FUNC:
           append_implicit_func_declaration(parser->allocator, &@2, $$,
@@ -1189,27 +1200,23 @@ module_fields :
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
           INSERT_BINDING($$, func, funcs, @2, field->import.func.name);
           $$->num_func_imports++;
-          CHECK_IMPORT_ORDERING($$, func, funcs, @2);
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
           INSERT_BINDING($$, table, tables, @2, field->import.table.name);
           $$->num_table_imports++;
-          CHECK_IMPORT_ORDERING($$, table, tables, @2);
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING($$, memory, memories, @2, field->import.memory.name);
           $$->num_memory_imports++;
-          CHECK_IMPORT_ORDERING($$, memory, memories, @2);
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING($$, global, globals, @2, field->import.global.name);
           $$->num_global_imports++;
-          CHECK_IMPORT_ORDERING($$, global, globals, @2);
           break;
         case WASM_NUM_EXTERNAL_KINDS:
           assert(0);

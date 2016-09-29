@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/get_local.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/get_local.wast:91:11: unable to join type i32 (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/get_local.wast:91:11: type mismatch at function. got i32, expected i64
   (module (func $type-local-num-vs-num (result i64) (local i32) (get_local 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
@@ -10,7 +10,7 @@ assert_invalid error:
   (module (func $type-local-num-vs-num (local f32) (i32.eqz (get_local 0))))
                                                     ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:95:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:95:11: type stack at end of function is 1. expected 0
   (module (func $type-local-num-vs-num (local f32) (i32.eqz (get_local 0))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
@@ -18,11 +18,11 @@ assert_invalid error:
   (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (get_local 1))))
                                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:99:11: unable to join type f64 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:99:11: type stack at end of function is 1. expected 0
   (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (get_local 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:107:11: unable to join type i32 (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/get_local.wast:107:11: type mismatch at function. got i32, expected i64
   (module (func $type-param-num-vs-num (param i32) (result i64) (get_local 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
@@ -30,7 +30,7 @@ assert_invalid error:
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
                                                     ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:111:11: unable to join type i32 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:111:11: type stack at end of function is 1. expected 0
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
@@ -38,7 +38,7 @@ assert_invalid error:
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
                                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/get_local.wast:115:11: unable to join type f64 (type of last operation) with type void (function signature result type).
+  third_party/testsuite/get_local.wast:115:11: type stack at end of function is 1. expected 0
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:

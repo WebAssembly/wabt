@@ -1,3 +1,4 @@
+;;; SKIP: start function not working properly in interpreter yet
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;

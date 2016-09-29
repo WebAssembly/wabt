@@ -2,212 +2,144 @@
 ;;; STDIN_FILE: third_party/testsuite/br_if.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/br_if.wast:164:41: type stack size too small at i32.ctz. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:171:41: type stack size too small at i32.ctz. got 0, expected at least 1
   (module (func $type-false-i32 (block (i32.ctz (br_if 0 (i32.const 0))))))
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:164:34: unable to join type void (joined type of block's br* targets) with type i32 (block's result type).
+  third_party/testsuite/br_if.wast:171:34: type stack at end of block is 1. expected 0
   (module (func $type-false-i32 (block (i32.ctz (br_if 0 (i32.const 0))))))
                                  ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:168:41: type stack size too small at i64.ctz. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:175:41: type stack size too small at i64.ctz. got 0, expected at least 1
   (module (func $type-false-i64 (block (i64.ctz (br_if 0 (i32.const 0))))))
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:168:34: unable to join type void (joined type of block's br* targets) with type i64 (block's result type).
+  third_party/testsuite/br_if.wast:175:34: type stack at end of block is 1. expected 0
   (module (func $type-false-i64 (block (i64.ctz (br_if 0 (i32.const 0))))))
                                  ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:172:41: type stack size too small at f32.neg. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:179:41: type stack size too small at f32.neg. got 0, expected at least 1
   (module (func $type-false-f32 (block (f32.neg (br_if 0 (i32.const 0))))))
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:172:34: unable to join type void (joined type of block's br* targets) with type f32 (block's result type).
+  third_party/testsuite/br_if.wast:179:34: type stack at end of block is 1. expected 0
   (module (func $type-false-f32 (block (f32.neg (br_if 0 (i32.const 0))))))
                                  ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:176:41: type stack size too small at f64.neg. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:183:41: type stack size too small at f64.neg. got 0, expected at least 1
   (module (func $type-false-f64 (block (f64.neg (br_if 0 (i32.const 0))))))
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:176:34: unable to join type void (joined type of block's br* targets) with type f64 (block's result type).
+  third_party/testsuite/br_if.wast:183:34: type stack at end of block is 1. expected 0
   (module (func $type-false-f64 (block (f64.neg (br_if 0 (i32.const 0))))))
                                  ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:181:40: type stack size too small at i32.ctz. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:188:40: type stack size too small at i32.ctz. got 0, expected at least 1
   (module (func $type-true-i32 (block (i32.ctz (br_if 0 (i32.const 1))))))
                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:181:33: unable to join type void (joined type of block's br* targets) with type i32 (block's result type).
+  third_party/testsuite/br_if.wast:188:33: type stack at end of block is 1. expected 0
   (module (func $type-true-i32 (block (i32.ctz (br_if 0 (i32.const 1))))))
                                 ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:185:49: type mismatch at br_if. got i64, expected i32
+  third_party/testsuite/br_if.wast:192:49: type mismatch at br_if condition. got i64, expected i32
   (module (func $type-true-i64 (block (i64.ctz (br_if 0 (i64.const 1))))))
-                                                ^^^^^
+                                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:185:40: type stack size too small at i64.ctz. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:192:40: type stack size too small at i64.ctz. got 0, expected at least 1
   (module (func $type-true-i64 (block (i64.ctz (br_if 0 (i64.const 1))))))
                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:185:33: unable to join type void (joined type of block's br* targets) with type i64 (block's result type).
+  third_party/testsuite/br_if.wast:192:33: type stack at end of block is 1. expected 0
   (module (func $type-true-i64 (block (i64.ctz (br_if 0 (i64.const 1))))))
                                 ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:189:49: type mismatch at br_if. got f32, expected i32
+  third_party/testsuite/br_if.wast:196:49: type mismatch at br_if condition. got f32, expected i32
   (module (func $type-true-f32 (block (f32.neg (br_if 0 (f32.const 1))))))
-                                                ^^^^^
+                                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:189:40: type stack size too small at f32.neg. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:196:40: type stack size too small at f32.neg. got 0, expected at least 1
   (module (func $type-true-f32 (block (f32.neg (br_if 0 (f32.const 1))))))
                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:189:33: unable to join type void (joined type of block's br* targets) with type f32 (block's result type).
+  third_party/testsuite/br_if.wast:196:33: type stack at end of block is 1. expected 0
   (module (func $type-true-f32 (block (f32.neg (br_if 0 (f32.const 1))))))
                                 ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:193:49: type mismatch at br_if. got i64, expected i32
+  third_party/testsuite/br_if.wast:200:49: type mismatch at br_if condition. got i64, expected i32
   (module (func $type-true-f64 (block (f64.neg (br_if 0 (i64.const 1))))))
-                                                ^^^^^
+                                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:193:40: type stack size too small at f64.neg. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:200:40: type stack size too small at f64.neg. got 0, expected at least 1
   (module (func $type-true-f64 (block (f64.neg (br_if 0 (i64.const 1))))))
                                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:193:33: unable to join type void (joined type of block's br* targets) with type f64 (block's result type).
+  third_party/testsuite/br_if.wast:200:33: type stack at end of block is 1. expected 0
   (module (func $type-true-f64 (block (f64.neg (br_if 0 (i64.const 1))))))
                                 ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:199:6: unable to join type void (joined type of block's br* targets) with type i32 (block's result type).
-    (block (br_if 0 (i32.const 0)) (i32.const 1))
-     ^^^^^
+  third_party/testsuite/br_if.wast:206:17: type stack size too small at br_if value. got 0, expected at least 1
+    (block i32 (br_if 0 (i32.const 0)) (i32.const 1))
+                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:198:11: unable to join type void (type of last operation) with type i32 (function signature result type).
-  (module (func $type-false-arg-empty-vs-num (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  third_party/testsuite/br_if.wast:212:17: type stack size too small at br_if value. got 0, expected at least 1
+    (block i32 (br_if 0 (i32.const 1)) (i32.const 1))
+                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:205:6: unable to join type void (joined type of block's br* targets) with type i32 (block's result type).
-    (block (br_if 0 (i32.const 1)) (i32.const 1))
-     ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:204:11: unable to join type void (type of last operation) with type i32 (function signature result type).
-  (module (func $type-true-arg-empty-vs-num (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:211:13: type stack size too small at br_if. got 1, expected at least 2
-    (block (br_if 0 (nop) (i32.const 0)))
-            ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:210:11: unable to join type i32 (type of last operation) with type void (function signature result type).
-  (module (func $type-false-arg-void-vs-empty
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:217:13: type stack size too small at br_if. got 1, expected at least 2
-    (block (br_if 0 (nop) (i32.const 1)))
-            ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:216:11: unable to join type i32 (type of last operation) with type void (function signature result type).
-  (module (func $type-true-arg-void-vs-empty
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:223:6: unable to join type i32 (joined type of block's br* targets) with type void (block's result type).
+  third_party/testsuite/br_if.wast:218:6: type stack at end of block is 1. expected 0
     (block (br_if 0 (i32.const 0) (i32.const 0)))
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:222:11: unable to join type i32 (type of last operation) with type void (function signature result type).
-  (module (func $type-false-arg-num-vs-empty
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:229:6: unable to join type i32 (joined type of block's br* targets) with type void (block's result type).
+  third_party/testsuite/br_if.wast:224:6: type stack at end of block is 1. expected 0
     (block (br_if 0 (i32.const 0) (i32.const 1)))
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:228:11: unable to join type i32 (type of last operation) with type void (function signature result type).
-  (module (func $type-true-arg-num-vs-empty
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  third_party/testsuite/br_if.wast:246:17: type stack size too small at br_if value. got 0, expected at least 1
+    (block i32 (br_if 0 (nop) (i32.const 0)) (i32.const 1))
+                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:250:13: type stack size too small at br_if. got 1, expected at least 2
-    (block (br_if 0 (nop) (i32.const 0)) (i32.const 1))
-            ^^^^^
+  third_party/testsuite/br_if.wast:252:17: type stack size too small at br_if value. got 0, expected at least 1
+    (block i32 (br_if 0 (nop) (i32.const 1)) (i32.const 1))
+                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:250:6: maximum arity for block is 1, got 2
-    (block (br_if 0 (nop) (i32.const 0)) (i32.const 1))
-     ^^^^^
+  third_party/testsuite/br_if.wast:258:23: type mismatch at br_if value. got i64, expected i32
+    (block i32 (drop (br_if 0 (i64.const 1) (i32.const 0))) (i32.const 1))
+                      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:256:13: type stack size too small at br_if. got 1, expected at least 2
-    (block (br_if 0 (nop) (i32.const 1)) (i32.const 1))
-            ^^^^^
+  third_party/testsuite/br_if.wast:264:23: type mismatch at br_if value. got i64, expected i32
+    (block i32 (drop (br_if 0 (i64.const 1) (i32.const 0))) (i32.const 1))
+                      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:256:6: maximum arity for block is 1, got 2
-    (block (br_if 0 (nop) (i32.const 1)) (i32.const 1))
-     ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:262:6: unable to join type i64 (joined type of block's br* targets) with type i32 (block's result type).
-    (block (br_if 0 (i64.const 1) (i32.const 0)) (i32.const 1))
-     ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:261:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
-  (module (func $type-false-arg-num-vs-num (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:268:6: unable to join type i64 (joined type of block's br* targets) with type i32 (block's result type).
-    (block (br_if 0 (i64.const 1) (i32.const 0)) (i32.const 1))
-     ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:267:11: unable to join type i64 (type of last operation) with type i32 (function signature result type).
-  (module (func $type-true-arg-num-vs-num (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:275:13: type stack size too small at br_if. got 0, expected at least 1
+  third_party/testsuite/br_if.wast:271:13: type stack size too small at br_if condition. got 0, expected at least 1
     (block (br_if 0 (nop)))
-            ^^^^^
+            ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:275:6: unable to join type void (joined type of block's br* targets) with type i32 (block's result type).
-    (block (br_if 0 (nop)))
-     ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:281:13: type mismatch at br_if. got i64, expected i32
+  third_party/testsuite/br_if.wast:277:13: type mismatch at br_if condition. got i64, expected i32
     (block (br_if 0 (i64.const 0)))
-            ^^^^^
+            ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:287:13: type stack size too small at br_if. got 1, expected at least 2
-    (block (br_if 0 (i32.const 0) (nop)) (i32.const 1))
-            ^^^^^
+  third_party/testsuite/br_if.wast:283:17: type stack size too small at br_if value. got 0, expected at least 1
+    (block i32 (br_if 0 (i32.const 0) (nop)) (i32.const 1))
+                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:287:6: maximum arity for block is 1, got 2
-    (block (br_if 0 (i32.const 0) (nop)) (i32.const 1))
+  third_party/testsuite/br_if.wast:289:17: type mismatch at br_if condition. got i64, expected i32
+    (block i32 (br_if 0 (i32.const 0) (i64.const 0)) (i32.const 1))
+                ^^^^^^^
+assert_invalid error:
+  third_party/testsuite/br_if.wast:289:6: type stack at end of block is 2. expected 1
+    (block i32 (br_if 0 (i32.const 0) (i64.const 0)) (i32.const 1))
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:293:13: type mismatch at br_if. got i64, expected i32
-    (block (br_if 0 (i32.const 0) (i64.const 0)) (i32.const 1))
-            ^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:300:54: type mismatch at br_if. got i64, expected i32
-    (block (i64.const 1) (i64.const 2) (i64.const 3) br_if 2 0)
-                                                     ^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:301:5: type stack size too small at i64.add. got 1, expected at least 2
-    i64.add
-    ^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:307:66: type mismatch at br_if. got i64, expected i32
-    (block (nop) (i32.const 7) (nop) (i32.const 8) (i64.const 3) br_if 2 0)
-                                                                 ^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:308:5: type stack size too small at i32.add. got 1, expected at least 2
-    i32.add
-    ^^^^^^^
-assert_invalid error:
-  third_party/testsuite/br_if.wast:314:39: label variable out of range (max 1)
+  third_party/testsuite/br_if.wast:295:39: label variable out of range (max 1)
   (module (func $unbound-label (br_if 1 (i32.const 1))))
                                       ^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:318:60: label variable out of range (max 3)
+  third_party/testsuite/br_if.wast:299:60: label variable out of range (max 3)
   (module (func $unbound-nested-label (block (block (br_if 5 (i32.const 1))))))
                                                            ^
 assert_invalid error:
-  third_party/testsuite/br_if.wast:322:37: label variable out of range (max 1)
-  (module (func $large-label (br_if 0x100000001 (i32.const 1))))
-                                    ^^^^^^^^^^^
-36/36 tests passed.
+  third_party/testsuite/br_if.wast:303:37: label variable out of range (max 1)
+  (module (func $large-label (br_if 0x10000001 (i32.const 1))))
+                                    ^^^^^^^^^^
+34/34 tests passed.
 ;;; STDOUT ;;)

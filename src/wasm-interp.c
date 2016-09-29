@@ -581,7 +581,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
 
   enum {
     NONE,
-    INVOKE,
+    ACTION,
     ASSERT_RETURN,
     ASSERT_RETURN_NAN,
     ASSERT_TRAP,
@@ -757,7 +757,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
       case END_COMMAND_OBJECT: {
         WasmInterpreterResult iresult;
         EXPECT('}');
-        RunVerbosity verbose = command_type == INVOKE ? RUN_VERBOSE : RUN_QUIET;
+        RunVerbosity verbose = command_type == ACTION ? RUN_VERBOSE : RUN_QUIET;
         result = run_export_by_name(allocator, &module, &thread, &command_name,
                                     &iresult, &result_values, verbose);
         if (WASM_FAILED(result)) {
@@ -767,7 +767,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
         }
 
         switch (command_type) {
-          case INVOKE:
+          case ACTION:
             if (iresult != WASM_INTERPRETER_RETURNED) {
               FAILED("trapped");
               failed++;
@@ -811,8 +811,8 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
       }
 
       case COMMAND_TYPE: {
-        if (MATCHES_STR("\"invoke\"")) {
-          command_type = INVOKE;
+        if (MATCHES_STR("\"action\"")) {
+          command_type = ACTION;
         } else if (MATCHES_STR("\"assert_return\"")) {
           command_type = ASSERT_RETURN;
         } else if (MATCHES_STR("\"assert_return_nan\"")) {
@@ -865,10 +865,12 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
 fail:
   fprintf(stderr, "error parsing spec json file\n");
   fprintf(stderr, "got this far: %" PRIzd ":> %.*s...\n", p - start, 20, p);
+  result = WASM_ERROR;
 
 done:
   if (has_module)
     destroy_module_and_thread(allocator, &module, &thread);
+  wasm_destroy_interpreter_typed_value_vector(allocator, &result_values);
   wasm_free(allocator, data);
   return result;
 }

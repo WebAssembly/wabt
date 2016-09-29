@@ -3,6 +3,9 @@
   (import "foo" "bar" (table $baz 0 anyfunc))
   (import "foo" "blah" (table $baz 0 anyfunc)))
 (;; STDERR ;;;
+parse/module/bad-import-table-redefinition.txt:4:3: only one table allowed
+  (import "foo" "blah" (table $baz 0 anyfunc)))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 parse/module/bad-import-table-redefinition.txt:4:3: redefinition of table "$baz"
   (import "foo" "blah" (table $baz 0 anyfunc)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

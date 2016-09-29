@@ -1,7 +1,7 @@
 ;;; FLAGS: -dv --no-canonicalize-leb128s
 (module
-  (memory 100)
   (import "stdio" "print" (func (param i32)))
+  (memory 100)
   (export "f1" (func $f1))
   (table anyfunc (elem $f2 $f3))
   (type $t (func (param i32) (result i32)))

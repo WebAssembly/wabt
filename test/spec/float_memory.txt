@@ -1,29 +1,29 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/float_memory.wast
 (;; STDOUT ;;;
-$invoke_2() 
-$invoke_5() 
-$invoke_8() 
-$invoke_11() 
-$invoke_2() 
-$invoke_5() 
-$invoke_8() 
-$invoke_11() 
-$invoke_2() 
-$invoke_5() 
-$invoke_8() 
-$invoke_11() 
-$invoke_2() 
-$invoke_5() 
-$invoke_8() 
-$invoke_11() 
-$invoke_2() 
-$invoke_5() 
-$invoke_8() 
-$invoke_11() 
-$invoke_2() 
-$invoke_5() 
-$invoke_8() 
-$invoke_11() 
+$action_2() => 
+$action_5() => 
+$action_8() => 
+$action_11() => 
+$action_2() => 
+$action_5() => 
+$action_8() => 
+$action_11() => 
+$action_2() => 
+$action_5() => 
+$action_8() => 
+$action_11() => 
+$action_2() => 
+$action_5() => 
+$action_8() => 
+$action_11() => 
+$action_2() => 
+$action_5() => 
+$action_8() => 
+$action_11() => 
+$action_2() => 
+$action_5() => 
+$action_8() => 
+$action_11() => 
 60/60 tests passed.
 ;;; STDOUT ;;)

@@ -1,10 +1,8 @@
 ;;; TOOL: run-roundtrip
 ;;; FLAGS: --stdout
 (module
-  (import "a" "b" (memory 1))
-  (memory 2 3))
+  (import "a" "b" (memory 1)))
 (;; STDOUT ;;;
 (module
-  (import "a" "b" (memory (;0;) 1))
-  (memory (;1;) 2 3))
+  (import "a" "b" (memory (;0;) 1)))
 ;;; STDOUT ;;)

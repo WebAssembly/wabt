@@ -2,55 +2,107 @@
 ;;; STDIN_FILE: third_party/testsuite/store_retval.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:4:11: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/store_retval.wast:2:11: type stack size too small at function. got 0, expected at least 1
   (module (func (param i32) (result i32) (set_local 0 (i32.const 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:8:11: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/store_retval.wast:2:11: type stack at end of function is 0. expected 1
+  (module (func (param i32) (result i32) (set_local 0 (i32.const 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:6:11: type stack size too small at function. got 0, expected at least 1
   (module (func (param i64) (result i64) (set_local 0 (i64.const 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:12:11: unable to join type void (type of last operation) with type f32 (function signature result type).
+  third_party/testsuite/store_retval.wast:6:11: type stack at end of function is 0. expected 1
+  (module (func (param i64) (result i64) (set_local 0 (i64.const 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:10:11: type stack size too small at function. got 0, expected at least 1
   (module (func (param f32) (result f32) (set_local 0 (f32.const 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:16:11: unable to join type void (type of last operation) with type f64 (function signature result type).
+  third_party/testsuite/store_retval.wast:10:11: type stack at end of function is 0. expected 1
+  (module (func (param f32) (result f32) (set_local 0 (f32.const 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:14:11: type stack size too small at function. got 0, expected at least 1
   (module (func (param f64) (result f64) (set_local 0 (f64.const 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:21:22: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/store_retval.wast:14:11: type stack at end of function is 0. expected 1
+  (module (func (param f64) (result f64) (set_local 0 (f64.const 1))))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:19:22: type stack size too small at function. got 0, expected at least 1
 ...y 1) (func (param i32) (result i32) (i32.store (i32.const 0) (i32.const 1))))
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:25:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/store_retval.wast:19:22: type stack at end of function is 0. expected 1
+...y 1) (func (param i32) (result i32) (i32.store (i32.const 0) (i32.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:23:22: type stack size too small at function. got 0, expected at least 1
 ...y 1) (func (param i64) (result i64) (i64.store (i32.const 0) (i64.const 1))))
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:29:22: unable to join type void (type of last operation) with type f32 (function signature result type).
+  third_party/testsuite/store_retval.wast:23:22: type stack at end of function is 0. expected 1
+...y 1) (func (param i64) (result i64) (i64.store (i32.const 0) (i64.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:27:22: type stack size too small at function. got 0, expected at least 1
 ...y 1) (func (param f32) (result f32) (f32.store (i32.const 0) (f32.const 1))))
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:33:22: unable to join type void (type of last operation) with type f64 (function signature result type).
+  third_party/testsuite/store_retval.wast:27:22: type stack at end of function is 0. expected 1
+...y 1) (func (param f32) (result f32) (f32.store (i32.const 0) (f32.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:31:22: type stack size too small at function. got 0, expected at least 1
 ...y 1) (func (param f64) (result f64) (f64.store (i32.const 0) (f64.const 1))))
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:38:22: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/store_retval.wast:31:22: type stack at end of function is 0. expected 1
+...y 1) (func (param f64) (result f64) (f64.store (i32.const 0) (f64.const 1))))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:36:22: type stack size too small at function. got 0, expected at least 1
 ... 1) (func (param i32) (result i32) (i32.store8 (i32.const 0) (i32.const 1))))
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:42:22: unable to join type void (type of last operation) with type i32 (function signature result type).
+  third_party/testsuite/store_retval.wast:36:22: type stack at end of function is 0. expected 1
+... 1) (func (param i32) (result i32) (i32.store8 (i32.const 0) (i32.const 1))))
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:40:22: type stack size too small at function. got 0, expected at least 1
 ...1) (func (param i32) (result i32) (i32.store16 (i32.const 0) (i32.const 1))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:46:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/store_retval.wast:40:22: type stack at end of function is 0. expected 1
+...1) (func (param i32) (result i32) (i32.store16 (i32.const 0) (i32.const 1))))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:44:22: type stack size too small at function. got 0, expected at least 1
 ... 1) (func (param i64) (result i64) (i64.store8 (i32.const 0) (i64.const 1))))
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:50:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/store_retval.wast:44:22: type stack at end of function is 0. expected 1
+... 1) (func (param i64) (result i64) (i64.store8 (i32.const 0) (i64.const 1))))
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:48:22: type stack size too small at function. got 0, expected at least 1
 ...1) (func (param i64) (result i64) (i64.store16 (i32.const 0) (i64.const 1))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/store_retval.wast:54:22: unable to join type void (type of last operation) with type i64 (function signature result type).
+  third_party/testsuite/store_retval.wast:48:22: type stack at end of function is 0. expected 1
+...1) (func (param i64) (result i64) (i64.store16 (i32.const 0) (i64.const 1))))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:52:22: type stack size too small at function. got 0, expected at least 1
+...1) (func (param i64) (result i64) (i64.store32 (i32.const 0) (i64.const 1))))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/store_retval.wast:52:22: type stack at end of function is 0. expected 1
 ...1) (func (param i64) (result i64) (i64.store32 (i32.const 0) (i64.const 1))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 0/0 tests passed.
