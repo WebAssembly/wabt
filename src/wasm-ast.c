@@ -411,6 +411,7 @@ void wasm_destroy_var_vector_and_elements(WasmAllocator* allocator,
 void wasm_destroy_func_signature(WasmAllocator* allocator,
                                  WasmFuncSignature* sig) {
   wasm_destroy_type_vector(allocator, &sig->param_types);
+  wasm_destroy_type_vector(allocator, &sig->result_types);
 }
 
 void wasm_destroy_expr_list(WasmAllocator* allocator, WasmExpr* first) {
@@ -612,7 +613,9 @@ void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
   wasm_destroy_export_ptr_vector(allocator, &module->exports);
   wasm_destroy_func_type_ptr_vector(allocator, &module->func_types);
   wasm_destroy_table_ptr_vector(allocator, &module->tables);
+  wasm_destroy_elem_segment_ptr_vector(allocator, &module->elem_segments);
   wasm_destroy_memory_ptr_vector(allocator, &module->memories);
+  wasm_destroy_data_segment_ptr_vector(allocator, &module->data_segments);
   wasm_destroy_binding_hash_entry_vector(allocator,
                                          &module->func_bindings.entries);
   wasm_destroy_binding_hash_entry_vector(allocator,
@@ -668,6 +671,7 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
       wasm_destroy_action(allocator, &command->assert_return.action);
+      wasm_destroy_const_vector(allocator, &command->assert_return.expected);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
       wasm_destroy_action(allocator, &command->assert_return_nan.action);

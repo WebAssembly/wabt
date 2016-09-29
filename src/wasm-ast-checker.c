@@ -1440,6 +1440,10 @@ static void check_command(Context* ctx, const WasmCommand* command) {
   }
 }
 
+static void wasm_destroy_context(Context* ctx) {
+  wasm_destroy_type_vector(ctx->allocator, &ctx->type_stack);
+}
+
 WasmResult wasm_check_names(WasmAllocator* allocator,
                             WasmAstLexer* lexer,
                             const struct WasmScript* script,
@@ -1454,6 +1458,7 @@ WasmResult wasm_check_names(WasmAllocator* allocator,
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
+  wasm_destroy_context(&ctx);
   return ctx.result;
 }
 
@@ -1471,6 +1476,7 @@ WasmResult wasm_check_ast(WasmAllocator* allocator,
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
+  wasm_destroy_context(&ctx);
   return ctx.result;
 }
 
@@ -1502,11 +1508,13 @@ WasmResult wasm_check_assert_invalid(
     ai_ctx.error_handler = assert_invalid_error_handler;
     ai_ctx.result = WASM_OK;
     check_raw_module(&ai_ctx, &command->assert_invalid.module);
+    wasm_destroy_context(&ai_ctx);
 
     if (WASM_SUCCEEDED(ai_ctx.result)) {
       print_error(&ctx, CHECK_STYLE_FULL, &command->assert_invalid.module.loc,
                   "expected module to be invalid");
     }
   }
+  wasm_destroy_context(&ctx);
   return ctx.result;
 }
