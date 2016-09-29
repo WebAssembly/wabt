@@ -344,7 +344,9 @@ typedef enum WasmCommandType {
   WASM_COMMAND_TYPE_MODULE,
   WASM_COMMAND_TYPE_ACTION,
   WASM_COMMAND_TYPE_REGISTER,
+  WASM_COMMAND_TYPE_ASSERT_MALFORMED,
   WASM_COMMAND_TYPE_ASSERT_INVALID,
+  WASM_COMMAND_TYPE_ASSERT_UNLINKABLE,
   WASM_COMMAND_TYPE_ASSERT_RETURN,
   WASM_COMMAND_TYPE_ASSERT_RETURN_NAN,
   WASM_COMMAND_TYPE_ASSERT_TRAP,
@@ -360,7 +362,10 @@ typedef struct WasmCommand {
     struct { WasmAction action; WasmConstVector expected; } assert_return;
     struct { WasmAction action; } assert_return_nan;
     struct { WasmAction action; WasmStringSlice text; } assert_trap;
-    struct { WasmRawModule module; WasmStringSlice text; } assert_invalid;
+    struct {
+      WasmRawModule module;
+      WasmStringSlice text;
+    } assert_malformed, assert_invalid, assert_unlinkable;
   };
 } WasmCommand;
 WASM_DEFINE_VECTOR(command, WasmCommand);

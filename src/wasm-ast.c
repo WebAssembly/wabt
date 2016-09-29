@@ -665,9 +665,17 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       wasm_destroy_string_slice(allocator, &command->register_.module_name);
       wasm_destroy_string_slice(allocator, &command->register_.module_var_name);
       break;
+    case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
+      wasm_destroy_raw_module(allocator, &command->assert_malformed.module);
+      wasm_destroy_string_slice(allocator, &command->assert_malformed.text);
+      break;
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
       wasm_destroy_raw_module(allocator, &command->assert_invalid.module);
       wasm_destroy_string_slice(allocator, &command->assert_invalid.text);
+      break;
+    case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
+      wasm_destroy_raw_module(allocator, &command->assert_unlinkable.module);
+      wasm_destroy_string_slice(allocator, &command->assert_unlinkable.text);
       break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
       wasm_destroy_action(allocator, &command->assert_return.action);

@@ -1375,7 +1375,9 @@ static void check_command(Context* ctx, const WasmCommand* command) {
       break;
 
     case WASM_COMMAND_TYPE_REGISTER:
+    case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
+    case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
       /* ignore */
       break;
 

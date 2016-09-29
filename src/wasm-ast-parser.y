@@ -184,7 +184,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %token FUNC START TYPE PARAM RESULT LOCAL GLOBAL
 %token MODULE TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
 %token REGISTER INVOKE GET
-%token ASSERT_INVALID ASSERT_UNLINKABLE
+%token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
 %token ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP
 %token INPUT OUTPUT
 %token EOF 0 "EOF"
@@ -197,7 +197,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 
 %type<action> action
 %type<block> block
-%type<command> cmd
+%type<command> assertion cmd
 %type<commands> cmd_list
 %type<const_> const
 %type<consts> const_list
@@ -1298,7 +1298,7 @@ action :
       $$.invoke.name = $4;
       $$.invoke.args = $5;
     }
-  | LPAR GET script_var_opt TEXT RPAR {
+  | LPAR GET script_var_opt quoted_text RPAR {
       WASM_ZERO_MEMORY($$);
       $$.loc = @2;
       $$.module_var_name = $3;
@@ -1307,29 +1307,24 @@ action :
     }
 ;
 
-cmd :
-    module {
+assertion :
+    LPAR ASSERT_MALFORMED raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_MODULE;
-      $$->module = *$1;
-      wasm_free(parser->allocator, $1);
-    }
-  | action {
-      $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ACTION;
-      $$->action = $1;
-    }
-  | LPAR REGISTER quoted_text script_var_opt RPAR {
-      $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_REGISTER;
-      $$->register_.module_name = $3;
-      $$->register_.module_var_name = $4;
+      $$->type = WASM_COMMAND_TYPE_ASSERT_MALFORMED;
+      $$->assert_malformed.module = $3;
+      $$->assert_malformed.text = $4;
     }
   | LPAR ASSERT_INVALID raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_INVALID;
       $$->assert_invalid.module = $3;
       $$->assert_invalid.text = $4;
+    }
+  | LPAR ASSERT_UNLINKABLE raw_module quoted_text RPAR {
+      $$ = new_command(parser->allocator);
+      $$->type = WASM_COMMAND_TYPE_ASSERT_UNLINKABLE;
+      $$->assert_unlinkable.module = $3;
+      $$->assert_unlinkable.text = $4;
     }
   | LPAR ASSERT_RETURN action const_list RPAR {
       $$ = new_command(parser->allocator);
@@ -1347,6 +1342,27 @@ cmd :
       $$->type = WASM_COMMAND_TYPE_ASSERT_TRAP;
       $$->assert_trap.action = $3;
       $$->assert_trap.text = $4;
+    }
+;
+
+cmd :
+    action {
+      $$ = new_command(parser->allocator);
+      $$->type = WASM_COMMAND_TYPE_ACTION;
+      $$->action = $1;
+    }
+  | assertion
+  | module {
+      $$ = new_command(parser->allocator);
+      $$->type = WASM_COMMAND_TYPE_MODULE;
+      $$->module = *$1;
+      wasm_free(parser->allocator, $1);
+    }
+  | LPAR REGISTER quoted_text script_var_opt RPAR {
+      $$ = new_command(parser->allocator);
+      $$->type = WASM_COMMAND_TYPE_REGISTER;
+      $$->register_.module_name = $3;
+      $$->register_.module_var_name = $4;
     }
 ;
 cmd_list :

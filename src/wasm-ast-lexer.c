@@ -435,6 +435,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "register"            { RETURN(REGISTER); }
     <i> "invoke"              { RETURN(INVOKE); }
     <i> "get"                 { RETURN(GET); }
+    <i> "assert_malformed"    { RETURN(ASSERT_MALFORMED); }
     <i> "assert_invalid"      { RETURN(ASSERT_INVALID); }
     <i> "assert_unlinkable"   { RETURN(ASSERT_UNLINKABLE); }
     <i> "assert_return"       { RETURN(ASSERT_RETURN); }
