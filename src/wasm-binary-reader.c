@@ -612,6 +612,7 @@ static void sprint_limits(char* dst, size_t size, const WasmLimits* limits) {
   } else {
     result = wasm_snprintf(dst, size, "initial: %" PRIu64, limits->initial);
   }
+  WASM_USE(result);
   assert((size_t)result < size);
 }
 
