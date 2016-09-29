@@ -234,10 +234,10 @@ add_dependencies(everything wasm2wast)
 target_link_libraries(wasm2wast libwasm)
 
 if (NOT WIN32)
-add_custom_command( TARGET wast2wasm 
+add_custom_command( TARGET wast2wasm
                     POST_BUILD
                     COMMAND ln -sf wast2wasm sexpr-wasm)
-add_custom_command( TARGET wasm2wast 
+add_custom_command( TARGET wasm2wast
                     POST_BUILD
                     COMMAND ln -sf wasm2wast wasm-wast)
 
@@ -318,3 +318,6 @@ add_custom_target(run-tests
   DEPENDS wast2wasm wasm2wast wasm-interp
   WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
 )
+
+# install
+install(TARGETS wast2wasm wasm2wast wasm-interp DESTINATION bin)
