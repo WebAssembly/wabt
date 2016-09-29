@@ -3,3 +3,9 @@
 
 # too few parameters to function in call. got 8, expected 9
 pr44942.c.s.wast
+
+# New in 0xc:
+# call_indirect with no table
+20021118-2.c.s.wast
+921208-1.c.s.wast
+930513-1.c.s.wast
