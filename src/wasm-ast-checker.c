@@ -568,9 +568,9 @@ static void check_n_types(Context* ctx,
   if (WASM_SUCCEEDED(check_type_stack_limit(ctx, loc, expected->size, desc))) {
     size_t i;
     for (i = 0; i < expected->size; ++i) {
-      WasmType actual = ctx->type_stack.data[i];
-      check_type(ctx, loc, actual, expected->data[expected->size - i - 1],
-                 desc);
+      WasmType actual =
+          ctx->type_stack.data[ctx->type_stack.size - expected->size + i];
+      check_type(ctx, loc, actual, expected->data[i], desc);
     }
   }
 }
