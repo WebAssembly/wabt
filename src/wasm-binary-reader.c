@@ -541,8 +541,10 @@ LOGGING_UINT32(on_function_signatures_count)
 LOGGING_UINT32_UINT32(on_function_signature, "index", "sig_index")
 LOGGING_END(function_signatures_section)
 LOGGING_BEGIN(table_section)
+LOGGING_UINT32(on_table_count)
 LOGGING_END(table_section)
 LOGGING_BEGIN(memory_section)
+LOGGING_UINT32(on_memory_count)
 LOGGING_END(memory_section)
 LOGGING_BEGIN(global_section)
 LOGGING_UINT32(on_global_count)
@@ -965,10 +967,12 @@ static WasmBinaryReader s_logging_binary_reader = {
     .end_function_signatures_section = logging_end_function_signatures_section,
 
     .begin_table_section = logging_begin_table_section,
+    .on_table_count = logging_on_table_count,
     .on_table = logging_on_table,
     .end_table_section = logging_end_table_section,
 
     .begin_memory_section = logging_begin_memory_section,
+    .on_memory_count = logging_on_memory_count,
     .on_memory = logging_on_memory,
     .end_memory_section = logging_end_memory_section,
 
