@@ -1059,12 +1059,10 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
             offset, last_end);
       }
 
-      uint64_t max =
-          table->elem_limits.has_max ? table->elem_limits.initial : UINT32_MAX;
-
-      if (offset + elem_segment->vars.size > max) {
+      uint64_t max = table->elem_limits.initial;
+      if ((uint64_t)offset + elem_segment->vars.size > max) {
         print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                    "segment ends past the end of table max size (%" PRIu64 ")",
+                    "segment ends past the end of the table (%" PRIu64 ")",
                     max);
       }
 
@@ -1102,14 +1100,12 @@ static void check_data_segments(Context* ctx, const WasmModule* module) {
             offset, last_end);
       }
 
-      uint32_t max = memory->page_limits.has_max ? memory->page_limits.initial
-                                                 : WASM_MAX_PAGES;
-      const uint64_t memory_max_size = max * WASM_PAGE_SIZE;
-      if (offset + data_segment->size > memory_max_size) {
+      uint32_t max = memory->page_limits.initial;
+      const uint64_t memory_initial_size = (uint64_t)max * WASM_PAGE_SIZE;
+      if ((uint64_t)offset + data_segment->size > memory_initial_size) {
         print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                    "segment ends past the end of memory max size (%" PRIu64
-                    ")",
-                    memory_max_size);
+                    "segment ends past the end of memory (%" PRIu64 ")",
+                    memory_initial_size);
       }
 
       last_end = offset + data_segment->size;
