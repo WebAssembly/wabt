@@ -42,10 +42,11 @@
 0000023: 0000 0040                                  ; f32 literal
 0000027: bc                                         ; OPCODE_SET_GLOBAL
 0000028: 00                                         ; global index
-0000020: 08                                         ; FIXUP func body size
-000001e: 0a                                         ; FIXUP section size
+0000029: 0f                                         ; OPCODE_END
+0000020: 09                                         ; FIXUP func body size
+000001e: 0b                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0609 0103 0013 0000 803f 0f0a 0a01  
-0000020: 0800 1300 0000 40bc 00                   
+0000010: 0100 0609 0103 0013 0000 803f 0f0a 0b01  
+0000020: 0900 1300 0000 40bc 000f                 
 ;;; STDOUT ;;)

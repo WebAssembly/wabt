@@ -334,13 +334,14 @@
 000011b: 06                                         ; OPCODE_BR
 000011c: 00                                         ; break depth
 000011d: 0f                                         ; OPCODE_END
-; move data: [16, 11e) -> [17, 11f)
-0000015: 8802                                       ; FIXUP func body size
-; move data: [14, 11f) -> [15, 120)
-0000013: 8b02                                       ; FIXUP section size
+000011e: 0f                                         ; OPCODE_END
+; move data: [16, 11f) -> [17, 120)
+0000015: 8902                                       ; FIXUP func body size
+; move data: [14, 120) -> [15, 121)
+0000013: 8c02                                       ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a8b 0201 8802 0001 000a 0a0a 0a0a  
+0000010: 0100 0a8c 0201 8902 0001 000a 0a0a 0a0a  
 0000020: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
 0000030: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
 0000040: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
@@ -357,4 +358,5 @@
 00000f0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
 0000100: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
 0000110: 0a0a 0a0a 0a0a 0a0a 0a0a 0a06 0006 000f  
+0000120: 0f                                       
 ;;; STDOUT ;;)

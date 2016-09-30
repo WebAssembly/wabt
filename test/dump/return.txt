@@ -37,15 +37,17 @@
 000001c: 10                                         ; OPCODE_I32_CONST
 000001d: 2a                                         ; i32 literal
 000001e: 09                                         ; OPCODE_RETURN
-000001a: 04                                         ; FIXUP func body size
+000001f: 0f                                         ; OPCODE_END
+000001a: 05                                         ; FIXUP func body size
 ; function body 1
-000001f: 00                                         ; func body size (guess)
-0000020: 00                                         ; local decl count
-0000021: 09                                         ; OPCODE_RETURN
-000001f: 02                                         ; FIXUP func body size
-0000018: 09                                         ; FIXUP section size
+0000020: 00                                         ; func body size (guess)
+0000021: 00                                         ; local decl count
+0000022: 09                                         ; OPCODE_RETURN
+0000023: 0f                                         ; OPCODE_END
+0000020: 03                                         ; FIXUP func body size
+0000018: 0b                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0108 0240 0001 0140  
-0000010: 0000 0303 0200 010a 0902 0400 102a 0902  
-0000020: 0009                                     
+0000010: 0000 0303 0200 010a 0b02 0500 102a 090f  
+0000020: 0300 090f                                
 ;;; STDOUT ;;)

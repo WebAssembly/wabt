@@ -43,10 +43,11 @@
 0000021: 10                                         ; OPCODE_I32_CONST
 0000022: 1d                                         ; i32 literal
 0000023: 0f                                         ; OPCODE_END
-0000016: 0d                                         ; FIXUP func body size
-0000014: 0f                                         ; FIXUP section size
+0000024: 0f                                         ; OPCODE_END
+0000016: 0e                                         ; FIXUP func body size
+0000014: 10                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0105 0140 0001 0103  
-0000010: 0201 000a 0f01 0d00 0101 102a 1000 0700  
-0000020: 0b10 1d0f                                
+0000010: 0201 000a 1001 0e00 0101 102a 1000 0700  
+0000020: 0b10 1d0f 0f                             
 ;;; STDOUT ;;)

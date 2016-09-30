@@ -44,10 +44,11 @@
 0000025: 00                                         ; local decl count
 0000026: 11                                         ; OPCODE_I64_CONST
 0000027: 00                                         ; i64 literal
-0000024: 03                                         ; FIXUP func body size
-0000022: 05                                         ; FIXUP section size
+0000028: 0f                                         ; OPCODE_END
+0000024: 04                                         ; FIXUP func body size
+0000022: 06                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0106 0140 0101 0102  
 0000010: 020b 0103 666f 6f03 6261 7200 0003 0201  
-0000020: 000a 0501 0300 1100                      
+0000020: 000a 0601 0400 1100 0f                   
 ;;; STDOUT ;;)

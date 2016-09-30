@@ -43,10 +43,11 @@
 000001f: 00                                         ; local index
 0000020: 39                                         ; OPCODE_GROW_MEMORY
 0000021: 0b                                         ; OPCODE_DROP
-000001c: 05                                         ; FIXUP func body size
-000001a: 07                                         ; FIXUP section size
+0000022: 0f                                         ; OPCODE_END
+000001c: 06                                         ; FIXUP func body size
+000001a: 08                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0105 0140 0101 0003  
-0000010: 0201 0005 0401 0101 020a 0701 0500 1400  
-0000020: 390b                                     
+0000010: 0201 0005 0401 0101 020a 0801 0600 1400  
+0000020: 390b 0f                                  
 ;;; STDOUT ;;)

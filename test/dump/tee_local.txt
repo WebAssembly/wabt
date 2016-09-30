@@ -36,9 +36,10 @@
 000001b: 19                                         ; OPCODE_TEE_LOCAL
 000001c: 00                                         ; local index
 000001d: 0b                                         ; OPCODE_DROP
-0000015: 08                                         ; FIXUP func body size
-0000013: 0a                                         ; FIXUP section size
+000001e: 0f                                         ; OPCODE_END
+0000015: 09                                         ; FIXUP func body size
+0000013: 0b                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a0a 0108 0101 0110 0019 000b       
+0000010: 0100 0a0b 0109 0101 0110 0019 000b 0f    
 ;;; STDOUT ;;)

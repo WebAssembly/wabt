@@ -7,10 +7,11 @@
   "\01\00"            ;; 1 function, type 0
   "\07\07"            ;; export section, 7 bytes
   "\01\04main\00\00"  ;; 1 export, function 0, named "main"
-  "\0a\07"            ;; code section, 7 bytes
-  "\01"               ;; 1 function
-  "\05\00"            ;; 0 locals
+  "\0a\08"            ;; code section, 8 bytes
+  "\01\06"            ;; 1 function, 6 bytes
+  "\00"               ;; 0 locals
   "\10"               ;; i32.const
   "\dc\7c"            ;; -420
   "\09"               ;; return
+  "\0f"               ;; end (of function)
 )

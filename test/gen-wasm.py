@@ -412,6 +412,7 @@ def p_data_func(p):
   'data : data FUNC LBRACE data RBRACE'
   p[0] = p[1]
   func_data = p[4]
+  func_data.append(0xf) # end opcode
   WriteLebU32(p[0], len(func_data))
   p[0].extend(func_data)
 

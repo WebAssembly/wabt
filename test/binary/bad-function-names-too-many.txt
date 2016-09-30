@@ -13,6 +13,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000020: function name count > function signature count
+error: @0x00000021: function name count > function signature count
 
 ;;; STDERR ;;)

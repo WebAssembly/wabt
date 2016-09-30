@@ -34,9 +34,10 @@
 000001c: 03                                         ; WASM_TYPE_F32
 000001d: 04                                         ; local type count
 000001e: 04                                         ; WASM_TYPE_F64
-0000015: 09                                         ; FIXUP func body size
-0000013: 0b                                         ; FIXUP section size
+000001f: 0f                                         ; OPCODE_END
+0000015: 0a                                         ; FIXUP func body size
+0000013: 0c                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a0b 0109 0401 0102 0203 0304 04    
+0000010: 0100 0a0c 010a 0401 0102 0203 0304 040f  
 ;;; STDOUT ;;)

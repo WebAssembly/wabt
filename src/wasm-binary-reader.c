@@ -1519,6 +1519,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           CALLBACK(on_local_decl, k, num_local_types, local_type);
         }
 
+        WasmBool seen_end_opcode = WASM_FALSE;
         while (ctx->offset < end_offset) {
           uint8_t opcode;
           in_u8(ctx, &opcode, "opcode");
@@ -1618,7 +1619,10 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               break;
 
             case WASM_OPCODE_END:
-              CALLBACK0(on_end_expr);
+              if (ctx->offset == end_offset)
+                seen_end_opcode = WASM_TRUE;
+              else
+                CALLBACK0(on_end_expr);
               break;
 
             case WASM_OPCODE_I32_CONST: {
@@ -1893,6 +1897,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         }
         RAISE_ERROR_UNLESS(ctx->offset == end_offset,
                            "function body longer than given size");
+        RAISE_ERROR_UNLESS(seen_end_opcode,
+                           "function body must end with END opcode");
         CALLBACK(end_function_body, i);
         CALLBACK(end_function_body_pass, i, j);
       }

@@ -60,11 +60,12 @@
 0000034: 0b                                         ; OPCODE_DROP
 0000035: 16                                         ; OPCODE_CALL_FUNCTION
 0000036: 01                                         ; func index
-0000029: 0d                                         ; FIXUP func body size
-0000027: 0f                                         ; FIXUP section size
+0000037: 0f                                         ; OPCODE_END
+0000029: 0e                                         ; FIXUP func body size
+0000027: 10                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 010b 0240 0201 0301  
 0000010: 0140 0001 0102 0b01 0366 6f6f 0362 6172  
-0000020: 0000 0302 0101 0a0f 010d 0010 0113 0000  
-0000030: 0040 1600 0b16 01                        
+0000020: 0000 0302 0101 0a10 010e 0010 0113 0000  
+0000030: 0040 1600 0b16 010f                      
 ;;; STDOUT ;;)

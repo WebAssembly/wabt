@@ -35,9 +35,10 @@
 000001b: 07                                         ; OPCODE_BR_IF
 000001c: 00                                         ; break depth
 000001d: 0f                                         ; OPCODE_END
-0000015: 08                                         ; FIXUP func body size
-0000013: 0a                                         ; FIXUP section size
+000001e: 0f                                         ; OPCODE_END
+0000015: 09                                         ; FIXUP func body size
+0000013: 0b                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a0a 0108 0002 0010 0007 000f       
+0000010: 0100 0a0b 0109 0002 0010 0007 000f 0f    
 ;;; STDOUT ;;)

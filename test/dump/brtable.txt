@@ -65,11 +65,12 @@
 000002f: 10                                         ; OPCODE_I32_CONST
 0000030: 03                                         ; i32 literal
 0000031: 0b                                         ; OPCODE_DROP
-0000015: 1c                                         ; FIXUP func body size
-0000013: 1e                                         ; FIXUP section size
+0000032: 0f                                         ; OPCODE_END
+0000015: 1d                                         ; FIXUP func body size
+0000013: 1f                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a1e 011c 0001 0001 0001 0010 0008  
+0000010: 0100 0a1f 011d 0001 0001 0001 0010 0008  
 0000020: 0200 0100 0f10 010b 1002 0b06 010f 0f10  
-0000030: 030b                                     
+0000030: 030b 0f                                  
 ;;; STDOUT ;;)

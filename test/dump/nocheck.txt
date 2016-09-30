@@ -45,6 +45,7 @@
 0000026: 12                                         ; OPCODE_F64_CONST
 0000027: 0000 0000 0000 0040                        ; f64 literal
 000002f: 40                                         ; OPCODE_I32_ADD
-000001f: 10                                         ; FIXUP func body size
-000001d: 12                                         ; FIXUP section size
+0000030: 0f                                         ; OPCODE_END
+000001f: 11                                         ; FIXUP func body size
+000001d: 13                                         ; FIXUP section size
 ;;; STDOUT ;;)

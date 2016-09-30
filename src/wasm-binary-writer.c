@@ -593,6 +593,7 @@ static void write_func(Context* ctx,
   write_func_locals(ctx, module, func, &func->local_types);
   push_label(ctx, &node, &label);
   write_expr_list(ctx, module, func, func->first_expr);
+  write_opcode(&ctx->stream, WASM_OPCODE_END);
   pop_label(ctx, &label);
 }
 
