@@ -1116,7 +1116,6 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
   CHECK_DEPTH(ctx, depth);
   depth = translate_depth(ctx, depth);
-  Label* label = get_label(ctx, depth);
   CHECK_RESULT(pop_and_check_1_type(ctx, WASM_TYPE_I32, "br_if"));
   /* flip the br_if so if <cond> is true it can drop values from the stack */
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_UNLESS));
@@ -1124,12 +1123,6 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   CHECK_RESULT(emit_i32(ctx, WASM_INVALID_OFFSET));
   CHECK_RESULT(emit_br(ctx, depth));
   CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset, get_istream_offset(ctx)));
-  /* clean up the values (if any), when the branch isn't taken */
-  CHECK_RESULT(emit_drop_keep(ctx, label->sig.size, 0));
-  /* don't pop the top expr from the stack if it is ANY; we want that to
-   * propagate through */
-  if (!top_type_is_any(ctx))
-    ctx->type_stack.size -= label->sig.size;
   return WASM_OK;
 }
 

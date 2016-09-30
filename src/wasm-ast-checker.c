@@ -440,11 +440,6 @@ static WasmType pop_type(Context* ctx) {
   return result;
 }
 
-static void drop_types(Context* ctx, size_t count) {
-  assert(ctx->type_stack.size >= type_stack_limit(ctx) + count);
-  ctx->type_stack.size -= count;
-}
-
 static void check_type(Context* ctx,
                        const WasmLocation* loc,
                        WasmType actual,
@@ -685,10 +680,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     case WASM_EXPR_TYPE_BR_IF: {
       const WasmBlockSignature* sig;
       pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "br_if condition");
-      if (WASM_SUCCEEDED(check_br(ctx, &expr->loc, &expr->br_if.var, &sig,
-                                  "br_if value"))) {
-        drop_types(ctx, sig->size);
-      }
+      check_br(ctx, &expr->loc, &expr->br_if.var, &sig, "br_if value");
       break;
     }
 

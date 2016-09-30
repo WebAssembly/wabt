@@ -2,8 +2,9 @@
 (module
   (func (param i32) (result i32)
     (block $exit i32
-      (br_if $exit (i32.const 42) (get_local 0))
-      (i32.const 29)))
+      (i32.sub
+        (br_if $exit (i32.const 42) (get_local 0))
+        (i32.const 13))))
 
   (func (export "test1") (result i32)
     (call 0 (i32.const 0)))
