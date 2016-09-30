@@ -370,12 +370,12 @@ static void write_expr(Context* ctx,
       for (i = 0; i < expr->br_table.targets.size; ++i) {
         const WasmVar* var = &expr->br_table.targets.data[i];
         node = find_label_by_var(ctx->top_label, var);
-        wasm_write_u32(&ctx->stream, ctx->max_depth - node->depth - 1,
-                       "break depth");
+        write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
+                         "break depth");
       }
       node = find_label_by_var(ctx->top_label, &expr->br_table.default_target);
-      wasm_write_u32(&ctx->stream, ctx->max_depth - node->depth - 1,
-                     "break depth for default");
+      write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
+                       "break depth for default");
       break;
     }
     case WASM_EXPR_TYPE_CALL: {

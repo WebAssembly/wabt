@@ -1588,13 +1588,13 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
               uint32_t i;
               for (i = 0; i < num_targets; ++i) {
                 uint32_t target_depth;
-                in_u32(ctx, &target_depth, "br_table target depth");
+                in_u32_leb128(ctx, &target_depth, "br_table target depth");
                 ctx->target_depths.data[i] = target_depth;
               }
 
               uint32_t default_target_depth;
-              in_u32(ctx, &default_target_depth,
-                     "br_table default target depth");
+              in_u32_leb128(ctx, &default_target_depth,
+                            "br_table default target depth");
 
               CALLBACK(on_br_table_expr, num_targets, ctx->target_depths.data,
                        default_target_depth);
