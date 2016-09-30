@@ -703,7 +703,7 @@ static WasmResult logging_on_table(uint32_t index,
 
 static WasmResult logging_on_memory_count(uint32_t count, void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_memory_count(count: %u)\n", count);
+  LOGF("on_memory_count(%u)\n", count);
   FORWARD(on_memory_count, count);
 }
 
