@@ -543,6 +543,7 @@ LOGGING_END(function_signatures_section)
 LOGGING_BEGIN(table_section)
 LOGGING_END(table_section)
 LOGGING_BEGIN(memory_section)
+LOGGING_UINT32(on_memory_count)
 LOGGING_END(memory_section)
 LOGGING_BEGIN(global_section)
 LOGGING_UINT32(on_global_count)
@@ -699,12 +700,6 @@ static WasmResult logging_on_table(uint32_t index,
   sprint_limits(buf, sizeof(buf), elem_limits);
   LOGF("on_table(index: %u, elem_type: %u, %s)\n", index, elem_type, buf);
   FORWARD(on_table, index, elem_type, elem_limits);
-}
-
-static WasmResult logging_on_memory_count(uint32_t count, void* user_data) {
-  LoggingContext* ctx = user_data;
-  LOGF("on_memory_count(%u)\n", count);
-  FORWARD(on_memory_count, count);
 }
 
 static WasmResult logging_on_memory(uint32_t index,
