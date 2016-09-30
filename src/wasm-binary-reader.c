@@ -701,6 +701,12 @@ static WasmResult logging_on_table(uint32_t index,
   FORWARD(on_table, index, elem_type, elem_limits);
 }
 
+static WasmResult logging_on_memory_count(uint32_t count, void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_memory_count(count: %u)\n", count);
+  FORWARD(on_memory_count, count);
+}
+
 static WasmResult logging_on_memory(uint32_t index,
                                     const WasmLimits* page_limits,
                                     void* user_data) {
@@ -969,6 +975,7 @@ static WasmBinaryReader s_logging_binary_reader = {
     .end_table_section = logging_end_table_section,
 
     .begin_memory_section = logging_begin_memory_section,
+    .on_memory_count = logging_on_memory_count,
     .on_memory = logging_on_memory,
     .end_memory_section = logging_end_memory_section,
 
