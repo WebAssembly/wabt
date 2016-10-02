@@ -27,7 +27,7 @@
   (type $t2 (func (param i32 i64)))
   (import "foo" "bar" (func $import (type $t1)))
   (func $func0 (type $t0) (param $p0 i32) (result f32)
-    f32.const 0x1p+0)
+    f32.const 0x1p+0 (;=1;))
   (func $f2 (type $t2) (param $p0 i32) (param $param1 i64)
     (local $l0 f32) (local $local1 f64)
     call $import
@@ -41,7 +41,7 @@
     drop
     get_local $param1
     drop
-    f32.const 0x0p+0
+    f32.const 0x0p+0 (;=0;)
     set_local $l0)
   (table $T0 1 1 anyfunc)
   (export "baz" (func $import))

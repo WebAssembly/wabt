@@ -390,10 +390,10 @@ static WasmResult begin_global(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult begin_global_init_expr(uint32_t index,
-                                               void* user_data) {
+static WasmResult begin_global_init_expr(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  assert(index == ctx->module->globals.size - 1);
+  assert(ctx->module->num_global_imports + index ==
+         ctx->module->globals.size - 1);
   WasmGlobal* global =
       ctx->module->globals.data[index + ctx->module->num_global_imports];
   ctx->current_init_expr = &global->init_expr;

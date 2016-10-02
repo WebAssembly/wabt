@@ -27,9 +27,9 @@
     drop
     i32.const 1
     set_local $p0
-    f32.const 0x1p+0
+    f32.const 0x1p+0 (;=1;)
     set_local $p1
-    f64.const 0x1p+0
+    f64.const 0x1p+0 (;=1;)
     set_local $l0
     i64.const 1
     set_local $l1))

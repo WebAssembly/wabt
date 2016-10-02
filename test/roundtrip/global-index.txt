@@ -1,0 +1,10 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout
+(module
+  (import "a" "b" (global i32))
+  (global f32 (f32.const 12345.625)))
+(;; STDOUT ;;;
+(module
+  (import "a" "b" (global (;0;) i32))
+  (global (;1;) f32 (f32.const 0x1.81cdp+13 (;=12345.6;))))
+;;; STDOUT ;;)

@@ -1,0 +1,25 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout
+(module
+  (func (param i32) (result f32)
+    block f32
+      f32.const 1
+      get_local 0
+      i32.eqz
+      br_if 0
+      drop
+      f32.const 2
+    end))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32) (result f32)))
+  (func (;0;) (type 0) (param i32) (result f32)
+    block f32  ;; label = @1
+      f32.const 0x1p+0 (;=1;)
+      get_local 0
+      i32.eqz
+      br_if 0 (;@1;)
+      drop
+      f32.const 0x1p+1 (;=2;)
+    end))
+;;; STDOUT ;;)

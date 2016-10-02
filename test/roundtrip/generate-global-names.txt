@@ -10,9 +10,9 @@
 (module
   (type $t0 (func (result i32)))
   (func $f0 (type $t0) (result i32)
-    f32.const 0x1.8p+1
+    f32.const 0x1.8p+1 (;=3;)
     set_global $g1
     get_global $g0)
   (global $g0 i32 (i32.const 42))
-  (global $g1 f32 (f32.const -0x1.8p+0)))
+  (global $g1 f32 (f32.const -0x1.8p+0 (;=-1.5;))))
 ;;; STDOUT ;;)

@@ -1,0 +1,12 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout
+(module
+  (import "a" "b" (func (result i32)))
+  (func (param f32)))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (param f32)))
+  (import "a" "b" (func (;0;) (type 0)))
+  (func (;1;) (type 1) (param f32)))
+;;; STDOUT ;;)
