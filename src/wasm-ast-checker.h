@@ -39,13 +39,17 @@ WasmResult wasm_check_ast(struct WasmAllocator*,
                           const struct WasmScript*,
                           WasmSourceErrorHandler*);
 
-/* Run the assert_invalid spec tests. These always contain an invalid module.
- * This function succeeds if and only if the contained module is invalid. */
-WasmResult wasm_check_assert_invalid(
+/* Run the assert_invalid and assert_malformed spec tests. A module is
+ * "malformed" if it cannot be read from the binary format. A module is
+ * "invalid" if either it is malformed, or if it does not pass the standard
+ * checks (as done by wasm_check_ast). This function succeeds if and only if
+ * all assert_invalid and assert_malformed tests pass. */
+WasmResult wasm_check_assert_invalid_and_malformed(
     struct WasmAllocator*,
     WasmAstLexer*,
     const struct WasmScript*,
     WasmSourceErrorHandler* assert_invalid_error_handler,
+    WasmSourceErrorHandler* assert_malformed_error_handler,
     WasmSourceErrorHandler* error_handler);
 WASM_EXTERN_C_END
 

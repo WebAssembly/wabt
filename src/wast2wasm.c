@@ -45,12 +45,14 @@ static WasmWriteBinarySpecOptions s_write_binary_spec_options =
 static WasmBool s_spec;
 static WasmBool s_use_libc_allocator;
 static WasmBool s_check = WASM_TRUE;
-static WasmBool s_check_assert_invalid = WASM_TRUE;
+static WasmBool s_check_assert_invalid_and_malformed = WASM_TRUE;
 
 static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
 static WasmSourceErrorHandler s_assert_invalid_error_handler =
     WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT;
+static WasmSourceErrorHandler s_assert_malformed_error_handler =
+    WASM_ASSERT_MALFORMED_SOURCE_ERROR_HANDLER_DEFAULT;
 
 static WasmFileWriter s_log_stream_writer;
 static WasmStream s_log_stream;
@@ -68,7 +70,7 @@ enum {
   FLAG_NO_CANONICALIZE_LEB128S,
   FLAG_DEBUG_NAMES,
   FLAG_NO_CHECK,
-  FLAG_NO_CHECK_ASSERT_INVALID,
+  FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED,
   NUM_FLAGS
 };
 
@@ -110,8 +112,9 @@ static WasmOption s_options[] = {
      "Write debug names to the generated binary file"},
     {FLAG_NO_CHECK, 0, "no-check", NULL, NOPE,
      "Don't check for invalid modules"},
-    {FLAG_NO_CHECK_ASSERT_INVALID, 0, "no-check-assert-invalid", NULL, NOPE,
-     "Don't run the assert_invalid checks"},
+    {FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED, 0,
+     "no-check-assert-invalid-and-malformed", NULL, NOPE,
+     "Don't run the assert_invalid or assert_malformed checks"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
@@ -159,8 +162,8 @@ static void on_option(struct WasmOptionParser* parser,
       s_check = WASM_FALSE;
       break;
 
-    case FLAG_NO_CHECK_ASSERT_INVALID:
-      s_check_assert_invalid = WASM_FALSE;
+    case FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED:
+      s_check_assert_invalid_and_malformed = WASM_FALSE;
       break;
   }
 }
@@ -409,10 +412,10 @@ int main(int argc, char** argv) {
       result = wasm_check_names(allocator, lexer, &script, &s_error_handler);
     }
 
-    if (WASM_SUCCEEDED(result) && s_check_assert_invalid) {
-      result = wasm_check_assert_invalid(allocator, lexer, &script,
-                                         &s_assert_invalid_error_handler,
-                                         &s_error_handler);
+    if (WASM_SUCCEEDED(result) && s_check_assert_invalid_and_malformed) {
+      result = wasm_check_assert_invalid_and_malformed(
+          allocator, lexer, &script, &s_assert_invalid_error_handler,
+          &s_assert_malformed_error_handler, &s_error_handler);
     }
 
     if (WASM_SUCCEEDED(result)) {

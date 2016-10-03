@@ -1,0 +1,11 @@
+;;; FLAGS: --spec --no-check-assert-invalid
+
+;; normally would fail because the module is well-formed.
+(assert_malformed
+  (module "\00asm\0c\00\00\00")
+  "???")
+
+;; normally would print a message displaying why the module was malformed.
+(assert_malformed
+  (module "\00asm\ab\cd\ef\01")
+  "???")

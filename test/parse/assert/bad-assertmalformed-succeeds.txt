@@ -1,0 +1,11 @@
+;;; ERROR: 1
+;;; FLAGS: --spec
+(assert_malformed
+  (module
+    "\00asm\0c\00\00\00")
+  "???")
+(;; STDERR ;;;
+parse/assert/bad-assertmalformed-succeeds.txt:4:4: expected module to be malformed
+  (module
+   ^^^^^^
+;;; STDERR ;;)

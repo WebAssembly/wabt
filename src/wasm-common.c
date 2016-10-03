@@ -154,6 +154,18 @@ void wasm_default_assert_invalid_source_error_callback(
                      source_line_column_offset);
 }
 
+void wasm_default_assert_malformed_source_error_callback(
+    const WasmLocation* loc,
+    const char* error,
+    const char* source_line,
+    size_t source_line_length,
+    size_t source_line_column_offset,
+    void* user_data) {
+  fprintf(stdout, "assert_malformed error:\n  ");
+  print_source_error(stdout, loc, error, source_line, source_line_length,
+                     source_line_column_offset);
+}
+
 void wasm_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data) {
