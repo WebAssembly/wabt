@@ -1121,6 +1121,7 @@ static void check_import(Context* ctx,
       break;
     case WASM_EXTERNAL_KIND_GLOBAL:
       check_global(ctx, loc, &import->global);
+      ctx->current_global_index++;
       break;
     case WASM_NUM_EXTERNAL_KINDS:
       assert(0);
