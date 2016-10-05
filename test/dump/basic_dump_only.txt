@@ -1,0 +1,13 @@
+;;; FLAGS: -d
+(module
+  (memory 1)
+  (func $f (param i32 i32) (result i32)
+    (i32.store (i32.const 0) (i32.add (i32.load (i32.const 0)) (i32.const 1)))
+    (i32.add (get_local 0) (get_local 1)))
+  (export "f" (func $f)))
+(;; STDOUT ;;;
+0000000: 0061 736d 0c00 0000 0107 0140 0201 0101  
+0000010: 0103 0201 0005 0301 0001 0705 0101 6600  
+0000020: 000a 1601 1400 1000 1000 2a02 0010 0140  
+0000030: 3302 0014 0014 0140 0f                   
+;;; STDOUT ;;)

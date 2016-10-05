@@ -124,8 +124,6 @@ static void on_option(struct WasmOptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
       s_write_binary_options.log_stream = &s_log_stream;
       break;
 
@@ -387,6 +385,9 @@ int main(int argc, char** argv) {
   WasmAllocator* allocator;
 
   wasm_init_stdio();
+
+  wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
+  wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
   parse_options(argc, argv);
 
   if (s_use_libc_allocator) {
