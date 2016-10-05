@@ -910,6 +910,7 @@ static void print_const_expr_error(Context* ctx,
 static WasmResult eval_const_expr_i32(Context* ctx,
                                       const WasmExpr* expr,
                                       const char* desc,
+                                      WasmBool* out_has_value,
                                       uint32_t* out_value) {
   if (expr->next != NULL) {
     expr = expr->next;
@@ -924,6 +925,7 @@ static WasmResult eval_const_expr_i32(Context* ctx,
                     s_type_names[expr->const_.type]);
         return WASM_ERROR;
       }
+      *out_has_value = WASM_TRUE;
       *out_value = expr->const_.u32;
       return WASM_OK;
 
@@ -941,7 +943,15 @@ static WasmResult eval_const_expr_i32(Context* ctx,
       }
 
       /* TODO(binji): handle infinite recursion */
-      return eval_const_expr_i32(ctx, global->init_expr, desc, out_value);
+      if (global->init_expr) {
+        return eval_const_expr_i32(ctx, global->init_expr, desc, out_has_value,
+                                   out_value);
+      } else {
+        /* imported globals can't be evaluated until they're linked. */
+        *out_has_value = WASM_FALSE;
+        *out_value = 0;
+        return WASM_OK;
+      }
     }
 
     invalid_expr:
@@ -1041,24 +1051,28 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
             check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
+    WasmBool has_offset = WASM_FALSE;
     uint32_t offset = 0;
-    if (WASM_SUCCEEDED(eval_const_expr_i32(
-            ctx, elem_segment->offset, "elem segment expression", &offset))) {
-      if (offset < last_end) {
-        print_error(
-            ctx, CHECK_STYLE_FULL, &field->loc,
-            "segment offset (%u) less than end of previous segment (%u)",
-            offset, last_end);
-      }
+    if (WASM_SUCCEEDED(eval_const_expr_i32(ctx, elem_segment->offset,
+                                           "elem segment expression",
+                                           &has_offset, &offset))) {
+      if (has_offset) {
+        if (offset < last_end) {
+          print_error(
+              ctx, CHECK_STYLE_FULL, &field->loc,
+              "segment offset (%u) less than end of previous segment (%u)",
+              offset, last_end);
+        }
 
-      uint64_t max = table->elem_limits.initial;
-      if ((uint64_t)offset + elem_segment->vars.size > max) {
-        print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                    "segment ends past the end of the table (%" PRIu64 ")",
-                    max);
-      }
+        uint64_t max = table->elem_limits.initial;
+        if ((uint64_t)offset + elem_segment->vars.size > max) {
+          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                      "segment ends past the end of the table (%" PRIu64 ")",
+                      max);
+        }
 
-      last_end = offset + elem_segment->vars.size;
+        last_end = offset + elem_segment->vars.size;
+      }
     }
   }
 }
@@ -1082,25 +1096,29 @@ static void check_data_segments(Context* ctx, const WasmModule* module) {
             check_memory_var(ctx, &data_segment->memory_var, &memory)))
       continue;
 
+    WasmBool has_offset = WASM_FALSE;
     uint32_t offset = 0;
-    if (WASM_SUCCEEDED(eval_const_expr_i32(
-            ctx, data_segment->offset, "data segment expression", &offset))) {
-      if (offset < last_end) {
-        print_error(
-            ctx, CHECK_STYLE_FULL, &field->loc,
-            "segment offset (%u) less than end of previous segment (%u)",
-            offset, last_end);
-      }
+    if (WASM_SUCCEEDED(eval_const_expr_i32(ctx, data_segment->offset,
+                                           "data segment expression",
+                                           &has_offset, &offset))) {
+      if (has_offset) {
+        if (offset < last_end) {
+          print_error(
+              ctx, CHECK_STYLE_FULL, &field->loc,
+              "segment offset (%u) less than end of previous segment (%u)",
+              offset, last_end);
+        }
 
-      uint32_t max = memory->page_limits.initial;
-      const uint64_t memory_initial_size = (uint64_t)max * WASM_PAGE_SIZE;
-      if ((uint64_t)offset + data_segment->size > memory_initial_size) {
-        print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                    "segment ends past the end of memory (%" PRIu64 ")",
-                    memory_initial_size);
-      }
+        uint32_t max = memory->page_limits.initial;
+        const uint64_t memory_initial_size = (uint64_t)max * WASM_PAGE_SIZE;
+        if ((uint64_t)offset + data_segment->size > memory_initial_size) {
+          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                      "segment ends past the end of memory (%" PRIu64 ")",
+                      memory_initial_size);
+        }
 
-      last_end = offset + data_segment->size;
+        last_end = offset + data_segment->size;
+      }
     }
   }
 }
