@@ -44,9 +44,6 @@ static WasmReadBinaryOptions s_read_binary_options =
 
 static WasmBool s_use_libc_allocator;
 
-static WasmBinaryErrorHandler s_error_handler =
-    WASM_BINARY_ERROR_HANDLER_DEFAULT;
-
 static WasmFileWriter s_log_stream_writer;
 static WasmStream s_log_stream;
 
@@ -394,8 +391,7 @@ int main(int argc, char** argv) {
     WasmOpcntData opcnt_data;
     wasm_init_opcnt_data(allocator, &opcnt_data);
     result = wasm_read_binary_opcnt(
-        allocator, data, size, &s_read_binary_options, &s_error_handler,
-        &opcnt_data);
+        allocator, data, size, &s_read_binary_options, &opcnt_data);
     if (WASM_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
           out, "Opcode counts:", allocator, &opcnt_data.opcode_vec,

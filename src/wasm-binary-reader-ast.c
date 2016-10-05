@@ -59,12 +59,12 @@ typedef struct Context {
   WasmExpr** current_init_expr;
 } Context;
 
-static void on_error(uint32_t offset, const char* message, void* user_data);
+static void handle_error(Context* ctx, uint32_t offset, const char* message);
 
 static void WASM_PRINTF_FORMAT(2, 3)
     print_error(Context* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
-  on_error(WASM_UNKNOWN_OFFSET, buffer, ctx);
+  handle_error(ctx, WASM_UNKNOWN_OFFSET, buffer);
 }
 
 static void push_label(Context* ctx, LabelType label_type, WasmExpr** first) {
@@ -126,12 +126,16 @@ static WasmResult append_expr(Context* ctx, WasmExpr* expr) {
   return WASM_OK;
 }
 
-static void on_error(uint32_t offset, const char* message, void* user_data) {
-  Context* ctx = user_data;
+static void handle_error(Context* ctx, uint32_t offset, const char* message) {
   if (ctx->error_handler->on_error) {
-    ctx->error_handler->on_error(offset, message,
-                                 ctx->error_handler->user_data);
+    ctx->error_handler->on_error(offset, message, ctx->error_handler->user_data);
   }
+}
+
+static void on_error(WasmBinaryReaderContext* reader_context,
+                     const char* message) {
+  Context* ctx = reader_context->user_data;
+  handle_error(ctx, reader_context->offset, message);
 }
 
 static WasmResult on_signature_count(uint32_t count, void* user_data) {

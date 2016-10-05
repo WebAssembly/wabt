@@ -41,7 +41,7 @@ def main(args):
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
