@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (type (func (param i32)))
   (type (func (param i64)))
@@ -65,8 +66,4 @@
 000002e: 01                                        ; num results
 000002f: 04                                        ; result type
 0000009: 26                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0126 0940 0101 0040 
-0000010: 0102 0040 0103 0040 0104 0040 0001 0140 
-0000020: 0001 0240 0001 0340 0001 0440 0101 0104 
 ;;; STDOUT ;;)

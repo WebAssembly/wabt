@@ -43,19 +43,19 @@ typedef uint32_t Uint32;
 WASM_DEFINE_VECTOR(type, WasmType)
 WASM_DEFINE_VECTOR(uint32, Uint32);
 
-#define CALLBACK_CTX(member, ...)                                      \
-  RAISE_ERROR_UNLESS(                                                  \
-      WASM_SUCCEEDED(                                                  \
-          ctx->reader->member                                          \
-              ? ctx->reader->member(get_user_context(ctx), __VA_ARGS__)\
-              : WASM_OK),                                              \
+#define CALLBACK_CTX(member, ...)                                       \
+  RAISE_ERROR_UNLESS(                                                   \
+      WASM_SUCCEEDED(                                                   \
+          ctx->reader->member                                           \
+              ? ctx->reader->member(get_user_context(ctx), __VA_ARGS__) \
+              : WASM_OK),                                               \
       #member " callback failed")
 
-#define CALLBACK_CTX0(member)                                          \
-  RAISE_ERROR_UNLESS(                                                  \
-      WASM_SUCCEEDED(ctx->reader->member                               \
-                         ? ctx->reader->member(get_user_context(ctx))  \
-                         : WASM_OK),                                   \
+#define CALLBACK_CTX0(member)                                         \
+  RAISE_ERROR_UNLESS(                                                 \
+      WASM_SUCCEEDED(ctx->reader->member                              \
+                         ? ctx->reader->member(get_user_context(ctx)) \
+                         : WASM_OK),                                  \
       #member " callback failed")
 
 #define CALLBACK_SECTION(member) CALLBACK_CTX(member, section_size)
@@ -79,16 +79,18 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
   return ctx->reader->member ? ctx->reader->member(ctx->reader->user_data) \
                              : WASM_OK
 
-#define FORWARD_CTX0(member)                        \
-  if (!ctx->reader->member) return WASM_OK;         \
-  WasmBinaryReaderContext new_ctx = *reader_context;\
-  new_ctx.user_data = ctx->reader->user_data;       \
+#define FORWARD_CTX0(member)                  \
+  if (!ctx->reader->member)                   \
+    return WASM_OK;                           \
+  WasmBinaryReaderContext new_ctx = *context; \
+  new_ctx.user_data = ctx->reader->user_data; \
   return ctx->reader->member(&new_ctx);
 
-#define FORWARD_CTX(member, ...)                    \
-  if (!ctx->reader->member) return WASM_OK;         \
-  WasmBinaryReaderContext new_ctx = *reader_context;\
-  new_ctx.user_data = ctx->reader->user_data;       \
+#define FORWARD_CTX(member, ...)              \
+  if (!ctx->reader->member)                   \
+    return WASM_OK;                           \
+  WasmBinaryReaderContext new_ctx = *context; \
+  new_ctx.user_data = ctx->reader->user_data; \
   return ctx->reader->member(&new_ctx, __VA_ARGS__);
 
 #define FORWARD(member, ...)                                            \
@@ -109,11 +111,6 @@ WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 #define V(NAME, code) [code] = #NAME,
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
-
-static const char* s_external_kind_name[] = {"func", "table", "memory",
-                                             "global"};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_external_kind_name) ==
-                   WASM_NUM_EXTERNAL_KINDS);
 
 typedef struct Context {
   const uint8_t* data;
@@ -400,8 +397,7 @@ static uint32_t num_total_globals(Context* ctx) {
 static WasmBool handle_unknown_section(Context* ctx,
                                        WasmStringSlice* section_name,
                                        uint32_t section_size) {
-  if (ctx->options->read_debug_names &&
-      ctx->name_section_ok &&
+  if (ctx->options->read_debug_names && ctx->name_section_ok &&
       strncmp(section_name->start, WASM_BINARY_SECTION_NAME,
               section_name->length) == 0) {
     CALLBACK_SECTION(begin_names_section);
@@ -482,7 +478,6 @@ static void destroy_context(WasmAllocator* allocator, Context* ctx) {
   wasm_destroy_uint32_vector(allocator, &ctx->target_depths);
 }
 
-
 /* Logging */
 
 static void indent(LoggingContext* ctx) {
@@ -526,20 +521,21 @@ static void logging_on_error(WasmBinaryReaderContext* ctx,
   }
 }
 
-#define LOGGING_BEGIN(name)                             \
-  static WasmResult logging_begin_##name(WasmBinaryReaderContext* reader_context, uint32_t size) { \
-    LoggingContext* ctx = reader_context->user_data;    \
-    LOGF("begin_" #name "\n");                          \
-    indent(ctx);                                        \
-    FORWARD_CTX(begin_##name, size);                    \
+#define LOGGING_BEGIN(name)                                                \
+  static WasmResult logging_begin_##name(WasmBinaryReaderContext* context, \
+                                         uint32_t size) {                  \
+    LoggingContext* ctx = context->user_data;                              \
+    LOGF("begin_" #name "\n");                                             \
+    indent(ctx);                                                           \
+    FORWARD_CTX(begin_##name, size);                                       \
   }
 
-#define LOGGING_END(name)                                 \
-  static WasmResult logging_end_##name(WasmBinaryReaderContext* reader_context) { \
-    LoggingContext* ctx = reader_context->user_data;      \
-    dedent(ctx);                                          \
-    LOGF("end_" #name "\n");                              \
-    FORWARD_CTX0(end_##name);                             \
+#define LOGGING_END(name)                                                  \
+  static WasmResult logging_end_##name(WasmBinaryReaderContext* context) { \
+    LoggingContext* ctx = context->user_data;                              \
+    dedent(ctx);                                                           \
+    LOGF("end_" #name "\n");                                               \
+    FORWARD_CTX0(end_##name);                                              \
   }
 
 #define LOGGING_UINT32(name)                                          \
@@ -782,7 +778,7 @@ static WasmResult logging_on_export(uint32_t index,
   LoggingContext* ctx = user_data;
   LOGF("on_export(index: %u, kind: %s, item_index: %u, name: \"" PRIstringslice
        "\")\n",
-       index, s_external_kind_name[kind], item_index,
+       index, wasm_get_kind_name(kind), item_index,
        WASM_PRINTF_STRING_SLICE_ARG(name));
   FORWARD(on_export, index, kind, item_index, name);
 }
@@ -828,11 +824,11 @@ static WasmResult logging_on_br_if_expr(uint32_t depth, void* user_data) {
   FORWARD(on_br_if_expr, depth);
 }
 
-static WasmResult logging_on_br_table_expr(uint32_t num_targets,
+static WasmResult logging_on_br_table_expr(WasmBinaryReaderContext* context,
+                                           uint32_t num_targets,
                                            uint32_t* target_depths,
-                                           uint32_t default_target_depth,
-                                           void* user_data) {
-  LoggingContext* ctx = user_data;
+                                           uint32_t default_target_depth) {
+  LoggingContext* ctx = context->user_data;
   LOGF("on_br_table_expr(num_targets: %u, depths: [", num_targets);
   uint32_t i;
   for (i = 0; i < num_targets; ++i) {
@@ -841,7 +837,8 @@ static WasmResult logging_on_br_table_expr(uint32_t num_targets,
       LOGF_NOINDENT(", ");
   }
   LOGF_NOINDENT("], default: %u)\n", default_target_depth);
-  FORWARD(on_br_table_expr, num_targets, target_depths, default_target_depth);
+  FORWARD_CTX(on_br_table_expr, num_targets, target_depths,
+              default_target_depth);
 }
 
 static WasmResult logging_on_f32_const_expr(uint32_t value_bits,
@@ -1245,6 +1242,7 @@ static void read_function_body(Context* ctx,
     switch (opcode) {
       case WASM_OPCODE_UNREACHABLE:
         CALLBACK0(on_unreachable_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_BLOCK: {
@@ -1254,6 +1252,7 @@ static void read_function_body(Context* ctx,
                            "expected valid block signature type");
         uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
         CALLBACK(on_block_expr, num_types, &sig_type);
+        CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
@@ -1264,6 +1263,7 @@ static void read_function_body(Context* ctx,
                            "expected valid block signature type");
         uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
         CALLBACK(on_loop_expr, num_types, &sig_type);
+        CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
@@ -1274,21 +1274,25 @@ static void read_function_body(Context* ctx,
                            "expected valid block signature type");
         uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
         CALLBACK(on_if_expr, num_types, &sig_type);
+        CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
       case WASM_OPCODE_ELSE:
         CALLBACK0(on_else_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_SELECT:
         CALLBACK0(on_select_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_BR: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br depth");
         CALLBACK(on_br_expr, depth);
+        CALLBACK_CTX(on_opcode_uint32, depth);
         break;
       }
 
@@ -1296,6 +1300,7 @@ static void read_function_body(Context* ctx,
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br_if depth");
         CALLBACK(on_br_if_expr, depth);
+        CALLBACK_CTX(on_opcode_uint32, depth);
         break;
       }
 
@@ -1303,8 +1308,7 @@ static void read_function_body(Context* ctx,
         uint32_t num_targets;
         in_u32_leb128(ctx, &num_targets, "br_table target count");
         if (num_targets > ctx->target_depths.capacity) {
-          wasm_reserve_uint32s(allocator, &ctx->target_depths,
-                               num_targets);
+          wasm_reserve_uint32s(allocator, &ctx->target_depths, num_targets);
           ctx->target_depths.size = num_targets;
         }
 
@@ -1319,21 +1323,24 @@ static void read_function_body(Context* ctx,
         in_u32_leb128(ctx, &default_target_depth,
                       "br_table default target depth");
 
-        CALLBACK(on_br_table_expr, num_targets, ctx->target_depths.data,
-                 default_target_depth);
+        CALLBACK_CTX(on_br_table_expr, num_targets, ctx->target_depths.data,
+                     default_target_depth);
         break;
       }
 
       case WASM_OPCODE_RETURN:
         CALLBACK0(on_return_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_NOP:
         CALLBACK0(on_nop_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_DROP:
         CALLBACK0(on_drop_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_END:
@@ -1347,6 +1354,7 @@ static void read_function_body(Context* ctx,
         uint32_t value = 0;
         in_i32_leb128(ctx, &value, "i32.const value");
         CALLBACK(on_i32_const_expr, value);
+        CALLBACK_CTX(on_opcode_uint32, value);
         break;
       }
 
@@ -1354,6 +1362,7 @@ static void read_function_body(Context* ctx,
         uint64_t value = 0;
         in_i64_leb128(ctx, &value, "i64.const value");
         CALLBACK(on_i64_const_expr, value);
+        CALLBACK_CTX(on_opcode_uint64, value);
         break;
       }
 
@@ -1361,6 +1370,7 @@ static void read_function_body(Context* ctx,
         uint32_t value_bits = 0;
         in_f32(ctx, &value_bits, "f32.const value");
         CALLBACK(on_f32_const_expr, value_bits);
+        CALLBACK_CTX(on_opcode_uint32, value_bits);
         break;
       }
 
@@ -1368,6 +1378,7 @@ static void read_function_body(Context* ctx,
         uint64_t value_bits = 0;
         in_f64(ctx, &value_bits, "f64.const value");
         CALLBACK(on_f64_const_expr, value_bits);
+        CALLBACK_CTX(on_opcode_uint64, value_bits);
         break;
       }
 
@@ -1375,6 +1386,7 @@ static void read_function_body(Context* ctx,
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "get_global global index");
         CALLBACK(on_get_global_expr, global_index);
+        CALLBACK_CTX(on_opcode_uint32, global_index);
         break;
       }
 
@@ -1382,6 +1394,7 @@ static void read_function_body(Context* ctx,
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "get_local local index");
         CALLBACK(on_get_local_expr, local_index);
+        CALLBACK_CTX(on_opcode_uint32, local_index);
         break;
       }
 
@@ -1389,6 +1402,7 @@ static void read_function_body(Context* ctx,
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "set_global global index");
         CALLBACK(on_set_global_expr, global_index);
+        CALLBACK_CTX(on_opcode_uint32, global_index);
         break;
       }
 
@@ -1396,6 +1410,7 @@ static void read_function_body(Context* ctx,
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "set_local local index");
         CALLBACK(on_set_local_expr, local_index);
+        CALLBACK_CTX(on_opcode_uint32, local_index);
         break;
       }
 
@@ -1405,6 +1420,7 @@ static void read_function_body(Context* ctx,
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
                            "invalid call_function function index");
         CALLBACK(on_call_expr, func_index);
+        CALLBACK_CTX(on_opcode_uint32, func_index);
         break;
       }
 
@@ -1414,6 +1430,7 @@ static void read_function_body(Context* ctx,
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid call_indirect signature index");
         CALLBACK(on_call_indirect_expr, sig_index);
+        CALLBACK_CTX(on_opcode_uint32, sig_index);
         break;
       }
 
@@ -1421,6 +1438,7 @@ static void read_function_body(Context* ctx,
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "tee_local local index");
         CALLBACK(on_tee_local_expr, local_index);
+        CALLBACK_CTX(on_opcode_uint32, local_index);
         break;
       }
 
@@ -1444,6 +1462,7 @@ static void read_function_body(Context* ctx,
         in_u32_leb128(ctx, &offset, "load offset");
 
         CALLBACK(on_load_expr, opcode, alignment_log2, offset);
+        CALLBACK_CTX(on_opcode_uint32_uint32, alignment_log2, offset);
         break;
       }
 
@@ -1462,15 +1481,18 @@ static void read_function_body(Context* ctx,
         in_u32_leb128(ctx, &offset, "store offset");
 
         CALLBACK(on_store_expr, opcode, alignment_log2, offset);
+        CALLBACK_CTX(on_opcode_uint32_uint32, alignment_log2, offset);
         break;
       }
 
       case WASM_OPCODE_CURRENT_MEMORY:
         CALLBACK0(on_current_memory_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_GROW_MEMORY:
         CALLBACK0(on_grow_memory_expr);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_I32_ADD:
@@ -1518,6 +1540,7 @@ static void read_function_body(Context* ctx,
       case WASM_OPCODE_F64_MAX:
       case WASM_OPCODE_F64_COPYSIGN:
         CALLBACK(on_binary_expr, opcode);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_I32_EQ:
@@ -1553,6 +1576,7 @@ static void read_function_body(Context* ctx,
       case WASM_OPCODE_F64_GT:
       case WASM_OPCODE_F64_GE:
         CALLBACK(on_compare_expr, opcode);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_I32_CLZ:
@@ -1576,6 +1600,7 @@ static void read_function_body(Context* ctx,
       case WASM_OPCODE_F64_NEAREST:
       case WASM_OPCODE_F64_SQRT:
         CALLBACK(on_unary_expr, opcode);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       case WASM_OPCODE_I32_TRUNC_S_F32:
@@ -1606,6 +1631,7 @@ static void read_function_body(Context* ctx,
       case WASM_OPCODE_I32_EQZ:
       case WASM_OPCODE_I64_EQZ:
         CALLBACK(on_convert_expr, opcode);
+        CALLBACK_CTX0(on_opcode_bare);
         break;
 
       default:
@@ -1614,8 +1640,7 @@ static void read_function_body(Context* ctx,
   }
   RAISE_ERROR_UNLESS(ctx->offset == end_offset,
                      "function body longer than given size");
-  RAISE_ERROR_UNLESS(seen_end_opcode,
-                     "function body must end with END opcode");
+  RAISE_ERROR_UNLESS(seen_end_opcode, "function body must end with END opcode");
 }
 
 WasmResult wasm_read_binary(WasmAllocator* allocator,
@@ -1659,8 +1684,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   uint32_t version;
   in_u32(ctx, &version, "version");
   RAISE_ERROR_UNLESS(version == WASM_BINARY_VERSION,
-                     "bad wasm file version: %#x (expected %#x)",
-                     version, WASM_BINARY_VERSION);
+                     "bad wasm file version: %#x (expected %#x)", version,
+                     WASM_BINARY_VERSION);
 
   /* type */
   uint32_t section_size;
@@ -1763,7 +1788,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         default:
           RAISE_ERROR("invalid import kind: %d", kind);
       }
-
     }
     CALLBACK_CTX0(end_import_section);
   }
@@ -1912,8 +1936,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint32_t j, num_function_indexes;
       in_u32_leb128(ctx, &num_function_indexes,
                     "elem segment function index count");
-      CALLBACK(on_elem_segment_function_index_count, i,
-               num_function_indexes);
+      CALLBACK(on_elem_segment_function_index_count, i, num_function_indexes);
       for (j = 0; j < num_function_indexes; ++j) {
         uint32_t func_index;
         in_u32_leb128(ctx, &func_index, "elem segment function index");

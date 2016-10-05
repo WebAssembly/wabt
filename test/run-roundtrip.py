@@ -78,7 +78,8 @@ def TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename, verbose):
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
-def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename, verbose):
+def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename,
+                         verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
@@ -101,9 +102,9 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wast2wasm-executable', metavar='PATH',
+  parser.add_argument('--wast2wasm', metavar='PATH',
                       help='set the wast2wasm executable to use.')
-  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+  parser.add_argument('--wasm2wast', metavar='PATH',
                       help='set the wasm2wast executable to use.')
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
@@ -111,7 +112,7 @@ def main(args):
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
@@ -120,7 +121,7 @@ def main(args):
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.wast2wasm_executable),
+      find_exe.GetWast2WasmExecutable(options.wast2wasm),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
@@ -128,7 +129,7 @@ def main(args):
   })
 
   wasm2wast = utils.Executable(
-      find_exe.GetWasm2WastExecutable(options.wasm2wast_executable),
+      find_exe.GetWasm2WastExecutable(options.wasm2wast),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
     '--debug-names': options.debug_names,
@@ -139,8 +140,12 @@ def main(args):
   wast2wasm.verbose = options.print_cmd
   wasm2wast.verbose = options.print_cmd
 
+  filename = options.file
+  if not os.path.exists(filename):
+    sys.stderr.write('File not found: %s\n' % filename)
+    return ERROR
+
   with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
-    filename = options.file
     if options.stdout:
       result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
                                          filename, options.verbose)

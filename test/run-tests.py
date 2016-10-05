@@ -54,12 +54,20 @@ TOOLS = {
     'EXE': '%(wast2wasm)s',
     'VERBOSE-FLAGS': ['-v']
   },
+  'run-wasmdump': {
+    'EXE': 'test/run-wasmdump.py',
+    'FLAGS': ' '.join([
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasmdump=%(wasmdump)s',
+    ]),
+    'VERBOSE-FLAGS': ['-v']
+  },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': ' '.join([
       '-v',
-      '--wast2wasm-executable=%(wast2wasm)s',
-      '--wasm2wast-executable=%(wasm2wast)s',
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasm2wast=%(wasm2wast)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -73,8 +81,9 @@ TOOLS = {
   'run-interp': {
     'EXE': 'test/run-interp.py',
     'FLAGS': ' '.join([
-      '--wast2wasm-executable', '%(wast2wasm)s',
-      '--wasm-interp-executable=%(wasm-interp)s',
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasmdump=%(wasmdump)s',
+      '--wasm-interp=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
@@ -89,8 +98,9 @@ TOOLS = {
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
     'FLAGS': ' '.join([
-      '--wast2wasm-executable', '%(wast2wasm)s',
-      '--wasm-interp-executable=%(wasm-interp)s',
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasmdump=%(wasmdump)s',
+      '--wasm-interp=%(wasm-interp)s',
       '--spec',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
@@ -105,7 +115,7 @@ TOOLS = {
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
-      '--wasm2wast-executable=%(wasm2wast)s',
+      '--wasm2wast=%(wasm2wast)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -119,7 +129,7 @@ TOOLS = {
   'run-gen-wasm-interp': {
     'EXE': 'test/run-gen-wasm-interp.py',
     'FLAGS': ' '.join([
-      '--wasm-interp-executable=%(wasm-interp)s',
+      '--wasm-interp=%(wasm-interp)s',
       '--run-all-exports',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
@@ -134,8 +144,8 @@ TOOLS = {
   'run-opcodecnt': {
     'EXE': 'test/run-opcodecnt.py',
     'FLAGS': ' '.join([
-      '--wast2wasm-executable=%(wast2wasm)s',
-      '--wasmopcodecnt-executable=%(wasmopcodecnt)s',
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasmopcodecnt=%(wasmopcodecnt)s',
       '--no-error-cmdline',
     ]),
     'VERBOSE-FLAGS': [
@@ -248,8 +258,8 @@ class TestInfo(object):
     result.expected_stderr = ''
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
-    result.flags = ['--wast2wasm', '%(wast2wasm)s', '--wasm2wast', '%(wasm2wast)s',
-                    '-v']
+    result.flags = ['--wast2wasm', '%(wast2wasm)s', '--wasm2wast',
+                    '%(wasm2wast)s', '-v']
     result.expected_error = 0
     result.slow = self.slow
     result.skip = self.skip
@@ -678,13 +688,15 @@ def main(args):
                       help='directory to search for all executables. '
                           'This can be overridden by the other executable '
                           'flags.')
-  parser.add_argument('--wast2wasm-executable', metavar='PATH',
-                      help='override executable.')
-  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+  parser.add_argument('--wast2wasm', metavar='PATH',
+                      help='override wast2wasm executable.')
+  parser.add_argument('--wasm2wast', metavar='PATH',
                       help='override wasm2wast executable.')
-  parser.add_argument('--wasm-interp-executable', metavar='PATH',
+  parser.add_argument('--wasmdump', metavar='PATH',
+                      help='override wasmdump executable.')
+  parser.add_argument('--wasm-interp', metavar='PATH',
                       help='override wasm-interp executable.')
-  parser.add_argument('--wasmopcodecnt-executable', metavar='PATH',
+  parser.add_argument('--wasmopcodecnt', metavar='PATH',
                       help='override wasmopcodecnt executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
@@ -735,24 +747,23 @@ def main(args):
     return 1
 
   if options.exe_dir:
-    if not options.wast2wasm_executable:
-      options.wast2wasm_executable = os.path.join(options.exe_dir, 'wast2wasm')
-    if not options.wasm2wast_executable:
-      options.wasm2wast_executable = os.path.join(options.exe_dir, 'wasm2wast')
-    if not options.wasm_interp_executable:
-      options.wasm_interp_executable = os.path.join(options.exe_dir,
-                                                    'wasm-interp')
-    if not options.wasmopcodecnt_executable:
-      options.wasmopcodecnt_executable = os.path.join(options.exe_dir,
-                                                      'wasmopcodecnt')
+    if not options.wast2wasm:
+      options.wast2wasm = os.path.join(options.exe_dir, 'wast2wasm')
+    if not options.wasm2wast:
+      options.wasm2wast = os.path.join(options.exe_dir, 'wasm2wast')
+    if not options.wasm_interp:
+      options.wasm_interp = os.path.join(options.exe_dir, 'wasm-interp')
+    if not options.wasmopcodecnt:
+      options.wasmopcodecnt = os.path.join(options.exe_dir, 'wasmopcodecnt')
+    if not options.wasmdump:
+      options.wasmdump = os.path.join(options.exe_dir, 'wasmdump')
 
   variables = {
-    'wast2wasm': find_exe.GetWast2WasmExecutable(options.wast2wasm_executable),
-    'wasm2wast': find_exe.GetWasm2WastExecutable(options.wasm2wast_executable),
-    'wasm-interp':
-        find_exe.GetWasmInterpExecutable(options.wasm_interp_executable),
-    'wasmopcodecnt':
-        find_exe.GetWasmOpcodeCntExecutable(options.wasmopcodecnt_executable),
+    'wast2wasm': find_exe.GetWast2WasmExecutable(options.wast2wasm),
+    'wasm2wast': find_exe.GetWasm2WastExecutable(options.wasm2wast),
+    'wasmdump': find_exe.GetWasmdumpExecutable(options.wasmdump),
+    'wasm-interp': find_exe.GetWasmInterpExecutable(options.wasm_interp),
+    'wasmopcodecnt': find_exe.GetWasmOpcodeCntExecutable(options.wasmopcodecnt),
   }
 
   status = Status(options.verbose)

@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func
     (drop (f64.const 0x0p0))
@@ -101,18 +102,39 @@
 0000015: ac01                                      ; FIXUP func body size
 ; move data: [14, c3) -> [15, c4)
 0000013: af01                                      ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0aaf 0101 ac01 0012 0000 0000 0000 
-0000020: 0000 0b12 0000 0000 5034 1241 0b12 0000 
-0000030: 0000 0000 3045 0b12 0000 0000 0000 e07f 
-0000040: 0b12 0000 0000 0000 907f 0b12 0000 0000 
-0000050: 0030 c27f 0b12 00e0 ffff ffff df7f 0b12 
-0000060: c0ff ffff ffff cf7f 0b12 0000 0000 0000 
-0000070: f07f 0b12 fcff ffff ffff ef7f 0b12 feff 
-0000080: ffff ffff ef7f 0b12 f1ff ffff ffff df02 
-0000090: 0b12 f3ff ffff ffff df02 0b12 0000 0000 
-00000a0: 0000 8001 0b12 0000 0000 0000 f13f 0b12 
-00000b0: 0000 0000 0000 7042 0b12 0000 0000 10f0 
-00000c0: 0fc0 0b0f                               
+func 0
+ 000019: 12 00 00 00 00 00 00 00 00 | f64.const 0
+ 000022: 0b                         | drop
+ 000023: 12 00 00 00 00 50 34 12 41 | f64.const 0
+ 00002c: 0b                         | drop
+ 00002d: 12 00 00 00 00 00 00 30 45 | f64.const 0
+ 000036: 0b                         | drop
+ 000037: 12 00 00 00 00 00 00 e0 7f | f64.const 0
+ 000040: 0b                         | drop
+ 000041: 12 00 00 00 00 00 00 90 7f | f64.const 0
+ 00004a: 0b                         | drop
+ 00004b: 12 00 00 00 00 00 30 c2 7f | f64.const 0
+ 000054: 0b                         | drop
+ 000055: 12 00 e0 ff ff ff ff df 7f | f64.const -8192
+ 00005e: 0b                         | drop
+ 00005f: 12 c0 ff ff ff ff ff cf 7f | f64.const -64
+ 000068: 0b                         | drop
+ 000069: 12 00 00 00 00 00 00 f0 7f | f64.const 0
+ 000072: 0b                         | drop
+ 000073: 12 fc ff ff ff ff ff ef 7f | f64.const -4
+ 00007c: 0b                         | drop
+ 00007d: 12 fe ff ff ff ff ff ef 7f | f64.const -2
+ 000086: 0b                         | drop
+ 000087: 12 f1 ff ff ff ff ff df 02 | f64.const -15
+ 000090: 0b                         | drop
+ 000091: 12 f3 ff ff ff ff ff df 02 | f64.const -13
+ 00009a: 0b                         | drop
+ 00009b: 12 00 00 00 00 00 00 80 01 | f64.const 0
+ 0000a4: 0b                         | drop
+ 0000a5: 12 00 00 00 00 00 00 f1 3f | f64.const 0
+ 0000ae: 0b                         | drop
+ 0000af: 12 00 00 00 00 00 00 70 42 | f64.const 0
+ 0000b8: 0b                         | drop
+ 0000b9: 12 00 00 00 00 10 f0 0f c0 | f64.const 0
+ 0000c2: 0b                         | drop
 ;;; STDOUT ;;)

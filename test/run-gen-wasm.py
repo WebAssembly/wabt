@@ -36,14 +36,14 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wasm2wast-executable', metavar='PATH',
+  parser.add_argument('--wasm2wast', metavar='PATH',
                       help='set the wasm2wast executable to use.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('--print-cmd', help='print the commands that are run.',
-                      action='store_true')
+  parser.add_argument('-p', '--print-cmd', action='store_true',
+                      help='print the commands that are run.')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
@@ -54,7 +54,7 @@ def main(args):
       sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
 
   wasm2wast = utils.Executable(
-      find_exe.GetWasm2WastExecutable(options.wasm2wast_executable),
+      find_exe.GetWasm2WastExecutable(options.wasm2wast),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
     '--debug-names': options.debug_names,

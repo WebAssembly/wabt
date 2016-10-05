@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func
     (drop (f32.const 0x0p0))
@@ -99,13 +100,39 @@
 000007d: 0f                                        ; end
 0000015: 68                                        ; FIXUP func body size
 0000013: 6a                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0a6a 0168 0013 0000 0000 0b13 80a2 
-0000020: 9148 0b13 0000 8059 0b13 0000 007f 0b13 
-0000030: 0000 807c 0b13 0080 917d 0b13 f0ff ff7e 
-0000040: 0b13 feff 7f7e 0b13 0000 807f 0b13 c4ff 
-0000050: 7f7f 0b13 f8ff 7f7f 0b13 faff ff0a 0b13 
-0000060: f8ff ff0a 0b13 0000 0004 0b13 0000 883f 
-0000070: 0b13 0000 8053 0b13 8080 7fc0 0b0f      
+func 0
+ 000017: 13 00 00 00 00             | f32.const 0
+ 00001c: 0b                         | drop
+ 00001d: 13 80 a2 91 48             | f32.const 0x4891a280
+ 000022: 0b                         | drop
+ 000023: 13 00 00 80 59             | f32.const 0x59800000
+ 000028: 0b                         | drop
+ 000029: 13 00 00 00 7f             | f32.const 0x7f000000
+ 00002e: 0b                         | drop
+ 00002f: 13 00 00 80 7c             | f32.const 0x7c800000
+ 000034: 0b                         | drop
+ 000035: 13 00 80 91 7d             | f32.const 0x7d918000
+ 00003a: 0b                         | drop
+ 00003b: 13 f0 ff ff 7e             | f32.const 0x7efffff0
+ 000040: 0b                         | drop
+ 000041: 13 fe ff 7f 7e             | f32.const 0x7e7ffffe
+ 000046: 0b                         | drop
+ 000047: 13 00 00 80 7f             | f32.const 0x7f800000
+ 00004c: 0b                         | drop
+ 00004d: 13 c4 ff 7f 7f             | f32.const 0x7f7fffc4
+ 000052: 0b                         | drop
+ 000053: 13 f8 ff 7f 7f             | f32.const 0x7f7ffff8
+ 000058: 0b                         | drop
+ 000059: 13 fa ff ff 0a             | f32.const 0xafffffa
+ 00005e: 0b                         | drop
+ 00005f: 13 f8 ff ff 0a             | f32.const 0xafffff8
+ 000064: 0b                         | drop
+ 000065: 13 00 00 00 04             | f32.const 0x4000000
+ 00006a: 0b                         | drop
+ 00006b: 13 00 00 88 3f             | f32.const 0x3f880000
+ 000070: 0b                         | drop
+ 000071: 13 00 00 80 53             | f32.const 0x53800000
+ 000076: 0b                         | drop
+ 000077: 13 80 80 7f c0             | f32.const 0xc07f8080
+ 00007c: 0b                         | drop
 ;;; STDOUT ;;)
