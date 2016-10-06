@@ -103,6 +103,9 @@ typedef struct Context {
   uint32_t num_signatures;
   uint32_t num_imports;
   uint32_t num_func_imports;
+  uint32_t num_table_imports;
+  uint32_t num_memory_imports;
+  uint32_t num_global_imports;
   uint32_t num_function_signatures;
   uint32_t num_tables;
   uint32_t num_memories;
@@ -346,6 +349,18 @@ static WasmBool is_inline_sig_type(uint8_t type) {
 
 static uint32_t num_total_funcs(Context* ctx) {
   return ctx->num_func_imports + ctx->num_function_signatures;
+}
+
+static uint32_t num_total_tables(Context* ctx) {
+  return ctx->num_table_imports + ctx->num_tables;
+}
+
+static uint32_t num_total_memories(Context* ctx) {
+  return ctx->num_memory_imports + ctx->num_memories;
+}
+
+static uint32_t num_total_globals(Context* ctx) {
+  return ctx->num_global_imports + ctx->num_globals;
 }
 
 static WasmBool handle_unknown_section(Context* ctx,
@@ -1303,6 +1318,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           WasmLimits elem_limits;
           read_table(ctx, &elem_type, &elem_limits);
           CALLBACK(on_import_table, i, elem_type, &elem_limits);
+          ctx->num_table_imports++;
           break;
         }
 
@@ -1310,6 +1326,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           WasmLimits page_limits;
           read_memory(ctx, &page_limits);
           CALLBACK(on_import_memory, i, &page_limits);
+          ctx->num_memory_imports++;
           break;
         }
 
@@ -1318,6 +1335,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
           WasmBool mutable_;
           read_global_header(ctx, &type, &mutable_);
           CALLBACK(on_import_global, i, type, mutable_);
+          ctx->num_global_imports++;
           break;
         }
 
@@ -1422,15 +1440,15 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                              "invalid export func index");
           break;
         case WASM_EXTERNAL_KIND_TABLE:
-          RAISE_ERROR_UNLESS(item_index < ctx->num_tables,
+          RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
                              "invalid export table index");
           break;
         case WASM_EXTERNAL_KIND_MEMORY:
-          RAISE_ERROR_UNLESS(item_index < ctx->num_memories,
+          RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
                              "invalid export memory index");
           break;
         case WASM_EXTERNAL_KIND_GLOBAL:
-          RAISE_ERROR_UNLESS(item_index < ctx->num_globals,
+          RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
                              "invalid export global index");
           break;
         case WASM_NUM_EXTERNAL_KINDS:
@@ -1456,7 +1474,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* elem */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM)) {
-    RAISE_ERROR_UNLESS(ctx->num_tables > 0,
+    RAISE_ERROR_UNLESS(num_total_tables(ctx) > 0,
                        "elem section without table section");
     CALLBACK0(begin_elem_section);
     uint32_t i, num_elem_segments;
@@ -1684,8 +1702,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
             case WASM_OPCODE_CALL_FUNCTION: {
               uint32_t func_index;
               in_u32_leb128(ctx, &func_index, "call_function function index");
-              RAISE_ERROR_UNLESS(func_index < ctx->num_func_imports +
-                                                  ctx->num_function_signatures,
+              RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
                                  "invalid call_function function index");
               CALLBACK(on_call_expr, func_index);
               break;
@@ -1908,7 +1925,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* data */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_DATA)) {
-    RAISE_ERROR_UNLESS(ctx->num_memories > 0,
+    RAISE_ERROR_UNLESS(num_total_memories(ctx) > 0,
                        "data section without memory section");
     CALLBACK0(begin_data_section);
     uint32_t i, num_data_segments;
