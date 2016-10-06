@@ -24,7 +24,7 @@
  *
  */
 
-#define WASM_VECTOR_SORT(name, type)                                           \
+#define WASM_DEFINE_VECTOR_SORT(name, type)                                    \
   static void wasm_sort_##name##_vector(                                       \
     struct WasmAllocator* allocator,                                           \
     type##Vector* in_vec,                                                      \

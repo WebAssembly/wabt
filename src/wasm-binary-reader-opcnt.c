@@ -149,17 +149,20 @@ static WasmBinaryReader s_binary_reader = {
   .on_store_expr = on_store_expr
 };
 
-void wasm_opcnt_data_construct(WasmOpcntData* data,
-                               struct WasmAllocator* allocator) {
-  WASM_ZERO_MEMORY(*data);
-  data->allocator = allocator;
+WasmOpcntData* wasm_new_opcnt_data(struct WasmAllocator* allocator) {
+  WasmOpcntData* result = wasm_alloc_zero(allocator, sizeof(WasmOpcntData),
+                                          WASM_DEFAULT_ALIGN);
+  result->allocator = allocator;
+  return result;
 }
 
-void wasm_opcnt_data_destruct(WasmOpcntData* data) {
-  wasm_destroy_int_counter_vector(data->allocator, &data->opcode_vec);
-  wasm_destroy_int_counter_vector(data->allocator, &data->i32_const_vec);
-  wasm_destroy_int_counter_vector(data->allocator, &data->get_local_vec);
-  wasm_destroy_int_pair_counter_vector(data->allocator, &data->i32_load_vec);
+void wasm_destroy_opcnt_data(struct WasmAllocator* allocator,
+                             WasmOpcntData* data) {
+  assert(allocator == data->allocator);
+  wasm_destroy_int_counter_vector(allocator, &data->opcode_vec);
+  wasm_destroy_int_counter_vector(allocator, &data->i32_const_vec);
+  wasm_destroy_int_counter_vector(allocator, &data->get_local_vec);
+  wasm_destroy_int_pair_counter_vector(allocator, &data->i32_load_vec);
 }
 
 WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,

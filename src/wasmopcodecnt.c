@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 WebAssrtrrembly Community Group participants
+ * Copyright 2016 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -171,11 +171,11 @@ static void parse_options(int argc, char** argv) {
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
-WASM_VECTOR_SORT(int_counter, WasmIntCounter);
+WASM_DEFINE_VECTOR_SORT(int_counter, WasmIntCounter);
 
 typedef int (int_counter_lt_fcn)(WasmIntCounter*, WasmIntCounter*);
 
-WASM_VECTOR_SORT(int_pair_counter, WasmIntPairCounter);
+WASM_DEFINE_VECTOR_SORT(int_pair_counter, WasmIntPairCounter);
 
 typedef int (int_pair_counter_lt_fcn)(WasmIntPairCounter*, WasmIntPairCounter*);
 
@@ -385,37 +385,36 @@ int main(int argc, char** argv) {
     result = WASM_ERROR;
   }
   if (WASM_SUCCEEDED(result)) {
-    WasmOpcntData opcnt_data;
-    wasm_opcnt_data_construct(&opcnt_data, allocator);
+    WasmOpcntData* opcnt_data = wasm_new_opcnt_data(allocator);
     result = wasm_read_binary_opcnt(
         allocator, data, size, &s_read_binary_options, &s_error_handler,
-        &opcnt_data);
+        opcnt_data);
     if (WASM_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
-          out, "Opcode counts:", allocator, &opcnt_data.opcode_vec,
+          out, "Opcode counts:", allocator, &opcnt_data->opcode_vec,
           opcode_counter_gt, display_opcode_name, NULL);
       display_sorted_int_counter_vector(
-          out, "\ni32.const", allocator, &opcnt_data.i32_const_vec,
+          out, "\ni32.const", allocator, &opcnt_data->i32_const_vec,
           int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_I32_CONST]);
       display_sorted_int_counter_vector(
-          out, "\nget_local:\n", allocator, &opcnt_data.get_local_vec,
+          out, "\nget_local:\n", allocator, &opcnt_data->get_local_vec,
           int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
       display_sorted_int_counter_vector(
-          out, "\nset_local:\n", allocator, &opcnt_data.set_local_vec,
+          out, "\nset_local:\n", allocator, &opcnt_data->set_local_vec,
           int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
       display_sorted_int_counter_vector(
-          out, "\ntee_local:\n", allocator, &opcnt_data.tee_local_vec,
+          out, "\ntee_local:\n", allocator, &opcnt_data->tee_local_vec,
           int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_TEE_LOCAL]);
       display_sorted_int_pair_counter_vector(
-          out, "\ni32.load:\n", allocator, &opcnt_data.i32_load_vec,
+          out, "\ni32.load:\n", allocator, &opcnt_data->i32_load_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
           s_opcode_name[WASM_OPCODE_I32_LOAD]);
       display_sorted_int_pair_counter_vector(
-          out, "\ni32.store:\n", allocator, &opcnt_data.i32_store_vec,
+          out, "\ni32.store:\n", allocator, &opcnt_data->i32_store_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
           s_opcode_name[WASM_OPCODE_I32_STORE]);
     }
-    wasm_opcnt_data_destruct(&opcnt_data);
+    wasm_destroy_opcnt_data(allocator, opcnt_data);
   }
   wasm_free(allocator, data);
   wasm_print_allocator_stats(allocator);
