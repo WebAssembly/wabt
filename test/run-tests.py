@@ -710,11 +710,6 @@ def main(args):
 
   test_names = findtests.FindTestFiles(SCRIPT_DIR, '.txt', pattern_re)
 
-  # HACK(binji): exclude interp/ and spec/ tests
-  test_names = [test_name for test_name in test_names
-                if not test_name.startswith('spec')]
-  # HACK(binji)
-
   if options.list:
     for test_name in test_names:
       print(test_name)

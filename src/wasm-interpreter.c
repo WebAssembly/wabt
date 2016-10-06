@@ -2231,5 +2231,6 @@ void wasm_destroy_interpreter_module(WasmAllocator* allocator,
   wasm_destroy_interpreter_import_ptr_array(allocator, &module->func_imports);
   WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->exports,
                                   interpreter_export);
+  wasm_destroy_interpreter_global_array(allocator, &module->globals);
   wasm_destroy_output_buffer(&module->istream);
 }

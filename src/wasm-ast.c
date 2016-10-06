@@ -597,6 +597,8 @@ static void destroy_module_field(WasmAllocator* allocator,
 }
 
 void wasm_destroy_module(WasmAllocator* allocator, WasmModule* module) {
+  wasm_destroy_string_slice(allocator, &module->name);
+
   WasmModuleField* field = module->first_field;
   while (field != NULL) {
     WasmModuleField* next_field = field->next;

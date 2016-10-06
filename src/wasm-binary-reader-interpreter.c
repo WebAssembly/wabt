@@ -268,14 +268,6 @@ static WasmResult emit_drop_keep(Context* ctx, uint32_t drop, uint8_t keep) {
   return WASM_OK;
 }
 
-static WasmResult drop_types_for_return(Context* ctx, uint32_t arity) {
-  /* drop the locals and params, but keep the return value, if any */
-  assert(ctx->type_stack.size >= arity);
-  uint32_t drop_count = ctx->type_stack.size - arity;
-  CHECK_RESULT(emit_drop_keep(ctx, drop_count, arity));
-  return WASM_OK;
-}
-
 static WasmResult append_fixup(Context* ctx,
                                Uint32VectorVector* fixups_vector,
                                uint32_t index) {
@@ -296,9 +288,13 @@ static WasmResult emit_br_offset(Context* ctx,
   return WASM_OK;
 }
 
+static uint32_t get_label_br_arity(Label* label) {
+  return label->label_type != LABEL_TYPE_LOOP ? label->sig.size : 0;
+}
+
 static WasmResult emit_br(Context* ctx, uint32_t depth) {
   Label* label = get_label(ctx, depth);
-  uint32_t arity = label->sig.size;
+  uint32_t arity = get_label_br_arity(label);
   assert(ctx->type_stack.size >= label->type_stack_limit + arity);
   uint32_t drop_count =
       (ctx->type_stack.size - label->type_stack_limit) - arity;
@@ -310,7 +306,7 @@ static WasmResult emit_br(Context* ctx, uint32_t depth) {
 
 static WasmResult emit_br_table_offset(Context* ctx, uint32_t depth) {
   Label* label = get_label(ctx, depth);
-  uint32_t arity = label->sig.size;
+  uint32_t arity = get_label_br_arity(label);
   assert(ctx->type_stack.size >= label->type_stack_limit + arity);
   uint32_t drop_count =
       (ctx->type_stack.size - label->type_stack_limit) - arity;
@@ -717,8 +713,7 @@ static void push_label(Context* ctx,
   label->type_stack_limit = ctx->type_stack.size;
   label->offset = offset;
   label->fixup_offset = fixup_offset;
-  LOGF("   : +depth %" PRIzd ":%s\n", ctx->label_stack.size - 1,
-       s_type_names[type]);
+  LOGF("   : +depth %" PRIzd "\n", ctx->label_stack.size - 1);
 }
 
 static void pop_label(Context* ctx) {
@@ -746,8 +741,7 @@ static WasmType top_type(Context* ctx) {
 }
 
 static WasmBool top_type_is_any(Context* ctx) {
-  Label* label = top_label(ctx);
-  if (ctx->type_stack.size > label->type_stack_limit) {
+  if (ctx->type_stack.size > ctx->current_func->param_and_local_types.size) {
     WasmType top_type = ctx->type_stack.data[ctx->type_stack.size - 1];
     if (top_type == WASM_TYPE_ANY)
       return WASM_TRUE;
@@ -897,6 +891,21 @@ static WasmResult check_opcode2(Context* ctx, WasmOpcode opcode) {
   return WASM_OK;
 }
 
+static WasmResult drop_types_for_return(Context* ctx, uint32_t arity) {
+  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
+  /* drop the locals and params, but keep the return value, if any.  */
+  if (ctx->type_stack.size >= arity) {
+    uint32_t drop_count = ctx->type_stack.size - arity;
+    CHECK_RESULT(emit_drop_keep(ctx, drop_count, arity));
+  } else {
+    /* it is possible for the size of the type stack to be smaller than the
+     * return arity if the last instruction of the function is
+     * return. In that case the type stack should be empty */
+    assert(ctx->type_stack.size == 0);
+  }
+  return WASM_OK;
+}
+
 static WasmResult begin_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterFunc* func = get_func(ctx, index);
@@ -941,8 +950,17 @@ static WasmResult end_function_body(uint32_t index, void* user_data) {
 
   CHECK_RESULT(check_n_types(ctx, &label->sig, "implicit return"));
   CHECK_RESULT(check_type_stack_limit_exact(ctx, label->sig.size, "func"));
-  CHECK_RESULT(drop_types_for_return(ctx, label->sig.size));
   fixup_top_label(ctx, get_istream_offset(ctx));
+  if (top_type_is_any(ctx)) {
+    /* if the top type is any it means that this code is unreachable, at least
+     * from the normal fallthrough, though it's possible that this code was
+     * reached by branching to the implicit function label. If so, we have
+     * already validated that the stack at that location, so we just need to
+     * reset it to that state. */
+    reset_type_stack_to_limit(ctx);
+    push_types(ctx, &label->sig);
+  }
+  CHECK_RESULT(drop_types_for_return(ctx, label->sig.size));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_RETURN));
   pop_label(ctx);
   ctx->current_func = NULL;
@@ -1105,7 +1123,8 @@ static WasmResult on_br_expr(uint32_t depth, void* user_data) {
   CHECK_DEPTH(ctx, depth);
   depth = translate_depth(ctx, depth);
   Label* label = get_label(ctx, depth);
-  CHECK_RESULT(check_n_types(ctx, &label->sig, "br"));
+  if (label->label_type != LABEL_TYPE_LOOP)
+    CHECK_RESULT(check_n_types(ctx, &label->sig, "br"));
   CHECK_RESULT(emit_br(ctx, depth));
   reset_type_stack_to_limit(ctx);
   push_type(ctx, WASM_TYPE_ANY);

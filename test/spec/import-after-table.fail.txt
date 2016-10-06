@@ -1,0 +1,10 @@
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/import-after-table.fail.wast
+(;; STDERR ;;;
+Error running "wast2wasm":
+third_party/testsuite/import-after-table.fail.wast:1:27: imports must occur before all non-import definitions
+(module (table 0 anyfunc) (import "" "" (func)))
+                          ^^^^^^^^^^^^^^^^^^^^^
+
+;;; STDERR ;;)

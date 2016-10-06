@@ -54,6 +54,10 @@ static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
 static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = mem_size,
+static size_t s_opcode_memory_size[] = {WASM_FOREACH_OPCODE(V)};
+#undef V
+
 typedef enum CheckStyle {
   CHECK_STYLE_NAME,
   CHECK_STYLE_FULL,
@@ -95,6 +99,8 @@ typedef struct Context {
   WasmAstLexer* lexer;
   const WasmModule* current_module;
   const WasmFunc* current_func;
+  int current_table_index;
+  int current_memory_index;
   int current_global_index;
   WasmTypeVector type_stack;
   LabelNode* top_label;
@@ -118,6 +124,12 @@ static void WASM_PRINTF_FORMAT(4, 5) print_error(Context* ctx,
 
 static WasmBool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
+}
+
+static uint32_t get_opcode_natural_alignment(WasmOpcode opcode) {
+  uint32_t memory_size = s_opcode_memory_size[opcode];
+  assert(memory_size != 0);
+  return memory_size;
 }
 
 static void check_duplicate_bindings(Context* ctx,
@@ -283,9 +295,17 @@ static WasmResult check_local_var(Context* ctx,
 
 static void check_align(Context* ctx,
                         const WasmLocation* loc,
-                        uint32_t alignment) {
-  if (alignment != WASM_USE_NATURAL_ALIGNMENT && !is_power_of_two(alignment))
-    print_error(ctx, CHECK_STYLE_FULL, loc, "alignment must be power-of-two");
+                        uint32_t alignment,
+                        uint32_t natural_alignment) {
+  if (alignment != WASM_USE_NATURAL_ALIGNMENT) {
+    if (!is_power_of_two(alignment))
+      print_error(ctx, CHECK_STYLE_FULL, loc, "alignment must be power-of-two");
+    if (alignment > natural_alignment) {
+      print_error(ctx, CHECK_STYLE_FULL, loc,
+                  "alignment must not be larger than natural alignment (%u)",
+                  natural_alignment);
+    }
+  }
 }
 
 static void check_offset(Context* ctx,
@@ -635,8 +655,8 @@ static void check_block(Context* ctx,
                         const WasmLocation* loc,
                         const WasmExpr* first,
                         const char* desc) {
+  WasmBool check_result = WASM_TRUE;
   if (first) {
-    WasmBool check_result = WASM_TRUE;
     const WasmExpr* expr;
     for (expr = first; expr; expr = expr->next) {
       check_expr(ctx, expr);
@@ -646,13 +666,13 @@ static void check_block(Context* ctx,
         break;
       }
     }
-    if (check_result) {
-      assert(ctx->top_label != NULL);
-      check_n_types(ctx, loc, ctx->top_label->sig, desc);
-      check_type_stack_limit_exact(ctx, loc, ctx->top_label->sig->size, desc);
-    }
-    ctx->type_stack.size = ctx->top_label->type_stack_limit;
   }
+  if (check_result) {
+    assert(ctx->top_label != NULL);
+    check_n_types(ctx, loc, ctx->top_label->sig, desc);
+    check_type_stack_limit_exact(ctx, loc, ctx->top_label->sig->size, desc);
+  }
+  ctx->type_stack.size = ctx->top_label->type_stack_limit;
 }
 
 static void check_expr(Context* ctx, const WasmExpr* expr) {
@@ -770,7 +790,8 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_LOAD:
-      check_align(ctx, &expr->loc, expr->load.align);
+      check_align(ctx, &expr->loc, expr->load.align,
+                  get_opcode_natural_alignment(expr->load.opcode));
       check_offset(ctx, &expr->loc, expr->load.offset);
       check_opcode1(ctx, &expr->loc, expr->load.opcode);
       break;
@@ -831,7 +852,8 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_STORE:
-      check_align(ctx, &expr->loc, expr->store.align);
+      check_align(ctx, &expr->loc, expr->store.align,
+                  get_opcode_natural_alignment(expr->store.opcode));
       check_offset(ctx, &expr->loc, expr->store.offset);
       check_opcode2(ctx, &expr->loc, expr->store.opcode);
       break;
@@ -910,6 +932,7 @@ static void print_const_expr_error(Context* ctx,
 static WasmResult eval_const_expr_i32(Context* ctx,
                                       const WasmExpr* expr,
                                       const char* desc,
+                                      WasmBool* out_has_value,
                                       uint32_t* out_value) {
   if (expr->next != NULL) {
     expr = expr->next;
@@ -924,6 +947,7 @@ static WasmResult eval_const_expr_i32(Context* ctx,
                     s_type_names[expr->const_.type]);
         return WASM_ERROR;
       }
+      *out_has_value = WASM_TRUE;
       *out_value = expr->const_.u32;
       return WASM_OK;
 
@@ -941,7 +965,15 @@ static WasmResult eval_const_expr_i32(Context* ctx,
       }
 
       /* TODO(binji): handle infinite recursion */
-      return eval_const_expr_i32(ctx, global->init_expr, desc, out_value);
+      if (global->init_expr) {
+        return eval_const_expr_i32(ctx, global->init_expr, desc, out_has_value,
+                                   out_value);
+      } else {
+        /* imported globals can't be evaluated until they're linked. */
+        *out_has_value = WASM_FALSE;
+        *out_value = 0;
+        return WASM_OK;
+      }
     }
 
     invalid_expr:
@@ -1025,6 +1057,8 @@ static void check_limits(Context* ctx,
 static void check_table(Context* ctx,
                         const WasmLocation* loc,
                         const WasmTable* table) {
+  if (ctx->current_table_index == 1)
+    print_error(ctx, CHECK_STYLE_FULL, loc, "only one table allowed");
   check_limits(ctx, loc, &table->elem_limits, UINT32_MAX, "elems");
 }
 
@@ -1041,24 +1075,28 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
             check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
+    WasmBool has_offset = WASM_FALSE;
     uint32_t offset = 0;
-    if (WASM_SUCCEEDED(eval_const_expr_i32(
-            ctx, elem_segment->offset, "elem segment expression", &offset))) {
-      if (offset < last_end) {
-        print_error(
-            ctx, CHECK_STYLE_FULL, &field->loc,
-            "segment offset (%u) less than end of previous segment (%u)",
-            offset, last_end);
-      }
+    if (WASM_SUCCEEDED(eval_const_expr_i32(ctx, elem_segment->offset,
+                                           "elem segment expression",
+                                           &has_offset, &offset))) {
+      if (has_offset) {
+        if (offset < last_end) {
+          print_error(
+              ctx, CHECK_STYLE_FULL, &field->loc,
+              "segment offset (%u) less than end of previous segment (%u)",
+              offset, last_end);
+        }
 
-      uint64_t max = table->elem_limits.initial;
-      if ((uint64_t)offset + elem_segment->vars.size > max) {
-        print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                    "segment ends past the end of the table (%" PRIu64 ")",
-                    max);
-      }
+        uint64_t max = table->elem_limits.initial;
+        if ((uint64_t)offset + elem_segment->vars.size > max) {
+          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                      "segment ends past the end of the table (%" PRIu64 ")",
+                      max);
+        }
 
-      last_end = offset + elem_segment->vars.size;
+        last_end = offset + elem_segment->vars.size;
+      }
     }
   }
 }
@@ -1066,6 +1104,8 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
 static void check_memory(Context* ctx,
                          const WasmLocation* loc,
                          const WasmMemory* memory) {
+  if (ctx->current_memory_index == 1)
+    print_error(ctx, CHECK_STYLE_FULL, loc, "only one memory block allowed");
   check_limits(ctx, loc, &memory->page_limits, WASM_MAX_PAGES, "pages");
 }
 
@@ -1082,25 +1122,29 @@ static void check_data_segments(Context* ctx, const WasmModule* module) {
             check_memory_var(ctx, &data_segment->memory_var, &memory)))
       continue;
 
+    WasmBool has_offset = WASM_FALSE;
     uint32_t offset = 0;
-    if (WASM_SUCCEEDED(eval_const_expr_i32(
-            ctx, data_segment->offset, "data segment expression", &offset))) {
-      if (offset < last_end) {
-        print_error(
-            ctx, CHECK_STYLE_FULL, &field->loc,
-            "segment offset (%u) less than end of previous segment (%u)",
-            offset, last_end);
-      }
+    if (WASM_SUCCEEDED(eval_const_expr_i32(ctx, data_segment->offset,
+                                           "data segment expression",
+                                           &has_offset, &offset))) {
+      if (has_offset) {
+        if (offset < last_end) {
+          print_error(
+              ctx, CHECK_STYLE_FULL, &field->loc,
+              "segment offset (%u) less than end of previous segment (%u)",
+              offset, last_end);
+        }
 
-      uint32_t max = memory->page_limits.initial;
-      const uint64_t memory_initial_size = (uint64_t)max * WASM_PAGE_SIZE;
-      if ((uint64_t)offset + data_segment->size > memory_initial_size) {
-        print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                    "segment ends past the end of memory (%" PRIu64 ")",
-                    memory_initial_size);
-      }
+        uint32_t max = memory->page_limits.initial;
+        const uint64_t memory_initial_size = (uint64_t)max * WASM_PAGE_SIZE;
+        if ((uint64_t)offset + data_segment->size > memory_initial_size) {
+          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
+                      "segment ends past the end of memory (%" PRIu64 ")",
+                      memory_initial_size);
+        }
 
-      last_end = offset + data_segment->size;
+        last_end = offset + data_segment->size;
+      }
     }
   }
 }
@@ -1115,12 +1159,18 @@ static void check_import(Context* ctx,
       break;
     case WASM_EXTERNAL_KIND_TABLE:
       check_table(ctx, loc, &import->table);
+      ctx->current_table_index++;
       break;
     case WASM_EXTERNAL_KIND_MEMORY:
       check_memory(ctx, loc, &import->memory);
+      ctx->current_memory_index++;
       break;
     case WASM_EXTERNAL_KIND_GLOBAL:
       check_global(ctx, loc, &import->global);
+      if (import->global.mutable_) {
+        print_error(ctx, CHECK_STYLE_FULL, loc,
+                    "mutable globals cannot be imported");
+      }
       ctx->current_global_index++;
       break;
     case WASM_NUM_EXTERNAL_KINDS:
@@ -1140,9 +1190,16 @@ static void check_export(Context* ctx, const WasmExport* export_) {
     case WASM_EXTERNAL_KIND_MEMORY:
       check_memory_var(ctx, &export_->var, NULL);
       break;
-    case WASM_EXTERNAL_KIND_GLOBAL:
-      check_global_var(ctx, &export_->var, NULL, NULL);
+    case WASM_EXTERNAL_KIND_GLOBAL: {
+      const WasmGlobal* global;
+      if (WASM_SUCCEEDED(check_global_var(ctx, &export_->var, &global, NULL))) {
+        if (global->mutable_) {
+          print_error(ctx, CHECK_STYLE_FULL, &export_->var.loc,
+                      "mutable globals cannot be exported");
+        }
+      }
       break;
+    }
     case WASM_NUM_EXTERNAL_KINDS:
       assert(0);
       break;
@@ -1150,11 +1207,11 @@ static void check_export(Context* ctx, const WasmExport* export_) {
 }
 
 static void check_module(Context* ctx, const WasmModule* module) {
-  WasmBool seen_memory = WASM_FALSE;
-  WasmBool seen_table = WASM_FALSE;
   WasmBool seen_start = WASM_FALSE;
 
   ctx->current_module = module;
+  ctx->current_table_index = 0;
+  ctx->current_memory_index = 0;
   ctx->current_global_index = 0;
 
   WasmModuleField* field;
@@ -1178,12 +1235,8 @@ static void check_module(Context* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_TABLE:
-        if (seen_table) {
-          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                      "only one table allowed");
-        }
         check_table(ctx, &field->loc, &field->table);
-        seen_table = WASM_TRUE;
+        ctx->current_table_index++;
         break;
 
       case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
@@ -1191,12 +1244,8 @@ static void check_module(Context* ctx, const WasmModule* module) {
         break;
 
       case WASM_MODULE_FIELD_TYPE_MEMORY:
-        if (seen_memory) {
-          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                      "only one memory block allowed");
-        }
         check_memory(ctx, &field->loc, &field->memory);
-        seen_memory = WASM_TRUE;
+        ctx->current_memory_index++;
         break;
 
       case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
