@@ -17,6 +17,7 @@
 #ifndef WASM_COMMON_H_
 #define WASM_COMMON_H_
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -348,8 +349,16 @@ typedef enum WasmOpcode {
   WASM_OPCODE_##NAME = code,
   WASM_FOREACH_OPCODE(V)
 #undef V
-  WASM_LAST_OPCODE
+  WASM_NUM_OPCODES
 } WasmOpcode;
+
+typedef struct WasmOpcodeInfo {
+  const char* name;
+  WasmType result_type;
+  WasmType param1_type;
+  WasmType param2_type;
+  int memory_size;
+} WasmOpcodeInfo;
 
 typedef enum WasmLiteralType {
   WASM_LITERAL_TYPE_INT,
@@ -407,6 +416,34 @@ void wasm_default_binary_error_callback(uint32_t offset,
                                         void* user_data);
 
 void wasm_init_stdio();
+
+/* opcode info */
+extern WasmOpcodeInfo g_wasm_opcode_info[];
+
+static WASM_INLINE const char* wasm_get_opcode_name(WasmOpcode opcode) {
+  assert(opcode < WASM_NUM_OPCODES);
+  return g_wasm_opcode_info[opcode].name;
+}
+
+static WASM_INLINE WasmType wasm_get_opcode_result_type(WasmOpcode opcode) {
+  assert(opcode < WASM_NUM_OPCODES);
+  return g_wasm_opcode_info[opcode].result_type;
+}
+
+static WASM_INLINE WasmType wasm_get_opcode_param_type_1(WasmOpcode opcode) {
+  assert(opcode < WASM_NUM_OPCODES);
+  return g_wasm_opcode_info[opcode].param1_type;
+}
+
+static WASM_INLINE WasmType wasm_get_opcode_param_type_2(WasmOpcode opcode) {
+  assert(opcode < WASM_NUM_OPCODES);
+  return g_wasm_opcode_info[opcode].param2_type;
+}
+
+static WASM_INLINE int wasm_get_opcode_memory_size(WasmOpcode opcode) {
+  assert(opcode < WASM_NUM_OPCODES);
+  return g_wasm_opcode_info[opcode].memory_size;
+}
 
 WASM_EXTERN_C_END
 

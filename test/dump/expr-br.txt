@@ -29,14 +29,14 @@
 ; function body 0
 0000016: 00                                         ; func body size (guess)
 0000017: 00                                         ; local decl count
-0000018: 01                                         ; OPCODE_BLOCK
+0000018: 01                                         ; block
 0000019: 01                                         ; WASM_TYPE_I32
-000001a: 10                                         ; OPCODE_I32_CONST
+000001a: 10                                         ; i32.const
 000001b: 01                                         ; i32 literal
-000001c: 06                                         ; OPCODE_BR
+000001c: 06                                         ; br
 000001d: 00                                         ; break depth
-000001e: 0f                                         ; OPCODE_END
-000001f: 0f                                         ; OPCODE_END
+000001e: 0f                                         ; end
+000001f: 0f                                         ; end
 0000016: 09                                         ; FIXUP func body size
 0000014: 0b                                         ; FIXUP section size
 ;; dump

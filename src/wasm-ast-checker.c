@@ -35,29 +35,6 @@ static const char* s_type_names[] = {
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES + 1);
 
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = WASM_TYPE_##rtype,
-static WasmType s_opcode_rtype[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = WASM_TYPE_##type1,
-static WasmType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = WASM_TYPE_##type2,
-static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = mem_size,
-static size_t s_opcode_memory_size[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
 typedef enum CheckStyle {
   CHECK_STYLE_NAME,
   CHECK_STYLE_FULL,
@@ -127,7 +104,7 @@ static WasmBool is_power_of_two(uint32_t x) {
 }
 
 static uint32_t get_opcode_natural_alignment(WasmOpcode opcode) {
-  uint32_t memory_size = s_opcode_memory_size[opcode];
+  uint32_t memory_size = wasm_get_opcode_memory_size(opcode);
   assert(memory_size != 0);
   return memory_size;
 }
@@ -564,16 +541,18 @@ static void pop_and_check_2_types(Context* ctx,
 static void check_opcode1(Context* ctx,
                           const WasmLocation* loc,
                           WasmOpcode opcode) {
-  pop_and_check_1_type(ctx, loc, s_opcode_type1[opcode], s_opcode_name[opcode]);
-  push_type(ctx, s_opcode_rtype[opcode]);
+  pop_and_check_1_type(ctx, loc, wasm_get_opcode_param_type_1(opcode),
+                       wasm_get_opcode_name(opcode));
+  push_type(ctx, wasm_get_opcode_result_type(opcode));
 }
 
 static void check_opcode2(Context* ctx,
                           const WasmLocation* loc,
                           WasmOpcode opcode) {
-  pop_and_check_2_types(ctx, loc, s_opcode_type1[opcode],
-                        s_opcode_type2[opcode], s_opcode_name[opcode]);
-  push_type(ctx, s_opcode_rtype[opcode]);
+  pop_and_check_2_types(ctx, loc, wasm_get_opcode_param_type_1(opcode),
+                        wasm_get_opcode_param_type_2(opcode),
+                        wasm_get_opcode_name(opcode));
+  push_type(ctx, wasm_get_opcode_result_type(opcode));
 }
 
 static void check_n_types(Context* ctx,

@@ -48,30 +48,30 @@
 ; function body 0
 0000025: 00                                         ; func body size (guess)
 0000026: 00                                         ; local decl count
-0000027: 10                                         ; OPCODE_I32_CONST
+0000027: 10                                         ; i32.const
 0000028: 00                                         ; i32 literal
-0000029: 0f                                         ; OPCODE_END
+0000029: 0f                                         ; end
 0000025: 04                                         ; FIXUP func body size
 ; function body 1
 000002a: 00                                         ; func body size (guess)
 000002b: 00                                         ; local decl count
-000002c: 11                                         ; OPCODE_I64_CONST
+000002c: 11                                         ; i64.const
 000002d: 00                                         ; i64 literal
-000002e: 0f                                         ; OPCODE_END
+000002e: 0f                                         ; end
 000002a: 04                                         ; FIXUP func body size
 ; function body 2
 000002f: 00                                         ; func body size (guess)
 0000030: 00                                         ; local decl count
-0000031: 13                                         ; OPCODE_F32_CONST
+0000031: 13                                         ; f32.const
 0000032: 0000 0000                                  ; f32 literal
-0000036: 0f                                         ; OPCODE_END
+0000036: 0f                                         ; end
 000002f: 07                                         ; FIXUP func body size
 ; function body 3
 0000037: 00                                         ; func body size (guess)
 0000038: 00                                         ; local decl count
-0000039: 12                                         ; OPCODE_F64_CONST
+0000039: 12                                         ; f64.const
 000003a: 0000 0000 0000 0000                        ; f64 literal
-0000042: 0f                                         ; OPCODE_END
+0000042: 0f                                         ; end
 0000037: 0b                                         ; FIXUP func body size
 0000023: 1f                                         ; FIXUP section size
 ;; dump

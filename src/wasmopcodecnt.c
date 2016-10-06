@@ -68,7 +68,7 @@ static const char s_description[] =
     "  instructions.\n"
     "\n"
     "examples:\n"
-    "  # parse binary file test.wasm and write opcode dist file test.dist\n"
+    "  # parse binary file test.wasm and write pcode dist file test.dist\n"
     "  $ wasmopcodecnt test.wasm -o test.dist\n";
 
 static WasmOption s_options[] = {
@@ -167,10 +167,6 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
 WASM_DEFINE_VECTOR_SORT(int_counter, WasmIntCounter);
 
 typedef int (int_counter_lt_fcn)(WasmIntCounter*, WasmIntCounter*);
@@ -182,8 +178,8 @@ typedef int (int_pair_counter_lt_fcn)(WasmIntPairCounter*, WasmIntPairCounter*);
 typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
 static void display_opcode_name(FILE* out, intmax_t opcode) {
-  if (opcode >= 0 && opcode < (intmax_t)WASM_ARRAY_SIZE(s_opcode_name))
-    fprintf(out, "%s", s_opcode_name[opcode]);
+  if (opcode >= 0 && opcode < WASM_NUM_OPCODES)
+    fprintf(out, "%s", wasm_get_opcode_name(opcode));
   else
     fprintf(out, "?(%" PRIdMAX ")", opcode);
 }
@@ -243,13 +239,13 @@ static int opcode_counter_gt(WasmIntCounter* counter_1,
     return 0;
   const char* name_1 = "?1";
   const char* name_2 = "?2";
-  if ((size_t)counter_1->value < WASM_ARRAY_SIZE(s_opcode_name)) {
-    const char* opcode_name = s_opcode_name[counter_1->value];
+  if (counter_1->value < WASM_NUM_OPCODES) {
+    const char* opcode_name = wasm_get_opcode_name(counter_1->value);
     if (opcode_name)
       name_1 = opcode_name;
   }
-  if ((size_t)counter_2->value < WASM_ARRAY_SIZE(s_opcode_name)) {
-    const char* opcode_name = s_opcode_name[counter_2->value];
+  if (counter_2->value < WASM_NUM_OPCODES) {
+    const char* opcode_name = wasm_get_opcode_name(counter_2->value);
     if (opcode_name)
       name_2 = opcode_name;
   }
@@ -395,24 +391,28 @@ int main(int argc, char** argv) {
           opcode_counter_gt, display_opcode_name, NULL);
       display_sorted_int_counter_vector(
           out, "\ni32.const", allocator, &opcnt_data->i32_const_vec,
-          int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_I32_CONST]);
+          int_counter_gt, display_intmax,
+          wasm_get_opcode_name(WASM_OPCODE_I32_CONST));
       display_sorted_int_counter_vector(
           out, "\nget_local:\n", allocator, &opcnt_data->get_local_vec,
-          int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
+          int_counter_gt, display_intmax,
+          wasm_get_opcode_name(WASM_OPCODE_GET_LOCAL));
       display_sorted_int_counter_vector(
           out, "\nset_local:\n", allocator, &opcnt_data->set_local_vec,
-          int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
+          int_counter_gt, display_intmax,
+          wasm_get_opcode_name(WASM_OPCODE_SET_LOCAL));
       display_sorted_int_counter_vector(
           out, "\ntee_local:\n", allocator, &opcnt_data->tee_local_vec,
-          int_counter_gt, display_intmax, s_opcode_name[WASM_OPCODE_TEE_LOCAL]);
+          int_counter_gt, display_intmax,
+          wasm_get_opcode_name(WASM_OPCODE_TEE_LOCAL));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.load:\n", allocator, &opcnt_data->i32_load_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
-          s_opcode_name[WASM_OPCODE_I32_LOAD]);
+          wasm_get_opcode_name(WASM_OPCODE_I32_LOAD));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.store:\n", allocator, &opcnt_data->i32_store_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
-          s_opcode_name[WASM_OPCODE_I32_STORE]);
+          wasm_get_opcode_name(WASM_OPCODE_I32_STORE));
     }
     wasm_destroy_opcnt_data(allocator, opcnt_data);
   }

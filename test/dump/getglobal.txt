@@ -28,9 +28,9 @@
 0000015: 01                                         ; num globals
 0000016: 01                                         ; WASM_TYPE_I32
 0000017: 00                                         ; global mutability
-0000018: 10                                         ; OPCODE_I32_CONST
+0000018: 10                                         ; i32.const
 0000019: 00                                         ; i32 literal
-000001a: 0f                                         ; OPCODE_END
+000001a: 0f                                         ; end
 0000014: 06                                         ; FIXUP section size
 ; section "CODE" (10)
 000001b: 0a                                         ; section code
@@ -39,9 +39,9 @@
 ; function body 0
 000001e: 00                                         ; func body size (guess)
 000001f: 00                                         ; local decl count
-0000020: bb                                         ; OPCODE_GET_GLOBAL
+0000020: bb                                         ; get_global
 0000021: 00                                         ; global index
-0000022: 0f                                         ; OPCODE_END
+0000022: 0f                                         ; end
 000001e: 04                                         ; FIXUP func body size
 000001c: 06                                         ; FIXUP section size
 ;; dump

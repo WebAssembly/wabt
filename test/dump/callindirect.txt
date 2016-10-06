@@ -39,9 +39,9 @@
 000001c: 01                                         ; num elem segments
 ; elem segment header 0
 000001d: 00                                         ; table index
-000001e: 10                                         ; OPCODE_I32_CONST
+000001e: 10                                         ; i32.const
 000001f: 00                                         ; i32 literal
-0000020: 0f                                         ; OPCODE_END
+0000020: 0f                                         ; end
 0000021: 01                                         ; num function indices
 0000022: 00                                         ; function index
 000001b: 07                                         ; FIXUP section size
@@ -52,13 +52,13 @@
 ; function body 0
 0000026: 00                                         ; func body size (guess)
 0000027: 00                                         ; local decl count
-0000028: 10                                         ; OPCODE_I32_CONST
+0000028: 10                                         ; i32.const
 0000029: 00                                         ; i32 literal
-000002a: 10                                         ; OPCODE_I32_CONST
+000002a: 10                                         ; i32.const
 000002b: 00                                         ; i32 literal
-000002c: 17                                         ; OPCODE_CALL_INDIRECT
+000002c: 17                                         ; call_indirect
 000002d: 00                                         ; signature index
-000002e: 0f                                         ; OPCODE_END
+000002e: 0f                                         ; end
 0000026: 08                                         ; FIXUP func body size
 0000024: 0a                                         ; FIXUP section size
 ;; dump

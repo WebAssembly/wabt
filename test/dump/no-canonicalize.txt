@@ -89,9 +89,9 @@
 0000062: 01                                         ; num elem segments
 ; elem segment header 0
 0000063: 00                                         ; table index
-0000064: 10                                         ; OPCODE_I32_CONST
+0000064: 10                                         ; i32.const
 0000065: 00                                         ; i32 literal
-0000066: 0f                                         ; OPCODE_END
+0000066: 0f                                         ; end
 0000067: 02                                         ; num function indices
 0000068: 02                                         ; function index
 0000069: 03                                         ; function index
@@ -103,36 +103,36 @@
 ; function body 0
 0000071: 0000 0000 00                               ; func body size (guess)
 0000076: 00                                         ; local decl count
-0000077: 14                                         ; OPCODE_GET_LOCAL
+0000077: 14                                         ; get_local
 0000078: 00                                         ; local index
-0000079: 14                                         ; OPCODE_GET_LOCAL
+0000079: 14                                         ; get_local
 000007a: 01                                         ; local index
-000007b: 17                                         ; OPCODE_CALL_INDIRECT
+000007b: 17                                         ; call_indirect
 000007c: 01                                         ; signature index
-000007d: 0b                                         ; OPCODE_DROP
-000007e: 0f                                         ; OPCODE_END
+000007d: 0b                                         ; drop
+000007e: 0f                                         ; end
 0000071: 8980 8080 00                               ; FIXUP func body size
 ; function body 1
 000007f: 0000 0000 00                               ; func body size (guess)
 0000084: 00                                         ; local decl count
-0000085: 14                                         ; OPCODE_GET_LOCAL
+0000085: 14                                         ; get_local
 0000086: 00                                         ; local index
-0000087: 10                                         ; OPCODE_I32_CONST
+0000087: 10                                         ; i32.const
 0000088: 01                                         ; i32 literal
-0000089: 40                                         ; OPCODE_I32_ADD
-000008a: 0b                                         ; OPCODE_DROP
-000008b: 0f                                         ; OPCODE_END
+0000089: 40                                         ; i32.add
+000008a: 0b                                         ; drop
+000008b: 0f                                         ; end
 000007f: 8880 8080 00                               ; FIXUP func body size
 ; function body 2
 000008c: 0000 0000 00                               ; func body size (guess)
 0000091: 00                                         ; local decl count
-0000092: 14                                         ; OPCODE_GET_LOCAL
+0000092: 14                                         ; get_local
 0000093: 00                                         ; local index
-0000094: 10                                         ; OPCODE_I32_CONST
+0000094: 10                                         ; i32.const
 0000095: 02                                         ; i32 literal
-0000096: 42                                         ; OPCODE_I32_MUL
-0000097: 0b                                         ; OPCODE_DROP
-0000098: 0f                                         ; OPCODE_END
+0000096: 42                                         ; i32.mul
+0000097: 0b                                         ; drop
+0000098: 0f                                         ; end
 000008c: 8880 8080 00                               ; FIXUP func body size
 000006b: a980 8080 00                               ; FIXUP section size
 ;; dump

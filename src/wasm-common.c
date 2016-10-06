@@ -28,21 +28,21 @@
 
 #include "wasm-allocator.h"
 
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = mem_size,
-static uint8_t s_opcode_mem_size[] = {WASM_FOREACH_OPCODE(V)};
+#define V(rtype, type1, type2, mem_size, code, NAME, text)                 \
+  [code] = {text, WASM_TYPE_##rtype, WASM_TYPE_##type1, WASM_TYPE_##type2, \
+            mem_size},
+WasmOpcodeInfo g_wasm_opcode_info[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
 WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
-  assert(opcode < WASM_ARRAY_SIZE(s_opcode_mem_size));
-  uint32_t opcode_align = s_opcode_mem_size[opcode];
+  uint32_t opcode_align = wasm_get_opcode_memory_size(opcode);
   return alignment == WASM_USE_NATURAL_ALIGNMENT ||
          alignment == opcode_align;
 }
 
 uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment) {
-  assert(opcode < WASM_ARRAY_SIZE(s_opcode_mem_size));
   if (alignment == WASM_USE_NATURAL_ALIGNMENT)
-    return s_opcode_mem_size[opcode];
+    return wasm_get_opcode_memory_size(opcode);
   return alignment;
 }
 

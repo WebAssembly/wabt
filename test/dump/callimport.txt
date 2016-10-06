@@ -51,16 +51,16 @@
 ; function body 0
 0000029: 00                                         ; func body size (guess)
 000002a: 00                                         ; local decl count
-000002b: 10                                         ; OPCODE_I32_CONST
+000002b: 10                                         ; i32.const
 000002c: 01                                         ; i32 literal
-000002d: 13                                         ; OPCODE_F32_CONST
+000002d: 13                                         ; f32.const
 000002e: 0000 0040                                  ; f32 literal
-0000032: 16                                         ; OPCODE_CALL_FUNCTION
+0000032: 16                                         ; call
 0000033: 00                                         ; func index
-0000034: 0b                                         ; OPCODE_DROP
-0000035: 16                                         ; OPCODE_CALL_FUNCTION
+0000034: 0b                                         ; drop
+0000035: 16                                         ; call
 0000036: 01                                         ; func index
-0000037: 0f                                         ; OPCODE_END
+0000037: 0f                                         ; end
 0000029: 0e                                         ; FIXUP func body size
 0000027: 10                                         ; FIXUP section size
 ;; dump

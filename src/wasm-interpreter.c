@@ -23,7 +23,7 @@
 #include "wasm-stream.h"
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {
+static const char* s_interpreter_opcode_name[] = {
     WASM_FOREACH_OPCODE(V)
     [WASM_OPCODE_ALLOCA] = "alloca",
     [WASM_OPCODE_BR_UNLESS] = "br_unless",
@@ -38,6 +38,11 @@ static const char* s_opcode_name[] = {
     if (WASM_FAILED(expr)) \
       return WASM_ERROR;   \
   } while (0)
+
+static const char* wasm_get_interpreter_opcode_name(uint8_t opcode) {
+  assert(opcode < WASM_ARRAY_SIZE(s_interpreter_opcode_name));
+  return s_interpreter_opcode_name[opcode];
+}
 
 WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
                                         WasmInterpreterModule* module,
@@ -1575,24 +1580,28 @@ void wasm_trace_pc(WasmInterpreterModule* module,
   switch (opcode) {
     case WASM_OPCODE_SELECT:
       wasm_writef(stream, "%s %u, %" PRIu64 ", %" PRIu64 "\n",
-                  s_opcode_name[opcode], PICK(3).i32, PICK(2).i64, PICK(1).i64);
+                  wasm_get_interpreter_opcode_name(opcode), PICK(3).i32,
+                  PICK(2).i64, PICK(1).i64);
       break;
 
     case WASM_OPCODE_BR:
-      wasm_writef(stream, "%s @%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      wasm_writef(stream, "%s @%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  read_u32_at(pc));
       break;
 
     case WASM_OPCODE_BR_IF:
-      wasm_writef(stream, "%s @%u, %u\n", s_opcode_name[opcode],
-                  read_u32_at(pc), TOP().i32);
+      wasm_writef(stream, "%s @%u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_BR_TABLE: {
       uint32_t num_targets = read_u32_at(pc);
       uint32_t table_offset = read_u32_at(pc + 4);
       VALUE_TYPE_I32 key = TOP().i32;
-      wasm_writef(stream, "%s %u, $#%u, table:$%u\n", s_opcode_name[opcode],
-                  key, num_targets, table_offset);
+      wasm_writef(stream, "%s %u, $#%u, table:$%u\n",
+                  wasm_get_interpreter_opcode_name(opcode), key, num_targets,
+                  table_offset);
       break;
     }
 
@@ -1601,49 +1610,55 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_UNREACHABLE:
     case WASM_OPCODE_CURRENT_MEMORY:
     case WASM_OPCODE_DROP:
-      wasm_writef(stream, "%s\n", s_opcode_name[opcode]);
+      wasm_writef(stream, "%s\n", wasm_get_interpreter_opcode_name(opcode));
       break;
 
     case WASM_OPCODE_I32_CONST:
-      wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  read_u32_at(pc));
       break;
 
     case WASM_OPCODE_I64_CONST:
-      wasm_writef(stream, "%s $%" PRIu64 "\n", s_opcode_name[opcode],
-                  read_u64_at(pc));
+      wasm_writef(stream, "%s $%" PRIu64 "\n",
+                  wasm_get_interpreter_opcode_name(opcode), read_u64_at(pc));
       break;
 
     case WASM_OPCODE_F32_CONST:
-      wasm_writef(stream, "%s $%g\n", s_opcode_name[opcode],
+      wasm_writef(stream, "%s $%g\n", wasm_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(read_u32_at(pc)));
       break;
 
     case WASM_OPCODE_F64_CONST:
-      wasm_writef(stream, "%s $%g\n", s_opcode_name[opcode],
+      wasm_writef(stream, "%s $%g\n", wasm_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(read_u64_at(pc)));
       break;
 
     case WASM_OPCODE_GET_LOCAL:
-      wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  read_u32_at(pc));
       break;
 
     case WASM_OPCODE_SET_LOCAL:
     case WASM_OPCODE_TEE_LOCAL:
-      wasm_writef(stream, "%s $%u, %u\n", s_opcode_name[opcode],
-                  read_u32_at(pc), TOP().i32);
+      wasm_writef(stream, "%s $%u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_CALL_FUNCTION:
-      wasm_writef(stream, "%s @%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      wasm_writef(stream, "%s @%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  read_u32_at(pc));
       break;
 
     case WASM_OPCODE_CALL_INDIRECT:
-      wasm_writef(stream, "%s $%u, %u\n", s_opcode_name[opcode],
-                  read_u32_at(pc), TOP().i32);
+      wasm_writef(stream, "%s $%u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_CALL_IMPORT:
-      wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  read_u32_at(pc));
       break;
 
     case WASM_OPCODE_I32_LOAD8_S:
@@ -1660,14 +1675,16 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I64_LOAD:
     case WASM_OPCODE_F32_LOAD:
     case WASM_OPCODE_F64_LOAD:
-      wasm_writef(stream, "%s %u+$%u\n", s_opcode_name[opcode], TOP().i32,
+      wasm_writef(stream, "%s %u+$%u\n",
+                  wasm_get_interpreter_opcode_name(opcode), TOP().i32,
                   read_u32_at(pc));
       break;
 
     case WASM_OPCODE_I32_STORE8:
     case WASM_OPCODE_I32_STORE16:
     case WASM_OPCODE_I32_STORE:
-      wasm_writef(stream, "%s %u+$%u, %u\n", s_opcode_name[opcode], PICK(2).i32,
+      wasm_writef(stream, "%s %u+$%u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
                   read_u32_at(pc), PICK(1).i32);
       break;
 
@@ -1675,22 +1692,26 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I64_STORE16:
     case WASM_OPCODE_I64_STORE32:
     case WASM_OPCODE_I64_STORE:
-      wasm_writef(stream, "%s %u+$%u, %" PRIu64 "\n", s_opcode_name[opcode],
-                  PICK(2).i32, read_u32_at(pc), PICK(1).i64);
+      wasm_writef(stream, "%s %u+$%u, %" PRIu64 "\n",
+                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
+                  read_u32_at(pc), PICK(1).i64);
       break;
 
     case WASM_OPCODE_F32_STORE:
-      wasm_writef(stream, "%s %u+$%u, %g\n", s_opcode_name[opcode], PICK(2).i32,
+      wasm_writef(stream, "%s %u+$%u, %g\n",
+                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
                   read_u32_at(pc), bitcast_u32_to_f32(PICK(1).f32_bits));
       break;
 
     case WASM_OPCODE_F64_STORE:
-      wasm_writef(stream, "%s %u+$%u, %g\n", s_opcode_name[opcode], PICK(2).i32,
+      wasm_writef(stream, "%s %u+$%u, %g\n",
+                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
                   read_u32_at(pc), bitcast_u64_to_f64(PICK(1).f64_bits));
       break;
 
     case WASM_OPCODE_GROW_MEMORY:
-      wasm_writef(stream, "%s %u\n", s_opcode_name[opcode], TOP().i32);
+      wasm_writef(stream, "%s %u\n", wasm_get_interpreter_opcode_name(opcode),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_I32_ADD:
@@ -1718,7 +1739,8 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I32_GE_U:
     case WASM_OPCODE_I32_ROTR:
     case WASM_OPCODE_I32_ROTL:
-      wasm_writef(stream, "%s %u, %u\n", s_opcode_name[opcode], PICK(2).i32,
+      wasm_writef(stream, "%s %u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
                   PICK(1).i32);
       break;
 
@@ -1726,7 +1748,8 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I32_CTZ:
     case WASM_OPCODE_I32_POPCNT:
     case WASM_OPCODE_I32_EQZ:
-      wasm_writef(stream, "%s %u\n", s_opcode_name[opcode], TOP().i32);
+      wasm_writef(stream, "%s %u\n", wasm_get_interpreter_opcode_name(opcode),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_I64_ADD:
@@ -1755,14 +1778,16 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I64_ROTR:
     case WASM_OPCODE_I64_ROTL:
       wasm_writef(stream, "%s %" PRIu64 ", %" PRIu64 "\n",
-                  s_opcode_name[opcode], PICK(2).i64, PICK(1).i64);
+                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i64,
+                  PICK(1).i64);
       break;
 
     case WASM_OPCODE_I64_CLZ:
     case WASM_OPCODE_I64_CTZ:
     case WASM_OPCODE_I64_POPCNT:
     case WASM_OPCODE_I64_EQZ:
-      wasm_writef(stream, "%s %" PRIu64 "\n", s_opcode_name[opcode], TOP().i64);
+      wasm_writef(stream, "%s %" PRIu64 "\n",
+                  wasm_get_interpreter_opcode_name(opcode), TOP().i64);
       break;
 
     case WASM_OPCODE_F32_ADD:
@@ -1778,9 +1803,9 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F32_LE:
     case WASM_OPCODE_F32_GT:
     case WASM_OPCODE_F32_GE:
-      wasm_writef(stream, "%s %g, %g\n", s_opcode_name[opcode],
-                  bitcast_u32_to_f32(PICK(2).i32),
-                  bitcast_u32_to_f32(PICK(1).i32));
+      wasm_writef(
+          stream, "%s %g, %g\n", wasm_get_interpreter_opcode_name(opcode),
+          bitcast_u32_to_f32(PICK(2).i32), bitcast_u32_to_f32(PICK(1).i32));
       break;
 
     case WASM_OPCODE_F32_ABS:
@@ -1790,7 +1815,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F32_TRUNC:
     case WASM_OPCODE_F32_NEAREST:
     case WASM_OPCODE_F32_SQRT:
-      wasm_writef(stream, "%s %g\n", s_opcode_name[opcode],
+      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(TOP().i32));
       break;
 
@@ -1807,9 +1832,9 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F64_LE:
     case WASM_OPCODE_F64_GT:
     case WASM_OPCODE_F64_GE:
-      wasm_writef(stream, "%s %g, %g\n", s_opcode_name[opcode],
-                  bitcast_u64_to_f64(PICK(2).i64),
-                  bitcast_u64_to_f64(PICK(1).i64));
+      wasm_writef(
+          stream, "%s %g, %g\n", wasm_get_interpreter_opcode_name(opcode),
+          bitcast_u64_to_f64(PICK(2).i64), bitcast_u64_to_f64(PICK(1).i64));
       break;
 
     case WASM_OPCODE_F64_ABS:
@@ -1819,7 +1844,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F64_TRUNC:
     case WASM_OPCODE_F64_NEAREST:
     case WASM_OPCODE_F64_SQRT:
-      wasm_writef(stream, "%s %g\n", s_opcode_name[opcode],
+      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(TOP().i64));
       break;
 
@@ -1829,7 +1854,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I64_TRUNC_U_F32:
     case WASM_OPCODE_F64_PROMOTE_F32:
     case WASM_OPCODE_I32_REINTERPRET_F32:
-      wasm_writef(stream, "%s %g\n", s_opcode_name[opcode],
+      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(TOP().i32));
       break;
 
@@ -1839,7 +1864,7 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_I64_TRUNC_U_F64:
     case WASM_OPCODE_F32_DEMOTE_F64:
     case WASM_OPCODE_I64_REINTERPRET_F64:
-      wasm_writef(stream, "%s %g\n", s_opcode_name[opcode],
+      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(TOP().i64));
       break;
 
@@ -1849,7 +1874,8 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F64_CONVERT_S_I64:
     case WASM_OPCODE_F64_CONVERT_U_I64:
     case WASM_OPCODE_F64_REINTERPRET_I64:
-      wasm_writef(stream, "%s %" PRIu64 "\n", s_opcode_name[opcode], TOP().i64);
+      wasm_writef(stream, "%s %" PRIu64 "\n",
+                  wasm_get_interpreter_opcode_name(opcode), TOP().i64);
       break;
 
     case WASM_OPCODE_I64_EXTEND_S_I32:
@@ -1859,21 +1885,25 @@ void wasm_trace_pc(WasmInterpreterModule* module,
     case WASM_OPCODE_F32_REINTERPRET_I32:
     case WASM_OPCODE_F64_CONVERT_S_I32:
     case WASM_OPCODE_F64_CONVERT_U_I32:
-      wasm_writef(stream, "%s %u\n", s_opcode_name[opcode], TOP().i32);
+      wasm_writef(stream, "%s %u\n", wasm_get_interpreter_opcode_name(opcode),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_ALLOCA:
-      wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32_at(pc));
+      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  read_u32_at(pc));
       break;
 
     case WASM_OPCODE_BR_UNLESS:
-      wasm_writef(stream, "%s @%u, %u\n", s_opcode_name[opcode],
-                  read_u32_at(pc), TOP().i32);
+      wasm_writef(stream, "%s @%u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+                  TOP().i32);
       break;
 
     case WASM_OPCODE_DROP_KEEP:
-      wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode],
-                  read_u32_at(pc), *(pc + 4));
+      wasm_writef(stream, "%s $%u $%u\n",
+                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+                  *(pc + 4));
       break;
 
     case WASM_OPCODE_DATA:
@@ -1907,23 +1937,25 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
     switch (opcode) {
       case WASM_OPCODE_SELECT:
         wasm_writef(stream, "%s %%[-3], %%[-2], %%[-1]\n",
-                    s_opcode_name[opcode]);
+                    wasm_get_interpreter_opcode_name(opcode));
         break;
 
       case WASM_OPCODE_BR:
-        wasm_writef(stream, "%s @%u\n", s_opcode_name[opcode], read_u32(&pc));
+        wasm_writef(stream, "%s @%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_BR_IF:
-        wasm_writef(stream, "%s @%u, %%[-1]\n", s_opcode_name[opcode],
-                    read_u32(&pc));
+        wasm_writef(stream, "%s @%u, %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_BR_TABLE: {
         uint32_t num_targets = read_u32(&pc);
         uint32_t table_offset = read_u32(&pc);
         wasm_writef(stream, "%s %%[-1], $#%u, table:$%u\n",
-                    s_opcode_name[opcode], num_targets, table_offset);
+                    wasm_get_interpreter_opcode_name(opcode), num_targets,
+                    table_offset);
         break;
       }
 
@@ -1932,49 +1964,55 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_UNREACHABLE:
       case WASM_OPCODE_CURRENT_MEMORY:
       case WASM_OPCODE_DROP:
-        wasm_writef(stream, "%s\n", s_opcode_name[opcode]);
+        wasm_writef(stream, "%s\n", wasm_get_interpreter_opcode_name(opcode));
         break;
 
       case WASM_OPCODE_I32_CONST:
-        wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        wasm_writef(stream, "%s $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_I64_CONST:
-        wasm_writef(stream, "%s $%" PRIu64 "\n", s_opcode_name[opcode],
-                    read_u64(&pc));
+        wasm_writef(stream, "%s $%" PRIu64 "\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u64(&pc));
         break;
 
       case WASM_OPCODE_F32_CONST:
-        wasm_writef(stream, "%s $%g\n", s_opcode_name[opcode],
+        wasm_writef(stream, "%s $%g\n",
+                    wasm_get_interpreter_opcode_name(opcode),
                     bitcast_u32_to_f32(read_u32(&pc)));
         break;
 
       case WASM_OPCODE_F64_CONST:
-        wasm_writef(stream, "%s $%g\n", s_opcode_name[opcode],
+        wasm_writef(stream, "%s $%g\n",
+                    wasm_get_interpreter_opcode_name(opcode),
                     bitcast_u64_to_f64(read_u64(&pc)));
         break;
 
       case WASM_OPCODE_GET_LOCAL:
-        wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        wasm_writef(stream, "%s $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_SET_LOCAL:
       case WASM_OPCODE_TEE_LOCAL:
-        wasm_writef(stream, "%s $%u, %%[-1]\n", s_opcode_name[opcode],
-                    read_u32(&pc));
+        wasm_writef(stream, "%s $%u, %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_CALL_FUNCTION:
-        wasm_writef(stream, "%s @%u\n", s_opcode_name[opcode], read_u32(&pc));
+        wasm_writef(stream, "%s @%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_CALL_INDIRECT:
-        wasm_writef(stream, "%s $%u, %%[-1]\n", s_opcode_name[opcode],
-                    read_u32(&pc));
+        wasm_writef(stream, "%s $%u, %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_CALL_IMPORT:
-        wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        wasm_writef(stream, "%s $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_I32_LOAD8_S:
@@ -1991,8 +2029,8 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_I64_LOAD:
       case WASM_OPCODE_F32_LOAD:
       case WASM_OPCODE_F64_LOAD:
-        wasm_writef(stream, "%s %%[-1]+$%u\n", s_opcode_name[opcode],
-                    read_u32(&pc));
+        wasm_writef(stream, "%s %%[-1]+$%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_I32_STORE8:
@@ -2004,8 +2042,8 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_I64_STORE:
       case WASM_OPCODE_F32_STORE:
       case WASM_OPCODE_F64_STORE:
-        wasm_writef(stream, "%s %%[-2]+$%u, %%[-1]\n", s_opcode_name[opcode],
-                    read_u32(&pc));
+        wasm_writef(stream, "%s %%[-2]+$%u, %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_I32_ADD:
@@ -2084,7 +2122,8 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_F64_LE:
       case WASM_OPCODE_F64_GT:
       case WASM_OPCODE_F64_GE:
-        wasm_writef(stream, "%s %%[-2], %%[-1]\n", s_opcode_name[opcode]);
+        wasm_writef(stream, "%s %%[-2], %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode));
         break;
 
       case WASM_OPCODE_I32_CLZ:
@@ -2135,28 +2174,32 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
       case WASM_OPCODE_F64_CONVERT_S_I32:
       case WASM_OPCODE_F64_CONVERT_U_I32:
       case WASM_OPCODE_GROW_MEMORY:
-        wasm_writef(stream, "%s %%[-1]\n", s_opcode_name[opcode]);
+        wasm_writef(stream, "%s %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode));
         break;
 
       case WASM_OPCODE_ALLOCA:
-        wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], read_u32(&pc));
+        wasm_writef(stream, "%s $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_BR_UNLESS:
-        wasm_writef(stream, "%s @%u, %%[-1]\n", s_opcode_name[opcode],
-                    read_u32(&pc));
+        wasm_writef(stream, "%s @%u, %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_DROP_KEEP: {
         uint32_t drop = read_u32(&pc);
         uint32_t keep = *pc++;
-        wasm_writef(stream, "%s $%u $%u\n", s_opcode_name[opcode], drop, keep);
+        wasm_writef(stream, "%s $%u $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), drop, keep);
         break;
       }
 
       case WASM_OPCODE_DATA: {
         uint32_t num_bytes = read_u32(&pc);
-        wasm_writef(stream, "%s $%u\n", s_opcode_name[opcode], num_bytes);
+        wasm_writef(stream, "%s $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), num_bytes);
         /* for now, the only reason this is emitted is for br_table, so display
          * it as a list of table entries */
         if (num_bytes % WASM_TABLE_ENTRY_SIZE == 0) {

@@ -39,11 +39,11 @@
 ; function body 0
 000001c: 00                                         ; func body size (guess)
 000001d: 00                                         ; local decl count
-000001e: 14                                         ; OPCODE_GET_LOCAL
+000001e: 14                                         ; get_local
 000001f: 00                                         ; local index
-0000020: 39                                         ; OPCODE_GROW_MEMORY
-0000021: 0b                                         ; OPCODE_DROP
-0000022: 0f                                         ; OPCODE_END
+0000020: 39                                         ; grow_memory
+0000021: 0b                                         ; drop
+0000022: 0f                                         ; end
 000001c: 06                                         ; FIXUP func body size
 000001a: 08                                         ; FIXUP section size
 ;; dump

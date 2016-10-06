@@ -30,17 +30,17 @@
 ; function body 0
 0000017: 00                                         ; func body size (guess)
 0000018: 00                                         ; local decl count
-0000019: 0f                                         ; OPCODE_END
+0000019: 0f                                         ; end
 0000017: 02                                         ; FIXUP func body size
 ; function body 1
 000001a: 00                                         ; func body size (guess)
 000001b: 00                                         ; local decl count
-000001c: 0f                                         ; OPCODE_END
+000001c: 0f                                         ; end
 000001a: 02                                         ; FIXUP func body size
 ; function body 2
 000001d: 00                                         ; func body size (guess)
 000001e: 00                                         ; local decl count
-000001f: 0f                                         ; OPCODE_END
+000001f: 0f                                         ; end
 000001d: 02                                         ; FIXUP func body size
 0000015: 0a                                         ; FIXUP section size
 ;; dump

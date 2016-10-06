@@ -50,25 +50,25 @@
 000001e: 01                                         ; WASM_TYPE_I32
 000001f: 01                                         ; local type count
 0000020: 03                                         ; WASM_TYPE_F32
-0000021: 14                                         ; OPCODE_GET_LOCAL
+0000021: 14                                         ; get_local
 0000022: 00                                         ; local index
-0000023: 0b                                         ; OPCODE_DROP
-0000024: 14                                         ; OPCODE_GET_LOCAL
+0000023: 0b                                         ; drop
+0000024: 14                                         ; get_local
 0000025: 01                                         ; local index
-0000026: 0b                                         ; OPCODE_DROP
-0000027: 14                                         ; OPCODE_GET_LOCAL
+0000026: 0b                                         ; drop
+0000027: 14                                         ; get_local
 0000028: 02                                         ; local index
-0000029: 0b                                         ; OPCODE_DROP
-000002a: 14                                         ; OPCODE_GET_LOCAL
+0000029: 0b                                         ; drop
+000002a: 14                                         ; get_local
 000002b: 03                                         ; local index
-000002c: 0b                                         ; OPCODE_DROP
-000002d: 14                                         ; OPCODE_GET_LOCAL
+000002c: 0b                                         ; drop
+000002d: 14                                         ; get_local
 000002e: 04                                         ; local index
-000002f: 0b                                         ; OPCODE_DROP
-0000030: 14                                         ; OPCODE_GET_LOCAL
+000002f: 0b                                         ; drop
+0000030: 14                                         ; get_local
 0000031: 05                                         ; local index
-0000032: 0b                                         ; OPCODE_DROP
-0000033: 0f                                         ; OPCODE_END
+0000032: 0b                                         ; drop
+0000033: 0f                                         ; end
 0000017: 1c                                         ; FIXUP func body size
 0000015: 1e                                         ; FIXUP section size
 ;; dump

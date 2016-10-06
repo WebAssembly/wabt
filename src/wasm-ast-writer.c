@@ -31,10 +31,6 @@
 #define NO_FORCE_NEWLINE 0
 #define FORCE_NEWLINE 1
 
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
@@ -302,7 +298,7 @@ static void write_begin_block(Context* ctx,
 static void write_end_block(Context* ctx) {
   dedent(ctx);
   ctx->depth--;
-  write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_END]);
+  write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_END));
 }
 
 static void write_block(Context* ctx,
@@ -316,19 +312,19 @@ static void write_block(Context* ctx,
 static void write_const(Context* ctx, const WasmConst* const_) {
   switch (const_->type) {
     case WASM_TYPE_I32:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_I32_CONST]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_I32_CONST));
       writef(ctx, "%d", (int32_t)const_->u32);
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
     case WASM_TYPE_I64:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_I64_CONST]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_I64_CONST));
       writef(ctx, "%" PRId64, (int64_t)const_->u64);
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
     case WASM_TYPE_F32: {
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_F32_CONST]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_F32_CONST));
       char buffer[128];
       wasm_write_float_hex(buffer, 128, const_->f32_bits);
       write_puts_space(ctx, buffer);
@@ -340,7 +336,7 @@ static void write_const(Context* ctx, const WasmConst* const_) {
     }
 
     case WASM_TYPE_F64: {
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_F64_CONST]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_F64_CONST));
       char buffer[128];
       wasm_write_double_hex(buffer, 128, const_->f64_bits);
       write_puts_space(ctx, buffer);
@@ -360,25 +356,25 @@ static void write_const(Context* ctx, const WasmConst* const_) {
 static void write_expr(Context* ctx, const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
-      write_puts_newline(ctx, s_opcode_name[expr->binary.opcode]);
+      write_puts_newline(ctx, wasm_get_opcode_name(expr->binary.opcode));
       break;
 
     case WASM_EXPR_TYPE_BLOCK:
-      write_block(ctx, &expr->block, s_opcode_name[WASM_OPCODE_BLOCK]);
+      write_block(ctx, &expr->block, wasm_get_opcode_name(WASM_OPCODE_BLOCK));
       break;
 
     case WASM_EXPR_TYPE_BR:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_BR));
       write_br_var(ctx, &expr->br.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_BR_IF:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR_IF]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_BR_IF));
       write_br_var(ctx, &expr->br_if.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_BR_TABLE: {
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_BR_TABLE]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_BR_TABLE));
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i)
         write_br_var(ctx, &expr->br_table.targets.data[i], NEXT_CHAR_SPACE);
@@ -387,17 +383,17 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_CALL:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_FUNCTION]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_CALL_FUNCTION));
       write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_CALL_INDIRECT:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_CALL_INDIRECT]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_CALL_INDIRECT));
       write_var(ctx, &expr->call_indirect.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_COMPARE:
-      write_puts_newline(ctx, s_opcode_name[expr->compare.opcode]);
+      write_puts_newline(ctx, wasm_get_opcode_name(expr->compare.opcode));
       break;
 
     case WASM_EXPR_TYPE_CONST:
@@ -405,33 +401,34 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_CONVERT:
-      write_puts_newline(ctx, s_opcode_name[expr->convert.opcode]);
+      write_puts_newline(ctx, wasm_get_opcode_name(expr->convert.opcode));
       break;
 
     case WASM_EXPR_TYPE_DROP:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_DROP]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_DROP));
       break;
 
     case WASM_EXPR_TYPE_GET_GLOBAL:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_GET_GLOBAL]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_GET_GLOBAL));
       write_var(ctx, &expr->get_global.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_GET_LOCAL:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_GET_LOCAL]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_GET_LOCAL));
       write_var(ctx, &expr->get_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_GROW_MEMORY]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_GROW_MEMORY));
       break;
 
     case WASM_EXPR_TYPE_IF:
-      write_begin_block(ctx, &expr->if_.true_, s_opcode_name[WASM_OPCODE_IF]);
+      write_begin_block(ctx, &expr->if_.true_,
+                        wasm_get_opcode_name(WASM_OPCODE_IF));
       write_expr_list(ctx, expr->if_.true_.first);
       if (expr->if_.false_) {
         dedent(ctx);
-        write_puts_space(ctx, s_opcode_name[WASM_OPCODE_ELSE]);
+        write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_ELSE));
         indent(ctx);
         write_newline(ctx, FORCE_NEWLINE);
         write_expr_list(ctx, expr->if_.false_);
@@ -440,7 +437,7 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_LOAD:
-      write_puts_space(ctx, s_opcode_name[expr->load.opcode]);
+      write_puts_space(ctx, wasm_get_opcode_name(expr->load.opcode));
       if (expr->load.offset)
         writef(ctx, "offset=%" PRIu64, expr->load.offset);
       if (!wasm_is_naturally_aligned(expr->load.opcode, expr->load.align))
@@ -449,37 +446,37 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_LOOP:
-      write_block(ctx, &expr->loop, s_opcode_name[WASM_OPCODE_LOOP]);
+      write_block(ctx, &expr->loop, wasm_get_opcode_name(WASM_OPCODE_LOOP));
       break;
 
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_CURRENT_MEMORY]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_CURRENT_MEMORY));
       break;
 
     case WASM_EXPR_TYPE_NOP:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_NOP]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_NOP));
       break;
 
     case WASM_EXPR_TYPE_RETURN:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_RETURN]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_RETURN));
       break;
 
     case WASM_EXPR_TYPE_SELECT:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_SELECT]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_SELECT));
       break;
 
     case WASM_EXPR_TYPE_SET_GLOBAL:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_SET_GLOBAL]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_SET_GLOBAL));
       write_var(ctx, &expr->set_global.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_SET_LOCAL:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_SET_LOCAL]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_SET_LOCAL));
       write_var(ctx, &expr->set_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_STORE:
-      write_puts_space(ctx, s_opcode_name[expr->store.opcode]);
+      write_puts_space(ctx, wasm_get_opcode_name(expr->store.opcode));
       if (expr->store.offset)
         writef(ctx, "offset=%" PRIu64, expr->store.offset);
       if (!wasm_is_naturally_aligned(expr->store.opcode, expr->store.align))
@@ -488,16 +485,16 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
       break;
 
     case WASM_EXPR_TYPE_TEE_LOCAL:
-      write_puts_space(ctx, s_opcode_name[WASM_OPCODE_TEE_LOCAL]);
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_TEE_LOCAL));
       write_var(ctx, &expr->tee_local.var, NEXT_CHAR_NEWLINE);
       break;
 
     case WASM_EXPR_TYPE_UNARY:
-      write_puts_newline(ctx, s_opcode_name[expr->unary.opcode]);
+      write_puts_newline(ctx, wasm_get_opcode_name(expr->unary.opcode));
       break;
 
     case WASM_EXPR_TYPE_UNREACHABLE:
-      write_puts_newline(ctx, s_opcode_name[WASM_OPCODE_UNREACHABLE]);
+      write_puts_newline(ctx, wasm_get_opcode_name(WASM_OPCODE_UNREACHABLE));
       break;
 
     default:

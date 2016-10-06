@@ -18,44 +18,44 @@
 000000a: 08                                         ; num globals
 000000b: 01                                         ; WASM_TYPE_I32
 000000c: 00                                         ; global mutability
-000000d: 10                                         ; OPCODE_I32_CONST
+000000d: 10                                         ; i32.const
 000000e: 01                                         ; i32 literal
-000000f: 0f                                         ; OPCODE_END
+000000f: 0f                                         ; end
 0000010: 02                                         ; WASM_TYPE_I64
 0000011: 00                                         ; global mutability
-0000012: 11                                         ; OPCODE_I64_CONST
+0000012: 11                                         ; i64.const
 0000013: 02                                         ; i64 literal
-0000014: 0f                                         ; OPCODE_END
+0000014: 0f                                         ; end
 0000015: 03                                         ; WASM_TYPE_F32
 0000016: 00                                         ; global mutability
-0000017: 13                                         ; OPCODE_F32_CONST
+0000017: 13                                         ; f32.const
 0000018: 0000 4040                                  ; f32 literal
-000001c: 0f                                         ; OPCODE_END
+000001c: 0f                                         ; end
 000001d: 04                                         ; WASM_TYPE_F64
 000001e: 00                                         ; global mutability
-000001f: 12                                         ; OPCODE_F64_CONST
+000001f: 12                                         ; f64.const
 0000020: 0000 0000 0000 1040                        ; f64 literal
-0000028: 0f                                         ; OPCODE_END
+0000028: 0f                                         ; end
 0000029: 01                                         ; WASM_TYPE_I32
 000002a: 00                                         ; global mutability
-000002b: bb                                         ; OPCODE_GET_GLOBAL
+000002b: bb                                         ; get_global
 000002c: 00                                         ; global index
-000002d: 0f                                         ; OPCODE_END
+000002d: 0f                                         ; end
 000002e: 02                                         ; WASM_TYPE_I64
 000002f: 00                                         ; global mutability
-0000030: bb                                         ; OPCODE_GET_GLOBAL
+0000030: bb                                         ; get_global
 0000031: 01                                         ; global index
-0000032: 0f                                         ; OPCODE_END
+0000032: 0f                                         ; end
 0000033: 03                                         ; WASM_TYPE_F32
 0000034: 00                                         ; global mutability
-0000035: bb                                         ; OPCODE_GET_GLOBAL
+0000035: bb                                         ; get_global
 0000036: 02                                         ; global index
-0000037: 0f                                         ; OPCODE_END
+0000037: 0f                                         ; end
 0000038: 04                                         ; WASM_TYPE_F64
 0000039: 00                                         ; global mutability
-000003a: bb                                         ; OPCODE_GET_GLOBAL
+000003a: bb                                         ; get_global
 000003b: 03                                         ; global index
-000003c: 0f                                         ; OPCODE_END
+000003c: 0f                                         ; end
 0000009: 33                                         ; FIXUP section size
 ;; dump
 0000000: 0061 736d 0c00 0000 0633 0801 0010 010f  

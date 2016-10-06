@@ -20,17 +20,17 @@
 000000f: 02                                         ; num data segments
 ; data segment header 0
 0000010: 00                                         ; memory index
-0000011: 10                                         ; OPCODE_I32_CONST
+0000011: 10                                         ; i32.const
 0000012: 0a                                         ; i32 literal
-0000013: 0f                                         ; OPCODE_END
+0000013: 0f                                         ; end
 0000014: 05                                         ; data segment size
 ; data segment data 0
 0000015: 6865 6c6c 6f                               ; data segment data
 ; data segment header 1
 000001a: 00                                         ; memory index
-000001b: 10                                         ; OPCODE_I32_CONST
+000001b: 10                                         ; i32.const
 000001c: 14                                         ; i32 literal
-000001d: 0f                                         ; OPCODE_END
+000001d: 0f                                         ; end
 000001e: 07                                         ; data segment size
 ; data segment data 1
 000001f: 676f 6f64 6279 65                          ; data segment data

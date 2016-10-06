@@ -86,32 +86,6 @@ static const char* s_type_names[] = {
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES + 1);
 
-/* TODO(binji): combine with the ones defined in wasm-check? */
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = WASM_TYPE_##rtype,
-static WasmType s_opcode_rtype[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = WASM_TYPE_##type1,
-static WasmType s_opcode_type1[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = WASM_TYPE_##type2,
-static WasmType s_opcode_type2[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {
-    /* clang-format off */
-  WASM_FOREACH_OPCODE(V)
-  [WASM_OPCODE_ALLOCA] = "alloca",
-  [WASM_OPCODE_DROP_KEEP] = "drop_keep",
-    /* clang-format on */
-};
-#undef V
-
 typedef uint32_t Uint32;
 WASM_DEFINE_VECTOR(uint32, Uint32);
 WASM_DEFINE_VECTOR(uint32_vector, Uint32Vector);
@@ -876,18 +850,18 @@ static WasmResult pop_and_check_2_types(Context* ctx,
 
 static WasmResult check_opcode1(Context* ctx, WasmOpcode opcode) {
   RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  CHECK_RESULT(
-      pop_and_check_1_type(ctx, s_opcode_type1[opcode], s_opcode_name[opcode]));
-  push_type(ctx, s_opcode_rtype[opcode]);
+  CHECK_RESULT(pop_and_check_1_type(ctx, wasm_get_opcode_param_type_1(opcode),
+                                    wasm_get_opcode_name(opcode)));
+  push_type(ctx, wasm_get_opcode_result_type(opcode));
   return WASM_OK;
 }
 
 static WasmResult check_opcode2(Context* ctx, WasmOpcode opcode) {
   RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  CHECK_RESULT(pop_and_check_2_types(ctx, s_opcode_type1[opcode],
-                                     s_opcode_type2[opcode],
-                                     s_opcode_name[opcode]));
-  push_type(ctx, s_opcode_rtype[opcode]);
+  CHECK_RESULT(pop_and_check_2_types(ctx, wasm_get_opcode_param_type_1(opcode),
+                                     wasm_get_opcode_param_type_2(opcode),
+                                     wasm_get_opcode_name(opcode)));
+  push_type(ctx, wasm_get_opcode_result_type(opcode));
   return WASM_OK;
 }
 

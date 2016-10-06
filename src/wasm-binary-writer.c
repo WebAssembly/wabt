@@ -48,11 +48,6 @@ static const char* s_type_names[] = {
 };
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  [code] = "OPCODE_" #NAME,
-static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
 #define V(NAME, code) [code] = #NAME,
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
@@ -228,7 +223,7 @@ static void write_str(WasmStream* stream,
 }
 
 static void write_opcode(WasmStream* stream, uint8_t opcode) {
-  wasm_write_u8(stream, opcode, s_opcode_name[opcode]);
+  wasm_write_u8(stream, opcode, wasm_get_opcode_name(opcode));
 }
 
 static void write_inline_signature_type(WasmStream* stream,

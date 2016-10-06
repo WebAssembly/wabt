@@ -50,25 +50,25 @@
 ; function body 0
 0000024: 00                                         ; func body size (guess)
 0000025: 00                                         ; local decl count
-0000026: 10                                         ; OPCODE_I32_CONST
+0000026: 10                                         ; i32.const
 0000027: 00                                         ; i32 literal
-0000028: 10                                         ; OPCODE_I32_CONST
+0000028: 10                                         ; i32.const
 0000029: 00                                         ; i32 literal
-000002a: 2a                                         ; OPCODE_I32_LOAD
+000002a: 2a                                         ; i32.load
 000002b: 02                                         ; alignment
 000002c: 00                                         ; load offset
-000002d: 10                                         ; OPCODE_I32_CONST
+000002d: 10                                         ; i32.const
 000002e: 01                                         ; i32 literal
-000002f: 40                                         ; OPCODE_I32_ADD
-0000030: 33                                         ; OPCODE_I32_STORE
+000002f: 40                                         ; i32.add
+0000030: 33                                         ; i32.store
 0000031: 02                                         ; alignment
 0000032: 00                                         ; store offset
-0000033: 14                                         ; OPCODE_GET_LOCAL
+0000033: 14                                         ; get_local
 0000034: 00                                         ; local index
-0000035: 14                                         ; OPCODE_GET_LOCAL
+0000035: 14                                         ; get_local
 0000036: 01                                         ; local index
-0000037: 40                                         ; OPCODE_I32_ADD
-0000038: 0f                                         ; OPCODE_END
+0000037: 40                                         ; i32.add
+0000038: 0f                                         ; end
 0000024: 14                                         ; FIXUP func body size
 0000022: 16                                         ; FIXUP section size
 ;; dump

@@ -77,10 +77,6 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
 static const char* s_type_names[] = {"void", "i32", "i64", "f32", "f64"};
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
 
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-
 #define V(NAME, code) [code] = #NAME,
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
@@ -516,7 +512,7 @@ static void logging_on_error(uint32_t offset,
 #define LOGGING_OPCODE(name)                                             \
   static WasmResult logging_##name(WasmOpcode opcode, void* user_data) { \
     LoggingContext* ctx = user_data;                                     \
-    LOGF(#name "(\"%s\" (%u))\n", s_opcode_name[opcode], opcode);        \
+    LOGF(#name "(\"%s\" (%u))\n", wasm_get_opcode_name(opcode), opcode); \
     FORWARD(name, opcode);                                               \
   }
 
@@ -839,7 +835,7 @@ static WasmResult logging_on_load_expr(WasmOpcode opcode,
                                        void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       s_opcode_name[opcode], opcode, alignment_log2, offset);
+       wasm_get_opcode_name(opcode), opcode, alignment_log2, offset);
   FORWARD(on_load_expr, opcode, alignment_log2, offset);
 }
 
@@ -859,7 +855,7 @@ static WasmResult logging_on_store_expr(WasmOpcode opcode,
                                         void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       s_opcode_name[opcode], opcode, alignment_log2, offset);
+       wasm_get_opcode_name(opcode), opcode, alignment_log2, offset);
   FORWARD(on_store_expr, opcode, alignment_log2, offset);
 }
 

@@ -35,30 +35,30 @@
 ; function body 0
 0000015: 00                                         ; func body size (guess)
 0000016: 00                                         ; local decl count
-0000017: 01                                         ; OPCODE_BLOCK
+0000017: 01                                         ; block
 0000018: 00                                         ; WASM_TYPE_VOID
-0000019: 02                                         ; OPCODE_LOOP
+0000019: 02                                         ; loop
 000001a: 00                                         ; WASM_TYPE_VOID
-000001b: 01                                         ; OPCODE_BLOCK
+000001b: 01                                         ; block
 000001c: 00                                         ; WASM_TYPE_VOID
-000001d: 10                                         ; OPCODE_I32_CONST
+000001d: 10                                         ; i32.const
 000001e: 00                                         ; i32 literal
-000001f: 0b                                         ; OPCODE_DROP
-0000020: 01                                         ; OPCODE_BLOCK
+000001f: 0b                                         ; drop
+0000020: 01                                         ; block
 0000021: 00                                         ; WASM_TYPE_VOID
-0000022: 06                                         ; OPCODE_BR
+0000022: 06                                         ; br
 0000023: 00                                         ; break depth
-0000024: 06                                         ; OPCODE_BR
+0000024: 06                                         ; br
 0000025: 01                                         ; break depth
-0000026: 06                                         ; OPCODE_BR
+0000026: 06                                         ; br
 0000027: 02                                         ; break depth
-0000028: 06                                         ; OPCODE_BR
+0000028: 06                                         ; br
 0000029: 03                                         ; break depth
-000002a: 0f                                         ; OPCODE_END
-000002b: 0f                                         ; OPCODE_END
-000002c: 0f                                         ; OPCODE_END
-000002d: 0f                                         ; OPCODE_END
-000002e: 0f                                         ; OPCODE_END
+000002a: 0f                                         ; end
+000002b: 0f                                         ; end
+000002c: 0f                                         ; end
+000002d: 0f                                         ; end
+000002e: 0f                                         ; end
 0000015: 19                                         ; FIXUP func body size
 0000013: 1b                                         ; FIXUP section size
 ;; dump

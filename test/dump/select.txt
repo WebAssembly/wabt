@@ -30,39 +30,39 @@
 ; function body 0
 0000015: 00                                         ; func body size (guess)
 0000016: 00                                         ; local decl count
-0000017: 10                                         ; OPCODE_I32_CONST
+0000017: 10                                         ; i32.const
 0000018: 02                                         ; i32 literal
-0000019: 10                                         ; OPCODE_I32_CONST
+0000019: 10                                         ; i32.const
 000001a: 03                                         ; i32 literal
-000001b: 10                                         ; OPCODE_I32_CONST
+000001b: 10                                         ; i32.const
 000001c: 01                                         ; i32 literal
-000001d: 05                                         ; OPCODE_SELECT
-000001e: 0b                                         ; OPCODE_DROP
-000001f: 11                                         ; OPCODE_I64_CONST
+000001d: 05                                         ; select
+000001e: 0b                                         ; drop
+000001f: 11                                         ; i64.const
 0000020: 02                                         ; i64 literal
-0000021: 11                                         ; OPCODE_I64_CONST
+0000021: 11                                         ; i64.const
 0000022: 03                                         ; i64 literal
-0000023: 10                                         ; OPCODE_I32_CONST
+0000023: 10                                         ; i32.const
 0000024: 01                                         ; i32 literal
-0000025: 05                                         ; OPCODE_SELECT
-0000026: 0b                                         ; OPCODE_DROP
-0000027: 13                                         ; OPCODE_F32_CONST
+0000025: 05                                         ; select
+0000026: 0b                                         ; drop
+0000027: 13                                         ; f32.const
 0000028: 0000 0040                                  ; f32 literal
-000002c: 13                                         ; OPCODE_F32_CONST
+000002c: 13                                         ; f32.const
 000002d: 0000 4040                                  ; f32 literal
-0000031: 10                                         ; OPCODE_I32_CONST
+0000031: 10                                         ; i32.const
 0000032: 01                                         ; i32 literal
-0000033: 05                                         ; OPCODE_SELECT
-0000034: 0b                                         ; OPCODE_DROP
-0000035: 12                                         ; OPCODE_F64_CONST
+0000033: 05                                         ; select
+0000034: 0b                                         ; drop
+0000035: 12                                         ; f64.const
 0000036: 0000 0000 0000 0040                        ; f64 literal
-000003e: 12                                         ; OPCODE_F64_CONST
+000003e: 12                                         ; f64.const
 000003f: 0000 0000 0000 0840                        ; f64 literal
-0000047: 10                                         ; OPCODE_I32_CONST
+0000047: 10                                         ; i32.const
 0000048: 01                                         ; i32 literal
-0000049: 05                                         ; OPCODE_SELECT
-000004a: 0b                                         ; OPCODE_DROP
-000004b: 0f                                         ; OPCODE_END
+0000049: 05                                         ; select
+000004a: 0b                                         ; drop
+000004b: 0f                                         ; end
 0000015: 36                                         ; FIXUP func body size
 0000013: 38                                         ; FIXUP section size
 ;; dump

@@ -68,14 +68,14 @@ typedef enum WasmInterpreterResult {
 
 enum {
   /* push space on the value stack for N entries */
-  WASM_OPCODE_ALLOCA = WASM_LAST_OPCODE,
+  WASM_OPCODE_ALLOCA = WASM_NUM_OPCODES,
   WASM_OPCODE_BR_UNLESS,
   WASM_OPCODE_CALL_IMPORT,
   WASM_OPCODE_DATA,
   WASM_OPCODE_DROP_KEEP,
-  WASM_LAST_INTERPRETER_OPCODE,
+  WASM_NUM_INTERPRETER_OPCODES,
 };
-WASM_STATIC_ASSERT(WASM_LAST_INTERPRETER_OPCODE <= 256);
+WASM_STATIC_ASSERT(WASM_NUM_INTERPRETER_OPCODES <= 256);
 
 /* TODO(binji): identical to WasmFuncSignature. Share? */
 typedef struct WasmInterpreterFuncSignature {

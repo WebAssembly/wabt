@@ -40,23 +40,23 @@
 ; function body 0
 000001a: 00                                         ; func body size (guess)
 000001b: 00                                         ; local decl count
-000001c: 01                                         ; OPCODE_BLOCK
+000001c: 01                                         ; block
 000001d: 00                                         ; WASM_TYPE_VOID
-000001e: 0a                                         ; OPCODE_NOP
-000001f: 0a                                         ; OPCODE_NOP
-0000020: 0a                                         ; OPCODE_NOP
-0000021: 0f                                         ; OPCODE_END
-0000022: 0f                                         ; OPCODE_END
+000001e: 0a                                         ; nop
+000001f: 0a                                         ; nop
+0000020: 0a                                         ; nop
+0000021: 0f                                         ; end
+0000022: 0f                                         ; end
 000001a: 08                                         ; FIXUP func body size
 ; function body 1
 0000023: 00                                         ; func body size (guess)
 0000024: 00                                         ; local decl count
-0000025: 01                                         ; OPCODE_BLOCK
+0000025: 01                                         ; block
 0000026: 01                                         ; WASM_TYPE_I32
-0000027: 10                                         ; OPCODE_I32_CONST
+0000027: 10                                         ; i32.const
 0000028: 01                                         ; i32 literal
-0000029: 0f                                         ; OPCODE_END
-000002a: 0f                                         ; OPCODE_END
+0000029: 0f                                         ; end
+000002a: 0f                                         ; end
 0000023: 07                                         ; FIXUP func body size
 0000018: 12                                         ; FIXUP section size
 ;; dump

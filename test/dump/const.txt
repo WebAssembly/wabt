@@ -67,121 +67,121 @@
 ; function body 0
 0000015: 00                                         ; func body size (guess)
 0000016: 00                                         ; local decl count
-0000017: 10                                         ; OPCODE_I32_CONST
+0000017: 10                                         ; i32.const
 0000018: 00                                         ; i32 literal
-0000019: 0b                                         ; OPCODE_DROP
-000001a: 10                                         ; OPCODE_I32_CONST
+0000019: 0b                                         ; drop
+000001a: 10                                         ; i32.const
 000001b: 8080 8080 78                               ; i32 literal
-0000020: 0b                                         ; OPCODE_DROP
-0000021: 10                                         ; OPCODE_I32_CONST
+0000020: 0b                                         ; drop
+0000021: 10                                         ; i32.const
 0000022: 7f                                         ; i32 literal
-0000023: 0b                                         ; OPCODE_DROP
-0000024: 10                                         ; OPCODE_I32_CONST
+0000023: 0b                                         ; drop
+0000024: 10                                         ; i32.const
 0000025: 8080 8080 78                               ; i32 literal
-000002a: 0b                                         ; OPCODE_DROP
-000002b: 10                                         ; OPCODE_I32_CONST
+000002a: 0b                                         ; drop
+000002b: 10                                         ; i32.const
 000002c: 7f                                         ; i32 literal
-000002d: 0b                                         ; OPCODE_DROP
-000002e: 11                                         ; OPCODE_I64_CONST
+000002d: 0b                                         ; drop
+000002e: 11                                         ; i64.const
 000002f: 00                                         ; i64 literal
-0000030: 0b                                         ; OPCODE_DROP
-0000031: 11                                         ; OPCODE_I64_CONST
+0000030: 0b                                         ; drop
+0000031: 11                                         ; i64.const
 0000032: 8080 8080 8080 8080 807f                   ; i64 literal
-000003c: 0b                                         ; OPCODE_DROP
-000003d: 11                                         ; OPCODE_I64_CONST
+000003c: 0b                                         ; drop
+000003d: 11                                         ; i64.const
 000003e: 7f                                         ; i64 literal
-000003f: 0b                                         ; OPCODE_DROP
-0000040: 11                                         ; OPCODE_I64_CONST
+000003f: 0b                                         ; drop
+0000040: 11                                         ; i64.const
 0000041: 8080 8080 8080 8080 807f                   ; i64 literal
-000004b: 0b                                         ; OPCODE_DROP
-000004c: 11                                         ; OPCODE_I64_CONST
+000004b: 0b                                         ; drop
+000004c: 11                                         ; i64.const
 000004d: 7f                                         ; i64 literal
-000004e: 0b                                         ; OPCODE_DROP
-000004f: 13                                         ; OPCODE_F32_CONST
+000004e: 0b                                         ; drop
+000004f: 13                                         ; f32.const
 0000050: 0000 0000                                  ; f32 literal
-0000054: 0b                                         ; OPCODE_DROP
-0000055: 13                                         ; OPCODE_F32_CONST
+0000054: 0b                                         ; drop
+0000055: 13                                         ; f32.const
 0000056: 1668 a965                                  ; f32 literal
-000005a: 0b                                         ; OPCODE_DROP
-000005b: 13                                         ; OPCODE_F32_CONST
+000005a: 0b                                         ; drop
+000005b: 13                                         ; f32.const
 000005c: 4020 4f37                                  ; f32 literal
-0000060: 0b                                         ; OPCODE_DROP
-0000061: 13                                         ; OPCODE_F32_CONST
+0000060: 0b                                         ; drop
+0000061: 13                                         ; f32.const
 0000062: 0000 c07f                                  ; f32 literal
-0000066: 0b                                         ; OPCODE_DROP
-0000067: 13                                         ; OPCODE_F32_CONST
+0000066: 0b                                         ; drop
+0000067: 13                                         ; f32.const
 0000068: 0000 c0ff                                  ; f32 literal
-000006c: 0b                                         ; OPCODE_DROP
-000006d: 13                                         ; OPCODE_F32_CONST
+000006c: 0b                                         ; drop
+000006d: 13                                         ; f32.const
 000006e: 0000 c07f                                  ; f32 literal
-0000072: 0b                                         ; OPCODE_DROP
-0000073: 13                                         ; OPCODE_F32_CONST
+0000072: 0b                                         ; drop
+0000073: 13                                         ; f32.const
 0000074: bc0a 807f                                  ; f32 literal
-0000078: 0b                                         ; OPCODE_DROP
-0000079: 13                                         ; OPCODE_F32_CONST
+0000078: 0b                                         ; drop
+0000079: 13                                         ; f32.const
 000007a: bc0a 80ff                                  ; f32 literal
-000007e: 0b                                         ; OPCODE_DROP
-000007f: 13                                         ; OPCODE_F32_CONST
+000007e: 0b                                         ; drop
+000007f: 13                                         ; f32.const
 0000080: bc0a 807f                                  ; f32 literal
-0000084: 0b                                         ; OPCODE_DROP
-0000085: 13                                         ; OPCODE_F32_CONST
+0000084: 0b                                         ; drop
+0000085: 13                                         ; f32.const
 0000086: 0000 807f                                  ; f32 literal
-000008a: 0b                                         ; OPCODE_DROP
-000008b: 13                                         ; OPCODE_F32_CONST
+000008a: 0b                                         ; drop
+000008b: 13                                         ; f32.const
 000008c: 0000 80ff                                  ; f32 literal
-0000090: 0b                                         ; OPCODE_DROP
-0000091: 13                                         ; OPCODE_F32_CONST
+0000090: 0b                                         ; drop
+0000091: 13                                         ; f32.const
 0000092: 0000 807f                                  ; f32 literal
-0000096: 0b                                         ; OPCODE_DROP
-0000097: 13                                         ; OPCODE_F32_CONST
+0000096: 0b                                         ; drop
+0000097: 13                                         ; f32.const
 0000098: 0000 00bf                                  ; f32 literal
-000009c: 0b                                         ; OPCODE_DROP
-000009d: 13                                         ; OPCODE_F32_CONST
+000009c: 0b                                         ; drop
+000009d: 13                                         ; f32.const
 000009e: db0f c940                                  ; f32 literal
-00000a2: 0b                                         ; OPCODE_DROP
-00000a3: 12                                         ; OPCODE_F64_CONST
+00000a2: 0b                                         ; drop
+00000a3: 12                                         ; f64.const
 00000a4: 0000 0000 0000 0000                        ; f64 literal
-00000ac: 0b                                         ; OPCODE_DROP
-00000ad: 12                                         ; OPCODE_F64_CONST
+00000ac: 0b                                         ; drop
+00000ad: 12                                         ; f64.const
 00000ae: b856 0e3c dd9a efbf                        ; f64 literal
-00000b6: 0b                                         ; OPCODE_DROP
-00000b7: 12                                         ; OPCODE_F64_CONST
+00000b6: 0b                                         ; drop
+00000b7: 12                                         ; f64.const
 00000b8: 182d 4454 fb21 1940                        ; f64 literal
-00000c0: 0b                                         ; OPCODE_DROP
-00000c1: 12                                         ; OPCODE_F64_CONST
+00000c0: 0b                                         ; drop
+00000c1: 12                                         ; f64.const
 00000c2: 0000 0000 0000 f87f                        ; f64 literal
-00000ca: 0b                                         ; OPCODE_DROP
-00000cb: 12                                         ; OPCODE_F64_CONST
+00000ca: 0b                                         ; drop
+00000cb: 12                                         ; f64.const
 00000cc: 0000 0000 0000 f8ff                        ; f64 literal
-00000d4: 0b                                         ; OPCODE_DROP
-00000d5: 12                                         ; OPCODE_F64_CONST
+00000d4: 0b                                         ; drop
+00000d5: 12                                         ; f64.const
 00000d6: 0000 0000 0000 f87f                        ; f64 literal
-00000de: 0b                                         ; OPCODE_DROP
-00000df: 12                                         ; OPCODE_F64_CONST
+00000de: 0b                                         ; drop
+00000df: 12                                         ; f64.const
 00000e0: bc0a 0000 0000 f07f                        ; f64 literal
-00000e8: 0b                                         ; OPCODE_DROP
-00000e9: 12                                         ; OPCODE_F64_CONST
+00000e8: 0b                                         ; drop
+00000e9: 12                                         ; f64.const
 00000ea: bc0a 0000 0000 f0ff                        ; f64 literal
-00000f2: 0b                                         ; OPCODE_DROP
-00000f3: 12                                         ; OPCODE_F64_CONST
+00000f2: 0b                                         ; drop
+00000f3: 12                                         ; f64.const
 00000f4: bc0a 0000 0000 f07f                        ; f64 literal
-00000fc: 0b                                         ; OPCODE_DROP
-00000fd: 12                                         ; OPCODE_F64_CONST
+00000fc: 0b                                         ; drop
+00000fd: 12                                         ; f64.const
 00000fe: 0000 0000 0000 f07f                        ; f64 literal
-0000106: 0b                                         ; OPCODE_DROP
-0000107: 12                                         ; OPCODE_F64_CONST
+0000106: 0b                                         ; drop
+0000107: 12                                         ; f64.const
 0000108: 0000 0000 0000 f0ff                        ; f64 literal
-0000110: 0b                                         ; OPCODE_DROP
-0000111: 12                                         ; OPCODE_F64_CONST
+0000110: 0b                                         ; drop
+0000111: 12                                         ; f64.const
 0000112: 0000 0000 0000 f07f                        ; f64 literal
-000011a: 0b                                         ; OPCODE_DROP
-000011b: 12                                         ; OPCODE_F64_CONST
+000011a: 0b                                         ; drop
+000011b: 12                                         ; f64.const
 000011c: 0000 0000 0000 e0bf                        ; f64 literal
-0000124: 0b                                         ; OPCODE_DROP
-0000125: 12                                         ; OPCODE_F64_CONST
+0000124: 0b                                         ; drop
+0000125: 12                                         ; f64.const
 0000126: 182d 4454 fb21 1940                        ; f64 literal
-000012e: 0b                                         ; OPCODE_DROP
-000012f: 0f                                         ; OPCODE_END
+000012e: 0b                                         ; drop
+000012f: 0f                                         ; end
 ; move data: [16, 130) -> [17, 131)
 0000015: 9a02                                       ; FIXUP func body size
 ; move data: [14, 131) -> [15, 132)

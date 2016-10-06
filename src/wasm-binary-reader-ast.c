@@ -33,12 +33,6 @@
       return WASM_ERROR;   \
   } while (0)
 
-#if LOG
-#define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
-static const char* s_opcode_name[] = {WASM_FOREACH_OPCODE(V)};
-#undef V
-#endif
-
 typedef enum LabelType {
   LABEL_TYPE_FUNC,
   LABEL_TYPE_BLOCK,
