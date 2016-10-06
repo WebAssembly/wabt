@@ -18,19 +18,51 @@
 #define WASM_BINARY_READER_OPCNT_H_
 
 #include "wasm-common.h"
+#include "wasm-vector.h"
 
 struct WasmAllocator;
 struct WasmModule;
 struct WasmReadBinaryOptions;
 
 WASM_EXTERN_C_BEGIN
+
+typedef struct WasmIntCounter {
+  intmax_t value;
+  size_t count;
+} WasmIntCounter;
+
+WASM_DEFINE_VECTOR(int_counter, WasmIntCounter)
+
+typedef struct WasmIntPairCounter {
+  intmax_t first;
+  intmax_t second;
+  size_t count;
+} WasmIntPairCounter;
+
+WASM_DEFINE_VECTOR(int_pair_counter, WasmIntPairCounter);
+
+typedef struct WasmOpcntData {
+  struct WasmAllocator* allocator;
+  WasmIntCounterVector opcode_vec;
+  WasmIntCounterVector i32_const_vec;
+  WasmIntCounterVector get_local_vec;
+  WasmIntCounterVector set_local_vec;
+  WasmIntCounterVector tee_local_vec;
+  WasmIntPairCounterVector i32_load_vec;
+  WasmIntPairCounterVector i32_store_vec;
+} WasmOpcntData;
+
+void wasm_opcnt_data_construct(WasmOpcntData* Data,
+                               struct WasmAllocator* Allocator);
+
+void wasm_opcnt_data_destruct(WasmOpcntData* Data);
+
 WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   const void* data,
                                   size_t size,
                                   const struct WasmReadBinaryOptions* options,
                                   WasmBinaryErrorHandler*,
-                                  size_t* opcode_counts,
-                                  size_t opcode_counts_size);
+                                  WasmOpcntData *opcnt_data);
 
 WASM_EXTERN_C_END
 
