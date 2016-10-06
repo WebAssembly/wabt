@@ -43,7 +43,8 @@ static void on_error(uint32_t offset, const char* message, void* user_data) {
 static WasmResult add_int_counter_value(struct WasmAllocator* allocator,
                                         WasmIntCounterVector* vec,
                                         intmax_t value) {
-  for (size_t i = 0; i < vec->size; ++i) {
+  size_t i;
+  for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].value == value) {
       ++vec->data[i].count;
       return WASM_OK;
@@ -59,7 +60,8 @@ static WasmResult add_int_counter_value(struct WasmAllocator* allocator,
 static WasmResult add_int_pair_counter_value(struct WasmAllocator* allocator,
                                              WasmIntPairCounterVector* vec,
                                              intmax_t first, intmax_t second) {
-  for (size_t i = 0; i < vec->size; ++i) {
+  size_t i;
+  for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].first == first && vec->data[i].second == second) {
       ++vec->data[i].count;
       return WASM_OK;
