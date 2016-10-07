@@ -54,7 +54,7 @@ def main(args):
       sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
 
   wasm2wast = utils.Executable(
-      find_exe.GetWasmWastExecutable(options.wasm2wast_executable),
+      find_exe.GetWasm2WastExecutable(options.wasm2wast_executable),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
     '--debug-names': options.debug_names,

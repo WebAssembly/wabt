@@ -193,6 +193,8 @@ static void display_int_counter_vector(
     const char* opcode_name) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
+    if (vec->data[i].count == 0)
+      continue;
     if (opcode_name)
       fprintf(out, "(%s ", opcode_name);
     display_fcn(out, vec->data[i].value);
@@ -208,6 +210,8 @@ static void display_int_pair_counter_vector(
     const char* opcode_name) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
+    if (vec->data[i].count == 0)
+      continue;
     if (opcode_name)
       fprintf(out, "(%s ", opcode_name);
     display_first_fcn(out, vec->data[i].first);
@@ -305,6 +309,9 @@ static void display_sorted_int_counter_vector(
     FILE* out, const char* title, struct WasmAllocator* allocator,
     WasmIntCounterVector* vec, int_counter_lt_fcn lt_fcn,
     display_name_fcn display_fcn, const char* opcode_name) {
+  if (vec->size == 0)
+    return;
+
   /* First filter out values less than cutoff. This speeds up sorting. */
   WasmIntCounterVector filtered_vec;
   WASM_ZERO_MEMORY(filtered_vec);
@@ -329,6 +336,9 @@ static void display_sorted_int_pair_counter_vector(
     WasmIntPairCounterVector* vec, int_pair_counter_lt_fcn lt_fcn,
     display_name_fcn display_first_fcn, display_name_fcn display_second_fcn,
     const char* opcode_name) {
+  if (vec->size == 0)
+    return;
+
   WasmIntPairCounterVector filtered_vec;
   WASM_ZERO_MEMORY(filtered_vec);
   WasmIntPairCounterVector sorted_vec;
@@ -381,40 +391,41 @@ int main(int argc, char** argv) {
     result = WASM_ERROR;
   }
   if (WASM_SUCCEEDED(result)) {
-    WasmOpcntData* opcnt_data = wasm_new_opcnt_data(allocator);
+    WasmOpcntData opcnt_data;
+    wasm_init_opcnt_data(allocator, &opcnt_data);
     result = wasm_read_binary_opcnt(
         allocator, data, size, &s_read_binary_options, &s_error_handler,
-        opcnt_data);
+        &opcnt_data);
     if (WASM_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
-          out, "Opcode counts:", allocator, &opcnt_data->opcode_vec,
+          out, "Opcode counts:", allocator, &opcnt_data.opcode_vec,
           opcode_counter_gt, display_opcode_name, NULL);
       display_sorted_int_counter_vector(
-          out, "\ni32.const", allocator, &opcnt_data->i32_const_vec,
+          out, "\ni32.const:", allocator, &opcnt_data.i32_const_vec,
           int_counter_gt, display_intmax,
           wasm_get_opcode_name(WASM_OPCODE_I32_CONST));
       display_sorted_int_counter_vector(
-          out, "\nget_local:\n", allocator, &opcnt_data->get_local_vec,
+          out, "\nget_local:", allocator, &opcnt_data.get_local_vec,
           int_counter_gt, display_intmax,
           wasm_get_opcode_name(WASM_OPCODE_GET_LOCAL));
       display_sorted_int_counter_vector(
-          out, "\nset_local:\n", allocator, &opcnt_data->set_local_vec,
+          out, "\nset_local:", allocator, &opcnt_data.set_local_vec,
           int_counter_gt, display_intmax,
           wasm_get_opcode_name(WASM_OPCODE_SET_LOCAL));
       display_sorted_int_counter_vector(
-          out, "\ntee_local:\n", allocator, &opcnt_data->tee_local_vec,
+          out, "\ntee_local:", allocator, &opcnt_data.tee_local_vec,
           int_counter_gt, display_intmax,
           wasm_get_opcode_name(WASM_OPCODE_TEE_LOCAL));
       display_sorted_int_pair_counter_vector(
-          out, "\ni32.load:\n", allocator, &opcnt_data->i32_load_vec,
+          out, "\ni32.load:", allocator, &opcnt_data.i32_load_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
           wasm_get_opcode_name(WASM_OPCODE_I32_LOAD));
       display_sorted_int_pair_counter_vector(
-          out, "\ni32.store:\n", allocator, &opcnt_data->i32_store_vec,
+          out, "\ni32.store:", allocator, &opcnt_data.i32_store_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
           wasm_get_opcode_name(WASM_OPCODE_I32_STORE));
     }
-    wasm_destroy_opcnt_data(allocator, opcnt_data);
+    wasm_destroy_opcnt_data(allocator, &opcnt_data);
   }
   wasm_free(allocator, data);
   wasm_print_allocator_stats(allocator);

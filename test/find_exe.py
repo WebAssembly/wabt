@@ -26,12 +26,14 @@ REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_WAST2WASM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wast2wasm')
 DEFAULT_WASM2WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm2wast')
 DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
+DEFAULT_WASMOPCODECNT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasmopcodecnt')
 
 
 if IS_WINDOWS:
   DEFAULT_WAST2WASM_EXE += '.exe'
   DEFAULT_WASM2WAST_EXE += '.exe'
   DEFAULT_WASM_INTERP_EXE += '.exe'
+  DEFAULT_WASMOPCODECNT_EXE += '.exe'
 
 
 def FindExeWithFallback(name, default_exe_list, override_exe=None):
@@ -52,13 +54,18 @@ def FindExeWithFallback(name, default_exe_list, override_exe=None):
       '\n'.join('search path: %s' % path for path in default_exe_list)))
 
 
-def GetSexprWasmExecutable(override=None):
+def GetWast2WasmExecutable(override=None):
   return FindExeWithFallback('wast2wasm', [DEFAULT_WAST2WASM_EXE], override)
 
 
-def GetWasmWastExecutable(override=None):
+def GetWasm2WastExecutable(override=None):
   return FindExeWithFallback('wasm2wast', [DEFAULT_WASM2WAST_EXE], override)
 
 
 def GetWasmInterpExecutable(override=None):
   return FindExeWithFallback('wasm-interp', [DEFAULT_WASM_INTERP_EXE], override)
+
+
+def GetWasmOpcodeCntExecutable(override=None):
+  return FindExeWithFallback('wasmopcodecnt', [DEFAULT_WASMOPCODECNT_EXE],
+                             override)

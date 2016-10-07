@@ -52,10 +52,9 @@ typedef struct WasmOpcntData {
   WasmIntPairCounterVector i32_store_vec;
 } WasmOpcntData;
 
-WasmOpcntData* wasm_new_opcnt_data(struct WasmAllocator* allocator);
-
+void wasm_init_opcnt_data(struct WasmAllocator* allocator, WasmOpcntData* data);
 void wasm_destroy_opcnt_data(struct WasmAllocator* allocator,
-                             WasmOpcntData* Data);
+                             WasmOpcntData* data);
 
 WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   const void* data,

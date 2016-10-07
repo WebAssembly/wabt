@@ -33,8 +33,8 @@ def main(args):
                       help='output directory for files.')
   parser.add_argument('--wast2wasm-executable', metavar='PATH',
                       help='override wast2wasm executable.')
-  parser.add_argument('--wasm-interp-executable', metavar='PATH',
-                      help='override wasm-interp executable.')
+  parser.add_argument('--wasmopcodecnt-executable', metavar='PATH',
+                      help='override wasmopcodecnt executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
@@ -43,8 +43,6 @@ def main(args):
                       action='store_false')
   parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
-  parser.add_argument('--run-all-exports', action='store_true')
-  parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -54,28 +52,23 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '-v': options.verbose,
-    '--spec': options.spec,
     '--use-libc-allocator': options.use_libc_allocator
   })
 
-  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.wasm_interp_executable),
+  wasmopcodecnt = utils.Executable(find_exe.GetWasmOpcodeCntExecutable(
+      options.wasmopcodecnt_executable),
       error_cmdline=options.error_cmdline)
-  wasm_interp.AppendOptionalArgs({
-    '--run-all-exports': options.run_all_exports,
-    '--spec': options.spec,
-    '--trace': options.verbose,
+  wasmopcodecnt.AppendOptionalArgs({
     '--use-libc-allocator': options.use_libc_allocator
   })
 
   wast2wasm.verbose = options.print_cmd
-  wasm_interp.verbose = options.print_cmd
+  wasmopcodecnt.verbose = options.print_cmd
 
-  with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
-    new_ext = '.json' if options.spec else '.wasm'
-    out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
+  with utils.TempDirectory(options.out_dir, 'run-opcodecnt-') as out_dir:
+    out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     wast2wasm.RunWithArgs(options.file, '-o', out_file)
-    wasm_interp.RunWithArgs(out_file)
+    wasmopcodecnt.RunWithArgs(out_file)
 
   return 0
 
@@ -86,4 +79,5 @@ if __name__ == '__main__':
   except Error as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)
+
 

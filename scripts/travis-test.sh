@@ -30,32 +30,13 @@ run_tests() {
   (cd ${ROOT_DIR} && log_and_run test/run-tests.py ${RUN_TEST_ARGS} $* --timeout=10)
 }
 
-check_and_add_flag() {
-  local FLAG=$1
-  local NAME=$2
-  if [ ! -e ${NAME} ]; then
-    echo "${NAME} doesn't exist; skipping test."
-    return 1
-  fi
-  RUN_TEST_ARGS="${RUN_TEST_ARGS} ${FLAG} ${NAME}"
-  return 0
-}
-
 set_run_test_args() {
   local COMPILER=$1
   local BUILD_TYPE=$2
   local CONFIG=${3:-}
 
-  RUN_TEST_ARGS=""
   local EXE_DIR=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}
-
-  WAST2WASM=${EXE_DIR}/wast2wasm
-  WASM2WAST=${EXE_DIR}/wasm2wast
-  WASM_INTERP=${EXE_DIR}/wasm-interp
-
-  check_and_add_flag "--wast2wasm-executable" ${WAST2WASM} && \
-      check_and_add_flag "--wasm2wast-executable" ${WASM2WAST} && \
-      check_and_add_flag "--wasm-interp-executable" ${WASM_INTERP}
+  RUN_TEST_ARGS="--exe-dir ${EXE_DIR}"
 }
 
 if [ ${CC} = "gcc" ]; then

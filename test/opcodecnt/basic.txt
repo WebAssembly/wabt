@@ -1,0 +1,43 @@
+;;; TOOL: run-opcodecnt
+(module
+  (memory (data "hello, world"))
+  (func
+    (local i32 i32)
+    i32.const 1
+    i32.const 2
+    get_local 0
+    get_local 0
+    get_local 0
+    get_local 1
+    get_local 1
+    br 0)
+
+  (func
+    i32.const 0
+    i32.load
+    f32.const 1
+    f32.const 2
+    f32.add
+    br 0))
+(;; STDOUT ;;;
+Opcode counts:
+get_local: 5
+i32.const: 3
+f32.const: 2
+end: 2
+br: 2
+i32.load: 1
+f32.add: 1
+
+i32.const:
+(i32.const 2): 1
+(i32.const 1): 1
+(i32.const 0): 1
+
+get_local:
+(get_local 0): 3
+(get_local 1): 2
+
+i32.load:
+(i32.load 2 0): 1
+;;; STDOUT ;;)

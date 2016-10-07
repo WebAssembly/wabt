@@ -120,7 +120,7 @@ def main(args):
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
-      find_exe.GetSexprWasmExecutable(options.wast2wasm_executable),
+      find_exe.GetWast2WasmExecutable(options.wast2wasm_executable),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
@@ -128,7 +128,7 @@ def main(args):
   })
 
   wasm2wast = utils.Executable(
-      find_exe.GetWasmWastExecutable(options.wasm2wast_executable),
+      find_exe.GetWasm2WastExecutable(options.wasm2wast_executable),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
     '--debug-names': options.debug_names,

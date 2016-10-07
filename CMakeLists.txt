@@ -326,4 +326,4 @@ add_custom_target(run-tests
 )
 
 # install
-install(TARGETS wast2wasm wasm2wast wasm-interp DESTINATION bin)
+install(TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt DESTINATION bin)

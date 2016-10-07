@@ -149,11 +149,10 @@ static WasmBinaryReader s_binary_reader = {
   .on_store_expr = on_store_expr
 };
 
-WasmOpcntData* wasm_new_opcnt_data(struct WasmAllocator* allocator) {
-  WasmOpcntData* result = wasm_alloc_zero(allocator, sizeof(WasmOpcntData),
-                                          WASM_DEFAULT_ALIGN);
-  result->allocator = allocator;
-  return result;
+void wasm_init_opcnt_data(struct WasmAllocator* allocator,
+                          WasmOpcntData* data) {
+  WASM_ZERO_MEMORY(*data);
+  data->allocator = allocator;
 }
 
 void wasm_destroy_opcnt_data(struct WasmAllocator* allocator,
