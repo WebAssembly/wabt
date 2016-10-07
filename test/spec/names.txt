@@ -1,8 +1,8 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/names.wast
 (;; STDOUT ;;;
-called import spectest.print(i32:42) => ()
-called import spectest.print(i32:123) => ()
+called host spectest.print(i32:42) => ()
+called host spectest.print(i32:123) => ()
 $action_0() => 
 14/14 tests passed.
 ;;; STDOUT ;;)

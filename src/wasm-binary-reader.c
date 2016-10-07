@@ -1462,7 +1462,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK0(begin_start_section);
     uint32_t func_index;
     in_u32_leb128(ctx, &func_index, "start function index");
-    RAISE_ERROR_UNLESS(func_index < ctx->num_function_signatures,
+    RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
                        "invalid start function index");
     CALLBACK(on_start_function, func_index);
     CALLBACK0(end_start_section);

@@ -1,4 +1,3 @@
-;;; SKIP: start function not working properly in interpreter yet
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
@@ -14,11 +13,11 @@ assert_invalid error:
   third_party/testsuite/start.wast:15:5: start function must be nullary
     (start $main)
     ^^^^^^^^^^^^^
-$invoke_1() 
-$invoke_3() 
-$invoke_1() 
-$invoke_3() 
-called import spectest.print(i32:1)
-called import spectest.print(i32:2)
+$action_1() => 
+$action_3() => 
+$action_1() => 
+$action_3() => 
+called host spectest.print(i32:1) => ()
+called host spectest.print(i32:2) => ()
 6/6 tests passed.
 ;;; STDOUT ;;)
