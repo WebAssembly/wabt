@@ -12,61 +12,61 @@
 
   (type (func (param i32) (result f64))))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 09                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 09                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 01                                         ; num params
-000000d: 01                                         ; param type
-000000e: 00                                         ; num results
+000000b: 40                                        ; function form
+000000c: 01                                        ; num params
+000000d: 01                                        ; param type
+000000e: 00                                        ; num results
 ; type 1
-000000f: 40                                         ; function form
-0000010: 01                                         ; num params
-0000011: 02                                         ; param type
-0000012: 00                                         ; num results
+000000f: 40                                        ; function form
+0000010: 01                                        ; num params
+0000011: 02                                        ; param type
+0000012: 00                                        ; num results
 ; type 2
-0000013: 40                                         ; function form
-0000014: 01                                         ; num params
-0000015: 03                                         ; param type
-0000016: 00                                         ; num results
+0000013: 40                                        ; function form
+0000014: 01                                        ; num params
+0000015: 03                                        ; param type
+0000016: 00                                        ; num results
 ; type 3
-0000017: 40                                         ; function form
-0000018: 01                                         ; num params
-0000019: 04                                         ; param type
-000001a: 00                                         ; num results
+0000017: 40                                        ; function form
+0000018: 01                                        ; num params
+0000019: 04                                        ; param type
+000001a: 00                                        ; num results
 ; type 4
-000001b: 40                                         ; function form
-000001c: 00                                         ; num params
-000001d: 01                                         ; num results
-000001e: 01                                         ; result type
+000001b: 40                                        ; function form
+000001c: 00                                        ; num params
+000001d: 01                                        ; num results
+000001e: 01                                        ; result type
 ; type 5
-000001f: 40                                         ; function form
-0000020: 00                                         ; num params
-0000021: 01                                         ; num results
-0000022: 02                                         ; result type
+000001f: 40                                        ; function form
+0000020: 00                                        ; num params
+0000021: 01                                        ; num results
+0000022: 02                                        ; result type
 ; type 6
-0000023: 40                                         ; function form
-0000024: 00                                         ; num params
-0000025: 01                                         ; num results
-0000026: 03                                         ; result type
+0000023: 40                                        ; function form
+0000024: 00                                        ; num params
+0000025: 01                                        ; num results
+0000026: 03                                        ; result type
 ; type 7
-0000027: 40                                         ; function form
-0000028: 00                                         ; num params
-0000029: 01                                         ; num results
-000002a: 04                                         ; result type
+0000027: 40                                        ; function form
+0000028: 00                                        ; num params
+0000029: 01                                        ; num results
+000002a: 04                                        ; result type
 ; type 8
-000002b: 40                                         ; function form
-000002c: 01                                         ; num params
-000002d: 01                                         ; param type
-000002e: 01                                         ; num results
-000002f: 04                                         ; result type
-0000009: 26                                         ; FIXUP section size
+000002b: 40                                        ; function form
+000002c: 01                                        ; num params
+000002d: 01                                        ; param type
+000002e: 01                                        ; num results
+000002f: 04                                        ; result type
+0000009: 26                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0126 0940 0101 0040  
-0000010: 0102 0040 0103 0040 0104 0040 0001 0140  
-0000020: 0001 0240 0001 0340 0001 0440 0101 0104  
+0000000: 0061 736d 0c00 0000 0126 0940 0101 0040 
+0000010: 0102 0040 0103 0040 0104 0040 0001 0140 
+0000020: 0001 0240 0001 0340 0001 0440 0101 0104 
 ;;; STDOUT ;;)

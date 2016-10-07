@@ -5,64 +5,64 @@
     (call_indirect $t (i32.const 0) (i32.const 0)))
   (table anyfunc (elem $f)))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 01                                         ; num params
-000000d: 01                                         ; param type
-000000e: 00                                         ; num results
-0000009: 05                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 01                                        ; num params
+000000d: 01                                        ; param type
+000000e: 00                                        ; num results
+0000009: 05                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-000000f: 03                                         ; section code
-0000010: 00                                         ; section size (guess)
-0000011: 01                                         ; num functions
-0000012: 00                                         ; function 0 signature index
-0000010: 02                                         ; FIXUP section size
+000000f: 03                                        ; section code
+0000010: 00                                        ; section size (guess)
+0000011: 01                                        ; num functions
+0000012: 00                                        ; function 0 signature index
+0000010: 02                                        ; FIXUP section size
 ; section "TABLE" (4)
-0000013: 04                                         ; section code
-0000014: 00                                         ; section size (guess)
-0000015: 01                                         ; num tables
+0000013: 04                                        ; section code
+0000014: 00                                        ; section size (guess)
+0000015: 01                                        ; num tables
 ; table 0
-0000016: 20                                         ; table elem type
-0000017: 01                                         ; table flags
-0000018: 01                                         ; table initial elems
-0000019: 01                                         ; table max elems
-0000014: 05                                         ; FIXUP section size
+0000016: 20                                        ; table elem type
+0000017: 01                                        ; table flags
+0000018: 01                                        ; table initial elems
+0000019: 01                                        ; table max elems
+0000014: 05                                        ; FIXUP section size
 ; section "ELEM" (9)
-000001a: 09                                         ; section code
-000001b: 00                                         ; section size (guess)
-000001c: 01                                         ; num elem segments
+000001a: 09                                        ; section code
+000001b: 00                                        ; section size (guess)
+000001c: 01                                        ; num elem segments
 ; elem segment header 0
-000001d: 00                                         ; table index
-000001e: 10                                         ; i32.const
-000001f: 00                                         ; i32 literal
-0000020: 0f                                         ; end
-0000021: 01                                         ; num function indices
-0000022: 00                                         ; function index
-000001b: 07                                         ; FIXUP section size
+000001d: 00                                        ; table index
+000001e: 10                                        ; i32.const
+000001f: 00                                        ; i32 literal
+0000020: 0f                                        ; end
+0000021: 01                                        ; num function indices
+0000022: 00                                        ; function index
+000001b: 07                                        ; FIXUP section size
 ; section "CODE" (10)
-0000023: 0a                                         ; section code
-0000024: 00                                         ; section size (guess)
-0000025: 01                                         ; num functions
+0000023: 0a                                        ; section code
+0000024: 00                                        ; section size (guess)
+0000025: 01                                        ; num functions
 ; function body 0
-0000026: 00                                         ; func body size (guess)
-0000027: 00                                         ; local decl count
-0000028: 10                                         ; i32.const
-0000029: 00                                         ; i32 literal
-000002a: 10                                         ; i32.const
-000002b: 00                                         ; i32 literal
-000002c: 17                                         ; call_indirect
-000002d: 00                                         ; signature index
-000002e: 0f                                         ; end
-0000026: 08                                         ; FIXUP func body size
-0000024: 0a                                         ; FIXUP section size
+0000026: 00                                        ; func body size (guess)
+0000027: 00                                        ; local decl count
+0000028: 10                                        ; i32.const
+0000029: 00                                        ; i32 literal
+000002a: 10                                        ; i32.const
+000002b: 00                                        ; i32 literal
+000002c: 17                                        ; call_indirect
+000002d: 00                                        ; signature index
+000002e: 0f                                        ; end
+0000026: 08                                        ; FIXUP func body size
+0000024: 0a                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0105 0140 0101 0003  
-0000010: 0201 0004 0501 2001 0101 0907 0100 1000  
-0000020: 0f01 000a 0a01 0800 1000 1000 1700 0f    
+0000000: 0061 736d 0c00 0000 0105 0140 0101 0003 
+0000010: 0201 0004 0501 2001 0101 0907 0100 1000 
+0000020: 0f01 000a 0a01 0800 1000 1000 1700 0f   
 ;;; STDOUT ;;)

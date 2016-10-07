@@ -13,71 +13,71 @@
     (set_local 4 (i32.const 0))
     (set_local 5 (f32.const 0))))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 02                                         ; num params
-000000d: 01                                         ; param type
-000000e: 03                                         ; param type
-000000f: 00                                         ; num results
-0000009: 06                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 02                                        ; num params
+000000d: 01                                        ; param type
+000000e: 03                                        ; param type
+000000f: 00                                        ; num results
+0000009: 06                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-0000010: 03                                         ; section code
-0000011: 00                                         ; section size (guess)
-0000012: 01                                         ; num functions
-0000013: 00                                         ; function 0 signature index
-0000011: 02                                         ; FIXUP section size
+0000010: 03                                        ; section code
+0000011: 00                                        ; section size (guess)
+0000012: 01                                        ; num functions
+0000013: 00                                        ; function 0 signature index
+0000011: 02                                        ; FIXUP section size
 ; section "CODE" (10)
-0000014: 0a                                         ; section code
-0000015: 00                                         ; section size (guess)
-0000016: 01                                         ; num functions
+0000014: 0a                                        ; section code
+0000015: 00                                        ; section size (guess)
+0000016: 01                                        ; num functions
 ; function body 0
-0000017: 00                                         ; func body size (guess)
-0000018: 04                                         ; local decl count
-0000019: 01                                         ; local type count
-000001a: 02                                         ; WASM_TYPE_I64
-000001b: 01                                         ; local type count
-000001c: 03                                         ; WASM_TYPE_F32
-000001d: 01                                         ; local type count
-000001e: 01                                         ; WASM_TYPE_I32
-000001f: 01                                         ; local type count
-0000020: 03                                         ; WASM_TYPE_F32
-0000021: 10                                         ; i32.const
-0000022: 00                                         ; i32 literal
-0000023: 15                                         ; set_local
-0000024: 00                                         ; local index
-0000025: 13                                         ; f32.const
-0000026: 0000 0000                                  ; f32 literal
-000002a: 15                                         ; set_local
-000002b: 01                                         ; local index
-000002c: 11                                         ; i64.const
-000002d: 00                                         ; i64 literal
-000002e: 15                                         ; set_local
-000002f: 02                                         ; local index
-0000030: 13                                         ; f32.const
-0000031: 0000 0000                                  ; f32 literal
-0000035: 15                                         ; set_local
-0000036: 03                                         ; local index
-0000037: 10                                         ; i32.const
-0000038: 00                                         ; i32 literal
-0000039: 15                                         ; set_local
-000003a: 04                                         ; local index
-000003b: 13                                         ; f32.const
-000003c: 0000 0000                                  ; f32 literal
-0000040: 15                                         ; set_local
-0000041: 05                                         ; local index
-0000042: 0f                                         ; end
-0000017: 2b                                         ; FIXUP func body size
-0000015: 2d                                         ; FIXUP section size
+0000017: 00                                        ; func body size (guess)
+0000018: 04                                        ; local decl count
+0000019: 01                                        ; local type count
+000001a: 02                                        ; WASM_TYPE_I64
+000001b: 01                                        ; local type count
+000001c: 03                                        ; WASM_TYPE_F32
+000001d: 01                                        ; local type count
+000001e: 01                                        ; WASM_TYPE_I32
+000001f: 01                                        ; local type count
+0000020: 03                                        ; WASM_TYPE_F32
+0000021: 10                                        ; i32.const
+0000022: 00                                        ; i32 literal
+0000023: 15                                        ; set_local
+0000024: 00                                        ; local index
+0000025: 13                                        ; f32.const
+0000026: 0000 0000                                 ; f32 literal
+000002a: 15                                        ; set_local
+000002b: 01                                        ; local index
+000002c: 11                                        ; i64.const
+000002d: 00                                        ; i64 literal
+000002e: 15                                        ; set_local
+000002f: 02                                        ; local index
+0000030: 13                                        ; f32.const
+0000031: 0000 0000                                 ; f32 literal
+0000035: 15                                        ; set_local
+0000036: 03                                        ; local index
+0000037: 10                                        ; i32.const
+0000038: 00                                        ; i32 literal
+0000039: 15                                        ; set_local
+000003a: 04                                        ; local index
+000003b: 13                                        ; f32.const
+000003c: 0000 0000                                 ; f32 literal
+0000040: 15                                        ; set_local
+0000041: 05                                        ; local index
+0000042: 0f                                        ; end
+0000017: 2b                                        ; FIXUP func body size
+0000015: 2d                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0106 0140 0201 0300  
-0000010: 0302 0100 0a2d 012b 0401 0201 0301 0101  
-0000020: 0310 0015 0013 0000 0000 1501 1100 1502  
-0000030: 1300 0000 0015 0310 0015 0413 0000 0000  
-0000040: 1505 0f                                  
+0000000: 0061 736d 0c00 0000 0106 0140 0201 0300 
+0000010: 0302 0100 0a2d 012b 0401 0201 0301 0101 
+0000020: 0310 0015 0013 0000 0000 1501 1100 1502 
+0000030: 1300 0000 0015 0310 0015 0413 0000 0000 
+0000040: 1505 0f                                 
 ;;; STDOUT ;;)

@@ -21,91 +21,91 @@
   )
 )
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 00                                         ; num params
-000000d: 00                                         ; num results
-0000009: 04                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-000000e: 03                                         ; section code
-000000f: 00                                         ; section size (guess)
-0000010: 01                                         ; num functions
-0000011: 00                                         ; function 0 signature index
-000000f: 02                                         ; FIXUP section size
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
 ; section "CODE" (10)
-0000012: 0a                                         ; section code
-0000013: 00                                         ; section size (guess)
-0000014: 01                                         ; num functions
+0000012: 0a                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
 ; function body 0
-0000015: 00                                         ; func body size (guess)
-0000016: 00                                         ; local decl count
-0000017: 13                                         ; f32.const
-0000018: 0000 0000                                  ; f32 literal
-000001c: 0b                                         ; drop
-000001d: 13                                         ; f32.const
-000001e: 80a2 9148                                  ; f32 literal
-0000022: 0b                                         ; drop
-0000023: 13                                         ; f32.const
-0000024: 0000 8059                                  ; f32 literal
-0000028: 0b                                         ; drop
-0000029: 13                                         ; f32.const
-000002a: 0000 007f                                  ; f32 literal
-000002e: 0b                                         ; drop
-000002f: 13                                         ; f32.const
-0000030: 0000 807c                                  ; f32 literal
-0000034: 0b                                         ; drop
-0000035: 13                                         ; f32.const
-0000036: 0080 917d                                  ; f32 literal
-000003a: 0b                                         ; drop
-000003b: 13                                         ; f32.const
-000003c: f0ff ff7e                                  ; f32 literal
-0000040: 0b                                         ; drop
-0000041: 13                                         ; f32.const
-0000042: feff 7f7e                                  ; f32 literal
-0000046: 0b                                         ; drop
-0000047: 13                                         ; f32.const
-0000048: 0000 807f                                  ; f32 literal
-000004c: 0b                                         ; drop
-000004d: 13                                         ; f32.const
-000004e: c4ff 7f7f                                  ; f32 literal
-0000052: 0b                                         ; drop
-0000053: 13                                         ; f32.const
-0000054: f8ff 7f7f                                  ; f32 literal
-0000058: 0b                                         ; drop
-0000059: 13                                         ; f32.const
-000005a: faff ff0a                                  ; f32 literal
-000005e: 0b                                         ; drop
-000005f: 13                                         ; f32.const
-0000060: f8ff ff0a                                  ; f32 literal
-0000064: 0b                                         ; drop
-0000065: 13                                         ; f32.const
-0000066: 0000 0004                                  ; f32 literal
-000006a: 0b                                         ; drop
-000006b: 13                                         ; f32.const
-000006c: 0000 883f                                  ; f32 literal
-0000070: 0b                                         ; drop
-0000071: 13                                         ; f32.const
-0000072: 0000 8053                                  ; f32 literal
-0000076: 0b                                         ; drop
-0000077: 13                                         ; f32.const
-0000078: 8080 7fc0                                  ; f32 literal
-000007c: 0b                                         ; drop
-000007d: 0f                                         ; end
-0000015: 68                                         ; FIXUP func body size
-0000013: 6a                                         ; FIXUP section size
+0000015: 00                                        ; func body size (guess)
+0000016: 00                                        ; local decl count
+0000017: 13                                        ; f32.const
+0000018: 0000 0000                                 ; f32 literal
+000001c: 0b                                        ; drop
+000001d: 13                                        ; f32.const
+000001e: 80a2 9148                                 ; f32 literal
+0000022: 0b                                        ; drop
+0000023: 13                                        ; f32.const
+0000024: 0000 8059                                 ; f32 literal
+0000028: 0b                                        ; drop
+0000029: 13                                        ; f32.const
+000002a: 0000 007f                                 ; f32 literal
+000002e: 0b                                        ; drop
+000002f: 13                                        ; f32.const
+0000030: 0000 807c                                 ; f32 literal
+0000034: 0b                                        ; drop
+0000035: 13                                        ; f32.const
+0000036: 0080 917d                                 ; f32 literal
+000003a: 0b                                        ; drop
+000003b: 13                                        ; f32.const
+000003c: f0ff ff7e                                 ; f32 literal
+0000040: 0b                                        ; drop
+0000041: 13                                        ; f32.const
+0000042: feff 7f7e                                 ; f32 literal
+0000046: 0b                                        ; drop
+0000047: 13                                        ; f32.const
+0000048: 0000 807f                                 ; f32 literal
+000004c: 0b                                        ; drop
+000004d: 13                                        ; f32.const
+000004e: c4ff 7f7f                                 ; f32 literal
+0000052: 0b                                        ; drop
+0000053: 13                                        ; f32.const
+0000054: f8ff 7f7f                                 ; f32 literal
+0000058: 0b                                        ; drop
+0000059: 13                                        ; f32.const
+000005a: faff ff0a                                 ; f32 literal
+000005e: 0b                                        ; drop
+000005f: 13                                        ; f32.const
+0000060: f8ff ff0a                                 ; f32 literal
+0000064: 0b                                        ; drop
+0000065: 13                                        ; f32.const
+0000066: 0000 0004                                 ; f32 literal
+000006a: 0b                                        ; drop
+000006b: 13                                        ; f32.const
+000006c: 0000 883f                                 ; f32 literal
+0000070: 0b                                        ; drop
+0000071: 13                                        ; f32.const
+0000072: 0000 8053                                 ; f32 literal
+0000076: 0b                                        ; drop
+0000077: 13                                        ; f32.const
+0000078: 8080 7fc0                                 ; f32 literal
+000007c: 0b                                        ; drop
+000007d: 0f                                        ; end
+0000015: 68                                        ; FIXUP func body size
+0000013: 6a                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a6a 0168 0013 0000 0000 0b13 80a2  
-0000020: 9148 0b13 0000 8059 0b13 0000 007f 0b13  
-0000030: 0000 807c 0b13 0080 917d 0b13 f0ff ff7e  
-0000040: 0b13 feff 7f7e 0b13 0000 807f 0b13 c4ff  
-0000050: 7f7f 0b13 f8ff 7f7f 0b13 faff ff0a 0b13  
-0000060: f8ff ff0a 0b13 0000 0004 0b13 0000 883f  
-0000070: 0b13 0000 8053 0b13 8080 7fc0 0b0f       
+0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
+0000010: 0100 0a6a 0168 0013 0000 0000 0b13 80a2 
+0000020: 9148 0b13 0000 8059 0b13 0000 007f 0b13 
+0000030: 0000 807c 0b13 0080 917d 0b13 f0ff ff7e 
+0000040: 0b13 feff 7f7e 0b13 0000 807f 0b13 c4ff 
+0000050: 7f7f 0b13 f8ff 7f7f 0b13 faff ff0a 0b13 
+0000060: f8ff ff0a 0b13 0000 0004 0b13 0000 883f 
+0000070: 0b13 0000 8053 0b13 8080 7fc0 0b0f      
 ;;; STDOUT ;;)
