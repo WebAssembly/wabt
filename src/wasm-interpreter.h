@@ -48,11 +48,11 @@ struct WasmStream;
   V(TRAP_CALL_STACK_EXHAUSTED, "call stack exhausted")                         \
   /* ran out of value stack space */                                           \
   V(TRAP_VALUE_STACK_EXHAUSTED, "value stack exhausted")                       \
-  /* we called an import function, but the return value didn't match the */    \
+  /* we called a host function, but the return value didn't match the */       \
   /* expected type */                                                          \
-  V(TRAP_IMPORT_RESULT_TYPE_MISMATCH, "import result type mismatch")           \
+  V(TRAP_HOST_RESULT_TYPE_MISMATCH, "host result type mismatch")               \
   /* we called an import function, but it didn't complete succesfully */       \
-  V(TRAP_IMPORT_TRAPPED, "import function trapped")
+  V(TRAP_HOST_TRAPPED, "host function trapped")
 
 typedef enum WasmInterpreterResult {
 #define V(name, str) WASM_INTERPRETER_##name,
@@ -60,6 +60,7 @@ typedef enum WasmInterpreterResult {
 #undef V
 } WasmInterpreterResult;
 
+#define WASM_INVALID_FUNC_INDEX ((uint32_t)~0)
 #define WASM_INVALID_OFFSET ((uint32_t)~0)
 #define WASM_TABLE_ENTRY_SIZE (sizeof(uint32_t) * 2 + sizeof(uint8_t))
 #define WASM_TABLE_ENTRY_OFFSET_OFFSET 0
@@ -70,7 +71,7 @@ enum {
   /* push space on the value stack for N entries */
   WASM_OPCODE_ALLOCA = WASM_NUM_OPCODES,
   WASM_OPCODE_BR_UNLESS,
-  WASM_OPCODE_CALL_IMPORT,
+  WASM_OPCODE_CALL_HOST,
   WASM_OPCODE_DATA,
   WASM_OPCODE_DROP_KEEP,
   WASM_NUM_INTERPRETER_OPCODES,
@@ -119,18 +120,6 @@ typedef struct WasmInterpreterGlobal {
 } WasmInterpreterGlobal;
 WASM_DEFINE_ARRAY(interpreter_global, WasmInterpreterGlobal);
 
-struct WasmInterpreterModule;
-struct WasmInterpreterImport;
-
-typedef WasmResult (*WasmInterpreterImportCallback)(
-    struct WasmInterpreterModule* module,
-    struct WasmInterpreterImport* import,
-    uint32_t num_args,
-    WasmInterpreterTypedValue* args,
-    uint32_t num_results,
-    WasmInterpreterTypedValue* out_results,
-    void* user_data);
-
 typedef struct WasmInterpreterImport {
   WasmStringSlice module_name;
   WasmStringSlice field_name;
@@ -138,8 +127,6 @@ typedef struct WasmInterpreterImport {
   union {
     struct {
       uint32_t sig_index;
-      WasmInterpreterImportCallback callback;
-      void* user_data;
     } func;
   };
 } WasmInterpreterImport;
@@ -153,17 +140,15 @@ typedef struct WasmInterpreterFunc {
   uint32_t local_decl_count;
   uint32_t local_count;
   WasmTypeVector param_and_local_types;
+  WasmBool is_host;
+  uint32_t import_index; /* or INVALID_FUNC_INDEX if not imported */
 } WasmInterpreterFunc;
-WASM_DEFINE_ARRAY(interpreter_func, WasmInterpreterFunc);
+WASM_DEFINE_VECTOR(interpreter_func, WasmInterpreterFunc);
 
 typedef struct WasmInterpreterExport {
   WasmStringSlice name;
   WasmExternalKind kind;
-  union {
-    struct {
-      uint32_t index;
-    } func;
-  };
+  uint32_t index;
 } WasmInterpreterExport;
 WASM_DEFINE_ARRAY(interpreter_export, WasmInterpreterExport);
 
@@ -173,15 +158,24 @@ WASM_DEFINE_ARRAY(uint32, WasmUint32);
 typedef struct WasmInterpreterModule {
   WasmInterpreterMemory memory;
   WasmInterpreterFuncSignatureArray sigs;
-  WasmInterpreterFuncArray funcs;
+  WasmInterpreterFuncVector funcs;
   WasmUint32Array func_table;
   WasmInterpreterImportArray imports;
-  WasmInterpreterImportPtrArray func_imports;
   WasmInterpreterExportArray exports;
   WasmInterpreterGlobalArray globals;
   WasmOutputBuffer istream;
-  uint32_t start_func_offset; /* == WASM_INVALID_OFFSET if not defined */
+  uint32_t start_func_index; /* == INVALID_FUNC_INDEX if not defined */
 } WasmInterpreterModule;
+
+typedef WasmResult (*WasmInterpreterHostFuncCallback)(
+    const WasmInterpreterFuncSignature* sig,
+    const WasmStringSlice* module_name,
+    const WasmStringSlice* field_name,
+    uint32_t num_args,
+    WasmInterpreterTypedValue* args,
+    uint32_t num_results,
+    WasmInterpreterTypedValue* out_results,
+    void* user_data);
 
 typedef struct WasmInterpreterThread {
   WasmInterpreterValueArray value_stack;
@@ -191,6 +185,11 @@ typedef struct WasmInterpreterThread {
   uint32_t* call_stack_top;
   uint32_t* call_stack_end;
   uint32_t pc;
+
+  struct {
+    WasmInterpreterHostFuncCallback callback;
+    void* user_data;
+  } host_func;
 
   /* a temporary buffer that is for passing args to import functions */
   WasmInterpreterTypedValueArray import_args;
@@ -214,6 +213,9 @@ WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
                                              WasmInterpreterValue value);
 void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread);
+WasmInterpreterResult wasm_call_host(WasmInterpreterModule* module,
+                                     WasmInterpreterThread* thread,
+                                     WasmInterpreterImport* import);
 WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
                                            WasmInterpreterThread* thread,
                                            uint32_t num_instructions,

@@ -8,7 +8,7 @@
     (return (i32.const 1)))
 )
 (;; STDOUT ;;;
-called import stdio.print(i32:100) => ()
-called import stdio.print(i32:200, i32:300) => ()
+called host stdio.print(i32:100) => ()
+called host stdio.print(i32:200, i32:300) => ()
 test() => i32:1
 ;;; STDOUT ;;)
