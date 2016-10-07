@@ -24,7 +24,6 @@
 #include "wasm-binary-reader.h"
 #include "wasm-binary-writer.h"
 #include "wasm-common.h"
-#include "wasm-interpreter.h"
 #include "wasm-stack-allocator.h"
 #include "wasm-stream.h"
 #include "wasm-writer.h"
@@ -75,37 +74,6 @@ DEFINE_STRUCT(
     on_error, user_data)
 
 DEFINE_STRUCT(
-    WasmInterpreterExport, interpreter_export,
-    name, func_offset)
-
-DEFINE_STRUCT(
-    WasmInterpreterImport, interpreter_import,
-    module_name, func_name, callback, user_data)
-
-DEFINE_STRUCT(
-    WasmInterpreterMemory, interpreter_memory,
-    data, page_size, byte_size)
-
-DEFINE_STRUCT(
-    WasmInterpreterModule, interpreter_module,
-    memory, start_func_offset)
-
-DEFINE_STRUCT0(
-    WasmInterpreterThread, interpreter_thread)
-
-DEFINE_STRUCT(
-    WasmInterpreterThreadOptions, interpreter_thread_options,
-    value_stack_size, call_stack_size, pc)
-
-DEFINE_STRUCT(
-    WasmInterpreterValue, interpreter_value,
-    i32, i64, f32_bits, f64_bits)
-
-DEFINE_STRUCT(
-    WasmInterpreterTypedValue, interpreter_typed_value,
-    type, value)
-
-DEFINE_STRUCT(
     WasmLocation, location,
     filename, line, first_column, last_column)
 
@@ -146,7 +114,7 @@ DEFINE_STRUCT(
 
 DEFINE_STRUCT(
     WasmWriteBinaryOptions, write_binary_options,
-    log_stream, canonicalize_lebs, remap_locals, write_debug_names)
+    log_stream, canonicalize_lebs, write_debug_names)
 /* clang-format on */
 
 WASM_EXTERN_C_END

@@ -224,43 +224,88 @@ add_library(libwasm STATIC
 )
 set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
-# wast2wasm
-add_executable(wast2wasm src/wast2wasm.c)
-add_dependencies(everything wast2wasm)
-target_link_libraries(wast2wasm libwasm)
+if (NOT EMSCRIPTEN)
+  # wast2wasm
+  add_executable(wast2wasm src/wast2wasm.c)
+  add_dependencies(everything wast2wasm)
+  target_link_libraries(wast2wasm libwasm)
 
-# wasm2wast
-add_executable(wasm2wast src/wasm2wast.c)
-add_dependencies(everything wasm2wast)
-target_link_libraries(wasm2wast libwasm)
+  # wasm2wast
+  add_executable(wasm2wast src/wasm2wast.c)
+  add_dependencies(everything wasm2wast)
+  target_link_libraries(wasm2wast libwasm)
 
-# wasmopcodecnt
-add_executable(wasmopcodecnt src/wasmopcodecnt.c)
-add_dependencies(everything wasmopcodecnt)
-target_link_libraries(wasmopcodecnt libwasm)
+  # wasmopcodecnt
+  add_executable(wasmopcodecnt src/wasmopcodecnt.c)
+  add_dependencies(everything wasmopcodecnt)
+  target_link_libraries(wasmopcodecnt libwasm)
 
-if (NOT WIN32)
-add_custom_command( TARGET wast2wasm
-                    POST_BUILD
-                    COMMAND ln -sf wast2wasm sexpr-wasm)
-add_custom_command( TARGET wasm2wast
-                    POST_BUILD
-                    COMMAND ln -sf wasm2wast wasm-wast)
+  if (NOT WIN32)
+  add_custom_command( TARGET wast2wasm
+                      POST_BUILD
+                      COMMAND ln -sf wast2wasm sexpr-wasm)
+  add_custom_command( TARGET wasm2wast
+                      POST_BUILD
+                      COMMAND ln -sf wasm2wast wasm-wast)
 
-endif ()
-set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm2wast" "wast2wasm")
+  endif ()
+  set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm2wast" "wast2wasm")
 
-# wasm-interp
-add_executable(wasm-interp src/wasm-interp.c)
-add_dependencies(everything wasm-interp)
-target_link_libraries(wasm-interp libwasm)
-if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
-  target_link_libraries(wasm-interp m)
-endif ()
+  # wasm-interp
+  add_executable(wasm-interp src/wasm-interp.c)
+  add_dependencies(everything wasm-interp)
+  target_link_libraries(wasm-interp libwasm)
+  if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+    target_link_libraries(wasm-interp m)
+  endif ()
 
-# emscripten stuff
-if (EMSCRIPTEN)
+  # hexfloat-test
+  find_package(Threads)
+  if (BUILD_TESTS AND CMAKE_USE_PTHREADS_INIT)
+    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
+      message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
+    endif ()
+
+    set(HEXFLOAT_TEST_SRCS
+      src/wasm-literal.c
+      test/hexfloat.cc
+      third_party/gtest/googletest/src/gtest-all.cc
+      third_party/gtest/googletest/src/gtest_main.cc
+    )
+    include_directories(
+      third_party/gtest/googletest
+      third_party/gtest/googletest/include
+    )
+    add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
+    add_dependencies(everything hexfloat_test)
+    set_source_files_properties(
+      test/hexfloat.cc
+      PROPERTIES
+      COMPILE_FLAGS -std=c++11
+    )
+    target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
+  endif ()
+
+  # test running
+  find_package(PythonInterp 2.7 REQUIRED)
+  set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
+  add_custom_target(run-tests
+    COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
+        --wast2wasm $<TARGET_FILE:wast2wasm>
+        --wasm2wast $<TARGET_FILE:wasm2wast>
+        --wasm-interp $<TARGET_FILE:wasm-interp>
+    DEPENDS wast2wasm wasm2wast wasm-interp
+    WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
+  )
+
+  # install
+  install(TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt DESTINATION bin)
+
+else ()
+  # emscripten stuff
+
   # just dump everything into one binary so we can reference it from JavaScript
+  add_definitions(-Wno-warn-absolute-paths)
   add_executable(libwasmjs src/wasm-emscripten-helpers.c)
   add_dependencies(everything libwasmjs)
   target_link_libraries(libwasmjs libwasm)
@@ -284,46 +329,3 @@ if (EMSCRIPTEN)
     LINK_DEPENDS "${WASM_JS};${EMSCRIPTEN_EXPORTED_JSON}"
   )
 endif ()
-
-
-# hexfloat-test
-find_package(Threads)
-if (BUILD_TESTS AND CMAKE_USE_PTHREADS_INIT)
-  if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
-    message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
-  endif ()
-
-  set(HEXFLOAT_TEST_SRCS
-    src/wasm-literal.c
-    test/hexfloat.cc
-    third_party/gtest/googletest/src/gtest-all.cc
-    third_party/gtest/googletest/src/gtest_main.cc
-  )
-  include_directories(
-    third_party/gtest/googletest
-    third_party/gtest/googletest/include
-  )
-  add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
-  add_dependencies(everything hexfloat_test)
-  set_source_files_properties(
-    test/hexfloat.cc
-    PROPERTIES
-    COMPILE_FLAGS -std=c++11
-  )
-  target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
-endif ()
-
-# test running
-find_package(PythonInterp 2.7 REQUIRED)
-set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
-add_custom_target(run-tests
-  COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
-      --wast2wasm $<TARGET_FILE:wast2wasm>
-      --wasm2wast $<TARGET_FILE:wasm2wast>
-      --wasm-interp $<TARGET_FILE:wasm-interp>
-  DEPENDS wast2wasm wasm2wast wasm-interp
-  WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
-)
-
-# install
-install(TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt DESTINATION bin)

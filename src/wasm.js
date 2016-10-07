@@ -537,23 +537,6 @@ BufferValue.prototype.toString = function() {
 var OK = 0;
 var ERROR = 1;
 
-// WasmInterpreterResult
-// var OK = 0;
-var RETURNED = 1;
-var TRAP_MEMORY_ACCESS_OUT_OF_BOUNDS = 2;
-var TRAP_INTEGER_OVERFLOW = 3;
-var TRAP_INTEGER_DIVIDE_BY_ZERO = 4;
-var TRAP_INVALID_CONVERSION_TO_INTEGER = 5;
-var TRAP_UNDEFINED_TABLE_INDEX = 6;
-var TRAP_UNREACHABLE = 7;
-var TRAP_INDIRECT_CALL_SIGNATURE_MISMATCH = 8;
-var TRAP_MEMORY_SIZE_OVERFLOW = 9;
-var TRAP_OUT_OF_MEMORY = 10;
-var TRAP_CALL_STACK_EXHAUSTED = 11;
-var TRAP_VALUE_STACK_EXHAUSTED = 12;
-var TRAP_IMPORT_RESULT_TYPE_MISMATCH = 13;
-var TRAP_IMPORT_TRAPPED = 14;
-
 // Wasm low-level types ////////////////////////////////////////////////////////
 
 var I = (function() {
@@ -561,14 +544,6 @@ var I = (function() {
 var Allocator = Struct('Allocator');
 var AstLexer = Struct('AstLexer');
 var BinaryErrorHandler = Struct('BinaryErrorHandler');
-var InterpreterExport = Struct('InterpreterExport');
-var InterpreterImport = Struct('InterpreterImport');
-var InterpreterMemory = Struct('InterpreterMemory');
-var InterpreterModule = Struct('InterpreterModule');
-var InterpreterThread = Struct('InterpreterThread');
-var InterpreterThreadOptions = Struct('InterpreterThreadOptions');
-var InterpreterTypedValue = Struct('InterpreterTypedValue');
-var InterpreterValue = Struct('InterpreterValue');
 var Location = Struct('Location');
 var MemoryWriter = Struct('MemoryWriter');
 var OutputBuffer = Struct('OutputBuffer');
@@ -598,51 +573,6 @@ Allocator.define('allocator', {
 BinaryErrorHandler.define('binary_error_handler', {
   on_error: BinaryErrorHandlerCallback,
   user_data: UserData,
-});
-
-InterpreterExport.define('interpreter_export', {
-  name: StrSlice,
-  func_offset: I32,
-});
-
-InterpreterImport.define('interpreter_import', {
-  module_name: StrSlice,
-  func_name: StrSlice,
-  callback: Ptr(
-      Fn(I32, [Ptr(InterpreterModule), Ptr(InterpreterImport),
-               ArrayLen, ArrayPtr(InterpreterTypedValue),
-               Ptr(InterpreterTypedValue), UserData])),
-});
-
-InterpreterMemory.define('interpreter_memory', {
-  data: BufPtr,
-  page_size: U32,
-  byte_size: BufLen,
-});
-
-InterpreterModule.define('interpreter_module', {
-  memory: InterpreterMemory,
-  start_func_offset: U32,
-});
-
-InterpreterThread.define('interpreter_thread');
-
-InterpreterThreadOptions.define('interpreter_thread_options', {
-  value_stack_size: U32,
-  call_stack_size: U32,
-  pc: U32,
-});
-
-InterpreterTypedValue.define('interpreter_typed_value', {
-  type: U32,
-  value: InterpreterValue,
-});
-
-InterpreterValue.define('interpreter_value', {
-  i32: U32,
-  i64: U64,
-  f32_bits: F32, // better to just read these as floats in JS
-  f64_bits: F64,
 });
 
 Location.define('location', {
@@ -695,7 +625,6 @@ StrSlice.define('string_slice', {
 WriteBinaryOptions.define('write_binary_options', {
   log_stream: Ptr(Stream),
   canonicalize_lebs: Bool,
-  remap_locals: Bool,
   write_debug_names: Bool,
 });
 
@@ -706,30 +635,20 @@ Writer.define('writer', {
 
 // Wasm low-level functions ////////////////////////////////////////////////////
 
-var checkAst = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wasm_check_ast');
+var checkAst = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wasm_check_ast');
 var closeMemWriter = Fn(Void, [Ptr(MemoryWriter)]).define('_wasm_close_mem_writer');
 var defaultBinaryErrorCallback = BinaryErrorHandlerCallback.define('_wasm_default_binary_error_callback');
 var defaultSourceErrorCallback = SourceErrorHandlerCallback.define('_wasm_default_source_error_callback');
 var destroyAstLexer = Fn(Void, [Ptr(AstLexer)]).define('_wasm_destroy_ast_lexer');
-var destroyInterpreterModule = Fn(Void, [Ptr(Allocator), Ptr(InterpreterModule)]).define('_wasm_destroy_interpreter_module');
-var destroyInterpreterThread = Fn(Void, [Ptr(Allocator), Ptr(InterpreterThread)]).define('_wasm_destroy_interpreter_thread');
 var destroyOutputBuffer = Fn(Void, [Ptr(OutputBuffer)]).define('_wasm_destroy_output_buffer');
 var destroyScript = Fn(Void, [Ptr(Script)]).define('_wasm_destroy_script');
 var destroyStackAllocator = Fn(Void, [Ptr(StackAllocator)]).define('_wasm_destroy_stack_allocator');
-var disassembleModule = Fn(Void, [Ptr(InterpreterModule), Ptr(Stream), U32, U32]).define('_wasm_disassemble_module');
-var getInterpreterExportByName = Fn(Ptr(InterpreterExport), [Ptr(InterpreterModule), Str]).define('_wasm_get_interpreter_export_by_name');
-var getInterpreterImportByName = Fn(Ptr(InterpreterImport), [Ptr(InterpreterModule), Str, Str]).define('_wasm_get_interpreter_import_by_name');
 var getLibcAllocator = Fn(Ptr(Allocator), []).define('_wasm_get_libc_allocator');
-var initInterpreterThread = Fn(I32, [Ptr(Allocator), Ptr(InterpreterModule), Ptr(InterpreterThread), Ptr(InterpreterThreadOptions)]).define('_wasm_init_interpreter_thread');
 var initMemWriter = Fn(I32, [Ptr(Allocator), Ptr(MemoryWriter)]).define('_wasm_init_mem_writer');
 var initStackAllocator = Fn(Void, [Ptr(StackAllocator), Ptr(Allocator)]).define('_wasm_init_stack_allocator');
 var initStream = Fn(Void, [Ptr(Stream), Ptr(Writer), Ptr(Stream)]).define('_wasm_init_stream');
 var newAstBufferLexer = Fn(Ptr(AstLexer), [Ptr(Allocator), Str, BufPtr, BufLen]).define('_wasm_new_ast_buffer_lexer');
 var parseAst = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wasm_parse_ast');
-var pushThreadValue = Fn(I32, [Ptr(InterpreterThread), Ptr(InterpreterValue)]);
-var readBinaryInterpreter = Fn(I32, [Ptr(Allocator), Ptr(Allocator), BufPtr, BufLen, Ptr(ReadBinaryOptions), Ptr(BinaryErrorHandler), Ptr(InterpreterModule)]).define('_wasm_read_binary_interpreter');
-var runInterpreter = Fn(I32, [Ptr(InterpreterModule), Ptr(InterpreterThread), U32, U32]).define('_wasm_run_interpreter');
-var tracePC = Fn(Void, [Ptr(InterpreterModule), Ptr(InterpreterThread), Ptr(Stream)]).define('_wasm_trace_pc');
 var writeBinaryScript = Fn(I32, [Ptr(Allocator), Ptr(Writer), Ptr(Script), Ptr(WriteBinaryOptions)]).define('_wasm_write_binary_script');
 
 return {
@@ -737,12 +656,6 @@ return {
   Allocator: Allocator,
   AstLexer: AstLexer,
   BinaryErrorHandler: BinaryErrorHandler,
-  InterpreterExport: InterpreterExport,
-  InterpreterImport: InterpreterImport,
-  InterpreterModule: InterpreterModule,
-  InterpreterThread: InterpreterThread,
-  InterpreterThreadOptions: InterpreterThreadOptions,
-  InterpreterTypedValue: InterpreterTypedValue,
   Location: Location,
   MemoryWriter: MemoryWriter,
   OutputBuffer: OutputBuffer,
@@ -761,25 +674,15 @@ return {
   defaultBinaryErrorCallback: defaultBinaryErrorCallback,
   defaultSourceErrorCallback: defaultSourceErrorCallback,
   destroyAstLexer: destroyAstLexer,
-  destroyInterpreterModule: destroyInterpreterModule,
-  destroyInterpreterThread: destroyInterpreterThread,
   destroyOutputBuffer: destroyOutputBuffer,
   destroyScript: destroyScript,
   destroyStackAllocator: destroyStackAllocator,
-  disassembleModule: disassembleModule,
-  getInterpreterExportByName: getInterpreterExportByName,
-  getInterpreterImportByName: getInterpreterImportByName,
   getLibcAllocator: getLibcAllocator,
-  initInterpreterThread: initInterpreterThread,
   initMemWriter: initMemWriter,
   initStackAllocator: initStackAllocator,
   initStream: initStream,
   newAstBufferLexer: newAstBufferLexer,
   parseAst: parseAst,
-  pushThreadValue: pushThreadValue,
-  readBinaryInterpreter: readBinaryInterpreter,
-  runInterpreter: runInterpreter,
-  tracePC: tracePC,
   writeBinaryScript: writeBinaryScript,
 };
 
@@ -1044,7 +947,8 @@ function Script() {
 }
 Script.prototype = Object.create(Object.prototype);
 Script.prototype.check = function() {
-  var result = I.checkAst(this.$astLexer.$, this.$, this.$errorHandler.$);
+  var result = I.checkAst(
+      this.$allocator.$, this.$astLexer.$, this.$, this.$errorHandler.$);
   if (result != OK) {
     throw new Error('check failed:\n' + this.$errorHandler.errorMessage);
   }
@@ -1083,7 +987,6 @@ function WriteBinaryOptions(allocator, options) {
   }
   var optBool = function(v, def) { return v === undefined ? def : v; };
   this.$.canonicalize_lebs.store(optBool(options.canonicalizeLebs, true));
-  this.$.remap_locals.store(optBool(options.remapLocals, true));
   this.$.write_debug_names.store(optBool(options.writeDebugNames, false));
 }
 WriteBinaryOptions.prototype = Object.create(Object.prototype);
@@ -1097,30 +1000,6 @@ WriteBinaryOptions.prototype.$destroy = function() {
     this.$logStream.$destroy();
   }
   this.$.$free();
-};
-
-// readInterpreterModule
-function readInterpreterModule(allocator, memoryAllocator, buf, options) {
-  buf = BufferValue.$malloc(buf);
-  var errorHandler = new BinaryErrorHandler();
-  options = new ReadBinaryOptions(options || {});
-  var module = new InterpreterModule();
-  try {
-    var result =
-        I.readBinaryInterpreter(allocator.$, memoryAllocator.$, buf, buf.size,
-                                options.$, errorHandler.$, module.$);
-    module.$allocator = allocator;
-    if (result != OK) {
-      module.$destroy();
-      throw new Error('readInterpreterModule failed:\n' +
-                      errorHandler.errorMessage);
-    }
-    return module;
-  } finally {
-    options.$destroy();
-    errorHandler.$destroy();
-    buf.$free();
-  }
 };
 
 // BinaryErrorHandler
@@ -1151,177 +1030,6 @@ ReadBinaryOptions.prototype.$destroy = function() {
   this.$.$free();
 };
 
-// InterpreterModule
-function InterpreterModule() {
-  this.$ = Value.$malloc(I.InterpreterModule);
-  this.$allocator = null;
-  this.memory = InterpreterMemory.$from(this.$.memory);
-};
-InterpreterModule.prototype = Object.create(Object.prototype);
-definePrimitiveGetter(InterpreterModule.prototype,
-                      'startFuncOffset',
-                      'start_func_offset');
-InterpreterModule.prototype.getImportByName = function(module, func) {
-  module = StrValue.$mallocCStr(module);
-  func = StrValue.$mallocCStr(func);
-  var import_ = I.getInterpreterImportByName(this.$, module, func);
-  module.$free();
-  func.$free();
-  if (import_ == 0) {
-    throw new Error('invalid import index');
-  }
-  return InterpreterImport.$from(import_);
-};
-InterpreterModule.prototype.getExportByName = function(name) {
-  name = StrValue.$mallocCStr(name);
-  var export_ = I.getInterpreterExportByName(this.$, name);
-  name.$free();
-  if (export_ == 0) {
-    throw new Error('invalid export index');
-  }
-  return InterpreterExport.$from(export_);
-};
-InterpreterModule.prototype.run =
-    function(thread, numInstructions, callStackReturnTop) {
-  var result =
-      I.runInterpreter(this.$, thread.$, numInstructions, callStackReturnTop);
-  switch (result) {
-    case OK:
-      return true;
-    case RETURNED:
-      return false;
-    case TRAP_MEMORY_ACCESS_OUT_OF_BOUNDS:
-      throw new Error('memory access out of bounds');
-    case TRAP_INTEGER_OVERFLOW:
-      throw new Error('integer overflow');
-    case TRAP_INTEGER_DIVIDE_BY_ZERO:
-      throw new Error('divide by zero');
-    case TRAP_INVALID_CONVERSION_TO_INTEGER:
-      throw new Error('invalid conversion to integer');
-    case TRAP_UNDEFINED_TABLE_INDEX:
-      throw new Error('undefined table index');
-    case TRAP_UNREACHABLE:
-      throw new Error('unreachable');
-    case TRAP_INDIRECT_CALL_SIGNATURE_MISMATCH:
-      throw new Error('indirect call signature mismatch');
-    case TRAP_MEMORY_SIZE_OVERFLOW:
-      throw new Error('memory size overflow');
-    case TRAP_OUT_OF_MEMORY:
-      throw new Error('out of memory');
-    case TRAP_CALL_STACK_EXHAUSTED:
-      throw new Error('call stack exhausted');
-    case TRAP_VALUE_STACK_EXHAUSTED:
-      throw new Error('value stack exhausted');
-    case TRAP_IMPORT_RESULT_TYPE_MISMATCH:
-      throw new Error('result type mismatch');
-    case TRAP_IMPORT_TRAPPED:
-      throw new Error('import trapped');
-    default:
-      throw new Error('unknown error');
-  }
-};
-InterpreterModule.prototype.disassemble = function(from, to) {
-  var stream = new StringStream();
-  I.disassembleModule(this.$, stream.$, from, to);
-  var result = stream.string;
-  stream.$destroy();
-  return result;
-};
-InterpreterModule.prototype.tracePC = function(thread) {
-  var stream = new StringStream();
-  I.tracePC(this.$, thread.$, stream.$);
-  var result = stream.string;
-  stream.$destroy();
-  return result;
-};
-InterpreterModule.prototype.$destroy = function() {
-  if (this.$allocator) {
-    I.destroyInterpreterModule(this.$allocator.$, this.$);
-  }
-  this.$.$free();
-};
-
-// InterpreterMemory
-function InterpreterMemory() {
-  this.$ = null;
-}
-define$From(InterpreterMemory);
-InterpreterMemory.prototype = Object.create(Object.prototype);
-defineBufferGetter(InterpreterMemory.prototype, 'buf', 'data', 'byte_size');
-definePrimitiveGetter(InterpreterMemory.prototype, 'byteSize', 'byte_size');
-definePrimitiveGetter(InterpreterMemory.prototype, 'pageSize', 'page_size');
-
-// InterpreterExport
-function InterpreterExport() {
-  this.$ = null;
-}
-define$From(InterpreterExport);
-InterpreterExport.prototype = Object.create(Object.prototype);
-defineStrSliceObjGetter(InterpreterExport.prototype, 'name');
-definePrimitiveGetter(InterpreterExport.prototype, 'funcOffset', 'func_offset');
-
-// InterpreterImport
-function InterpreterImport() {
-  this.$ = null;
-}
-define$From(InterpreterImport);
-InterpreterImport.prototype = Object.create(Object.prototype);
-defineStrSliceObjGetter(InterpreterImport.prototype, 'moduleName',
-                        'module_name');
-defineStrSliceObjGetter(InterpreterImport.prototype, 'funcName', 'func_name');
-definePrimitiveGetter(InterpreterImport.prototype, 'funcOffset', 'func_offset');
-
-// InterpreterThread
-function InterpreterThread(allocator, module, options) {
-  this.$allocator = allocator;
-  this.$ = Value.$malloc(I.InterpreterThread);
-  options = new InterpreterThreadOptions(options || {});
-  I.initInterpreterThread(allocator.$, module.$, this.$, options.$);
-  options.$destroy();
-}
-InterpreterThread.prototype = Object.create(Object.prototype);
-InterpreterThread.prototype.$destroy = function() {
-  I.destroyInterpreterThread(this.$allocator.$, this.$);
-  this.$.$free();
-};
-
-// InterpreterThreadOptions
-function InterpreterThreadOptions(options) {
-  this.$ = Value.$malloc(I.InterpreterThreadOptions);
-  this.$.value_stack_size.store(options.valueStackSize || 64 * 1024);
-  this.$.call_stack_size.store(options.callStackSize || 64 * 1024);
-  this.$.pc.store(options.pc || 0);
-}
-InterpreterThreadOptions.prototype = Object.create(Object.prototype);
-InterpreterThreadOptions.prototype.$destroy = function() {
-  this.$.$free();
-};
-
-// InterpreterValue
-function InterpreterValue() {
-  this.$ = Value.$malloc(I.InterpreterValue);
-}
-define$From(InterpreterValue);
-InterpreterValue.prototype = Object.create(Object.prototype);
-definePrimitiveGetterSetter(InterpreterValue.prototype, 'i32');
-definePrimitiveGetterSetter(InterpreterValue.prototype, 'i64');
-definePrimitiveGetterSetter(InterpreterValue.prototype, 'f32', 'f32_bits');
-definePrimitiveGetterSetter(InterpreterValue.prototype, 'f64', 'f64_bits');
-InterpreterValue.prototype.$destroy = function() {
-  this.$.$free();
-};
-
-// InterpreterTypedValue
-function InterpreterTypedValue() {
-  this.$ = Value.$malloc(I.InterpreterTypedValue);
-  this.value = InterpreterValue.$from(this.$.value);
-}
-InterpreterTypedValue.prototype = Object.create(Object.prototype);
-definePrimitiveGetterSetter(InterpreterTypedValue.prototype, 'type');
-InterpreterTypedValue.prototype.$destroy = function() {
-  this.$.$free();
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1331,14 +1039,11 @@ wasm = {
   ready: wasm.ready,
 
   // Types
-  InterpreterThread: InterpreterThread,
   LibcAllocator: LibcAllocator,
   StackAllocator: StackAllocator,
-  // InterpreterTypedValue: InterpreterTypedValue,
 
   // Functions
   parseAst: parseAst,
-  readInterpreterModule: readInterpreterModule,
 };
 
 resolve();
