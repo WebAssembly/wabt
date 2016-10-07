@@ -4,50 +4,50 @@
     (return (i32.const 42)))
   (func (return)))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 02                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 02                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 00                                         ; num params
-000000d: 01                                         ; num results
-000000e: 01                                         ; result type
+000000b: 40                                        ; function form
+000000c: 00                                        ; num params
+000000d: 01                                        ; num results
+000000e: 01                                        ; result type
 ; type 1
-000000f: 40                                         ; function form
-0000010: 00                                         ; num params
-0000011: 00                                         ; num results
-0000009: 08                                         ; FIXUP section size
+000000f: 40                                        ; function form
+0000010: 00                                        ; num params
+0000011: 00                                        ; num results
+0000009: 08                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-0000012: 03                                         ; section code
-0000013: 00                                         ; section size (guess)
-0000014: 02                                         ; num functions
-0000015: 00                                         ; function 0 signature index
-0000016: 01                                         ; function 1 signature index
-0000013: 03                                         ; FIXUP section size
+0000012: 03                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 02                                        ; num functions
+0000015: 00                                        ; function 0 signature index
+0000016: 01                                        ; function 1 signature index
+0000013: 03                                        ; FIXUP section size
 ; section "CODE" (10)
-0000017: 0a                                         ; section code
-0000018: 00                                         ; section size (guess)
-0000019: 02                                         ; num functions
+0000017: 0a                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 02                                        ; num functions
 ; function body 0
-000001a: 00                                         ; func body size (guess)
-000001b: 00                                         ; local decl count
-000001c: 10                                         ; i32.const
-000001d: 2a                                         ; i32 literal
-000001e: 09                                         ; return
-000001f: 0f                                         ; end
-000001a: 05                                         ; FIXUP func body size
+000001a: 00                                        ; func body size (guess)
+000001b: 00                                        ; local decl count
+000001c: 10                                        ; i32.const
+000001d: 2a                                        ; i32 literal
+000001e: 09                                        ; return
+000001f: 0f                                        ; end
+000001a: 05                                        ; FIXUP func body size
 ; function body 1
-0000020: 00                                         ; func body size (guess)
-0000021: 00                                         ; local decl count
-0000022: 09                                         ; return
-0000023: 0f                                         ; end
-0000020: 03                                         ; FIXUP func body size
-0000018: 0b                                         ; FIXUP section size
+0000020: 00                                        ; func body size (guess)
+0000021: 00                                        ; local decl count
+0000022: 09                                        ; return
+0000023: 0f                                        ; end
+0000020: 03                                        ; FIXUP func body size
+0000018: 0b                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0108 0240 0001 0140  
-0000010: 0000 0303 0200 010a 0b02 0500 102a 090f  
-0000020: 0300 090f                                
+0000000: 0061 736d 0c00 0000 0108 0240 0001 0140 
+0000010: 0000 0303 0200 010a 0b02 0500 102a 090f 
+0000020: 0300 090f                               
 ;;; STDOUT ;;)

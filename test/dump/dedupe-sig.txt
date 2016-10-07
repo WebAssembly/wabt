@@ -4,51 +4,51 @@
   (import "foo" "bar" (func (param i32) (result i64)))
   (func (param i32) (result i64) (i64.const 0)))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 01                                         ; num params
-000000d: 01                                         ; param type
-000000e: 01                                         ; num results
-000000f: 02                                         ; result type
-0000009: 06                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 01                                        ; num params
+000000d: 01                                        ; param type
+000000e: 01                                        ; num results
+000000f: 02                                        ; result type
+0000009: 06                                        ; FIXUP section size
 ; section "IMPORT" (2)
-0000010: 02                                         ; section code
-0000011: 00                                         ; section size (guess)
-0000012: 01                                         ; num imports
+0000010: 02                                        ; section code
+0000011: 00                                        ; section size (guess)
+0000012: 01                                        ; num imports
 ; import header 0
-0000013: 03                                         ; string length
+0000013: 03                                        ; string length
 0000014: 666f 6f                                  foo  ; import module name
-0000017: 03                                         ; string length
+0000017: 03                                        ; string length
 0000018: 6261 72                                  bar  ; import field name
-000001b: 00                                         ; import kind
-000001c: 00                                         ; import signature index
-0000011: 0b                                         ; FIXUP section size
+000001b: 00                                        ; import kind
+000001c: 00                                        ; import signature index
+0000011: 0b                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-000001d: 03                                         ; section code
-000001e: 00                                         ; section size (guess)
-000001f: 01                                         ; num functions
-0000020: 00                                         ; function 0 signature index
-000001e: 02                                         ; FIXUP section size
+000001d: 03                                        ; section code
+000001e: 00                                        ; section size (guess)
+000001f: 01                                        ; num functions
+0000020: 00                                        ; function 0 signature index
+000001e: 02                                        ; FIXUP section size
 ; section "CODE" (10)
-0000021: 0a                                         ; section code
-0000022: 00                                         ; section size (guess)
-0000023: 01                                         ; num functions
+0000021: 0a                                        ; section code
+0000022: 00                                        ; section size (guess)
+0000023: 01                                        ; num functions
 ; function body 0
-0000024: 00                                         ; func body size (guess)
-0000025: 00                                         ; local decl count
-0000026: 11                                         ; i64.const
-0000027: 00                                         ; i64 literal
-0000028: 0f                                         ; end
-0000024: 04                                         ; FIXUP func body size
-0000022: 06                                         ; FIXUP section size
+0000024: 00                                        ; func body size (guess)
+0000025: 00                                        ; local decl count
+0000026: 11                                        ; i64.const
+0000027: 00                                        ; i64 literal
+0000028: 0f                                        ; end
+0000024: 04                                        ; FIXUP func body size
+0000022: 06                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0106 0140 0101 0102  
-0000010: 020b 0103 666f 6f03 6261 7200 0003 0201  
-0000020: 000a 0601 0400 1100 0f                   
+0000000: 0061 736d 0c00 0000 0106 0140 0101 0102 
+0000010: 020b 0103 666f 6f03 6261 7200 0003 0201 
+0000020: 000a 0601 0400 1100 0f                  
 ;;; STDOUT ;;)

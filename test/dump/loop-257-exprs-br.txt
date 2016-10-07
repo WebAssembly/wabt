@@ -49,323 +49,323 @@
       (br 0)       ;; depth 1 (due to implicit block)
 ))))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 00                                         ; num params
-000000d: 00                                         ; num results
-0000009: 04                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-000000e: 03                                         ; section code
-000000f: 00                                         ; section size (guess)
-0000010: 01                                         ; num functions
-0000011: 00                                         ; function 0 signature index
-000000f: 02                                         ; FIXUP section size
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
 ; section "CODE" (10)
-0000012: 0a                                         ; section code
-0000013: 00                                         ; section size (guess)
-0000014: 01                                         ; num functions
+0000012: 0a                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
 ; function body 0
-0000015: 00                                         ; func body size (guess)
-0000016: 00                                         ; local decl count
-0000017: 01                                         ; block
-0000018: 00                                         ; WASM_TYPE_VOID
-0000019: 02                                         ; loop
-000001a: 00                                         ; WASM_TYPE_VOID
-000001b: 0a                                         ; nop
-000001c: 0a                                         ; nop
-000001d: 0a                                         ; nop
-000001e: 0a                                         ; nop
-000001f: 0a                                         ; nop
-0000020: 0a                                         ; nop
-0000021: 0a                                         ; nop
-0000022: 0a                                         ; nop
-0000023: 0a                                         ; nop
-0000024: 0a                                         ; nop
-0000025: 0a                                         ; nop
-0000026: 0a                                         ; nop
-0000027: 0a                                         ; nop
-0000028: 0a                                         ; nop
-0000029: 0a                                         ; nop
-000002a: 0a                                         ; nop
-000002b: 0a                                         ; nop
-000002c: 0a                                         ; nop
-000002d: 0a                                         ; nop
-000002e: 0a                                         ; nop
-000002f: 0a                                         ; nop
-0000030: 0a                                         ; nop
-0000031: 0a                                         ; nop
-0000032: 0a                                         ; nop
-0000033: 0a                                         ; nop
-0000034: 0a                                         ; nop
-0000035: 0a                                         ; nop
-0000036: 0a                                         ; nop
-0000037: 0a                                         ; nop
-0000038: 0a                                         ; nop
-0000039: 0a                                         ; nop
-000003a: 0a                                         ; nop
-000003b: 0a                                         ; nop
-000003c: 0a                                         ; nop
-000003d: 0a                                         ; nop
-000003e: 0a                                         ; nop
-000003f: 0a                                         ; nop
-0000040: 0a                                         ; nop
-0000041: 0a                                         ; nop
-0000042: 0a                                         ; nop
-0000043: 0a                                         ; nop
-0000044: 0a                                         ; nop
-0000045: 0a                                         ; nop
-0000046: 0a                                         ; nop
-0000047: 0a                                         ; nop
-0000048: 0a                                         ; nop
-0000049: 0a                                         ; nop
-000004a: 0a                                         ; nop
-000004b: 0a                                         ; nop
-000004c: 0a                                         ; nop
-000004d: 0a                                         ; nop
-000004e: 0a                                         ; nop
-000004f: 0a                                         ; nop
-0000050: 0a                                         ; nop
-0000051: 0a                                         ; nop
-0000052: 0a                                         ; nop
-0000053: 0a                                         ; nop
-0000054: 0a                                         ; nop
-0000055: 0a                                         ; nop
-0000056: 0a                                         ; nop
-0000057: 0a                                         ; nop
-0000058: 0a                                         ; nop
-0000059: 0a                                         ; nop
-000005a: 0a                                         ; nop
-000005b: 0a                                         ; nop
-000005c: 0a                                         ; nop
-000005d: 0a                                         ; nop
-000005e: 0a                                         ; nop
-000005f: 0a                                         ; nop
-0000060: 0a                                         ; nop
-0000061: 0a                                         ; nop
-0000062: 0a                                         ; nop
-0000063: 0a                                         ; nop
-0000064: 0a                                         ; nop
-0000065: 0a                                         ; nop
-0000066: 0a                                         ; nop
-0000067: 0a                                         ; nop
-0000068: 0a                                         ; nop
-0000069: 0a                                         ; nop
-000006a: 0a                                         ; nop
-000006b: 0a                                         ; nop
-000006c: 0a                                         ; nop
-000006d: 0a                                         ; nop
-000006e: 0a                                         ; nop
-000006f: 0a                                         ; nop
-0000070: 0a                                         ; nop
-0000071: 0a                                         ; nop
-0000072: 0a                                         ; nop
-0000073: 0a                                         ; nop
-0000074: 0a                                         ; nop
-0000075: 0a                                         ; nop
-0000076: 0a                                         ; nop
-0000077: 0a                                         ; nop
-0000078: 0a                                         ; nop
-0000079: 0a                                         ; nop
-000007a: 0a                                         ; nop
-000007b: 0a                                         ; nop
-000007c: 0a                                         ; nop
-000007d: 0a                                         ; nop
-000007e: 0a                                         ; nop
-000007f: 0a                                         ; nop
-0000080: 0a                                         ; nop
-0000081: 0a                                         ; nop
-0000082: 0a                                         ; nop
-0000083: 0a                                         ; nop
-0000084: 0a                                         ; nop
-0000085: 0a                                         ; nop
-0000086: 0a                                         ; nop
-0000087: 0a                                         ; nop
-0000088: 0a                                         ; nop
-0000089: 0a                                         ; nop
-000008a: 0a                                         ; nop
-000008b: 0a                                         ; nop
-000008c: 0a                                         ; nop
-000008d: 0a                                         ; nop
-000008e: 0a                                         ; nop
-000008f: 0a                                         ; nop
-0000090: 0a                                         ; nop
-0000091: 0a                                         ; nop
-0000092: 0a                                         ; nop
-0000093: 0a                                         ; nop
-0000094: 0a                                         ; nop
-0000095: 0a                                         ; nop
-0000096: 0a                                         ; nop
-0000097: 0a                                         ; nop
-0000098: 0a                                         ; nop
-0000099: 0a                                         ; nop
-000009a: 0a                                         ; nop
-000009b: 0a                                         ; nop
-000009c: 0a                                         ; nop
-000009d: 0a                                         ; nop
-000009e: 0a                                         ; nop
-000009f: 0a                                         ; nop
-00000a0: 0a                                         ; nop
-00000a1: 0a                                         ; nop
-00000a2: 0a                                         ; nop
-00000a3: 0a                                         ; nop
-00000a4: 0a                                         ; nop
-00000a5: 0a                                         ; nop
-00000a6: 0a                                         ; nop
-00000a7: 0a                                         ; nop
-00000a8: 0a                                         ; nop
-00000a9: 0a                                         ; nop
-00000aa: 0a                                         ; nop
-00000ab: 0a                                         ; nop
-00000ac: 0a                                         ; nop
-00000ad: 0a                                         ; nop
-00000ae: 0a                                         ; nop
-00000af: 0a                                         ; nop
-00000b0: 0a                                         ; nop
-00000b1: 0a                                         ; nop
-00000b2: 0a                                         ; nop
-00000b3: 0a                                         ; nop
-00000b4: 0a                                         ; nop
-00000b5: 0a                                         ; nop
-00000b6: 0a                                         ; nop
-00000b7: 0a                                         ; nop
-00000b8: 0a                                         ; nop
-00000b9: 0a                                         ; nop
-00000ba: 0a                                         ; nop
-00000bb: 0a                                         ; nop
-00000bc: 0a                                         ; nop
-00000bd: 0a                                         ; nop
-00000be: 0a                                         ; nop
-00000bf: 0a                                         ; nop
-00000c0: 0a                                         ; nop
-00000c1: 0a                                         ; nop
-00000c2: 0a                                         ; nop
-00000c3: 0a                                         ; nop
-00000c4: 0a                                         ; nop
-00000c5: 0a                                         ; nop
-00000c6: 0a                                         ; nop
-00000c7: 0a                                         ; nop
-00000c8: 0a                                         ; nop
-00000c9: 0a                                         ; nop
-00000ca: 0a                                         ; nop
-00000cb: 0a                                         ; nop
-00000cc: 0a                                         ; nop
-00000cd: 0a                                         ; nop
-00000ce: 0a                                         ; nop
-00000cf: 0a                                         ; nop
-00000d0: 0a                                         ; nop
-00000d1: 0a                                         ; nop
-00000d2: 0a                                         ; nop
-00000d3: 0a                                         ; nop
-00000d4: 0a                                         ; nop
-00000d5: 0a                                         ; nop
-00000d6: 0a                                         ; nop
-00000d7: 0a                                         ; nop
-00000d8: 0a                                         ; nop
-00000d9: 0a                                         ; nop
-00000da: 0a                                         ; nop
-00000db: 0a                                         ; nop
-00000dc: 0a                                         ; nop
-00000dd: 0a                                         ; nop
-00000de: 0a                                         ; nop
-00000df: 0a                                         ; nop
-00000e0: 0a                                         ; nop
-00000e1: 0a                                         ; nop
-00000e2: 0a                                         ; nop
-00000e3: 0a                                         ; nop
-00000e4: 0a                                         ; nop
-00000e5: 0a                                         ; nop
-00000e6: 0a                                         ; nop
-00000e7: 0a                                         ; nop
-00000e8: 0a                                         ; nop
-00000e9: 0a                                         ; nop
-00000ea: 0a                                         ; nop
-00000eb: 0a                                         ; nop
-00000ec: 0a                                         ; nop
-00000ed: 0a                                         ; nop
-00000ee: 0a                                         ; nop
-00000ef: 0a                                         ; nop
-00000f0: 0a                                         ; nop
-00000f1: 0a                                         ; nop
-00000f2: 0a                                         ; nop
-00000f3: 0a                                         ; nop
-00000f4: 0a                                         ; nop
-00000f5: 0a                                         ; nop
-00000f6: 0a                                         ; nop
-00000f7: 0a                                         ; nop
-00000f8: 0a                                         ; nop
-00000f9: 0a                                         ; nop
-00000fa: 0a                                         ; nop
-00000fb: 0a                                         ; nop
-00000fc: 0a                                         ; nop
-00000fd: 0a                                         ; nop
-00000fe: 0a                                         ; nop
-00000ff: 0a                                         ; nop
-0000100: 0a                                         ; nop
-0000101: 0a                                         ; nop
-0000102: 0a                                         ; nop
-0000103: 0a                                         ; nop
-0000104: 0a                                         ; nop
-0000105: 0a                                         ; nop
-0000106: 0a                                         ; nop
-0000107: 0a                                         ; nop
-0000108: 0a                                         ; nop
-0000109: 0a                                         ; nop
-000010a: 0a                                         ; nop
-000010b: 0a                                         ; nop
-000010c: 0a                                         ; nop
-000010d: 0a                                         ; nop
-000010e: 0a                                         ; nop
-000010f: 0a                                         ; nop
-0000110: 0a                                         ; nop
-0000111: 0a                                         ; nop
-0000112: 0a                                         ; nop
-0000113: 0a                                         ; nop
-0000114: 0a                                         ; nop
-0000115: 0a                                         ; nop
-0000116: 0a                                         ; nop
-0000117: 0a                                         ; nop
-0000118: 0a                                         ; nop
-0000119: 0a                                         ; nop
-000011a: 0a                                         ; nop
-000011b: 06                                         ; br
-000011c: 01                                         ; break depth
-000011d: 06                                         ; br
-000011e: 00                                         ; break depth
-000011f: 06                                         ; br
-0000120: 01                                         ; break depth
-0000121: 06                                         ; br
-0000122: 00                                         ; break depth
-0000123: 0f                                         ; end
-0000124: 0f                                         ; end
-0000125: 0f                                         ; end
+0000015: 00                                        ; func body size (guess)
+0000016: 00                                        ; local decl count
+0000017: 01                                        ; block
+0000018: 00                                        ; WASM_TYPE_VOID
+0000019: 02                                        ; loop
+000001a: 00                                        ; WASM_TYPE_VOID
+000001b: 0a                                        ; nop
+000001c: 0a                                        ; nop
+000001d: 0a                                        ; nop
+000001e: 0a                                        ; nop
+000001f: 0a                                        ; nop
+0000020: 0a                                        ; nop
+0000021: 0a                                        ; nop
+0000022: 0a                                        ; nop
+0000023: 0a                                        ; nop
+0000024: 0a                                        ; nop
+0000025: 0a                                        ; nop
+0000026: 0a                                        ; nop
+0000027: 0a                                        ; nop
+0000028: 0a                                        ; nop
+0000029: 0a                                        ; nop
+000002a: 0a                                        ; nop
+000002b: 0a                                        ; nop
+000002c: 0a                                        ; nop
+000002d: 0a                                        ; nop
+000002e: 0a                                        ; nop
+000002f: 0a                                        ; nop
+0000030: 0a                                        ; nop
+0000031: 0a                                        ; nop
+0000032: 0a                                        ; nop
+0000033: 0a                                        ; nop
+0000034: 0a                                        ; nop
+0000035: 0a                                        ; nop
+0000036: 0a                                        ; nop
+0000037: 0a                                        ; nop
+0000038: 0a                                        ; nop
+0000039: 0a                                        ; nop
+000003a: 0a                                        ; nop
+000003b: 0a                                        ; nop
+000003c: 0a                                        ; nop
+000003d: 0a                                        ; nop
+000003e: 0a                                        ; nop
+000003f: 0a                                        ; nop
+0000040: 0a                                        ; nop
+0000041: 0a                                        ; nop
+0000042: 0a                                        ; nop
+0000043: 0a                                        ; nop
+0000044: 0a                                        ; nop
+0000045: 0a                                        ; nop
+0000046: 0a                                        ; nop
+0000047: 0a                                        ; nop
+0000048: 0a                                        ; nop
+0000049: 0a                                        ; nop
+000004a: 0a                                        ; nop
+000004b: 0a                                        ; nop
+000004c: 0a                                        ; nop
+000004d: 0a                                        ; nop
+000004e: 0a                                        ; nop
+000004f: 0a                                        ; nop
+0000050: 0a                                        ; nop
+0000051: 0a                                        ; nop
+0000052: 0a                                        ; nop
+0000053: 0a                                        ; nop
+0000054: 0a                                        ; nop
+0000055: 0a                                        ; nop
+0000056: 0a                                        ; nop
+0000057: 0a                                        ; nop
+0000058: 0a                                        ; nop
+0000059: 0a                                        ; nop
+000005a: 0a                                        ; nop
+000005b: 0a                                        ; nop
+000005c: 0a                                        ; nop
+000005d: 0a                                        ; nop
+000005e: 0a                                        ; nop
+000005f: 0a                                        ; nop
+0000060: 0a                                        ; nop
+0000061: 0a                                        ; nop
+0000062: 0a                                        ; nop
+0000063: 0a                                        ; nop
+0000064: 0a                                        ; nop
+0000065: 0a                                        ; nop
+0000066: 0a                                        ; nop
+0000067: 0a                                        ; nop
+0000068: 0a                                        ; nop
+0000069: 0a                                        ; nop
+000006a: 0a                                        ; nop
+000006b: 0a                                        ; nop
+000006c: 0a                                        ; nop
+000006d: 0a                                        ; nop
+000006e: 0a                                        ; nop
+000006f: 0a                                        ; nop
+0000070: 0a                                        ; nop
+0000071: 0a                                        ; nop
+0000072: 0a                                        ; nop
+0000073: 0a                                        ; nop
+0000074: 0a                                        ; nop
+0000075: 0a                                        ; nop
+0000076: 0a                                        ; nop
+0000077: 0a                                        ; nop
+0000078: 0a                                        ; nop
+0000079: 0a                                        ; nop
+000007a: 0a                                        ; nop
+000007b: 0a                                        ; nop
+000007c: 0a                                        ; nop
+000007d: 0a                                        ; nop
+000007e: 0a                                        ; nop
+000007f: 0a                                        ; nop
+0000080: 0a                                        ; nop
+0000081: 0a                                        ; nop
+0000082: 0a                                        ; nop
+0000083: 0a                                        ; nop
+0000084: 0a                                        ; nop
+0000085: 0a                                        ; nop
+0000086: 0a                                        ; nop
+0000087: 0a                                        ; nop
+0000088: 0a                                        ; nop
+0000089: 0a                                        ; nop
+000008a: 0a                                        ; nop
+000008b: 0a                                        ; nop
+000008c: 0a                                        ; nop
+000008d: 0a                                        ; nop
+000008e: 0a                                        ; nop
+000008f: 0a                                        ; nop
+0000090: 0a                                        ; nop
+0000091: 0a                                        ; nop
+0000092: 0a                                        ; nop
+0000093: 0a                                        ; nop
+0000094: 0a                                        ; nop
+0000095: 0a                                        ; nop
+0000096: 0a                                        ; nop
+0000097: 0a                                        ; nop
+0000098: 0a                                        ; nop
+0000099: 0a                                        ; nop
+000009a: 0a                                        ; nop
+000009b: 0a                                        ; nop
+000009c: 0a                                        ; nop
+000009d: 0a                                        ; nop
+000009e: 0a                                        ; nop
+000009f: 0a                                        ; nop
+00000a0: 0a                                        ; nop
+00000a1: 0a                                        ; nop
+00000a2: 0a                                        ; nop
+00000a3: 0a                                        ; nop
+00000a4: 0a                                        ; nop
+00000a5: 0a                                        ; nop
+00000a6: 0a                                        ; nop
+00000a7: 0a                                        ; nop
+00000a8: 0a                                        ; nop
+00000a9: 0a                                        ; nop
+00000aa: 0a                                        ; nop
+00000ab: 0a                                        ; nop
+00000ac: 0a                                        ; nop
+00000ad: 0a                                        ; nop
+00000ae: 0a                                        ; nop
+00000af: 0a                                        ; nop
+00000b0: 0a                                        ; nop
+00000b1: 0a                                        ; nop
+00000b2: 0a                                        ; nop
+00000b3: 0a                                        ; nop
+00000b4: 0a                                        ; nop
+00000b5: 0a                                        ; nop
+00000b6: 0a                                        ; nop
+00000b7: 0a                                        ; nop
+00000b8: 0a                                        ; nop
+00000b9: 0a                                        ; nop
+00000ba: 0a                                        ; nop
+00000bb: 0a                                        ; nop
+00000bc: 0a                                        ; nop
+00000bd: 0a                                        ; nop
+00000be: 0a                                        ; nop
+00000bf: 0a                                        ; nop
+00000c0: 0a                                        ; nop
+00000c1: 0a                                        ; nop
+00000c2: 0a                                        ; nop
+00000c3: 0a                                        ; nop
+00000c4: 0a                                        ; nop
+00000c5: 0a                                        ; nop
+00000c6: 0a                                        ; nop
+00000c7: 0a                                        ; nop
+00000c8: 0a                                        ; nop
+00000c9: 0a                                        ; nop
+00000ca: 0a                                        ; nop
+00000cb: 0a                                        ; nop
+00000cc: 0a                                        ; nop
+00000cd: 0a                                        ; nop
+00000ce: 0a                                        ; nop
+00000cf: 0a                                        ; nop
+00000d0: 0a                                        ; nop
+00000d1: 0a                                        ; nop
+00000d2: 0a                                        ; nop
+00000d3: 0a                                        ; nop
+00000d4: 0a                                        ; nop
+00000d5: 0a                                        ; nop
+00000d6: 0a                                        ; nop
+00000d7: 0a                                        ; nop
+00000d8: 0a                                        ; nop
+00000d9: 0a                                        ; nop
+00000da: 0a                                        ; nop
+00000db: 0a                                        ; nop
+00000dc: 0a                                        ; nop
+00000dd: 0a                                        ; nop
+00000de: 0a                                        ; nop
+00000df: 0a                                        ; nop
+00000e0: 0a                                        ; nop
+00000e1: 0a                                        ; nop
+00000e2: 0a                                        ; nop
+00000e3: 0a                                        ; nop
+00000e4: 0a                                        ; nop
+00000e5: 0a                                        ; nop
+00000e6: 0a                                        ; nop
+00000e7: 0a                                        ; nop
+00000e8: 0a                                        ; nop
+00000e9: 0a                                        ; nop
+00000ea: 0a                                        ; nop
+00000eb: 0a                                        ; nop
+00000ec: 0a                                        ; nop
+00000ed: 0a                                        ; nop
+00000ee: 0a                                        ; nop
+00000ef: 0a                                        ; nop
+00000f0: 0a                                        ; nop
+00000f1: 0a                                        ; nop
+00000f2: 0a                                        ; nop
+00000f3: 0a                                        ; nop
+00000f4: 0a                                        ; nop
+00000f5: 0a                                        ; nop
+00000f6: 0a                                        ; nop
+00000f7: 0a                                        ; nop
+00000f8: 0a                                        ; nop
+00000f9: 0a                                        ; nop
+00000fa: 0a                                        ; nop
+00000fb: 0a                                        ; nop
+00000fc: 0a                                        ; nop
+00000fd: 0a                                        ; nop
+00000fe: 0a                                        ; nop
+00000ff: 0a                                        ; nop
+0000100: 0a                                        ; nop
+0000101: 0a                                        ; nop
+0000102: 0a                                        ; nop
+0000103: 0a                                        ; nop
+0000104: 0a                                        ; nop
+0000105: 0a                                        ; nop
+0000106: 0a                                        ; nop
+0000107: 0a                                        ; nop
+0000108: 0a                                        ; nop
+0000109: 0a                                        ; nop
+000010a: 0a                                        ; nop
+000010b: 0a                                        ; nop
+000010c: 0a                                        ; nop
+000010d: 0a                                        ; nop
+000010e: 0a                                        ; nop
+000010f: 0a                                        ; nop
+0000110: 0a                                        ; nop
+0000111: 0a                                        ; nop
+0000112: 0a                                        ; nop
+0000113: 0a                                        ; nop
+0000114: 0a                                        ; nop
+0000115: 0a                                        ; nop
+0000116: 0a                                        ; nop
+0000117: 0a                                        ; nop
+0000118: 0a                                        ; nop
+0000119: 0a                                        ; nop
+000011a: 0a                                        ; nop
+000011b: 06                                        ; br
+000011c: 01                                        ; break depth
+000011d: 06                                        ; br
+000011e: 00                                        ; break depth
+000011f: 06                                        ; br
+0000120: 01                                        ; break depth
+0000121: 06                                        ; br
+0000122: 00                                        ; break depth
+0000123: 0f                                        ; end
+0000124: 0f                                        ; end
+0000125: 0f                                        ; end
 ; move data: [16, 126) -> [17, 127)
-0000015: 9002                                       ; FIXUP func body size
+0000015: 9002                                      ; FIXUP func body size
 ; move data: [14, 127) -> [15, 128)
-0000013: 9302                                       ; FIXUP section size
+0000013: 9302                                      ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a93 0201 9002 0001 0002 000a 0a0a  
-0000020: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000030: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000040: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000050: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000060: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000070: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000080: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000090: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-00000a0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-00000b0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-00000c0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-00000d0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-00000e0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-00000f0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000100: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a  
-0000110: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a06 0106  
-0000120: 0006 0106 000f 0f0f                      
+0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
+0000010: 0100 0a93 0201 9002 0001 0002 000a 0a0a 
+0000020: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000030: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000040: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000050: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000060: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000070: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000080: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000090: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+00000a0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+00000b0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+00000c0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+00000d0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+00000e0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+00000f0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000100: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
+0000110: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a06 0106 
+0000120: 0006 0106 000f 0f0f                     
 ;;; STDOUT ;;)

@@ -2,35 +2,35 @@
 (module
   (func (nop)))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 00                                         ; num params
-000000d: 00                                         ; num results
-0000009: 04                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-000000e: 03                                         ; section code
-000000f: 00                                         ; section size (guess)
-0000010: 01                                         ; num functions
-0000011: 00                                         ; function 0 signature index
-000000f: 02                                         ; FIXUP section size
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
 ; section "CODE" (10)
-0000012: 0a                                         ; section code
-0000013: 00                                         ; section size (guess)
-0000014: 01                                         ; num functions
+0000012: 0a                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
 ; function body 0
-0000015: 00                                         ; func body size (guess)
-0000016: 00                                         ; local decl count
-0000017: 0a                                         ; nop
-0000018: 0f                                         ; end
-0000015: 03                                         ; FIXUP func body size
-0000013: 05                                         ; FIXUP section size
+0000015: 00                                        ; func body size (guess)
+0000016: 00                                        ; local decl count
+0000017: 0a                                        ; nop
+0000018: 0f                                        ; end
+0000015: 03                                        ; FIXUP func body size
+0000013: 05                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a05 0103 000a 0f                   
+0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
+0000010: 0100 0a05 0103 000a 0f                  
 ;;; STDOUT ;;)

@@ -28,66 +28,66 @@
       (f32.demote/f64
         (f64.promote/f32 (f32.const 0))))))
 (;; STDOUT ;;;
-0000000: 0061 736d                                  ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                  ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
-0000008: 01                                         ; section code
-0000009: 00                                         ; section size (guess)
-000000a: 01                                         ; num types
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                         ; function form
-000000c: 00                                         ; num params
-000000d: 00                                         ; num results
-0000009: 04                                         ; FIXUP section size
+000000b: 40                                        ; function form
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
 ; section "FUNCTION" (3)
-000000e: 03                                         ; section code
-000000f: 00                                         ; section size (guess)
-0000010: 01                                         ; num functions
-0000011: 00                                         ; function 0 signature index
-000000f: 02                                         ; FIXUP section size
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
 ; section "CODE" (10)
-0000012: 0a                                         ; section code
-0000013: 00                                         ; section size (guess)
-0000014: 01                                         ; num functions
+0000012: 0a                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
 ; function body 0
-0000015: 00                                         ; func body size (guess)
-0000016: 00                                         ; local decl count
-0000017: 10                                         ; i32.const
-0000018: 00                                         ; i32 literal
-0000019: af                                         ; f64.convert_u/i32
-000001a: a0                                         ; i32.trunc_u/f64
-000001b: ae                                         ; f64.convert_s/i32
-000001c: 9e                                         ; i32.trunc_s/f64
-000001d: a9                                         ; f32.convert_u/i32
-000001e: 9f                                         ; i32.trunc_u/f32
-000001f: a8                                         ; f32.convert_s/i32
-0000020: 9d                                         ; i32.trunc_s/f32
-0000021: a7                                         ; i64.extend_u/i32
-0000022: a1                                         ; i32.wrap/i64
-0000023: 0b                                         ; drop
-0000024: 10                                         ; i32.const
-0000025: 00                                         ; i32 literal
-0000026: a6                                         ; i64.extend_s/i32
-0000027: b1                                         ; f64.convert_u/i64
-0000028: a5                                         ; i64.trunc_u/f64
-0000029: b0                                         ; f64.convert_s/i64
-000002a: a3                                         ; i64.trunc_s/f64
-000002b: ab                                         ; f32.convert_u/i64
-000002c: a4                                         ; i64.trunc_u/f32
-000002d: aa                                         ; f32.convert_s/i64
-000002e: a2                                         ; i64.trunc_s/f32
-000002f: 0b                                         ; drop
-0000030: 13                                         ; f32.const
-0000031: 0000 0000                                  ; f32 literal
-0000035: b2                                         ; f64.promote/f32
-0000036: ac                                         ; f32.demote/f64
-0000037: 0b                                         ; drop
-0000038: 0f                                         ; end
-0000015: 23                                         ; FIXUP func body size
-0000013: 25                                         ; FIXUP section size
+0000015: 00                                        ; func body size (guess)
+0000016: 00                                        ; local decl count
+0000017: 10                                        ; i32.const
+0000018: 00                                        ; i32 literal
+0000019: af                                        ; f64.convert_u/i32
+000001a: a0                                        ; i32.trunc_u/f64
+000001b: ae                                        ; f64.convert_s/i32
+000001c: 9e                                        ; i32.trunc_s/f64
+000001d: a9                                        ; f32.convert_u/i32
+000001e: 9f                                        ; i32.trunc_u/f32
+000001f: a8                                        ; f32.convert_s/i32
+0000020: 9d                                        ; i32.trunc_s/f32
+0000021: a7                                        ; i64.extend_u/i32
+0000022: a1                                        ; i32.wrap/i64
+0000023: 0b                                        ; drop
+0000024: 10                                        ; i32.const
+0000025: 00                                        ; i32 literal
+0000026: a6                                        ; i64.extend_s/i32
+0000027: b1                                        ; f64.convert_u/i64
+0000028: a5                                        ; i64.trunc_u/f64
+0000029: b0                                        ; f64.convert_s/i64
+000002a: a3                                        ; i64.trunc_s/f64
+000002b: ab                                        ; f32.convert_u/i64
+000002c: a4                                        ; i64.trunc_u/f32
+000002d: aa                                        ; f32.convert_s/i64
+000002e: a2                                        ; i64.trunc_s/f32
+000002f: 0b                                        ; drop
+0000030: 13                                        ; f32.const
+0000031: 0000 0000                                 ; f32 literal
+0000035: b2                                        ; f64.promote/f32
+0000036: ac                                        ; f32.demote/f64
+0000037: 0b                                        ; drop
+0000038: 0f                                        ; end
+0000015: 23                                        ; FIXUP func body size
+0000013: 25                                        ; FIXUP section size
 ;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302  
-0000010: 0100 0a25 0123 0010 00af a0ae 9ea9 9fa8  
-0000020: 9da7 a10b 1000 a6b1 a5b0 a3ab a4aa a20b  
-0000030: 1300 0000 00b2 ac0b 0f                   
+0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
+0000010: 0100 0a25 0123 0010 00af a0ae 9ea9 9fa8 
+0000020: 9da7 a10b 1000 a6b1 a5b0 a3ab a4aa a20b 
+0000030: 1300 0000 00b2 ac0b 0f                  
 ;;; STDOUT ;;)

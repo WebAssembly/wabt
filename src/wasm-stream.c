@@ -142,12 +142,14 @@ void wasm_write_memory_dump(WasmStream* stream,
       wasm_write_char(stream, ' ');
     }
 
-    wasm_write_char(stream, ' ');
-    p = line;
-    int i;
-    for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
-      if (print_chars)
+    if (print_chars == WASM_PRINT_CHARS) {
+      wasm_write_char(stream, ' ');
+      p = line;
+      int i;
+      for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
         wasm_write_char(stream, isprint(*p) ? *p : '.');
+    }
+
     /* if there are multiple lines, only print the desc on the last one */
     if (p >= end && desc)
       wasm_writef(stream, "  ; %s", desc);
