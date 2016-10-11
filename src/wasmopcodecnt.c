@@ -38,6 +38,13 @@ static const char* s_infile;
 static const char* s_outfile;
 static size_t s_cutoff = 0;
 static const char* s_separator = ": ";
+static WasmBool s_report_opcode_dist = WASM_TRUE;
+static WasmBool s_report_i32_const_dist = WASM_TRUE;
+static WasmBool s_report_i32_load_dist = WASM_TRUE;
+static WasmBool s_report_i32_store_dist = WASM_TRUE;
+static WasmBool s_report_get_local_dist = WASM_TRUE;
+static WasmBool s_report_set_local_dist = WASM_TRUE;
+static WasmBool s_report_tee_local_dist = WASM_TRUE;
 
 static WasmReadBinaryOptions s_read_binary_options =
     WASM_READ_BINARY_OPTIONS_DEFAULT;
@@ -60,6 +67,14 @@ enum {
   FLAG_USE_LIBC_ALLOCATOR,
   FLAG_CUTOFF,
   FLAG_SEPARATOR,
+  FLAG_CLEAR_ALL_REPORTING_FLAGS,
+  FLAG_REPORT_OPCODE_DIST,
+  FLAG_REPORT_I32_CONST_DIST,
+  FLAG_REPORT_I32_LOAD_DIST,
+  FLAG_REPORT_I32_STORE_DIST,
+  FLAG_REPORT_GET_LOCAL_DIST,
+  FLAG_REPORT_SET_LOCAL_DIST,
+  FLAG_REPORT_TEE_LOCAL_DIST,
   NUM_FLAGS
 };
 
@@ -92,7 +107,7 @@ static WasmOption s_options[] = {
      NOPE,
      "use malloc, free, etc. instead of stack allocator"},
     {FLAG_CUTOFF,
-     'c',
+     0,
      "cutoff",
      "N",
      YEP,
@@ -102,7 +117,55 @@ static WasmOption s_options[] = {
      "separator",
      "SEPARATOR",
      YEP,
-     "Separator text between element and count when reporting counts"}
+     "Separator text between element and count when reporting counts"},
+    {FLAG_CLEAR_ALL_REPORTING_FLAGS,
+     0,
+     "clear",
+     NULL,
+     NOPE,
+     "Clear all report count flags"},
+    {FLAG_REPORT_OPCODE_DIST,
+     0,
+     "opcodes",
+     NULL,
+     NOPE,
+     "Report counts for instruction opcodes"},
+    {FLAG_REPORT_I32_CONST_DIST,
+     0,
+     "i32.const",
+     NULL,
+     NOPE,
+     "Report counts for I32_const instructions"},
+    {FLAG_REPORT_I32_LOAD_DIST,
+     0,
+     "i32.load",
+     NULL,
+     NOPE,
+     "Report counts for I32_load instructions"},
+    {FLAG_REPORT_I32_STORE_DIST,
+     0,
+     "i32.store",
+     NULL,
+     NOPE,
+     "Report counts for I32_store instructions"},
+    {FLAG_REPORT_GET_LOCAL_DIST,
+     0,
+     "get_local",
+     NULL,
+     NOPE,
+     "Report counts for get_local instructions"},
+    {FLAG_REPORT_SET_LOCAL_DIST,
+     0,
+     "set_local",
+     NULL,
+     NOPE,
+     "Report counts for set_local instructions"},
+    {FLAG_REPORT_TEE_LOCAL_DIST,
+     0,
+     "tee_local",
+     NULL,
+     NOPE,
+     "Report counts for tee_local instructions"}
 };
 
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
@@ -137,6 +200,44 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_SEPARATOR:
       s_separator = argument;
+      break;
+
+    case FLAG_CLEAR_ALL_REPORTING_FLAGS:
+      s_report_opcode_dist = WASM_FALSE;
+      s_report_i32_const_dist = WASM_FALSE;
+      s_report_i32_load_dist = WASM_FALSE;
+      s_report_i32_store_dist = WASM_FALSE;
+      s_report_get_local_dist = WASM_FALSE;
+      s_report_set_local_dist = WASM_FALSE;
+      s_report_tee_local_dist = WASM_FALSE;
+      break;
+
+    case FLAG_REPORT_OPCODE_DIST:
+      s_report_opcode_dist = WASM_TRUE;
+      break;
+
+    case FLAG_REPORT_I32_CONST_DIST:
+      s_report_i32_const_dist = WASM_TRUE;
+      break;
+
+    case FLAG_REPORT_I32_LOAD_DIST:
+      s_report_i32_load_dist = WASM_TRUE;
+      break;
+
+    case FLAG_REPORT_I32_STORE_DIST:
+      s_report_get_local_dist = WASM_TRUE;
+      break;
+
+    case FLAG_REPORT_GET_LOCAL_DIST:
+      s_report_get_local_dist = WASM_TRUE;
+      break;
+
+    case FLAG_REPORT_SET_LOCAL_DIST:
+      s_report_set_local_dist = WASM_TRUE;
+      break;
+
+    case FLAG_REPORT_TEE_LOCAL_DIST:
+      s_report_tee_local_dist = WASM_TRUE;
       break;
   }
 }
@@ -386,13 +487,21 @@ int main(int argc, char** argv) {
   FILE* out = stdout;
   if (s_outfile) {
     out = fopen(s_outfile, "w");
-    if (!out)
+    if (!out) {
       ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
-    result = WASM_ERROR;
+      result = WASM_ERROR;
+    }
   }
   if (WASM_SUCCEEDED(result)) {
     WasmOpcntData opcnt_data;
     wasm_init_opcnt_data(allocator, &opcnt_data);
+    opcnt_data.collect_opcode_dist = s_report_opcode_dist;
+    opcnt_data.collect_get_local_dist = s_report_get_local_dist;
+    opcnt_data.collect_i32_const_dist = s_report_i32_const_dist;
+    opcnt_data.collect_i32_load_dist = s_report_i32_load_dist;
+    opcnt_data.collect_i32_store_dist = s_report_i32_store_dist;
+    opcnt_data.collect_set_local_dist = s_report_set_local_dist;
+    opcnt_data.collect_tee_local_dist = s_report_tee_local_dist;
     result = wasm_read_binary_opcnt(
         allocator, data, size, &s_read_binary_options, &s_error_handler,
         &opcnt_data);
@@ -430,5 +539,8 @@ int main(int argc, char** argv) {
   wasm_free(allocator, data);
   wasm_print_allocator_stats(allocator);
   wasm_destroy_allocator(allocator);
+  fflush(out);
+  if (s_outfile)
+    fclose(out);
   return result;
 }

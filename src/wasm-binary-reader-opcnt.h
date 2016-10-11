@@ -50,11 +50,21 @@ typedef struct WasmOpcntData {
   WasmIntCounterVector tee_local_vec;
   WasmIntPairCounterVector i32_load_vec;
   WasmIntPairCounterVector i32_store_vec;
+  WasmBool collect_opcode_dist;
+  WasmBool collect_get_local_dist;
+  WasmBool collect_i32_const_dist;
+  WasmBool collect_i32_load_dist;
+  WasmBool collect_i32_store_dist;
+  WasmBool collect_set_local_dist;
+  WasmBool collect_tee_local_dist;
 } WasmOpcntData;
 
 void wasm_init_opcnt_data(struct WasmAllocator* allocator, WasmOpcntData* data);
 void wasm_destroy_opcnt_data(struct WasmAllocator* allocator,
                              WasmOpcntData* data);
+
+void wasm_opcnt_data_set_flags(WasmOpcntData* data);
+void wasm_opcnt_data_clear_flags(WasmOpcntData* data);
 
 WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   const void* data,
