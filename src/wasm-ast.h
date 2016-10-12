@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "wasm-binding-hash.h"
 #include "wasm-common.h"
 #include "wasm-type-vector.h"
 #include "wasm-vector.h"
@@ -84,24 +85,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_UNARY,
   WASM_EXPR_TYPE_UNREACHABLE,
 } WasmExprType;
-
-typedef struct WasmBinding {
-  WasmLocation loc;
-  WasmStringSlice name;
-  int index;
-} WasmBinding;
-
-typedef struct WasmBindingHashEntry {
-  WasmBinding binding;
-  struct WasmBindingHashEntry* next;
-  struct WasmBindingHashEntry* prev; /* only valid when this entry is unused */
-} WasmBindingHashEntry;
-WASM_DEFINE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
-
-typedef struct WasmBindingHash {
-  WasmBindingHashEntryVector entries;
-  WasmBindingHashEntry* free_head;
-} WasmBindingHash;
 
 typedef WasmTypeVector WasmBlockSignature;
 
@@ -411,12 +394,6 @@ typedef struct WasmExprVisitor {
 } WasmExprVisitor;
 
 WASM_EXTERN_C_BEGIN
-WasmBinding* wasm_insert_binding(struct WasmAllocator*,
-                                 WasmBindingHash*,
-                                 const WasmStringSlice*);
-
-WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry*);
-
 WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
 /* ownership of the function signature is passed to the module */
 WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator*,

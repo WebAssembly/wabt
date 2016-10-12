@@ -2015,7 +2015,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_CTX0(end_data_section);
   }
 
-  CALLBACK_CTX0(end_module);
+  CALLBACK0(end_module);
   destroy_context(allocator, ctx);
   return WASM_OK;
 }

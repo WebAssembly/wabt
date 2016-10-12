@@ -56,6 +56,13 @@ WasmStringSlice wasm_empty_string_slice(void) {
   return result;
 }
 
+WasmStringSlice wasm_string_slice_from_cstr(const char* string) {
+  WasmStringSlice result;
+  result.start = string;
+  result.length = strlen(string);
+  return result;
+}
+
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice* a,
                                       const WasmStringSlice* b) {
   return a->start && b->start && a->length == b->length &&

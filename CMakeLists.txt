@@ -205,9 +205,10 @@ add_library(libwasm STATIC
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
   src/wasm-binary-reader-ast.c
+  src/wasm-binding-hash.c
   src/wasm-ast-writer.c
-  src/wasm-binary-reader-interpreter.c
   src/wasm-interpreter.c
+  src/wasm-binary-reader-interpreter.c
   src/wasm-apply-names.c
   src/wasm-generate-names.c
 

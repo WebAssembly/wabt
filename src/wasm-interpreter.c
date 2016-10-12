@@ -22,6 +22,8 @@
 
 #include "wasm-stream.h"
 
+#define INITIAL_ISTREAM_CAPACITY (64 * 1024)
+
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
 static const char* s_interpreter_opcode_name[] = {
     WASM_FOREACH_OPCODE(V)
@@ -44,47 +46,127 @@ static const char* wasm_get_interpreter_opcode_name(uint8_t opcode) {
   return s_interpreter_opcode_name[opcode];
 }
 
-static WasmResult trapping_host_func_callback(
-    const WasmInterpreterFuncSignature* sig,
-    const WasmStringSlice* module_name,
-    const WasmStringSlice* field_name,
-    uint32_t num_args,
-    WasmInterpreterTypedValue* args,
-    uint32_t num_results,
-    WasmInterpreterTypedValue* out_results,
-    void* user_data) {
-  return WASM_ERROR;
+void wasm_init_interpreter_environment(WasmAllocator* allocator,
+                                       WasmInterpreterEnvironment* env) {
+  WASM_ZERO_MEMORY(*env);
+  wasm_init_output_buffer(allocator, &env->istream, INITIAL_ISTREAM_CAPACITY);
+}
+
+static void wasm_destroy_interpreter_func_signature(
+    WasmAllocator* allocator,
+    WasmInterpreterFuncSignature* sig) {
+  wasm_destroy_type_vector(allocator, &sig->param_types);
+  wasm_destroy_type_vector(allocator, &sig->result_types);
+}
+
+static void wasm_destroy_interpreter_func(
+    WasmAllocator* allocator,
+    WasmInterpreterFunc* func) {
+  if (!func->is_host)
+    wasm_destroy_type_vector(allocator, &func->defined.param_and_local_types);
+}
+
+static void wasm_destroy_interpreter_memory(WasmAllocator* unused,
+                                            WasmInterpreterMemory* memory) {
+  if (memory->allocator) {
+    wasm_free(memory->allocator, memory->data);
+  } else {
+    assert(memory->data == NULL);
+  }
+}
+
+static void wasm_destroy_interpreter_table(WasmAllocator* allocator,
+                                           WasmInterpreterTable* table) {
+  wasm_destroy_uint32_array(allocator, &table->func_indexes);
+}
+
+static void wasm_destroy_interpreter_import(WasmAllocator* allocator,
+                                            WasmInterpreterImport* import) {
+  wasm_destroy_string_slice(allocator, &import->module_name);
+  wasm_destroy_string_slice(allocator, &import->field_name);
+}
+
+static void wasm_destroy_interpreter_module(WasmAllocator* allocator,
+                                            WasmInterpreterModule* module) {
+  wasm_destroy_interpreter_export_vector(allocator, &module->exports);
+  wasm_destroy_binding_hash(allocator, &module->export_bindings);
+  if (!module->is_host) {
+    WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->defined.imports,
+                                    interpreter_import);
+  }
+}
+
+void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
+                                          WasmInterpreterEnvironment* env) {
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->modules,
+                                   interpreter_module);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->sigs,
+                                   interpreter_func_signature);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->funcs, interpreter_func);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->memories,
+                                   interpreter_memory);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->tables, interpreter_table);
+  wasm_destroy_interpreter_global_vector(allocator, &env->globals);
+  wasm_destroy_output_buffer(&env->istream);
+  wasm_destroy_binding_hash(allocator, &env->module_bindings);
+}
+
+WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
+                                               WasmInterpreterEnvironment* env,
+                                               WasmStringSlice name) {
+  WasmInterpreterModule* module =
+      wasm_append_interpreter_module(allocator, &env->modules);
+  module->name = wasm_dup_string_slice(allocator, name);
+  module->memory_index = WASM_INVALID_INDEX;
+  module->table_index = WASM_INVALID_INDEX;
+  module->is_host = WASM_TRUE;
+
+  WasmBinding* binding =
+      wasm_insert_binding(allocator, &env->module_bindings, &module->name);
+  binding->index = env->modules.size - 1;
+  return module;
 }
 
 WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
+                                        WasmInterpreterEnvironment* env,
                                         WasmInterpreterModule* module,
                                         WasmInterpreterThread* thread,
                                         WasmInterpreterThreadOptions* options) {
+  assert(!module->is_host);
+  WASM_ZERO_MEMORY(*thread);
   wasm_new_interpreter_value_array(allocator, &thread->value_stack,
                                    options->value_stack_size);
   wasm_new_uint32_array(allocator, &thread->call_stack,
                         options->call_stack_size);
+  thread->env = env;
+  thread->module = module;
   thread->value_stack_top = thread->value_stack.data;
   thread->value_stack_end = thread->value_stack.data + thread->value_stack.size;
   thread->call_stack_top = thread->call_stack.data;
   thread->call_stack_end = thread->call_stack.data + thread->call_stack.size;
   thread->pc = options->pc;
 
-  thread->host_func.callback = trapping_host_func_callback;
+  /* cache this module's memory and table, for convenience */
+  if (module->memory_index != WASM_INVALID_INDEX)
+    thread->memory = &env->memories.data[module->memory_index];
+  if (module->table_index != WASM_INVALID_INDEX)
+    thread->table = &env->tables.data[module->table_index];
 
-  /* allocate import_args based on the signature with the most params */
+  /* allocate host_args based on the signature with the most params */
   /* TODO(binji): move this elsewhere? */
   uint32_t i;
-  uint32_t max_import_params = 0;
-  for (i = 0; i < module->funcs.size; ++i) {
-    WasmInterpreterFunc* func = &module->funcs.data[i];
-    assert(func->sig_index < module->sigs.size);
-    WasmInterpreterFuncSignature* sig = &module->sigs.data[func->sig_index];
-    if (sig->param_types.size > max_import_params)
-      max_import_params = sig->param_types.size;
+  uint32_t max_host_params = 0;
+  for (i = 0; i < env->funcs.size; ++i) {
+    WasmInterpreterFunc* func = &env->funcs.data[i];
+    if (!func->is_host)
+      continue;
+    assert(func->sig_index < env->sigs.size);
+    WasmInterpreterFuncSignature* sig = &env->sigs.data[func->sig_index];
+    if (sig->param_types.size > max_host_params)
+      max_host_params = sig->param_types.size;
   }
-  wasm_new_interpreter_typed_value_array(allocator, &thread->import_args,
-                                         max_import_params);
+  wasm_new_interpreter_typed_value_array(allocator, &thread->host_args,
+                                         max_host_params);
   return WASM_OK;
 }
 
@@ -99,35 +181,19 @@ WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
 WasmInterpreterExport* wasm_get_interpreter_export_by_name(
     WasmInterpreterModule* module,
     WasmStringSlice* name) {
-  uint32_t i;
-  for (i = 0; i < module->exports.size; ++i) {
-    WasmInterpreterExport* export = &module->exports.data[i];
-    if (wasm_string_slices_are_equal(name, &export->name))
-      return export;
-  }
-  return NULL;
-}
-
-WasmInterpreterImport* wasm_get_interpreter_import_by_name(
-    WasmInterpreterModule* module,
-    WasmStringSlice* module_name,
-    WasmStringSlice* func_name) {
-  uint32_t i;
-  for (i = 0; i < module->imports.size; ++i) {
-    WasmInterpreterImport* import = &module->imports.data[i];
-    if (wasm_string_slices_are_equal(module_name, &import->module_name) &&
-        wasm_string_slices_are_equal(func_name, &import->field_name)) {
-      return import;
-    }
-  }
-  return NULL;
+  int field_index =
+      wasm_find_binding_index_by_name(&module->export_bindings, name);
+  if (field_index < 0)
+    return NULL;
+  assert((size_t)field_index < module->exports.size);
+  return &module->exports.data[field_index];
 }
 
 void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread) {
   wasm_destroy_interpreter_value_array(allocator, &thread->value_stack);
   wasm_destroy_uint32_array(allocator, &thread->call_stack);
-  wasm_destroy_interpreter_typed_value_array(allocator, &thread->import_args);
+  wasm_destroy_interpreter_typed_value_array(allocator, &thread->host_args);
 }
 
 /* 3 32222222 222...00
@@ -421,26 +487,26 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define POP_CALL() (*--thread->call_stack_top)
 
-#define LOAD(type, mem_type)                                               \
-  do {                                                                     \
-    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                 \
-    MEM_TYPE_##mem_type value;                                             \
-    TRAP_IF(offset + sizeof(value) > module->memory.byte_size,             \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
-    void* src = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
-    memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                      \
-    PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);               \
+#define LOAD(type, mem_type)                                                \
+  do {                                                                      \
+    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                  \
+    MEM_TYPE_##mem_type value;                                              \
+    TRAP_IF(offset + sizeof(value) > thread->memory->byte_size,             \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
+    void* src = (void*)((intptr_t)thread->memory->data + (uint32_t)offset); \
+    memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                       \
+    PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);                \
   } while (0)
 
-#define STORE(type, mem_type)                                              \
-  do {                                                                     \
-    VALUE_TYPE_##type value = POP_##type();                                \
-    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                 \
-    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;                  \
-    TRAP_IF(offset + sizeof(src) > module->memory.byte_size,               \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
-    void* dst = (void*)((intptr_t)module->memory.data + (uint32_t)offset); \
-    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                        \
+#define STORE(type, mem_type)                                               \
+  do {                                                                      \
+    VALUE_TYPE_##type value = POP_##type();                                 \
+    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                  \
+    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;                   \
+    TRAP_IF(offset + sizeof(src) > thread->memory->byte_size,               \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
+    void* dst = (void*)((intptr_t)thread->memory->data + (uint32_t)offset); \
+    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                         \
   } while (0)
 
 #define BINOP(rtype, type, op)            \
@@ -625,32 +691,31 @@ static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
   *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
 }
 
-static WasmBool signatures_are_equal(WasmInterpreterModule* module,
+static WasmBool signatures_are_equal(WasmInterpreterEnvironment* env,
                                      uint32_t sig_index_0,
                                      uint32_t sig_index_1) {
   if (sig_index_0 == sig_index_1)
     return WASM_TRUE;
-  WasmInterpreterFuncSignature* sig_0 = &module->sigs.data[sig_index_0];
-  WasmInterpreterFuncSignature* sig_1 = &module->sigs.data[sig_index_1];
+  WasmInterpreterFuncSignature* sig_0 = &env->sigs.data[sig_index_0];
+  WasmInterpreterFuncSignature* sig_1 = &env->sigs.data[sig_index_1];
   return wasm_type_vectors_are_equal(&sig_0->param_types,
                                      &sig_1->param_types) &&
          wasm_type_vectors_are_equal(&sig_0->result_types,
                                      &sig_1->result_types);
 }
 
-WasmInterpreterResult wasm_call_host(WasmInterpreterModule* module,
-                                     WasmInterpreterThread* thread,
-                                     WasmInterpreterImport* import) {
-  uint32_t sig_index = import->func.sig_index;
-  assert(sig_index < module->sigs.size);
-  WasmInterpreterFuncSignature* sig = &module->sigs.data[sig_index];
+WasmInterpreterResult wasm_call_host(WasmInterpreterThread* thread,
+                                     WasmInterpreterFunc* func) {
+  assert(func->is_host);
+  assert(func->sig_index < thread->env->sigs.size);
+  WasmInterpreterFuncSignature* sig = &thread->env->sigs.data[func->sig_index];
 
   uint32_t num_args = sig->param_types.size;
   uint32_t i;
-  assert(num_args <= thread->import_args.size);
+  assert(num_args <= thread->host_args.size);
   for (i = num_args; i > 0; --i) {
     WasmInterpreterValue value = POP();
-    WasmInterpreterTypedValue* arg = &thread->import_args.data[i - 1];
+    WasmInterpreterTypedValue* arg = &thread->host_args.data[i - 1];
     arg->type = sig->param_types.data[i - 1];
     arg->value = value;
   }
@@ -659,11 +724,9 @@ WasmInterpreterResult wasm_call_host(WasmInterpreterModule* module,
   WasmInterpreterTypedValue* call_result_values =
       alloca(sizeof(WasmInterpreterTypedValue) * num_results);
 
-  assert(thread->host_func.callback);
-  WasmResult call_result = thread->host_func.callback(
-      sig, &import->module_name, &import->field_name, num_args,
-      thread->import_args.data, num_results, call_result_values,
-      thread->host_func.user_data);
+  WasmResult call_result = func->host.callback(
+      func, sig, num_args, thread->host_args.data, num_results,
+      call_result_values, func->host.user_data);
   TRAP_IF(call_result != WASM_OK, HOST_TRAPPED);
 
   for (i = 0; i < num_results; ++i) {
@@ -675,14 +738,16 @@ WasmInterpreterResult wasm_call_host(WasmInterpreterModule* module,
   return WASM_INTERPRETER_OK;
 }
 
-WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
-                                           WasmInterpreterThread* thread,
+WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
                                            uint32_t num_instructions,
                                            uint32_t* call_stack_return_top) {
   WasmInterpreterResult result = WASM_INTERPRETER_OK;
   assert(call_stack_return_top < thread->call_stack_end);
 
-  const uint8_t* istream = module->istream.start;
+  WasmInterpreterEnvironment* env = thread->env;
+  WasmInterpreterModule* module = thread->module;
+
+  const uint8_t* istream = env->istream.start;
   const uint8_t* pc = &istream[thread->pc];
   uint32_t i;
   for (i = 0; i < num_instructions; ++i) {
@@ -753,15 +818,15 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
 
       case WASM_OPCODE_GET_GLOBAL: {
         uint32_t index = read_u32(&pc);
-        assert(index < module->globals.size);
-        PUSH(module->globals.data[index].typed_value.value);
+        assert(index < env->globals.size);
+        PUSH(env->globals.data[index].typed_value.value);
         break;
       }
 
       case WASM_OPCODE_SET_GLOBAL: {
         uint32_t index = read_u32(&pc);
-        assert(index < module->globals.size);
-        module->globals.data[index].typed_value.value = POP();
+        assert(index < env->globals.size);
+        env->globals.data[index].typed_value.value = POP();
         break;
       }
 
@@ -789,36 +854,29 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
       }
 
       case WASM_OPCODE_CALL_INDIRECT: {
+        WasmInterpreterTable* table = &env->tables.data[module->table_index];
         uint32_t sig_index = read_u32(&pc);
-        assert(sig_index < module->sigs.size);
+        assert(sig_index < env->sigs.size);
         VALUE_TYPE_I32 entry_index = POP_I32();
-        TRAP_IF(entry_index >= module->func_table.size, UNDEFINED_TABLE_INDEX);
-        uint32_t func_index = module->func_table.data[entry_index];
-        WasmInterpreterFunc* func = &module->funcs.data[func_index];
+        TRAP_IF(entry_index >= table->func_indexes.size, UNDEFINED_TABLE_INDEX);
+        uint32_t func_index = table->func_indexes.data[entry_index];
+        WasmInterpreterFunc* func = &env->funcs.data[func_index];
+        TRAP_UNLESS(signatures_are_equal(env, func->sig_index, sig_index),
+                    INDIRECT_CALL_SIGNATURE_MISMATCH);
         if (func->is_host) {
-          TRAP_UNLESS(signatures_are_equal(module, func->sig_index, sig_index),
-                      INDIRECT_CALL_SIGNATURE_MISMATCH);
-          uint32_t import_index = func->import_index;
-          assert(import_index < module->imports.size);
-          WasmInterpreterImport* import = &module->imports.data[import_index];
-          wasm_call_host(module, thread, import);
+          wasm_call_host(thread, func);
         } else {
-          TRAP_UNLESS(signatures_are_equal(module, func->sig_index, sig_index),
-                      INDIRECT_CALL_SIGNATURE_MISMATCH);
           PUSH_CALL();
-          GOTO(func->offset);
+          GOTO(func->defined.offset);
         }
         break;
       }
 
       case WASM_OPCODE_CALL_HOST: {
         uint32_t func_index = read_u32(&pc);
-        assert(func_index < module->funcs.size);
-        WasmInterpreterFunc* func = &module->funcs.data[func_index];
-        uint32_t import_index = func->import_index;
-        assert(import_index < module->imports.size);
-        WasmInterpreterImport* import = &module->imports.data[import_index];
-        wasm_call_host(module, thread, import);
+        assert(func_index < env->funcs.size);
+        WasmInterpreterFunc* func = &env->funcs.data[func_index];
+        wasm_call_host(thread, func);
         break;
       }
 
@@ -915,27 +973,27 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
         break;
 
       case WASM_OPCODE_CURRENT_MEMORY:
-        PUSH_I32(module->memory.page_size);
+        PUSH_I32(thread->memory->page_size);
         break;
 
       case WASM_OPCODE_GROW_MEMORY: {
-        uint32_t old_page_size = module->memory.page_size;
-        uint32_t old_byte_size = module->memory.byte_size;
+        uint32_t old_page_size = thread->memory->page_size;
+        uint32_t old_byte_size = thread->memory->byte_size;
         VALUE_TYPE_I32 grow_pages = POP_I32();
         uint32_t new_page_size = old_page_size + grow_pages;
-        PUSH_NEG_1_AND_BREAK_IF(new_page_size > module->memory.max_page_size);
+        PUSH_NEG_1_AND_BREAK_IF(new_page_size > thread->memory->max_page_size);
         PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WASM_PAGE_SIZE >
                                 UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
-        WasmAllocator* allocator = module->memory.allocator;
-        void* new_data = wasm_realloc(allocator, module->memory.data,
+        WasmAllocator* allocator = thread->memory->allocator;
+        void* new_data = wasm_realloc(allocator, thread->memory->data,
                                       new_byte_size, WASM_DEFAULT_ALIGN);
         PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
-        module->memory.data = new_data;
-        module->memory.page_size = new_page_size;
-        module->memory.byte_size = new_byte_size;
+        thread->memory->data = new_data;
+        thread->memory->page_size = new_page_size;
+        thread->memory->byte_size = new_byte_size;
         PUSH_I32(old_page_size);
         break;
       }
@@ -1581,16 +1639,14 @@ exit_loop:
   return result;
 }
 
-void wasm_trace_pc(WasmInterpreterModule* module,
-                   WasmInterpreterThread* thread,
-                   WasmStream* stream) {
-  const uint8_t* istream = module->istream.start;
+void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
+  const uint8_t* istream = thread->env->istream.start;
   const uint8_t* pc = &istream[thread->pc];
   size_t value_stack_depth = thread->value_stack_top - thread->value_stack.data;
   size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data;
 
   wasm_writef(stream, "#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ",
-              call_stack_depth, pc - (uint8_t*)module->istream.start,
+              call_stack_depth, pc - (uint8_t*)thread->env->istream.start,
               value_stack_depth);
 
   uint8_t opcode = *pc++;
@@ -1934,17 +1990,17 @@ void wasm_trace_pc(WasmInterpreterModule* module,
   }
 }
 
-void wasm_disassemble_module(WasmInterpreterModule* module,
-                             WasmStream* stream,
-                             uint32_t from,
-                             uint32_t to) {
+void wasm_disassemble(WasmInterpreterEnvironment* env,
+                      WasmStream* stream,
+                      uint32_t from,
+                      uint32_t to) {
   /* TODO(binji): mark function entries */
   /* TODO(binji): track value stack size */
-  if (from >= module->istream.size)
+  if (from >= env->istream.size)
     return;
-  if (to > module->istream.size)
-    to = module->istream.size;
-  const uint8_t* istream = module->istream.start;
+  if (to > env->istream.size)
+    to = env->istream.size;
+  const uint8_t* istream = env->istream.start;
   const uint8_t* pc = &istream[from];
 
   while ((uint32_t)(pc - istream) < to) {
@@ -2247,49 +2303,11 @@ void wasm_disassemble_module(WasmInterpreterModule* module,
   }
 }
 
-static void wasm_destroy_memory(WasmInterpreterMemory* memory) {
-  if (memory->allocator) {
-    wasm_free(memory->allocator, memory->data);
-  } else {
-    assert(memory->data == NULL);
-  }
+void wasm_disassemble_module(WasmInterpreterEnvironment* env,
+                             WasmStream* stream,
+                             WasmInterpreterModule* module) {
+  assert(!module->is_host);
+  wasm_disassemble(env, stream, module->defined.istream_start,
+                   module->defined.istream_end);
 }
 
-static void wasm_destroy_interpreter_func_signature(
-    WasmAllocator* allocator,
-    WasmInterpreterFuncSignature* sig) {
-  wasm_destroy_type_vector(allocator, &sig->param_types);
-  wasm_destroy_type_vector(allocator, &sig->result_types);
-}
-
-static void wasm_destroy_interpreter_func(
-    WasmAllocator* allocator,
-    WasmInterpreterFunc* func) {
-  wasm_destroy_type_vector(allocator, &func->param_and_local_types);
-}
-
-static void wasm_destroy_interpreter_import(WasmAllocator* allocator,
-                                            WasmInterpreterImport* import) {
-  wasm_destroy_string_slice(allocator, &import->module_name);
-  wasm_destroy_string_slice(allocator, &import->field_name);
-}
-
-static void wasm_destroy_interpreter_export(WasmAllocator* allocator,
-                                            WasmInterpreterExport* export) {
-  wasm_destroy_string_slice(allocator, &export->name);
-}
-
-void wasm_destroy_interpreter_module(WasmAllocator* allocator,
-                                     WasmInterpreterModule* module) {
-  wasm_destroy_memory(&module->memory);
-  WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->sigs,
-                                  interpreter_func_signature);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, module->funcs, interpreter_func);
-  wasm_destroy_uint32_array(allocator, &module->func_table);
-  WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->imports,
-                                  interpreter_import);
-  WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->exports,
-                                  interpreter_export);
-  wasm_destroy_interpreter_global_array(allocator, &module->globals);
-  wasm_destroy_output_buffer(&module->istream);
-}

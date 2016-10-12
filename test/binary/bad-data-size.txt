@@ -15,6 +15,7 @@ section(DATA) {
 }
 (;; STDERR ;;;
 Error running "wasm-interp":
+error: data segment is out of bounds: [0, 8) >= max value 0
 error: @0x0000001d: on_data_segment_data callback failed
 
 ;;; STDERR ;;)

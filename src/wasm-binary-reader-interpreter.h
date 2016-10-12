@@ -20,6 +20,7 @@
 #include "wasm-common.h"
 
 struct WasmAllocator;
+struct WasmInterpreterEnvironment;
 struct WasmInterpreterModule;
 struct WasmReadBinaryOptions;
 
@@ -27,11 +28,12 @@ WASM_EXTERN_C_BEGIN
 WasmResult wasm_read_binary_interpreter(
     struct WasmAllocator* allocator,
     struct WasmAllocator* memory_allocator,
+    struct WasmInterpreterEnvironment* env,
     const void* data,
     size_t size,
     const struct WasmReadBinaryOptions* options,
     WasmBinaryErrorHandler*,
-    struct WasmInterpreterModule* out_module);
+    struct WasmInterpreterModule** out_module);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_READER_INTERPRETER_H_ */

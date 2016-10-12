@@ -62,11 +62,17 @@ void wasm_close_file_writer(WasmFileWriter* writer);
 /* WasmMemoryWriter */
 WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
                                 WasmMemoryWriter* writer);
+/* Passes ownership of the buffer to writer */
+WasmResult wasm_init_mem_writer_existing(WasmMemoryWriter* writer,
+                                         WasmOutputBuffer* buf);
 void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,
                                          WasmOutputBuffer* out_buf);
 void wasm_close_mem_writer(WasmMemoryWriter* writer);
 
 /* WasmOutputBuffer */
+void wasm_init_output_buffer(WasmAllocator* allocator,
+                             WasmOutputBuffer* buf,
+                             size_t initial_capacity);
 WasmResult wasm_write_output_buffer_to_file(WasmOutputBuffer* buf,
                                             const char* filename);
 void wasm_destroy_output_buffer(WasmOutputBuffer* buf);
