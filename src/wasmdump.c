@@ -128,9 +128,10 @@ int main(int argc, char** argv) {
   void* data;
   size_t size;
   WasmResult result = wasm_read_file(allocator, s_infile, &data, &size);
-  if (WASM_SUCCEEDED(result)) {
-    result =
-        wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-  }
+  if (WASM_FAILED(result))
+    return result;
+
+  result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+  wasm_free(allocator, data);
   return result;
 }
