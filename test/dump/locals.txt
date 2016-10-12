@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func (local i32 i64 i64 f32 f32 f32 f64 f64 f64 f64)))
 (;; STDOUT ;;;
@@ -37,7 +38,5 @@
 000001f: 0f                                        ; end
 0000015: 0a                                        ; FIXUP func body size
 0000013: 0c                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0a0c 010a 0401 0102 0203 0304 040f 
+func 0
 ;;; STDOUT ;;)

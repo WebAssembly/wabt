@@ -128,7 +128,8 @@ static WasmResult append_expr(Context* ctx, WasmExpr* expr) {
 
 static void handle_error(Context* ctx, uint32_t offset, const char* message) {
   if (ctx->error_handler->on_error) {
-    ctx->error_handler->on_error(offset, message, ctx->error_handler->user_data);
+    ctx->error_handler->on_error(offset, message,
+                                 ctx->error_handler->user_data);
   }
 }
 
@@ -535,11 +536,11 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   return append_expr(ctx, expr);
 }
 
-static WasmResult on_br_table_expr(uint32_t num_targets,
+static WasmResult on_br_table_expr(WasmBinaryReaderContext* context,
+                                   uint32_t num_targets,
                                    uint32_t* target_depths,
-                                   uint32_t default_target_depth,
-                                   void* user_data) {
-  Context* ctx = user_data;
+                                   uint32_t default_target_depth) {
+  Context* ctx = context->user_data;
   WasmExpr* expr = wasm_new_br_table_expr(ctx->allocator);
   wasm_reserve_vars(ctx->allocator, &expr->br_table.targets, num_targets);
   expr->br_table.targets.size = num_targets;
@@ -574,7 +575,7 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
 
 static WasmResult on_compare_expr(WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  WasmExpr *expr = wasm_new_compare_expr(ctx->allocator);
+  WasmExpr* expr = wasm_new_compare_expr(ctx->allocator);
   expr->compare.opcode = opcode;
   return append_expr(ctx, expr);
 }

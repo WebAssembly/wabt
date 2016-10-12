@@ -205,7 +205,6 @@ add_library(libwasm STATIC
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
   src/wasm-binary-reader-ast.c
-  src/wasm-binary-reader-opcnt.c
   src/wasm-ast-writer.c
   src/wasm-binary-reader-interpreter.c
   src/wasm-interpreter.c
@@ -236,9 +235,15 @@ if (NOT EMSCRIPTEN)
   target_link_libraries(wasm2wast libwasm)
 
   # wasmopcodecnt
-  add_executable(wasmopcodecnt src/wasmopcodecnt.c)
+  add_executable(wasmopcodecnt src/wasmopcodecnt.c
+    src/wasm-binary-reader-opcnt.c)
   add_dependencies(everything wasmopcodecnt)
   target_link_libraries(wasmopcodecnt libwasm)
+
+  # wasmdump
+  add_executable(wasmdump src/wasmdump.c src/wasm-binary-reader-objdump.c)
+  add_dependencies(everything wasmdump)
+  target_link_libraries(wasmdump libwasm)
 
   if (NOT WIN32)
   add_custom_command( TARGET wast2wasm

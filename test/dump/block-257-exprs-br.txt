@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func
     (block $foo
@@ -339,24 +340,265 @@
 0000015: 8902                                      ; FIXUP func body size
 ; move data: [14, 120) -> [15, 121)
 0000013: 8c02                                      ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0a8c 0201 8902 0001 000a 0a0a 0a0a 
-0000020: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000030: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000040: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000050: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000060: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000070: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000080: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000090: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-00000a0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-00000b0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-00000c0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-00000d0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-00000e0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-00000f0: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000100: 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 0a0a 
-0000110: 0a0a 0a0a 0a0a 0a0a 0a0a 0a06 0006 000f 
-0000120: 0f                                      
+func 0
+ 000019: 01 00                      | block
+ 00001b: 0a                         |   nop
+ 00001c: 0a                         |   nop
+ 00001d: 0a                         |   nop
+ 00001e: 0a                         |   nop
+ 00001f: 0a                         |   nop
+ 000020: 0a                         |   nop
+ 000021: 0a                         |   nop
+ 000022: 0a                         |   nop
+ 000023: 0a                         |   nop
+ 000024: 0a                         |   nop
+ 000025: 0a                         |   nop
+ 000026: 0a                         |   nop
+ 000027: 0a                         |   nop
+ 000028: 0a                         |   nop
+ 000029: 0a                         |   nop
+ 00002a: 0a                         |   nop
+ 00002b: 0a                         |   nop
+ 00002c: 0a                         |   nop
+ 00002d: 0a                         |   nop
+ 00002e: 0a                         |   nop
+ 00002f: 0a                         |   nop
+ 000030: 0a                         |   nop
+ 000031: 0a                         |   nop
+ 000032: 0a                         |   nop
+ 000033: 0a                         |   nop
+ 000034: 0a                         |   nop
+ 000035: 0a                         |   nop
+ 000036: 0a                         |   nop
+ 000037: 0a                         |   nop
+ 000038: 0a                         |   nop
+ 000039: 0a                         |   nop
+ 00003a: 0a                         |   nop
+ 00003b: 0a                         |   nop
+ 00003c: 0a                         |   nop
+ 00003d: 0a                         |   nop
+ 00003e: 0a                         |   nop
+ 00003f: 0a                         |   nop
+ 000040: 0a                         |   nop
+ 000041: 0a                         |   nop
+ 000042: 0a                         |   nop
+ 000043: 0a                         |   nop
+ 000044: 0a                         |   nop
+ 000045: 0a                         |   nop
+ 000046: 0a                         |   nop
+ 000047: 0a                         |   nop
+ 000048: 0a                         |   nop
+ 000049: 0a                         |   nop
+ 00004a: 0a                         |   nop
+ 00004b: 0a                         |   nop
+ 00004c: 0a                         |   nop
+ 00004d: 0a                         |   nop
+ 00004e: 0a                         |   nop
+ 00004f: 0a                         |   nop
+ 000050: 0a                         |   nop
+ 000051: 0a                         |   nop
+ 000052: 0a                         |   nop
+ 000053: 0a                         |   nop
+ 000054: 0a                         |   nop
+ 000055: 0a                         |   nop
+ 000056: 0a                         |   nop
+ 000057: 0a                         |   nop
+ 000058: 0a                         |   nop
+ 000059: 0a                         |   nop
+ 00005a: 0a                         |   nop
+ 00005b: 0a                         |   nop
+ 00005c: 0a                         |   nop
+ 00005d: 0a                         |   nop
+ 00005e: 0a                         |   nop
+ 00005f: 0a                         |   nop
+ 000060: 0a                         |   nop
+ 000061: 0a                         |   nop
+ 000062: 0a                         |   nop
+ 000063: 0a                         |   nop
+ 000064: 0a                         |   nop
+ 000065: 0a                         |   nop
+ 000066: 0a                         |   nop
+ 000067: 0a                         |   nop
+ 000068: 0a                         |   nop
+ 000069: 0a                         |   nop
+ 00006a: 0a                         |   nop
+ 00006b: 0a                         |   nop
+ 00006c: 0a                         |   nop
+ 00006d: 0a                         |   nop
+ 00006e: 0a                         |   nop
+ 00006f: 0a                         |   nop
+ 000070: 0a                         |   nop
+ 000071: 0a                         |   nop
+ 000072: 0a                         |   nop
+ 000073: 0a                         |   nop
+ 000074: 0a                         |   nop
+ 000075: 0a                         |   nop
+ 000076: 0a                         |   nop
+ 000077: 0a                         |   nop
+ 000078: 0a                         |   nop
+ 000079: 0a                         |   nop
+ 00007a: 0a                         |   nop
+ 00007b: 0a                         |   nop
+ 00007c: 0a                         |   nop
+ 00007d: 0a                         |   nop
+ 00007e: 0a                         |   nop
+ 00007f: 0a                         |   nop
+ 000080: 0a                         |   nop
+ 000081: 0a                         |   nop
+ 000082: 0a                         |   nop
+ 000083: 0a                         |   nop
+ 000084: 0a                         |   nop
+ 000085: 0a                         |   nop
+ 000086: 0a                         |   nop
+ 000087: 0a                         |   nop
+ 000088: 0a                         |   nop
+ 000089: 0a                         |   nop
+ 00008a: 0a                         |   nop
+ 00008b: 0a                         |   nop
+ 00008c: 0a                         |   nop
+ 00008d: 0a                         |   nop
+ 00008e: 0a                         |   nop
+ 00008f: 0a                         |   nop
+ 000090: 0a                         |   nop
+ 000091: 0a                         |   nop
+ 000092: 0a                         |   nop
+ 000093: 0a                         |   nop
+ 000094: 0a                         |   nop
+ 000095: 0a                         |   nop
+ 000096: 0a                         |   nop
+ 000097: 0a                         |   nop
+ 000098: 0a                         |   nop
+ 000099: 0a                         |   nop
+ 00009a: 0a                         |   nop
+ 00009b: 0a                         |   nop
+ 00009c: 0a                         |   nop
+ 00009d: 0a                         |   nop
+ 00009e: 0a                         |   nop
+ 00009f: 0a                         |   nop
+ 0000a0: 0a                         |   nop
+ 0000a1: 0a                         |   nop
+ 0000a2: 0a                         |   nop
+ 0000a3: 0a                         |   nop
+ 0000a4: 0a                         |   nop
+ 0000a5: 0a                         |   nop
+ 0000a6: 0a                         |   nop
+ 0000a7: 0a                         |   nop
+ 0000a8: 0a                         |   nop
+ 0000a9: 0a                         |   nop
+ 0000aa: 0a                         |   nop
+ 0000ab: 0a                         |   nop
+ 0000ac: 0a                         |   nop
+ 0000ad: 0a                         |   nop
+ 0000ae: 0a                         |   nop
+ 0000af: 0a                         |   nop
+ 0000b0: 0a                         |   nop
+ 0000b1: 0a                         |   nop
+ 0000b2: 0a                         |   nop
+ 0000b3: 0a                         |   nop
+ 0000b4: 0a                         |   nop
+ 0000b5: 0a                         |   nop
+ 0000b6: 0a                         |   nop
+ 0000b7: 0a                         |   nop
+ 0000b8: 0a                         |   nop
+ 0000b9: 0a                         |   nop
+ 0000ba: 0a                         |   nop
+ 0000bb: 0a                         |   nop
+ 0000bc: 0a                         |   nop
+ 0000bd: 0a                         |   nop
+ 0000be: 0a                         |   nop
+ 0000bf: 0a                         |   nop
+ 0000c0: 0a                         |   nop
+ 0000c1: 0a                         |   nop
+ 0000c2: 0a                         |   nop
+ 0000c3: 0a                         |   nop
+ 0000c4: 0a                         |   nop
+ 0000c5: 0a                         |   nop
+ 0000c6: 0a                         |   nop
+ 0000c7: 0a                         |   nop
+ 0000c8: 0a                         |   nop
+ 0000c9: 0a                         |   nop
+ 0000ca: 0a                         |   nop
+ 0000cb: 0a                         |   nop
+ 0000cc: 0a                         |   nop
+ 0000cd: 0a                         |   nop
+ 0000ce: 0a                         |   nop
+ 0000cf: 0a                         |   nop
+ 0000d0: 0a                         |   nop
+ 0000d1: 0a                         |   nop
+ 0000d2: 0a                         |   nop
+ 0000d3: 0a                         |   nop
+ 0000d4: 0a                         |   nop
+ 0000d5: 0a                         |   nop
+ 0000d6: 0a                         |   nop
+ 0000d7: 0a                         |   nop
+ 0000d8: 0a                         |   nop
+ 0000d9: 0a                         |   nop
+ 0000da: 0a                         |   nop
+ 0000db: 0a                         |   nop
+ 0000dc: 0a                         |   nop
+ 0000dd: 0a                         |   nop
+ 0000de: 0a                         |   nop
+ 0000df: 0a                         |   nop
+ 0000e0: 0a                         |   nop
+ 0000e1: 0a                         |   nop
+ 0000e2: 0a                         |   nop
+ 0000e3: 0a                         |   nop
+ 0000e4: 0a                         |   nop
+ 0000e5: 0a                         |   nop
+ 0000e6: 0a                         |   nop
+ 0000e7: 0a                         |   nop
+ 0000e8: 0a                         |   nop
+ 0000e9: 0a                         |   nop
+ 0000ea: 0a                         |   nop
+ 0000eb: 0a                         |   nop
+ 0000ec: 0a                         |   nop
+ 0000ed: 0a                         |   nop
+ 0000ee: 0a                         |   nop
+ 0000ef: 0a                         |   nop
+ 0000f0: 0a                         |   nop
+ 0000f1: 0a                         |   nop
+ 0000f2: 0a                         |   nop
+ 0000f3: 0a                         |   nop
+ 0000f4: 0a                         |   nop
+ 0000f5: 0a                         |   nop
+ 0000f6: 0a                         |   nop
+ 0000f7: 0a                         |   nop
+ 0000f8: 0a                         |   nop
+ 0000f9: 0a                         |   nop
+ 0000fa: 0a                         |   nop
+ 0000fb: 0a                         |   nop
+ 0000fc: 0a                         |   nop
+ 0000fd: 0a                         |   nop
+ 0000fe: 0a                         |   nop
+ 0000ff: 0a                         |   nop
+ 000100: 0a                         |   nop
+ 000101: 0a                         |   nop
+ 000102: 0a                         |   nop
+ 000103: 0a                         |   nop
+ 000104: 0a                         |   nop
+ 000105: 0a                         |   nop
+ 000106: 0a                         |   nop
+ 000107: 0a                         |   nop
+ 000108: 0a                         |   nop
+ 000109: 0a                         |   nop
+ 00010a: 0a                         |   nop
+ 00010b: 0a                         |   nop
+ 00010c: 0a                         |   nop
+ 00010d: 0a                         |   nop
+ 00010e: 0a                         |   nop
+ 00010f: 0a                         |   nop
+ 000110: 0a                         |   nop
+ 000111: 0a                         |   nop
+ 000112: 0a                         |   nop
+ 000113: 0a                         |   nop
+ 000114: 0a                         |   nop
+ 000115: 0a                         |   nop
+ 000116: 0a                         |   nop
+ 000117: 0a                         |   nop
+ 000118: 0a                         |   nop
+ 000119: 0a                         |   nop
+ 00011a: 0a                         |   nop
+ 00011b: 06 00                      |   br 0
+ 00011d: 06 00                      |   br 0
+ 00011f: 0f                         | end
 ;;; STDOUT ;;)

@@ -151,6 +151,13 @@ typedef enum WasmExternalKind {
   WASM_NUM_EXTERNAL_KINDS,
 } WasmExternalKind;
 
+extern const char* g_wasm_kind_name[];
+
+static WASM_INLINE const char* wasm_get_kind_name(WasmExternalKind kind) {
+  assert(kind < WASM_NUM_EXTERNAL_KINDS);
+  return g_wasm_kind_name[kind];
+}
+
 typedef struct WasmLimits {
   uint64_t initial;
   uint64_t max;

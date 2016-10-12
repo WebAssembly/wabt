@@ -18,37 +18,34 @@
 import argparse
 import json
 import os
-import subprocess
 import sys
+import tempfile
 
 import find_exe
 import utils
-from utils import Error
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def main(args):
   parser = argparse.ArgumentParser()
+  parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
+                      action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
   parser.add_argument('--wast2wasm', metavar='PATH',
-                      help='override wast2wasm executable.')
+                      help='set the wast2wasm executable to use.')
   parser.add_argument('--wasmdump', metavar='PATH',
-                      help='override wast2wasm executable.')
-  parser.add_argument('--wasm-interp', metavar='PATH',
-                      help='override wasm-interp executable.')
-  parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
-                      action='store_true')
+                      help='set the wasmdump executable to use.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
-  parser.add_argument('--run-all-exports', action='store_true')
+  parser.add_argument('--no-check', action='store_true')
   parser.add_argument('--spec', action='store_true')
+  parser.add_argument('--no-canonicalize-leb128s', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
+  parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -56,8 +53,11 @@ def main(args):
       find_exe.GetWast2WasmExecutable(options.wast2wasm),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
-    '-v': options.verbose,
+    '--debug-names': options.debug_names,
+    '--no-check': options.no_check,
+    '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
     '--spec': options.spec,
+    '-v': options.verbose,
     '--use-libc-allocator': options.use_libc_allocator
   })
 
@@ -65,23 +65,20 @@ def main(args):
       find_exe.GetWasmdumpExecutable(options.wasmdump),
       error_cmdline=options.error_cmdline)
 
-  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.wasm_interp),
-      error_cmdline=options.error_cmdline)
-  wasm_interp.AppendOptionalArgs({
-    '--run-all-exports': options.run_all_exports,
-    '--spec': options.spec,
-    '--trace': options.verbose,
-    '--use-libc-allocator': options.use_libc_allocator
-  })
-
   wast2wasm.verbose = options.print_cmd
-  wasm_interp.verbose = options.print_cmd
+  wasmdump.verbose = options.print_cmd
 
-  with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
-    new_ext = '.json' if options.spec else '.wasm'
-    out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
-    wast2wasm.RunWithArgs(options.file, '-o', out_file)
+  filename = options.file
+
+  with utils.TempDirectory(options.out_dir, 'wasmdump-') as out_dir:
+    basename = os.path.basename(filename)
+    basename_noext = os.path.splitext(basename)[0]
+    if options.spec:
+      out_file = os.path.join(out_dir, basename_noext + '.json')
+    else:
+      out_file = os.path.join(out_dir, basename_noext + '.wasm')
+    wast2wasm.RunWithArgs('-o', out_file, filename)
+
     if options.spec:
       with open(out_file) as json_file:
         json_data = json.load(json_file)
@@ -89,17 +86,14 @@ def main(args):
       wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
     else:
       wasm_files = [out_file]
-    for wasm_file in wasm_files:
-      wasmdump.RunWithArgs(wasm_file)
-    wasm_interp.RunWithArgs(out_file)
 
-  return 0
+    for wasm_file in wasm_files:
+      wasmdump.RunWithArgs('-d', wasm_file)
 
 
 if __name__ == '__main__':
   try:
     sys.exit(main(sys.argv[1:]))
-  except Error as e:
+  except utils.Error as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)
-

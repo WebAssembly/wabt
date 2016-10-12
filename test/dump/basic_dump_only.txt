@@ -1,4 +1,4 @@
-;;; FLAGS: -d
+;;; TOOL: run-wasmdump
 (module
   (memory 1)
   (func $f (param i32 i32) (result i32)
@@ -6,8 +6,14 @@
     (i32.add (get_local 0) (get_local 1)))
   (export "f" (func $f)))
 (;; STDOUT ;;;
-0000000: 0061 736d 0c00 0000 0107 0140 0201 0101 
-0000010: 0103 0201 0005 0301 0001 0705 0101 6600 
-0000020: 000a 1601 1400 1000 1000 2a02 0010 0140 
-0000030: 3302 0014 0014 0140 0f                  
+func 0
+ 000026: 10 00                      | i32.const 0
+ 000028: 10 00                      | i32.const 0
+ 00002a: 2a 02 00                   | i32.load 2 0
+ 00002d: 10 01                      | i32.const 0x1
+ 00002f: 40                         | i32.add
+ 000030: 33 02 00                   | i32.store 2 0
+ 000033: 14 00                      | get_local 0
+ 000035: 14 01                      | get_local 0x1
+ 000037: 40                         | i32.add
 ;;; STDOUT ;;)

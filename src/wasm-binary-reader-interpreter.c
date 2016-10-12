@@ -320,8 +320,7 @@ static WasmResult emit_func_offset(Context* ctx,
   return WASM_OK;
 }
 
-static void on_error(WasmBinaryReaderContext* ctx,
-                     const char* message) {
+static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
   handle_error(ctx->offset, message, ctx->user_data);
 }
 
@@ -510,8 +509,7 @@ static WasmResult on_init_expr_get_global_expr(uint32_t index,
                                                void* user_data) {
   Context* ctx = user_data;
   assert(global_index < ctx->module->globals.size);
-  WasmInterpreterGlobal* ref_global =
-      &ctx->module->globals.data[global_index];
+  WasmInterpreterGlobal* ref_global = &ctx->module->globals.data[global_index];
   ctx->init_expr_value = ref_global->typed_value;
   return WASM_OK;
 }
@@ -719,8 +717,8 @@ static WasmResult check_n_types(Context* ctx,
   for (i = 0; i < expected->size; ++i) {
     WasmType actual =
         ctx->type_stack.data[ctx->type_stack.size - expected->size + i];
-    CHECK_RESULT(check_type(ctx, expected->data[expected->size - i - 1],
-                            actual, desc));
+    CHECK_RESULT(
+        check_type(ctx, expected->data[expected->size - i - 1], actual, desc));
   }
   return WASM_OK;
 }
@@ -1049,11 +1047,11 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_br_table_expr(uint32_t num_targets,
+static WasmResult on_br_table_expr(WasmBinaryReaderContext* context,
+                                   uint32_t num_targets,
                                    uint32_t* target_depths,
-                                   uint32_t default_target_depth,
-                                   void* user_data) {
-  Context* ctx = user_data;
+                                   uint32_t default_target_depth) {
+  Context* ctx = context->user_data;
   CHECK_RESULT(pop_and_check_1_type(ctx, WASM_TYPE_I32, "br_table"));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_TABLE));
   CHECK_RESULT(emit_i32(ctx, num_targets));

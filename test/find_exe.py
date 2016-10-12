@@ -25,6 +25,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 DEFAULT_WAST2WASM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wast2wasm')
 DEFAULT_WASM2WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm2wast')
+DEFAULT_WASMDUMP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasmdump')
 DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
 DEFAULT_WASMOPCODECNT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasmopcodecnt')
 
@@ -60,6 +61,10 @@ def GetWast2WasmExecutable(override=None):
 
 def GetWasm2WastExecutable(override=None):
   return FindExeWithFallback('wasm2wast', [DEFAULT_WASM2WAST_EXE], override)
+
+
+def GetWasmdumpExecutable(override=None):
+  return FindExeWithFallback('wasmdump', [DEFAULT_WASMDUMP_EXE], override)
 
 
 def GetWasmInterpExecutable(override=None):

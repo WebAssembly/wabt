@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func
     (drop
@@ -85,9 +86,32 @@
 0000038: 0f                                        ; end
 0000015: 23                                        ; FIXUP func body size
 0000013: 25                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0a25 0123 0010 00af a0ae 9ea9 9fa8 
-0000020: 9da7 a10b 1000 a6b1 a5b0 a3ab a4aa a20b 
-0000030: 1300 0000 00b2 ac0b 0f                  
+func 0
+ 000017: 10 00                      | i32.const 0
+ 000019: af                         | f64.convert_u/i32
+ 00001a: a0                         | i32.trunc_u/f64
+ 00001b: ae                         | f64.convert_s/i32
+ 00001c: 9e                         | i32.trunc_s/f64
+ 00001d: a9                         | f32.convert_u/i32
+ 00001e: 9f                         | i32.trunc_u/f32
+ 00001f: a8                         | f32.convert_s/i32
+ 000020: 9d                         | i32.trunc_s/f32
+ 000021: a7                         | i64.extend_u/i32
+ 000022: a1                         | i32.wrap/i64
+ 000023: 0b                         | drop
+ 000024: 10 00                      | i32.const 0
+ 000026: a6                         | i64.extend_s/i32
+ 000027: b1                         | f64.convert_u/i64
+ 000028: a5                         | i64.trunc_u/f64
+ 000029: b0                         | f64.convert_s/i64
+ 00002a: a3                         | i64.trunc_s/f64
+ 00002b: ab                         | f32.convert_u/i64
+ 00002c: a4                         | i64.trunc_u/f32
+ 00002d: aa                         | f32.convert_s/i64
+ 00002e: a2                         | i64.trunc_s/f32
+ 00002f: 0b                         | drop
+ 000030: 13 00 00 00 00             | f32.const 0
+ 000035: b2                         | f64.promote/f32
+ 000036: ac                         | f32.demote/f64
+ 000037: 0b                         | drop
 ;;; STDOUT ;;)

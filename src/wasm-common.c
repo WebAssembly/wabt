@@ -34,10 +34,13 @@
 WasmOpcodeInfo g_wasm_opcode_info[] = {WASM_FOREACH_OPCODE(V)};
 #undef V
 
+const char* g_wasm_kind_name[] = {"func", "table", "memory", "global"};
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_kind_name) ==
+                   WASM_NUM_EXTERNAL_KINDS);
+
 WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
   uint32_t opcode_align = wasm_get_opcode_memory_size(opcode);
-  return alignment == WASM_USE_NATURAL_ALIGNMENT ||
-         alignment == opcode_align;
+  return alignment == WASM_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
 }
 
 uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment) {
