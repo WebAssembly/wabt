@@ -133,11 +133,16 @@ static Label* top_label(Context* ctx) {
   return get_label(ctx, ctx->label_stack.size - 1);
 }
 
-static void on_error(uint32_t offset, const char* message, void* user_data);
+static void handle_error(uint32_t offset, const char* message, Context* ctx) {
+  if (ctx->error_handler->on_error) {
+    ctx->error_handler->on_error(offset, message,
+                                 ctx->error_handler->user_data);
+  }
+}
 
 static void print_error(Context* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
-  on_error(WASM_INVALID_OFFSET, buffer, ctx);
+  handle_error(WASM_INVALID_OFFSET, buffer, ctx);
 }
 
 static WasmInterpreterFunc* get_func(Context* ctx, uint32_t func_index) {
@@ -315,12 +320,9 @@ static WasmResult emit_func_offset(Context* ctx,
   return WASM_OK;
 }
 
-static void on_error(uint32_t offset, const char* message, void* user_data) {
-  Context* ctx = user_data;
-  if (ctx->error_handler->on_error) {
-    ctx->error_handler->on_error(offset, message,
-                                 ctx->error_handler->user_data);
-  }
+static void on_error(WasmBinaryReaderContext* ctx,
+                     const char* message) {
+  handle_error(ctx->offset, message, ctx->user_data);
 }
 
 static WasmResult on_signature_count(uint32_t count, void* user_data) {

@@ -60,7 +60,6 @@ WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
                                   const void* data,
                                   size_t size,
                                   const struct WasmReadBinaryOptions* options,
-                                  WasmBinaryErrorHandler*,
                                   WasmOpcntData* opcnt_data);
 
 WASM_EXTERN_C_END
