@@ -304,7 +304,7 @@ if (NOT EMSCRIPTEN)
   )
 
   # install
-  install(TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt DESTINATION bin)
+  install(TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt wasmdump DESTINATION bin)
 
 else ()
   # emscripten stuff
