@@ -41,3 +41,10 @@ matrix:
       env: SANITIZER=ubsan
     - os: osx
       compiler: clang
+
+  # Allow failures on the Mac bots. We'd rather not, but they are quite slow.
+  allow_failures:
+    - os: osx
+      compiler: clang
+
+  fast_finish: true
