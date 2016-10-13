@@ -586,7 +586,7 @@ static WasmResult on_data_segment_data(uint32_t index,
   assert(ctx->init_expr_value.type == WASM_TYPE_I32);
   uint32_t address = ctx->init_expr_value.value.i32;
   uint8_t* dst_data = memory->data;
-  if ((uint64_t)address + (uint64_t)size > memory->byte_size)
+  if (size > 0 && (uint64_t)address + (uint64_t)size > memory->byte_size)
     return WASM_ERROR;
   memcpy(&dst_data[address], src_data, size);
   return WASM_OK;

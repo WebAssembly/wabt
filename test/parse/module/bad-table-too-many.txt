@@ -7,7 +7,4 @@
 parse/module/bad-table-too-many.txt:5:3: only one table allowed
   (table anyfunc (elem 0)))
   ^^^^^^^^^^^^^^^^^^^^^^^^
-parse/module/bad-table-too-many.txt:5:3: segment offset (0) less than end of previous segment (1)
-  (table anyfunc (elem 0)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)
