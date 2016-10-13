@@ -284,8 +284,8 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "i32.store16"         { OPCODE(I32_STORE16); RETURN(STORE); }
     <i> "i64.store16"         { OPCODE(I64_STORE16); RETURN(STORE); }
     <i> "i64.store32"         { OPCODE(I64_STORE32); RETURN(STORE); }
-    <i> "offset="digits       { TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
-    <i> "align="digits        { TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
+    <i> "offset=" nat         { TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
+    <i> "align=" nat          { TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
     <i> "i32.const"           { TYPE(I32); RETURN(CONST); }
     <i> "i64.const"           { TYPE(I64); RETURN(CONST); }
     <i> "f32.const"           { TYPE(F32); RETURN(CONST); }

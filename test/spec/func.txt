@@ -126,35 +126,35 @@ assert_invalid error:
     (return (i64.const 1)) (return (i32.const 1))
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:485:6: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:480:6: type stack size too small at br value. got 0, expected at least 1
     (br 0)
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:491:6: type mismatch at br value. got f32, expected i32
+  third_party/testsuite/func.wast:486:6: type mismatch at br value. got f32, expected i32
     (br 0 (f32.const 0))
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:497:6: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:492:6: type stack size too small at br value. got 0, expected at least 1
     (br 0) (i32.const 1)
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:503:6: type mismatch at br value. got i64, expected i32
+  third_party/testsuite/func.wast:498:6: type mismatch at br value. got i64, expected i32
     (br 0 (i64.const 1)) (i32.const 1)
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:509:6: type mismatch at br value. got i64, expected i32
+  third_party/testsuite/func.wast:504:6: type mismatch at br value. got i64, expected i32
     (br 0 (i64.const 1)) (br 0 (i32.const 1))
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:525:13: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:520:13: type stack size too small at br value. got 0, expected at least 1
     (block (br 1)) (br 0 (i32.const 1))
             ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:531:13: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:526:13: type stack size too small at br value. got 0, expected at least 1
     (block (br 1 (nop))) (br 0 (i32.const 1))
             ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:537:13: type mismatch at br value. got i64, expected i32
+  third_party/testsuite/func.wast:532:13: type mismatch at br value. got i64, expected i32
     (block (br 1 (i64.const 1))) (br 0 (i32.const 1))
             ^^^^
 66/66 tests passed.

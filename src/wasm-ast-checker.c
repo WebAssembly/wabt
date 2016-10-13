@@ -908,71 +908,17 @@ static void print_const_expr_error(Context* ctx,
               desc);
 }
 
-static WasmResult eval_const_expr_i32(Context* ctx,
-                                      const WasmExpr* expr,
-                                      const char* desc,
-                                      WasmBool* out_has_value,
-                                      uint32_t* out_value) {
-  if (expr->next != NULL) {
-    expr = expr->next;
-    goto invalid_expr;
-  }
-
-  switch (expr->type) {
-    case WASM_EXPR_TYPE_CONST:
-      if (expr->const_.type != WASM_TYPE_I32) {
-        print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
-                    "%s must be of type i32; got %s.", desc,
-                    s_type_names[expr->const_.type]);
-        return WASM_ERROR;
-      }
-      *out_has_value = WASM_TRUE;
-      *out_value = expr->const_.u32;
-      return WASM_OK;
-
-    case WASM_EXPR_TYPE_GET_GLOBAL: {
-      const WasmGlobal* global = NULL;
-      if (WASM_FAILED(
-              check_global_var(ctx, &expr->get_global.var, &global, NULL)))
-        return WASM_ERROR;
-
-      if (global->type != WASM_TYPE_I32) {
-        print_error(ctx, CHECK_STYLE_FULL, &expr->loc,
-                    "%s must be of type i32; got %s.", desc,
-                    s_type_names[expr->const_.type]);
-        return WASM_ERROR;
-      }
-
-      /* TODO(binji): handle infinite recursion */
-      if (global->init_expr) {
-        return eval_const_expr_i32(ctx, global->init_expr, desc, out_has_value,
-                                   out_value);
-      } else {
-        /* imported globals can't be evaluated until they're linked. */
-        *out_has_value = WASM_FALSE;
-        *out_value = 0;
-        return WASM_OK;
-      }
-    }
-
-    invalid_expr:
-    default:
-      print_const_expr_error(ctx, &expr->loc, desc);
-      return WASM_ERROR;
-  }
-}
-
-static void check_global(Context* ctx,
-                         const WasmLocation* loc,
-                         const WasmGlobal* global) {
-  static const char s_desc[] = "global initializer expression";
+static void check_const_init_expr(Context* ctx,
+                                  const WasmLocation* loc,
+                                  const WasmExpr* expr,
+                                  WasmType expected_type,
+                                  const char* desc) {
   WasmType type = WASM_TYPE_VOID;
-  WasmExpr* expr = global->init_expr;
   if (!expr)
     return;
 
   if (expr->next != NULL) {
-    print_const_expr_error(ctx, loc, s_desc);
+    print_const_expr_error(ctx, loc, desc);
     return;
   }
 
@@ -993,18 +939,30 @@ static void check_global(Context* ctx,
       /* globals can only reference previously defined globals */
       if (ref_global_index >= ctx->current_global_index) {
         print_error(ctx, CHECK_STYLE_FULL, loc,
-                    "global can only be defined in terms of a previously "
-                    "defined global.");
+                    "initializer expression can only be reference a previously "
+                    "defined global");
+      }
+
+      if (ref_global->mutable_) {
+        print_error(ctx, CHECK_STYLE_FULL, loc,
+                    "initializer expression cannot reference a mutable global");
       }
       break;
     }
 
     default:
-      print_const_expr_error(ctx, loc, s_desc);
+      print_const_expr_error(ctx, loc, desc);
       return;
   }
 
-  check_type(ctx, &expr->loc, type, global->type, s_desc);
+  check_type(ctx, &expr->loc, type, expected_type, desc);
+}
+
+static void check_global(Context* ctx,
+                         const WasmLocation* loc,
+                         const WasmGlobal* global) {
+  check_const_init_expr(ctx, loc, global->init_expr, global->type,
+                        "global initializer expression");
 }
 
 static void check_limits(Context* ctx,
@@ -1043,7 +1001,6 @@ static void check_table(Context* ctx,
 
 static void check_elem_segments(Context* ctx, const WasmModule* module) {
   WasmModuleField* field;
-  uint32_t last_end = 0;
   for (field = module->first_field; field; field = field->next) {
     if (field->type != WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT)
       continue;
@@ -1054,29 +1011,8 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
             check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
-    WasmBool has_offset = WASM_FALSE;
-    uint32_t offset = 0;
-    if (WASM_SUCCEEDED(eval_const_expr_i32(ctx, elem_segment->offset,
-                                           "elem segment expression",
-                                           &has_offset, &offset))) {
-      if (has_offset) {
-        if (offset < last_end) {
-          print_error(
-              ctx, CHECK_STYLE_FULL, &field->loc,
-              "segment offset (%u) less than end of previous segment (%u)",
-              offset, last_end);
-        }
-
-        uint64_t max = table->elem_limits.initial;
-        if ((uint64_t)offset + elem_segment->vars.size > max) {
-          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                      "segment ends past the end of the table (%" PRIu64 ")",
-                      max);
-        }
-
-        last_end = offset + elem_segment->vars.size;
-      }
-    }
+    check_const_init_expr(ctx, &field->loc, elem_segment->offset, WASM_TYPE_I32,
+                          "elem segment offset");
   }
 }
 
@@ -1090,7 +1026,6 @@ static void check_memory(Context* ctx,
 
 static void check_data_segments(Context* ctx, const WasmModule* module) {
   WasmModuleField* field;
-  uint32_t last_end = 0;
   for (field = module->first_field; field; field = field->next) {
     if (field->type != WASM_MODULE_FIELD_TYPE_DATA_SEGMENT)
       continue;
@@ -1101,30 +1036,8 @@ static void check_data_segments(Context* ctx, const WasmModule* module) {
             check_memory_var(ctx, &data_segment->memory_var, &memory)))
       continue;
 
-    WasmBool has_offset = WASM_FALSE;
-    uint32_t offset = 0;
-    if (WASM_SUCCEEDED(eval_const_expr_i32(ctx, data_segment->offset,
-                                           "data segment expression",
-                                           &has_offset, &offset))) {
-      if (has_offset) {
-        if (offset < last_end) {
-          print_error(
-              ctx, CHECK_STYLE_FULL, &field->loc,
-              "segment offset (%u) less than end of previous segment (%u)",
-              offset, last_end);
-        }
-
-        uint32_t max = memory->page_limits.initial;
-        const uint64_t memory_initial_size = (uint64_t)max * WASM_PAGE_SIZE;
-        if ((uint64_t)offset + data_segment->size > memory_initial_size) {
-          print_error(ctx, CHECK_STYLE_FULL, &field->loc,
-                      "segment ends past the end of memory (%" PRIu64 ")",
-                      memory_initial_size);
-        }
-
-        last_end = offset + data_segment->size;
-      }
-    }
+    check_const_init_expr(ctx, &field->loc, data_segment->offset, WASM_TYPE_I32,
+                          "data segment offset");
   }
 }
 

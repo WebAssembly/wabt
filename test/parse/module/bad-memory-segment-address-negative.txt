@@ -1,9 +1,0 @@
-;;; ERROR: 1
-(module
-  (memory 100)
-  (data (i32.const -1) "foo"))
-(;; STDERR ;;;
-parse/module/bad-memory-segment-address-negative.txt:4:3: segment ends past the end of memory (6553600)
-  (data (i32.const -1) "foo"))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-;;; STDERR ;;)

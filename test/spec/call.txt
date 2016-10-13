@@ -34,35 +34,35 @@ assert_invalid error:
     (func $arity-2-vs-0 (call 1 (f64.const 2) (i32.const 1)))
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:204:36: type stack size too small at call. got 1, expected at least 2
+  third_party/testsuite/call.wast:196:36: type stack size too small at call. got 1, expected at least 2
     (func $type-first-void-vs-num (call 1 (nop) (i32.const 1)))
                                    ^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:211:37: type stack size too small at call. got 1, expected at least 2
+  third_party/testsuite/call.wast:203:37: type stack size too small at call. got 1, expected at least 2
     (func $type-second-void-vs-num (call 1 (i32.const 1) (nop)))
                                     ^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:218:35: type mismatch for argument 0 of call. got f64, expected i32
+  third_party/testsuite/call.wast:210:35: type mismatch for argument 0 of call. got f64, expected i32
     (func $type-first-num-vs-num (call 1 (f64.const 1) (i32.const 1)))
                                   ^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:218:35: type mismatch for argument 1 of call. got i32, expected f64
+  third_party/testsuite/call.wast:210:35: type mismatch for argument 1 of call. got i32, expected f64
     (func $type-first-num-vs-num (call 1 (f64.const 1) (i32.const 1)))
                                   ^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:225:36: type mismatch for argument 0 of call. got i32, expected f64
+  third_party/testsuite/call.wast:217:36: type mismatch for argument 0 of call. got i32, expected f64
     (func $type-second-num-vs-num (call 1 (i32.const 1) (f64.const 1)))
                                    ^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:225:36: type mismatch for argument 1 of call. got f64, expected i32
+  third_party/testsuite/call.wast:217:36: type mismatch for argument 1 of call. got f64, expected i32
     (func $type-second-num-vs-num (call 1 (i32.const 1) (f64.const 1)))
                                    ^^^^^^
 assert_invalid error:
-  third_party/testsuite/call.wast:235:37: function variable out of range (max 1)
+  third_party/testsuite/call.wast:227:37: function variable out of range (max 1)
   (module (func $unbound-func (call 1)))
                                     ^
 assert_invalid error:
-  third_party/testsuite/call.wast:239:35: function variable out of range (max 1)
+  third_party/testsuite/call.wast:231:35: function variable out of range (max 1)
   (module (func $large-func (call 1012321300)))
                                   ^^^^^^^^^^
 35/35 tests passed.
