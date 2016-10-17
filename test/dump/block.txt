@@ -2,14 +2,16 @@
 ;;; FLAGS: -v
 (module
   (func
-    (block
-      (nop)
-      (nop)
-      (nop)))
+    block
+      nop
+      nop
+      nop
+    end)
 
   (func (result i32)
-    (block i32
-      (i32.const 1))))
+    block i32
+      i32.const 1
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

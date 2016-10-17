@@ -1,10 +1,16 @@
 ;;; TOOL: run-interp
 (module
   (func $f (param i32) (result i32)
-    (block i32
-      (if (i32.eq (get_local 0) (i32.const 0))
-        (br 1 (i32.const 1)))
-      (i32.const 2)))
+    block i32 
+      get_local 0
+      i32.const 0
+      i32.eq 
+      if   
+        i32.const 1
+        br 1
+      end
+      i32.const 2
+    end)
 
   (func (export "test1") (result i32)
     (call $f (i32.const 0)))
