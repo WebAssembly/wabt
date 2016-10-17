@@ -1,6 +1,7 @@
 (module
   (func (result i32)
-    (return
-      (block i32
-        (nop)
-        (i32.const 1)))))
+     block i32
+       nop
+       i32.const 1
+     end
+     return))
