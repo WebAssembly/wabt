@@ -1,18 +1,24 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (block
-      (block
-        (block (br_table 0 1 0 (i32.const 0)))
+    block
+      block
+        block
+          i32.const 0 
+          br_table 0 1 0 
+        end
         ;; case 0
-        (drop (i32.const 1))
-        (drop (i32.const 2))
-        (br 1)  ;; topmost block
-      )
+        i32.const 1
+        drop
+        i32.const 2
+        drop
+        br 1  ;; topmost block
+      end
       ;; case 1
       ;; fallthrough
-    )
-    (drop (i32.const 3))))
+    end
+    i32.const 3
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

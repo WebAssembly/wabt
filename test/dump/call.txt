@@ -1,7 +1,8 @@
 ;;; FLAGS: -dv
 (module
   (func (param i32)
-    (call 0 (i32.const 1))))
+     i32.const 1
+     call 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

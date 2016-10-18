@@ -1,12 +1,20 @@
 ;;; FLAGS: -dv
 (module
   (func (result i32)
-    (block $exit i32 (loop $cont i32
-      (if (i32.const 1)
-        (br $cont))
-      (if (i32.const 3)
-        (br $exit (i32.const 4)))
-      (i32.const 5)))))
+    block $exit i32 
+      loop $cont i32
+        i32.const 1
+        if 
+          br $cont
+        end
+        i32.const 3
+        if
+          i32.const 4 
+          br $exit
+        end
+        i32.const 5
+      end
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

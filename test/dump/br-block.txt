@@ -1,15 +1,20 @@
 ;;; FLAGS: -dv
 (module
   (func                     ;; depth
-    (block $outer           ;; 4
-      (loop                 ;; 2 loop, 3 exit
-        (block              ;; 1
-          (drop (i32.const 0))
-          (block $inner     ;; 0
-            (br 0)
-            (br 1)
-            (br 2)
-            (br 3)))))))
+    block $outer           ;; 4
+      loop                 ;; 2 loop, 3 exit
+        block              ;; 1
+          i32.const 0
+          drop 
+          block $inner     ;; 0
+            br 0
+            br 1
+            br 2
+            br 3
+          end
+        end
+      end
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

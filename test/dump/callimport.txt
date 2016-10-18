@@ -3,9 +3,12 @@
   (import "foo" "bar" (func (param i32 f32) (result i32)))
   (func (result i32)
     ;; call imported func
-    (drop (call 0 (i32.const 1) (f32.const 2)))
+    i32.const 1
+    f32.const 2
+    call 0
+    drop
     ;; call local func
-    (call 1)))
+    call 1))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
