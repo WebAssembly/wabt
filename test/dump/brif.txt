@@ -2,8 +2,10 @@
 ;;; FLAGS: -v
 (module
   (func
-    (block $foo
-      (br_if $foo (i32.const 1)))))
+    block $foo
+      i32.const 1
+      br_if $foo
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

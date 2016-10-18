@@ -2,8 +2,10 @@
 ;;; FLAGS: -v
 (module
   (func
-    (loop $cont
-      (br_if $cont (i32.const 0)))))
+    loop $cont
+      i32.const 0
+      br_if $cont
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

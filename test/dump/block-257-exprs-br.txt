@@ -2,51 +2,51 @@
 ;;; FLAGS: -v
 (module
   (func
-    (block $foo
+    block $foo
       ;; 1..64
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
 
       ;; 65..128
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
 
       ;; 129..192
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
 
       ;; 193..256
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
+      nop nop nop nop nop nop nop nop
 
       ;; 257..258
-      (br $foo)  ;; should be depth 1
-      (br 0)     ;; also depth 1
-)))
+      br $foo  ;; should be depth 1
+      br 0     ;; also depth 1
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
