@@ -120,7 +120,7 @@ static void log_opcode(Context* ctx,
   size_t offset = ctx->current_opcode_offset;
 
   // Print binary data
-  printf(" %06zx: %02x", offset - 1, ctx->current_opcode);
+  printf(" %06" PRIzx ": %02x", offset - 1, ctx->current_opcode);
   size_t i;
   for (i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT; i++, offset++) {
     printf(" %02x", data[offset]);
