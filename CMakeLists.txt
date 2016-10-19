@@ -225,23 +225,23 @@ set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
 if (NOT EMSCRIPTEN)
   # wast2wasm
-  add_executable(wast2wasm src/wast2wasm.c)
+  add_executable(wast2wasm src/exe/wast2wasm.c)
   add_dependencies(everything wast2wasm)
   target_link_libraries(wast2wasm libwasm)
 
   # wasm2wast
-  add_executable(wasm2wast src/wasm2wast.c)
+  add_executable(wasm2wast src/exe/wasm2wast.c)
   add_dependencies(everything wasm2wast)
   target_link_libraries(wasm2wast libwasm)
 
   # wasmopcodecnt
-  add_executable(wasmopcodecnt src/wasmopcodecnt.c
+  add_executable(wasmopcodecnt src/exe/wasmopcodecnt.c
     src/wasm-binary-reader-opcnt.c)
   add_dependencies(everything wasmopcodecnt)
   target_link_libraries(wasmopcodecnt libwasm)
 
   # wasmdump
-  add_executable(wasmdump src/wasmdump.c src/wasm-binary-reader-objdump.c)
+  add_executable(wasmdump src/exe/wasmdump.c src/wasm-binary-reader-objdump.c)
   add_dependencies(everything wasmdump)
   target_link_libraries(wasmdump libwasm)
 
@@ -257,7 +257,7 @@ if (NOT EMSCRIPTEN)
   set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm2wast" "wast2wasm")
 
   # wasm-interp
-  add_executable(wasm-interp src/wasm-interp.c)
+  add_executable(wasm-interp src/exe/wasm-interp.c)
   add_dependencies(everything wasm-interp)
   target_link_libraries(wasm-interp libwasm)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
