@@ -511,6 +511,7 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
                                      const WasmVar* var);
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
                                       const WasmStringSlice* name);
+WasmModule* wasm_get_first_module(const WasmScript* script);
 
 void wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator*,

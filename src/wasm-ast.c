@@ -272,6 +272,16 @@ int wasm_get_func_type_index_by_decl(const WasmModule* module,
   }
 }
 
+WasmModule* wasm_get_first_module(const WasmScript* script) {
+  size_t i;
+  for (i = 0; i < script->commands.size; ++i) {
+    WasmCommand* command = &script->commands.data[i];
+    if (command->type == WASM_COMMAND_TYPE_MODULE)
+      return &command->module;
+  }
+  return NULL;
+}
+
 void wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator* allocator,
     const WasmTypeVector* types,
