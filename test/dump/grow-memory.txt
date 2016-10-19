@@ -2,8 +2,9 @@
 (module
   (memory 1 2)
   (func (param i32)
-    (drop
-      (grow_memory (get_local 0)))))
+    get_local 0
+    grow_memory
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

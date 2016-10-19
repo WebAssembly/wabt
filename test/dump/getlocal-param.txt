@@ -9,12 +9,18 @@
     ;; i64   3
     ;; f32       4       5
     (local i64 f32 i32 f32)
-    (drop (get_local 0))
-    (drop (get_local 1))
-    (drop (get_local 2))
-    (drop (get_local 3))
-    (drop (get_local 4))
-    (drop (get_local 5))))
+    get_local 0
+    drop
+    get_local 1
+    drop
+    get_local 2
+    drop
+    get_local 3
+    drop
+    get_local 4
+    drop
+    get_local 5
+    drop ))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

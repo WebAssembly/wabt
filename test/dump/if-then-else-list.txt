@@ -1,13 +1,18 @@
 ;;; FLAGS: -dv
 (module
   (func
-    (if (i32.const 1)
-      (then
-        (drop (i32.const 2))
-        (drop (i32.const 3)))
-      (else
-        (drop (i32.const 4))
-        (drop (i32.const 5))))))
+    i32.const 1
+    if
+      i32.const 2
+      drop
+      i32.const 3
+      drop
+    else
+      i32.const 4
+      drop
+      i32.const 5
+      drop
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

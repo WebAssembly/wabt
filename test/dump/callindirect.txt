@@ -2,7 +2,9 @@
 (module
   (type $t (func (param i32)))
   (func $f (type $t)
-    (call_indirect $t (i32.const 0) (i32.const 0)))
+    i32.const 0
+    i32.const 0
+    call_indirect $t )
   (table anyfunc (elem $f)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

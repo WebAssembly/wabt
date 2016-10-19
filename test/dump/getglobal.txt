@@ -2,7 +2,7 @@
 (module
   (global i32 (i32.const 0))
   (func (result i32)
-    (get_global 0)))
+    get_global 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
