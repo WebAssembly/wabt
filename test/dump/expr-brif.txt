@@ -2,10 +2,13 @@
 ;;; FLAGS: -v
 (module
   (func (result i32)
-    (block $exit i32
-      (drop
-        (br_if $exit (i32.const 42) (i32.const 0)))
-      (i32.const 29))))
+    block $exit i32
+      i32.const 42
+      i32.const 0 
+      br_if $exit
+      drop
+      i32.const 29
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

@@ -9,14 +9,22 @@
     ;; f32       4               5
     ;; f64   6                       7
     (local f64 f32 i64 i32 i32 f32 f64 i64)
-    (drop (get_local 0))
-    (drop (get_local 1))
-    (drop (get_local 2))
-    (drop (get_local 3))
-    (drop (get_local 4))
-    (drop (get_local 5))
-    (drop (get_local 6))
-    (drop (get_local 7))))
+    get_local 0
+    drop
+    get_local 1
+    drop
+    get_local 2
+    drop
+    get_local 3
+    drop
+    get_local 4
+    drop
+    get_local 5
+    drop
+    get_local 6
+    drop
+    get_local 7
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

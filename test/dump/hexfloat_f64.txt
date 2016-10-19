@@ -2,23 +2,40 @@
 ;;; FLAGS: -v
 (module
   (func
-    (drop (f64.const 0x0p0))
-    (drop (f64.const 0x1234.5p6))
-    (drop (f64.const 0xffffffffffffffffp20))
-    (drop (f64.const 0x1p1023))
-    (drop (f64.const 0x0.08p1023))
-    (drop (f64.const 0x2.46p+1020))
-    (drop (f64.const 0x0.ffffffffffp1023))
-    (drop (f64.const 0x0.7fffffffffffp1023))
-    (drop (f64.const 0x0.ffffffffffffffffp1024))
-    (drop (f64.const 0x1.ffffffffffffcp1023))
-    (drop (f64.const 0x1.ffffffffffffep1023))
-    (drop (f64.const 0xffffffffffff88p-1033))
-    (drop (f64.const 0xffffffffffff98p-1033))
-    (drop (f64.const 0xffffffffffffffp-1055))
-    (drop (f64.const 0x000000001.10000000000p0))
-    (drop (f64.const 0x1000000000.p4))
-    (drop (f64.const -0x1.ff01p1))
+    f64.const 0x0p0
+    drop
+    f64.const 0x1234.5p6 
+    drop
+    f64.const 0xffffffffffffffffp20
+    drop
+    f64.const 0x1p1023
+    drop
+    f64.const 0x0.08p1023
+    drop
+    f64.const 0x2.46p+1020
+    drop
+    f64.const 0x0.ffffffffffp1023
+    drop
+    f64.const 0x0.7fffffffffffp1023
+    drop
+    f64.const 0x0.ffffffffffffffffp1024
+    drop
+    f64.const 0x1.ffffffffffffcp1023
+    drop
+    f64.const 0x1.ffffffffffffep1023
+    drop
+    f64.const 0xffffffffffff88p-1033
+    drop
+    f64.const 0xffffffffffff98p-1033
+    drop
+    f64.const 0xffffffffffffffp-1055
+    drop
+    f64.const 0x000000001.10000000000p0
+    drop
+    f64.const 0x1000000000.p4
+    drop
+    f64.const -0x1.ff01p1
+    drop
   )
 )
 (;; STDOUT ;;;

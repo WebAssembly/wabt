@@ -2,23 +2,40 @@
 ;;; FLAGS: -v
 (module
   (func
-    (drop (f32.const 0x0p0))
-    (drop (f32.const 0x1234.5p6))
-    (drop (f32.const 0xffffffffp20))
-    (drop (f32.const 0x1p127))
-    (drop (f32.const 0x0.08p127))
-    (drop (f32.const 0x2.46p+123))
-    (drop (f32.const 0x0.fffffp127))
-    (drop (f32.const 0x0.7fffffp127))
-    (drop (f32.const 0x0.ffffffffp128))
-    (drop (f32.const 0x1.ffff88p127))
-    (drop (f32.const 0x1.fffff1p127))
-    (drop (f32.const 0xfffff98p-133))
-    (drop (f32.const 0xfffff88p-133))
-    (drop (f32.const 0xfffffffffp-155))
-    (drop (f32.const 0x000000001.10000000000p0))
-    (drop (f32.const 0x1000000000.p4))
-    (drop (f32.const -0x1.ff01p1))
+    f32.const 0x0p0
+    drop
+    f32.const 0x1234.5p6
+    drop
+    f32.const 0xffffffffp20
+    drop
+    f32.const 0x1p127
+    drop
+    f32.const 0x0.08p127
+    drop
+    f32.const 0x2.46p+123
+    drop
+    f32.const 0x0.fffffp127
+    drop
+    f32.const 0x0.7fffffp127
+    drop
+    f32.const 0x0.ffffffffp128
+    drop
+    f32.const 0x1.ffff88p127
+    drop
+    f32.const 0x1.fffff1p127
+    drop
+    f32.const 0xfffff98p-133
+    drop
+    f32.const 0xfffff88p-133
+    drop
+    f32.const 0xfffffffffp-155 
+    drop
+    f32.const 0x000000001.10000000000p0
+    drop
+    f32.const 0x1000000000.p4
+    drop
+    f32.const -0x1.ff01p1
+    drop
   )
 )
 (;; STDOUT ;;;

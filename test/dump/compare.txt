@@ -2,55 +2,119 @@
 ;;; FLAGS: -v
 (module
   (func
-    (drop
-      (i32.eq
-        (i32.ne
-          (i32.lt_s
-            (i32.lt_u
-              (i32.le_s
-                (i32.le_u
-                  (i32.gt_s
-                    (i32.gt_u
-                      (i32.ge_s
-                        (i32.ge_u
-                          (i32.const 0)
-                          (i32.const 0))
-                        (i32.const 0))
-                      (i32.const 0))
-                    (i32.const 0))
-                  (i32.const 0))
-                (i32.const 0))
-              (i32.const 0))
-            (i32.const 0))
-          (i32.const 0))
-        (i32.const 0)))
-
+    i32.const 0
+    i32.const 0
+    i32.ge_u
+    i32.const 0
+    i32.ge_s
+    i32.const 0
+    i32.gt_u
+    i32.const 0
+    i32.gt_s
+    i32.const 0
+    i32.le_u
+    i32.const 0
+    i32.le_s
+    i32.const 0
+    i32.lt_u
+    i32.const 0
+    i32.lt_s
+    i32.const 0
+    i32.ne
+    i32.const 0
+    i32.eq
+    drop
+   
     ;; all comparisons return i32, so these tests can't be chained like the one
     ;; above
-    (drop (i64.eq (i64.const 0) (i64.const 0)))
-    (drop (i64.ne (i64.const 0) (i64.const 0)))
-    (drop (i64.lt_s (i64.const 0) (i64.const 0)))
-    (drop (i64.lt_u (i64.const 0) (i64.const 0)))
-    (drop (i64.le_s (i64.const 0) (i64.const 0)))
-    (drop (i64.le_u (i64.const 0) (i64.const 0)))
-    (drop (i64.gt_s (i64.const 0) (i64.const 0)))
-    (drop (i64.gt_u (i64.const 0) (i64.const 0)))
-    (drop (i64.ge_s (i64.const 0) (i64.const 0)))
-    (drop (i64.ge_u (i64.const 0) (i64.const 0)))
-
-    (drop (f32.eq (f32.const 0) (f32.const 0)))
-    (drop (f32.ne (f32.const 0) (f32.const 0)))
-    (drop (f32.lt (f32.const 0) (f32.const 0)))
-    (drop (f32.le (f32.const 0) (f32.const 0)))
-    (drop (f32.gt (f32.const 0) (f32.const 0)))
-    (drop (f32.ge (f32.const 0) (f32.const 0)))
-
-    (drop (f64.eq (f64.const 0) (f64.const 0)))
-    (drop (f64.ne (f64.const 0) (f64.const 0)))
-    (drop (f64.lt (f64.const 0) (f64.const 0)))
-    (drop (f64.le (f64.const 0) (f64.const 0)))
-    (drop (f64.gt (f64.const 0) (f64.const 0)))
-    (drop (f64.ge (f64.const 0) (f64.const 0)))))
+    i64.const 0
+    i64.const 0
+    i64.eq
+    drop
+    i64.const 0
+    i64.const 0
+    i64.ne
+    drop
+    i64.const 0
+    i64.const 0
+    i64.lt_s
+    drop
+    i64.const 0
+    i64.const 0
+    i64.lt_u
+    drop
+    i64.const 0
+    i64.const 0
+    i64.le_s
+    drop
+    i64.const 0
+    i64.const 0
+    i64.le_u
+    drop
+    i64.const 0
+    i64.const 0
+    i64.gt_s
+    drop
+    i64.const 0
+    i64.const 0
+    i64.gt_u
+    drop
+    i64.const 0
+    i64.const 0
+    i64.ge_s 
+    drop
+    i64.const 0
+    i64.const 0
+    i64.ge_u
+    drop
+    f32.const 0
+    f32.const 0
+    f32.eq
+    drop
+    f32.const 0 
+    f32.const 0
+    f32.ne
+    drop
+    f32.const 0
+    f32.const 0
+    f32.lt
+    drop
+    f32.const 0
+    f32.const 0
+    f32.le
+    drop
+    f32.const 0
+    f32.const 0
+    f32.gt 
+    drop
+    f32.const 0
+    f32.const 0
+    f32.ge
+    drop
+    f64.const 0
+    f64.const 0
+    f64.eq
+    drop
+    f64.const 0
+    f64.const 0 
+    f64.ne
+    drop
+    f64.const 0
+    f64.const 0
+    f64.lt
+    drop
+    f64.const 0
+    f64.const 0
+    f64.le
+    drop
+    f64.const 0
+    f64.const 0
+    f64.gt
+    drop
+    f64.const 0
+    f64.const 0
+    f64.ge
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

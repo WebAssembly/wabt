@@ -2,32 +2,35 @@
 ;;; FLAGS: -v
 (module
   (func
-    (drop
-      (i32.wrap/i64
-        (i64.extend_u/i32
-          (i32.trunc_s/f32
-            (f32.convert_s/i32
-              (i32.trunc_u/f32
-                (f32.convert_u/i32
-                  (i32.trunc_s/f64
-                    (f64.convert_s/i32
-                      (i32.trunc_u/f64
-                        (f64.convert_u/i32 (i32.const 0))))))))))))
+    i32.const 0
+    f64.convert_u/i32
+    i32.trunc_u/f64
+    f64.convert_s/i32
+    i32.trunc_s/f64
+    f32.convert_u/i32
+    i32.trunc_u/f32
+    f32.convert_s/i32
+    i32.trunc_s/f32
+    i64.extend_u/i32
+    i32.wrap/i64
+    drop
+     
+    i32.const 0
+    i64.extend_s/i32
+    f64.convert_u/i64
+    i64.trunc_u/f64
+    f64.convert_s/i64
+    i64.trunc_s/f64
+    f32.convert_u/i64
+    i64.trunc_u/f32
+    f32.convert_s/i64
+    i64.trunc_s/f32
+    drop
 
-    (drop
-      (i64.trunc_s/f32
-        (f32.convert_s/i64
-          (i64.trunc_u/f32
-            (f32.convert_u/i64
-              (i64.trunc_s/f64
-                (f64.convert_s/i64
-                  (i64.trunc_u/f64
-                    (f64.convert_u/i64
-                      (i64.extend_s/i32 (i32.const 0)))))))))))
-
-    (drop
-      (f32.demote/f64
-        (f64.promote/f32 (f32.const 0))))))
+    f32.const 0
+    f64.promote/f32
+    f32.demote/f64
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
