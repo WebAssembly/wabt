@@ -70,6 +70,8 @@ static WasmResult on_opcode(WasmBinaryReaderContext* context,
                             WasmOpcode opcode) {
   Context* ctx = context->user_data;
   WasmIntCounterVector* opcnt_vec = &ctx->opcnt_data->opcode_vec;
+  if (!ctx->opcnt_data->collect_opcode_dist)
+    return WASM_OK;
   while (opcode >= opcnt_vec->size) {
     WasmIntCounter Counter;
     Counter.value = opcnt_vec->size;
@@ -83,24 +85,32 @@ static WasmResult on_opcode(WasmBinaryReaderContext* context,
 
 static WasmResult on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
+  if (!ctx->opcnt_data->collect_i32_const_dist)
+    return WASM_OK;
   return add_int_counter_value(ctx->opcnt_data->allocator,
                                &ctx->opcnt_data->i32_const_vec, (int32_t)value);
 }
 
 static WasmResult on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
+  if (!ctx->opcnt_data->collect_get_local_dist)
+    return WASM_OK;
   return add_int_counter_value(ctx->opcnt_data->allocator,
                                &ctx->opcnt_data->get_local_vec, local_index);
 }
 
 static WasmResult on_set_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
+  if (!ctx->opcnt_data->collect_set_local_dist)
+    return WASM_OK;
   return add_int_counter_value(ctx->opcnt_data->allocator,
                                &ctx->opcnt_data->set_local_vec, local_index);
 }
 
 static  WasmResult on_tee_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
+  if (!ctx->opcnt_data->collect_tee_local_dist)
+    return WASM_OK;
   return add_int_counter_value(ctx->opcnt_data->allocator,
                                &ctx->opcnt_data->tee_local_vec, local_index);
 }
@@ -110,7 +120,7 @@ static  WasmResult on_load_expr(WasmOpcode opcode,
                                 uint32_t offset,
                                 void* user_data) {
   Context* ctx = user_data;
-  if (opcode == WASM_OPCODE_I32_LOAD)
+  if (ctx->opcnt_data->collect_i32_load_dist && opcode == WASM_OPCODE_I32_LOAD)
     return add_int_pair_counter_value(ctx->opcnt_data->allocator,
                                       &ctx->opcnt_data->i32_load_vec,
                                       alignment_log2, offset);
@@ -122,7 +132,7 @@ static  WasmResult on_store_expr(WasmOpcode opcode,
                                  uint32_t offset,
                                  void* user_data) {
   Context* ctx = user_data;
-  if (opcode == WASM_OPCODE_I32_STORE)
+  if (ctx->opcnt_data->collect_i32_store_dist && opcode == WASM_OPCODE_I32_STORE)
     return add_int_pair_counter_value(ctx->opcnt_data->allocator,
                                       &ctx->opcnt_data->i32_store_vec,
                                       alignment_log2, offset);
@@ -149,6 +159,26 @@ void wasm_init_opcnt_data(struct WasmAllocator* allocator,
                           WasmOpcntData* data) {
   WASM_ZERO_MEMORY(*data);
   data->allocator = allocator;
+}
+
+void wasm_opcnt_data_set_flags(WasmOpcntData* Data) {
+  Data->collect_opcode_dist = WASM_TRUE;
+  Data->collect_i32_const_dist = WASM_TRUE;
+  Data->collect_get_local_dist = WASM_TRUE;
+  Data->collect_set_local_dist = WASM_TRUE;
+  Data->collect_tee_local_dist = WASM_TRUE;
+  Data->collect_i32_load_dist = WASM_TRUE;
+  Data->collect_i32_store_dist = WASM_TRUE;
+}
+
+void wasm_opcnt_data_clear_flags(WasmOpcntData* Data) {
+  Data->collect_opcode_dist = WASM_FALSE;
+  Data->collect_i32_const_dist = WASM_FALSE;
+  Data->collect_get_local_dist = WASM_FALSE;
+  Data->collect_set_local_dist = WASM_FALSE;
+  Data->collect_tee_local_dist = WASM_FALSE;
+  Data->collect_i32_load_dist = WASM_FALSE;
+  Data->collect_i32_store_dist = WASM_FALSE;
 }
 
 void wasm_destroy_opcnt_data(struct WasmAllocator* allocator,
