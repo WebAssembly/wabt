@@ -225,28 +225,28 @@ set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
 if (NOT EMSCRIPTEN)
   # wast2wasm
-  add_executable(wast2wasm src/exe/wast2wasm.c)
+  add_executable(wast2wasm src/tools/wast2wasm.c)
   add_dependencies(everything wast2wasm)
   target_link_libraries(wast2wasm libwasm)
 
   # wasm2wast
-  add_executable(wasm2wast src/exe/wasm2wast.c)
+  add_executable(wasm2wast src/tools/wasm2wast.c)
   add_dependencies(everything wasm2wast)
   target_link_libraries(wasm2wast libwasm)
 
   # wasmopcodecnt
-  add_executable(wasmopcodecnt src/exe/wasmopcodecnt.c
+  add_executable(wasmopcodecnt src/tools/wasmopcodecnt.c
     src/wasm-binary-reader-opcnt.c)
   add_dependencies(everything wasmopcodecnt)
   target_link_libraries(wasmopcodecnt libwasm)
 
   # wasmdump
-  add_executable(wasmdump src/exe/wasmdump.c src/wasm-binary-reader-objdump.c)
+  add_executable(wasmdump src/tools/wasmdump.c src/wasm-binary-reader-objdump.c)
   add_dependencies(everything wasmdump)
   target_link_libraries(wasmdump libwasm)
 
   # wasm-interp
-  add_executable(wasm-interp src/exe/wasm-interp.c)
+  add_executable(wasm-interp src/tools/wasm-interp.c)
   add_dependencies(everything wasm-interp)
   target_link_libraries(wasm-interp libwasm)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
@@ -254,7 +254,7 @@ if (NOT EMSCRIPTEN)
   endif ()
 
   # wast-desugar
-  add_executable(wast-desugar src/exe/wast-desugar.c)
+  add_executable(wast-desugar src/tools/wast-desugar.c)
   add_dependencies(everything wast-desugar)
   target_link_libraries(wast-desugar libwasm)
 
