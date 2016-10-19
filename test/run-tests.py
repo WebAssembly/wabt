@@ -54,6 +54,9 @@ TOOLS = {
     'EXE': '%(wast2wasm)s',
     'VERBOSE-FLAGS': ['-v']
   },
+  'wast-desugar': {
+    'EXE': '%(wast-desugar)s'
+  },
   'run-wasmdump': {
     'EXE': 'test/run-wasmdump.py',
     'FLAGS': ' '.join([
@@ -688,16 +691,9 @@ def main(args):
                       help='directory to search for all executables. '
                           'This can be overridden by the other executable '
                           'flags.')
-  parser.add_argument('--wast2wasm', metavar='PATH',
-                      help='override wast2wasm executable.')
-  parser.add_argument('--wasm2wast', metavar='PATH',
-                      help='override wasm2wast executable.')
-  parser.add_argument('--wasmdump', metavar='PATH',
-                      help='override wasmdump executable.')
-  parser.add_argument('--wasm-interp', metavar='PATH',
-                      help='override wasm-interp executable.')
-  parser.add_argument('--wasmopcodecnt', metavar='PATH',
-                      help='override wasmopcodecnt executable.')
+  for exe_basename in find_exe.EXECUTABLES:
+    parser.add_argument('--%s' % exe_basename, metavar='PATH',
+                        help='override %s executable.' % exe_basename)
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('-f', '--fail-fast',
@@ -746,25 +742,18 @@ def main(args):
     print('no tests match that filter')
     return 1
 
-  if options.exe_dir:
-    if not options.wast2wasm:
-      options.wast2wasm = os.path.join(options.exe_dir, 'wast2wasm')
-    if not options.wasm2wast:
-      options.wasm2wast = os.path.join(options.exe_dir, 'wasm2wast')
-    if not options.wasm_interp:
-      options.wasm_interp = os.path.join(options.exe_dir, 'wasm-interp')
-    if not options.wasmopcodecnt:
-      options.wasmopcodecnt = os.path.join(options.exe_dir, 'wasmopcodecnt')
-    if not options.wasmdump:
-      options.wasmdump = os.path.join(options.exe_dir, 'wasmdump')
+  variables = {}
 
-  variables = {
-    'wast2wasm': find_exe.GetWast2WasmExecutable(options.wast2wasm),
-    'wasm2wast': find_exe.GetWasm2WastExecutable(options.wasm2wast),
-    'wasmdump': find_exe.GetWasmdumpExecutable(options.wasmdump),
-    'wasm-interp': find_exe.GetWasmInterpExecutable(options.wasm_interp),
-    'wasmopcodecnt': find_exe.GetWasmOpcodeCntExecutable(options.wasmopcodecnt),
-  }
+  for exe_basename in find_exe.EXECUTABLES:
+    attr_name = exe_basename.replace('-', '_')
+    exe_override = getattr(options, attr_name)
+    if options.exe_dir:
+      if not exe_override:
+        exe_override = os.path.join(options.exe_dir, exe_basename)
+        setattr(options, attr_name, exe_override)
+
+    variables[exe_basename] = find_exe.FindExecutable(exe_basename,
+                                                      exe_override)
 
   status = Status(options.verbose)
   infos = GetAllTestInfo(test_names, status)
