@@ -63,93 +63,93 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 13                                        ; f32.const
+0000017: 44                                        ; f32.const
 0000018: 0000 0000                                 ; f32 literal
-000001c: 0b                                        ; drop
-000001d: 13                                        ; f32.const
+000001c: 1a                                        ; drop
+000001d: 44                                        ; f32.const
 000001e: 80a2 9148                                 ; f32 literal
-0000022: 0b                                        ; drop
-0000023: 13                                        ; f32.const
+0000022: 1a                                        ; drop
+0000023: 44                                        ; f32.const
 0000024: 0000 8059                                 ; f32 literal
-0000028: 0b                                        ; drop
-0000029: 13                                        ; f32.const
+0000028: 1a                                        ; drop
+0000029: 44                                        ; f32.const
 000002a: 0000 007f                                 ; f32 literal
-000002e: 0b                                        ; drop
-000002f: 13                                        ; f32.const
+000002e: 1a                                        ; drop
+000002f: 44                                        ; f32.const
 0000030: 0000 807c                                 ; f32 literal
-0000034: 0b                                        ; drop
-0000035: 13                                        ; f32.const
+0000034: 1a                                        ; drop
+0000035: 44                                        ; f32.const
 0000036: 0080 917d                                 ; f32 literal
-000003a: 0b                                        ; drop
-000003b: 13                                        ; f32.const
+000003a: 1a                                        ; drop
+000003b: 44                                        ; f32.const
 000003c: f0ff ff7e                                 ; f32 literal
-0000040: 0b                                        ; drop
-0000041: 13                                        ; f32.const
+0000040: 1a                                        ; drop
+0000041: 44                                        ; f32.const
 0000042: feff 7f7e                                 ; f32 literal
-0000046: 0b                                        ; drop
-0000047: 13                                        ; f32.const
+0000046: 1a                                        ; drop
+0000047: 44                                        ; f32.const
 0000048: 0000 807f                                 ; f32 literal
-000004c: 0b                                        ; drop
-000004d: 13                                        ; f32.const
+000004c: 1a                                        ; drop
+000004d: 44                                        ; f32.const
 000004e: c4ff 7f7f                                 ; f32 literal
-0000052: 0b                                        ; drop
-0000053: 13                                        ; f32.const
+0000052: 1a                                        ; drop
+0000053: 44                                        ; f32.const
 0000054: f8ff 7f7f                                 ; f32 literal
-0000058: 0b                                        ; drop
-0000059: 13                                        ; f32.const
+0000058: 1a                                        ; drop
+0000059: 44                                        ; f32.const
 000005a: faff ff0a                                 ; f32 literal
-000005e: 0b                                        ; drop
-000005f: 13                                        ; f32.const
+000005e: 1a                                        ; drop
+000005f: 44                                        ; f32.const
 0000060: f8ff ff0a                                 ; f32 literal
-0000064: 0b                                        ; drop
-0000065: 13                                        ; f32.const
+0000064: 1a                                        ; drop
+0000065: 44                                        ; f32.const
 0000066: 0000 0004                                 ; f32 literal
-000006a: 0b                                        ; drop
-000006b: 13                                        ; f32.const
+000006a: 1a                                        ; drop
+000006b: 44                                        ; f32.const
 000006c: 0000 883f                                 ; f32 literal
-0000070: 0b                                        ; drop
-0000071: 13                                        ; f32.const
+0000070: 1a                                        ; drop
+0000071: 44                                        ; f32.const
 0000072: 0000 8053                                 ; f32 literal
-0000076: 0b                                        ; drop
-0000077: 13                                        ; f32.const
+0000076: 1a                                        ; drop
+0000077: 44                                        ; f32.const
 0000078: 8080 7fc0                                 ; f32 literal
-000007c: 0b                                        ; drop
-000007d: 0f                                        ; end
+000007c: 1a                                        ; drop
+000007d: 0b                                        ; end
 0000015: 68                                        ; FIXUP func body size
 0000013: 6a                                        ; FIXUP section size
 func 0
- 000017: 13 00 00 00 00             | f32.const 0
- 00001c: 0b                         | drop
- 00001d: 13 80 a2 91 48             | f32.const 0x4891a280
- 000022: 0b                         | drop
- 000023: 13 00 00 80 59             | f32.const 0x59800000
- 000028: 0b                         | drop
- 000029: 13 00 00 00 7f             | f32.const 0x7f000000
- 00002e: 0b                         | drop
- 00002f: 13 00 00 80 7c             | f32.const 0x7c800000
- 000034: 0b                         | drop
- 000035: 13 00 80 91 7d             | f32.const 0x7d918000
- 00003a: 0b                         | drop
- 00003b: 13 f0 ff ff 7e             | f32.const 0x7efffff0
- 000040: 0b                         | drop
- 000041: 13 fe ff 7f 7e             | f32.const 0x7e7ffffe
- 000046: 0b                         | drop
- 000047: 13 00 00 80 7f             | f32.const 0x7f800000
- 00004c: 0b                         | drop
- 00004d: 13 c4 ff 7f 7f             | f32.const 0x7f7fffc4
- 000052: 0b                         | drop
- 000053: 13 f8 ff 7f 7f             | f32.const 0x7f7ffff8
- 000058: 0b                         | drop
- 000059: 13 fa ff ff 0a             | f32.const 0xafffffa
- 00005e: 0b                         | drop
- 00005f: 13 f8 ff ff 0a             | f32.const 0xafffff8
- 000064: 0b                         | drop
- 000065: 13 00 00 00 04             | f32.const 0x4000000
- 00006a: 0b                         | drop
- 00006b: 13 00 00 88 3f             | f32.const 0x3f880000
- 000070: 0b                         | drop
- 000071: 13 00 00 80 53             | f32.const 0x53800000
- 000076: 0b                         | drop
- 000077: 13 80 80 7f c0             | f32.const 0xc07f8080
- 00007c: 0b                         | drop
+ 000017: 44 00 00 00 00             | f32.const 0
+ 00001c: 1a                         | drop
+ 00001d: 44 80 a2 91 48             | f32.const 0x4891a280
+ 000022: 1a                         | drop
+ 000023: 44 00 00 80 59             | f32.const 0x59800000
+ 000028: 1a                         | drop
+ 000029: 44 00 00 00 7f             | f32.const 0x7f000000
+ 00002e: 1a                         | drop
+ 00002f: 44 00 00 80 7c             | f32.const 0x7c800000
+ 000034: 1a                         | drop
+ 000035: 44 00 80 91 7d             | f32.const 0x7d918000
+ 00003a: 1a                         | drop
+ 00003b: 44 f0 ff ff 7e             | f32.const 0x7efffff0
+ 000040: 1a                         | drop
+ 000041: 44 fe ff 7f 7e             | f32.const 0x7e7ffffe
+ 000046: 1a                         | drop
+ 000047: 44 00 00 80 7f             | f32.const 0x7f800000
+ 00004c: 1a                         | drop
+ 00004d: 44 c4 ff 7f 7f             | f32.const 0x7f7fffc4
+ 000052: 1a                         | drop
+ 000053: 44 f8 ff 7f 7f             | f32.const 0x7f7ffff8
+ 000058: 1a                         | drop
+ 000059: 44 fa ff ff 0a             | f32.const 0xafffffa
+ 00005e: 1a                         | drop
+ 00005f: 44 f8 ff ff 0a             | f32.const 0xafffff8
+ 000064: 1a                         | drop
+ 000065: 44 00 00 00 04             | f32.const 0x4000000
+ 00006a: 1a                         | drop
+ 00006b: 44 00 00 88 3f             | f32.const 0x3f880000
+ 000070: 1a                         | drop
+ 000071: 44 00 00 80 53             | f32.const 0x53800000
+ 000076: 1a                         | drop
+ 000077: 44 80 80 7f c0             | f32.const 0xc07f8080
+ 00007c: 1a                         | drop
 ;;; STDOUT ;;)

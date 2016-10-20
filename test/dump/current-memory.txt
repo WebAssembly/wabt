@@ -38,10 +38,10 @@
 ; function body 0
 000001b: 00                                        ; func body size (guess)
 000001c: 00                                        ; local decl count
-000001d: 3b                                        ; current_memory
-000001e: 0f                                        ; end
+000001d: 3f                                        ; current_memory
+000001e: 0b                                        ; end
 000001b: 03                                        ; FIXUP func body size
 0000019: 05                                        ; FIXUP section size
 func 0
- 00001d: 3b                         | current_memory
+ 00001d: 3f                         | current_memory
 ;;; STDOUT ;;)

@@ -376,7 +376,7 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_CALL: {
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
       assert(index >= 0 && (size_t)index < module->funcs.size);
-      write_opcode(&ctx->stream, WASM_OPCODE_CALL_FUNCTION);
+      write_opcode(&ctx->stream, WASM_OPCODE_CALL);
       write_u32_leb128(&ctx->stream, index, "func index");
       break;
     }

@@ -27,7 +27,7 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 0f                                        ; end
+0000017: 0b                                        ; end
 0000015: 02                                        ; FIXUP func body size
 0000013: 04                                        ; FIXUP section size
 func 0

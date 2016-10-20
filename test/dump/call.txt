@@ -30,14 +30,14 @@
 ; function body 0
 0000016: 00                                        ; func body size (guess)
 0000017: 00                                        ; local decl count
-0000018: 10                                        ; i32.const
+0000018: 41                                        ; i32.const
 0000019: 01                                        ; i32 literal
-000001a: 16                                        ; call
+000001a: 10                                        ; call
 000001b: 00                                        ; func index
-000001c: 0f                                        ; end
+000001c: 0b                                        ; end
 0000016: 06                                        ; FIXUP func body size
 0000014: 08                                        ; FIXUP section size
 func 0
- 000018: 10 01                      | i32.const 0x1
- 00001a: 16 00                      | call 0
+ 000018: 41 01                      | i32.const 0x1
+ 00001a: 10 00                      | call 0
 ;;; STDOUT ;;)

@@ -46,7 +46,7 @@
 000001e: 03                                        ; WASM_TYPE_F32
 000001f: 02                                        ; local type count
 0000020: 01                                        ; WASM_TYPE_I32
-0000021: 0f                                        ; end
+0000021: 0b                                        ; end
 000001b: 06                                        ; FIXUP func body size
 ; function body 1
 0000022: 00                                        ; func body size (guess)
@@ -55,7 +55,7 @@
 0000025: 04                                        ; WASM_TYPE_F64
 0000026: 02                                        ; local type count
 0000027: 02                                        ; WASM_TYPE_I64
-0000028: 0f                                        ; end
+0000028: 0b                                        ; end
 0000022: 06                                        ; FIXUP func body size
 0000019: 0f                                        ; FIXUP section size
 ; section "name"
