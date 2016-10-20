@@ -1,7 +1,8 @@
 ;;; TOOL: run-wasmdump
 ;;; FLAGS: -v
 (module
-  (func (nop)))
+  (func 
+    nop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

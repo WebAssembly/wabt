@@ -2,34 +2,38 @@
 ;;; FLAGS: -v
 (module
   (func
-    (drop
-      (i32.eqz
-        (i32.clz
-          (i32.ctz
-            (i32.popcnt (i32.const 0))))))
-
-    (drop
-      (i64.clz
-        (i64.ctz
-          (i64.popcnt (i64.const 0)))))
-
-    (drop
-      (f32.neg
-        (f32.abs
-          (f32.sqrt
-            (f32.ceil
-              (f32.floor
-                (f32.trunc
-                  (f32.nearest (f32.const 0)))))))))
-
-    (drop
-      (f64.neg
-        (f64.abs
-          (f64.sqrt
-            (f64.ceil
-              (f64.floor
-                (f64.trunc
-                  (f64.nearest (f64.const 0)))))))))))
+    i32.const 0
+    i32.popcnt
+    i32.ctz
+    i32.clz
+    i32.eqz
+    drop
+    
+    i64.const 0
+    i64.popcnt
+    i64.ctz
+    i64.clz
+    drop
+    
+    f32.const 0
+    f32.nearest
+    f32.trunc
+    f32.floor
+    f32.ceil
+    f32.sqrt
+    f32.abs
+    f32.neg
+    drop
+   
+    f64.const 0
+    f64.nearest 
+    f64.trunc
+    f64.floor
+    f64.ceil
+    f64.sqrt
+    f64.abs
+    f64.neg
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

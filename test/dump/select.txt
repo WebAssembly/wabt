@@ -2,10 +2,26 @@
 ;;; FLAGS: -v
 (module
   (func
-    (drop (select (i32.const 2) (i32.const 3) (i32.const 1)))
-    (drop (select (i64.const 2) (i64.const 3) (i32.const 1)))
-    (drop (select (f32.const 2) (f32.const 3) (i32.const 1)))
-    (drop (select (f64.const 2) (f64.const 3) (i32.const 1)))))
+    i32.const 2
+    i32.const 3
+    i32.const 1
+    select
+    drop
+    i64.const 2
+    i64.const 3
+    i32.const 1
+    select
+    drop
+    f32.const 2
+    f32.const 3
+    i32.const 1
+    select
+    drop
+    f64.const 2
+    f64.const 3
+    i32.const 1
+    select
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

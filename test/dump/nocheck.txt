@@ -2,9 +2,9 @@
 ;;; FLAGS: -v --no-check
 (module
   (func (result i64)
-    (i32.add
-      (f32.const 1)
-      (f64.const 2)))
+    f32.const 1
+    f64.const 2
+    i32.add)
   (export "foo" (func 0)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

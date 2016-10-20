@@ -7,11 +7,20 @@
   (table anyfunc (elem $f2 $f3))
   (type $t (func (param i32) (result i32)))
   (func $f1 (param i32 i32)
-    (drop (call_indirect $t (get_local 0) (get_local 1))))
+    get_local 0
+    get_local 1
+    call_indirect $t
+    drop)
   (func $f2 (param i32)
-    (drop (i32.add (get_local 0) (i32.const 1))))
+    get_local 0
+    i32.const 1
+    i32.add
+    drop)
   (func $f3 (param i32)
-    (drop (i32.mul (get_local 0) (i32.const 2)))))
+    get_local 0
+    i32.const 2
+    i32.mul
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

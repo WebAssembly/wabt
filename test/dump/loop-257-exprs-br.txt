@@ -2,53 +2,57 @@
 ;;; FLAGS: -v
 (module
   (func
-    (block $outer (loop $inner
-      ;; 1..64
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+    block $outer 
+      loop $inner
+        ;; 1..64
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
 
-      ;; 65..128
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+        ;; 65..128
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
 
-      ;; 129..192
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
 
-      ;; 193..256
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
-      (nop) (nop) (nop) (nop) (nop) (nop) (nop) (nop)
+        ;; 129..192
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+
+        ;; 193..256
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+        nop nop nop nop nop nop nop nop
+
 
       ;; 257..258
-      (br $outer)  ;; depth 2
-      (br $inner)  ;; depth 1
-      (br 1)       ;; depth 2 (due to implicit block)
-      (br 0)       ;; depth 1 (due to implicit block)
-))))
+      br $outer  ;; depth 2
+      br $inner  ;; depth 1
+      br 1       ;; depth 2 (due to implicit block)
+      br 0       ;; depth 1 (due to implicit block)
+      end
+    end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

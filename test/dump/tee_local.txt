@@ -3,8 +3,9 @@
 (module
   (func
     (local i32)
-    (drop
-      (tee_local 0 (i32.const 0)))))
+    i32.const 0
+    tee_local 0
+    drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION

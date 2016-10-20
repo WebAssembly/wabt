@@ -2,28 +2,54 @@
 ;;; FLAGS: -v
 (module
   (func
-    (i32.store8 align=1 (i32.const 0) (i32.const 0))
-
-    (i32.store16 align=1 (i32.const 0) (i32.const 0))
-    (i32.store16 align=2 (i32.const 0) (i32.const 0))
-
-    (i32.store align=1 (i32.const 0) (i32.const 0))
-    (i32.store align=2 (i32.const 0) (i32.const 0))
-    (i32.store align=4 (i32.const 0) (i32.const 0))
-
-    (i64.store8 align=1 (i32.const 0) (i64.const 0))
-
-    (i64.store16 align=1 (i32.const 0) (i64.const 0))
-    (i64.store16 align=2 (i32.const 0) (i64.const 0))
-
-    (i64.store32 align=1 (i32.const 0) (i64.const 0))
-    (i64.store32 align=2 (i32.const 0) (i64.const 0))
-    (i64.store32 align=4 (i32.const 0) (i64.const 0))
-
-    (i64.store align=1 (i32.const 0) (i64.const 0))
-    (i64.store align=2 (i32.const 0) (i64.const 0))
-    (i64.store align=4 (i32.const 0) (i64.const 0))
-    (i64.store align=8 (i32.const 0) (i64.const 0))))
+    i32.const 0
+    i32.const 0
+    i32.store8 align=1
+    i32.const 0
+    i32.const 0
+    i32.store16 align=1
+    i32.const 0
+    i32.const 0
+    i32.store16 align=2
+    i32.const 0
+    i32.const 0
+    i32.store align=1
+    i32.const 0
+    i32.const 0
+    i32.store align=2
+    i32.const 0
+    i32.const 0
+    i32.store align=4
+    i32.const 0
+    i64.const 0
+    i64.store8 align=1
+    i32.const 0
+    i64.const 0
+    i64.store16 align=1
+    i32.const 0
+    i64.const 0
+    i64.store16 align=2
+    i32.const 0
+    i64.const 0
+    i64.store32 align=1
+    i32.const 0
+    i64.const 0
+    i64.store32 align=2
+    i32.const 0
+    i64.const 0
+    i64.store32 align=4
+    i32.const 0
+    i64.const 0
+    i64.store align=1
+    i32.const 0
+    i64.const 0
+    i64.store align=2
+    i32.const 0
+    i64.const 0
+    i64.store align=4
+    i32.const 0
+    i64.const 0
+    i64.store align=8))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
