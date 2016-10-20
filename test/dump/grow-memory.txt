@@ -41,15 +41,15 @@
 ; function body 0
 000001c: 00                                        ; func body size (guess)
 000001d: 00                                        ; local decl count
-000001e: 14                                        ; get_local
+000001e: 20                                        ; get_local
 000001f: 00                                        ; local index
-0000020: 39                                        ; grow_memory
-0000021: 0b                                        ; drop
-0000022: 0f                                        ; end
+0000020: 40                                        ; grow_memory
+0000021: 1a                                        ; drop
+0000022: 0b                                        ; end
 000001c: 06                                        ; FIXUP func body size
 000001a: 08                                        ; FIXUP section size
 func 0
- 00001e: 14 00                      | get_local 0
- 000020: 39                         | grow_memory
- 000021: 0b                         | drop
+ 00001e: 20 00                      | get_local 0
+ 000020: 40                         | grow_memory
+ 000021: 1a                         | drop
 ;;; STDOUT ;;)

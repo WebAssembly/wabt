@@ -45,50 +45,50 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 01                                        ; block
+0000017: 02                                        ; block
 0000018: 00                                        ; WASM_TYPE_VOID
-0000019: 01                                        ; block
+0000019: 02                                        ; block
 000001a: 00                                        ; WASM_TYPE_VOID
-000001b: 01                                        ; block
+000001b: 02                                        ; block
 000001c: 00                                        ; WASM_TYPE_VOID
-000001d: 10                                        ; i32.const
+000001d: 41                                        ; i32.const
 000001e: 00                                        ; i32 literal
-000001f: 08                                        ; br_table
+000001f: 0e                                        ; br_table
 0000020: 02                                        ; num targets
 0000021: 00                                        ; break depth
 0000022: 01                                        ; break depth
 0000023: 00                                        ; break depth for default
-0000024: 0f                                        ; end
-0000025: 10                                        ; i32.const
+0000024: 0b                                        ; end
+0000025: 41                                        ; i32.const
 0000026: 01                                        ; i32 literal
-0000027: 0b                                        ; drop
-0000028: 10                                        ; i32.const
+0000027: 1a                                        ; drop
+0000028: 41                                        ; i32.const
 0000029: 02                                        ; i32 literal
-000002a: 0b                                        ; drop
-000002b: 06                                        ; br
+000002a: 1a                                        ; drop
+000002b: 0c                                        ; br
 000002c: 01                                        ; break depth
-000002d: 0f                                        ; end
-000002e: 0f                                        ; end
-000002f: 10                                        ; i32.const
+000002d: 0b                                        ; end
+000002e: 0b                                        ; end
+000002f: 41                                        ; i32.const
 0000030: 03                                        ; i32 literal
-0000031: 0b                                        ; drop
-0000032: 0f                                        ; end
+0000031: 1a                                        ; drop
+0000032: 0b                                        ; end
 0000015: 1d                                        ; FIXUP func body size
 0000013: 1f                                        ; FIXUP section size
 func 0
- 000017: 01 00                      | block
- 000019: 01 00                      |   block
- 00001b: 01 00                      |     block
- 00001d: 10 00                      |       i32.const 0
- 00001f: 08 02 00 01 00             |       br_table
- 000024: 0f                         |     end
- 000025: 10 01                      |     i32.const 0x1
- 000027: 0b                         |     drop
- 000028: 10 02                      |     i32.const 0x2
- 00002a: 0b                         |     drop
- 00002b: 06 01                      |     br 0x1
- 00002d: 0f                         |   end
- 00002e: 0f                         | end
- 00002f: 10 03                      | i32.const 0x3
- 000031: 0b                         | drop
+ 000017: 02 00                      | block
+ 000019: 02 00                      |   block
+ 00001b: 02 00                      |     block
+ 00001d: 41 00                      |       i32.const 0
+ 00001f: 0e 02 00 01 00             |       br_table
+ 000024: 0b                         |     end
+ 000025: 41 01                      |     i32.const 0x1
+ 000027: 1a                         |     drop
+ 000028: 41 02                      |     i32.const 0x2
+ 00002a: 1a                         |     drop
+ 00002b: 0c 01                      |     br 0x1
+ 00002d: 0b                         |   end
+ 00002e: 0b                         | end
+ 00002f: 41 03                      | i32.const 0x3
+ 000031: 1a                         | drop
 ;;; STDOUT ;;)

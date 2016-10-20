@@ -21,9 +21,9 @@
 0000010: 01                                        ; num data segments
 ; data segment header 0
 0000011: 00                                        ; memory index
-0000012: 10                                        ; i32.const
+0000012: 41                                        ; i32.const
 0000013: 00                                        ; i32 literal
-0000014: 0f                                        ; end
+0000014: 0b                                        ; end
 0000015: 0b                                        ; data segment size
 ; data segment data 0
 0000016: 0001 0203 0405 0607 0809 0a               ; data segment data

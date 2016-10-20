@@ -383,7 +383,7 @@ static void write_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_CALL:
-      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_CALL_FUNCTION));
+      write_puts_space(ctx, wasm_get_opcode_name(WASM_OPCODE_CALL));
       write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
       break;
 

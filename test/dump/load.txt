@@ -69,134 +69,134 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 10                                        ; i32.const
+0000017: 41                                        ; i32.const
 0000018: 00                                        ; i32 literal
-0000019: 2a                                        ; i32.load
+0000019: 28                                        ; i32.load
 000001a: 02                                        ; alignment
 000001b: 00                                        ; load offset
-000001c: 0b                                        ; drop
-000001d: 10                                        ; i32.const
+000001c: 1a                                        ; drop
+000001d: 41                                        ; i32.const
 000001e: 00                                        ; i32 literal
-000001f: 20                                        ; i32.load8_s
+000001f: 2c                                        ; i32.load8_s
 0000020: 00                                        ; alignment
 0000021: 00                                        ; load offset
-0000022: 0b                                        ; drop
-0000023: 10                                        ; i32.const
+0000022: 1a                                        ; drop
+0000023: 41                                        ; i32.const
 0000024: 00                                        ; i32 literal
-0000025: 22                                        ; i32.load16_s
+0000025: 2e                                        ; i32.load16_s
 0000026: 01                                        ; alignment
 0000027: 00                                        ; load offset
-0000028: 0b                                        ; drop
-0000029: 10                                        ; i32.const
+0000028: 1a                                        ; drop
+0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
-000002b: 21                                        ; i32.load8_u
+000002b: 2d                                        ; i32.load8_u
 000002c: 00                                        ; alignment
 000002d: 00                                        ; load offset
-000002e: 0b                                        ; drop
-000002f: 10                                        ; i32.const
+000002e: 1a                                        ; drop
+000002f: 41                                        ; i32.const
 0000030: 00                                        ; i32 literal
-0000031: 23                                        ; i32.load16_u
+0000031: 2f                                        ; i32.load16_u
 0000032: 01                                        ; alignment
 0000033: 00                                        ; load offset
-0000034: 0b                                        ; drop
-0000035: 10                                        ; i32.const
+0000034: 1a                                        ; drop
+0000035: 41                                        ; i32.const
 0000036: 00                                        ; i32 literal
-0000037: 2b                                        ; i64.load
+0000037: 29                                        ; i64.load
 0000038: 03                                        ; alignment
 0000039: 00                                        ; load offset
-000003a: 0b                                        ; drop
-000003b: 10                                        ; i32.const
+000003a: 1a                                        ; drop
+000003b: 41                                        ; i32.const
 000003c: 00                                        ; i32 literal
-000003d: 24                                        ; i64.load8_s
+000003d: 30                                        ; i64.load8_s
 000003e: 00                                        ; alignment
 000003f: 00                                        ; load offset
-0000040: 0b                                        ; drop
-0000041: 10                                        ; i32.const
+0000040: 1a                                        ; drop
+0000041: 41                                        ; i32.const
 0000042: 00                                        ; i32 literal
-0000043: 26                                        ; i64.load16_s
+0000043: 32                                        ; i64.load16_s
 0000044: 01                                        ; alignment
 0000045: 00                                        ; load offset
-0000046: 0b                                        ; drop
-0000047: 10                                        ; i32.const
+0000046: 1a                                        ; drop
+0000047: 41                                        ; i32.const
 0000048: 00                                        ; i32 literal
-0000049: 28                                        ; i64.load32_s
+0000049: 34                                        ; i64.load32_s
 000004a: 02                                        ; alignment
 000004b: 00                                        ; load offset
-000004c: 0b                                        ; drop
-000004d: 10                                        ; i32.const
+000004c: 1a                                        ; drop
+000004d: 41                                        ; i32.const
 000004e: 00                                        ; i32 literal
-000004f: 25                                        ; i64.load8_u
+000004f: 31                                        ; i64.load8_u
 0000050: 00                                        ; alignment
 0000051: 00                                        ; load offset
-0000052: 0b                                        ; drop
-0000053: 10                                        ; i32.const
+0000052: 1a                                        ; drop
+0000053: 41                                        ; i32.const
 0000054: 00                                        ; i32 literal
-0000055: 27                                        ; i64.load16_u
+0000055: 33                                        ; i64.load16_u
 0000056: 01                                        ; alignment
 0000057: 00                                        ; load offset
-0000058: 0b                                        ; drop
-0000059: 10                                        ; i32.const
+0000058: 1a                                        ; drop
+0000059: 41                                        ; i32.const
 000005a: 00                                        ; i32 literal
-000005b: 29                                        ; i64.load32_u
+000005b: 35                                        ; i64.load32_u
 000005c: 02                                        ; alignment
 000005d: 00                                        ; load offset
-000005e: 0b                                        ; drop
-000005f: 10                                        ; i32.const
+000005e: 1a                                        ; drop
+000005f: 41                                        ; i32.const
 0000060: 00                                        ; i32 literal
-0000061: 2c                                        ; f32.load
+0000061: 2a                                        ; f32.load
 0000062: 02                                        ; alignment
 0000063: 00                                        ; load offset
-0000064: 0b                                        ; drop
-0000065: 10                                        ; i32.const
+0000064: 1a                                        ; drop
+0000065: 41                                        ; i32.const
 0000066: 00                                        ; i32 literal
-0000067: 2d                                        ; f64.load
+0000067: 2b                                        ; f64.load
 0000068: 03                                        ; alignment
 0000069: 00                                        ; load offset
-000006a: 0b                                        ; drop
-000006b: 0f                                        ; end
+000006a: 1a                                        ; drop
+000006b: 0b                                        ; end
 0000015: 56                                        ; FIXUP func body size
 0000013: 58                                        ; FIXUP section size
 func 0
- 000017: 10 00                      | i32.const 0
- 000019: 2a 02 00                   | i32.load 2 0
- 00001c: 0b                         | drop
- 00001d: 10 00                      | i32.const 0
- 00001f: 20 00 00                   | i32.load8_s 0 0
- 000022: 0b                         | drop
- 000023: 10 00                      | i32.const 0
- 000025: 22 01 00                   | i32.load16_s 1 0
- 000028: 0b                         | drop
- 000029: 10 00                      | i32.const 0
- 00002b: 21 00 00                   | i32.load8_u 0 0
- 00002e: 0b                         | drop
- 00002f: 10 00                      | i32.const 0
- 000031: 23 01 00                   | i32.load16_u 1 0
- 000034: 0b                         | drop
- 000035: 10 00                      | i32.const 0
- 000037: 2b 03 00                   | i64.load 3 0
- 00003a: 0b                         | drop
- 00003b: 10 00                      | i32.const 0
- 00003d: 24 00 00                   | i64.load8_s 0 0
- 000040: 0b                         | drop
- 000041: 10 00                      | i32.const 0
- 000043: 26 01 00                   | i64.load16_s 1 0
- 000046: 0b                         | drop
- 000047: 10 00                      | i32.const 0
- 000049: 28 02 00                   | i64.load32_s 2 0
- 00004c: 0b                         | drop
- 00004d: 10 00                      | i32.const 0
- 00004f: 25 00 00                   | i64.load8_u 0 0
- 000052: 0b                         | drop
- 000053: 10 00                      | i32.const 0
- 000055: 27 01 00                   | i64.load16_u 1 0
- 000058: 0b                         | drop
- 000059: 10 00                      | i32.const 0
- 00005b: 29 02 00                   | i64.load32_u 2 0
- 00005e: 0b                         | drop
- 00005f: 10 00                      | i32.const 0
- 000061: 2c 02 00                   | f32.load 2 0
- 000064: 0b                         | drop
- 000065: 10 00                      | i32.const 0
- 000067: 2d 03 00                   | f64.load 3 0
- 00006a: 0b                         | drop
+ 000017: 41 00                      | i32.const 0
+ 000019: 28 02 00                   | i32.load 2 0
+ 00001c: 1a                         | drop
+ 00001d: 41 00                      | i32.const 0
+ 00001f: 2c 00 00                   | i32.load8_s 0 0
+ 000022: 1a                         | drop
+ 000023: 41 00                      | i32.const 0
+ 000025: 2e 01 00                   | i32.load16_s 1 0
+ 000028: 1a                         | drop
+ 000029: 41 00                      | i32.const 0
+ 00002b: 2d 00 00                   | i32.load8_u 0 0
+ 00002e: 1a                         | drop
+ 00002f: 41 00                      | i32.const 0
+ 000031: 2f 01 00                   | i32.load16_u 1 0
+ 000034: 1a                         | drop
+ 000035: 41 00                      | i32.const 0
+ 000037: 29 03 00                   | i64.load 3 0
+ 00003a: 1a                         | drop
+ 00003b: 41 00                      | i32.const 0
+ 00003d: 30 00 00                   | i64.load8_s 0 0
+ 000040: 1a                         | drop
+ 000041: 41 00                      | i32.const 0
+ 000043: 32 01 00                   | i64.load16_s 1 0
+ 000046: 1a                         | drop
+ 000047: 41 00                      | i32.const 0
+ 000049: 34 02 00                   | i64.load32_s 2 0
+ 00004c: 1a                         | drop
+ 00004d: 41 00                      | i32.const 0
+ 00004f: 31 00 00                   | i64.load8_u 0 0
+ 000052: 1a                         | drop
+ 000053: 41 00                      | i32.const 0
+ 000055: 33 01 00                   | i64.load16_u 1 0
+ 000058: 1a                         | drop
+ 000059: 41 00                      | i32.const 0
+ 00005b: 35 02 00                   | i64.load32_u 2 0
+ 00005e: 1a                         | drop
+ 00005f: 41 00                      | i32.const 0
+ 000061: 2a 02 00                   | f32.load 2 0
+ 000064: 1a                         | drop
+ 000065: 41 00                      | i32.const 0
+ 000067: 2b 03 00                   | f64.load 3 0
+ 00006a: 1a                         | drop
 ;;; STDOUT ;;)

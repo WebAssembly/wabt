@@ -57,38 +57,38 @@
 000001e: 01                                        ; WASM_TYPE_I32
 000001f: 01                                        ; local type count
 0000020: 03                                        ; WASM_TYPE_F32
-0000021: 14                                        ; get_local
+0000021: 20                                        ; get_local
 0000022: 00                                        ; local index
-0000023: 0b                                        ; drop
-0000024: 14                                        ; get_local
+0000023: 1a                                        ; drop
+0000024: 20                                        ; get_local
 0000025: 01                                        ; local index
-0000026: 0b                                        ; drop
-0000027: 14                                        ; get_local
+0000026: 1a                                        ; drop
+0000027: 20                                        ; get_local
 0000028: 02                                        ; local index
-0000029: 0b                                        ; drop
-000002a: 14                                        ; get_local
+0000029: 1a                                        ; drop
+000002a: 20                                        ; get_local
 000002b: 03                                        ; local index
-000002c: 0b                                        ; drop
-000002d: 14                                        ; get_local
+000002c: 1a                                        ; drop
+000002d: 20                                        ; get_local
 000002e: 04                                        ; local index
-000002f: 0b                                        ; drop
-0000030: 14                                        ; get_local
+000002f: 1a                                        ; drop
+0000030: 20                                        ; get_local
 0000031: 05                                        ; local index
-0000032: 0b                                        ; drop
-0000033: 0f                                        ; end
+0000032: 1a                                        ; drop
+0000033: 0b                                        ; end
 0000017: 1c                                        ; FIXUP func body size
 0000015: 1e                                        ; FIXUP section size
 func 0
- 000021: 14 00                      | get_local 0
- 000023: 0b                         | drop
- 000024: 14 01                      | get_local 0x1
- 000026: 0b                         | drop
- 000027: 14 02                      | get_local 0x2
- 000029: 0b                         | drop
- 00002a: 14 03                      | get_local 0x3
- 00002c: 0b                         | drop
- 00002d: 14 04                      | get_local 0x4
- 00002f: 0b                         | drop
- 000030: 14 05                      | get_local 0x5
- 000032: 0b                         | drop
+ 000021: 20 00                      | get_local 0
+ 000023: 1a                         | drop
+ 000024: 20 01                      | get_local 0x1
+ 000026: 1a                         | drop
+ 000027: 20 02                      | get_local 0x2
+ 000029: 1a                         | drop
+ 00002a: 20 03                      | get_local 0x3
+ 00002c: 1a                         | drop
+ 00002d: 20 04                      | get_local 0x4
+ 00002f: 1a                         | drop
+ 000030: 20 05                      | get_local 0x5
+ 000032: 1a                         | drop
 ;;; STDOUT ;;)

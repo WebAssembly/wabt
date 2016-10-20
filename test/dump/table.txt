@@ -55,9 +55,9 @@
 0000027: 01                                        ; num elem segments
 ; elem segment header 0
 0000028: 00                                        ; table index
-0000029: 10                                        ; i32.const
+0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
-000002b: 0f                                        ; end
+000002b: 0b                                        ; end
 000002c: 04                                        ; num function indices
 000002d: 00                                        ; function index
 000002e: 00                                        ; function index
@@ -71,23 +71,23 @@
 ; function body 0
 0000034: 00                                        ; func body size (guess)
 0000035: 00                                        ; local decl count
-0000036: 0f                                        ; end
+0000036: 0b                                        ; end
 0000034: 02                                        ; FIXUP func body size
 ; function body 1
 0000037: 00                                        ; func body size (guess)
 0000038: 00                                        ; local decl count
-0000039: 0f                                        ; end
+0000039: 0b                                        ; end
 0000037: 02                                        ; FIXUP func body size
 ; function body 2
 000003a: 00                                        ; func body size (guess)
 000003b: 00                                        ; local decl count
-000003c: 12                                        ; f64.const
+000003c: 44                                        ; f64.const
 000003d: 0000 0000 0000 0000                       ; f64 literal
-0000045: 0f                                        ; end
+0000045: 0b                                        ; end
 000003a: 0b                                        ; FIXUP func body size
 0000032: 13                                        ; FIXUP section size
 func 0
 func 1
 func 2
- 00003c: 12 00 00 00 00 00 00 00 00 | f64.const 0
+ 00003c: 44 00 00 00 00 00 00 00 00 | f64.const 0
 ;;; STDOUT ;;)
