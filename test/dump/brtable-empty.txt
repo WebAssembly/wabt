@@ -31,20 +31,20 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 01                                        ; block
+0000017: 02                                        ; block
 0000018: 00                                        ; WASM_TYPE_VOID
-0000019: 10                                        ; i32.const
+0000019: 41                                        ; i32.const
 000001a: 00                                        ; i32 literal
-000001b: 08                                        ; br_table
+000001b: 0e                                        ; br_table
 000001c: 00                                        ; num targets
 000001d: 00                                        ; break depth for default
-000001e: 0f                                        ; end
-000001f: 0f                                        ; end
+000001e: 0b                                        ; end
+000001f: 0b                                        ; end
 0000015: 0a                                        ; FIXUP func body size
 0000013: 0c                                        ; FIXUP section size
 func 0
- 000017: 01 00                      | block
- 000019: 10 00                      |   i32.const 0
- 00001b: 08 00 00                   |   br_table
- 00001e: 0f                         | end
+ 000017: 02 00                      | block
+ 000019: 41 00                      |   i32.const 0
+ 00001b: 0e 00 00                   |   br_table
+ 00001e: 0b                         | end
 ;;; STDOUT ;;)

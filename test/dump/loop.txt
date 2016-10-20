@@ -31,17 +31,17 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 02                                        ; loop
+0000017: 03                                        ; loop
 0000018: 00                                        ; WASM_TYPE_VOID
-0000019: 0a                                        ; nop
-000001a: 0a                                        ; nop
-000001b: 0f                                        ; end
-000001c: 0f                                        ; end
+0000019: 01                                        ; nop
+000001a: 01                                        ; nop
+000001b: 0b                                        ; end
+000001c: 0b                                        ; end
 0000015: 07                                        ; FIXUP func body size
 0000013: 09                                        ; FIXUP section size
 func 0
- 000017: 02 00                      | loop
- 000019: 0a                         |   nop
- 00001a: 0a                         |   nop
- 00001b: 0f                         | end
+ 000017: 03 00                      | loop
+ 000019: 01                         |   nop
+ 00001a: 01                         |   nop
+ 00001b: 0b                         | end
 ;;; STDOUT ;;)

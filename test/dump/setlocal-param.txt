@@ -54,44 +54,44 @@
 000001e: 01                                        ; WASM_TYPE_I32
 000001f: 01                                        ; local type count
 0000020: 03                                        ; WASM_TYPE_F32
-0000021: 10                                        ; i32.const
+0000021: 41                                        ; i32.const
 0000022: 00                                        ; i32 literal
-0000023: 15                                        ; set_local
+0000023: 21                                        ; set_local
 0000024: 00                                        ; local index
-0000025: 13                                        ; f32.const
+0000025: 44                                        ; f32.const
 0000026: 0000 0000                                 ; f32 literal
-000002a: 15                                        ; set_local
+000002a: 21                                        ; set_local
 000002b: 01                                        ; local index
-000002c: 11                                        ; i64.const
+000002c: 42                                        ; i64.const
 000002d: 00                                        ; i64 literal
-000002e: 15                                        ; set_local
+000002e: 21                                        ; set_local
 000002f: 02                                        ; local index
-0000030: 13                                        ; f32.const
+0000030: 44                                        ; f32.const
 0000031: 0000 0000                                 ; f32 literal
-0000035: 15                                        ; set_local
+0000035: 21                                        ; set_local
 0000036: 03                                        ; local index
-0000037: 10                                        ; i32.const
+0000037: 41                                        ; i32.const
 0000038: 00                                        ; i32 literal
-0000039: 15                                        ; set_local
+0000039: 21                                        ; set_local
 000003a: 04                                        ; local index
-000003b: 13                                        ; f32.const
+000003b: 44                                        ; f32.const
 000003c: 0000 0000                                 ; f32 literal
-0000040: 15                                        ; set_local
+0000040: 21                                        ; set_local
 0000041: 05                                        ; local index
-0000042: 0f                                        ; end
+0000042: 0b                                        ; end
 0000017: 2b                                        ; FIXUP func body size
 0000015: 2d                                        ; FIXUP section size
 func 0
- 000021: 10 00                      | i32.const 0
- 000023: 15 00                      | set_local 0
- 000025: 13 00 00 00 00             | f32.const 0
- 00002a: 15 01                      | set_local 0x1
- 00002c: 11 00                      | i64.const 0
- 00002e: 15 02                      | set_local 0x2
- 000030: 13 00 00 00 00             | f32.const 0
- 000035: 15 03                      | set_local 0x3
- 000037: 10 00                      | i32.const 0
- 000039: 15 04                      | set_local 0x4
- 00003b: 13 00 00 00 00             | f32.const 0
- 000040: 15 05                      | set_local 0x5
+ 000021: 41 00                      | i32.const 0
+ 000023: 21 00                      | set_local 0
+ 000025: 44 00 00 00 00             | f32.const 0
+ 00002a: 21 01                      | set_local 0x1
+ 00002c: 42 00                      | i64.const 0
+ 00002e: 21 02                      | set_local 0x2
+ 000030: 44 00 00 00 00             | f32.const 0
+ 000035: 21 03                      | set_local 0x3
+ 000037: 41 00                      | i32.const 0
+ 000039: 21 04                      | set_local 0x4
+ 00003b: 44 00 00 00 00             | f32.const 0
+ 000040: 21 05                      | set_local 0x5
 ;;; STDOUT ;;)

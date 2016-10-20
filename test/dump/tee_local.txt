@@ -33,16 +33,16 @@
 0000016: 01                                        ; local decl count
 0000017: 01                                        ; local type count
 0000018: 01                                        ; WASM_TYPE_I32
-0000019: 10                                        ; i32.const
+0000019: 41                                        ; i32.const
 000001a: 00                                        ; i32 literal
-000001b: 19                                        ; tee_local
+000001b: 22                                        ; tee_local
 000001c: 00                                        ; local index
-000001d: 0b                                        ; drop
-000001e: 0f                                        ; end
+000001d: 1a                                        ; drop
+000001e: 0b                                        ; end
 0000015: 09                                        ; FIXUP func body size
 0000013: 0b                                        ; FIXUP section size
 func 0
- 000019: 10 00                      | i32.const 0
- 00001b: 19 00                      | tee_local 0
- 00001d: 0b                         | drop
+ 000019: 41 00                      | i32.const 0
+ 00001b: 22 00                      | tee_local 0
+ 00001d: 1a                         | drop
 ;;; STDOUT ;;)
