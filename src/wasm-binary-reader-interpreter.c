@@ -1359,7 +1359,7 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
     CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_HOST));
     CHECK_RESULT(emit_i32(ctx, translate_func_index_to_env(ctx, func_index)));
   } else {
-    CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_FUNCTION));
+    CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL));
     CHECK_RESULT(emit_func_offset(ctx, func, func_index));
   }
   push_types(ctx, &sig->result_types);

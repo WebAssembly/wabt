@@ -59,70 +59,70 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 10                                        ; i32.const
+0000017: 41                                        ; i32.const
 0000018: 00                                        ; i32 literal
-0000019: 59                                        ; i32.popcnt
-000001a: 58                                        ; i32.ctz
-000001b: 57                                        ; i32.clz
-000001c: 5a                                        ; i32.eqz
-000001d: 0b                                        ; drop
-000001e: 11                                        ; i64.const
+0000019: 69                                        ; i32.popcnt
+000001a: 68                                        ; i32.ctz
+000001b: 67                                        ; i32.clz
+000001c: 45                                        ; i32.eqz
+000001d: 1a                                        ; drop
+000001e: 42                                        ; i64.const
 000001f: 00                                        ; i64 literal
-0000020: 74                                        ; i64.popcnt
-0000021: 73                                        ; i64.ctz
-0000022: 72                                        ; i64.clz
-0000023: 0b                                        ; drop
-0000024: 13                                        ; f32.const
+0000020: 7b                                        ; i64.popcnt
+0000021: 7a                                        ; i64.ctz
+0000022: 79                                        ; i64.clz
+0000023: 1a                                        ; drop
+0000024: 43                                        ; f32.const
 0000025: 0000 0000                                 ; f32 literal
-0000029: 81                                        ; f32.nearest
-000002a: 80                                        ; f32.trunc
-000002b: 7f                                        ; f32.floor
-000002c: 7e                                        ; f32.ceil
-000002d: 82                                        ; f32.sqrt
-000002e: 7b                                        ; f32.abs
-000002f: 7c                                        ; f32.neg
-0000030: 0b                                        ; drop
-0000031: 12                                        ; f64.const
+0000029: 91                                        ; f32.nearest
+000002a: 90                                        ; f32.trunc
+000002b: 8f                                        ; f32.floor
+000002c: 8e                                        ; f32.ceil
+000002d: 92                                        ; f32.sqrt
+000002e: 8b                                        ; f32.abs
+000002f: 8c                                        ; f32.neg
+0000030: 1a                                        ; drop
+0000031: 44                                        ; f64.const
 0000032: 0000 0000 0000 0000                       ; f64 literal
-000003a: 95                                        ; f64.nearest
-000003b: 94                                        ; f64.trunc
-000003c: 93                                        ; f64.floor
-000003d: 92                                        ; f64.ceil
-000003e: 96                                        ; f64.sqrt
-000003f: 8f                                        ; f64.abs
-0000040: 90                                        ; f64.neg
-0000041: 0b                                        ; drop
-0000042: 0f                                        ; end
+000003a: 9f                                        ; f64.nearest
+000003b: 9e                                        ; f64.trunc
+000003c: 9d                                        ; f64.floor
+000003d: 9c                                        ; f64.ceil
+000003e: a0                                        ; f64.sqrt
+000003f: 99                                        ; f64.abs
+0000040: 9a                                        ; f64.neg
+0000041: 1a                                        ; drop
+0000042: 0b                                        ; end
 0000015: 2d                                        ; FIXUP func body size
 0000013: 2f                                        ; FIXUP section size
 func 0
- 000017: 10 00                      | i32.const 0
- 000019: 59                         | i32.popcnt
- 00001a: 58                         | i32.ctz
- 00001b: 57                         | i32.clz
- 00001c: 5a                         | i32.eqz
- 00001d: 0b                         | drop
- 00001e: 11 00                      | i64.const 0
- 000020: 74                         | i64.popcnt
- 000021: 73                         | i64.ctz
- 000022: 72                         | i64.clz
- 000023: 0b                         | drop
- 000024: 13 00 00 00 00             | f32.const 0
- 000029: 81                         | f32.nearest
- 00002a: 80                         | f32.trunc
- 00002b: 7f                         | f32.floor
- 00002c: 7e                         | f32.ceil
- 00002d: 82                         | f32.sqrt
- 00002e: 7b                         | f32.abs
- 00002f: 7c                         | f32.neg
- 000030: 0b                         | drop
- 000031: 12 00 00 00 00 00 00 00 00 | f64.const 0
- 00003a: 95                         | f64.nearest
- 00003b: 94                         | f64.trunc
- 00003c: 93                         | f64.floor
- 00003d: 92                         | f64.ceil
- 00003e: 96                         | f64.sqrt
- 00003f: 8f                         | f64.abs
- 000040: 90                         | f64.neg
- 000041: 0b                         | drop
+ 000017: 41 00                      | i32.const 0
+ 000019: 69                         | i32.popcnt
+ 00001a: 68                         | i32.ctz
+ 00001b: 67                         | i32.clz
+ 00001c: 45                         | i32.eqz
+ 00001d: 1a                         | drop
+ 00001e: 42 00                      | i64.const 0
+ 000020: 7b                         | i64.popcnt
+ 000021: 7a                         | i64.ctz
+ 000022: 79                         | i64.clz
+ 000023: 1a                         | drop
+ 000024: 43 00 00 00 00             | f32.const 0
+ 000029: 91                         | f32.nearest
+ 00002a: 90                         | f32.trunc
+ 00002b: 8f                         | f32.floor
+ 00002c: 8e                         | f32.ceil
+ 00002d: 92                         | f32.sqrt
+ 00002e: 8b                         | f32.abs
+ 00002f: 8c                         | f32.neg
+ 000030: 1a                         | drop
+ 000031: 44 00 00 00 00 00 00 00 00 | f64.const 0
+ 00003a: 9f                         | f64.nearest
+ 00003b: 9e                         | f64.trunc
+ 00003c: 9d                         | f64.floor
+ 00003d: 9c                         | f64.ceil
+ 00003e: a0                         | f64.sqrt
+ 00003f: 99                         | f64.abs
+ 000040: 9a                         | f64.neg
+ 000041: 1a                         | drop
 ;;; STDOUT ;;)

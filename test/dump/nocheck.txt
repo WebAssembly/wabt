@@ -41,16 +41,16 @@
 ; function body 0
 000001f: 00                                        ; func body size (guess)
 0000020: 00                                        ; local decl count
-0000021: 13                                        ; f32.const
+0000021: 43                                        ; f32.const
 0000022: 0000 803f                                 ; f32 literal
-0000026: 12                                        ; f64.const
+0000026: 44                                        ; f64.const
 0000027: 0000 0000 0000 0040                       ; f64 literal
-000002f: 40                                        ; i32.add
-0000030: 0f                                        ; end
+000002f: 6a                                        ; i32.add
+0000030: 0b                                        ; end
 000001f: 11                                        ; FIXUP func body size
 000001d: 13                                        ; FIXUP section size
 func 0
- 000021: 13 00 00 80 3f             | f32.const 0x3f800000
- 000026: 12 00 00 00 00 00 00 00 40 | f64.const 0
- 00002f: 40                         | i32.add
+ 000021: 43 00 00 80 3f             | f32.const 0x3f800000
+ 000026: 44 00 00 00 00 00 00 00 40 | f64.const 0
+ 00002f: 6a                         | i32.add
 ;;; STDOUT ;;)

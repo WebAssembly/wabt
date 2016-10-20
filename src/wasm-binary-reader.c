@@ -1414,11 +1414,11 @@ static void read_function_body(Context* ctx,
         break;
       }
 
-      case WASM_OPCODE_CALL_FUNCTION: {
+      case WASM_OPCODE_CALL: {
         uint32_t func_index;
-        in_u32_leb128(ctx, &func_index, "call_function function index");
+        in_u32_leb128(ctx, &func_index, "call function index");
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
-                           "invalid call_function function index");
+                           "invalid call function index");
         CALLBACK(on_call_expr, func_index);
         CALLBACK_CTX(on_opcode_uint32, func_index);
         break;
