@@ -3,7 +3,8 @@
   (type $t (func (param i32)))
   (func (type $t))
   (func (param i32 i64))
-  (func (result f64) (f64.const 0))
+  (func (result f64) 
+    f64.const 0)
   (table anyfunc (elem 0 0 1 2)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
