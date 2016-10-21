@@ -73,6 +73,10 @@ int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
   return func->decl.sig.param_types.size + result;
 }
 
+int wasm_get_module_index_by_var(const WasmScript* script, const WasmVar* var) {
+  return wasm_get_index_from_var(&script->module_bindings, var);
+}
+
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
   int index = wasm_get_index_from_var(&module->func_bindings, var);
   if (index < 0 || (size_t)index >= module->funcs.size)
@@ -138,6 +142,16 @@ WasmModule* wasm_get_first_module(const WasmScript* script) {
       return &command->module;
   }
   return NULL;
+}
+
+WasmModule* wasm_get_module_by_var(const WasmScript* script,
+                                   const WasmVar* var) {
+  int index = wasm_get_index_from_var(&script->module_bindings, var);
+  if (index < 0 || (size_t)index >= script->commands.size)
+    return NULL;
+  WasmCommand* command = &script->commands.data[index];
+  assert(command->type == WASM_COMMAND_TYPE_MODULE);
+  return &command->module;
 }
 
 void wasm_make_type_binding_reverse_mapping(
@@ -496,7 +510,7 @@ void wasm_destroy_raw_module(WasmAllocator* allocator, WasmRawModule* raw) {
 }
 
 void wasm_destroy_action(WasmAllocator* allocator, WasmAction* action) {
-  wasm_destroy_string_slice(allocator, &action->module_var_name);
+  wasm_destroy_var(allocator, &action->module_var);
   switch (action->type) {
     case WASM_ACTION_TYPE_INVOKE:
       wasm_destroy_string_slice(allocator, &action->invoke.name);
@@ -518,7 +532,7 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       break;
     case WASM_COMMAND_TYPE_REGISTER:
       wasm_destroy_string_slice(allocator, &command->register_.module_name);
-      wasm_destroy_string_slice(allocator, &command->register_.module_var_name);
+      wasm_destroy_var(allocator, &command->register_.var);
       break;
     case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
       wasm_destroy_raw_module(allocator, &command->assert_malformed.module);
@@ -564,6 +578,7 @@ void wasm_destroy_elem_segment(WasmAllocator* allocator,
 void wasm_destroy_script(WasmScript* script) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(script->allocator, script->commands,
                                    command);
+  wasm_destroy_binding_hash(script->allocator, &script->module_bindings);
 }
 
 #define CHECK_RESULT(expr)   \

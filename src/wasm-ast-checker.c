@@ -1225,7 +1225,7 @@ static WasmResult read_raw_module(Context* ctx,
   WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
   BinaryErrorCallbackData user_data;
   user_data.ctx = ctx;
-  user_data.loc = &raw->loc;
+  user_data.loc = &raw->binary.loc;
   WasmBinaryErrorHandler error_handler;
   error_handler.on_error = on_read_binary_error;
   error_handler.user_data = &user_data;
@@ -1430,6 +1430,16 @@ WasmResult wasm_check_ast(WasmAllocator* allocator,
   return ctx.result;
 }
 
+static WasmLocation* get_raw_module_location(WasmRawModule* raw) {
+  switch (raw->type) {
+    case WASM_RAW_MODULE_TYPE_BINARY: return &raw->binary.loc;
+    case WASM_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
+    default:
+      assert(0);
+      return NULL;
+  }
+}
+
 WasmResult wasm_check_assert_invalid_and_malformed(
     WasmAllocator* allocator,
     WasmAstLexer* lexer,
@@ -1465,7 +1475,8 @@ WasmResult wasm_check_assert_invalid_and_malformed(
       check_raw_module(&ctx2, &command->assert_invalid.module);
       wasm_destroy_context(&ctx2);
       if (WASM_SUCCEEDED(ctx2.result)) {
-        print_error(&ctx, CHECK_STYLE_FULL, &command->assert_invalid.module.loc,
+        print_error(&ctx, CHECK_STYLE_FULL,
+                    get_raw_module_location(&command->assert_invalid.module),
                     "expected module to be invalid");
       }
     } else if (command->type == WASM_COMMAND_TYPE_ASSERT_MALFORMED) {
@@ -1476,7 +1487,7 @@ WasmResult wasm_check_assert_invalid_and_malformed(
       wasm_destroy_context(&ctx2);
       if (WASM_SUCCEEDED(ctx2.result)) {
         print_error(&ctx, CHECK_STYLE_FULL,
-                    &command->assert_malformed.module.loc,
+                    get_raw_module_location(&command->assert_malformed.module),
                     "expected module to be malformed");
       }
     }

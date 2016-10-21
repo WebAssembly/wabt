@@ -27,6 +27,8 @@
 #include "wasm-binary-reader.h"
 #include "wasm-literal.h"
 
+#define INVALID_VAR_INDEX (-1)
+
 /* the default value for YYMAXDEPTH is 10000, which can be easily hit since our
    grammar is right-recursive.
 
@@ -225,13 +227,13 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %type<literal> literal
 %type<script> script
 %type<table> table_sig
-%type<text> bind_var bind_var_opt labeling_opt quoted_text script_var_opt
+%type<text> bind_var bind_var_opt labeling_opt quoted_text
 %type<text_list> non_empty_text_list text_list
 %type<types> value_type_list
 %type<u32> align_opt
 %type<u64> nat offset_opt
 %type<vars> var_list
-%type<var> start type_use var
+%type<var> start type_use var script_var_opt
 
 /* These non-terminals use the types below that have destructors, but the
  * memory is shared with the lexer, so should not be destroyed. */
@@ -1235,11 +1237,11 @@ module_fields :
 ;
 
 raw_module :
-    LPAR MODULE script_var_opt module_fields RPAR {
+    LPAR MODULE bind_var_opt module_fields RPAR {
       $$.type = WASM_RAW_MODULE_TYPE_TEXT;
       $$.text = $4;
       $$.text->name = $3;
-      $$.loc = @2;
+      $$.text->loc = @2;
 
       /* resolve func type variables where the signature was not specified
        * explicitly */
@@ -1257,10 +1259,10 @@ raw_module :
         }
       }
     }
-  | LPAR MODULE script_var_opt non_empty_text_list RPAR {
+  | LPAR MODULE bind_var_opt non_empty_text_list RPAR {
       $$.type = WASM_RAW_MODULE_TYPE_BINARY;
       $$.binary.name = $3;
-      $$.loc = @2;
+      $$.binary.loc = @2;
       dup_text_list(parser->allocator, &$4, &$$.binary.data, &$$.binary.size);
       wasm_destroy_text_list(parser->allocator, &$4);
     }
@@ -1275,7 +1277,7 @@ module :
         $$ = new_module(parser->allocator);
         WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorCallbackData user_data;
-        user_data.loc = &$1.loc;
+        user_data.loc = &$1.binary.loc;
         user_data.lexer = lexer;
         user_data.parser = parser;
         WasmBinaryErrorHandler error_handler;
@@ -1285,6 +1287,7 @@ module :
                              &options, &error_handler, $$);
         wasm_free(parser->allocator, $1.binary.data);
         $$->name = $1.binary.name;
+        $$->loc = $1.binary.loc;
       }
     }
 ;
@@ -1292,15 +1295,23 @@ module :
 /* Scripts */
 
 script_var_opt :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
-  | VAR { DUPTEXT($$, $1); }
+    /* empty */ {
+      WASM_ZERO_MEMORY($$);
+      $$.type = WASM_VAR_TYPE_INDEX;
+      $$.index = INVALID_VAR_INDEX;
+    }
+  | VAR {
+      WASM_ZERO_MEMORY($$);
+      $$.type = WASM_VAR_TYPE_NAME;
+      DUPTEXT($$.name, $1);
+    }
 ;
 
 action :
     LPAR INVOKE script_var_opt quoted_text const_list RPAR {
       WASM_ZERO_MEMORY($$);
       $$.loc = @2;
-      $$.module_var_name = $3;
+      $$.module_var = $3;
       $$.type = WASM_ACTION_TYPE_INVOKE;
       $$.invoke.name = $4;
       $$.invoke.args = $5;
@@ -1308,7 +1319,7 @@ action :
   | LPAR GET script_var_opt quoted_text RPAR {
       WASM_ZERO_MEMORY($$);
       $$.loc = @2;
-      $$.module_var_name = $3;
+      $$.module_var = $3;
       $$.type = WASM_ACTION_TYPE_GET;
       $$.invoke.name = $4;
     }
@@ -1369,7 +1380,7 @@ cmd :
       $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_REGISTER;
       $$->register_.module_name = $3;
-      $$->register_.module_var_name = $4;
+      $$->register_.var = $4;
     }
 ;
 cmd_list :
@@ -1403,7 +1414,56 @@ const_list :
 
 script :
     cmd_list {
+      WASM_ZERO_MEMORY($$);
+      $$.allocator = parser->allocator;
       $$.commands = $1;
+
+      int last_module_index = -1;
+      size_t i;
+      for (i = 0; i < $$.commands.size; ++i) {
+        WasmCommand* command = &$$.commands.data[0];
+        WasmAction* action = NULL;
+        switch (command->type) {
+          case WASM_COMMAND_TYPE_MODULE: {
+            /* Wire up module name bindings. */
+            WasmModule* module = &command->module;
+            if (module->name.length == 0)
+              continue;
+            WasmStringSlice module_name =
+                wasm_dup_string_slice(parser->allocator, module->name);
+            INSERT_BINDING(&$$, module, commands, module->loc, module_name);
+            last_module_index = i;
+            break;
+          }
+
+          case WASM_COMMAND_TYPE_ASSERT_RETURN:
+            action = &command->assert_return.action;
+            goto has_action;
+          case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
+            action = &command->assert_return_nan.action;
+            goto has_action;
+          case WASM_COMMAND_TYPE_ASSERT_TRAP:
+            action = &command->assert_trap.action;
+            goto has_action;
+          case WASM_COMMAND_TYPE_ACTION:
+            action = &command->action;
+            goto has_action;
+
+          has_action: {
+            /* Resolve actions with an invalid index to use the preceding
+             * module. */
+            WasmVar* var = &action->module_var;
+            if (var->type == WASM_VAR_TYPE_INDEX &&
+                var->index == INVALID_VAR_INDEX) {
+              var->index = last_module_index;
+            }
+            break;
+          }
+
+          default:
+            break;
+        }
+      }
       parser->script = $$;
     }
 ;
@@ -1584,10 +1644,10 @@ WasmResult wasm_parse_ast(WasmAstLexer* lexer,
   WASM_ZERO_MEMORY(parser);
   WasmAllocator* allocator = wasm_ast_lexer_get_allocator(lexer);
   parser.allocator = allocator;
+  parser.script.allocator = allocator;
   parser.error_handler = error_handler;
-  out_script->allocator = allocator;
   int result = wasm_ast_parser_parse(lexer, &parser);
-  out_script->commands = parser.script.commands;
+  *out_script = parser.script;
   return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
 }
 
