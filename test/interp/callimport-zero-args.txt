@@ -3,9 +3,9 @@
   (import "foo" "bar" (func $imported (result i32)))
 
   (func (export "f") (result i32)
-    (i32.add
-      (i32.const 13)
-      (call $imported))))
+    i32.const 13
+    call $imported
+    i32.add)
 (;; STDOUT ;;;
 called host foo.bar() => (i32:0)
 f() => i32:13
