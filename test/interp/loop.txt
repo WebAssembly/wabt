@@ -19,7 +19,7 @@
         br $cont
       end
     end
-    get_local 1))
+    get_local 1)
 (;; STDOUT ;;;
 loop() => i32:10
 ;;; STDOUT ;;)
