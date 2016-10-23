@@ -155,7 +155,7 @@
   (func (export "i64_lt_u_less") (result i32)
     i64.const 1 
     i64.const -1
-    i64.lt_u
+    i64.lt_u)
   (func (export "i64_lt_u_equal") (result i32)
     i64.const 1
     i64.const 1 
