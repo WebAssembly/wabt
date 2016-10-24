@@ -12,20 +12,20 @@
     (local $F2L3 i64)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 01                                        ; num params
-000000d: 01                                        ; param type
+000000d: 7f                                        ; i32
 000000e: 00                                        ; num results
 ; type 1
-000000f: 40                                        ; function form
+000000f: 60                                        ; func
 0000010: 01                                        ; num params
-0000011: 03                                        ; param type
+0000011: 7d                                        ; f32
 0000012: 00                                        ; num results
 0000009: 09                                        ; FIXUP section size
 ; section "FUNCTION" (3)
@@ -43,18 +43,18 @@
 000001b: 00                                        ; func body size (guess)
 000001c: 02                                        ; local decl count
 000001d: 01                                        ; local type count
-000001e: 03                                        ; WASM_TYPE_F32
+000001e: 7d                                        ; f32
 000001f: 02                                        ; local type count
-0000020: 01                                        ; WASM_TYPE_I32
+0000020: 7f                                        ; i32
 0000021: 0b                                        ; end
 000001b: 06                                        ; FIXUP func body size
 ; function body 1
 0000022: 00                                        ; func body size (guess)
 0000023: 02                                        ; local decl count
 0000024: 01                                        ; local type count
-0000025: 04                                        ; WASM_TYPE_F64
+0000025: 7c                                        ; f64
 0000026: 02                                        ; local type count
-0000027: 02                                        ; WASM_TYPE_I64
+0000027: 7e                                        ; i64
 0000028: 0b                                        ; end
 0000022: 06                                        ; FIXUP func body size
 0000019: 0f                                        ; FIXUP section size

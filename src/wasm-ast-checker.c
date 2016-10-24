@@ -28,13 +28,6 @@
 #include "wasm-binary-reader-ast.h"
 #include "wasm-binary-reader.h"
 
-#define WASM_TYPE_ANY WASM_NUM_TYPES
-
-static const char* s_type_names[] = {
-    "void", "i32", "i64", "f32", "f64", "any",
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES + 1);
-
 typedef enum CheckStyle {
   CHECK_STYLE_NAME,
   CHECK_STYLE_FULL,
@@ -445,7 +438,8 @@ static void check_type(Context* ctx,
   if (actual != expected) {
     print_error(ctx, CHECK_STYLE_FULL, loc,
                 "type mismatch at %s. got %s, expected %s", desc,
-                s_type_names[actual], s_type_names[expected]);
+                wasm_get_type_name(actual),
+                wasm_get_type_name(expected));
   }
 }
 
@@ -459,8 +453,8 @@ static void check_type_index(Context* ctx,
   if (actual != expected) {
     print_error(ctx, CHECK_STYLE_FULL, loc,
                 "type mismatch for %s %d of %s. got %s, expected %s",
-                index_kind, index, desc, s_type_names[actual],
-                s_type_names[expected]);
+                index_kind, index, desc, wasm_get_type_name(actual),
+                wasm_get_type_name(expected));
   }
 }
 
@@ -578,7 +572,7 @@ static void check_assert_return_nan_type(Context* ctx,
   if (actual != WASM_TYPE_F32 && actual != WASM_TYPE_F64) {
     print_error(ctx, CHECK_STYLE_FULL, loc,
                 "type mismatch at %s. got %s, expected f32 or f64", desc,
-                s_type_names[actual]);
+                wasm_get_type_name(actual));
   }
 }
 

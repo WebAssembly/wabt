@@ -36,18 +36,6 @@
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
-WASM_STATIC_ASSERT(WASM_TYPE_VOID == 0);
-WASM_STATIC_ASSERT(WASM_TYPE_I32 == 1);
-WASM_STATIC_ASSERT(WASM_TYPE_I64 == 2);
-WASM_STATIC_ASSERT(WASM_TYPE_F32 == 3);
-WASM_STATIC_ASSERT(WASM_TYPE_F64 == 4);
-
-static const char* s_type_names[] = {
-    "WASM_TYPE_VOID", "WASM_TYPE_I32", "WASM_TYPE_I64",
-    "WASM_TYPE_F32",  "WASM_TYPE_F64",
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
-
 #define V(NAME, code) [code] = #NAME,
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
@@ -226,12 +214,16 @@ static void write_opcode(WasmStream* stream, uint8_t opcode) {
   wasm_write_u8(stream, opcode, wasm_get_opcode_name(opcode));
 }
 
+static void write_type(WasmStream* stream, WasmType type) {
+  write_i32_leb128(stream, type, wasm_get_type_name(type));
+}
+
 static void write_inline_signature_type(WasmStream* stream,
                                         const WasmBlockSignature* sig) {
   if (sig->size == 0) {
-    wasm_write_u8(stream, 0, s_type_names[WASM_TYPE_VOID]);
+    write_type(stream, WASM_TYPE_VOID);
   } else if (sig->size == 1) {
-    wasm_write_u8(stream, sig->data[0], s_type_names[sig->data[0]]);
+    write_type(stream, sig->data[0]);
   } else {
     /* this is currently unrepresentable */
     wasm_write_u8(stream, 0xff, "INVALID INLINE SIGNATURE");
@@ -573,7 +565,7 @@ static void write_func_locals(Context* ctx,
       local_type_count++;
     } else {
       write_u32_leb128(&ctx->stream, local_type_count, "local type count");
-      wasm_write_u8(&ctx->stream, current_type, s_type_names[current_type]);
+      write_type(&ctx->stream, current_type);
       local_type_count = 1;
       current_type = type;
     }
@@ -594,7 +586,7 @@ static void write_func(Context* ctx,
 
 static void write_table(Context* ctx, const WasmTable* table) {
   const WasmLimits* limits = &table->elem_limits;
-  wasm_write_u8(&ctx->stream, WASM_BINARY_ELEM_TYPE_ANYFUNC, "table elem type");
+  write_type(&ctx->stream, WASM_TYPE_ANYFUNC);
   uint32_t flags = limits->has_max ? WASM_BINARY_LIMITS_HAS_MAX_FLAG : 0;
   write_u32_leb128(&ctx->stream, flags, "table flags");
   write_u32_leb128(&ctx->stream, limits->initial, "table initial elems");
@@ -612,7 +604,7 @@ static void write_memory(Context* ctx, const WasmMemory* memory) {
 }
 
 static void write_global_header(Context* ctx, const WasmGlobal* global) {
-  wasm_write_u8(&ctx->stream, global->type, s_type_names[global->type]);
+  write_type(&ctx->stream, global->type);
   wasm_write_u8(&ctx->stream, global->mutable_, "global mutability");
 }
 
@@ -632,19 +624,18 @@ static void write_module(Context* ctx, const WasmModule* module) {
       const WasmFuncType* func_type = module->func_types.data[i];
       const WasmFuncSignature* sig = &func_type->sig;
       write_header(ctx, "type", i);
-      wasm_write_u8(&ctx->stream, WASM_BINARY_TYPE_FORM_FUNCTION,
-                    "function form");
+      write_type(&ctx->stream, WASM_TYPE_FUNC);
 
       size_t j;
       uint32_t num_params = sig->param_types.size;
       uint32_t num_results = sig->result_types.size;
       write_u32_leb128(&ctx->stream, num_params, "num params");
       for (j = 0; j < num_params; ++j)
-        wasm_write_u8(&ctx->stream, sig->param_types.data[j], "param type");
+        write_type(&ctx->stream, sig->param_types.data[j]);
 
       write_u32_leb128(&ctx->stream, num_results, "num results");
       for (j = 0; j < num_results; ++j)
-        wasm_write_u8(&ctx->stream, sig->result_types.data[j], "result type");
+        write_type(&ctx->stream, sig->result_types.data[j]);
     }
     end_section(ctx);
   }

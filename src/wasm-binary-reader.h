@@ -74,7 +74,7 @@ typedef struct WasmBinaryReader {
                                uint32_t sig_index,
                                void* user_data);
   WasmResult (*on_import_table)(uint32_t index,
-                                uint32_t elem_type,
+                                WasmType elem_type,
                                 const WasmLimits* elem_limits,
                                 void* user_data);
   WasmResult (*on_import_memory)(uint32_t index,
@@ -101,7 +101,7 @@ typedef struct WasmBinaryReader {
                                     uint32_t size);
   WasmResult (*on_table_count)(uint32_t count, void* user_data);
   WasmResult (*on_table)(uint32_t index,
-                         uint32_t elem_type,
+                         WasmType elem_type,
                          const WasmLimits* elem_limits,
                          void* user_data);
   WasmResult (*end_table_section)(WasmBinaryReaderContext* ctx);

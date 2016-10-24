@@ -78,13 +78,6 @@
   if (top_type_is_any(ctx))               \
   return WASM_OK
 
-#define WASM_TYPE_ANY WASM_NUM_TYPES
-
-static const char* s_type_names[] = {
-    "void", "i32", "i64", "f32", "f64", "any",
-};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES + 1);
-
 typedef uint32_t Uint32;
 WASM_DEFINE_VECTOR(uint32, Uint32);
 WASM_DEFINE_VECTOR(uint32_vector, Uint32Vector);
@@ -527,7 +520,7 @@ static WasmResult on_import_func(uint32_t index,
 }
 
 static WasmResult on_import_table(uint32_t index,
-                                  uint32_t elem_type,
+                                  WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
   Context* ctx = user_data;
@@ -669,7 +662,7 @@ static WasmResult on_function_signature(uint32_t index,
 }
 
 static WasmResult on_table(uint32_t index,
-                           uint32_t elem_type,
+                           WasmType elem_type,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   Context* ctx = user_data;
@@ -958,7 +951,7 @@ static WasmResult check_type(Context* ctx,
   RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
   if (expected != actual) {
     print_error(ctx, "type mismatch in %s, expected %s but got %s.", desc,
-                s_type_names[expected], s_type_names[actual]);
+                wasm_get_type_name(expected), wasm_get_type_name(actual));
     return WASM_ERROR;
   }
   return WASM_OK;
@@ -988,7 +981,7 @@ static WasmType pop_type(Context* ctx) {
   WasmType type = top_type(ctx);
   if (type != WASM_TYPE_ANY) {
     LOGF("%3" PRIzd "->%3" PRIzd ": pop  %s\n", ctx->type_stack.size,
-         ctx->type_stack.size - 1, s_type_names[type]);
+         ctx->type_stack.size - 1, wasm_get_type_name(type));
     ctx->type_stack.size--;
   }
   return type;
@@ -998,7 +991,7 @@ static void push_type(Context* ctx, WasmType type) {
   RETURN_IF_TOP_TYPE_IS_ANY(ctx);
   if (type != WASM_TYPE_VOID) {
     LOGF("%3" PRIzd "->%3" PRIzd ": push %s\n", ctx->type_stack.size,
-         ctx->type_stack.size + 1, s_type_names[type]);
+         ctx->type_stack.size + 1, wasm_get_type_name(type));
     wasm_append_type_value(ctx->allocator, &ctx->type_stack, &type);
   }
 }

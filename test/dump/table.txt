@@ -9,27 +9,27 @@
   (table anyfunc (elem 0 0 1 2)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 03                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 01                                        ; num params
-000000d: 01                                        ; param type
+000000d: 7f                                        ; i32
 000000e: 00                                        ; num results
 ; type 1
-000000f: 40                                        ; function form
+000000f: 60                                        ; func
 0000010: 02                                        ; num params
-0000011: 01                                        ; param type
-0000012: 02                                        ; param type
+0000011: 7f                                        ; i32
+0000012: 7e                                        ; i64
 0000013: 00                                        ; num results
 ; type 2
-0000014: 40                                        ; function form
+0000014: 60                                        ; func
 0000015: 00                                        ; num params
 0000016: 01                                        ; num results
-0000017: 04                                        ; result type
+0000017: 7c                                        ; f64
 0000009: 0e                                        ; FIXUP section size
 ; section "FUNCTION" (3)
 0000018: 03                                        ; section code
@@ -44,7 +44,7 @@
 000001f: 00                                        ; section size (guess)
 0000020: 01                                        ; num tables
 ; table 0
-0000021: 20                                        ; table elem type
+0000021: 70                                        ; anyfunc
 0000022: 01                                        ; table flags
 0000023: 04                                        ; table initial elems
 0000024: 04                                        ; table max elems

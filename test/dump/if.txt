@@ -22,13 +22,13 @@
     end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -49,13 +49,13 @@
 0000018: 41                                        ; i32.const
 0000019: 01                                        ; i32 literal
 000001a: 04                                        ; if
-000001b: 00                                        ; WASM_TYPE_VOID
+000001b: 40                                        ; void
 000001c: 01                                        ; nop
 000001d: 0b                                        ; end
 000001e: 41                                        ; i32.const
 000001f: 00                                        ; i32 literal
 0000020: 04                                        ; if
-0000021: 03                                        ; WASM_TYPE_F32
+0000021: 7d                                        ; f32
 0000022: 43                                        ; f32.const
 0000023: 0000 803f                                 ; f32 literal
 0000027: 05                                        ; else
@@ -71,7 +71,7 @@
 0000032: 41                                        ; i32.const
 0000033: 01                                        ; i32 literal
 0000034: 04                                        ; if
-0000035: 00                                        ; WASM_TYPE_VOID
+0000035: 40                                        ; void
 0000036: 0f                                        ; return
 0000037: 05                                        ; else
 0000038: 0f                                        ; return
@@ -81,11 +81,11 @@
 0000014: 26                                        ; FIXUP section size
 func 0
  000018: 41 01                      | i32.const 0x1
- 00001a: 04 00                      | if
+ 00001a: 04 40                      | if
  00001c: 01                         |   nop
  00001d: 0b                         | end
  00001e: 41 00                      | i32.const 0
- 000020: 04 03                      | if f32
+ 000020: 04 7d                      | if f32
  000022: 43 00 00 80 3f             |   f32.const 0x3f800000
  000027: 05                         | else
  000028: 43 00 00 00 40             |   f32.const 0x40000000
@@ -93,7 +93,7 @@ func 0
  00002e: 1a                         | drop
 func 1
  000032: 41 01                      | i32.const 0x1
- 000034: 04 00                      | if
+ 000034: 04 40                      | if
  000036: 0f                         |   return
  000037: 05                         | else
  000038: 0f                         |   return

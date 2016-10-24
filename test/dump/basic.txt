@@ -15,18 +15,18 @@
   (export "f" (func $f)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 02                                        ; num params
-000000d: 01                                        ; param type
-000000e: 01                                        ; param type
+000000d: 7f                                        ; i32
+000000e: 7f                                        ; i32
 000000f: 01                                        ; num results
-0000010: 01                                        ; result type
+0000010: 7f                                        ; i32
 0000009: 07                                        ; FIXUP section size
 ; section "FUNCTION" (3)
 0000011: 03                                        ; section code

@@ -105,9 +105,6 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
 
-static const char* s_type_names[] = {"void", "i32", "i64", "f32", "f64"};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_type_names) == WASM_NUM_TYPES);
-
 #define V(NAME, code) [code] = #NAME,
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
@@ -339,6 +336,15 @@ static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
 #undef SHIFT_AMOUNT
 #undef SIGN_EXTEND
 
+static void in_type(Context* ctx, WasmType* out_value, const char* desc) {
+  uint32_t type = 0;
+  in_i32_leb128(ctx, &type, desc);
+  /* Must be in the vs7 range: [-128, 127). */
+  if ((int32_t)type < -128 || (int32_t)type > 127)
+    RAISE_ERROR("invalid type: %d", type);
+  *out_value = type;
+}
+
 static void in_str(Context* ctx, WasmStringSlice* out_str, const char* desc) {
   uint32_t str_len = 0;
   in_u32_leb128(ctx, &str_len, "string length");
@@ -370,12 +376,21 @@ static WasmBool is_valid_external_kind(uint8_t kind) {
   return kind < WASM_NUM_EXTERNAL_KINDS;
 }
 
-static WasmBool is_concrete_type(uint8_t type) {
-  return type != WASM_TYPE_VOID && type < WASM_NUM_TYPES;
+static WasmBool is_concrete_type(WasmType type) {
+  switch (type) {
+    case WASM_TYPE_I32:
+    case WASM_TYPE_I64:
+    case WASM_TYPE_F32:
+    case WASM_TYPE_F64:
+      return WASM_TRUE;
+
+    default:
+      return WASM_FALSE;
+  }
 }
 
-static WasmBool is_inline_sig_type(uint8_t type) {
-  return type < WASM_NUM_TYPES;
+static WasmBool is_inline_sig_type(WasmType type) {
+  return is_concrete_type(type) || type == WASM_TYPE_VOID;
 }
 
 static uint32_t num_total_funcs(Context* ctx) {
@@ -672,7 +687,7 @@ static void log_types(LoggingContext* ctx,
   uint32_t i;
   LOGF_NOINDENT("[");
   for (i = 0; i < type_count; ++i) {
-    LOGF_NOINDENT("%s", s_type_names[types[i]]);
+    LOGF_NOINDENT("%s", wasm_get_type_name(types[i]));
     if (i != type_count - 1)
       LOGF_NOINDENT(", ");
   }
@@ -708,14 +723,14 @@ static WasmResult logging_on_import(uint32_t index,
 }
 
 static WasmResult logging_on_import_table(uint32_t index,
-                                          uint32_t elem_type,
+                                          WasmType elem_type,
                                           const WasmLimits* elem_limits,
                                           void* user_data) {
   LoggingContext* ctx = user_data;
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
-  LOGF("on_import_table(index: %u, elem_type: %u, %s)\n", index, elem_type,
-       buf);
+  LOGF("on_import_table(index: %u, elem_type: %s, %s)\n", index,
+       wasm_get_type_name(elem_type), buf);
   FORWARD(on_import_table, index, elem_type, elem_limits);
 }
 
@@ -735,18 +750,19 @@ static WasmResult logging_on_import_global(uint32_t index,
                                            void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("on_import_global(index: %u, type: %s, mutable: %s)\n", index,
-       s_type_names[type], mutable_ ? "true" : "false");
+       wasm_get_type_name(type), mutable_ ? "true" : "false");
   FORWARD(on_import_global, index, type, mutable_);
 }
 
 static WasmResult logging_on_table(uint32_t index,
-                                   uint32_t elem_type,
+                                   WasmType elem_type,
                                    const WasmLimits* elem_limits,
                                    void* user_data) {
   LoggingContext* ctx = user_data;
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
-  LOGF("on_table(index: %u, elem_type: %u, %s)\n", index, elem_type, buf);
+  LOGF("on_table(index: %u, elem_type: %s, %s)\n", index,
+       wasm_get_type_name(elem_type), buf);
   FORWARD(on_table, index, elem_type, elem_limits);
 }
 
@@ -766,7 +782,7 @@ static WasmResult logging_begin_global(uint32_t index,
                                        void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("begin_global(index: %u, type: %s, mutable: %s)\n", index,
-       s_type_names[type], mutable_ ? "true" : "false");
+       wasm_get_type_name(type), mutable_ ? "true" : "false");
   FORWARD(begin_global, index, mutable_, type);
 }
 
@@ -798,7 +814,7 @@ static WasmResult logging_on_local_decl(uint32_t decl_index,
                                         void* user_data) {
   LoggingContext* ctx = user_data;
   LOGF("on_local_decl(index: %u, count: %u, type: %s)\n", decl_index, count,
-       s_type_names[type]);
+       wasm_get_type_name(type));
   FORWARD(on_local_decl, decl_index, count, type);
 }
 
@@ -1172,11 +1188,11 @@ static void read_init_expr(Context* ctx, uint32_t index) {
 }
 
 static void read_table(Context* ctx,
-                       uint32_t* out_elem_type,
+                       WasmType* out_elem_type,
                        WasmLimits* out_elem_limits) {
-  in_u32_leb128(ctx, out_elem_type, "table elem type");
-  RAISE_ERROR_UNLESS(*out_elem_type == WASM_BINARY_ELEM_TYPE_ANYFUNC,
-                     "table elem type must by anyfunc (0x20)");
+  in_type(ctx, out_elem_type, "table elem type");
+  RAISE_ERROR_UNLESS(*out_elem_type == WASM_TYPE_ANYFUNC,
+                     "table elem type must by anyfunc");
 
   uint32_t flags;
   uint32_t initial;
@@ -1216,11 +1232,11 @@ static void read_memory(Context* ctx, WasmLimits* out_page_limits) {
 }
 
 static void read_global_header(Context* ctx,
-                               uint8_t* out_type,
+                               WasmType* out_type,
                                WasmBool* out_mutable) {
-  uint8_t global_type;
+  WasmType global_type;
   uint8_t mutable_;
-  in_u8(ctx, &global_type, "global type");
+  in_type(ctx, &global_type, "global type");
   RAISE_ERROR_UNLESS(is_concrete_type(global_type),
                      "expected valid global type");
 
@@ -1246,8 +1262,8 @@ static void read_function_body(Context* ctx,
         break;
 
       case WASM_OPCODE_BLOCK: {
-        uint8_t sig_type;
-        in_u8(ctx, &sig_type, "block signature type");
+        WasmType sig_type;
+        in_type(ctx, &sig_type, "block signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
         uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
@@ -1257,8 +1273,8 @@ static void read_function_body(Context* ctx,
       }
 
       case WASM_OPCODE_LOOP: {
-        uint8_t sig_type;
-        in_u8(ctx, &sig_type, "loop signature type");
+        WasmType sig_type;
+        in_type(ctx, &sig_type, "loop signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
         uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
@@ -1268,8 +1284,8 @@ static void read_function_body(Context* ctx,
       }
 
       case WASM_OPCODE_IF: {
-        uint8_t sig_type;
-        in_u8(ctx, &sig_type, "if signature type");
+        WasmType sig_type;
+        in_type(ctx, &sig_type, "if signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
         uint32_t num_types = sig_type == WASM_TYPE_VOID ? 0 : 1;
@@ -1696,10 +1712,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK(on_signature_count, ctx->num_signatures);
 
     for (i = 0; i < ctx->num_signatures; ++i) {
-      uint8_t form;
-      in_u8(ctx, &form, "type form");
-      RAISE_ERROR_UNLESS(form == WASM_BINARY_TYPE_FORM_FUNCTION,
-                         "unexpected type form");
+      WasmType form;
+      in_type(ctx, &form, "type form");
+      RAISE_ERROR_UNLESS(form == WASM_TYPE_FUNC, "unexpected type form");
 
       uint32_t num_params;
       in_u32_leb128(ctx, &num_params, "function param count");
@@ -1709,8 +1724,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
       uint32_t j;
       for (j = 0; j < num_params; ++j) {
-        uint8_t param_type;
-        in_u8(ctx, &param_type, "function param type");
+        WasmType param_type;
+        in_type(ctx, &param_type, "function param type");
         RAISE_ERROR_UNLESS(is_concrete_type(param_type),
                            "expected valid param type");
         ctx->param_types.data[j] = param_type;
@@ -1720,9 +1735,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       in_u32_leb128(ctx, &num_results, "function result count");
       RAISE_ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
 
-      uint8_t result_type = WASM_TYPE_VOID;
+      WasmType result_type = WASM_TYPE_VOID;
       if (num_results) {
-        in_u8(ctx, &result_type, "function result type");
+        in_type(ctx, &result_type, "function result type");
         RAISE_ERROR_UNLESS(is_concrete_type(result_type),
                            "expected valid result type");
       }
@@ -1760,7 +1775,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         }
 
         case WASM_EXTERNAL_KIND_TABLE: {
-          uint32_t elem_type;
+          WasmType elem_type;
           WasmLimits elem_limits;
           read_table(ctx, &elem_type, &elem_limits);
           CALLBACK(on_import_table, i, elem_type, &elem_limits);
@@ -1777,7 +1792,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         }
 
         case WASM_EXTERNAL_KIND_GLOBAL: {
-          uint8_t type;
+          WasmType type;
           WasmBool mutable_;
           read_global_header(ctx, &type, &mutable_);
           CALLBACK(on_import_global, i, type, mutable_);
@@ -1821,7 +1836,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count must be 0 or 1");
     CALLBACK(on_table_count, ctx->num_tables);
     for (i = 0; i < ctx->num_tables; ++i) {
-      uint32_t elem_type;
+      WasmType elem_type;
       WasmLimits elem_limits;
       read_table(ctx, &elem_type, &elem_limits);
       CALLBACK(on_table, i, elem_type, &elem_limits);
@@ -1850,7 +1865,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     in_u32_leb128(ctx, &ctx->num_globals, "global count");
     CALLBACK(on_global_count, ctx->num_globals);
     for (i = 0; i < ctx->num_globals; ++i) {
-      uint8_t global_type;
+      WasmType global_type;
       WasmBool mutable_;
       read_global_header(ctx, &global_type, &mutable_);
       CALLBACK(begin_global, i, global_type, mutable_);
@@ -1974,8 +1989,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
         for (k = 0; k < num_local_decls; ++k) {
           uint32_t num_local_types;
           in_u32_leb128(ctx, &num_local_types, "local type count");
-          uint8_t local_type;
-          in_u8(ctx, &local_type, "local type");
+          WasmType local_type;
+          in_type(ctx, &local_type, "local type");
           RAISE_ERROR_UNLESS(is_concrete_type(local_type),
                              "expected valid local type");
           CALLBACK(on_local_decl, k, num_local_types, local_type);

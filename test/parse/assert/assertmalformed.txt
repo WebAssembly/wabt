@@ -5,7 +5,7 @@
   "unknown binary version")
 (;; STDOUT ;;;
 assert_malformed error:
-  parse/assert/assertmalformed.txt:3:4: error in binary module: @0x00000008: bad wasm file version: 0xabc (expected 0xc)
+  parse/assert/assertmalformed.txt:3:4: error in binary module: @0x00000008: bad wasm file version: 0xabc (expected 0xd)
   (module
    ^^^^^^
 ;;; STDOUT ;;)

@@ -1,8 +1,8 @@
 (module
   "\00asm"            ;; magic
-  "\0c\00\00\00"      ;; version
+  "\0d\00\00\00"      ;; version
   "\01\05"            ;; type section, 5 bytes
-  "\01\40\00\01\01"   ;; 1 type, function, no params, i32 result
+  "\01\60\00\01\7f"   ;; 1 type, function, no params, i32 result
   "\03\02"            ;; function section, 2 bytes
   "\01\00"            ;; 1 function, type 0
   "\07\07"            ;; export section, 7 bytes
