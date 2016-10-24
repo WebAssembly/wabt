@@ -378,6 +378,7 @@ static void write_expr(Context* ctx,
       assert(index >= 0 && (size_t)index < module->func_types.size);
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_INDIRECT);
       write_u32_leb128(&ctx->stream, index, "signature index");
+      write_u32_leb128(&ctx->stream, 0, "call_indirect reserved");
       break;
     }
     case WASM_EXPR_TYPE_COMPARE:
@@ -413,6 +414,7 @@ static void write_expr(Context* ctx,
       break;
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
       write_opcode(&ctx->stream, WASM_OPCODE_CURRENT_MEMORY);
+      write_u32_leb128(&ctx->stream, 0, "current_memory reserved");
       break;
     case WASM_EXPR_TYPE_DROP:
       write_opcode(&ctx->stream, WASM_OPCODE_DROP);
@@ -431,6 +433,7 @@ static void write_expr(Context* ctx,
     }
     case WASM_EXPR_TYPE_GROW_MEMORY:
       write_opcode(&ctx->stream, WASM_OPCODE_GROW_MEMORY);
+      write_u32_leb128(&ctx->stream, 0, "grow_memory reserved");
       break;
     case WASM_EXPR_TYPE_IF: {
       WasmLabelNode node;

@@ -44,12 +44,13 @@
 000001e: 20                                        ; get_local
 000001f: 00                                        ; local index
 0000020: 40                                        ; grow_memory
-0000021: 1a                                        ; drop
-0000022: 0b                                        ; end
-000001c: 06                                        ; FIXUP func body size
-000001a: 08                                        ; FIXUP section size
+0000021: 00                                        ; grow_memory reserved
+0000022: 1a                                        ; drop
+0000023: 0b                                        ; end
+000001c: 07                                        ; FIXUP func body size
+000001a: 09                                        ; FIXUP section size
 func 0
  00001e: 20 00                      | get_local 0
- 000020: 40                         | grow_memory
- 000021: 1a                         | drop
+ 000020: 40 00                      | grow_memory 0
+ 000022: 1a                         | drop
 ;;; STDOUT ;;)

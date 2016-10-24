@@ -61,11 +61,12 @@
 000002b: 00                                        ; i32 literal
 000002c: 11                                        ; call_indirect
 000002d: 00                                        ; signature index
-000002e: 0b                                        ; end
-0000026: 08                                        ; FIXUP func body size
-0000024: 0a                                        ; FIXUP section size
+000002e: 00                                        ; call_indirect reserved
+000002f: 0b                                        ; end
+0000026: 09                                        ; FIXUP func body size
+0000024: 0b                                        ; FIXUP section size
 func 0
  000028: 41 00                      | i32.const 0
  00002a: 41 00                      | i32.const 0
- 00002c: 11 00                      | call_indirect 0
+ 00002c: 11 00 00                   | call_indirect 0 0
 ;;; STDOUT ;;)
