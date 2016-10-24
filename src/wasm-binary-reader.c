@@ -1445,8 +1445,12 @@ static void read_function_body(Context* ctx,
         in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid call_indirect signature index");
+        uint32_t reserved;
+        in_u32_leb128(ctx, &reserved, "call_indirect reserved");
+        RAISE_ERROR_UNLESS(reserved == 0,
+                           "call_indirect reserved value must be 0");
         CALLBACK(on_call_indirect_expr, sig_index);
-        CALLBACK_CTX(on_opcode_uint32, sig_index);
+        CALLBACK_CTX(on_opcode_uint32_uint32, sig_index, reserved);
         break;
       }
 
@@ -1501,15 +1505,25 @@ static void read_function_body(Context* ctx,
         break;
       }
 
-      case WASM_OPCODE_CURRENT_MEMORY:
+      case WASM_OPCODE_CURRENT_MEMORY: {
+        uint32_t reserved;
+        in_u32_leb128(ctx, &reserved, "current_memory reserved");
+        RAISE_ERROR_UNLESS(reserved == 0,
+                           "current_memory reserved value must be 0");
         CALLBACK0(on_current_memory_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK_CTX(on_opcode_uint32, reserved);
         break;
+      }
 
-      case WASM_OPCODE_GROW_MEMORY:
+      case WASM_OPCODE_GROW_MEMORY: {
+        uint32_t reserved;
+        in_u32_leb128(ctx, &reserved, "grow_memory reserved");
+        RAISE_ERROR_UNLESS(reserved == 0,
+                           "grow_memory reserved value must be 0");
         CALLBACK0(on_grow_memory_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK_CTX(on_opcode_uint32, reserved);
         break;
+      }
 
       case WASM_OPCODE_I32_ADD:
       case WASM_OPCODE_I32_SUB:
