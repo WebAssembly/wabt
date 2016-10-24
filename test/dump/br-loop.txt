@@ -10,13 +10,13 @@
     end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -34,11 +34,11 @@
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
 0000017: 03                                        ; loop
-0000018: 00                                        ; WASM_TYPE_VOID
+0000018: 40                                        ; void
 0000019: 41                                        ; i32.const
 000001a: 01                                        ; i32 literal
 000001b: 04                                        ; if
-000001c: 00                                        ; WASM_TYPE_VOID
+000001c: 40                                        ; void
 000001d: 0c                                        ; br
 000001e: 01                                        ; break depth
 000001f: 0b                                        ; end
@@ -47,9 +47,9 @@
 0000015: 0c                                        ; FIXUP func body size
 0000013: 0e                                        ; FIXUP section size
 func 0
- 000017: 03 00                      | loop
+ 000017: 03 40                      | loop
  000019: 41 01                      |   i32.const 0x1
- 00001b: 04 00                      |   if
+ 00001b: 04 40                      |   if
  00001d: 0c 01                      |     br 0x1
  00001f: 0b                         |   end
  000020: 0b                         | end

@@ -253,8 +253,9 @@ static void write_br_var(Context* ctx, const WasmVar* var, NextChar next_char) {
 }
 
 static void write_type(Context* ctx, WasmType type, NextChar next_char) {
-  static const char* s_types[] = {NULL, "i32", "i64", "f32", "f64"};
-  write_puts(ctx, s_types[type], next_char);
+  const char* type_name = wasm_get_type_name(type);
+  assert(type_name != NULL);
+  write_puts(ctx, type_name, next_char);
 }
 
 static void write_types(Context* ctx,

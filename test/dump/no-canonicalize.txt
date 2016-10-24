@@ -23,27 +23,27 @@
     drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 0000 0000 00                              ; section size (guess)
 000000e: 03                                        ; num types
 ; type 0
-000000f: 40                                        ; function form
+000000f: 60                                        ; func
 0000010: 01                                        ; num params
-0000011: 01                                        ; param type
+0000011: 7f                                        ; i32
 0000012: 00                                        ; num results
 ; type 1
-0000013: 40                                        ; function form
+0000013: 60                                        ; func
 0000014: 01                                        ; num params
-0000015: 01                                        ; param type
+0000015: 7f                                        ; i32
 0000016: 01                                        ; num results
-0000017: 01                                        ; result type
+0000017: 7f                                        ; i32
 ; type 2
-0000018: 40                                        ; function form
+0000018: 60                                        ; func
 0000019: 02                                        ; num params
-000001a: 01                                        ; param type
-000001b: 01                                        ; param type
+000001a: 7f                                        ; i32
+000001b: 7f                                        ; i32
 000001c: 00                                        ; num results
 0000009: 8f80 8080 00                              ; FIXUP section size
 ; section "IMPORT" (2)
@@ -71,7 +71,7 @@
 000003d: 0000 0000 00                              ; section size (guess)
 0000042: 01                                        ; num tables
 ; table 0
-0000043: 20                                        ; table elem type
+0000043: 70                                        ; anyfunc
 0000044: 01                                        ; table flags
 0000045: 02                                        ; table initial elems
 0000046: 02                                        ; table max elems

@@ -4,13 +4,13 @@
   (func (local i32 i64 i64 f32 f32 f32 f64 f64 f64 f64)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -28,13 +28,13 @@
 0000015: 00                                        ; func body size (guess)
 0000016: 04                                        ; local decl count
 0000017: 01                                        ; local type count
-0000018: 01                                        ; WASM_TYPE_I32
+0000018: 7f                                        ; i32
 0000019: 02                                        ; local type count
-000001a: 02                                        ; WASM_TYPE_I64
+000001a: 7e                                        ; i64
 000001b: 03                                        ; local type count
-000001c: 03                                        ; WASM_TYPE_F32
+000001c: 7d                                        ; f32
 000001d: 04                                        ; local type count
-000001e: 04                                        ; WASM_TYPE_F64
+000001e: 7c                                        ; f64
 000001f: 0b                                        ; end
 0000015: 0a                                        ; FIXUP func body size
 0000013: 0c                                        ; FIXUP section size

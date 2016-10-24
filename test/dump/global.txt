@@ -12,47 +12,47 @@
   (global f64 (get_global 3)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "GLOBAL" (6)
 0000008: 06                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 08                                        ; num globals
-000000b: 01                                        ; WASM_TYPE_I32
+000000b: 7f                                        ; i32
 000000c: 00                                        ; global mutability
 000000d: 41                                        ; i32.const
 000000e: 01                                        ; i32 literal
 000000f: 0b                                        ; end
-0000010: 02                                        ; WASM_TYPE_I64
+0000010: 7e                                        ; i64
 0000011: 00                                        ; global mutability
 0000012: 42                                        ; i64.const
 0000013: 02                                        ; i64 literal
 0000014: 0b                                        ; end
-0000015: 03                                        ; WASM_TYPE_F32
+0000015: 7d                                        ; f32
 0000016: 00                                        ; global mutability
 0000017: 43                                        ; f32.const
 0000018: 0000 4040                                 ; f32 literal
 000001c: 0b                                        ; end
-000001d: 04                                        ; WASM_TYPE_F64
+000001d: 7c                                        ; f64
 000001e: 00                                        ; global mutability
 000001f: 44                                        ; f64.const
 0000020: 0000 0000 0000 1040                       ; f64 literal
 0000028: 0b                                        ; end
-0000029: 01                                        ; WASM_TYPE_I32
+0000029: 7f                                        ; i32
 000002a: 00                                        ; global mutability
 000002b: 23                                        ; get_global
 000002c: 00                                        ; global index
 000002d: 0b                                        ; end
-000002e: 02                                        ; WASM_TYPE_I64
+000002e: 7e                                        ; i64
 000002f: 00                                        ; global mutability
 0000030: 23                                        ; get_global
 0000031: 01                                        ; global index
 0000032: 0b                                        ; end
-0000033: 03                                        ; WASM_TYPE_F32
+0000033: 7d                                        ; f32
 0000034: 00                                        ; global mutability
 0000035: 23                                        ; get_global
 0000036: 02                                        ; global index
 0000037: 0b                                        ; end
-0000038: 04                                        ; WASM_TYPE_F64
+0000038: 7c                                        ; f64
 0000039: 00                                        ; global mutability
 000003a: 23                                        ; get_global
 000003b: 03                                        ; global index

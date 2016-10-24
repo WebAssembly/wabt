@@ -129,18 +129,17 @@ typedef struct WasmBinaryErrorHandler {
 
 /* matches binary format, do not change */
 enum {
-  WASM_TYPE_VOID = 0,
-  WASM_TYPE_I32 = 1,
-  WASM_TYPE_I64 = 2,
-  WASM_TYPE_F32 = 3,
-  WASM_TYPE_F64 = 4,
-  WASM_NUM_TYPES,
+  WASM_TYPE_I32 = -0x01,
+  WASM_TYPE_I64 = -0x02,
+  WASM_TYPE_F32 = -0x03,
+  WASM_TYPE_F64 = -0x04,
+  WASM_TYPE_ANYFUNC = -0x10,
+  WASM_TYPE_FUNC = -0x20,
+  WASM_TYPE_VOID = -0x40,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
-  /* used when parsing multiple return types to signify an error */
-  /* TODO(binji): remove and support properly */
-  WASM_TYPE_MULTIPLE = WASM_NUM_TYPES,
+  WASM_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
 };
-typedef unsigned char WasmType;
+typedef int32_t WasmType;
 
 /* matches binary format, do not change */
 typedef enum WasmExternalKind {
@@ -450,6 +449,20 @@ static WASM_INLINE WasmType wasm_get_opcode_param_type_2(WasmOpcode opcode) {
 static WASM_INLINE int wasm_get_opcode_memory_size(WasmOpcode opcode) {
   assert(opcode < WASM_NUM_OPCODES);
   return g_wasm_opcode_info[opcode].memory_size;
+}
+
+static WASM_INLINE const char* wasm_get_type_name(WasmType type) {
+  switch (type) {
+    case WASM_TYPE_I32: return "i32";
+    case WASM_TYPE_I64: return "i64";
+    case WASM_TYPE_F32: return "f32";
+    case WASM_TYPE_F64: return "f64";
+    case WASM_TYPE_ANYFUNC: return "anyfunc";
+    case WASM_TYPE_FUNC: return "func";
+    case WASM_TYPE_VOID: return "void";
+    case WASM_TYPE_ANY: return "any";
+    default: return NULL;
+  }
 }
 
 WASM_EXTERN_C_END

@@ -39,15 +39,15 @@ except ImportError:
 
 ## ply stuff ###################################################################
 NAMED_VALUES = {
-  'void': 0,
-  'i32': 1,
-  'i64': 2,
-  'f32': 3,
-  'f64': 4,
-  'anyfunc': 0x20,
-  'function': 0x40,
+  'i32': 0x7f, # -1
+  'i64': 0x7e, # -2
+  'f32': 0x7d, # -3
+  'f64': 0x7c, # -4
+  'anyfunc': 0x70, # -0x10
+  'function': 0x60, # -0x20
+  'void': 0x40, # -0x40
   'magic': (0, 0x61, 0x73, 0x6d),
-  'version': (0xc, 0, 0, 0),
+  'version': (0xd, 0, 0, 0),
 
   # section codes
   'UNKNOWN': 0,

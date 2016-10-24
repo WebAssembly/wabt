@@ -1,3 +1,4 @@
+;;; SKIP: spec binary format has not been updated to 0xd
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/binary.wast
 (;; STDOUT ;;;
