@@ -17,561 +17,419 @@
 #include "wasm-binary-writer-spec.h"
 
 #include <assert.h>
+#include <inttypes.h>
 
 #include "wasm-ast.h"
 #include "wasm-binary.h"
 #include "wasm-binary-writer.h"
 #include "wasm-config.h"
+#include "wasm-stream.h"
 #include "wasm-writer.h"
-
-#define DUMP_OCTETS_PER_LINE 16
-
-#define CALLBACK0(ctx, member)                                     \
-  do {                                                             \
-    if (((ctx)->spec_options->member))                             \
-      (ctx)->spec_options->member((ctx)->spec_options->user_data); \
-  } while (0)
-
-#define CALLBACK(ctx, member, ...)                                             \
-  do {                                                                         \
-    if (((ctx)->spec_options->member))                                         \
-      (ctx)                                                                    \
-          ->spec_options->member(__VA_ARGS__, (ctx)->spec_options->user_data); \
-  } while (0)
 
 typedef struct Context {
   WasmAllocator* allocator;
-  WasmWriter* writer;
-  size_t writer_offset;
-  const WasmWriteBinaryOptions* options;
+  WasmMemoryWriter json_writer;
+  WasmStream json_stream;
+  const char* source_filename;
+  WasmStringSlice json_filename_noext;
   const WasmWriteBinarySpecOptions* spec_options;
   WasmResult result;
+  size_t num_modules;
 } Context;
 
-typedef struct ExprList {
-  WasmExpr* first;
-  WasmExpr* last;
-} ExprList;
-
-typedef struct ActionInfo {
-  const WasmAction* action;
-  int index;
-  size_t num_results;
-  union {
-    /* when action->type == INVOKE; memory is shared with the callee's sig */
-    const WasmTypeVector* result_types;
-    /* when action->type == GET */
-    WasmType result_type;
-  };
-} ActionInfo;
-
-static void append_expr(ExprList* expr_list, WasmExpr* expr) {
-  if (expr_list->last)
-    expr_list->last->next = expr;
-  else
-    expr_list->first = expr;
-  expr_list->last = expr;
+static void convert_backslash_to_slash(char* s, size_t length) {
+  size_t i = 0;
+  for (; i < length; ++i)
+    if (s[i] == '\\')
+      s[i] = '/';
 }
 
-static void append_const_expr(WasmAllocator* allocator,
-                              ExprList* expr_list,
-                              const WasmConst* const_) {
-  WasmExpr* expr = wasm_new_const_expr(allocator);
-  expr->const_ = *const_;
-  append_expr(expr_list, expr);
+static WasmStringSlice strip_extension(const char* s) {
+  /* strip .json or .wasm, but leave other extensions, e.g.:
+   *
+   * s = "foo", => "foo"
+   * s = "foo.json" => "foo"
+   * s = "foo.wasm" => "foo"
+   * s = "foo.bar" => "foo.bar"
+   */
+  if (s == NULL) {
+    WasmStringSlice result;
+    result.start = NULL;
+    result.length = 0;
+    return result;
+  }
+
+  size_t slen = strlen(s);
+  const char* ext_start = strrchr(s, '.');
+  if (ext_start == NULL)
+    ext_start = s + slen;
+
+  WasmStringSlice result;
+  result.start = s;
+
+  if (strcmp(ext_start, ".json") == 0 || strcmp(ext_start, ".wasm") == 0) {
+    result.length = ext_start - s;
+  } else {
+    result.length = slen;
+  }
+  return result;
 }
 
-static void append_i32_const_expr(WasmAllocator* allocator,
-                                  ExprList* expr_list,
-                                  uint32_t value) {
-  WasmConst const_;
-  const_.type = WASM_TYPE_I32;
-  const_.u32 = value;
-  append_const_expr(allocator, expr_list, &const_);
+static WasmStringSlice get_basename(const char* s) {
+  /* strip everything up to and including the last slash, e.g.:
+   *
+   * s = "/foo/bar/baz", => "baz"
+   * s = "/usr/local/include/stdio.h", => "stdio.h"
+   * s = "foo.bar", => "foo.bar"
+   */
+  size_t slen = strlen(s);
+  const char* start = s;
+  const char* last_slash = strrchr(s, '/');
+  if (last_slash != NULL)
+    start = last_slash + 1;
+
+  WasmStringSlice result;
+  result.start = start;
+  result.length = s + slen - start;
+  return result;
 }
 
-static void append_invoke_expr(WasmAllocator* allocator,
-                               ExprList* expr_list,
-                               const WasmActionInvoke* invoke,
-                               int func_index) {
+static char* get_module_filename(Context* ctx) {
+  size_t buflen = ctx->json_filename_noext.length + 20;
+  char* str = wasm_alloc(ctx->allocator, buflen, WASM_DEFAULT_ALIGN);
+  size_t length = wasm_snprintf(
+      str, buflen, PRIstringslice ".%" PRIzd ".wasm",
+      WASM_PRINTF_STRING_SLICE_ARG(ctx->json_filename_noext), ctx->num_modules);
+  convert_backslash_to_slash(str, length);
+  return str;
+}
+
+static void write_string(Context* ctx, const char* s) {
+  wasm_writef(&ctx->json_stream, "\"%s\"", s);
+}
+
+static void write_key(Context* ctx, const char* key) {
+  wasm_writef(&ctx->json_stream, "\"%s\": ", key);
+}
+
+static void write_separator(Context* ctx) {
+  wasm_writef(&ctx->json_stream, ", ");
+}
+
+static void write_escaped_string_slice(Context* ctx, WasmStringSlice ss) {
   size_t i;
-  for (i = 0; i < invoke->args.size; ++i)
-    append_const_expr(allocator, expr_list, &invoke->args.data[i]);
-
-  WasmExpr* expr = wasm_new_call_expr(allocator);
-  expr->call.var.type = WASM_VAR_TYPE_INDEX;
-  expr->call.var.index = func_index;
-  append_expr(expr_list, expr);
+  wasm_write_char(&ctx->json_stream, '"');
+  for (i = 0; i < ss.length; ++i) {
+    uint8_t c = ss.start[i];
+    if (c < 0x20 || c == '\\' || c == '"') {
+      wasm_writef(&ctx->json_stream, "\\u%04x", c);
+    } else {
+      wasm_write_char(&ctx->json_stream, c);
+    }
+  }
+  wasm_write_char(&ctx->json_stream, '"');
 }
 
-static void append_get_global_expr(WasmAllocator* allocator,
-                                   ExprList* expr_list,
-                                   const WasmActionGet* get,
-                                   int global_index) {
-  WasmExpr* expr = wasm_new_get_global_expr(allocator);
-  expr->get_global.var.type = WASM_VAR_TYPE_INDEX;
-  expr->get_global.var.index = global_index;
-  append_expr(expr_list, expr);
+static void write_command_type(Context* ctx, const WasmCommand* command) {
+  static const char* s_command_names[] = {
+      "module",
+      "action",
+      "register",
+      "assert_malformed",
+      "assert_invalid",
+      "assert_unlinkable",
+      "assert_return",
+      "assert_return_nan",
+      "assert_trap",
+  };
+  WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_command_names) ==
+                     WASM_NUM_COMMAND_TYPES);
+
+  write_key(ctx, "type");
+  write_string(ctx, s_command_names[command->type]);
 }
 
-static void append_eq_expr(WasmAllocator* allocator,
-                           ExprList* expr_list,
-                           WasmType type) {
-  WasmExpr* expr = wasm_new_compare_expr(allocator);
-  switch (type) {
+static void write_location(Context* ctx, const WasmLocation* loc) {
+  write_key(ctx, "line");
+  wasm_writef(&ctx->json_stream, "%d", loc->line);
+}
+
+static void write_var(Context* ctx, const WasmVar* var) {
+  if (var->type == WASM_VAR_TYPE_INDEX)
+    wasm_writef(&ctx->json_stream, "\"%" PRIu64 "\"", var->index);
+  else
+    write_escaped_string_slice(ctx, var->name);
+}
+
+static void write_const(Context* ctx, const WasmConst* const_) {
+  wasm_writef(&ctx->json_stream, "{");
+  write_key(ctx, "type");
+
+  /* Always write the values as strings, even though they may be representable
+   * as JSON numbers. This way the formatting is consistent. */
+  switch (const_->type) {
     case WASM_TYPE_I32:
-      expr->compare.opcode = WASM_OPCODE_I32_EQ;
+      write_string(ctx, "i32");
+      write_separator(ctx);
+      write_key(ctx, "value");
+      wasm_writef(&ctx->json_stream, "\"%u\"", const_->u32);
       break;
+
     case WASM_TYPE_I64:
-      expr->compare.opcode = WASM_OPCODE_I64_EQ;
+      write_string(ctx, "i64");
+      write_separator(ctx);
+      write_key(ctx, "value");
+      wasm_writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->u64);
       break;
-    case WASM_TYPE_F32:
-      expr->compare.opcode = WASM_OPCODE_F32_EQ;
+
+    case WASM_TYPE_F32: {
+      /* TODO(binji): write as hex float */
+      write_string(ctx, "f32");
+      write_separator(ctx);
+      write_key(ctx, "value");
+      wasm_writef(&ctx->json_stream, "\"%u\"", const_->f32_bits);
       break;
-    case WASM_TYPE_F64:
-      expr->compare.opcode = WASM_OPCODE_F64_EQ;
+    }
+
+    case WASM_TYPE_F64: {
+      /* TODO(binji): write as hex float */
+      write_string(ctx, "f64");
+      write_separator(ctx);
+      write_key(ctx, "value");
+      wasm_writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->f64_bits);
       break;
+    }
+
     default:
       assert(0);
   }
-  append_expr(expr_list, expr);
+
+  wasm_writef(&ctx->json_stream, "}");
 }
 
-static void append_ne_expr(WasmAllocator* allocator,
-                           ExprList* expr_list,
-                           WasmType type) {
-  WasmExpr* expr = wasm_new_compare_expr(allocator);
-  switch (type) {
-    case WASM_TYPE_I32:
-      expr->compare.opcode = WASM_OPCODE_I32_NE;
-      break;
-    case WASM_TYPE_I64:
-      expr->compare.opcode = WASM_OPCODE_I64_NE;
-      break;
-    case WASM_TYPE_F32:
-      expr->compare.opcode = WASM_OPCODE_F32_NE;
-      break;
-    case WASM_TYPE_F64:
-      expr->compare.opcode = WASM_OPCODE_F64_NE;
-      break;
-    default:
-      assert(0);
+static void write_const_vector(Context* ctx, const WasmConstVector* consts) {
+  wasm_writef(&ctx->json_stream, "[");
+  size_t i;
+  for (i = 0; i < consts->size; ++i) {
+    const WasmConst* const_ = &consts->data[i];
+    write_const(ctx, const_);
+    if (i != consts->size - 1)
+      write_separator(ctx);
   }
-  append_expr(expr_list, expr);
+  wasm_writef(&ctx->json_stream, "]");
 }
 
-static void append_tee_local_expr(WasmAllocator* allocator,
-                                  ExprList* expr_list,
-                                  int index) {
-  WasmExpr* expr = wasm_new_tee_local_expr(allocator);
-  expr->tee_local.var.type = WASM_VAR_TYPE_INDEX;
-  expr->tee_local.var.index = index;
-  append_expr(expr_list, expr);
-}
-
-static void append_get_local_expr(WasmAllocator* allocator,
-                                  ExprList* expr_list,
-                                  int index) {
-  WasmExpr* expr = wasm_new_get_local_expr(allocator);
-  expr->get_local.var.type = WASM_VAR_TYPE_INDEX;
-  expr->get_local.var.index = index;
-  append_expr(expr_list, expr);
-}
-
-static void append_reinterpret_expr(WasmAllocator* allocator,
-                                    ExprList* expr_list,
-                                    WasmType type) {
-  WasmExpr* expr = wasm_new_convert_expr(allocator);
-  switch (type) {
-    case WASM_TYPE_F32:
-      expr->convert.opcode = WASM_OPCODE_I32_REINTERPRET_F32;
-      break;
-    case WASM_TYPE_F64:
-      expr->convert.opcode = WASM_OPCODE_I64_REINTERPRET_F64;
-      break;
-    default:
-      assert(0);
-      break;
-  }
-  append_expr(expr_list, expr);
-}
-
-static void append_return_expr(WasmAllocator* allocator, ExprList* expr_list) {
-  WasmExpr* expr = wasm_new_return_expr(allocator);
-  append_expr(expr_list, expr);
-}
-
-static WasmModuleField* append_module_field(
-    WasmAllocator* allocator,
-    WasmModule* module,
-    WasmModuleFieldType module_field_type) {
-  WasmModuleField* result = wasm_append_module_field(allocator, module);
-  result->type = module_field_type;
-
-  switch (module_field_type) {
-    case WASM_MODULE_FIELD_TYPE_FUNC: {
-      WasmFuncPtr* func_ptr = wasm_append_func_ptr(allocator, &module->funcs);
-      *func_ptr = &result->func;
-      break;
-    }
-    case WASM_MODULE_FIELD_TYPE_IMPORT: {
-      WasmImportPtr* import_ptr =
-          wasm_append_import_ptr(allocator, &module->imports);
-      *import_ptr = &result->import;
-      break;
-    }
-    case WASM_MODULE_FIELD_TYPE_EXPORT: {
-      WasmExportPtr* export_ptr =
-          wasm_append_export_ptr(allocator, &module->exports);
-      *export_ptr = &result->export_;
-      break;
-    }
-    case WASM_MODULE_FIELD_TYPE_FUNC_TYPE: {
-      WasmFuncTypePtr* func_type_ptr =
-          wasm_append_func_type_ptr(allocator, &module->func_types);
-      *func_type_ptr = &result->func_type;
-      break;
-    }
-
-    case WASM_MODULE_FIELD_TYPE_GLOBAL:
-    case WASM_MODULE_FIELD_TYPE_TABLE:
-    case WASM_MODULE_FIELD_TYPE_MEMORY:
-    case WASM_MODULE_FIELD_TYPE_START:
-    case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
-    case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
-      /* not supported */
-      assert(0);
-      break;
-  }
-
-  return result;
-}
-
-static WasmStringSlice create_assert_func_name(WasmAllocator* allocator,
-                                               const char* format,
-                                               int format_index) {
-  WasmStringSlice name;
-  char buffer[256];
-  int buffer_len = wasm_snprintf(buffer, 256, format, format_index);
-  name.start = wasm_strndup(allocator, buffer, buffer_len);
-  name.length = buffer_len;
-  return name;
-}
-
-static WasmFunc* append_nullary_func(WasmAllocator* allocator,
-                                     WasmModule* module,
-                                     const WasmTypeVector* result_types,
-                                     WasmStringSlice export_name) {
-  WasmFuncType* func_type;
-  WasmFuncSignature sig;
-  WASM_ZERO_MEMORY(sig);
-  /* OK to share memory w/ result_types, because we're just using it to see if
-   * this signature already exists */
-  sig.result_types = *result_types;
-  int sig_index = wasm_get_func_type_index_by_sig(module, &sig);
-  if (sig_index == -1) {
-    WasmLocation loc;
-    WASM_ZERO_MEMORY(loc);
-    /* clone result_types so we don't share its memory */
-    WASM_ZERO_MEMORY(sig.result_types);
-    wasm_extend_types(allocator, &sig.result_types, result_types);
-    func_type = wasm_append_implicit_func_type(allocator, &loc, module, &sig);
-    sig_index = module->func_types.size - 1;
+static void write_action(Context* ctx, const WasmAction* action) {
+  write_key(ctx, "action");
+  wasm_writef(&ctx->json_stream, "{");
+  write_key(ctx, "type");
+  if (action->type == WASM_ACTION_TYPE_INVOKE) {
+    write_string(ctx, "invoke");
   } else {
-    func_type = module->func_types.data[sig_index];
+    assert(action->type == WASM_ACTION_TYPE_GET);
+    write_string(ctx, "get");
   }
-
-  WasmModuleField* func_field =
-      append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_FUNC);
-  WasmFunc* func = &func_field->func;
-  func->decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
-                     WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
-  func->decl.type_var.type = WASM_VAR_TYPE_INDEX;
-  func->decl.type_var.index = sig_index;
-  func->decl.sig = func_type->sig;
-  int func_index = module->funcs.size - 1;
-
-  WasmModuleField* export_field =
-      append_module_field(allocator, module, WASM_MODULE_FIELD_TYPE_EXPORT);
-  WasmExport* export_ = &export_field->export_;
-  export_->var.type = WASM_VAR_TYPE_INDEX;
-  export_->var.index = func_index;
-  export_->name = export_name;
-  return module->funcs.data[func_index];
-}
-
-static WasmFunc* append_nullary_func_0(WasmAllocator* allocator,
-                                       WasmModule* module,
-                                       WasmStringSlice export_name) {
-  WasmTypeVector types;
-  WASM_ZERO_MEMORY(types);
-  return append_nullary_func(allocator, module, &types, export_name);
-}
-
-static WasmFunc* append_nullary_func_1(WasmAllocator* allocator,
-                                       WasmModule* module,
-                                       WasmType type,
-                                       WasmStringSlice export_name) {
-  WasmTypeVector types;
-  WASM_ZERO_MEMORY(types);
-  types.size = 1;
-  types.data = &type;
-  return append_nullary_func(allocator, module, &types, export_name);
-}
-
-static ActionInfo get_action_info(const WasmModule* module,
-                                  const WasmAction* action) {
-  ActionInfo result;
-  WASM_ZERO_MEMORY(result);
-
-  switch (action->type) {
-    case WASM_ACTION_TYPE_INVOKE: {
-      WasmExport* export_ =
-          wasm_get_export_by_name(module, &action->invoke.name);
-      assert(export_);
-
-      int func_index = wasm_get_func_index_by_var(module, &export_->var);
-      assert(func_index >= 0 && (size_t)func_index < module->funcs.size);
-      WasmFunc* callee = module->funcs.data[func_index];
-      result.action = action;
-      result.index = func_index;
-      result.num_results = callee->decl.sig.result_types.size;
-      result.result_types = &callee->decl.sig.result_types;
-      break;
-    }
-
-    case WASM_ACTION_TYPE_GET: {
-      WasmExport* export_ = wasm_get_export_by_name(module, &action->get.name);
-      assert(export_);
-
-      int global_index = wasm_get_global_index_by_var(module, &export_->var);
-      assert(global_index >= 0 && (size_t)global_index < module->globals.size);
-      WasmGlobal* global = module->globals.data[global_index];
-      result.action = action;
-      result.index = global_index;
-      result.num_results = 1;
-      result.result_type = global->type;
-      break;
-    }
+  write_separator(ctx);
+  if (action->module_var.type != WASM_VAR_TYPE_INDEX) {
+    write_key(ctx, "module");
+    write_var(ctx, &action->module_var);
+    write_separator(ctx);
   }
-  return result;
-}
-
-static WasmType get_action_info_result_type(const ActionInfo* info) {
-  assert(info->num_results == 1);
-
-  switch (info->action->type) {
-    case WASM_ACTION_TYPE_INVOKE:
-      return info->result_types->data[0];
-
-    case WASM_ACTION_TYPE_GET:
-      return info->result_type;
-  }
-  WABT_UNREACHABLE;
-}
-
-static void append_action_expr(WasmAllocator* allocator,
-                               WasmModule* module,
-                               ExprList* expr_list,
-                               const ActionInfo* info) {
-  switch (info->action->type) {
-    case WASM_ACTION_TYPE_INVOKE:
-      append_invoke_expr(allocator, expr_list, &info->action->invoke,
-                         info->index);
-      break;
-
-    case WASM_ACTION_TYPE_GET:
-      append_get_global_expr(allocator, expr_list, &info->action->get,
-                             info->index);
-      break;
-  }
-}
-
-static void write_module(Context* ctx, uint32_t index, WasmModule* module) {
-  WasmResult result;
-  WasmWriter* writer = NULL;
-  CALLBACK(ctx, on_module_before_write, index, &writer);
-  if (writer != NULL) {
-    result =
-        wasm_write_binary_module(ctx->allocator, writer, module, ctx->options);
+  if (action->type == WASM_ACTION_TYPE_INVOKE) {
+    write_key(ctx, "field");
+    write_escaped_string_slice(ctx, action->invoke.name);
+    write_separator(ctx);
+    write_key(ctx, "args");
+    write_const_vector(ctx, &action->invoke.args);
   } else {
-    result = WASM_ERROR;
+    write_key(ctx, "field");
+    write_escaped_string_slice(ctx, action->get.name);
   }
-  if (WASM_FAILED(result))
+  wasm_writef(&ctx->json_stream, "}");
+}
+
+static void write_module(Context* ctx,
+                         char* filename,
+                         const WasmModule* module) {
+  WasmMemoryWriter writer;
+  WasmResult result = wasm_init_mem_writer(ctx->allocator, &writer);
+  if (WASM_SUCCEEDED(result)) {
+    result = wasm_write_binary_module(ctx->allocator, &writer.base, module,
+                                      &ctx->spec_options->write_binary_options);
+    if (WASM_SUCCEEDED(result))
+      result = wasm_write_output_buffer_to_file(&writer.buf, filename);
+    wasm_close_mem_writer(&writer);
+  }
+
+  ctx->result = result;
+}
+
+static void write_raw_module(Context* ctx,
+                             char* filename,
+                             const WasmRawModule* raw_module) {
+  if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT) {
+    write_module(ctx, filename, raw_module->text);
+  } else {
+    WasmFileStream stream;
+    WasmResult result = wasm_init_file_writer(&stream.writer, filename);
+    if (WASM_SUCCEEDED(result)) {
+      wasm_init_stream(&stream.base, &stream.writer.base, NULL);
+      wasm_write_data(&stream.base, raw_module->binary.data,
+                      raw_module->binary.size, "");
+      wasm_close_file_writer(&stream.writer);
+    }
     ctx->result = result;
-  CALLBACK(ctx, on_module_end, index, result);
+  }
+}
+
+static void write_invalid_module(Context* ctx,
+                                 const WasmRawModule* module,
+                                 WasmStringSlice text) {
+  char* filename = get_module_filename(ctx);
+  write_location(ctx, wasm_get_raw_module_location(module));
+  write_separator(ctx);
+  write_key(ctx, "filename");
+  write_escaped_string_slice(ctx, get_basename(filename));
+  write_separator(ctx);
+  write_key(ctx, "text");
+  write_escaped_string_slice(ctx, text);
+  write_raw_module(ctx, filename, module);
+  wasm_free(ctx->allocator, filename);
 }
 
 static void write_commands(Context* ctx, WasmScript* script) {
-  uint32_t i;
-  uint32_t num_modules = 0;
-  WasmAllocator* allocator = script->allocator;
-  WasmModule* last_module = NULL;
-  uint32_t num_assert_funcs = 0;
+  wasm_writef(&ctx->json_stream, "{\"source_filename\": \"%s\",\n",
+              ctx->source_filename);
+  wasm_writef(&ctx->json_stream, " \"commands\": [\n");
+  size_t i;
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
-    if (command->type == WASM_COMMAND_TYPE_MODULE) {
-      if (last_module)
-        write_module(ctx, num_modules, last_module);
-      CALLBACK(ctx, on_module_begin, num_modules);
-      last_module = &command->module;
-      num_assert_funcs = 0;
-      ++num_modules;
-    } else {
-      if (!last_module)
-        continue;
 
-      const char* format = NULL;
-      WasmAction* action = NULL;
-      switch (command->type) {
-        case WASM_COMMAND_TYPE_ACTION:
-          format = "$action_%d";
-          action = &command->action;
-          break;
-        case WASM_COMMAND_TYPE_ASSERT_RETURN:
-          format = "$assert_return_%d";
-          action = &command->assert_return.action;
-          break;
-        case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-          format = "$assert_return_nan_%d";
-          action = &command->assert_return_nan.action;
-          break;
-        case WASM_COMMAND_TYPE_ASSERT_TRAP:
-          format = "$assert_trap_%d";
-          action = &command->assert_trap.action;
-          break;
-        default:
-          continue;
+    wasm_writef(&ctx->json_stream, "  {");
+    write_command_type(ctx, command);
+    write_separator(ctx);
+
+    switch (command->type) {
+      case WASM_COMMAND_TYPE_MODULE: {
+        WasmModule* module = &command->module;
+        char* filename = get_module_filename(ctx);
+        write_location(ctx, &module->loc);
+        write_separator(ctx);
+        if (module->name.start) {
+          write_key(ctx, "name");
+          write_escaped_string_slice(ctx, module->name);
+          write_separator(ctx);
+        }
+        write_key(ctx, "filename");
+        write_escaped_string_slice(ctx, get_basename(filename));
+        write_module(ctx, filename, module);
+        wasm_free(ctx->allocator, filename);
+        ctx->num_modules++;
+        break;
       }
 
-      WasmStringSlice name =
-          create_assert_func_name(allocator, format, num_assert_funcs);
-      CALLBACK(ctx, on_command, num_assert_funcs, command->type, &name,
-               &action->loc);
+      case WASM_COMMAND_TYPE_ACTION:
+        write_location(ctx, &command->action.loc);
+        write_separator(ctx);
+        write_action(ctx, &command->action);
+        break;
 
-      ++num_assert_funcs;
+      case WASM_COMMAND_TYPE_REGISTER:
+        write_location(ctx, &command->register_.var.loc);
+        write_separator(ctx);
+        write_key(ctx, "name");
+        write_var(ctx, &command->register_.var);
+        write_separator(ctx);
+        write_key(ctx, "as");
+        write_escaped_string_slice(ctx, command->register_.module_name);
+        break;
 
-      ActionInfo info = get_action_info(last_module, action);
+      case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
+        write_invalid_module(ctx, &command->assert_malformed.module,
+                             command->assert_malformed.text);
+        ctx->num_modules++;
+        break;
 
-      switch (command->type) {
-        case WASM_COMMAND_TYPE_ACTION: {
-          WasmFunc* caller =
-              append_nullary_func_0(allocator, last_module, name);
-          ExprList expr_list;
-          WASM_ZERO_MEMORY(expr_list);
-          append_action_expr(allocator, last_module, &expr_list, &info);
-          append_return_expr(allocator, &expr_list);
-          caller->first_expr = expr_list.first;
-          break;
-        }
+      case WASM_COMMAND_TYPE_ASSERT_INVALID:
+        /* TODO(binji): this doesn't currently work because of various
+         * assertions in wasm-binary-writer.c */
+#if 0
+        write_invalid_module(ctx, &command->assert_invalid.module,
+                             command->assert_invalid.text);
+        ctx->num_modules++;
+#else
+        write_location(
+            ctx, wasm_get_raw_module_location(&command->assert_invalid.module));
+#endif
+        break;
 
-        case WASM_COMMAND_TYPE_ASSERT_RETURN: {
-          WasmFunc* caller = append_nullary_func_1(allocator, last_module,
-                                                   WASM_TYPE_I32, name);
-          ExprList expr_list;
-          WASM_ZERO_MEMORY(expr_list);
-          append_action_expr(allocator, last_module, &expr_list, &info);
+      case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
+        write_invalid_module(ctx, &command->assert_unlinkable.module,
+                             command->assert_unlinkable.text);
+        ctx->num_modules++;
+        break;
 
-          if (info.num_results == 1) {
-            WasmType result_type = get_action_info_result_type(&info);
-            const WasmConstVector* expected_consts =
-                &command->assert_return.expected;
-            if (expected_consts->size == 1) {
-              WasmConst expected = expected_consts->data[0];
-              if (expected.type == WASM_TYPE_F32) {
-                append_reinterpret_expr(allocator, &expr_list, WASM_TYPE_F32);
-                append_const_expr(allocator, &expr_list, &expected);
-                append_reinterpret_expr(allocator, &expr_list, WASM_TYPE_F32);
-                append_eq_expr(allocator, &expr_list, WASM_TYPE_I32);
-              } else if (expected.type == WASM_TYPE_F64) {
-                append_reinterpret_expr(allocator, &expr_list, WASM_TYPE_F64);
-                append_const_expr(allocator, &expr_list, &expected);
-                append_reinterpret_expr(allocator, &expr_list, WASM_TYPE_F64);
-                append_eq_expr(allocator, &expr_list, WASM_TYPE_I64);
-              } else {
-                append_const_expr(allocator, &expr_list, &expected);
-                append_eq_expr(allocator, &expr_list, result_type);
-              }
-            } else {
-              /* function result count mismatch; just fail */
-              append_i32_const_expr(allocator, &expr_list, 0);
-              append_return_expr(allocator, &expr_list);
-            }
-          } else {
-            /* 0 results or >1 results. If there are 0 results, we just assume
-             * that everything was OK. We don't currenty support multiple
-             * results, so consider that a failure. */
-            append_i32_const_expr(allocator, &expr_list,
-                                  info.num_results == 0 ? 1 : 0);
-            append_return_expr(allocator, &expr_list);
-          }
+      case WASM_COMMAND_TYPE_ASSERT_RETURN:
+        write_location(ctx, &command->assert_return.action.loc);
+        write_separator(ctx);
+        write_action(ctx, &command->assert_return.action);
+        write_separator(ctx);
+        write_key(ctx, "expected");
+        write_const_vector(ctx, &command->assert_return.expected);
+        break;
 
-          caller->first_expr = expr_list.first;
-          break;
-        }
+      case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
+        write_location(ctx, &command->assert_return_nan.action.loc);
+        write_separator(ctx);
+        write_action(ctx, &command->assert_return_nan.action);
+        break;
 
-        case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN: {
-          WasmFunc* caller = append_nullary_func_1(allocator, last_module,
-                                                   WASM_TYPE_I32, name);
-          ExprList expr_list;
-          WASM_ZERO_MEMORY(expr_list);
+      case WASM_COMMAND_TYPE_ASSERT_TRAP:
+        write_location(ctx, &command->assert_trap.action.loc);
+        write_separator(ctx);
+        write_action(ctx, &command->assert_trap.action);
+        write_separator(ctx);
+        write_key(ctx, "text");
+        write_escaped_string_slice(ctx, command->assert_trap.text);
+        break;
 
-          append_action_expr(allocator, last_module, &expr_list, &info);
-
-          if (info.num_results == 1) {
-            WasmType result_type = get_action_info_result_type(&info);
-            wasm_append_type_value(allocator, &caller->local_types,
-                                   &result_type);
-            append_tee_local_expr(allocator, &expr_list, 0);
-            append_get_local_expr(allocator, &expr_list, 0);
-            /* x != x is true iff x is NaN */
-            append_ne_expr(allocator, &expr_list, result_type);
-          } else {
-            /* assert_return_nan doesn't make sense w/ 0 or >1 results; just
-             * fail */
-            append_i32_const_expr(allocator, &expr_list, 0);
-            append_return_expr(allocator, &expr_list);
-          }
-
-          caller->first_expr = expr_list.first;
-          break;
-        }
-
-        case WASM_COMMAND_TYPE_ASSERT_TRAP: {
-          WasmFunc* caller =
-              append_nullary_func_0(allocator, last_module, name);
-          ExprList expr_list;
-          WASM_ZERO_MEMORY(expr_list);
-          append_action_expr(allocator, last_module, &expr_list, &info);
-          append_return_expr(allocator, &expr_list);
-          caller->first_expr = expr_list.first;
-          break;
-        }
-
-        default:
-          assert(0);
-      }
+      case WASM_NUM_COMMAND_TYPES:
+        assert(0);
+        break;
     }
+
+    wasm_writef(&ctx->json_stream, "}");
+    if (i != script->commands.size - 1)
+      write_separator(ctx);
+    wasm_writef(&ctx->json_stream, "\n");
   }
-  if (last_module)
-    write_module(ctx, num_modules, last_module);
+  wasm_writef(&ctx->json_stream, "]}\n");
 }
 
 WasmResult wasm_write_binary_spec_script(
     WasmAllocator* allocator,
     WasmScript* script,
-    const WasmWriteBinaryOptions* options,
+    const char* source_filename,
     const WasmWriteBinarySpecOptions* spec_options) {
+  assert(source_filename);
   Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
-  ctx.options = options;
   ctx.spec_options = spec_options;
   ctx.result = WASM_OK;
+  ctx.source_filename = source_filename;
+  ctx.json_filename_noext = strip_extension(ctx.spec_options->json_filename);
 
-  CALLBACK0(&ctx, on_script_begin);
-  write_commands(&ctx, script);
-  CALLBACK0(&ctx, on_script_end);
+  WasmResult result = wasm_init_mem_writer(ctx.allocator, &ctx.json_writer);
+  if (WASM_SUCCEEDED(result)) {
+    wasm_init_stream(&ctx.json_stream, &ctx.json_writer.base, NULL);
+    write_commands(&ctx, script);
+    if (ctx.spec_options->json_filename) {
+      wasm_write_output_buffer_to_file(&ctx.json_writer.buf,
+                                       ctx.spec_options->json_filename);
+    }
+    wasm_close_mem_writer(&ctx.json_writer);
+  }
 
   return ctx.result;
 }

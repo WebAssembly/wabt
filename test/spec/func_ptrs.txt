@@ -29,7 +29,7 @@ assert_invalid error:
   third_party/testsuite/func_ptrs.wast:48:64: function type variable out of range (max 0)
 ...invalid (module (import "spectest" "print" (func (type 43)))) "unknown type")
                                                           ^^
-called host spectest.print(i32:83) => ()
-$action_3() => 
-25/25 tests passed.
+called host spectest.print(i32:83) =>
+four(i32:83) =>
+26/26 tests passed.
 ;;; STDOUT ;;)

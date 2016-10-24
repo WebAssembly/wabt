@@ -1284,9 +1284,33 @@ static const WasmTypeVector* check_invoke(Context* ctx,
   return &func->decl.sig.result_types;
 }
 
-static WasmType check_get(Context* ctx, const WasmAction* action) {
-  /* TODO */
-  return WASM_TYPE_ANY;
+static WasmResult check_get(Context* ctx,
+                            const WasmAction* action,
+                            WasmType* out_type) {
+  const WasmActionGet* get = &action->get;
+  const WasmModule* module = ctx->current_module;
+  if (!module) {
+    print_error(ctx, CHECK_STYLE_FULL, &action->loc,
+                "get must occur after a module definition");
+    return WASM_ERROR;
+  }
+
+  WasmExport* export = wasm_get_export_by_name(module, &get->name);
+  if (!export) {
+    print_error(ctx, CHECK_STYLE_NAME, &action->loc,
+                "unknown global export \"" PRIstringslice "\"",
+                WASM_PRINTF_STRING_SLICE_ARG(get->name));
+    return WASM_ERROR;
+  }
+
+  WasmGlobal* global = wasm_get_global_by_var(module, &export->var);
+  if (!global) {
+    /* this error will have already been reported, just skip it */
+    return WASM_ERROR;
+  }
+
+  *out_type = global->type;
+  return WASM_OK;
 }
 
 static ActionResult check_action(Context* ctx, const WasmAction* action) {
@@ -1301,8 +1325,10 @@ static ActionResult check_action(Context* ctx, const WasmAction* action) {
       break;
 
     case WASM_ACTION_TYPE_GET:
-      result.kind = ACTION_RESULT_KIND_TYPE;
-      result.type = check_get(ctx, action);
+      if (WASM_SUCCEEDED(check_get(ctx, action, &result.type)))
+        result.kind = ACTION_RESULT_KIND_TYPE;
+      else
+        result.kind = ACTION_RESULT_KIND_ERROR;
       break;
   }
 
@@ -1424,16 +1450,6 @@ WasmResult wasm_check_ast(WasmAllocator* allocator,
   return ctx.result;
 }
 
-static WasmLocation* get_raw_module_location(WasmRawModule* raw) {
-  switch (raw->type) {
-    case WASM_RAW_MODULE_TYPE_BINARY: return &raw->binary.loc;
-    case WASM_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
-    default:
-      assert(0);
-      return NULL;
-  }
-}
-
 WasmResult wasm_check_assert_invalid_and_malformed(
     WasmAllocator* allocator,
     WasmAstLexer* lexer,
@@ -1469,9 +1485,10 @@ WasmResult wasm_check_assert_invalid_and_malformed(
       check_raw_module(&ctx2, &command->assert_invalid.module);
       wasm_destroy_context(&ctx2);
       if (WASM_SUCCEEDED(ctx2.result)) {
-        print_error(&ctx, CHECK_STYLE_FULL,
-                    get_raw_module_location(&command->assert_invalid.module),
-                    "expected module to be invalid");
+        print_error(
+            &ctx, CHECK_STYLE_FULL,
+            wasm_get_raw_module_location(&command->assert_invalid.module),
+            "expected module to be invalid");
       }
     } else if (command->type == WASM_COMMAND_TYPE_ASSERT_MALFORMED) {
       ctx2.error_handler = assert_malformed_error_handler;
@@ -1480,9 +1497,10 @@ WasmResult wasm_check_assert_invalid_and_malformed(
       destroy_read_module(ctx.allocator, &read_module);
       wasm_destroy_context(&ctx2);
       if (WASM_SUCCEEDED(ctx2.result)) {
-        print_error(&ctx, CHECK_STYLE_FULL,
-                    get_raw_module_location(&command->assert_malformed.module),
-                    "expected module to be malformed");
+        print_error(
+            &ctx, CHECK_STYLE_FULL,
+            wasm_get_raw_module_location(&command->assert_malformed.module),
+            "expected module to be malformed");
       }
     }
   }

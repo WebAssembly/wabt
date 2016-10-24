@@ -28,8 +28,8 @@
     i32.const 0
     i32.load))
 (;; STDOUT ;;;
-test1() => 
+test1() =>
 check1() => i32:0
-test2() => 
+test2() =>
 check2() => i32:1
 ;;; STDOUT ;;)

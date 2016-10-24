@@ -16,7 +16,6 @@
 #
 
 import argparse
-import json
 import os
 import sys
 import tempfile
@@ -80,9 +79,7 @@ def main(args):
     wast2wasm.RunWithArgs('-o', out_file, filename)
 
     if options.spec:
-      with open(out_file) as json_file:
-        json_data = json.load(json_file)
-      wasm_files = [m['filename'] for m in json_data['modules']]
+      wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
       wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
     else:
       wasm_files = [out_file]

@@ -567,6 +567,17 @@ wasm_get_func_type_num_results(const WasmFuncType* func_type) {
   return func_type->sig.result_types.size;
 }
 
+static WASM_INLINE const WasmLocation* wasm_get_raw_module_location(
+    const WasmRawModule* raw) {
+  switch (raw->type) {
+    case WASM_RAW_MODULE_TYPE_BINARY: return &raw->binary.loc;
+    case WASM_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
+    default:
+      assert(0);
+      return NULL;
+  }
+}
+
 WASM_EXTERN_C_END
 
 #endif /* WASM_AST_H_ */

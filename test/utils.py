@@ -18,6 +18,7 @@
 from __future__ import print_function
 import contextlib
 import os
+import json
 import shutil
 import signal
 import subprocess
@@ -163,3 +164,9 @@ def Hexdump(data):
     lines.append(line)
 
   return lines
+
+
+def GetModuleFilenamesFromSpecJSON(json_filename):
+  with open(json_filename) as json_file:
+    json_data = json.load(json_file)
+  return [m['filename'] for m in json_data['commands'] if 'filename' in m]

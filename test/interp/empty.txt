@@ -2,5 +2,5 @@
 (module
   (func (export "f")))
 (;; STDOUT ;;;
-f() => 
+f() =>
 ;;; STDOUT ;;)

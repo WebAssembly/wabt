@@ -53,7 +53,12 @@ struct WasmStream;
   /* expected type */                                                          \
   V(TRAP_HOST_RESULT_TYPE_MISMATCH, "host result type mismatch")               \
   /* we called an import function, but it didn't complete succesfully */       \
-  V(TRAP_HOST_TRAPPED, "host function trapped")
+  V(TRAP_HOST_TRAPPED, "host function trapped")                                \
+  /* we attempted to call a function with the an argument list that doesn't    \
+   * match the function signature */                                           \
+  V(ARGUMENT_TYPE_MISMATCH, "argument type mismatch")                          \
+  /* we tried to call an exported function by name that doesn't exist */       \
+  V(UNKNOWN_EXPORTED_FUNCTION, "unknown exported function")
 
 typedef enum WasmInterpreterResult {
 #define V(name, str) WASM_INTERPRETER_##name,
@@ -259,6 +264,9 @@ typedef struct WasmInterpreterThreadOptions {
 } WasmInterpreterThreadOptions;
 
 WASM_EXTERN_C_BEGIN
+WasmBool is_nan_f32(uint32_t f32_bits);
+WasmBool is_nan_f64(uint64_t f64_bits);
+
 void wasm_init_interpreter_environment(WasmAllocator* allocator,
                                        WasmInterpreterEnvironment* env);
 void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
@@ -291,7 +299,7 @@ void wasm_disassemble_module(WasmInterpreterEnvironment* env,
 
 WasmInterpreterExport* wasm_get_interpreter_export_by_name(
     WasmInterpreterModule* module,
-    WasmStringSlice* name);
+    const WasmStringSlice* name);
 WASM_EXTERN_C_END
 
 #endif /* WASM_INTERPRETER_H_ */

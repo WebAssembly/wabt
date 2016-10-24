@@ -18,39 +18,24 @@
 #define WASM_BINARY_WRITER_SPEC_H_
 
 #include "wasm-ast.h"
+#include "wasm-binary-writer.h"
 #include "wasm-common.h"
 
 struct WasmAllocator;
-struct WasmWriteBinaryOptions;
 struct WasmWriter;
 
 #define WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL }
+  { NULL, WASM_WRITE_BINARY_OPTIONS_DEFAULT }
 
 typedef struct WasmWriteBinarySpecOptions {
-  /* callbacks for writing multiple modules */
-  void (*on_script_begin)(void* user_data);
-  void (*on_module_begin)(uint32_t index,
-                          void* user_data);
-  void (*on_command)(uint32_t index,
-                     WasmCommandType type,
-                     const WasmStringSlice* name,
-                     const WasmLocation* loc,
-                     void* user_data);
-  void (*on_module_before_write)(uint32_t index,
-                                 struct WasmWriter** out_writer,
-                                 void* user_data);
-  void (*on_module_end)(uint32_t index, WasmResult result, void* user_data);
-  void (*on_script_end)(void* user_data);
-
-  void* user_data;
+  const char* json_filename;
+  WasmWriteBinaryOptions write_binary_options;
 } WasmWriteBinarySpecOptions;
 
 WASM_EXTERN_C_BEGIN
-/* this function modifies the AST */
 WasmResult wasm_write_binary_spec_script(struct WasmAllocator*,
                                          struct WasmScript*,
-                                         const struct WasmWriteBinaryOptions*,
+                                         const char* source_filename,
                                          const WasmWriteBinarySpecOptions*);
 WASM_EXTERN_C_END
 

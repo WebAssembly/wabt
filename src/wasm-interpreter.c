@@ -180,7 +180,7 @@ WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
 
 WasmInterpreterExport* wasm_get_interpreter_export_by_name(
     WasmInterpreterModule* module,
-    WasmStringSlice* name) {
+    const WasmStringSlice* name) {
   int field_index =
       wasm_find_binding_index_by_name(&module->export_bindings, name);
   if (field_index < 0)
@@ -232,7 +232,7 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
 #define F32_SIG_MASK 0x7fffff
 #define F32_SIGN_MASK 0x80000000U
 
-static WASM_INLINE WasmBool is_nan_f32(uint32_t f32_bits) {
+WASM_INLINE WasmBool is_nan_f32(uint32_t f32_bits) {
   return (f32_bits > F32_INF && f32_bits < F32_NEG_ZERO) ||
          (f32_bits > F32_NEG_INF);
 }
@@ -297,7 +297,7 @@ static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
 #define F64_SIG_MASK 0xfffffffffffffULL
 #define F64_SIGN_MASK 0x8000000000000000ULL
 
-static WASM_INLINE WasmBool is_nan_f64(uint64_t f64_bits) {
+WASM_INLINE WasmBool is_nan_f64(uint64_t f64_bits) {
   return (f64_bits > F64_INF && f64_bits < F64_NEG_ZERO) ||
          (f64_bits > F64_NEG_INF);
 }

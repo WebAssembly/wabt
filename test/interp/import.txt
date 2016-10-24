@@ -12,7 +12,7 @@
     return)
 )
 (;; STDOUT ;;;
-called host spectest.print(i32:100) => ()
-called host spectest.print(i32:200, i32:300) => ()
+called host spectest.print(i32:100) =>
+called host spectest.print(i32:200, i32:300) =>
 test() => i32:1
 ;;; STDOUT ;;)
