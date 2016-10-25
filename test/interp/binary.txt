@@ -104,7 +104,9 @@
     i64.const 5 
     i64.xor)
   (func (export "i64_shl") (result i64) 
-    (i64.shl (i64.const -100) (i64.const 3)))
+    i64.const -100
+    i64.const 3
+    i64.shl)
   (func (export "i64_shr_u") (result i64)
     i64.const -100
     i64.const 3 

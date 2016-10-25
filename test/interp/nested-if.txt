@@ -9,8 +9,8 @@
   (func (export "f") (result i32)
     block $exit
       i32.const 1
-      if 
-        i32.const 2           ;; outer if
+      if                     ;; outer if
+        i32.const 2          
         drop
         i32.const 3
         if                   ;; inner if

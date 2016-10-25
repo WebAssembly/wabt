@@ -1,47 +1,107 @@
 ;;; TOOL: run-interp
 (module
   (func $f32_is_nan (param f32) (result i32)
-    (f32.ne (get_local 0) (get_local 0)))
+    get_local 0
+    get_local 0
+    f32.ne)
   (func $f64_is_nan (param f64) (result i32)
-    (f64.ne (get_local 0) (get_local 0)))
+    get_local 0
+    get_local 0
+    f64.ne)
 
   ;; i32
-  (func (export "i32_eqz_100") (result i32) (i32.eqz (i32.const 100)))
-  (func (export "i32_eqz_0") (result i32) (i32.eqz (i32.const 0)))
-  (func (export "i32_clz") (result i32) (i32.clz (i32.const 128)))
-  (func (export "i32_ctz") (result i32) (i32.ctz (i32.const 128)))
-  (func (export "i32_popcnt") (result i32) (i32.popcnt (i32.const 128)))
+  (func (export "i32_eqz_100") (result i32) 
+    i32.const 100
+    i32.eqz)
+  (func (export "i32_eqz_0") (result i32)
+    i32.const 0 
+    i32.eqz)
+  (func (export "i32_clz") (result i32)
+    i32.const 128 
+    i32.clz)
+  (func (export "i32_ctz") (result i32)
+    i32.const 128 
+    i32.ctz)
+  (func (export "i32_popcnt") (result i32) 
+    i32.const 128
+    i32.popcnt)
 
   ;; i64
-  (func (export "i64_eqz_100") (result i32) (i64.eqz (i64.const 100)))
-  (func (export "i64_eqz_0") (result i32) (i64.eqz (i64.const 0)))
-  (func (export "i64_clz") (result i64) (i64.clz (i64.const 128)))
-  (func (export "i64_ctz") (result i64) (i64.ctz (i64.const 128)))
-  (func (export "i64_popcnt") (result i64) (i64.popcnt (i64.const 128)))
+  (func (export "i64_eqz_100") (result i32)
+    i64.const 100 
+    i64.eqz)
+  (func (export "i64_eqz_0") (result i32)
+    i64.const 0 
+    i64.eqz)
+  (func (export "i64_clz") (result i64) 
+    i64.const 128
+    i64.clz)
+  (func (export "i64_ctz") (result i64) 
+    i64.const 128
+    i64.ctz)
+  (func (export "i64_popcnt") (result i64)
+    i64.const 128 
+    i64.popcnt)
 
   ;; f32
-  (func (export "f32_neg") (result f32) (f32.neg (f32.const 100)))
-  (func (export "f32_abs") (result f32) (f32.abs (f32.const -100)))
+  (func (export "f32_neg") (result f32)
+    f32.const 100 
+    f32.neg)
+  (func (export "f32_abs") (result f32)
+    f32.const -100 
+    f32.abs)
   (func (export "f32_sqrt_neg_is_nan") (result i32)
-    (call $f32_is_nan (f32.sqrt (f32.const -100))))
-  (func (export "f32_sqrt_100") (result f32) (f32.sqrt (f32.const 100)))
-  (func (export "f32_ceil") (result f32) (f32.ceil (f32.const -0.75)))
-  (func (export "f32_floor") (result f32) (f32.floor (f32.const -0.75)))
-  (func (export "f32_trunc") (result f32) (f32.trunc (f32.const -0.75)))
-  (func (export "f32_nearest_lo") (result f32) (f32.nearest (f32.const 1.25)))
-  (func (export "f32_nearest_hi") (result f32) (f32.nearest (f32.const 1.75)))
+    f32.const -100
+    f32.sqrt
+    call $f32_is_nan)
+  (func (export "f32_sqrt_100") (result f32)
+    f32.const 100
+    f32.sqrt)
+  (func (export "f32_ceil") (result f32)
+    f32.const -0.75 
+    f32.ceil)
+  (func (export "f32_floor") (result f32)
+    f32.const -0.75 
+    f32.floor)
+  (func (export "f32_trunc") (result f32)
+    f32.const -0.75 
+    f32.trunc)
+  (func (export "f32_nearest_lo") (result f32)
+    f32.const 1.25 
+    f32.nearest)
+  (func (export "f32_nearest_hi") (result f32)
+    f32.const 1.75 
+    f32.nearest)
 
   ;; f64
-  (func (export "f64_neg") (result f64) (f64.neg (f64.const 100)))
-  (func (export "f64_abs") (result f64) (f64.abs (f64.const -100)))
+  (func (export "f64_neg") (result f64) 
+    f64.const 100
+    f64.neg)
+  (func (export "f64_abs") (result f64) 
+    f64.const -100
+    f64.abs)
   (func (export "f64_sqrt_neg_is_nan") (result i32)
-    (call $f64_is_nan (f64.sqrt (f64.const -100))))
-  (func (export "f64_sqrt_100") (result f64) (f64.sqrt (f64.const 100)))
-  (func (export "f64_ceil") (result f64) (f64.ceil (f64.const -0.75)))
-  (func (export "f64_floor") (result f64) (f64.floor (f64.const -0.75)))
-  (func (export "f64_trunc") (result f64) (f64.trunc (f64.const -0.75)))
-  (func (export "f64_nearest_lo") (result f64) (f64.nearest (f64.const 1.25)))
-  (func (export "f64_nearest_hi") (result f64) (f64.nearest (f64.const 1.75)))
+    f64.const -100
+    f64.sqrt
+    call $f64_is_nan)
+  (func (export "f64_sqrt_100") (result f64)
+   f64.const 100 
+   f64.sqrt)
+  (func (export "f64_ceil") (result f64)
+   f64.const -0.75 
+   f64.ceil)
+  (func (export "f64_floor") (result f64)
+    f64.const -0.75 
+    f64.floor)
+  (func (export "f64_trunc") (result f64)
+    f64.const -0.75 
+    f64.trunc)
+  (func (export "f64_nearest_lo") (result f64) 
+    f64.const 1.25
+    f64.nearest)
+  (func (export "f64_nearest_hi") (result f64)
+    f64.const 1.75 
+    f64.nearest)
 )
 (;; STDOUT ;;;
 i32_eqz_100() => i32:0
