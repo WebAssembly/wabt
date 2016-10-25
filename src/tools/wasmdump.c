@@ -28,9 +28,13 @@
 
 #define PROGRAM_NAME "wasmdump"
 
+#define NOPE WASM_OPTION_NO_ARGUMENT
+#define YEP WASM_OPTION_HAS_ARGUMENT
+
 enum {
   FLAG_HEADERS,
   FLAG_RAW,
+  FLAG_SECTION,
   FLAG_DISASSEMBLE,
   FLAG_VERBOSE,
   FLAG_DEBUG,
@@ -45,26 +49,21 @@ static const char s_description[] =
     "  $ wasmdump test.wasm\n";
 
 static WasmOption s_options[] = {
-    {FLAG_HEADERS, 'h', "headers", NULL, WASM_OPTION_NO_ARGUMENT,
-     "print headers"},
-    {FLAG_RAW, 'r', "raw", NULL, WASM_OPTION_NO_ARGUMENT,
-     "print raw section contents"},
-    {FLAG_DISASSEMBLE, 'd', "disassemble", NULL, WASM_OPTION_NO_ARGUMENT,
-     "disassemble function bodies"},
-    {FLAG_DEBUG, '\0', "debug", NULL, WASM_OPTION_NO_ARGUMENT,
-     "disassemble function bodies"},
-    {FLAG_VERBOSE, 'v', "verbose", NULL, WASM_OPTION_NO_ARGUMENT,
-     "Verbose output"},
-    {FLAG_HELP, 'h', "help", NULL, WASM_OPTION_NO_ARGUMENT,
-     "print this help message"},
+    {FLAG_HEADERS, 'h', "headers", NULL, NOPE, "print headers"},
+    {FLAG_SECTION, 'j', "section", NULL, YEP, "select just one section"},
+    {FLAG_RAW, 'r', "raw", NULL, NOPE, "print raw section contents"},
+    {FLAG_DISASSEMBLE, 'd', "disassemble", NULL, NOPE, "disassemble function bodies"},
+    {FLAG_DEBUG, '\0', "debug", NULL, NOPE, "disassemble function bodies"},
+    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE, "Verbose output"},
+    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
 };
+
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
-static const char* s_infile;
 static WasmObjdumpOptions s_objdump_options;
 
 static void on_argument(struct WasmOptionParser* parser, const char* argument) {
-  s_infile = argument;
+  s_objdump_options.infile = argument;
 }
 
 static void on_option(struct WasmOptionParser* parser,
@@ -90,6 +89,10 @@ static void on_option(struct WasmOptionParser* parser,
       s_objdump_options.verbose = WASM_TRUE;
       break;
 
+    case FLAG_SECTION:
+      s_objdump_options.section_name = argument;
+      break;
+
     case FLAG_HELP:
       wasm_print_help(parser, PROGRAM_NAME);
       exit(0);
@@ -113,7 +116,7 @@ static void parse_options(int argc, char** argv) {
   parser.on_error = on_option_error;
   wasm_parse_options(&parser, argc, argv);
 
-  if (!s_infile) {
+  if (!s_objdump_options.infile) {
     wasm_print_help(&parser, PROGRAM_NAME);
     WASM_FATAL("No filename given.\n");
   }
@@ -127,11 +130,45 @@ int main(int argc, char** argv) {
 
   void* data;
   size_t size;
-  WasmResult result = wasm_read_file(allocator, s_infile, &data, &size);
+  WasmResult result = wasm_read_file(allocator, s_objdump_options.infile, &data, &size);
   if (WASM_FAILED(result))
     return result;
 
-  result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+  // Perform serveral passed over the binary in order to print out different
+  // types of information.
+
+  s_objdump_options.print_header = 1;
+
+  // Pass 1: Print the section headers
+  if (s_objdump_options.headers) {
+    s_objdump_options.mode = DUMP_HEADERS;
+    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    if (result)
+      goto done;
+    s_objdump_options.print_header = 0;
+  }
+  // Pass 2: Print extra information based on section type
+  if (s_objdump_options.verbose || s_objdump_options.section_name) {
+    s_objdump_options.mode = DUMP_DETAILS;
+    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    if (result)
+      goto done;
+    s_objdump_options.print_header = 0;
+  }
+  if (s_objdump_options.disassemble) {
+    s_objdump_options.mode = DUMP_DISASSEMBLE;
+    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    if (result)
+      goto done;
+    s_objdump_options.print_header = 0;
+  }
+  // Pass 3: Dump to raw contents of the sections
+  if (s_objdump_options.raw) {
+    s_objdump_options.mode = DUMP_RAW_DATA;
+    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+  }
+
+done:
   wasm_free(allocator, data);
   return result;
 }

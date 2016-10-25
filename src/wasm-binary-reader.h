@@ -46,7 +46,7 @@ typedef struct WasmBinaryReader {
   void (*on_error)(WasmBinaryReaderContext* ctx, const char* message);
 
   /* module */
-  WasmResult (*begin_module)(void* user_data);
+  WasmResult (*begin_module)(uint32_t version, void* user_data);
   WasmResult (*end_module)(void* user_data);
 
   /* signatures section */
