@@ -3,12 +3,23 @@
   (func (export "loop") (result i32)
     (local i32 i32)
     ;; loop statements now require an explicit branch to the top
-    (loop $cont
-      (set_local 1 (i32.add (get_local 1) (get_local 0)))
-      (set_local 0 (i32.add (get_local 0) (i32.const 1)))
-      (if (i32.lt_s (get_local 0) (i32.const 5))
-        (br $cont)))
-    (get_local 1)))
+    loop $cont
+      get_local 1
+      get_local 0
+      i32.add
+      set_local 1
+      get_local 0
+      i32.const 1
+      i32.add 
+      set_local 0
+      get_local 0
+      i32.const 5
+      i32.lt_s
+      if
+        br $cont
+      end
+    end
+    get_local 1))
 (;; STDOUT ;;;
 loop() => i32:10
 ;;; STDOUT ;;)

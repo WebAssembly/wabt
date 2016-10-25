@@ -7,14 +7,18 @@
 
 (module
   (func (export "f") (result i32)
-    (block $exit
-      (if                     ;; outer if
-        (i32.const 1)
-        (drop (i32.const 2))
-        (if                   ;; inner if
-          (i32.const 3)
-          (br $exit))))
-    (i32.const 4)))
+    block $exit
+      i32.const 1
+      if                     ;; outer if
+        i32.const 2          
+        drop
+        i32.const 3
+        if                   ;; inner if
+          br $exit
+        end
+      end
+    end
+    i32.const 4))
 (;; STDOUT ;;;
 f() => i32:4
 ;;; STDOUT ;;)
