@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "wasm-binding-hash.h"
 #include "wasm-common.h"
 #include "wasm-type-vector.h"
 #include "wasm-vector.h"
@@ -84,24 +85,6 @@ typedef enum WasmExprType {
   WASM_EXPR_TYPE_UNARY,
   WASM_EXPR_TYPE_UNREACHABLE,
 } WasmExprType;
-
-typedef struct WasmBinding {
-  WasmLocation loc;
-  WasmStringSlice name;
-  int index;
-} WasmBinding;
-
-typedef struct WasmBindingHashEntry {
-  WasmBinding binding;
-  struct WasmBindingHashEntry* next;
-  struct WasmBindingHashEntry* prev; /* only valid when this entry is unused */
-} WasmBindingHashEntry;
-WASM_DEFINE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
-
-typedef struct WasmBindingHash {
-  WasmBindingHashEntryVector entries;
-  WasmBindingHashEntry* free_head;
-} WasmBindingHash;
 
 typedef WasmTypeVector WasmBlockSignature;
 
@@ -263,6 +246,7 @@ typedef struct WasmModuleField {
 } WasmModuleField;
 
 typedef struct WasmModule {
+  WasmLocation loc;
   WasmStringSlice name;
   WasmModuleField* first_field;
   WasmModuleField* last_field;
@@ -304,11 +288,11 @@ typedef enum WasmRawModuleType {
  * when parsing text, as assert_invalid always assumes that text parsing
  * succeeds. */
 typedef struct WasmRawModule {
-  WasmLocation loc;
   WasmRawModuleType type;
   union {
     WasmModule* text;
     struct {
+      WasmLocation loc;
       WasmStringSlice name;
       void* data;
       size_t size;
@@ -333,7 +317,7 @@ typedef struct WasmActionGet {
 typedef struct WasmAction {
   WasmLocation loc;
   WasmActionType type;
-  WasmStringSlice module_var_name;
+  WasmVar module_var;
   union {
     WasmActionInvoke invoke;
     WasmActionGet get;
@@ -358,7 +342,7 @@ typedef struct WasmCommand {
   union {
     WasmModule module;
     WasmAction action;
-    struct { WasmStringSlice module_name, module_var_name; } register_;
+    struct { WasmStringSlice module_name; WasmVar var; } register_;
     struct { WasmAction action; WasmConstVector expected; } assert_return;
     struct { WasmAction action; } assert_return_nan;
     struct { WasmAction action; WasmStringSlice text; } assert_trap;
@@ -373,6 +357,7 @@ WASM_DEFINE_VECTOR(command, WasmCommand);
 typedef struct WasmScript {
   struct WasmAllocator* allocator;
   WasmCommandVector commands;
+  WasmBindingHash module_bindings;
 } WasmScript;
 
 typedef struct WasmExprVisitor {
@@ -411,12 +396,6 @@ typedef struct WasmExprVisitor {
 } WasmExprVisitor;
 
 WASM_EXTERN_C_BEGIN
-WasmBinding* wasm_insert_binding(struct WasmAllocator*,
-                                 WasmBindingHash*,
-                                 const WasmStringSlice*);
-
-WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry*);
-
 WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
 /* ownership of the function signature is passed to the module */
 WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator*,
@@ -497,6 +476,7 @@ int wasm_get_table_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_memory_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
 int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
+int wasm_get_module_index_by_var(const WasmScript* script, const WasmVar* var);
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
 WasmGlobalPtr wasm_get_global_by_var(const WasmModule* func,
@@ -511,6 +491,9 @@ WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
                                      const WasmVar* var);
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
                                       const WasmStringSlice* name);
+WasmModule* wasm_get_first_module(const WasmScript* script);
+WasmModule* wasm_get_module_by_var(const WasmScript* script,
+                                   const WasmVar* var);
 
 void wasm_make_type_binding_reverse_mapping(
     struct WasmAllocator*,

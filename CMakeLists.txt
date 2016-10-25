@@ -205,10 +205,10 @@ add_library(libwasm STATIC
   src/wasm-binary-writer.c
   src/wasm-binary-writer-spec.c
   src/wasm-binary-reader-ast.c
-  src/wasm-binary-reader-opcnt.c
+  src/wasm-binding-hash.c
   src/wasm-ast-writer.c
-  src/wasm-binary-reader-interpreter.c
   src/wasm-interpreter.c
+  src/wasm-binary-reader-interpreter.c
   src/wasm-apply-names.c
   src/wasm-generate-names.c
 
@@ -226,38 +226,55 @@ set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
 if (NOT EMSCRIPTEN)
   # wast2wasm
-  add_executable(wast2wasm src/wast2wasm.c)
+  add_executable(wast2wasm src/tools/wast2wasm.c)
   add_dependencies(everything wast2wasm)
   target_link_libraries(wast2wasm libwasm)
 
   # wasm2wast
-  add_executable(wasm2wast src/wasm2wast.c)
+  add_executable(wasm2wast src/tools/wasm2wast.c)
   add_dependencies(everything wasm2wast)
   target_link_libraries(wasm2wast libwasm)
 
   # wasmopcodecnt
-  add_executable(wasmopcodecnt src/wasmopcodecnt.c)
+  add_executable(wasmopcodecnt src/tools/wasmopcodecnt.c
+    src/wasm-binary-reader-opcnt.c)
   add_dependencies(everything wasmopcodecnt)
   target_link_libraries(wasmopcodecnt libwasm)
 
-  if (NOT WIN32)
-  add_custom_command( TARGET wast2wasm
-                      POST_BUILD
-                      COMMAND ln -sf wast2wasm sexpr-wasm)
-  add_custom_command( TARGET wasm2wast
-                      POST_BUILD
-                      COMMAND ln -sf wasm2wast wasm-wast)
-
-  endif ()
-  set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "wasm2wast" "wast2wasm")
+  # wasmdump
+  add_executable(wasmdump src/tools/wasmdump.c src/wasm-binary-reader-objdump.c)
+  add_dependencies(everything wasmdump)
+  target_link_libraries(wasmdump libwasm)
 
   # wasm-interp
-  add_executable(wasm-interp src/wasm-interp.c)
+  add_executable(wasm-interp src/tools/wasm-interp.c)
   add_dependencies(everything wasm-interp)
   target_link_libraries(wasm-interp libwasm)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
     target_link_libraries(wasm-interp m)
   endif ()
+
+  # wast-desugar
+  add_executable(wast-desugar src/tools/wast-desugar.c)
+  add_dependencies(everything wast-desugar)
+  target_link_libraries(wast-desugar libwasm)
+
+  # symlinks for wast2wasm and wasm2wast
+  if (NOT WIN32)
+    add_custom_command(
+      TARGET wast2wasm
+      POST_BUILD
+      COMMAND ln -sf wast2wasm sexpr-wasm
+    )
+    add_custom_command(
+      TARGET wasm2wast
+      POST_BUILD
+      COMMAND ln -sf wasm2wast wasm-wast
+    )
+  endif ()
+  set_property(
+    DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
+    "wasm2wast" "wast2wasm")
 
   # hexfloat-test
   find_package(Threads)
@@ -299,7 +316,10 @@ if (NOT EMSCRIPTEN)
   )
 
   # install
-  install(TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt DESTINATION bin)
+  install(
+    TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt wasmdump wast-desugar
+    DESTINATION bin
+  )
 
 else ()
   # emscripten stuff

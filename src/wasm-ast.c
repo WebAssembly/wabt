@@ -21,158 +21,15 @@
 
 #include "wasm-allocator.h"
 
-#define INITIAL_HASH_CAPACITY 8
-
-static size_t hash_name(const WasmStringSlice* name) {
-  // FNV-1a hash
-  const uint32_t fnv_prime = 0x01000193;
-  const uint8_t* bp = (const uint8_t*)name->start;
-  const uint8_t* be = bp + name->length;
-  uint32_t hval = 0x811c9dc5;
-  while (bp < be) {
-    hval ^= (uint32_t)*bp++;
-    hval *= fnv_prime;
-  }
-  return hval;
-}
-
-static WasmBindingHashEntry* hash_main_entry(const WasmBindingHash* hash,
-                                             const WasmStringSlice* name) {
-  return &hash->entries.data[hash_name(name) % hash->entries.capacity];
-}
-
-WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry* entry) {
-  return !entry->binding.name.start;
-}
-
-static WasmBindingHashEntry* hash_new_entry(WasmBindingHash* hash,
-                                            const WasmStringSlice* name) {
-  WasmBindingHashEntry* entry = hash_main_entry(hash, name);
-  if (!wasm_hash_entry_is_free(entry)) {
-    assert(hash->free_head);
-    WasmBindingHashEntry* free_entry = hash->free_head;
-    hash->free_head = free_entry->next;
-    if (free_entry->next)
-      free_entry->next->prev = NULL;
-
-    /* our main position is already claimed. Check to see if the entry in that
-     * position is in its main position */
-    WasmBindingHashEntry* other_entry =
-        hash_main_entry(hash, &entry->binding.name);
-    if (other_entry == entry) {
-      /* yes, so add this new entry to the chain, even if it is already there */
-      /* add as the second entry in the chain */
-      free_entry->next = entry->next;
-      entry->next = free_entry;
-      entry = free_entry;
-    } else {
-      /* no, move the entry to the free entry */
-      assert(!wasm_hash_entry_is_free(other_entry));
-      while (other_entry->next != entry)
-        other_entry = other_entry->next;
-
-      other_entry->next = free_entry;
-      *free_entry = *entry;
-      entry->next = NULL;
-    }
-  } else {
-    /* remove from the free list */
-    if (entry->next)
-      entry->next->prev = entry->prev;
-    if (entry->prev)
-      entry->prev->next = entry->next;
-    else
-      hash->free_head = entry->next;
-    entry->next = NULL;
-  }
-
-  WASM_ZERO_MEMORY(entry->binding);
-  entry->binding.name = *name;
-  entry->prev = NULL;
-  /* entry->next is set above */
-  return entry;
-}
-
-static void hash_resize(WasmAllocator* allocator,
-                        WasmBindingHash* hash,
-                        size_t desired_capacity) {
-  WasmBindingHash new_hash;
-  WASM_ZERO_MEMORY(new_hash);
-  /* TODO(binji): better plural */
-  wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
-                                   desired_capacity);
-
-  /* update the free list */
-  size_t i;
-  for (i = 0; i < new_hash.entries.capacity; ++i) {
-    WasmBindingHashEntry* entry = &new_hash.entries.data[i];
-    if (new_hash.free_head)
-      new_hash.free_head->prev = entry;
-
-    WASM_ZERO_MEMORY(entry->binding.name);
-    entry->next = new_hash.free_head;
-    new_hash.free_head = entry;
-  }
-  new_hash.free_head->prev = NULL;
-
-  /* copy from the old hash to the new hash */
-  for (i = 0; i < hash->entries.capacity; ++i) {
-    WasmBindingHashEntry* old_entry = &hash->entries.data[i];
-    if (wasm_hash_entry_is_free(old_entry))
-      continue;
-
-    WasmStringSlice* name = &old_entry->binding.name;
-    WasmBindingHashEntry* new_entry = hash_new_entry(&new_hash, name);
-    new_entry->binding = old_entry->binding;
-  }
-
-  /* we are sharing the WasmStringSlices, so we only need to destroy the old
-   * binding vector */
-  wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
-  *hash = new_hash;
-}
-
-WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
-                                 WasmBindingHash* hash,
-                                 const WasmStringSlice* name) {
-  if (hash->entries.size == 0)
-    hash_resize(allocator, hash, INITIAL_HASH_CAPACITY);
-
-  if (!hash->free_head) {
-    /* no more free space, allocate more */
-    hash_resize(allocator, hash, hash->entries.capacity * 2);
-  }
-
-  WasmBindingHashEntry* entry = hash_new_entry(hash, name);
-  assert(entry);
-  hash->entries.size++;
-  return &entry->binding;
-}
-
-static int find_binding_index_by_name(const WasmBindingHash* hash,
-                                      const WasmStringSlice* name) {
-  if (hash->entries.capacity == 0)
-    return -1;
-
-  WasmBindingHashEntry* entry = hash_main_entry(hash, name);
-  do {
-    if (wasm_string_slices_are_equal(&entry->binding.name, name))
-      return entry->binding.index;
-
-    entry = entry->next;
-  } while (entry && !wasm_hash_entry_is_free(entry));
-  return -1;
-}
-
 int wasm_get_index_from_var(const WasmBindingHash* hash, const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
-    return find_binding_index_by_name(hash, &var->name);
+    return wasm_find_binding_index_by_name(hash, &var->name);
   return (int)var->index;
 }
 
 WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
                                       const WasmStringSlice* name) {
-  int index = find_binding_index_by_name(&module->export_bindings, name);
+  int index = wasm_find_binding_index_by_name(&module->export_bindings, name);
   if (index == -1)
     return NULL;
   return module->exports.data[index];
@@ -203,16 +60,21 @@ int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_INDEX)
     return (int)var->index;
 
-  int result = find_binding_index_by_name(&func->param_bindings, &var->name);
+  int result =
+      wasm_find_binding_index_by_name(&func->param_bindings, &var->name);
   if (result != -1)
     return result;
 
-  result = find_binding_index_by_name(&func->local_bindings, &var->name);
+  result = wasm_find_binding_index_by_name(&func->local_bindings, &var->name);
   if (result == -1)
     return result;
 
   /* the locals start after all the params */
   return func->decl.sig.param_types.size + result;
+}
+
+int wasm_get_module_index_by_var(const WasmScript* script, const WasmVar* var) {
+  return wasm_get_index_from_var(&script->module_bindings, var);
 }
 
 WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var) {
@@ -270,6 +132,26 @@ int wasm_get_func_type_index_by_decl(const WasmModule* module,
   } else {
     return wasm_get_func_type_index_by_sig(module, &decl->sig);
   }
+}
+
+WasmModule* wasm_get_first_module(const WasmScript* script) {
+  size_t i;
+  for (i = 0; i < script->commands.size; ++i) {
+    WasmCommand* command = &script->commands.data[i];
+    if (command->type == WASM_COMMAND_TYPE_MODULE)
+      return &command->module;
+  }
+  return NULL;
+}
+
+WasmModule* wasm_get_module_by_var(const WasmScript* script,
+                                   const WasmVar* var) {
+  int index = wasm_get_index_from_var(&script->module_bindings, var);
+  if (index < 0 || (size_t)index >= script->commands.size)
+    return NULL;
+  WasmCommand* command = &script->commands.data[index];
+  assert(command->type == WASM_COMMAND_TYPE_MODULE);
+  return &command->module;
 }
 
 void wasm_make_type_binding_reverse_mapping(
@@ -383,21 +265,6 @@ WasmExpr* wasm_new_empty_expr(struct WasmAllocator* allocator,
   return result;
 }
 
-static void destroy_binding_hash_entry(WasmAllocator* allocator,
-                                       WasmBindingHashEntry* entry) {
-  wasm_destroy_string_slice(allocator, &entry->binding.name);
-}
-
-static void destroy_binding_hash(WasmAllocator* allocator,
-                                 WasmBindingHash* hash) {
-  /* Can't use WASM_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
-   * capacity. */
-  size_t i;
-  for (i = 0; i < hash->entries.capacity; ++i)
-    destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
-  wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
-}
-
 void wasm_destroy_var(WasmAllocator* allocator, WasmVar* var) {
   if (var->type == WASM_VAR_TYPE_NAME)
     wasm_destroy_string_slice(allocator, &var->name);
@@ -503,8 +370,8 @@ void wasm_destroy_func(WasmAllocator* allocator, WasmFunc* func) {
   wasm_destroy_string_slice(allocator, &func->name);
   wasm_destroy_func_declaration(allocator, &func->decl);
   wasm_destroy_type_vector(allocator, &func->local_types);
-  destroy_binding_hash(allocator, &func->param_bindings);
-  destroy_binding_hash(allocator, &func->local_bindings);
+  wasm_destroy_binding_hash(allocator, &func->param_bindings);
+  wasm_destroy_binding_hash(allocator, &func->local_bindings);
   wasm_destroy_expr_list(allocator, func->first_expr);
 }
 
@@ -643,7 +510,7 @@ void wasm_destroy_raw_module(WasmAllocator* allocator, WasmRawModule* raw) {
 }
 
 void wasm_destroy_action(WasmAllocator* allocator, WasmAction* action) {
-  wasm_destroy_string_slice(allocator, &action->module_var_name);
+  wasm_destroy_var(allocator, &action->module_var);
   switch (action->type) {
     case WASM_ACTION_TYPE_INVOKE:
       wasm_destroy_string_slice(allocator, &action->invoke.name);
@@ -665,7 +532,7 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       break;
     case WASM_COMMAND_TYPE_REGISTER:
       wasm_destroy_string_slice(allocator, &command->register_.module_name);
-      wasm_destroy_string_slice(allocator, &command->register_.module_var_name);
+      wasm_destroy_var(allocator, &command->register_.var);
       break;
     case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
       wasm_destroy_raw_module(allocator, &command->assert_malformed.module);
@@ -711,6 +578,7 @@ void wasm_destroy_elem_segment(WasmAllocator* allocator,
 void wasm_destroy_script(WasmScript* script) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(script->allocator, script->commands,
                                    command);
+  wasm_destroy_binding_hash(script->allocator, &script->module_bindings);
 }
 
 #define CHECK_RESULT(expr)   \

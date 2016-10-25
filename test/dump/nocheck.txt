@@ -1,3 +1,4 @@
+;;; TOOL: run-wasmdump
 ;;; FLAGS: -v --no-check
 (module
   (func (result i64)
@@ -48,4 +49,8 @@
 0000030: 0f                                        ; end
 000001f: 11                                        ; FIXUP func body size
 000001d: 13                                        ; FIXUP section size
+func 0
+ 000021: 13 00 00 80 3f             | f32.const 0x3f800000
+ 000026: 12 00 00 00 00 00 00 00 40 | f64.const 0
+ 00002f: 40                         | i32.add
 ;;; STDOUT ;;)

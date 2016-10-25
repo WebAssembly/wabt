@@ -1,3 +1,4 @@
+;;; TOOL: run-wasmdump
 ;;; FLAGS: -v --spec
 (module (memory 1))
 (module (memory 2))

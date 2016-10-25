@@ -85,9 +85,10 @@ void wasm_close_file_writer(WasmFileWriter* writer) {
   fclose(writer->file);
 }
 
-static void init_output_buffer(WasmAllocator* allocator,
-                               WasmOutputBuffer* buf,
-                               size_t initial_capacity) {
+void wasm_init_output_buffer(WasmAllocator* allocator,
+                             WasmOutputBuffer* buf,
+                             size_t initial_capacity) {
+  assert(initial_capacity != 0);
   buf->allocator = allocator;
   buf->start = wasm_alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
   buf->size = 0;
@@ -97,6 +98,7 @@ static void init_output_buffer(WasmAllocator* allocator,
 static void ensure_output_buffer_capacity(WasmOutputBuffer* buf,
                                           size_t ensure_capacity) {
   if (ensure_capacity > buf->capacity) {
+    assert(buf->capacity != 0);
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
@@ -142,7 +144,20 @@ WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;
-  init_output_buffer(allocator, &writer->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
+  wasm_init_output_buffer(allocator, &writer->buf,
+                          INITIAL_OUTPUT_BUFFER_CAPACITY);
+  return WASM_OK;
+}
+
+WasmResult wasm_init_mem_writer_existing(WasmMemoryWriter* writer,
+                                         WasmOutputBuffer* buf) {
+  WASM_ZERO_MEMORY(*writer);
+  writer->base.user_data = writer;
+  writer->base.write_data = write_data_to_output_buffer;
+  writer->base.move_data = move_data_in_output_buffer;
+  writer->buf = *buf;
+  /* Clear buffer, since ownership has passed to the writer. */
+  WASM_ZERO_MEMORY(*buf);
   return WASM_OK;
 }
 

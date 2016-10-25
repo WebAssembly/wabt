@@ -34,7 +34,7 @@ assert_invalid error:
   (module (global i32 (f32.const 0)))
                        ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:90:11: global can only be defined in terms of a previously defined global.
+  third_party/testsuite/globals.wast:90:11: initializer expression can only be reference a previously defined global
   (module (global i32 (get_global 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 16/16 tests passed.

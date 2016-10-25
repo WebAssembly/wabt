@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func
     (local i32)
@@ -40,7 +41,8 @@
 000001e: 0f                                        ; end
 0000015: 09                                        ; FIXUP func body size
 0000013: 0b                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0a0b 0109 0101 0110 0019 000b 0f   
+func 0
+ 000019: 10 00                      | i32.const 0
+ 00001b: 19 00                      | tee_local 0
+ 00001d: 0b                         | drop
 ;;; STDOUT ;;)

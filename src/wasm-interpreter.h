@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "wasm-array.h"
+#include "wasm-binding-hash.h"
 #include "wasm-type-vector.h"
 #include "wasm-vector.h"
 #include "wasm-writer.h"
@@ -60,7 +61,7 @@ typedef enum WasmInterpreterResult {
 #undef V
 } WasmInterpreterResult;
 
-#define WASM_INVALID_FUNC_INDEX ((uint32_t)~0)
+#define WASM_INVALID_INDEX ((uint32_t)~0)
 #define WASM_INVALID_OFFSET ((uint32_t)~0)
 #define WASM_TABLE_ENTRY_SIZE (sizeof(uint32_t) * 2 + sizeof(uint8_t))
 #define WASM_TABLE_ENTRY_OFFSET_OFFSET 0
@@ -78,12 +79,21 @@ enum {
 };
 WASM_STATIC_ASSERT(WASM_NUM_INTERPRETER_OPCODES <= 256);
 
+typedef uint32_t WasmUint32;
+WASM_DEFINE_ARRAY(uint32, WasmUint32);
+
 /* TODO(binji): identical to WasmFuncSignature. Share? */
 typedef struct WasmInterpreterFuncSignature {
   WasmTypeVector param_types;
   WasmTypeVector result_types;
 } WasmInterpreterFuncSignature;
-WASM_DEFINE_ARRAY(interpreter_func_signature, WasmInterpreterFuncSignature);
+WASM_DEFINE_VECTOR(interpreter_func_signature, WasmInterpreterFuncSignature);
+
+typedef struct WasmInterpreterTable {
+  WasmLimits limits;
+  WasmUint32Array func_indexes;
+} WasmInterpreterTable;
+WASM_DEFINE_VECTOR(interpreter_table, WasmInterpreterTable);
 
 typedef struct WasmInterpreterMemory {
   WasmAllocator* allocator;
@@ -92,12 +102,7 @@ typedef struct WasmInterpreterMemory {
   uint32_t byte_size;
   uint32_t max_page_size;
 } WasmInterpreterMemory;
-
-typedef struct WasmInterpreterFuncTableEntry {
-  uint32_t sig_index;
-  uint32_t func_index;
-} WasmInterpreterFuncTableEntry;
-WASM_DEFINE_ARRAY(interpreter_func_table_entry, WasmInterpreterFuncTableEntry);
+WASM_DEFINE_VECTOR(interpreter_memory, WasmInterpreterMemory);
 
 typedef union WasmInterpreterValue {
   uint32_t i32;
@@ -117,8 +122,9 @@ WASM_DEFINE_VECTOR(interpreter_typed_value, WasmInterpreterTypedValue);
 typedef struct WasmInterpreterGlobal {
   WasmInterpreterTypedValue typed_value;
   WasmBool mutable_;
+  uint32_t import_index; /* or INVALID_INDEX if not imported */
 } WasmInterpreterGlobal;
-WASM_DEFINE_ARRAY(interpreter_global, WasmInterpreterGlobal);
+WASM_DEFINE_VECTOR(interpreter_global, WasmInterpreterGlobal);
 
 typedef struct WasmInterpreterImport {
   WasmStringSlice module_name;
@@ -128,56 +134,109 @@ typedef struct WasmInterpreterImport {
     struct {
       uint32_t sig_index;
     } func;
+    struct {
+      WasmLimits limits;
+    } table, memory;
+    struct {
+      WasmType type;
+      WasmBool mutable_;
+    } global;
   };
 } WasmInterpreterImport;
-typedef WasmInterpreterImport* WasmInterpreterImportPtr;
 WASM_DEFINE_ARRAY(interpreter_import, WasmInterpreterImport);
-WASM_DEFINE_ARRAY(interpreter_import_ptr, WasmInterpreterImportPtr);
 
-typedef struct WasmInterpreterFunc {
-  uint32_t sig_index;
-  uint32_t offset;
-  uint32_t local_decl_count;
-  uint32_t local_count;
-  WasmTypeVector param_and_local_types;
-  WasmBool is_host;
-  uint32_t import_index; /* or INVALID_FUNC_INDEX if not imported */
-} WasmInterpreterFunc;
-WASM_DEFINE_VECTOR(interpreter_func, WasmInterpreterFunc);
-
-typedef struct WasmInterpreterExport {
-  WasmStringSlice name;
-  WasmExternalKind kind;
-  uint32_t index;
-} WasmInterpreterExport;
-WASM_DEFINE_ARRAY(interpreter_export, WasmInterpreterExport);
-
-typedef uint32_t WasmUint32;
-WASM_DEFINE_ARRAY(uint32, WasmUint32);
-
-typedef struct WasmInterpreterModule {
-  WasmInterpreterMemory memory;
-  WasmInterpreterFuncSignatureArray sigs;
-  WasmInterpreterFuncVector funcs;
-  WasmUint32Array func_table;
-  WasmInterpreterImportArray imports;
-  WasmInterpreterExportArray exports;
-  WasmInterpreterGlobalArray globals;
-  WasmOutputBuffer istream;
-  uint32_t start_func_index; /* == INVALID_FUNC_INDEX if not defined */
-} WasmInterpreterModule;
+struct WasmInterpreterFunc;
 
 typedef WasmResult (*WasmInterpreterHostFuncCallback)(
+    const struct WasmInterpreterFunc* func,
     const WasmInterpreterFuncSignature* sig,
-    const WasmStringSlice* module_name,
-    const WasmStringSlice* field_name,
     uint32_t num_args,
     WasmInterpreterTypedValue* args,
     uint32_t num_results,
     WasmInterpreterTypedValue* out_results,
     void* user_data);
 
+typedef struct WasmInterpreterFunc {
+  uint32_t sig_index;
+  WasmBool is_host;
+  union {
+    struct {
+      uint32_t offset;
+      uint32_t local_decl_count;
+      uint32_t local_count;
+      WasmTypeVector param_and_local_types;
+    } defined;
+    struct {
+      WasmStringSlice module_name;
+      WasmStringSlice field_name;
+      WasmInterpreterHostFuncCallback callback;
+      void* user_data;
+    } host;
+  };
+} WasmInterpreterFunc;
+WASM_DEFINE_VECTOR(interpreter_func, WasmInterpreterFunc);
+
+typedef struct WasmInterpreterExport {
+  WasmStringSlice name; /* Owned by the export_bindings hash */
+  WasmExternalKind kind;
+  uint32_t index;
+} WasmInterpreterExport;
+WASM_DEFINE_VECTOR(interpreter_export, WasmInterpreterExport);
+
+typedef struct WasmInterpreterHostImportDelegate {
+  void *user_data;
+  WasmResult (*import_func)(WasmInterpreterImport*,
+                            WasmInterpreterFunc*,
+                            WasmInterpreterFuncSignature*,
+                            void* user_data);
+  WasmResult (*import_table)(WasmInterpreterImport*,
+                             WasmInterpreterTable*,
+                             void* user_data);
+  WasmResult (*import_memory)(WasmInterpreterImport*,
+                              WasmInterpreterMemory*,
+                              void* user_data);
+  WasmResult (*import_global)(WasmInterpreterImport*,
+                              WasmInterpreterGlobal*,
+                              void* user_data);
+} WasmInterpreterHostImportDelegate;
+
+typedef struct WasmInterpreterModule {
+  WasmStringSlice name;
+  WasmInterpreterExportVector exports;
+  WasmBindingHash export_bindings;
+  uint32_t memory_index; /* INVALID_INDEX if not defined */
+  uint32_t table_index;  /* INVALID_INDEX if not defined */
+  WasmBool is_host;
+  union {
+    struct {
+      WasmInterpreterImportArray imports;
+      uint32_t start_func_index; /* INVALID_INDEX if not defined */
+      size_t istream_start;
+      size_t istream_end;
+    } defined;
+    struct {
+      WasmInterpreterHostImportDelegate import_delegate;
+    } host;
+  };
+} WasmInterpreterModule;
+WASM_DEFINE_VECTOR(interpreter_module, WasmInterpreterModule);
+
+typedef struct WasmInterpreterEnvironment {
+  WasmInterpreterModuleVector modules;
+  WasmInterpreterFuncSignatureVector sigs;
+  WasmInterpreterFuncVector funcs;
+  WasmInterpreterMemoryVector memories;
+  WasmInterpreterTableVector tables;
+  WasmInterpreterGlobalVector globals;
+  WasmOutputBuffer istream;
+  WasmBindingHash module_bindings;
+} WasmInterpreterEnvironment;
+
 typedef struct WasmInterpreterThread {
+  WasmInterpreterEnvironment* env;
+  WasmInterpreterModule* module;
+  WasmInterpreterTable* table;
+  WasmInterpreterMemory* memory;
   WasmInterpreterValueArray value_stack;
   WasmUint32Array call_stack;
   WasmInterpreterValue* value_stack_top;
@@ -186,13 +245,8 @@ typedef struct WasmInterpreterThread {
   uint32_t* call_stack_end;
   uint32_t pc;
 
-  struct {
-    WasmInterpreterHostFuncCallback callback;
-    void* user_data;
-  } host_func;
-
-  /* a temporary buffer that is for passing args to import functions */
-  WasmInterpreterTypedValueArray import_args;
+  /* a temporary buffer that is for passing args to host functions */
+  WasmInterpreterTypedValueArray host_args;
 } WasmInterpreterThread;
 
 #define WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT \
@@ -205,7 +259,15 @@ typedef struct WasmInterpreterThreadOptions {
 } WasmInterpreterThreadOptions;
 
 WASM_EXTERN_C_BEGIN
+void wasm_init_interpreter_environment(WasmAllocator* allocator,
+                                       WasmInterpreterEnvironment* env);
+void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
+                                          WasmInterpreterEnvironment* env);
+WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
+                                               WasmInterpreterEnvironment* env,
+                                               WasmStringSlice name);
 WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
+                                        WasmInterpreterEnvironment* env,
                                         WasmInterpreterModule* module,
                                         WasmInterpreterThread* thread,
                                         WasmInterpreterThreadOptions* options);
@@ -213,22 +275,19 @@ WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
                                              WasmInterpreterValue value);
 void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread);
-WasmInterpreterResult wasm_call_host(WasmInterpreterModule* module,
-                                     WasmInterpreterThread* thread,
-                                     WasmInterpreterImport* import);
-WasmInterpreterResult wasm_run_interpreter(WasmInterpreterModule* module,
-                                           WasmInterpreterThread* thread,
+WasmInterpreterResult wasm_call_host(WasmInterpreterThread* thread,
+                                     WasmInterpreterFunc* func);
+WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
                                            uint32_t num_instructions,
                                            uint32_t* call_stack_return_top);
-void wasm_trace_pc(WasmInterpreterModule* module,
-                   WasmInterpreterThread* thread,
-                   struct WasmStream* stream);
-void wasm_disassemble_module(WasmInterpreterModule* module,
+void wasm_trace_pc(WasmInterpreterThread* thread, struct WasmStream* stream);
+void wasm_disassemble(WasmInterpreterEnvironment* env,
+                      struct WasmStream* stream,
+                      uint32_t from,
+                      uint32_t to);
+void wasm_disassemble_module(WasmInterpreterEnvironment* env,
                              struct WasmStream* stream,
-                             uint32_t from,
-                             uint32_t to);
-void wasm_destroy_interpreter_module(WasmAllocator* allocator,
-                                     WasmInterpreterModule* module);
+                             WasmInterpreterModule* module);
 
 WasmInterpreterExport* wasm_get_interpreter_export_by_name(
     WasmInterpreterModule* module,

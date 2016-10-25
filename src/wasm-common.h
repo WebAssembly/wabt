@@ -383,6 +383,7 @@ WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment);
 uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment);
 
 WasmStringSlice wasm_empty_string_slice(void);
+WasmStringSlice wasm_string_slice_from_cstr(const char* string);
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice*,
                                       const WasmStringSlice*);
 void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);
@@ -443,6 +444,15 @@ static WASM_INLINE WasmType wasm_get_opcode_param_type_2(WasmOpcode opcode) {
 static WASM_INLINE int wasm_get_opcode_memory_size(WasmOpcode opcode) {
   assert(opcode < WASM_NUM_OPCODES);
   return g_wasm_opcode_info[opcode].memory_size;
+}
+
+/* external kind */
+
+extern const char* g_wasm_kind_name[];
+
+static WASM_INLINE const char* wasm_get_kind_name(WasmExternalKind kind) {
+  assert(kind < WASM_NUM_EXTERNAL_KINDS);
+  return g_wasm_kind_name[kind];
 }
 
 WASM_EXTERN_C_END

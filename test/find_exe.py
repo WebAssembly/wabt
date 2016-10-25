@@ -23,17 +23,17 @@ from utils import Error
 IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
-DEFAULT_WAST2WASM_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wast2wasm')
-DEFAULT_WASM2WAST_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm2wast')
-DEFAULT_WASM_INTERP_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasm-interp')
-DEFAULT_WASMOPCODECNT_EXE = os.path.join(REPO_ROOT_DIR, 'out', 'wasmopcodecnt')
+EXECUTABLES = [
+    'wast2wasm', 'wasm2wast', 'wasmdump', 'wasm-interp', 'wasmopcodecnt',
+    'wast-desugar'
+]
 
 
-if IS_WINDOWS:
-  DEFAULT_WAST2WASM_EXE += '.exe'
-  DEFAULT_WASM2WAST_EXE += '.exe'
-  DEFAULT_WASM_INTERP_EXE += '.exe'
-  DEFAULT_WASMOPCODECNT_EXE += '.exe'
+def GetDefaultExe(basename):
+  result = os.path.join(REPO_ROOT_DIR, 'out', basename)
+  if IS_WINDOWS:
+    result += '.exe'
+  return result
 
 
 def FindExeWithFallback(name, default_exe_list, override_exe=None):
@@ -54,18 +54,29 @@ def FindExeWithFallback(name, default_exe_list, override_exe=None):
       '\n'.join('search path: %s' % path for path in default_exe_list)))
 
 
+def FindExecutable(basename, override=None):
+  return FindExeWithFallback(basename, [GetDefaultExe(basename)], override)
+
+
 def GetWast2WasmExecutable(override=None):
-  return FindExeWithFallback('wast2wasm', [DEFAULT_WAST2WASM_EXE], override)
+  return FindExecutable('wast2wasm', override)
 
 
 def GetWasm2WastExecutable(override=None):
-  return FindExeWithFallback('wasm2wast', [DEFAULT_WASM2WAST_EXE], override)
+  return FindExecutable('wasm2wast', override)
+
+
+def GetWasmdumpExecutable(override=None):
+  return FindExecutable('wasmdump', override)
 
 
 def GetWasmInterpExecutable(override=None):
-  return FindExeWithFallback('wasm-interp', [DEFAULT_WASM_INTERP_EXE], override)
+  return FindExecutable('wasm-interp', override)
 
 
 def GetWasmOpcodeCntExecutable(override=None):
-  return FindExeWithFallback('wasmopcodecnt', [DEFAULT_WASMOPCODECNT_EXE],
-                             override)
+  return FindExecutable('wasmopcodecnt', override)
+
+
+def GetWastDesugarExecutable(override=None):
+  return FindExecutable('wast-desugar', override)

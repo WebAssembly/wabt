@@ -16,6 +16,7 @@
 #
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -31,9 +32,11 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wast2wasm-executable', metavar='PATH',
+  parser.add_argument('--wast2wasm', metavar='PATH',
                       help='override wast2wasm executable.')
-  parser.add_argument('--wasm-interp-executable', metavar='PATH',
+  parser.add_argument('--wasmdump', metavar='PATH',
+                      help='override wast2wasm executable.')
+  parser.add_argument('--wasm-interp', metavar='PATH',
                       help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
@@ -41,7 +44,7 @@ def main(args):
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
@@ -50,7 +53,7 @@ def main(args):
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.wast2wasm_executable),
+      find_exe.GetWast2WasmExecutable(options.wast2wasm),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '-v': options.verbose,
@@ -58,8 +61,12 @@ def main(args):
     '--use-libc-allocator': options.use_libc_allocator
   })
 
+  wasmdump = utils.Executable(
+      find_exe.GetWasmdumpExecutable(options.wasmdump),
+      error_cmdline=options.error_cmdline)
+
   wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.wasm_interp_executable),
+      options.wasm_interp),
       error_cmdline=options.error_cmdline)
   wasm_interp.AppendOptionalArgs({
     '--run-all-exports': options.run_all_exports,
@@ -75,6 +82,15 @@ def main(args):
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
     wast2wasm.RunWithArgs(options.file, '-o', out_file)
+    if options.spec:
+      with open(out_file) as json_file:
+        json_data = json.load(json_file)
+      wasm_files = [m['filename'] for m in json_data['modules']]
+      wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
+    else:
+      wasm_files = [out_file]
+    for wasm_file in wasm_files:
+      wasmdump.RunWithArgs(wasm_file)
     wasm_interp.RunWithArgs(out_file)
 
   return 0

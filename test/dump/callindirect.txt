@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (type $t (func (param i32)))
   (func $f (type $t)
@@ -63,8 +64,8 @@
 000002e: 0f                                        ; end
 0000026: 08                                        ; FIXUP func body size
 0000024: 0a                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0105 0140 0101 0003 
-0000010: 0201 0004 0501 2001 0101 0907 0100 1000 
-0000020: 0f01 000a 0a01 0800 1000 1000 1700 0f   
+func 0
+ 000028: 10 00                      | i32.const 0
+ 00002a: 10 00                      | i32.const 0
+ 00002c: 17 00                      | call_indirect 0
 ;;; STDOUT ;;)

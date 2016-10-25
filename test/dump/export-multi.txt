@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func (nop))
   (export "a" (func 0))
@@ -45,8 +46,6 @@
 0000023: 0f                                        ; end
 0000020: 03                                        ; FIXUP func body size
 000001e: 05                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0709 0201 6100 0001 6200 000a 0501 
-0000020: 0300 0a0f                               
+func 0
+ 000022: 0a                         | nop
 ;;; STDOUT ;;)

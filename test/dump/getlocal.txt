@@ -1,4 +1,5 @@
-;;; FLAGS: -dv
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v
 (module
   (func
     ;; by default, sexpr-wasm will remap locals so all similar types are
@@ -90,9 +91,21 @@
 000003d: 0f                                        ; end
 0000015: 28                                        ; FIXUP func body size
 0000013: 2a                                        ; FIXUP section size
-;; dump
-0000000: 0061 736d 0c00 0000 0104 0140 0000 0302 
-0000010: 0100 0a2a 0128 0701 0401 0301 0202 0101 
-0000020: 0301 0401 0214 000b 1401 0b14 020b 1403 
-0000030: 0b14 040b 1405 0b14 060b 1407 0b0f      
+func 0
+ 000025: 14 00                      | get_local 0
+ 000027: 0b                         | drop
+ 000028: 14 01                      | get_local 0x1
+ 00002a: 0b                         | drop
+ 00002b: 14 02                      | get_local 0x2
+ 00002d: 0b                         | drop
+ 00002e: 14 03                      | get_local 0x3
+ 000030: 0b                         | drop
+ 000031: 14 04                      | get_local 0x4
+ 000033: 0b                         | drop
+ 000034: 14 05                      | get_local 0x5
+ 000036: 0b                         | drop
+ 000037: 14 06                      | get_local 0x6
+ 000039: 0b                         | drop
+ 00003a: 14 07                      | get_local 0x7
+ 00003c: 0b                         | drop
 ;;; STDOUT ;;)
