@@ -298,32 +298,32 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I64, I64, I64, 0, 0x8a, I64_ROTR, "i64.rotr")                       \
   V(F32, F32, F32, 0, 0x8b, F32_ABS, "f32.abs")                         \
   V(F32, F32, F32, 0, 0x8c, F32_NEG, "f32.neg")                         \
-  V(F32, F32, F32, 0, 0x8d, F32_COPYSIGN, "f32.copysign")               \
-  V(F32, F32, F32, 0, 0x8e, F32_CEIL, "f32.ceil")                       \
-  V(F32, F32, F32, 0, 0x8f, F32_FLOOR, "f32.floor")                     \
-  V(F32, F32, F32, 0, 0x90, F32_TRUNC, "f32.trunc")                     \
-  V(F32, F32, F32, 0, 0x91, F32_NEAREST, "f32.nearest")                 \
-  V(F32, F32, F32, 0, 0x92, F32_SQRT, "f32.sqrt")                       \
-  V(F32, F32, F32, 0, 0x93, F32_ADD, "f32.add")                         \
-  V(F32, F32, F32, 0, 0x94, F32_SUB, "f32.sub")                         \
-  V(F32, F32, F32, 0, 0x95, F32_MUL, "f32.mul")                         \
-  V(F32, F32, F32, 0, 0x96, F32_DIV, "f32.div")                         \
-  V(F32, F32, F32, 0, 0x97, F32_MIN, "f32.min")                         \
-  V(F32, F32, F32, 0, 0x98, F32_MAX, "f32.max")                         \
+  V(F32, F32, F32, 0, 0x8d, F32_CEIL, "f32.ceil")                       \
+  V(F32, F32, F32, 0, 0x8e, F32_FLOOR, "f32.floor")                     \
+  V(F32, F32, F32, 0, 0x8f, F32_TRUNC, "f32.trunc")                     \
+  V(F32, F32, F32, 0, 0x90, F32_NEAREST, "f32.nearest")                 \
+  V(F32, F32, F32, 0, 0x91, F32_SQRT, "f32.sqrt")                       \
+  V(F32, F32, F32, 0, 0x92, F32_ADD, "f32.add")                         \
+  V(F32, F32, F32, 0, 0x93, F32_SUB, "f32.sub")                         \
+  V(F32, F32, F32, 0, 0x94, F32_MUL, "f32.mul")                         \
+  V(F32, F32, F32, 0, 0x95, F32_DIV, "f32.div")                         \
+  V(F32, F32, F32, 0, 0x96, F32_MIN, "f32.min")                         \
+  V(F32, F32, F32, 0, 0x97, F32_MAX, "f32.max")                         \
+  V(F32, F32, F32, 0, 0x98, F32_COPYSIGN, "f32.copysign")               \
   V(F64, F64, F64, 0, 0x99, F64_ABS, "f64.abs")                         \
   V(F64, F64, F64, 0, 0x9a, F64_NEG, "f64.neg")                         \
-  V(F64, F64, F64, 0, 0x9b, F64_COPYSIGN, "f64.copysign")               \
-  V(F64, F64, F64, 0, 0x9c, F64_CEIL, "f64.ceil")                       \
-  V(F64, F64, F64, 0, 0x9d, F64_FLOOR, "f64.floor")                     \
-  V(F64, F64, F64, 0, 0x9e, F64_TRUNC, "f64.trunc")                     \
-  V(F64, F64, F64, 0, 0x9f, F64_NEAREST, "f64.nearest")                 \
-  V(F64, F64, F64, 0, 0xa0, F64_SQRT, "f64.sqrt")                       \
-  V(F64, F64, F64, 0, 0xa1, F64_ADD, "f64.add")                         \
-  V(F64, F64, F64, 0, 0xa2, F64_SUB, "f64.sub")                         \
-  V(F64, F64, F64, 0, 0xa3, F64_MUL, "f64.mul")                         \
-  V(F64, F64, F64, 0, 0xa4, F64_DIV, "f64.div")                         \
-  V(F64, F64, F64, 0, 0xa5, F64_MIN, "f64.min")                         \
-  V(F64, F64, F64, 0, 0xa6, F64_MAX, "f64.max")                         \
+  V(F64, F64, F64, 0, 0x9b, F64_CEIL, "f64.ceil")                       \
+  V(F64, F64, F64, 0, 0x9c, F64_FLOOR, "f64.floor")                     \
+  V(F64, F64, F64, 0, 0x9d, F64_TRUNC, "f64.trunc")                     \
+  V(F64, F64, F64, 0, 0x9e, F64_NEAREST, "f64.nearest")                 \
+  V(F64, F64, F64, 0, 0x9f, F64_SQRT, "f64.sqrt")                       \
+  V(F64, F64, F64, 0, 0xa0, F64_ADD, "f64.add")                         \
+  V(F64, F64, F64, 0, 0xa1, F64_SUB, "f64.sub")                         \
+  V(F64, F64, F64, 0, 0xa2, F64_MUL, "f64.mul")                         \
+  V(F64, F64, F64, 0, 0xa3, F64_DIV, "f64.div")                         \
+  V(F64, F64, F64, 0, 0xa4, F64_MIN, "f64.min")                         \
+  V(F64, F64, F64, 0, 0xa5, F64_MAX, "f64.max")                         \
+  V(F64, F64, F64, 0, 0xa6, F64_COPYSIGN, "f64.copysign")               \
   V(I32, I64, ___, 0, 0xa7, I32_WRAP_I64, "i32.wrap/i64")               \
   V(I32, F32, ___, 0, 0xa8, I32_TRUNC_S_F32, "i32.trunc_s/f32")         \
   V(I32, F32, ___, 0, 0xa9, I32_TRUNC_U_F32, "i32.trunc_u/f32")         \
