@@ -21,14 +21,14 @@ import os
 import re
 import sys
 
+from utils import Executable, Error
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 TEST_DIR = os.path.join(ROOT_DIR, 'test')
 DEFAULT_EMSCRIPTEN_DIR = os.path.join(ROOT_DIR, 'emscripten')
 
 sys.path.append(TEST_DIR)
-
-from utils import Executable, Error
 
 
 def FindFiles(cmake_build_dir):
