@@ -31,8 +31,6 @@ DEFAULT_EMSCRIPTEN_DIR = os.path.join(ROOT_DIR, 'emscripten')
 sys.path.append(TEST_DIR)
 
 
-
-
 def FindFiles(cmake_build_dir):
   result = []
   for root, dirs, files in os.walk(cmake_build_dir):
