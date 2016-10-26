@@ -1,6 +1,7 @@
 ;;; FLAGS: --spec
 (module
-  (func $foo (result i32) i32.const 0)
+  (func $foo (result i32) 
+    i32.const 0)
   (export "foo" (func $foo))
   (func $bar (param f32) (result f32) 
     get_local 0)
