@@ -1,7 +1,8 @@
 ;;; ERROR: 1
 ;;; FLAGS: --spec
 (module
-  (func $bar (param f32) (result f32) (get_local 0))
+  (func $bar (param f32) (result f32) 
+    get_local 0)
   (export "bar" (func $bar)))
 
 ;; NOT ok to use more complex exprs
@@ -10,7 +11,7 @@
     (f32.add (f32.const 1) (f32.const 10)))
   (f32.const 11))
 (;; STDERR ;;;
-parse/assert/bad-assertreturn-non-const.txt:10:6: syntax error, unexpected BINARY, expecting CONST
+parse/assert/bad-assertreturn-non-const.txt:11:6: syntax error, unexpected BINARY, expecting CONST
     (f32.add (f32.const 1) (f32.const 10)))
      ^^^^^^^
 ;;; STDERR ;;)

@@ -1,26 +1,27 @@
 ;;; FLAGS: --spec
 (assert_invalid
   (module
-    (func
-      (drop (i32.const 1)))
+    (func 
+      i32.const 1
+      drop)
     (export "foo" (func 1)))
   "unknown function 1") ;; string is ignored
 (assert_invalid
   (module
     (func (result i32)
-      (nop)))
+      nop))
   "type mismatch")
 (;; STDOUT ;;;
 assert_invalid error:
-  parse/assert/assertinvalid.txt:6:25: function variable out of range (max 1)
+  parse/assert/assertinvalid.txt:7:25: function variable out of range (max 1)
     (export "foo" (func 1)))
                         ^
 assert_invalid error:
-  parse/assert/assertinvalid.txt:10:5: type stack size too small at function. got 0, expected at least 1
+  parse/assert/assertinvalid.txt:11:5: type stack size too small at function. got 0, expected at least 1
     (func (result i32)
-    ^^^^^^^^
+    ^^^^^^
 assert_invalid error:
-  parse/assert/assertinvalid.txt:10:5: type stack at end of function is 0. expected 1
+  parse/assert/assertinvalid.txt:11:5: type stack at end of function is 0. expected 1
     (func (result i32)
-    ^^^^^^^^
+    ^^^^^^
 ;;; STDOUT ;;)
