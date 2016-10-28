@@ -24,13 +24,13 @@
     drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -47,60 +47,60 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 10                                        ; i32.const
+0000017: 41                                        ; i32.const
 0000018: 02                                        ; i32 literal
-0000019: 10                                        ; i32.const
+0000019: 41                                        ; i32.const
 000001a: 03                                        ; i32 literal
-000001b: 10                                        ; i32.const
+000001b: 41                                        ; i32.const
 000001c: 01                                        ; i32 literal
-000001d: 05                                        ; select
-000001e: 0b                                        ; drop
-000001f: 11                                        ; i64.const
+000001d: 1b                                        ; select
+000001e: 1a                                        ; drop
+000001f: 42                                        ; i64.const
 0000020: 02                                        ; i64 literal
-0000021: 11                                        ; i64.const
+0000021: 42                                        ; i64.const
 0000022: 03                                        ; i64 literal
-0000023: 10                                        ; i32.const
+0000023: 41                                        ; i32.const
 0000024: 01                                        ; i32 literal
-0000025: 05                                        ; select
-0000026: 0b                                        ; drop
-0000027: 13                                        ; f32.const
+0000025: 1b                                        ; select
+0000026: 1a                                        ; drop
+0000027: 43                                        ; f32.const
 0000028: 0000 0040                                 ; f32 literal
-000002c: 13                                        ; f32.const
+000002c: 43                                        ; f32.const
 000002d: 0000 4040                                 ; f32 literal
-0000031: 10                                        ; i32.const
+0000031: 41                                        ; i32.const
 0000032: 01                                        ; i32 literal
-0000033: 05                                        ; select
-0000034: 0b                                        ; drop
-0000035: 12                                        ; f64.const
+0000033: 1b                                        ; select
+0000034: 1a                                        ; drop
+0000035: 44                                        ; f64.const
 0000036: 0000 0000 0000 0040                       ; f64 literal
-000003e: 12                                        ; f64.const
+000003e: 44                                        ; f64.const
 000003f: 0000 0000 0000 0840                       ; f64 literal
-0000047: 10                                        ; i32.const
+0000047: 41                                        ; i32.const
 0000048: 01                                        ; i32 literal
-0000049: 05                                        ; select
-000004a: 0b                                        ; drop
-000004b: 0f                                        ; end
+0000049: 1b                                        ; select
+000004a: 1a                                        ; drop
+000004b: 0b                                        ; end
 0000015: 36                                        ; FIXUP func body size
 0000013: 38                                        ; FIXUP section size
 func 0
- 000017: 10 02                      | i32.const 0x2
- 000019: 10 03                      | i32.const 0x3
- 00001b: 10 01                      | i32.const 0x1
- 00001d: 05                         | select
- 00001e: 0b                         | drop
- 00001f: 11 02                      | i64.const 2
- 000021: 11 03                      | i64.const 3
- 000023: 10 01                      | i32.const 0x1
- 000025: 05                         | select
- 000026: 0b                         | drop
- 000027: 13 00 00 00 40             | f32.const 0x40000000
- 00002c: 13 00 00 40 40             | f32.const 0x40400000
- 000031: 10 01                      | i32.const 0x1
- 000033: 05                         | select
- 000034: 0b                         | drop
- 000035: 12 00 00 00 00 00 00 00 40 | f64.const 0
- 00003e: 12 00 00 00 00 00 00 08 40 | f64.const 0
- 000047: 10 01                      | i32.const 0x1
- 000049: 05                         | select
- 00004a: 0b                         | drop
+ 000017: 41 02                      | i32.const 0x2
+ 000019: 41 03                      | i32.const 0x3
+ 00001b: 41 01                      | i32.const 0x1
+ 00001d: 1b                         | select
+ 00001e: 1a                         | drop
+ 00001f: 42 02                      | i64.const 2
+ 000021: 42 03                      | i64.const 3
+ 000023: 41 01                      | i32.const 0x1
+ 000025: 1b                         | select
+ 000026: 1a                         | drop
+ 000027: 43 00 00 00 40             | f32.const 0x40000000
+ 00002c: 43 00 00 40 40             | f32.const 0x40400000
+ 000031: 41 01                      | i32.const 0x1
+ 000033: 1b                         | select
+ 000034: 1a                         | drop
+ 000035: 44 00 00 00 00 00 00 00 40 | f64.const 0
+ 00003e: 44 00 00 00 00 00 00 08 40 | f64.const 0
+ 000047: 41 01                      | i32.const 0x1
+ 000049: 1b                         | select
+ 00004a: 1a                         | drop
 ;;; STDOUT ;;)

@@ -8,15 +8,15 @@
     drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 01                                        ; num params
-000000d: 01                                        ; param type
+000000d: 7f                                        ; i32
 000000e: 00                                        ; num results
 0000009: 05                                        ; FIXUP section size
 ; section "FUNCTION" (3)
@@ -41,15 +41,16 @@
 ; function body 0
 000001c: 00                                        ; func body size (guess)
 000001d: 00                                        ; local decl count
-000001e: 14                                        ; get_local
+000001e: 20                                        ; get_local
 000001f: 00                                        ; local index
-0000020: 39                                        ; grow_memory
-0000021: 0b                                        ; drop
-0000022: 0f                                        ; end
-000001c: 06                                        ; FIXUP func body size
-000001a: 08                                        ; FIXUP section size
+0000020: 40                                        ; grow_memory
+0000021: 00                                        ; grow_memory reserved
+0000022: 1a                                        ; drop
+0000023: 0b                                        ; end
+000001c: 07                                        ; FIXUP func body size
+000001a: 09                                        ; FIXUP section size
 func 0
- 00001e: 14 00                      | get_local 0
- 000020: 39                         | grow_memory
- 000021: 0b                         | drop
+ 00001e: 20 00                      | get_local 0
+ 000020: 40 00                      | grow_memory 0
+ 000022: 1a                         | drop
 ;;; STDOUT ;;)

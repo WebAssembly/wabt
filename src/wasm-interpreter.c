@@ -846,7 +846,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         PICK(read_u32(&pc)) = TOP();
         break;
 
-      case WASM_OPCODE_CALL_FUNCTION: {
+      case WASM_OPCODE_CALL: {
         uint32_t offset = read_u32(&pc);
         PUSH_CALL();
         GOTO(offset);
@@ -1718,7 +1718,7 @@ void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_CALL_FUNCTION:
+    case WASM_OPCODE_CALL:
       wasm_writef(stream, "%s @%u\n", wasm_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
@@ -2073,7 +2073,7 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_CALL_FUNCTION:
+      case WASM_OPCODE_CALL:
         wasm_writef(stream, "%s @%u\n",
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;

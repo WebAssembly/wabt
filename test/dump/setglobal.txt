@@ -7,13 +7,13 @@
     set_global 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -27,11 +27,11 @@
 0000012: 06                                        ; section code
 0000013: 00                                        ; section size (guess)
 0000014: 01                                        ; num globals
-0000015: 03                                        ; WASM_TYPE_F32
+0000015: 7d                                        ; f32
 0000016: 00                                        ; global mutability
-0000017: 13                                        ; f32.const
+0000017: 43                                        ; f32.const
 0000018: 0000 803f                                 ; f32 literal
-000001c: 0f                                        ; end
+000001c: 0b                                        ; end
 0000013: 09                                        ; FIXUP section size
 ; section "CODE" (10)
 000001d: 0a                                        ; section code
@@ -40,14 +40,14 @@
 ; function body 0
 0000020: 00                                        ; func body size (guess)
 0000021: 00                                        ; local decl count
-0000022: 13                                        ; f32.const
+0000022: 43                                        ; f32.const
 0000023: 0000 0040                                 ; f32 literal
-0000027: bc                                        ; set_global
+0000027: 24                                        ; set_global
 0000028: 00                                        ; global index
-0000029: 0f                                        ; end
+0000029: 0b                                        ; end
 0000020: 09                                        ; FIXUP func body size
 000001e: 0b                                        ; FIXUP section size
 func 0
- 000022: 13 00 00 00 40             | f32.const 0x40000000
- 000027: bc 00                      | set_global 0
+ 000022: 43 00 00 00 40             | f32.const 0x40000000
+ 000027: 24 00                      | set_global 0
 ;;; STDOUT ;;)

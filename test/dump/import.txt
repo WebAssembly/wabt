@@ -5,25 +5,25 @@
   (import "ignored" "test2" (func (param i32) (result i32))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 04                                        ; num params
-000000d: 01                                        ; param type
-000000e: 02                                        ; param type
-000000f: 03                                        ; param type
-0000010: 04                                        ; param type
+000000d: 7f                                        ; i32
+000000e: 7e                                        ; i64
+000000f: 7d                                        ; f32
+0000010: 7c                                        ; f64
 0000011: 00                                        ; num results
 ; type 1
-0000012: 40                                        ; function form
+0000012: 60                                        ; func
 0000013: 01                                        ; num params
-0000014: 01                                        ; param type
+0000014: 7f                                        ; i32
 0000015: 01                                        ; num results
-0000016: 01                                        ; result type
+0000016: 7f                                        ; i32
 0000009: 0d                                        ; FIXUP section size
 ; section "IMPORT" (2)
 0000017: 02                                        ; section code

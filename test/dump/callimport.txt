@@ -12,23 +12,23 @@
     call 1))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 02                                        ; num params
-000000d: 01                                        ; param type
-000000e: 03                                        ; param type
+000000d: 7f                                        ; i32
+000000e: 7d                                        ; f32
 000000f: 01                                        ; num results
-0000010: 01                                        ; result type
+0000010: 7f                                        ; i32
 ; type 1
-0000011: 40                                        ; function form
+0000011: 60                                        ; func
 0000012: 00                                        ; num params
 0000013: 01                                        ; num results
-0000014: 01                                        ; result type
+0000014: 7f                                        ; i32
 0000009: 0b                                        ; FIXUP section size
 ; section "IMPORT" (2)
 0000015: 02                                        ; section code
@@ -55,22 +55,22 @@
 ; function body 0
 0000029: 00                                        ; func body size (guess)
 000002a: 00                                        ; local decl count
-000002b: 10                                        ; i32.const
+000002b: 41                                        ; i32.const
 000002c: 01                                        ; i32 literal
-000002d: 13                                        ; f32.const
+000002d: 43                                        ; f32.const
 000002e: 0000 0040                                 ; f32 literal
-0000032: 16                                        ; call
+0000032: 10                                        ; call
 0000033: 00                                        ; func index
-0000034: 0b                                        ; drop
-0000035: 16                                        ; call
+0000034: 1a                                        ; drop
+0000035: 10                                        ; call
 0000036: 01                                        ; func index
-0000037: 0f                                        ; end
+0000037: 0b                                        ; end
 0000029: 0e                                        ; FIXUP func body size
 0000027: 10                                        ; FIXUP section size
 func 0
- 00002b: 10 01                      | i32.const 0x1
- 00002d: 13 00 00 00 40             | f32.const 0x40000000
- 000032: 16 00                      | call 0
- 000034: 0b                         | drop
- 000035: 16 01                      | call 0x1
+ 00002b: 41 01                      | i32.const 0x1
+ 00002d: 43 00 00 00 40             | f32.const 0x40000000
+ 000032: 10 00                      | call 0
+ 000034: 1a                         | drop
+ 000035: 10 01                      | call 0x1
 ;;; STDOUT ;;)

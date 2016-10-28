@@ -9,15 +9,15 @@
   (table anyfunc (elem $f)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 01                                        ; num params
-000000d: 01                                        ; param type
+000000d: 7f                                        ; i32
 000000e: 00                                        ; num results
 0000009: 05                                        ; FIXUP section size
 ; section "FUNCTION" (3)
@@ -31,7 +31,7 @@
 0000014: 00                                        ; section size (guess)
 0000015: 01                                        ; num tables
 ; table 0
-0000016: 20                                        ; table elem type
+0000016: 70                                        ; anyfunc
 0000017: 01                                        ; table flags
 0000018: 01                                        ; table initial elems
 0000019: 01                                        ; table max elems
@@ -42,9 +42,9 @@
 000001c: 01                                        ; num elem segments
 ; elem segment header 0
 000001d: 00                                        ; table index
-000001e: 10                                        ; i32.const
+000001e: 41                                        ; i32.const
 000001f: 00                                        ; i32 literal
-0000020: 0f                                        ; end
+0000020: 0b                                        ; end
 0000021: 01                                        ; num function indices
 0000022: 00                                        ; function index
 000001b: 07                                        ; FIXUP section size
@@ -55,17 +55,18 @@
 ; function body 0
 0000026: 00                                        ; func body size (guess)
 0000027: 00                                        ; local decl count
-0000028: 10                                        ; i32.const
+0000028: 41                                        ; i32.const
 0000029: 00                                        ; i32 literal
-000002a: 10                                        ; i32.const
+000002a: 41                                        ; i32.const
 000002b: 00                                        ; i32 literal
-000002c: 17                                        ; call_indirect
+000002c: 11                                        ; call_indirect
 000002d: 00                                        ; signature index
-000002e: 0f                                        ; end
-0000026: 08                                        ; FIXUP func body size
-0000024: 0a                                        ; FIXUP section size
+000002e: 00                                        ; call_indirect reserved
+000002f: 0b                                        ; end
+0000026: 09                                        ; FIXUP func body size
+0000024: 0b                                        ; FIXUP section size
 func 0
- 000028: 10 00                      | i32.const 0
- 00002a: 10 00                      | i32.const 0
- 00002c: 17 00                      | call_indirect 0
+ 000028: 41 00                      | i32.const 0
+ 00002a: 41 00                      | i32.const 0
+ 00002c: 11 00 00                   | call_indirect 0 0
 ;;; STDOUT ;;)

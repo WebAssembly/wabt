@@ -6,16 +6,16 @@
     get_global 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 01                                        ; num results
-000000e: 01                                        ; result type
+000000e: 7f                                        ; i32
 0000009: 05                                        ; FIXUP section size
 ; section "FUNCTION" (3)
 000000f: 03                                        ; section code
@@ -27,11 +27,11 @@
 0000013: 06                                        ; section code
 0000014: 00                                        ; section size (guess)
 0000015: 01                                        ; num globals
-0000016: 01                                        ; WASM_TYPE_I32
+0000016: 7f                                        ; i32
 0000017: 00                                        ; global mutability
-0000018: 10                                        ; i32.const
+0000018: 41                                        ; i32.const
 0000019: 00                                        ; i32 literal
-000001a: 0f                                        ; end
+000001a: 0b                                        ; end
 0000014: 06                                        ; FIXUP section size
 ; section "CODE" (10)
 000001b: 0a                                        ; section code
@@ -40,11 +40,11 @@
 ; function body 0
 000001e: 00                                        ; func body size (guess)
 000001f: 00                                        ; local decl count
-0000020: bb                                        ; get_global
+0000020: 23                                        ; get_global
 0000021: 00                                        ; global index
-0000022: 0f                                        ; end
+0000022: 0b                                        ; end
 000001e: 04                                        ; FIXUP func body size
 000001c: 06                                        ; FIXUP section size
 func 0
- 000020: bb 00                      | get_global 0
+ 000020: 23 00                      | get_global 0
 ;;; STDOUT ;;)

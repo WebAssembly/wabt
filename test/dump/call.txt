@@ -6,15 +6,15 @@
      call 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 01                                        ; num params
-000000d: 01                                        ; param type
+000000d: 7f                                        ; i32
 000000e: 00                                        ; num results
 0000009: 05                                        ; FIXUP section size
 ; section "FUNCTION" (3)
@@ -30,14 +30,14 @@
 ; function body 0
 0000016: 00                                        ; func body size (guess)
 0000017: 00                                        ; local decl count
-0000018: 10                                        ; i32.const
+0000018: 41                                        ; i32.const
 0000019: 01                                        ; i32 literal
-000001a: 16                                        ; call
+000001a: 10                                        ; call
 000001b: 00                                        ; func index
-000001c: 0f                                        ; end
+000001c: 0b                                        ; end
 0000016: 06                                        ; FIXUP func body size
 0000014: 08                                        ; FIXUP section size
 func 0
- 000018: 10 01                      | i32.const 0x1
- 00001a: 16 00                      | call 0
+ 000018: 41 01                      | i32.const 0x1
+ 00001a: 10 00                      | call 0
 ;;; STDOUT ;;)

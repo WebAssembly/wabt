@@ -33,13 +33,13 @@
     drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -56,65 +56,65 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 10                                        ; i32.const
+0000017: 41                                        ; i32.const
 0000018: 00                                        ; i32 literal
-0000019: af                                        ; f64.convert_u/i32
-000001a: a0                                        ; i32.trunc_u/f64
-000001b: ae                                        ; f64.convert_s/i32
-000001c: 9e                                        ; i32.trunc_s/f64
-000001d: a9                                        ; f32.convert_u/i32
-000001e: 9f                                        ; i32.trunc_u/f32
-000001f: a8                                        ; f32.convert_s/i32
-0000020: 9d                                        ; i32.trunc_s/f32
-0000021: a7                                        ; i64.extend_u/i32
-0000022: a1                                        ; i32.wrap/i64
-0000023: 0b                                        ; drop
-0000024: 10                                        ; i32.const
+0000019: b8                                        ; f64.convert_u/i32
+000001a: ab                                        ; i32.trunc_u/f64
+000001b: b7                                        ; f64.convert_s/i32
+000001c: aa                                        ; i32.trunc_s/f64
+000001d: b3                                        ; f32.convert_u/i32
+000001e: a9                                        ; i32.trunc_u/f32
+000001f: b2                                        ; f32.convert_s/i32
+0000020: a8                                        ; i32.trunc_s/f32
+0000021: ad                                        ; i64.extend_u/i32
+0000022: a7                                        ; i32.wrap/i64
+0000023: 1a                                        ; drop
+0000024: 41                                        ; i32.const
 0000025: 00                                        ; i32 literal
-0000026: a6                                        ; i64.extend_s/i32
-0000027: b1                                        ; f64.convert_u/i64
-0000028: a5                                        ; i64.trunc_u/f64
-0000029: b0                                        ; f64.convert_s/i64
-000002a: a3                                        ; i64.trunc_s/f64
-000002b: ab                                        ; f32.convert_u/i64
-000002c: a4                                        ; i64.trunc_u/f32
-000002d: aa                                        ; f32.convert_s/i64
-000002e: a2                                        ; i64.trunc_s/f32
-000002f: 0b                                        ; drop
-0000030: 13                                        ; f32.const
+0000026: ac                                        ; i64.extend_s/i32
+0000027: ba                                        ; f64.convert_u/i64
+0000028: b1                                        ; i64.trunc_u/f64
+0000029: b9                                        ; f64.convert_s/i64
+000002a: b0                                        ; i64.trunc_s/f64
+000002b: b5                                        ; f32.convert_u/i64
+000002c: af                                        ; i64.trunc_u/f32
+000002d: b4                                        ; f32.convert_s/i64
+000002e: ae                                        ; i64.trunc_s/f32
+000002f: 1a                                        ; drop
+0000030: 43                                        ; f32.const
 0000031: 0000 0000                                 ; f32 literal
-0000035: b2                                        ; f64.promote/f32
-0000036: ac                                        ; f32.demote/f64
-0000037: 0b                                        ; drop
-0000038: 0f                                        ; end
+0000035: bb                                        ; f64.promote/f32
+0000036: b6                                        ; f32.demote/f64
+0000037: 1a                                        ; drop
+0000038: 0b                                        ; end
 0000015: 23                                        ; FIXUP func body size
 0000013: 25                                        ; FIXUP section size
 func 0
- 000017: 10 00                      | i32.const 0
- 000019: af                         | f64.convert_u/i32
- 00001a: a0                         | i32.trunc_u/f64
- 00001b: ae                         | f64.convert_s/i32
- 00001c: 9e                         | i32.trunc_s/f64
- 00001d: a9                         | f32.convert_u/i32
- 00001e: 9f                         | i32.trunc_u/f32
- 00001f: a8                         | f32.convert_s/i32
- 000020: 9d                         | i32.trunc_s/f32
- 000021: a7                         | i64.extend_u/i32
- 000022: a1                         | i32.wrap/i64
- 000023: 0b                         | drop
- 000024: 10 00                      | i32.const 0
- 000026: a6                         | i64.extend_s/i32
- 000027: b1                         | f64.convert_u/i64
- 000028: a5                         | i64.trunc_u/f64
- 000029: b0                         | f64.convert_s/i64
- 00002a: a3                         | i64.trunc_s/f64
- 00002b: ab                         | f32.convert_u/i64
- 00002c: a4                         | i64.trunc_u/f32
- 00002d: aa                         | f32.convert_s/i64
- 00002e: a2                         | i64.trunc_s/f32
- 00002f: 0b                         | drop
- 000030: 13 00 00 00 00             | f32.const 0
- 000035: b2                         | f64.promote/f32
- 000036: ac                         | f32.demote/f64
- 000037: 0b                         | drop
+ 000017: 41 00                      | i32.const 0
+ 000019: b8                         | f64.convert_u/i32
+ 00001a: ab                         | i32.trunc_u/f64
+ 00001b: b7                         | f64.convert_s/i32
+ 00001c: aa                         | i32.trunc_s/f64
+ 00001d: b3                         | f32.convert_u/i32
+ 00001e: a9                         | i32.trunc_u/f32
+ 00001f: b2                         | f32.convert_s/i32
+ 000020: a8                         | i32.trunc_s/f32
+ 000021: ad                         | i64.extend_u/i32
+ 000022: a7                         | i32.wrap/i64
+ 000023: 1a                         | drop
+ 000024: 41 00                      | i32.const 0
+ 000026: ac                         | i64.extend_s/i32
+ 000027: ba                         | f64.convert_u/i64
+ 000028: b1                         | i64.trunc_u/f64
+ 000029: b9                         | f64.convert_s/i64
+ 00002a: b0                         | i64.trunc_s/f64
+ 00002b: b5                         | f32.convert_u/i64
+ 00002c: af                         | i64.trunc_u/f32
+ 00002d: b4                         | f32.convert_s/i64
+ 00002e: ae                         | i64.trunc_s/f32
+ 00002f: 1a                         | drop
+ 000030: 43 00 00 00 00             | f32.const 0
+ 000035: bb                         | f64.promote/f32
+ 000036: b6                         | f32.demote/f64
+ 000037: 1a                         | drop
 ;;; STDOUT ;;)

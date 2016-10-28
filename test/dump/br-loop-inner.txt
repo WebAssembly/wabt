@@ -9,13 +9,13 @@
         (br $cont))))))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -32,40 +32,40 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 01                                        ; block
-0000018: 00                                        ; WASM_TYPE_VOID
-0000019: 02                                        ; loop
-000001a: 00                                        ; WASM_TYPE_VOID
-000001b: 10                                        ; i32.const
+0000017: 02                                        ; block
+0000018: 40                                        ; void
+0000019: 03                                        ; loop
+000001a: 40                                        ; void
+000001b: 41                                        ; i32.const
 000001c: 01                                        ; i32 literal
-000001d: 03                                        ; if
-000001e: 00                                        ; WASM_TYPE_VOID
-000001f: 06                                        ; br
+000001d: 04                                        ; if
+000001e: 40                                        ; void
+000001f: 0c                                        ; br
 0000020: 02                                        ; break depth
-0000021: 0f                                        ; end
-0000022: 10                                        ; i32.const
+0000021: 0b                                        ; end
+0000022: 41                                        ; i32.const
 0000023: 02                                        ; i32 literal
-0000024: 03                                        ; if
-0000025: 00                                        ; WASM_TYPE_VOID
-0000026: 06                                        ; br
+0000024: 04                                        ; if
+0000025: 40                                        ; void
+0000026: 0c                                        ; br
 0000027: 01                                        ; break depth
-0000028: 0f                                        ; end
-0000029: 0f                                        ; end
-000002a: 0f                                        ; end
-000002b: 0f                                        ; end
+0000028: 0b                                        ; end
+0000029: 0b                                        ; end
+000002a: 0b                                        ; end
+000002b: 0b                                        ; end
 0000015: 16                                        ; FIXUP func body size
 0000013: 18                                        ; FIXUP section size
 func 0
- 000017: 01 00                      | block
- 000019: 02 00                      |   loop
- 00001b: 10 01                      |     i32.const 0x1
- 00001d: 03 00                      |     if
- 00001f: 06 02                      |       br 0x2
- 000021: 0f                         |     end
- 000022: 10 02                      |     i32.const 0x2
- 000024: 03 00                      |     if
- 000026: 06 01                      |       br 0x1
- 000028: 0f                         |     end
- 000029: 0f                         |   end
- 00002a: 0f                         | end
+ 000017: 02 40                      | block
+ 000019: 03 40                      |   loop
+ 00001b: 41 01                      |     i32.const 0x1
+ 00001d: 04 40                      |     if
+ 00001f: 0c 02                      |       br 0x2
+ 000021: 0b                         |     end
+ 000022: 41 02                      |     i32.const 0x2
+ 000024: 04 40                      |     if
+ 000026: 0c 01                      |       br 0x1
+ 000028: 0b                         |     end
+ 000029: 0b                         |   end
+ 00002a: 0b                         | end
 ;;; STDOUT ;;)

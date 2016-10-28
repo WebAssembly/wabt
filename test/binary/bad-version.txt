@@ -1,9 +1,9 @@
 ;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
 magic
-0xd 0 0 0
+0xe 0 0 0
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000008: bad wasm file version: 0xd (expected 0xc)
+error: @0x00000008: bad wasm file version: 0xe (expected 0xd)
 
 ;;; STDERR ;;)

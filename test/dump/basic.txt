@@ -15,18 +15,18 @@
   (export "f" (func $f)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 02                                        ; num params
-000000d: 01                                        ; param type
-000000e: 01                                        ; param type
+000000d: 7f                                        ; i32
+000000e: 7f                                        ; i32
 000000f: 01                                        ; num results
-0000010: 01                                        ; result type
+0000010: 7f                                        ; i32
 0000009: 07                                        ; FIXUP section size
 ; section "FUNCTION" (3)
 0000011: 03                                        ; section code
@@ -58,35 +58,35 @@
 ; function body 0
 0000024: 00                                        ; func body size (guess)
 0000025: 00                                        ; local decl count
-0000026: 10                                        ; i32.const
+0000026: 41                                        ; i32.const
 0000027: 00                                        ; i32 literal
-0000028: 10                                        ; i32.const
+0000028: 41                                        ; i32.const
 0000029: 00                                        ; i32 literal
-000002a: 2a                                        ; i32.load
+000002a: 28                                        ; i32.load
 000002b: 02                                        ; alignment
 000002c: 00                                        ; load offset
-000002d: 10                                        ; i32.const
+000002d: 41                                        ; i32.const
 000002e: 01                                        ; i32 literal
-000002f: 40                                        ; i32.add
-0000030: 33                                        ; i32.store
+000002f: 6a                                        ; i32.add
+0000030: 36                                        ; i32.store
 0000031: 02                                        ; alignment
 0000032: 00                                        ; store offset
-0000033: 14                                        ; get_local
+0000033: 20                                        ; get_local
 0000034: 00                                        ; local index
-0000035: 14                                        ; get_local
+0000035: 20                                        ; get_local
 0000036: 01                                        ; local index
-0000037: 40                                        ; i32.add
-0000038: 0f                                        ; end
+0000037: 6a                                        ; i32.add
+0000038: 0b                                        ; end
 0000024: 14                                        ; FIXUP func body size
 0000022: 16                                        ; FIXUP section size
 func 0
- 000026: 10 00                      | i32.const 0
- 000028: 10 00                      | i32.const 0
- 00002a: 2a 02 00                   | i32.load 2 0
- 00002d: 10 01                      | i32.const 0x1
- 00002f: 40                         | i32.add
- 000030: 33 02 00                   | i32.store 2 0
- 000033: 14 00                      | get_local 0
- 000035: 14 01                      | get_local 0x1
- 000037: 40                         | i32.add
+ 000026: 41 00                      | i32.const 0
+ 000028: 41 00                      | i32.const 0
+ 00002a: 28 02 00                   | i32.load 2 0
+ 00002d: 41 01                      | i32.const 0x1
+ 00002f: 6a                         | i32.add
+ 000030: 36 02 00                   | i32.store 2 0
+ 000033: 20 00                      | get_local 0
+ 000035: 20 01                      | get_local 0x1
+ 000037: 6a                         | i32.add
 ;;; STDOUT ;;)

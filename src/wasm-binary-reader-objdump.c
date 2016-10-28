@@ -286,11 +286,12 @@ static WasmResult on_import_func(uint32_t index,
 }
 
 static WasmResult on_import_table(uint32_t index,
-                                  uint32_t elem_type,
+                                  WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
   /* TODO(sbc): print more useful information about the table here */
-  print_details(user_data, "- table elem_type=%d\n", elem_type);
+  print_details(user_data, "- table elem_type=%s\n",
+                wasm_get_type_name(elem_type));
   return WASM_OK;
 }
 
@@ -317,7 +318,7 @@ static WasmResult on_memory(uint32_t index,
 }
 
 static WasmResult on_table(uint32_t index,
-                           uint32_t elem_type,
+                           WasmType elem_type,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   print_details(user_data, "- table %d\n", index);

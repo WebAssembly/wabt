@@ -6,13 +6,13 @@
   (func))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -31,17 +31,17 @@
 ; function body 0
 0000017: 00                                        ; func body size (guess)
 0000018: 00                                        ; local decl count
-0000019: 0f                                        ; end
+0000019: 0b                                        ; end
 0000017: 02                                        ; FIXUP func body size
 ; function body 1
 000001a: 00                                        ; func body size (guess)
 000001b: 00                                        ; local decl count
-000001c: 0f                                        ; end
+000001c: 0b                                        ; end
 000001a: 02                                        ; FIXUP func body size
 ; function body 2
 000001d: 00                                        ; func body size (guess)
 000001e: 00                                        ; local decl count
-000001f: 0f                                        ; end
+000001f: 0b                                        ; end
 000001d: 02                                        ; FIXUP func body size
 0000015: 0a                                        ; FIXUP section size
 func 0

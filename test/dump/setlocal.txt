@@ -25,13 +25,13 @@
     set_local 7))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -49,69 +49,69 @@
 0000015: 00                                        ; func body size (guess)
 0000016: 07                                        ; local decl count
 0000017: 01                                        ; local type count
-0000018: 04                                        ; WASM_TYPE_F64
+0000018: 7c                                        ; f64
 0000019: 01                                        ; local type count
-000001a: 03                                        ; WASM_TYPE_F32
+000001a: 7d                                        ; f32
 000001b: 01                                        ; local type count
-000001c: 02                                        ; WASM_TYPE_I64
+000001c: 7e                                        ; i64
 000001d: 02                                        ; local type count
-000001e: 01                                        ; WASM_TYPE_I32
+000001e: 7f                                        ; i32
 000001f: 01                                        ; local type count
-0000020: 03                                        ; WASM_TYPE_F32
+0000020: 7d                                        ; f32
 0000021: 01                                        ; local type count
-0000022: 04                                        ; WASM_TYPE_F64
+0000022: 7c                                        ; f64
 0000023: 01                                        ; local type count
-0000024: 02                                        ; WASM_TYPE_I64
-0000025: 12                                        ; f64.const
+0000024: 7e                                        ; i64
+0000025: 44                                        ; f64.const
 0000026: 0000 0000 0000 0000                       ; f64 literal
-000002e: 15                                        ; set_local
+000002e: 21                                        ; set_local
 000002f: 00                                        ; local index
-0000030: 13                                        ; f32.const
+0000030: 43                                        ; f32.const
 0000031: 0000 0000                                 ; f32 literal
-0000035: 15                                        ; set_local
+0000035: 21                                        ; set_local
 0000036: 01                                        ; local index
-0000037: 11                                        ; i64.const
+0000037: 42                                        ; i64.const
 0000038: 00                                        ; i64 literal
-0000039: 15                                        ; set_local
+0000039: 21                                        ; set_local
 000003a: 02                                        ; local index
-000003b: 10                                        ; i32.const
+000003b: 41                                        ; i32.const
 000003c: 00                                        ; i32 literal
-000003d: 15                                        ; set_local
+000003d: 21                                        ; set_local
 000003e: 03                                        ; local index
-000003f: 10                                        ; i32.const
+000003f: 41                                        ; i32.const
 0000040: 00                                        ; i32 literal
-0000041: 15                                        ; set_local
+0000041: 21                                        ; set_local
 0000042: 04                                        ; local index
-0000043: 13                                        ; f32.const
+0000043: 43                                        ; f32.const
 0000044: 0000 0000                                 ; f32 literal
-0000048: 15                                        ; set_local
+0000048: 21                                        ; set_local
 0000049: 05                                        ; local index
-000004a: 12                                        ; f64.const
+000004a: 44                                        ; f64.const
 000004b: 0000 0000 0000 0000                       ; f64 literal
-0000053: 15                                        ; set_local
+0000053: 21                                        ; set_local
 0000054: 06                                        ; local index
-0000055: 11                                        ; i64.const
+0000055: 42                                        ; i64.const
 0000056: 00                                        ; i64 literal
-0000057: 15                                        ; set_local
+0000057: 21                                        ; set_local
 0000058: 07                                        ; local index
-0000059: 0f                                        ; end
+0000059: 0b                                        ; end
 0000015: 44                                        ; FIXUP func body size
 0000013: 46                                        ; FIXUP section size
 func 0
- 000025: 12 00 00 00 00 00 00 00 00 | f64.const 0
- 00002e: 15 00                      | set_local 0
- 000030: 13 00 00 00 00             | f32.const 0
- 000035: 15 01                      | set_local 0x1
- 000037: 11 00                      | i64.const 0
- 000039: 15 02                      | set_local 0x2
- 00003b: 10 00                      | i32.const 0
- 00003d: 15 03                      | set_local 0x3
- 00003f: 10 00                      | i32.const 0
- 000041: 15 04                      | set_local 0x4
- 000043: 13 00 00 00 00             | f32.const 0
- 000048: 15 05                      | set_local 0x5
- 00004a: 12 00 00 00 00 00 00 00 00 | f64.const 0
- 000053: 15 06                      | set_local 0x6
- 000055: 11 00                      | i64.const 0
- 000057: 15 07                      | set_local 0x7
+ 000025: 44 00 00 00 00 00 00 00 00 | f64.const 0
+ 00002e: 21 00                      | set_local 0
+ 000030: 43 00 00 00 00             | f32.const 0
+ 000035: 21 01                      | set_local 0x1
+ 000037: 42 00                      | i64.const 0
+ 000039: 21 02                      | set_local 0x2
+ 00003b: 41 00                      | i32.const 0
+ 00003d: 21 03                      | set_local 0x3
+ 00003f: 41 00                      | i32.const 0
+ 000041: 21 04                      | set_local 0x4
+ 000043: 43 00 00 00 00             | f32.const 0
+ 000048: 21 05                      | set_local 0x5
+ 00004a: 44 00 00 00 00 00 00 00 00 | f64.const 0
+ 000053: 21 06                      | set_local 0x6
+ 000055: 42 00                      | i64.const 0
+ 000057: 21 07                      | set_local 0x7
 ;;; STDOUT ;;)

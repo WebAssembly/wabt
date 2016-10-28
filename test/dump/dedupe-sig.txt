@@ -7,17 +7,17 @@
     i64.const 0))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 01                                        ; num params
-000000d: 01                                        ; param type
+000000d: 7f                                        ; i32
 000000e: 01                                        ; num results
-000000f: 02                                        ; result type
+000000f: 7e                                        ; i64
 0000009: 06                                        ; FIXUP section size
 ; section "IMPORT" (2)
 0000010: 02                                        ; section code
@@ -44,11 +44,11 @@
 ; function body 0
 0000024: 00                                        ; func body size (guess)
 0000025: 00                                        ; local decl count
-0000026: 11                                        ; i64.const
+0000026: 42                                        ; i64.const
 0000027: 00                                        ; i64 literal
-0000028: 0f                                        ; end
+0000028: 0b                                        ; end
 0000024: 04                                        ; FIXUP func body size
 0000022: 06                                        ; FIXUP section size
 func 0
- 000026: 11 00                      | i64.const 0
+ 000026: 42 00                      | i64.const 0
 ;;; STDOUT ;;)

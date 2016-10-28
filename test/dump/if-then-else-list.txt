@@ -16,13 +16,13 @@
     end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
@@ -39,38 +39,38 @@
 ; function body 0
 0000015: 00                                        ; func body size (guess)
 0000016: 00                                        ; local decl count
-0000017: 10                                        ; i32.const
+0000017: 41                                        ; i32.const
 0000018: 01                                        ; i32 literal
-0000019: 03                                        ; if
-000001a: 00                                        ; WASM_TYPE_VOID
-000001b: 10                                        ; i32.const
+0000019: 04                                        ; if
+000001a: 40                                        ; void
+000001b: 41                                        ; i32.const
 000001c: 02                                        ; i32 literal
-000001d: 0b                                        ; drop
-000001e: 10                                        ; i32.const
+000001d: 1a                                        ; drop
+000001e: 41                                        ; i32.const
 000001f: 03                                        ; i32 literal
-0000020: 0b                                        ; drop
-0000021: 04                                        ; else
-0000022: 10                                        ; i32.const
+0000020: 1a                                        ; drop
+0000021: 05                                        ; else
+0000022: 41                                        ; i32.const
 0000023: 04                                        ; i32 literal
-0000024: 0b                                        ; drop
-0000025: 10                                        ; i32.const
+0000024: 1a                                        ; drop
+0000025: 41                                        ; i32.const
 0000026: 05                                        ; i32 literal
-0000027: 0b                                        ; drop
-0000028: 0f                                        ; end
-0000029: 0f                                        ; end
+0000027: 1a                                        ; drop
+0000028: 0b                                        ; end
+0000029: 0b                                        ; end
 0000015: 14                                        ; FIXUP func body size
 0000013: 16                                        ; FIXUP section size
 func 0
- 000017: 10 01                      | i32.const 0x1
- 000019: 03 00                      | if
- 00001b: 10 02                      |   i32.const 0x2
- 00001d: 0b                         |   drop
- 00001e: 10 03                      |   i32.const 0x3
- 000020: 0b                         |   drop
- 000021: 04                         | else
- 000022: 10 04                      |   i32.const 0x4
- 000024: 0b                         |   drop
- 000025: 10 05                      |   i32.const 0x5
- 000027: 0b                         |   drop
- 000028: 0f                         | end
+ 000017: 41 01                      | i32.const 0x1
+ 000019: 04 40                      | if
+ 00001b: 41 02                      |   i32.const 0x2
+ 00001d: 1a                         |   drop
+ 00001e: 41 03                      |   i32.const 0x3
+ 000020: 1a                         |   drop
+ 000021: 05                         | else
+ 000022: 41 04                      |   i32.const 0x4
+ 000024: 1a                         |   drop
+ 000025: 41 05                      |   i32.const 0x5
+ 000027: 1a                         |   drop
+ 000028: 0b                         | end
 ;;; STDOUT ;;)

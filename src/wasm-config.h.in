@@ -104,7 +104,7 @@
 #define WASM_LIKELY(x) (x)
 #define WASM_PRINTF_FORMAT(format_arg, first_arg)
 
-#define WABT_UNREACHABLE __assume(false)
+#define WABT_UNREACHABLE __assume(0)
 
 __inline unsigned long wasm_clz_u32(unsigned long mask) {
   unsigned long index;

@@ -21,14 +21,14 @@ import os
 import re
 import sys
 
+from utils import Executable, Error
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 TEST_DIR = os.path.join(ROOT_DIR, 'test')
 DEFAULT_EMSCRIPTEN_DIR = os.path.join(ROOT_DIR, 'emscripten')
 
 sys.path.append(TEST_DIR)
-
-from utils import Executable, Error
 
 
 def FindFiles(cmake_build_dir):
@@ -53,7 +53,8 @@ def ProcessFile(nm, file_):
   names = []
   for line in nm.RunWithArgsForStdout(file_).splitlines():
     line = line.rstrip()
-    if not line.lstrip(): continue
+    if not line.lstrip():
+      continue
     if line.endswith(':'):
       # displaying the archive name, e.g. "foo.c.o:"
       continue
@@ -78,11 +79,11 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
   parser.add_argument('-v', '--verbose',
-                          help='print more diagnotic messages.',
-                          action='store_true')
+                      help='print more diagnostic messages.',
+                      action='store_true')
   parser.add_argument('--emscripten-dir', metavar='PATH',
-                          help='emscripten directory',
-                          default=DEFAULT_EMSCRIPTEN_DIR)
+                      help='emscripten directory',
+                      default=DEFAULT_EMSCRIPTEN_DIR)
   parser.add_argument('cmake_build_dir', metavar='cmake_build_dir')
   options = parser.parse_args(args)
   nm = GetNM(options.emscripten_dir)
@@ -91,7 +92,7 @@ def main(args):
   for file_ in FindFiles(options.cmake_build_dir):
     names.extend(ProcessFile(nm, file_))
 
-  out_data = json.dumps(sorted(names), separators=(',\n',':\n'))
+  out_data = json.dumps(sorted(names), separators=(',\n', ':\n'))
   if options.output:
     with open(options.output, 'w') as out_file:
       out_file.write(out_data)

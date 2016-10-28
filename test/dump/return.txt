@@ -8,18 +8,18 @@
     return))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 01                                        ; num results
-000000e: 01                                        ; result type
+000000e: 7f                                        ; i32
 ; type 1
-000000f: 40                                        ; function form
+000000f: 60                                        ; func
 0000010: 00                                        ; num params
 0000011: 00                                        ; num results
 0000009: 08                                        ; FIXUP section size
@@ -37,21 +37,21 @@
 ; function body 0
 000001a: 00                                        ; func body size (guess)
 000001b: 00                                        ; local decl count
-000001c: 10                                        ; i32.const
+000001c: 41                                        ; i32.const
 000001d: 2a                                        ; i32 literal
-000001e: 09                                        ; return
-000001f: 0f                                        ; end
+000001e: 0f                                        ; return
+000001f: 0b                                        ; end
 000001a: 05                                        ; FIXUP func body size
 ; function body 1
 0000020: 00                                        ; func body size (guess)
 0000021: 00                                        ; local decl count
-0000022: 09                                        ; return
-0000023: 0f                                        ; end
+0000022: 0f                                        ; return
+0000023: 0b                                        ; end
 0000020: 03                                        ; FIXUP func body size
 0000018: 0b                                        ; FIXUP section size
 func 0
- 00001c: 10 2a                      | i32.const 0x2a
- 00001e: 09                         | return
+ 00001c: 41 2a                      | i32.const 0x2a
+ 00001e: 0f                         | return
 func 1
- 000022: 09                         | return
+ 000022: 0f                         | return
 ;;; STDOUT ;;)

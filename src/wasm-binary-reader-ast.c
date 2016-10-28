@@ -227,7 +227,7 @@ static WasmResult on_import_func(uint32_t index,
 }
 
 static WasmResult on_import_table(uint32_t index,
-                                  uint32_t elem_type,
+                                  WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
   Context* ctx = user_data;
@@ -315,7 +315,7 @@ static WasmResult on_table_count(uint32_t count, void* user_data) {
 }
 
 static WasmResult on_table(uint32_t index,
-                           uint32_t elem_type,
+                           WasmType elem_type,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   Context* ctx = user_data;
@@ -491,9 +491,10 @@ static WasmResult on_local_decl(uint32_t decl_index,
   size_t new_local_count = old_local_count + count;
   wasm_reserve_types(ctx->allocator, &ctx->current_func->local_types,
                      new_local_count);
-  WASM_STATIC_ASSERT(sizeof(WasmType) == sizeof(uint8_t));
   WasmTypeVector* types = &ctx->current_func->local_types;
-  memset(&types->data[old_local_count], type, count);
+  size_t i;
+  for (i = 0; i < count; ++i)
+    types->data[old_local_count + i] = type;
   types->size = new_local_count;
   return WASM_OK;
 }

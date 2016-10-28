@@ -14,20 +14,20 @@
     end))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0c00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
 ; type 0
-000000b: 40                                        ; function form
+000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 ; type 1
-000000e: 40                                        ; function form
+000000e: 60                                        ; func
 000000f: 00                                        ; num params
 0000010: 01                                        ; num results
-0000011: 01                                        ; result type
+0000011: 7f                                        ; i32
 0000009: 08                                        ; FIXUP section size
 ; section "FUNCTION" (3)
 0000012: 03                                        ; section code
@@ -43,33 +43,33 @@
 ; function body 0
 000001a: 00                                        ; func body size (guess)
 000001b: 00                                        ; local decl count
-000001c: 01                                        ; block
-000001d: 00                                        ; WASM_TYPE_VOID
-000001e: 0a                                        ; nop
-000001f: 0a                                        ; nop
-0000020: 0a                                        ; nop
-0000021: 0f                                        ; end
-0000022: 0f                                        ; end
+000001c: 02                                        ; block
+000001d: 40                                        ; void
+000001e: 01                                        ; nop
+000001f: 01                                        ; nop
+0000020: 01                                        ; nop
+0000021: 0b                                        ; end
+0000022: 0b                                        ; end
 000001a: 08                                        ; FIXUP func body size
 ; function body 1
 0000023: 00                                        ; func body size (guess)
 0000024: 00                                        ; local decl count
-0000025: 01                                        ; block
-0000026: 01                                        ; WASM_TYPE_I32
-0000027: 10                                        ; i32.const
+0000025: 02                                        ; block
+0000026: 7f                                        ; i32
+0000027: 41                                        ; i32.const
 0000028: 01                                        ; i32 literal
-0000029: 0f                                        ; end
-000002a: 0f                                        ; end
+0000029: 0b                                        ; end
+000002a: 0b                                        ; end
 0000023: 07                                        ; FIXUP func body size
 0000018: 12                                        ; FIXUP section size
 func 0
- 00001c: 01 00                      | block
- 00001e: 0a                         |   nop
- 00001f: 0a                         |   nop
- 000020: 0a                         |   nop
- 000021: 0f                         | end
+ 00001c: 02 40                      | block
+ 00001e: 01                         |   nop
+ 00001f: 01                         |   nop
+ 000020: 01                         |   nop
+ 000021: 0b                         | end
 func 1
- 000025: 01 01                      | block i32
- 000027: 10 01                      |   i32.const 0x1
- 000029: 0f                         | end
+ 000025: 02 7f                      | block i32
+ 000027: 41 01                      |   i32.const 0x1
+ 000029: 0b                         | end
 ;;; STDOUT ;;)
