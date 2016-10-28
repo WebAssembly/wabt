@@ -40,5 +40,8 @@
 0000020: 0b                                        ; end
 000001e: 02                                        ; FIXUP func body size
 000001c: 04                                        ; FIXUP section size
+func-exported.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
 ;;; STDOUT ;;)

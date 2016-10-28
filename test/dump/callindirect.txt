@@ -65,6 +65,9 @@
 000002f: 0b                                        ; end
 0000026: 09                                        ; FIXUP func body size
 0000024: 0b                                        ; FIXUP section size
+callindirect.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000028: 41 00                      | i32.const 0
  00002a: 41 00                      | i32.const 0

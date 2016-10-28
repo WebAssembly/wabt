@@ -36,4 +36,7 @@
 ; data segment data 1
 000001f: 676f 6f64 6279 65                         ; data segment data
 000000e: 17                                        ; FIXUP section size
+memory.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 ;;; STDOUT ;;)

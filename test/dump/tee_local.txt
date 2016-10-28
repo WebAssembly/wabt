@@ -41,6 +41,8 @@
 000001e: 0b                                        ; end
 0000015: 09                                        ; FIXUP func body size
 0000013: 0b                                        ; FIXUP section size
+tee_local.wasm:	file format wasm 0x00000d
+
 Code Disassembly:
 func 0
  000019: 41 00                      | i32.const 0

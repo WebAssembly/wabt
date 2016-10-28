@@ -46,6 +46,9 @@
 0000023: 0b                                        ; end
 0000020: 03                                        ; FIXUP func body size
 000001e: 05                                        ; FIXUP section size
+export-multi.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000022: 01                         | nop
 ;;; STDOUT ;;)

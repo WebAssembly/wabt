@@ -82,6 +82,9 @@
 000004b: 0b                                        ; end
 0000015: 36                                        ; FIXUP func body size
 0000013: 38                                        ; FIXUP section size
+select.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000017: 41 02                      | i32.const 0x2
  000019: 41 03                      | i32.const 0x3

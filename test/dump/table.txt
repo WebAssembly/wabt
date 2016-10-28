@@ -86,6 +86,9 @@
 0000045: 0b                                        ; end
 000003a: 0b                                        ; FIXUP func body size
 0000032: 13                                        ; FIXUP section size
+table.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
 func 1
 func 2

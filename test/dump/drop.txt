@@ -35,6 +35,9 @@
 000001a: 0b                                        ; end
 0000015: 05                                        ; FIXUP func body size
 0000013: 07                                        ; FIXUP section size
+drop.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000017: 41 00                      | i32.const 0
  000019: 1a                         | drop

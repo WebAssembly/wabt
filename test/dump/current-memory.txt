@@ -43,6 +43,9 @@
 000001f: 0b                                        ; end
 000001b: 04                                        ; FIXUP func body size
 0000019: 06                                        ; FIXUP section size
+current-memory.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  00001d: 3f 00                      | current_memory 0
 ;;; STDOUT ;;)

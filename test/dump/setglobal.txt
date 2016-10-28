@@ -47,6 +47,9 @@
 0000029: 0b                                        ; end
 0000020: 09                                        ; FIXUP func body size
 000001e: 0b                                        ; FIXUP section size
+setglobal.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000022: 43 00 00 00 40             | f32.const 0x40000000
  000027: 24 00                      | set_global 0

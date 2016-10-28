@@ -12,4 +12,7 @@
 000000b: 00                                        ; memory flags
 000000c: 01                                        ; memory initial pages
 0000009: 03                                        ; FIXUP section size
+memory-1-byte.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 ;;; STDOUT ;;)

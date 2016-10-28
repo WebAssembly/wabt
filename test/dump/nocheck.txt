@@ -49,6 +49,9 @@
 0000030: 0b                                        ; end
 000001f: 11                                        ; FIXUP func body size
 000001d: 13                                        ; FIXUP section size
+nocheck.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000021: 43 00 00 80 3f             | f32.const 0x3f800000
  000026: 44 00 00 00 00 00 00 00 40 | f64.const 0

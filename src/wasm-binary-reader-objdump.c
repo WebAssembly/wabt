@@ -17,6 +17,7 @@
 #include "wasm-binary-reader-objdump.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -113,7 +114,12 @@ static WasmResult on_count(uint32_t count, void* user_data) {
 static WasmResult begin_module(uint32_t version, void* user_data) {
   Context* ctx = user_data;
   if (ctx->options->print_header) {
-    printf("%s:\tfile format wasm %#08x\n", ctx->options->infile, version);
+    const char *basename = strrchr(ctx->options->infile, '/');
+    if (basename)
+      basename++;
+    else
+      basename = ctx->options->infile;
+    printf("%s:\tfile format wasm %#08x\n", basename, version);
     ctx->header_printed = 1;
   }
 
@@ -371,7 +377,7 @@ static WasmResult on_import_table(uint32_t index,
       "  - table elem_type=%s init=%" PRIzx " max=%" PRIzx "\n",
       wasm_get_type_name(elem_type),
       elem_limits->initial,
-      elem_limits->has_max ? elem_limits->max : 0);
+      elem_limits->max);
   return WASM_OK;
 }
 
@@ -445,7 +451,7 @@ static WasmResult on_init_expr_f32_const_expr(uint32_t index,
 static WasmResult on_init_expr_f64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  print_details(user_data, " - init f64=%ld\n", value);
+  print_details(user_data, " - init f64=%" PRId64 "\n", value);
   return WASM_OK;
 }
 
@@ -466,7 +472,7 @@ static WasmResult on_init_expr_i32_const_expr(uint32_t index,
 static WasmResult on_init_expr_i64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  print_details(user_data, " - init i64=%ld\n", value);
+  print_details(user_data, " - init i64=%" PRId64 "\n", value);
   return WASM_OK;
 }
 
