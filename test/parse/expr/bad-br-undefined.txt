@@ -1,7 +1,7 @@
 ;;; ERROR: 1
-(module (func (br 1)))
+(module (func br 1))
 (;; STDERR ;;;
-parse/expr/bad-br-undefined.txt:2:19: label variable out of range (max 1)
-(module (func (br 1)))
-                  ^
+parse/expr/bad-br-undefined.txt:2:18: label variable out of range (max 1)
+(module (func br 1))
+                 ^
 ;;; STDERR ;;)

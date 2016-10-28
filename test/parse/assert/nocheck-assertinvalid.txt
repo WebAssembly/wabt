@@ -7,4 +7,4 @@
 ;; normally would print a message displaying why the module was invalid.
 (assert_invalid
   (module
-    (func (result i32) (i64.const 1))) "bar")
+    (func (result i32) i64.const 1)) "bar")
