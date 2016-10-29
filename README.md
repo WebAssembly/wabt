@@ -106,7 +106,7 @@ You can use `-h` to get additional help:
 $ out/wast2wasm -h
 ```
 
-Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/2bb13aa785be9908b95d0e2e09950b39a26004fa/demo/index.html).
+Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/e528a622caa77702209bf0c3654ca78456c41a52/demo/index.html).
 
 ## Running wasm2wast
 
