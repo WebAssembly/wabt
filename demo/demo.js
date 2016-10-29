@@ -136,9 +136,9 @@ var examples = [
     contents:
       '(module\n' +
       '  (func $addTwo (param i32 i32) (result i32)\n' +
-      '    (i32.add\n' +
-      '      (get_local 0)\n' +
-      '      (get_local 1)))\n' +
+      '    get_local 0\n' +
+      '    get_local 1\n' +
+      '    i32.add)\n' +
       '  (export "addTwo" (func $addTwo)))\n'
   },
 
@@ -147,16 +147,19 @@ var examples = [
     contents:
       '(module\n' +
       '  (func $fac (param i64) (result i64)\n' +
-      '    (if i64\n' +
-      '      (i64.lt_s (get_local 0) (i64.const 1))\n' +
-      '      (then (i64.const 1))\n' +
-      '      (else\n' +
-      '        (i64.mul\n' +
-      '          (get_local 0)\n' +
-      '          (call $fac\n' +
-      '            (i64.sub\n' +
-      '              (get_local 0)\n' +
-      '              (i64.const 1)))))))\n' +
+      '    get_local 0\n' +
+      '    i64.const 1\n' +
+      '    i64.lt_s\n' +
+      '    if i64\n' +
+      '      i64.const 1\n' +
+      '    else\n' +
+      '      get_local 0\n' +
+      '      get_local 0\n' +
+      '      i64.const 1\n' +
+      '      i64.sub\n' +
+      '      call $fac\n' +
+      '      i64.mul\n' +
+      '    end)\n' +
       '  (export "fac" (func $fac)))\n'
   },
 
@@ -170,7 +173,9 @@ var examples = [
       '  (start 1)\n' +
       '  (table 0 1 anyfunc)\n' +
       '  (func)\n' +
-      '  (func (type 0) (drop (i32.const 42)))\n' +
+      '  (func (type 0)\n' +
+      '    i32.const 42\n' +
+      '    drop)\n' +
       '  (export "e" (func 1)))\n'
   }
 ];
