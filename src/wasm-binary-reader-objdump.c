@@ -374,7 +374,7 @@ static WasmResult on_import_table(uint32_t index,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
   print_details(user_data,
-      "  - table elem_type=%s init=%" PRIzx " max=%" PRIzx "\n",
+      "  - table elem_type=%s init=%" PRIzx " max=%" PRId64 "\n",
       wasm_get_type_name(elem_type),
       elem_limits->initial,
       elem_limits->max);
@@ -408,7 +408,7 @@ static WasmResult on_table(uint32_t index,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   print_details(user_data,
-      "  - [%d] type=%#x init=%" PRIzx " max=%" PRIzx" \n",
+      "  - [%d] type=%#x init=%" PRId64 " max=%" PRId64 " \n",
       index,
       elem_type,
       elem_limits->initial,
