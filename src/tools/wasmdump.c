@@ -141,30 +141,30 @@ int main(int argc, char** argv) {
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
-    s_objdump_options.mode = DUMP_HEADERS;
+    s_objdump_options.mode = WASM_DUMP_HEADERS;
     result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-    if (result)
+    if (WASM_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.verbose || s_objdump_options.section_name) {
-    s_objdump_options.mode = DUMP_DETAILS;
+    s_objdump_options.mode = WASM_DUMP_DETAILS;
     result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-    if (result)
+    if (WASM_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   if (s_objdump_options.disassemble) {
-    s_objdump_options.mode = DUMP_DISASSEMBLE;
+    s_objdump_options.mode = WASM_DUMP_DISASSEMBLE;
     result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-    if (result)
+    if (WASM_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   // Pass 3: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
-    s_objdump_options.mode = DUMP_RAW_DATA;
+    s_objdump_options.mode = WASM_DUMP_RAW_DATA;
     result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
   }
 

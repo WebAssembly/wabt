@@ -25,10 +25,10 @@ struct WasmModule;
 struct WasmReadBinaryOptions;
 
 typedef enum WasmObjdumpMode {
-  DUMP_HEADERS,
-  DUMP_DETAILS,
-  DUMP_DISASSEMBLE,
-  DUMP_RAW_DATA,
+  WASM_DUMP_HEADERS,
+  WASM_DUMP_DETAILS,
+  WASM_DUMP_DISASSEMBLE,
+  WASM_DUMP_RAW_DATA,
 } WasmObjdumpMode;
 
 typedef struct WasmObjdumpOptions {
@@ -40,7 +40,7 @@ typedef struct WasmObjdumpOptions {
   WasmObjdumpMode mode;
   const char* infile;
   const char* section_name;
-  int print_header;
+  WasmBool print_header;
 } WasmObjdumpOptions;
 
 WASM_EXTERN_C_BEGIN

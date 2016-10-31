@@ -32,15 +32,15 @@ typedef struct Context {
   size_t current_opcode_offset;
   size_t last_opcode_end;
   int indent_level;
-  int print_details;
-  int header_printed;
+  WasmBool print_details;
+  WasmBool header_printed;
   int section_found;
 } Context;
 
 
-static int should_print_details(Context* ctx) {
-  if (ctx->options->mode != DUMP_DETAILS)
-    return 0;
+static WasmBool should_print_details(Context* ctx) {
+  if (ctx->options->mode != WASM_DUMP_DETAILS)
+    return WASM_FALSE;
   return ctx->print_details;
 }
 
@@ -65,26 +65,26 @@ static WasmResult begin_section(Context* ctx,
                                 size_t offset,
                                 size_t size) {
   switch (ctx->options->mode) {
-    case DUMP_HEADERS:
+    case WASM_DUMP_HEADERS:
       printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010" PRIzx
              ") ",
              name, offset, offset + size, size);
       break;
-    case DUMP_DETAILS:
+    case WASM_DUMP_DETAILS:
       if (!ctx->options->section_name || !strcasecmp(ctx->options->section_name, name)) {
         printf("%s:\n", name);
-        ctx->print_details = 1;
-        ctx->section_found = 1;
+        ctx->print_details = WASM_TRUE;
+        ctx->section_found = WASM_TRUE;
       } else {
-        ctx->print_details = 0;
+        ctx->print_details = WASM_FALSE;
       }
       break;
-    case DUMP_RAW_DATA:
+    case WASM_DUMP_RAW_DATA:
       printf("\nContents of section %s:\n", name);
       wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size, offset,
                              WASM_PRINT_CHARS, NULL);
       break;
-    case DUMP_DISASSEMBLE:
+    case WASM_DUMP_DISASSEMBLE:
       break;
   }
   return WASM_OK;
@@ -105,7 +105,7 @@ SEGSTART(names, "NAMES")
 
 static WasmResult on_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  if (ctx->options->mode == DUMP_HEADERS) {
+  if (ctx->options->mode == WASM_DUMP_HEADERS) {
     printf("count: %d\n", count);
   }
   return WASM_OK;
@@ -120,23 +120,23 @@ static WasmResult begin_module(uint32_t version, void* user_data) {
     else
       basename = ctx->options->infile;
     printf("%s:\tfile format wasm %#08x\n", basename, version);
-    ctx->header_printed = 1;
+    ctx->header_printed = WASM_TRUE;
   }
 
   switch (ctx->options->mode) {
-    case DUMP_HEADERS:
+    case WASM_DUMP_HEADERS:
       printf("\n");
       printf("Sections:\n");
       break;
-    case DUMP_DETAILS:
+    case WASM_DUMP_DETAILS:
       printf("\n");
       printf("Section Details:\n");
       break;
-    case DUMP_DISASSEMBLE:
+    case WASM_DUMP_DISASSEMBLE:
       printf("\n");
       printf("Code Disassembly:\n");
       break;
-    case DUMP_RAW_DATA:
+    case WASM_DUMP_RAW_DATA:
       break;
   }
 
@@ -145,7 +145,7 @@ static WasmResult begin_module(uint32_t version, void* user_data) {
 
 static WasmResult end_module(void *user_data) {
   Context* ctx = user_data;
-  if (ctx->options->mode == DUMP_DETAILS && ctx->options->section_name) {
+  if (ctx->options->mode == WASM_DUMP_DETAILS && ctx->options->section_name) {
     if (!ctx->section_found) {
       printf("Section not found: %s\n", ctx->options->section_name);
       return WASM_ERROR;
@@ -345,7 +345,7 @@ static WasmResult begin_function_body(uint32_t index, void* user_data) {
 
   if (should_print_details(ctx))
     printf(" - func %d\n", index);
-  if (ctx->options->mode == DUMP_DISASSEMBLE)
+  if (ctx->options->mode == WASM_DUMP_DISASSEMBLE)
     printf("func %d\n", index);
 
   ctx->last_opcode_end = 0;
@@ -563,15 +563,15 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   reader = s_binary_reader;
   Context context;
   WASM_ZERO_MEMORY(context);
-  context.header_printed = 0;
-  context.print_details = 0;
-  context.section_found = 0;
+  context.header_printed = WASM_FALSE;
+  context.print_details = WASM_FALSE;
+  context.section_found = WASM_FALSE;
   context.data = data;
   context.size = size;
   context.options = options;
   context.out_stream = wasm_init_stdout_stream();
 
-  if (options->mode == DUMP_DISASSEMBLE) {
+  if (options->mode == WASM_DUMP_DISASSEMBLE) {
     reader.on_opcode = on_opcode;
     reader.on_opcode_bare = on_opcode_bare;
     reader.on_opcode_uint32 = on_opcode_uint32;
