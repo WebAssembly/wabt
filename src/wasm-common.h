@@ -128,7 +128,7 @@ typedef struct WasmBinaryErrorHandler {
   { wasm_default_binary_error_callback, NULL }
 
 /* matches binary format, do not change */
-enum {
+typedef enum WasmType {
   WASM_TYPE_I32 = -0x01,
   WASM_TYPE_I64 = -0x02,
   WASM_TYPE_F32 = -0x03,
@@ -138,8 +138,7 @@ enum {
   WASM_TYPE_VOID = -0x40,
   WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
   WASM_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
-};
-typedef int32_t WasmType;
+} WasmType;
 
 /* matches binary format, do not change */
 typedef enum WasmExternalKind {

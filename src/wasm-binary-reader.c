@@ -783,7 +783,7 @@ static WasmResult logging_begin_global(uint32_t index,
   LoggingContext* ctx = user_data;
   LOGF("begin_global(index: %u, type: %s, mutable: %s)\n", index,
        wasm_get_type_name(type), mutable_ ? "true" : "false");
-  FORWARD(begin_global, index, mutable_, type);
+  FORWARD(begin_global, index, type, mutable_);
 }
 
 static WasmResult logging_on_export(uint32_t index,
