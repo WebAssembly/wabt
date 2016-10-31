@@ -222,6 +222,9 @@
 0000015: 9a02                                      ; FIXUP func body size
 ; move data: [14, 131) -> [15, 132)
 0000013: 9d02                                      ; FIXUP section size
+const.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000019: 41 00                      | i32.const 0
  00001b: 1a                         | drop

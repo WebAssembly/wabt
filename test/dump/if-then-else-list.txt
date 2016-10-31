@@ -60,6 +60,9 @@
 0000029: 0b                                        ; end
 0000015: 14                                        ; FIXUP func body size
 0000013: 16                                        ; FIXUP section size
+if-then-else-list.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000017: 41 01                      | i32.const 0x1
  000019: 04 40                      | if

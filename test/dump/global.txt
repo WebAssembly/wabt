@@ -58,4 +58,7 @@
 000003b: 03                                        ; global index
 000003c: 0b                                        ; end
 0000009: 33                                        ; FIXUP section size
+global.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 ;;; STDOUT ;;)

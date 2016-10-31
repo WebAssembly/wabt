@@ -275,6 +275,9 @@
 0000015: e201                                      ; FIXUP func body size
 ; move data: [14, f9) -> [15, fa)
 0000013: e501                                      ; FIXUP section size
+binary.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000019: 41 00                      | i32.const 0
  00001b: 41 00                      | i32.const 0

@@ -85,6 +85,9 @@
 000005b: 05                                        ; string length
 000005c: 2446 324c 33                             $F2L3  ; local name 3
 000002a: 36                                        ; FIXUP section size
+debug-names.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
 func 1
 ;;; STDOUT ;;)

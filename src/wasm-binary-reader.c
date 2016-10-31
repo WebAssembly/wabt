@@ -589,7 +589,7 @@ static void logging_on_error(WasmBinaryReaderContext* ctx,
     FORWARD0(name);                                   \
   }
 
-LOGGING0(begin_module)
+LOGGING_UINT32(begin_module)
 LOGGING0(end_module)
 LOGGING_BEGIN(signature_section)
 LOGGING_UINT32(on_signature_count)
@@ -1706,8 +1706,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   wasm_reserve_uint32s(allocator, &ctx->target_depths,
                        INITIAL_BR_TABLE_TARGET_CAPACITY);
 
-  CALLBACK0(begin_module);
-
   uint32_t magic;
   in_u32(ctx, &magic, "magic");
   RAISE_ERROR_UNLESS(magic == WASM_BINARY_MAGIC, "bad magic value");
@@ -1716,6 +1714,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   RAISE_ERROR_UNLESS(version == WASM_BINARY_VERSION,
                      "bad wasm file version: %#x (expected %#x)", version,
                      WASM_BINARY_VERSION);
+
+  CALLBACK(begin_module, version);
 
   /* type */
   uint32_t section_size;

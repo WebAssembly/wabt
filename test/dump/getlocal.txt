@@ -91,6 +91,9 @@
 000003d: 0b                                        ; end
 0000015: 28                                        ; FIXUP func body size
 0000013: 2a                                        ; FIXUP section size
+getlocal.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000025: 20 00                      | get_local 0
  000027: 1a                         | drop

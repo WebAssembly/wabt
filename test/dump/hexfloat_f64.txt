@@ -119,6 +119,9 @@
 0000015: ac01                                      ; FIXUP func body size
 ; move data: [14, c3) -> [15, c4)
 0000013: af01                                      ; FIXUP section size
+hexfloat_f64.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000019: 44 00 00 00 00 00 00 00 00 | f64.const 0
  000022: 1a                         | drop

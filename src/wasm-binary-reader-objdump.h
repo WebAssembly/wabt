@@ -24,15 +24,27 @@ struct WasmAllocator;
 struct WasmModule;
 struct WasmReadBinaryOptions;
 
+typedef enum WasmObjdumpMode {
+  WASM_DUMP_HEADERS,
+  WASM_DUMP_DETAILS,
+  WASM_DUMP_DISASSEMBLE,
+  WASM_DUMP_RAW_DATA,
+} WasmObjdumpMode;
+
 typedef struct WasmObjdumpOptions {
   WasmBool headers;
   WasmBool verbose;
   WasmBool raw;
   WasmBool disassemble;
   WasmBool debug;
+  WasmObjdumpMode mode;
+  const char* infile;
+  const char* section_name;
+  WasmBool print_header;
 } WasmObjdumpOptions;
 
 WASM_EXTERN_C_BEGIN
+
 WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
                                     const uint8_t* data,
                                     size_t size,

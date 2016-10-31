@@ -340,6 +340,9 @@
 0000015: 8902                                      ; FIXUP func body size
 ; move data: [14, 120) -> [15, 121)
 0000013: 8c02                                      ; FIXUP section size
+block-257-exprs-br.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
 func 0
  000019: 02 40                      | block
  00001b: 01                         |   nop
