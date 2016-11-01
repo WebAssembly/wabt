@@ -1,10 +1,13 @@
 ;;; ERROR: 1
-(module (func (block $foo (br foo))))
+(module (func 
+          block $foo 
+            br foo 
+          end))
 (;; STDERR ;;;
-parse/expr/bad-br-name.txt:2:31: unexpected token "foo"
-(module (func (block $foo (br foo))))
-                              ^^^
-parse/expr/bad-br-name.txt:2:34: syntax error, unexpected ), expecting NAT or VAR
-(module (func (block $foo (br foo))))
-                                 ^
+parse/expr/bad-br-name.txt:4:16: unexpected token "foo"
+            br foo 
+               ^^^
+parse/expr/bad-br-name.txt:5:11: syntax error, unexpected END, expecting NAT or VAR
+          end))
+          ^^^
 ;;; STDERR ;;)

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
-(module (func (get_local $n)))
+(module (func get_local $n))
 (;; STDERR ;;;
-parse/expr/bad-getlocal-name-undefined.txt:2:26: undefined local variable "$n"
-(module (func (get_local $n)))
-                         ^^
+parse/expr/bad-getlocal-name-undefined.txt:2:25: undefined local variable "$n"
+(module (func get_local $n))
+                        ^^
 ;;; STDERR ;;)

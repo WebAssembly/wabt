@@ -1,10 +1,12 @@
 ;;; ERROR: 1
-(module (func (i32.convert.i32 (i32.const))))
+(module (func
+          i32.const 
+          i32.convert.i32))
 (;; STDERR ;;;
-parse/expr/bad-convert-int-no-sign.txt:2:16: unexpected token "i32.convert.i32"
-(module (func (i32.convert.i32 (i32.const))))
-               ^^^^^^^^^^^^^^^
-parse/expr/bad-convert-int-no-sign.txt:2:32: syntax error, unexpected (
-(module (func (i32.convert.i32 (i32.const))))
-                               ^
+parse/expr/bad-convert-int-no-sign.txt:4:11: unexpected token "i32.convert.i32"
+          i32.convert.i32))
+          ^^^^^^^^^^^^^^^
+parse/expr/bad-convert-int-no-sign.txt:4:26: syntax error, unexpected ), expecting NAT or INT or FLOAT
+          i32.convert.i32))
+                         ^
 ;;; STDERR ;;)

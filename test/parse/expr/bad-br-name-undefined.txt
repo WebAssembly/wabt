@@ -1,7 +1,7 @@
 ;;; ERROR: 1
-(module (func (br $n)))
+(module (func br $n))
 (;; STDERR ;;;
-parse/expr/bad-br-name-undefined.txt:2:19: undefined label variable "$n"
-(module (func (br $n)))
-                  ^^
+parse/expr/bad-br-name-undefined.txt:2:18: undefined label variable "$n"
+(module (func br $n))
+                 ^^
 ;;; STDERR ;;)

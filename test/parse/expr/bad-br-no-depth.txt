@@ -1,10 +1,11 @@
 ;;; ERROR: 1
 (module
   (func
-    (block
-      (br))))
+    block
+      br
+    end))
 (;; STDERR ;;;
-parse/expr/bad-br-no-depth.txt:5:10: syntax error, unexpected ), expecting NAT or VAR
-      (br))))
-         ^
+parse/expr/bad-br-no-depth.txt:6:5: syntax error, unexpected END, expecting NAT or VAR
+    end))
+    ^^^
 ;;; STDERR ;;)
