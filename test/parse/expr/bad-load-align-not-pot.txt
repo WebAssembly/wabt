@@ -1,10 +1,11 @@
 ;;; ERROR: 1
 (module
   (func
-    (drop
-      (i32.load align=3 (i32.const 0)))))
+    i32.const 0
+    i32.load align=3 
+    drop))
 (;; STDERR ;;;
-parse/expr/bad-load-align-not-pot.txt:5:8: alignment must be power-of-two
-      (i32.load align=3 (i32.const 0)))))
-       ^^^^^^^^^^^^^^^^
+parse/expr/bad-load-align-not-pot.txt:5:5: alignment must be power-of-two
+    i32.load align=3 
+    ^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

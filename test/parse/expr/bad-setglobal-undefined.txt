@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (func (set_global 0 (i32.const 1))))
+(module (func 
+          i32.const 1
+          set_global 0))
 (;; STDERR ;;;
-parse/expr/bad-setglobal-undefined.txt:2:27: global variable out of range (max 0)
-(module (func (set_global 0 (i32.const 1))))
-                          ^
+parse/expr/bad-setglobal-undefined.txt:4:22: global variable out of range (max 0)
+          set_global 0))
+                     ^
 ;;; STDERR ;;)

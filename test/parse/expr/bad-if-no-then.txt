@@ -1,5 +1,8 @@
 ;;; ERROR: 1
-(module (func (if (i32.const 0))))
+(module (func
+          i32.const 0 
+          if
+          end))
 (;; STDERR ;;;
 parse/expr/bad-if-no-then.txt:2:32: syntax error, unexpected ), expecting (
 (module (func (if (i32.const 0))))

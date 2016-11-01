@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (func (set_local $n (i32.const 0))))
+(module (func 
+          i32.const 0
+          set_local $n))
 (;; STDERR ;;;
-parse/expr/bad-setlocal-name-undefined.txt:2:26: undefined local variable "$n"
-(module (func (set_local $n (i32.const 0))))
-                         ^^
+parse/expr/bad-setlocal-name-undefined.txt:4:21: undefined local variable "$n"
+          set_local $n))
+                    ^^
 ;;; STDERR ;;)
