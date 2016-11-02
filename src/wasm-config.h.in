@@ -34,6 +34,9 @@
 /* Whether ssize_t is defined by stddef.h */
 #cmakedefine01 HAVE_SSIZE_T
 
+/* Whether strcasecmp is defined by strings.h */
+#cmakedefine01 HAVE_STRCASECMP
+
 #cmakedefine01 COMPILER_IS_CLANG
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC
@@ -48,6 +51,8 @@
 #elif COMPILER_IS_MSVC
 #include <malloc.h>
 #define alloca _alloca
+#elif __MINGW32__
+#include <malloc.h>
 #else
 #error no alloca
 #endif
@@ -86,10 +91,6 @@
 #else
 #error "don't know how to define 64-bit builtins"
 #endif
-
-/* print format specifier for size_t */
-#define PRIzd "zd"
-#define PRIzx "zx"
 
 #define WABT_UNREACHABLE __builtin_unreachable()
 
@@ -177,6 +178,16 @@ __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
 #endif
 #define wasm_popcount_u64 __popcnt64
 
+#else
+
+#error unknown compiler
+
+#endif
+
+
+/* Check For MINGW first, because it is also a GNU compiler */
+#if COMPILER_IS_MSVC || __MINGW32__
+
 /* print format specifier for size_t */
 #if SIZEOF_SIZE_T == 4
 #define PRIzd "d"
@@ -188,11 +199,18 @@ __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
 #error "weird sizeof size_t"
 #endif
 
+#elif COMPILER_IS_CLANG || COMPILER_IS_GNU
+
+/* print format specifier for size_t */
+#define PRIzd "zd"
+#define PRIzx "zx"
+
 #else
 
 #error unknown compiler
 
 #endif
+
 
 #if HAVE_SNPRINTF
 #define wasm_snprintf snprintf
@@ -213,6 +231,14 @@ int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 
 #if !HAVE_SSIZE_T
 typedef int ssize_t;
+#endif
+
+#if !HAVE_STRCASECMP
+#if COMPILER_IS_MSVC
+#define strcasecmp _stricmp
+#else
+#error no strcasecmp
+#endif
 #endif
 
 #endif /* WASM_CONFIG_H_ */

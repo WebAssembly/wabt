@@ -54,6 +54,7 @@ check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
+check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
 
 if (EMSCRIPTEN)
   set(SIZEOF_SSIZE_T 4)

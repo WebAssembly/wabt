@@ -531,7 +531,7 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   WasmStringSlice command_file;
   WasmStringSlice command_name;
   WasmInterpreterTypedValueVector result_values;
-  uint32_t command_line_no;
+  uint32_t command_line_no = 0;
   WasmBool has_thread = WASM_FALSE;
   uint32_t passed = 0;
   uint32_t failed = 0;
