@@ -1,9 +1,9 @@
 ;;; ERROR: 1
 (module (func
   (local i32)
-  (set_local 0)))
+  set_local 0))
 (;; STDERR ;;;
-parse/expr/bad-setlocal-no-value.txt:4:4: type stack size too small at set_local. got 0, expected at least 1
-  (set_local 0)))
-   ^^^^^^^^^^^
+parse/expr/bad-setlocal-no-value.txt:4:3: type stack size too small at set_local. got 0, expected at least 1
+  set_local 0))
+  ^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (func (i32.load8_s offset=-1 (i32.const 0))))
+(module (func
+          i32.const 0 
+          i32.load8_s offset=-1))
 (;; STDERR ;;;
-parse/expr/bad-load-offset-negative.txt:2:28: unexpected token "offset=-1"
-(module (func (i32.load8_s offset=-1 (i32.const 0))))
-                           ^^^^^^^^^
+parse/expr/bad-load-offset-negative.txt:4:23: unexpected token "offset=-1"
+          i32.load8_s offset=-1))
+                      ^^^^^^^^^
 ;;; STDERR ;;)

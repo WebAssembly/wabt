@@ -1,12 +1,13 @@
 ;;; ERROR: 1
 (module (func
   (local $n i32)
-  (set_local n (i32.const 0))))
+  i32.const 0
+  set_local n))
 (;; STDERR ;;;
-parse/expr/bad-setlocal-name.txt:4:14: unexpected token "n"
-  (set_local n (i32.const 0))))
+parse/expr/bad-setlocal-name.txt:5:13: unexpected token "n"
+  set_local n))
+            ^
+parse/expr/bad-setlocal-name.txt:5:14: syntax error, unexpected ), expecting NAT or VAR
+  set_local n))
              ^
-parse/expr/bad-setlocal-name.txt:4:16: syntax error, unexpected (, expecting NAT or VAR
-  (set_local n (i32.const 0))))
-               ^
 ;;; STDERR ;;)

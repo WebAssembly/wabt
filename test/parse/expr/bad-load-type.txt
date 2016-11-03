@@ -1,10 +1,9 @@
 ;;; ERROR: 1
-(module (func (load.x32 (i32.const 0))))
+(module (func
+          i32.const 0
+          load.x32))
 (;; STDERR ;;;
-parse/expr/bad-load-type.txt:2:16: unexpected token "load.x32"
-(module (func (load.x32 (i32.const 0))))
-               ^^^^^^^^
-parse/expr/bad-load-type.txt:2:25: syntax error, unexpected (
-(module (func (load.x32 (i32.const 0))))
-                        ^
+parse/expr/bad-load-type.txt:4:11: unexpected token "load.x32"
+          load.x32))
+          ^^^^^^^^
 ;;; STDERR ;;)
