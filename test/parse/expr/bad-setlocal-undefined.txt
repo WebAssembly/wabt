@@ -1,7 +1,9 @@
 ;;; ERROR: 1
-(module (func (set_local 0 (i32.const 0))))
+(module (func
+          i32.const 0 
+          set_local 0))
 (;; STDERR ;;;
-parse/expr/bad-setlocal-undefined.txt:2:26: local variable out of range (max 0)
-(module (func (set_local 0 (i32.const 0))))
-                         ^
+parse/expr/bad-setlocal-undefined.txt:4:21: local variable out of range (max 0)
+          set_local 0))
+                    ^
 ;;; STDERR ;;)

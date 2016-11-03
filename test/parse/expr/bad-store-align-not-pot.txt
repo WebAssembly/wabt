@@ -1,7 +1,10 @@
 ;;; ERROR: 1
-(module (func (f32.store align=3 (i32.const 0) (f32.const 0.0))))
+(module (func
+          i32.const 0
+          f32.const 0.0
+          f32.store align=3))
 (;; STDERR ;;;
-parse/expr/bad-store-align-not-pot.txt:2:16: alignment must be power-of-two
-(module (func (f32.store align=3 (i32.const 0) (f32.const 0.0))))
-               ^^^^^^^^^^^^^^^^^
+parse/expr/bad-store-align-not-pot.txt:5:11: alignment must be power-of-two
+          f32.store align=3))
+          ^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)
