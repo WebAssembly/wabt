@@ -690,7 +690,7 @@ static const yytype_uint16 yyrline[] =
     1078,  1081,  1092,  1096,  1103,  1107,  1110,  1118,  1126,  1143,
     1159,  1170,  1177,  1184,  1190,  1230,  1240,  1262,  1272,  1298,
     1303,  1311,  1319,  1329,  1335,  1341,  1347,  1353,  1358,  1367,
-    1372,  1373,  1379,  1387,  1388,  1396,  1408,  1409,  1416,  1474
+    1372,  1373,  1379,  1387,  1388,  1396,  1408,  1409,  1416,  1479
 };
 #endif
 
@@ -3986,18 +3986,23 @@ yyreduce:
       int last_module_index = -1;
       size_t i;
       for (i = 0; i < (yyval.script).commands.size; ++i) {
-        WasmCommand* command = &(yyval.script).commands.data[0];
+        WasmCommand* command = &(yyval.script).commands.data[i];
         WasmAction* action = NULL;
         switch (command->type) {
           case WASM_COMMAND_TYPE_MODULE: {
+            last_module_index = i;
+
             /* Wire up module name bindings. */
             WasmModule* module = &command->module;
             if (module->name.length == 0)
               continue;
+
             WasmStringSlice module_name =
                 wasm_dup_string_slice(parser->allocator, module->name);
-            INSERT_BINDING(&(yyval.script), module, commands, module->loc, module_name);
-            last_module_index = i;
+            WasmBinding* binding = wasm_insert_binding(
+                parser->allocator, &(yyval.script).module_bindings, &module_name);
+            binding->loc = module->loc;
+            binding->index = i;
             break;
           }
 
@@ -4031,11 +4036,11 @@ yyreduce:
       }
       parser->script = (yyval.script);
     }
-#line 4035 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 4040 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
 
-#line 4039 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
+#line 4044 "src/prebuilt/wasm-ast-parser-gen.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4270,7 +4275,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1477 "src/wasm-ast-parser.y" /* yacc.c:1906  */
+#line 1482 "src/wasm-ast-parser.y" /* yacc.c:1906  */
 
 
 static void append_expr_list(WasmExprList* expr_list, WasmExprList* expr) {

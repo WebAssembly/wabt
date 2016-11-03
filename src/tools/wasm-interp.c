@@ -416,8 +416,33 @@ static WasmInterpreterResult run_export_by_name(
   WasmInterpreterExport* export =
       wasm_get_interpreter_export_by_name(thread->module, name);
   if (!export)
-    return WASM_INTERPRETER_UNKNOWN_EXPORTED_FUNCTION;
+    return WASM_INTERPRETER_UNKNOWN_EXPORT;
+  if (export->kind != WASM_EXTERNAL_KIND_FUNC)
+    return WASM_INTERPRETER_EXPORT_KIND_MISMATCH;
   return run_export(allocator, thread, export, args, out_results);
+}
+
+static WasmInterpreterResult get_global_export_by_name(
+    WasmAllocator* allocator,
+    WasmInterpreterThread* thread,
+    const WasmStringSlice* name,
+    WasmInterpreterTypedValueVector* out_results) {
+  WasmInterpreterExport* export =
+      wasm_get_interpreter_export_by_name(thread->module, name);
+  if (!export)
+    return WASM_INTERPRETER_UNKNOWN_EXPORT;
+  if (export->kind != WASM_EXTERNAL_KIND_GLOBAL)
+    return WASM_INTERPRETER_EXPORT_KIND_MISMATCH;
+
+  assert(export->index < thread->env->globals.size);
+  WasmInterpreterGlobal* global = &thread->env->globals.data[export->index];
+
+  /* Don't clear out the vector, in case it is being reused. Just reset the
+   * size to zero. */
+  out_results->size = 0;
+  wasm_append_interpreter_typed_value_value(allocator, out_results,
+                                            &global->typed_value);
+  return WASM_INTERPRETER_OK;
 }
 
 static void run_all_exports(WasmAllocator* allocator,
@@ -718,6 +743,8 @@ static WasmResult parse_uint32(Context* ctx, uint32_t* out_int) {
 }
 
 static WasmResult parse_string(Context* ctx, WasmStringSlice* out_string) {
+  WASM_ZERO_MEMORY(*out_string);
+
   skip_whitespace(ctx);
   if (read_char(ctx) != '"') {
     print_parse_error(ctx, "expected string");
@@ -776,6 +803,7 @@ static WasmResult parse_string(Context* ctx, WasmStringSlice* out_string) {
 static WasmResult parse_key_string_value(Context* ctx,
                                          const char* key,
                                          WasmStringSlice* out_string) {
+  WASM_ZERO_MEMORY(*out_string);
   EXPECT_KEY(key);
   return parse_string(ctx, out_string);
 }
@@ -917,9 +945,11 @@ static WasmResult on_module_command(Context* ctx,
   CHECK_RESULT(
       read_module(ctx->allocator, path, &ctx->env, &ctx->last_module, thread));
 
-  if (ctx->last_module->name.start) {
+  if (name.start) {
+    WasmStringSlice dup_name = wasm_dup_string_slice(ctx->allocator, name);
+    ctx->last_module->name = dup_name;
     WasmBinding* binding = wasm_insert_binding(
-        ctx->allocator, &ctx->env.module_bindings, &ctx->last_module->name);
+        ctx->allocator, &ctx->env.module_bindings, &dup_name);
     binding->index = ctx->env.modules.size - 1;
   }
 
@@ -966,8 +996,14 @@ static WasmResult run_action(Context* ctx,
       }
       return WASM_OK;
 
+    case ACTION_TYPE_GET: {
+      *out_iresult = get_global_export_by_name(
+          ctx->allocator, thread, &action->field_name, out_results);
+      return WASM_OK;
+    }
+
     default:
-    case ACTION_TYPE_GET:
+      print_command_error(ctx, "invalid action type %d", action->type);
       return WASM_ERROR;
   }
 }
@@ -1163,6 +1199,9 @@ static WasmResult parse_command(Context* ctx) {
   if (match(ctx, "\"module\"")) {
     WasmStringSlice name;
     WasmStringSlice filename;
+    WASM_ZERO_MEMORY(name);
+    WASM_ZERO_MEMORY(filename);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1175,6 +1214,8 @@ static WasmResult parse_command(Context* ctx) {
     on_module_command(ctx, filename, name);
   } else if (match(ctx, "\"action\"")) {
     Action action;
+    WASM_ZERO_MEMORY(action);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1184,6 +1225,9 @@ static WasmResult parse_command(Context* ctx) {
   } else if (match(ctx, "\"register\"")) {
     WasmStringSlice as;
     WasmStringSlice name;
+    WASM_ZERO_MEMORY(as);
+    WASM_ZERO_MEMORY(name);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1194,6 +1238,9 @@ static WasmResult parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_malformed\"")) {
     WasmStringSlice filename;
     WasmStringSlice text;
+    WASM_ZERO_MEMORY(filename);
+    WASM_ZERO_MEMORY(text);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1217,6 +1264,9 @@ static WasmResult parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_unlinkable\"")) {
     WasmStringSlice filename;
     WasmStringSlice text;
+    WASM_ZERO_MEMORY(filename);
+    WASM_ZERO_MEMORY(text);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1227,6 +1277,9 @@ static WasmResult parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_return\"")) {
     Action action;
     WasmInterpreterTypedValueVector expected;
+    WASM_ZERO_MEMORY(action);
+    WASM_ZERO_MEMORY(expected);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1239,6 +1292,8 @@ static WasmResult parse_command(Context* ctx) {
     destroy_action(ctx->allocator, &action);
   } else if (match(ctx, "\"assert_return_nan\"")) {
     Action action;
+    WASM_ZERO_MEMORY(action);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
@@ -1248,6 +1303,9 @@ static WasmResult parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
     WasmStringSlice text;
+    WASM_ZERO_MEMORY(action);
+    WASM_ZERO_MEMORY(text);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");

@@ -67,6 +67,7 @@ typedef struct Context {
   WasmSourceErrorHandler* error_handler;
   WasmAllocator* allocator;
   WasmAstLexer* lexer;
+  const WasmScript* script;
   const WasmModule* current_module;
   const WasmFunc* current_func;
   int current_table_index;
@@ -1243,10 +1244,10 @@ static void check_raw_module(Context* ctx, WasmRawModule* raw) {
 static const WasmTypeVector* check_invoke(Context* ctx,
                                           const WasmAction* action) {
   const WasmActionInvoke* invoke = &action->invoke;
-  const WasmModule* module = ctx->current_module;
+  const WasmModule* module =
+      wasm_get_module_by_var(ctx->script, &action->module_var);
   if (!module) {
-    print_error(ctx, CHECK_STYLE_FULL, &action->loc,
-                "invoke must occur after a module definition");
+    print_error(ctx, CHECK_STYLE_FULL, &action->loc, "unknown module");
     return NULL;
   }
 
@@ -1288,10 +1289,10 @@ static WasmResult check_get(Context* ctx,
                             const WasmAction* action,
                             WasmType* out_type) {
   const WasmActionGet* get = &action->get;
-  const WasmModule* module = ctx->current_module;
+  const WasmModule* module =
+      wasm_get_module_by_var(ctx->script, &action->module_var);
   if (!module) {
-    print_error(ctx, CHECK_STYLE_FULL, &action->loc,
-                "get must occur after a module definition");
+    print_error(ctx, CHECK_STYLE_FULL, &action->loc, "unknown module");
     return WASM_ERROR;
   }
 
@@ -1425,6 +1426,7 @@ WasmResult wasm_check_names(WasmAllocator* allocator,
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
   ctx.result = WASM_OK;
+  ctx.script = script;
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
@@ -1443,6 +1445,7 @@ WasmResult wasm_check_ast(WasmAllocator* allocator,
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
   ctx.result = WASM_OK;
+  ctx.script = script;
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
@@ -1464,6 +1467,7 @@ WasmResult wasm_check_assert_invalid_and_malformed(
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
   ctx.result = WASM_OK;
+  ctx.script = script;
 
   size_t i;
   for (i = 0; i < script->commands.size; ++i) {
@@ -1479,6 +1483,7 @@ WasmResult wasm_check_assert_invalid_and_malformed(
     ctx2.allocator = allocator;
     ctx2.lexer = lexer;
     ctx2.result = WASM_OK;
+    ctx2.script = script;
 
     if (command->type == WASM_COMMAND_TYPE_ASSERT_INVALID) {
       ctx2.error_handler = assert_invalid_error_handler;

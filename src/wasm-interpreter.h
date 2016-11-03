@@ -57,8 +57,10 @@ struct WasmStream;
   /* we attempted to call a function with the an argument list that doesn't    \
    * match the function signature */                                           \
   V(ARGUMENT_TYPE_MISMATCH, "argument type mismatch")                          \
-  /* we tried to call an exported function by name that doesn't exist */       \
-  V(UNKNOWN_EXPORTED_FUNCTION, "unknown exported function")
+  /* we tried to get an export by name that doesn't exist */                   \
+  V(UNKNOWN_EXPORT, "unknown export")                                          \
+  /* the expected export kind doesn't match. */                                \
+  V(EXPORT_KIND_MISMATCH, "export kind mismatch")
 
 typedef enum WasmInterpreterResult {
 #define V(name, str) WASM_INTERPRETER_##name,

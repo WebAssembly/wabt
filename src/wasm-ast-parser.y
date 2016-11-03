@@ -1421,18 +1421,23 @@ script :
       int last_module_index = -1;
       size_t i;
       for (i = 0; i < $$.commands.size; ++i) {
-        WasmCommand* command = &$$.commands.data[0];
+        WasmCommand* command = &$$.commands.data[i];
         WasmAction* action = NULL;
         switch (command->type) {
           case WASM_COMMAND_TYPE_MODULE: {
+            last_module_index = i;
+
             /* Wire up module name bindings. */
             WasmModule* module = &command->module;
             if (module->name.length == 0)
               continue;
+
             WasmStringSlice module_name =
                 wasm_dup_string_slice(parser->allocator, module->name);
-            INSERT_BINDING(&$$, module, commands, module->loc, module_name);
-            last_module_index = i;
+            WasmBinding* binding = wasm_insert_binding(
+                parser->allocator, &$$.module_bindings, &module_name);
+            binding->loc = module->loc;
+            binding->index = i;
             break;
           }
 
