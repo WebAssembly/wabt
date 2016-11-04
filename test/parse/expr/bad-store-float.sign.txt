@@ -1,10 +1,10 @@
 ;;; ERROR: 1
-(module (func (f32.storeu (i32.const 0) (f32.const 0))))
+(module (func
+          i32.const 0
+          f32.const 0 
+          f32.storeu))
 (;; STDERR ;;;
-parse/expr/bad-store-float.sign.txt:2:16: unexpected token "f32.storeu"
-(module (func (f32.storeu (i32.const 0) (f32.const 0))))
-               ^^^^^^^^^^
-parse/expr/bad-store-float.sign.txt:2:27: syntax error, unexpected (
-(module (func (f32.storeu (i32.const 0) (f32.const 0))))
-                          ^
+parse/expr/bad-store-float.sign.txt:5:11: unexpected token "f32.storeu"
+          f32.storeu))
+          ^^^^^^^^^^
 ;;; STDERR ;;)
