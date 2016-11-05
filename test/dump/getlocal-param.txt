@@ -1,14 +1,7 @@
 ;;; TOOL: run-wasmdump
 ;;; FLAGS: -v
 (module
-  ;; parameters are always first
-  ;;             0   1
   (func (param i32 f32)
-    ;; by default, sexpr-wasm will remap locals so all similar types are
-    ;; grouped together, in the order i32, i64, f32, f64.
-    ;; i32           2
-    ;; i64   3
-    ;; f32       4       5
     (local i64 f32 i32 f32)
     get_local 0
     drop
