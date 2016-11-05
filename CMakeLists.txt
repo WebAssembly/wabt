@@ -72,8 +72,8 @@ else ()
 endif ()
 
 configure_file(
-  ${SEXPR_WASM_SOURCE_DIR}/src/wasm-config.h.in
-  ${SEXPR_WASM_BINARY_DIR}/wasm-config.h
+  ${SEXPR_WASM_SOURCE_DIR}/src/config.h.in
+  ${SEXPR_WASM_BINARY_DIR}/config.h
 )
 
 include_directories(src ${SEXPR_WASM_BINARY_DIR})
@@ -158,14 +158,14 @@ SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover")
 
 find_package(BISON 3.0)
 if (RUN_BISON AND BISON_FOUND)
-  set(WASM_AST_PARSER_GEN_C ${SEXPR_WASM_BINARY_DIR}/wasm-ast-parser-gen.c)
+  set(WASM_AST_PARSER_GEN_C ${SEXPR_WASM_BINARY_DIR}/ast-parser-gen.c)
   BISON_TARGET(WASM_AST_PARSER_GEN_C
-    ${SEXPR_WASM_SOURCE_DIR}/src/wasm-ast-parser.y
+    ${SEXPR_WASM_SOURCE_DIR}/src/ast-parser.y
     ${WASM_AST_PARSER_GEN_C}
-    COMPILE_FLAGS --defines=${SEXPR_WASM_BINARY_DIR}/wasm-ast-parser-gen.h
+    COMPILE_FLAGS --defines=${SEXPR_WASM_BINARY_DIR}/ast-parser-gen.h
   )
 else ()
-  set(WASM_AST_PARSER_GEN_C src/prebuilt/wasm-ast-parser-gen.c)
+  set(WASM_AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.c)
   include_directories(src/prebuilt)
 endif ()
 
@@ -182,8 +182,8 @@ endif ()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SEXPR_WASM_SOURCE_DIR}/cmake)
 find_package(RE2C 0.13)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
-  set(WASM_AST_LEXER_C ${SEXPR_WASM_SOURCE_DIR}/src/wasm-ast-lexer.c)
-  set(WASM_AST_LEXER_GEN_C ${SEXPR_WASM_BINARY_DIR}/wasm-ast-lexer-gen.c)
+  set(WASM_AST_LEXER_C ${SEXPR_WASM_SOURCE_DIR}/src/ast-lexer.c)
+  set(WASM_AST_LEXER_GEN_C ${SEXPR_WASM_BINARY_DIR}/ast-lexer-gen.c)
   RE2C_TARGET(
     NAME WASM_AST_LEXER_GEN_C
     INPUT ${WASM_AST_LEXER_C}
@@ -191,37 +191,37 @@ if (RUN_RE2C AND RE2C_EXECUTABLE)
     OPTIONS -bc
   )
 else ()
-  set(WASM_AST_LEXER_GEN_C src/prebuilt/wasm-ast-lexer-gen.c)
+  set(WASM_AST_LEXER_GEN_C src/prebuilt/ast-lexer-gen.c)
 endif ()
 
 add_custom_target(everything)
 
 add_library(libwasm STATIC
-  src/wasm-ast.c
-  src/wasm-ast-parser-lexer-shared.c
+  src/ast.c
+  src/ast-parser-lexer-shared.c
   ${WASM_AST_LEXER_GEN_C}
   ${WASM_AST_PARSER_GEN_C}
-  src/wasm-ast-checker.c
-  src/wasm-binary-reader.c
-  src/wasm-binary-writer.c
-  src/wasm-binary-writer-spec.c
-  src/wasm-binary-reader-ast.c
-  src/wasm-binding-hash.c
-  src/wasm-ast-writer.c
-  src/wasm-interpreter.c
-  src/wasm-binary-reader-interpreter.c
-  src/wasm-apply-names.c
-  src/wasm-generate-names.c
+  src/ast-checker.c
+  src/binary-reader.c
+  src/binary-writer.c
+  src/binary-writer-spec.c
+  src/binary-reader-ast.c
+  src/binding-hash.c
+  src/ast-writer.c
+  src/interpreter.c
+  src/binary-reader-interpreter.c
+  src/apply-names.c
+  src/generate-names.c
 
-  src/wasm-allocator.c
-  src/wasm-common.c
-  src/wasm-config.c
-  src/wasm-literal.c
-  src/wasm-option-parser.c
-  src/wasm-stack-allocator.c
-  src/wasm-stream.c
-  src/wasm-vector.c
-  src/wasm-writer.c
+  src/allocator.c
+  src/common.c
+  src/config.c
+  src/literal.c
+  src/option-parser.c
+  src/stack-allocator.c
+  src/stream.c
+  src/vector.c
+  src/writer.c
 )
 set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
 
@@ -238,12 +238,12 @@ if (NOT EMSCRIPTEN)
 
   # wasmopcodecnt
   add_executable(wasmopcodecnt src/tools/wasmopcodecnt.c
-    src/wasm-binary-reader-opcnt.c)
+    src/binary-reader-opcnt.c)
   add_dependencies(everything wasmopcodecnt)
   target_link_libraries(wasmopcodecnt libwasm)
 
   # wasmdump
-  add_executable(wasmdump src/tools/wasmdump.c src/wasm-binary-reader-objdump.c)
+  add_executable(wasmdump src/tools/wasmdump.c src/binary-reader-objdump.c)
   add_dependencies(everything wasmdump)
   target_link_libraries(wasmdump libwasm)
 
@@ -285,7 +285,7 @@ if (NOT EMSCRIPTEN)
     endif ()
 
     set(HEXFLOAT_TEST_SRCS
-      src/wasm-literal.c
+      src/literal.c
       test/hexfloat.cc
       third_party/gtest/googletest/src/gtest-all.cc
       third_party/gtest/googletest/src/gtest_main.cc
@@ -327,7 +327,7 @@ else ()
 
   # just dump everything into one binary so we can reference it from JavaScript
   add_definitions(-Wno-warn-absolute-paths)
-  add_executable(libwasmjs src/wasm-emscripten-helpers.c)
+  add_executable(libwasmjs src/emscripten-helpers.c)
   add_dependencies(everything libwasmjs)
   target_link_libraries(libwasmjs libwasm)
   set_target_properties(libwasmjs PROPERTIES OUTPUT_NAME libwasm)

@@ -19,17 +19,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm-allocator.h"
-#include "wasm-apply-names.h"
-#include "wasm-ast.h"
-#include "wasm-ast-writer.h"
-#include "wasm-binary-reader.h"
-#include "wasm-binary-reader-ast.h"
-#include "wasm-generate-names.h"
-#include "wasm-option-parser.h"
-#include "wasm-stack-allocator.h"
-#include "wasm-stream.h"
-#include "wasm-writer.h"
+#include "allocator.h"
+#include "apply-names.h"
+#include "ast.h"
+#include "ast-writer.h"
+#include "binary-reader.h"
+#include "binary-reader-ast.h"
+#include "generate-names.h"
+#include "option-parser.h"
+#include "stack-allocator.h"
+#include "stream.h"
+#include "writer.h"
 
 #define PROGRAM_NAME "wasm2wast"
 

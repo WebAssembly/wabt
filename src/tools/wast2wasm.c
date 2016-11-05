@@ -19,18 +19,18 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "wasm-config.h"
+#include "config.h"
 
-#include "wasm-ast.h"
-#include "wasm-ast-checker.h"
-#include "wasm-ast-parser.h"
-#include "wasm-binary-writer.h"
-#include "wasm-binary-writer-spec.h"
-#include "wasm-common.h"
-#include "wasm-option-parser.h"
-#include "wasm-stack-allocator.h"
-#include "wasm-stream.h"
-#include "wasm-writer.h"
+#include "ast.h"
+#include "ast-checker.h"
+#include "ast-parser.h"
+#include "binary-writer.h"
+#include "binary-writer-spec.h"
+#include "common.h"
+#include "option-parser.h"
+#include "stack-allocator.h"
+#include "stream.h"
+#include "writer.h"
 
 #define PROGRAM_NAME "wast2wasm"
 

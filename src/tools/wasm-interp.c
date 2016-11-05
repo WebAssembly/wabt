@@ -19,14 +19,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm-allocator.h"
-#include "wasm-binary-reader.h"
-#include "wasm-binary-reader-interpreter.h"
-#include "wasm-interpreter.h"
-#include "wasm-literal.h"
-#include "wasm-option-parser.h"
-#include "wasm-stack-allocator.h"
-#include "wasm-stream.h"
+#include "allocator.h"
+#include "binary-reader.h"
+#include "binary-reader-interpreter.h"
+#include "interpreter.h"
+#include "literal.h"
+#include "option-parser.h"
+#include "stack-allocator.h"
+#include "stream.h"
 
 #define INSTRUCTION_QUANTUM 1000
 #define PROGRAM_NAME "wasm-interp"

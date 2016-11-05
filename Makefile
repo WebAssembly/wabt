@@ -139,13 +139,13 @@ clean:
 test-everything:
 
 .PHONY: update-bison update-re2c
-update-bison: src/prebuilt/wasm-ast-parser-gen.c
-update-re2c: src/prebuilt/wasm-ast-lexer-gen.c
+update-bison: src/prebuilt/ast-parser-gen.c
+update-re2c: src/prebuilt/ast-lexer-gen.c
 
-src/prebuilt/wasm-ast-parser-gen.c: src/wasm-ast-parser.y
-	bison -o $@ $< --defines=src/prebuilt/wasm-ast-parser-gen.h --report=state
+src/prebuilt/ast-parser-gen.c: src/ast-parser.y
+	bison -o $@ $< --defines=src/prebuilt/ast-parser-gen.h --report=state
 
-src/prebuilt/wasm-ast-lexer-gen.c: src/wasm-ast-lexer.c
+src/prebuilt/ast-lexer-gen.c: src/ast-lexer.c
 	re2c --no-generation-date -bc -o $@ $<
 
 # defaults with simple names
