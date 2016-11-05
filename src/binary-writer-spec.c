@@ -338,9 +338,15 @@ static void write_commands(Context* ctx, WasmScript* script) {
       case WASM_COMMAND_TYPE_REGISTER:
         write_location(ctx, &command->register_.var.loc);
         write_separator(ctx);
-        write_key(ctx, "name");
-        write_var(ctx, &command->register_.var);
-        write_separator(ctx);
+        if (command->register_.var.type == WASM_VAR_TYPE_NAME) {
+          write_key(ctx, "name");
+          write_var(ctx, &command->register_.var);
+          write_separator(ctx);
+        } else {
+          /* If we're not registering by name, then we should only be
+           * registering the last module. */
+          assert(command->register_.var.index == (int)ctx->num_modules - 1);
+        }
         write_key(ctx, "as");
         write_escaped_string_slice(ctx, command->register_.module_name);
         break;

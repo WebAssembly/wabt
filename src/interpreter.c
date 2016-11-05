@@ -90,6 +90,7 @@ static void wasm_destroy_interpreter_module(WasmAllocator* allocator,
                                             WasmInterpreterModule* module) {
   wasm_destroy_interpreter_export_vector(allocator, &module->exports);
   wasm_destroy_binding_hash(allocator, &module->export_bindings);
+  wasm_destroy_string_slice(allocator, &module->name);
   if (!module->is_host) {
     WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->defined.imports,
                                     interpreter_import);
@@ -109,6 +110,66 @@ void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
   wasm_destroy_interpreter_global_vector(allocator, &env->globals);
   wasm_destroy_output_buffer(&env->istream);
   wasm_destroy_binding_hash(allocator, &env->module_bindings);
+  wasm_destroy_binding_hash(allocator, &env->registered_module_bindings);
+}
+
+WasmInterpreterEnvironmentMark wasm_mark_interpreter_environment(
+    WasmInterpreterEnvironment* env) {
+  WasmInterpreterEnvironmentMark mark;
+  WASM_ZERO_MEMORY(mark);
+  mark.modules_size = env->modules.size;
+  mark.sigs_size = env->sigs.size;
+  mark.funcs_size = env->funcs.size;
+  mark.memories_size = env->memories.size;
+  mark.tables_size = env->tables.size;
+  mark.globals_size = env->globals.size;
+  mark.istream_size = env->istream.size;
+  return mark;
+}
+
+void wasm_reset_interpreter_environment_to_mark(
+    WasmAllocator* allocator,
+    WasmInterpreterEnvironment* env,
+    WasmInterpreterEnvironmentMark mark) {
+  size_t i;
+
+#define DESTROY_PAST_MARK(destroy_name, names)                                 \
+  do {                                                                         \
+    assert(mark.names##_size <= env->names.size);                              \
+    for (i = mark.names##_size; i < env->names.size; ++i)                      \
+      wasm_destroy_interpreter_##destroy_name(allocator, &env->names.data[i]); \
+    env->names.size = mark.names##_size;                                       \
+  } while (0)
+
+  /* Destroy entries in the binding hash. */
+  for (i = mark.modules_size; i < env->modules.size; ++i) {
+    const WasmStringSlice* name = &env->modules.data[i].name;
+    if (!wasm_string_slice_is_empty(name))
+      wasm_remove_binding(allocator, &env->module_bindings, name);
+  }
+
+  /* registered_module_bindings maps from an arbitrary name to a module index,
+   * so we have to iterate through the entire table to find entries to remove.
+   */
+  for (i = 0; i < env->registered_module_bindings.entries.capacity; ++i) {
+    WasmBindingHashEntry* entry =
+        &env->registered_module_bindings.entries.data[i];
+    if (!wasm_hash_entry_is_free(entry) &&
+        entry->binding.index >= (int)mark.modules_size) {
+      wasm_remove_binding(allocator, &env->registered_module_bindings,
+                          &entry->binding.name);
+    }
+  }
+
+  DESTROY_PAST_MARK(module, modules);
+  DESTROY_PAST_MARK(func_signature, sigs);
+  DESTROY_PAST_MARK(func, funcs);
+  DESTROY_PAST_MARK(memory, memories);
+  DESTROY_PAST_MARK(table, tables);
+  env->globals.size = mark.globals_size;
+  env->istream.size = mark.istream_size;
+
+#undef DESTROY_PAST_MARK
 }
 
 WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
@@ -121,8 +182,9 @@ WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
   module->table_index = WASM_INVALID_INDEX;
   module->is_host = WASM_TRUE;
 
-  WasmBinding* binding =
-      wasm_insert_binding(allocator, &env->module_bindings, &module->name);
+  WasmStringSlice dup_name = wasm_dup_string_slice(allocator, name);
+  WasmBinding* binding = wasm_insert_binding(
+      allocator, &env->registered_module_bindings, &dup_name);
   binding->index = env->modules.size - 1;
   return module;
 }
@@ -691,9 +753,9 @@ static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
   *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
 }
 
-static WasmBool signatures_are_equal(WasmInterpreterEnvironment* env,
-                                     uint32_t sig_index_0,
-                                     uint32_t sig_index_1) {
+WasmBool wasm_func_signatures_are_equal(WasmInterpreterEnvironment* env,
+                                        uint32_t sig_index_0,
+                                        uint32_t sig_index_1) {
   if (sig_index_0 == sig_index_1)
     return WASM_TRUE;
   WasmInterpreterFuncSignature* sig_0 = &env->sigs.data[sig_index_0];
@@ -860,9 +922,11 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= table->func_indexes.size, UNDEFINED_TABLE_INDEX);
         uint32_t func_index = table->func_indexes.data[entry_index];
+        TRAP_IF(func_index == WASM_INVALID_INDEX, UNINITIALIZED_TABLE_ELEMENT);
         WasmInterpreterFunc* func = &env->funcs.data[func_index];
-        TRAP_UNLESS(signatures_are_equal(env, func->sig_index, sig_index),
-                    INDIRECT_CALL_SIGNATURE_MISMATCH);
+        TRAP_UNLESS(
+            wasm_func_signatures_are_equal(env, func->sig_index, sig_index),
+            INDIRECT_CALL_SIGNATURE_MISMATCH);
         if (func->is_host) {
           wasm_call_host(thread, func);
         } else {
@@ -973,15 +1037,18 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         break;
 
       case WASM_OPCODE_CURRENT_MEMORY:
-        PUSH_I32(thread->memory->page_size);
+        PUSH_I32(thread->memory->page_limits.initial);
         break;
 
       case WASM_OPCODE_GROW_MEMORY: {
-        uint32_t old_page_size = thread->memory->page_size;
+        uint32_t old_page_size = thread->memory->page_limits.initial;
         uint32_t old_byte_size = thread->memory->byte_size;
         VALUE_TYPE_I32 grow_pages = POP_I32();
         uint32_t new_page_size = old_page_size + grow_pages;
-        PUSH_NEG_1_AND_BREAK_IF(new_page_size > thread->memory->max_page_size);
+        uint32_t max_page_size = thread->memory->page_limits.has_max
+                                     ? thread->memory->page_limits.max
+                                     : WASM_MAX_PAGES;
+        PUSH_NEG_1_AND_BREAK_IF(new_page_size > max_page_size);
         PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WASM_PAGE_SIZE >
                                 UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
@@ -992,7 +1059,7 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
         thread->memory->data = new_data;
-        thread->memory->page_size = new_page_size;
+        thread->memory->page_limits.initial = new_page_size;
         thread->memory->byte_size = new_byte_size;
         PUSH_I32(old_page_size);
         break;
@@ -1707,11 +1774,13 @@ void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
       break;
 
     case WASM_OPCODE_GET_LOCAL:
+    case WASM_OPCODE_GET_GLOBAL:
       wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
     case WASM_OPCODE_SET_LOCAL:
+    case WASM_OPCODE_SET_GLOBAL:
     case WASM_OPCODE_TEE_LOCAL:
       wasm_writef(stream, "%s $%u, %u\n",
                   wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
@@ -2063,11 +2132,13 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
         break;
 
       case WASM_OPCODE_GET_LOCAL:
+      case WASM_OPCODE_GET_GLOBAL:
         wasm_writef(stream, "%s $%u\n",
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_SET_LOCAL:
+      case WASM_OPCODE_SET_GLOBAL:
       case WASM_OPCODE_TEE_LOCAL:
         wasm_writef(stream, "%s $%u, %%[-1]\n",
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));

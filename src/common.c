@@ -63,13 +63,20 @@ WasmStringSlice wasm_string_slice_from_cstr(const char* string) {
   return result;
 }
 
+WasmBool wasm_string_slice_is_empty(const WasmStringSlice* str) {
+  assert(str);
+  return str->start == NULL || str->length == 0;
+}
+
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice* a,
                                       const WasmStringSlice* b) {
+  assert(a && b);
   return a->start && b->start && a->length == b->length &&
          memcmp(a->start, b->start, a->length) == 0;
 }
 
 void wasm_destroy_string_slice(WasmAllocator* allocator, WasmStringSlice* str) {
+  assert(str);
   wasm_free(allocator, (void*)str->start);
 }
 

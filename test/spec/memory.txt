@@ -121,5 +121,14 @@ assert_invalid error:
   third_party/testsuite/memory.wast:162:29: alignment must not be larger than natural alignment (1)
   (module (memory 0) (func (i32.store8 align=2 (i32.const 0) (i32.const 0))))
                             ^^^^^^^^^^^^^^^^^^
-27/27 tests passed.
+third_party/testsuite/memory.wast:47: assert_unlinkable error:
+  error: data segment is out of bounds: [0, 1) >= max value 0
+  error: @0x00000017: on_data_segment_data callback failed
+third_party/testsuite/memory.wast:51: assert_unlinkable error:
+  error: data segment is out of bounds: [98304, 98305) >= max value 65536
+  error: @0x0000001f: on_data_segment_data callback failed
+third_party/testsuite/memory.wast:60: assert_unlinkable error:
+  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+  error: @0x00000020: on_data_segment_data callback failed
+30/30 tests passed.
 ;;; STDOUT ;;)

@@ -470,18 +470,22 @@ static void run_all_exports(WasmAllocator* allocator,
 static WasmResult read_module(WasmAllocator* allocator,
                               const char* module_filename,
                               WasmInterpreterEnvironment* env,
+                              WasmBinaryErrorHandler* error_handler,
                               WasmInterpreterModule** out_module,
                               WasmInterpreterThread* out_thread) {
   WasmResult result;
   void* data;
   size_t size;
+
   WASM_ZERO_MEMORY(*out_thread);
+  *out_module = NULL;
+
   result = wasm_read_file(allocator, module_filename, &data, &size);
   if (WASM_SUCCEEDED(result)) {
     WasmAllocator* memory_allocator = &g_wasm_libc_allocator;
     result = wasm_read_binary_interpreter(allocator, memory_allocator, env,
                                           data, size, &s_read_binary_options,
-                                          &s_error_handler, out_module);
+                                          error_handler, out_module);
 
     if (WASM_SUCCEEDED(result)) {
       if (s_verbose)
@@ -521,30 +525,113 @@ static WasmResult default_host_callback(const WasmInterpreterFunc* func,
   return WASM_OK;
 }
 
+static WasmBool string_slice_equals_str(const WasmStringSlice* ss,
+                                        const char* s) {
+  return strncmp(ss->start, s, ss->length) == 0;
+}
+
+#define PRIimport "\"" PRIstringslice "." PRIstringslice "\""
+#define PRINTF_IMPORT_ARG(x)                    \
+  WASM_PRINTF_STRING_SLICE_ARG((x).module_name) \
+  , WASM_PRINTF_STRING_SLICE_ARG((x).field_name)
+
+static void WASM_PRINTF_FORMAT(2, 3)
+    print_error(WasmPrintErrorCallback callback, const char* format, ...) {
+  WASM_SNPRINTF_ALLOCA(buffer, length, format);
+  callback.print_error(buffer, callback.user_data);
+}
+
 static WasmResult spectest_import_func(WasmInterpreterImport* import,
                                        WasmInterpreterFunc* func,
                                        WasmInterpreterFuncSignature* sig,
+                                       WasmPrintErrorCallback callback,
                                        void* user_data) {
-  func->host.callback = default_host_callback;
-  return WASM_OK;
+  if (string_slice_equals_str(&import->field_name, "print")) {
+    func->host.callback = default_host_callback;
+    return WASM_OK;
+  } else {
+    print_error(callback, "unknown host function import " PRIimport,
+                PRINTF_IMPORT_ARG(*import));
+    return WASM_ERROR;
+  }
 }
 
 static WasmResult spectest_import_table(WasmInterpreterImport* import,
                                         WasmInterpreterTable* table,
+                                        WasmPrintErrorCallback callback,
                                         void* user_data) {
-  return WASM_ERROR;
+  if (string_slice_equals_str(&import->field_name, "table")) {
+    table->limits.has_max = WASM_TRUE;
+    table->limits.initial = 10;
+    table->limits.max = 20;
+    size_t i;
+    for (i = 0; i < table->func_indexes.size; ++i)
+      table->func_indexes.data[i] = WASM_INVALID_INDEX;
+    return WASM_OK;
+  } else {
+    print_error(callback, "unknown host table import " PRIimport,
+                PRINTF_IMPORT_ARG(*import));
+    return WASM_ERROR;
+  }
 }
 
 static WasmResult spectest_import_memory(WasmInterpreterImport* import,
                                          WasmInterpreterMemory* memory,
+                                         WasmPrintErrorCallback callback,
                                          void* user_data) {
-  return WASM_ERROR;
+  if (string_slice_equals_str(&import->field_name, "memory")) {
+    memory->page_limits.has_max = WASM_TRUE;
+    memory->page_limits.initial = 1;
+    memory->page_limits.max = 2;
+    memory->byte_size = memory->page_limits.initial * WASM_MAX_PAGES;
+    memory->data = wasm_alloc_zero(memory->allocator, memory->byte_size,
+                                   WASM_DEFAULT_ALIGN);
+    return WASM_OK;
+  } else {
+    print_error(callback, "unknown host memory import " PRIimport,
+                PRINTF_IMPORT_ARG(*import));
+    return WASM_ERROR;
+  }
 }
 
 static WasmResult spectest_import_global(WasmInterpreterImport* import,
                                          WasmInterpreterGlobal* global,
+                                         WasmPrintErrorCallback callback,
                                          void* user_data) {
-  return WASM_ERROR;
+  if (string_slice_equals_str(&import->field_name, "global")) {
+    switch (global->typed_value.type) {
+      case WASM_TYPE_I32:
+        global->typed_value.value.i32 = 666;
+        break;
+
+      case WASM_TYPE_F32: {
+        float value = 666.6f;
+        memcpy(&global->typed_value.value.f32_bits, &value, sizeof(value));
+        break;
+      }
+
+      case WASM_TYPE_I64:
+        global->typed_value.value.i64 = 666;
+        break;
+
+      case WASM_TYPE_F64: {
+        double value = 666.6;
+        memcpy(&global->typed_value.value.f64_bits, &value, sizeof(value));
+        break;
+      }
+
+      default:
+        print_error(callback, "bad type for host global import " PRIimport,
+                    PRINTF_IMPORT_ARG(*import));
+        return WASM_ERROR;
+    }
+
+    return WASM_OK;
+  } else {
+    print_error(callback, "unknown host global import " PRIimport,
+                PRINTF_IMPORT_ARG(*import));
+    return WASM_ERROR;
+  }
 }
 
 static void init_environment(WasmAllocator* allocator,
@@ -566,7 +653,8 @@ static WasmResult read_and_run_module(WasmAllocator* allocator,
   WasmInterpreterThread thread;
 
   init_environment(allocator, &env);
-  result = read_module(allocator, module_filename, &env, &module, &thread);
+  result = read_module(allocator, module_filename, &env, &s_error_handler,
+                       &module, &thread);
   if (WASM_SUCCEEDED(result)) {
     WasmInterpreterResult iresult = run_start_function(allocator, &thread);
     if (iresult == WASM_INTERPRETER_OK) {
@@ -808,15 +896,21 @@ static WasmResult parse_key_string_value(Context* ctx,
   return parse_string(ctx, out_string);
 }
 
+static WasmResult parse_opt_name_string_value(Context* ctx,
+                                              WasmStringSlice* out_string) {
+  WASM_ZERO_MEMORY(*out_string);
+  if (match(ctx, "\"name\"")) {
+    EXPECT(":");
+    CHECK_RESULT(parse_string(ctx, out_string));
+    EXPECT(",");
+  }
+  return WASM_OK;
+}
+
 static WasmResult parse_line(Context* ctx) {
   EXPECT_KEY("line");
   CHECK_RESULT(parse_uint32(ctx, &ctx->command_line_number));
   return WASM_OK;
-}
-
-static WasmBool string_slice_equals_str(const WasmStringSlice* ss,
-                                        const char* s) {
-  return strncmp(ss->start, s, ss->length) == 0;
 }
 
 static WasmResult parse_const(Context* ctx,
@@ -912,13 +1006,11 @@ static WasmResult parse_action(Context* ctx, Action* out_action) {
   return WASM_OK;
 }
 
-static WasmResult on_module_command(Context* ctx,
-                                    WasmStringSlice filename,
-                                    WasmStringSlice name) {
+static char* create_module_path(Context* ctx, WasmStringSlice filename) {
   const char* spec_json_filename = ctx->loc.filename;
   WasmStringSlice dirname = get_dirname(spec_json_filename);
   size_t path_len = dirname.length + 1 + filename.length + 1;
-  char* path = alloca(path_len);
+  char* path = wasm_alloc(ctx->allocator, path_len, 1);
 
   if (dirname.length == 0) {
     wasm_snprintf(path, path_len, PRIstringslice,
@@ -929,6 +1021,13 @@ static WasmResult on_module_command(Context* ctx,
                   WASM_PRINTF_STRING_SLICE_ARG(filename));
   }
 
+  return path;
+}
+
+static WasmResult on_module_command(Context* ctx,
+                                    WasmStringSlice filename,
+                                    WasmStringSlice name) {
+  char* path = create_module_path(ctx, filename);
   /* Make sure that the difference in size between the thread and module
    * vectors is constant; the only modules that don't have matching threads are
    * host modules, which should all be added at the beginning. */
@@ -939,25 +1038,39 @@ static WasmResult on_module_command(Context* ctx,
            (int)(ctx->env.modules.size - ctx->threads.size));
   }
 
-  WasmInterpreterThread* thread =
-      wasm_append_interpreter_thread(ctx->allocator, &ctx->threads);
+  WasmInterpreterThread thread;
+  WasmInterpreterEnvironmentMark mark =
+      wasm_mark_interpreter_environment(&ctx->env);
+  WasmResult result = read_module(ctx->allocator, path, &ctx->env,
+                                  &s_error_handler, &ctx->last_module, &thread);
 
-  CHECK_RESULT(
-      read_module(ctx->allocator, path, &ctx->env, &ctx->last_module, thread));
-
-  if (name.start) {
-    WasmStringSlice dup_name = wasm_dup_string_slice(ctx->allocator, name);
-    ctx->last_module->name = dup_name;
-    WasmBinding* binding = wasm_insert_binding(
-        ctx->allocator, &ctx->env.module_bindings, &dup_name);
-    binding->index = ctx->env.modules.size - 1;
+  if (WASM_FAILED(result)) {
+    wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+    print_command_error(ctx, "error reading module: \"%s\"", path);
+    wasm_free(ctx->allocator, path);
+    return WASM_ERROR;
   }
 
-  WasmInterpreterResult iresult = run_start_function(ctx->allocator, thread);
+  wasm_free(ctx->allocator, path);
+
+  WasmInterpreterResult iresult = run_start_function(ctx->allocator, &thread);
   if (iresult != WASM_INTERPRETER_OK) {
+    wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
     print_interpreter_result("error running start function", iresult);
     return WASM_ERROR;
   }
+
+  if (!wasm_string_slice_is_empty(&name)) {
+    ctx->last_module->name = wasm_dup_string_slice(ctx->allocator, name);
+
+    /* The binding also needs its own copy of the name. */
+    WasmStringSlice binding_name = wasm_dup_string_slice(ctx->allocator, name);
+    WasmBinding* binding = wasm_insert_binding(
+        ctx->allocator, &ctx->env.module_bindings, &binding_name);
+    binding->index = ctx->env.modules.size - 1;
+  }
+
+  wasm_append_interpreter_thread_value(ctx->allocator, &ctx->threads, &thread);
 
   return WASM_OK;
 }
@@ -970,7 +1083,7 @@ static WasmResult run_action(Context* ctx,
   WASM_ZERO_MEMORY(*out_results);
 
   int module_index;
-  if (action->module_name.start) {
+  if (!wasm_string_slice_is_empty(&action->module_name)) {
     module_index = wasm_find_binding_index_by_name(&ctx->env.module_bindings,
                                                    &action->module_name);
   } else {
@@ -979,7 +1092,7 @@ static WasmResult run_action(Context* ctx,
 
   int thread_index = module_index - ctx->thread_to_module_offset;
   if (thread_index < 0 || thread_index >= (int)ctx->threads.size) {
-    print_command_error(ctx, "invalid module in action.");
+    print_command_error(ctx, "invalid module in action");
     return WASM_ERROR;
   }
 
@@ -1037,14 +1150,74 @@ static WasmResult on_assert_malformed_command(Context* ctx,
 static WasmResult on_register_command(Context* ctx,
                                       WasmStringSlice name,
                                       WasmStringSlice as) {
-  /* TODO */
+  int module_index;
+  if (!wasm_string_slice_is_empty(&name)) {
+    /* The module names can be different than their registered names. We don't
+     * keep a hash for the module names (just the registered names), so we'll
+     * just iterate over all the modules to find it. */
+    size_t i;
+    module_index = -1;
+    for (i = 0; i < ctx->env.modules.size; ++i) {
+      const WasmStringSlice* module_name = &ctx->env.modules.data[i].name;
+      if (!wasm_string_slice_is_empty(module_name) &&
+          wasm_string_slices_are_equal(&name, module_name)) {
+        module_index = (int)i;
+        break;
+      }
+    }
+  } else {
+    module_index = (int)ctx->env.modules.size - 1;
+  }
+
+  if (module_index < 0 || module_index >= (int)ctx->env.modules.size) {
+    print_command_error(ctx, "unknown module in register");
+    return WASM_ERROR;
+  }
+
+  WasmStringSlice dup_as = wasm_dup_string_slice(ctx->allocator, as);
+  WasmBinding* binding = wasm_insert_binding(
+      ctx->allocator, &ctx->env.registered_module_bindings, &dup_as);
+  binding->index = module_index;
   return WASM_OK;
 }
 
 static WasmResult on_assert_unlinkable_command(Context* ctx,
                                                WasmStringSlice filename,
                                                WasmStringSlice text) {
-  /* TODO */
+  char buffer[256];
+  wasm_snprintf(buffer, sizeof(buffer),
+                PRIstringslice ":%d: assert_unlinkable error",
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
+                ctx->command_line_number);
+
+  WasmDefaultErrorHandlerInfo info;
+  info.header = buffer;
+  info.out_file = stdout;
+  info.print_header = WASM_PRINT_ERROR_HEADER_ONCE;
+
+  WasmBinaryErrorHandler error_handler;
+  error_handler.on_error = wasm_default_binary_error_callback;
+  error_handler.user_data = &info;
+
+  ctx->total++;
+  char* path = create_module_path(ctx, filename);
+  WasmInterpreterThread thread;
+  WasmInterpreterEnvironmentMark mark =
+      wasm_mark_interpreter_environment(&ctx->env);
+  WasmResult result = read_module(ctx->allocator, path, &ctx->env,
+                                  &error_handler, &ctx->last_module, &thread);
+  wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+
+  if (WASM_FAILED(result)) {
+    ctx->passed++;
+  } else {
+    wasm_destroy_interpreter_thread(ctx->allocator, &thread);
+    print_command_error(ctx, "expected module to be unlinkable: \"%s\"", path);
+    wasm_free(ctx->allocator, path);
+    return WASM_ERROR;
+  }
+
+  wasm_free(ctx->allocator, path);
   return WASM_OK;
 }
 
@@ -1212,11 +1385,7 @@ static WasmResult parse_command(Context* ctx) {
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
-    if (match(ctx, "\"name\"")) {
-      EXPECT(":");
-      CHECK_RESULT(parse_string(ctx, &name));
-      EXPECT(",");
-    }
+    CHECK_RESULT(parse_opt_name_string_value(ctx, &name));
     PARSE_KEY_STRING_VALUE("filename", &filename);
     on_module_command(ctx, filename, name);
   } else if (match(ctx, "\"action\"")) {
@@ -1238,8 +1407,7 @@ static WasmResult parse_command(Context* ctx) {
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
-    PARSE_KEY_STRING_VALUE("name", &name);
-    EXPECT(",");
+    CHECK_RESULT(parse_opt_name_string_value(ctx, &name));
     PARSE_KEY_STRING_VALUE("as", &as);
     on_register_command(ctx, name, as);
   } else if (match(ctx, "\"assert_malformed\"")) {
