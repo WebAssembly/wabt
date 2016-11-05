@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef WASM_RESOLVE_NAMES_H_
-#define WASM_RESOLVE_NAMES_H_
+#ifndef WABT_RESOLVE_NAMES_H_
+#define WABT_RESOLVE_NAMES_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmAstLexer;
-struct WasmModule;
-struct WasmScript;
-struct WasmSourceErrorHandler;
+struct WabtAllocator;
+struct WabtAstLexer;
+struct WabtModule;
+struct WabtScript;
+struct WabtSourceErrorHandler;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_resolve_names_module(struct WasmAllocator*,
-                                     struct WasmAstLexer*,
-                                     struct WasmModule*,
-                                     struct WasmSourceErrorHandler*);
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_resolve_names_module(struct WabtAllocator*,
+                                     struct WabtAstLexer*,
+                                     struct WabtModule*,
+                                     struct WabtSourceErrorHandler*);
 
-WasmResult wasm_resolve_names_script(struct WasmAllocator*,
-                                     struct WasmAstLexer*,
-                                     struct WasmScript*,
-                                     struct WasmSourceErrorHandler*);
-WASM_EXTERN_C_END
+WabtResult wabt_resolve_names_script(struct WabtAllocator*,
+                                     struct WabtAstLexer*,
+                                     struct WabtScript*,
+                                     struct WabtSourceErrorHandler*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_RESOLVE_NAMES_H_ */
+#endif /* WABT_RESOLVE_NAMES_H_ */

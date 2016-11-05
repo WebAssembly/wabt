@@ -14,54 +14,54 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_READER_OPCNT_H_
-#define WASM_BINARY_READER_OPCNT_H_
+#ifndef WABT_BINARY_READER_OPCNT_H_
+#define WABT_BINARY_READER_OPCNT_H_
 
 #include "common.h"
 #include "vector.h"
 
-struct WasmAllocator;
-struct WasmModule;
-struct WasmReadBinaryOptions;
+struct WabtAllocator;
+struct WabtModule;
+struct WabtReadBinaryOptions;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-typedef struct WasmIntCounter {
+typedef struct WabtIntCounter {
   intmax_t value;
   size_t count;
-} WasmIntCounter;
+} WabtIntCounter;
 
-WASM_DEFINE_VECTOR(int_counter, WasmIntCounter)
+WABT_DEFINE_VECTOR(int_counter, WabtIntCounter)
 
-typedef struct WasmIntPairCounter {
+typedef struct WabtIntPairCounter {
   intmax_t first;
   intmax_t second;
   size_t count;
-} WasmIntPairCounter;
+} WabtIntPairCounter;
 
-WASM_DEFINE_VECTOR(int_pair_counter, WasmIntPairCounter);
+WABT_DEFINE_VECTOR(int_pair_counter, WabtIntPairCounter);
 
-typedef struct WasmOpcntData {
-  struct WasmAllocator* allocator;
-  WasmIntCounterVector opcode_vec;
-  WasmIntCounterVector i32_const_vec;
-  WasmIntCounterVector get_local_vec;
-  WasmIntCounterVector set_local_vec;
-  WasmIntCounterVector tee_local_vec;
-  WasmIntPairCounterVector i32_load_vec;
-  WasmIntPairCounterVector i32_store_vec;
-} WasmOpcntData;
+typedef struct WabtOpcntData {
+  struct WabtAllocator* allocator;
+  WabtIntCounterVector opcode_vec;
+  WabtIntCounterVector i32_const_vec;
+  WabtIntCounterVector get_local_vec;
+  WabtIntCounterVector set_local_vec;
+  WabtIntCounterVector tee_local_vec;
+  WabtIntPairCounterVector i32_load_vec;
+  WabtIntPairCounterVector i32_store_vec;
+} WabtOpcntData;
 
-void wasm_init_opcnt_data(struct WasmAllocator* allocator, WasmOpcntData* data);
-void wasm_destroy_opcnt_data(struct WasmAllocator* allocator,
-                             WasmOpcntData* data);
+void wabt_init_opcnt_data(struct WabtAllocator* allocator, WabtOpcntData* data);
+void wabt_destroy_opcnt_data(struct WabtAllocator* allocator,
+                             WabtOpcntData* data);
 
-WasmResult wasm_read_binary_opcnt(struct WasmAllocator* allocator,
+WabtResult wabt_read_binary_opcnt(struct WabtAllocator* allocator,
                                   const void* data,
                                   size_t size,
-                                  const struct WasmReadBinaryOptions* options,
-                                  WasmOpcntData* opcnt_data);
+                                  const struct WabtReadBinaryOptions* options,
+                                  WabtOpcntData* opcnt_data);
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_READER_OPCNT_H_ */
+#endif /* WABT_BINARY_READER_OPCNT_H_ */

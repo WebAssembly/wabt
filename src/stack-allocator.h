@@ -14,37 +14,37 @@
  * limitations under the License.
  */
 
-#ifndef WASM_STACK_ALLOCATOR_H_
-#define WASM_STACK_ALLOCATOR_H_
+#ifndef WABT_STACK_ALLOCATOR_H_
+#define WABT_STACK_ALLOCATOR_H_
 
 #include "allocator.h"
 #include "common.h"
 
 #include <setjmp.h>
 
-#define WASM_STACK_ALLOCATOR_STATS 0
+#define WABT_STACK_ALLOCATOR_STATS 0
 
-typedef struct WasmStackAllocatorChunk {
+typedef struct WabtStackAllocatorChunk {
   void* start;
   void* current;
   void* end;
   union {
-    struct WasmStackAllocatorChunk* prev;
-    struct WasmStackAllocatorChunk* next_free;
+    struct WabtStackAllocatorChunk* prev;
+    struct WabtStackAllocatorChunk* next_free;
   };
-} WasmStackAllocatorChunk;
+} WabtStackAllocatorChunk;
 
-typedef struct WasmStackAllocator {
-  WasmAllocator allocator;
-  WasmStackAllocatorChunk* first;
-  WasmStackAllocatorChunk* last;
-  WasmAllocator* fallback;
+typedef struct WabtStackAllocator {
+  WabtAllocator allocator;
+  WabtStackAllocatorChunk* first;
+  WabtStackAllocatorChunk* last;
+  WabtAllocator* fallback;
   void* last_allocation;
-  WasmStackAllocatorChunk* next_free;
-  WasmBool has_jmpbuf;
+  WabtStackAllocatorChunk* next_free;
+  WabtBool has_jmpbuf;
   jmp_buf jmpbuf;
 
-#if WASM_STACK_ALLOCATOR_STATS
+#if WABT_STACK_ALLOCATOR_STATS
   /* some random stats */
   size_t chunk_alloc_count;
   size_t alloc_count;
@@ -53,13 +53,13 @@ typedef struct WasmStackAllocator {
   size_t total_chunk_bytes;
   size_t total_alloc_bytes;
   size_t total_realloc_bytes;
-#endif /* WASM_STACK_ALLOCATOR_STATS */
-} WasmStackAllocator;
+#endif /* WABT_STACK_ALLOCATOR_STATS */
+} WabtStackAllocator;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_init_stack_allocator(WasmStackAllocator*,
-                                     WasmAllocator* fallback);
-void wasm_destroy_stack_allocator(WasmStackAllocator*);
-WASM_EXTERN_C_END
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_init_stack_allocator(WabtStackAllocator*,
+                                     WabtAllocator* fallback);
+void wabt_destroy_stack_allocator(WabtStackAllocator*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_STACK_ALLOCATOR_H_ */
+#endif /* WABT_STACK_ALLOCATOR_H_ */

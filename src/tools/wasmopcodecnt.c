@@ -39,16 +39,16 @@ static const char* s_outfile;
 static size_t s_cutoff = 0;
 static const char* s_separator = ": ";
 
-static WasmReadBinaryOptions s_read_binary_options =
-    WASM_READ_BINARY_OPTIONS_DEFAULT;
+static WabtReadBinaryOptions s_read_binary_options =
+    WABT_READ_BINARY_OPTIONS_DEFAULT;
 
-static WasmBool s_use_libc_allocator;
+static WabtBool s_use_libc_allocator;
 
-static WasmFileWriter s_log_stream_writer;
-static WasmStream s_log_stream;
+static WabtFileWriter s_log_stream_writer;
+static WabtStream s_log_stream;
 
-#define NOPE WASM_OPTION_NO_ARGUMENT
-#define YEP WASM_OPTION_HAS_ARGUMENT
+#define NOPE WABT_OPTION_NO_ARGUMENT
+#define YEP WABT_OPTION_HAS_ARGUMENT
 
 enum {
   FLAG_VERBOSE,
@@ -68,7 +68,7 @@ static const char s_description[] =
     "  # parse binary file test.wasm and write pcode dist file test.dist\n"
     "  $ wasmopcodecnt test.wasm -o test.dist\n";
 
-static WasmOption s_options[] = {
+static WabtOption s_options[] = {
     {FLAG_VERBOSE,
      'v',
      "verbose",
@@ -102,21 +102,21 @@ static WasmOption s_options[] = {
      "Separator text between element and count when reporting counts"}
 };
 
-WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
+WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static void on_option(struct WasmOptionParser* parser,
-                      struct WasmOption* option,
+static void on_option(struct WabtOptionParser* parser,
+                      struct WabtOption* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
+      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
 
     case FLAG_HELP:
-      wasm_print_help(parser, PROGRAM_NAME);
+      wabt_print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -125,7 +125,7 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = WASM_TRUE;
+      s_use_libc_allocator = WABT_TRUE;
       break;
 
     case FLAG_CUTOFF:
@@ -138,45 +138,45 @@ static void on_option(struct WasmOptionParser* parser,
   }
 }
 
-static void on_argument(struct WasmOptionParser* parser, const char* argument) {
+static void on_argument(struct WabtOptionParser* parser, const char* argument) {
   s_infile = argument;
 }
 
-static void on_option_error(struct WasmOptionParser* parser,
+static void on_option_error(struct WabtOptionParser* parser,
                             const char* message) {
-  WASM_FATAL("%s\n", message);
+  WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WasmOptionParser parser;
-  WASM_ZERO_MEMORY(parser);
+  WabtOptionParser parser;
+  WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
-  parser.num_options = WASM_ARRAY_SIZE(s_options);
+  parser.num_options = WABT_ARRAY_SIZE(s_options);
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wasm_parse_options(&parser, argc, argv);
+  wabt_parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wasm_print_help(&parser, PROGRAM_NAME);
-    WASM_FATAL("No filename given.\n");
+    wabt_print_help(&parser, PROGRAM_NAME);
+    WABT_FATAL("No filename given.\n");
   }
 }
 
-WASM_DEFINE_VECTOR_SORT(int_counter, WasmIntCounter);
+WABT_DEFINE_VECTOR_SORT(int_counter, WabtIntCounter);
 
-typedef int (int_counter_lt_fcn)(WasmIntCounter*, WasmIntCounter*);
+typedef int (int_counter_lt_fcn)(WabtIntCounter*, WabtIntCounter*);
 
-WASM_DEFINE_VECTOR_SORT(int_pair_counter, WasmIntPairCounter);
+WABT_DEFINE_VECTOR_SORT(int_pair_counter, WabtIntPairCounter);
 
-typedef int (int_pair_counter_lt_fcn)(WasmIntPairCounter*, WasmIntPairCounter*);
+typedef int (int_pair_counter_lt_fcn)(WabtIntPairCounter*, WabtIntPairCounter*);
 
 typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
 static void display_opcode_name(FILE* out, intmax_t opcode) {
-  if (opcode >= 0 && opcode < WASM_NUM_OPCODES)
-    fprintf(out, "%s", wasm_get_opcode_name(opcode));
+  if (opcode >= 0 && opcode < WABT_NUM_OPCODES)
+    fprintf(out, "%s", wabt_get_opcode_name(opcode));
   else
     fprintf(out, "?(%" PRIdMAX ")", opcode);
 }
@@ -186,7 +186,7 @@ static void display_intmax(FILE* out, intmax_t value) {
 }
 
 static void display_int_counter_vector(
-    FILE* out, WasmIntCounterVector* vec, display_name_fcn display_fcn,
+    FILE* out, WabtIntCounterVector* vec, display_name_fcn display_fcn,
     const char* opcode_name) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
@@ -202,7 +202,7 @@ static void display_int_counter_vector(
 }
 
 static void display_int_pair_counter_vector(
-    FILE* out, WasmIntPairCounterVector* vec,
+    FILE* out, WabtIntPairCounterVector* vec,
     display_name_fcn display_first_fcn, display_name_fcn display_second_fcn,
     const char* opcode_name) {
   size_t i;
@@ -220,8 +220,8 @@ static void display_int_pair_counter_vector(
   }
 }
 
-static void swap_int_counters(WasmIntCounter* v1, WasmIntCounter* v2) {
-  WasmIntCounter tmp;
+static void swap_int_counters(WabtIntCounter* v1, WabtIntCounter* v2) {
+  WabtIntCounter tmp;
   tmp.value = v1->value;
   tmp.count = v1->count;
 
@@ -232,21 +232,21 @@ static void swap_int_counters(WasmIntCounter* v1, WasmIntCounter* v2) {
   v2->count = tmp.count;
 }
 
-static int opcode_counter_gt(WasmIntCounter* counter_1,
-                             WasmIntCounter* counter_2) {
+static int opcode_counter_gt(WabtIntCounter* counter_1,
+                             WabtIntCounter* counter_2) {
   if (counter_1->count > counter_2->count)
     return 1;
   if (counter_1->count < counter_2->count)
     return 0;
   const char* name_1 = "?1";
   const char* name_2 = "?2";
-  if (counter_1->value < WASM_NUM_OPCODES) {
-    const char* opcode_name = wasm_get_opcode_name(counter_1->value);
+  if (counter_1->value < WABT_NUM_OPCODES) {
+    const char* opcode_name = wabt_get_opcode_name(counter_1->value);
     if (opcode_name)
       name_1 = opcode_name;
   }
-  if (counter_2->value < WASM_NUM_OPCODES) {
-    const char* opcode_name = wasm_get_opcode_name(counter_2->value);
+  if (counter_2->value < WABT_NUM_OPCODES) {
+    const char* opcode_name = wabt_get_opcode_name(counter_2->value);
     if (opcode_name)
       name_2 = opcode_name;
   }
@@ -256,8 +256,8 @@ static int opcode_counter_gt(WasmIntCounter* counter_1,
   return 0;
 }
 
-static int int_counter_gt(WasmIntCounter* counter_1,
-                          WasmIntCounter* counter_2) {
+static int int_counter_gt(WabtIntCounter* counter_1,
+                          WabtIntCounter* counter_2) {
   if (counter_1->count < counter_2->count)
     return 0;
   if (counter_1->count > counter_2->count)
@@ -269,9 +269,9 @@ static int int_counter_gt(WasmIntCounter* counter_1,
   return 0;
 }
 
-static void swap_int_pair_counters(WasmIntPairCounter* v1,
-                                   WasmIntPairCounter* v2) {
-  WasmIntPairCounter tmp;
+static void swap_int_pair_counters(WabtIntPairCounter* v1,
+                                   WabtIntPairCounter* v2) {
+  WabtIntPairCounter tmp;
   tmp.first = v1->first;
   tmp.second = v1->second;
   tmp.count = v1->count;
@@ -285,8 +285,8 @@ static void swap_int_pair_counters(WasmIntPairCounter* v1,
   v2->count = tmp.count;
 }
 
-static int int_pair_counter_gt(WasmIntPairCounter* counter_1,
-                               WasmIntPairCounter* counter_2) {
+static int int_pair_counter_gt(WabtIntPairCounter* counter_1,
+                               WabtIntPairCounter* counter_2) {
   if (counter_1->count < counter_2->count)
     return 0;
   if (counter_1->count > counter_2->count)
@@ -303,128 +303,128 @@ static int int_pair_counter_gt(WasmIntPairCounter* counter_1,
 }
 
 static void display_sorted_int_counter_vector(
-    FILE* out, const char* title, struct WasmAllocator* allocator,
-    WasmIntCounterVector* vec, int_counter_lt_fcn lt_fcn,
+    FILE* out, const char* title, struct WabtAllocator* allocator,
+    WabtIntCounterVector* vec, int_counter_lt_fcn lt_fcn,
     display_name_fcn display_fcn, const char* opcode_name) {
   if (vec->size == 0)
     return;
 
   /* First filter out values less than cutoff. This speeds up sorting. */
-  WasmIntCounterVector filtered_vec;
-  WASM_ZERO_MEMORY(filtered_vec);
+  WabtIntCounterVector filtered_vec;
+  WABT_ZERO_MEMORY(filtered_vec);
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
-    wasm_append_int_counter_value(allocator, &filtered_vec, &vec->data[i]);
+    wabt_append_int_counter_value(allocator, &filtered_vec, &vec->data[i]);
   }
-  WasmIntCounterVector sorted_vec;
-  WASM_ZERO_MEMORY(sorted_vec);
-  wasm_sort_int_counter_vector(allocator, &filtered_vec, &sorted_vec,
+  WabtIntCounterVector sorted_vec;
+  WABT_ZERO_MEMORY(sorted_vec);
+  wabt_sort_int_counter_vector(allocator, &filtered_vec, &sorted_vec,
                                swap_int_counters, lt_fcn);
   fprintf(out, "%s\n", title);
   display_int_counter_vector(out, &sorted_vec, display_fcn, opcode_name);
-  wasm_destroy_int_counter_vector(allocator, &filtered_vec);
-  wasm_destroy_int_counter_vector(allocator, &sorted_vec);
+  wabt_destroy_int_counter_vector(allocator, &filtered_vec);
+  wabt_destroy_int_counter_vector(allocator, &sorted_vec);
 }
 
 static void display_sorted_int_pair_counter_vector(
-    FILE* out, const char* title, struct WasmAllocator* allocator,
-    WasmIntPairCounterVector* vec, int_pair_counter_lt_fcn lt_fcn,
+    FILE* out, const char* title, struct WabtAllocator* allocator,
+    WabtIntPairCounterVector* vec, int_pair_counter_lt_fcn lt_fcn,
     display_name_fcn display_first_fcn, display_name_fcn display_second_fcn,
     const char* opcode_name) {
   if (vec->size == 0)
     return;
 
-  WasmIntPairCounterVector filtered_vec;
-  WASM_ZERO_MEMORY(filtered_vec);
-  WasmIntPairCounterVector sorted_vec;
+  WabtIntPairCounterVector filtered_vec;
+  WABT_ZERO_MEMORY(filtered_vec);
+  WabtIntPairCounterVector sorted_vec;
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
-    wasm_append_int_pair_counter_value(allocator, &filtered_vec, &vec->data[i]);
+    wabt_append_int_pair_counter_value(allocator, &filtered_vec, &vec->data[i]);
   }
-  WASM_ZERO_MEMORY(sorted_vec);
-  wasm_sort_int_pair_counter_vector(allocator, &filtered_vec, &sorted_vec,
+  WABT_ZERO_MEMORY(sorted_vec);
+  wabt_sort_int_pair_counter_vector(allocator, &filtered_vec, &sorted_vec,
                                     swap_int_pair_counters, lt_fcn);
   fprintf(out, "%s\n", title);
   display_int_pair_counter_vector(out, &sorted_vec, display_first_fcn,
                                   display_second_fcn, opcode_name);
-  wasm_destroy_int_pair_counter_vector(allocator, &filtered_vec);
-  wasm_destroy_int_pair_counter_vector(allocator, &sorted_vec);
+  wabt_destroy_int_pair_counter_vector(allocator, &filtered_vec);
+  wabt_destroy_int_pair_counter_vector(allocator, &sorted_vec);
 }
 
 int main(int argc, char** argv) {
 
-  wasm_init_stdio();
+  wabt_init_stdio();
   parse_options(argc, argv);
 
-  WasmStackAllocator stack_allocator;
-  WasmAllocator *allocator;
+  WabtStackAllocator stack_allocator;
+  WabtAllocator *allocator;
   if (s_use_libc_allocator) {
-    allocator = &g_wasm_libc_allocator;
+    allocator = &g_wabt_libc_allocator;
   } else {
-    wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
+    wabt_init_stack_allocator(&stack_allocator, &g_wabt_libc_allocator);
     allocator = &stack_allocator.allocator;
   }
 
 
   void* data;
   size_t size;
-  WasmResult result = wasm_read_file(allocator, s_infile, &data, &size);
-  if (WASM_FAILED(result)) {
+  WabtResult result = wabt_read_file(allocator, s_infile, &data, &size);
+  if (WABT_FAILED(result)) {
     const char* input_name = s_infile ? s_infile : "stdin";
     ERROR("Unable to parse: %s", input_name);
-    wasm_free(allocator, data);
-    wasm_print_allocator_stats(allocator);
-    wasm_destroy_allocator(allocator);
+    wabt_free(allocator, data);
+    wabt_print_allocator_stats(allocator);
+    wabt_destroy_allocator(allocator);
   }
   FILE* out = stdout;
   if (s_outfile) {
     out = fopen(s_outfile, "w");
     if (!out)
       ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
-    result = WASM_ERROR;
+    result = WABT_ERROR;
   }
-  if (WASM_SUCCEEDED(result)) {
-    WasmOpcntData opcnt_data;
-    wasm_init_opcnt_data(allocator, &opcnt_data);
-    result = wasm_read_binary_opcnt(
+  if (WABT_SUCCEEDED(result)) {
+    WabtOpcntData opcnt_data;
+    wabt_init_opcnt_data(allocator, &opcnt_data);
+    result = wabt_read_binary_opcnt(
         allocator, data, size, &s_read_binary_options, &opcnt_data);
-    if (WASM_SUCCEEDED(result)) {
+    if (WABT_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
           out, "Opcode counts:", allocator, &opcnt_data.opcode_vec,
           opcode_counter_gt, display_opcode_name, NULL);
       display_sorted_int_counter_vector(
           out, "\ni32.const:", allocator, &opcnt_data.i32_const_vec,
           int_counter_gt, display_intmax,
-          wasm_get_opcode_name(WASM_OPCODE_I32_CONST));
+          wabt_get_opcode_name(WABT_OPCODE_I32_CONST));
       display_sorted_int_counter_vector(
           out, "\nget_local:", allocator, &opcnt_data.get_local_vec,
           int_counter_gt, display_intmax,
-          wasm_get_opcode_name(WASM_OPCODE_GET_LOCAL));
+          wabt_get_opcode_name(WABT_OPCODE_GET_LOCAL));
       display_sorted_int_counter_vector(
           out, "\nset_local:", allocator, &opcnt_data.set_local_vec,
           int_counter_gt, display_intmax,
-          wasm_get_opcode_name(WASM_OPCODE_SET_LOCAL));
+          wabt_get_opcode_name(WABT_OPCODE_SET_LOCAL));
       display_sorted_int_counter_vector(
           out, "\ntee_local:", allocator, &opcnt_data.tee_local_vec,
           int_counter_gt, display_intmax,
-          wasm_get_opcode_name(WASM_OPCODE_TEE_LOCAL));
+          wabt_get_opcode_name(WABT_OPCODE_TEE_LOCAL));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.load:", allocator, &opcnt_data.i32_load_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
-          wasm_get_opcode_name(WASM_OPCODE_I32_LOAD));
+          wabt_get_opcode_name(WABT_OPCODE_I32_LOAD));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.store:", allocator, &opcnt_data.i32_store_vec,
           int_pair_counter_gt, display_intmax, display_intmax,
-          wasm_get_opcode_name(WASM_OPCODE_I32_STORE));
+          wabt_get_opcode_name(WABT_OPCODE_I32_STORE));
     }
-    wasm_destroy_opcnt_data(allocator, &opcnt_data);
+    wabt_destroy_opcnt_data(allocator, &opcnt_data);
   }
-  wasm_free(allocator, data);
-  wasm_print_allocator_stats(allocator);
-  wasm_destroy_allocator(allocator);
+  wabt_free(allocator, data);
+  wabt_print_allocator_stats(allocator);
+  wabt_destroy_allocator(allocator);
   return result;
 }

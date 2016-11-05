@@ -14,44 +14,44 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINDING_HASH_H_
-#define WASM_BINDING_HASH_H_
+#ifndef WABT_BINDING_HASH_H_
+#define WABT_BINDING_HASH_H_
 
 #include "common.h"
 #include "vector.h"
 
-struct WasmAllocator;
+struct WabtAllocator;
 
-typedef struct WasmBinding {
-  WasmLocation loc;
-  WasmStringSlice name;
+typedef struct WabtBinding {
+  WabtLocation loc;
+  WabtStringSlice name;
   int index;
-} WasmBinding;
+} WabtBinding;
 
-typedef struct WasmBindingHashEntry {
-  WasmBinding binding;
-  struct WasmBindingHashEntry* next;
-  struct WasmBindingHashEntry* prev; /* only valid when this entry is unused */
-} WasmBindingHashEntry;
-WASM_DEFINE_VECTOR(binding_hash_entry, WasmBindingHashEntry);
+typedef struct WabtBindingHashEntry {
+  WabtBinding binding;
+  struct WabtBindingHashEntry* next;
+  struct WabtBindingHashEntry* prev; /* only valid when this entry is unused */
+} WabtBindingHashEntry;
+WABT_DEFINE_VECTOR(binding_hash_entry, WabtBindingHashEntry);
 
-typedef struct WasmBindingHash {
-  WasmBindingHashEntryVector entries;
-  WasmBindingHashEntry* free_head;
-} WasmBindingHash;
+typedef struct WabtBindingHash {
+  WabtBindingHashEntryVector entries;
+  WabtBindingHashEntry* free_head;
+} WabtBindingHash;
 
-WASM_EXTERN_C_BEGIN
-WasmBinding* wasm_insert_binding(struct WasmAllocator*,
-                                 WasmBindingHash*,
-                                 const WasmStringSlice*);
-void wasm_remove_binding(struct WasmAllocator*,
-                         WasmBindingHash*,
-                         const WasmStringSlice*);
-WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry*);
+WABT_EXTERN_C_BEGIN
+WabtBinding* wabt_insert_binding(struct WabtAllocator*,
+                                 WabtBindingHash*,
+                                 const WabtStringSlice*);
+void wabt_remove_binding(struct WabtAllocator*,
+                         WabtBindingHash*,
+                         const WabtStringSlice*);
+WabtBool wabt_hash_entry_is_free(const WabtBindingHashEntry*);
 /* returns -1 if the name is not in the hash */
-int wasm_find_binding_index_by_name(const WasmBindingHash*,
-                                    const WasmStringSlice* name);
-void wasm_destroy_binding_hash(struct WasmAllocator*, WasmBindingHash*);
-WASM_EXTERN_C_END
+int wabt_find_binding_index_by_name(const WabtBindingHash*,
+                                    const WabtStringSlice* name);
+void wabt_destroy_binding_hash(struct WabtAllocator*, WabtBindingHash*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINDING_HASH_H_ */
+#endif /* WABT_BINDING_HASH_H_ */

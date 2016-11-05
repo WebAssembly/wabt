@@ -20,31 +20,31 @@
 #include <stdio.h>
 #include <string.h>
 
-void wasm_ast_parser_error(WasmLocation* loc,
-                           WasmAstLexer* lexer,
-                           WasmAstParser* parser,
+void wabt_ast_parser_error(WabtLocation* loc,
+                           WabtAstLexer* lexer,
+                           WabtAstParser* parser,
                            const char* format,
                            ...) {
   parser->errors++;
   va_list args;
   va_start(args, format);
-  wasm_ast_format_error(parser->error_handler, loc, lexer, format, args);
+  wabt_ast_format_error(parser->error_handler, loc, lexer, format, args);
   va_end(args);
 }
 
-void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
-                           const struct WasmLocation* loc,
-                           WasmAstLexer* lexer,
+void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
+                           const struct WabtLocation* loc,
+                           WabtAstLexer* lexer,
                            const char* format,
                            va_list args) {
   va_list args_copy;
   va_copy(args_copy, args);
-  char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
+  char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
   char* buffer = fixed_buf;
-  size_t len = wasm_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
+  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
   if (len + 1 > sizeof(fixed_buf)) {
     buffer = alloca(len + 1);
-    len = wasm_vsnprintf(buffer, len + 1, format, args_copy);
+    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
   }
 
   char* source_line = NULL;
@@ -53,13 +53,13 @@ void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
   size_t source_line_max_length = error_handler->source_line_max_length;
   if (loc && lexer) {
     source_line = alloca(source_line_max_length + 1);
-    WasmResult result = wasm_ast_lexer_get_source_line(
+    WabtResult result = wabt_ast_lexer_get_source_line(
         lexer, loc, source_line_max_length, source_line, &source_line_length,
         &source_line_column_offset);
-    if (WASM_FAILED(result)) {
+    if (WABT_FAILED(result)) {
       /* if this fails, it means that we've probably screwed up the lexer. blow
        * up. */
-      WASM_FATAL("error getting the source line.\n");
+      WABT_FATAL("error getting the source line.\n");
     }
   }
 
@@ -71,69 +71,69 @@ void wasm_ast_format_error(WasmSourceErrorHandler* error_handler,
   va_end(args_copy);
 }
 
-void wasm_destroy_optional_export(WasmAllocator* allocator,
-                                  WasmOptionalExport* export_) {
+void wabt_destroy_optional_export(WabtAllocator* allocator,
+                                  WabtOptionalExport* export_) {
   if (export_->has_export)
-    wasm_destroy_export(allocator, &export_->export_);
+    wabt_destroy_export(allocator, &export_->export_);
 }
 
-void wasm_destroy_exported_func(WasmAllocator* allocator,
-                                WasmExportedFunc* exported_func) {
-  wasm_destroy_optional_export(allocator, &exported_func->export_);
-  wasm_destroy_func(allocator, exported_func->func);
-  wasm_free(allocator, exported_func->func);
+void wabt_destroy_exported_func(WabtAllocator* allocator,
+                                WabtExportedFunc* exported_func) {
+  wabt_destroy_optional_export(allocator, &exported_func->export_);
+  wabt_destroy_func(allocator, exported_func->func);
+  wabt_free(allocator, exported_func->func);
 }
 
-void wasm_destroy_text_list(WasmAllocator* allocator, WasmTextList* text_list) {
-  WasmTextListNode* node = text_list->first;
+void wabt_destroy_text_list(WabtAllocator* allocator, WabtTextList* text_list) {
+  WabtTextListNode* node = text_list->first;
   while (node) {
-    WasmTextListNode* next = node->next;
-    wasm_destroy_string_slice(allocator, &node->text);
-    wasm_free(allocator, node);
+    WabtTextListNode* next = node->next;
+    wabt_destroy_string_slice(allocator, &node->text);
+    wabt_free(allocator, node);
     node = next;
   }
 }
 
-void wasm_destroy_func_fields(struct WasmAllocator* allocator,
-                              WasmFuncField* func_field) {
+void wabt_destroy_func_fields(struct WabtAllocator* allocator,
+                              WabtFuncField* func_field) {
   /* destroy the entire linked-list */
   while (func_field) {
-    WasmFuncField* next_func_field = func_field->next;
+    WabtFuncField* next_func_field = func_field->next;
 
     switch (func_field->type) {
-      case WASM_FUNC_FIELD_TYPE_EXPRS:
-        wasm_destroy_expr_list(allocator, func_field->first_expr);
+      case WABT_FUNC_FIELD_TYPE_EXPRS:
+        wabt_destroy_expr_list(allocator, func_field->first_expr);
         break;
 
-      case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
-      case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES:
-      case WASM_FUNC_FIELD_TYPE_RESULT_TYPES:
-        wasm_destroy_type_vector(allocator, &func_field->types);
+      case WABT_FUNC_FIELD_TYPE_PARAM_TYPES:
+      case WABT_FUNC_FIELD_TYPE_LOCAL_TYPES:
+      case WABT_FUNC_FIELD_TYPE_RESULT_TYPES:
+        wabt_destroy_type_vector(allocator, &func_field->types);
         break;
 
-      case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
-      case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL:
-        wasm_destroy_string_slice(allocator, &func_field->bound_type.name);
+      case WABT_FUNC_FIELD_TYPE_BOUND_PARAM:
+      case WABT_FUNC_FIELD_TYPE_BOUND_LOCAL:
+        wabt_destroy_string_slice(allocator, &func_field->bound_type.name);
         break;
     }
 
-    wasm_free(allocator, func_field);
+    wabt_free(allocator, func_field);
     func_field = next_func_field;
   }
 }
 
-void wasm_destroy_exported_memory(WasmAllocator* allocator,
-                                  WasmExportedMemory* memory) {
-  wasm_destroy_memory(allocator, &memory->memory);
-  wasm_destroy_optional_export(allocator, &memory->export_);
+void wabt_destroy_exported_memory(WabtAllocator* allocator,
+                                  WabtExportedMemory* memory) {
+  wabt_destroy_memory(allocator, &memory->memory);
+  wabt_destroy_optional_export(allocator, &memory->export_);
   if (memory->has_data_segment)
-    wasm_destroy_data_segment(allocator, &memory->data_segment);
+    wabt_destroy_data_segment(allocator, &memory->data_segment);
 }
 
-void wasm_destroy_exported_table(WasmAllocator* allocator,
-                                 WasmExportedTable* table) {
-  wasm_destroy_table(allocator, &table->table);
-  wasm_destroy_optional_export(allocator, &table->export_);
+void wabt_destroy_exported_table(WabtAllocator* allocator,
+                                 WabtExportedTable* table) {
+  wabt_destroy_table(allocator, &table->table);
+  wabt_destroy_optional_export(allocator, &table->export_);
   if (table->has_elem_segment)
-    wasm_destroy_elem_segment(allocator, &table->elem_segment);
+    wabt_destroy_elem_segment(allocator, &table->elem_segment);
 }

@@ -28,15 +28,15 @@ typedef struct MemInfo {
   size_t size;
 } MemInfo;
 
-static WasmBool s_has_jmpbuf;
+static WabtBool s_has_jmpbuf;
 static jmp_buf s_jmpbuf;
 
 #ifndef NDEBUG
-static WasmBool is_power_of_two(size_t x) {
+static WabtBool is_power_of_two(size_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static WasmBool is_aligned(void* p, size_t align) {
+static WabtBool is_aligned(void* p, size_t align) {
   return ((intptr_t)p & (align - 1)) == 0;
 }
 #endif /* NDEBUG */
@@ -45,7 +45,7 @@ static void* align_up(void* p, size_t align) {
   return (void*)(((intptr_t)p + align - 1) & ~(align - 1));
 }
 
-static void* libc_alloc(WasmAllocator* allocator,
+static void* libc_alloc(WabtAllocator* allocator,
                         size_t size,
                         size_t align,
                         const char* file,
@@ -58,7 +58,7 @@ static void* libc_alloc(WasmAllocator* allocator,
   if (!p) {
     if (s_has_jmpbuf)
       longjmp(s_jmpbuf, 1);
-    WASM_FATAL("%s:%d: memory allocation failed\n", file, line);
+    WABT_FATAL("%s:%d: memory allocation failed\n", file, line);
   }
 
   void* aligned = align_up((void*)((size_t)p + sizeof(MemInfo)), align);
@@ -69,7 +69,7 @@ static void* libc_alloc(WasmAllocator* allocator,
   return aligned;
 }
 
-static void libc_free(WasmAllocator* allocator,
+static void libc_free(WabtAllocator* allocator,
                       void* p,
                       const char* file,
                       int line) {
@@ -81,9 +81,9 @@ static void libc_free(WasmAllocator* allocator,
 }
 
 /* nothing to destroy */
-static void libc_destroy(WasmAllocator* allocator) {}
+static void libc_destroy(WabtAllocator* allocator) {}
 
-static void* libc_realloc(WasmAllocator* allocator,
+static void* libc_realloc(WabtAllocator* allocator,
                           void* p,
                           size_t size,
                           size_t align,
@@ -101,26 +101,26 @@ static void* libc_realloc(WasmAllocator* allocator,
 }
 
 /* mark/reset_to_mark are not supported by the libc allocator */
-static WasmAllocatorMark libc_mark(WasmAllocator* allocator) {
+static WabtAllocatorMark libc_mark(WabtAllocator* allocator) {
   return NULL;
 }
 
-static void libc_reset_to_mark(WasmAllocator* allocator,
-                               WasmAllocatorMark mark) {}
+static void libc_reset_to_mark(WabtAllocator* allocator,
+                               WabtAllocatorMark mark) {}
 
-static void libc_print_stats(WasmAllocator* allocator) {
+static void libc_print_stats(WabtAllocator* allocator) {
   /* TODO(binji): nothing for now, implement later */
 }
 
-static int libc_setjmp_handler(WasmAllocator* allocator) {
-  s_has_jmpbuf = WASM_TRUE;
+static int libc_setjmp_handler(WabtAllocator* allocator) {
+  s_has_jmpbuf = WABT_TRUE;
   return setjmp(s_jmpbuf);
 }
 
-WasmAllocator g_wasm_libc_allocator = {
+WabtAllocator g_wabt_libc_allocator = {
     libc_alloc, libc_realloc,       libc_free,        libc_destroy,
     libc_mark,  libc_reset_to_mark, libc_print_stats, libc_setjmp_handler};
 
-WasmAllocator* wasm_get_libc_allocator(void) {
-  return &g_wasm_libc_allocator;
+WabtAllocator* wabt_get_libc_allocator(void) {
+  return &g_wabt_libc_allocator;
 }

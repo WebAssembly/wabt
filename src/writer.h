@@ -14,69 +14,69 @@
  * limitations under the License.
  */
 
-#ifndef WASM_WRITER_H_
-#define WASM_WRITER_H_
+#ifndef WABT_WRITER_H_
+#define WABT_WRITER_H_
 
 #include <stdio.h>
 
 #include "allocator.h"
 #include "common.h"
 
-typedef struct WasmWriter {
+typedef struct WabtWriter {
   void* user_data;
-  WasmResult (*write_data)(size_t offset,
+  WabtResult (*write_data)(size_t offset,
                            const void* data,
                            size_t size,
                            void* user_data);
-  WasmResult (*move_data)(size_t dst_offset,
+  WabtResult (*move_data)(size_t dst_offset,
                           size_t src_offset,
                           size_t size,
                           void* user_data);
-} WasmWriter;
+} WabtWriter;
 
-typedef struct WasmOutputBuffer {
-  WasmAllocator* allocator;
+typedef struct WabtOutputBuffer {
+  WabtAllocator* allocator;
   void* start;
   size_t size;
   size_t capacity;
-} WasmOutputBuffer;
+} WabtOutputBuffer;
 
-typedef struct WasmMemoryWriter {
-  WasmWriter base;
-  WasmOutputBuffer buf;
-} WasmMemoryWriter;
+typedef struct WabtMemoryWriter {
+  WabtWriter base;
+  WabtOutputBuffer buf;
+} WabtMemoryWriter;
 
-typedef struct WasmFileWriter {
-  WasmWriter base;
+typedef struct WabtFileWriter {
+  WabtWriter base;
   FILE* file;
   size_t offset;
-} WasmFileWriter;
+} WabtFileWriter;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-/* WasmFileWriter */
-WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename);
-void wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file);
-void wasm_close_file_writer(WasmFileWriter* writer);
+/* WabtFileWriter */
+WabtResult wabt_init_file_writer(WabtFileWriter* writer, const char* filename);
+void wabt_init_file_writer_existing(WabtFileWriter* writer, FILE* file);
+void wabt_close_file_writer(WabtFileWriter* writer);
 
-/* WasmMemoryWriter */
-WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
-                                WasmMemoryWriter* writer);
+/* WabtMemoryWriter */
+WabtResult wabt_init_mem_writer(WabtAllocator* allocator,
+                                WabtMemoryWriter* writer);
 /* Passes ownership of the buffer to writer */
-WasmResult wasm_init_mem_writer_existing(WasmMemoryWriter* writer,
-                                         WasmOutputBuffer* buf);
-void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,
-                                         WasmOutputBuffer* out_buf);
-void wasm_close_mem_writer(WasmMemoryWriter* writer);
+WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
+                                         WabtOutputBuffer* buf);
+void wabt_steal_mem_writer_output_buffer(WabtMemoryWriter* writer,
+                                         WabtOutputBuffer* out_buf);
+void wabt_close_mem_writer(WabtMemoryWriter* writer);
 
-/* WasmOutputBuffer */
-void wasm_init_output_buffer(WasmAllocator* allocator,
-                             WasmOutputBuffer* buf,
+/* WabtOutputBuffer */
+void wabt_init_output_buffer(WabtAllocator* allocator,
+                             WabtOutputBuffer* buf,
                              size_t initial_capacity);
-WasmResult wasm_write_output_buffer_to_file(WasmOutputBuffer* buf,
+WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
                                             const char* filename);
-void wasm_destroy_output_buffer(WasmOutputBuffer* buf);
+void wabt_destroy_output_buffer(WabtOutputBuffer* buf);
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_WRITER_H_ */
+#endif /* WABT_WRITER_H_ */

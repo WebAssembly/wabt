@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef WASM_AST_WRITER_H_
-#define WASM_AST_WRITER_H_
+#ifndef WABT_AST_WRITER_H_
+#define WABT_AST_WRITER_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmModule;
-struct WasmWriter;
+struct WabtAllocator;
+struct WabtModule;
+struct WabtWriter;
 
-WASM_EXTERN_C WasmResult wasm_write_ast(struct WasmAllocator*,
-                                        struct WasmWriter*,
-                                        const struct WasmModule*);
+WABT_EXTERN_C WabtResult wabt_write_ast(struct WabtAllocator*,
+                                        struct WabtWriter*,
+                                        const struct WabtModule*);
 
-#endif /* WASM_AST_WRITER_H_ */
+#endif /* WABT_AST_WRITER_H_ */

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_H_
-#define WASM_BINARY_H_
+#ifndef WABT_BINARY_H_
+#define WABT_BINARY_H_
 
 #include "common.h"
 
-#define WASM_BINARY_MAGIC 0x6d736100
-#define WASM_BINARY_VERSION 0x0d
-#define WASM_BINARY_LIMITS_HAS_MAX_FLAG 0x1
+#define WABT_BINARY_MAGIC 0x6d736100
+#define WABT_BINARY_VERSION 0x0d
+#define WABT_BINARY_LIMITS_HAS_MAX_FLAG 0x1
 
-#define WASM_BINARY_SECTION_NAME "name"
-#define WASM_BINARY_SECTION_RELOC "reloc"
+#define WABT_BINARY_SECTION_NAME "name"
+#define WABT_BINARY_SECTION_RELOC "reloc"
 
-#define WASM_FOREACH_BINARY_SECTION(V) \
+#define WABT_FOREACH_BINARY_SECTION(V) \
   V(CUSTOM, custom, 0)                 \
   V(TYPE, type, 1)                     \
   V(IMPORT, import, 2)                 \
@@ -41,21 +41,21 @@
   V(DATA, data, 11)
 
 /* clang-format off */
-typedef enum WasmBinarySection {
-#define V(NAME, name, code) WASM_BINARY_SECTION_##NAME = code,
-  WASM_FOREACH_BINARY_SECTION(V)
+typedef enum WabtBinarySection {
+#define V(NAME, name, code) WABT_BINARY_SECTION_##NAME = code,
+  WABT_FOREACH_BINARY_SECTION(V)
 #undef V
-  WASM_NUM_BINARY_SECTIONS
-} WasmBinarySection;
+  WABT_NUM_BINARY_SECTIONS
+} WabtBinarySection;
 /* clang-format on */
 
-WASM_EXTERN_C_BEGIN
-extern const char* g_wasm_section_name[];
+WABT_EXTERN_C_BEGIN
+extern const char* g_wabt_section_name[];
 
-static WASM_INLINE const char* wasm_get_section_name(WasmBinarySection sec) {
-  assert(sec < WASM_NUM_BINARY_SECTIONS);
-  return g_wasm_section_name[sec];
+static WABT_INLINE const char* wabt_get_section_name(WabtBinarySection sec) {
+  assert(sec < WABT_NUM_BINARY_SECTIONS);
+  return g_wabt_section_name[sec];
 }
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_H_ */
+#endif /* WABT_BINARY_H_ */

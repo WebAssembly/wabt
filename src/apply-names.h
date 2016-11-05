@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef WASM_APPLY_NAMES_H_
-#define WASM_APPLY_NAMES_H_
+#ifndef WABT_APPLY_NAMES_H_
+#define WABT_APPLY_NAMES_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmModule;
+struct WabtAllocator;
+struct WabtModule;
 
-/* Use function, import, function type, parameter and local names in WasmVars
+/* Use function, import, function type, parameter and local names in WabtVars
  * that reference them.
  *
  * e.g. transform this:
@@ -37,8 +37,8 @@ struct WasmModule;
  *    ...
  *    (call $foo ...)
  */
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_apply_names(struct WasmAllocator*, struct WasmModule*);
-WASM_EXTERN_C_END
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_apply_names(struct WabtAllocator*, struct WabtModule*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_APPLY_NAMES_H_ */
+#endif /* WABT_APPLY_NAMES_H_ */

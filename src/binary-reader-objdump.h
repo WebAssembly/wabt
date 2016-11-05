@@ -14,55 +14,55 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_READER_OBJDUMP_H_
-#define WASM_BINARY_READER_OBJDUMP_H_
+#ifndef WABT_BINARY_READER_OBJDUMP_H_
+#define WABT_BINARY_READER_OBJDUMP_H_
 
 #include "common.h"
 #include "stream.h"
 #include "vector.h"
 
-struct WasmAllocator;
-struct WasmModule;
-struct WasmReadBinaryOptions;
+struct WabtAllocator;
+struct WabtModule;
+struct WabtReadBinaryOptions;
 
-typedef struct WasmReloc {
-  WasmRelocType type;
+typedef struct WabtReloc {
+  WabtRelocType type;
   size_t offset;
-} WasmReloc;
-WASM_DEFINE_VECTOR(reloc, WasmReloc);
+} WabtReloc;
+WABT_DEFINE_VECTOR(reloc, WabtReloc);
 
-WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
+WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-typedef enum WasmObjdumpMode {
-  WASM_DUMP_PREPASS,
-  WASM_DUMP_HEADERS,
-  WASM_DUMP_DETAILS,
-  WASM_DUMP_DISASSEMBLE,
-  WASM_DUMP_RAW_DATA,
-} WasmObjdumpMode;
+typedef enum WabtObjdumpMode {
+  WABT_DUMP_PREPASS,
+  WABT_DUMP_HEADERS,
+  WABT_DUMP_DETAILS,
+  WABT_DUMP_DISASSEMBLE,
+  WABT_DUMP_RAW_DATA,
+} WabtObjdumpMode;
 
-typedef struct WasmObjdumpOptions {
-  WasmBool headers;
-  WasmBool details;
-  WasmBool raw;
-  WasmBool disassemble;
-  WasmBool debug;
-  WasmBool relocs;
-  WasmObjdumpMode mode;
+typedef struct WabtObjdumpOptions {
+  WabtBool headers;
+  WabtBool details;
+  WabtBool raw;
+  WabtBool disassemble;
+  WabtBool debug;
+  WabtBool relocs;
+  WabtObjdumpMode mode;
   const char* infile;
   const char* section_name;
-  WasmBool print_header;
-  WasmStringSliceVector function_names;
-  WasmRelocVector code_relocations;
-} WasmObjdumpOptions;
+  WabtBool print_header;
+  WabtStringSliceVector function_names;
+  WabtRelocVector code_relocations;
+} WabtObjdumpOptions;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
+WabtResult wabt_read_binary_objdump(struct WabtAllocator* allocator,
                                     const uint8_t* data,
                                     size_t size,
-                                    WasmObjdumpOptions* options);
+                                    WabtObjdumpOptions* options);
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_READER_OBJDUMP_H_ */
+#endif /* WABT_BINARY_READER_OBJDUMP_H_ */

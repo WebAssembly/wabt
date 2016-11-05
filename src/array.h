@@ -14,45 +14,45 @@
  * limitations under the License.
  */
 
-#ifndef WASM_ARRAY_H_
-#define WASM_ARRAY_H_
+#ifndef WABT_ARRAY_H_
+#define WABT_ARRAY_H_
 
 #include <stddef.h>
 
 #include "allocator.h"
 #include "common.h"
 
-#define WASM_DEFINE_ARRAY(name, type)                                        \
+#define WABT_DEFINE_ARRAY(name, type)                                        \
   typedef struct type##Array {                                               \
     type* data;                                                              \
     size_t size;                                                             \
   } type##Array;                                                             \
                                                                              \
-  WASM_EXTERN_C_BEGIN                                                        \
-  static WASM_INLINE void wasm_destroy_##name##_array(                       \
-      struct WasmAllocator* allocator, type##Array* array) WASM_UNUSED;      \
-  static WASM_INLINE void wasm_new_##name##_array(                           \
-      struct WasmAllocator* allocator, type##Array* array, size_t size)      \
-      WASM_UNUSED;                                                           \
-  WASM_EXTERN_C_END                                                          \
+  WABT_EXTERN_C_BEGIN                                                        \
+  static WABT_INLINE void wabt_destroy_##name##_array(                       \
+      struct WabtAllocator* allocator, type##Array* array) WABT_UNUSED;      \
+  static WABT_INLINE void wabt_new_##name##_array(                           \
+      struct WabtAllocator* allocator, type##Array* array, size_t size)      \
+      WABT_UNUSED;                                                           \
+  WABT_EXTERN_C_END                                                          \
                                                                              \
-  void wasm_destroy_##name##_array(struct WasmAllocator* allocator,          \
+  void wabt_destroy_##name##_array(struct WabtAllocator* allocator,          \
                                    type##Array* array) {                     \
-    wasm_free(allocator, array->data);                                       \
+    wabt_free(allocator, array->data);                                       \
   }                                                                          \
-  void wasm_new_##name##_array(struct WasmAllocator* allocator,              \
+  void wabt_new_##name##_array(struct WabtAllocator* allocator,              \
                                type##Array* array, size_t size) {            \
     array->size = size;                                                      \
     array->data =                                                            \
-        wasm_alloc_zero(allocator, size * sizeof(type), WASM_DEFAULT_ALIGN); \
+        wabt_alloc_zero(allocator, size * sizeof(type), WABT_DEFAULT_ALIGN); \
   }
 
-#define WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, v, name) \
+#define WABT_DESTROY_ARRAY_AND_ELEMENTS(allocator, v, name) \
   {                                                         \
     size_t i;                                               \
     for (i = 0; i < (v).size; ++i)                          \
-      wasm_destroy_##name(allocator, &((v).data[i]));       \
-    wasm_destroy_##name##_array(allocator, &(v));           \
+      wabt_destroy_##name(allocator, &((v).data[i]));       \
+    wabt_destroy_##name##_array(allocator, &(v));           \
   }
 
-#endif /* WASM_ARRAY_H_ */
+#endif /* WABT_ARRAY_H_ */

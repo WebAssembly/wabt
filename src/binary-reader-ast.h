@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_READER_AST_H_
-#define WASM_BINARY_READER_AST_H_
+#ifndef WABT_BINARY_READER_AST_H_
+#define WABT_BINARY_READER_AST_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmModule;
-struct WasmReadBinaryOptions;
+struct WabtAllocator;
+struct WabtModule;
+struct WabtReadBinaryOptions;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_read_binary_ast(struct WabtAllocator* allocator,
                                 const void* data,
                                 size_t size,
-                                const struct WasmReadBinaryOptions* options,
-                                WasmBinaryErrorHandler*,
-                                struct WasmModule* out_module);
-WASM_EXTERN_C_END
+                                const struct WabtReadBinaryOptions* options,
+                                WabtBinaryErrorHandler*,
+                                struct WabtModule* out_module);
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_READER_AST_H_ */
+#endif /* WABT_BINARY_READER_AST_H_ */

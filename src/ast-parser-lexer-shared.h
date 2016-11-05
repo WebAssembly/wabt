@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WASM_AST_PARSER_LEXER_SHARED_H_
-#define WASM_AST_PARSER_LEXER_SHARED_H_
+#ifndef WABT_AST_PARSER_LEXER_SHARED_H_
+#define WABT_AST_PARSER_LEXER_SHARED_H_
 
 #include <stdarg.h>
 
@@ -23,167 +23,167 @@
 #include "ast-lexer.h"
 #include "common.h"
 
-#define WASM_AST_PARSER_STYPE WasmToken
-#define WASM_AST_PARSER_LTYPE WasmLocation
-#define YYSTYPE WASM_AST_PARSER_STYPE
-#define YYLTYPE WASM_AST_PARSER_LTYPE
+#define WABT_AST_PARSER_STYPE WabtToken
+#define WABT_AST_PARSER_LTYPE WabtLocation
+#define YYSTYPE WABT_AST_PARSER_STYPE
+#define YYLTYPE WABT_AST_PARSER_LTYPE
 
-#define WASM_INVALID_LINE_OFFSET ((size_t)~0)
+#define WABT_INVALID_LINE_OFFSET ((size_t)~0)
 
-struct WasmAllocator;
+struct WabtAllocator;
 
-typedef struct WasmExprList {
-  WasmExpr* first;
-  WasmExpr* last;
+typedef struct WabtExprList {
+  WabtExpr* first;
+  WabtExpr* last;
   size_t size;
-} WasmExprList;
+} WabtExprList;
 
-typedef struct WasmTextListNode {
-  WasmStringSlice text;
-  struct WasmTextListNode* next;
-} WasmTextListNode;
+typedef struct WabtTextListNode {
+  WabtStringSlice text;
+  struct WabtTextListNode* next;
+} WabtTextListNode;
 
-typedef struct WasmTextList {
-  WasmTextListNode* first;
-  WasmTextListNode* last;
-} WasmTextList;
+typedef struct WabtTextList {
+  WabtTextListNode* first;
+  WabtTextListNode* last;
+} WabtTextList;
 
-typedef struct WasmOptionalExport {
-  WasmExport export_;
-  WasmBool has_export;
-} WasmOptionalExport;
+typedef struct WabtOptionalExport {
+  WabtExport export_;
+  WabtBool has_export;
+} WabtOptionalExport;
 
-typedef struct WasmExportedFunc {
-  WasmFunc* func;
-  WasmOptionalExport export_;
-} WasmExportedFunc;
+typedef struct WabtExportedFunc {
+  WabtFunc* func;
+  WabtOptionalExport export_;
+} WabtExportedFunc;
 
-typedef struct WasmExportedGlobal {
-  WasmGlobal global;
-  WasmOptionalExport export_;
-} WasmExportedGlobal;
+typedef struct WabtExportedGlobal {
+  WabtGlobal global;
+  WabtOptionalExport export_;
+} WabtExportedGlobal;
 
-typedef struct WasmExportedTable {
-  WasmTable table;
-  WasmElemSegment elem_segment;
-  WasmOptionalExport export_;
-  WasmBool has_elem_segment;
-} WasmExportedTable;
+typedef struct WabtExportedTable {
+  WabtTable table;
+  WabtElemSegment elem_segment;
+  WabtOptionalExport export_;
+  WabtBool has_elem_segment;
+} WabtExportedTable;
 
-typedef struct WasmExportedMemory {
-  WasmMemory memory;
-  WasmDataSegment data_segment;
-  WasmOptionalExport export_;
-  WasmBool has_data_segment;
-} WasmExportedMemory;
+typedef struct WabtExportedMemory {
+  WabtMemory memory;
+  WabtDataSegment data_segment;
+  WabtOptionalExport export_;
+  WabtBool has_data_segment;
+} WabtExportedMemory;
 
-typedef enum WasmFuncFieldType {
-  WASM_FUNC_FIELD_TYPE_EXPRS,
-  WASM_FUNC_FIELD_TYPE_PARAM_TYPES,
-  WASM_FUNC_FIELD_TYPE_BOUND_PARAM,
-  WASM_FUNC_FIELD_TYPE_RESULT_TYPES,
-  WASM_FUNC_FIELD_TYPE_LOCAL_TYPES,
-  WASM_FUNC_FIELD_TYPE_BOUND_LOCAL,
-} WasmFuncFieldType;
+typedef enum WabtFuncFieldType {
+  WABT_FUNC_FIELD_TYPE_EXPRS,
+  WABT_FUNC_FIELD_TYPE_PARAM_TYPES,
+  WABT_FUNC_FIELD_TYPE_BOUND_PARAM,
+  WABT_FUNC_FIELD_TYPE_RESULT_TYPES,
+  WABT_FUNC_FIELD_TYPE_LOCAL_TYPES,
+  WABT_FUNC_FIELD_TYPE_BOUND_LOCAL,
+} WabtFuncFieldType;
 
-typedef struct WasmBoundType {
-  WasmLocation loc;
-  WasmStringSlice name;
-  WasmType type;
-} WasmBoundType;
+typedef struct WabtBoundType {
+  WabtLocation loc;
+  WabtStringSlice name;
+  WabtType type;
+} WabtBoundType;
 
-typedef struct WasmFuncField {
-  WasmFuncFieldType type;
+typedef struct WabtFuncField {
+  WabtFuncFieldType type;
   union {
-    WasmExpr* first_expr;     /* WASM_FUNC_FIELD_TYPE_EXPRS */
-    WasmTypeVector types;     /* WASM_FUNC_FIELD_TYPE_*_TYPES */
-    WasmBoundType bound_type; /* WASM_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
+    WabtExpr* first_expr;     /* WABT_FUNC_FIELD_TYPE_EXPRS */
+    WabtTypeVector types;     /* WABT_FUNC_FIELD_TYPE_*_TYPES */
+    WabtBoundType bound_type; /* WABT_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
   };
-  struct WasmFuncField* next;
-} WasmFuncField;
+  struct WabtFuncField* next;
+} WabtFuncField;
 
-typedef union WasmToken {
+typedef union WabtToken {
   /* terminals */
-  WasmStringSlice text;
-  WasmType type;
-  WasmOpcode opcode;
-  WasmLiteral literal;
+  WabtStringSlice text;
+  WabtType type;
+  WabtOpcode opcode;
+  WabtLiteral literal;
 
   /* non-terminals */
-  /* some of these use pointers to keep the size of WasmToken down; copying the
+  /* some of these use pointers to keep the size of WabtToken down; copying the
    tokens is a hotspot when parsing large files. */
-  WasmAction action;
-  WasmBlock block;
-  WasmCommand* command;
-  WasmCommandVector commands;
-  WasmConst const_;
-  WasmConstVector consts;
-  WasmDataSegment data_segment;
-  WasmElemSegment elem_segment;
-  WasmExport export_;
-  WasmExportedFunc exported_func;
-  WasmExportedGlobal exported_global;
-  WasmExportedMemory exported_memory;
-  WasmExportedTable exported_table;
-  WasmExpr* expr;
-  WasmExprList expr_list;
-  WasmFuncField* func_fields;
-  WasmFunc* func;
-  WasmFuncSignature func_sig;
-  WasmFuncType func_type;
-  WasmGlobal global;
-  WasmImport* import;
-  WasmLimits limits;
-  WasmOptionalExport optional_export;
-  WasmMemory memory;
-  WasmModule* module;
-  WasmRawModule raw_module;
-  WasmScript script;
-  WasmTable table;
-  WasmTextList text_list;
-  WasmTypeVector types;
+  WabtAction action;
+  WabtBlock block;
+  WabtCommand* command;
+  WabtCommandVector commands;
+  WabtConst const_;
+  WabtConstVector consts;
+  WabtDataSegment data_segment;
+  WabtElemSegment elem_segment;
+  WabtExport export_;
+  WabtExportedFunc exported_func;
+  WabtExportedGlobal exported_global;
+  WabtExportedMemory exported_memory;
+  WabtExportedTable exported_table;
+  WabtExpr* expr;
+  WabtExprList expr_list;
+  WabtFuncField* func_fields;
+  WabtFunc* func;
+  WabtFuncSignature func_sig;
+  WabtFuncType func_type;
+  WabtGlobal global;
+  WabtImport* import;
+  WabtLimits limits;
+  WabtOptionalExport optional_export;
+  WabtMemory memory;
+  WabtModule* module;
+  WabtRawModule raw_module;
+  WabtScript script;
+  WabtTable table;
+  WabtTextList text_list;
+  WabtTypeVector types;
   uint32_t u32;
   uint64_t u64;
-  WasmVar var;
-  WasmVarVector vars;
-} WasmToken;
+  WabtVar var;
+  WabtVarVector vars;
+} WabtToken;
 
-typedef struct WasmAstParser {
-  struct WasmAllocator* allocator;
-  WasmScript script;
-  WasmSourceErrorHandler* error_handler;
+typedef struct WabtAstParser {
+  struct WabtAllocator* allocator;
+  WabtScript script;
+  WabtSourceErrorHandler* error_handler;
   int errors;
-} WasmAstParser;
+} WabtAstParser;
 
-WASM_EXTERN_C_BEGIN
-struct WasmAllocator* wasm_ast_lexer_get_allocator(WasmAstLexer* lexer);
-int wasm_ast_lexer_lex(union WasmToken*,
-                       struct WasmLocation*,
-                       WasmAstLexer*,
-                       struct WasmAstParser*);
-WasmResult wasm_ast_lexer_get_source_line(WasmAstLexer*,
-                                          const struct WasmLocation*,
+WABT_EXTERN_C_BEGIN
+struct WabtAllocator* wabt_ast_lexer_get_allocator(WabtAstLexer* lexer);
+int wabt_ast_lexer_lex(union WabtToken*,
+                       struct WabtLocation*,
+                       WabtAstLexer*,
+                       struct WabtAstParser*);
+WabtResult wabt_ast_lexer_get_source_line(WabtAstLexer*,
+                                          const struct WabtLocation*,
                                           size_t line_max_length,
                                           char* line,
                                           size_t* out_line_length,
                                           int* out_column_offset);
-void WASM_PRINTF_FORMAT(4, 5) wasm_ast_parser_error(struct WasmLocation*,
-                                                    WasmAstLexer*,
-                                                    struct WasmAstParser*,
+void WABT_PRINTF_FORMAT(4, 5) wabt_ast_parser_error(struct WabtLocation*,
+                                                    WabtAstLexer*,
+                                                    struct WabtAstParser*,
                                                     const char*,
                                                     ...);
-void wasm_ast_format_error(WasmSourceErrorHandler*,
-                           const struct WasmLocation*,
-                           WasmAstLexer*,
+void wabt_ast_format_error(WabtSourceErrorHandler*,
+                           const struct WabtLocation*,
+                           WabtAstLexer*,
                            const char* format,
                            va_list);
-void wasm_destroy_optional_export(WasmAllocator*, WasmOptionalExport*);
-void wasm_destroy_exported_func(WasmAllocator*, WasmExportedFunc*);
-void wasm_destroy_exported_global(WasmAllocator*, WasmExportedFunc*);
-void wasm_destroy_exported_memory(WasmAllocator*, WasmExportedMemory*);
-void wasm_destroy_exported_table(WasmAllocator*, WasmExportedTable*);
-void wasm_destroy_func_fields(WasmAllocator*, WasmFuncField*);
-void wasm_destroy_text_list(WasmAllocator*, WasmTextList*);
-WASM_EXTERN_C_END
+void wabt_destroy_optional_export(WabtAllocator*, WabtOptionalExport*);
+void wabt_destroy_exported_func(WabtAllocator*, WabtExportedFunc*);
+void wabt_destroy_exported_global(WabtAllocator*, WabtExportedFunc*);
+void wabt_destroy_exported_memory(WabtAllocator*, WabtExportedMemory*);
+void wabt_destroy_exported_table(WabtAllocator*, WabtExportedTable*);
+void wabt_destroy_func_fields(WabtAllocator*, WabtFuncField*);
+void wabt_destroy_text_list(WabtAllocator*, WabtTextList*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_AST_PARSER_LEXER_SHARED_H_ */
+#endif /* WABT_AST_PARSER_LEXER_SHARED_H_ */

@@ -18,7 +18,7 @@
 
 #define INITIAL_HASH_CAPACITY 8
 
-static size_t hash_name(const WasmStringSlice* name) {
+static size_t hash_name(const WabtStringSlice* name) {
   // FNV-1a hash
   const uint32_t fnv_prime = 0x01000193;
   const uint8_t* bp = (const uint8_t*)name->start;
@@ -31,28 +31,28 @@ static size_t hash_name(const WasmStringSlice* name) {
   return hval;
 }
 
-static WasmBindingHashEntry* hash_main_entry(const WasmBindingHash* hash,
-                                             const WasmStringSlice* name) {
+static WabtBindingHashEntry* hash_main_entry(const WabtBindingHash* hash,
+                                             const WabtStringSlice* name) {
   return &hash->entries.data[hash_name(name) % hash->entries.capacity];
 }
 
-WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry* entry) {
+WabtBool wabt_hash_entry_is_free(const WabtBindingHashEntry* entry) {
   return !entry->binding.name.start;
 }
 
-static WasmBindingHashEntry* hash_new_entry(WasmBindingHash* hash,
-                                            const WasmStringSlice* name) {
-  WasmBindingHashEntry* entry = hash_main_entry(hash, name);
-  if (!wasm_hash_entry_is_free(entry)) {
+static WabtBindingHashEntry* hash_new_entry(WabtBindingHash* hash,
+                                            const WabtStringSlice* name) {
+  WabtBindingHashEntry* entry = hash_main_entry(hash, name);
+  if (!wabt_hash_entry_is_free(entry)) {
     assert(hash->free_head);
-    WasmBindingHashEntry* free_entry = hash->free_head;
+    WabtBindingHashEntry* free_entry = hash->free_head;
     hash->free_head = free_entry->next;
     if (free_entry->next)
       free_entry->next->prev = NULL;
 
     /* our main position is already claimed. Check to see if the entry in that
      * position is in its main position */
-    WasmBindingHashEntry* other_entry =
+    WabtBindingHashEntry* other_entry =
         hash_main_entry(hash, &entry->binding.name);
     if (other_entry == entry) {
       /* yes, so add this new entry to the chain, even if it is already there */
@@ -62,7 +62,7 @@ static WasmBindingHashEntry* hash_new_entry(WasmBindingHash* hash,
       entry = free_entry;
     } else {
       /* no, move the entry to the free entry */
-      assert(!wasm_hash_entry_is_free(other_entry));
+      assert(!wabt_hash_entry_is_free(other_entry));
       while (other_entry->next != entry)
         other_entry = other_entry->next;
 
@@ -81,30 +81,30 @@ static WasmBindingHashEntry* hash_new_entry(WasmBindingHash* hash,
     entry->next = NULL;
   }
 
-  WASM_ZERO_MEMORY(entry->binding);
+  WABT_ZERO_MEMORY(entry->binding);
   entry->binding.name = *name;
   entry->prev = NULL;
   /* entry->next is set above */
   return entry;
 }
 
-static void hash_resize(WasmAllocator* allocator,
-                        WasmBindingHash* hash,
+static void hash_resize(WabtAllocator* allocator,
+                        WabtBindingHash* hash,
                         size_t desired_capacity) {
-  WasmBindingHash new_hash;
-  WASM_ZERO_MEMORY(new_hash);
+  WabtBindingHash new_hash;
+  WABT_ZERO_MEMORY(new_hash);
   /* TODO(binji): better plural */
-  wasm_reserve_binding_hash_entrys(allocator, &new_hash.entries,
+  wabt_reserve_binding_hash_entrys(allocator, &new_hash.entries,
                                    desired_capacity);
 
   /* update the free list */
   size_t i;
   for (i = 0; i < new_hash.entries.capacity; ++i) {
-    WasmBindingHashEntry* entry = &new_hash.entries.data[i];
+    WabtBindingHashEntry* entry = &new_hash.entries.data[i];
     if (new_hash.free_head)
       new_hash.free_head->prev = entry;
 
-    WASM_ZERO_MEMORY(entry->binding.name);
+    WABT_ZERO_MEMORY(entry->binding.name);
     entry->next = new_hash.free_head;
     new_hash.free_head = entry;
   }
@@ -112,24 +112,24 @@ static void hash_resize(WasmAllocator* allocator,
 
   /* copy from the old hash to the new hash */
   for (i = 0; i < hash->entries.capacity; ++i) {
-    WasmBindingHashEntry* old_entry = &hash->entries.data[i];
-    if (wasm_hash_entry_is_free(old_entry))
+    WabtBindingHashEntry* old_entry = &hash->entries.data[i];
+    if (wabt_hash_entry_is_free(old_entry))
       continue;
 
-    WasmStringSlice* name = &old_entry->binding.name;
-    WasmBindingHashEntry* new_entry = hash_new_entry(&new_hash, name);
+    WabtStringSlice* name = &old_entry->binding.name;
+    WabtBindingHashEntry* new_entry = hash_new_entry(&new_hash, name);
     new_entry->binding = old_entry->binding;
   }
 
-  /* we are sharing the WasmStringSlices, so we only need to destroy the old
+  /* we are sharing the WabtStringSlices, so we only need to destroy the old
    * binding vector */
-  wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
+  wabt_destroy_binding_hash_entry_vector(allocator, &hash->entries);
   *hash = new_hash;
 }
 
-WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
-                                 WasmBindingHash* hash,
-                                 const WasmStringSlice* name) {
+WabtBinding* wabt_insert_binding(WabtAllocator* allocator,
+                                 WabtBindingHash* hash,
+                                 const WabtStringSlice* name) {
   if (hash->entries.size == 0)
     hash_resize(allocator, hash, INITIAL_HASH_CAPACITY);
 
@@ -138,50 +138,50 @@ WasmBinding* wasm_insert_binding(WasmAllocator* allocator,
     hash_resize(allocator, hash, hash->entries.capacity * 2);
   }
 
-  WasmBindingHashEntry* entry = hash_new_entry(hash, name);
+  WabtBindingHashEntry* entry = hash_new_entry(hash, name);
   assert(entry);
   hash->entries.size++;
   return &entry->binding;
 }
 
-int wasm_find_binding_index_by_name(const WasmBindingHash* hash,
-                                    const WasmStringSlice* name) {
+int wabt_find_binding_index_by_name(const WabtBindingHash* hash,
+                                    const WabtStringSlice* name) {
   if (hash->entries.capacity == 0)
     return -1;
 
-  WasmBindingHashEntry* entry = hash_main_entry(hash, name);
+  WabtBindingHashEntry* entry = hash_main_entry(hash, name);
   do {
-    if (wasm_string_slices_are_equal(&entry->binding.name, name))
+    if (wabt_string_slices_are_equal(&entry->binding.name, name))
       return entry->binding.index;
 
     entry = entry->next;
-  } while (entry && !wasm_hash_entry_is_free(entry));
+  } while (entry && !wabt_hash_entry_is_free(entry));
   return -1;
 }
 
-void wasm_remove_binding(struct WasmAllocator* allocator,
-                         WasmBindingHash* hash,
-                         const WasmStringSlice* name) {
-  int index = wasm_find_binding_index_by_name(hash, name);
+void wabt_remove_binding(struct WabtAllocator* allocator,
+                         WabtBindingHash* hash,
+                         const WabtStringSlice* name) {
+  int index = wabt_find_binding_index_by_name(hash, name);
   if (index == -1)
     return;
 
-  WasmBindingHashEntry* entry = &hash->entries.data[index];
-  wasm_destroy_string_slice(allocator, &entry->binding.name);
-  WASM_ZERO_MEMORY(*entry);
+  WabtBindingHashEntry* entry = &hash->entries.data[index];
+  wabt_destroy_string_slice(allocator, &entry->binding.name);
+  WABT_ZERO_MEMORY(*entry);
 }
 
-static void destroy_binding_hash_entry(WasmAllocator* allocator,
-                                       WasmBindingHashEntry* entry) {
-  wasm_destroy_string_slice(allocator, &entry->binding.name);
+static void destroy_binding_hash_entry(WabtAllocator* allocator,
+                                       WabtBindingHashEntry* entry) {
+  wabt_destroy_string_slice(allocator, &entry->binding.name);
 }
 
-void wasm_destroy_binding_hash(WasmAllocator* allocator,
-                               WasmBindingHash* hash) {
-  /* Can't use WASM_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
+void wabt_destroy_binding_hash(WabtAllocator* allocator,
+                               WabtBindingHash* hash) {
+  /* Can't use WABT_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
    * capacity. */
   size_t i;
   for (i = 0; i < hash->entries.capacity; ++i)
     destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
-  wasm_destroy_binding_hash_entry_vector(allocator, &hash->entries);
+  wabt_destroy_binding_hash_entry_vector(allocator, &hash->entries);
 }

@@ -38,7 +38,7 @@ typedef enum LabelType {
 
 typedef struct LabelNode {
   LabelType label_type;
-  const WasmTypeVector* sig;
+  const WabtTypeVector* sig;
   struct LabelNode* next;
   size_t type_stack_limit;
 } LabelNode;
@@ -52,170 +52,170 @@ typedef enum ActionResultKind {
 typedef struct ActionResult {
   ActionResultKind kind;
   union {
-    const WasmTypeVector* types;
-    WasmType type;
+    const WabtTypeVector* types;
+    WabtType type;
   };
 } ActionResult;
 
 typedef struct Context {
-  WasmSourceErrorHandler* error_handler;
-  WasmAllocator* allocator;
-  WasmAstLexer* lexer;
-  const WasmScript* script;
-  const WasmModule* current_module;
-  const WasmFunc* current_func;
+  WabtSourceErrorHandler* error_handler;
+  WabtAllocator* allocator;
+  WabtAstLexer* lexer;
+  const WabtScript* script;
+  const WabtModule* current_module;
+  const WabtFunc* current_func;
   int current_table_index;
   int current_memory_index;
   int current_global_index;
   int num_imported_globals;
-  WasmTypeVector type_stack;
+  WabtTypeVector type_stack;
   LabelNode* top_label;
   int max_depth;
-  WasmResult result;
+  WabtResult result;
 } Context;
 
-static void WASM_PRINTF_FORMAT(3, 4)
-    print_error(Context* ctx, const WasmLocation* loc, const char* fmt, ...) {
-  ctx->result = WASM_ERROR;
+static void WABT_PRINTF_FORMAT(3, 4)
+    print_error(Context* ctx, const WabtLocation* loc, const char* fmt, ...) {
+  ctx->result = WABT_ERROR;
   va_list args;
   va_start(args, fmt);
-  wasm_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
+  wabt_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
 }
 
-static WasmBool is_power_of_two(uint32_t x) {
+static WabtBool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static uint32_t get_opcode_natural_alignment(WasmOpcode opcode) {
-  uint32_t memory_size = wasm_get_opcode_memory_size(opcode);
+static uint32_t get_opcode_natural_alignment(WabtOpcode opcode) {
+  uint32_t memory_size = wabt_get_opcode_memory_size(opcode);
   assert(memory_size != 0);
   return memory_size;
 }
 
-static WasmResult check_var(Context* ctx,
+static WabtResult check_var(Context* ctx,
                             int max_index,
-                            const WasmVar* var,
+                            const WabtVar* var,
                             const char* desc,
                             int* out_index) {
-  assert(var->type == WASM_VAR_TYPE_INDEX);
+  assert(var->type == WABT_VAR_TYPE_INDEX);
   if (var->index >= 0 && var->index < max_index) {
     if (out_index)
       *out_index = var->index;
-    return WASM_OK;
+    return WABT_OK;
   }
   print_error(ctx, &var->loc, "%s variable out of range (max %d)", desc,
               max_index);
-  return WASM_ERROR;
+  return WABT_ERROR;
 }
 
-static WasmResult check_func_var(Context* ctx,
-                                 const WasmVar* var,
-                                 const WasmFunc** out_func) {
+static WabtResult check_func_var(Context* ctx,
+                                 const WabtVar* var,
+                                 const WabtFunc** out_func) {
   int index;
-  if (WASM_FAILED(check_var(ctx, ctx->current_module->funcs.size, var,
+  if (WABT_FAILED(check_var(ctx, ctx->current_module->funcs.size, var,
                             "function", &index))) {
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (out_func)
     *out_func = ctx->current_module->funcs.data[index];
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult check_global_var(Context* ctx,
-                                   const WasmVar* var,
-                                   const WasmGlobal** out_global,
+static WabtResult check_global_var(Context* ctx,
+                                   const WabtVar* var,
+                                   const WabtGlobal** out_global,
                                    int* out_global_index) {
   int index;
-  if (WASM_FAILED(check_var(ctx, ctx->current_module->globals.size, var,
+  if (WABT_FAILED(check_var(ctx, ctx->current_module->globals.size, var,
                             "global", &index))) {
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (out_global)
     *out_global = ctx->current_module->globals.data[index];
   if (out_global_index)
     *out_global_index = index;
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult check_func_type_var(Context* ctx,
-                                      const WasmVar* var,
-                                      const WasmFuncType** out_func_type) {
+static WabtResult check_func_type_var(Context* ctx,
+                                      const WabtVar* var,
+                                      const WabtFuncType** out_func_type) {
   int index;
-  if (WASM_FAILED(check_var(ctx, ctx->current_module->func_types.size, var,
+  if (WABT_FAILED(check_var(ctx, ctx->current_module->func_types.size, var,
                             "function type", &index))) {
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (out_func_type)
     *out_func_type = ctx->current_module->func_types.data[index];
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult check_table_var(Context* ctx,
-                                  const WasmVar* var,
-                                  const WasmTable** out_table) {
+static WabtResult check_table_var(Context* ctx,
+                                  const WabtVar* var,
+                                  const WabtTable** out_table) {
   int index;
-  if (WASM_FAILED(check_var(ctx, ctx->current_module->tables.size, var, "table",
+  if (WABT_FAILED(check_var(ctx, ctx->current_module->tables.size, var, "table",
                             &index))) {
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (out_table)
     *out_table = ctx->current_module->tables.data[index];
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult check_memory_var(Context* ctx,
-                                   const WasmVar* var,
-                                   const WasmMemory** out_memory) {
+static WabtResult check_memory_var(Context* ctx,
+                                   const WabtVar* var,
+                                   const WabtMemory** out_memory) {
   int index;
-  if (WASM_FAILED(check_var(ctx, ctx->current_module->memories.size, var,
+  if (WABT_FAILED(check_var(ctx, ctx->current_module->memories.size, var,
                             "memory", &index))) {
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (out_memory)
     *out_memory = ctx->current_module->memories.data[index];
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult check_local_var(Context* ctx,
-                                  const WasmVar* var,
-                                  WasmType* out_type) {
-  const WasmFunc* func = ctx->current_func;
-  int max_index = wasm_get_num_params_and_locals(func);
-  int index = wasm_get_local_index_by_var(func, var);
+static WabtResult check_local_var(Context* ctx,
+                                  const WabtVar* var,
+                                  WabtType* out_type) {
+  const WabtFunc* func = ctx->current_func;
+  int max_index = wabt_get_num_params_and_locals(func);
+  int index = wabt_get_local_index_by_var(func, var);
   if (index >= 0 && index < max_index) {
     if (out_type) {
-      int num_params = wasm_get_num_params(func);
+      int num_params = wabt_get_num_params(func);
       if (index < num_params) {
-        *out_type = wasm_get_param_type(func, index);
+        *out_type = wabt_get_param_type(func, index);
       } else {
         *out_type = ctx->current_func->local_types.data[index - num_params];
       }
     }
-    return WASM_OK;
+    return WABT_OK;
   }
 
-  if (var->type == WASM_VAR_TYPE_NAME) {
+  if (var->type == WABT_VAR_TYPE_NAME) {
     print_error(ctx, &var->loc,
                 "undefined local variable \"" PRIstringslice "\"",
-                WASM_PRINTF_STRING_SLICE_ARG(var->name));
+                WABT_PRINTF_STRING_SLICE_ARG(var->name));
   } else {
     print_error(ctx, &var->loc, "local variable out of range (max %d)",
                 max_index);
   }
-  return WASM_ERROR;
+  return WABT_ERROR;
 }
 
 static void check_align(Context* ctx,
-                        const WasmLocation* loc,
+                        const WabtLocation* loc,
                         uint32_t alignment,
                         uint32_t natural_alignment) {
-  if (alignment != WASM_USE_NATURAL_ALIGNMENT) {
+  if (alignment != WABT_USE_NATURAL_ALIGNMENT) {
     if (!is_power_of_two(alignment))
       print_error(ctx, loc, "alignment must be power-of-two");
     if (alignment > natural_alignment) {
@@ -227,15 +227,15 @@ static void check_align(Context* ctx,
 }
 
 static void check_offset(Context* ctx,
-                         const WasmLocation* loc,
+                         const WabtLocation* loc,
                          uint64_t offset) {
   if (offset > UINT32_MAX) {
     print_error(ctx, loc, "offset must be less than or equal to 0xffffffff");
   }
 }
 
-static LabelNode* find_label_by_var(LabelNode* top_label, const WasmVar* var) {
-  assert(var->type == WASM_VAR_TYPE_INDEX);
+static LabelNode* find_label_by_var(LabelNode* top_label, const WabtVar* var) {
+  assert(var->type == WABT_VAR_TYPE_INDEX);
   LabelNode* node = top_label;
   int i = 0;
   while (node && i != var->index) {
@@ -245,27 +245,27 @@ static LabelNode* find_label_by_var(LabelNode* top_label, const WasmVar* var) {
   return node;
 }
 
-static WasmResult check_label_var(Context* ctx,
+static WabtResult check_label_var(Context* ctx,
                                   LabelNode* top_label,
-                                  const WasmVar* var,
+                                  const WabtVar* var,
                                   LabelNode** out_node) {
   LabelNode* node = find_label_by_var(top_label, var);
   if (node) {
     if (out_node)
       *out_node = node;
-    return WASM_OK;
+    return WABT_OK;
   }
 
   print_error(ctx, &var->loc, "label variable out of range (max %d)",
               ctx->max_depth);
-  return WASM_ERROR;
+  return WABT_ERROR;
 }
 
 static void push_label(Context* ctx,
-                       const WasmLocation* loc,
+                       const WabtLocation* loc,
                        LabelNode* node,
                        LabelType label_type,
-                       const WasmTypeVector* sig) {
+                       const WabtTypeVector* sig) {
   node->label_type = label_type;
   node->next = ctx->top_label;
   node->sig = sig;
@@ -284,8 +284,8 @@ static size_t type_stack_limit(Context* ctx) {
   return ctx->top_label->type_stack_limit;
 }
 
-static WasmResult check_type_stack_limit(Context* ctx,
-                                         const WasmLocation* loc,
+static WabtResult check_type_stack_limit(Context* ctx,
+                                         const WabtLocation* loc,
                                          size_t expected,
                                          const char* desc) {
   size_t limit = type_stack_limit(ctx);
@@ -294,13 +294,13 @@ static WasmResult check_type_stack_limit(Context* ctx,
     print_error(ctx, loc, "type stack size too small at %s. got %" PRIzd
                           ", expected at least %" PRIzd,
                 desc, avail, expected);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult check_type_stack_limit_exact(Context* ctx,
-                                               const WasmLocation* loc,
+static WabtResult check_type_stack_limit_exact(Context* ctx,
+                                               const WabtLocation* loc,
                                                size_t expected,
                                                const char* desc) {
   size_t limit = type_stack_limit(ctx);
@@ -309,80 +309,80 @@ static WasmResult check_type_stack_limit_exact(Context* ctx,
     print_error(ctx, loc,
                 "type stack at end of %s is %" PRIzd ". expected %" PRIzd, desc,
                 avail, expected);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
-  return WASM_OK;
+  return WABT_OK;
 }
 
 static void reset_type_stack_to_limit(Context* ctx) {
   ctx->type_stack.size = type_stack_limit(ctx);
 }
 
-static void push_type(Context* ctx, WasmType type) {
-  if (type != WASM_TYPE_VOID)
-    wasm_append_type_value(ctx->allocator, &ctx->type_stack, &type);
+static void push_type(Context* ctx, WabtType type) {
+  if (type != WABT_TYPE_VOID)
+    wabt_append_type_value(ctx->allocator, &ctx->type_stack, &type);
 }
 
-static void push_types(Context* ctx, const WasmTypeVector* types) {
+static void push_types(Context* ctx, const WabtTypeVector* types) {
   size_t i;
   for (i = 0; i < types->size; ++i)
     push_type(ctx, types->data[i]);
 }
 
-static WasmType peek_type(Context* ctx, size_t depth, int arity) {
+static WabtType peek_type(Context* ctx, size_t depth, int arity) {
   if (arity > 0) {
     if (depth < ctx->type_stack.size - type_stack_limit(ctx)) {
       return ctx->type_stack.data[ctx->type_stack.size - depth - 1];
     } else {
       /* return any type to allow type-checking to continue; the caller should
        * have already raised an error about the stack underflow. */
-      return WASM_TYPE_I32;
+      return WABT_TYPE_I32;
     }
   } else {
-    return WASM_TYPE_VOID;
+    return WABT_TYPE_VOID;
   }
 }
 
-static WasmType top_type(Context* ctx) {
+static WabtType top_type(Context* ctx) {
   return peek_type(ctx, 0, 1);
 }
 
-static WasmType pop_type(Context* ctx) {
-  WasmType result = top_type(ctx);
+static WabtType pop_type(Context* ctx) {
+  WabtType result = top_type(ctx);
   if (ctx->type_stack.size > type_stack_limit(ctx))
     ctx->type_stack.size--;
   return result;
 }
 
 static void check_type(Context* ctx,
-                       const WasmLocation* loc,
-                       WasmType actual,
-                       WasmType expected,
+                       const WabtLocation* loc,
+                       WabtType actual,
+                       WabtType expected,
                        const char* desc) {
   if (actual != expected) {
     print_error(ctx, loc, "type mismatch at %s. got %s, expected %s", desc,
-                wasm_get_type_name(actual), wasm_get_type_name(expected));
+                wabt_get_type_name(actual), wabt_get_type_name(expected));
   }
 }
 
 static void check_type_index(Context* ctx,
-                             const WasmLocation* loc,
-                             WasmType actual,
-                             WasmType expected,
+                             const WabtLocation* loc,
+                             WabtType actual,
+                             WabtType expected,
                              const char* desc,
                              int index,
                              const char* index_kind) {
   if (actual != expected) {
     print_error(ctx, loc, "type mismatch for %s %d of %s. got %s, expected %s",
-                index_kind, index, desc, wasm_get_type_name(actual),
-                wasm_get_type_name(expected));
+                index_kind, index, desc, wabt_get_type_name(actual),
+                wabt_get_type_name(expected));
   }
 }
 
 static void check_types(Context* ctx,
-                        const WasmLocation* loc,
-                        const WasmTypeVector* actual,
-                        const WasmTypeVector* expected,
+                        const WabtLocation* loc,
+                        const WabtTypeVector* actual,
+                        const WabtTypeVector* expected,
                         const char* desc,
                         const char* index_kind) {
   if (actual->size == expected->size) {
@@ -398,9 +398,9 @@ static void check_types(Context* ctx,
 }
 
 static void check_const_types(Context* ctx,
-                              const WasmLocation* loc,
-                              const WasmTypeVector* actual,
-                              const WasmConstVector* expected,
+                              const WabtLocation* loc,
+                              const WabtTypeVector* actual,
+                              const WabtConstVector* expected,
                               const char* desc) {
   if (actual->size == expected->size) {
     size_t i;
@@ -415,67 +415,67 @@ static void check_const_types(Context* ctx,
 }
 
 static void check_const_type(Context* ctx,
-                             const WasmLocation* loc,
-                             WasmType actual,
-                             const WasmConstVector* expected,
+                             const WabtLocation* loc,
+                             WabtType actual,
+                             const WabtConstVector* expected,
                              const char* desc) {
-  assert(actual != WASM_TYPE_ANY);
-  WasmTypeVector actual_types;
+  assert(actual != WABT_TYPE_ANY);
+  WabtTypeVector actual_types;
 
-  WASM_ZERO_MEMORY(actual_types);
-  actual_types.size = actual == WASM_TYPE_VOID ? 0 : 1;
+  WABT_ZERO_MEMORY(actual_types);
+  actual_types.size = actual == WABT_TYPE_VOID ? 0 : 1;
   actual_types.data = &actual;
   check_const_types(ctx, loc, &actual_types, expected, desc);
 }
 
 static void pop_and_check_1_type(Context* ctx,
-                                 const WasmLocation* loc,
-                                 WasmType expected,
+                                 const WabtLocation* loc,
+                                 WabtType expected,
                                  const char* desc) {
-  if (WASM_SUCCEEDED(check_type_stack_limit(ctx, loc, 1, desc))) {
-    WasmType actual = pop_type(ctx);
+  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, loc, 1, desc))) {
+    WabtType actual = pop_type(ctx);
     check_type(ctx, loc, actual, expected, desc);
   }
 }
 
 static void pop_and_check_2_types(Context* ctx,
-                                  const WasmLocation* loc,
-                                  WasmType expected1,
-                                  WasmType expected2,
+                                  const WabtLocation* loc,
+                                  WabtType expected1,
+                                  WabtType expected2,
                                   const char* desc) {
-  if (WASM_SUCCEEDED(check_type_stack_limit(ctx, loc, 2, desc))) {
-    WasmType actual2 = pop_type(ctx);
-    WasmType actual1 = pop_type(ctx);
+  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, loc, 2, desc))) {
+    WabtType actual2 = pop_type(ctx);
+    WabtType actual1 = pop_type(ctx);
     check_type(ctx, loc, actual1, expected1, desc);
     check_type(ctx, loc, actual2, expected2, desc);
   }
 }
 
 static void check_opcode1(Context* ctx,
-                          const WasmLocation* loc,
-                          WasmOpcode opcode) {
-  pop_and_check_1_type(ctx, loc, wasm_get_opcode_param_type_1(opcode),
-                       wasm_get_opcode_name(opcode));
-  push_type(ctx, wasm_get_opcode_result_type(opcode));
+                          const WabtLocation* loc,
+                          WabtOpcode opcode) {
+  pop_and_check_1_type(ctx, loc, wabt_get_opcode_param_type_1(opcode),
+                       wabt_get_opcode_name(opcode));
+  push_type(ctx, wabt_get_opcode_result_type(opcode));
 }
 
 static void check_opcode2(Context* ctx,
-                          const WasmLocation* loc,
-                          WasmOpcode opcode) {
-  pop_and_check_2_types(ctx, loc, wasm_get_opcode_param_type_1(opcode),
-                        wasm_get_opcode_param_type_2(opcode),
-                        wasm_get_opcode_name(opcode));
-  push_type(ctx, wasm_get_opcode_result_type(opcode));
+                          const WabtLocation* loc,
+                          WabtOpcode opcode) {
+  pop_and_check_2_types(ctx, loc, wabt_get_opcode_param_type_1(opcode),
+                        wabt_get_opcode_param_type_2(opcode),
+                        wabt_get_opcode_name(opcode));
+  push_type(ctx, wabt_get_opcode_result_type(opcode));
 }
 
 static void check_n_types(Context* ctx,
-                          const WasmLocation* loc,
-                          const WasmTypeVector* expected,
+                          const WabtLocation* loc,
+                          const WabtTypeVector* expected,
                           const char* desc) {
-  if (WASM_SUCCEEDED(check_type_stack_limit(ctx, loc, expected->size, desc))) {
+  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, loc, expected->size, desc))) {
     size_t i;
     for (i = 0; i < expected->size; ++i) {
-      WasmType actual =
+      WabtType actual =
           ctx->type_stack.data[ctx->type_stack.size - expected->size + i];
       check_type(ctx, loc, actual, expected->data[i], desc);
     }
@@ -483,25 +483,25 @@ static void check_n_types(Context* ctx,
 }
 
 static void check_assert_return_nan_type(Context* ctx,
-                                         const WasmLocation* loc,
-                                         WasmType actual,
+                                         const WabtLocation* loc,
+                                         WabtType actual,
                                          const char* desc) {
   /* when using assert_return_nan, the result can be either a f32 or f64 type
    * so we special case it here. */
-  if (actual != WASM_TYPE_F32 && actual != WASM_TYPE_F64) {
+  if (actual != WABT_TYPE_F32 && actual != WABT_TYPE_F64) {
     print_error(ctx, loc, "type mismatch at %s. got %s, expected f32 or f64",
-                desc, wasm_get_type_name(actual));
+                desc, wabt_get_type_name(actual));
   }
 }
 
-static WasmResult check_br(Context* ctx,
-                           const WasmLocation* loc,
-                           const WasmVar* var,
-                           const WasmBlockSignature** out_sig,
+static WabtResult check_br(Context* ctx,
+                           const WabtLocation* loc,
+                           const WabtVar* var,
+                           const WabtBlockSignature** out_sig,
                            const char* desc) {
   LabelNode* node;
-  WasmResult result = check_label_var(ctx, ctx->top_label, var, &node);
-  if (WASM_SUCCEEDED(result)) {
+  WabtResult result = check_label_var(ctx, ctx->top_label, var, &node);
+  if (WABT_SUCCEEDED(result)) {
     if (node->label_type != LABEL_TYPE_LOOP) {
       check_n_types(ctx, loc, node->sig, desc);
     }
@@ -513,9 +513,9 @@ static WasmResult check_br(Context* ctx,
 }
 
 static void check_call(Context* ctx,
-                       const WasmLocation* loc,
-                       const WasmStringSlice* callee_name,
-                       const WasmFuncSignature* sig,
+                       const WabtLocation* loc,
+                       const WabtStringSlice* callee_name,
+                       const WabtFuncSignature* sig,
                        const char* desc) {
   size_t expected_args = sig->param_types.size;
   size_t limit = type_stack_limit(ctx);
@@ -523,9 +523,9 @@ static void check_call(Context* ctx,
   size_t i;
   if (expected_args <= avail) {
     for (i = 0; i < sig->param_types.size; ++i) {
-      WasmType actual =
+      WabtType actual =
           ctx->type_stack.data[ctx->type_stack.size - expected_args + i];
-      WasmType expected = sig->param_types.data[i];
+      WabtType expected = sig->param_types.data[i];
       check_type_index(ctx, loc, actual, expected, desc, i, "argument");
     }
     ctx->type_stack.size -= expected_args;
@@ -539,20 +539,20 @@ static void check_call(Context* ctx,
     push_type(ctx, sig->result_types.data[i]);
 }
 
-static void check_expr(Context* ctx, const WasmExpr* expr);
+static void check_expr(Context* ctx, const WabtExpr* expr);
 
 static void check_block(Context* ctx,
-                        const WasmLocation* loc,
-                        const WasmExpr* first,
+                        const WabtLocation* loc,
+                        const WabtExpr* first,
                         const char* desc) {
-  WasmBool check_result = WASM_TRUE;
+  WabtBool check_result = WABT_TRUE;
   if (first) {
-    const WasmExpr* expr;
+    const WabtExpr* expr;
     for (expr = first; expr; expr = expr->next) {
       check_expr(ctx, expr);
       /* stop typechecking if we hit unreachable code */
-      if (top_type(ctx) == WASM_TYPE_ANY) {
-        check_result = WASM_FALSE;
+      if (top_type(ctx) == WABT_TYPE_ANY) {
+        check_result = WABT_FALSE;
         break;
       }
     }
@@ -566,21 +566,21 @@ static void check_block(Context* ctx,
 }
 
 static void check_has_memory(Context* ctx,
-                             const WasmLocation* loc,
-                             WasmOpcode opcode) {
+                             const WabtLocation* loc,
+                             WabtOpcode opcode) {
   if (ctx->current_module->memories.size == 0) {
     print_error(ctx, loc, "%s requires an imported or defined memory.",
-                wasm_get_opcode_name(opcode));
+                wabt_get_opcode_name(opcode));
   }
 }
 
-static void check_expr(Context* ctx, const WasmExpr* expr) {
+static void check_expr(Context* ctx, const WabtExpr* expr) {
   switch (expr->type) {
-    case WASM_EXPR_TYPE_BINARY:
+    case WABT_EXPR_TYPE_BINARY:
       check_opcode2(ctx, &expr->loc, expr->binary.opcode);
       break;
 
-    case WASM_EXPR_TYPE_BLOCK: {
+    case WABT_EXPR_TYPE_BLOCK: {
       LabelNode node;
       push_label(ctx, &expr->loc, &node, LABEL_TYPE_BLOCK, &expr->block.sig);
       check_block(ctx, &expr->loc, expr->block.first, "block");
@@ -589,21 +589,21 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
     }
 
-    case WASM_EXPR_TYPE_BR:
+    case WABT_EXPR_TYPE_BR:
       check_br(ctx, &expr->loc, &expr->br.var, NULL, "br value");
       reset_type_stack_to_limit(ctx);
-      push_type(ctx, WASM_TYPE_ANY);
+      push_type(ctx, WABT_TYPE_ANY);
       break;
 
-    case WASM_EXPR_TYPE_BR_IF: {
-      const WasmBlockSignature* sig;
-      pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "br_if condition");
+    case WABT_EXPR_TYPE_BR_IF: {
+      const WabtBlockSignature* sig;
+      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "br_if condition");
       check_br(ctx, &expr->loc, &expr->br_if.var, &sig, "br_if value");
       break;
     }
 
-    case WASM_EXPR_TYPE_BR_TABLE: {
-      pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "br_table key");
+    case WABT_EXPR_TYPE_BR_TABLE: {
+      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "br_table key");
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
         check_br(ctx, &expr->loc, &expr->br_table.targets.data[i], NULL,
@@ -612,73 +612,73 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       check_br(ctx, &expr->loc, &expr->br_table.default_target, NULL,
                "br_table default target");
       reset_type_stack_to_limit(ctx);
-      push_type(ctx, WASM_TYPE_ANY);
+      push_type(ctx, WABT_TYPE_ANY);
       break;
     }
 
-    case WASM_EXPR_TYPE_CALL: {
-      const WasmFunc* callee;
-      if (WASM_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee)))
+    case WABT_EXPR_TYPE_CALL: {
+      const WabtFunc* callee;
+      if (WABT_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee)))
         check_call(ctx, &expr->loc, &callee->name, &callee->decl.sig, "call");
       break;
     }
 
-    case WASM_EXPR_TYPE_CALL_INDIRECT: {
-      const WasmFuncType* func_type;
+    case WABT_EXPR_TYPE_CALL_INDIRECT: {
+      const WabtFuncType* func_type;
       if (ctx->current_module->tables.size == 0) {
         print_error(ctx, &expr->loc,
                     "found call_indirect operator, but no table");
       }
-      if (WASM_SUCCEEDED(
+      if (WABT_SUCCEEDED(
               check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
-        WasmType type = pop_type(ctx);
-        check_type(ctx, &expr->loc, type, WASM_TYPE_I32,
+        WabtType type = pop_type(ctx);
+        check_type(ctx, &expr->loc, type, WABT_TYPE_I32,
                    "call_indirect function index");
         check_call(ctx, &expr->loc, NULL, &func_type->sig, "call_indirect");
       }
       break;
     }
 
-    case WASM_EXPR_TYPE_COMPARE:
+    case WABT_EXPR_TYPE_COMPARE:
       check_opcode2(ctx, &expr->loc, expr->compare.opcode);
       break;
 
-    case WASM_EXPR_TYPE_CONST:
+    case WABT_EXPR_TYPE_CONST:
       push_type(ctx, expr->const_.type);
       break;
 
-    case WASM_EXPR_TYPE_CONVERT:
+    case WABT_EXPR_TYPE_CONVERT:
       check_opcode1(ctx, &expr->loc, expr->convert.opcode);
       break;
 
-    case WASM_EXPR_TYPE_DROP:
-      if (WASM_SUCCEEDED(check_type_stack_limit(ctx, &expr->loc, 1, "drop")))
+    case WABT_EXPR_TYPE_DROP:
+      if (WABT_SUCCEEDED(check_type_stack_limit(ctx, &expr->loc, 1, "drop")))
         pop_type(ctx);
       break;
 
-    case WASM_EXPR_TYPE_GET_GLOBAL: {
-      const WasmGlobal* global;
-      if (WASM_SUCCEEDED(
+    case WABT_EXPR_TYPE_GET_GLOBAL: {
+      const WabtGlobal* global;
+      if (WABT_SUCCEEDED(
               check_global_var(ctx, &expr->get_global.var, &global, NULL)))
         push_type(ctx, global->type);
       break;
     }
 
-    case WASM_EXPR_TYPE_GET_LOCAL: {
-      WasmType type;
-      if (WASM_SUCCEEDED(check_local_var(ctx, &expr->get_local.var, &type)))
+    case WABT_EXPR_TYPE_GET_LOCAL: {
+      WabtType type;
+      if (WABT_SUCCEEDED(check_local_var(ctx, &expr->get_local.var, &type)))
         push_type(ctx, type);
       break;
     }
 
-    case WASM_EXPR_TYPE_GROW_MEMORY:
-      check_has_memory(ctx, &expr->loc, WASM_OPCODE_GROW_MEMORY);
-      check_opcode1(ctx, &expr->loc, WASM_OPCODE_GROW_MEMORY);
+    case WABT_EXPR_TYPE_GROW_MEMORY:
+      check_has_memory(ctx, &expr->loc, WABT_OPCODE_GROW_MEMORY);
+      check_opcode1(ctx, &expr->loc, WABT_OPCODE_GROW_MEMORY);
       break;
 
-    case WASM_EXPR_TYPE_IF: {
+    case WABT_EXPR_TYPE_IF: {
       LabelNode node;
-      pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "if condition");
+      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "if condition");
       push_label(ctx, &expr->loc, &node, LABEL_TYPE_IF, &expr->if_.true_.sig);
       check_block(ctx, &expr->loc, expr->if_.true_.first, "if true branch");
       check_block(ctx, &expr->loc, expr->if_.false_, "if false branch");
@@ -687,7 +687,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
     }
 
-    case WASM_EXPR_TYPE_LOAD:
+    case WABT_EXPR_TYPE_LOAD:
       check_has_memory(ctx, &expr->loc, expr->load.opcode);
       check_align(ctx, &expr->loc, expr->load.align,
                   get_opcode_natural_alignment(expr->load.opcode));
@@ -695,7 +695,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       check_opcode1(ctx, &expr->loc, expr->load.opcode);
       break;
 
-    case WASM_EXPR_TYPE_LOOP: {
+    case WABT_EXPR_TYPE_LOOP: {
       LabelNode node;
       push_label(ctx, &expr->loc, &node, LABEL_TYPE_LOOP, &expr->loop.sig);
       check_block(ctx, &expr->loc, expr->loop.first, "loop");
@@ -704,38 +704,38 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
     }
 
-    case WASM_EXPR_TYPE_CURRENT_MEMORY:
-      check_has_memory(ctx, &expr->loc, WASM_OPCODE_CURRENT_MEMORY);
-      push_type(ctx, WASM_TYPE_I32);
+    case WABT_EXPR_TYPE_CURRENT_MEMORY:
+      check_has_memory(ctx, &expr->loc, WABT_OPCODE_CURRENT_MEMORY);
+      push_type(ctx, WABT_TYPE_I32);
       break;
 
-    case WASM_EXPR_TYPE_NOP:
+    case WABT_EXPR_TYPE_NOP:
       break;
 
-    case WASM_EXPR_TYPE_RETURN: {
+    case WABT_EXPR_TYPE_RETURN: {
       check_n_types(ctx, &expr->loc, &ctx->current_func->decl.sig.result_types,
                     "return");
       reset_type_stack_to_limit(ctx);
-      push_type(ctx, WASM_TYPE_ANY);
+      push_type(ctx, WABT_TYPE_ANY);
       break;
     }
 
-    case WASM_EXPR_TYPE_SELECT: {
-      pop_and_check_1_type(ctx, &expr->loc, WASM_TYPE_I32, "select");
-      if (WASM_SUCCEEDED(
+    case WABT_EXPR_TYPE_SELECT: {
+      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "select");
+      if (WABT_SUCCEEDED(
               check_type_stack_limit(ctx, &expr->loc, 2, "select"))) {
-        WasmType type1 = pop_type(ctx);
-        WasmType type2 = pop_type(ctx);
+        WabtType type1 = pop_type(ctx);
+        WabtType type2 = pop_type(ctx);
         check_type(ctx, &expr->loc, type2, type1, "select");
         push_type(ctx, type1);
       }
       break;
     }
 
-    case WASM_EXPR_TYPE_SET_GLOBAL: {
-      WasmType type = WASM_TYPE_I32;
-      const WasmGlobal* global;
-      if (WASM_SUCCEEDED(
+    case WABT_EXPR_TYPE_SET_GLOBAL: {
+      WabtType type = WABT_TYPE_I32;
+      const WabtGlobal* global;
+      if (WABT_SUCCEEDED(
               check_global_var(ctx, &expr->set_global.var, &global, NULL))) {
         type = global->type;
       }
@@ -743,14 +743,14 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       break;
     }
 
-    case WASM_EXPR_TYPE_SET_LOCAL: {
-      WasmType type = WASM_TYPE_I32;
+    case WABT_EXPR_TYPE_SET_LOCAL: {
+      WabtType type = WABT_TYPE_I32;
       check_local_var(ctx, &expr->set_local.var, &type);
       pop_and_check_1_type(ctx, &expr->loc, type, "set_local");
       break;
     }
 
-    case WASM_EXPR_TYPE_STORE:
+    case WABT_EXPR_TYPE_STORE:
       check_has_memory(ctx, &expr->loc, expr->store.opcode);
       check_align(ctx, &expr->loc, expr->store.align,
                   get_opcode_natural_alignment(expr->store.opcode));
@@ -758,30 +758,30 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
       check_opcode2(ctx, &expr->loc, expr->store.opcode);
       break;
 
-    case WASM_EXPR_TYPE_TEE_LOCAL: {
-      WasmType local_type = WASM_TYPE_I32;
+    case WABT_EXPR_TYPE_TEE_LOCAL: {
+      WabtType local_type = WABT_TYPE_I32;
       check_local_var(ctx, &expr->tee_local.var, &local_type);
       if (check_type_stack_limit(ctx, &expr->loc, 1, "tee_local"))
         check_type(ctx, &expr->loc, top_type(ctx), local_type, "tee_local");
       break;
     }
 
-    case WASM_EXPR_TYPE_UNARY:
+    case WABT_EXPR_TYPE_UNARY:
       check_opcode1(ctx, &expr->loc, expr->unary.opcode);
       break;
 
-    case WASM_EXPR_TYPE_UNREACHABLE:
+    case WABT_EXPR_TYPE_UNREACHABLE:
       reset_type_stack_to_limit(ctx);
-      push_type(ctx, WASM_TYPE_ANY);
+      push_type(ctx, WABT_TYPE_ANY);
       break;
   }
 }
 
 static void check_func_signature_matches_func_type(
     Context* ctx,
-    const WasmLocation* loc,
-    const WasmFuncSignature* sig,
-    const WasmFuncType* func_type) {
+    const WabtLocation* loc,
+    const WabtFuncSignature* sig,
+    const WabtFuncType* func_type) {
   check_types(ctx, loc, &sig->result_types, &func_type->sig.result_types,
               "function", "result");
   check_types(ctx, loc, &sig->param_types, &func_type->sig.param_types,
@@ -789,17 +789,17 @@ static void check_func_signature_matches_func_type(
 }
 
 static void check_func(Context* ctx,
-                       const WasmLocation* loc,
-                       const WasmFunc* func) {
+                       const WabtLocation* loc,
+                       const WabtFunc* func) {
   ctx->current_func = func;
-  if (wasm_get_num_results(func) > 1) {
+  if (wabt_get_num_results(func) > 1) {
     print_error(ctx, loc, "multiple result values not currently supported.");
     /* don't run any other checks, the won't test the result_type properly */
     return;
   }
-  if (wasm_decl_has_func_type(&func->decl)) {
-    const WasmFuncType* func_type;
-    if (WASM_SUCCEEDED(
+  if (wabt_decl_has_func_type(&func->decl)) {
+    const WabtFuncType* func_type;
+    if (WABT_SUCCEEDED(
             check_func_type_var(ctx, &func->decl.type_var, &func_type))) {
       check_func_signature_matches_func_type(ctx, loc, &func->decl.sig,
                                              func_type);
@@ -816,7 +816,7 @@ static void check_func(Context* ctx,
 }
 
 static void print_const_expr_error(Context* ctx,
-                                   const WasmLocation* loc,
+                                   const WabtLocation* loc,
                                    const char* desc) {
   print_error(ctx, loc,
               "invalid %s, must be a constant expression; either *.const or "
@@ -825,11 +825,11 @@ static void print_const_expr_error(Context* ctx,
 }
 
 static void check_const_init_expr(Context* ctx,
-                                  const WasmLocation* loc,
-                                  const WasmExpr* expr,
-                                  WasmType expected_type,
+                                  const WabtLocation* loc,
+                                  const WabtExpr* expr,
+                                  WabtType expected_type,
                                   const char* desc) {
-  WasmType type = WASM_TYPE_VOID;
+  WabtType type = WABT_TYPE_VOID;
   if (expr) {
     if (expr->next != NULL) {
       print_const_expr_error(ctx, loc, desc);
@@ -837,14 +837,14 @@ static void check_const_init_expr(Context* ctx,
     }
 
     switch (expr->type) {
-      case WASM_EXPR_TYPE_CONST:
+      case WABT_EXPR_TYPE_CONST:
         type = expr->const_.type;
         break;
 
-      case WASM_EXPR_TYPE_GET_GLOBAL: {
-        const WasmGlobal* ref_global = NULL;
+      case WABT_EXPR_TYPE_GET_GLOBAL: {
+        const WabtGlobal* ref_global = NULL;
         int ref_global_index;
-        if (WASM_FAILED(check_global_var(ctx, &expr->get_global.var,
+        if (WABT_FAILED(check_global_var(ctx, &expr->get_global.var,
                                          &ref_global, &ref_global_index))) {
           return;
         }
@@ -879,15 +879,15 @@ static void check_const_init_expr(Context* ctx,
 }
 
 static void check_global(Context* ctx,
-                         const WasmLocation* loc,
-                         const WasmGlobal* global) {
+                         const WabtLocation* loc,
+                         const WabtGlobal* global) {
   check_const_init_expr(ctx, loc, global->init_expr, global->type,
                         "global initializer expression");
 }
 
 static void check_limits(Context* ctx,
-                         const WasmLocation* loc,
-                         const WasmLimits* limits,
+                         const WabtLocation* loc,
+                         const WabtLimits* limits,
                          uint64_t absolute_max,
                          const char* desc) {
   if (limits->initial > absolute_max) {
@@ -910,105 +910,105 @@ static void check_limits(Context* ctx,
 }
 
 static void check_table(Context* ctx,
-                        const WasmLocation* loc,
-                        const WasmTable* table) {
+                        const WabtLocation* loc,
+                        const WabtTable* table) {
   if (ctx->current_table_index == 1)
     print_error(ctx, loc, "only one table allowed");
   check_limits(ctx, loc, &table->elem_limits, UINT32_MAX, "elems");
 }
 
-static void check_elem_segments(Context* ctx, const WasmModule* module) {
-  WasmModuleField* field;
+static void check_elem_segments(Context* ctx, const WabtModule* module) {
+  WabtModuleField* field;
   for (field = module->first_field; field; field = field->next) {
-    if (field->type != WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT)
+    if (field->type != WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT)
       continue;
 
-    WasmElemSegment* elem_segment = &field->elem_segment;
-    const WasmTable* table;
-    if (!WASM_SUCCEEDED(
+    WabtElemSegment* elem_segment = &field->elem_segment;
+    const WabtTable* table;
+    if (!WABT_SUCCEEDED(
             check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
     size_t i;
     for (i = 0; i < elem_segment->vars.size; ++i) {
-      if (!WASM_SUCCEEDED(
+      if (!WABT_SUCCEEDED(
               check_func_var(ctx, &elem_segment->vars.data[i], NULL)))
         continue;
     }
 
-    check_const_init_expr(ctx, &field->loc, elem_segment->offset, WASM_TYPE_I32,
+    check_const_init_expr(ctx, &field->loc, elem_segment->offset, WABT_TYPE_I32,
                           "elem segment offset");
   }
 }
 
 static void check_memory(Context* ctx,
-                         const WasmLocation* loc,
-                         const WasmMemory* memory) {
+                         const WabtLocation* loc,
+                         const WabtMemory* memory) {
   if (ctx->current_memory_index == 1)
     print_error(ctx, loc, "only one memory block allowed");
-  check_limits(ctx, loc, &memory->page_limits, WASM_MAX_PAGES, "pages");
+  check_limits(ctx, loc, &memory->page_limits, WABT_MAX_PAGES, "pages");
 }
 
-static void check_data_segments(Context* ctx, const WasmModule* module) {
-  WasmModuleField* field;
+static void check_data_segments(Context* ctx, const WabtModule* module) {
+  WabtModuleField* field;
   for (field = module->first_field; field; field = field->next) {
-    if (field->type != WASM_MODULE_FIELD_TYPE_DATA_SEGMENT)
+    if (field->type != WABT_MODULE_FIELD_TYPE_DATA_SEGMENT)
       continue;
 
-    WasmDataSegment* data_segment = &field->data_segment;
-    const WasmMemory* memory;
-    if (!WASM_SUCCEEDED(
+    WabtDataSegment* data_segment = &field->data_segment;
+    const WabtMemory* memory;
+    if (!WABT_SUCCEEDED(
             check_memory_var(ctx, &data_segment->memory_var, &memory)))
       continue;
 
-    check_const_init_expr(ctx, &field->loc, data_segment->offset, WASM_TYPE_I32,
+    check_const_init_expr(ctx, &field->loc, data_segment->offset, WABT_TYPE_I32,
                           "data segment offset");
   }
 }
 
 static void check_import(Context* ctx,
-                         const WasmLocation* loc,
-                         const WasmImport* import) {
+                         const WabtLocation* loc,
+                         const WabtImport* import) {
   switch (import->kind) {
-    case WASM_EXTERNAL_KIND_FUNC:
-      if (wasm_decl_has_func_type(&import->func.decl))
+    case WABT_EXTERNAL_KIND_FUNC:
+      if (wabt_decl_has_func_type(&import->func.decl))
         check_func_type_var(ctx, &import->func.decl.type_var, NULL);
       break;
-    case WASM_EXTERNAL_KIND_TABLE:
+    case WABT_EXTERNAL_KIND_TABLE:
       check_table(ctx, loc, &import->table);
       ctx->current_table_index++;
       break;
-    case WASM_EXTERNAL_KIND_MEMORY:
+    case WABT_EXTERNAL_KIND_MEMORY:
       check_memory(ctx, loc, &import->memory);
       ctx->current_memory_index++;
       break;
-    case WASM_EXTERNAL_KIND_GLOBAL:
+    case WABT_EXTERNAL_KIND_GLOBAL:
       if (import->global.mutable_) {
         print_error(ctx, loc, "mutable globals cannot be imported");
       }
       ctx->num_imported_globals++;
       ctx->current_global_index++;
       break;
-    case WASM_NUM_EXTERNAL_KINDS:
+    case WABT_NUM_EXTERNAL_KINDS:
       assert(0);
       break;
   }
 }
 
-static void check_export(Context* ctx, const WasmExport* export_) {
+static void check_export(Context* ctx, const WabtExport* export_) {
   switch (export_->kind) {
-    case WASM_EXTERNAL_KIND_FUNC:
+    case WABT_EXTERNAL_KIND_FUNC:
       check_func_var(ctx, &export_->var, NULL);
       break;
-    case WASM_EXTERNAL_KIND_TABLE:
+    case WABT_EXTERNAL_KIND_TABLE:
       check_table_var(ctx, &export_->var, NULL);
       break;
-    case WASM_EXTERNAL_KIND_MEMORY:
+    case WABT_EXTERNAL_KIND_MEMORY:
       check_memory_var(ctx, &export_->var, NULL);
       break;
-    case WASM_EXTERNAL_KIND_GLOBAL: {
-      const WasmGlobal* global;
-      if (WASM_SUCCEEDED(check_global_var(ctx, &export_->var, &global, NULL))) {
+    case WABT_EXTERNAL_KIND_GLOBAL: {
+      const WabtGlobal* global;
+      if (WABT_SUCCEEDED(check_global_var(ctx, &export_->var, &global, NULL))) {
         if (global->mutable_) {
           print_error(ctx, &export_->var.loc,
                       "mutable globals cannot be exported");
@@ -1016,32 +1016,32 @@ static void check_export(Context* ctx, const WasmExport* export_) {
       }
       break;
     }
-    case WASM_NUM_EXTERNAL_KINDS:
+    case WABT_NUM_EXTERNAL_KINDS:
       assert(0);
       break;
   }
 }
 
-static void on_duplicate_binding(WasmBindingHashEntry* a,
-                                 WasmBindingHashEntry* b,
+static void on_duplicate_binding(WabtBindingHashEntry* a,
+                                 WabtBindingHashEntry* b,
                                  void* user_data) {
   Context* ctx = user_data;
   /* choose the location that is later in the file */
-  WasmLocation* a_loc = &a->binding.loc;
-  WasmLocation* b_loc = &b->binding.loc;
-  WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
+  WabtLocation* a_loc = &a->binding.loc;
+  WabtLocation* b_loc = &b->binding.loc;
+  WabtLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
   print_error(ctx, loc, "redefinition of export \"" PRIstringslice "\"",
-              WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
+              WABT_PRINTF_STRING_SLICE_ARG(a->binding.name));
 }
 
 static void check_duplicate_export_bindings(Context* ctx,
-                                            const WasmModule* module) {
-  wasm_find_duplicate_bindings(&module->export_bindings, on_duplicate_binding,
+                                            const WabtModule* module) {
+  wabt_find_duplicate_bindings(&module->export_bindings, on_duplicate_binding,
                                ctx);
 }
 
-static void check_module(Context* ctx, const WasmModule* module) {
-  WasmBool seen_start = WASM_FALSE;
+static void check_module(Context* ctx, const WabtModule* module) {
+  WabtBool seen_start = WABT_FALSE;
 
   ctx->current_module = module;
   ctx->current_table_index = 0;
@@ -1049,65 +1049,65 @@ static void check_module(Context* ctx, const WasmModule* module) {
   ctx->current_global_index = 0;
   ctx->num_imported_globals = 0;
 
-  WasmModuleField* field;
+  WabtModuleField* field;
   for (field = module->first_field; field != NULL; field = field->next) {
     switch (field->type) {
-      case WASM_MODULE_FIELD_TYPE_FUNC:
+      case WABT_MODULE_FIELD_TYPE_FUNC:
         check_func(ctx, &field->loc, &field->func);
         break;
 
-      case WASM_MODULE_FIELD_TYPE_GLOBAL:
+      case WABT_MODULE_FIELD_TYPE_GLOBAL:
         check_global(ctx, &field->loc, &field->global);
         ctx->current_global_index++;
         break;
 
-      case WASM_MODULE_FIELD_TYPE_IMPORT:
+      case WABT_MODULE_FIELD_TYPE_IMPORT:
         check_import(ctx, &field->loc, &field->import);
         break;
 
-      case WASM_MODULE_FIELD_TYPE_EXPORT:
+      case WABT_MODULE_FIELD_TYPE_EXPORT:
         check_export(ctx, &field->export_);
         break;
 
-      case WASM_MODULE_FIELD_TYPE_TABLE:
+      case WABT_MODULE_FIELD_TYPE_TABLE:
         check_table(ctx, &field->loc, &field->table);
         ctx->current_table_index++;
         break;
 
-      case WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+      case WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT:
         /* checked below */
         break;
 
-      case WASM_MODULE_FIELD_TYPE_MEMORY:
+      case WABT_MODULE_FIELD_TYPE_MEMORY:
         check_memory(ctx, &field->loc, &field->memory);
         ctx->current_memory_index++;
         break;
 
-      case WASM_MODULE_FIELD_TYPE_DATA_SEGMENT:
+      case WABT_MODULE_FIELD_TYPE_DATA_SEGMENT:
         /* checked below */
         break;
 
-      case WASM_MODULE_FIELD_TYPE_FUNC_TYPE:
+      case WABT_MODULE_FIELD_TYPE_FUNC_TYPE:
         break;
 
-      case WASM_MODULE_FIELD_TYPE_START: {
+      case WABT_MODULE_FIELD_TYPE_START: {
         if (seen_start) {
           print_error(ctx, &field->loc, "only one start function allowed");
         }
 
-        const WasmFunc* start_func = NULL;
+        const WabtFunc* start_func = NULL;
         check_func_var(ctx, &field->start, &start_func);
         if (start_func) {
-          if (wasm_get_num_params(start_func) != 0) {
+          if (wabt_get_num_params(start_func) != 0) {
             print_error(ctx, &field->loc, "start function must be nullary");
           }
 
-          if (wasm_get_num_results(start_func) != 0) {
+          if (wabt_get_num_results(start_func) != 0) {
             print_error(ctx, &field->loc,
                         "start function must not return anything");
           }
         }
-        seen_start = WASM_TRUE;
+        seen_start = WABT_TRUE;
         break;
       }
     }
@@ -1121,32 +1121,32 @@ static void check_module(Context* ctx, const WasmModule* module) {
 /* returns the result type of the invoked function, checked by the caller;
  * returning NULL means that another error occured first, so the result type
  * should be ignored. */
-static const WasmTypeVector* check_invoke(Context* ctx,
-                                          const WasmAction* action) {
-  const WasmActionInvoke* invoke = &action->invoke;
-  const WasmModule* module =
-      wasm_get_module_by_var(ctx->script, &action->module_var);
+static const WabtTypeVector* check_invoke(Context* ctx,
+                                          const WabtAction* action) {
+  const WabtActionInvoke* invoke = &action->invoke;
+  const WabtModule* module =
+      wabt_get_module_by_var(ctx->script, &action->module_var);
   if (!module) {
     print_error(ctx, &action->loc, "unknown module");
     return NULL;
   }
 
-  WasmExport* export = wasm_get_export_by_name(module, &invoke->name);
+  WabtExport* export = wabt_get_export_by_name(module, &invoke->name);
   if (!export) {
     print_error(ctx, &action->loc,
                 "unknown function export \"" PRIstringslice "\"",
-                WASM_PRINTF_STRING_SLICE_ARG(invoke->name));
+                WABT_PRINTF_STRING_SLICE_ARG(invoke->name));
     return NULL;
   }
 
-  WasmFunc* func = wasm_get_func_by_var(module, &export->var);
+  WabtFunc* func = wabt_get_func_by_var(module, &export->var);
   if (!func) {
     /* this error will have already been reported, just skip it */
     return NULL;
   }
 
   size_t actual_args = invoke->args.size;
-  size_t expected_args = wasm_get_num_params(func);
+  size_t expected_args = wabt_get_num_params(func);
   if (expected_args != actual_args) {
     print_error(ctx, &action->loc, "too %s parameters to function. got %" PRIzd
                                    ", expected %" PRIzd,
@@ -1156,56 +1156,56 @@ static const WasmTypeVector* check_invoke(Context* ctx,
   }
   size_t i;
   for (i = 0; i < actual_args; ++i) {
-    WasmConst* const_ = &invoke->args.data[i];
+    WabtConst* const_ = &invoke->args.data[i];
     check_type_index(ctx, &const_->loc, const_->type,
-                     wasm_get_param_type(func, i), "invoke", i, "argument");
+                     wabt_get_param_type(func, i), "invoke", i, "argument");
   }
 
   return &func->decl.sig.result_types;
 }
 
-static WasmResult check_get(Context* ctx,
-                            const WasmAction* action,
-                            WasmType* out_type) {
-  const WasmActionGet* get = &action->get;
-  const WasmModule* module =
-      wasm_get_module_by_var(ctx->script, &action->module_var);
+static WabtResult check_get(Context* ctx,
+                            const WabtAction* action,
+                            WabtType* out_type) {
+  const WabtActionGet* get = &action->get;
+  const WabtModule* module =
+      wabt_get_module_by_var(ctx->script, &action->module_var);
   if (!module) {
     print_error(ctx, &action->loc, "unknown module");
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
-  WasmExport* export = wasm_get_export_by_name(module, &get->name);
+  WabtExport* export = wabt_get_export_by_name(module, &get->name);
   if (!export) {
     print_error(ctx, &action->loc,
                 "unknown global export \"" PRIstringslice "\"",
-                WASM_PRINTF_STRING_SLICE_ARG(get->name));
-    return WASM_ERROR;
+                WABT_PRINTF_STRING_SLICE_ARG(get->name));
+    return WABT_ERROR;
   }
 
-  WasmGlobal* global = wasm_get_global_by_var(module, &export->var);
+  WabtGlobal* global = wabt_get_global_by_var(module, &export->var);
   if (!global) {
     /* this error will have already been reported, just skip it */
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   *out_type = global->type;
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static ActionResult check_action(Context* ctx, const WasmAction* action) {
+static ActionResult check_action(Context* ctx, const WabtAction* action) {
   ActionResult result;
-  WASM_ZERO_MEMORY(result);
+  WABT_ZERO_MEMORY(result);
 
   switch (action->type) {
-    case WASM_ACTION_TYPE_INVOKE:
+    case WABT_ACTION_TYPE_INVOKE:
       result.types = check_invoke(ctx, action);
       result.kind =
           result.types ? ACTION_RESULT_KIND_TYPES : ACTION_RESULT_KIND_ERROR;
       break;
 
-    case WASM_ACTION_TYPE_GET:
-      if (WASM_SUCCEEDED(check_get(ctx, action, &result.type)))
+    case WABT_ACTION_TYPE_GET:
+      if (WABT_SUCCEEDED(check_get(ctx, action, &result.type)))
         result.kind = ACTION_RESULT_KIND_TYPE;
       else
         result.kind = ACTION_RESULT_KIND_ERROR;
@@ -1215,28 +1215,28 @@ static ActionResult check_action(Context* ctx, const WasmAction* action) {
   return result;
 }
 
-static void check_command(Context* ctx, const WasmCommand* command) {
+static void check_command(Context* ctx, const WabtCommand* command) {
   switch (command->type) {
-    case WASM_COMMAND_TYPE_MODULE:
+    case WABT_COMMAND_TYPE_MODULE:
       check_module(ctx, &command->module);
       break;
 
-    case WASM_COMMAND_TYPE_ACTION:
+    case WABT_COMMAND_TYPE_ACTION:
       /* ignore result type */
       check_action(ctx, &command->action);
       break;
 
-    case WASM_COMMAND_TYPE_REGISTER:
-    case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
-    case WASM_COMMAND_TYPE_ASSERT_INVALID:
-    case WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
-    case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
-    case WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+    case WABT_COMMAND_TYPE_REGISTER:
+    case WABT_COMMAND_TYPE_ASSERT_MALFORMED:
+    case WABT_COMMAND_TYPE_ASSERT_INVALID:
+    case WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
+    case WABT_COMMAND_TYPE_ASSERT_UNLINKABLE:
+    case WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
       /* ignore */
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_RETURN: {
-      const WasmAction* action = &command->assert_return.action;
+    case WABT_COMMAND_TYPE_ASSERT_RETURN: {
+      const WabtAction* action = &command->assert_return.action;
       ActionResult result = check_action(ctx, action);
       switch (result.kind) {
         case ACTION_RESULT_KIND_TYPES:
@@ -1256,12 +1256,12 @@ static void check_command(Context* ctx, const WasmCommand* command) {
       break;
     }
 
-    case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN: {
-      const WasmAction* action = &command->assert_return_nan.action;
+    case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN: {
+      const WabtAction* action = &command->assert_return_nan.action;
       ActionResult result = check_action(ctx, action);
 
       /* a valid result type will either be f32 or f64; convert a TYPES result
-       * into a TYPE result, so it is easier to check below. WASM_TYPE_ANY is
+       * into a TYPE result, so it is easier to check below. WABT_TYPE_ANY is
        * used to specify a type that should not be checked (because an earlier
        * error occurred). */
       if (result.kind == ACTION_RESULT_KIND_TYPES) {
@@ -1271,46 +1271,46 @@ static void check_command(Context* ctx, const WasmCommand* command) {
         } else {
           print_error(ctx, &action->loc, "expected 1 result, got %" PRIzd,
                       result.types->size);
-          result.type = WASM_TYPE_ANY;
+          result.type = WABT_TYPE_ANY;
         }
       }
 
       if (result.kind == ACTION_RESULT_KIND_TYPE &&
-          result.type != WASM_TYPE_ANY)
+          result.type != WABT_TYPE_ANY)
         check_assert_return_nan_type(ctx, &action->loc, result.type, "action");
       break;
     }
 
-    case WASM_COMMAND_TYPE_ASSERT_TRAP:
-    case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
+    case WABT_COMMAND_TYPE_ASSERT_TRAP:
+    case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
       /* ignore result type */
       check_action(ctx, &command->assert_trap.action);
       break;
 
-    case WASM_NUM_COMMAND_TYPES:
+    case WABT_NUM_COMMAND_TYPES:
       assert(0);
       break;
   }
 }
 
-static void wasm_destroy_context(Context* ctx) {
-  wasm_destroy_type_vector(ctx->allocator, &ctx->type_stack);
+static void wabt_destroy_context(Context* ctx) {
+  wabt_destroy_type_vector(ctx->allocator, &ctx->type_stack);
 }
 
-WasmResult wasm_validate_script(WasmAllocator* allocator,
-                                WasmAstLexer* lexer,
-                                const struct WasmScript* script,
-                                WasmSourceErrorHandler* error_handler) {
+WabtResult wabt_validate_script(WabtAllocator* allocator,
+                                WabtAstLexer* lexer,
+                                const struct WabtScript* script,
+                                WabtSourceErrorHandler* error_handler) {
   Context ctx;
-  WASM_ZERO_MEMORY(ctx);
+  WABT_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
-  ctx.result = WASM_OK;
+  ctx.result = WABT_OK;
   ctx.script = script;
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
-  wasm_destroy_context(&ctx);
+  wabt_destroy_context(&ctx);
   return ctx.result;
 }

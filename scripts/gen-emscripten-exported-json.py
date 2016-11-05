@@ -21,8 +21,6 @@ import os
 import re
 import sys
 
-from utils import Executable, Error
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 TEST_DIR = os.path.join(ROOT_DIR, 'test')
@@ -30,13 +28,15 @@ DEFAULT_EMSCRIPTEN_DIR = os.path.join(ROOT_DIR, 'emscripten')
 
 sys.path.append(TEST_DIR)
 
+from utils import Executable, Error  # noqa: E402
+
 
 def FindFiles(cmake_build_dir):
   result = []
   for root, dirs, files in os.walk(cmake_build_dir):
     for file_ in files:
       path = os.path.join(root, file_)
-      if file_ == 'libwasm.a' or re.search(r'wasm-emscripten-helpers', file_):
+      if file_ == 'libwabt.a' or re.search(r'emscripten-helpers', file_):
         result.append(path)
   return result
 
@@ -61,9 +61,9 @@ def ProcessFile(nm, file_):
     # line looks like:
     #
     # -------- d yycheck
-    # -------- t wasm_strndup_
-    #          U wasm_parse_int64
-    # -------- T wasm_offsetof_allocator_alloc
+    # -------- t wabt_strndup_
+    #          U wabt_parse_int64
+    # -------- T wabt_offsetof_allocator_alloc
     #
     # we want to only keep the "T" names; the extern function symbols defined
     # in the object.

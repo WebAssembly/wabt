@@ -20,7 +20,7 @@
 
 #define INITIAL_VECTOR_CAPACITY 8
 
-void wasm_ensure_capacity(WasmAllocator* allocator,
+void wabt_ensure_capacity(WabtAllocator* allocator,
                                 void** data,
                                 size_t* capacity,
                                 size_t desired_size,
@@ -30,19 +30,19 @@ void wasm_ensure_capacity(WasmAllocator* allocator,
     while (new_capacity < desired_size)
       new_capacity *= 2;
     size_t new_byte_size = new_capacity * elt_byte_size;
-    *data = wasm_realloc(allocator, *data, new_byte_size, WASM_DEFAULT_ALIGN);
+    *data = wabt_realloc(allocator, *data, new_byte_size, WABT_DEFAULT_ALIGN);
     *capacity = new_capacity;
   }
 }
 
-void wasm_resize_vector(struct WasmAllocator* allocator,
+void wabt_resize_vector(struct WabtAllocator* allocator,
                               void** data,
                               size_t* size,
                               size_t* capacity,
                               size_t desired_size,
                               size_t elt_byte_size) {
   size_t old_size = *size;
-  wasm_ensure_capacity(allocator, data, capacity, desired_size, elt_byte_size);
+  wabt_ensure_capacity(allocator, data, capacity, desired_size, elt_byte_size);
   if (desired_size > old_size) {
     memset((void*)((size_t)*data + old_size * elt_byte_size), 0,
            (desired_size - old_size) * elt_byte_size);
@@ -50,25 +50,25 @@ void wasm_resize_vector(struct WasmAllocator* allocator,
   *size = desired_size;
 }
 
-void* wasm_append_element(WasmAllocator* allocator,
+void* wabt_append_element(WabtAllocator* allocator,
                           void** data,
                           size_t* size,
                           size_t* capacity,
                           size_t elt_byte_size) {
-  wasm_ensure_capacity(allocator, data, capacity, *size + 1, elt_byte_size);
+  wabt_ensure_capacity(allocator, data, capacity, *size + 1, elt_byte_size);
   void* p = (void*)((size_t)*data + (*size)++ * elt_byte_size);
   memset(p, 0, elt_byte_size);
   return p;
 }
 
-void wasm_extend_elements(WasmAllocator* allocator,
+void wabt_extend_elements(WabtAllocator* allocator,
                                 void** dst,
                                 size_t* dst_size,
                                 size_t* dst_capacity,
                                 const void** src,
                                 size_t src_size,
                                 size_t elt_byte_size) {
-  wasm_ensure_capacity(allocator, dst, dst_capacity, *dst_size + src_size,
+  wabt_ensure_capacity(allocator, dst, dst_capacity, *dst_size + src_size,
                        elt_byte_size);
   memcpy((void*)((size_t)*dst + (*dst_size * elt_byte_size)), *src,
          src_size * elt_byte_size);

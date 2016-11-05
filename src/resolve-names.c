@@ -23,32 +23,32 @@
 #include "ast.h"
 #include "ast-parser-lexer-shared.h"
 
-typedef WasmLabel* LabelPtr;
-WASM_DEFINE_VECTOR(label_ptr, LabelPtr);
+typedef WabtLabel* LabelPtr;
+WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
 typedef struct Context {
-  WasmAllocator* allocator;
-  WasmSourceErrorHandler* error_handler;
-  WasmAstLexer* lexer;
-  WasmScript* script;
-  WasmModule* current_module;
-  WasmFunc* current_func;
-  WasmExprVisitor visitor;
+  WabtAllocator* allocator;
+  WabtSourceErrorHandler* error_handler;
+  WabtAstLexer* lexer;
+  WabtScript* script;
+  WabtModule* current_module;
+  WabtFunc* current_func;
+  WabtExprVisitor visitor;
   LabelPtrVector labels;
-  WasmResult result;
+  WabtResult result;
 } Context;
 
-static void WASM_PRINTF_FORMAT(3, 4)
-    print_error(Context* ctx, const WasmLocation* loc, const char* fmt, ...) {
-  ctx->result = WASM_ERROR;
+static void WABT_PRINTF_FORMAT(3, 4)
+    print_error(Context* ctx, const WabtLocation* loc, const char* fmt, ...) {
+  ctx->result = WABT_ERROR;
   va_list args;
   va_start(args, fmt);
-  wasm_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
+  wabt_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
 }
 
-static void push_label(Context* ctx, WasmLabel* label) {
-  wasm_append_label_ptr_value(ctx->allocator, &ctx->labels, &label);
+static void push_label(Context* ctx, WabtLabel* label) {
+  wabt_append_label_ptr_value(ctx->allocator, &ctx->labels, &label);
 }
 
 static void pop_label(Context* ctx) {
@@ -61,258 +61,258 @@ typedef struct FindDuplicateBindingContext {
   const char* desc;
 } FindDuplicateBindingContext;
 
-static void on_duplicate_binding(WasmBindingHashEntry* a,
-                                 WasmBindingHashEntry* b,
+static void on_duplicate_binding(WabtBindingHashEntry* a,
+                                 WabtBindingHashEntry* b,
                                  void* user_data) {
   FindDuplicateBindingContext* fdbc = user_data;
   /* choose the location that is later in the file */
-  WasmLocation* a_loc = &a->binding.loc;
-  WasmLocation* b_loc = &b->binding.loc;
-  WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
+  WabtLocation* a_loc = &a->binding.loc;
+  WabtLocation* b_loc = &b->binding.loc;
+  WabtLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
   print_error(fdbc->ctx, loc, "redefinition of %s \"" PRIstringslice "\"",
-              fdbc->desc, WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
+              fdbc->desc, WABT_PRINTF_STRING_SLICE_ARG(a->binding.name));
 }
 
 static void check_duplicate_bindings(Context* ctx,
-                                     const WasmBindingHash* bindings,
+                                     const WabtBindingHash* bindings,
                                      const char* desc) {
   FindDuplicateBindingContext fdbc;
   fdbc.ctx = ctx;
   fdbc.desc = desc;
-  wasm_find_duplicate_bindings(bindings, on_duplicate_binding, &fdbc);
+  wabt_find_duplicate_bindings(bindings, on_duplicate_binding, &fdbc);
 }
 
-static void resolve_label_var(Context* ctx, WasmVar* var) {
-  if (var->type == WASM_VAR_TYPE_NAME) {
+static void resolve_label_var(Context* ctx, WabtVar* var) {
+  if (var->type == WABT_VAR_TYPE_NAME) {
     int i;
     for (i = ctx->labels.size - 1; i >= 0; --i) {
-      WasmLabel* label = ctx->labels.data[i];
-      if (wasm_string_slices_are_equal(label, &var->name)) {
-        wasm_destroy_string_slice(ctx->allocator, &var->name);
-        var->type = WASM_VAR_TYPE_INDEX;
+      WabtLabel* label = ctx->labels.data[i];
+      if (wabt_string_slices_are_equal(label, &var->name)) {
+        wabt_destroy_string_slice(ctx->allocator, &var->name);
+        var->type = WABT_VAR_TYPE_INDEX;
         var->index = ctx->labels.size - i - 1;
         return;
       }
     }
     print_error(ctx, &var->loc,
                 "undefined label variable \"" PRIstringslice "\"",
-                WASM_PRINTF_STRING_SLICE_ARG(var->name));
+                WABT_PRINTF_STRING_SLICE_ARG(var->name));
   }
 }
 
 static void resolve_var(Context* ctx,
-                        const WasmBindingHash* bindings,
-                        WasmVar* var,
+                        const WabtBindingHash* bindings,
+                        WabtVar* var,
                         const char* desc) {
-  if (var->type == WASM_VAR_TYPE_NAME) {
-    int index = wasm_get_index_from_var(bindings, var);
+  if (var->type == WABT_VAR_TYPE_NAME) {
+    int index = wabt_get_index_from_var(bindings, var);
     if (index == -1) {
       print_error(ctx, &var->loc,
                   "undefined %s variable \"" PRIstringslice "\"", desc,
-                  WASM_PRINTF_STRING_SLICE_ARG(var->name));
+                  WABT_PRINTF_STRING_SLICE_ARG(var->name));
       return;
     }
 
-    wasm_destroy_string_slice(ctx->allocator, &var->name);
+    wabt_destroy_string_slice(ctx->allocator, &var->name);
     var->index = index;
-    var->type = WASM_VAR_TYPE_INDEX;
+    var->type = WABT_VAR_TYPE_INDEX;
   }
 }
 
-static void resolve_func_var(Context* ctx, WasmVar* var) {
+static void resolve_func_var(Context* ctx, WabtVar* var) {
   resolve_var(ctx, &ctx->current_module->func_bindings, var, "function");
 }
 
-static void resolve_global_var(Context* ctx, WasmVar* var) {
+static void resolve_global_var(Context* ctx, WabtVar* var) {
   resolve_var(ctx, &ctx->current_module->global_bindings, var, "global");
 }
 
-static void resolve_func_type_var(Context* ctx, WasmVar* var) {
+static void resolve_func_type_var(Context* ctx, WabtVar* var) {
   resolve_var(ctx, &ctx->current_module->func_type_bindings, var,
               "function type");
 }
 
-static void resolve_table_var(Context* ctx, WasmVar* var) {
+static void resolve_table_var(Context* ctx, WabtVar* var) {
   resolve_var(ctx, &ctx->current_module->table_bindings, var, "table");
 }
 
-static void resolve_memory_var(Context* ctx, WasmVar* var) {
+static void resolve_memory_var(Context* ctx, WabtVar* var) {
   resolve_var(ctx, &ctx->current_module->memory_bindings, var, "memory");
 }
 
-static void resolve_local_var(Context* ctx, WasmVar* var) {
-  if (var->type == WASM_VAR_TYPE_NAME) {
-    int index = wasm_get_local_index_by_var(ctx->current_func, var);
+static void resolve_local_var(Context* ctx, WabtVar* var) {
+  if (var->type == WABT_VAR_TYPE_NAME) {
+    int index = wabt_get_local_index_by_var(ctx->current_func, var);
     if (index == -1) {
       print_error(ctx, &var->loc,
                   "undefined local variable \"" PRIstringslice "\"",
-                  WASM_PRINTF_STRING_SLICE_ARG(var->name));
+                  WABT_PRINTF_STRING_SLICE_ARG(var->name));
       return;
     }
 
-    wasm_destroy_string_slice(ctx->allocator, &var->name);
+    wabt_destroy_string_slice(ctx->allocator, &var->name);
     var->index = index;
-    var->type = WASM_VAR_TYPE_INDEX;
+    var->type = WABT_VAR_TYPE_INDEX;
   }
 }
 
-static WasmResult begin_block_expr(WasmExpr* expr, void* user_data) {
+static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   push_label(ctx, &expr->block.label);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult end_block_expr(WasmExpr* expr, void* user_data) {
+static WabtResult end_block_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult begin_loop_expr(WasmExpr* expr, void* user_data) {
+static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   push_label(ctx, &expr->loop.label);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult end_loop_expr(WasmExpr* expr, void* user_data) {
+static WabtResult end_loop_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_br_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_br_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_label_var(ctx, &expr->br.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_br_if_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_br_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_label_var(ctx, &expr->br_if.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_br_table_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   size_t i;
-  WasmVarVector* targets = &expr->br_table.targets;
+  WabtVarVector* targets = &expr->br_table.targets;
   for (i = 0; i < targets->size; ++i) {
-    WasmVar* target = &targets->data[i];
+    WabtVar* target = &targets->data[i];
     resolve_label_var(ctx, target);
   }
 
   resolve_label_var(ctx, &expr->br_table.default_target);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_call_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_call_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_func_var(ctx, &expr->call.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_call_indirect_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_call_indirect_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_func_type_var(ctx, &expr->call_indirect.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_get_global_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_get_global_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_global_var(ctx, &expr->get_global.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_get_local_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_get_local_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_local_var(ctx, &expr->get_local.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult begin_if_expr(WasmExpr* expr, void* user_data) {
+static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   push_label(ctx, &expr->if_.true_.label);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult end_if_expr(WasmExpr* expr, void* user_data) {
+static WabtResult end_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   pop_label(ctx);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_set_global_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_set_global_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_global_var(ctx, &expr->set_global.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_set_local_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_set_local_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_local_var(ctx, &expr->set_local.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult on_tee_local_expr(WasmExpr* expr, void* user_data) {
+static WabtResult on_tee_local_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = user_data;
   resolve_local_var(ctx, &expr->tee_local.var);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static void visit_func(Context* ctx, WasmFunc* func) {
+static void visit_func(Context* ctx, WabtFunc* func) {
   ctx->current_func = func;
-  if (wasm_decl_has_func_type(&func->decl))
+  if (wabt_decl_has_func_type(&func->decl))
     resolve_func_type_var(ctx, &func->decl.type_var);
 
   check_duplicate_bindings(ctx, &func->param_bindings, "parameter");
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
 
-  wasm_visit_func(func, &ctx->visitor);
+  wabt_visit_func(func, &ctx->visitor);
   ctx->current_func = NULL;
 }
 
-static void visit_export(Context* ctx, WasmExport* export) {
+static void visit_export(Context* ctx, WabtExport* export) {
   switch (export->kind) {
-    case WASM_EXTERNAL_KIND_FUNC:
+    case WABT_EXTERNAL_KIND_FUNC:
       resolve_func_var(ctx, &export->var);
       break;
 
-    case WASM_EXTERNAL_KIND_TABLE:
+    case WABT_EXTERNAL_KIND_TABLE:
       resolve_table_var(ctx, &export->var);
       break;
 
-    case WASM_EXTERNAL_KIND_MEMORY:
+    case WABT_EXTERNAL_KIND_MEMORY:
       resolve_memory_var(ctx, &export->var);
       break;
 
-    case WASM_EXTERNAL_KIND_GLOBAL:
+    case WABT_EXTERNAL_KIND_GLOBAL:
       resolve_global_var(ctx, &export->var);
       break;
 
-    case WASM_NUM_EXTERNAL_KINDS:
+    case WABT_NUM_EXTERNAL_KINDS:
       assert(0);
       break;
   }
 }
 
-static void visit_global(Context* ctx, WasmGlobal* global) {
-  wasm_visit_expr_list(global->init_expr, &ctx->visitor);
+static void visit_global(Context* ctx, WabtGlobal* global) {
+  wabt_visit_expr_list(global->init_expr, &ctx->visitor);
 }
 
-static void visit_elem_segment(Context* ctx, WasmElemSegment* segment) {
+static void visit_elem_segment(Context* ctx, WabtElemSegment* segment) {
   size_t i;
   resolve_table_var(ctx, &segment->table_var);
-  wasm_visit_expr_list(segment->offset, &ctx->visitor);
+  wabt_visit_expr_list(segment->offset, &ctx->visitor);
   for (i = 0; i < segment->vars.size; ++i)
     resolve_func_var(ctx, &segment->vars.data[i]);
 }
 
-static void visit_data_segment(Context* ctx, WasmDataSegment* segment) {
+static void visit_data_segment(Context* ctx, WabtDataSegment* segment) {
   resolve_memory_var(ctx, &segment->memory_var);
-  wasm_visit_expr_list(segment->offset, &ctx->visitor);
+  wabt_visit_expr_list(segment->offset, &ctx->visitor);
 }
 
-static void visit_module(Context* ctx, WasmModule* module) {
+static void visit_module(Context* ctx, WabtModule* module) {
   ctx->current_module = module;
   check_duplicate_bindings(ctx, &module->func_bindings, "function");
   check_duplicate_bindings(ctx, &module->global_bindings, "global");
@@ -336,101 +336,101 @@ static void visit_module(Context* ctx, WasmModule* module) {
   ctx->current_module = NULL;
 }
 
-static void visit_raw_module(Context* ctx, WasmRawModule* raw_module) {
-  if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT)
+static void visit_raw_module(Context* ctx, WabtRawModule* raw_module) {
+  if (raw_module->type == WABT_RAW_MODULE_TYPE_TEXT)
     visit_module(ctx, raw_module->text);
 }
 
-void dummy_source_error_callback(const WasmLocation* loc,
+void dummy_source_error_callback(const WabtLocation* loc,
                                  const char* error,
                                  const char* source_line,
                                  size_t source_line_length,
                                  size_t source_line_column_offset,
                                  void* user_data) {}
 
-static void visit_command(Context* ctx, WasmCommand* command) {
+static void visit_command(Context* ctx, WabtCommand* command) {
   switch (command->type) {
-    case WASM_COMMAND_TYPE_MODULE:
+    case WABT_COMMAND_TYPE_MODULE:
       visit_module(ctx, &command->module);
       break;
 
-    case WASM_COMMAND_TYPE_ACTION:
-    case WASM_COMMAND_TYPE_ASSERT_RETURN:
-    case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-    case WASM_COMMAND_TYPE_ASSERT_TRAP:
-    case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
-    case WASM_COMMAND_TYPE_REGISTER:
+    case WABT_COMMAND_TYPE_ACTION:
+    case WABT_COMMAND_TYPE_ASSERT_RETURN:
+    case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN:
+    case WABT_COMMAND_TYPE_ASSERT_TRAP:
+    case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
+    case WABT_COMMAND_TYPE_REGISTER:
       /* Don't resolve a module_var, since it doesn't really behave like other
        * vars. You can't reference a module by index. */
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
+    case WABT_COMMAND_TYPE_ASSERT_MALFORMED:
       /* Malformed modules should not be text; the whole point of this
        * assertion is to test for malformed binary modules. */
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_INVALID: {
+    case WABT_COMMAND_TYPE_ASSERT_INVALID: {
       /* The module may be invalid because the names cannot be resolved; we
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
-      WasmSourceErrorHandler new_error_handler;
+      WabtSourceErrorHandler new_error_handler;
       new_error_handler.on_error = dummy_source_error_callback;
       new_error_handler.source_line_max_length =
           ctx->error_handler->source_line_max_length;
 
       Context new_ctx;
-      WASM_ZERO_MEMORY(new_ctx);
+      WABT_ZERO_MEMORY(new_ctx);
       new_ctx.allocator = ctx->allocator;
       new_ctx.error_handler = &new_error_handler;
       new_ctx.lexer = ctx->lexer;
       new_ctx.visitor = ctx->visitor;
       new_ctx.visitor.user_data = &new_ctx;
-      new_ctx.result = WASM_OK;
+      new_ctx.result = WABT_OK;
 
       visit_raw_module(&new_ctx, &command->assert_invalid.module);
-      wasm_destroy_label_ptr_vector(new_ctx.allocator, &new_ctx.labels);
-      if (WASM_FAILED(new_ctx.result)) {
-        command->type = WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY;
+      wabt_destroy_label_ptr_vector(new_ctx.allocator, &new_ctx.labels);
+      if (WABT_FAILED(new_ctx.result)) {
+        command->type = WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY;
       }
       break;
     }
 
-    case WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
+    case WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
       /* The only reason a module would be "non-binary" is if the names cannot
        * be resolved. So we assume name resolution has already been tried and
        * failed, so skip it. */
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
+    case WABT_COMMAND_TYPE_ASSERT_UNLINKABLE:
       visit_raw_module(ctx, &command->assert_unlinkable.module);
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+    case WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
       visit_raw_module(ctx, &command->assert_uninstantiable.module);
       break;
 
-    case WASM_NUM_COMMAND_TYPES:
+    case WABT_NUM_COMMAND_TYPES:
       assert(0);
       break;
   }
 }
 
-static void visit_script(Context* ctx, WasmScript* script) {
+static void visit_script(Context* ctx, WabtScript* script) {
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     visit_command(ctx, &script->commands.data[i]);
 }
 
 static void init_context(Context* ctx,
-                         WasmAllocator* allocator,
-                         WasmAstLexer* lexer,
-                         WasmScript* script,
-                         WasmSourceErrorHandler* error_handler) {
-  WASM_ZERO_MEMORY(*ctx);
+                         WabtAllocator* allocator,
+                         WabtAstLexer* lexer,
+                         WabtScript* script,
+                         WabtSourceErrorHandler* error_handler) {
+  WABT_ZERO_MEMORY(*ctx);
   ctx->allocator = allocator;
   ctx->lexer = lexer;
   ctx->error_handler = error_handler;
-  ctx->result = WASM_OK;
+  ctx->result = WABT_OK;
   ctx->script = script;
   ctx->visitor.user_data = ctx;
   ctx->visitor.begin_block_expr = begin_block_expr;
@@ -451,24 +451,24 @@ static void init_context(Context* ctx,
   ctx->visitor.on_tee_local_expr = on_tee_local_expr;
 }
 
-WasmResult wasm_resolve_names_module(WasmAllocator* allocator,
-                                     WasmAstLexer* lexer,
-                                     WasmModule* module,
-                                     WasmSourceErrorHandler* error_handler) {
+WabtResult wabt_resolve_names_module(WabtAllocator* allocator,
+                                     WabtAstLexer* lexer,
+                                     WabtModule* module,
+                                     WabtSourceErrorHandler* error_handler) {
   Context ctx;
   init_context(&ctx, allocator, lexer, NULL, error_handler);
   visit_module(&ctx, module);
-  wasm_destroy_label_ptr_vector(allocator, &ctx.labels);
+  wabt_destroy_label_ptr_vector(allocator, &ctx.labels);
   return ctx.result;
 }
 
-WasmResult wasm_resolve_names_script(WasmAllocator* allocator,
-                                     WasmAstLexer* lexer,
-                                     WasmScript* script,
-                                     WasmSourceErrorHandler* error_handler) {
+WabtResult wabt_resolve_names_script(WabtAllocator* allocator,
+                                     WabtAstLexer* lexer,
+                                     WabtScript* script,
+                                     WabtSourceErrorHandler* error_handler) {
   Context ctx;
   init_context(&ctx, allocator, lexer, script, error_handler);
   visit_script(&ctx, script);
-  wasm_destroy_label_ptr_vector(allocator, &ctx.labels);
+  wabt_destroy_label_ptr_vector(allocator, &ctx.labels);
   return ctx.result;
 }

@@ -14,69 +14,69 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_WRITER_H_
-#define WASM_BINARY_WRITER_H_
+#ifndef WABT_BINARY_WRITER_H_
+#define WABT_BINARY_WRITER_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmModule;
-struct WasmScript;
-struct WasmWriter;
-struct WasmStream;
-enum WasmPrintChars;
+struct WabtAllocator;
+struct WabtModule;
+struct WabtScript;
+struct WabtWriter;
+struct WabtStream;
+enum WabtPrintChars;
 
-#define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { NULL, WASM_TRUE, WASM_FALSE, WASM_FALSE }
+#define WABT_WRITE_BINARY_OPTIONS_DEFAULT \
+  { NULL, WABT_TRUE, WABT_FALSE, WABT_FALSE }
 
-typedef struct WasmWriteBinaryOptions {
-  struct WasmStream* log_stream;
-  WasmBool canonicalize_lebs;
-  WasmBool relocatable;
-  WasmBool write_debug_names;
-} WasmWriteBinaryOptions;
+typedef struct WabtWriteBinaryOptions {
+  struct WabtStream* log_stream;
+  WabtBool canonicalize_lebs;
+  WabtBool relocatable;
+  WabtBool write_debug_names;
+} WabtWriteBinaryOptions;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_write_binary_module(struct WasmAllocator*,
-                                    struct WasmWriter*,
-                                    const struct WasmModule*,
-                                    const WasmWriteBinaryOptions*);
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_write_binary_module(struct WabtAllocator*,
+                                    struct WabtWriter*,
+                                    const struct WabtModule*,
+                                    const WabtWriteBinaryOptions*);
 
 /* returns the length of the leb128 */
-uint32_t wasm_u32_leb128_length(uint32_t value);
+uint32_t wabt_u32_leb128_length(uint32_t value);
 
-void wasm_write_u32_leb128(struct WasmStream* stream,
+void wabt_write_u32_leb128(struct WabtStream* stream,
                            uint32_t value,
                            const char* desc);
 
-void wasm_write_i32_leb128(struct WasmStream* stream,
+void wabt_write_i32_leb128(struct WabtStream* stream,
                            int32_t value,
                            const char* desc);
 
-void wasm_write_fixed_u32_leb128(struct WasmStream* stream,
+void wabt_write_fixed_u32_leb128(struct WabtStream* stream,
                                  uint32_t value,
                                  const char* desc);
 
-uint32_t wasm_write_fixed_u32_leb128_at(struct WasmStream* stream,
+uint32_t wabt_write_fixed_u32_leb128_at(struct WabtStream* stream,
                                         uint32_t offset,
                                         uint32_t value,
                                         const char* desc);
 
-uint32_t wasm_write_fixed_u32_leb128_raw(uint8_t* data,
+uint32_t wabt_write_fixed_u32_leb128_raw(uint8_t* data,
                                          uint8_t* end,
                                          uint32_t value);
 
-void wasm_write_type(struct WasmStream* stream, WasmType type);
+void wabt_write_type(struct WabtStream* stream, WabtType type);
 
-void wasm_write_str(struct WasmStream* stream,
+void wabt_write_str(struct WabtStream* stream,
                     const char* s,
                     size_t length,
-                    enum WasmPrintChars print_chars,
+                    enum WabtPrintChars print_chars,
                     const char* desc);
 
-void wasm_write_opcode(struct WasmStream* stream, uint8_t opcode);
+void wabt_write_opcode(struct WabtStream* stream, uint8_t opcode);
 
-void wasm_write_limits(struct WasmStream* stream, const WasmLimits* limits);
-WASM_EXTERN_C_END
+void wabt_write_limits(struct WabtStream* stream, const WabtLimits* limits);
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_WRITER_H_ */
+#endif /* WABT_BINARY_WRITER_H_ */

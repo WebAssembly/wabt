@@ -16,8 +16,8 @@
 
 #include "binary.h"
 
-const char* g_wasm_section_name[] = {
+const char* g_wabt_section_name[] = {
 #define V(NAME, name, code) #NAME,
-  WASM_FOREACH_BINARY_SECTION(V)
+  WABT_FOREACH_BINARY_SECTION(V)
 #undef V
 };
