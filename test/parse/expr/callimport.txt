@@ -1,4 +1,5 @@
 (module
   (import "foo" "bar" (func (param i32) (result i32)))
   (func (param i32) (result i32)
-    (call 0 (i32.const 0))))
+    i32.const 0
+    call 0))

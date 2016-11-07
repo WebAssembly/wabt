@@ -1,7 +1,12 @@
 (module
   (func
-    (block
-      (block
-        (block (br_table 0 1 (i32.const 0)))
-        (nop))
-      (nop))))
+    block
+      block
+        block 
+         i32.const 0
+         br_table 0 1 
+        end
+        nop
+      end
+      nop
+    end))

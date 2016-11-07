@@ -1,1 +1,9 @@
-(module (func (block (nop) (block (nop) (nop)))))
+(module 
+  (func 
+    block 
+      nop 
+      block 
+        nop
+        nop
+      end 
+    end))

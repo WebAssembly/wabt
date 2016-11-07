@@ -1,5 +1,6 @@
 (module
   (func
-    (block $foo
-      (nop)
-      (nop))))
+    block $foo
+      nop
+      nop
+    end))
