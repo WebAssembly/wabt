@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "config.h"
 
@@ -106,14 +107,12 @@ typedef struct WasmSourceErrorHandler {
   void* user_data;
 } WasmSourceErrorHandler;
 
-#define WASM_SOURCE_ERROR_HANDLER_DEFAULT \
-  { wasm_default_source_error_callback, 80, NULL }
-
-#define WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT \
-  { wasm_default_assert_invalid_source_error_callback, 80, NULL }
-
-#define WASM_ASSERT_MALFORMED_SOURCE_ERROR_HANDLER_DEFAULT \
-  { wasm_default_assert_malformed_source_error_callback, 80, NULL }
+#define WASM_SOURCE_LINE_MAX_LENGTH_DEFAULT 80
+#define WASM_SOURCE_ERROR_HANDLER_DEFAULT                                    \
+  {                                                                          \
+    wasm_default_source_error_callback, WASM_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
+        NULL                                                                 \
+  }
 
 typedef void (*WasmBinaryErrorCallback)(uint32_t offset,
                                         const char* error,
@@ -126,6 +125,20 @@ typedef struct WasmBinaryErrorHandler {
 
 #define WASM_BINARY_ERROR_HANDLER_DEFAULT \
   { wasm_default_binary_error_callback, NULL }
+
+/* This data structure is not required; it is just used by the default error
+ * handler callbacks. */
+typedef enum WasmPrintErrorHeader {
+  WASM_PRINT_ERROR_HEADER_NEVER,
+  WASM_PRINT_ERROR_HEADER_ONCE,
+  WASM_PRINT_ERROR_HEADER_ALWAYS,
+} WasmPrintErrorHeader;
+
+typedef struct WasmDefaultErrorHandlerInfo {
+  const char* header;
+  FILE* out_file;
+  WasmPrintErrorHeader print_header;
+} WasmDefaultErrorHandlerInfo;
 
 /* matches binary format, do not change */
 typedef enum WasmType {
@@ -396,20 +409,7 @@ void wasm_default_source_error_callback(const WasmLocation*,
                                         size_t source_line_length,
                                         size_t source_line_column_offset,
                                         void* user_data);
-void wasm_default_assert_invalid_source_error_callback(
-    const WasmLocation*,
-    const char* error,
-    const char* source_line,
-    size_t source_line_length,
-    size_t source_line_column_offset,
-    void* user_data);
-void wasm_default_assert_malformed_source_error_callback(
-    const WasmLocation*,
-    const char* error,
-    const char* source_line,
-    size_t source_line_length,
-    size_t source_line_column_offset,
-    void* user_data);
+
 void wasm_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data);

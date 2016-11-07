@@ -142,47 +142,53 @@ static void print_source_error(FILE* out,
   }
 }
 
+static void print_error_header(FILE* out, WasmDefaultErrorHandlerInfo* info) {
+  if (info && info->header) {
+    switch (info->print_header) {
+      case WASM_PRINT_ERROR_HEADER_NEVER:
+        break;
+
+      case WASM_PRINT_ERROR_HEADER_ONCE:
+        info->print_header = WASM_PRINT_ERROR_HEADER_NEVER;
+        /* Fallthrough. */
+
+      case WASM_PRINT_ERROR_HEADER_ALWAYS:
+        fprintf(out, "%s:\n", info->header);
+        break;
+    }
+    /* If there's a header, indent the following message. */
+    fprintf(out, "  ");
+  }
+}
+
+static FILE* get_default_error_handler_info_output_file(
+    WasmDefaultErrorHandlerInfo* info) {
+  return info && info->out_file ? info->out_file : stderr;
+}
+
 void wasm_default_source_error_callback(const WasmLocation* loc,
                                         const char* error,
                                         const char* source_line,
                                         size_t source_line_length,
                                         size_t source_line_column_offset,
                                         void* user_data) {
-  print_source_error(stderr, loc, error, source_line, source_line_length,
-                     source_line_column_offset);
-}
-
-void wasm_default_assert_invalid_source_error_callback(
-    const WasmLocation* loc,
-    const char* error,
-    const char* source_line,
-    size_t source_line_length,
-    size_t source_line_column_offset,
-    void* user_data) {
-  fprintf(stdout, "assert_invalid error:\n  ");
-  print_source_error(stdout, loc, error, source_line, source_line_length,
-                     source_line_column_offset);
-}
-
-void wasm_default_assert_malformed_source_error_callback(
-    const WasmLocation* loc,
-    const char* error,
-    const char* source_line,
-    size_t source_line_length,
-    size_t source_line_column_offset,
-    void* user_data) {
-  fprintf(stdout, "assert_malformed error:\n  ");
-  print_source_error(stdout, loc, error, source_line, source_line_length,
+  WasmDefaultErrorHandlerInfo* info = user_data;
+  FILE* out = get_default_error_handler_info_output_file(info);
+  print_error_header(out, info);
+  print_source_error(out, loc, error, source_line, source_line_length,
                      source_line_column_offset);
 }
 
 void wasm_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data) {
+  WasmDefaultErrorHandlerInfo* info = user_data;
+  FILE* out = get_default_error_handler_info_output_file(info);
+  print_error_header(out, info);
   if (offset == WASM_UNKNOWN_OFFSET)
-    fprintf(stderr, "error: %s\n", error);
+    fprintf(out, "error: %s\n", error);
   else
-    fprintf(stderr, "error: @0x%08x: %s\n", offset, error);
+    fprintf(out, "error: @0x%08x: %s\n", offset, error);
 }
 
 void wasm_init_stdio() {
