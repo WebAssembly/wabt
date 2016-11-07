@@ -19,18 +19,18 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "wasm-config.h"
+#include "config.h"
 
-#include "wasm-ast.h"
-#include "wasm-ast-checker.h"
-#include "wasm-ast-parser.h"
-#include "wasm-binary-writer.h"
-#include "wasm-binary-writer-spec.h"
-#include "wasm-common.h"
-#include "wasm-option-parser.h"
-#include "wasm-stack-allocator.h"
-#include "wasm-stream.h"
-#include "wasm-writer.h"
+#include "ast.h"
+#include "ast-checker.h"
+#include "ast-parser.h"
+#include "binary-writer.h"
+#include "binary-writer-spec.h"
+#include "common.h"
+#include "option-parser.h"
+#include "stack-allocator.h"
+#include "stream.h"
+#include "writer.h"
 
 #define PROGRAM_NAME "wast2wasm"
 
@@ -205,181 +205,6 @@ static void write_buffer_to_file(const char* filename,
   }
 }
 
-static WasmStringSlice strip_extension(const char* s) {
-  /* strip .json or .wasm, but leave other extensions, e.g.:
-   *
-   * s = "foo", => "foo"
-   * s = "foo.json" => "foo"
-   * s = "foo.wasm" => "foo"
-   * s = "foo.bar" => "foo.bar"
-   */
-  if (s == NULL) {
-    WasmStringSlice result;
-    result.start = NULL;
-    result.length = 0;
-    return result;
-  }
-
-  size_t slen = strlen(s);
-  const char* ext_start = strrchr(s, '.');
-  if (ext_start == NULL)
-    ext_start = s + slen;
-
-  WasmStringSlice result;
-  result.start = s;
-
-  if (strcmp(ext_start, ".json") == 0 || strcmp(ext_start, ".wasm") == 0) {
-    result.length = ext_start - s;
-  } else {
-    result.length = slen;
-  }
-  return result;
-}
-
-static WasmStringSlice get_basename(const char* s) {
-  /* strip everything up to and including the last slash, e.g.:
-   *
-   * s = "/foo/bar/baz", => "baz"
-   * s = "/usr/local/include/stdio.h", => "stdio.h"
-   * s = "foo.bar", => "foo.bar"
-   */
-  size_t slen = strlen(s);
-  const char* start = s;
-  const char* last_slash = strrchr(s, '/');
-  if (last_slash != NULL)
-    start = last_slash + 1;
-
-  WasmStringSlice result;
-  result.start = start;
-  result.length = s + slen - start;
-  return result;
-}
-
-static char* get_module_filename(WasmAllocator* allocator,
-                                 WasmStringSlice* filename_noext,
-                                 uint32_t index) {
-  size_t buflen = filename_noext->length + 20;
-  char* str = wasm_alloc(allocator, buflen, WASM_DEFAULT_ALIGN);
-  wasm_snprintf(str, buflen, PRIstringslice ".%d.wasm",
-                WASM_PRINTF_STRING_SLICE_ARG(*filename_noext), index);
-  return str;
-}
-
-static char* convert_backslash_to_forward_slash(char* buffer, const int buf_size) {
-  int i = 0;
-  for (; i < buf_size; ++i) {
-    if (buffer[i] == '\\') {
-      buffer[i] = '/';
-    }
-  }
-  return buffer;
-}
-
-typedef struct Context {
-  WasmAllocator* allocator;
-  WasmMemoryWriter json_writer;
-  WasmMemoryWriter module_writer;
-  WasmStream json_stream;
-  WasmStringSlice output_filename_noext;
-  char* module_filename;
-  WasmResult result;
-} Context;
-
-static void on_script_begin(void* user_data) {
-  Context* ctx = user_data;
-  if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->module_writer)))
-    WASM_FATAL("unable to open memory writer for writing\n");
-
-  if (WASM_FAILED(wasm_init_mem_writer(ctx->allocator, &ctx->json_writer)))
-    WASM_FATAL("unable to open memory writer for writing\n");
-  wasm_init_stream(&ctx->json_stream, &ctx->json_writer.base, NULL);
-
-  wasm_writef(&ctx->json_stream, "{\"modules\": [\n");
-}
-
-static void on_module_begin(uint32_t index, void* user_data) {
-  Context* ctx = user_data;
-  wasm_free(ctx->allocator, ctx->module_filename);
-  ctx->module_filename =
-      get_module_filename(ctx->allocator, &ctx->output_filename_noext, index);
-  if (index != 0)
-    wasm_writef(&ctx->json_stream, ",\n");
-  ctx->module_filename =
-      convert_backslash_to_forward_slash(ctx->module_filename,
-                                         strlen(ctx->module_filename));
-
-  WasmStringSlice module_basename = get_basename(ctx->module_filename);
-  wasm_writef(&ctx->json_stream,
-              "  {\"filename\": \"" PRIstringslice "\", \"commands\": [\n",
-              WASM_PRINTF_STRING_SLICE_ARG(module_basename));
-}
-
-static void on_command(uint32_t index,
-                       WasmCommandType type,
-                       const WasmStringSlice* name,
-                       const WasmLocation* loc,
-                       void* user_data) {
-  static const char* s_command_names[] = {
-      "module",
-      "action",
-      "register",
-      "assert_malformed",
-      "assert_invalid",
-      "assert_unlinkable",
-      "assert_return",
-      "assert_return_nan",
-      "assert_trap",
-  };
-  WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_command_names) ==
-                     WASM_NUM_COMMAND_TYPES);
-
-  static const char* s_command_format =
-      "    {"
-      "\"type\": \"%s\", "
-      "\"name\": \"" PRIstringslice
-      "\", "
-      "\"file\": \"%s\", "
-      "\"line\": %d}";
-
-  Context* ctx = user_data;
-  if (index != 0)
-    wasm_writef(&ctx->json_stream, ",\n");
-  const int l = strlen(loc->filename);
-  char* filename = wasm_alloc(ctx->allocator, l + 1, WASM_DEFAULT_ALIGN);
-  memcpy(filename, loc->filename, l + 1);
-  filename = convert_backslash_to_forward_slash(filename, l);
-  wasm_writef(&ctx->json_stream, s_command_format, s_command_names[type],
-              WASM_PRINTF_STRING_SLICE_ARG(*name), filename, loc->line);
-  wasm_free(ctx->allocator, filename);
-}
-
-static void on_module_before_write(uint32_t index,
-                                   WasmWriter** out_writer,
-                                   void* user_data) {
-  Context* ctx = user_data;
-  ctx->module_writer.buf.size = 0;
-  *out_writer = &ctx->module_writer.base;
-}
-
-static void on_module_end(uint32_t index, WasmResult result, void* user_data) {
-  Context* ctx = user_data;
-  wasm_writef(&ctx->json_stream, "\n  ]}");
-  if (WASM_SUCCEEDED(result))
-    write_buffer_to_file(ctx->module_filename, &ctx->module_writer.buf);
-}
-
-static void on_script_end(void* user_data) {
-  Context* ctx = user_data;
-  wasm_writef(&ctx->json_stream, "\n]}\n");
-
-  if (WASM_SUCCEEDED(ctx->result))
-    write_buffer_to_file(s_outfile, &ctx->json_writer.buf);
-
-  wasm_free(ctx->allocator, ctx->module_filename);
-  wasm_close_mem_writer(&ctx->module_writer);
-  wasm_close_mem_writer(&ctx->json_writer);
-}
-
 int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
@@ -421,22 +246,10 @@ int main(int argc, char** argv) {
 
     if (WASM_SUCCEEDED(result)) {
       if (s_spec) {
-        Context ctx;
-        WASM_ZERO_MEMORY(ctx);
-        ctx.allocator = allocator;
-        ctx.output_filename_noext = strip_extension(s_outfile);
-
-        s_write_binary_spec_options.on_script_begin = &on_script_begin;
-        s_write_binary_spec_options.on_module_begin = &on_module_begin;
-        s_write_binary_spec_options.on_command = &on_command,
-        s_write_binary_spec_options.on_module_before_write =
-            &on_module_before_write;
-        s_write_binary_spec_options.on_module_end = &on_module_end;
-        s_write_binary_spec_options.on_script_end = &on_script_end;
-        s_write_binary_spec_options.user_data = &ctx;
-
-        result = wasm_write_binary_spec_script(allocator, &script,
-                                               &s_write_binary_options,
+        s_write_binary_spec_options.json_filename = s_outfile;
+        s_write_binary_spec_options.write_binary_options =
+            s_write_binary_options;
+        result = wasm_write_binary_spec_script(allocator, &script, s_infile,
                                                &s_write_binary_spec_options);
       } else {
         WasmMemoryWriter writer;

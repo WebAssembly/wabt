@@ -7,6 +7,6 @@
     call $imported
     i32.add))
 (;; STDOUT ;;;
-called host spectest.print() => (i32:0)
+called host spectest.print() => i32:0
 f() => i32:13
 ;;; STDOUT ;;)

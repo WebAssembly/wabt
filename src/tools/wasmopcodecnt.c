@@ -20,13 +20,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wasm-allocator.h"
-#include "wasm-binary-reader.h"
-#include "wasm-binary-reader-opcnt.h"
-#include "wasm-option-parser.h"
-#include "wasm-stack-allocator.h"
-#include "wasm-stream.h"
-#include "wasm-vector-sort.h"
+#include "allocator.h"
+#include "binary-reader.h"
+#include "binary-reader-opcnt.h"
+#include "option-parser.h"
+#include "stack-allocator.h"
+#include "stream.h"
+#include "vector-sort.h"
 
 #define PROGRAM_NAME "wasmopcodecnt"
 

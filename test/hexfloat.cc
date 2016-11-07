@@ -21,7 +21,7 @@
 
 #include "gtest/gtest.h"
 
-#include "wasm-literal.h"
+#include "literal.h"
 
 #if HAVE_SYSCONF
 #include <unistd.h>

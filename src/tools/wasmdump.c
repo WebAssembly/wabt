@@ -18,13 +18,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "wasm-allocator.h"
-#include "wasm-common.h"
-#include "wasm-option-parser.h"
-#include "wasm-stream.h"
-#include "wasm-writer.h"
-#include "wasm-binary-reader.h"
-#include "wasm-binary-reader-objdump.h"
+#include "allocator.h"
+#include "common.h"
+#include "option-parser.h"
+#include "stream.h"
+#include "writer.h"
+#include "binary-reader.h"
+#include "binary-reader-objdump.h"
 
 #define PROGRAM_NAME "wasmdump"
 

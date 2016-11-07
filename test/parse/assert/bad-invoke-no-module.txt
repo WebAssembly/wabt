@@ -2,7 +2,7 @@
 ;;; FLAGS: --spec
 (invoke "foo")
 (;; STDERR ;;;
-parse/assert/bad-invoke-no-module.txt:3:2: invoke must occur after a module definition
+parse/assert/bad-invoke-no-module.txt:3:2: unknown module
 (invoke "foo")
  ^^^^^^
 ;;; STDERR ;;)

@@ -9,15 +9,19 @@ environment:
   matrix:
   - GENERATOR: MSYS Makefiles
     CONFIG: Release
+    EXTRA_CONFIG_FLAGS: -DBUILD_TESTS=OFF
     PARALLEL_FLAG: -j
   - GENERATOR: Visual Studio 14 2015
     CONFIG: Release
+    EXTRA_CONFIG_FLAGS:
     PARALLEL_FLAG: "/m:"
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Debug
+    EXTRA_CONFIG_FLAGS:
     PARALLEL_FLAG: "/m:"
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Release
+    EXTRA_CONFIG_FLAGS:
     PARALLEL_FLAG: "/m:"
 
 install:
@@ -28,7 +32,7 @@ before_build:
   - flake8 --ignore=E111,E114 ./scripts/
 
 build_script:
-  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -G "%GENERATOR%"
+  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% %EXTRA_CONFIG_FLAGS% -G "%GENERATOR%"
   - cmake --build . --config %CONFIG% -- %PARALLEL_FLAG%%DEGREE_OF_PARALLELISM%
 
 test_script:

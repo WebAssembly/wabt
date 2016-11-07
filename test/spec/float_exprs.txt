@@ -1,15 +1,15 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/float_exprs.wast
 (;; STDOUT ;;;
-$action_0() => 
-$action_1() => 
-$action_2() => 
-$action_3() => 
-$action_8() => 
-$action_0() => 
-$action_1() => 
-$action_2() => 
-$action_3() => 
-$action_8() => 
-694/694 tests passed.
+init(i32:0, f32:15.1) =>
+init(i32:4, f32:15.2) =>
+init(i32:8, f32:15.3) =>
+init(i32:12, f32:15.4) =>
+run(i32:16, f32:3) =>
+init(i32:0, f64:15.1) =>
+init(i32:8, f64:15.2) =>
+init(i32:16, f64:15.3) =>
+init(i32:24, f64:15.4) =>
+run(i32:32, f64:3) =>
+704/704 tests passed.
 ;;; STDOUT ;;)
