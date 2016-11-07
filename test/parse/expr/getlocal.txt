@@ -1,3 +1,4 @@
 (module
   (func (local i32)
-    (drop (get_local 0))))
+    get_local 0
+    drop))
