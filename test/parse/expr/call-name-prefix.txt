@@ -1,5 +1,6 @@
 (module
   (func $foomore
-    (call $foo (i32.const 0)))
+    i32.const 0
+    call $foo)
   (func $foo (param i32)
-    (nop)))
+    nop))

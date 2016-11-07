@@ -1,4 +1,5 @@
 (module
   (import "foo" "bar" (func $bar (param f32)))
   (func
-    (call $bar (f32.const 0))))
+    f32.const 0
+    call $bar))

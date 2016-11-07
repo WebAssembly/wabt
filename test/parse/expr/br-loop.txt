@@ -1,4 +1,5 @@
 (module
   (func
-    (loop $exit
-      (br $exit))))
+    loop $exit
+      br $exit
+    end))

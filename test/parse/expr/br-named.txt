@@ -1,3 +1,4 @@
 (module (func
-  (block $foo
-    (br $foo))))
+  block $foo
+    br $foo
+  end))
