@@ -138,6 +138,7 @@ static void write_command_type(Context* ctx, const WasmCommand* command) {
       "assert_malformed",
       "assert_invalid",
       "assert_unlinkable",
+      "assert_uninstantiable",
       "assert_return",
       "assert_return_nan",
       "assert_trap",
@@ -366,6 +367,12 @@ static void write_commands(Context* ctx, WasmScript* script) {
       case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
         write_invalid_module(ctx, &command->assert_unlinkable.module,
                              command->assert_unlinkable.text);
+        ctx->num_modules++;
+        break;
+
+      case WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+        write_invalid_module(ctx, &command->assert_uninstantiable.module,
+                             command->assert_uninstantiable.text);
         ctx->num_modules++;
         break;
 

@@ -331,6 +331,7 @@ typedef enum WasmCommandType {
   WASM_COMMAND_TYPE_ASSERT_MALFORMED,
   WASM_COMMAND_TYPE_ASSERT_INVALID,
   WASM_COMMAND_TYPE_ASSERT_UNLINKABLE,
+  WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE,
   WASM_COMMAND_TYPE_ASSERT_RETURN,
   WASM_COMMAND_TYPE_ASSERT_RETURN_NAN,
   WASM_COMMAND_TYPE_ASSERT_TRAP,
@@ -349,7 +350,8 @@ typedef struct WasmCommand {
     struct {
       WasmRawModule module;
       WasmStringSlice text;
-    } assert_malformed, assert_invalid, assert_unlinkable;
+    } assert_malformed, assert_invalid, assert_unlinkable,
+        assert_uninstantiable;
   };
 } WasmCommand;
 WASM_DEFINE_VECTOR(command, WasmCommand);

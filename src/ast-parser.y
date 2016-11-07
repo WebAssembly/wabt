@@ -1344,6 +1344,12 @@ assertion :
       $$->assert_unlinkable.module = $3;
       $$->assert_unlinkable.text = $4;
     }
+  | LPAR ASSERT_TRAP raw_module quoted_text RPAR {
+      $$ = new_command(parser->allocator);
+      $$->type = WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE;
+      $$->assert_uninstantiable.module = $3;
+      $$->assert_uninstantiable.text = $4;
+    }
   | LPAR ASSERT_RETURN action const_list RPAR {
       $$ = new_command(parser->allocator);
       $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN;

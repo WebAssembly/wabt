@@ -53,21 +53,5 @@ assert_invalid error:
   third_party/testsuite/loop.wast:249:11: type stack at end of function is 0. expected 1
   (module (func $type-value-num-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/loop.wast:271:11: type stack size too small at function. got 0, expected at least 1
-  (module (func $type-cont-last-void-vs-empty (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/loop.wast:271:11: type stack at end of function is 0. expected 1
-  (module (func $type-cont-last-void-vs-empty (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/loop.wast:277:11: type stack size too small at function. got 0, expected at least 1
-  (module (func $type-cont-last-num-vs-empty (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  third_party/testsuite/loop.wast:277:11: type stack at end of function is 0. expected 1
-  (module (func $type-cont-last-num-vs-empty (result i32)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 42/42 tests passed.
 ;;; STDOUT ;;)
