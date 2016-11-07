@@ -37,5 +37,9 @@ assert_invalid error:
   third_party/testsuite/globals.wast:90:11: initializer expression can only be reference a previously defined global
   (module (global i32 (get_global 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/globals.wast:95:11: initializer expression can only be reference a previously defined global
+  (module (global i32 (get_global 1)) (global i32 (i32.const 0)))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 16/16 tests passed.
 ;;; STDOUT ;;)

@@ -2,39 +2,39 @@
 ;;; STDIN_FILE: third_party/testsuite/br.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/br.wast:368:11: type stack size too small at function. got 0, expected at least 1
+  third_party/testsuite/br.wast:372:11: type stack size too small at function. got 0, expected at least 1
   (module (func $type-arg-empty-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br.wast:368:11: type stack at end of function is 0. expected 1
+  third_party/testsuite/br.wast:372:11: type stack at end of function is 0. expected 1
   (module (func $type-arg-empty-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br.wast:389:11: type stack size too small at function. got 0, expected at least 1
+  third_party/testsuite/br.wast:379:11: type stack size too small at function. got 0, expected at least 1
   (module (func $type-arg-void-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br.wast:389:11: type stack at end of function is 0. expected 1
+  third_party/testsuite/br.wast:379:11: type stack at end of function is 0. expected 1
   (module (func $type-arg-void-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br.wast:395:11: type stack size too small at function. got 0, expected at least 1
+  third_party/testsuite/br.wast:385:11: type stack size too small at function. got 0, expected at least 1
   (module (func $type-arg-num-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br.wast:395:11: type stack at end of function is 0. expected 1
+  third_party/testsuite/br.wast:385:11: type stack at end of function is 0. expected 1
   (module (func $type-arg-num-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/br.wast:402:36: label variable out of range (max 1)
+  third_party/testsuite/br.wast:392:36: label variable out of range (max 1)
   (module (func $unbound-label (br 1)))
                                    ^
 assert_invalid error:
-  third_party/testsuite/br.wast:406:57: label variable out of range (max 3)
+  third_party/testsuite/br.wast:396:57: label variable out of range (max 3)
   (module (func $unbound-nested-label (block (block (br 5)))))
                                                         ^
 assert_invalid error:
-  third_party/testsuite/br.wast:410:34: label variable out of range (max 1)
+  third_party/testsuite/br.wast:400:34: label variable out of range (max 1)
   (module (func $large-label (br 0x10000001)))
                                  ^^^^^^^^^^
 61/61 tests passed.
