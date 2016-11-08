@@ -303,6 +303,7 @@ static void write_commands(Context* ctx, WasmScript* script) {
               ctx->source_filename);
   wasm_writef(&ctx->json_stream, " \"commands\": [\n");
   size_t i;
+  int last_module_index = -1;
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
 
@@ -326,6 +327,7 @@ static void write_commands(Context* ctx, WasmScript* script) {
         write_module(ctx, filename, module);
         wasm_free(ctx->allocator, filename);
         ctx->num_modules++;
+        last_module_index = (int)i;
         break;
       }
 
@@ -345,7 +347,8 @@ static void write_commands(Context* ctx, WasmScript* script) {
         } else {
           /* If we're not registering by name, then we should only be
            * registering the last module. */
-          assert(command->register_.var.index == (int)ctx->num_modules - 1);
+          WASM_USE(last_module_index);
+          assert(command->register_.var.index == last_module_index);
         }
         write_key(ctx, "as");
         write_escaped_string_slice(ctx, command->register_.module_name);

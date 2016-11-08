@@ -373,8 +373,9 @@ static WasmInterpreterResult run_function(
 }
 
 static WasmInterpreterResult run_start_function(WasmAllocator* allocator,
-                                                WasmInterpreterThread* thread) {
-  if (thread->module->defined.start_func_index == WASM_INVALID_INDEX)
+                                                WasmInterpreterThread* thread,
+                                                WasmInterpreterModule* module) {
+  if (module->defined.start_func_index == WASM_INVALID_INDEX)
     return WASM_INTERPRETER_OK;
 
   if (s_trace)
@@ -384,9 +385,8 @@ static WasmInterpreterResult run_start_function(WasmAllocator* allocator,
   WASM_ZERO_MEMORY(args);
   WASM_ZERO_MEMORY(results);
 
-  WasmInterpreterResult iresult =
-      run_function(allocator, thread, thread->module->defined.start_func_index,
-                   &args, &results);
+  WasmInterpreterResult iresult = run_function(
+      allocator, thread, module->defined.start_func_index, &args, &results);
   assert(results.size == 0);
   return iresult;
 }
@@ -409,12 +409,13 @@ static WasmInterpreterResult run_export(
 static WasmInterpreterResult run_export_by_name(
     WasmAllocator* allocator,
     WasmInterpreterThread* thread,
+    WasmInterpreterModule* module,
     const WasmStringSlice* name,
     const WasmInterpreterTypedValueVector* args,
     WasmInterpreterTypedValueVector* out_results,
     RunVerbosity verbose) {
   WasmInterpreterExport* export =
-      wasm_get_interpreter_export_by_name(thread->module, name);
+      wasm_get_interpreter_export_by_name(module, name);
   if (!export)
     return WASM_INTERPRETER_UNKNOWN_EXPORT;
   if (export->kind != WASM_EXTERNAL_KIND_FUNC)
@@ -425,10 +426,11 @@ static WasmInterpreterResult run_export_by_name(
 static WasmInterpreterResult get_global_export_by_name(
     WasmAllocator* allocator,
     WasmInterpreterThread* thread,
+    WasmInterpreterModule* module,
     const WasmStringSlice* name,
     WasmInterpreterTypedValueVector* out_results) {
   WasmInterpreterExport* export =
-      wasm_get_interpreter_export_by_name(thread->module, name);
+      wasm_get_interpreter_export_by_name(module, name);
   if (!export)
     return WASM_INTERPRETER_UNKNOWN_EXPORT;
   if (export->kind != WASM_EXTERNAL_KIND_GLOBAL)
@@ -471,13 +473,11 @@ static WasmResult read_module(WasmAllocator* allocator,
                               const char* module_filename,
                               WasmInterpreterEnvironment* env,
                               WasmBinaryErrorHandler* error_handler,
-                              WasmInterpreterModule** out_module,
-                              WasmInterpreterThread* out_thread) {
+                              WasmInterpreterModule** out_module) {
   WasmResult result;
   void* data;
   size_t size;
 
-  WASM_ZERO_MEMORY(*out_thread);
   *out_module = NULL;
 
   result = wasm_read_file(allocator, module_filename, &data, &size);
@@ -490,9 +490,6 @@ static WasmResult read_module(WasmAllocator* allocator,
     if (WASM_SUCCEEDED(result)) {
       if (s_verbose)
         wasm_disassemble_module(env, s_stdout_stream, *out_module);
-
-      result = wasm_init_interpreter_thread(allocator, env, *out_module,
-                                            out_thread, &s_thread_options);
     }
     wasm_free(allocator, data);
   }
@@ -564,9 +561,6 @@ static WasmResult spectest_import_table(WasmInterpreterImport* import,
     table->limits.has_max = WASM_TRUE;
     table->limits.initial = 10;
     table->limits.max = 20;
-    size_t i;
-    for (i = 0; i < table->func_indexes.size; ++i)
-      table->func_indexes.data[i] = WASM_INVALID_INDEX;
     return WASM_OK;
   } else {
     print_error(callback, "unknown host table import " PRIimport,
@@ -643,6 +637,7 @@ static void init_environment(WasmAllocator* allocator,
   host_module->host.import_delegate.import_table = spectest_import_table;
   host_module->host.import_delegate.import_memory = spectest_import_memory;
   host_module->host.import_delegate.import_global = spectest_import_global;
+
 }
 
 static WasmResult read_and_run_module(WasmAllocator* allocator,
@@ -653,10 +648,12 @@ static WasmResult read_and_run_module(WasmAllocator* allocator,
   WasmInterpreterThread thread;
 
   init_environment(allocator, &env);
-  result = read_module(allocator, module_filename, &env, &s_error_handler,
-                       &module, &thread);
+  wasm_init_interpreter_thread(allocator, &env, &thread, &s_thread_options);
+  result =
+      read_module(allocator, module_filename, &env, &s_error_handler, &module);
   if (WASM_SUCCEEDED(result)) {
-    WasmInterpreterResult iresult = run_start_function(allocator, &thread);
+    WasmInterpreterResult iresult =
+        run_start_function(allocator, &thread, module);
     if (iresult == WASM_INTERPRETER_OK) {
       if (s_run_all_exports)
         run_all_exports(allocator, module, &thread, RUN_VERBOSE);
@@ -676,9 +673,8 @@ WASM_DEFINE_VECTOR(interpreter_thread, WasmInterpreterThread);
 typedef struct Context {
   WasmAllocator* allocator;
   WasmInterpreterEnvironment env;
-  WasmInterpreterThreadVector threads;
+  WasmInterpreterThread thread;
   WasmInterpreterModule* last_module;
-  int thread_to_module_offset;
 
   /* Parsing info */
   char* json_data;
@@ -1028,21 +1024,10 @@ static WasmResult on_module_command(Context* ctx,
                                     WasmStringSlice filename,
                                     WasmStringSlice name) {
   char* path = create_module_path(ctx, filename);
-  /* Make sure that the difference in size between the thread and module
-   * vectors is constant; the only modules that don't have matching threads are
-   * host modules, which should all be added at the beginning. */
-  if (ctx->threads.size == 0) {
-    ctx->thread_to_module_offset = (int)ctx->env.modules.size;
-  } else {
-    assert(ctx->thread_to_module_offset ==
-           (int)(ctx->env.modules.size - ctx->threads.size));
-  }
-
-  WasmInterpreterThread thread;
   WasmInterpreterEnvironmentMark mark =
       wasm_mark_interpreter_environment(&ctx->env);
   WasmResult result = read_module(ctx->allocator, path, &ctx->env,
-                                  &s_error_handler, &ctx->last_module, &thread);
+                                  &s_error_handler, &ctx->last_module);
 
   if (WASM_FAILED(result)) {
     wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
@@ -1053,7 +1038,8 @@ static WasmResult on_module_command(Context* ctx,
 
   wasm_free(ctx->allocator, path);
 
-  WasmInterpreterResult iresult = run_start_function(ctx->allocator, &thread);
+  WasmInterpreterResult iresult =
+      run_start_function(ctx->allocator, &ctx->thread, ctx->last_module);
   if (iresult != WASM_INTERPRETER_OK) {
     wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
     print_interpreter_result("error running start function", iresult);
@@ -1069,9 +1055,6 @@ static WasmResult on_module_command(Context* ctx,
         ctx->allocator, &ctx->env.module_bindings, &binding_name);
     binding->index = ctx->env.modules.size - 1;
   }
-
-  wasm_append_interpreter_thread_value(ctx->allocator, &ctx->threads, &thread);
-
   return WASM_OK;
 }
 
@@ -1090,19 +1073,14 @@ static WasmResult run_action(Context* ctx,
     module_index = (int)ctx->env.modules.size - 1;
   }
 
-  int thread_index = module_index - ctx->thread_to_module_offset;
-  if (thread_index < 0 || thread_index >= (int)ctx->threads.size) {
-    print_command_error(ctx, "invalid module in action");
-    return WASM_ERROR;
-  }
-
-  WasmInterpreterThread* thread = &ctx->threads.data[thread_index];
+  assert(module_index < (int)ctx->env.modules.size);
+  WasmInterpreterModule* module = &ctx->env.modules.data[module_index];
 
   switch (action->type) {
     case ACTION_TYPE_INVOKE:
-      *out_iresult =
-          run_export_by_name(ctx->allocator, thread, &action->field_name,
-                             &action->args, out_results, verbose);
+      *out_iresult = run_export_by_name(ctx->allocator, &ctx->thread, module,
+                                        &action->field_name, &action->args,
+                                        out_results, verbose);
       if (verbose) {
         print_call(wasm_empty_string_slice(), action->field_name, &action->args,
                    out_results, *out_iresult);
@@ -1110,8 +1088,9 @@ static WasmResult run_action(Context* ctx,
       return WASM_OK;
 
     case ACTION_TYPE_GET: {
-      *out_iresult = get_global_export_by_name(
-          ctx->allocator, thread, &action->field_name, out_results);
+      *out_iresult =
+          get_global_export_by_name(ctx->allocator, &ctx->thread, module,
+                                    &action->field_name, out_results);
       return WASM_OK;
     }
 
@@ -1201,17 +1180,15 @@ static WasmResult on_assert_unlinkable_command(Context* ctx,
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  WasmInterpreterThread thread;
   WasmInterpreterEnvironmentMark mark =
       wasm_mark_interpreter_environment(&ctx->env);
   WasmResult result = read_module(ctx->allocator, path, &ctx->env,
-                                  &error_handler, &ctx->last_module, &thread);
+                                  &error_handler, &ctx->last_module);
   wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
 
   if (WASM_FAILED(result)) {
     ctx->passed++;
   } else {
-    wasm_destroy_interpreter_thread(ctx->allocator, &thread);
     print_command_error(ctx, "expected module to be unlinkable: \"%s\"", path);
     wasm_free(ctx->allocator, path);
     return WASM_ERROR;
@@ -1528,8 +1505,7 @@ static WasmResult parse_commands(Context* ctx) {
 }
 
 static void destroy_context(Context* ctx) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->threads,
-                                   interpreter_thread);
+  wasm_destroy_interpreter_thread(ctx->allocator, &ctx->thread);
   wasm_destroy_interpreter_environment(ctx->allocator, &ctx->env);
   wasm_free(ctx->allocator, ctx->json_data);
 }
@@ -1543,6 +1519,8 @@ static WasmResult read_and_run_spec_json(WasmAllocator* allocator,
   ctx.loc.line = 1;
   ctx.loc.first_column = 1;
   init_environment(allocator, &ctx.env);
+  wasm_init_interpreter_thread(allocator, &ctx.env, &ctx.thread,
+                               &s_thread_options);
 
   void* data;
   size_t size;

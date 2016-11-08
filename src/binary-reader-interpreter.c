@@ -121,6 +121,7 @@ typedef struct Context {
   Uint32Vector global_index_mapping;
 
   uint32_t num_func_imports;
+  uint32_t num_global_imports;
 
   /* values cached in the Context so they can be shared between callbacks */
   WasmInterpreterTypedValue init_expr_value;
@@ -184,6 +185,12 @@ static uint32_t translate_defined_func_index_to_env(Context* ctx,
   return ctx->func_index_mapping.data[func_index];
 }
 
+static uint32_t translate_module_func_index_to_defined(Context* ctx,
+                                                       uint32_t func_index) {
+  assert(func_index >= ctx->num_func_imports);
+  return func_index - ctx->num_func_imports;
+}
+
 static WasmInterpreterFunc* get_func_by_env_index(Context* ctx,
                                                   uint32_t func_index) {
   assert(func_index < ctx->env->funcs.size);
@@ -208,6 +215,14 @@ static uint32_t translate_global_index_to_env(Context* ctx,
   return ctx->global_index_mapping.data[global_index];
 }
 
+static uint32_t translate_defined_global_index_to_env(Context* ctx,
+                                                      uint32_t global_index) {
+  /* all globaltion imports are first, so skip over those */
+  global_index += ctx->num_global_imports;
+  assert(global_index < ctx->global_index_mapping.size);
+  return ctx->global_index_mapping.data[global_index];
+}
+
 static WasmInterpreterGlobal* get_global_by_env_index(Context* ctx,
                                                       uint32_t global_index) {
   assert(global_index < ctx->env->globals.size);
@@ -219,6 +234,13 @@ static WasmInterpreterGlobal* get_global_by_module_index(
     uint32_t global_index) {
   return get_global_by_env_index(
       ctx, translate_global_index_to_env(ctx, global_index));
+}
+
+static WasmInterpreterGlobal* get_global_by_defined_index(
+    Context* ctx,
+    uint32_t global_index) {
+  return get_global_by_env_index(
+      ctx, translate_defined_global_index_to_env(ctx, global_index));
 }
 
 static WasmType get_global_type_by_module_index(Context* ctx,
@@ -361,8 +383,11 @@ static WasmResult fixup_top_label(Context* ctx, uint32_t offset) {
 static WasmResult emit_func_offset(Context* ctx,
                                    WasmInterpreterFunc* func,
                                    uint32_t func_index) {
-  if (func->defined.offset == WASM_INVALID_OFFSET)
-    CHECK_RESULT(append_fixup(ctx, &ctx->func_fixups, func_index));
+  if (func->defined.offset == WASM_INVALID_OFFSET) {
+    CHECK_RESULT(
+        append_fixup(ctx, &ctx->func_fixups,
+                     translate_module_func_index_to_defined(ctx, func_index)));
+  }
   CHECK_RESULT(emit_i32(ctx, func->defined.offset));
   return WASM_OK;
 }
@@ -566,6 +591,14 @@ static WasmResult on_import_func(uint32_t index,
   return WASM_OK;
 }
 
+static void init_table_func_indexes(Context* ctx, WasmInterpreterTable* table) {
+  wasm_new_uint32_array(ctx->allocator, &table->func_indexes,
+                        table->limits.initial);
+  size_t i;
+  for (i = 0; i < table->func_indexes.size; ++i)
+    table->func_indexes.data[i] = WASM_INVALID_INDEX;
+}
+
 static WasmResult on_import_table(uint32_t index,
                                   WasmType elem_type,
                                   const WasmLimits* elem_limits,
@@ -583,8 +616,7 @@ static WasmResult on_import_table(uint32_t index,
     WasmInterpreterTable* table =
         wasm_append_interpreter_table(ctx->allocator, &ctx->env->tables);
     table->limits = *elem_limits;
-    wasm_new_uint32_array(ctx->allocator, &table->func_indexes,
-                          table->limits.initial);
+    init_table_func_indexes(ctx, table);
 
     WasmInterpreterHostImportDelegate* host_delegate =
         &ctx->host_import_module->host.import_delegate;
@@ -683,6 +715,7 @@ static WasmResult on_import_global(uint32_t index,
   }
   wasm_append_uint32_value(ctx->allocator, &ctx->global_index_mapping,
                            &global_index);
+  ctx->num_global_imports++;
   return WASM_OK;
 }
 
@@ -692,9 +725,10 @@ static WasmResult on_function_signatures_count(uint32_t count,
   wasm_resize_uint32_vector(ctx->allocator, &ctx->func_index_mapping,
                             ctx->func_index_mapping.size + count);
   uint32_t i;
-  for (i = 0; i < count; ++i)
+  for (i = 0; i < count; ++i) {
     ctx->func_index_mapping.data[ctx->num_func_imports + i] =
         ctx->env->funcs.size + i;
+  }
   wasm_resize_interpreter_func_vector(ctx->allocator, &ctx->env->funcs,
                                       ctx->env->funcs.size + count);
   wasm_resize_uint32_vector_vector(ctx->allocator, &ctx->func_fixups, count);
@@ -723,8 +757,7 @@ static WasmResult on_table(uint32_t index,
   WasmInterpreterTable* table =
       wasm_append_interpreter_table(ctx->allocator, &ctx->env->tables);
   table->limits = *elem_limits;
-  wasm_new_uint32_array(ctx->allocator, &table->func_indexes,
-                        elem_limits->initial);
+  init_table_func_indexes(ctx, table);
   ctx->module->table_index = ctx->env->tables.size - 1;
   return WASM_OK;
 }
@@ -750,10 +783,13 @@ static WasmResult on_memory(uint32_t index,
 
 static WasmResult on_global_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wasm_resize_uint32_vector(ctx->allocator, &ctx->global_index_mapping, count);
+  wasm_resize_uint32_vector(ctx->allocator, &ctx->global_index_mapping,
+                            ctx->global_index_mapping.size + count);
   uint32_t i;
-  for (i = 0; i < count; ++i)
-    ctx->global_index_mapping.data[i] = ctx->env->globals.size + i;
+  for (i = 0; i < count; ++i) {
+    ctx->global_index_mapping.data[ctx->num_global_imports + i] =
+        ctx->env->globals.size + i;
+  }
   wasm_resize_interpreter_global_vector(ctx->allocator, &ctx->env->globals,
                                         ctx->env->globals.size + count);
   return WASM_OK;
@@ -764,7 +800,7 @@ static WasmResult begin_global(uint32_t index,
                                WasmBool mutable_,
                                void* user_data) {
   Context* ctx = user_data;
-  WasmInterpreterGlobal* global = get_global_by_module_index(ctx, index);
+  WasmInterpreterGlobal* global = get_global_by_defined_index(ctx, index);
   global->typed_value.type = type;
   global->mutable_ = mutable_;
   return WASM_OK;
@@ -772,7 +808,7 @@ static WasmResult begin_global(uint32_t index,
 
 static WasmResult end_global_init_expr(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  WasmInterpreterGlobal* global = get_global_by_module_index(ctx, index);
+  WasmInterpreterGlobal* global = get_global_by_defined_index(ctx, index);
   global->typed_value = ctx->init_expr_value;
   return WASM_OK;
 }
@@ -800,7 +836,7 @@ static WasmResult on_init_expr_get_global_expr(uint32_t index,
                                                void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterGlobal* ref_global =
-      get_global_by_module_index(ctx, global_index);
+      get_global_by_defined_index(ctx, global_index);
   ctx->init_expr_value = ref_global->typed_value;
   return WASM_OK;
 }
@@ -1433,6 +1469,7 @@ static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   }
 
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CALL_INDIRECT));
+  CHECK_RESULT(emit_i32(ctx, ctx->module->table_index));
   CHECK_RESULT(emit_i32(ctx, translate_sig_index_to_env(ctx, sig_index)));
   push_types(ctx, &sig->result_types);
   return WASM_OK;
@@ -1540,6 +1577,7 @@ static WasmResult on_grow_memory_expr(void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(pop_and_check_1_type(ctx, WASM_TYPE_I32, "grow_memory"));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_GROW_MEMORY));
+  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   push_type(ctx, WASM_TYPE_I32);
   return WASM_OK;
 }
@@ -1551,6 +1589,7 @@ static WasmResult on_load_expr(WasmOpcode opcode,
   Context* ctx = user_data;
   CHECK_RESULT(check_opcode1(ctx, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
+  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   CHECK_RESULT(emit_i32(ctx, offset));
   return WASM_OK;
 }
@@ -1562,6 +1601,7 @@ static WasmResult on_store_expr(WasmOpcode opcode,
   Context* ctx = user_data;
   CHECK_RESULT(check_opcode2(ctx, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
+  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   CHECK_RESULT(emit_i32(ctx, offset));
   return WASM_OK;
 }
@@ -1569,6 +1609,7 @@ static WasmResult on_store_expr(WasmOpcode opcode,
 static WasmResult on_current_memory_expr(void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CURRENT_MEMORY));
+  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   push_type(ctx, WASM_TYPE_I32);
   return WASM_OK;
 }
