@@ -2,12 +2,6 @@
 ;;; FLAGS: -v
 (module
   (func
-    ;; by default, sexpr-wasm will remap locals so all similar types are
-    ;; grouped together, in the order i32, i64, f32, f64.
-    ;; i32               0   1
-    ;; i64           2                   3
-    ;; f32       4               5
-    ;; f64   6                       7
     (local f64 f32 i64 i32 i32 f32 f64 i64)
     get_local 0
     drop

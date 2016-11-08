@@ -49,10 +49,6 @@ static WasmBool s_check_assert_invalid_and_malformed = WASM_TRUE;
 
 static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
-static WasmSourceErrorHandler s_assert_invalid_error_handler =
-    WASM_ASSERT_INVALID_SOURCE_ERROR_HANDLER_DEFAULT;
-static WasmSourceErrorHandler s_assert_malformed_error_handler =
-    WASM_ASSERT_MALFORMED_SOURCE_ERROR_HANDLER_DEFAULT;
 
 static WasmFileWriter s_log_stream_writer;
 static WasmStream s_log_stream;
@@ -205,6 +201,18 @@ static void write_buffer_to_file(const char* filename,
   }
 }
 
+static void init_source_error_handler(WasmSourceErrorHandler* error_handler,
+                                      WasmDefaultErrorHandlerInfo* info,
+                                      const char* header) {
+  info->header = header;
+  info->out_file = stdout;
+  info->print_header = WASM_PRINT_ERROR_HEADER_ALWAYS;
+
+  error_handler->on_error = wasm_default_source_error_callback;
+  error_handler->source_line_max_length = WASM_SOURCE_LINE_MAX_LENGTH_DEFAULT;
+  error_handler->user_data = info;
+}
+
 int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
@@ -239,9 +247,20 @@ int main(int argc, char** argv) {
     }
 
     if (WASM_SUCCEEDED(result) && s_check_assert_invalid_and_malformed) {
+      WasmDefaultErrorHandlerInfo assert_invalid_info;
+      WasmSourceErrorHandler assert_invalid_error_handler;
+      init_source_error_handler(&assert_invalid_error_handler,
+                                &assert_invalid_info, "assert_invalid error");
+
+      WasmDefaultErrorHandlerInfo assert_malformed_info;
+      WasmSourceErrorHandler assert_malformed_error_handler;
+      init_source_error_handler(&assert_malformed_error_handler,
+                                &assert_malformed_info,
+                                "assert_malformed error");
+
       result = wasm_check_assert_invalid_and_malformed(
-          allocator, lexer, &script, &s_assert_invalid_error_handler,
-          &s_assert_malformed_error_handler, &s_error_handler);
+          allocator, lexer, &script, &assert_invalid_error_handler,
+          &assert_malformed_error_handler, &s_error_handler);
     }
 
     if (WASM_SUCCEEDED(result)) {

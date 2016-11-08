@@ -98,63 +98,63 @@ assert_invalid error:
   (module (func $type-value-num-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:428:6: type stack size too small at return. got 0, expected at least 1
+  third_party/testsuite/func.wast:397:6: type stack size too small at return. got 0, expected at least 1
     (return)
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:434:6: type stack size too small at return. got 0, expected at least 1
+  third_party/testsuite/func.wast:403:6: type stack size too small at return. got 0, expected at least 1
     (return (nop))
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:440:6: type mismatch at return. got i64, expected i32
+  third_party/testsuite/func.wast:409:6: type mismatch at return. got i64, expected i32
     (return (i64.const 0))
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:447:6: type stack size too small at return. got 0, expected at least 1
+  third_party/testsuite/func.wast:416:6: type stack size too small at return. got 0, expected at least 1
     (return) (i32.const 1)
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:453:6: type stack size too small at return. got 0, expected at least 1
+  third_party/testsuite/func.wast:422:6: type stack size too small at return. got 0, expected at least 1
     (return (nop)) (i32.const 1)
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:459:6: type mismatch at return. got i64, expected i32
+  third_party/testsuite/func.wast:428:6: type mismatch at return. got i64, expected i32
     (return (i64.const 1)) (i32.const 1)
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:465:6: type mismatch at return. got i64, expected i32
+  third_party/testsuite/func.wast:434:6: type mismatch at return. got i64, expected i32
     (return (i64.const 1)) (return (i32.const 1))
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:480:6: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:441:6: type stack size too small at br value. got 0, expected at least 1
     (br 0)
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:486:6: type mismatch at br value. got f32, expected i32
+  third_party/testsuite/func.wast:447:6: type mismatch at br value. got f32, expected i32
     (br 0 (f32.const 0))
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:492:6: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:453:6: type stack size too small at br value. got 0, expected at least 1
     (br 0) (i32.const 1)
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:498:6: type mismatch at br value. got i64, expected i32
+  third_party/testsuite/func.wast:459:6: type mismatch at br value. got i64, expected i32
     (br 0 (i64.const 1)) (i32.const 1)
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:504:6: type mismatch at br value. got i64, expected i32
+  third_party/testsuite/func.wast:465:6: type mismatch at br value. got i64, expected i32
     (br 0 (i64.const 1)) (br 0 (i32.const 1))
      ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:520:13: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:472:13: type stack size too small at br value. got 0, expected at least 1
     (block (br 1)) (br 0 (i32.const 1))
             ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:526:13: type stack size too small at br value. got 0, expected at least 1
+  third_party/testsuite/func.wast:478:13: type stack size too small at br value. got 0, expected at least 1
     (block (br 1 (nop))) (br 0 (i32.const 1))
             ^^^^
 assert_invalid error:
-  third_party/testsuite/func.wast:532:13: type mismatch at br value. got i64, expected i32
+  third_party/testsuite/func.wast:484:13: type mismatch at br value. got i64, expected i32
     (block (br 1 (i64.const 1))) (br 0 (i32.const 1))
             ^^^^
 66/66 tests passed.

@@ -546,6 +546,12 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       wasm_destroy_raw_module(allocator, &command->assert_unlinkable.module);
       wasm_destroy_string_slice(allocator, &command->assert_unlinkable.text);
       break;
+    case WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+      wasm_destroy_raw_module(allocator,
+                              &command->assert_uninstantiable.module);
+      wasm_destroy_string_slice(allocator,
+                                &command->assert_uninstantiable.text);
+      break;
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
       wasm_destroy_action(allocator, &command->assert_return.action);
       wasm_destroy_const_vector(allocator, &command->assert_return.expected);

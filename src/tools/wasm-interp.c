@@ -1048,6 +1048,13 @@ static WasmResult on_assert_unlinkable_command(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult on_assert_uninstantiable_command(Context* ctx,
+                                                   WasmStringSlice filename,
+                                                   WasmStringSlice text) {
+  /* TODO */
+  return WASM_OK;
+}
+
 static WasmBool typed_values_are_equal(const WasmInterpreterTypedValue* tv1,
                                        const WasmInterpreterTypedValue* tv2) {
   if (tv1->type != tv2->type)
@@ -1274,6 +1281,19 @@ static WasmResult parse_command(Context* ctx) {
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     on_assert_unlinkable_command(ctx, filename, text);
+  } else if (match(ctx, "\"assert_uninstantiable\"")) {
+    WasmStringSlice filename;
+    WasmStringSlice text;
+    WASM_ZERO_MEMORY(filename);
+    WASM_ZERO_MEMORY(text);
+
+    EXPECT(",");
+    CHECK_RESULT(parse_line(ctx));
+    EXPECT(",");
+    PARSE_KEY_STRING_VALUE("filename", &filename);
+    EXPECT(",");
+    PARSE_KEY_STRING_VALUE("text", &text);
+    on_assert_uninstantiable_command(ctx, filename, text);
   } else if (match(ctx, "\"assert_return\"")) {
     Action action;
     WasmInterpreterTypedValueVector expected;

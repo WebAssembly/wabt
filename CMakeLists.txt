@@ -15,7 +15,7 @@
 #
 
 cmake_minimum_required(VERSION 2.6)
-project(SEXPR_WASM)
+project(WABT)
 
 option(BUILD_TESTS "Build GTest-based tests" ON)
 option(RUN_BISON "Run bison" ON)
@@ -72,11 +72,11 @@ else ()
 endif ()
 
 configure_file(
-  ${SEXPR_WASM_SOURCE_DIR}/src/config.h.in
-  ${SEXPR_WASM_BINARY_DIR}/config.h
+  ${WABT_SOURCE_DIR}/src/config.h.in
+  ${WABT_BINARY_DIR}/config.h
 )
 
-include_directories(src ${SEXPR_WASM_BINARY_DIR})
+include_directories(src ${WABT_BINARY_DIR})
 
 if (COMPILER_IS_MSVC)
   # disable warning C4018: signed/unsigned mismatch
@@ -100,16 +100,16 @@ else ()
   if (NOT EMSCRIPTEN)
     # try to get the target architecture by compiling a dummy.c file and
     # checking the architecture using the file command.
-    file(WRITE ${SEXPR_WASM_BINARY_DIR}/dummy.c "main(){}")
+    file(WRITE ${WABT_BINARY_DIR}/dummy.c "main(){}")
     try_compile(
       COMPILE_OK
-      ${SEXPR_WASM_BINARY_DIR}
-      ${SEXPR_WASM_BINARY_DIR}/dummy.c
-      COPY_FILE ${SEXPR_WASM_BINARY_DIR}/dummy
+      ${WABT_BINARY_DIR}
+      ${WABT_BINARY_DIR}/dummy.c
+      COPY_FILE ${WABT_BINARY_DIR}/dummy
     )
     if (COMPILE_OK)
       execute_process(
-        COMMAND file ${SEXPR_WASM_BINARY_DIR}/dummy
+        COMMAND file ${WABT_BINARY_DIR}/dummy
         RESULT_VARIABLE FILE_RESULT
         OUTPUT_VARIABLE FILE_OUTPUT
         ERROR_QUIET
@@ -158,11 +158,11 @@ SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover")
 
 find_package(BISON 3.0)
 if (RUN_BISON AND BISON_FOUND)
-  set(WASM_AST_PARSER_GEN_C ${SEXPR_WASM_BINARY_DIR}/ast-parser-gen.c)
+  set(WASM_AST_PARSER_GEN_C ${WABT_BINARY_DIR}/ast-parser-gen.c)
   BISON_TARGET(WASM_AST_PARSER_GEN_C
-    ${SEXPR_WASM_SOURCE_DIR}/src/ast-parser.y
+    ${WABT_SOURCE_DIR}/src/ast-parser.y
     ${WASM_AST_PARSER_GEN_C}
-    COMPILE_FLAGS --defines=${SEXPR_WASM_BINARY_DIR}/ast-parser-gen.h
+    COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/ast-parser-gen.h
   )
 else ()
   set(WASM_AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.c)
@@ -179,11 +179,11 @@ if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
   )
 endif ()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SEXPR_WASM_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 find_package(RE2C 0.13)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
-  set(WASM_AST_LEXER_C ${SEXPR_WASM_SOURCE_DIR}/src/ast-lexer.c)
-  set(WASM_AST_LEXER_GEN_C ${SEXPR_WASM_BINARY_DIR}/ast-lexer-gen.c)
+  set(WASM_AST_LEXER_C ${WABT_SOURCE_DIR}/src/ast-lexer.c)
+  set(WASM_AST_LEXER_GEN_C ${WABT_BINARY_DIR}/ast-lexer-gen.c)
   RE2C_TARGET(
     NAME WASM_AST_LEXER_GEN_C
     INPUT ${WASM_AST_LEXER_C}
@@ -306,14 +306,14 @@ if (NOT EMSCRIPTEN)
 
   # test running
   find_package(PythonInterp 2.7 REQUIRED)
-  set(RUN_TESTS_PY ${SEXPR_WASM_SOURCE_DIR}/test/run-tests.py)
+  set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
   add_custom_target(run-tests
     COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY}
         --wast2wasm $<TARGET_FILE:wast2wasm>
         --wasm2wast $<TARGET_FILE:wasm2wast>
         --wasm-interp $<TARGET_FILE:wasm-interp>
     DEPENDS wast2wasm wasm2wast wasm-interp
-    WORKING_DIRECTORY ${SEXPR_WASM_SOURCE_DIR}
+    WORKING_DIRECTORY ${WABT_SOURCE_DIR}
   )
 
   # install
@@ -332,9 +332,8 @@ else ()
   target_link_libraries(libwasmjs libwasm)
   set_target_properties(libwasmjs PROPERTIES OUTPUT_NAME libwasm)
 
-  set(WASM_JS ${SEXPR_WASM_SOURCE_DIR}/src/wasm.js)
-  set(EMSCRIPTEN_EXPORTED_JSON
-    ${SEXPR_WASM_SOURCE_DIR}/src/emscripten-exported.json)
+  set(WASM_JS ${WABT_SOURCE_DIR}/src/wasm.js)
+  set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
 
   set(LIBWASM_LINK_FLAGS
     --pre-js ${WASM_JS}
