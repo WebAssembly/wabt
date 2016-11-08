@@ -1,0 +1,10 @@
+;;; TOOL: run-gen-spec-js
+;;; FLAGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+(assert_malformed
+  (module "\00asm\bc\0a\00\00")
+  "unknown binary version")
+(;; STDOUT ;;;
+// A deliberately empty file for testing.
+
+assert_malformed("\x00\x61\x73\x6d\xbc\x0a\x00\x00");
+;;; STDOUT ;;)
