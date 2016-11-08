@@ -1,4 +1,3 @@
-;;; SKIP: spec binary format has not been updated to 0xd
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/binary.wast
 (;; STDOUT ;;;
@@ -28,15 +27,15 @@ assert_malformed error:
                    ^^^^^^
 assert_malformed error:
   third_party/testsuite/binary.wast:13:20: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_malformed (module "\00asm\0c") "unexpected end")
+(assert_malformed (module "\00asm\0d") "unexpected end")
                    ^^^^^^
 assert_malformed error:
   third_party/testsuite/binary.wast:14:20: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_malformed (module "\00asm\0c\00\00") "unexpected end")
+(assert_malformed (module "\00asm\0d\00\00") "unexpected end")
                    ^^^^^^
 assert_malformed error:
-  third_party/testsuite/binary.wast:15:20: error in binary module: @0x00000008: bad wasm file version: 0x10 (expected 0xc)
-(assert_malformed (module "\00asm\10\00\00\00") "unknown binary version")
+  third_party/testsuite/binary.wast:15:20: error in binary module: @0x00000008: bad wasm file version: 0xe (expected 0xd)
+(assert_malformed (module "\00asm\0e\00\00\00") "unknown binary version")
                    ^^^^^^
 0/0 tests passed.
 ;;; STDOUT ;;)

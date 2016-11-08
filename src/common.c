@@ -107,7 +107,7 @@ WasmResult wasm_read_file(WasmAllocator* allocator,
   }
 
   void* data = wasm_alloc(allocator, size, WASM_DEFAULT_ALIGN);
-  if (fread(data, size, 1, infile) != 1) {
+  if (size != 0 && fread(data, size, 1, infile) != 1) {
     fprintf(stderr, "fread failed.\n");
     return WASM_ERROR;
   }
