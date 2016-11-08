@@ -1,4 +1,6 @@
 (module
   (func
-    (if (i32.const 1)
-      (then (br 0)))))
+    i32.const 1
+    if 
+      br 0
+    end))

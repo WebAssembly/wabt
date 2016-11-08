@@ -1,4 +1,8 @@
 (module
   (func
-    (loop (nop))
-    (loop $inner (nop))))
+    loop 
+      nop
+    end
+    loop $inner 
+      nop
+    end))

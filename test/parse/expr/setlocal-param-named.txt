@@ -1,1 +1,4 @@
-(module (func (param $n i32) (set_local $n (i32.const 0))))
+(module 
+  (func (param $n i32) 
+    i32.const 0
+    set_local $n))

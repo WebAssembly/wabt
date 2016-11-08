@@ -1,5 +1,6 @@
 (module
   (func
     (local i32)
-    (drop
-      (tee_local 0 (i32.const 0)))))
+    i32.const 0
+    tee_local 0
+    drop))

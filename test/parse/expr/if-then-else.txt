@@ -1,1 +1,8 @@
-(module (func (if (i32.const 0) (nop) (nop))))
+(module 
+  (func
+    (i32.const 0) 
+    if  
+      nop 
+    else
+      nop
+    end))

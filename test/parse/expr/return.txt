@@ -1,3 +1,4 @@
 (module
   (func (result i32)
-    (return (i32.const 42))))
+    i32.const 42
+    return))
