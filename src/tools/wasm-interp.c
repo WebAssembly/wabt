@@ -909,6 +909,46 @@ static WasmResult parse_line(Context* ctx) {
   return WASM_OK;
 }
 
+static WasmResult parse_type_object(Context* ctx, WasmType* out_type) {
+  WasmStringSlice type_str;
+  EXPECT("{");
+  PARSE_KEY_STRING_VALUE("type", &type_str);
+  EXPECT("}");
+
+  if (string_slice_equals_str(&type_str, "i32")) {
+    *out_type = WASM_TYPE_I32;
+    return WASM_OK;
+  } else if (string_slice_equals_str(&type_str, "f32")) {
+    *out_type = WASM_TYPE_F32;
+    return WASM_OK;
+  } else if (string_slice_equals_str(&type_str, "i64")) {
+    *out_type = WASM_TYPE_I64;
+    return WASM_OK;
+  } else if (string_slice_equals_str(&type_str, "f64")) {
+    *out_type = WASM_TYPE_F64;
+    return WASM_OK;
+  } else {
+    print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
+                WASM_PRINTF_STRING_SLICE_ARG(type_str));
+    return WASM_ERROR;
+  }
+}
+
+static WasmResult parse_type_vector(Context* ctx, WasmTypeVector* out_types) {
+  WASM_ZERO_MEMORY(*out_types);
+  EXPECT("[");
+  WasmBool first = WASM_TRUE;
+  while (!match(ctx, "]")) {
+    if (!first)
+      EXPECT(",");
+    WasmType type;
+    CHECK_RESULT(parse_type_object(ctx, &type));
+    first = WASM_FALSE;
+    wasm_append_type_value(ctx->allocator, out_types, &type);
+  }
+  return WASM_OK;
+}
+
 static WasmResult parse_const(Context* ctx,
                               WasmInterpreterTypedValue* out_value) {
   WasmStringSlice type_str;
@@ -1457,13 +1497,19 @@ static WasmResult parse_command(Context* ctx) {
     destroy_action(ctx->allocator, &action);
   } else if (match(ctx, "\"assert_return_nan\"")) {
     Action action;
+    WasmTypeVector expected;
     WASM_ZERO_MEMORY(action);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
     CHECK_RESULT(parse_action(ctx, &action));
+    EXPECT(",");
+    /* Not needed for wasm-interp, but useful for other parsers. */
+    EXPECT_KEY("expected");
+    CHECK_RESULT(parse_type_vector(ctx, &expected));
     on_assert_return_nan_command(ctx, &action);
+    wasm_destroy_type_vector(ctx->allocator, &expected);
     destroy_action(ctx->allocator, &action);
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;

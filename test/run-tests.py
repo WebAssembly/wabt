@@ -157,7 +157,22 @@ TOOLS = {
       ]),
       '-v'
     ]
-  }
+  },
+  'run-gen-spec-js': {
+    'EXE': 'test/run-gen-spec-js.py',
+    'FLAGS': ' '.join([
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasm2wast=%(wasm2wast)s',
+      '--no-error-cmdline',
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
+  },
 }
 
 ROUNDTRIP_TOOLS = ('wast2wasm',)
@@ -743,6 +758,7 @@ def main(args):
     return 1
 
   variables = {}
+  variables['test_dir'] = os.path.abspath(SCRIPT_DIR)
 
   for exe_basename in find_exe.EXECUTABLES:
     attr_name = exe_basename.replace('-', '_')

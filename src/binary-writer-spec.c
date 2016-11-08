@@ -162,6 +162,13 @@ static void write_var(Context* ctx, const WasmVar* var) {
     write_escaped_string_slice(ctx, var->name);
 }
 
+static void write_type_object(Context* ctx, WasmType type) {
+  wasm_writef(&ctx->json_stream, "{");
+  write_key(ctx, "type");
+  write_string(ctx, wasm_get_type_name(type));
+  wasm_writef(&ctx->json_stream, "}");
+}
+
 static void write_const(Context* ctx, const WasmConst* const_) {
   wasm_writef(&ctx->json_stream, "{");
   write_key(ctx, "type");
@@ -247,6 +254,36 @@ static void write_action(Context* ctx, const WasmAction* action) {
     write_escaped_string_slice(ctx, action->get.name);
   }
   wasm_writef(&ctx->json_stream, "}");
+}
+
+static void write_action_result_type(Context* ctx,
+                                     WasmScript* script,
+                                     const WasmAction* action) {
+  const WasmModule* module =
+      wasm_get_module_by_var(script, &action->module_var);
+  const WasmExport* export;
+  wasm_writef(&ctx->json_stream, "[");
+  switch (action->type) {
+    case WASM_ACTION_TYPE_INVOKE: {
+      export = wasm_get_export_by_name(module, &action->invoke.name);
+      assert(export->kind == WASM_EXTERNAL_KIND_FUNC);
+      WasmFunc* func = wasm_get_func_by_var(module, &export->var);
+      size_t num_results = wasm_get_num_results(func);
+      size_t i;
+      for (i = 0; i < num_results; ++i)
+        write_type_object(ctx, wasm_get_result_type(func, i));
+      break;
+    }
+
+    case WASM_ACTION_TYPE_GET: {
+      export = wasm_get_export_by_name(module, &action->get.name);
+      assert(export->kind == WASM_EXTERNAL_KIND_GLOBAL);
+      WasmGlobal* global = wasm_get_global_by_var(module, &export->var);
+      write_type_object(ctx, global->type);
+      break;
+    }
+  }
+  wasm_writef(&ctx->json_stream, "]");
 }
 
 static void write_module(Context* ctx,
@@ -398,6 +435,10 @@ static void write_commands(Context* ctx, WasmScript* script) {
         write_location(ctx, &command->assert_return_nan.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_return_nan.action);
+        write_separator(ctx);
+        write_key(ctx, "expected");
+        write_action_result_type(ctx, script,
+                                 &command->assert_return_nan.action);
         break;
 
       case WASM_COMMAND_TYPE_ASSERT_TRAP:

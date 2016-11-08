@@ -1,0 +1,18 @@
+;;; TOOL: run-gen-spec-js
+;;; FLAGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+(module
+  (func (export "unreachable") unreachable)
+  (func (export "i32.trunc_s") (param f32) (result i32)
+    get_local 0
+    i32.trunc_s/f32))
+
+(assert_trap (invoke "unreachable") "unreachable")
+;; Rewritten to avoid passing nan as a parameter.
+(assert_trap (invoke "i32.trunc_s" (f32.const -nan)) "invalid conversion")
+(;; STDOUT ;;;
+// A deliberately empty file for testing.
+
+$$ = instance("\x00\x61\x73\x6d\x0d\x00\x00\x00\x01\x09\x02\x60\x00\x00\x60\x01\x7d\x01\x7f\x03\x04\x03\x00\x01\x00\x07\x28\x03\x0b\x75\x6e\x72\x65\x61\x63\x68\x61\x62\x6c\x65\x00\x00\x0b\x69\x33\x32\x2e\x74\x72\x75\x6e\x63\x5f\x73\x00\x01\x08\x61\x73\x73\x65\x72\x74\x5f\x30\x00\x02\x0a\x17\x03\x03\x00\x00\x0b\x05\x00\x20\x00\xa8\x0b\x0b\x00\x43\x00\x00\xc0\xff\x10\x01\x0c\x00\x0b");
+assert_trap(() => $$.exports["unreachable"]());
+assert_trap(() => $$.exports["assert_0"]());
+;;; STDOUT ;;)
