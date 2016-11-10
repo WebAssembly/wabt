@@ -1,10 +1,207 @@
-;;; SKIP: imports not working properly in interpreter yet
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
 (;; STDOUT ;;;
-called import spectest.print(i32:14, f32:42)
-called import spectest.print(i32:13)
-called import spectest.print(i64:25, f64:53)
-called import spectest.print(i64:24)
-2/2 tests passed.
+assert_invalid error:
+  third_party/testsuite/imports.wast:270:45: only one table allowed
+  (module (import "" "" (table 10 anyfunc)) (import "" "" (table 10 anyfunc)))
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/imports.wast:274:45: only one table allowed
+  (module (import "" "" (table 10 anyfunc)) (table 10 anyfunc))
+                                            ^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/imports.wast:278:30: only one table allowed
+  (module (table 10 anyfunc) (table 10 anyfunc))
+                             ^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/imports.wast:365:37: only one memory block allowed
+  (module (import "" "" (memory 1)) (import "" "" (memory 1)))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/imports.wast:369:37: only one memory block allowed
+  (module (import "" "" (memory 1)) (memory 0))
+                                    ^^^^^^^^^^
+assert_invalid error:
+  third_party/testsuite/imports.wast:373:22: only one memory block allowed
+  (module (memory 0) (memory 0))
+                     ^^^^^^^^^^
+called host spectest.print(i32:13) =>
+called host spectest.print(i32:14, f32:42) =>
+called host spectest.print(i32:13) =>
+called host spectest.print(i32:13) =>
+called host spectest.print(i32:13) =>
+called host spectest.print(i64:24) =>
+called host spectest.print(i64:25, f64:53) =>
+called host spectest.print(i64:24) =>
+called host spectest.print(i64:24) =>
+called host spectest.print(i64:24) =>
+third_party/testsuite/imports.wast:72: assert_unlinkable error:
+  error: unknown module field "unknown"
+  error: @0x0000001e: on_import callback failed
+third_party/testsuite/imports.wast:76: assert_unlinkable error:
+  error: unknown host function import "spectest.unknown"
+  error: @0x00000024: on_import_func callback failed
+third_party/testsuite/imports.wast:81: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x0000001e: on_import_func callback failed
+third_party/testsuite/imports.wast:85: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x0000001e: on_import_func callback failed
+third_party/testsuite/imports.wast:89: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x0000001f: on_import_func callback failed
+third_party/testsuite/imports.wast:93: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000021: on_import_func callback failed
+third_party/testsuite/imports.wast:97: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000022: on_import_func callback failed
+third_party/testsuite/imports.wast:101: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000022: on_import_func callback failed
+third_party/testsuite/imports.wast:105: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000022: on_import_func callback failed
+third_party/testsuite/imports.wast:109: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000023: on_import_func callback failed
+third_party/testsuite/imports.wast:113: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000022: on_import_func callback failed
+third_party/testsuite/imports.wast:117: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000023: on_import_func callback failed
+third_party/testsuite/imports.wast:121: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000023: on_import_func callback failed
+third_party/testsuite/imports.wast:125: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000023: on_import_func callback failed
+third_party/testsuite/imports.wast:129: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000024: on_import_func callback failed
+third_party/testsuite/imports.wast:133: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000026: on_import_func callback failed
+third_party/testsuite/imports.wast:137: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000027: on_import_func callback failed
+third_party/testsuite/imports.wast:141: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000027: on_import_func callback failed
+third_party/testsuite/imports.wast:146: assert_unlinkable error:
+  error: expected import "test.global-i32" to have kind func, not global
+  error: @0x00000024: on_import_func callback failed
+third_party/testsuite/imports.wast:150: assert_unlinkable error:
+  error: expected import "test.table-10-inf" to have kind func, not table
+  error: @0x00000025: on_import_func callback failed
+third_party/testsuite/imports.wast:154: assert_unlinkable error:
+  error: expected import "test.memory-2-inf" to have kind func, not memory
+  error: @0x00000025: on_import_func callback failed
+third_party/testsuite/imports.wast:158: assert_unlinkable error:
+  error: unknown host function import "spectest.global"
+  error: @0x00000023: on_import_func callback failed
+third_party/testsuite/imports.wast:162: assert_unlinkable error:
+  error: unknown host function import "spectest.table"
+  error: @0x00000022: on_import_func callback failed
+third_party/testsuite/imports.wast:166: assert_unlinkable error:
+  error: unknown host function import "spectest.memory"
+  error: @0x00000023: on_import_func callback failed
+third_party/testsuite/imports.wast:199: assert_unlinkable error:
+  error: unknown module field "unknown"
+  error: @0x00000018: on_import callback failed
+third_party/testsuite/imports.wast:203: assert_unlinkable error:
+  error: unknown host global import "spectest.unknown"
+  error: @0x0000001f: on_import_global callback failed
+third_party/testsuite/imports.wast:208: assert_unlinkable error:
+  error: expected import "test.func" to have kind global, not func
+  error: @0x00000018: on_import_global callback failed
+third_party/testsuite/imports.wast:212: assert_unlinkable error:
+  error: expected import "test.table-10-inf" to have kind global, not table
+  error: @0x00000020: on_import_global callback failed
+third_party/testsuite/imports.wast:216: assert_unlinkable error:
+  error: expected import "test.memory-2-inf" to have kind global, not memory
+  error: @0x00000020: on_import_global callback failed
+third_party/testsuite/imports.wast:220: assert_unlinkable error:
+  error: unknown host global import "spectest.print"
+  error: @0x0000001d: on_import_global callback failed
+third_party/testsuite/imports.wast:224: assert_unlinkable error:
+  error: unknown host global import "spectest.table"
+  error: @0x0000001d: on_import_global callback failed
+third_party/testsuite/imports.wast:228: assert_unlinkable error:
+  error: unknown host global import "spectest.memory"
+  error: @0x0000001e: on_import_global callback failed
+third_party/testsuite/imports.wast:295: assert_unlinkable error:
+  error: unknown module field "unknown"
+  error: @0x00000018: on_import callback failed
+third_party/testsuite/imports.wast:299: assert_unlinkable error:
+  error: unknown host table import "spectest.unknown"
+  error: @0x00000020: on_import_table callback failed
+third_party/testsuite/imports.wast:304: assert_unlinkable error:
+  error: actual size (10) smaller than declared (12)
+  error: @0x00000021: on_import_table callback failed
+third_party/testsuite/imports.wast:308: assert_unlinkable error:
+  error: max size (unspecified) larger than declared (20)
+  error: @0x00000022: on_import_table callback failed
+third_party/testsuite/imports.wast:312: assert_unlinkable error:
+  error: actual size (10) smaller than declared (12)
+  error: @0x0000001e: on_import_table callback failed
+third_party/testsuite/imports.wast:316: assert_unlinkable error:
+  error: max size (20) larger than declared (15)
+  error: @0x0000001f: on_import_table callback failed
+third_party/testsuite/imports.wast:321: assert_unlinkable error:
+  error: expected import "test.func" to have kind table, not func
+  error: @0x00000019: on_import_table callback failed
+third_party/testsuite/imports.wast:325: assert_unlinkable error:
+  error: expected import "test.global-i32" to have kind table, not global
+  error: @0x0000001f: on_import_table callback failed
+third_party/testsuite/imports.wast:329: assert_unlinkable error:
+  error: expected import "test.memory-2-inf" to have kind table, not memory
+  error: @0x00000021: on_import_table callback failed
+third_party/testsuite/imports.wast:333: assert_unlinkable error:
+  error: unknown host table import "spectest.print"
+  error: @0x0000001e: on_import_table callback failed
+third_party/testsuite/imports.wast:388: assert_unlinkable error:
+  error: unknown module field "unknown"
+  error: @0x00000018: on_import callback failed
+third_party/testsuite/imports.wast:392: assert_unlinkable error:
+  error: unknown host memory import "spectest.unknown"
+  error: @0x0000001f: on_import_memory callback failed
+third_party/testsuite/imports.wast:397: assert_unlinkable error:
+  error: actual size (2) smaller than declared (3)
+  error: @0x00000020: on_import_memory callback failed
+third_party/testsuite/imports.wast:401: assert_unlinkable error:
+  error: max size (unspecified) larger than declared (3)
+  error: @0x00000021: on_import_memory callback failed
+third_party/testsuite/imports.wast:405: assert_unlinkable error:
+  error: actual size (1) smaller than declared (2)
+  error: @0x0000001e: on_import_memory callback failed
+third_party/testsuite/imports.wast:409: assert_unlinkable error:
+  error: max size (2) larger than declared (1)
+  error: @0x0000001f: on_import_memory callback failed
+third_party/testsuite/imports.wast:414: assert_unlinkable error:
+  error: expected import "test.func-i32" to have kind memory, not func
+  error: @0x0000001c: on_import_memory callback failed
+third_party/testsuite/imports.wast:418: assert_unlinkable error:
+  error: expected import "test.global-i32" to have kind memory, not global
+  error: @0x0000001e: on_import_memory callback failed
+third_party/testsuite/imports.wast:422: assert_unlinkable error:
+  error: expected import "test.table-10-inf" to have kind memory, not table
+  error: @0x00000020: on_import_memory callback failed
+third_party/testsuite/imports.wast:426: assert_unlinkable error:
+  error: unknown host memory import "spectest.print"
+  error: @0x0000001d: on_import_memory callback failed
+third_party/testsuite/imports.wast:430: assert_unlinkable error:
+  error: unknown host memory import "spectest.global"
+  error: @0x0000001e: on_import_memory callback failed
+third_party/testsuite/imports.wast:434: assert_unlinkable error:
+  error: unknown host memory import "spectest.table"
+  error: @0x0000001d: on_import_memory callback failed
+third_party/testsuite/imports.wast:439: assert_unlinkable error:
+  error: actual size (1) smaller than declared (2)
+  error: @0x0000001e: on_import_memory callback failed
+third_party/testsuite/imports.wast:443: assert_unlinkable error:
+  error: max size (2) larger than declared (1)
+  error: @0x0000001f: on_import_memory callback failed
+85/85 tests passed.
 ;;; STDOUT ;;)

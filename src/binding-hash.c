@@ -159,6 +159,18 @@ int wasm_find_binding_index_by_name(const WasmBindingHash* hash,
   return -1;
 }
 
+void wasm_remove_binding(struct WasmAllocator* allocator,
+                         WasmBindingHash* hash,
+                         const WasmStringSlice* name) {
+  int index = wasm_find_binding_index_by_name(hash, name);
+  if (index == -1)
+    return;
+
+  WasmBindingHashEntry* entry = &hash->entries.data[index];
+  wasm_destroy_string_slice(allocator, &entry->binding.name);
+  WASM_ZERO_MEMORY(*entry);
+}
+
 static void destroy_binding_hash_entry(WasmAllocator* allocator,
                                        WasmBindingHashEntry* entry) {
   wasm_destroy_string_slice(allocator, &entry->binding.name);

@@ -1387,6 +1387,7 @@ cmd :
       $$->type = WASM_COMMAND_TYPE_REGISTER;
       $$->register_.module_name = $3;
       $$->register_.var = $4;
+      $$->register_.var.loc = @4;
     }
 ;
 cmd_list :
@@ -1428,7 +1429,7 @@ script :
       size_t i;
       for (i = 0; i < $$.commands.size; ++i) {
         WasmCommand* command = &$$.commands.data[i];
-        WasmAction* action = NULL;
+        WasmVar* module_var = NULL;
         switch (command->type) {
           case WASM_COMMAND_TYPE_MODULE: {
             last_module_index = i;
@@ -1448,25 +1449,27 @@ script :
           }
 
           case WASM_COMMAND_TYPE_ASSERT_RETURN:
-            action = &command->assert_return.action;
-            goto has_action;
+            module_var = &command->assert_return.action.module_var;
+            goto has_module_var;
           case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-            action = &command->assert_return_nan.action;
-            goto has_action;
+            module_var = &command->assert_return_nan.action.module_var;
+            goto has_module_var;
           case WASM_COMMAND_TYPE_ASSERT_TRAP:
-            action = &command->assert_trap.action;
-            goto has_action;
+            module_var = &command->assert_trap.action.module_var;
+            goto has_module_var;
           case WASM_COMMAND_TYPE_ACTION:
-            action = &command->action;
-            goto has_action;
+            module_var = &command->action.module_var;
+            goto has_module_var;
+          case WASM_COMMAND_TYPE_REGISTER:
+            module_var = &command->register_.var;
+            goto has_module_var;
 
-          has_action: {
+          has_module_var: {
             /* Resolve actions with an invalid index to use the preceding
              * module. */
-            WasmVar* var = &action->module_var;
-            if (var->type == WASM_VAR_TYPE_INDEX &&
-                var->index == INVALID_VAR_INDEX) {
-              var->index = last_module_index;
+            if (module_var->type == WASM_VAR_TYPE_INDEX &&
+                module_var->index == INVALID_VAR_INDEX) {
+              module_var->index = last_module_index;
             }
             break;
           }

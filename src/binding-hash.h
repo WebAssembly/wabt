@@ -44,6 +44,9 @@ WASM_EXTERN_C_BEGIN
 WasmBinding* wasm_insert_binding(struct WasmAllocator*,
                                  WasmBindingHash*,
                                  const WasmStringSlice*);
+void wasm_remove_binding(struct WasmAllocator*,
+                         WasmBindingHash*,
+                         const WasmStringSlice*);
 WasmBool wasm_hash_entry_is_free(const WasmBindingHashEntry*);
 /* returns -1 if the name is not in the hash */
 int wasm_find_binding_index_by_name(const WasmBindingHash*,

@@ -690,8 +690,8 @@ static const yytype_uint16 yyrline[] =
     1078,  1081,  1092,  1096,  1103,  1107,  1110,  1118,  1126,  1143,
     1159,  1170,  1177,  1184,  1190,  1230,  1240,  1262,  1272,  1298,
     1303,  1311,  1319,  1329,  1335,  1341,  1347,  1353,  1359,  1364,
-    1373,  1378,  1379,  1385,  1393,  1394,  1402,  1414,  1415,  1422,
-    1485
+    1373,  1378,  1379,  1385,  1394,  1395,  1403,  1415,  1416,  1423,
+    1488
 };
 #endif
 
@@ -3943,28 +3943,29 @@ yyreduce:
       (yyval.command)->type = WASM_COMMAND_TYPE_REGISTER;
       (yyval.command)->register_.module_name = (yyvsp[-2].text);
       (yyval.command)->register_.var = (yyvsp[-1].var);
+      (yyval.command)->register_.var.loc = (yylsp[-1]);
     }
-#line 3948 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 3949 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 1393 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1394 "src/ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.commands)); }
-#line 3954 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 3955 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1394 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1395 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.commands) = (yyvsp[-1].commands);
       wasm_append_command_value(parser->allocator, &(yyval.commands), (yyvsp[0].command));
       wasm_free(parser->allocator, (yyvsp[0].command));
     }
-#line 3964 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 3965 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 1402 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1403 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
       if (WASM_FAILED(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
@@ -3975,26 +3976,26 @@ yyreduce:
       }
       wasm_free(parser->allocator, (char*)(yyvsp[-1].literal).text.start);
     }
-#line 3979 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 3980 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 1414 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1415 "src/ast-parser.y" /* yacc.c:1646  */
     { WASM_ZERO_MEMORY((yyval.consts)); }
-#line 3985 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 3986 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 1415 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1416 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.consts) = (yyvsp[-1].consts);
       wasm_append_const_value(parser->allocator, &(yyval.consts), &(yyvsp[0].const_));
     }
-#line 3994 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 3995 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 1422 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1423 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WASM_ZERO_MEMORY((yyval.script));
       (yyval.script).allocator = parser->allocator;
@@ -4004,7 +4005,7 @@ yyreduce:
       size_t i;
       for (i = 0; i < (yyval.script).commands.size; ++i) {
         WasmCommand* command = &(yyval.script).commands.data[i];
-        WasmAction* action = NULL;
+        WasmVar* module_var = NULL;
         switch (command->type) {
           case WASM_COMMAND_TYPE_MODULE: {
             last_module_index = i;
@@ -4024,25 +4025,27 @@ yyreduce:
           }
 
           case WASM_COMMAND_TYPE_ASSERT_RETURN:
-            action = &command->assert_return.action;
-            goto has_action;
+            module_var = &command->assert_return.action.module_var;
+            goto has_module_var;
           case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
-            action = &command->assert_return_nan.action;
-            goto has_action;
+            module_var = &command->assert_return_nan.action.module_var;
+            goto has_module_var;
           case WASM_COMMAND_TYPE_ASSERT_TRAP:
-            action = &command->assert_trap.action;
-            goto has_action;
+            module_var = &command->assert_trap.action.module_var;
+            goto has_module_var;
           case WASM_COMMAND_TYPE_ACTION:
-            action = &command->action;
-            goto has_action;
+            module_var = &command->action.module_var;
+            goto has_module_var;
+          case WASM_COMMAND_TYPE_REGISTER:
+            module_var = &command->register_.var;
+            goto has_module_var;
 
-          has_action: {
+          has_module_var: {
             /* Resolve actions with an invalid index to use the preceding
              * module. */
-            WasmVar* var = &action->module_var;
-            if (var->type == WASM_VAR_TYPE_INDEX &&
-                var->index == INVALID_VAR_INDEX) {
-              var->index = last_module_index;
+            if (module_var->type == WASM_VAR_TYPE_INDEX &&
+                module_var->index == INVALID_VAR_INDEX) {
+              module_var->index = last_module_index;
             }
             break;
           }
@@ -4053,11 +4056,11 @@ yyreduce:
       }
       parser->script = (yyval.script);
     }
-#line 4057 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 4060 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
     break;
 
 
-#line 4061 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
+#line 4064 "src/prebuilt/ast-parser-gen.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4292,7 +4295,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1488 "src/ast-parser.y" /* yacc.c:1906  */
+#line 1491 "src/ast-parser.y" /* yacc.c:1906  */
 
 
 static void append_expr_list(WasmExprList* expr_list, WasmExprList* expr) {

@@ -41,6 +41,8 @@ struct WasmStream;
   V(TRAP_INVALID_CONVERSION_TO_INTEGER, "invalid conversion to integer")       \
   /* function table index is out of bounds */                                  \
   V(TRAP_UNDEFINED_TABLE_INDEX, "undefined table index")                       \
+  /* function table element is uninitialized */                                \
+  V(TRAP_UNINITIALIZED_TABLE_ELEMENT, "uninitialized table element")           \
   /* unreachable instruction executed */                                       \
   V(TRAP_UNREACHABLE, "unreachable executed")                                  \
   /* call indirect signature doesn't match function table signature */         \
@@ -105,9 +107,8 @@ WASM_DEFINE_VECTOR(interpreter_table, WasmInterpreterTable);
 typedef struct WasmInterpreterMemory {
   WasmAllocator* allocator;
   void* data;
-  uint32_t page_size;
-  uint32_t byte_size;
-  uint32_t max_page_size;
+  WasmLimits page_limits;
+  uint32_t byte_size; /* Cached from page_limits. */
 } WasmInterpreterMemory;
 WASM_DEFINE_VECTOR(interpreter_memory, WasmInterpreterMemory);
 
@@ -123,7 +124,6 @@ typedef struct WasmInterpreterTypedValue {
   WasmType type;
   WasmInterpreterValue value;
 } WasmInterpreterTypedValue;
-WASM_DEFINE_ARRAY(interpreter_typed_value, WasmInterpreterTypedValue);
 WASM_DEFINE_VECTOR(interpreter_typed_value, WasmInterpreterTypedValue);
 
 typedef struct WasmInterpreterGlobal {
@@ -190,20 +190,29 @@ typedef struct WasmInterpreterExport {
 } WasmInterpreterExport;
 WASM_DEFINE_VECTOR(interpreter_export, WasmInterpreterExport);
 
+typedef struct WasmPrintErrorCallback {
+  void* user_data;
+  void (*print_error)(const char* msg, void* user_data);
+} WasmPrintErrorCallback;
+
 typedef struct WasmInterpreterHostImportDelegate {
   void *user_data;
   WasmResult (*import_func)(WasmInterpreterImport*,
                             WasmInterpreterFunc*,
                             WasmInterpreterFuncSignature*,
+                            WasmPrintErrorCallback,
                             void* user_data);
   WasmResult (*import_table)(WasmInterpreterImport*,
                              WasmInterpreterTable*,
+                             WasmPrintErrorCallback,
                              void* user_data);
   WasmResult (*import_memory)(WasmInterpreterImport*,
                               WasmInterpreterMemory*,
+                              WasmPrintErrorCallback,
                               void* user_data);
   WasmResult (*import_global)(WasmInterpreterImport*,
                               WasmInterpreterGlobal*,
+                              WasmPrintErrorCallback,
                               void* user_data);
 } WasmInterpreterHostImportDelegate;
 
@@ -228,6 +237,17 @@ typedef struct WasmInterpreterModule {
 } WasmInterpreterModule;
 WASM_DEFINE_VECTOR(interpreter_module, WasmInterpreterModule);
 
+/* Used to track and reset the state of the environment. */
+typedef struct WasmInterpreterEnvironmentMark {
+  size_t modules_size;
+  size_t sigs_size;
+  size_t funcs_size;
+  size_t memories_size;
+  size_t tables_size;
+  size_t globals_size;
+  size_t istream_size;
+} WasmInterpreterEnvironmentMark;
+
 typedef struct WasmInterpreterEnvironment {
   WasmInterpreterModuleVector modules;
   WasmInterpreterFuncSignatureVector sigs;
@@ -237,13 +257,12 @@ typedef struct WasmInterpreterEnvironment {
   WasmInterpreterGlobalVector globals;
   WasmOutputBuffer istream;
   WasmBindingHash module_bindings;
+  WasmBindingHash registered_module_bindings;
 } WasmInterpreterEnvironment;
 
 typedef struct WasmInterpreterThread {
+  WasmAllocator* allocator;
   WasmInterpreterEnvironment* env;
-  WasmInterpreterModule* module;
-  WasmInterpreterTable* table;
-  WasmInterpreterMemory* memory;
   WasmInterpreterValueArray value_stack;
   WasmUint32Array call_stack;
   WasmInterpreterValue* value_stack_top;
@@ -253,7 +272,7 @@ typedef struct WasmInterpreterThread {
   uint32_t pc;
 
   /* a temporary buffer that is for passing args to host functions */
-  WasmInterpreterTypedValueArray host_args;
+  WasmInterpreterTypedValueVector host_args;
 } WasmInterpreterThread;
 
 #define WASM_INTERPRETER_THREAD_OPTIONS_DEFAULT \
@@ -268,19 +287,27 @@ typedef struct WasmInterpreterThreadOptions {
 WASM_EXTERN_C_BEGIN
 WasmBool is_nan_f32(uint32_t f32_bits);
 WasmBool is_nan_f64(uint64_t f64_bits);
+WasmBool wasm_func_signatures_are_equal(WasmInterpreterEnvironment* env,
+                                        uint32_t sig_index_0,
+                                        uint32_t sig_index_1);
 
 void wasm_init_interpreter_environment(WasmAllocator* allocator,
                                        WasmInterpreterEnvironment* env);
 void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
                                           WasmInterpreterEnvironment* env);
+WasmInterpreterEnvironmentMark wasm_mark_interpreter_environment(
+    WasmInterpreterEnvironment* env);
+void wasm_reset_interpreter_environment_to_mark(
+    WasmAllocator* allocator,
+    WasmInterpreterEnvironment* env,
+    WasmInterpreterEnvironmentMark mark);
 WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
                                                WasmInterpreterEnvironment* env,
                                                WasmStringSlice name);
-WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
-                                        WasmInterpreterEnvironment* env,
-                                        WasmInterpreterModule* module,
-                                        WasmInterpreterThread* thread,
-                                        WasmInterpreterThreadOptions* options);
+void wasm_init_interpreter_thread(WasmAllocator* allocator,
+                                  WasmInterpreterEnvironment* env,
+                                  WasmInterpreterThread* thread,
+                                  WasmInterpreterThreadOptions* options);
 WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
                                              WasmInterpreterValue value);
 void wasm_destroy_interpreter_thread(WasmAllocator* allocator,

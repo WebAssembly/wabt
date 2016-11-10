@@ -395,6 +395,7 @@ uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment);
 
 WasmStringSlice wasm_empty_string_slice(void);
 WasmStringSlice wasm_string_slice_from_cstr(const char* string);
+WasmBool wasm_string_slice_is_empty(const WasmStringSlice*);
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice*,
                                       const WasmStringSlice*);
 void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);

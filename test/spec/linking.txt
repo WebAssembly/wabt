@@ -1,3 +1,17 @@
-;;; SKIP: linking not working yet
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/linking.wast
+(;; STDOUT ;;;
+third_party/testsuite/linking.wast:28: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000025: on_import_func callback failed
+third_party/testsuite/linking.wast:32: assert_unlinkable error:
+  error: import signature mismatch
+  error: @0x00000026: on_import_func callback failed
+third_party/testsuite/linking.wast:160: assert_unlinkable error:
+  error: unknown module field "mem"
+  error: @0x00000038: on_import callback failed
+third_party/testsuite/linking.wast:233: assert_unlinkable error:
+  error: unknown module field "tab"
+  error: @0x00000033: on_import callback failed
+69/69 tests passed.
+;;; STDOUT ;;)

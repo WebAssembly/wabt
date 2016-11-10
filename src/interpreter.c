@@ -90,6 +90,7 @@ static void wasm_destroy_interpreter_module(WasmAllocator* allocator,
                                             WasmInterpreterModule* module) {
   wasm_destroy_interpreter_export_vector(allocator, &module->exports);
   wasm_destroy_binding_hash(allocator, &module->export_bindings);
+  wasm_destroy_string_slice(allocator, &module->name);
   if (!module->is_host) {
     WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->defined.imports,
                                     interpreter_import);
@@ -109,6 +110,66 @@ void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
   wasm_destroy_interpreter_global_vector(allocator, &env->globals);
   wasm_destroy_output_buffer(&env->istream);
   wasm_destroy_binding_hash(allocator, &env->module_bindings);
+  wasm_destroy_binding_hash(allocator, &env->registered_module_bindings);
+}
+
+WasmInterpreterEnvironmentMark wasm_mark_interpreter_environment(
+    WasmInterpreterEnvironment* env) {
+  WasmInterpreterEnvironmentMark mark;
+  WASM_ZERO_MEMORY(mark);
+  mark.modules_size = env->modules.size;
+  mark.sigs_size = env->sigs.size;
+  mark.funcs_size = env->funcs.size;
+  mark.memories_size = env->memories.size;
+  mark.tables_size = env->tables.size;
+  mark.globals_size = env->globals.size;
+  mark.istream_size = env->istream.size;
+  return mark;
+}
+
+void wasm_reset_interpreter_environment_to_mark(
+    WasmAllocator* allocator,
+    WasmInterpreterEnvironment* env,
+    WasmInterpreterEnvironmentMark mark) {
+  size_t i;
+
+#define DESTROY_PAST_MARK(destroy_name, names)                                 \
+  do {                                                                         \
+    assert(mark.names##_size <= env->names.size);                              \
+    for (i = mark.names##_size; i < env->names.size; ++i)                      \
+      wasm_destroy_interpreter_##destroy_name(allocator, &env->names.data[i]); \
+    env->names.size = mark.names##_size;                                       \
+  } while (0)
+
+  /* Destroy entries in the binding hash. */
+  for (i = mark.modules_size; i < env->modules.size; ++i) {
+    const WasmStringSlice* name = &env->modules.data[i].name;
+    if (!wasm_string_slice_is_empty(name))
+      wasm_remove_binding(allocator, &env->module_bindings, name);
+  }
+
+  /* registered_module_bindings maps from an arbitrary name to a module index,
+   * so we have to iterate through the entire table to find entries to remove.
+   */
+  for (i = 0; i < env->registered_module_bindings.entries.capacity; ++i) {
+    WasmBindingHashEntry* entry =
+        &env->registered_module_bindings.entries.data[i];
+    if (!wasm_hash_entry_is_free(entry) &&
+        entry->binding.index >= (int)mark.modules_size) {
+      wasm_remove_binding(allocator, &env->registered_module_bindings,
+                          &entry->binding.name);
+    }
+  }
+
+  DESTROY_PAST_MARK(module, modules);
+  DESTROY_PAST_MARK(func_signature, sigs);
+  DESTROY_PAST_MARK(func, funcs);
+  DESTROY_PAST_MARK(memory, memories);
+  DESTROY_PAST_MARK(table, tables);
+  env->globals.size = mark.globals_size;
+  env->istream.size = mark.istream_size;
+
+#undef DESTROY_PAST_MARK
 }
 
 WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
@@ -121,53 +182,29 @@ WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
   module->table_index = WASM_INVALID_INDEX;
   module->is_host = WASM_TRUE;
 
-  WasmBinding* binding =
-      wasm_insert_binding(allocator, &env->module_bindings, &module->name);
+  WasmStringSlice dup_name = wasm_dup_string_slice(allocator, name);
+  WasmBinding* binding = wasm_insert_binding(
+      allocator, &env->registered_module_bindings, &dup_name);
   binding->index = env->modules.size - 1;
   return module;
 }
 
-WasmResult wasm_init_interpreter_thread(WasmAllocator* allocator,
-                                        WasmInterpreterEnvironment* env,
-                                        WasmInterpreterModule* module,
-                                        WasmInterpreterThread* thread,
-                                        WasmInterpreterThreadOptions* options) {
-  assert(!module->is_host);
+void wasm_init_interpreter_thread(WasmAllocator* allocator,
+                                  WasmInterpreterEnvironment* env,
+                                  WasmInterpreterThread* thread,
+                                  WasmInterpreterThreadOptions* options) {
   WASM_ZERO_MEMORY(*thread);
   wasm_new_interpreter_value_array(allocator, &thread->value_stack,
                                    options->value_stack_size);
   wasm_new_uint32_array(allocator, &thread->call_stack,
                         options->call_stack_size);
+  thread->allocator = allocator;
   thread->env = env;
-  thread->module = module;
   thread->value_stack_top = thread->value_stack.data;
   thread->value_stack_end = thread->value_stack.data + thread->value_stack.size;
   thread->call_stack_top = thread->call_stack.data;
   thread->call_stack_end = thread->call_stack.data + thread->call_stack.size;
   thread->pc = options->pc;
-
-  /* cache this module's memory and table, for convenience */
-  if (module->memory_index != WASM_INVALID_INDEX)
-    thread->memory = &env->memories.data[module->memory_index];
-  if (module->table_index != WASM_INVALID_INDEX)
-    thread->table = &env->tables.data[module->table_index];
-
-  /* allocate host_args based on the signature with the most params */
-  /* TODO(binji): move this elsewhere? */
-  uint32_t i;
-  uint32_t max_host_params = 0;
-  for (i = 0; i < env->funcs.size; ++i) {
-    WasmInterpreterFunc* func = &env->funcs.data[i];
-    if (!func->is_host)
-      continue;
-    assert(func->sig_index < env->sigs.size);
-    WasmInterpreterFuncSignature* sig = &env->sigs.data[func->sig_index];
-    if (sig->param_types.size > max_host_params)
-      max_host_params = sig->param_types.size;
-  }
-  wasm_new_interpreter_typed_value_array(allocator, &thread->host_args,
-                                         max_host_params);
-  return WASM_OK;
 }
 
 WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
@@ -193,7 +230,7 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
                                      WasmInterpreterThread* thread) {
   wasm_destroy_interpreter_value_array(allocator, &thread->value_stack);
   wasm_destroy_uint32_array(allocator, &thread->call_stack);
-  wasm_destroy_interpreter_typed_value_array(allocator, &thread->host_args);
+  wasm_destroy_interpreter_typed_value_vector(allocator, &thread->host_args);
 }
 
 /* 3 32222222 222...00
@@ -487,26 +524,33 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define POP_CALL() (*--thread->call_stack_top)
 
-#define LOAD(type, mem_type)                                                \
-  do {                                                                      \
-    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                  \
-    MEM_TYPE_##mem_type value;                                              \
-    TRAP_IF(offset + sizeof(value) > thread->memory->byte_size,             \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
-    void* src = (void*)((intptr_t)thread->memory->data + (uint32_t)offset); \
-    memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                       \
-    PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);                \
+#define GET_MEMORY(var)                      \
+  uint32_t memory_index = read_u32(&pc);     \
+  assert(memory_index < env->memories.size); \
+  WasmInterpreterMemory* var = &env->memories.data[memory_index]
+
+#define LOAD(type, mem_type)                                        \
+  do {                                                              \
+    GET_MEMORY(memory);                                             \
+    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);          \
+    MEM_TYPE_##mem_type value;                                      \
+    TRAP_IF(offset + sizeof(value) > memory->byte_size,             \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                           \
+    void* src = (void*)((intptr_t)memory->data + (uint32_t)offset); \
+    memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));               \
+    PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);        \
   } while (0)
 
-#define STORE(type, mem_type)                                               \
-  do {                                                                      \
-    VALUE_TYPE_##type value = POP_##type();                                 \
-    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);                  \
-    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;                   \
-    TRAP_IF(offset + sizeof(src) > thread->memory->byte_size,               \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                                   \
-    void* dst = (void*)((intptr_t)thread->memory->data + (uint32_t)offset); \
-    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                         \
+#define STORE(type, mem_type)                                       \
+  do {                                                              \
+    GET_MEMORY(memory);                                             \
+    VALUE_TYPE_##type value = POP_##type();                         \
+    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);          \
+    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;           \
+    TRAP_IF(offset + sizeof(src) > memory->byte_size,               \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                           \
+    void* dst = (void*)((intptr_t)memory->data + (uint32_t)offset); \
+    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                 \
   } while (0)
 
 #define BINOP(rtype, type, op)            \
@@ -691,9 +735,9 @@ static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
   *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
 }
 
-static WasmBool signatures_are_equal(WasmInterpreterEnvironment* env,
-                                     uint32_t sig_index_0,
-                                     uint32_t sig_index_1) {
+WasmBool wasm_func_signatures_are_equal(WasmInterpreterEnvironment* env,
+                                        uint32_t sig_index_0,
+                                        uint32_t sig_index_1) {
   if (sig_index_0 == sig_index_1)
     return WASM_TRUE;
   WasmInterpreterFuncSignature* sig_0 = &env->sigs.data[sig_index_0];
@@ -711,8 +755,12 @@ WasmInterpreterResult wasm_call_host(WasmInterpreterThread* thread,
   WasmInterpreterFuncSignature* sig = &thread->env->sigs.data[func->sig_index];
 
   uint32_t num_args = sig->param_types.size;
+  if (thread->host_args.size < num_args) {
+    wasm_resize_interpreter_typed_value_vector(thread->allocator,
+                                               &thread->host_args, num_args);
+  }
+
   uint32_t i;
-  assert(num_args <= thread->host_args.size);
   for (i = num_args; i > 0; --i) {
     WasmInterpreterValue value = POP();
     WasmInterpreterTypedValue* arg = &thread->host_args.data[i - 1];
@@ -745,7 +793,6 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
   assert(call_stack_return_top < thread->call_stack_end);
 
   WasmInterpreterEnvironment* env = thread->env;
-  WasmInterpreterModule* module = thread->module;
 
   const uint8_t* istream = env->istream.start;
   const uint8_t* pc = &istream[thread->pc];
@@ -854,15 +901,19 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
       }
 
       case WASM_OPCODE_CALL_INDIRECT: {
-        WasmInterpreterTable* table = &env->tables.data[module->table_index];
+        uint32_t table_index = read_u32(&pc);
+        assert(table_index < env->tables.size);
+        WasmInterpreterTable* table = &env->tables.data[table_index];
         uint32_t sig_index = read_u32(&pc);
         assert(sig_index < env->sigs.size);
         VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= table->func_indexes.size, UNDEFINED_TABLE_INDEX);
         uint32_t func_index = table->func_indexes.data[entry_index];
+        TRAP_IF(func_index == WASM_INVALID_INDEX, UNINITIALIZED_TABLE_ELEMENT);
         WasmInterpreterFunc* func = &env->funcs.data[func_index];
-        TRAP_UNLESS(signatures_are_equal(env, func->sig_index, sig_index),
-                    INDIRECT_CALL_SIGNATURE_MISMATCH);
+        TRAP_UNLESS(
+            wasm_func_signatures_are_equal(env, func->sig_index, sig_index),
+            INDIRECT_CALL_SIGNATURE_MISMATCH);
         if (func->is_host) {
           wasm_call_host(thread, func);
         } else {
@@ -972,28 +1023,34 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         STORE(F64, F64);
         break;
 
-      case WASM_OPCODE_CURRENT_MEMORY:
-        PUSH_I32(thread->memory->page_size);
+      case WASM_OPCODE_CURRENT_MEMORY: {
+        GET_MEMORY(memory);
+        PUSH_I32(memory->page_limits.initial);
         break;
+      }
 
       case WASM_OPCODE_GROW_MEMORY: {
-        uint32_t old_page_size = thread->memory->page_size;
-        uint32_t old_byte_size = thread->memory->byte_size;
+        GET_MEMORY(memory);
+        uint32_t old_page_size = memory->page_limits.initial;
+        uint32_t old_byte_size = memory->byte_size;
         VALUE_TYPE_I32 grow_pages = POP_I32();
         uint32_t new_page_size = old_page_size + grow_pages;
-        PUSH_NEG_1_AND_BREAK_IF(new_page_size > thread->memory->max_page_size);
+        uint32_t max_page_size = memory->page_limits.has_max
+                                     ? memory->page_limits.max
+                                     : WASM_MAX_PAGES;
+        PUSH_NEG_1_AND_BREAK_IF(new_page_size > max_page_size);
         PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WASM_PAGE_SIZE >
                                 UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
-        WasmAllocator* allocator = thread->memory->allocator;
-        void* new_data = wasm_realloc(allocator, thread->memory->data,
-                                      new_byte_size, WASM_DEFAULT_ALIGN);
+        WasmAllocator* allocator = memory->allocator;
+        void* new_data = wasm_realloc(allocator, memory->data, new_byte_size,
+                                      WASM_DEFAULT_ALIGN);
         PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
-        thread->memory->data = new_data;
-        thread->memory->page_size = new_page_size;
-        thread->memory->byte_size = new_byte_size;
+        memory->data = new_data;
+        memory->page_limits.initial = new_page_size;
+        memory->byte_size = new_byte_size;
         PUSH_I32(old_page_size);
         break;
       }
@@ -1681,10 +1738,16 @@ void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
     case WASM_OPCODE_NOP:
     case WASM_OPCODE_RETURN:
     case WASM_OPCODE_UNREACHABLE:
-    case WASM_OPCODE_CURRENT_MEMORY:
     case WASM_OPCODE_DROP:
       wasm_writef(stream, "%s\n", wasm_get_interpreter_opcode_name(opcode));
       break;
+
+    case WASM_OPCODE_CURRENT_MEMORY: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+                  memory_index);
+      break;
+    }
 
     case WASM_OPCODE_I32_CONST:
       wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
@@ -1707,11 +1770,13 @@ void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
       break;
 
     case WASM_OPCODE_GET_LOCAL:
+    case WASM_OPCODE_GET_GLOBAL:
       wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
     case WASM_OPCODE_SET_LOCAL:
+    case WASM_OPCODE_SET_GLOBAL:
     case WASM_OPCODE_TEE_LOCAL:
       wasm_writef(stream, "%s $%u, %u\n",
                   wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
@@ -1747,45 +1812,60 @@ void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
     case WASM_OPCODE_I32_LOAD:
     case WASM_OPCODE_I64_LOAD:
     case WASM_OPCODE_F32_LOAD:
-    case WASM_OPCODE_F64_LOAD:
-      wasm_writef(stream, "%s %u+$%u\n",
-                  wasm_get_interpreter_opcode_name(opcode), TOP().i32,
-                  read_u32_at(pc));
+    case WASM_OPCODE_F64_LOAD: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u:%u+$%u\n",
+                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+                  TOP().i32, read_u32_at(pc));
       break;
+    }
 
     case WASM_OPCODE_I32_STORE8:
     case WASM_OPCODE_I32_STORE16:
-    case WASM_OPCODE_I32_STORE:
-      wasm_writef(stream, "%s %u+$%u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
-                  read_u32_at(pc), PICK(1).i32);
+    case WASM_OPCODE_I32_STORE: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u:%u+$%u, %u\n",
+                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+                  PICK(2).i32, read_u32_at(pc), PICK(1).i32);
       break;
+    }
 
     case WASM_OPCODE_I64_STORE8:
     case WASM_OPCODE_I64_STORE16:
     case WASM_OPCODE_I64_STORE32:
-    case WASM_OPCODE_I64_STORE:
-      wasm_writef(stream, "%s %u+$%u, %" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
-                  read_u32_at(pc), PICK(1).i64);
+    case WASM_OPCODE_I64_STORE: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u:%u+$%u, %" PRIu64 "\n",
+                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+                  PICK(2).i32, read_u32_at(pc), PICK(1).i64);
       break;
+    }
 
-    case WASM_OPCODE_F32_STORE:
-      wasm_writef(stream, "%s %u+$%u, %g\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
-                  read_u32_at(pc), bitcast_u32_to_f32(PICK(1).f32_bits));
+    case WASM_OPCODE_F32_STORE: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u:%u+$%u, %g\n",
+                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+                  PICK(2).i32, read_u32_at(pc),
+                  bitcast_u32_to_f32(PICK(1).f32_bits));
       break;
+    }
 
-    case WASM_OPCODE_F64_STORE:
-      wasm_writef(stream, "%s %u+$%u, %g\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
-                  read_u32_at(pc), bitcast_u64_to_f64(PICK(1).f64_bits));
+    case WASM_OPCODE_F64_STORE: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u:%u+$%u, %g\n",
+                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+                  PICK(2).i32, read_u32_at(pc),
+                  bitcast_u64_to_f64(PICK(1).f64_bits));
       break;
+    }
 
-    case WASM_OPCODE_GROW_MEMORY:
-      wasm_writef(stream, "%s %u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WASM_OPCODE_GROW_MEMORY: {
+      uint32_t memory_index = read_u32(&pc);
+      wasm_writef(stream, "%s $%u:%u\n",
+                  wasm_get_interpreter_opcode_name(opcode), memory_index,
                   TOP().i32);
       break;
+    }
 
     case WASM_OPCODE_I32_ADD:
     case WASM_OPCODE_I32_SUB:
@@ -2035,10 +2115,16 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
       case WASM_OPCODE_NOP:
       case WASM_OPCODE_RETURN:
       case WASM_OPCODE_UNREACHABLE:
-      case WASM_OPCODE_CURRENT_MEMORY:
       case WASM_OPCODE_DROP:
         wasm_writef(stream, "%s\n", wasm_get_interpreter_opcode_name(opcode));
         break;
+
+      case WASM_OPCODE_CURRENT_MEMORY: {
+        uint32_t memory_index = read_u32(&pc);
+        wasm_writef(stream, "%s $%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), memory_index);
+        break;
+      }
 
       case WASM_OPCODE_I32_CONST:
         wasm_writef(stream, "%s $%u\n",
@@ -2063,11 +2149,13 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
         break;
 
       case WASM_OPCODE_GET_LOCAL:
+      case WASM_OPCODE_GET_GLOBAL:
         wasm_writef(stream, "%s $%u\n",
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
       case WASM_OPCODE_SET_LOCAL:
+      case WASM_OPCODE_SET_GLOBAL:
       case WASM_OPCODE_TEE_LOCAL:
         wasm_writef(stream, "%s $%u, %%[-1]\n",
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
@@ -2078,10 +2166,13 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
                     wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_CALL_INDIRECT:
-        wasm_writef(stream, "%s $%u, %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WASM_OPCODE_CALL_INDIRECT: {
+        uint32_t table_index = read_u32(&pc);
+        wasm_writef(stream, "%s $%u:%u, %%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), table_index,
+                    read_u32(&pc));
         break;
+      }
 
       case WASM_OPCODE_CALL_HOST:
         wasm_writef(stream, "%s $%u\n",
@@ -2101,10 +2192,13 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
       case WASM_OPCODE_I32_LOAD:
       case WASM_OPCODE_I64_LOAD:
       case WASM_OPCODE_F32_LOAD:
-      case WASM_OPCODE_F64_LOAD:
-        wasm_writef(stream, "%s %%[-1]+$%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WASM_OPCODE_F64_LOAD: {
+        uint32_t memory_index = read_u32(&pc);
+        wasm_writef(stream, "%s $%u:%%[-1]+$%u\n",
+                    wasm_get_interpreter_opcode_name(opcode), memory_index,
+                    read_u32(&pc));
         break;
+      }
 
       case WASM_OPCODE_I32_STORE8:
       case WASM_OPCODE_I32_STORE16:
@@ -2114,10 +2208,13 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
       case WASM_OPCODE_I64_STORE32:
       case WASM_OPCODE_I64_STORE:
       case WASM_OPCODE_F32_STORE:
-      case WASM_OPCODE_F64_STORE:
-        wasm_writef(stream, "%s %%[-2]+$%u, %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WASM_OPCODE_F64_STORE: {
+        uint32_t memory_index = read_u32(&pc);
+        wasm_writef(stream, "%s %%[-2]+$%u, $%u:%%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), memory_index,
+                    read_u32(&pc));
         break;
+      }
 
       case WASM_OPCODE_I32_ADD:
       case WASM_OPCODE_I32_SUB:
@@ -2246,10 +2343,16 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
       case WASM_OPCODE_F32_REINTERPRET_I32:
       case WASM_OPCODE_F64_CONVERT_S_I32:
       case WASM_OPCODE_F64_CONVERT_U_I32:
-      case WASM_OPCODE_GROW_MEMORY:
         wasm_writef(stream, "%s %%[-1]\n",
                     wasm_get_interpreter_opcode_name(opcode));
         break;
+
+      case WASM_OPCODE_GROW_MEMORY: {
+        uint32_t memory_index = read_u32(&pc);
+        wasm_writef(stream, "%s $%u:%%[-1]\n",
+                    wasm_get_interpreter_opcode_name(opcode), memory_index);
+        break;
+      }
 
       case WASM_OPCODE_ALLOCA:
         wasm_writef(stream, "%s $%u\n",
