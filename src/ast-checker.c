@@ -909,48 +909,49 @@ static void check_const_init_expr(Context* ctx,
                                   WasmType expected_type,
                                   const char* desc) {
   WasmType type = WASM_TYPE_VOID;
-  if (!expr)
-    return;
-
-  if (expr->next != NULL) {
-    print_const_expr_error(ctx, loc, desc);
-    return;
-  }
-
-  switch (expr->type) {
-    case WASM_EXPR_TYPE_CONST:
-      type = expr->const_.type;
-      break;
-
-    case WASM_EXPR_TYPE_GET_GLOBAL: {
-      const WasmGlobal* ref_global = NULL;
-      int ref_global_index;
-      if (WASM_FAILED(check_global_var(ctx, &expr->get_global.var, &ref_global,
-                                       &ref_global_index))) {
-        return;
-      }
-
-      type = ref_global->type;
-      /* globals can only reference previously defined globals */
-      if (ref_global_index >= ctx->current_global_index) {
-        print_error(ctx, CHECK_STYLE_FULL, loc,
-                    "initializer expression can only be reference a previously "
-                    "defined global");
-      }
-
-      if (ref_global->mutable_) {
-        print_error(ctx, CHECK_STYLE_FULL, loc,
-                    "initializer expression cannot reference a mutable global");
-      }
-      break;
-    }
-
-    default:
+  if (expr) {
+    if (expr->next != NULL) {
       print_const_expr_error(ctx, loc, desc);
       return;
+    }
+
+    switch (expr->type) {
+      case WASM_EXPR_TYPE_CONST:
+        type = expr->const_.type;
+        break;
+
+      case WASM_EXPR_TYPE_GET_GLOBAL: {
+        const WasmGlobal* ref_global = NULL;
+        int ref_global_index;
+        if (WASM_FAILED(check_global_var(ctx, &expr->get_global.var,
+                                         &ref_global, &ref_global_index))) {
+          return;
+        }
+
+        type = ref_global->type;
+        /* globals can only reference previously defined globals */
+        if (ref_global_index >= ctx->current_global_index) {
+          print_error(
+              ctx, CHECK_STYLE_FULL, loc,
+              "initializer expression can only be reference a previously "
+              "defined global");
+        }
+
+        if (ref_global->mutable_) {
+          print_error(
+              ctx, CHECK_STYLE_FULL, loc,
+              "initializer expression cannot reference a mutable global");
+        }
+        break;
+      }
+
+      default:
+        print_const_expr_error(ctx, loc, desc);
+        return;
+    }
   }
 
-  check_type(ctx, &expr->loc, type, expected_type, desc);
+  check_type(ctx, expr ? &expr->loc : loc, type, expected_type, desc);
 }
 
 static void check_global(Context* ctx,
@@ -1053,7 +1054,6 @@ static void check_import(Context* ctx,
       ctx->current_memory_index++;
       break;
     case WASM_EXTERNAL_KIND_GLOBAL:
-      check_global(ctx, loc, &import->global);
       if (import->global.mutable_) {
         print_error(ctx, CHECK_STYLE_FULL, loc,
                     "mutable globals cannot be imported");
