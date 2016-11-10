@@ -42,6 +42,3 @@
     i32.const 0
     f64.load
     drop))
-
-
-
