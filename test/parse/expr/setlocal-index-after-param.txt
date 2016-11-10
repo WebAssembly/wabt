@@ -1,1 +1,5 @@
-(module (func (param i32) (local i32) (set_local 1 (i32.const 0))))
+(module 
+  (func (param i32) 
+    (local i32) 
+    i32.const 0
+    set_local 1))

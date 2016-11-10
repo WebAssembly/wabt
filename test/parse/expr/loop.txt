@@ -1,3 +1,6 @@
 (module
   (func
-    (loop (nop) (nop))))
+    loop 
+      nop
+      nop
+    end))

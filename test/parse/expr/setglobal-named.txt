@@ -1,4 +1,5 @@
 (module
   (global $g f32 (f32.const 1))
   (func
-    (set_global $g (f32.const 2))))
+    f32.const 2
+    set_global $g))

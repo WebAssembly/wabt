@@ -1,4 +1,5 @@
 (module
   (global f32 (f32.const 1))
   (func
-    (set_global 0 (f32.const 2))))
+    f32.const 2
+    set_global 0))

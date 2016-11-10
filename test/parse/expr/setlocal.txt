@@ -1,2 +1,3 @@
 (module (func (local i32)
-  (set_local 0 (i32.const 0))))
+  i32.const 0
+  set_local 0))
