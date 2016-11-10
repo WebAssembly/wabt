@@ -111,7 +111,8 @@ static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 
 typedef struct Context {
   const uint8_t* data;
-  size_t size;
+  size_t data_size;
+  size_t section_end;
   size_t offset;
   WasmBinaryReaderContext user_ctx;
   WasmBinaryReader* reader;
@@ -143,7 +144,7 @@ typedef struct LoggingContext {
 static WasmBinaryReaderContext* get_user_context(Context* ctx) {
   ctx->user_ctx.user_data = ctx->reader->user_data;
   ctx->user_ctx.data = ctx->data;
-  ctx->user_ctx.size = ctx->size;
+  ctx->user_ctx.size = ctx->data_size;
   ctx->user_ctx.offset = ctx->offset;
   return &ctx->user_ctx;
 }
@@ -157,7 +158,7 @@ static void WASM_PRINTF_FORMAT(2, 3)
 }
 
 #define IN_SIZE(type)                                       \
-  if (ctx->offset + sizeof(type) > ctx->size) {             \
+  if (ctx->offset + sizeof(type) > ctx->section_end) {      \
     RAISE_ERROR("unable to read " #type ": %s", desc);      \
   }                                                         \
   memcpy(out_value, ctx->data + ctx->offset, sizeof(type)); \
@@ -201,7 +202,7 @@ static void in_f64(Context* ctx, uint64_t* out_value, const char* desc) {
 
 static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->size;
+  const uint8_t* end = ctx->data + ctx->section_end;
 
   if (p < end && (p[0] & 0x80) == 0) {
     *out_value = LEB128_1(uint32_t);
@@ -230,7 +231,7 @@ static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
 
 static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->size;
+  const uint8_t* end = ctx->data + ctx->section_end;
 
   if (p < end && (p[0] & 0x80) == 0) {
     uint32_t result = LEB128_1(uint32_t);
@@ -267,7 +268,7 @@ static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
 
 static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->size;
+  const uint8_t* end = ctx->data + ctx->section_end;
 
   if (p < end && (p[0] & 0x80) == 0) {
     uint64_t result = LEB128_1(uint64_t);
@@ -349,7 +350,7 @@ static void in_str(Context* ctx, WasmStringSlice* out_str, const char* desc) {
   uint32_t str_len = 0;
   in_u32_leb128(ctx, &str_len, "string length");
 
-  if (ctx->offset + str_len > ctx->size)
+  if (ctx->offset + str_len > ctx->section_end)
     RAISE_ERROR("unable to read string: %s", desc);
 
   out_str->start = (const char*)ctx->data + ctx->offset;
@@ -364,7 +365,7 @@ static void in_bytes(Context* ctx,
   uint32_t data_size = 0;
   in_u32_leb128(ctx, &data_size, "data size");
 
-  if (ctx->offset + data_size > ctx->size)
+  if (ctx->offset + data_size > ctx->section_end)
     RAISE_ERROR("unable to read data: %s", desc);
 
   *out_data = (const uint8_t*)ctx->data + ctx->offset;
@@ -448,15 +449,20 @@ static WasmBool skip_until_section(Context* ctx,
                                    uint32_t* section_size) {
   uint32_t section_start_offset = ctx->offset;
   uint32_t section_code;
-  if (ctx->offset == ctx->size) {
+  if (ctx->offset == ctx->data_size) {
     /* ok, no more sections */
     return WASM_FALSE;
   }
 
+  /* Reset section_end to the full data size so the next section can be read. */
+  ctx->section_end = ctx->data_size;
+
   in_u32_leb128(ctx, &section_code, "section code");
   in_u32_leb128(ctx, section_size, "section size");
-  uint32_t payload_start_offset = ctx->offset;
-  if (ctx->offset + *section_size > ctx->size)
+
+  ctx->section_end = ctx->offset + *section_size;
+
+  if (ctx->section_end > ctx->data_size)
     RAISE_ERROR("invalid section size: extends past end");
 
   if (section_code == WASM_BINARY_SECTION_UNKNOWN) {
@@ -464,7 +470,7 @@ static WasmBool skip_until_section(Context* ctx,
     in_str(ctx, &section_name, "section name");
     if (!handle_unknown_section(ctx, &section_name, *section_size)) {
       /* section wasn't handled, so skip it and try again. */
-      ctx->offset = payload_start_offset + *section_size;
+      ctx->offset = ctx->section_end;
       return skip_until_section(ctx, expected_code, section_size);
     }
     return WASM_FALSE;
@@ -1692,7 +1698,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
   ctx->data = data;
-  ctx->size = size;
+  ctx->data_size = ctx->section_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;
 
