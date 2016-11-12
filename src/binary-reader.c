@@ -1827,6 +1827,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_CTX0(end_import_section);
   }
 
+  /* Allow the name section to come after the imports have been specified. */
+  ctx->name_section_ok = WASM_TRUE;
+
   /* function */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_FUNCTION, &section_size)) {
     CALLBACK_SECTION(begin_function_signatures_section);
@@ -1843,10 +1846,6 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     }
     CALLBACK_CTX0(end_function_signatures_section);
   }
-
-  /* only allow the name section to come after the function signatures have
-   * been specified */
-  ctx->name_section_ok = WASM_TRUE;
 
   /* table */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_TABLE, &section_size)) {
@@ -2049,6 +2048,9 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     }
     CALLBACK_CTX0(end_data_section);
   }
+
+  /* Handle supported unnamed sections at the end. */
+  skip_until_section(ctx, WASM_BINARY_SECTION_UNKNOWN, &section_size);
 
   CALLBACK0(end_module);
   destroy_context(allocator, ctx);

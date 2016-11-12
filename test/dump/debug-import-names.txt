@@ -1,0 +1,42 @@
+;;; TOOL: run-wasmdump
+;;; FLAGS: -v --debug-names
+(module
+  (import "bar" "foo" (func $foo)))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+; section "TYPE" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
+; section "IMPORT" (2)
+000000e: 02                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num imports
+; import header 0
+0000011: 03                                        ; string length
+0000012: 6261 72                                  bar  ; import module name
+0000015: 03                                        ; string length
+0000016: 666f 6f                                  foo  ; import field name
+0000019: 00                                        ; import kind
+000001a: 00                                        ; import signature index
+000000f: 0b                                        ; FIXUP section size
+; section "name"
+000001b: 00                                        ; user section code
+000001c: 00                                        ; section size (guess)
+000001d: 04                                        ; string length
+000001e: 6e61 6d65                                name  ; user section name
+0000022: 01                                        ; num functions
+0000023: 04                                        ; string length
+0000024: 2466 6f6f                                $foo  ; func name 0
+0000028: 00                                        ; num locals
+000001c: 0c                                        ; FIXUP section size
+debug-import-names.wasm:	file format wasm 0x00000d
+
+Code Disassembly:
+;;; STDOUT ;;)
