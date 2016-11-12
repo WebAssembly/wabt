@@ -600,7 +600,7 @@ void wasm_destroy_script(WasmScript* script) {
 
 static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor);
 
-static WasmResult visit_expr_list(WasmExpr* first, WasmExprVisitor* visitor) {
+WasmResult wasm_visit_expr_list(WasmExpr* first, WasmExprVisitor* visitor) {
   WasmExpr* expr;
   for (expr = first; expr; expr = expr->next)
     CHECK_RESULT(visit_expr(expr, visitor));
@@ -615,7 +615,7 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_BLOCK:
       CALLBACK(begin_block_expr);
-      CHECK_RESULT(visit_expr_list(expr->block.first, visitor));
+      CHECK_RESULT(wasm_visit_expr_list(expr->block.first, visitor));
       CALLBACK(end_block_expr);
       break;
 
@@ -673,9 +673,9 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_IF:
       CALLBACK(begin_if_expr);
-      CHECK_RESULT(visit_expr_list(expr->if_.true_.first, visitor));
+      CHECK_RESULT(wasm_visit_expr_list(expr->if_.true_.first, visitor));
       CALLBACK(after_if_true_expr);
-      CHECK_RESULT(visit_expr_list(expr->if_.false_, visitor));
+      CHECK_RESULT(wasm_visit_expr_list(expr->if_.false_, visitor));
       CALLBACK(end_if_expr);
       break;
 
@@ -685,7 +685,7 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
     case WASM_EXPR_TYPE_LOOP:
       CALLBACK(begin_loop_expr);
-      CHECK_RESULT(visit_expr_list(expr->loop.first, visitor));
+      CHECK_RESULT(wasm_visit_expr_list(expr->loop.first, visitor));
       CALLBACK(end_loop_expr);
       break;
 
@@ -731,5 +731,5 @@ static WasmResult visit_expr(WasmExpr* expr, WasmExprVisitor* visitor) {
 
 /* TODO(binji): make the visitor non-recursive */
 WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor* visitor) {
-  return visit_expr_list(func->first_expr, visitor);
+  return wasm_visit_expr_list(func->first_expr, visitor);
 }

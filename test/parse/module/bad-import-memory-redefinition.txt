@@ -3,9 +3,6 @@
   (import "foo" "bar" (memory $baz 0))
   (import "foo" "blah" (memory $baz 0)))
 (;; STDERR ;;;
-parse/module/bad-import-memory-redefinition.txt:4:3: only one memory block allowed
-  (import "foo" "blah" (memory $baz 0)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 parse/module/bad-import-memory-redefinition.txt:4:3: redefinition of memory "$baz"
   (import "foo" "blah" (memory $baz 0)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
