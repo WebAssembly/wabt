@@ -25,24 +25,17 @@ struct WasmModule;
 struct WasmScript;
 
 WASM_EXTERN_C_BEGIN
-/* Only check that names are valid; this is useful if you want to generate
- * invalid binaries (so they can be validated by the consumer). */
-WasmResult wasm_check_names(struct WasmAllocator*,
-                            WasmAstLexer*,
-                            const struct WasmScript*,
-                            WasmSourceErrorHandler*);
-
 /* perform all checks on the AST; the module is valid if and only if this
  * function succeeds. */
-WasmResult wasm_check_ast(struct WasmAllocator*,
-                          WasmAstLexer*,
-                          const struct WasmScript*,
-                          WasmSourceErrorHandler*);
+WasmResult wasm_check_script(struct WasmAllocator*,
+                             WasmAstLexer*,
+                             const struct WasmScript*,
+                             WasmSourceErrorHandler*);
 
 /* Run the assert_invalid and assert_malformed spec tests. A module is
  * "malformed" if it cannot be read from the binary format. A module is
  * "invalid" if either it is malformed, or if it does not pass the standard
- * checks (as done by wasm_check_ast). This function succeeds if and only if
+ * checks (as done by wasm_check_script). This function succeeds if and only if
  * all assert_invalid and assert_malformed tests pass. */
 WasmResult wasm_check_assert_invalid_and_malformed(
     struct WasmAllocator*,

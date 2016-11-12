@@ -28,6 +28,7 @@
 #include "binary-writer-spec.h"
 #include "common.h"
 #include "option-parser.h"
+#include "resolve-names.h"
 #include "stack-allocator.h"
 #include "stream.h"
 #include "writer.h"
@@ -238,13 +239,11 @@ int main(int argc, char** argv) {
   WasmResult result = wasm_parse_ast(lexer, &script, &s_error_handler);
 
   if (WASM_SUCCEEDED(result)) {
-    if (s_check) {
-      /* full validation of the module */
-      result = wasm_check_ast(allocator, lexer, &script, &s_error_handler);
-    } else {
-      /* minimal checks necessary to ensure we can generate a binary */
-      result = wasm_check_names(allocator, lexer, &script, &s_error_handler);
-    }
+    result =
+        wasm_resolve_names_script(allocator, lexer, &script, &s_error_handler);
+
+    if (WASM_SUCCEEDED(result) && s_check)
+      result = wasm_check_script(allocator, lexer, &script, &s_error_handler);
 
     if (WASM_SUCCEEDED(result) && s_check_assert_invalid_and_malformed) {
       WasmDefaultErrorHandlerInfo assert_invalid_info;

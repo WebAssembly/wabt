@@ -40,19 +40,11 @@
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
 
-typedef struct WasmLabelNode {
-  const WasmLabel* label;
-  int depth;
-  struct WasmLabelNode* next;
-} WasmLabelNode;
-
 typedef struct Context {
   WasmAllocator* allocator;
   WasmStream stream;
   WasmStream* log_stream;
   const WasmWriteBinaryOptions* options;
-  WasmLabelNode* top_label;
-  int max_depth;
 
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
@@ -267,46 +259,9 @@ static void end_section(Context* ctx) {
   ctx->last_section_leb_size_guess = 0;
 }
 
-static WasmLabelNode* find_label_by_name(WasmLabelNode* top_label,
-                                         const WasmStringSlice* name) {
-  WasmLabelNode* node = top_label;
-  while (node) {
-    if (node->label && wasm_string_slices_are_equal(node->label, name))
-      return node;
-    node = node->next;
-  }
-  return NULL;
-}
-
-static WasmLabelNode* find_label_by_var(WasmLabelNode* top_label,
-                                        const WasmVar* var) {
-  if (var->type == WASM_VAR_TYPE_NAME)
-    return find_label_by_name(top_label, &var->name);
-
-  WasmLabelNode* node = top_label;
-  int i = 0;
-  while (node && i != var->index) {
-    node = node->next;
-    i++;
-  }
-  return node;
-}
-
-static void push_label(Context* ctx,
-                       WasmLabelNode* node,
-                       const WasmLabel* label) {
-  assert(label);
-  node->label = label;
-  node->next = ctx->top_label;
-  node->depth = ctx->max_depth;
-  ctx->top_label = node;
-  ctx->max_depth++;
-}
-
-static void pop_label(Context* ctx, const WasmLabel* label) {
-  ctx->max_depth--;
-  if (ctx->top_label && ctx->top_label->label == label)
-    ctx->top_label = ctx->top_label->next;
+static uint32_t get_label_var_depth(Context* ctx, const WasmVar* var) {
+  assert(var->type == WASM_VAR_TYPE_INDEX);
+  return var->index;
 }
 
 static void write_expr_list(Context* ctx,
@@ -322,47 +277,34 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_BINARY:
       write_opcode(&ctx->stream, expr->binary.opcode);
       break;
-    case WASM_EXPR_TYPE_BLOCK: {
-      WasmLabelNode node;
-      push_label(ctx, &node, &expr->block.label);
+    case WASM_EXPR_TYPE_BLOCK:
       write_opcode(&ctx->stream, WASM_OPCODE_BLOCK);
       write_inline_signature_type(&ctx->stream, &expr->block.sig);
       write_expr_list(ctx, module, func, expr->block.first);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
-      pop_label(ctx, &expr->block.label);
       break;
-    }
-    case WASM_EXPR_TYPE_BR: {
-      WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br.var);
-      assert(node);
+    case WASM_EXPR_TYPE_BR:
       write_opcode(&ctx->stream, WASM_OPCODE_BR);
-      write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
+      write_u32_leb128(&ctx->stream, get_label_var_depth(ctx, &expr->br.var),
                        "break depth");
       break;
-    }
-    case WASM_EXPR_TYPE_BR_IF: {
-      WasmLabelNode* node = find_label_by_var(ctx->top_label, &expr->br_if.var);
-      assert(node);
+    case WASM_EXPR_TYPE_BR_IF:
       write_opcode(&ctx->stream, WASM_OPCODE_BR_IF);
-      write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
+      write_u32_leb128(&ctx->stream, get_label_var_depth(ctx, &expr->br_if.var),
                        "break depth");
       break;
-    }
     case WASM_EXPR_TYPE_BR_TABLE: {
       write_opcode(&ctx->stream, WASM_OPCODE_BR_TABLE);
       write_u32_leb128(&ctx->stream, expr->br_table.targets.size,
                        "num targets");
       size_t i;
-      WasmLabelNode* node;
+      uint32_t depth;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
-        const WasmVar* var = &expr->br_table.targets.data[i];
-        node = find_label_by_var(ctx->top_label, var);
-        write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
-                         "break depth");
+        depth = get_label_var_depth(ctx, &expr->br_table.targets.data[i]);
+        write_u32_leb128(&ctx->stream, depth, "break depth");
       }
-      node = find_label_by_var(ctx->top_label, &expr->br_table.default_target);
-      write_u32_leb128(&ctx->stream, ctx->max_depth - node->depth - 1,
-                       "break depth for default");
+      depth = get_label_var_depth(ctx, &expr->br_table.default_target);
+      write_u32_leb128(&ctx->stream, depth, "break depth for default");
       break;
     }
     case WASM_EXPR_TYPE_CALL: {
@@ -435,20 +377,16 @@ static void write_expr(Context* ctx,
       write_opcode(&ctx->stream, WASM_OPCODE_GROW_MEMORY);
       write_u32_leb128(&ctx->stream, 0, "grow_memory reserved");
       break;
-    case WASM_EXPR_TYPE_IF: {
-      WasmLabelNode node;
+    case WASM_EXPR_TYPE_IF:
       write_opcode(&ctx->stream, WASM_OPCODE_IF);
       write_inline_signature_type(&ctx->stream, &expr->if_.true_.sig);
-      push_label(ctx, &node, &expr->if_.true_.label);
       write_expr_list(ctx, module, func, expr->if_.true_.first);
       if (expr->if_.false_) {
         write_opcode(&ctx->stream, WASM_OPCODE_ELSE);
         write_expr_list(ctx, module, func, expr->if_.false_);
       }
-      pop_label(ctx, &expr->if_.true_.label);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
       break;
-    }
     case WASM_EXPR_TYPE_LOAD: {
       write_opcode(&ctx->stream, expr->load.opcode);
       uint32_t align =
@@ -458,16 +396,12 @@ static void write_expr(Context* ctx,
                        "load offset");
       break;
     }
-    case WASM_EXPR_TYPE_LOOP: {
-      WasmLabelNode node;
-      push_label(ctx, &node, &expr->loop.label);
+    case WASM_EXPR_TYPE_LOOP:
       write_opcode(&ctx->stream, WASM_OPCODE_LOOP);
       write_inline_signature_type(&ctx->stream, &expr->loop.sig);
       write_expr_list(ctx, module, func, expr->loop.first);
       write_opcode(&ctx->stream, WASM_OPCODE_END);
-      pop_label(ctx, &expr->loop.label);
       break;
-    }
     case WASM_EXPR_TYPE_NOP:
       write_opcode(&ctx->stream, WASM_OPCODE_NOP);
       break;
@@ -578,13 +512,9 @@ static void write_func_locals(Context* ctx,
 static void write_func(Context* ctx,
                        const WasmModule* module,
                        const WasmFunc* func) {
-  WasmLabelNode node;
-  WasmLabel label = wasm_empty_string_slice();
   write_func_locals(ctx, module, func, &func->local_types);
-  push_label(ctx, &node, &label);
   write_expr_list(ctx, module, func, func->first_expr);
   write_opcode(&ctx->stream, WASM_OPCODE_END);
-  pop_label(ctx, &label);
 }
 
 static void write_table(Context* ctx, const WasmTable* table) {

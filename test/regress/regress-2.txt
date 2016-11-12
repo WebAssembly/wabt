@@ -10,30 +10,6 @@
   (func $memory(param f32)(call 332 ))
   (func $memorGe ))
 (;; STDERR ;;;
-regress/regress-2.txt:3:9: type stack size too small at call. got 0, expected at least 1
-  (func(call 2 ))
-        ^^^^^^
-regress/regress-2.txt:4:16: type stack size too small at call. got 0, expected at least 1
-  (func $memor(call 2 ))
-               ^^^^^^
-regress/regress-2.txt:5:33: function variable out of range (max 9)
-  (func $memory(param f32)(call 332 ))
-                                ^^^
-regress/regress-2.txt:6:16: type stack size too small at call. got 0, expected at least 1
-  (func $memor(call 2 ))
-               ^^^^^^
-regress/regress-2.txt:7:18: type stack size too small at call. got 0, expected at least 1
-  (func $memornc(call 2 ))
-                 ^^^^^^
-regress/regress-2.txt:8:16: type stack size too small at call. got 0, expected at least 1
-  (func $mYmor(call 2 ))
-               ^^^^^^
-regress/regress-2.txt:9:155: type stack size too small at call. got 0, expected at least 1
-...``````````````````````````````````````````````````````````````````r(call 2 ))
-                                                                       ^^^^^^
-regress/regress-2.txt:10:33: function variable out of range (max 9)
-  (func $memory(param f32)(call 332 ))
-                                ^^^
 regress/regress-2.txt:10:3: redefinition of function "$memory"
   (func $memory(param f32)(call 332 ))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

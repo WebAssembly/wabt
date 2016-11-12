@@ -212,6 +212,7 @@ add_library(libwasm STATIC
   src/binary-reader-interpreter.c
   src/apply-names.c
   src/generate-names.c
+  src/resolve-names.c
 
   src/allocator.c
   src/common.c
