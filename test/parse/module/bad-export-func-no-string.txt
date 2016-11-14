@@ -1,7 +1,7 @@
 ;;; ERROR: 1
-(module (func (nop)) (export nop nop))
+(module (func nop) (export nop nop))
 (;; STDERR ;;;
-parse/module/bad-export-func-no-string.txt:2:30: syntax error, unexpected NOP, expecting TEXT
-(module (func (nop)) (export nop nop))
-                             ^^^
+parse/module/bad-export-func-no-string.txt:2:28: syntax error, unexpected NOP, expecting TEXT
+(module (func nop) (export nop nop))
+                           ^^^
 ;;; STDERR ;;)

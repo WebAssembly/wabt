@@ -7,6 +7,6 @@
 
   (func (type $empty))
   (func (type $i_v) (param i32))
-  (func (type $f_i) (param f32) (result i32) (i32.const 0))
-  (func (type $ii_i) (param i32 i32) (result i32) (i32.const 0))
-  (func (type $v_f) (result f32) (f32.const 0)))
+  (func (type $f_i) (param f32) (result i32) i32.const 0)
+  (func (type $ii_i) (param i32 i32) (result i32) i32.const 0)
+  (func (type $v_f) (result f32) f32.const 0))
