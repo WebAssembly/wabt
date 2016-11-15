@@ -50,7 +50,7 @@ NAMED_VALUES = {
   'version': (0xd, 0, 0, 0),
 
   # section codes
-  'UNKNOWN': 0,
+  'USER': 0,
   'TYPE': 1,
   'IMPORT': 2,
   'FUNCTION': 3,
@@ -401,7 +401,7 @@ def p_data_user_section(p):
   p[0] = p[1]
   name = p[4]
   section_data = p[7]
-  p[0].append(0)  # 0 is the section code for "unknown"
+  p[0].append(0)  # 0 is the section code for "user"
   section_name_data = []
   WriteLebU32(section_name_data, len(name))
   WriteString(section_name_data, name)
