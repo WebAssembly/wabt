@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: -v
+;;; FLAGS: -v --headers
 (module
   (memory 1)
   (func $f (param i32 i32) (result i32)
@@ -80,6 +80,13 @@
 0000024: 14                                        ; FIXUP func body size
 0000022: 16                                        ; FIXUP section size
 basic.wasm:	file format wasm 0x00000d
+
+Sections:
+     TYPE start=0x0000000a end=0x00000011 (size=0x00000007) count: 1
+ FUNCTION start=0x00000013 end=0x00000015 (size=0x00000002) count: 1
+   MEMORY start=0x00000017 end=0x0000001a (size=0x00000003) count: 1
+   EXPORT start=0x0000001c end=0x00000021 (size=0x00000005) count: 1
+     CODE start=0x00000023 end=0x00000039 (size=0x00000016) count: 1
 
 Code Disassembly:
 func 0
