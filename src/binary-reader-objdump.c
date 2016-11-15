@@ -90,6 +90,17 @@ static WasmResult begin_section(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult begin_user_section(WasmBinaryReaderContext* ctx,
+                                     uint32_t size,
+                                     WasmStringSlice section_name) {
+  Context* context = ctx->user_data;
+  if (begin_section(context, "USER", ctx->offset, size))
+    return WASM_ERROR;
+  if (context->options->mode == WASM_DUMP_DETAILS)
+    printf(" - name: \"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  return WASM_OK;
+}
+
 SEGSTART(signature, "TYPE")
 SEGSTART(import, "IMPORT")
 SEGSTART(function_signatures, "FUNCTION")
@@ -101,7 +112,6 @@ SEGSTART(start, "START")
 SEGSTART(function_bodies, "CODE")
 SEGSTART(elem, "ELEM")
 SEGSTART(data, "DATA")
-SEGSTART(names, "NAMES")
 
 static WasmResult on_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
@@ -487,7 +497,10 @@ static WasmBinaryReader s_binary_reader = {
     .end_module = end_module,
     .on_error = on_error,
 
-    // Signature sections
+    // User section
+    .begin_user_section = begin_user_section,
+
+    // Signature section
     .begin_signature_section = begin_signature_section,
     .on_signature_count = on_count,
     .on_signature = on_signature,
@@ -543,8 +556,8 @@ static WasmBinaryReader s_binary_reader = {
     .begin_data_section = begin_data_section,
     .on_data_segment_count = on_count,
 
-    // Names section
-    .begin_names_section = begin_names_section,
+    // Known "User" sections:
+    // - Names section
     .on_function_names_count = on_count,
 
     .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
