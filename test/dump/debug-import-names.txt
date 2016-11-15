@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: -v --debug-names
+;;; FLAGS: --headers -v --debug-names
 (module
   (import "bar" "foo" (func $foo)))
 (;; STDOUT ;;;
@@ -37,6 +37,11 @@
 0000028: 00                                        ; num locals
 000001c: 0c                                        ; FIXUP section size
 debug-import-names.wasm:	file format wasm 0x00000d
+
+Sections:
+     TYPE start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
+   IMPORT start=0x00000010 end=0x0000001b (size=0x0000000b) count: 1
+    NAMES start=0x00000022 end=0x0000002e (size=0x0000000c) count: 1
 
 Code Disassembly:
 ;;; STDOUT ;;)
