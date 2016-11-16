@@ -22,7 +22,6 @@
 #include "config.h"
 
 #include "ast.h"
-#include "ast-checker.h"
 #include "ast-parser.h"
 #include "binary-writer.h"
 #include "binary-writer-spec.h"
@@ -31,6 +30,7 @@
 #include "resolve-names.h"
 #include "stack-allocator.h"
 #include "stream.h"
+#include "validator.h"
 #include "writer.h"
 
 #define PROGRAM_NAME "wast2wasm"
@@ -45,8 +45,8 @@ static WasmWriteBinarySpecOptions s_write_binary_spec_options =
     WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static WasmBool s_spec;
 static WasmBool s_use_libc_allocator;
-static WasmBool s_check = WASM_TRUE;
-static WasmBool s_check_assert_invalid_and_malformed = WASM_TRUE;
+static WasmBool s_validate = WASM_TRUE;
+static WasmBool s_validate_assert_invalid_and_malformed = WASM_TRUE;
 
 static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
@@ -154,11 +154,11 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_NO_CHECK:
-      s_check = WASM_FALSE;
+      s_validate = WASM_FALSE;
       break;
 
     case FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED:
-      s_check_assert_invalid_and_malformed = WASM_FALSE;
+      s_validate_assert_invalid_and_malformed = WASM_FALSE;
       break;
   }
 }
@@ -242,10 +242,12 @@ int main(int argc, char** argv) {
     result =
         wasm_resolve_names_script(allocator, lexer, &script, &s_error_handler);
 
-    if (WASM_SUCCEEDED(result) && s_check)
-      result = wasm_check_script(allocator, lexer, &script, &s_error_handler);
+    if (WASM_SUCCEEDED(result) && s_validate) {
+      result =
+          wasm_validate_script(allocator, lexer, &script, &s_error_handler);
+    }
 
-    if (WASM_SUCCEEDED(result) && s_check_assert_invalid_and_malformed) {
+    if (WASM_SUCCEEDED(result) && s_validate_assert_invalid_and_malformed) {
       WasmDefaultErrorHandlerInfo assert_invalid_info;
       WasmSourceErrorHandler assert_invalid_error_handler;
       init_source_error_handler(&assert_invalid_error_handler,
@@ -257,7 +259,7 @@ int main(int argc, char** argv) {
                                 &assert_malformed_info,
                                 "assert_malformed error");
 
-      result = wasm_check_assert_invalid_and_malformed(
+      result = wasm_validate_assert_invalid_and_malformed(
           allocator, lexer, &script, &assert_invalid_error_handler,
           &assert_malformed_error_handler, &s_error_handler);
     }

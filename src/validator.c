@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ast-checker.h"
+#include "validator.h"
 #include "config.h"
 
 #include <assert.h>
@@ -1314,10 +1314,10 @@ static void wasm_destroy_context(Context* ctx) {
   wasm_destroy_type_vector(ctx->allocator, &ctx->type_stack);
 }
 
-WasmResult wasm_check_script(WasmAllocator* allocator,
-                             WasmAstLexer* lexer,
-                             const struct WasmScript* script,
-                             WasmSourceErrorHandler* error_handler) {
+WasmResult wasm_validate_script(WasmAllocator* allocator,
+                                WasmAstLexer* lexer,
+                                const struct WasmScript* script,
+                                WasmSourceErrorHandler* error_handler) {
   Context ctx;
   WASM_ZERO_MEMORY(ctx);
   ctx.allocator = allocator;
@@ -1332,7 +1332,7 @@ WasmResult wasm_check_script(WasmAllocator* allocator,
   return ctx.result;
 }
 
-WasmResult wasm_check_assert_invalid_and_malformed(
+WasmResult wasm_validate_assert_invalid_and_malformed(
     WasmAllocator* allocator,
     WasmAstLexer* lexer,
     const struct WasmScript* script,
