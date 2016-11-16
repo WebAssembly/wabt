@@ -201,7 +201,7 @@ add_library(libwasm STATIC
   src/ast-parser-lexer-shared.c
   ${WASM_AST_LEXER_GEN_C}
   ${WASM_AST_PARSER_GEN_C}
-  src/ast-checker.c
+  src/validator.c
   src/binary-reader.c
   src/binary-writer.c
   src/binary-writer-spec.c

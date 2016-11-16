@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WASM_AST_CHECKER_H_
-#define WASM_AST_CHECKER_H_
+#ifndef WASM_VALIDATOR_H_
+#define WASM_VALIDATOR_H_
 
 #include "ast-lexer.h"
 #include "common.h"
@@ -27,17 +27,17 @@ struct WasmScript;
 WASM_EXTERN_C_BEGIN
 /* perform all checks on the AST; the module is valid if and only if this
  * function succeeds. */
-WasmResult wasm_check_script(struct WasmAllocator*,
-                             WasmAstLexer*,
-                             const struct WasmScript*,
-                             WasmSourceErrorHandler*);
+WasmResult wasm_validate_script(struct WasmAllocator*,
+                                WasmAstLexer*,
+                                const struct WasmScript*,
+                                WasmSourceErrorHandler*);
 
 /* Run the assert_invalid and assert_malformed spec tests. A module is
  * "malformed" if it cannot be read from the binary format. A module is
  * "invalid" if either it is malformed, or if it does not pass the standard
- * checks (as done by wasm_check_script). This function succeeds if and only if
- * all assert_invalid and assert_malformed tests pass. */
-WasmResult wasm_check_assert_invalid_and_malformed(
+ * checks (as done by wasm_validate_script). This function succeeds if and only
+ * if all assert_invalid and assert_malformed tests pass. */
+WasmResult wasm_validate_assert_invalid_and_malformed(
     struct WasmAllocator*,
     WasmAstLexer*,
     const struct WasmScript*,
@@ -46,4 +46,4 @@ WasmResult wasm_check_assert_invalid_and_malformed(
     WasmSourceErrorHandler* error_handler);
 WASM_EXTERN_C_END
 
-#endif /* WASM_AST_CHECKER_H_ */
+#endif /* WASM_VALIDATOR_H_ */
