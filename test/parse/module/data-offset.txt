@@ -1,6 +1,6 @@
 (module
   (import "foo" "bar" (global i32))
   (memory 1)
-  (global i32 (i32.const 1))
+  (global i32 i32.const 1)
   (data (get_global 0) "hi")
   (data (get_global 1) "world"))

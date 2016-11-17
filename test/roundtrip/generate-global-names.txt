@@ -4,8 +4,9 @@
   (global i32 (i32.const 42))
   (global f32 (f32.const -1.5))
   (func (result i32)
-    (set_global 1 (f32.const 3.0))
-    (get_global 0)))
+    f32.const 3.0
+    set_global 1
+    get_global 0))
 (;; STDOUT ;;;
 (module
   (type $t0 (func (result i32)))

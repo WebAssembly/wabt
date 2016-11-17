@@ -4,8 +4,10 @@
   (import "an" "import" (func (param i32)))
   (import "another" "import" (func (param f32)))
   (func
-    (call 0 (i32.const 0))
-    (call 1 (f32.const 0))))
+    i32.const 0
+    call 0
+    f32.const 0
+    call 1))
 (;; STDOUT ;;;
 (module
   (type $t0 (func (param i32)))

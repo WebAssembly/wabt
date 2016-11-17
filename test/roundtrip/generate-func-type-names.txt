@@ -7,8 +7,9 @@
   (type (func (result i32)))
   (func (type 0))
   (func (type 1)
-    (call_indirect 0 (i32.const 0))
-    (i32.const 1)))
+    i32.const 0
+    call_indirect 0
+    i32.const 1))
 (;; STDOUT ;;;
 (module
   (type $t0 (func))

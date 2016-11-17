@@ -1,4 +1,5 @@
 (module
   (func
-    (drop
-      (grow_memory (i32.const 100)))))
+    i32.const 100
+    grow_memory
+    drop))

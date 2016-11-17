@@ -1,46 +1,178 @@
 (module
   (func
-    (drop (i32.add (i32.const 0) (i32.const 0)))
-    (drop (i64.add (i64.const 0) (i64.const 0)))
-    (drop (f32.add (f32.const 0) (f32.const 0)))
-    (drop (f64.add (f64.const 0) (f64.const 0)))
-    (drop (i32.sub (i32.const 0) (i32.const 0)))
-    (drop (i64.sub (i64.const 0) (i64.const 0)))
-    (drop (f32.sub (f32.const 0) (f32.const 0)))
-    (drop (f64.sub (f64.const 0) (f64.const 0)))
-    (drop (i32.mul (i32.const 0) (i32.const 0)))
-    (drop (i64.mul (i64.const 0) (i64.const 0)))
-    (drop (f32.mul (f32.const 0) (f32.const 0)))
-    (drop (f64.mul (f64.const 0) (f64.const 0)))
-    (drop (i32.div_s (i32.const 0) (i32.const 0)))
-    (drop (i64.div_s (i64.const 0) (i64.const 0)))
-    (drop (i32.div_u (i32.const 0) (i32.const 0)))
-    (drop (i64.div_u (i64.const 0) (i64.const 0)))
-    (drop (f32.div (f32.const 0) (f32.const 0)))
-    (drop (f64.div (f64.const 0) (f64.const 0)))
-    (drop (i32.rem_s (i32.const 0) (i32.const 0)))
-    (drop (i64.rem_s (i64.const 0) (i64.const 0)))
-    (drop (i32.rem_u (i32.const 0) (i32.const 0)))
-    (drop (i64.rem_u (i64.const 0) (i64.const 0)))
-    (drop (f32.min (f32.const 0) (f32.const 0)))
-    (drop (f64.min (f64.const 0) (f64.const 0)))
-    (drop (f32.max (f32.const 0) (f32.const 0)))
-    (drop (f64.max (f64.const 0) (f64.const 0)))
-    (drop (i32.and (i32.const 0) (i32.const 0)))
-    (drop (i64.and (i64.const 0) (i64.const 0)))
-    (drop (i32.or (i32.const 0) (i32.const 0)))
-    (drop (i64.or (i64.const 0) (i64.const 0)))
-    (drop (i32.xor (i32.const 0) (i32.const 0)))
-    (drop (i64.xor (i64.const 0) (i64.const 0)))
-    (drop (i32.shl (i32.const 0) (i32.const 0)))
-    (drop (i64.shl (i64.const 0) (i64.const 0)))
-    (drop (i32.shr_u (i32.const 0) (i32.const 0)))
-    (drop (i64.shr_u (i64.const 0) (i64.const 0)))
-    (drop (i32.shr_s (i32.const 0) (i32.const 0)))
-    (drop (i64.shr_s (i64.const 0) (i64.const 0)))
-    (drop (i32.rotl (i32.const 0) (i32.const 0)))
-    (drop (i64.rotl (i64.const 0) (i64.const 0)))
-    (drop (i32.rotr (i32.const 0) (i32.const 0)))
-    (drop (i64.rotr (i64.const 0) (i64.const 0)))
-    (drop (f32.copysign (f32.const 0) (f32.const 0)))
-    (drop (f64.copysign (f64.const 0) (f64.const 0)))))
+    i32.const 0
+    i32.const 0
+    i32.add
+    drop
+    i64.const 0
+    i64.const 0
+    i64.add
+    drop
+    f32.const 0
+    f32.const 0
+    f32.add
+    drop
+    f64.const 0
+    f64.const 0
+    f64.add
+    drop
+    i32.const 0
+    i32.const 0
+    i32.sub
+    drop
+    i64.const 0
+    i64.const 0
+    i64.sub
+    drop
+    f32.const 0
+    f32.const 0
+    f32.sub
+    drop
+    f64.const 0
+    f64.const 0
+    f64.sub
+    drop
+    i32.const 0
+    i32.const 0
+    i32.mul
+    drop
+    i64.const 0
+    i64.const 0
+    i64.mul
+    drop
+    f32.const 0
+    f32.const 0
+    f32.mul
+    drop
+    f64.const 0
+    f64.const 0
+    f64.mul
+    drop
+    i32.const 0
+    i32.const 0
+    i32.div_s
+    drop
+    i64.const 0
+    i64.const 0
+    i64.div_s
+    drop
+    i32.const 0
+    i32.const 0
+    i32.div_u
+    drop
+    i64.const 0
+    i64.const 0
+    i64.div_u
+    drop
+    f32.const 0
+    f32.const 0
+    f32.div
+    drop
+    f64.const 0
+    f64.const 0
+    f64.div
+    drop
+    i32.const 0
+    i32.const 0
+    i32.rem_s
+    drop
+    i64.const 0
+    i64.const 0
+    i64.rem_s
+    drop
+    i32.const 0
+    i32.const 0
+    i32.rem_u
+    drop
+    i64.const 0
+    i64.const 0
+    i64.rem_u
+    drop
+    f32.const 0
+    f32.const 0
+    f32.min
+    drop
+    f64.const 0
+    f64.const 0
+    f64.min
+    drop
+    f32.const 0
+    f32.const 0
+    f32.max
+    drop
+    f64.const 0
+    f64.const 0
+    f64.max
+    drop
+    i32.const 0
+    i32.const 0
+    i32.and
+    drop
+    i64.const 0
+    i64.const 0
+    i64.and
+    drop
+    i32.const 0
+    i32.const 0
+    i32.or
+    drop
+    i64.const 0
+    i64.const 0
+    i64.or
+    drop
+    i32.const 0
+    i32.const 0
+    i32.xor
+    drop
+    i64.const 0
+    i64.const 0
+    i64.xor
+    drop
+    i32.const 0
+    i32.const 0
+    i32.shl
+    drop
+    i64.const 0
+    i64.const 0
+    i64.shl
+    drop
+    i32.const 0
+    i32.const 0
+    i32.shr_u
+    drop
+    i64.const 0
+    i64.const 0
+    i64.shr_u
+    drop
+    i32.const 0
+    i32.const 0
+    i32.shr_s
+    drop
+    i64.const 0
+    i64.const 0
+    i64.shr_s
+    drop
+    i32.const 0
+    i32.const 0
+    i32.rotl
+    drop
+    i64.const 0
+    i64.const 0
+    i64.rotl
+    drop
+    i32.const 0
+    i32.const 0
+    i32.rotr
+    drop
+    i64.const 0
+    i64.const 0
+    i64.rotr
+    drop
+    f32.const 0
+    f32.const 0
+    f32.copysign
+    drop
+    f64.const 0
+    f64.const 0
+    f64.copysign
+    drop))

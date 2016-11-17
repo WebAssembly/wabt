@@ -8,15 +8,23 @@
   (type (func (param i32) (result f32)))
   (import "foo" "bar" (func $import (result i32)))
   (table anyfunc (elem 0))
-  (func $func0 (type 0) (f32.const 1))
+  (func $func0 (type 0) f32.const 1)
   (func (param i32) (param $param1 i64)
     (local f32)
     (local $local1 f64)
-    (drop (call 0))
-    (drop (call 1 (i32.const 0)))
-    (drop (call_indirect 0 (i32.const 0) (i32.const 1)))
-    (drop (get_local 1))
-    (set_local 2 (f32.const 0)))
+    call 0
+    drop
+    i32.const 0
+    call 1
+    drop
+    i32.const 0
+    i32.const 1
+    call_indirect 0
+    drop
+    get_local 1
+    drop
+    f32.const 0
+    set_local 2)
   (export "baz" (func 0))
   (export "quux" (func 1)))
 
