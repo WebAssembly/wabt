@@ -3,7 +3,7 @@
 (module
   (func)
   (func
-    (call 0))
+    call 0)
   (table anyfunc (elem 0 1 0))
   (export "zero" (func 0))
   (export "one" (func 1)))

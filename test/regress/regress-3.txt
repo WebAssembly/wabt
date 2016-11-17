@@ -2,6 +2,8 @@
 (module
   (type $t (func (result i32)))
   (func
-    (drop
-      (i32.eq (call $f) (i32.const 0))))
+    call $f
+    i32.const 0
+    i32.eq
+    drop)
   (func $f (type $t) (i32.const 42)))
