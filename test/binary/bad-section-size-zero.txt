@@ -1,0 +1,12 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section_code[1] section_size[0]
+;; garbage after the section; shouldn't be read
+1 2 3 4 5
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x0000000a: unable to read u32 leb128: type count
+
+;;; STDERR ;;)

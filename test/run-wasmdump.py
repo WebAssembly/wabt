@@ -40,6 +40,7 @@ def main(args):
                       action='store_false')
   parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
+  parser.add_argument('--headers', action='store_true')
   parser.add_argument('--no-check', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--no-canonicalize-leb128s', action='store_true')
@@ -63,6 +64,9 @@ def main(args):
   wasmdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.wasmdump),
       error_cmdline=options.error_cmdline)
+  wasmdump.AppendOptionalArgs({
+    '-h': options.headers,
+  })
 
   wast2wasm.verbose = options.print_cmd
   wasmdump.verbose = options.print_cmd

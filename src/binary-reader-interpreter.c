@@ -217,7 +217,7 @@ static uint32_t translate_global_index_to_env(Context* ctx,
 
 static uint32_t translate_defined_global_index_to_env(Context* ctx,
                                                       uint32_t global_index) {
-  /* all globaltion imports are first, so skip over those */
+  /* all global imports are first, so skip over those */
   global_index += ctx->num_global_imports;
   assert(global_index < ctx->global_index_mapping.size);
   return ctx->global_index_mapping.data[global_index];

@@ -462,6 +462,7 @@ void wasm_destroy_var(struct WasmAllocator*, WasmVar*);
 
 /* traversal functions */
 WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor*);
+WasmResult wasm_visit_expr_list(WasmExpr* expr, WasmExprVisitor*);
 
 /* convenience functions for looking through the AST */
 int wasm_get_index_from_var(const WasmBindingHash* bindings,
