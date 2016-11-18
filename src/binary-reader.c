@@ -543,7 +543,8 @@ static WasmResult logging_begin_user_section(WasmBinaryReaderContext* context,
                                              uint32_t size,
                                              WasmStringSlice section_name) {
   LoggingContext* ctx = context->user_data;
-  LOGF("begin_user_section: " PRIstringslice "\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  LOGF("begin_user_section: '" PRIstringslice "' size=%d\n",
+       WASM_PRINTF_STRING_SLICE_ARG(section_name), size);
   indent(ctx);
   FORWARD_CTX(begin_user_section, size, section_name);
 }
