@@ -64,6 +64,9 @@ def main(args):
 
   gen_wasm.verbose = options.print_cmd
   wasm2wast.verbose = options.print_cmd
+  wasm2wast.AppendOptionalArgs({
+    '--verbose': options.verbose,
+  })
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
