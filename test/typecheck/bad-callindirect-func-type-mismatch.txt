@@ -2,9 +2,11 @@
 (module
   (table anyfunc (elem 0))
   (type $t (func))
-  (func (call_indirect $t (f32.const 0))))
+  (func 
+    f32.const 0
+    call_indirect $t))
 (;; STDERR ;;;
-typecheck/bad-callindirect-func-type-mismatch.txt:5:10: type mismatch at call_indirect function index. got f32, expected i32
-  (func (call_indirect $t (f32.const 0))))
-         ^^^^^^^^^^^^^^^^
+typecheck/bad-callindirect-func-type-mismatch.txt:7:5: type mismatch at call_indirect function index. got f32, expected i32
+    call_indirect $t))
+    ^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

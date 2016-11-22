@@ -1,14 +1,17 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (block
-      (block (br_table 0 1 (f32.const 0)))
-      ;; case 0
-      (return (i32.const 1)))
-    ;; case 1
-    (i32.const 2)))
+    block
+      block
+        f32.const 0
+        br_table 0 1 
+      end
+      i32.const 1
+      return
+    end
+    i32.const 2))
 (;; STDERR ;;;
-typecheck/bad-brtable-type-mismatch.txt:5:15: type mismatch at br_table key. got f32, expected i32
-      (block (br_table 0 1 (f32.const 0)))
-              ^^^^^^^^^^^^
+typecheck/bad-brtable-type-mismatch.txt:7:9: type mismatch at br_table key. got f32, expected i32
+        br_table 0 1 
+        ^^^^^^^^^^^^
 ;;; STDERR ;;)
