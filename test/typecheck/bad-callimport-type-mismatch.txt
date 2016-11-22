@@ -1,9 +1,11 @@
 ;;; ERROR: 1
 (module
   (import "foo" "bar" (func (param i32)))
-  (func (call 0 (f32.const 0))))
+  (func
+    f32.const 0
+    call 0))
 (;; STDERR ;;;
-typecheck/bad-callimport-type-mismatch.txt:4:10: type mismatch for argument 0 of call. got f32, expected i32
-  (func (call 0 (f32.const 0))))
-         ^^^^^^
+typecheck/bad-callimport-type-mismatch.txt:6:5: type mismatch for argument 0 of call. got f32, expected i32
+    call 0))
+    ^^^^^^
 ;;; STDERR ;;)

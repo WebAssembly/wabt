@@ -6,9 +6,22 @@
   (table anyfunc (elem $direct))
 
   (func
-    (if (call $direct) (nop))
-    (if (call_import $import) (nop))
-    (if (call_indirect $indirect (i32.const 0)) (nop))))
+    if 
+      call $direct
+    else
+      nop
+    end
+    if 
+      call_import $import 
+    else 
+      nop 
+    end
+    if
+      i32.const 0 
+      call_indirect $indirect 
+    else 
+      nop
+    end))
 (;; STDERR ;;;
 typecheck/bad-call-result-mismatch.txt:3:11: syntax error, unexpected VAR, expecting TEXT
   (import $import "foo" "bar" (result f32))
