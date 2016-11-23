@@ -2,9 +2,11 @@
 (module
   (memory 0)
   (func
-    (drop (grow_memory (f32.const 100)))))
+    f32.const 100
+    grow_memory
+    drop))
 (;; STDERR ;;;
-typecheck/bad-grow-memory-type-mismatch.txt:5:12: type mismatch at grow_memory. got f32, expected i32
-    (drop (grow_memory (f32.const 100)))))
-           ^^^^^^^^^^^
+typecheck/bad-grow-memory-type-mismatch.txt:6:5: type mismatch at grow_memory. got f32, expected i32
+    grow_memory
+    ^^^^^^^^^^^
 ;;; STDERR ;;)
