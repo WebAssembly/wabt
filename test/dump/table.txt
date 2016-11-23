@@ -92,5 +92,5 @@ Code Disassembly:
 func 0
 func 1
 func 2
- 00003c: 44 00 00 00 00 00 00 00 00 | f64.const 0
+ 00003c: 44 00 00 00 00 00 00 00 00 | f64.const 0.000000
 ;;; STDOUT ;;)

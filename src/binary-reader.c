@@ -1403,7 +1403,9 @@ static void read_function_body(Context* ctx,
         uint32_t value_bits = 0;
         in_f32(ctx, &value_bits, "f32.const value");
         CALLBACK(on_f32_const_expr, value_bits);
-        CALLBACK_CTX(on_opcode_uint32, value_bits);
+        float float_value;
+        memcpy(&float_value, &value_bits, sizeof(float_value));
+        CALLBACK_CTX(on_opcode_f32, float_value);
         break;
       }
 
@@ -1411,7 +1413,9 @@ static void read_function_body(Context* ctx,
         uint64_t value_bits = 0;
         in_f64(ctx, &value_bits, "f64.const value");
         CALLBACK(on_f64_const_expr, value_bits);
-        CALLBACK_CTX(on_opcode_uint64, value_bits);
+        double double_value;
+        memcpy(&double_value, &value_bits, sizeof(double_value));
+        CALLBACK_CTX(on_opcode_f64, double_value);
         break;
       }
 
