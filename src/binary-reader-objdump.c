@@ -486,6 +486,23 @@ static WasmResult on_init_expr_i64_const_expr(uint32_t index,
   return WASM_OK;
 }
 
+static WasmResult on_function_name(uint32_t index,
+                                   WasmStringSlice name,
+                                   void* user_data) {
+  print_details(user_data, " - func:%d " PRIstringslice "\n", index,
+                WASM_PRINTF_STRING_SLICE_ARG(name));
+  return WASM_OK;
+}
+
+static WasmResult on_local_name(uint32_t func_index,
+                                uint32_t local_index,
+                                WasmStringSlice name,
+                                void* user_data) {
+  print_details(user_data, "  - local:%d " PRIstringslice "\n", local_index,
+                WASM_PRINTF_STRING_SLICE_ARG(name));
+  return WASM_OK;
+}
+
 static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
   wasm_default_binary_error_callback(ctx->offset, message, ctx->user_data);
 }
@@ -559,6 +576,8 @@ static WasmBinaryReader s_binary_reader = {
     // Known "User" sections:
     // - Names section
     .on_function_names_count = on_count,
+    .on_function_name = on_function_name,
+    .on_local_name = on_local_name,
 
     .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
     .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,
