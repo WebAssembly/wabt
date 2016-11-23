@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: -v --debug-names
+;;; FLAGS: -v --debug-names --dump-verbose
 (module
   (func $F1 (param $F1P0 i32)
     (local $F1L1 f32)
@@ -86,6 +86,29 @@
 000005c: 2446 324c 33                             $F2L3  ; local name 3
 000002a: 36                                        ; FIXUP section size
 debug-names.wasm:	file format wasm 0x00000d
+
+Section Details:
+TYPE:
+ - [0] (i32) -> nil
+ - [1] (f32) -> nil
+FUNCTION:
+ - [0] sig=0
+ - [1] sig=1
+CODE:
+ - func 0
+ - func 1
+USER:
+ - name: "name"
+ - [0] $F1
+  - [0] $F1P0
+  - [1] $F1L1
+  - [2] $F1L2
+  - [3] 
+ - [1] $F2
+  - [0] $F2P0
+  - [1] $F2L1
+  - [2] 
+  - [3] $F2L3
 
 Code Disassembly:
 func 0
