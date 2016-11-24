@@ -1,9 +1,10 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (return (f32.const 0))))
+    f32.const 0
+    return))
 (;; STDERR ;;;
-typecheck/bad-return-type-mismatch.txt:4:6: type mismatch at return. got f32, expected i32
-    (return (f32.const 0))))
-     ^^^^^^
+typecheck/bad-return-type-mismatch.txt:5:5: type mismatch at return. got f32, expected i32
+    return))
+    ^^^^^^
 ;;; STDERR ;;)
