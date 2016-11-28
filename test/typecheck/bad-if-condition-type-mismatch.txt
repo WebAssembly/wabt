@@ -1,15 +1,21 @@
 ;;; ERROR: 1
 (module
   (func
-    (if (f32.const 0) (i32.const 0) (i32.const 0))))
+    f32.const 0
+    if 
+      i32.const 0
+    else
+      i32.const 0
+    end)
+)
 (;; STDERR ;;;
-typecheck/bad-if-condition-type-mismatch.txt:4:9: type mismatch at if condition. got f32, expected i32
-    (if (f32.const 0) (i32.const 0) (i32.const 0))))
-        ^^^^^^^^^^^^^
-typecheck/bad-if-condition-type-mismatch.txt:4:9: type stack at end of if true branch is 1. expected 0
-    (if (f32.const 0) (i32.const 0) (i32.const 0))))
-        ^^^^^^^^^^^^^
-typecheck/bad-if-condition-type-mismatch.txt:4:9: type stack at end of if false branch is 1. expected 0
-    (if (f32.const 0) (i32.const 0) (i32.const 0))))
-        ^^^^^^^^^^^^^
+typecheck/bad-if-condition-type-mismatch.txt:5:5: type mismatch at if condition. got f32, expected i32
+    if 
+    ^^^
+typecheck/bad-if-condition-type-mismatch.txt:5:5: type stack at end of if true branch is 1. expected 0
+    if 
+    ^^^
+typecheck/bad-if-condition-type-mismatch.txt:5:5: type stack at end of if false branch is 1. expected 0
+    if 
+    ^^^
 ;;; STDERR ;;)

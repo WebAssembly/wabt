@@ -1,10 +1,17 @@
 (module
   (func (result i32)
-    (block $outer
-      (block $inner
-        (loop
-          (if (i32.const 1)
-            (br $outer))
-          (br $inner)))
-      (return (i32.const 2)))
-    (return (i32.const 3))))
+    block $outer
+      block $inner
+        loop
+          i32.const 1
+          if 
+            br $outer
+          end
+          br $inner
+        end
+      end
+      i32.const 2
+      return
+    end
+    i32.const 3
+    return))

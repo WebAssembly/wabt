@@ -1,2 +1,4 @@
 (module
-  (func (return (nop))))
+  (func 
+    nop
+    return))
