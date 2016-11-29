@@ -42,6 +42,7 @@ def main(args):
                       action='store_true')
   parser.add_argument('--headers', action='store_true')
   parser.add_argument('--no-check', action='store_true')
+  parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--no-canonicalize-leb128s', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
@@ -66,6 +67,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wasmdump.AppendOptionalArgs({
     '-h': options.headers,
+    '-v': options.dump_verbose,
   })
 
   wast2wasm.verbose = options.print_cmd
