@@ -116,7 +116,7 @@ func 0
  00002d: b4                         | f32.convert_s/i64
  00002e: ae                         | i64.trunc_s/f32
  00002f: 1a                         | drop
- 000030: 43 00 00 00 00             | f32.const 0.000000
+ 000030: 43 00 00 00 00             | f32.const 0
  000035: bb                         | f64.promote/f32
  000036: b6                         | f32.demote/f64
  000037: 1a                         | drop

@@ -274,7 +274,7 @@ static WasmResult on_opcode_f32(WasmBinaryReaderContext* ctx,
                                 float value) {
   Context* context = ctx->user_data;
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
-  log_opcode(context, ctx->data, immediate_len, "%f", value);
+  log_opcode(context, ctx->data, immediate_len, "%g", value);
   return WASM_OK;
 }
 
@@ -282,7 +282,7 @@ static WasmResult on_opcode_f64(WasmBinaryReaderContext* ctx,
                                 double value) {
   Context* context = ctx->user_data;
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
-  log_opcode(context, ctx->data, immediate_len, "%f", value);
+  log_opcode(context, ctx->data, immediate_len, "%g", value);
   return WASM_OK;
 }
 

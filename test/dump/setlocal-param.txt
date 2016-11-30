@@ -87,14 +87,14 @@ Code Disassembly:
 func 0
  000021: 41 00                      | i32.const 0
  000023: 21 00                      | set_local 0
- 000025: 43 00 00 00 00             | f32.const 0.000000
+ 000025: 43 00 00 00 00             | f32.const 0
  00002a: 21 01                      | set_local 0x1
  00002c: 42 00                      | i64.const 0
  00002e: 21 02                      | set_local 0x2
- 000030: 43 00 00 00 00             | f32.const 0.000000
+ 000030: 43 00 00 00 00             | f32.const 0
  000035: 21 03                      | set_local 0x3
  000037: 41 00                      | i32.const 0
  000039: 21 04                      | set_local 0x4
- 00003b: 43 00 00 00 00             | f32.const 0.000000
+ 00003b: 43 00 00 00 00             | f32.const 0
  000040: 21 05                      | set_local 0x5
 ;;; STDOUT ;;)

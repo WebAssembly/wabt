@@ -65,13 +65,13 @@ func 0
  000017: 41 00                      | i32.const 0
  000019: be                         | f32.reinterpret/i32
  00001a: 1a                         | drop
- 00001b: 43 00 00 00 00             | f32.const 0.000000
+ 00001b: 43 00 00 00 00             | f32.const 0
  000020: bc                         | i32.reinterpret/f32
  000021: 1a                         | drop
  000022: 42 00                      | i64.const 0
  000024: bf                         | f64.reinterpret/i64
  000025: 1a                         | drop
- 000026: 44 00 00 00 00 00 00 00 00 | f64.const 0.000000
+ 000026: 44 00 00 00 00 00 00 00 00 | f64.const 0
  00002f: bd                         | i64.reinterpret/f64
  000030: 1a                         | drop
 ;;; STDOUT ;;)

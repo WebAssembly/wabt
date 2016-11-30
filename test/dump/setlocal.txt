@@ -101,9 +101,9 @@ setlocal.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
 func 0
- 000025: 44 00 00 00 00 00 00 00 00 | f64.const 0.000000
+ 000025: 44 00 00 00 00 00 00 00 00 | f64.const 0
  00002e: 21 00                      | set_local 0
- 000030: 43 00 00 00 00             | f32.const 0.000000
+ 000030: 43 00 00 00 00             | f32.const 0
  000035: 21 01                      | set_local 0x1
  000037: 42 00                      | i64.const 0
  000039: 21 02                      | set_local 0x2
@@ -111,9 +111,9 @@ func 0
  00003d: 21 03                      | set_local 0x3
  00003f: 41 00                      | i32.const 0
  000041: 21 04                      | set_local 0x4
- 000043: 43 00 00 00 00             | f32.const 0.000000
+ 000043: 43 00 00 00 00             | f32.const 0
  000048: 21 05                      | set_local 0x5
- 00004a: 44 00 00 00 00 00 00 00 00 | f64.const 0.000000
+ 00004a: 44 00 00 00 00 00 00 00 00 | f64.const 0
  000053: 21 06                      | set_local 0x6
  000055: 42 00                      | i64.const 0
  000057: 21 07                      | set_local 0x7
