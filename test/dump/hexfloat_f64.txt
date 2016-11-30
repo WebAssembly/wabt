@@ -135,19 +135,19 @@ func 0
  00004a: 1a                         | drop
  00004b: 44 00 00 00 00 00 30 c2 7f | f64.const 0x1.23p+1021
  000054: 1a                         | drop
- 000055: 44 00 e0 ff ff ff ff df 7f | f64.const 0x1.fffffffffep+102
+ 000055: 44 00 e0 ff ff ff ff df 7f | f64.const 0x1.fffffffffep+1022
  00005e: 1a                         | drop
- 00005f: 44 c0 ff ff ff ff ff cf 7f | f64.const 0x1.fffffffffffcp+1
+ 00005f: 44 c0 ff ff ff ff ff cf 7f | f64.const 0x1.fffffffffffcp+1021
  000068: 1a                         | drop
  000069: 44 00 00 00 00 00 00 f0 7f | f64.const infinity
  000072: 1a                         | drop
- 000073: 44 fc ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffcp+
+ 000073: 44 fc ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffcp+1023
  00007c: 1a                         | drop
- 00007d: 44 fe ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffep+
+ 00007d: 44 fe ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffep+1023
  000086: 1a                         | drop
- 000087: 44 f1 ff ff ff ff ff df 02 | f64.const 0x1.ffffffffffff1p-
+ 000087: 44 f1 ff ff ff ff ff df 02 | f64.const 0x1.ffffffffffff1p-978
  000090: 1a                         | drop
- 000091: 44 f3 ff ff ff ff ff df 02 | f64.const 0x1.ffffffffffff3p-
+ 000091: 44 f3 ff ff ff ff ff df 02 | f64.const 0x1.ffffffffffff3p-978
  00009a: 1a                         | drop
  00009b: 44 00 00 00 00 00 00 80 01 | f64.const 0x1p-999
  0000a4: 1a                         | drop
