@@ -22,6 +22,7 @@
 #include <stdio.h>
 
 #include "binary-reader.h"
+#include "literal.h"
 
 typedef struct Context {
   const WasmObjdumpOptions* options;
@@ -271,18 +272,22 @@ static WasmResult on_opcode_uint64(WasmBinaryReaderContext* ctx,
 }
 
 static WasmResult on_opcode_f32(WasmBinaryReaderContext* ctx,
-                                float value) {
+                                uint32_t value) {
   Context* context = ctx->user_data;
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
-  log_opcode(context, ctx->data, immediate_len, "%g", value);
+  char buffer[20];
+  wasm_write_float_hex(buffer, sizeof(buffer), value);
+  log_opcode(context, ctx->data, immediate_len, buffer);
   return WASM_OK;
 }
 
 static WasmResult on_opcode_f64(WasmBinaryReaderContext* ctx,
-                                double value) {
+                                uint64_t value) {
   Context* context = ctx->user_data;
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
-  log_opcode(context, ctx->data, immediate_len, "%g", value);
+  char buffer[20];
+  wasm_write_double_hex(buffer, sizeof(buffer), value);
+  log_opcode(context, ctx->data, immediate_len, buffer);
   return WASM_OK;
 }
 

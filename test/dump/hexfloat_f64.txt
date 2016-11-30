@@ -123,38 +123,38 @@ hexfloat_f64.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
 func 0
- 000019: 44 00 00 00 00 00 00 00 00 | f64.const 0
+ 000019: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  000022: 1a                         | drop
- 000023: 44 00 00 00 00 50 34 12 41 | f64.const 298260
+ 000023: 44 00 00 00 00 50 34 12 41 | f64.const 0x1.2345p+18
  00002c: 1a                         | drop
- 00002d: 44 00 00 00 00 00 00 30 45 | f64.const 1.93428e+25
+ 00002d: 44 00 00 00 00 00 00 30 45 | f64.const 0x1p+84
  000036: 1a                         | drop
- 000037: 44 00 00 00 00 00 00 e0 7f | f64.const 8.98847e+307
+ 000037: 44 00 00 00 00 00 00 e0 7f | f64.const 0x1p+1023
  000040: 1a                         | drop
- 000041: 44 00 00 00 00 00 00 90 7f | f64.const 2.8089e+306
+ 000041: 44 00 00 00 00 00 00 90 7f | f64.const 0x1p+1018
  00004a: 1a                         | drop
- 00004b: 44 00 00 00 00 00 30 c2 7f | f64.const 2.55434e+307
+ 00004b: 44 00 00 00 00 00 30 c2 7f | f64.const 0x1.23p+1021
  000054: 1a                         | drop
- 000055: 44 00 e0 ff ff ff ff df 7f | f64.const 8.98847e+307
+ 000055: 44 00 e0 ff ff ff ff df 7f | f64.const 0x1.fffffffffep+102
  00005e: 1a                         | drop
- 00005f: 44 c0 ff ff ff ff ff cf 7f | f64.const 4.49423e+307
+ 00005f: 44 c0 ff ff ff ff ff cf 7f | f64.const 0x1.fffffffffffcp+1
  000068: 1a                         | drop
- 000069: 44 00 00 00 00 00 00 f0 7f | f64.const inf
+ 000069: 44 00 00 00 00 00 00 f0 7f | f64.const infinity
  000072: 1a                         | drop
- 000073: 44 fc ff ff ff ff ff ef 7f | f64.const 1.79769e+308
+ 000073: 44 fc ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffcp+
  00007c: 1a                         | drop
- 00007d: 44 fe ff ff ff ff ff ef 7f | f64.const 1.79769e+308
+ 00007d: 44 fe ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffep+
  000086: 1a                         | drop
- 000087: 44 f1 ff ff ff ff ff df 02 | f64.const 7.82878e-295
+ 000087: 44 f1 ff ff ff ff ff df 02 | f64.const 0x1.ffffffffffff1p-
  000090: 1a                         | drop
- 000091: 44 f3 ff ff ff ff ff df 02 | f64.const 7.82878e-295
+ 000091: 44 f3 ff ff ff ff ff df 02 | f64.const 0x1.ffffffffffff3p-
  00009a: 1a                         | drop
- 00009b: 44 00 00 00 00 00 00 80 01 | f64.const 1.86653e-301
+ 00009b: 44 00 00 00 00 00 00 80 01 | f64.const 0x1p-999
  0000a4: 1a                         | drop
- 0000a5: 44 00 00 00 00 00 00 f1 3f | f64.const 1.0625
+ 0000a5: 44 00 00 00 00 00 00 f1 3f | f64.const 0x1.1p+0
  0000ae: 1a                         | drop
- 0000af: 44 00 00 00 00 00 00 70 42 | f64.const 1.09951e+12
+ 0000af: 44 00 00 00 00 00 00 70 42 | f64.const 0x1p+40
  0000b8: 1a                         | drop
- 0000b9: 44 00 00 00 00 10 f0 0f c0 | f64.const -3.99222
+ 0000b9: 44 00 00 00 00 10 f0 0f c0 | f64.const -0x1.ff01p+1
  0000c2: 1a                         | drop
 ;;; STDOUT ;;)

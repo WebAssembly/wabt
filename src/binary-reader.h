@@ -175,8 +175,8 @@ typedef struct WasmBinaryReader {
                                         uint32_t value,
                                         uint32_t value2);
   WasmResult (*on_opcode_uint64)(WasmBinaryReaderContext* ctx, uint64_t value);
-  WasmResult (*on_opcode_f32)(WasmBinaryReaderContext* ctx, float value);
-  WasmResult (*on_opcode_f64)(WasmBinaryReaderContext* ctx, double value);
+  WasmResult (*on_opcode_f32)(WasmBinaryReaderContext* ctx, uint32_t value);
+  WasmResult (*on_opcode_f64)(WasmBinaryReaderContext* ctx, uint64_t value);
   WasmResult (*on_opcode_block_sig)(WasmBinaryReaderContext* ctx,
                                     uint32_t num_types,
                                     WasmType* sig_types);
