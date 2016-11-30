@@ -400,11 +400,11 @@ static WasmResult on_import_func(uint32_t index,
                                  uint32_t sig_index,
                                  void* user_data) {
   Context* ctx = user_data;
-  print_details(
-      user_data, " - func[%d] sig=%d " PRIstringslice "." PRIstringslice "\n",
-      ctx->function_index, sig_index,
-      WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-      WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+  print_details(user_data,
+                " - " PRIstringslice "." PRIstringslice "-> func[%d] sig=%d\n",
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
+                ctx->function_index, sig_index);
   ctx->function_index++;
   return WASM_OK;
 }
@@ -413,18 +413,24 @@ static WasmResult on_import_table(uint32_t index,
                                   WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
-  print_details(user_data,
-      " - table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
-      wasm_get_type_name(elem_type),
-      elem_limits->initial,
-      elem_limits->max);
+  Context* ctx = user_data;
+  print_details(
+      user_data, " - " PRIstringslice "." PRIstringslice
+                 " -> table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
+      WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+      WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
+      wasm_get_type_name(elem_type), elem_limits->initial, elem_limits->max);
   return WASM_OK;
 }
 
 static WasmResult on_import_memory(uint32_t index,
                                    const WasmLimits* page_limits,
                                    void* user_data) {
-  print_details(user_data, " - memory\n");
+  Context* ctx = user_data;
+  print_details(user_data,
+                " - " PRIstringslice "." PRIstringslice " -> memory\n",
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
   return WASM_OK;
 }
 
@@ -432,7 +438,12 @@ static WasmResult on_import_global(uint32_t index,
                                    WasmType type,
                                    WasmBool mutable_,
                                    void* user_data) {
-  print_details(user_data, " - global mutable=%d type=%#x\n", mutable_, type);
+  Context* ctx = user_data;
+  print_details(user_data, " - " PRIstringslice "." PRIstringslice
+                           " -> global %s mutable=%d\n",
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
+                wasm_get_type_name(type), mutable_);
   return WASM_OK;
 }
 
@@ -639,7 +650,6 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
     reader.on_opcode = on_opcode;
     reader.on_opcode_bare = on_opcode_bare;
     reader.on_opcode_uint32 = on_opcode_uint32;
-    reader.on_opcode_uint32_uint32 = on_opcode_uint32_uint32;
     reader.on_opcode_uint32_uint32 = on_opcode_uint32_uint32;
     reader.on_opcode_uint64 = on_opcode_uint64;
     reader.on_opcode_f32 = on_opcode_f32;
