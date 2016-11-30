@@ -401,7 +401,7 @@ static WasmResult on_import_func(uint32_t index,
                                  void* user_data) {
   Context* ctx = user_data;
   print_details(user_data,
-                " - " PRIstringslice "." PRIstringslice "-> func[%d] sig=%d\n",
+                " - " PRIstringslice "." PRIstringslice " -> func[%d] sig=%d\n",
                 WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
                 WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
                 ctx->function_index, sig_index);
