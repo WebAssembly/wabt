@@ -1,13 +1,19 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (block $outer
-      (block $inner
-        (loop
-          (if (i32.const 1)
-            (br $outer))
-          (br $inner)))
-      (return (i32.const 2)))
+    block $outer
+      block $inner
+        loop
+          i32.const 1
+          if 
+            br $outer
+          end
+          br $inner
+        end
+      end
+      i32.const 2
+      return
+    end
     ;; the existence of the (br $outer) statement requires there to be a
     ;; return statement here, or a value returned from (br $outer).
   ))

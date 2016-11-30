@@ -1,2 +1,4 @@
 (module
-  (func (return (i32.const 0))))
+  (func 
+    i32.const 0
+    return))

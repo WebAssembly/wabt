@@ -1,7 +1,10 @@
 ;;; ERROR: 1
-(module (func (i32.store (i32.const 0) (f32.const 0))))
+(module (func
+  i32.const 0
+  f32.const 0
+  i32.store))
 (;; STDERR ;;;
-typecheck/bad-store-index-type-mismatch.txt:2:16: type mismatch at i32.store. got f32, expected i32
-(module (func (i32.store (i32.const 0) (f32.const 0))))
-               ^^^^^^^^^
+typecheck/bad-store-index-type-mismatch.txt:5:3: type mismatch at i32.store. got f32, expected i32
+  i32.store))
+  ^^^^^^^^^
 ;;; STDERR ;;)

@@ -1,9 +1,12 @@
 ;;; ERROR: 1
 (module
   (func (result f32)
-    (select (f64.const 0) (f32.const 0) (i32.const 0))))
+    f64.const 0
+    f32.const 0
+    i32.const 0
+    select))
 (;; STDERR ;;;
-typecheck/bad-select-value0.txt:4:6: type mismatch at select. got f64, expected f32
-    (select (f64.const 0) (f32.const 0) (i32.const 0))))
-     ^^^^^^
+typecheck/bad-select-value0.txt:7:5: type mismatch at select. got f64, expected f32
+    select))
+    ^^^^^^
 ;;; STDERR ;;)

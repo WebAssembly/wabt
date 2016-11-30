@@ -1,10 +1,13 @@
 ;;; ERROR: 1
 (module
   (func
-    (drop
-      (select (i64.const 0) (f32.const 0) (i32.const 0)))))
+    i64.const 0
+    f32.const 0
+    i32.const 0
+    select
+    drop))
 (;; STDERR ;;;
-typecheck/bad-select-value1.txt:5:8: type mismatch at select. got i64, expected f32
-      (select (i64.const 0) (f32.const 0) (i32.const 0)))))
-       ^^^^^^
+typecheck/bad-select-value1.txt:7:5: type mismatch at select. got i64, expected f32
+    select
+    ^^^^^^
 ;;; STDERR ;;)

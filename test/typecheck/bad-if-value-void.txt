@@ -1,12 +1,16 @@
 ;;; ERROR: 1
 (module
   (func
-    (block $b
-      (if (i32.const 0)
-        (br $b)
-        (f32.const 0.0)))))
+    block $b
+      i32.const 0
+      if 
+        br $b
+      else
+        f32.const 0
+      end
+    end))
 (;; STDERR ;;;
-typecheck/bad-if-value-void.txt:5:11: type stack at end of if false branch is 1. expected 0
-      (if (i32.const 0)
-          ^^^^^^^^^^^^^
+typecheck/bad-if-value-void.txt:6:7: type stack at end of if false branch is 1. expected 0
+      if 
+      ^^^
 ;;; STDERR ;;)

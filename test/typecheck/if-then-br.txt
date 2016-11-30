@@ -1,6 +1,8 @@
 (module
   (func
-    (block
-      (if
-        (i32.const 0)
-        (br 0)))))
+    block
+      i32.const 0
+      if
+        br 0
+      end
+    end))

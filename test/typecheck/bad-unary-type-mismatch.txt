@@ -1,10 +1,11 @@
 ;;; ERROR: 1
 (module
   (func
-    (drop
-      (f32.neg (f64.const 0)))))
+    f64.const 0x0p+0 (;=0;)
+    f32.neg
+    drop))
 (;; STDERR ;;;
-typecheck/bad-unary-type-mismatch.txt:5:8: type mismatch at f32.neg. got f64, expected f32
-      (f32.neg (f64.const 0)))))
-       ^^^^^^^
+typecheck/bad-unary-type-mismatch.txt:5:5: type mismatch at f32.neg. got f64, expected f32
+    f32.neg
+    ^^^^^^^
 ;;; STDERR ;;)
