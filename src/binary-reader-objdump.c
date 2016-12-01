@@ -105,6 +105,8 @@ static WasmResult begin_user_section(WasmBinaryReaderContext* ctx,
     return WASM_ERROR;
   if (context->options->mode == WASM_DUMP_DETAILS)
     printf(" - name: \"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  else if (context->options->mode == WASM_DUMP_HEADERS)
+    printf("\"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
   return WASM_OK;
 }
 
@@ -638,7 +640,6 @@ static WasmBinaryReader s_binary_reader = {
 
     // Known "User" sections:
     // - Names section
-    .on_function_names_count = on_count,
     .on_function_name = on_function_name,
     .on_local_name = on_local_name,
 
