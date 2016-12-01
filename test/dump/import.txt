@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: -v
+;;; FLAGS: -v --dump-verbose
 (module
   (import "ignored" "test" (func (param i32 i64 f32 f64)))
   (import "ignored" "test2" (func (param i32) (result i32))))
@@ -45,6 +45,14 @@
 0000038: 01                                        ; import signature index
 0000018: 20                                        ; FIXUP section size
 import.wasm:	file format wasm 0x00000d
+
+Section Details:
+TYPE:
+ - [0] (i32, i64, f32, f64) -> nil
+ - [1] (i32) -> i32
+IMPORT:
+ - ignored.test -> func[0] sig=0
+ - ignored.test2 -> func[1] sig=1
 
 Code Disassembly:
 ;;; STDOUT ;;)

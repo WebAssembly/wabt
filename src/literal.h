@@ -33,6 +33,10 @@ typedef enum WasmParseIntType {
   WASM_PARSE_SIGNED_AND_UNSIGNED = 1,
 } WasmParseIntType;
 
+/* Size of char buffer required to hold hex representation of a float/double */
+#define WASM_MAX_FLOAT_HEX 20
+#define WASM_MAX_DOUBLE_HEX 40
+
 WASM_EXTERN_C_BEGIN
 WasmResult wasm_parse_hexdigit(char c, uint32_t* out);
 WasmResult wasm_parse_int32(const char* s,
