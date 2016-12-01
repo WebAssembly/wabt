@@ -41,6 +41,7 @@ typedef struct Context {
   WasmStringSlice import_field_name;
 
   int function_index;
+  int global_index;
 } Context;
 
 
@@ -406,10 +407,10 @@ static WasmResult on_import_func(uint32_t index,
                                  void* user_data) {
   Context* ctx = user_data;
   print_details(user_data,
-                " - " PRIstringslice "." PRIstringslice " -> func[%d] sig=%d\n",
+                " - func[%d] sig=%d <- " PRIstringslice "." PRIstringslice "\n",
+                ctx->function_index, sig_index,
                 WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
-                ctx->function_index, sig_index);
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
   ctx->function_index++;
   return WASM_OK;
 }
@@ -444,11 +445,12 @@ static WasmResult on_import_global(uint32_t index,
                                    WasmBool mutable_,
                                    void* user_data) {
   Context* ctx = user_data;
-  print_details(user_data, " - " PRIstringslice "." PRIstringslice
-                           " -> global %s mutable=%d\n",
+  print_details(user_data, " - global[%d] %s mutable=%d <- " PRIstringslice
+                           "." PRIstringslice "\n",
+                ctx->global_index, wasm_get_type_name(type), mutable_,
                 WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
-                wasm_get_type_name(type), mutable_);
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+  ctx->global_index++;
   return WASM_OK;
 }
 
@@ -477,7 +479,7 @@ static WasmResult on_export(uint32_t index,
                             uint32_t item_index,
                             WasmStringSlice name,
                             void* user_data) {
-  print_details(user_data, " - [%d] %s ", item_index, wasm_get_kind_name(kind));
+  print_details(user_data, " - %s[%d] ", wasm_get_kind_name(kind), item_index);
   print_details(user_data, PRIstringslice, WASM_PRINTF_STRING_SLICE_ARG(name));
   print_details(user_data, "\n");
   return WASM_OK;
@@ -494,6 +496,14 @@ static WasmResult begin_elem_segment(uint32_t index,
                                      uint32_t table_index,
                                      void* user_data) {
   print_details(user_data, " - segment [%d] table=%d\n", index, table_index);
+  return WASM_OK;
+}
+
+static WasmResult begin_global(uint32_t index, WasmType type, WasmBool mutable, void* user_data) {
+  Context* ctx = user_data;
+  print_details(user_data, " - global[%d] %s mutable=%d", ctx->global_index,
+                wasm_get_type_name(type), mutable);
+  ctx->global_index++;
   return WASM_OK;
 }
 
@@ -552,7 +562,11 @@ static WasmResult on_local_name(uint32_t func_index,
 }
 
 static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
-  wasm_default_binary_error_callback(ctx->offset, message, ctx->user_data);
+  WasmDefaultErrorHandlerInfo info;
+  info.header = "error reading binary";
+  info.out_file = stdout;
+  info.print_header = WASM_PRINT_ERROR_HEADER_ONCE;
+  wasm_default_binary_error_callback(ctx->offset, message, &info);
 }
 
 static WasmBinaryReader s_binary_reader = {
@@ -596,6 +610,7 @@ static WasmBinaryReader s_binary_reader = {
 
     // Globl seciont
     .begin_global_section = begin_global_section,
+    .begin_global = begin_global,
     .on_global_count = on_count,
 
     // Export section
