@@ -49,7 +49,7 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_module)(uint32_t version, void* user_data);
   WasmResult (*end_module)(void* user_data);
 
-  /* user section */
+  /* custom section */
   WasmResult (*begin_custom_section)(WasmBinaryReaderContext* ctx,
                                      uint32_t size,
                                      WasmStringSlice section_name);
