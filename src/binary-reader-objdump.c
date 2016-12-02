@@ -97,11 +97,11 @@ static WasmResult begin_section(Context* ctx,
   return WASM_OK;
 }
 
-static WasmResult begin_user_section(WasmBinaryReaderContext* ctx,
-                                     uint32_t size,
-                                     WasmStringSlice section_name) {
+static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
+                                       uint32_t size,
+                                       WasmStringSlice section_name) {
   Context* context = ctx->user_data;
-  if (begin_section(context, "USER", ctx->offset, size))
+  if (begin_section(context, "CUSTOM", ctx->offset, size))
     return WASM_ERROR;
   if (context->options->mode == WASM_DUMP_DETAILS)
     printf(" - name: \"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
@@ -583,7 +583,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_error = on_error,
 
     // User section
-    .begin_user_section = begin_user_section,
+    .begin_custom_section = begin_custom_section,
 
     // Signature section
     .begin_signature_section = begin_signature_section,

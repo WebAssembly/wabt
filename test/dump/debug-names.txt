@@ -59,10 +59,10 @@
 0000022: 06                                        ; FIXUP func body size
 0000019: 0f                                        ; FIXUP section size
 ; section "name"
-0000029: 00                                        ; user section code
+0000029: 00                                        ; custom section code
 000002a: 00                                        ; section size (guess)
 000002b: 04                                        ; string length
-000002c: 6e61 6d65                                name  ; user section name
+000002c: 6e61 6d65                                name  ; custom section name
 0000030: 02                                        ; num functions
 0000031: 03                                        ; string length
 0000032: 2446 31                                  $F1  ; func name 0
@@ -97,7 +97,7 @@ FUNCTION:
 CODE:
  - func 0
  - func 1
-USER:
+CUSTOM:
  - name: "name"
  - func[0] $F1
   - local[0] $F1P0

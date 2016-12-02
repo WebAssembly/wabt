@@ -50,10 +50,10 @@ typedef struct WasmBinaryReader {
   WasmResult (*end_module)(void* user_data);
 
   /* user section */
-  WasmResult (*begin_user_section)(WasmBinaryReaderContext* ctx,
-                                   uint32_t size,
-                                   WasmStringSlice section_name);
-  WasmResult (*end_user_section)(WasmBinaryReaderContext* ctx);
+  WasmResult (*begin_custom_section)(WasmBinaryReaderContext* ctx,
+                                     uint32_t size,
+                                     WasmStringSlice section_name);
+  WasmResult (*end_custom_section)(WasmBinaryReaderContext* ctx);
 
   /* signatures section */
   /* TODO(binji): rename to "type" section */

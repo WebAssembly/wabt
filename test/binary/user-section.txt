@@ -8,16 +8,16 @@ section("bar") { count[5] }
 section("foo") { count[6] }
 (;; STDOUT ;;;
 begin_module(13)
-begin_user_section: 'foo' size=5
-end_user_section
+begin_custom_section: 'foo' size=5
+end_custom_section
 begin_signature_section
   on_signature_count(1)
   on_signature(index: 0, params: [], results: [i32])
 end_signature_section
-begin_user_section: 'bar' size=5
-end_user_section
-begin_user_section: 'foo' size=5
-end_user_section
+begin_custom_section: 'bar' size=5
+end_custom_section
+begin_custom_section: 'foo' size=5
+end_custom_section
 end_module
 (module
   (type (;0;) (func (result i32))))
