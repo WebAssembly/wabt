@@ -19,5 +19,5 @@ inc() =>
 inc() =>
 called host spectest.print(i32:1) =>
 called host spectest.print(i32:2) =>
-10/10 tests passed.
+11/11 tests passed.
 ;;; STDOUT ;;)

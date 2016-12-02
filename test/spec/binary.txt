@@ -37,5 +37,23 @@ assert_malformed error:
   third_party/testsuite/binary.wast:15:20: error in binary module: @0x00000008: bad wasm file version: 0xe (expected 0xd)
 (assert_malformed (module "\00asm\0e\00\00\00") "unknown binary version")
                    ^^^^^^
-0/0 tests passed.
+third_party/testsuite/binary.wast:6: assert_malformed passed:
+  error: @0x00000000: unable to read uint32_t: magic
+third_party/testsuite/binary.wast:7: assert_malformed passed:
+  error: @0x00000000: unable to read uint32_t: magic
+third_party/testsuite/binary.wast:8: assert_malformed passed:
+  error: @0x00000000: unable to read uint32_t: magic
+third_party/testsuite/binary.wast:9: assert_malformed passed:
+  error: @0x00000000: unable to read uint32_t: magic
+third_party/testsuite/binary.wast:10: assert_malformed passed:
+  error: @0x00000004: bad magic value
+third_party/testsuite/binary.wast:12: assert_malformed passed:
+  error: @0x00000004: unable to read uint32_t: version
+third_party/testsuite/binary.wast:13: assert_malformed passed:
+  error: @0x00000004: unable to read uint32_t: version
+third_party/testsuite/binary.wast:14: assert_malformed passed:
+  error: @0x00000004: unable to read uint32_t: version
+third_party/testsuite/binary.wast:15: assert_malformed passed:
+  error: @0x00000008: bad wasm file version: 0xe (expected 0xd)
+9/9 tests passed.
 ;;; STDOUT ;;)
