@@ -1159,11 +1159,61 @@ static WasmResult on_action_command(Context* ctx, Action* action) {
   return result;
 }
 
+static WasmBinaryErrorHandler* new_custom_error_handler(Context* ctx,
+                                                        const char* desc) {
+  size_t header_size = ctx->source_filename.length + strlen(desc) + 100;
+  char* header = wasm_alloc(ctx->allocator, header_size, 1);
+  wasm_snprintf(header, header_size, PRIstringslice ":%d: %s passed",
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
+                ctx->command_line_number, desc);
+
+  WasmDefaultErrorHandlerInfo* info = wasm_alloc_zero(
+      ctx->allocator, sizeof(WasmDefaultErrorHandlerInfo), WASM_DEFAULT_ALIGN);
+  info->header = header;
+  info->out_file = stdout;
+  info->print_header = WASM_PRINT_ERROR_HEADER_ONCE;
+
+  WasmBinaryErrorHandler* error_handler = wasm_alloc_zero(
+      ctx->allocator, sizeof(WasmBinaryErrorHandler), WASM_DEFAULT_ALIGN);
+  error_handler->on_error = wasm_default_binary_error_callback;
+  error_handler->user_data = info;
+  return error_handler;
+}
+
+static void destroy_custom_error_handler(
+    WasmAllocator* allocator,
+    WasmBinaryErrorHandler* error_handler) {
+  WasmDefaultErrorHandlerInfo* info = error_handler->user_data;
+  wasm_free(allocator, (void*)info->header);
+  wasm_free(allocator, info);
+  wasm_free(allocator, error_handler);
+}
+
 static WasmResult on_assert_malformed_command(Context* ctx,
                                               WasmStringSlice filename,
                                               WasmStringSlice text) {
-  /* TODO */
-  return WASM_OK;
+  WasmBinaryErrorHandler* error_handler =
+      new_custom_error_handler(ctx, "assert_malformed");
+  WasmInterpreterEnvironment env;
+  WASM_ZERO_MEMORY(env);
+
+  ctx->total++;
+  char* path = create_module_path(ctx, filename);
+  WasmInterpreterModule* module;
+  WasmResult result =
+      read_module(ctx->allocator, path, &env, error_handler, &module);
+  if (WASM_FAILED(result)) {
+    ctx->passed++;
+    result = WASM_OK;
+  } else {
+    print_command_error(ctx, "expected module to be malformed: \"%s\"", path);
+    result = WASM_ERROR;
+  }
+
+  wasm_free(ctx->allocator, path);
+  wasm_destroy_interpreter_environment(ctx->allocator, &env);
+  destroy_custom_error_handler(ctx->allocator, error_handler);
+  return result;
 }
 
 static WasmResult on_register_command(Context* ctx,
@@ -1203,46 +1253,61 @@ static WasmResult on_register_command(Context* ctx,
 static WasmResult on_assert_unlinkable_command(Context* ctx,
                                                WasmStringSlice filename,
                                                WasmStringSlice text) {
-  char buffer[256];
-  wasm_snprintf(buffer, sizeof(buffer),
-                PRIstringslice ":%d: assert_unlinkable error",
-                WASM_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
-                ctx->command_line_number);
-
-  WasmDefaultErrorHandlerInfo info;
-  info.header = buffer;
-  info.out_file = stdout;
-  info.print_header = WASM_PRINT_ERROR_HEADER_ONCE;
-
-  WasmBinaryErrorHandler error_handler;
-  error_handler.on_error = wasm_default_binary_error_callback;
-  error_handler.user_data = &info;
+  WasmBinaryErrorHandler* error_handler =
+      new_custom_error_handler(ctx, "assert_unlinkable");
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
+  WasmInterpreterModule* module;
   WasmInterpreterEnvironmentMark mark =
       wasm_mark_interpreter_environment(&ctx->env);
-  WasmResult result = read_module(ctx->allocator, path, &ctx->env,
-                                  &error_handler, &ctx->last_module);
+  WasmResult result =
+      read_module(ctx->allocator, path, &ctx->env, error_handler, &module);
   wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
 
   if (WASM_FAILED(result)) {
     ctx->passed++;
+    result = WASM_OK;
   } else {
     print_command_error(ctx, "expected module to be unlinkable: \"%s\"", path);
-    wasm_free(ctx->allocator, path);
-    return WASM_ERROR;
+    result = WASM_ERROR;
   }
 
   wasm_free(ctx->allocator, path);
-  return WASM_OK;
+  destroy_custom_error_handler(ctx->allocator, error_handler);
+  return result;
 }
 
 static WasmResult on_assert_uninstantiable_command(Context* ctx,
                                                    WasmStringSlice filename,
                                                    WasmStringSlice text) {
-  /* TODO */
-  return WASM_OK;
+  ctx->total++;
+  char* path = create_module_path(ctx, filename);
+  WasmInterpreterModule* module;
+  WasmInterpreterEnvironmentMark mark =
+      wasm_mark_interpreter_environment(&ctx->env);
+  WasmResult result =
+      read_module(ctx->allocator, path, &ctx->env, &s_error_handler, &module);
+
+  if (WASM_SUCCEEDED(result)) {
+    WasmInterpreterResult iresult =
+        run_start_function(ctx->allocator, &ctx->thread, module);
+    if (iresult == WASM_INTERPRETER_OK) {
+      print_command_error(ctx, "expected error running start function: \"%s\"",
+                          path);
+      result = WASM_ERROR;
+    } else {
+      ctx->passed++;
+      result = WASM_OK;
+    }
+  } else {
+    print_command_error(ctx, "error reading module: \"%s\"", path);
+    result = WASM_ERROR;
+  }
+
+  wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+  wasm_free(ctx->allocator, path);
+  return result;
 }
 
 static WasmBool typed_values_are_equal(const WasmInterpreterTypedValue* tv1,
@@ -1350,7 +1415,6 @@ static WasmResult on_assert_return_nan_command(Context* ctx, Action* action) {
           result = WASM_ERROR;
           break;
       }
-
     } else {
       print_command_error(ctx, "unexpected trap: %s", s_trap_strings[iresult]);
       result = WASM_ERROR;
