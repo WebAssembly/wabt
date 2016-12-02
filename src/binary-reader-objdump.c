@@ -512,14 +512,18 @@ static WasmResult begin_global(uint32_t index, WasmType type, WasmBool mutable, 
 static WasmResult on_init_expr_f32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
-  print_details(user_data, " - init f32=%d\n", value);
+  char buffer[WASM_MAX_FLOAT_HEX];
+  wasm_write_float_hex(buffer, sizeof(buffer), value);
+  print_details(user_data, " - init f32=%s\n", buffer);
   return WASM_OK;
 }
 
 static WasmResult on_init_expr_f64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  print_details(user_data, " - init f64=%" PRId64 "\n", value);
+  char buffer[WASM_MAX_DOUBLE_HEX];
+  wasm_write_float_hex(buffer, sizeof(buffer), value);
+  print_details(user_data, " - init f64=%s\n", buffer);
   return WASM_OK;
 }
 

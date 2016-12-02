@@ -64,8 +64,8 @@ Section Details:
 GLOBAL:
  - global[0] i32 mutable=0 - init i32=1
  - global[1] i64 mutable=0 - init i64=2
- - global[2] f32 mutable=0 - init f32=1077936128
- - global[3] f64 mutable=0 - init f64=4616189618054758400
+ - global[2] f32 mutable=0 - init f32=0x1.8p+1
+ - global[3] f64 mutable=0 - init f64=0x0p+0
  - global[4] i32 mutable=0 - init global=0
  - global[5] i64 mutable=0 - init global=1
  - global[6] f32 mutable=0 - init global=2
