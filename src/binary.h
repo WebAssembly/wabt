@@ -17,11 +17,14 @@
 #ifndef WASM_BINARY_H_
 #define WASM_BINARY_H_
 
+#include "common.h"
+
 #define WASM_BINARY_MAGIC 0x6d736100
 #define WASM_BINARY_VERSION 0x0d
 #define WASM_BINARY_LIMITS_HAS_MAX_FLAG 0x1
 
 #define WASM_BINARY_SECTION_NAME "name"
+#define WASM_BINARY_SECTION_RELOC "reloc"
 
 #define WASM_FOREACH_BINARY_SECTION(V) \
   V(CUSTOM, 0)                         \
@@ -45,5 +48,14 @@ typedef enum WasmBinarySection {
   WASM_NUM_BINARY_SECTIONS
 } WasmBinarySection;
 /* clang-format on */
+
+WASM_EXTERN_C_BEGIN
+extern const char* g_wasm_section_name[];
+
+static WASM_INLINE const char* wasm_get_section_name(WasmBinarySection sec) {
+  assert(sec < WASM_NUM_BINARY_SECTIONS);
+  return g_wasm_section_name[sec];
+}
+WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_H_ */

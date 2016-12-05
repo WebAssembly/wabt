@@ -36,10 +36,6 @@
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
-#define V(NAME, code) [code] = #NAME,
-static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
-#undef V
-
 typedef struct Context {
   WasmAllocator* allocator;
   WasmStream stream;
@@ -228,7 +224,7 @@ static void begin_known_section(Context* ctx,
   assert(ctx->last_section_leb_size_guess == 0);
   char desc[100];
   wasm_snprintf(desc, sizeof(desc), "section \"%s\" (%u)",
-                s_section_name[section_code], section_code);
+                wasm_get_section_name(section_code), section_code);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
   wasm_write_u8(&ctx->stream, section_code, "section code");
   ctx->last_section_leb_size_guess = leb_size_guess;
