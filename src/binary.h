@@ -24,7 +24,7 @@
 #define WASM_BINARY_SECTION_NAME "name"
 
 #define WASM_FOREACH_BINARY_SECTION(V) \
-  V(USER, 0)                           \
+  V(CUSTOM, 0)                         \
   V(TYPE, 1)                           \
   V(IMPORT, 2)                         \
   V(FUNCTION, 3)                       \

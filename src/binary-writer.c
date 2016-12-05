@@ -236,19 +236,19 @@ static void begin_known_section(Context* ctx,
       write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
 }
 
-static void begin_user_section(Context* ctx,
-                               const char* name,
-                               size_t leb_size_guess) {
+static void begin_custom_section(Context* ctx,
+                                 const char* name,
+                                 size_t leb_size_guess) {
   assert(ctx->last_section_leb_size_guess == 0);
   char desc[100];
   wasm_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
-  wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_USER, "user section code");
+  wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_CUSTOM, "custom section code");
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
   write_str(&ctx->stream, name, strlen(name), WASM_PRINT_CHARS,
-            "user section name");
+            "custom section name");
 }
 
 static void end_section(Context* ctx) {
@@ -788,7 +788,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
     WASM_ZERO_MEMORY(index_to_name);
 
     char desc[100];
-    begin_user_section(ctx, WASM_BINARY_SECTION_NAME, leb_size_guess);
+    begin_custom_section(ctx, WASM_BINARY_SECTION_NAME, leb_size_guess);
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
       const WasmFunc* func = module->funcs.data[i];

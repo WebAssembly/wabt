@@ -410,10 +410,10 @@ static uint32_t num_total_globals(Context* ctx) {
   return ctx->num_global_imports + ctx->num_globals;
 }
 
-static void handle_user_section(Context* ctx,
-                                WasmStringSlice* section_name,
-                                uint32_t section_size) {
-  CALLBACK_CTX(begin_user_section, section_size, *section_name);
+static void handle_custom_section(Context* ctx,
+                                  WasmStringSlice* section_name,
+                                  uint32_t section_size) {
+  CALLBACK_CTX(begin_custom_section, section_size, *section_name);
   if (ctx->options->read_debug_names && ctx->name_section_ok &&
       strncmp(section_name->start, WASM_BINARY_SECTION_NAME,
               section_name->length) == 0) {
@@ -440,7 +440,7 @@ static void handle_user_section(Context* ctx,
     }
     CALLBACK0(end_names_section);
   }
-  CALLBACK_CTX0(end_user_section);
+  CALLBACK_CTX0(end_custom_section);
 }
 
 static WasmBool skip_until_section(Context* ctx,
@@ -464,10 +464,10 @@ static WasmBool skip_until_section(Context* ctx,
   if (ctx->section_end > ctx->data_size)
     RAISE_ERROR("invalid section size: extends past end");
 
-  if (section_code == WASM_BINARY_SECTION_USER) {
+  if (section_code == WASM_BINARY_SECTION_CUSTOM) {
     WasmStringSlice section_name;
     in_str(ctx, &section_name, "section name");
-    handle_user_section(ctx, &section_name, *section_size);
+    handle_custom_section(ctx, &section_name, *section_size);
     ctx->offset = ctx->section_end;
     return skip_until_section(ctx, expected_code, section_size);
   } else {
@@ -539,14 +539,14 @@ static void logging_on_error(WasmBinaryReaderContext* ctx,
   }
 }
 
-static WasmResult logging_begin_user_section(WasmBinaryReaderContext* context,
-                                             uint32_t size,
-                                             WasmStringSlice section_name) {
+static WasmResult logging_begin_custom_section(WasmBinaryReaderContext* context,
+                                               uint32_t size,
+                                               WasmStringSlice section_name) {
   LoggingContext* ctx = context->user_data;
-  LOGF("begin_user_section: '" PRIstringslice "' size=%d\n",
+  LOGF("begin_custom_section: '" PRIstringslice "' size=%d\n",
        WASM_PRINTF_STRING_SLICE_ARG(section_name), size);
   indent(ctx);
-  FORWARD_CTX(begin_user_section, size, section_name);
+  FORWARD_CTX(begin_custom_section, size, section_name);
 }
 
 #define LOGGING_BEGIN(name)                                                \
@@ -604,7 +604,7 @@ static WasmResult logging_begin_user_section(WasmBinaryReaderContext* context,
 
 LOGGING_UINT32(begin_module)
 LOGGING0(end_module)
-LOGGING_END(user_section)
+LOGGING_END(custom_section)
 LOGGING_BEGIN(signature_section)
 LOGGING_UINT32(on_signature_count)
 LOGGING_END(signature_section)
@@ -1024,8 +1024,8 @@ static WasmBinaryReader s_logging_binary_reader = {
     .begin_module = logging_begin_module,
     .end_module = logging_end_module,
 
-    .begin_user_section = logging_begin_user_section,
-    .end_user_section = logging_end_user_section,
+    .begin_custom_section = logging_begin_custom_section,
+    .end_custom_section = logging_end_custom_section,
 
     .begin_signature_section = logging_begin_signature_section,
     .on_signature_count = logging_on_signature_count,
@@ -2060,8 +2060,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_CTX0(end_data_section);
   }
 
-  /* Handle supported unnamed sections at the end. */
-  skip_until_section(ctx, WASM_BINARY_SECTION_USER, &section_size);
+  /* Handle supported custom sections at the end. */
+  skip_until_section(ctx, WASM_BINARY_SECTION_CUSTOM, &section_size);
 
   CALLBACK0(end_module);
   destroy_context(allocator, ctx);
