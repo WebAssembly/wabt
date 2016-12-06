@@ -30,7 +30,7 @@ typedef struct Context {
   WasmAllocator* allocator;
   WasmMemoryWriter json_writer;
   WasmStream json_stream;
-  const char* source_filename;
+  WasmStringSlice source_filename;
   WasmStringSlice json_filename_noext;
   const WasmWriteBinarySpecOptions* spec_options;
   WasmResult result;
@@ -336,9 +336,9 @@ static void write_invalid_module(Context* ctx,
 }
 
 static void write_commands(Context* ctx, WasmScript* script) {
-  wasm_writef(&ctx->json_stream, "{\"source_filename\": \"%s\",\n",
-              ctx->source_filename);
-  wasm_writef(&ctx->json_stream, " \"commands\": [\n");
+  wasm_writef(&ctx->json_stream, "{\"source_filename\": ");
+  write_escaped_string_slice(ctx, ctx->source_filename);
+  wasm_writef(&ctx->json_stream, ",\n \"commands\": [\n");
   size_t i;
   int last_module_index = -1;
   for (i = 0; i < script->commands.size; ++i) {
@@ -474,7 +474,8 @@ WasmResult wasm_write_binary_spec_script(
   ctx.allocator = allocator;
   ctx.spec_options = spec_options;
   ctx.result = WASM_OK;
-  ctx.source_filename = source_filename;
+  ctx.source_filename.start = source_filename;
+  ctx.source_filename.length = strlen(source_filename);
   ctx.json_filename_noext = strip_extension(ctx.spec_options->json_filename);
 
   WasmResult result = wasm_init_mem_writer(ctx.allocator, &ctx.json_writer);
