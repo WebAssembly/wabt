@@ -490,7 +490,7 @@ static WasmResult on_export(uint32_t index,
 static WasmResult on_elem_segment_function_index(uint32_t index,
                                                  uint32_t func_index,
                                                  void* user_data) {
-  print_details(user_data, "  - [%d] -> %d\n", index, func_index);
+  print_details(user_data, "  - func[%d]\n", func_index);
   return WASM_OK;
 }
 

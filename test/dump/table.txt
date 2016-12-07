@@ -102,10 +102,10 @@ TABLE:
 ELEM:
  - segment[0] table=0
  - init i32=0
-  - [0] -> 0
-  - [0] -> 0
-  - [0] -> 1
-  - [0] -> 2
+  - func[0]
+  - func[0]
+  - func[1]
+  - func[2]
 CODE:
  - func 0
  - func 1
