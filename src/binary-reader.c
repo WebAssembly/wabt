@@ -1852,7 +1852,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint32_t sig_index;
       in_u32_leb128(ctx, &sig_index, "function signature index");
       RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
-                         "invalid function signature index");
+                         "invalid function signature index: %d", sig_index);
       CALLBACK(on_function_signature, i, sig_index);
     }
     CALLBACK_CTX0(end_function_signatures_section);
@@ -1863,7 +1863,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_SECTION(begin_table_section);
     uint32_t i;
     in_u32_leb128(ctx, &ctx->num_tables, "table count");
-    RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count must be 0 or 1");
+    RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
+                       ctx->num_tables);
     CALLBACK(on_table_count, ctx->num_tables);
     for (i = 0; i < ctx->num_tables; ++i) {
       WasmType elem_type;
