@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: -v
+;;; FLAGS: -v --dump-verbose
 (module
   (type $t (func (param i32)))
   (func (type $t))
@@ -87,6 +87,29 @@
 000003a: 0b                                        ; FIXUP func body size
 0000032: 13                                        ; FIXUP section size
 table.wasm:	file format wasm 0x00000d
+
+Section Details:
+TYPE:
+ - [0] (i32) -> nil
+ - [1] (i32, i64) -> nil
+ - [2] () -> f64
+FUNCTION:
+ - func[0] sig=0
+ - func[1] sig=1
+ - func[2] sig=2
+TABLE:
+ - [0] type=anyfunc init=4 max=4
+ELEM:
+ - segment[0] table=0
+ - init i32=0
+  - func[0]
+  - func[0]
+  - func[1]
+  - func[2]
+CODE:
+ - func 0
+ - func 1
+ - func 2
 
 Code Disassembly:
 func 0

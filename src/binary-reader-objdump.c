@@ -103,9 +103,9 @@ static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
   Context* context = ctx->user_data;
   if (begin_section(context, "CUSTOM", ctx->offset, size))
     return WASM_ERROR;
-  if (context->options->mode == WASM_DUMP_DETAILS)
-    printf(" - name: \"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
-  else if (context->options->mode == WASM_DUMP_HEADERS)
+  print_details(context, " - name: \"" PRIstringslice "\"\n",
+                WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  if (context->options->mode == WASM_DUMP_HEADERS)
     printf("\"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
   return WASM_OK;
 }
@@ -468,9 +468,9 @@ static WasmResult on_table(uint32_t index,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   print_details(user_data,
-      " - [%d] type=%#x init=%" PRId64 " max=%" PRId64 " \n",
+      " - [%d] type=%s init=%" PRId64 " max=%" PRId64 "\n",
       index,
-      elem_type,
+      wasm_get_type_name(elem_type),
       elem_limits->initial,
       elem_limits->has_max ? elem_limits->max : 0);
   return WASM_OK;
@@ -490,14 +490,14 @@ static WasmResult on_export(uint32_t index,
 static WasmResult on_elem_segment_function_index(uint32_t index,
                                                  uint32_t func_index,
                                                  void* user_data) {
-  print_details(user_data, "  - [%d] -> %d\n", index, func_index);
+  print_details(user_data, "  - func[%d]\n", func_index);
   return WASM_OK;
 }
 
 static WasmResult begin_elem_segment(uint32_t index,
                                      uint32_t table_index,
                                      void* user_data) {
-  print_details(user_data, " - segment [%d] table=%d\n", index, table_index);
+  print_details(user_data, " - segment[%d] table=%d\n", index, table_index);
   return WASM_OK;
 }
 
