@@ -3,7 +3,7 @@
 (module
   (memory 1)
   (data (i32.const 10) "hello")
-  (data (i32.const 20) "goodbye"))
+  (data (i32.const 20) "goodbye, Lorem ipsum dolor sit amet, consectetur"))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
@@ -32,10 +32,12 @@
 000001b: 41                                        ; i32.const
 000001c: 14                                        ; i32 literal
 000001d: 0b                                        ; end
-000001e: 07                                        ; data segment size
+000001e: 30                                        ; data segment size
 ; data segment data 1
-000001f: 676f 6f64 6279 65                         ; data segment data
-000000e: 17                                        ; FIXUP section size
+000001f: 676f 6f64 6279 652c 204c 6f72 656d 2069 
+000002f: 7073 756d 2064 6f6c 6f72 2073 6974 2061 
+000003f: 6d65 742c 2063 6f6e 7365 6374 6574 7572   ; data segment data
+000000e: 40                                        ; FIXUP section size
 memory.wasm:	file format wasm 0x00000d
 
 Section Details:
@@ -45,7 +47,9 @@ DATA:
  - init i32=10
   - 0000000: 6865 6c6c 6f                             hello
  - init i32=20
-  - 0000001: 676f 6f64 6279 65                        goodbye
+  - 0000000: 676f 6f64 6279 652c 204c 6f72 656d 2069  goodbye, Lorem i
+  - 0000010: 7073 756d 2064 6f6c 6f72 2073 6974 2061  psum dolor sit a
+  - 0000020: 6d65 742c 2063 6f6e 7365 6374 6574 7572  met, consectetur
 
 Code Disassembly:
 ;;; STDOUT ;;)

@@ -89,7 +89,7 @@ static WasmResult begin_section(Context* ctx,
     case WASM_DUMP_RAW_DATA:
       printf("\nContents of section %s:\n", name);
       wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size, offset,
-                             WASM_PRINT_CHARS, NULL);
+                             WASM_PRINT_CHARS, NULL, NULL);
       break;
     case WASM_DUMP_DISASSEMBLE:
       break;
@@ -581,10 +581,10 @@ static WasmResult on_data_segment_data(uint32_t index,
                                        uint32_t size,
                                        void* user_data) {
   Context* ctx = user_data;
-  print_details(user_data, "  - ");
-  if (should_print_details(ctx))
+  if (should_print_details(ctx)) {
     wasm_write_memory_dump(ctx->out_stream, src_data, size, 0, WASM_PRINT_CHARS,
-                           NULL);
+                           "  - ", NULL);
+  }
   return WASM_OK;
 }
 
