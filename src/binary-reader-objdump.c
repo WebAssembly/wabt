@@ -575,7 +575,6 @@ static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
   wasm_default_binary_error_callback(ctx->offset, message, &info);
 }
 
-#define MAX_DATA_PRINT 30
 static WasmResult on_data_segment_data(uint32_t index,
                                        const void* src_data,
                                        uint32_t size,
