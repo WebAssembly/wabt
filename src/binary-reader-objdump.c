@@ -89,7 +89,7 @@ static WasmResult begin_section(Context* ctx,
     case WASM_DUMP_RAW_DATA:
       printf("\nContents of section %s:\n", name);
       wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size, offset,
-                             WASM_PRINT_CHARS, NULL);
+                             WASM_PRINT_CHARS, NULL, NULL);
       break;
     case WASM_DUMP_DISASSEMBLE:
       break;
@@ -575,6 +575,18 @@ static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
   wasm_default_binary_error_callback(ctx->offset, message, &info);
 }
 
+static WasmResult on_data_segment_data(uint32_t index,
+                                       const void* src_data,
+                                       uint32_t size,
+                                       void* user_data) {
+  Context* ctx = user_data;
+  if (should_print_details(ctx)) {
+    wasm_write_memory_dump(ctx->out_stream, src_data, size, 0, WASM_PRINT_CHARS,
+                           "  - ", NULL);
+  }
+  return WASM_OK;
+}
+
 static WasmBinaryReader s_binary_reader = {
     .user_data = NULL,
 
@@ -640,6 +652,7 @@ static WasmBinaryReader s_binary_reader = {
 
     // Data section
     .begin_data_section = begin_data_section,
+    .on_data_segment_data = on_data_segment_data,
     .on_data_segment_count = on_count,
 
     // Known "User" sections:
