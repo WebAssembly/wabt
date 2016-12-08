@@ -575,6 +575,19 @@ static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
   wasm_default_binary_error_callback(ctx->offset, message, &info);
 }
 
+#define MAX_DATA_PRINT 30
+static WasmResult on_data_segment_data(uint32_t index,
+                                       const void* src_data,
+                                       uint32_t size,
+                                       void* user_data) {
+  Context* ctx = user_data;
+  print_details(user_data, "  - ");
+  if (should_print_details(ctx))
+    wasm_write_memory_dump(ctx->out_stream, src_data, size, 0, WASM_PRINT_CHARS,
+                           NULL);
+  return WASM_OK;
+}
+
 static WasmBinaryReader s_binary_reader = {
     .user_data = NULL,
 
@@ -640,6 +653,7 @@ static WasmBinaryReader s_binary_reader = {
 
     // Data section
     .begin_data_section = begin_data_section,
+    .on_data_segment_data = on_data_segment_data,
     .on_data_segment_count = on_count,
 
     // Known "User" sections:
