@@ -3,5 +3,4 @@
   (global i32 i32.const 1)
   (func)
   (table 2 anyfunc)
-  (elem (get_global 0) 0)
-  (elem (get_global 1) 0))
+  (elem (get_global 0) 0))

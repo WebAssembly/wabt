@@ -1,0 +1,10 @@
+;;; ERROR: 1
+(module
+  (func
+    loop $foo
+    end $bar))
+(;; STDERR ;;;
+parse/expr/bad-loop-mismatch-label.txt:5:9: mismatching label "$foo" != "$bar"
+    end $bar))
+        ^^^^
+;;; STDERR ;;)

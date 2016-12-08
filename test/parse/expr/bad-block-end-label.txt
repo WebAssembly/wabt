@@ -1,0 +1,10 @@
+;;; ERROR: 1
+(module
+  (func
+    block
+    end $foo))
+(;; STDERR ;;;
+parse/expr/bad-block-end-label.txt:5:9: unexpected label "$foo"
+    end $foo))
+        ^^^^
+;;; STDERR ;;)

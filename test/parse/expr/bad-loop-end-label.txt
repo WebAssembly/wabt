@@ -1,0 +1,10 @@
+;;; ERROR: 1
+(module
+  (func
+    loop
+    end $foo))
+(;; STDERR ;;;
+parse/expr/bad-loop-end-label.txt:5:9: unexpected label "$foo"
+    end $foo))
+        ^^^^
+;;; STDERR ;;)

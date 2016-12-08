@@ -67,6 +67,7 @@ typedef struct Context {
   int current_table_index;
   int current_memory_index;
   int current_global_index;
+  int num_imported_globals;
   WasmTypeVector type_stack;
   LabelNode* top_label;
   int max_depth;
@@ -836,12 +837,15 @@ static void check_const_init_expr(Context* ctx,
         }
 
         type = ref_global->type;
-        /* globals can only reference previously defined globals */
+        /* globals can only reference previously defined, internal globals */
         if (ref_global_index >= ctx->current_global_index) {
+          print_error(ctx, loc,
+                      "initializer expression can only reference a previously "
+                      "defined global");
+        } else if (ref_global_index >= ctx->num_imported_globals) {
           print_error(
               ctx, loc,
-              "initializer expression can only be reference a previously "
-              "defined global");
+              "initializer expression can only reference an imported global");
         }
 
         if (ref_global->mutable_) {
@@ -962,6 +966,7 @@ static void check_import(Context* ctx,
       if (import->global.mutable_) {
         print_error(ctx, loc, "mutable globals cannot be imported");
       }
+      ctx->num_imported_globals++;
       ctx->current_global_index++;
       break;
     case WASM_NUM_EXTERNAL_KINDS:
@@ -1004,6 +1009,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
   ctx->current_table_index = 0;
   ctx->current_memory_index = 0;
   ctx->current_global_index = 0;
+  ctx->num_imported_globals = 0;
 
   WasmModuleField* field;
   for (field = module->first_field; field != NULL; field = field->next) {
