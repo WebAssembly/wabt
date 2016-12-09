@@ -288,12 +288,15 @@ static void write_action_result_type(Context* ctx,
 
 static void write_module(Context* ctx,
                          char* filename,
-                         const WasmModule* module) {
+                         const WasmModule* module,
+                         WasmBool is_invalid) {
   WasmMemoryWriter writer;
   WasmResult result = wasm_init_mem_writer(ctx->allocator, &writer);
   if (WASM_SUCCEEDED(result)) {
+    WasmWriteBinaryOptions options = ctx->spec_options->write_binary_options;
+    options.is_invalid = is_invalid;
     result = wasm_write_binary_module(ctx->allocator, &writer.base, module,
-                                      &ctx->spec_options->write_binary_options);
+                                      &options);
     if (WASM_SUCCEEDED(result))
       result = wasm_write_output_buffer_to_file(&writer.buf, filename);
     wasm_close_mem_writer(&writer);
@@ -304,9 +307,10 @@ static void write_module(Context* ctx,
 
 static void write_raw_module(Context* ctx,
                              char* filename,
-                             const WasmRawModule* raw_module) {
+                             const WasmRawModule* raw_module,
+                             WasmBool is_invalid) {
   if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT) {
-    write_module(ctx, filename, raw_module->text);
+    write_module(ctx, filename, raw_module->text, is_invalid);
   } else {
     WasmFileStream stream;
     WasmResult result = wasm_init_file_writer(&stream.writer, filename);
@@ -331,7 +335,7 @@ static void write_invalid_module(Context* ctx,
   write_separator(ctx);
   write_key(ctx, "text");
   write_escaped_string_slice(ctx, text);
-  write_raw_module(ctx, filename, module);
+  write_raw_module(ctx, filename, module, WASM_TRUE);
   wasm_free(ctx->allocator, filename);
 }
 
@@ -361,7 +365,7 @@ static void write_commands(Context* ctx, WasmScript* script) {
         }
         write_key(ctx, "filename");
         write_escaped_string_slice(ctx, get_basename(filename));
-        write_module(ctx, filename, module);
+        write_module(ctx, filename, module, WASM_FALSE);
         wasm_free(ctx->allocator, filename);
         ctx->num_modules++;
         last_module_index = (int)i;
@@ -398,16 +402,9 @@ static void write_commands(Context* ctx, WasmScript* script) {
         break;
 
       case WASM_COMMAND_TYPE_ASSERT_INVALID:
-        /* TODO(binji): this doesn't currently work because of various
-         * assertions in wasm-binary-writer.c */
-#if 0
         write_invalid_module(ctx, &command->assert_invalid.module,
                              command->assert_invalid.text);
         ctx->num_modules++;
-#else
-        write_location(
-            ctx, wasm_get_raw_module_location(&command->assert_invalid.module));
-#endif
         break;
 
       case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
