@@ -459,7 +459,12 @@ static WasmResult on_import_global(uint32_t index,
 static WasmResult on_memory(uint32_t index,
                             const WasmLimits* page_limits,
                             void* user_data) {
-  print_details(user_data, " - memory %d\n", index);
+  print_details(user_data, " - memory[%d] pages: initial=%" PRId64,
+      index,
+      page_limits->initial);
+  if (page_limits->has_max)
+    print_details(user_data, " max=%" PRId64, page_limits->max);
+  print_details(user_data, "\n");
   return WASM_OK;
 }
 
@@ -467,12 +472,13 @@ static WasmResult on_table(uint32_t index,
                            WasmType elem_type,
                            const WasmLimits* elem_limits,
                            void* user_data) {
-  print_details(user_data,
-      " - [%d] type=%s init=%" PRId64 " max=%" PRId64 "\n",
+  print_details(user_data, " - table[%d] type=%s initial=%" PRId64,
       index,
       wasm_get_type_name(elem_type),
-      elem_limits->initial,
-      elem_limits->has_max ? elem_limits->max : 0);
+      elem_limits->initial);
+  if (elem_limits->has_max)
+    print_details(user_data, " max=%" PRId64, elem_limits->max);
+  print_details(user_data, "\n");
   return WASM_OK;
 }
 

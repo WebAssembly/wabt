@@ -98,7 +98,7 @@ FUNCTION:
  - func[1] sig=1
  - func[2] sig=2
 TABLE:
- - [0] type=anyfunc init=4 max=4
+ - table[0] type=anyfunc initial=4 max=4
 ELEM:
  - segment[0] table=0
  - init i32=0

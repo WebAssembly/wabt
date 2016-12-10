@@ -42,7 +42,7 @@ memory.wasm:	file format wasm 0x00000d
 
 Section Details:
 MEMORY:
- - memory 0
+ - memory[0] pages: initial=1
 DATA:
  - memory[0] - init i32=10
   - 0000000: 6865 6c6c 6f                             hello
