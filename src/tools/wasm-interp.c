@@ -1278,6 +1278,38 @@ static WasmResult on_assert_unlinkable_command(Context* ctx,
   return result;
 }
 
+static WasmResult on_assert_invalid_command(Context* ctx,
+                                               WasmStringSlice filename,
+                                               WasmStringSlice text) {
+  /* TODO: need to correctly support invalid asserts in interpreter */
+  return WASM_OK;
+#if 0
+  WasmBinaryErrorHandler* error_handler =
+      new_custom_error_handler(ctx, "assert_invalid");
+
+  ctx->total++;
+  char* path = create_module_path(ctx, filename);
+  WasmInterpreterModule* module;
+  WasmInterpreterEnvironmentMark mark =
+      wasm_mark_interpreter_environment(&ctx->env);
+  WasmResult result =
+      read_module(ctx->allocator, path, &ctx->env, error_handler, &module);
+  wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+
+  if (WASM_FAILED(result)) {
+    ctx->passed++;
+    result = WASM_OK;
+  } else {
+    print_command_error(ctx, "expected module to be invalid: \"%s\"", path);
+    result = WASM_ERROR;
+  }
+
+  wasm_free(ctx->allocator, path);
+  destroy_custom_error_handler(ctx->allocator, error_handler);
+  return result;
+#endif
+}
+
 static WasmResult on_assert_uninstantiable_command(Context* ctx,
                                                    WasmStringSlice filename,
                                                    WasmStringSlice text) {
@@ -1505,18 +1537,15 @@ static WasmResult parse_command(Context* ctx) {
     PARSE_KEY_STRING_VALUE("text", &text);
     on_assert_malformed_command(ctx, filename, text);
   } else if (match(ctx, "\"assert_invalid\"")) {
-    EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
-#if 0
-    /* TODO(binji): this doesn't work currently because the spec writer can't
-     * write invalid modules in all cases. */
-
     WasmStringSlice filename;
     WasmStringSlice text;
+    EXPECT(",");
+    CHECK_RESULT(parse_line(ctx));
+    EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-#endif
+    on_assert_invalid_command(ctx, filename, text);
   } else if (match(ctx, "\"assert_unlinkable\"")) {
     WasmStringSlice filename;
     WasmStringSlice text;
