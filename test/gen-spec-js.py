@@ -17,7 +17,10 @@
 
 import argparse
 from collections import namedtuple
-import cStringIO
+try:
+  from cStringIO import StringIO
+except ImportError:
+  from io import StringIO
 import json
 import os
 import re
@@ -36,12 +39,12 @@ F32_NEG_ZERO = 0x80000000
 F32_SIGN_BIT = F32_NEG_ZERO
 F32_SIG_MASK = 0x7fffff
 F32_QUIET_NAN_TAG = 0x400000
-F64_INF = 0x7ff0000000000000L
-F64_NEG_INF = 0xfff0000000000000L
-F64_NEG_ZERO = 0x8000000000000000L
+F64_INF = 0x7ff0000000000000
+F64_NEG_INF = 0xfff0000000000000
+F64_NEG_ZERO = 0x8000000000000000
 F64_SIGN_BIT = F64_NEG_ZERO
-F64_SIG_MASK = 0xfffffffffffffL
-F64_QUIET_NAN_TAG = 0x8000000000000L
+F64_SIG_MASK = 0xfffffffffffff
+F64_QUIET_NAN_TAG = 0x8000000000000
 
 def I32ToJS(value):
   # JavaScript will return all i32 values as signed.
@@ -154,7 +157,7 @@ def IsValidJSConstant(const):
   elif type_ == 'f32':
     return not IsNaNF32(int(const['value']))
   elif type_ == 'f64':
-    return not IsNaNF64(long(const['value']))
+    return not IsNaNF64(int(const['value']))
 
 def IsValidJSAction(action):
   return all(IsValidJSConstant(x) for x in action.get('args', []))
@@ -361,14 +364,8 @@ class JSWriter(object):
                                                   command.get('name', '$$')))
 
   def _WriteAssertModuleCommand(self, command):
-    filename = command.get('filename')
-    if filename:
-      self.out_file.write('%s("%s");\n' % (command['type'],
-                                           self._Module(filename)))
-    else:
-      # TODO(binji): this is only needed because assert_invalid doesn't write a
-      # module file currently.
-      self.out_file.write('// No filename for command: %s\n' % command)
+    self.out_file.write('%s("%s");\n' % (command['type'],
+                                         self._Module(command['filename'])))
 
   def _WriteAssertReturnCommand(self, command):
     expected = command['expected']
@@ -387,7 +384,7 @@ class JSWriter(object):
 
   def _Module(self, filename):
     with open(os.path.join(self.base_dir, filename), 'rb') as wasm_file:
-      return ''.join('\\x%02x' % ord(c) for c in wasm_file.read())
+      return ''.join('\\x%02x' % c for c in bytearray(wasm_file.read()))
 
   def _Constant(self, const):
     assert IsValidJSConstant(const), 'Invalid JS const: %s' % const
@@ -466,7 +463,7 @@ def main(args):
         module_command['filename'] = os.path.relpath(new_module_filename,
                                                      json_dir)
 
-    output = cStringIO.StringIO()
+    output = StringIO()
     if options.prefix:
       with open(options.prefix) as prefix_file:
         output.write(prefix_file.read())

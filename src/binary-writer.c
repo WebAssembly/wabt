@@ -239,7 +239,8 @@ static void begin_custom_section(Context* ctx,
   char desc[100];
   wasm_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
-  wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_CUSTOM, "custom section code");
+  wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_CUSTOM,
+                "custom section code");
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
@@ -305,7 +306,8 @@ static void write_expr(Context* ctx,
     }
     case WASM_EXPR_TYPE_CALL: {
       int index = wasm_get_func_index_by_var(module, &expr->call.var);
-      assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->funcs.size));
+      assert(ctx->options->is_invalid ||
+             (index >= 0 && (size_t)index < module->funcs.size));
       write_opcode(&ctx->stream, WASM_OPCODE_CALL);
       write_u32_leb128(&ctx->stream, index, "func index");
       break;
@@ -313,7 +315,8 @@ static void write_expr(Context* ctx,
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
       int index =
           wasm_get_func_type_index_by_var(module, &expr->call_indirect.var);
-      assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->func_types.size));
+      assert(ctx->options->is_invalid ||
+             (index >= 0 && (size_t)index < module->func_types.size));
       write_opcode(&ctx->stream, WASM_OPCODE_CALL_INDIRECT);
       write_u32_leb128(&ctx->stream, index, "signature index");
       write_u32_leb128(&ctx->stream, 0, "call_indirect reserved");
@@ -679,25 +682,29 @@ static void write_module(Context* ctx, const WasmModule* module) {
       switch (export->kind) {
         case WASM_EXTERNAL_KIND_FUNC: {
           int index = wasm_get_func_index_by_var(module, &export->var);
-          assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->funcs.size));
+          assert(ctx->options->is_invalid ||
+                 (index >= 0 && (size_t)index < module->funcs.size));
           write_u32_leb128(&ctx->stream, index, "export func index");
           break;
         }
         case WASM_EXTERNAL_KIND_TABLE: {
           int index = wasm_get_table_index_by_var(module, &export->var);
-          assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->tables.size));
+          assert(ctx->options->is_invalid ||
+                 (index >= 0 && (size_t)index < module->tables.size));
           write_u32_leb128(&ctx->stream, index, "export table index");
           break;
         }
         case WASM_EXTERNAL_KIND_MEMORY: {
           int index = wasm_get_memory_index_by_var(module, &export->var);
-          assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->memories.size));
+          assert(ctx->options->is_invalid ||
+                 (index >= 0 && (size_t)index < module->memories.size));
           write_u32_leb128(&ctx->stream, index, "export memory index");
           break;
         }
         case WASM_EXTERNAL_KIND_GLOBAL: {
           int index = wasm_get_global_index_by_var(module, &export->var);
-          assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->globals.size));
+          assert(ctx->options->is_invalid ||
+                 (index >= 0 && (size_t)index < module->globals.size));
           write_u32_leb128(&ctx->stream, index, "export global index");
           break;
         }
@@ -734,7 +741,8 @@ static void write_module(Context* ctx, const WasmModule* module) {
       size_t j;
       for (j = 0; j < segment->vars.size; ++j) {
         int index = wasm_get_func_index_by_var(module, &segment->vars.data[j]);
-        assert(ctx->options->is_invalid || (index >= 0 && (size_t)index < module->funcs.size));
+        assert(ctx->options->is_invalid ||
+               (index >= 0 && (size_t)index < module->funcs.size));
         write_u32_leb128(&ctx->stream, index, "function index");
       }
     }

@@ -237,7 +237,6 @@ static void sprint_typed_value(char* buffer,
   }
 }
 
-
 static void print_typed_value(const WasmInterpreterTypedValue* tv) {
   char buffer[MAX_TYPED_VALUE_CHARS];
   sprint_typed_value(buffer, sizeof(buffer), tv);
@@ -637,7 +636,6 @@ static void init_environment(WasmAllocator* allocator,
   host_module->host.import_delegate.import_table = spectest_import_table;
   host_module->host.import_delegate.import_memory = spectest_import_memory;
   host_module->host.import_delegate.import_global = spectest_import_global;
-
 }
 
 static WasmResult read_and_run_module(WasmAllocator* allocator,
@@ -717,8 +715,8 @@ typedef struct Action {
 static void WASM_PRINTF_FORMAT(2, 3)
     print_parse_error(Context* ctx, const char* format, ...) {
   WASM_SNPRINTF_ALLOCA(buffer, length, format);
-  fprintf(stderr, "%s:%d:%d: %s\n", ctx->loc.filename,
-          ctx->loc.line, ctx->loc.first_column, buffer);
+  fprintf(stderr, "%s:%d:%d: %s\n", ctx->loc.filename, ctx->loc.line,
+          ctx->loc.first_column, buffer);
 }
 
 static void WASM_PRINTF_FORMAT(2, 3)
@@ -741,7 +739,7 @@ static int read_char(Context* ctx) {
     return -1;
   ctx->prev_loc = ctx->loc;
   char c = ctx->json_data[ctx->json_offset++];
-  if (c == '\n')  {
+  if (c == '\n') {
     ctx->loc.line++;
     ctx->loc.first_column = 1;
   } else {
@@ -929,7 +927,7 @@ static WasmResult parse_type_object(Context* ctx, WasmType* out_type) {
     return WASM_OK;
   } else {
     print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
-                WASM_PRINTF_STRING_SLICE_ARG(type_str));
+                      WASM_PRINTF_STRING_SLICE_ARG(type_str));
     return WASM_ERROR;
   }
 }
@@ -992,7 +990,7 @@ static WasmResult parse_const(Context* ctx,
     return WASM_OK;
   } else {
     print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
-                WASM_PRINTF_STRING_SLICE_ARG(type_str));
+                      WASM_PRINTF_STRING_SLICE_ARG(type_str));
     return WASM_ERROR;
   }
 }
@@ -1279,8 +1277,8 @@ static WasmResult on_assert_unlinkable_command(Context* ctx,
 }
 
 static WasmResult on_assert_invalid_command(Context* ctx,
-                                               WasmStringSlice filename,
-                                               WasmStringSlice text) {
+                                            WasmStringSlice filename,
+                                            WasmStringSlice text) {
   /* TODO: need to correctly support invalid asserts in interpreter */
   return WASM_OK;
 #if 0
