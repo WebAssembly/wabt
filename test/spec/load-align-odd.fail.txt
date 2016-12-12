@@ -1,0 +1,10 @@
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/load-align-odd.fail.wast
+(;; STDERR ;;;
+Error running "wast2wasm":
+third_party/testsuite/load-align-odd.fail.wast:1:33: alignment must be power-of-two
+(module (memory 0) (func (drop (i64.load align=5 (i32.const 0)))))
+                                ^^^^^^^^^^^^^^^^
+
+;;; STDERR ;;)
