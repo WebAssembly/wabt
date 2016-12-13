@@ -33,7 +33,7 @@
 0000018: 41                                        ; i32.const
 0000019: 01                                        ; i32 literal
 000001a: 10                                        ; call
-000001b: 00                                        ; func index
+000001b: 00                                        ; function index
 000001c: 0b                                        ; end
 0000016: 06                                        ; FIXUP func body size
 0000014: 08                                        ; FIXUP section size

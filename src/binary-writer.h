@@ -18,6 +18,7 @@
 #define WASM_BINARY_WRITER_H_
 
 #include "common.h"
+#include "stream.h"
 
 struct WasmAllocator;
 struct WasmModule;
@@ -45,6 +46,39 @@ WasmResult wasm_write_binary_script(struct WasmAllocator*,
                                     struct WasmWriter*,
                                     const struct WasmScript*,
                                     const WasmWriteBinaryOptions*);
+
+void wasm_write_u32_leb128(struct WasmStream* stream,
+                           uint32_t value,
+                           const char* desc);
+
+void wasm_write_i32_leb128(struct WasmStream* stream,
+                           int32_t value,
+                           const char* desc);
+
+void wasm_write_fixed_u32_leb128(struct WasmStream* stream,
+                                 uint32_t value,
+                                 const char* desc);
+
+uint32_t wasm_write_fixed_u32_leb128_at(struct WasmStream* stream,
+                                        uint32_t offset,
+                                        uint32_t value,
+                                        const char* desc);
+
+uint32_t wasm_write_fixed_u32_leb128_raw(uint8_t* data,
+                                         uint8_t* end,
+                                         uint32_t value);
+
+void wasm_write_type(struct WasmStream* stream, WasmType type);
+
+void wasm_write_str(struct WasmStream* stream,
+                    const char* s,
+                    size_t length,
+                    WasmPrintChars print_chars,
+                    const char* desc);
+
+void wasm_write_opcode(WasmStream* stream, uint8_t opcode);
+
+void wasm_write_limits(WasmStream* stream, const WasmLimits* limits);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_WRITER_H_ */

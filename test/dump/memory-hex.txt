@@ -11,9 +11,9 @@
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
 ; memory 0
-000000b: 01                                        ; memory flags
-000000c: 01                                        ; memory initial pages
-000000d: 01                                        ; memory max pages
+000000b: 01                                        ; limits: flags
+000000c: 01                                        ; limits: initial
+000000d: 01                                        ; limits: max
 0000009: 04                                        ; FIXUP section size
 ; section "DATA" (11)
 000000e: 0b                                        ; section code
