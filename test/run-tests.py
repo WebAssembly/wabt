@@ -65,6 +65,14 @@ TOOLS = {
     ]),
     'VERBOSE-FLAGS': ['-v']
   },
+  'run-wasm-link': {
+    'EXE': 'test/run-wasm-link.py',
+    'FLAGS': ' '.join([
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasm-link=%(wasm-link)s',
+    ]),
+    'VERBOSE-FLAGS': ['-v']
+  },
   'run-roundtrip': {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': ' '.join([

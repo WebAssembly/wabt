@@ -560,6 +560,15 @@ static WasmResult on_local_name(uint32_t func_index,
   return WASM_OK;
 }
 
+WasmResult on_reloc(WasmRelocType type,
+                    uint32_t section,
+                    uint32_t offset,
+                    void* user_data) {
+  print_details(user_data, "  - %-20s section=%d offset=%#x\n",
+                wasm_get_reloc_type_name(type), section, offset);
+  return WASM_OK;
+}
+
 static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
   WasmDefaultErrorHandlerInfo info;
   info.header = "error reading binary";
@@ -650,6 +659,8 @@ static WasmBinaryReader s_binary_reader = {
     // - Names section
     .on_function_name = on_function_name,
     .on_local_name = on_local_name,
+
+    .on_reloc = on_reloc,
 
     .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
     .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,

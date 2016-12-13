@@ -153,6 +153,16 @@ typedef enum WasmType {
   WASM_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
 } WasmType;
 
+typedef enum WasmRelocType {
+  WASM_RELOC_FUNC_INDEX = 0,
+  WASM_RELOC_FUNC_INDEX_SLEB = 1,
+  WASM_RELOC_TABLE_INDEX = 2,
+  WASM_RELOC_GLOBAL_INDEX = 3,
+  WASM_RELOC_TYPE_INDEX = 4,
+  WASM_RELOC_DATA = 5,
+  WASM_NUM_RELOC_TYPES,
+} WasmRelocType;
+
 /* matches binary format, do not change */
 typedef enum WasmExternalKind {
   WASM_EXTERNAL_KIND_FUNC = 0,
@@ -167,6 +177,7 @@ typedef struct WasmLimits {
   uint64_t max;
   WasmBool has_max;
 } WasmLimits;
+
 
 enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
@@ -394,6 +405,8 @@ WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment);
 uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment);
 
 WasmStringSlice wasm_empty_string_slice(void);
+WasmBool wasm_string_slice_eq(WasmStringSlice* s1, const char* s2);
+WasmBool wasm_string_slice_startswith(WasmStringSlice* s1, const char* s2);
 WasmStringSlice wasm_string_slice_from_cstr(const char* string);
 WasmBool wasm_string_slice_is_empty(const WasmStringSlice*);
 WasmBool wasm_string_slices_are_equal(const WasmStringSlice*,
@@ -452,6 +465,15 @@ extern const char* g_wasm_kind_name[];
 static WASM_INLINE const char* wasm_get_kind_name(WasmExternalKind kind) {
   assert(kind < WASM_NUM_EXTERNAL_KINDS);
   return g_wasm_kind_name[kind];
+}
+
+/* reloc */
+
+extern const char* g_wasm_reloc_type_name[];
+
+static WASM_INLINE const char* wasm_get_reloc_type_name(WasmRelocType reloc) {
+  assert(reloc < WASM_NUM_RELOC_TYPES);
+  return g_wasm_reloc_type_name[reloc];
 }
 
 /* type */

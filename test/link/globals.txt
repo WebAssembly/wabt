@@ -1,0 +1,73 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS: 
+(module
+  (import "foo" "bar" (global i32))
+  (global i32 (i32.const 1))
+  (global i32 (i32.const 2))
+  (func (param i32)
+     get_global 2
+     get_global 1
+     i32.add
+     get_global 0
+     i32.add
+     call 0)
+)
+(module
+  (import "a" "b" (global i64))
+  (global i64 (i64.const 2))
+  (func (param i64) (param i64)
+     get_global 0
+     get_global 1
+     call 0)
+)
+(;; STDOUT ;;;
+linked.wasm:	file format wasm 0x00000d
+
+Sections:
+     TYPE start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
+   IMPORT start=0x00000016 end=0x00000029 (size=0x00000013) count: 2
+ FUNCTION start=0x0000002f end=0x00000032 (size=0x00000003) count: 2
+   GLOBAL start=0x00000034 end=0x00000044 (size=0x00000010) count: 3
+     CODE start=0x00000046 end=0x00000079 (size=0x00000033) count: 2
+   CUSTOM start=0x0000007f end=0x0000009a (size=0x0000001b) "reloc.CODE"
+
+Section Details:
+TYPE:
+ - [0] (i32) -> nil
+ - [1] (i64, i64) -> nil
+IMPORT:
+ - global[0] i32 mutable=0 <- foo.bar
+ - global[1] i64 mutable=0 <- a.b
+FUNCTION:
+ - func[0] sig=0
+ - func[1] sig=1
+GLOBAL:
+ - global[2] i32 mutable=0 - init i32=1
+ - global[3] i32 mutable=0 - init i32=2
+ - global[4] i64 mutable=0 - init i64=2
+CODE:
+ - func 0
+ - func 1
+CUSTOM:
+ - name: "reloc.CODE"
+  - RELOC_GLOBAL_INDEX   section=5 offset=0x4
+  - RELOC_GLOBAL_INDEX   section=5 offset=0xa
+  - RELOC_GLOBAL_INDEX   section=5 offset=0x11
+  - RELOC_FUNC_INDEX     section=5 offset=0x18
+  - RELOC_GLOBAL_INDEX   section=5 offset=0x21
+  - RELOC_GLOBAL_INDEX   section=5 offset=0x27
+  - RELOC_FUNC_INDEX     section=5 offset=0x2d
+
+Code Disassembly:
+func 0
+ 000049: 23 83 80 80 80 00          | get_global 0x3
+ 00004f: 23 82 80 80 80 00          | get_global 0x2
+ 000055: 6a                         | i32.add
+ 000056: 23 80 80 80 80 00          | get_global 0
+ 00005c: 6a                         | i32.add
+ 00005d: 10 80 80 80 80 00          | call 0
+func 1
+ 000066: 23 81 80 80 80 00          | get_global 0x1
+ 00006c: 23 84 80 80 80 00          | get_global 0x4
+ 000072: 10 81 80 80 80 00          | call 0x1
+;;; STDOUT ;;)

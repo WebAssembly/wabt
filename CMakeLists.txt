@@ -253,6 +253,11 @@ if (NOT EMSCRIPTEN)
   add_dependencies(everything wasmdump)
   target_link_libraries(wasmdump libwasm)
 
+  # wasm-link
+  add_executable(wasm-link src/tools/wasm-link.c)
+  add_dependencies(everything wasm-link)
+  target_link_libraries(wasm-link libwasm)
+
   # wasm-interp
   add_executable(wasm-interp src/tools/wasm-interp.c)
   add_dependencies(everything wasm-interp)

@@ -521,11 +521,6 @@ static WasmResult default_host_callback(const WasmInterpreterFunc* func,
   return WASM_OK;
 }
 
-static WasmBool string_slice_equals_str(const WasmStringSlice* ss,
-                                        const char* s) {
-  return strncmp(ss->start, s, ss->length) == 0;
-}
-
 #define PRIimport "\"" PRIstringslice "." PRIstringslice "\""
 #define PRINTF_IMPORT_ARG(x)                    \
   WASM_PRINTF_STRING_SLICE_ARG((x).module_name) \
@@ -542,7 +537,7 @@ static WasmResult spectest_import_func(WasmInterpreterImport* import,
                                        WasmInterpreterFuncSignature* sig,
                                        WasmPrintErrorCallback callback,
                                        void* user_data) {
-  if (string_slice_equals_str(&import->field_name, "print")) {
+  if (wasm_string_slice_eq(&import->field_name, "print")) {
     func->host.callback = default_host_callback;
     return WASM_OK;
   } else {
@@ -556,7 +551,7 @@ static WasmResult spectest_import_table(WasmInterpreterImport* import,
                                         WasmInterpreterTable* table,
                                         WasmPrintErrorCallback callback,
                                         void* user_data) {
-  if (string_slice_equals_str(&import->field_name, "table")) {
+  if (wasm_string_slice_eq(&import->field_name, "table")) {
     table->limits.has_max = WASM_TRUE;
     table->limits.initial = 10;
     table->limits.max = 20;
@@ -572,7 +567,7 @@ static WasmResult spectest_import_memory(WasmInterpreterImport* import,
                                          WasmInterpreterMemory* memory,
                                          WasmPrintErrorCallback callback,
                                          void* user_data) {
-  if (string_slice_equals_str(&import->field_name, "memory")) {
+  if (wasm_string_slice_eq(&import->field_name, "memory")) {
     memory->page_limits.has_max = WASM_TRUE;
     memory->page_limits.initial = 1;
     memory->page_limits.max = 2;
@@ -591,7 +586,7 @@ static WasmResult spectest_import_global(WasmInterpreterImport* import,
                                          WasmInterpreterGlobal* global,
                                          WasmPrintErrorCallback callback,
                                          void* user_data) {
-  if (string_slice_equals_str(&import->field_name, "global")) {
+  if (wasm_string_slice_eq(&import->field_name, "global")) {
     switch (global->typed_value.type) {
       case WASM_TYPE_I32:
         global->typed_value.value.i32 = 666;
@@ -913,16 +908,16 @@ static WasmResult parse_type_object(Context* ctx, WasmType* out_type) {
   PARSE_KEY_STRING_VALUE("type", &type_str);
   EXPECT("}");
 
-  if (string_slice_equals_str(&type_str, "i32")) {
+  if (wasm_string_slice_eq(&type_str, "i32")) {
     *out_type = WASM_TYPE_I32;
     return WASM_OK;
-  } else if (string_slice_equals_str(&type_str, "f32")) {
+  } else if (wasm_string_slice_eq(&type_str, "f32")) {
     *out_type = WASM_TYPE_F32;
     return WASM_OK;
-  } else if (string_slice_equals_str(&type_str, "i64")) {
+  } else if (wasm_string_slice_eq(&type_str, "i64")) {
     *out_type = WASM_TYPE_I64;
     return WASM_OK;
-  } else if (string_slice_equals_str(&type_str, "f64")) {
+  } else if (wasm_string_slice_eq(&type_str, "f64")) {
     *out_type = WASM_TYPE_F64;
     return WASM_OK;
   } else {
@@ -960,28 +955,28 @@ static WasmResult parse_const(Context* ctx,
   const char* value_start = value_str.start;
   const char* value_end = value_str.start + value_str.length;
 
-  if (string_slice_equals_str(&type_str, "i32")) {
+  if (wasm_string_slice_eq(&type_str, "i32")) {
     uint32_t value;
     CHECK_RESULT(wasm_parse_int32(value_start, value_end, &value,
                                   WASM_PARSE_UNSIGNED_ONLY));
     out_value->type = WASM_TYPE_I32;
     out_value->value.i32 = value;
     return WASM_OK;
-  } else if (string_slice_equals_str(&type_str, "f32")) {
+  } else if (wasm_string_slice_eq(&type_str, "f32")) {
     uint32_t value_bits;
     CHECK_RESULT(wasm_parse_int32(value_start, value_end, &value_bits,
                                   WASM_PARSE_UNSIGNED_ONLY));
     out_value->type = WASM_TYPE_F32;
     out_value->value.f32_bits = value_bits;
     return WASM_OK;
-  } else if (string_slice_equals_str(&type_str, "i64")) {
+  } else if (wasm_string_slice_eq(&type_str, "i64")) {
     uint64_t value;
     CHECK_RESULT(wasm_parse_int64(value_start, value_end, &value,
                                   WASM_PARSE_UNSIGNED_ONLY));
     out_value->type = WASM_TYPE_I64;
     out_value->value.i64 = value;
     return WASM_OK;
-  } else if (string_slice_equals_str(&type_str, "f64")) {
+  } else if (wasm_string_slice_eq(&type_str, "f64")) {
     uint64_t value_bits;
     CHECK_RESULT(wasm_parse_int64(value_start, value_end, &value_bits,
                                   WASM_PARSE_UNSIGNED_ONLY));

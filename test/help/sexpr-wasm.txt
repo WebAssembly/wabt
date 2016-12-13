@@ -25,7 +25,8 @@ options:
   -v, --verbose                                      use multiple times for more info
   -h, --help                                         print this help message
   -d, --dump-module                                  print a hexdump of the module to stdout
-  -o, --output=FILE                                  output file for the generated binary format
+  -o, --output=FILE                                  output wasm binary file
+  -c,                                                compile-only (output a wasm file suitable for linking with others)
       --spec                                         parse a file with multiple modules and assertions, like the spec tests
       --use-libc-allocator                           use malloc, free, etc. instead of stack allocator
       --no-canonicalize-leb128s                      Write all LEB128 sizes as 5-bytes instead of their minimal size

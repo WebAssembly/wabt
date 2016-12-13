@@ -32,6 +32,8 @@ def main(args):
                       help='output directory for files.')
   parser.add_argument('--wast2wasm', metavar='PATH',
                       help='set the wast2wasm executable to use.')
+  parser.add_argument('--wasm-link', metavar='PATH',
+                      help='set the wasm-link executable to use.')
   parser.add_argument('--wasmdump', metavar='PATH',
                       help='set the wasmdump executable to use.')
   parser.add_argument('--no-error-cmdline',
@@ -40,13 +42,11 @@ def main(args):
                       action='store_false')
   parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
+  parser.add_argument('--incremental', help='incremenatly link one object at' +
+                          ' a time to produce the final linked binary.',
+                      action='store_true')
   parser.add_argument('--headers', action='store_true')
-  parser.add_argument('--no-check', action='store_true')
   parser.add_argument('-c', '--compile-only', action='store_true')
-  parser.add_argument('--dump-verbose', action='store_true')
-  parser.add_argument('--spec', action='store_true')
-  parser.add_argument('--no-canonicalize-leb128s', action='store_true')
-  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -56,44 +56,52 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
-    '--no-check': options.no_check,
-    '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
-    '--spec': options.spec,
     '-v': options.verbose,
-    '-c': options.compile_only,
-    '--use-libc-allocator': options.use_libc_allocator
+    '-c': options.compile_only
+  })
+
+  wasm_link = utils.Executable(
+      find_exe.GetWasmlinkExecutable(options.wasm_link),
+      error_cmdline=options.error_cmdline)
+  wasm_link.AppendOptionalArgs({
+    '-v': options.verbose,
   })
 
   wasmdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.wasmdump),
       error_cmdline=options.error_cmdline)
   wasmdump.AppendOptionalArgs({
-    '-h': options.headers,
-    '-v': options.dump_verbose,
   })
 
   wast2wasm.verbose = options.print_cmd
+  wasm_link.verbose = options.print_cmd
   wasmdump.verbose = options.print_cmd
 
   filename = options.file
 
-  with utils.TempDirectory(options.out_dir, 'wasmdump-') as out_dir:
+  with utils.TempDirectory(options.out_dir, 'wasm-link-') as out_dir:
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
-    if options.spec:
-      out_file = os.path.join(out_dir, basename_noext + '.json')
-    else:
-      out_file = os.path.join(out_dir, basename_noext + '.wasm')
-    wast2wasm.RunWithArgs('-o', out_file, filename)
+    out_file = os.path.join(out_dir, basename_noext + '.json')
+    wast2wasm.RunWithArgs('--spec', '-c', '-o', out_file, filename)
 
-    if options.spec:
-      wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
-      wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
-    else:
-      wasm_files = [out_file]
+    wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
+    wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
 
-    for wasm_file in wasm_files:
-      wasmdump.RunWithArgs('-d', wasm_file)
+    output = os.path.join(out_dir, 'linked.wasm')
+    if options.incremental:
+      partialy_linked = output + '.partial'
+      for i, f in enumerate(wasm_files):
+        if i == 0:
+          wasm_link.RunWithArgs('-o', output, f)
+        else:
+          os.rename(output, partialy_linked)
+          wasm_link.RunWithArgs('-o', output, partialy_linked, f)
+        #wasmdump.RunWithArgs('-d', '-h', output)
+      wasmdump.RunWithArgs('-d', '-v', '-h', output)
+    else:
+      wasm_link.RunWithArgs('-o', output, *wasm_files)
+      wasmdump.RunWithArgs('-d', '-h', '-v', output)
 
 
 if __name__ == '__main__':

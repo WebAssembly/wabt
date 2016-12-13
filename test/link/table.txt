@@ -1,0 +1,58 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS:
+(module
+  (func $func1 (param i32))
+  (table anyfunc (elem $func1 $func1))
+)
+(module
+  (func $func2 (param i64))
+  (func $func3 (param f64))
+  (table anyfunc (elem $func3 $func2 $func2))
+)
+(;; STDOUT ;;;
+linked.wasm:	file format wasm 0x00000d
+
+Sections:
+     TYPE start=0x0000000a end=0x00000017 (size=0x0000000d) count: 3
+ FUNCTION start=0x0000001d end=0x00000021 (size=0x00000004) count: 3
+    TABLE start=0x00000023 end=0x00000028 (size=0x00000005) count: 1
+     ELEM start=0x0000002e end=0x0000004d (size=0x0000001f) count: 1
+     CODE start=0x0000004f end=0x00000059 (size=0x0000000a) count: 3
+   CUSTOM start=0x0000005f end=0x00000076 (size=0x00000017) "reloc.ELEM"
+
+Section Details:
+TYPE:
+ - [0] (i32) -> nil
+ - [1] (i64) -> nil
+ - [2] (f64) -> nil
+FUNCTION:
+ - func[0] sig=0
+ - func[1] sig=1
+ - func[2] sig=2
+TABLE:
+ - table[0] type=anyfunc initial=5 max=5
+ELEM:
+ - segment[0] table=0
+ - init i32=0
+  - func[0]
+  - func[0]
+  - func[2]
+  - func[1]
+  - func[1]
+CODE:
+ - func 0
+ - func 1
+ - func 2
+CUSTOM:
+ - name: "reloc.ELEM"
+  - RELOC_FUNC_INDEX     section=4 offset=0x6
+  - RELOC_FUNC_INDEX     section=4 offset=0xb
+  - RELOC_FUNC_INDEX     section=4 offset=0x10
+  - RELOC_FUNC_INDEX     section=4 offset=0x15
+  - RELOC_FUNC_INDEX     section=4 offset=0x1a
+
+Code Disassembly:
+func 0
+func 1
+func 2
+;;; STDOUT ;;)

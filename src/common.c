@@ -38,6 +38,12 @@ const char* g_wasm_kind_name[] = {"func", "table", "memory", "global"};
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_kind_name) ==
                    WASM_NUM_EXTERNAL_KINDS);
 
+const char* g_wasm_reloc_type_name[] = {
+    "RELOC_FUNC_INDEX", "RELOC_FUNC_INDEX_SLEB", "RELOC_TABLE_INDEX",
+    "RELOC_GLOBAL_INDEX", "RELOC_GLOBAL_TYPE_INDEX", "RELOC_DATA"};
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_reloc_type_name) ==
+                   WASM_NUM_RELOC_TYPES);
+
 WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
   uint32_t opcode_align = wasm_get_opcode_memory_size(opcode);
   return alignment == WASM_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
@@ -54,6 +60,22 @@ WasmStringSlice wasm_empty_string_slice(void) {
   result.start = "";
   result.length = 0;
   return result;
+}
+
+WasmBool wasm_string_slice_eq(WasmStringSlice* s1, const char* s2) {
+  size_t s2_len = strlen(s2);
+  if (s2_len != s1->length)
+    return WASM_FALSE;
+
+  return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
+}
+
+WasmBool wasm_string_slice_startswith(WasmStringSlice* s1, const char* s2) {
+  size_t s2_len = strlen(s2);
+  if (s2_len > s1->length)
+    return WASM_FALSE;
+
+  return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
 }
 
 WasmStringSlice wasm_string_slice_from_cstr(const char* string) {
@@ -86,7 +108,7 @@ WasmResult wasm_read_file(WasmAllocator* allocator,
                           size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
-    fprintf(stderr, "unable to read %s\n", filename);
+    fprintf(stderr, "unable to read file: %s\n", filename);
     return WASM_ERROR;
   }
 
@@ -196,6 +218,7 @@ void wasm_default_binary_error_callback(uint32_t offset,
     fprintf(out, "error: %s\n", error);
   else
     fprintf(out, "error: @0x%08x: %s\n", offset, error);
+  fflush(out);
 }
 
 void wasm_init_stdio() {

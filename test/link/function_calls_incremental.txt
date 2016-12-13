@@ -1,0 +1,86 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS: --incremental
+(module
+  (import "foo" "bar" (func (param i32) (result i32)))
+  (func (param i32)
+     get_local 0
+     call 0
+     call 1)
+)
+(module
+  (import "does" "nothing" (func (param f64)))
+  (func (param i64)
+     f64.const 1
+     call 0
+     i64.const 10
+     call 1)
+)
+(module
+  (import "hello" "world" (func (param f32)))
+  (func (param i32)
+     f32.const 1
+     call 0
+     i32.const 10
+     call 1)
+)
+(;; STDOUT ;;;
+linked.wasm:	file format wasm 0x00000d
+
+Sections:
+     TYPE start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
+   IMPORT start=0x00000026 end=0x0000005a (size=0x00000034) count: 3
+ FUNCTION start=0x00000060 end=0x00000064 (size=0x00000004) count: 3
+     CODE start=0x00000066 end=0x000000a8 (size=0x00000042) count: 3
+   CUSTOM start=0x000000ae end=0x000000c3 (size=0x00000015) "reloc.IMPORT"
+   CUSTOM start=0x000000c9 end=0x000000e2 (size=0x00000019) "reloc.CODE"
+
+Section Details:
+TYPE:
+ - [0] (i32) -> i32
+ - [1] (i32) -> nil
+ - [2] (f64) -> nil
+ - [3] (i64) -> nil
+ - [4] (f32) -> nil
+ - [5] (i32) -> nil
+IMPORT:
+ - func[0] sig=0 <- foo.bar
+ - func[1] sig=2 <- does.nothing
+ - func[2] sig=4 <- hello.world
+FUNCTION:
+ - func[3] sig=1
+ - func[4] sig=3
+ - func[5] sig=5
+CODE:
+ - func 0
+ - func 1
+ - func 2
+CUSTOM:
+ - name: "reloc.IMPORT"
+  - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0xa
+  - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0x1d
+  - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0x2f
+CUSTOM:
+ - name: "reloc.CODE"
+  - RELOC_FUNC_INDEX     section=4 offset=0x6
+  - RELOC_FUNC_INDEX     section=4 offset=0xc
+  - RELOC_FUNC_INDEX     section=4 offset=0x1e
+  - RELOC_FUNC_INDEX     section=4 offset=0x26
+  - RELOC_FUNC_INDEX     section=4 offset=0x34
+  - RELOC_FUNC_INDEX     section=4 offset=0x3c
+
+Code Disassembly:
+func 0
+ 000069: 20 00                      | get_local 0
+ 00006b: 10 80 80 80 80 00          | call 0
+ 000071: 10 83 80 80 80 00          | call 0x3
+func 1
+ 00007a: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
+ 000083: 10 81 80 80 80 00          | call 0x1
+ 000089: 42 0a                      | i64.const 10
+ 00008b: 10 84 80 80 80 00          | call 0x4
+func 2
+ 000094: 43 00 00 80 3f             | f32.const 0x1p+0
+ 000099: 10 82 80 80 80 00          | call 0x2
+ 00009f: 41 0a                      | i32.const 0xa
+ 0000a1: 10 85 80 80 80 00          | call 0x5
+;;; STDOUT ;;)

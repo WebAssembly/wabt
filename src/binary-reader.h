@@ -287,6 +287,13 @@ typedef struct WasmBinaryReader {
                               void* user_data);
   WasmResult (*end_names_section)(WasmBinaryReaderContext* ctx);
 
+  /* names section */
+  WasmResult (*begin_reloc_section)(WasmBinaryReaderContext* ctx,
+                                    uint32_t size);
+  WasmResult (*on_reloc_count)(uint32_t count, void* user_data);
+  WasmResult (*on_reloc)(WasmRelocType type, uint32_t section, uint32_t offset, void* user_data);
+  WasmResult (*end_reloc_section)(WasmBinaryReaderContext* ctx);
+
   /* init_expr - used by elem, data and global sections; these functions are
    * only called between calls to begin_*_init_expr and end_*_init_expr */
   WasmResult (*on_init_expr_f32_const_expr)(uint32_t index,
