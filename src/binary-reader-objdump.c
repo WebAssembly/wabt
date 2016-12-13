@@ -61,16 +61,10 @@ static void WASM_PRINTF_FORMAT(2, 3)
   va_end(args);
 }
 
-#define SEGSTART(segname, name)                                             \
-  static WasmResult begin_##segname##_section(WasmBinaryReaderContext* ctx, \
-                                              uint32_t size) {              \
-    return begin_section(ctx->user_data, name, ctx->offset, size);          \
-  }
-
-static WasmResult begin_section(Context* ctx,
-                                const char* name,
-                                size_t offset,
-                                size_t size) {
+static WasmResult do_begin_section(Context* ctx,
+                                   const char* name,
+                                   size_t offset,
+                                   size_t size) {
   switch (ctx->options->mode) {
     case WASM_DUMP_HEADERS:
       printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010" PRIzx
@@ -97,30 +91,23 @@ static WasmResult begin_section(Context* ctx,
   return WASM_OK;
 }
 
+static WasmResult begin_section(WasmBinaryReaderContext* ctx,
+                                WasmBinarySection type,
+                                uint32_t size) {
+  return do_begin_section(ctx->user_data, wasm_get_section_name(type),
+                          ctx->offset, size);
+}
+
 static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
                                        uint32_t size,
                                        WasmStringSlice section_name) {
   Context* context = ctx->user_data;
-  if (begin_section(context, "CUSTOM", ctx->offset, size))
-    return WASM_ERROR;
   print_details(context, " - name: \"" PRIstringslice "\"\n",
                 WASM_PRINTF_STRING_SLICE_ARG(section_name));
   if (context->options->mode == WASM_DUMP_HEADERS)
     printf("\"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
   return WASM_OK;
 }
-
-SEGSTART(signature, "TYPE")
-SEGSTART(import, "IMPORT")
-SEGSTART(function_signatures, "FUNCTION")
-SEGSTART(table, "TABLE")
-SEGSTART(memory, "MEMORY")
-SEGSTART(global, "GLOBAL")
-SEGSTART(export, "EXPORT")
-SEGSTART(start, "START")
-SEGSTART(function_bodies, "CODE")
-SEGSTART(elem, "ELEM")
-SEGSTART(data, "DATA")
 
 static WasmResult on_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
@@ -608,16 +595,16 @@ static WasmBinaryReader s_binary_reader = {
     .end_module = end_module,
     .on_error = on_error,
 
+    .begin_section = begin_section,
+
     // User section
     .begin_custom_section = begin_custom_section,
 
     // Signature section
-    .begin_signature_section = begin_signature_section,
     .on_signature_count = on_count,
     .on_signature = on_signature,
 
     // Import section
-    .begin_import_section = begin_import_section,
     .on_import_count = on_count,
     .on_import = on_import,
     .on_import_func = on_import_func,
@@ -626,46 +613,35 @@ static WasmBinaryReader s_binary_reader = {
     .on_import_global = on_import_global,
 
     // Function sigs section
-    .begin_function_signatures_section = begin_function_signatures_section,
     .on_function_signatures_count = on_count,
     .on_function_signature = on_function_signature,
 
     // Table section
-    .begin_table_section = begin_table_section,
     .on_table_count = on_count,
     .on_table = on_table,
 
     // Memory section
-    .begin_memory_section = begin_memory_section,
     .on_memory_count = on_count,
     .on_memory = on_memory,
 
     // Globl seciont
-    .begin_global_section = begin_global_section,
     .begin_global = begin_global,
     .on_global_count = on_count,
 
     // Export section
-    .begin_export_section = begin_export_section,
     .on_export_count = on_count,
     .on_export = on_export,
 
-    // Start section
-    .begin_start_section = begin_start_section,
-
     // Body section
-    .begin_function_bodies_section = begin_function_bodies_section,
     .on_function_bodies_count = on_count,
     .begin_function_body = begin_function_body,
 
     // Elems section
-    .begin_elem_section = begin_elem_section,
     .begin_elem_segment = begin_elem_segment,
     .on_elem_segment_count = on_count,
     .on_elem_segment_function_index = on_elem_segment_function_index,
 
     // Data section
-    .begin_data_section = begin_data_section,
     .begin_data_segment = begin_data_segment,
     .on_data_segment_data = on_data_segment_data,
     .on_data_segment_count = on_count,

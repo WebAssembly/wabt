@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: --headers -v --debug-names
+;;; FLAGS: --headers -v --debug-names --dump-verbose
 (module
   (import "bar" "foo" (func $foo)))
 (;; STDOUT ;;;
