@@ -108,10 +108,10 @@ uint32_t wasm_write_fixed_u32_leb128_at(WasmStream* stream,
                                         uint32_t value,
                                         const char* desc) {
   uint8_t data[MAX_U32_LEB128_BYTES];
-  uint32_t rtn =
+  uint32_t length =
       wasm_write_fixed_u32_leb128_raw(data, data + MAX_U32_LEB128_BYTES, value);
-  wasm_write_data_at(stream, offset, data, rtn, WASM_DONT_PRINT_CHARS, desc);
-  return rtn;
+  wasm_write_data_at(stream, offset, data, length, WASM_DONT_PRINT_CHARS, desc);
+  return length;
 }
 
 void wasm_write_u32_leb128(WasmStream* stream,
