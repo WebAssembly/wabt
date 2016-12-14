@@ -18,13 +18,13 @@
 #define WASM_BINARY_WRITER_H_
 
 #include "common.h"
-#include "stream.h"
 
 struct WasmAllocator;
 struct WasmModule;
 struct WasmScript;
 struct WasmWriter;
 struct WasmStream;
+enum WasmPrintChars;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
   { NULL, WASM_TRUE, WASM_FALSE, WASM_FALSE }
@@ -73,12 +73,12 @@ void wasm_write_type(struct WasmStream* stream, WasmType type);
 void wasm_write_str(struct WasmStream* stream,
                     const char* s,
                     size_t length,
-                    WasmPrintChars print_chars,
+                    enum WasmPrintChars print_chars,
                     const char* desc);
 
-void wasm_write_opcode(WasmStream* stream, uint8_t opcode);
+void wasm_write_opcode(struct WasmStream* stream, uint8_t opcode);
 
-void wasm_write_limits(WasmStream* stream, const WasmLimits* limits);
+void wasm_write_limits(struct WasmStream* stream, const WasmLimits* limits);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_WRITER_H_ */
