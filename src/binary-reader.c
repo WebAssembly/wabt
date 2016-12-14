@@ -692,7 +692,9 @@ LOGGING_UINT32(on_elem_segment_count)
 LOGGING_UINT32_UINT32(begin_elem_segment, "index", "table_index")
 LOGGING_UINT32(begin_elem_segment_init_expr)
 LOGGING_UINT32(end_elem_segment_init_expr)
-LOGGING_UINT32_UINT32_CTX(on_elem_segment_function_index_count, "index", "count")
+LOGGING_UINT32_UINT32_CTX(on_elem_segment_function_index_count,
+                          "index",
+                          "count")
 LOGGING_UINT32_UINT32(on_elem_segment_function_index, "index", "func_index")
 LOGGING_UINT32(end_elem_segment)
 LOGGING_END(elem_section)

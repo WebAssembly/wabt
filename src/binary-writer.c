@@ -77,7 +77,6 @@ static void write_header(Context* ctx, const char* name, int index) {
     }                               \
   } while (1)
 
-
 /* returns the length of the leb128 */
 uint32_t wasm_write_u32_leb128_at(WasmStream* stream,
                                   uint32_t offset,
@@ -109,7 +108,8 @@ uint32_t wasm_write_fixed_u32_leb128_at(WasmStream* stream,
                                         uint32_t value,
                                         const char* desc) {
   uint8_t data[MAX_U32_LEB128_BYTES];
-  uint32_t rtn = wasm_write_fixed_u32_leb128_raw(data, data+MAX_U32_LEB128_BYTES, value);
+  uint32_t rtn =
+      wasm_write_fixed_u32_leb128_raw(data, data + MAX_U32_LEB128_BYTES, value);
   wasm_write_data_at(stream, offset, data, rtn, WASM_DONT_PRINT_CHARS, desc);
   return rtn;
 }
@@ -117,14 +117,16 @@ uint32_t wasm_write_fixed_u32_leb128_at(WasmStream* stream,
 void wasm_write_u32_leb128(WasmStream* stream,
                            uint32_t value,
                            const char* desc) {
-  uint32_t length = wasm_write_u32_leb128_at(stream, stream->offset, value, desc);
+  uint32_t length =
+      wasm_write_u32_leb128_at(stream, stream->offset, value, desc);
   stream->offset += length;
 }
 
 void wasm_write_fixed_u32_leb128(WasmStream* stream,
                                  uint32_t value,
                                  const char* desc) {
-  uint32_t length = wasm_write_fixed_u32_leb128_at(stream, stream->offset, value, desc);
+  uint32_t length =
+      wasm_write_fixed_u32_leb128_at(stream, stream->offset, value, desc);
   stream->offset += length;
 }
 
@@ -205,10 +207,10 @@ static void write_fixup_u32_leb128_size(Context* ctx,
 }
 
 void wasm_write_str(WasmStream* stream,
-                           const char* s,
-                           size_t length,
-                           WasmPrintChars print_chars,
-                           const char* desc) {
+                    const char* s,
+                    size_t length,
+                    WasmPrintChars print_chars,
+                    const char* desc) {
   wasm_write_u32_leb128(stream, length, "string length");
   wasm_write_data_at(stream, stream->offset, s, length, print_chars, desc);
   stream->offset += length;
@@ -409,7 +411,7 @@ static void write_expr(Context* ctx,
           wasm_get_opcode_alignment(expr->load.opcode, expr->load.align);
       wasm_write_u8(&ctx->stream, log2_u32(align), "alignment");
       wasm_write_u32_leb128(&ctx->stream, (uint32_t)expr->load.offset,
-                       "load offset");
+                            "load offset");
       break;
     }
     case WASM_EXPR_TYPE_LOOP:
@@ -445,7 +447,7 @@ static void write_expr(Context* ctx,
           wasm_get_opcode_alignment(expr->store.opcode, expr->store.align);
       wasm_write_u8(&ctx->stream, log2_u32(align), "alignment");
       wasm_write_u32_leb128(&ctx->stream, (uint32_t)expr->store.offset,
-                       "store offset");
+                            "store offset");
       break;
     }
     case WASM_EXPR_TYPE_TEE_LOCAL: {
@@ -604,8 +606,8 @@ static void write_module(Context* ctx, const WasmModule* module) {
       switch (import->kind) {
         case WASM_EXTERNAL_KIND_FUNC:
           wasm_write_u32_leb128(&ctx->stream, wasm_get_func_type_index_by_decl(
-                                             module, &import->func.decl),
-                           "import signature index");
+                                                  module, &import->func.decl),
+                                "import signature index");
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           write_table(ctx, &import->table);
@@ -635,9 +637,9 @@ static void write_module(Context* ctx, const WasmModule* module) {
       char desc[100];
       wasm_snprintf(desc, sizeof(desc), "function %" PRIzd " signature index",
                     i);
-      wasm_write_u32_leb128(&ctx->stream,
-                       wasm_get_func_type_index_by_decl(module, &func->decl),
-                       desc);
+      wasm_write_u32_leb128(
+          &ctx->stream, wasm_get_func_type_index_by_decl(module, &func->decl),
+          desc);
     }
     end_section(ctx);
   }
