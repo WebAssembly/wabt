@@ -470,7 +470,7 @@ static WasmBool skip_until_section(Context* ctx,
   }
 
   if (ctx->section_end != ctx->data_size && ctx->offset != ctx->section_end) {
-    RAISE_ERROR("unfinished section (expected end: 0x%" PRIx64 ")",
+    RAISE_ERROR("unfinished section (expected end: 0x%" PRIzx ")",
                 ctx->section_end);
   }
 
