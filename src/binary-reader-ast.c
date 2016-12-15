@@ -1163,5 +1163,7 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
   WasmResult result =
       wasm_read_binary(allocator, data, size, &reader, 1, options);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, ctx.label_stack, label_node);
+  if (WASM_FAILED(result))
+    wasm_destroy_module(allocator, out_module);
   return result;
 }

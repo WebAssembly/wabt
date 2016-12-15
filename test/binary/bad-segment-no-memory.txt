@@ -9,6 +9,6 @@ section(DATA) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000000a: data section without memory section
+error: @0x0000000b: data section without memory section
 
 ;;; STDERR ;;)

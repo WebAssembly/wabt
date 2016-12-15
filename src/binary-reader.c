@@ -1914,7 +1914,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_SECTION(begin_memory_section);
     uint32_t i;
     in_u32_leb128(ctx, &ctx->num_memories, "memory count");
-    RAISE_ERROR_UNLESS(ctx->num_memories, "memory count must be 0 or 1");
+    RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
     CALLBACK(on_memory_count, ctx->num_memories);
     for (i = 0; i < ctx->num_memories; ++i) {
       WasmLimits page_limits;
@@ -1999,12 +1999,12 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* elem */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM, &section_size)) {
-    RAISE_ERROR_UNLESS(num_total_tables(ctx) > 0,
-                       "elem section without table section");
     CALLBACK_SECTION(begin_elem_section);
     uint32_t i, num_elem_segments;
     in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
     CALLBACK(on_elem_segment_count, num_elem_segments);
+    RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
+                       "elem section without table section");
     for (i = 0; i < num_elem_segments; ++i) {
       uint32_t table_index;
       in_u32_leb128(ctx, &table_index, "elem segment table index");
@@ -2073,12 +2073,12 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* data */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_DATA, &section_size)) {
-    RAISE_ERROR_UNLESS(num_total_memories(ctx) > 0,
-                       "data section without memory section");
     CALLBACK_SECTION(begin_data_section);
     uint32_t i, num_data_segments;
     in_u32_leb128(ctx, &num_data_segments, "data segment count");
     CALLBACK(on_data_segment_count, num_data_segments);
+    RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
+                       "data section without memory section");
     for (i = 0; i < num_data_segments; ++i) {
       uint32_t memory_index;
       in_u32_leb128(ctx, &memory_index, "data segment memory index");

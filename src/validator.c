@@ -565,6 +565,15 @@ static void check_block(Context* ctx,
   ctx->type_stack.size = ctx->top_label->type_stack_limit;
 }
 
+static void check_has_memory(Context* ctx,
+                             const WasmLocation* loc,
+                             WasmOpcode opcode) {
+  if (ctx->current_module->memories.size == 0) {
+    print_error(ctx, loc, "%s requires an imported or defined memory.",
+                wasm_get_opcode_name(opcode));
+  }
+}
+
 static void check_expr(Context* ctx, const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
@@ -663,6 +672,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
+      check_has_memory(ctx, &expr->loc, WASM_OPCODE_GROW_MEMORY);
       check_opcode1(ctx, &expr->loc, WASM_OPCODE_GROW_MEMORY);
       break;
 
@@ -678,6 +688,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_LOAD:
+      check_has_memory(ctx, &expr->loc, expr->load.opcode);
       check_align(ctx, &expr->loc, expr->load.align,
                   get_opcode_natural_alignment(expr->load.opcode));
       check_offset(ctx, &expr->loc, expr->load.offset);
@@ -694,6 +705,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
+      check_has_memory(ctx, &expr->loc, WASM_OPCODE_CURRENT_MEMORY);
       push_type(ctx, WASM_TYPE_I32);
       break;
 
@@ -739,6 +751,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_STORE:
+      check_has_memory(ctx, &expr->loc, expr->store.opcode);
       check_align(ctx, &expr->loc, expr->store.align,
                   get_opcode_natural_alignment(expr->store.opcode));
       check_offset(ctx, &expr->loc, expr->store.offset);
