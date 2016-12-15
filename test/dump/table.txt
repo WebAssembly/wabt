@@ -45,9 +45,9 @@
 0000020: 01                                        ; num tables
 ; table 0
 0000021: 70                                        ; anyfunc
-0000022: 01                                        ; table flags
-0000023: 04                                        ; table initial elems
-0000024: 04                                        ; table max elems
+0000022: 01                                        ; limits: flags
+0000023: 04                                        ; limits: initial
+0000024: 04                                        ; limits: max
 000001f: 05                                        ; FIXUP section size
 ; section "ELEM" (9)
 0000025: 09                                        ; section code

@@ -39,8 +39,8 @@
 0000016: 00                                        ; section size (guess)
 0000017: 01                                        ; num memories
 ; memory 0
-0000018: 00                                        ; memory flags
-0000019: 01                                        ; memory initial pages
+0000018: 00                                        ; limits: flags
+0000019: 01                                        ; limits: initial
 0000016: 03                                        ; FIXUP section size
 ; section "EXPORT" (7)
 000001a: 07                                        ; section code

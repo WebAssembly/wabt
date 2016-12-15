@@ -72,17 +72,17 @@
 0000042: 01                                        ; num tables
 ; table 0
 0000043: 70                                        ; anyfunc
-0000044: 01                                        ; table flags
-0000045: 02                                        ; table initial elems
-0000046: 02                                        ; table max elems
+0000044: 01                                        ; limits: flags
+0000045: 02                                        ; limits: initial
+0000046: 02                                        ; limits: max
 000003d: 8580 8080 00                              ; FIXUP section size
 ; section "MEMORY" (5)
 0000047: 05                                        ; section code
 0000048: 0000 0000 00                              ; section size (guess)
 000004d: 01                                        ; num memories
 ; memory 0
-000004e: 00                                        ; memory flags
-000004f: 64                                        ; memory initial pages
+000004e: 00                                        ; limits: flags
+000004f: 64                                        ; limits: initial
 0000048: 8380 8080 00                              ; FIXUP section size
 ; section "EXPORT" (7)
 0000050: 07                                        ; section code

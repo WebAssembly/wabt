@@ -28,8 +28,8 @@
 0000014: 00                                        ; section size (guess)
 0000015: 01                                        ; num memories
 ; memory 0
-0000016: 00                                        ; memory flags
-0000017: 01                                        ; memory initial pages
+0000016: 00                                        ; limits: flags
+0000017: 01                                        ; limits: initial
 0000014: 03                                        ; FIXUP section size
 ; section "CODE" (10)
 0000018: 0a                                        ; section code
