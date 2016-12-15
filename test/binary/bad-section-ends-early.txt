@@ -1,0 +1,20 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section_code[TYPE]
+section_len[5]
+count[0]
+dummy[0]
+dummy[0]
+dummy[0]
+dummy[0]
+dummy[0]
+dummy[0]
+dummy[0]
+dummy[0]
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x0000000b: unfinished section (expected end: 0xf)
+
+;;; STDERR ;;)

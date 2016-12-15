@@ -469,6 +469,11 @@ static WasmBool skip_until_section(Context* ctx,
     return WASM_FALSE;
   }
 
+  if (ctx->section_end != ctx->data_size && ctx->offset != ctx->section_end) {
+    RAISE_ERROR("unfinished section (expected end: 0x%" PRIzx ")",
+                ctx->section_end);
+  }
+
   /* Reset section_end to the full data size so the next section can be read. */
   ctx->section_end = ctx->data_size;
 
@@ -503,6 +508,7 @@ static WasmBool skip_until_section(Context* ctx,
     } else {
       /* ok, future section. Reset the offset. */
       ctx->offset = section_start_offset;
+      ctx->section_end = ctx->data_size;
       return WASM_FALSE;
     }
   }
