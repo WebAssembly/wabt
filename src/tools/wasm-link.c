@@ -49,7 +49,7 @@ WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
 
 typedef const char* String;
-WASM_DEFINE_VECTOR(filename, String);
+WASM_DEFINE_VECTOR(string, String);
 
 static WasmBool s_verbose;
 static const char* s_outfile = "a.wasm";
@@ -80,7 +80,7 @@ static void on_option(struct WasmOptionParser* parser,
 }
 
 static void on_argument(struct WasmOptionParser* parser, const char* argument) {
-  *wasm_append_filename(s_allocator, &s_infiles) = argument;
+  *wasm_append_string(s_allocator, &s_infiles) = argument;
 }
 
 static void on_option_error(struct WasmOptionParser* parser,
@@ -187,6 +187,22 @@ typedef struct Context {
   uint32_t total_global_imports;
   ssize_t current_section_payload_offset;
 } Context;
+
+void wasm_destroy_section(WasmAllocator* allocator, Section* section) {
+  wasm_destroy_reloc_vector(allocator, &section->relocations);
+  switch (section->type) {
+    case WASM_BINARY_SECTION_DATA:
+      wasm_destroy_data_segment_vector(allocator, &section->data_segments);
+      break;
+    default:
+      break;
+  }
+}
+
+void wasm_destroy_binary(WasmAllocator* allocator, InputBinary* binary) {
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, binary->sections, section);
+  wasm_free(allocator, binary->data);
+}
 
 static WasmResult on_reloc(WasmRelocType type,
                            uint32_t section,
@@ -826,6 +842,10 @@ static void write_binary(Context* ctx) {
   for (i = 1; i < WASM_NUM_BINARY_SECTIONS; i++) {
     write_combined_reloc_section(ctx, i, &sections[i], section_indices[i]);
   }
+
+  for (i = 0; i < WASM_NUM_BINARY_SECTIONS; i++) {
+    wasm_destroy_section_ptr_vector(s_allocator, &sections[i]);
+  }
 }
 
 static WasmResult perform_link(Context* ctx) {
@@ -878,6 +898,10 @@ int main(int argc, char** argv) {
   result = perform_link(&context);
   if (WASM_FAILED(result))
     exit(1);
+
+  // Cleanup
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(s_allocator, context.inputs, binary);
+  wasm_destroy_string_vector(s_allocator, &s_infiles);
 
   wasm_print_allocator_stats(s_allocator);
   wasm_destroy_allocator(s_allocator);
