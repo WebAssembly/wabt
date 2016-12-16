@@ -105,22 +105,23 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
 
-#define V(NAME, code) [code] = #NAME,
+#define V(NAME, name, code) [code] = #NAME,
 static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
 #undef V
 
 typedef struct Context {
+  WasmAllocator* allocator;
   const uint8_t* data;
   size_t data_size;
-  size_t section_end;
   size_t offset;
+  size_t read_end; /* Either the section end or data_size. */
   WasmBinaryReaderContext user_ctx;
   WasmBinaryReader* reader;
   jmp_buf error_jmp_buf;
   WasmTypeVector param_types;
   Uint32Vector target_depths;
   const WasmReadBinaryOptions* options;
-  WasmBool name_section_ok;
+  WasmBinarySection last_section_code;
   uint32_t num_signatures;
   uint32_t num_imports;
   uint32_t num_func_imports;
@@ -158,7 +159,7 @@ static void WASM_PRINTF_FORMAT(2, 3)
 }
 
 #define IN_SIZE(type)                                       \
-  if (ctx->offset + sizeof(type) > ctx->section_end) {      \
+  if (ctx->offset + sizeof(type) > ctx->read_end) {         \
     RAISE_ERROR("unable to read " #type ": %s", desc);      \
   }                                                         \
   memcpy(out_value, ctx->data + ctx->offset, sizeof(type)); \
@@ -230,7 +231,7 @@ size_t wasm_read_u32_leb128(const uint8_t* p,
 
 static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->section_end;
+  const uint8_t* end = ctx->data + ctx->read_end;
   size_t bytes_read = wasm_read_u32_leb128(p, end, out_value);
   if (!bytes_read)
     RAISE_ERROR("unable to read u32 leb128: %s", desc);
@@ -275,7 +276,7 @@ size_t wasm_read_i32_leb128(const uint8_t* p,
 
 static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->section_end;
+  const uint8_t* end = ctx->data + ctx->read_end;
   size_t bytes_read = wasm_read_i32_leb128(p, end, out_value);
   if (!bytes_read)
     RAISE_ERROR("unable to read i32 leb128: %s", desc);
@@ -284,7 +285,7 @@ static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
 
 static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->section_end;
+  const uint8_t* end = ctx->data + ctx->read_end;
 
   if (p < end && (p[0] & 0x80) == 0) {
     uint64_t result = LEB128_1(uint64_t);
@@ -366,7 +367,7 @@ static void in_str(Context* ctx, WasmStringSlice* out_str, const char* desc) {
   uint32_t str_len = 0;
   in_u32_leb128(ctx, &str_len, "string length");
 
-  if (ctx->offset + str_len > ctx->section_end)
+  if (ctx->offset + str_len > ctx->read_end)
     RAISE_ERROR("unable to read string: %s", desc);
 
   out_str->start = (const char*)ctx->data + ctx->offset;
@@ -381,7 +382,7 @@ static void in_bytes(Context* ctx,
   uint32_t data_size = 0;
   in_u32_leb128(ctx, &data_size, "data size");
 
-  if (ctx->offset + data_size > ctx->section_end)
+  if (ctx->offset + data_size > ctx->read_end)
     RAISE_ERROR("unable to read data: %s", desc);
 
   *out_data = (const uint8_t*)ctx->data + ctx->offset;
@@ -426,97 +427,9 @@ static uint32_t num_total_globals(Context* ctx) {
   return ctx->num_global_imports + ctx->num_globals;
 }
 
-static void handle_custom_section(Context* ctx,
-                                  WasmStringSlice* section_name,
-                                  uint32_t section_size) {
-  CALLBACK_CTX(begin_custom_section, section_size, *section_name);
-  if (ctx->options->read_debug_names && ctx->name_section_ok &&
-      strncmp(section_name->start, WASM_BINARY_SECTION_NAME,
-              section_name->length) == 0) {
-    CALLBACK_SECTION(begin_names_section);
-    uint32_t i, num_functions;
-    in_u32_leb128(ctx, &num_functions, "function name count");
-    RAISE_ERROR_UNLESS(num_functions <= num_total_funcs(ctx),
-                       "function name count > function signature count");
-    CALLBACK(on_function_names_count, num_functions);
-    for (i = 0; i < num_functions; ++i) {
-      WasmStringSlice function_name;
-      in_str(ctx, &function_name, "function name");
-      CALLBACK(on_function_name, i, function_name);
-
-      uint32_t num_locals;
-      in_u32_leb128(ctx, &num_locals, "local name count");
-      CALLBACK(on_local_names_count, i, num_locals);
-      uint32_t j;
-      for (j = 0; j < num_locals; ++j) {
-        WasmStringSlice local_name;
-        in_str(ctx, &local_name, "local name");
-        CALLBACK(on_local_name, i, j, local_name);
-      }
-    }
-    CALLBACK0(end_names_section);
-  }
-  CALLBACK_CTX0(end_custom_section);
-}
-
-static WasmBool skip_until_section(Context* ctx,
-                                   WasmBinarySection expected_code,
-                                   uint32_t* section_size) {
-  uint32_t section_start_offset = ctx->offset;
-  uint32_t section_code;
-  if (ctx->offset == ctx->data_size) {
-    /* ok, no more sections */
-    return WASM_FALSE;
-  }
-
-  if (ctx->section_end != ctx->data_size && ctx->offset != ctx->section_end) {
-    RAISE_ERROR("unfinished section (expected end: 0x%" PRIzx ")",
-                ctx->section_end);
-  }
-
-  /* Reset section_end to the full data size so the next section can be read. */
-  ctx->section_end = ctx->data_size;
-
-  in_u32_leb128(ctx, &section_code, "section code");
-  in_u32_leb128(ctx, section_size, "section size");
-
-  ctx->section_end = ctx->offset + *section_size;
-
-  if (ctx->section_end > ctx->data_size)
-    RAISE_ERROR("invalid section size: extends past end");
-
-  if (section_code == WASM_BINARY_SECTION_CUSTOM) {
-    CALLBACK_CTX(begin_section, section_code, *section_size);
-    WasmStringSlice section_name;
-    in_str(ctx, &section_name, "section name");
-    handle_custom_section(ctx, &section_name, *section_size);
-    ctx->offset = ctx->section_end;
-    return skip_until_section(ctx, expected_code, section_size);
-  } else {
-    /* section is known, check if it is valid. */
-    if (section_code >= WASM_NUM_BINARY_SECTIONS) {
-      RAISE_ERROR("invalid section code: %u; max is %u", section_code,
-                  WASM_NUM_BINARY_SECTIONS - 1);
-    }
-
-    if (section_code == expected_code) {
-      CALLBACK_CTX(begin_section, section_code, *section_size);
-      return WASM_TRUE;
-    } else if (section_code < expected_code) {
-      RAISE_ERROR("section %s out of order", s_section_name[section_code]);
-      return WASM_FALSE;
-    } else {
-      /* ok, future section. Reset the offset. */
-      ctx->offset = section_start_offset;
-      ctx->section_end = ctx->data_size;
-      return WASM_FALSE;
-    }
-  }
-}
-
-static void destroy_context(WasmAllocator* allocator, Context* ctx) {
-  wasm_destroy_type_vector(allocator, &ctx->param_types);
-  wasm_destroy_uint32_vector(allocator, &ctx->target_depths);
+static void destroy_context(Context* ctx) {
+  wasm_destroy_type_vector(ctx->allocator, &ctx->param_types);
+  wasm_destroy_uint32_vector(ctx->allocator, &ctx->target_depths);
 }
 
 /* Logging */
@@ -1298,9 +1211,7 @@ static void read_global_header(Context* ctx,
   *out_mutable = mutable_;
 }
 
-static void read_function_body(Context* ctx,
-                               WasmAllocator* allocator,
-                               uint32_t end_offset) {
+static void read_function_body(Context* ctx, uint32_t end_offset) {
   WasmBool seen_end_opcode = WASM_FALSE;
   while (ctx->offset < end_offset) {
     uint8_t opcode;
@@ -1375,7 +1286,8 @@ static void read_function_body(Context* ctx,
         uint32_t num_targets;
         in_u32_leb128(ctx, &num_targets, "br_table target count");
         if (num_targets > ctx->target_depths.capacity) {
-          wasm_reserve_uint32s(allocator, &ctx->target_depths, num_targets);
+          wasm_reserve_uint32s(ctx->allocator, &ctx->target_depths,
+                               num_targets);
           ctx->target_depths.size = num_targets;
         }
 
@@ -1724,6 +1636,397 @@ static void read_function_body(Context* ctx,
   RAISE_ERROR_UNLESS(seen_end_opcode, "function body must end with END opcode");
 }
 
+static void read_custom_section(Context* ctx, uint32_t section_size) {
+  WasmStringSlice section_name;
+  in_str(ctx, &section_name, "section name");
+  CALLBACK_CTX(begin_custom_section, section_size, section_name);
+
+  WasmBool name_section_ok =
+      ctx->last_section_code >= WASM_BINARY_SECTION_IMPORT;
+  if (ctx->options->read_debug_names && name_section_ok &&
+      strncmp(section_name.start, WASM_BINARY_SECTION_NAME,
+              section_name.length) == 0) {
+    CALLBACK_SECTION(begin_names_section);
+    uint32_t i, num_functions;
+    in_u32_leb128(ctx, &num_functions, "function name count");
+    RAISE_ERROR_UNLESS(num_functions <= num_total_funcs(ctx),
+                       "function name count > function signature count");
+    CALLBACK(on_function_names_count, num_functions);
+    for (i = 0; i < num_functions; ++i) {
+      WasmStringSlice function_name;
+      in_str(ctx, &function_name, "function name");
+      CALLBACK(on_function_name, i, function_name);
+
+      uint32_t num_locals;
+      in_u32_leb128(ctx, &num_locals, "local name count");
+      CALLBACK(on_local_names_count, i, num_locals);
+      uint32_t j;
+      for (j = 0; j < num_locals; ++j) {
+        WasmStringSlice local_name;
+        in_str(ctx, &local_name, "local name");
+        CALLBACK(on_local_name, i, j, local_name);
+      }
+    }
+    CALLBACK0(end_names_section);
+  } else {
+    /* This is an unknown custom section, skip it. */
+    ctx->offset = ctx->read_end;
+  }
+  CALLBACK_CTX0(end_custom_section);
+}
+
+static void read_type_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_signature_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_signatures, "type count");
+  CALLBACK(on_signature_count, ctx->num_signatures);
+
+  for (i = 0; i < ctx->num_signatures; ++i) {
+    WasmType form;
+    in_type(ctx, &form, "type form");
+    RAISE_ERROR_UNLESS(form == WASM_TYPE_FUNC, "unexpected type form");
+
+    uint32_t num_params;
+    in_u32_leb128(ctx, &num_params, "function param count");
+
+    if (num_params > ctx->param_types.capacity)
+      wasm_reserve_types(ctx->allocator, &ctx->param_types, num_params);
+
+    uint32_t j;
+    for (j = 0; j < num_params; ++j) {
+      WasmType param_type;
+      in_type(ctx, &param_type, "function param type");
+      RAISE_ERROR_UNLESS(is_concrete_type(param_type),
+                         "expected valid param type");
+      ctx->param_types.data[j] = param_type;
+    }
+
+    uint32_t num_results;
+    in_u32_leb128(ctx, &num_results, "function result count");
+    RAISE_ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
+
+    WasmType result_type = WASM_TYPE_VOID;
+    if (num_results) {
+      in_type(ctx, &result_type, "function result type");
+      RAISE_ERROR_UNLESS(is_concrete_type(result_type),
+                         "expected valid result type");
+    }
+
+    CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
+             &result_type);
+  }
+  CALLBACK_CTX0(end_signature_section);
+}
+
+static void read_import_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_import_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_imports, "import count");
+  CALLBACK(on_import_count, ctx->num_imports);
+  for (i = 0; i < ctx->num_imports; ++i) {
+    WasmStringSlice module_name;
+    in_str(ctx, &module_name, "import module name");
+    WasmStringSlice field_name;
+    in_str(ctx, &field_name, "import field name");
+    CALLBACK(on_import, i, module_name, field_name);
+
+    uint32_t kind;
+    in_u32_leb128(ctx, &kind, "import kind");
+    switch (kind) {
+      case WASM_EXTERNAL_KIND_FUNC: {
+        uint32_t sig_index;
+        in_u32_leb128(ctx, &sig_index, "import signature index");
+        RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
+                           "invalid import signature index");
+        CALLBACK(on_import_func, i, sig_index);
+        ctx->num_func_imports++;
+        break;
+      }
+
+      case WASM_EXTERNAL_KIND_TABLE: {
+        WasmType elem_type;
+        WasmLimits elem_limits;
+        read_table(ctx, &elem_type, &elem_limits);
+        CALLBACK(on_import_table, i, elem_type, &elem_limits);
+        ctx->num_table_imports++;
+        break;
+      }
+
+      case WASM_EXTERNAL_KIND_MEMORY: {
+        WasmLimits page_limits;
+        read_memory(ctx, &page_limits);
+        CALLBACK(on_import_memory, i, &page_limits);
+        ctx->num_memory_imports++;
+        break;
+      }
+
+      case WASM_EXTERNAL_KIND_GLOBAL: {
+        WasmType type;
+        WasmBool mutable_;
+        read_global_header(ctx, &type, &mutable_);
+        CALLBACK(on_import_global, i, type, mutable_);
+        ctx->num_global_imports++;
+        break;
+      }
+
+      default:
+        RAISE_ERROR("invalid import kind: %d", kind);
+    }
+  }
+  CALLBACK_CTX0(end_import_section);
+}
+
+static void read_function_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_function_signatures_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_function_signatures, "function signature count");
+  CALLBACK(on_function_signatures_count, ctx->num_function_signatures);
+  for (i = 0; i < ctx->num_function_signatures; ++i) {
+    uint32_t sig_index;
+    in_u32_leb128(ctx, &sig_index, "function signature index");
+    RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
+                       "invalid function signature index: %d", sig_index);
+    CALLBACK(on_function_signature, i, sig_index);
+  }
+  CALLBACK_CTX0(end_function_signatures_section);
+}
+
+static void read_table_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_table_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_tables, "table count");
+  RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
+                     ctx->num_tables);
+  CALLBACK(on_table_count, ctx->num_tables);
+  for (i = 0; i < ctx->num_tables; ++i) {
+    WasmType elem_type;
+    WasmLimits elem_limits;
+    read_table(ctx, &elem_type, &elem_limits);
+    CALLBACK(on_table, i, elem_type, &elem_limits);
+  }
+  CALLBACK_CTX0(end_table_section);
+}
+
+static void read_memory_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_memory_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_memories, "memory count");
+  RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
+  CALLBACK(on_memory_count, ctx->num_memories);
+  for (i = 0; i < ctx->num_memories; ++i) {
+    WasmLimits page_limits;
+    read_memory(ctx, &page_limits);
+    CALLBACK(on_memory, i, &page_limits);
+  }
+  CALLBACK_CTX0(end_memory_section);
+}
+
+static void read_global_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_global_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_globals, "global count");
+  CALLBACK(on_global_count, ctx->num_globals);
+  for (i = 0; i < ctx->num_globals; ++i) {
+    WasmType global_type;
+    WasmBool mutable_;
+    read_global_header(ctx, &global_type, &mutable_);
+    CALLBACK(begin_global, i, global_type, mutable_);
+    CALLBACK(begin_global_init_expr, i);
+    read_init_expr(ctx, i);
+    CALLBACK(end_global_init_expr, i);
+    CALLBACK(end_global, i);
+  }
+  CALLBACK_CTX0(end_global_section);
+}
+
+static void read_export_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_export_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_exports, "export count");
+  CALLBACK(on_export_count, ctx->num_exports);
+  for (i = 0; i < ctx->num_exports; ++i) {
+    WasmStringSlice name;
+    in_str(ctx, &name, "export item name");
+
+    uint8_t external_kind;
+    in_u8(ctx, &external_kind, "export external kind");
+    RAISE_ERROR_UNLESS(is_valid_external_kind(external_kind),
+                       "invalid export external kind");
+
+    uint32_t item_index;
+    in_u32_leb128(ctx, &item_index, "export item index");
+    switch (external_kind) {
+      case WASM_EXTERNAL_KIND_FUNC:
+        RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
+                           "invalid export func index");
+        break;
+      case WASM_EXTERNAL_KIND_TABLE:
+        RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
+                           "invalid export table index");
+        break;
+      case WASM_EXTERNAL_KIND_MEMORY:
+        RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
+                           "invalid export memory index");
+        break;
+      case WASM_EXTERNAL_KIND_GLOBAL:
+        RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
+                           "invalid export global index");
+        break;
+      case WASM_NUM_EXTERNAL_KINDS:
+        assert(0);
+        break;
+    }
+
+    CALLBACK(on_export, i, external_kind, item_index, name);
+  }
+  CALLBACK_CTX0(end_export_section);
+}
+
+static void read_start_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_start_section);
+  uint32_t func_index;
+  in_u32_leb128(ctx, &func_index, "start function index");
+  RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
+                     "invalid start function index");
+  CALLBACK(on_start_function, func_index);
+  CALLBACK_CTX0(end_start_section);
+}
+
+static void read_elem_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_elem_section);
+  uint32_t i, num_elem_segments;
+  in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
+  CALLBACK(on_elem_segment_count, num_elem_segments);
+  RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
+                     "elem section without table section");
+  for (i = 0; i < num_elem_segments; ++i) {
+    uint32_t table_index;
+    in_u32_leb128(ctx, &table_index, "elem segment table index");
+    CALLBACK(begin_elem_segment, i, table_index);
+    CALLBACK(begin_elem_segment_init_expr, i);
+    read_init_expr(ctx, i);
+    CALLBACK(end_elem_segment_init_expr, i);
+
+    uint32_t j, num_function_indexes;
+    in_u32_leb128(ctx, &num_function_indexes,
+                  "elem segment function index count");
+    CALLBACK_CTX(on_elem_segment_function_index_count, i, num_function_indexes);
+    for (j = 0; j < num_function_indexes; ++j) {
+      uint32_t func_index;
+      in_u32_leb128(ctx, &func_index, "elem segment function index");
+      CALLBACK(on_elem_segment_function_index, i, func_index);
+    }
+    CALLBACK(end_elem_segment, i);
+  }
+  CALLBACK_CTX0(end_elem_section);
+}
+
+static void read_code_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_function_bodies_section);
+  uint32_t i;
+  in_u32_leb128(ctx, &ctx->num_function_bodies, "function body count");
+  RAISE_ERROR_UNLESS(ctx->num_function_signatures == ctx->num_function_bodies,
+                     "function signature count != function body count");
+  CALLBACK(on_function_bodies_count, ctx->num_function_bodies);
+  for (i = 0; i < ctx->num_function_bodies; ++i) {
+    uint32_t func_offset = ctx->offset;
+    ctx->offset = func_offset;
+    CALLBACK(begin_function_body, i);
+    uint32_t body_size;
+    in_u32_leb128(ctx, &body_size, "function body size");
+    uint32_t body_start_offset = ctx->offset;
+    uint32_t end_offset = body_start_offset + body_size;
+
+    uint32_t num_local_decls;
+    in_u32_leb128(ctx, &num_local_decls, "local declaration count");
+    CALLBACK(on_local_decl_count, num_local_decls);
+    uint32_t k;
+    for (k = 0; k < num_local_decls; ++k) {
+      uint32_t num_local_types;
+      in_u32_leb128(ctx, &num_local_types, "local type count");
+      WasmType local_type;
+      in_type(ctx, &local_type, "local type");
+      RAISE_ERROR_UNLESS(is_concrete_type(local_type),
+                         "expected valid local type");
+      CALLBACK(on_local_decl, k, num_local_types, local_type);
+    }
+
+    read_function_body(ctx, end_offset);
+
+    CALLBACK(end_function_body, i);
+  }
+  CALLBACK_CTX0(end_function_bodies_section);
+}
+
+static void read_data_section(Context* ctx, uint32_t section_size) {
+  CALLBACK_SECTION(begin_data_section);
+  uint32_t i, num_data_segments;
+  in_u32_leb128(ctx, &num_data_segments, "data segment count");
+  CALLBACK(on_data_segment_count, num_data_segments);
+  RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
+                     "data section without memory section");
+  for (i = 0; i < num_data_segments; ++i) {
+    uint32_t memory_index;
+    in_u32_leb128(ctx, &memory_index, "data segment memory index");
+    CALLBACK(begin_data_segment, i, memory_index);
+    CALLBACK(begin_data_segment_init_expr, i);
+    read_init_expr(ctx, i);
+    CALLBACK(end_data_segment_init_expr, i);
+
+    uint32_t data_size;
+    const void* data;
+    in_bytes(ctx, &data, &data_size, "data segment data");
+    CALLBACK(on_data_segment_data, i, data, data_size);
+    CALLBACK(end_data_segment, i);
+  }
+  CALLBACK_CTX0(end_data_section);
+}
+
+static void read_sections(Context* ctx) {
+  while (ctx->offset < ctx->data_size) {
+    uint32_t section_code;
+    uint32_t section_size;
+    /* Temporarily reset read_end to the full data size so the next section
+     * can be read. */
+    ctx->read_end = ctx->data_size;
+    in_u32_leb128(ctx, &section_code, "section code");
+    in_u32_leb128(ctx, &section_size, "section size");
+    ctx->read_end = ctx->offset + section_size;
+
+    if (ctx->read_end > ctx->data_size)
+      RAISE_ERROR("invalid section size: extends past end");
+
+    if (ctx->last_section_code != WASM_NUM_BINARY_SECTIONS &&
+        section_code != WASM_BINARY_SECTION_CUSTOM &&
+        section_code <= ctx->last_section_code) {
+      RAISE_ERROR("section %s out of order", s_section_name[section_code]);
+    }
+
+    CALLBACK_CTX(begin_section, section_code, section_size);
+
+#define V(NAME, name, code)                   \
+  case WASM_BINARY_SECTION_##NAME:            \
+    read_##name##_section(ctx, section_size); \
+    break;
+
+    switch (section_code) {
+      WASM_FOREACH_BINARY_SECTION(V)
+      default:
+        RAISE_ERROR("invalid section code: %u; max is %u", section_code,
+                    WASM_NUM_BINARY_SECTIONS - 1);
+    }
+
+#undef V
+
+    if (ctx->offset != ctx->read_end) {
+      RAISE_ERROR("unfinished section (expected end: 0x%" PRIzx ")",
+                  ctx->read_end);
+    }
+
+    ctx->last_section_code = section_code;
+  }
+}
+
 WasmResult wasm_read_binary(WasmAllocator* allocator,
                             const void* data,
                             size_t size,
@@ -1742,13 +2045,15 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   WASM_ZERO_MEMORY(context);
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
+  ctx->allocator = allocator;
   ctx->data = data;
-  ctx->data_size = ctx->section_end = size;
+  ctx->data_size = ctx->read_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;
+  ctx->last_section_code = WASM_NUM_BINARY_SECTIONS;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
-    destroy_context(allocator, ctx);
+    destroy_context(ctx);
     return WASM_ERROR;
   }
 
@@ -1767,339 +2072,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
                      WASM_BINARY_VERSION);
 
   CALLBACK(begin_module, version);
-
-  /* type */
-  uint32_t section_size;
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_TYPE, &section_size)) {
-    CALLBACK_SECTION(begin_signature_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_signatures, "type count");
-    CALLBACK(on_signature_count, ctx->num_signatures);
-
-    for (i = 0; i < ctx->num_signatures; ++i) {
-      WasmType form;
-      in_type(ctx, &form, "type form");
-      RAISE_ERROR_UNLESS(form == WASM_TYPE_FUNC, "unexpected type form");
-
-      uint32_t num_params;
-      in_u32_leb128(ctx, &num_params, "function param count");
-
-      if (num_params > ctx->param_types.capacity)
-        wasm_reserve_types(allocator, &ctx->param_types, num_params);
-
-      uint32_t j;
-      for (j = 0; j < num_params; ++j) {
-        WasmType param_type;
-        in_type(ctx, &param_type, "function param type");
-        RAISE_ERROR_UNLESS(is_concrete_type(param_type),
-                           "expected valid param type");
-        ctx->param_types.data[j] = param_type;
-      }
-
-      uint32_t num_results;
-      in_u32_leb128(ctx, &num_results, "function result count");
-      RAISE_ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
-
-      WasmType result_type = WASM_TYPE_VOID;
-      if (num_results) {
-        in_type(ctx, &result_type, "function result type");
-        RAISE_ERROR_UNLESS(is_concrete_type(result_type),
-                           "expected valid result type");
-      }
-
-      CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
-               &result_type);
-    }
-    CALLBACK_CTX0(end_signature_section);
-  }
-
-  /* import */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_IMPORT, &section_size)) {
-    CALLBACK_SECTION(begin_import_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_imports, "import count");
-    CALLBACK(on_import_count, ctx->num_imports);
-    for (i = 0; i < ctx->num_imports; ++i) {
-      WasmStringSlice module_name;
-      in_str(ctx, &module_name, "import module name");
-      WasmStringSlice field_name;
-      in_str(ctx, &field_name, "import field name");
-      CALLBACK(on_import, i, module_name, field_name);
-
-      uint32_t kind;
-      in_u32_leb128(ctx, &kind, "import kind");
-      switch (kind) {
-        case WASM_EXTERNAL_KIND_FUNC: {
-          uint32_t sig_index;
-          in_u32_leb128(ctx, &sig_index, "import signature index");
-          RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
-                             "invalid import signature index");
-          CALLBACK(on_import_func, i, sig_index);
-          ctx->num_func_imports++;
-          break;
-        }
-
-        case WASM_EXTERNAL_KIND_TABLE: {
-          WasmType elem_type;
-          WasmLimits elem_limits;
-          read_table(ctx, &elem_type, &elem_limits);
-          CALLBACK(on_import_table, i, elem_type, &elem_limits);
-          ctx->num_table_imports++;
-          break;
-        }
-
-        case WASM_EXTERNAL_KIND_MEMORY: {
-          WasmLimits page_limits;
-          read_memory(ctx, &page_limits);
-          CALLBACK(on_import_memory, i, &page_limits);
-          ctx->num_memory_imports++;
-          break;
-        }
-
-        case WASM_EXTERNAL_KIND_GLOBAL: {
-          WasmType type;
-          WasmBool mutable_;
-          read_global_header(ctx, &type, &mutable_);
-          CALLBACK(on_import_global, i, type, mutable_);
-          ctx->num_global_imports++;
-          break;
-        }
-
-        default:
-          RAISE_ERROR("invalid import kind: %d", kind);
-      }
-    }
-    CALLBACK_CTX0(end_import_section);
-  }
-
-  /* Allow the name section to come after the imports have been specified. */
-  ctx->name_section_ok = WASM_TRUE;
-
-  /* function */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_FUNCTION, &section_size)) {
-    CALLBACK_SECTION(begin_function_signatures_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_function_signatures,
-                  "function signature count");
-    CALLBACK(on_function_signatures_count, ctx->num_function_signatures);
-    for (i = 0; i < ctx->num_function_signatures; ++i) {
-      uint32_t sig_index;
-      in_u32_leb128(ctx, &sig_index, "function signature index");
-      RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
-                         "invalid function signature index: %d", sig_index);
-      CALLBACK(on_function_signature, i, sig_index);
-    }
-    CALLBACK_CTX0(end_function_signatures_section);
-  }
-
-  /* table */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_TABLE, &section_size)) {
-    CALLBACK_SECTION(begin_table_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_tables, "table count");
-    RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
-                       ctx->num_tables);
-    CALLBACK(on_table_count, ctx->num_tables);
-    for (i = 0; i < ctx->num_tables; ++i) {
-      WasmType elem_type;
-      WasmLimits elem_limits;
-      read_table(ctx, &elem_type, &elem_limits);
-      CALLBACK(on_table, i, elem_type, &elem_limits);
-    }
-    CALLBACK_CTX0(end_table_section);
-  }
-
-  /* memory */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_MEMORY, &section_size)) {
-    CALLBACK_SECTION(begin_memory_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_memories, "memory count");
-    RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
-    CALLBACK(on_memory_count, ctx->num_memories);
-    for (i = 0; i < ctx->num_memories; ++i) {
-      WasmLimits page_limits;
-      read_memory(ctx, &page_limits);
-      CALLBACK(on_memory, i, &page_limits);
-    }
-    CALLBACK_CTX0(end_memory_section);
-  }
-
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_GLOBAL, &section_size)) {
-    CALLBACK_SECTION(begin_global_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_globals, "global count");
-    CALLBACK(on_global_count, ctx->num_globals);
-    for (i = 0; i < ctx->num_globals; ++i) {
-      WasmType global_type;
-      WasmBool mutable_;
-      read_global_header(ctx, &global_type, &mutable_);
-      CALLBACK(begin_global, i, global_type, mutable_);
-      CALLBACK(begin_global_init_expr, i);
-      read_init_expr(ctx, i);
-      CALLBACK(end_global_init_expr, i);
-      CALLBACK(end_global, i);
-    }
-    CALLBACK_CTX0(end_global_section);
-  }
-
-  /* export */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_EXPORT, &section_size)) {
-    CALLBACK_SECTION(begin_export_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_exports, "export count");
-    CALLBACK(on_export_count, ctx->num_exports);
-    for (i = 0; i < ctx->num_exports; ++i) {
-      WasmStringSlice name;
-      in_str(ctx, &name, "export item name");
-
-      uint8_t external_kind;
-      in_u8(ctx, &external_kind, "export external kind");
-      RAISE_ERROR_UNLESS(is_valid_external_kind(external_kind),
-                         "invalid export external kind");
-
-      uint32_t item_index;
-      in_u32_leb128(ctx, &item_index, "export item index");
-      switch (external_kind) {
-        case WASM_EXTERNAL_KIND_FUNC:
-          RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
-                             "invalid export func index");
-          break;
-        case WASM_EXTERNAL_KIND_TABLE:
-          RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
-                             "invalid export table index");
-          break;
-        case WASM_EXTERNAL_KIND_MEMORY:
-          RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
-                             "invalid export memory index");
-          break;
-        case WASM_EXTERNAL_KIND_GLOBAL:
-          RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
-                             "invalid export global index");
-          break;
-        case WASM_NUM_EXTERNAL_KINDS:
-          assert(0);
-          break;
-      }
-
-      CALLBACK(on_export, i, external_kind, item_index, name);
-    }
-    CALLBACK_CTX0(end_export_section);
-  }
-
-  /* start */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_START, &section_size)) {
-    CALLBACK_SECTION(begin_start_section);
-    uint32_t func_index;
-    in_u32_leb128(ctx, &func_index, "start function index");
-    RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
-                       "invalid start function index");
-    CALLBACK(on_start_function, func_index);
-    CALLBACK_CTX0(end_start_section);
-  }
-
-  /* elem */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM, &section_size)) {
-    CALLBACK_SECTION(begin_elem_section);
-    uint32_t i, num_elem_segments;
-    in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
-    CALLBACK(on_elem_segment_count, num_elem_segments);
-    RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
-                       "elem section without table section");
-    for (i = 0; i < num_elem_segments; ++i) {
-      uint32_t table_index;
-      in_u32_leb128(ctx, &table_index, "elem segment table index");
-      CALLBACK(begin_elem_segment, i, table_index);
-      CALLBACK(begin_elem_segment_init_expr, i);
-      read_init_expr(ctx, i);
-      CALLBACK(end_elem_segment_init_expr, i);
-
-      uint32_t j, num_function_indexes;
-      in_u32_leb128(ctx, &num_function_indexes,
-                    "elem segment function index count");
-      CALLBACK_CTX(on_elem_segment_function_index_count, i,
-                   num_function_indexes);
-      for (j = 0; j < num_function_indexes; ++j) {
-        uint32_t func_index;
-        in_u32_leb128(ctx, &func_index, "elem segment function index");
-        CALLBACK(on_elem_segment_function_index, i, func_index);
-      }
-      CALLBACK(end_elem_segment, i);
-    }
-    CALLBACK_CTX0(end_elem_section);
-  }
-
-  /* code */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_CODE, &section_size)) {
-    CALLBACK_SECTION(begin_function_bodies_section);
-    uint32_t i;
-    in_u32_leb128(ctx, &ctx->num_function_bodies, "function body count");
-    RAISE_ERROR_UNLESS(ctx->num_function_signatures == ctx->num_function_bodies,
-                       "function signature count != function body count");
-    CALLBACK(on_function_bodies_count, ctx->num_function_bodies);
-    for (i = 0; i < ctx->num_function_bodies; ++i) {
-      uint32_t j;
-      uint32_t func_offset = ctx->offset;
-      for (j = 0; j < num_function_passes; ++j) {
-        ctx->offset = func_offset;
-        CALLBACK(begin_function_body_pass, i, j);
-        CALLBACK(begin_function_body, i);
-        uint32_t body_size;
-        in_u32_leb128(ctx, &body_size, "function body size");
-        uint32_t body_start_offset = ctx->offset;
-        uint32_t end_offset = body_start_offset + body_size;
-
-        uint32_t num_local_decls;
-        in_u32_leb128(ctx, &num_local_decls, "local declaration count");
-        CALLBACK(on_local_decl_count, num_local_decls);
-        uint32_t k;
-        for (k = 0; k < num_local_decls; ++k) {
-          uint32_t num_local_types;
-          in_u32_leb128(ctx, &num_local_types, "local type count");
-          WasmType local_type;
-          in_type(ctx, &local_type, "local type");
-          RAISE_ERROR_UNLESS(is_concrete_type(local_type),
-                             "expected valid local type");
-          CALLBACK(on_local_decl, k, num_local_types, local_type);
-        }
-
-        read_function_body(ctx, allocator, end_offset);
-
-        CALLBACK(end_function_body, i);
-        CALLBACK(end_function_body_pass, i, j);
-      }
-    }
-    CALLBACK_CTX0(end_function_bodies_section);
-  }
-
-  /* data */
-  if (skip_until_section(ctx, WASM_BINARY_SECTION_DATA, &section_size)) {
-    CALLBACK_SECTION(begin_data_section);
-    uint32_t i, num_data_segments;
-    in_u32_leb128(ctx, &num_data_segments, "data segment count");
-    CALLBACK(on_data_segment_count, num_data_segments);
-    RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
-                       "data section without memory section");
-    for (i = 0; i < num_data_segments; ++i) {
-      uint32_t memory_index;
-      in_u32_leb128(ctx, &memory_index, "data segment memory index");
-      CALLBACK(begin_data_segment, i, memory_index);
-      CALLBACK(begin_data_segment_init_expr, i);
-      read_init_expr(ctx, i);
-      CALLBACK(end_data_segment_init_expr, i);
-
-      uint32_t data_size;
-      const void* data;
-      in_bytes(ctx, &data, &data_size, "data segment data");
-      CALLBACK(on_data_segment_data, i, data, data_size);
-      CALLBACK(end_data_segment, i);
-    }
-    CALLBACK_CTX0(end_data_section);
-  }
-
-  /* Handle supported custom sections at the end. */
-  skip_until_section(ctx, WASM_BINARY_SECTION_CUSTOM, &section_size);
-
+  read_sections(ctx);
   CALLBACK0(end_module);
-  destroy_context(allocator, ctx);
+  destroy_context(ctx);
   return WASM_OK;
 }

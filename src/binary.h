@@ -27,22 +27,22 @@
 #define WASM_BINARY_SECTION_RELOC "reloc"
 
 #define WASM_FOREACH_BINARY_SECTION(V) \
-  V(CUSTOM, 0)                         \
-  V(TYPE, 1)                           \
-  V(IMPORT, 2)                         \
-  V(FUNCTION, 3)                       \
-  V(TABLE, 4)                          \
-  V(MEMORY, 5)                         \
-  V(GLOBAL, 6)                         \
-  V(EXPORT, 7)                         \
-  V(START, 8)                          \
-  V(ELEM, 9)                           \
-  V(CODE, 10)                          \
-  V(DATA, 11)
+  V(CUSTOM, custom, 0)                 \
+  V(TYPE, type, 1)                     \
+  V(IMPORT, import, 2)                 \
+  V(FUNCTION, function, 3)             \
+  V(TABLE, table, 4)                   \
+  V(MEMORY, memory, 5)                 \
+  V(GLOBAL, global, 6)                 \
+  V(EXPORT, export, 7)                 \
+  V(START, start, 8)                   \
+  V(ELEM, elem, 9)                     \
+  V(CODE, code, 10)                    \
+  V(DATA, data, 11)
 
 /* clang-format off */
 typedef enum WasmBinarySection {
-#define V(NAME, code) WASM_BINARY_SECTION_##NAME = code,
+#define V(NAME, name, code) WASM_BINARY_SECTION_##NAME = code,
   WASM_FOREACH_BINARY_SECTION(V)
 #undef V
   WASM_NUM_BINARY_SECTIONS
