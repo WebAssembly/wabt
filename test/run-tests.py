@@ -70,6 +70,7 @@ TOOLS = {
     'FLAGS': ' '.join([
       '--wast2wasm=%(wast2wasm)s',
       '--wasm-link=%(wasm-link)s',
+      '--wasmdump=%(wasmdump)s',
     ]),
     'VERBOSE-FLAGS': ['-v']
   },

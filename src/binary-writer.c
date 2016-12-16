@@ -102,7 +102,7 @@ static void write_header(Context* ctx, const char* name, int index) {
 
 
 uint32_t wasm_u32_leb128_length(uint32_t value) {
-  uint8_t data[MAX_U32_LEB128_BYTES];
+  uint8_t data[MAX_U32_LEB128_BYTES] WASM_UNUSED;
   uint32_t i = 0;
   LEB128_LOOP_UNTIL(value == 0);
   return i;
