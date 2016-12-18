@@ -1,0 +1,15 @@
+;;; ERROR: 1
+(module
+  (func
+    i32.const 1
+    if $foo
+    else $bar
+    end $baz))
+(;; STDERR ;;;
+parse/expr/bad-if-mismatch-label.txt:6:10: mismatching label "$foo" != "$bar"
+    else $bar
+         ^^^^
+parse/expr/bad-if-mismatch-label.txt:7:9: mismatching label "$foo" != "$baz"
+    end $baz))
+        ^^^^
+;;; STDERR ;;)

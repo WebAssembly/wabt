@@ -109,6 +109,25 @@
     }                                                              \
   } while (0)
 
+#define CHECK_END_LABEL(loc, begin_label, end_label)                     \
+  do {                                                                   \
+    if (!wasm_string_slice_is_empty(&(end_label))) {                     \
+      if (wasm_string_slice_is_empty(&(begin_label))) {                  \
+        wasm_ast_parser_error(&loc, lexer, parser,                       \
+                              "unexpected label \"" PRIstringslice "\"", \
+                              WASM_PRINTF_STRING_SLICE_ARG(end_label));  \
+      } else if (!wasm_string_slices_are_equal(&(begin_label),           \
+                                               &(end_label))) {          \
+        wasm_ast_parser_error(&loc, lexer, parser,                       \
+                              "mismatching label \"" PRIstringslice      \
+                              "\" != \"" PRIstringslice "\"",            \
+                              WASM_PRINTF_STRING_SLICE_ARG(begin_label), \
+                              WASM_PRINTF_STRING_SLICE_ARG(end_label));  \
+      }                                                                  \
+      wasm_destroy_string_slice(parser->allocator, &(end_label));        \
+    }                                                                    \
+  } while (0)
+
 #define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
 #define YYFREE(p) wasm_free(parser->allocator, p)
 
@@ -571,26 +590,31 @@ plain_instr :
     }
 ;
 block_instr :
-    BLOCK labeling_opt block END {
+    BLOCK labeling_opt block END labeling_opt {
       $$ = wasm_new_block_expr(parser->allocator);
       $$->block = $3;
       $$->block.label = $2;
+      CHECK_END_LABEL(@5, $$->block.label, $5);
     }
-  | LOOP labeling_opt block END {
+  | LOOP labeling_opt block END labeling_opt {
       $$ = wasm_new_loop_expr(parser->allocator);
       $$->loop = $3;
       $$->loop.label = $2;
+      CHECK_END_LABEL(@5, $$->block.label, $5);
     }
-  | IF labeling_opt block END {
+  | IF labeling_opt block END labeling_opt {
       $$ = wasm_new_if_expr(parser->allocator);
       $$->if_.true_ = $3;
       $$->if_.true_.label = $2;
+      CHECK_END_LABEL(@5, $$->block.label, $5);
     }
-  | IF labeling_opt block ELSE instr_list END {
+  | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
       $$ = wasm_new_if_expr(parser->allocator);
       $$->if_.true_ = $3;
       $$->if_.true_.label = $2;
-      $$->if_.false_ = $5.first;
+      $$->if_.false_ = $6.first;
+      CHECK_END_LABEL(@5, $$->block.label, $5);
+      CHECK_END_LABEL(@8, $$->block.label, $8);
     }
 ;
 block :

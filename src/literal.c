@@ -418,7 +418,7 @@ void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
   /* -0x#.######p-### */
   /* -nan:0x###### */
   /* -infinity */
-  char buffer[20];
+  char buffer[WASM_MAX_FLOAT_HEX];
   char* p = buffer;
   WasmBool is_neg = (bits >> F32_SIGN_SHIFT);
   int exp = ((bits >> F32_SIG_BITS) & F32_EXP_MASK) - F32_EXP_BIAS;
@@ -748,7 +748,7 @@ void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
   /* -0x#.#############p-#### */
   /* -nan:0x############# */
   /* -infinity */
-  char buffer[40];
+  char buffer[WASM_MAX_DOUBLE_HEX];
   char* p = buffer;
   WasmBool is_neg = (bits >> F64_SIGN_SHIFT);
   int exp = ((bits >> F64_SIG_BITS) & F64_EXP_MASK) - F64_EXP_BIAS;

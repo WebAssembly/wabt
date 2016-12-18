@@ -86,13 +86,14 @@ void wasm_write_memory_dump(WasmStream*,
                             size_t size,
                             size_t offset,
                             WasmPrintChars print_chars,
+                            const char* prefix,
                             const char* desc);
 
 static WASM_INLINE void wasm_write_output_buffer_memory_dump(
     WasmStream* stream,
     struct WasmOutputBuffer* buf) {
   wasm_write_memory_dump(stream, buf->start, buf->size, 0,
-                         WASM_DONT_PRINT_CHARS, NULL);
+                         WASM_DONT_PRINT_CHARS, NULL, NULL);
 }
 
 WASM_EXTERN_C_END

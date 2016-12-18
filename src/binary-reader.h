@@ -49,11 +49,15 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_module)(uint32_t version, void* user_data);
   WasmResult (*end_module)(void* user_data);
 
-  /* user section */
-  WasmResult (*begin_user_section)(WasmBinaryReaderContext* ctx,
-                                   uint32_t size,
-                                   WasmStringSlice section_name);
-  WasmResult (*end_user_section)(WasmBinaryReaderContext* ctx);
+  WasmResult (*begin_section)(WasmBinaryReaderContext* ctx,
+                              WasmBinarySection section_type,
+                              uint32_t size);
+
+  /* custom section */
+  WasmResult (*begin_custom_section)(WasmBinaryReaderContext* ctx,
+                                     uint32_t size,
+                                     WasmStringSlice section_name);
+  WasmResult (*end_custom_section)(WasmBinaryReaderContext* ctx);
 
   /* signatures section */
   /* TODO(binji): rename to "type" section */
@@ -175,6 +179,8 @@ typedef struct WasmBinaryReader {
                                         uint32_t value,
                                         uint32_t value2);
   WasmResult (*on_opcode_uint64)(WasmBinaryReaderContext* ctx, uint64_t value);
+  WasmResult (*on_opcode_f32)(WasmBinaryReaderContext* ctx, uint32_t value);
+  WasmResult (*on_opcode_f64)(WasmBinaryReaderContext* ctx, uint64_t value);
   WasmResult (*on_opcode_block_sig)(WasmBinaryReaderContext* ctx,
                                     uint32_t num_types,
                                     WasmType* sig_types);
@@ -240,9 +246,10 @@ typedef struct WasmBinaryReader {
                                    void* user_data);
   WasmResult (*begin_elem_segment_init_expr)(uint32_t index, void* user_data);
   WasmResult (*end_elem_segment_init_expr)(uint32_t index, void* user_data);
-  WasmResult (*on_elem_segment_function_index_count)(uint32_t index,
-                                                     uint32_t count,
-                                                     void* user_data);
+  WasmResult (*on_elem_segment_function_index_count)(
+      WasmBinaryReaderContext* ctx,
+      uint32_t index,
+      uint32_t count);
   WasmResult (*on_elem_segment_function_index)(uint32_t index,
                                                uint32_t func_index,
                                                void* user_data);
@@ -306,6 +313,14 @@ WasmResult wasm_read_binary(struct WasmAllocator* allocator,
                             WasmBinaryReader* reader,
                             uint32_t num_function_passes,
                             const WasmReadBinaryOptions* options);
+
+size_t wasm_read_u32_leb128(const uint8_t* ptr,
+                            const uint8_t* end,
+                            uint32_t* out_value);
+
+size_t wasm_read_i32_leb128(const uint8_t* ptr,
+                            const uint8_t* end,
+                            uint32_t* out_value);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_READER_H_ */

@@ -837,10 +837,11 @@ static WasmResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_elem_segment_function_index_count(uint32_t index,
-                                                       uint32_t count,
-                                                       void* user_data) {
-  Context* ctx = user_data;
+static WasmResult on_elem_segment_function_index_count(
+    WasmBinaryReaderContext* context,
+    uint32_t index,
+    uint32_t count) {
+  Context* ctx = context->user_data;
   assert(index == ctx->module->elem_segments.size - 1);
   WasmElemSegment* segment = ctx->module->elem_segments.data[index];
   wasm_reserve_vars(ctx->allocator, &segment->vars, count);
@@ -1162,5 +1163,7 @@ WasmResult wasm_read_binary_ast(struct WasmAllocator* allocator,
   WasmResult result =
       wasm_read_binary(allocator, data, size, &reader, 1, options);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, ctx.label_stack, label_node);
+  if (WASM_FAILED(result))
+    wasm_destroy_module(allocator, out_module);
   return result;
 }

@@ -12,8 +12,8 @@
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
 ; memory 0
-000000b: 00                                        ; memory flags
-000000c: 01                                        ; memory initial pages
+000000b: 00                                        ; limits: flags
+000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
@@ -22,8 +22,8 @@
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
 ; memory 0
-000000b: 00                                        ; memory flags
-000000c: 02                                        ; memory initial pages
+000000b: 00                                        ; limits: flags
+000000c: 02                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
@@ -32,8 +32,8 @@
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
 ; memory 0
-000000b: 00                                        ; memory flags
-000000c: 04                                        ; memory initial pages
+000000b: 00                                        ; limits: flags
+000000c: 04                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
@@ -42,8 +42,8 @@
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
 ; memory 0
-000000b: 00                                        ; memory flags
-000000c: 05                                        ; memory initial pages
+000000b: 00                                        ; limits: flags
+000000c: 05                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 memory-data-size.0.wasm:	file format wasm 0x00000d
 

@@ -157,7 +157,22 @@ TOOLS = {
       ]),
       '-v'
     ]
-  }
+  },
+  'run-gen-spec-js': {
+    'EXE': 'test/run-gen-spec-js.py',
+    'FLAGS': ' '.join([
+      '--wast2wasm=%(wast2wasm)s',
+      '--wasm2wast=%(wasm2wast)s',
+      '--no-error-cmdline',
+      '-o', '%(out_dir)s',
+    ]),
+    'VERBOSE-FLAGS': [
+      ' '.join([
+        '--print-cmd',
+      ]),
+      '-v'
+    ]
+  },
 }
 
 ROUNDTRIP_TOOLS = ('wast2wasm',)
@@ -180,10 +195,20 @@ def AppendBeforeExt(file_path, suffix):
   return file_path_noext + suffix + ext
 
 
+class Cell(object):
+  def __init__(self, value):
+    self.value = [value]
+
+  def Set(self, value):
+    self.value[0] = value
+
+  def Get(self):
+    return self.value[0]
+
+
 def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
   process = None
-  # Cheesy way to be able to set is_timeout from inside KillProcess
-  is_timeout = [False]
+  is_timeout = Cell(False)
   def KillProcess(timeout=True):
     if process:
       try:
@@ -195,7 +220,7 @@ def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
           os.killpg(os.getpgid(process.pid), 15)
       except OSError:
         pass
-    is_timeout[0] = timeout
+    is_timeout.Set(timeout)
 
   try:
     start_time = time.time()
@@ -219,7 +244,7 @@ def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
       returncode = process.returncode
       process = None
       timer.cancel()
-    if is_timeout[0]:
+    if is_timeout.Get():
       raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
     duration = time.time() - start_time
   except OSError as e:
@@ -527,9 +552,9 @@ def RunTest(info, options, variables, verbose_level = 0):
   except Exception as e:
     return e
 
-def ProcessWorker(i, options, variables, inq, outq, should_run):
+def ThreadWorker(i, options, variables, inq, outq, should_run):
   try:
-    while should_run.value:
+    while should_run.Get():
       try:
         info = inq.get(False)
         out = RunTest(info, options, variables)
@@ -576,7 +601,7 @@ def HandleTestResult(status, info, result, rebase=False):
   except Exception as e:
     status.Failed(info, str(e))
 
-#Source: http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
+#Source : http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 def YesNoPrompt(question, default='yes'):
   """Ask a yes/no question via raw_input() and return their answer.
 
@@ -613,27 +638,24 @@ def WaitWorkersTerminate(workers, timeout=5):
   for worker in workers:
     if worker.is_alive():
       worker.join(timeout)
-      if worker.is_alive():
-        worker.terminate()
 
-def RunMultiProcess(infos_to_run, test_count, status, options, variables):
+def RunMultiThreaded(infos_to_run, test_count, status, options, variables):
   should_stop_on_error = options.stop_interactive
   continued_errors = 0
-  num_proc = options.jobs
+  num_threads = options.jobs
 
-  all_procs = []
+  all_threads = []
   try:
-    inq = multiprocessing.Queue()
-    outq = multiprocessing.Queue()
+    inq = Queue.Queue()
+    outq = Queue.Queue()
     for info in infos_to_run:
       inq.put_nowait(info)
-    should_run = multiprocessing.Value('i', 1)
-    for i, p in enumerate(range(num_proc)):
+    should_run = Cell(True)
+    for i in range(num_threads):
       args = (i, options, variables, inq, outq, should_run)
-      proc = multiprocessing.Process(target=ProcessWorker, args=args)
-      all_procs.append(proc)
-      proc.start()
-    inq.close()
+      thread = threading.Thread(target=ThreadWorker, args=args)
+      all_threads.append(thread)
+      thread.start()
 
     finished_tests = 0
     while finished_tests < test_count:
@@ -649,16 +671,14 @@ def RunMultiProcess(infos_to_run, test_count, status, options, variables):
         should_continue = YesNoPrompt(question='Continue testing?',
                                       default='yes')
         if not should_continue:
-          with should_run.get_lock():
-            should_run.value = 0
+          should_run.Set(False)
           break
         continued_errors += 1
-  except KeyboardInterrupt:
-    WaitWorkersTerminate(all_procs)
   finally:
-    WaitWorkersTerminate(all_procs)
+    should_run.Set(False)
+    WaitWorkersTerminate(all_threads)
 
-def RunSingleProcess(infos_to_run, status, options, variables):
+def RunSingleThreaded(infos_to_run, status, options, variables):
   continued_errors = 0
 
   for info in infos_to_run:
@@ -679,6 +699,13 @@ def RunSingleProcess(infos_to_run, status, options, variables):
       elif options.verbose:
         RunTest(info, options, variables, verbose_level=1)
       continued_errors += 1
+
+def GetDefaultJobCount():
+  cpu_count = multiprocessing.cpu_count()
+  if cpu_count <= 1:
+    return 1
+  else:
+    return cpu_count // 2
 
 def main(args):
   parser = argparse.ArgumentParser()
@@ -710,7 +737,7 @@ def main(args):
                       help='rebase a test to its current output.',
                       action='store_true')
   parser.add_argument('-j', '--jobs', help='number of jobs to use to run tests',
-                      type=int, default=multiprocessing.cpu_count())
+                      type=int, default=GetDefaultJobCount())
   parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                       help='per test timeout in seconds')
   parser.add_argument('--no-roundtrip',
@@ -743,6 +770,7 @@ def main(args):
     return 1
 
   variables = {}
+  variables['test_dir'] = os.path.abspath(SCRIPT_DIR)
 
   for exe_basename in find_exe.EXECUTABLES:
     attr_name = exe_basename.replace('-', '_')
@@ -783,10 +811,10 @@ def main(args):
 
   try:
     if options.jobs > 1:
-      RunMultiProcess(infos_to_run, test_count, status, options, variables)
+      RunMultiThreaded(infos_to_run, test_count, status, options, variables)
     else:
-      RunSingleProcess(infos_to_run, status, options, variables)
-  except:
+      RunSingleThreaded(infos_to_run, status, options, variables)
+  except KeyboardInterrupt:
     print('\nInterrupted testing\n')
   finally:
     if out_dir_is_temp:

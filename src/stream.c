@@ -59,7 +59,7 @@ void wasm_write_data_at(WasmStream* stream,
     return;
   if (stream->log_stream) {
     wasm_write_memory_dump(stream->log_stream, src, size, offset, print_chars,
-                           desc);
+                           NULL, desc);
   }
   if (stream->writer->write_data) {
     stream->result = stream->writer->write_data(offset, src, size,
@@ -122,12 +122,15 @@ void wasm_write_memory_dump(WasmStream* stream,
                             size_t size,
                             size_t offset,
                             WasmPrintChars print_chars,
+                            const char* prefix,
                             const char* desc) {
   const uint8_t* p = start;
   const uint8_t* end = p + size;
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
+    if (prefix)
+      wasm_writef(stream, "%s", prefix);
     wasm_writef(stream, "%07" PRIzx ": ", (size_t)p - (size_t)start + offset);
     while (p < line_end) {
       int i;

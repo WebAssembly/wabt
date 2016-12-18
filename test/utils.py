@@ -99,7 +99,10 @@ class Executable(object):
   def AppendOptionalArgs(self, option_dict):
     for option, value in option_dict.items():
       if value:
-        self.AppendArg(option)
+        if value is True:
+          self.AppendArg(option)
+        else:
+          self.AppendArg('%s=%s' % (option, value))
 
 
 @contextlib.contextmanager

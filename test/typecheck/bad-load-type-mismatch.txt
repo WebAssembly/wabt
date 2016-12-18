@@ -1,11 +1,12 @@
 ;;; ERROR: 1
 (module
+  (memory 1)
   (func
     f32.const 0
     i32.load
     drop))
 (;; STDERR ;;;
-typecheck/bad-load-type-mismatch.txt:5:5: type mismatch at i32.load. got f32, expected i32
+typecheck/bad-load-type-mismatch.txt:6:5: type mismatch at i32.load. got f32, expected i32
     i32.load
     ^^^^^^^^
 ;;; STDERR ;;)

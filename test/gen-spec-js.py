@@ -16,181 +16,470 @@
 #
 
 import argparse
-import cStringIO
+from collections import namedtuple
+try:
+  from cStringIO import StringIO
+except ImportError:
+  from io import StringIO
 import json
 import os
+import re
+import struct
 import sys
 
-from utils import Error
+from find_exe import GetWast2WasmExecutable, GetWasm2WastExecutable
+from utils import ChangeDir, ChangeExt, Error, Executable
+import utils
 
-JS_HEADER = """\
-var passed = 0;
-var failed = 0;
-var quiet = false;
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-"""
+F32_INF = 0x7f800000
+F32_NEG_INF = 0xff800000
+F32_NEG_ZERO = 0x80000000
+F32_SIGN_BIT = F32_NEG_ZERO
+F32_SIG_MASK = 0x7fffff
+F32_QUIET_NAN_TAG = 0x400000
+F64_INF = 0x7ff0000000000000
+F64_NEG_INF = 0xfff0000000000000
+F64_NEG_ZERO = 0x8000000000000000
+F64_SIGN_BIT = F64_NEG_ZERO
+F64_SIG_MASK = 0xfffffffffffff
+F64_QUIET_NAN_TAG = 0x8000000000000
 
-MODULE_RUN = """\
-testModule%(module_index)s();
-"""
+def I32ToJS(value):
+  # JavaScript will return all i32 values as signed.
+  if value >= 2**31:
+    value -= 2**32
+  return str(value)
 
-MODULE_RUN_FOOTER = """\
-end();
+def IsNaNF32(f32_bits):
+  return (F32_INF < f32_bits < F32_NEG_ZERO) or (f32_bits > F32_NEG_INF)
 
-"""
+def ReinterpretF32(f32_bits):
+    return struct.unpack('<f', struct.pack('<I', f32_bits))[0]
 
-MODULE_TEST_HEADER = """\
-function testModule%(module_index)s() {
-"""
+def NaNF32ToString(f32_bits):
+  result = '-' if f32_bits & F32_SIGN_BIT else ''
+  result += 'nan'
+  sig = f32_bits & F32_SIG_MASK
+  if sig != F32_QUIET_NAN_TAG:
+    result += ':0x%x' % sig
+  return result
 
-MODULE_DATA_HEADER = """\
-  var module = createModule([
-"""
+def F32ToWasm(f32_bits):
+  if IsNaNF32(f32_bits):
+    return 'f32.const %s' % NaNF32ToString(f32_bits)
+  elif f32_bits == F32_INF:
+    return 'f32.const infinity'
+  elif f32_bits == F32_NEG_INF:
+    return 'f32.const -infinity'
+  else:
+    return 'f32.const %s' % float.hex(ReinterpretF32(f32_bits))
 
-MODULE_DATA_FOOTER = """\
-  ]);
+def F32ToJS(f32_bits):
+  assert not IsNaNF32(f32_bits)
+  if f32_bits == F32_INF:
+    return 'Infinity'
+  elif f32_bits == F32_NEG_INF:
+    return '-Infinity'
+  else:
+    return 'f32(%s)' % ReinterpretF32(f32_bits)
 
-"""
+def IsNaNF64(f64_bits):
+  return (F64_INF < f64_bits < F64_NEG_ZERO) or (f64_bits > F64_NEG_INF)
 
-INVOKE_COMMAND = """\
-  invoke(module, '%(name)s');
-"""
+def ReinterpretF64(f64_bits):
+  return struct.unpack('<d', struct.pack('<Q', f64_bits))[0]
 
-ASSERT_RETURN_COMMAND = """\
-  assertReturn(module, '%(name)s', '%(file)s', %(line)s);
-"""
+def NaNF64ToString(f64_bits):
+  result = '-' if f64_bits & F64_SIGN_BIT else ''
+  result += 'nan'
+  sig = f64_bits & F64_SIG_MASK
+  if sig != F64_QUIET_NAN_TAG:
+    result += ':0x%x' % sig
+  return result
 
-ASSERT_TRAP_COMMAND = """\
-  assertTrap(module, '%(name)s', '%(file)s', %(line)s);
-"""
+def F64ToWasm(f64_bits):
+  if IsNaNF64(f64_bits):
+    return 'f64.const %s' % NaNF64ToString(f64_bits)
+  elif f64_bits == F64_INF:
+    return 'f64.const infinity'
+  elif f64_bits == F64_NEG_INF:
+    return 'f64.const -infinity'
+  else:
+    return 'f64.const %s' % float.hex(ReinterpretF64(f64_bits))
 
-COMMANDS = {
-    'invoke': INVOKE_COMMAND,
-    'assert_return': ASSERT_RETURN_COMMAND,
-    'assert_return_nan': ASSERT_RETURN_COMMAND,
-    'assert_trap': ASSERT_TRAP_COMMAND
-}
-
-MODULE_TEST_FOOTER = """\
-}
-
-"""
-
-JS_FOOTER = """\
-function createModule(data) {
-  var u8a = new Uint8Array(data);
-  var ffi = {spectest: {print: print}};
-  return Wasm.instantiateModule(u8a, ffi);
-}
-
-function assertReturn(module, name, file, line) {
-  try {
-    var result = module.exports[name]();
-  } catch(e) {
-    print(file + ":" + line + ": " + name + " unexpectedly threw: " + e);
-  }
-
-  if (result == 1) {
-    passed++;
-  } else {
-    print(file + ":" + line + ": " + name + " failed.");
-    failed++;
-  }
-}
-
-function assertTrap(module, name, file, line) {
-  var threw = false;
-  try {
-    module.exports[name]();
-  } catch (e) {
-    threw = true;
-  }
-
-  if (threw) {
-    passed++;
-  } else {
-    print(file + ":" + line + ": " + name + " failed, didn't throw");
-    failed++;
-  }
-}
-
-function invoke(module, name) {
-  try {
-    var invokeResult = module.exports[name]();
-    passed++;
-  } catch(e) {
-    print(name + " unexpectedly threw: " + e);
-    failed++;
-  }
-
-  if (!quiet)
-    print(name + " = " + invokeResult);
-}
-
-function end() {
-  if ((failed > 0) || !quiet)
-    print(passed + "/" + (passed + failed) + " tests passed.");
-}
-"""
-
-def ProcessJsonFile(json_file_path):
-  json_file_dir = os.path.dirname(json_file_path)
-  with open(json_file_path) as json_file:
-    json_data = json.load(json_file)
-
-  output = cStringIO.StringIO()
-  output.write(JS_HEADER)
-  for module_index in range(len(json_data['modules'])):
-    output.write(MODULE_RUN % {'module_index': module_index})
-  output.write(MODULE_RUN_FOOTER)
-
-  for module_index, module in enumerate(json_data['modules']):
-    module_filepath = os.path.join(json_file_dir, module['filename'])
-    with open(module_filepath, 'rb') as wasm_file:
-      wasm_data = wasm_file.read()
-
-    output.write(MODULE_TEST_HEADER % {'module_index': module_index})
-    output.write(MODULE_DATA_HEADER)
-    WriteModuleBytes(output, wasm_data)
-    output.write(MODULE_DATA_FOOTER)
-
-    for command_index, command in enumerate(module['commands']):
-      output.write(COMMANDS[command['type']] % command)
-    output.write(MODULE_TEST_FOOTER)
-  output.write(JS_FOOTER)
-
-  return output.getvalue()
+def F64ToJS(f64_bits):
+  assert not IsNaNF64(f64_bits)
+  if f64_bits == F64_INF:
+    return 'Infinity'
+  elif f64_bits == F64_NEG_INF:
+    return '-Infinity'
+  else:
+    # Use repr to get full precision
+    return repr(ReinterpretF64(f64_bits))
 
 
-def WriteModuleBytes(output, module_data):
-  BYTES_PER_LINE = 16
-  offset = 0
-  while True:
-    line_data = module_data[offset:offset+BYTES_PER_LINE]
-    if not line_data:
-      break
-    output.write('    ')
-    output.write(', '.join('%3d' % ord(byte) for byte in line_data))
-    output.write(',\n')
-    offset += BYTES_PER_LINE
+def UnescapeWasmString(s):
+  # Wast allows for more escape characters than this, but we assume that
+  # wasm2wast will only use the \xx escapes.
+  result = ''
+  i = 0
+  while i < len(s):
+    c = s[i]
+    if c == '\\':
+      x = s[i+1:i+3]
+      if len(x) != 2:
+        raise Error('String with invalid escape: \"%s\"' % s)
+      result += chr(int(x, 16))
+      i += 3
+    else:
+      result += c
+      i += 1
+  return result
+
+def EscapeJSString(s):
+  result = ''
+  for c in s:
+    if 32 <= ord(c) < 127 and c not in '"\\':
+      result += c
+    else:
+      result += '\\x%02x' % ord(c)
+  return result
+
+
+def IsValidJSConstant(const):
+  type_ = const['type']
+  if type_ == 'i32':
+    return True
+  elif type_ == 'i64':
+    return False
+  elif type_ == 'f32':
+    return not IsNaNF32(int(const['value']))
+  elif type_ == 'f64':
+    return not IsNaNF64(int(const['value']))
+
+def IsValidJSAction(action):
+  return all(IsValidJSConstant(x) for x in action.get('args', []))
+
+def IsValidJSCommand(command):
+  type_ = command['type']
+  action = command['action']
+  if type_ == 'assert_return':
+    expected = command['expected']
+    return (IsValidJSAction(action) and
+            all(IsValidJSConstant(x) for x in expected))
+  elif type_ == 'assert_return_nan':
+    return IsValidJSAction(action)
+  elif type_ == 'assert_trap':
+    return IsValidJSAction(action)
+
+
+def CollectInvalidModuleCommands(commands):
+  modules = []
+  module_map = {}
+  for command in commands:
+    if command['type'] == 'module':
+      pair = (command, [])
+      modules.append(pair)
+      module_name = command.get('name')
+      if module_name:
+        module_map[module_name] = pair
+    elif command['type'] in ('assert_return', 'assert_return_nan',
+                             'assert_trap'):
+      if IsValidJSCommand(command):
+        continue
+
+      action = command['action']
+      module_name = action.get('module')
+      if module_name:
+        pair = module_map[module_name]
+      else:
+        pair = modules[-1]
+      pair[1].append(command)
+  return modules
+
+
+class ModuleExtender(object):
+  def __init__(self, wast2wasm, wasm2wast, temp_dir):
+    self.wast2wasm = wast2wasm
+    self.wasm2wast = wasm2wast
+    self.temp_dir = temp_dir
+    self.lines = []
+    self.exports = {}
+
+  def Extend(self, wasm_path, commands):
+    wast_path = self._RunWasm2Wast(wasm_path)
+    with open(wast_path) as wast_file:
+      wast = wast_file.read()
+
+    self.lines = []
+    self.exports = self._GetExports(wast)
+    for i, command in enumerate(commands):
+      self._Command(i, command)
+
+    wast = wast[:wast.rindex(')')] + '\n\n'
+    wast += '\n'.join(self.lines) + ')'
+    # print wast
+    with open(wast_path, 'w') as wast_file:
+      wast_file.write(wast)
+    return self._RunWast2Wasm(wast_path)
+
+  def _Command(self, index, command):
+    command_type = command['type']
+    new_field = 'assert_%d' % index
+    if command_type == 'assert_return':
+      self.lines.append('(func (export "%s")' % new_field)
+      self.lines.append('block')
+      self._Action(command['action'])
+      for expected in command['expected']:
+        self._Reinterpret(expected['type'])
+        self._Constant(expected)
+        self._Reinterpret(expected['type'])
+        self._Compare(expected['type'])
+        self.lines.extend(['i32.eqz', 'br_if 0'])
+      self.lines.extend(['return', 'end', 'unreachable', ')'])
+    elif command_type == 'assert_return_nan':
+      type_ = command['expected'][0]['type']
+      self.lines.append('(func (export "%s")' % new_field)
+      self.lines.append('(local %s)' % type_)
+      self.lines.append('block')
+      self._Action(command['action'])
+      self.lines.append('tee_local 0')
+      self._Reinterpret(type_)
+      self.lines.append('get_local 0')
+      self._Reinterpret(type_)
+      self._Compare(type_)
+      self.lines.extend(['i32.eqz', 'br_if 0', 'return', 'end',
+                         'unreachable', ')'])
+
+      # Change the command to assert_return, it won't return NaN anymore.
+      command['type'] = 'assert_return'
+    elif command_type == 'assert_trap':
+      self.lines.append('(func (export "%s")' % new_field)
+      self._Action(command['action'])
+      self.lines.extend(['br 0', ')'])
+    else:
+      raise Error('Unexpected command: %s' % command_type)
+
+    # Update command to point to the new exported function.
+    command['action']['field'] = new_field
+    command['action']['args'] = []
+    command['expected'] = []
+
+  def _GetExports(self, wast):
+    result = {}
+    pattern = r'^\s*\(export \"(.*?)\"\s*\((\w+) (\d+)'
+    for name, type_, index in re.findall(pattern, wast, re.MULTILINE):
+      result[UnescapeWasmString(name)] = (type_, index)
+    return result
+
+  def _Action(self, action):
+    export = self.exports[action['field']]
+    if action['type'] == 'invoke':
+      for arg in action['args']:
+        self._Constant(arg)
+      self.lines.append('call %s' % export[1])
+    elif action['type'] == 'get':
+      self.lines.append('get_global %s' % export[1])
+    else:
+      raise Error('Unexpected action: %s' % action['type'])
+
+  def _Reinterpret(self, type_):
+    self.lines.extend({'i32': [],
+                       'i64': [],
+                       'f32': ['i32.reinterpret/f32'],
+                       'f64': ['i64.reinterpret/f64']}[type_])
+
+  def _Compare(self, type_):
+    self.lines.append({'i32': 'i32.eq',
+                       'i64': 'i64.eq',
+                       'f32': 'i32.eq',
+                       'f64': 'i64.eq'}[type_])
+
+  def _Constant(self, const):
+    inst = None
+    type_ = const['type']
+    if type_ == 'i32':
+      inst = 'i32.const %s' % const['value']
+    elif type_ == 'i64':
+      inst = 'i64.const %s' % const['value']
+    elif type_ == 'f32':
+      inst = F32ToWasm(int(const['value']))
+    elif type_ == 'f64':
+      inst = F64ToWasm(long(const['value']))
+    self.lines.append(inst)
+
+  def _RunWasm2Wast(self, wasm_path):
+    wast_path = ChangeDir(ChangeExt(wasm_path, '.wast'), self.temp_dir)
+    self.wasm2wast.RunWithArgs(wasm_path, '-o', wast_path)
+    return wast_path
+
+  def _RunWast2Wasm(self, wast_path):
+    wasm_path = ChangeDir(ChangeExt(wast_path, '.wasm'), self.temp_dir)
+    self.wast2wasm.RunWithArgs(wast_path, '-o', wasm_path)
+    return wasm_path
+
+
+class JSWriter(object):
+  def __init__(self, base_dir, commands, out_file):
+    self.base_dir = base_dir
+    self.commands = commands
+    self.out_file = out_file
+
+  def Write(self):
+    for command in self.commands:
+      self._WriteCommand(command)
+
+  def _WriteCommand(self, command):
+    command_funcs = {
+      'module': self._WriteModuleCommand,
+      'action': self._WriteActionCommand,
+      'register': self._WriteRegisterCommand,
+      'assert_malformed': self._WriteAssertModuleCommand,
+      'assert_invalid': self._WriteAssertModuleCommand,
+      'assert_unlinkable': self._WriteAssertModuleCommand,
+      'assert_uninstantiable': self._WriteAssertModuleCommand,
+      'assert_return': self._WriteAssertReturnCommand,
+      'assert_return_nan': self._WriteAssertActionCommand,
+      'assert_trap': self._WriteAssertActionCommand,
+    }
+
+    func = command_funcs.get(command['type'])
+    if func is None:
+      raise Error('Unexpected type: %s' % command['type'])
+    func(command)
+
+  def _WriteModuleCommand(self, command):
+    if 'name' in command:
+      self.out_file.write('let %s = ' % command['name'])
+    self.out_file.write('$$ = instance("%s");\n' %
+                        self._Module(command['filename']))
+
+  def _WriteActionCommand(self, command):
+    self.out_file.write('%s;\n' % self._Action(command['action']))
+
+  def _WriteRegisterCommand(self, command):
+    self.out_file.write('register("%s", %s)\n' % (command['as'],
+                                                  command.get('name', '$$')))
+
+  def _WriteAssertModuleCommand(self, command):
+    self.out_file.write('%s("%s");\n' % (command['type'],
+                                         self._Module(command['filename'])))
+
+  def _WriteAssertReturnCommand(self, command):
+    expected = command['expected']
+    if len(expected) == 1:
+      self.out_file.write('assert_return(() => %s, %s);\n' %
+                          (self._Action(command['action']),
+                           self._ConstantList(expected)))
+    elif len(expected) == 0:
+      self._WriteAssertActionCommand(command)
+    else:
+      raise Error('Unexpected result with multiple values: %s' % expected)
+
+  def _WriteAssertActionCommand(self, command):
+    self.out_file.write('%s(() => %s);\n' % (command['type'],
+                                             self._Action(command['action'])))
+
+  def _Module(self, filename):
+    with open(os.path.join(self.base_dir, filename), 'rb') as wasm_file:
+      return ''.join('\\x%02x' % c for c in bytearray(wasm_file.read()))
+
+  def _Constant(self, const):
+    assert IsValidJSConstant(const), 'Invalid JS const: %s' % const
+    type_ = const['type']
+    value = int(const['value'])
+    if type_ == 'i32':
+      return I32ToJS(value)
+    elif type_ == 'f32':
+      return F32ToJS(value)
+    elif type_ == 'f64':
+      return F64ToJS(value)
+    else:
+      assert False
+
+  def _ConstantList(self, consts):
+    return ', '.join(self._Constant(const) for const in consts)
+
+  def _Action(self, action):
+    type_ = action['type']
+    if type_ not in ('invoke', 'get'):
+      raise Error('Unexpected action type: %s' % type_)
+
+    args = ''
+    if type_ == 'invoke':
+      args = '(%s)' % self._ConstantList(action.get('args', []))
+
+    return '%s.exports["%s"]%s' % (action.get('module', '$$'),
+                                   EscapeJSString(action['field']),
+                                   args)
 
 
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
+  parser.add_argument('-P', '--prefix', metavar='PATH', help='prefix file.',
+                      default=os.path.join(SCRIPT_DIR, 'gen-spec-prefix.js'))
+  parser.add_argument('--wast2wasm', metavar='PATH',
+                      help='set the wast2wasm executable to use.')
+  parser.add_argument('--wasm2wast', metavar='PATH',
+                      help='set the wasm2wast executable to use.')
+  parser.add_argument('--temp-dir', metavar='PATH',
+                      help='set the directory that temporary wasm/wast'
+                           ' files are written.')
+  parser.add_argument('--no-error-cmdline',
+                      help='don\'t display the subprocess\'s commandline when' +
+                          ' an error occurs', dest='error_cmdline',
+                      action='store_false')
+  parser.add_argument('-p', '--print-cmd',
+                      help='print the commands that are run.',
+                      action='store_true')
   parser.add_argument('file', help='spec json file.')
   options = parser.parse_args(args)
 
-  output_data = ProcessJsonFile(options.file)
+  wast2wasm = Executable(GetWast2WasmExecutable(options.wast2wasm),
+                         error_cmdline=options.error_cmdline)
+  wasm2wast = Executable(GetWasm2WastExecutable(options.wasm2wast),
+                         error_cmdline=options.error_cmdline)
+
+  wast2wasm.verbose = options.print_cmd
+  wasm2wast.verbose = options.print_cmd
+
+  with open(options.file) as json_file:
+    json_dir = os.path.dirname(options.file)
+    spec_json = json.load(json_file)
+    all_commands = spec_json['commands']
+
+  # modules is a list of pairs: [(module_command, [assert_command, ...]), ...]
+  modules = CollectInvalidModuleCommands(all_commands)
+
+  with utils.TempDirectory(options.temp_dir, 'gen-spec-js-') as temp_dir:
+    extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
+    for module_command, assert_commands in modules:
+      if assert_commands:
+        wasm_path = os.path.join(json_dir, module_command['filename'])
+        new_module_filename = extender.Extend(wasm_path, assert_commands)
+        module_command['filename'] = os.path.relpath(new_module_filename,
+                                                     json_dir)
+
+    output = StringIO()
+    if options.prefix:
+      with open(options.prefix) as prefix_file:
+        output.write(prefix_file.read())
+        output.write('\n')
+
+    JSWriter(json_dir, all_commands, output).Write()
+
   if options.output:
-    output_file = open(options.output, 'w')
+    out_file = open(options.output, 'w')
   else:
-    output_file = sys.stdout
+    out_file = sys.stdout
 
   try:
-    output_file.write(output_data)
+    out_file.write(output.getvalue())
   finally:
-    output_file.close()
+    out_file.close()
 
   return 0
 

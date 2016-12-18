@@ -22,6 +22,7 @@
 #include <stdio.h>
 
 #include "binary-reader.h"
+#include "literal.h"
 
 typedef struct Context {
   const WasmObjdumpOptions* options;
@@ -35,6 +36,12 @@ typedef struct Context {
   WasmBool print_details;
   WasmBool header_printed;
   int section_found;
+
+  WasmStringSlice import_module_name;
+  WasmStringSlice import_field_name;
+
+  int function_index;
+  int global_index;
 } Context;
 
 
@@ -54,16 +61,10 @@ static void WASM_PRINTF_FORMAT(2, 3)
   va_end(args);
 }
 
-#define SEGSTART(segname, name)                                             \
-  static WasmResult begin_##segname##_section(WasmBinaryReaderContext* ctx, \
-                                              uint32_t size) {              \
-    return begin_section(ctx->user_data, name, ctx->offset, size);          \
-  }
-
-static WasmResult begin_section(Context* ctx,
-                                const char* name,
-                                size_t offset,
-                                size_t size) {
+static WasmResult do_begin_section(Context* ctx,
+                                   const char* name,
+                                   size_t offset,
+                                   size_t size) {
   switch (ctx->options->mode) {
     case WASM_DUMP_HEADERS:
       printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010" PRIzx
@@ -82,7 +83,7 @@ static WasmResult begin_section(Context* ctx,
     case WASM_DUMP_RAW_DATA:
       printf("\nContents of section %s:\n", name);
       wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size, offset,
-                             WASM_PRINT_CHARS, NULL);
+                             WASM_PRINT_CHARS, NULL, NULL);
       break;
     case WASM_DUMP_DISASSEMBLE:
       break;
@@ -90,28 +91,23 @@ static WasmResult begin_section(Context* ctx,
   return WASM_OK;
 }
 
-static WasmResult begin_user_section(WasmBinaryReaderContext* ctx,
-                                     uint32_t size,
-                                     WasmStringSlice section_name) {
-  Context* context = ctx->user_data;
-  if (begin_section(context, "USER", ctx->offset, size))
-    return WASM_ERROR;
-  if (context->options->mode == WASM_DUMP_DETAILS)
-    printf(" - name: \"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
-  return WASM_OK;
+static WasmResult begin_section(WasmBinaryReaderContext* ctx,
+                                WasmBinarySection type,
+                                uint32_t size) {
+  return do_begin_section(ctx->user_data, wasm_get_section_name(type),
+                          ctx->offset, size);
 }
 
-SEGSTART(signature, "TYPE")
-SEGSTART(import, "IMPORT")
-SEGSTART(function_signatures, "FUNCTION")
-SEGSTART(table, "TABLE")
-SEGSTART(memory, "MEMORY")
-SEGSTART(global, "GLOBAL")
-SEGSTART(export, "EXPORT")
-SEGSTART(start, "START")
-SEGSTART(function_bodies, "CODE")
-SEGSTART(elem, "ELEM")
-SEGSTART(data, "DATA")
+static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
+                                       uint32_t size,
+                                       WasmStringSlice section_name) {
+  Context* context = ctx->user_data;
+  print_details(context, " - name: \"" PRIstringslice "\"\n",
+                WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  if (context->options->mode == WASM_DUMP_HEADERS)
+    printf("\"" PRIstringslice "\"\n", WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  return WASM_OK;
+}
 
 static WasmResult on_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
@@ -265,6 +261,26 @@ static WasmResult on_opcode_uint64(WasmBinaryReaderContext* ctx,
   return WASM_OK;
 }
 
+static WasmResult on_opcode_f32(WasmBinaryReaderContext* ctx,
+                                uint32_t value) {
+  Context* context = ctx->user_data;
+  size_t immediate_len = ctx->offset - context->current_opcode_offset;
+  char buffer[WASM_MAX_FLOAT_HEX];
+  wasm_write_float_hex(buffer, sizeof(buffer), value);
+  log_opcode(context, ctx->data, immediate_len, buffer);
+  return WASM_OK;
+}
+
+static WasmResult on_opcode_f64(WasmBinaryReaderContext* ctx,
+                                uint64_t value) {
+  Context* context = ctx->user_data;
+  size_t immediate_len = ctx->offset - context->current_opcode_offset;
+  char buffer[WASM_MAX_DOUBLE_HEX];
+  wasm_write_double_hex(buffer, sizeof(buffer), value);
+  log_opcode(context, ctx->data, immediate_len, buffer);
+  return WASM_OK;
+}
+
 WasmResult on_br_table_expr(WasmBinaryReaderContext* ctx,
                             uint32_t num_targets,
                             uint32_t* target_depths,
@@ -346,7 +362,10 @@ static WasmResult on_signature(uint32_t index,
 static WasmResult on_function_signature(uint32_t index,
                                         uint32_t sig_index,
                                         void* user_data) {
-  print_details(user_data, " - [%d] sig=%d\n", index, sig_index);
+  Context* ctx = user_data;
+
+  print_details(user_data, " - func[%d] sig=%d\n", ctx->function_index, sig_index);
+  ctx->function_index++;
   return WASM_OK;
 }
 
@@ -366,16 +385,22 @@ static WasmResult on_import(uint32_t index,
                             WasmStringSlice module_name,
                             WasmStringSlice field_name,
                             void* user_data) {
-  print_details(user_data, " - " PRIstringslice " " PRIstringslice "\n",
-                  WASM_PRINTF_STRING_SLICE_ARG(module_name),
-                  WASM_PRINTF_STRING_SLICE_ARG(field_name));
+  Context* ctx = user_data;
+  ctx->import_module_name = module_name;
+  ctx->import_field_name = field_name;
   return WASM_OK;
 }
 
 static WasmResult on_import_func(uint32_t index,
                                  uint32_t sig_index,
                                  void* user_data) {
-  print_details(user_data, " - func sig=%d\n", sig_index);
+  Context* ctx = user_data;
+  print_details(user_data,
+                " - func[%d] sig=%d <- " PRIstringslice "." PRIstringslice "\n",
+                ctx->function_index, sig_index,
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+  ctx->function_index++;
   return WASM_OK;
 }
 
@@ -383,18 +408,24 @@ static WasmResult on_import_table(uint32_t index,
                                   WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
-  print_details(user_data,
-      " - table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
-      wasm_get_type_name(elem_type),
-      elem_limits->initial,
-      elem_limits->max);
+  Context* ctx = user_data;
+  print_details(
+      user_data, " - " PRIstringslice "." PRIstringslice
+                 " -> table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
+      WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+      WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
+      wasm_get_type_name(elem_type), elem_limits->initial, elem_limits->max);
   return WASM_OK;
 }
 
 static WasmResult on_import_memory(uint32_t index,
                                    const WasmLimits* page_limits,
                                    void* user_data) {
-  print_details(user_data, " - memory\n");
+  Context* ctx = user_data;
+  print_details(user_data,
+                " - " PRIstringslice "." PRIstringslice " -> memory\n",
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
   return WASM_OK;
 }
 
@@ -402,14 +433,25 @@ static WasmResult on_import_global(uint32_t index,
                                    WasmType type,
                                    WasmBool mutable_,
                                    void* user_data) {
-  print_details(user_data, " - global\n");
+  Context* ctx = user_data;
+  print_details(user_data, " - global[%d] %s mutable=%d <- " PRIstringslice
+                           "." PRIstringslice "\n",
+                ctx->global_index, wasm_get_type_name(type), mutable_,
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
+                WASM_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+  ctx->global_index++;
   return WASM_OK;
 }
 
 static WasmResult on_memory(uint32_t index,
                             const WasmLimits* page_limits,
                             void* user_data) {
-  print_details(user_data, " - memory %d\n", index);
+  print_details(user_data, " - memory[%d] pages: initial=%" PRId64,
+      index,
+      page_limits->initial);
+  if (page_limits->has_max)
+    print_details(user_data, " max=%" PRId64, page_limits->max);
+  print_details(user_data, "\n");
   return WASM_OK;
 }
 
@@ -417,12 +459,13 @@ static WasmResult on_table(uint32_t index,
                            WasmType elem_type,
                            const WasmLimits* elem_limits,
                            void* user_data) {
-  print_details(user_data,
-      " - [%d] type=%#x init=%" PRId64 " max=%" PRId64 " \n",
+  print_details(user_data, " - table[%d] type=%s initial=%" PRId64,
       index,
-      elem_type,
-      elem_limits->initial,
-      elem_limits->has_max ? elem_limits->max : 0);
+      wasm_get_type_name(elem_type),
+      elem_limits->initial);
+  if (elem_limits->has_max)
+    print_details(user_data, " max=%" PRId64, elem_limits->max);
+  print_details(user_data, "\n");
   return WASM_OK;
 }
 
@@ -431,7 +474,7 @@ static WasmResult on_export(uint32_t index,
                             uint32_t item_index,
                             WasmStringSlice name,
                             void* user_data) {
-  print_details(user_data, " - [%d] %s ", item_index, wasm_get_kind_name(kind));
+  print_details(user_data, " - %s[%d] ", wasm_get_kind_name(kind), item_index);
   print_details(user_data, PRIstringslice, WASM_PRINTF_STRING_SLICE_ARG(name));
   print_details(user_data, "\n");
   return WASM_OK;
@@ -440,28 +483,40 @@ static WasmResult on_export(uint32_t index,
 static WasmResult on_elem_segment_function_index(uint32_t index,
                                                  uint32_t func_index,
                                                  void* user_data) {
-  print_details(user_data, "  - [%d] -> %d\n", index, func_index);
+  print_details(user_data, "  - func[%d]\n", func_index);
   return WASM_OK;
 }
 
 static WasmResult begin_elem_segment(uint32_t index,
                                      uint32_t table_index,
                                      void* user_data) {
-  print_details(user_data, " - segment [%d] table=%d\n", index, table_index);
+  print_details(user_data, " - segment[%d] table=%d\n", index, table_index);
+  return WASM_OK;
+}
+
+static WasmResult begin_global(uint32_t index, WasmType type, WasmBool mutable, void* user_data) {
+  Context* ctx = user_data;
+  print_details(user_data, " - global[%d] %s mutable=%d", ctx->global_index,
+                wasm_get_type_name(type), mutable);
+  ctx->global_index++;
   return WASM_OK;
 }
 
 static WasmResult on_init_expr_f32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
-  print_details(user_data, " - init f32=%d\n", value);
+  char buffer[WASM_MAX_FLOAT_HEX];
+  wasm_write_float_hex(buffer, sizeof(buffer), value);
+  print_details(user_data, " - init f32=%s\n", buffer);
   return WASM_OK;
 }
 
 static WasmResult on_init_expr_f64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  print_details(user_data, " - init f64=%" PRId64 "\n", value);
+  char buffer[WASM_MAX_DOUBLE_HEX];
+  wasm_write_float_hex(buffer, sizeof(buffer), value);
+  print_details(user_data, " - init f64=%s\n", buffer);
   return WASM_OK;
 }
 
@@ -489,7 +544,7 @@ static WasmResult on_init_expr_i64_const_expr(uint32_t index,
 static WasmResult on_function_name(uint32_t index,
                                    WasmStringSlice name,
                                    void* user_data) {
-  print_details(user_data, " - func:%d " PRIstringslice "\n", index,
+  print_details(user_data, " - func[%d] " PRIstringslice "\n", index,
                 WASM_PRINTF_STRING_SLICE_ARG(name));
   return WASM_OK;
 }
@@ -498,13 +553,39 @@ static WasmResult on_local_name(uint32_t func_index,
                                 uint32_t local_index,
                                 WasmStringSlice name,
                                 void* user_data) {
-  print_details(user_data, "  - local:%d " PRIstringslice "\n", local_index,
-                WASM_PRINTF_STRING_SLICE_ARG(name));
+  if (name.length) {
+    print_details(user_data, "  - local[%d] " PRIstringslice "\n", local_index,
+                  WASM_PRINTF_STRING_SLICE_ARG(name));
+  }
   return WASM_OK;
 }
 
 static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
-  wasm_default_binary_error_callback(ctx->offset, message, ctx->user_data);
+  WasmDefaultErrorHandlerInfo info;
+  info.header = "error reading binary";
+  info.out_file = stdout;
+  info.print_header = WASM_PRINT_ERROR_HEADER_ONCE;
+  wasm_default_binary_error_callback(ctx->offset, message, &info);
+}
+
+static WasmResult begin_data_segment(uint32_t index,
+                                     uint32_t memory_index,
+                                     void* user_data) {
+  Context* ctx = user_data;
+  print_details(ctx, " - memory[%d]", memory_index);
+  return WASM_OK;
+}
+
+static WasmResult on_data_segment_data(uint32_t index,
+                                       const void* src_data,
+                                       uint32_t size,
+                                       void* user_data) {
+  Context* ctx = user_data;
+  if (should_print_details(ctx)) {
+    wasm_write_memory_dump(ctx->out_stream, src_data, size, 0, WASM_PRINT_CHARS,
+                           "  - ", NULL);
+  }
+  return WASM_OK;
 }
 
 static WasmBinaryReader s_binary_reader = {
@@ -514,16 +595,16 @@ static WasmBinaryReader s_binary_reader = {
     .end_module = end_module,
     .on_error = on_error,
 
+    .begin_section = begin_section,
+
     // User section
-    .begin_user_section = begin_user_section,
+    .begin_custom_section = begin_custom_section,
 
     // Signature section
-    .begin_signature_section = begin_signature_section,
     .on_signature_count = on_count,
     .on_signature = on_signature,
 
     // Import section
-    .begin_import_section = begin_import_section,
     .on_import_count = on_count,
     .on_import = on_import,
     .on_import_func = on_import_func,
@@ -532,50 +613,41 @@ static WasmBinaryReader s_binary_reader = {
     .on_import_global = on_import_global,
 
     // Function sigs section
-    .begin_function_signatures_section = begin_function_signatures_section,
     .on_function_signatures_count = on_count,
     .on_function_signature = on_function_signature,
 
     // Table section
-    .begin_table_section = begin_table_section,
     .on_table_count = on_count,
     .on_table = on_table,
 
     // Memory section
-    .begin_memory_section = begin_memory_section,
     .on_memory_count = on_count,
     .on_memory = on_memory,
 
     // Globl seciont
-    .begin_global_section = begin_global_section,
+    .begin_global = begin_global,
     .on_global_count = on_count,
 
     // Export section
-    .begin_export_section = begin_export_section,
     .on_export_count = on_count,
     .on_export = on_export,
 
-    // Start section
-    .begin_start_section = begin_start_section,
-
     // Body section
-    .begin_function_bodies_section = begin_function_bodies_section,
     .on_function_bodies_count = on_count,
     .begin_function_body = begin_function_body,
 
     // Elems section
-    .begin_elem_section = begin_elem_section,
     .begin_elem_segment = begin_elem_segment,
     .on_elem_segment_count = on_count,
     .on_elem_segment_function_index = on_elem_segment_function_index,
 
     // Data section
-    .begin_data_section = begin_data_section,
+    .begin_data_segment = begin_data_segment,
+    .on_data_segment_data = on_data_segment_data,
     .on_data_segment_count = on_count,
 
     // Known "User" sections:
     // - Names section
-    .on_function_names_count = on_count,
     .on_function_name = on_function_name,
     .on_local_name = on_local_name,
 
@@ -609,6 +681,8 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
     reader.on_opcode_uint32 = on_opcode_uint32;
     reader.on_opcode_uint32_uint32 = on_opcode_uint32_uint32;
     reader.on_opcode_uint64 = on_opcode_uint64;
+    reader.on_opcode_f32 = on_opcode_f32;
+    reader.on_opcode_f64 = on_opcode_f64;
     reader.on_opcode_block_sig = on_opcode_block_sig;
     reader.on_end_expr = on_end_expr;
     reader.on_br_table_expr = on_br_table_expr;

@@ -1,6 +1,7 @@
 ;;; TOOL: run-wasmdump
 ;;; FLAGS: -v
 (module
+  (memory 1)
   (func
     i32.const 0
     i32.const 0
@@ -47,108 +48,116 @@
 0000010: 01                                        ; num functions
 0000011: 00                                        ; function 0 signature index
 000000f: 02                                        ; FIXUP section size
-; section "CODE" (10)
-0000012: 0a                                        ; section code
+; section "MEMORY" (5)
+0000012: 05                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 01                                        ; num functions
+0000014: 01                                        ; num memories
+; memory 0
+0000015: 00                                        ; limits: flags
+0000016: 01                                        ; limits: initial
+0000013: 03                                        ; FIXUP section size
+; section "CODE" (10)
+0000017: 0a                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 01                                        ; num functions
 ; function body 0
-0000015: 00                                        ; func body size (guess)
-0000016: 00                                        ; local decl count
-0000017: 41                                        ; i32.const
-0000018: 00                                        ; i32 literal
-0000019: 41                                        ; i32.const
-000001a: 00                                        ; i32 literal
-000001b: 3a                                        ; i32.store8
-000001c: 00                                        ; alignment
-000001d: 00                                        ; store offset
+000001a: 00                                        ; func body size (guess)
+000001b: 00                                        ; local decl count
+000001c: 41                                        ; i32.const
+000001d: 00                                        ; i32 literal
 000001e: 41                                        ; i32.const
 000001f: 00                                        ; i32 literal
-0000020: 41                                        ; i32.const
-0000021: 00                                        ; i32 literal
-0000022: 3b                                        ; i32.store16
-0000023: 01                                        ; alignment
-0000024: 00                                        ; store offset
+0000020: 3a                                        ; i32.store8
+0000021: 00                                        ; alignment
+0000022: 00                                        ; store offset
+0000023: 41                                        ; i32.const
+0000024: 00                                        ; i32 literal
 0000025: 41                                        ; i32.const
 0000026: 00                                        ; i32 literal
-0000027: 41                                        ; i32.const
-0000028: 00                                        ; i32 literal
-0000029: 36                                        ; i32.store
-000002a: 02                                        ; alignment
-000002b: 00                                        ; store offset
+0000027: 3b                                        ; i32.store16
+0000028: 01                                        ; alignment
+0000029: 00                                        ; store offset
+000002a: 41                                        ; i32.const
+000002b: 00                                        ; i32 literal
 000002c: 41                                        ; i32.const
 000002d: 00                                        ; i32 literal
-000002e: 42                                        ; i64.const
-000002f: 00                                        ; i64 literal
-0000030: 37                                        ; i64.store
-0000031: 03                                        ; alignment
-0000032: 00                                        ; store offset
-0000033: 41                                        ; i32.const
-0000034: 00                                        ; i32 literal
-0000035: 42                                        ; i64.const
-0000036: 00                                        ; i64 literal
-0000037: 3c                                        ; i64.store8
-0000038: 00                                        ; alignment
-0000039: 00                                        ; store offset
-000003a: 41                                        ; i32.const
-000003b: 00                                        ; i32 literal
-000003c: 42                                        ; i64.const
-000003d: 00                                        ; i64 literal
-000003e: 3d                                        ; i64.store16
-000003f: 01                                        ; alignment
-0000040: 00                                        ; store offset
-0000041: 41                                        ; i32.const
-0000042: 00                                        ; i32 literal
-0000043: 42                                        ; i64.const
-0000044: 00                                        ; i64 literal
-0000045: 3e                                        ; i64.store32
-0000046: 02                                        ; alignment
-0000047: 00                                        ; store offset
-0000048: 41                                        ; i32.const
-0000049: 00                                        ; i32 literal
-000004a: 43                                        ; f32.const
-000004b: 0000 0000                                 ; f32 literal
-000004f: 38                                        ; f32.store
-0000050: 02                                        ; alignment
-0000051: 00                                        ; store offset
-0000052: 41                                        ; i32.const
-0000053: 00                                        ; i32 literal
-0000054: 44                                        ; f64.const
-0000055: 0000 0000 0000 0000                       ; f64 literal
-000005d: 39                                        ; f64.store
-000005e: 03                                        ; alignment
-000005f: 00                                        ; store offset
-0000060: 0b                                        ; end
-0000015: 4b                                        ; FIXUP func body size
-0000013: 4d                                        ; FIXUP section size
+000002e: 36                                        ; i32.store
+000002f: 02                                        ; alignment
+0000030: 00                                        ; store offset
+0000031: 41                                        ; i32.const
+0000032: 00                                        ; i32 literal
+0000033: 42                                        ; i64.const
+0000034: 00                                        ; i64 literal
+0000035: 37                                        ; i64.store
+0000036: 03                                        ; alignment
+0000037: 00                                        ; store offset
+0000038: 41                                        ; i32.const
+0000039: 00                                        ; i32 literal
+000003a: 42                                        ; i64.const
+000003b: 00                                        ; i64 literal
+000003c: 3c                                        ; i64.store8
+000003d: 00                                        ; alignment
+000003e: 00                                        ; store offset
+000003f: 41                                        ; i32.const
+0000040: 00                                        ; i32 literal
+0000041: 42                                        ; i64.const
+0000042: 00                                        ; i64 literal
+0000043: 3d                                        ; i64.store16
+0000044: 01                                        ; alignment
+0000045: 00                                        ; store offset
+0000046: 41                                        ; i32.const
+0000047: 00                                        ; i32 literal
+0000048: 42                                        ; i64.const
+0000049: 00                                        ; i64 literal
+000004a: 3e                                        ; i64.store32
+000004b: 02                                        ; alignment
+000004c: 00                                        ; store offset
+000004d: 41                                        ; i32.const
+000004e: 00                                        ; i32 literal
+000004f: 43                                        ; f32.const
+0000050: 0000 0000                                 ; f32 literal
+0000054: 38                                        ; f32.store
+0000055: 02                                        ; alignment
+0000056: 00                                        ; store offset
+0000057: 41                                        ; i32.const
+0000058: 00                                        ; i32 literal
+0000059: 44                                        ; f64.const
+000005a: 0000 0000 0000 0000                       ; f64 literal
+0000062: 39                                        ; f64.store
+0000063: 03                                        ; alignment
+0000064: 00                                        ; store offset
+0000065: 0b                                        ; end
+000001a: 4b                                        ; FIXUP func body size
+0000018: 4d                                        ; FIXUP section size
 store.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
 func 0
- 000017: 41 00                      | i32.const 0
- 000019: 41 00                      | i32.const 0
- 00001b: 3a 00 00                   | i32.store8 0 0
+ 00001c: 41 00                      | i32.const 0
  00001e: 41 00                      | i32.const 0
- 000020: 41 00                      | i32.const 0
- 000022: 3b 01 00                   | i32.store16 1 0
+ 000020: 3a 00 00                   | i32.store8 0 0
+ 000023: 41 00                      | i32.const 0
  000025: 41 00                      | i32.const 0
- 000027: 41 00                      | i32.const 0
- 000029: 36 02 00                   | i32.store 2 0
+ 000027: 3b 01 00                   | i32.store16 1 0
+ 00002a: 41 00                      | i32.const 0
  00002c: 41 00                      | i32.const 0
- 00002e: 42 00                      | i64.const 0
- 000030: 37 03 00                   | i64.store 3 0
- 000033: 41 00                      | i32.const 0
- 000035: 42 00                      | i64.const 0
- 000037: 3c 00 00                   | i64.store8 0 0
- 00003a: 41 00                      | i32.const 0
- 00003c: 42 00                      | i64.const 0
- 00003e: 3d 01 00                   | i64.store16 1 0
- 000041: 41 00                      | i32.const 0
- 000043: 42 00                      | i64.const 0
- 000045: 3e 02 00                   | i64.store32 2 0
- 000048: 41 00                      | i32.const 0
- 00004a: 43 00 00 00 00             | f32.const 0
- 00004f: 38 02 00                   | f32.store 2 0
- 000052: 41 00                      | i32.const 0
- 000054: 44 00 00 00 00 00 00 00 00 | f64.const 0
- 00005d: 39 03 00                   | f64.store 3 0
+ 00002e: 36 02 00                   | i32.store 2 0
+ 000031: 41 00                      | i32.const 0
+ 000033: 42 00                      | i64.const 0
+ 000035: 37 03 00                   | i64.store 3 0
+ 000038: 41 00                      | i32.const 0
+ 00003a: 42 00                      | i64.const 0
+ 00003c: 3c 00 00                   | i64.store8 0 0
+ 00003f: 41 00                      | i32.const 0
+ 000041: 42 00                      | i64.const 0
+ 000043: 3d 01 00                   | i64.store16 1 0
+ 000046: 41 00                      | i32.const 0
+ 000048: 42 00                      | i64.const 0
+ 00004a: 3e 02 00                   | i64.store32 2 0
+ 00004d: 41 00                      | i32.const 0
+ 00004f: 43 00 00 00 00             | f32.const 0x0p+0
+ 000054: 38 02 00                   | f32.store 2 0
+ 000057: 41 00                      | i32.const 0
+ 000059: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000062: 39 03 00                   | f64.store 3 0
 ;;; STDOUT ;;)

@@ -130,7 +130,11 @@ static  WasmResult on_store_expr(WasmOpcode opcode,
 }
 
 static void on_error(WasmBinaryReaderContext* ctx, const char* message) {
-  wasm_default_binary_error_callback(ctx->offset, message, ctx->user_data);
+  WasmDefaultErrorHandlerInfo info;
+  info.header = "error reading binary";
+  info.out_file = stdout;
+  info.print_header = WASM_PRINT_ERROR_HEADER_ONCE;
+  wasm_default_binary_error_callback(ctx->offset, message, &info);
 }
 
 static WasmBinaryReader s_binary_reader = {

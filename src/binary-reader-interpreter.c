@@ -836,7 +836,7 @@ static WasmResult on_init_expr_get_global_expr(uint32_t index,
                                                void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterGlobal* ref_global =
-      get_global_by_defined_index(ctx, global_index);
+      get_global_by_module_index(ctx, global_index);
   ctx->init_expr_value = ref_global->typed_value;
   return WASM_OK;
 }

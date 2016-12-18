@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-spec-js
+;;; FLAGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+(module
+  (func (export "f") (result i32) i32.const 1))
+
+(register "A")
+
+(module
+  (import "A" "f" (func (result i32)))
+  (func (export "g") (result i32) call 0))
+
+(assert_return (invoke "g") (i32.const 1))
+(;; STDOUT ;;;
+// A deliberately empty file for testing.
+
+$$ = instance("\x00\x61\x73\x6d\x0d\x00\x00\x00\x01\x05\x01\x60\x00\x01\x7f\x03\x02\x01\x00\x07\x05\x01\x01\x66\x00\x00\x0a\x06\x01\x04\x00\x41\x01\x0b");
+register("A", $$)
+$$ = instance("\x00\x61\x73\x6d\x0d\x00\x00\x00\x01\x05\x01\x60\x00\x01\x7f\x02\x07\x01\x01\x41\x01\x66\x00\x00\x03\x02\x01\x00\x07\x05\x01\x01\x67\x00\x01\x0a\x06\x01\x04\x00\x10\x00\x0b");
+assert_return(() => $$.exports["g"](), 1);
+;;; STDOUT ;;)

@@ -1,0 +1,21 @@
+;;; TOOL: run-gen-spec-js
+;;; FLAGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+(module $A (func (export "f") (result i32) i32.const 1))
+(module $B (func (export "f") (result i32) i32.const 2))
+(module $C (func (export "f") (result i32) i32.const 3))
+
+(assert_return (invoke "f") (i32.const 3))
+(assert_return (invoke $A "f") (i32.const 1))
+(assert_return (invoke $B "f") (i32.const 2))
+(assert_return (invoke $C "f") (i32.const 3))
+(;; STDOUT ;;;
+// A deliberately empty file for testing.
+
+let $A = $$ = instance("\x00\x61\x73\x6d\x0d\x00\x00\x00\x01\x05\x01\x60\x00\x01\x7f\x03\x02\x01\x00\x07\x05\x01\x01\x66\x00\x00\x0a\x06\x01\x04\x00\x41\x01\x0b");
+let $B = $$ = instance("\x00\x61\x73\x6d\x0d\x00\x00\x00\x01\x05\x01\x60\x00\x01\x7f\x03\x02\x01\x00\x07\x05\x01\x01\x66\x00\x00\x0a\x06\x01\x04\x00\x41\x02\x0b");
+let $C = $$ = instance("\x00\x61\x73\x6d\x0d\x00\x00\x00\x01\x05\x01\x60\x00\x01\x7f\x03\x02\x01\x00\x07\x05\x01\x01\x66\x00\x00\x0a\x06\x01\x04\x00\x41\x03\x0b");
+assert_return(() => $$.exports["f"](), 3);
+assert_return(() => $A.exports["f"](), 1);
+assert_return(() => $B.exports["f"](), 2);
+assert_return(() => $C.exports["f"](), 3);
+;;; STDOUT ;;)

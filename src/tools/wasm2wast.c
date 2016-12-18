@@ -189,10 +189,11 @@ int main(int argc, char** argv) {
           wasm_close_file_writer(&file_writer);
         }
       }
+
+      if (s_use_libc_allocator)
+        wasm_destroy_module(allocator, &module);
     }
 
-    if (s_use_libc_allocator)
-      wasm_destroy_module(allocator, &module);
     wasm_free(allocator, data);
     wasm_print_allocator_stats(allocator);
     wasm_destroy_allocator(allocator);

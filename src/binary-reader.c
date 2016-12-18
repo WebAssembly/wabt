@@ -200,70 +200,86 @@ static void in_f64(Context* ctx, uint64_t* out_value, const char* desc) {
   ((type)((value) << SHIFT_AMOUNT(type, sign_bit)) >> \
    SHIFT_AMOUNT(type, sign_bit))
 
-static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
-  const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->section_end;
-
+size_t wasm_read_u32_leb128(const uint8_t* p,
+                            const uint8_t* end,
+                            uint32_t* out_value) {
   if (p < end && (p[0] & 0x80) == 0) {
     *out_value = LEB128_1(uint32_t);
-    ctx->offset += 1;
+    return 1;
   } else if (p + 1 < end && (p[1] & 0x80) == 0) {
     *out_value = LEB128_2(uint32_t);
-    ctx->offset += 2;
+    return 2;
   } else if (p + 2 < end && (p[2] & 0x80) == 0) {
     *out_value = LEB128_3(uint32_t);
-    ctx->offset += 3;
+    return 3;
   } else if (p + 3 < end && (p[3] & 0x80) == 0) {
     *out_value = LEB128_4(uint32_t);
-    ctx->offset += 4;
+    return 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     /* the top bits set represent values > 32 bits */
     if (p[4] & 0xf0)
-      RAISE_ERROR("invalid u32 leb128: %s", desc);
+      return 0;
     *out_value = LEB128_5(uint32_t);
-    ctx->offset += 5;
+    return 5;
   } else {
     /* past the end */
     *out_value = 0;
-    RAISE_ERROR("unable to read u32 leb128: %s", desc);
+    return 0;
   }
 }
 
-static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
+static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
   const uint8_t* end = ctx->data + ctx->section_end;
+  size_t bytes_read = wasm_read_u32_leb128(p, end, out_value);
+  if (!bytes_read)
+    RAISE_ERROR("unable to read u32 leb128: %s", desc);
+  ctx->offset += bytes_read;
+}
 
+size_t wasm_read_i32_leb128(const uint8_t* p,
+                            const uint8_t* end,
+                            uint32_t* out_value) {
   if (p < end && (p[0] & 0x80) == 0) {
     uint32_t result = LEB128_1(uint32_t);
     *out_value = SIGN_EXTEND(int32_t, result, 6);
-    ctx->offset += 1;
+    return 1;
   } else if (p + 1 < end && (p[1] & 0x80) == 0) {
     uint32_t result = LEB128_2(uint32_t);
     *out_value = SIGN_EXTEND(int32_t, result, 13);
-    ctx->offset += 2;
+    return 2;
   } else if (p + 2 < end && (p[2] & 0x80) == 0) {
     uint32_t result = LEB128_3(uint32_t);
     *out_value = SIGN_EXTEND(int32_t, result, 20);
-    ctx->offset += 3;
+    return 3;
   } else if (p + 3 < end && (p[3] & 0x80) == 0) {
     uint32_t result = LEB128_4(uint32_t);
     *out_value = SIGN_EXTEND(int32_t, result, 27);
-    ctx->offset += 4;
+    return 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     /* the top bits should be a sign-extension of the sign bit */
     WasmBool sign_bit_set = (p[4] & 0x8);
     int top_bits = p[4] & 0xf0;
     if ((sign_bit_set && top_bits != 0x70) ||
         (!sign_bit_set && top_bits != 0)) {
-      RAISE_ERROR("invalid i32 leb128: %s", desc);
+      return 0;
     }
     uint32_t result = LEB128_5(uint32_t);
     *out_value = result;
-    ctx->offset += 5;
+    return 5;
   } else {
     /* past the end */
-    RAISE_ERROR("unable to read i32 leb128: %s", desc);
+    return 0;
   }
+}
+
+static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
+  const uint8_t* p = ctx->data + ctx->offset;
+  const uint8_t* end = ctx->data + ctx->section_end;
+  size_t bytes_read = wasm_read_i32_leb128(p, end, out_value);
+  if (!bytes_read)
+    RAISE_ERROR("unable to read i32 leb128: %s", desc);
+  ctx->offset += bytes_read;
 }
 
 static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
@@ -410,10 +426,10 @@ static uint32_t num_total_globals(Context* ctx) {
   return ctx->num_global_imports + ctx->num_globals;
 }
 
-static void handle_user_section(Context* ctx,
-                                WasmStringSlice* section_name,
-                                uint32_t section_size) {
-  CALLBACK_CTX(begin_user_section, section_size, *section_name);
+static void handle_custom_section(Context* ctx,
+                                  WasmStringSlice* section_name,
+                                  uint32_t section_size) {
+  CALLBACK_CTX(begin_custom_section, section_size, *section_name);
   if (ctx->options->read_debug_names && ctx->name_section_ok &&
       strncmp(section_name->start, WASM_BINARY_SECTION_NAME,
               section_name->length) == 0) {
@@ -440,7 +456,7 @@ static void handle_user_section(Context* ctx,
     }
     CALLBACK0(end_names_section);
   }
-  CALLBACK_CTX0(end_user_section);
+  CALLBACK_CTX0(end_custom_section);
 }
 
 static WasmBool skip_until_section(Context* ctx,
@@ -451,6 +467,11 @@ static WasmBool skip_until_section(Context* ctx,
   if (ctx->offset == ctx->data_size) {
     /* ok, no more sections */
     return WASM_FALSE;
+  }
+
+  if (ctx->section_end != ctx->data_size && ctx->offset != ctx->section_end) {
+    RAISE_ERROR("unfinished section (expected end: 0x%" PRIzx ")",
+                ctx->section_end);
   }
 
   /* Reset section_end to the full data size so the next section can be read. */
@@ -464,10 +485,11 @@ static WasmBool skip_until_section(Context* ctx,
   if (ctx->section_end > ctx->data_size)
     RAISE_ERROR("invalid section size: extends past end");
 
-  if (section_code == WASM_BINARY_SECTION_USER) {
+  if (section_code == WASM_BINARY_SECTION_CUSTOM) {
+    CALLBACK_CTX(begin_section, section_code, *section_size);
     WasmStringSlice section_name;
     in_str(ctx, &section_name, "section name");
-    handle_user_section(ctx, &section_name, *section_size);
+    handle_custom_section(ctx, &section_name, *section_size);
     ctx->offset = ctx->section_end;
     return skip_until_section(ctx, expected_code, section_size);
   } else {
@@ -478,6 +500,7 @@ static WasmBool skip_until_section(Context* ctx,
     }
 
     if (section_code == expected_code) {
+      CALLBACK_CTX(begin_section, section_code, *section_size);
       return WASM_TRUE;
     } else if (section_code < expected_code) {
       RAISE_ERROR("section %s out of order", s_section_name[section_code]);
@@ -485,6 +508,7 @@ static WasmBool skip_until_section(Context* ctx,
     } else {
       /* ok, future section. Reset the offset. */
       ctx->offset = section_start_offset;
+      ctx->section_end = ctx->data_size;
       return WASM_FALSE;
     }
   }
@@ -539,14 +563,14 @@ static void logging_on_error(WasmBinaryReaderContext* ctx,
   }
 }
 
-static WasmResult logging_begin_user_section(WasmBinaryReaderContext* context,
-                                             uint32_t size,
-                                             WasmStringSlice section_name) {
+static WasmResult logging_begin_custom_section(WasmBinaryReaderContext* context,
+                                               uint32_t size,
+                                               WasmStringSlice section_name) {
   LoggingContext* ctx = context->user_data;
-  LOGF("begin_user_section: '" PRIstringslice "' size=%d\n",
+  LOGF("begin_custom_section: '" PRIstringslice "' size=%d\n",
        WASM_PRINTF_STRING_SLICE_ARG(section_name), size);
   indent(ctx);
-  FORWARD_CTX(begin_user_section, size, section_name);
+  FORWARD_CTX(begin_custom_section, size, section_name);
 }
 
 #define LOGGING_BEGIN(name)                                                \
@@ -588,6 +612,14 @@ static WasmResult logging_begin_user_section(WasmBinaryReaderContext* context,
     FORWARD(name, value0, value1);                                   \
   }
 
+#define LOGGING_UINT32_UINT32_CTX(name, desc0, desc1)                  \
+  static WasmResult logging_##name(WasmBinaryReaderContext* context,   \
+                                   uint32_t value0, uint32_t value1) { \
+    LoggingContext* ctx = context->user_data;                          \
+    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);    \
+    FORWARD_CTX(name, value0, value1);                                 \
+  }
+
 #define LOGGING_OPCODE(name)                                             \
   static WasmResult logging_##name(WasmOpcode opcode, void* user_data) { \
     LoggingContext* ctx = user_data;                                     \
@@ -604,7 +636,7 @@ static WasmResult logging_begin_user_section(WasmBinaryReaderContext* context,
 
 LOGGING_UINT32(begin_module)
 LOGGING0(end_module)
-LOGGING_END(user_section)
+LOGGING_END(custom_section)
 LOGGING_BEGIN(signature_section)
 LOGGING_UINT32(on_signature_count)
 LOGGING_END(signature_section)
@@ -666,7 +698,9 @@ LOGGING_UINT32(on_elem_segment_count)
 LOGGING_UINT32_UINT32(begin_elem_segment, "index", "table_index")
 LOGGING_UINT32(begin_elem_segment_init_expr)
 LOGGING_UINT32(end_elem_segment_init_expr)
-LOGGING_UINT32_UINT32(on_elem_segment_function_index_count, "index", "count")
+LOGGING_UINT32_UINT32_CTX(on_elem_segment_function_index_count,
+                          "index",
+                          "count")
 LOGGING_UINT32_UINT32(on_elem_segment_function_index, "index", "func_index")
 LOGGING_UINT32(end_elem_segment)
 LOGGING_END(elem_section)
@@ -1024,8 +1058,8 @@ static WasmBinaryReader s_logging_binary_reader = {
     .begin_module = logging_begin_module,
     .end_module = logging_end_module,
 
-    .begin_user_section = logging_begin_user_section,
-    .end_user_section = logging_end_user_section,
+    .begin_custom_section = logging_begin_custom_section,
+    .end_custom_section = logging_end_custom_section,
 
     .begin_signature_section = logging_begin_signature_section,
     .on_signature_count = logging_on_signature_count,
@@ -1403,7 +1437,7 @@ static void read_function_body(Context* ctx,
         uint32_t value_bits = 0;
         in_f32(ctx, &value_bits, "f32.const value");
         CALLBACK(on_f32_const_expr, value_bits);
-        CALLBACK_CTX(on_opcode_uint32, value_bits);
+        CALLBACK_CTX(on_opcode_f32, value_bits);
         break;
       }
 
@@ -1411,7 +1445,7 @@ static void read_function_body(Context* ctx,
         uint64_t value_bits = 0;
         in_f64(ctx, &value_bits, "f64.const value");
         CALLBACK(on_f64_const_expr, value_bits);
-        CALLBACK_CTX(on_opcode_uint64, value_bits);
+        CALLBACK_CTX(on_opcode_f64, value_bits);
         break;
       }
 
@@ -1852,7 +1886,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint32_t sig_index;
       in_u32_leb128(ctx, &sig_index, "function signature index");
       RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
-                         "invalid function signature index");
+                         "invalid function signature index: %d", sig_index);
       CALLBACK(on_function_signature, i, sig_index);
     }
     CALLBACK_CTX0(end_function_signatures_section);
@@ -1863,7 +1897,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_SECTION(begin_table_section);
     uint32_t i;
     in_u32_leb128(ctx, &ctx->num_tables, "table count");
-    RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count must be 0 or 1");
+    RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
+                       ctx->num_tables);
     CALLBACK(on_table_count, ctx->num_tables);
     for (i = 0; i < ctx->num_tables; ++i) {
       WasmType elem_type;
@@ -1879,7 +1914,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_SECTION(begin_memory_section);
     uint32_t i;
     in_u32_leb128(ctx, &ctx->num_memories, "memory count");
-    RAISE_ERROR_UNLESS(ctx->num_memories, "memory count must be 0 or 1");
+    RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
     CALLBACK(on_memory_count, ctx->num_memories);
     for (i = 0; i < ctx->num_memories; ++i) {
       WasmLimits page_limits;
@@ -1964,12 +1999,12 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* elem */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_ELEM, &section_size)) {
-    RAISE_ERROR_UNLESS(num_total_tables(ctx) > 0,
-                       "elem section without table section");
     CALLBACK_SECTION(begin_elem_section);
     uint32_t i, num_elem_segments;
     in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
     CALLBACK(on_elem_segment_count, num_elem_segments);
+    RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
+                       "elem section without table section");
     for (i = 0; i < num_elem_segments; ++i) {
       uint32_t table_index;
       in_u32_leb128(ctx, &table_index, "elem segment table index");
@@ -1981,7 +2016,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
       uint32_t j, num_function_indexes;
       in_u32_leb128(ctx, &num_function_indexes,
                     "elem segment function index count");
-      CALLBACK(on_elem_segment_function_index_count, i, num_function_indexes);
+      CALLBACK_CTX(on_elem_segment_function_index_count, i,
+                   num_function_indexes);
       for (j = 0; j < num_function_indexes; ++j) {
         uint32_t func_index;
         in_u32_leb128(ctx, &func_index, "elem segment function index");
@@ -2037,12 +2073,12 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
 
   /* data */
   if (skip_until_section(ctx, WASM_BINARY_SECTION_DATA, &section_size)) {
-    RAISE_ERROR_UNLESS(num_total_memories(ctx) > 0,
-                       "data section without memory section");
     CALLBACK_SECTION(begin_data_section);
     uint32_t i, num_data_segments;
     in_u32_leb128(ctx, &num_data_segments, "data segment count");
     CALLBACK(on_data_segment_count, num_data_segments);
+    RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
+                       "data section without memory section");
     for (i = 0; i < num_data_segments; ++i) {
       uint32_t memory_index;
       in_u32_leb128(ctx, &memory_index, "data segment memory index");
@@ -2060,8 +2096,8 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
     CALLBACK_CTX0(end_data_section);
   }
 
-  /* Handle supported unnamed sections at the end. */
-  skip_until_section(ctx, WASM_BINARY_SECTION_USER, &section_size);
+  /* Handle supported custom sections at the end. */
+  skip_until_section(ctx, WASM_BINARY_SECTION_CUSTOM, &section_size);
 
   CALLBACK0(end_module);
   destroy_context(allocator, ctx);

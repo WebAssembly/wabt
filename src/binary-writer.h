@@ -24,14 +24,16 @@ struct WasmModule;
 struct WasmScript;
 struct WasmWriter;
 struct WasmStream;
+enum WasmPrintChars;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { NULL, WASM_TRUE, WASM_FALSE }
+  { NULL, WASM_TRUE, WASM_FALSE, WASM_FALSE }
 
 typedef struct WasmWriteBinaryOptions {
   struct WasmStream* log_stream;
   WasmBool canonicalize_lebs;
   WasmBool write_debug_names;
+  WasmBool is_invalid;
 } WasmWriteBinaryOptions;
 
 WASM_EXTERN_C_BEGIN
@@ -44,6 +46,39 @@ WasmResult wasm_write_binary_script(struct WasmAllocator*,
                                     struct WasmWriter*,
                                     const struct WasmScript*,
                                     const WasmWriteBinaryOptions*);
+
+void wasm_write_u32_leb128(struct WasmStream* stream,
+                           uint32_t value,
+                           const char* desc);
+
+void wasm_write_i32_leb128(struct WasmStream* stream,
+                           int32_t value,
+                           const char* desc);
+
+void wasm_write_fixed_u32_leb128(struct WasmStream* stream,
+                                 uint32_t value,
+                                 const char* desc);
+
+uint32_t wasm_write_fixed_u32_leb128_at(struct WasmStream* stream,
+                                        uint32_t offset,
+                                        uint32_t value,
+                                        const char* desc);
+
+uint32_t wasm_write_fixed_u32_leb128_raw(uint8_t* data,
+                                         uint8_t* end,
+                                         uint32_t value);
+
+void wasm_write_type(struct WasmStream* stream, WasmType type);
+
+void wasm_write_str(struct WasmStream* stream,
+                    const char* s,
+                    size_t length,
+                    enum WasmPrintChars print_chars,
+                    const char* desc);
+
+void wasm_write_opcode(struct WasmStream* stream, uint8_t opcode);
+
+void wasm_write_limits(struct WasmStream* stream, const WasmLimits* limits);
 WASM_EXTERN_C_END
 
 #endif /* WASM_BINARY_WRITER_H_ */

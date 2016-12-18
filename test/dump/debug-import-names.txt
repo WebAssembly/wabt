@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasmdump
-;;; FLAGS: --headers -v --debug-names
+;;; FLAGS: --headers -v --debug-names --dump-verbose
 (module
   (import "bar" "foo" (func $foo)))
 (;; STDOUT ;;;
@@ -27,10 +27,10 @@
 000001a: 00                                        ; import signature index
 000000f: 0b                                        ; FIXUP section size
 ; section "name"
-000001b: 00                                        ; user section code
+000001b: 00                                        ; custom section code
 000001c: 00                                        ; section size (guess)
 000001d: 04                                        ; string length
-000001e: 6e61 6d65                                name  ; user section name
+000001e: 6e61 6d65                                name  ; custom section name
 0000022: 01                                        ; num functions
 0000023: 04                                        ; string length
 0000024: 2466 6f6f                                $foo  ; func name 0
@@ -41,7 +41,16 @@ debug-import-names.wasm:	file format wasm 0x00000d
 Sections:
      TYPE start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
    IMPORT start=0x00000010 end=0x0000001b (size=0x0000000b) count: 1
-     USER start=0x00000022 end=0x0000002e (size=0x0000000c) count: 1
+   CUSTOM start=0x0000001d end=0x00000029 (size=0x0000000c) "name"
+
+Section Details:
+TYPE:
+ - [0] () -> nil
+IMPORT:
+ - func[0] sig=0 <- bar.foo
+CUSTOM:
+ - name: "name"
+ - func[0] $foo
 
 Code Disassembly:
 ;;; STDOUT ;;)

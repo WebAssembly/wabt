@@ -30,7 +30,7 @@ typedef struct Context {
   WasmAllocator* allocator;
   WasmMemoryWriter json_writer;
   WasmStream json_stream;
-  const char* source_filename;
+  WasmStringSlice source_filename;
   WasmStringSlice json_filename_noext;
   const WasmWriteBinarySpecOptions* spec_options;
   WasmResult result;
@@ -162,6 +162,13 @@ static void write_var(Context* ctx, const WasmVar* var) {
     write_escaped_string_slice(ctx, var->name);
 }
 
+static void write_type_object(Context* ctx, WasmType type) {
+  wasm_writef(&ctx->json_stream, "{");
+  write_key(ctx, "type");
+  write_string(ctx, wasm_get_type_name(type));
+  wasm_writef(&ctx->json_stream, "}");
+}
+
 static void write_const(Context* ctx, const WasmConst* const_) {
   wasm_writef(&ctx->json_stream, "{");
   write_key(ctx, "type");
@@ -249,14 +256,47 @@ static void write_action(Context* ctx, const WasmAction* action) {
   wasm_writef(&ctx->json_stream, "}");
 }
 
+static void write_action_result_type(Context* ctx,
+                                     WasmScript* script,
+                                     const WasmAction* action) {
+  const WasmModule* module =
+      wasm_get_module_by_var(script, &action->module_var);
+  const WasmExport* export;
+  wasm_writef(&ctx->json_stream, "[");
+  switch (action->type) {
+    case WASM_ACTION_TYPE_INVOKE: {
+      export = wasm_get_export_by_name(module, &action->invoke.name);
+      assert(export->kind == WASM_EXTERNAL_KIND_FUNC);
+      WasmFunc* func = wasm_get_func_by_var(module, &export->var);
+      size_t num_results = wasm_get_num_results(func);
+      size_t i;
+      for (i = 0; i < num_results; ++i)
+        write_type_object(ctx, wasm_get_result_type(func, i));
+      break;
+    }
+
+    case WASM_ACTION_TYPE_GET: {
+      export = wasm_get_export_by_name(module, &action->get.name);
+      assert(export->kind == WASM_EXTERNAL_KIND_GLOBAL);
+      WasmGlobal* global = wasm_get_global_by_var(module, &export->var);
+      write_type_object(ctx, global->type);
+      break;
+    }
+  }
+  wasm_writef(&ctx->json_stream, "]");
+}
+
 static void write_module(Context* ctx,
                          char* filename,
-                         const WasmModule* module) {
+                         const WasmModule* module,
+                         WasmBool is_invalid) {
   WasmMemoryWriter writer;
   WasmResult result = wasm_init_mem_writer(ctx->allocator, &writer);
   if (WASM_SUCCEEDED(result)) {
+    WasmWriteBinaryOptions options = ctx->spec_options->write_binary_options;
+    options.is_invalid = is_invalid;
     result = wasm_write_binary_module(ctx->allocator, &writer.base, module,
-                                      &ctx->spec_options->write_binary_options);
+                                      &options);
     if (WASM_SUCCEEDED(result))
       result = wasm_write_output_buffer_to_file(&writer.buf, filename);
     wasm_close_mem_writer(&writer);
@@ -267,9 +307,10 @@ static void write_module(Context* ctx,
 
 static void write_raw_module(Context* ctx,
                              char* filename,
-                             const WasmRawModule* raw_module) {
+                             const WasmRawModule* raw_module,
+                             WasmBool is_invalid) {
   if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT) {
-    write_module(ctx, filename, raw_module->text);
+    write_module(ctx, filename, raw_module->text, is_invalid);
   } else {
     WasmFileStream stream;
     WasmResult result = wasm_init_file_writer(&stream.writer, filename);
@@ -294,14 +335,14 @@ static void write_invalid_module(Context* ctx,
   write_separator(ctx);
   write_key(ctx, "text");
   write_escaped_string_slice(ctx, text);
-  write_raw_module(ctx, filename, module);
+  write_raw_module(ctx, filename, module, WASM_TRUE);
   wasm_free(ctx->allocator, filename);
 }
 
 static void write_commands(Context* ctx, WasmScript* script) {
-  wasm_writef(&ctx->json_stream, "{\"source_filename\": \"%s\",\n",
-              ctx->source_filename);
-  wasm_writef(&ctx->json_stream, " \"commands\": [\n");
+  wasm_writef(&ctx->json_stream, "{\"source_filename\": ");
+  write_escaped_string_slice(ctx, ctx->source_filename);
+  wasm_writef(&ctx->json_stream, ",\n \"commands\": [\n");
   size_t i;
   int last_module_index = -1;
   for (i = 0; i < script->commands.size; ++i) {
@@ -324,7 +365,7 @@ static void write_commands(Context* ctx, WasmScript* script) {
         }
         write_key(ctx, "filename");
         write_escaped_string_slice(ctx, get_basename(filename));
-        write_module(ctx, filename, module);
+        write_module(ctx, filename, module, WASM_FALSE);
         wasm_free(ctx->allocator, filename);
         ctx->num_modules++;
         last_module_index = (int)i;
@@ -361,16 +402,9 @@ static void write_commands(Context* ctx, WasmScript* script) {
         break;
 
       case WASM_COMMAND_TYPE_ASSERT_INVALID:
-        /* TODO(binji): this doesn't currently work because of various
-         * assertions in wasm-binary-writer.c */
-#if 0
         write_invalid_module(ctx, &command->assert_invalid.module,
                              command->assert_invalid.text);
         ctx->num_modules++;
-#else
-        write_location(
-            ctx, wasm_get_raw_module_location(&command->assert_invalid.module));
-#endif
         break;
 
       case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
@@ -398,6 +432,10 @@ static void write_commands(Context* ctx, WasmScript* script) {
         write_location(ctx, &command->assert_return_nan.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_return_nan.action);
+        write_separator(ctx);
+        write_key(ctx, "expected");
+        write_action_result_type(ctx, script,
+                                 &command->assert_return_nan.action);
         break;
 
       case WASM_COMMAND_TYPE_ASSERT_TRAP:
@@ -433,7 +471,8 @@ WasmResult wasm_write_binary_spec_script(
   ctx.allocator = allocator;
   ctx.spec_options = spec_options;
   ctx.result = WASM_OK;
-  ctx.source_filename = source_filename;
+  ctx.source_filename.start = source_filename;
+  ctx.source_filename.length = strlen(source_filename);
   ctx.json_filename_noext = strip_extension(ctx.spec_options->json_filename);
 
   WasmResult result = wasm_init_mem_writer(ctx.allocator, &ctx.json_writer);

@@ -67,6 +67,7 @@ typedef struct Context {
   int current_table_index;
   int current_memory_index;
   int current_global_index;
+  int num_imported_globals;
   WasmTypeVector type_stack;
   LabelNode* top_label;
   int max_depth;
@@ -564,6 +565,15 @@ static void check_block(Context* ctx,
   ctx->type_stack.size = ctx->top_label->type_stack_limit;
 }
 
+static void check_has_memory(Context* ctx,
+                             const WasmLocation* loc,
+                             WasmOpcode opcode) {
+  if (ctx->current_module->memories.size == 0) {
+    print_error(ctx, loc, "%s requires an imported or defined memory.",
+                wasm_get_opcode_name(opcode));
+  }
+}
+
 static void check_expr(Context* ctx, const WasmExpr* expr) {
   switch (expr->type) {
     case WASM_EXPR_TYPE_BINARY:
@@ -662,6 +672,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_GROW_MEMORY:
+      check_has_memory(ctx, &expr->loc, WASM_OPCODE_GROW_MEMORY);
       check_opcode1(ctx, &expr->loc, WASM_OPCODE_GROW_MEMORY);
       break;
 
@@ -677,6 +688,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_LOAD:
+      check_has_memory(ctx, &expr->loc, expr->load.opcode);
       check_align(ctx, &expr->loc, expr->load.align,
                   get_opcode_natural_alignment(expr->load.opcode));
       check_offset(ctx, &expr->loc, expr->load.offset);
@@ -693,6 +705,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_CURRENT_MEMORY:
+      check_has_memory(ctx, &expr->loc, WASM_OPCODE_CURRENT_MEMORY);
       push_type(ctx, WASM_TYPE_I32);
       break;
 
@@ -738,6 +751,7 @@ static void check_expr(Context* ctx, const WasmExpr* expr) {
     }
 
     case WASM_EXPR_TYPE_STORE:
+      check_has_memory(ctx, &expr->loc, expr->store.opcode);
       check_align(ctx, &expr->loc, expr->store.align,
                   get_opcode_natural_alignment(expr->store.opcode));
       check_offset(ctx, &expr->loc, expr->store.offset);
@@ -836,12 +850,15 @@ static void check_const_init_expr(Context* ctx,
         }
 
         type = ref_global->type;
-        /* globals can only reference previously defined globals */
+        /* globals can only reference previously defined, internal globals */
         if (ref_global_index >= ctx->current_global_index) {
+          print_error(ctx, loc,
+                      "initializer expression can only reference a previously "
+                      "defined global");
+        } else if (ref_global_index >= ctx->num_imported_globals) {
           print_error(
               ctx, loc,
-              "initializer expression can only be reference a previously "
-              "defined global");
+              "initializer expression can only reference an imported global");
         }
 
         if (ref_global->mutable_) {
@@ -962,6 +979,7 @@ static void check_import(Context* ctx,
       if (import->global.mutable_) {
         print_error(ctx, loc, "mutable globals cannot be imported");
       }
+      ctx->num_imported_globals++;
       ctx->current_global_index++;
       break;
     case WASM_NUM_EXTERNAL_KINDS:
@@ -1004,6 +1022,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
   ctx->current_table_index = 0;
   ctx->current_memory_index = 0;
   ctx->current_global_index = 0;
+  ctx->num_imported_globals = 0;
 
   WasmModuleField* field;
   for (field = module->first_field; field != NULL; field = field->next) {

@@ -1,4 +1,9 @@
 (module
+  (import "foo" "i32_global" (global i32))
+  (import "foo" "i64_global" (global i64))
+  (import "foo" "f32_global" (global f32))
+  (import "foo" "f64_global" (global f64))
+
   (global i32 (i32.const 1))
   (global i64 (i64.const 2))
   (global f32 (f32.const 3))
