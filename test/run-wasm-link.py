@@ -45,9 +45,9 @@ def main(args):
   parser.add_argument('--incremental', help='incremenatly link one object at' +
                           ' a time to produce the final linked binary.',
                       action='store_true')
-  parser.add_argument('--headers', action='store_true')
   parser.add_argument('-c', '--compile-only', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
+  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -56,6 +56,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
+    '--use-libc-allocator': options.use_libc_allocator,
     '-v': options.verbose,
     '-c': options.compile_only
   })

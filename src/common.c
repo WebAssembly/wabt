@@ -62,7 +62,7 @@ WasmStringSlice wasm_empty_string_slice(void) {
   return result;
 }
 
-WasmBool wasm_string_slice_eq(WasmStringSlice* s1, const char* s2) {
+WasmBool wasm_string_slice_eq_cstr(const WasmStringSlice* s1, const char* s2) {
   size_t s2_len = strlen(s2);
   if (s2_len != s1->length)
     return WASM_FALSE;
@@ -70,7 +70,8 @@ WasmBool wasm_string_slice_eq(WasmStringSlice* s1, const char* s2) {
   return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
 }
 
-WasmBool wasm_string_slice_startswith(WasmStringSlice* s1, const char* s2) {
+WasmBool wasm_string_slice_startswith(const WasmStringSlice* s1,
+                                      const char* s2) {
   size_t s2_len = strlen(s2);
   if (s2_len > s1->length)
     return WASM_FALSE;
