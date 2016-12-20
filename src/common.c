@@ -56,6 +56,23 @@ WasmStringSlice wasm_empty_string_slice(void) {
   return result;
 }
 
+WasmBool wasm_string_slice_eq_cstr(const WasmStringSlice* s1, const char* s2) {
+  size_t s2_len = strlen(s2);
+  if (s2_len != s1->length)
+    return WASM_FALSE;
+
+  return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
+}
+
+WasmBool wasm_string_slice_startswith(const WasmStringSlice* s1,
+                                      const char* s2) {
+  size_t s2_len = strlen(s2);
+  if (s2_len > s1->length)
+    return WASM_FALSE;
+
+  return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
+}
+
 WasmStringSlice wasm_string_slice_from_cstr(const char* string) {
   WasmStringSlice result;
   result.start = string;
@@ -86,7 +103,7 @@ WasmResult wasm_read_file(WasmAllocator* allocator,
                           size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
-    fprintf(stderr, "unable to read %s\n", filename);
+    fprintf(stderr, "unable to read file: %s\n", filename);
     return WASM_ERROR;
   }
 
@@ -196,6 +213,7 @@ void wasm_default_binary_error_callback(uint32_t offset,
     fprintf(out, "error: %s\n", error);
   else
     fprintf(out, "error: @0x%08x: %s\n", offset, error);
+  fflush(out);
 }
 
 void wasm_init_stdio() {
