@@ -99,8 +99,8 @@ static WasmOption s_options[] = {
      "print a hexdump of the module to stdout"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP,
      "output wasm binary file"},
-    {FLAG_COMPILE_ONLY, 'c', NULL, NULL, NOPE,
-     "compile-only (output a wasm file suitable for linking with others)"},
+    {FLAG_COMPILE_ONLY, 'r', NULL, NULL, NOPE,
+     "create a relocatable wasm binary (suitable for linking with wasm-link)"},
     {FLAG_SPEC, 0, "spec", NULL, NOPE,
      "parse a file with multiple modules and assertions, like the spec "
      "tests"},

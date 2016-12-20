@@ -45,7 +45,6 @@ def main(args):
   parser.add_argument('--incremental', help='incremenatly link one object at' +
                           ' a time to produce the final linked binary.',
                       action='store_true')
-  parser.add_argument('-c', '--compile-only', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -58,7 +57,6 @@ def main(args):
     '--debug-names': options.debug_names,
     '--use-libc-allocator': options.use_libc_allocator,
     '-v': options.verbose,
-    '-c': options.compile_only
   })
 
   wasm_link = utils.Executable(
@@ -84,7 +82,7 @@ def main(args):
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     out_file = os.path.join(out_dir, basename_noext + '.json')
-    wast2wasm.RunWithArgs('--spec', '-c', '-o', out_file, filename)
+    wast2wasm.RunWithArgs('--spec', '-r', '-o', out_file, filename)
 
     wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
     wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
