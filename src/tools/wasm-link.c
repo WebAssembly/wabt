@@ -287,7 +287,7 @@ static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
 
     // We don't currently support merging name sections unless they contain
     // a name for every function.
-    uint32_t i;
+    size_t i;
     for (i = 0; i < binary->sections.size; i++) {
       if (binary->sections.data[i].section_code ==
           WASM_BINARY_SECTION_FUNCTION) {
