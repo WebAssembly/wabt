@@ -281,7 +281,7 @@ if (NOT EMSCRIPTEN)
   endif ()
   set_property(
     DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
-    "wasm2wast" "wast2wasm")
+    "sexpr-wasm" "wasm-wast")
 
   # hexfloat-test
   find_package(Threads)
