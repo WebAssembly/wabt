@@ -929,6 +929,13 @@ static void check_elem_segments(Context* ctx, const WasmModule* module) {
             check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
+    size_t i;
+    for (i = 0; i < elem_segment->vars.size; ++i) {
+      if (!WASM_SUCCEEDED(
+              check_func_var(ctx, &elem_segment->vars.data[i], NULL)))
+        continue;
+    }
+
     check_const_init_expr(ctx, &field->loc, elem_segment->offset, WASM_TYPE_I32,
                           "elem segment offset");
   }
