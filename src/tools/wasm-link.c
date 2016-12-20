@@ -125,7 +125,7 @@ struct InputBinary;
 
 typedef struct SectionDataCustom {
   WasmBool linked;
-  /* Referernce to string data stored in the containing InputBinary */
+  /* Reference to string data stored in the containing InputBinary */
   WasmStringSlice name;
 } SectionDataCustom;
 
@@ -311,7 +311,7 @@ static WasmResult on_table(uint32_t index,
                            const WasmLimits* elem_limits,
                            void* user_data) {
   if (elem_limits->has_max && (elem_limits->max != elem_limits->initial))
-    WASM_FATAL("Tables with max > initial not supported by wasm-link\n");
+    WASM_FATAL("Tables with max != initial not supported by wasm-link\n");
 
   InputBinary* binary = user_data;
   binary->table_elem_count = elem_limits->initial;
@@ -325,7 +325,7 @@ static WasmResult on_elem_segment_function_index_count(
   InputBinary* binary = ctx->user_data;
   Section* sec = binary->current_section;
 
-  // Modify the payload to include only the actualy function indexes
+  // Modify the payload to include only the actual function indexes
   size_t delta = ctx->offset - sec->payload_offset;
   sec->payload_offset += delta;
   sec->payload_size -= delta;
