@@ -971,6 +971,17 @@ static void write_commands(Context* ctx, const WasmScript* script) {
   }
 }
 
+void wasm_destroy_reloc_section(WasmAllocator* allocator,
+                                RelocSection* reloc_section) {
+
+  wasm_destroy_reloc_vector(allocator, &reloc_section->relocations);
+}
+
+void destroy_context(Context* ctx) {
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->reloc_sections,
+                                   reloc_section);
+}
+
 WasmResult wasm_write_binary_module(WasmAllocator* allocator,
                                     WasmWriter* writer,
                                     const WasmModule* module,
@@ -982,6 +993,7 @@ WasmResult wasm_write_binary_module(WasmAllocator* allocator,
   ctx.log_stream = options->log_stream;
   wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
   write_module(&ctx, module);
+  destroy_context(&ctx);
   return ctx.stream.result;
 }
 
@@ -996,5 +1008,6 @@ WasmResult wasm_write_binary_script(WasmAllocator* allocator,
   ctx.log_stream = options->log_stream;
   wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
   write_commands(&ctx, script);
+  destroy_context(&ctx);
   return ctx.stream.result;
 }
