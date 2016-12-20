@@ -33,12 +33,12 @@ Sections:
      TYPE start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
    IMPORT start=0x00000026 end=0x0000005a (size=0x00000034) count: 3
  FUNCTION start=0x00000060 end=0x00000064 (size=0x00000004) count: 3
-    TABLE start=0x00000066 end=0x0000006b (size=0x00000005) count: 1
-     ELEM start=0x00000071 end=0x0000009a (size=0x00000029) count: 1
-     CODE start=0x0000009c end=0x000000de (size=0x00000042) count: 3
-   CUSTOM start=0x000000e4 end=0x000000f9 (size=0x00000015) "reloc.IMPORT"
-   CUSTOM start=0x000000ff end=0x0000011a (size=0x0000001b) "reloc.ELEM"
-   CUSTOM start=0x00000120 end=0x00000139 (size=0x00000019) "reloc.CODE"
+    TABLE start=0x0000006a end=0x0000006f (size=0x00000005) count: 1
+     ELEM start=0x00000075 end=0x0000009e (size=0x00000029) count: 1
+     CODE start=0x000000a0 end=0x000000e2 (size=0x00000042) count: 3
+   CUSTOM start=0x000000e8 end=0x000000fd (size=0x00000015) "reloc.IMPORT"
+   CUSTOM start=0x00000103 end=0x0000011e (size=0x0000001b) "reloc.ELEM"
+   CUSTOM start=0x00000124 end=0x0000013d (size=0x00000019) "reloc.CODE"
 
 Section Details:
 TYPE:
@@ -97,17 +97,17 @@ CUSTOM:
 
 Code Disassembly:
 func 0
- 00009f: 20 00                      | get_local 0
- 0000a1: 10 80 80 80 80 00          | call 0
- 0000a7: 10 83 80 80 80 00          | call 0x3
+ 0000a3: 20 00                      | get_local 0
+ 0000a5: 10 80 80 80 80 00          | call 0
+ 0000ab: 10 83 80 80 80 00          | call 0x3
 func 1
- 0000b0: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
- 0000b9: 10 81 80 80 80 00          | call 0x1
- 0000bf: 42 0a                      | i64.const 10
- 0000c1: 10 84 80 80 80 00          | call 0x4
+ 0000b4: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
+ 0000bd: 10 81 80 80 80 00          | call 0x1
+ 0000c3: 42 0a                      | i64.const 10
+ 0000c5: 10 84 80 80 80 00          | call 0x4
 func 2
- 0000ca: 43 00 00 80 3f             | f32.const 0x1p+0
- 0000cf: 10 82 80 80 80 00          | call 0x2
- 0000d5: 41 0a                      | i32.const 0xa
- 0000d7: 10 85 80 80 80 00          | call 0x5
+ 0000ce: 43 00 00 80 3f             | f32.const 0x1p+0
+ 0000d3: 10 82 80 80 80 00          | call 0x2
+ 0000d9: 41 0a                      | i32.const 0xa
+ 0000db: 10 85 80 80 80 00          | call 0x5
 ;;; STDOUT ;;)

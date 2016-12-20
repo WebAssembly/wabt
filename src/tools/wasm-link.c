@@ -207,11 +207,14 @@ void wasm_destroy_binary(WasmAllocator* allocator, InputBinary* binary) {
 }
 
 static WasmResult on_reloc(WasmRelocType type,
-                           uint32_t section,
+                           uint32_t section_index,
                            uint32_t offset,
                            void* user_data) {
   InputBinary* binary = user_data;
-  Section* sec = &binary->sections.data[section-1];
+  if (section_index >= binary->sections.size) {
+    WASM_FATAL("invalid section index: %d\n", section_index);
+  }
+  Section* sec = &binary->sections.data[section_index-1];
   if (offset + RELOC_SIZE > sec->size) {
     WASM_FATAL("invalid relocation offset: %#x\n", offset);
   }
@@ -489,7 +492,7 @@ static void write_combined_custom_section(Context* ctx,
   size_t total_size = 0;
   size_t total_count = 0;
 
-  // Reloc sections are handles seperatedly.
+  // Reloc sections are handled seperatedly.
   if (wasm_string_slice_startswith(name, "reloc"))
       return;
 
@@ -539,19 +542,14 @@ static void write_combined_table_section(Context* ctx,
     elem_count += sec->binary->table_elem_count;
   }
 
-  uint32_t section_size = 1;  // For the table type (WASM_TYPE_ANYFUNC)
-  section_size += wasm_u32_leb128_length(table_count);
-  section_size += wasm_u32_leb128_length(flags);
-  section_size += wasm_u32_leb128_length(elem_count);
-  section_size += wasm_u32_leb128_length(elem_count);
-
   WasmStream* stream = &ctx->stream;
-  wasm_write_u32_leb128(stream, section_size, "section size");
+  WRITE_UNKNOWN_SIZE;
   wasm_write_u32_leb128(stream, table_count, "table count");
   wasm_write_type(stream, WASM_TYPE_ANYFUNC);
   wasm_write_u32_leb128(stream, flags, "table elem flags");
   wasm_write_u32_leb128(stream, elem_count, "table initial length");
   wasm_write_u32_leb128(stream, elem_count, "table max length");
+  FIXUP_SIZE;
 }
 
 static void write_combined_elem_section(Context* ctx,
@@ -843,7 +841,7 @@ static void write_binary(Context* ctx) {
   }
 
   // Generate a new set of reloction sections
-  for (i = 1; i < WASM_NUM_BINARY_SECTIONS; i++) {
+  for (i = FIRST_KNOWN_SECTION; i < WASM_NUM_BINARY_SECTIONS; i++) {
     write_combined_reloc_section(ctx, i, &sections[i], section_indices[i]);
   }
 
