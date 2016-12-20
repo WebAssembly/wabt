@@ -884,13 +884,13 @@ int main(int argc, char** argv) {
   WASM_ZERO_MEMORY(context);
 
   WasmResult result = WASM_OK;
-  void* data;
-  size_t size;
-  uint i;
+  size_t i;
   for (i = 0; i < s_infiles.size; i++) {
     const char* input_filename = s_infiles.data[i];
     if (s_verbose)
       wasm_writef(&s_log_stream, "reading file: %s\n", input_filename);
+    void* data;
+    size_t size;
     result = wasm_read_file(s_allocator, input_filename, &data, &size);
     if (WASM_FAILED(result))
       return result;
