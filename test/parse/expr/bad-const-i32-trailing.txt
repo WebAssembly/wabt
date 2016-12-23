@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module (func i32.const 100x))
 (;; STDERR ;;;
-parse/expr/bad-const-i32-trailing.txt:2:25: unexpected token "100x"
+out/test/parse/expr/bad-const-i32-trailing.txt:2:25: unexpected token "100x"
 (module (func i32.const 100x))
                         ^^^^
-parse/expr/bad-const-i32-trailing.txt:2:29: syntax error, unexpected ), expecting NAT or INT or FLOAT
+out/test/parse/expr/bad-const-i32-trailing.txt:2:29: syntax error, unexpected ), expecting NAT or INT or FLOAT
 (module (func i32.const 100x))
                             ^
 ;;; STDERR ;;)

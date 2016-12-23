@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/func-local-before-result.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/func-local-before-result.fail.wast:1:28: syntax error, unexpected RESULT
+out/third_party/testsuite/func-local-before-result.fail.wast:1:28: syntax error, unexpected RESULT
 (module (func (local i32) (result i32) (get_local 0)))
                            ^^^^^^
 

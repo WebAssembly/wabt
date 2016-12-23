@@ -4,7 +4,7 @@
     loop
     end $foo))
 (;; STDERR ;;;
-parse/expr/bad-loop-end-label.txt:5:9: unexpected label "$foo"
+out/test/parse/expr/bad-loop-end-label.txt:5:9: unexpected label "$foo"
     end $foo))
         ^^^^
 ;;; STDERR ;;)

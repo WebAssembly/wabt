@@ -4,7 +4,7 @@
           f32.const 0 
           f32.storeu))
 (;; STDERR ;;;
-parse/expr/bad-store-float.sign.txt:5:11: unexpected token "f32.storeu"
+out/test/parse/expr/bad-store-float.sign.txt:5:11: unexpected token "f32.storeu"
           f32.storeu))
           ^^^^^^^^^^
 ;;; STDERR ;;)

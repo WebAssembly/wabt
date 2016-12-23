@@ -3,7 +3,7 @@
   (func(call $i32 ))
   (func $UemoOy_size ))
 (;; STDERR ;;;
-regress/regress-1.txt:3:14: undefined function variable "$i32"
+out/test/regress/regress-1.txt:3:14: undefined function variable "$i32"
   (func(call $i32 ))
              ^^^^
 ;;; STDERR ;;)

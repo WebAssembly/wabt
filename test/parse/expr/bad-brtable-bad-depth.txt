@@ -6,7 +6,7 @@
       br_table 2
     end))
 (;; STDERR ;;;
-parse/expr/bad-brtable-bad-depth.txt:6:16: label variable out of range (max 2)
+out/test/parse/expr/bad-brtable-bad-depth.txt:6:16: label variable out of range (max 2)
       br_table 2
                ^
 ;;; STDERR ;;)

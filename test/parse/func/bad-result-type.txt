@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (result foo)))
 (;; STDERR ;;;
-parse/func/bad-result-type.txt:2:23: unexpected token "foo"
+out/test/parse/func/bad-result-type.txt:2:23: unexpected token "foo"
 (module (func (result foo)))
                       ^^^
 ;;; STDERR ;;)

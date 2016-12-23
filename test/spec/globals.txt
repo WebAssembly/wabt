@@ -2,43 +2,43 @@
 ;;; STDIN_FILE: third_party/testsuite/globals.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/globals.wast:50:45: type mismatch at set_global. got i32, expected f32
+  out/third_party/testsuite/globals.wast:50:45: type mismatch at set_global. got i32, expected f32
   (module (global f32 (f32.const 0)) (func (set_global 0 (i32.const 1))))
                                             ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:55:11: mutable globals cannot be imported
+  out/third_party/testsuite/globals.wast:55:11: mutable globals cannot be imported
   (module (import "m" "a" (global (mut i32))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:60:11: mutable globals cannot be imported
+  out/third_party/testsuite/globals.wast:60:11: mutable globals cannot be imported
   (module (global (import "m" "a") (mut i32)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:65:64: mutable globals cannot be exported
+  out/third_party/testsuite/globals.wast:65:64: mutable globals cannot be exported
   (module (global (mut f32) (f32.const 0)) (export "a" (global 0)))
                                                                ^
 assert_invalid error:
-  third_party/testsuite/globals.wast:70:11: mutable globals cannot be exported
+  out/third_party/testsuite/globals.wast:70:11: mutable globals cannot be exported
   (module (global (export "a") (mut f32) (f32.const 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:75:11: invalid global initializer expression, must be a constant expression; either *.const or get_global.
+  out/third_party/testsuite/globals.wast:75:11: invalid global initializer expression, must be a constant expression; either *.const or get_global.
   (module (global f32 (f32.neg (f32.const 0))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:80:11: invalid global initializer expression, must be a constant expression; either *.const or get_global.
+  out/third_party/testsuite/globals.wast:80:11: invalid global initializer expression, must be a constant expression; either *.const or get_global.
   (module (global f32 (get_local 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:85:24: type mismatch at global initializer expression. got f32, expected i32
+  out/third_party/testsuite/globals.wast:85:24: type mismatch at global initializer expression. got f32, expected i32
   (module (global i32 (f32.const 0)))
                        ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:90:11: initializer expression can only reference a previously defined global
+  out/third_party/testsuite/globals.wast:90:11: initializer expression can only reference a previously defined global
   (module (global i32 (get_global 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/globals.wast:95:11: initializer expression can only reference a previously defined global
+  out/third_party/testsuite/globals.wast:95:11: initializer expression can only reference a previously defined global
   (module (global i32 (get_global 1)) (global i32 (i32.const 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 16/16 tests passed.

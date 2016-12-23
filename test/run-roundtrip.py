@@ -24,7 +24,6 @@ import sys
 import tempfile
 
 import find_exe
-import findtests
 import utils
 from utils import Error
 

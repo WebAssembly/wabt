@@ -3,7 +3,7 @@
           nop
           foo))
 (;; STDERR ;;;
-parse/expr/bad-nop.txt:4:11: unexpected token "foo"
+out/test/parse/expr/bad-nop.txt:4:11: unexpected token "foo"
           foo))
           ^^^
 ;;; STDERR ;;)

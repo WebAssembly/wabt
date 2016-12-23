@@ -5,7 +5,7 @@
     i32.trunc_s/f32 
     drop))
 (;; STDERR ;;;
-typecheck/bad-convert-type-mismatch.txt:5:5: type mismatch at i32.trunc_s/f32. got i32, expected f32
+out/test/typecheck/bad-convert-type-mismatch.txt:5:5: type mismatch at i32.trunc_s/f32. got i32, expected f32
     i32.trunc_s/f32 
     ^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

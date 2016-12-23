@@ -5,7 +5,7 @@
              i32.const 0))
   "success")
 (;; STDERR ;;;
-parse/assert/bad-assertinvalid-succeeds.txt:4:4: expected module to be invalid
+out/test/parse/assert/bad-assertinvalid-succeeds.txt:4:4: expected module to be invalid
   (module (func (result i32) 
    ^^^^^^
 ;;; STDERR ;;)

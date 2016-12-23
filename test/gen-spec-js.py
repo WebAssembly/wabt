@@ -307,7 +307,7 @@ class ModuleExtender(object):
     elif type_ == 'f32':
       inst = F32ToWasm(int(const['value']))
     elif type_ == 'f64':
-      inst = F64ToWasm(long(const['value']))
+      inst = F64ToWasm(int(const['value']))
     self.lines.append(inst)
 
   def _RunWasm2Wast(self, wasm_path):

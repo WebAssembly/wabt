@@ -3,7 +3,7 @@
   (import "foo" "bar" (global i32))
   (global f32 (get_global 0)))
 (;; STDERR ;;;
-typecheck/bad-global-getglobal-type-mismatch.txt:4:16: type mismatch at global initializer expression. got i32, expected f32
+out/test/typecheck/bad-global-getglobal-type-mismatch.txt:4:16: type mismatch at global initializer expression. got i32, expected f32
   (global f32 (get_global 0)))
                ^^^^^^^^^^^^
 ;;; STDERR ;;)

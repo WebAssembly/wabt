@@ -6,10 +6,10 @@
     else $bar
     end $baz))
 (;; STDERR ;;;
-parse/expr/bad-if-mismatch-label.txt:6:10: mismatching label "$foo" != "$bar"
+out/test/parse/expr/bad-if-mismatch-label.txt:6:10: mismatching label "$foo" != "$bar"
     else $bar
          ^^^^
-parse/expr/bad-if-mismatch-label.txt:7:9: mismatching label "$foo" != "$baz"
+out/test/parse/expr/bad-if-mismatch-label.txt:7:9: mismatching label "$foo" != "$baz"
     end $baz))
         ^^^^
 ;;; STDERR ;;)

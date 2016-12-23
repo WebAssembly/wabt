@@ -2,111 +2,111 @@
 ;;; STDIN_FILE: third_party/testsuite/tee_local.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:132:11: type mismatch at function. got i32, expected i64
+  out/third_party/testsuite/tee_local.wast:132:11: type mismatch at function. got i32, expected i64
   (module (func $type-local-num-vs-num (result i64) (local i32) (tee_local 0 ...
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:136:53: type mismatch at i32.eqz. got f32, expected i32
+  out/third_party/testsuite/tee_local.wast:136:53: type mismatch at i32.eqz. got f32, expected i32
 ...nc $type-local-num-vs-num (local f32) (i32.eqz (tee_local 0 (f32.const 0)))))
                                           ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:136:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:136:11: type stack at end of function is 1. expected 0
 ...unc $type-local-num-vs-num (local f32) (i32.eqz (tee_local 0 (f32.const 0)...
  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:140:57: type mismatch at f64.neg. got i64, expected f64
+  out/third_party/testsuite/tee_local.wast:140:57: type mismatch at f64.neg. got i64, expected f64
 ...type-local-num-vs-num (local f64 i64) (f64.neg (tee_local 1 (i64.const 0)))))
                                           ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:140:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:140:11: type stack at end of function is 1. expected 0
   (module (func $type-local-num-vs-num (local f64 i64) (f64.neg (tee_local 1 ...
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:145:58: type stack size too small at tee_local. got 0, expected at least 1
+  out/third_party/testsuite/tee_local.wast:145:58: type stack size too small at tee_local. got 0, expected at least 1
   (module (func $type-local-arg-void-vs-num (local i32) (tee_local 0 (nop))))
                                                          ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:149:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:149:11: type stack at end of function is 1. expected 0
 ...le (func $type-local-arg-num-vs-num (local i32) (tee_local 0 (f32.const 0))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:153:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:153:11: type stack at end of function is 1. expected 0
 ...le (func $type-local-arg-num-vs-num (local f32) (tee_local 0 (f64.const 0))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:157:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:157:11: type stack at end of function is 1. expected 0
 ...func $type-local-arg-num-vs-num (local f64 i64) (tee_local 1 (f64.const 0))))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:165:11: type mismatch at function. got i32, expected i64
+  out/third_party/testsuite/tee_local.wast:165:11: type mismatch at function. got i32, expected i64
   (module (func $type-param-num-vs-num (param i32) (result i64) (get_local 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:169:53: type mismatch at i32.eqz. got f32, expected i32
+  out/third_party/testsuite/tee_local.wast:169:53: type mismatch at i32.eqz. got f32, expected i32
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
                                                     ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:169:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:169:11: type stack at end of function is 1. expected 0
   (module (func $type-param-num-vs-num (param f32) (i32.eqz (get_local 0))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:173:57: type mismatch at f64.neg. got i64, expected f64
+  out/third_party/testsuite/tee_local.wast:173:57: type mismatch at f64.neg. got i64, expected f64
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
                                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:173:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:173:11: type stack at end of function is 1. expected 0
   (module (func $type-param-num-vs-num (param f64 i64) (f64.neg (get_local 1))))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:178:58: type stack size too small at tee_local. got 0, expected at least 1
+  out/third_party/testsuite/tee_local.wast:178:58: type stack size too small at tee_local. got 0, expected at least 1
   (module (func $type-param-arg-void-vs-num (param i32) (tee_local 0 (nop))))
                                                          ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:182:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:182:11: type stack at end of function is 1. expected 0
 ...le (func $type-param-arg-num-vs-num (param i32) (tee_local 0 (f32.const 0))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:186:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:186:11: type stack at end of function is 1. expected 0
 ...le (func $type-param-arg-num-vs-num (param f32) (tee_local 0 (f64.const 0))))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:190:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:190:11: type stack at end of function is 1. expected 0
 ...func $type-param-arg-num-vs-num (param f64 i64) (tee_local 1 (f64.const 0))))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:198:59: local variable out of range (max 2)
+  out/third_party/testsuite/tee_local.wast:198:59: local variable out of range (max 2)
   (module (func $unbound-local (local i32 i64) (get_local 3)))
                                                           ^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:202:57: local variable out of range (max 2)
+  out/third_party/testsuite/tee_local.wast:202:57: local variable out of range (max 2)
   (module (func $large-local (local i32 i64) (get_local 14324343)))
                                                         ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:207:59: local variable out of range (max 2)
+  out/third_party/testsuite/tee_local.wast:207:59: local variable out of range (max 2)
   (module (func $unbound-param (param i32 i64) (get_local 2)))
                                                           ^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:211:57: local variable out of range (max 2)
+  out/third_party/testsuite/tee_local.wast:211:57: local variable out of range (max 2)
   (module (func $large-param (local i32 i64) (get_local 714324343)))
                                                         ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:216:71: local variable out of range (max 3)
+  out/third_party/testsuite/tee_local.wast:216:71: local variable out of range (max 3)
   (module (func $unbound-mixed (param i32) (local i32 i64) (get_local 3)))
                                                                       ^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:220:69: local variable out of range (max 3)
+  out/third_party/testsuite/tee_local.wast:220:69: local variable out of range (max 3)
   (module (func $large-mixed (param i64) (local i32 i64) (get_local 214324343)))
                                                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:225:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:225:11: type stack at end of function is 1. expected 0
   (module (func $type-mixed-arg-num-vs-num (param f32) (local i32) (tee_local...
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:229:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:229:11: type stack at end of function is 1. expected 0
   (module (func $type-mixed-arg-num-vs-num (param i64 i32) (local f32) (tee_l...
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/tee_local.wast:233:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/tee_local.wast:233:11: type stack at end of function is 1. expected 0
   (module (func $type-mixed-arg-num-vs-num (param i64) (local f64 i64) (tee_l...
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 11/11 tests passed.

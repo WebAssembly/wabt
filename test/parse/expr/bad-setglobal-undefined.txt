@@ -3,7 +3,7 @@
           i32.const 1
           set_global 0))
 (;; STDERR ;;;
-parse/expr/bad-setglobal-undefined.txt:4:22: global variable out of range (max 0)
+out/test/parse/expr/bad-setglobal-undefined.txt:4:22: global variable out of range (max 0)
           set_global 0))
                      ^
 ;;; STDERR ;;)

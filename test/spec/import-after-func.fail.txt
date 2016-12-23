@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/import-after-func.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/import-after-func.fail.wast:1:16: imports must occur before all non-import definitions
+out/third_party/testsuite/import-after-func.fail.wast:1:16: imports must occur before all non-import definitions
 (module (func) (import "" "" (memory 0)))
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 

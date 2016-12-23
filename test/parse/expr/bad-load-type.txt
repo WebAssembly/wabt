@@ -3,7 +3,7 @@
           i32.const 0
           load.x32))
 (;; STDERR ;;;
-parse/expr/bad-load-type.txt:4:11: unexpected token "load.x32"
+out/test/parse/expr/bad-load-type.txt:4:11: unexpected token "load.x32"
           load.x32))
           ^^^^^^^^
 ;;; STDERR ;;)

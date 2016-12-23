@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/of_string-overflow-u64.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/of_string-overflow-u64.fail.wast:1:26: invalid literal "18446744073709551616"
+out/third_party/testsuite/of_string-overflow-u64.fail.wast:1:26: invalid literal "18446744073709551616"
 (module (func (i64.const 18446744073709551616)))
                          ^^^^^^^^^^^^^^^^^^^^
 

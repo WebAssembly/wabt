@@ -4,7 +4,7 @@
           i32.const 0
           i32.store align=foo))
 (;; STDERR ;;;
-parse/expr/bad-store-align.txt:5:21: unexpected token "align=foo"
+out/test/parse/expr/bad-store-align.txt:5:21: unexpected token "align=foo"
           i32.store align=foo))
                     ^^^^^^^^^
 ;;; STDERR ;;)
