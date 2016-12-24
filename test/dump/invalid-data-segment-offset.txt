@@ -1,0 +1,32 @@
+;;; FLAGS: -v --no-check
+(module
+  (memory 1)
+  (data (i32.add (i32.const 1) (i32.const 2)) "foo"))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+; section "MEMORY" (5)
+0000008: 05                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num memories
+; memory 0
+000000b: 00                                        ; limits: flags
+000000c: 01                                        ; limits: initial
+0000009: 03                                        ; FIXUP section size
+; section "DATA" (11)
+000000d: 0b                                        ; section code
+000000e: 00                                        ; section size (guess)
+000000f: 01                                        ; num data segments
+; data segment header 0
+0000010: 00                                        ; memory index
+0000011: 41                                        ; i32.const
+0000012: 01                                        ; i32 literal
+0000013: 41                                        ; i32.const
+0000014: 02                                        ; i32 literal
+0000015: 6a                                        ; i32.add
+0000016: 0b                                        ; end
+0000017: 03                                        ; data segment size
+; data segment data 0
+0000018: 666f 6f                                   ; data segment data
+000000e: 0c                                        ; FIXUP section size
+;;; STDOUT ;;)

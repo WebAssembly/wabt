@@ -478,7 +478,7 @@ static void write_init_expr(Context* ctx,
                             const WasmModule* module,
                             const WasmExpr* expr) {
   if (expr)
-    write_expr(ctx, module, NULL, expr);
+    write_expr_list(ctx, module, NULL, expr);
   wasm_write_opcode(&ctx->stream, WASM_OPCODE_END);
 }
 
@@ -742,7 +742,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
     }
   }
 
-  if (module->tables.size && module->elem_segments.size) {
+  if (module->elem_segments.size) {
     begin_known_section(ctx, WASM_BINARY_SECTION_ELEM, leb_size_guess);
     wasm_write_u32_leb128(&ctx->stream, module->elem_segments.size,
                           "num elem segments");
@@ -785,7 +785,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
     end_section(ctx);
   }
 
-  if (module->memories.size && module->data_segments.size) {
+  if (module->data_segments.size) {
     begin_known_section(ctx, WASM_BINARY_SECTION_DATA, leb_size_guess);
     wasm_write_u32_leb128(&ctx->stream, module->data_segments.size,
                           "num data segments");
