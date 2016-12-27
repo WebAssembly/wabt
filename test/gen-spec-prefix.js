@@ -56,7 +56,7 @@ function assert_soft_invalid(bytes) {
 function assert_unlinkable(bytes) {
   let mod = module(bytes);
   try { new WebAssembly.Instance(mod, registry) } catch (e) {
-    if (e instanceof TypeError) return;
+    if (e instanceof WebAssembly.LinkError) return;
   }
   throw new Error("Wasm linking failure expected");
 }
