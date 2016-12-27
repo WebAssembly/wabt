@@ -122,7 +122,7 @@ typedef struct Context {
   WasmTypeVector param_types;
   Uint32Vector target_depths;
   const WasmReadBinaryOptions* options;
-  WasmBinarySection last_section_code;
+  WasmBinarySection last_known_section_code;
   uint32_t num_signatures;
   uint32_t num_imports;
   uint32_t num_func_imports;
@@ -1643,7 +1643,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
   CALLBACK_CTX(begin_custom_section, section_size, section_name);
 
   WasmBool name_section_ok =
-      ctx->last_section_code >= WASM_BINARY_SECTION_IMPORT;
+      ctx->last_known_section_code >= WASM_BINARY_SECTION_IMPORT;
   if (ctx->options->read_debug_names && name_section_ok &&
       strncmp(section_name.start, WASM_BINARY_SECTION_NAME,
               section_name.length) == 0) {
@@ -1997,9 +1997,9 @@ static void read_sections(Context* ctx) {
     if (ctx->read_end > ctx->data_size)
       RAISE_ERROR("invalid section size: extends past end");
 
-    if (ctx->last_section_code != WASM_NUM_BINARY_SECTIONS &&
+    if (ctx->last_known_section_code != WASM_NUM_BINARY_SECTIONS &&
         section_code != WASM_BINARY_SECTION_CUSTOM &&
-        section_code <= ctx->last_section_code) {
+        section_code <= ctx->last_known_section_code) {
       RAISE_ERROR("section %s out of order", s_section_name[section_code]);
     }
 
@@ -2024,7 +2024,8 @@ static void read_sections(Context* ctx) {
                   ctx->read_end);
     }
 
-    ctx->last_section_code = section_code;
+    if (section_code != WASM_BINARY_SECTION_CUSTOM)
+      ctx->last_known_section_code = section_code;
   }
 }
 
@@ -2051,7 +2052,7 @@ WasmResult wasm_read_binary(WasmAllocator* allocator,
   ctx->data_size = ctx->read_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;
-  ctx->last_section_code = WASM_NUM_BINARY_SECTIONS;
+  ctx->last_known_section_code = WASM_NUM_BINARY_SECTIONS;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
     destroy_context(ctx);

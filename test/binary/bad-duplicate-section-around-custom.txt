@@ -1,0 +1,12 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[0] }
+section("foo") { 1 2 3 4 }
+section(TYPE) { count[0] }
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x00000017: section TYPE out of order
+
+;;; STDERR ;;)

@@ -173,8 +173,12 @@ int main(int argc, char** argv) {
       if (s_generate_names)
         result = wasm_generate_names(allocator, &module);
 
-      if (WASM_SUCCEEDED(result))
-        result = wasm_apply_names(allocator, &module);
+      if (WASM_SUCCEEDED(result)) {
+        /* TODO(binji): This shouldn't fail; if a name can't be applied
+         * (because the index is invalid, say) it should just be skipped. */
+        WasmResult dummy_result = wasm_apply_names(allocator, &module);
+        WASM_USE(dummy_result);
+      }
 
       if (WASM_SUCCEEDED(result)) {
         WasmFileWriter file_writer;
