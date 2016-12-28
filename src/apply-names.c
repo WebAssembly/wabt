@@ -134,8 +134,9 @@ static WasmResult use_name_for_param_and_local_var(Context* ctx,
                                                    WasmFunc* func,
                                                    WasmVar* var) {
   int local_index = wasm_get_local_index_by_var(func, var);
-  assert(local_index >= 0 &&
-         (size_t)local_index < wasm_get_num_params_and_locals(func));
+  if (local_index < 0 ||
+      (size_t)local_index >= wasm_get_num_params_and_locals(func))
+    return WASM_ERROR;
 
   uint32_t num_params = wasm_get_num_params(func);
   WasmStringSlice* name;

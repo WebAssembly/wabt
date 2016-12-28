@@ -1,0 +1,11 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --no-check
+(module
+  (func
+    set_local 0))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    set_local 0))
+;;; STDOUT ;;)
