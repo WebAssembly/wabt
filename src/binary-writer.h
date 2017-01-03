@@ -42,11 +42,6 @@ WasmResult wasm_write_binary_module(struct WasmAllocator*,
                                     const struct WasmModule*,
                                     const WasmWriteBinaryOptions*);
 
-WasmResult wasm_write_binary_script(struct WasmAllocator*,
-                                    struct WasmWriter*,
-                                    const struct WasmScript*,
-                                    const WasmWriteBinaryOptions*);
-
 void wasm_write_u32_leb128(struct WasmStream* stream,
                            uint32_t value,
                            const char* desc);

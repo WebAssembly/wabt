@@ -557,7 +557,7 @@ static void write_global_header(Context* ctx, const WasmGlobal* global) {
   wasm_write_u8(&ctx->stream, global->mutable_, "global mutability");
 }
 
-static void write_module(Context* ctx, const WasmModule* module) {
+static WasmResult write_module(Context* ctx, const WasmModule* module) {
   /* TODO(binji): better leb size guess. Some sections we know will only be 1
    byte, but others we can be fairly certain will be larger. */
   const size_t leb_size_guess = 1;
@@ -850,26 +850,8 @@ static void write_module(Context* ctx, const WasmModule* module) {
 
     wasm_destroy_string_slice_vector(ctx->allocator, &index_to_name);
   }
-}
 
-static void write_commands(Context* ctx, const WasmScript* script) {
-  size_t i;
-  WasmBool wrote_module = WASM_FALSE;
-  for (i = 0; i < script->commands.size; ++i) {
-    const WasmCommand* command = &script->commands.data[i];
-    if (command->type != WASM_COMMAND_TYPE_MODULE)
-      continue;
-
-    write_module(ctx, &command->module);
-    wrote_module = WASM_TRUE;
-    break;
-  }
-  if (!wrote_module) {
-    /* just write an empty module */
-    WasmModule module;
-    WASM_ZERO_MEMORY(module);
-    write_module(ctx, &module);
-  }
+  return ctx->stream.result;
 }
 
 WasmResult wasm_write_binary_module(WasmAllocator* allocator,
@@ -882,20 +864,5 @@ WasmResult wasm_write_binary_module(WasmAllocator* allocator,
   ctx.options = options;
   ctx.log_stream = options->log_stream;
   wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
-  write_module(&ctx, module);
-  return ctx.stream.result;
-}
-
-WasmResult wasm_write_binary_script(WasmAllocator* allocator,
-                                    WasmWriter* writer,
-                                    const WasmScript* script,
-                                    const WasmWriteBinaryOptions* options) {
-  Context ctx;
-  WASM_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
-  ctx.options = options;
-  ctx.log_stream = options->log_stream;
-  wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
-  write_commands(&ctx, script);
-  return ctx.stream.result;
+  return write_module(&ctx, module);
 }

@@ -51,8 +51,7 @@ static WasmBool s_validate_assert_invalid_and_malformed = WASM_TRUE;
 static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
 
-static WasmFileWriter s_log_stream_writer;
-static WasmStream s_log_stream;
+static WasmFileStream s_log_stream;
 
 #define NOPE WASM_OPTION_NO_ARGUMENT
 #define YEP WASM_OPTION_HAS_ARGUMENT
@@ -121,7 +120,7 @@ static void on_option(struct WasmOptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      s_write_binary_options.log_stream = &s_log_stream;
+      s_write_binary_options.log_stream = &s_log_stream.base;
       break;
 
     case FLAG_HELP:
@@ -193,8 +192,8 @@ static void write_buffer_to_file(const char* filename,
                                  WasmOutputBuffer* buffer) {
   if (s_dump_module) {
     if (s_verbose)
-      wasm_writef(&s_log_stream, ";; dump\n");
-    wasm_write_output_buffer_memory_dump(&s_log_stream, buffer);
+      wasm_writef(&s_log_stream.base, ";; dump\n");
+    wasm_write_output_buffer_memory_dump(&s_log_stream.base, buffer);
   }
 
   if (filename) {
@@ -220,8 +219,7 @@ int main(int argc, char** argv) {
 
   wasm_init_stdio();
 
-  wasm_init_file_writer_existing(&s_log_stream_writer, stdout);
-  wasm_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+  wasm_init_file_stream_from_existing(&s_log_stream, stdout);
   parse_options(argc, argv);
 
   if (s_use_libc_allocator) {
@@ -277,8 +275,24 @@ int main(int argc, char** argv) {
         if (WASM_FAILED(wasm_init_mem_writer(allocator, &writer)))
           WASM_FATAL("unable to open memory writer for writing\n");
 
-        result = wasm_write_binary_script(allocator, &writer.base, &script,
-                                          &s_write_binary_options);
+        /* Write the first module, if any. */
+        const WasmModule* module = NULL;
+        size_t i;
+        for (i = 0; i < script.commands.size; ++i) {
+          const WasmCommand* command = &script.commands.data[i];
+          if (command->type != WASM_COMMAND_TYPE_MODULE)
+            continue;
+          module = &command->module;
+          break;
+        }
+
+        if (module) {
+          result = wasm_write_binary_module(allocator, &writer.base, module,
+                                            &s_write_binary_options);
+        } else {
+          WASM_FATAL("no module found\n");
+        }
+
         if (WASM_SUCCEEDED(result))
           write_buffer_to_file(s_outfile, &writer.buf);
         wasm_close_mem_writer(&writer);
