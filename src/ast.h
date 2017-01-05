@@ -512,8 +512,9 @@ wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
 static WASM_INLINE WasmBool
 wasm_signatures_are_equal(const WasmFuncSignature* sig1,
                           const WasmFuncSignature* sig2) {
-  return (WasmBool)(wasm_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
-		    wasm_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
+  return (WasmBool)(
+      wasm_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
+      wasm_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
 }
 
 static WASM_INLINE size_t wasm_get_num_params(const WasmFunc* func) {
