@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/if-end-label-superfluous.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/if-end-label-superfluous.fail.wast:1:22: unexpected label "$l"
+out/third_party/testsuite/if-end-label-superfluous.fail.wast:1:22: unexpected label "$l"
 (module (func if end $l))
                      ^^
 

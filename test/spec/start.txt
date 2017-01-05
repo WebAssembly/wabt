@@ -2,15 +2,15 @@
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/start.wast:2:25: function variable out of range (max 1)
+  out/third_party/testsuite/start.wast:2:25: function variable out of range (max 1)
   (module (func) (start 1))
                         ^
 assert_invalid error:
-  third_party/testsuite/start.wast:9:5: start function must not return anything
+  out/third_party/testsuite/start.wast:9:5: start function must not return anything
     (start $main)
     ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/start.wast:16:5: start function must be nullary
+  out/third_party/testsuite/start.wast:16:5: start function must be nullary
     (start $main)
     ^^^^^^^^^^^^^
 inc() =>

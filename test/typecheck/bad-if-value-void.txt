@@ -10,7 +10,7 @@
       end
     end))
 (;; STDERR ;;;
-typecheck/bad-if-value-void.txt:6:7: type stack at end of if false branch is 1. expected 0
+out/test/typecheck/bad-if-value-void.txt:6:7: type stack at end of if false branch is 1. expected 0
       if 
       ^^^
 ;;; STDERR ;;)

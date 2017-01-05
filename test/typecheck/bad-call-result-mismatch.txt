@@ -23,7 +23,7 @@
       nop
     end))
 (;; STDERR ;;;
-typecheck/bad-call-result-mismatch.txt:3:11: syntax error, unexpected VAR, expecting TEXT
+out/test/typecheck/bad-call-result-mismatch.txt:3:11: syntax error, unexpected VAR, expecting TEXT
   (import $import "foo" "bar" (result f32))
           ^^^^^^^
 ;;; STDERR ;;)

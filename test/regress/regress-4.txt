@@ -5,7 +5,7 @@
   (func (param $p i32)
     (get_local $n)))
 (;; STDERR ;;;
-regress/regress-4.txt:6:16: undefined local variable "$n"
+out/test/regress/regress-4.txt:6:16: undefined local variable "$n"
     (get_local $n)))
                ^^
 ;;; STDERR ;;)

@@ -3,10 +3,10 @@
 ;;; STDIN_FILE: third_party/testsuite/if-else-end-label-mismatch.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/if-else-end-label-mismatch.fail.wast:1:26: mismatching label "$a" != "$l"
+out/third_party/testsuite/if-else-end-label-mismatch.fail.wast:1:26: mismatching label "$a" != "$l"
 (module (func if $a else $l end $l))
                          ^^
-third_party/testsuite/if-else-end-label-mismatch.fail.wast:1:33: mismatching label "$a" != "$l"
+out/third_party/testsuite/if-else-end-label-mismatch.fail.wast:1:33: mismatching label "$a" != "$l"
 (module (func if $a else $l end $l))
                                 ^^
 

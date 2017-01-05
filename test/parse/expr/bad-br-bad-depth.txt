@@ -7,7 +7,7 @@
       end
     end))
 (;; STDERR ;;;
-parse/expr/bad-br-bad-depth.txt:6:12: label variable out of range (max 3)
+out/test/parse/expr/bad-br-bad-depth.txt:6:12: label variable out of range (max 3)
         br 3
            ^
 ;;; STDERR ;;)

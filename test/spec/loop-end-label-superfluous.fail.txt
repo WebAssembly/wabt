@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/loop-end-label-superfluous.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/loop-end-label-superfluous.fail.wast:1:24: unexpected label "$l"
+out/third_party/testsuite/loop-end-label-superfluous.fail.wast:1:24: unexpected label "$l"
 (module (func loop end $l))
                        ^^
 

@@ -117,7 +117,7 @@
     (i64.const 0))  ;; deliberate type-check error
 )
 (;; STDERR ;;;
-regress/regress-5.txt:116:3: type mismatch at function. got i64, expected i32
+out/test/regress/regress-5.txt:116:3: type mismatch at function. got i64, expected i32
   (func (result i32)
   ^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

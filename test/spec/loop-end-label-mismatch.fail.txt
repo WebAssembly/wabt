@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/loop-end-label-mismatch.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/loop-end-label-mismatch.fail.wast:1:27: mismatching label "$a" != "$l"
+out/third_party/testsuite/loop-end-label-mismatch.fail.wast:1:27: mismatching label "$a" != "$l"
 (module (func loop $a end $l))
                           ^^
 

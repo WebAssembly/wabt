@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/import-after-memory.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/import-after-memory.fail.wast:1:20: imports must occur before all non-import definitions
+out/third_party/testsuite/import-after-memory.fail.wast:1:20: imports must occur before all non-import definitions
 (module (memory 0) (import "" "" (global i32)))
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

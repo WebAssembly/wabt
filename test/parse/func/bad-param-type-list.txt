@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (param i32 i64 foo f32)))
 (;; STDERR ;;;
-parse/func/bad-param-type-list.txt:2:30: unexpected token "foo"
+out/test/parse/func/bad-param-type-list.txt:2:30: unexpected token "foo"
 (module (func (param i32 i64 foo f32)))
                              ^^^
 ;;; STDERR ;;)

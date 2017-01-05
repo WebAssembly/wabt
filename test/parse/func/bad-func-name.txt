@@ -2,7 +2,7 @@
 (module
   (func foo))
 (;; STDERR ;;;
-parse/func/bad-func-name.txt:3:9: unexpected token "foo"
+out/test/parse/func/bad-func-name.txt:3:9: unexpected token "foo"
   (func foo))
         ^^^
 ;;; STDERR ;;)

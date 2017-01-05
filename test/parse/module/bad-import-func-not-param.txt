@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module (import "foo" "bar" (func (parump i32))))
 (;; STDERR ;;;
-parse/module/bad-import-func-not-param.txt:2:36: unexpected token "parump"
+out/test/parse/module/bad-import-func-not-param.txt:2:36: unexpected token "parump"
 (module (import "foo" "bar" (func (parump i32))))
                                    ^^^^^^
-parse/module/bad-import-func-not-param.txt:2:43: syntax error, unexpected VALUE_TYPE, expecting TYPE or PARAM or RESULT
+out/test/parse/module/bad-import-func-not-param.txt:2:43: syntax error, unexpected VALUE_TYPE, expecting TYPE or PARAM or RESULT
 (module (import "foo" "bar" (func (parump i32))))
                                           ^^^
 ;;; STDERR ;;)

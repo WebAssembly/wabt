@@ -3,10 +3,10 @@
 ;;; STDIN_FILE: third_party/testsuite/f64.load64.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/f64.load64.fail.wast:1:52: unexpected token "f64.load64"
+out/third_party/testsuite/f64.load64.fail.wast:1:52: unexpected token "f64.load64"
 (module (memory 1) (func (param i32) (result f64) (f64.load64 (get_local 0))))
                                                    ^^^^^^^^^^
-third_party/testsuite/f64.load64.fail.wast:1:63: syntax error, unexpected (
+out/third_party/testsuite/f64.load64.fail.wast:1:63: syntax error, unexpected (
 (module (memory 1) (func (param i32) (result f64) (f64.load64 (get_local 0))))
                                                               ^
 
