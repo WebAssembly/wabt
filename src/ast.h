@@ -506,7 +506,8 @@ void wasm_make_type_binding_reverse_mapping(
 
 static WASM_INLINE WasmBool
 wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
-  return (WasmBool)(decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE);
+  return (WasmBool)((decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) !=
+                    0);
 }
 
 static WASM_INLINE WasmBool
