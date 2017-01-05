@@ -506,14 +506,14 @@ void wasm_make_type_binding_reverse_mapping(
 
 static WASM_INLINE WasmBool
 wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
-  return decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+  return (WasmBool)(decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE);
 }
 
 static WASM_INLINE WasmBool
 wasm_signatures_are_equal(const WasmFuncSignature* sig1,
                           const WasmFuncSignature* sig2) {
-  return wasm_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
-         wasm_type_vectors_are_equal(&sig1->result_types, &sig2->result_types);
+  return (WasmBool)(wasm_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
+		    wasm_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
 }
 
 static WASM_INLINE size_t wasm_get_num_params(const WasmFunc* func) {

@@ -90,8 +90,8 @@
   }                                                                            \
   type* wasm_append_##name(struct WasmAllocator* allocator,                    \
                            type##Vector* vec) {                                \
-    return wasm_append_element(allocator, (void**)&vec->data, &vec->size,      \
-                               &vec->capacity, sizeof(type));                  \
+    return (type*) wasm_append_element(allocator, (void**)&vec->data,          \
+                                       &vec->size, &vec->capacity, sizeof(type));     \
   }                                                                            \
   void wasm_append_##name##_value(struct WasmAllocator* allocator,             \
                                   type##Vector* vec, const type* value) {      \
