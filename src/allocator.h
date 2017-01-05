@@ -105,7 +105,7 @@ static WASM_INLINE char* wasm_strndup_(WasmAllocator* allocator,
     real_len++;
   }
 
-  char* new_s = allocator->alloc(allocator, real_len + 1, 1, file, line);
+  char* new_s = (char*)allocator->alloc(allocator, real_len + 1, 1, file, line);
   memcpy(new_s, s, real_len);
   new_s[real_len] = 0;
   return new_s;
