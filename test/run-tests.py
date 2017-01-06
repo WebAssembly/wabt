@@ -447,7 +447,7 @@ class TestInfo(object):
 
   def Rebase(self, stdout, stderr):
     test_path = os.path.join(REPO_ROOT_DIR, self.filename)
-    with open(test_path, 'w', newline='') as f:
+    with open(test_path, 'wb') as f:
       f.write(self.header)
       f.write(self.input_)
       if stderr:
