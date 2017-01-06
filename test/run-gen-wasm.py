@@ -45,7 +45,7 @@ def main(args):
   parser.add_argument('-p', '--print-cmd', action='store_true',
                       help='print the commands that are run.')
   parser.add_argument('--use-libc-allocator', action='store_true')
-  parser.add_argument('--debug-names', action='store_true')
+  parser.add_argument('--no-debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -57,7 +57,7 @@ def main(args):
       find_exe.GetWasm2WastExecutable(options.wasm2wast),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
-    '--debug-names': options.debug_names,
+    '--no-debug-names': options.no_debug_names,
     '--generate-names': options.generate_names,
     '--use-libc-allocator': options.use_libc_allocator
   })

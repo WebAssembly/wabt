@@ -36,8 +36,7 @@
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
-static WasmReadBinaryOptions s_read_binary_options =
-    WASM_READ_BINARY_OPTIONS_DEFAULT;
+static WasmReadBinaryOptions s_read_binary_options = {NULL, WASM_TRUE};
 static WasmBool s_use_libc_allocator;
 static WasmBool s_generate_names;
 
@@ -55,7 +54,7 @@ enum {
   FLAG_HELP,
   FLAG_OUTPUT,
   FLAG_USE_LIBC_ALLOCATOR,
-  FLAG_DEBUG_NAMES,
+  FLAG_NO_DEBUG_NAMES,
   FLAG_GENERATE_NAMES,
   NUM_FLAGS
 };
@@ -68,8 +67,8 @@ static const char s_description[] =
     "  # parse binary file test.wasm and write s-expression file test.wast\n"
     "  $ wasm2wast test.wasm -o test.wast\n"
     "\n"
-    "  # parse test.wasm and write test.wast, using the debug names, if any\n"
-    "  $ wasm2wast test.wasm --debug-names -o test.wast\n";
+    "  # parse test.wasm, write test.wast, but ignore the debug names, if any\n"
+    "  $ wasm2wast test.wasm --no-debug-names -o test.wast\n";
 
 static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
@@ -79,8 +78,8 @@ static WasmOption s_options[] = {
      "output file for the generated wast file, by default use stdout"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
      "use malloc, free, etc. instead of stack allocator"},
-    {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
-     "Read debug names from the binary file"},
+    {FLAG_NO_DEBUG_NAMES, 0, "no-debug-names", NULL, NOPE,
+     "Ignore debug names in the binary file"},
     {FLAG_GENERATE_NAMES, 0, "generate-names", NULL, NOPE,
      "Give auto-generated names to non-named functions, types, etc."},
 };
@@ -110,8 +109,8 @@ static void on_option(struct WasmOptionParser* parser,
       s_use_libc_allocator = WASM_TRUE;
       break;
 
-    case FLAG_DEBUG_NAMES:
-      s_read_binary_options.read_debug_names = WASM_TRUE;
+    case FLAG_NO_DEBUG_NAMES:
+      s_read_binary_options.read_debug_names = WASM_FALSE;
       break;
 
     case FLAG_GENERATE_NAMES:

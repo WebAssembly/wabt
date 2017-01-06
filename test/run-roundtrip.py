@@ -133,7 +133,7 @@ def main(args):
       find_exe.GetWasm2WastExecutable(options.wasm2wast),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
-    '--debug-names': options.debug_names,
+    '--no-debug-names': not options.debug_names,
     '--generate-names': options.generate_names,
     '--use-libc-allocator': options.use_libc_allocator
   })

@@ -1,6 +1,5 @@
 ;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
-;;; FLAGS: --debug-names
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }

@@ -1,0 +1,26 @@
+;;; TOOL: run-gen-wasm
+;;; FLAGS: --no-debug-names
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[decl_count[1] i32_count[1] i32]
+    get_local 0
+  }
+}
+section("name") {
+  func_count[1]
+  str("$F0")
+  local_count[1]
+  str("$L0")
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func (;0;) (type 0) (result i32)
+    (local i32)
+    get_local 0))
+;;; STDOUT ;;)
