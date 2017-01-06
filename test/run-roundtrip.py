@@ -24,7 +24,6 @@ import sys
 import tempfile
 
 import find_exe
-import findtests
 import utils
 from utils import Error
 
@@ -115,6 +114,7 @@ def main(args):
   parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
+  parser.add_argument('--no-check', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -125,6 +125,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
+    '--no-check': options.no_check,
     '--use-libc-allocator': options.use_libc_allocator
   })
 

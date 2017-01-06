@@ -2,31 +2,31 @@
 ;;; STDIN_FILE: third_party/testsuite/func_ptrs.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:31:26: table variable out of range (max 0)
+  out/third_party/testsuite/func_ptrs.wast:31:26: table variable out of range (max 0)
 (assert_invalid (module (elem (i32.const 0))) "unknown table")
                          ^^^^
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:32:26: table variable out of range (max 0)
+  out/third_party/testsuite/func_ptrs.wast:32:26: table variable out of range (max 0)
 (assert_invalid (module (elem (i32.const 0) 0) (func)) "unknown table")
                          ^^^^
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:35:36: type mismatch at elem segment offset. got i64, expected i32
+  out/third_party/testsuite/func_ptrs.wast:35:36: type mismatch at elem segment offset. got i64, expected i32
   (module (table 1 anyfunc) (elem (i64.const 0)))
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:39:29: invalid elem segment offset, must be a constant expression; either *.const or get_global.
+  out/third_party/testsuite/func_ptrs.wast:39:29: invalid elem segment offset, must be a constant expression; either *.const or get_global.
   (module (table 1 anyfunc) (elem (i32.ctz (i32.const 0))))
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:43:29: invalid elem segment offset, must be a constant expression; either *.const or get_global.
+  out/third_party/testsuite/func_ptrs.wast:43:29: invalid elem segment offset, must be a constant expression; either *.const or get_global.
   (module (table 1 anyfunc) (elem (nop)))
                             ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:47:37: function type variable out of range (max 0)
+  out/third_party/testsuite/func_ptrs.wast:47:37: function type variable out of range (max 0)
 (assert_invalid (module (func (type 42))) "unknown type")
                                     ^^
 assert_invalid error:
-  third_party/testsuite/func_ptrs.wast:48:64: function type variable out of range (max 0)
+  out/third_party/testsuite/func_ptrs.wast:48:64: function type variable out of range (max 0)
 ...invalid (module (import "spectest" "print" (func (type 43)))) "unknown type")
                                                           ^^
 called host spectest.print(i32:83) =>

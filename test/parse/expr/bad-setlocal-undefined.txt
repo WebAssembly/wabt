@@ -3,7 +3,7 @@
           i32.const 0 
           set_local 0))
 (;; STDERR ;;;
-parse/expr/bad-setlocal-undefined.txt:4:21: local variable out of range (max 0)
+out/test/parse/expr/bad-setlocal-undefined.txt:4:21: local variable out of range (max 0)
           set_local 0))
                     ^
 ;;; STDERR ;;)

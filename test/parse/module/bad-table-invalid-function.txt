@@ -4,7 +4,7 @@
   (func $f)
   (elem (i32.const 0) $f 1))
 (;; STDERR ;;;
-parse/module/bad-table-invalid-function.txt:5:26: function variable out of range (max 1)
+out/test/parse/module/bad-table-invalid-function.txt:5:26: function variable out of range (max 1)
   (elem (i32.const 0) $f 1))
                          ^
 ;;; STDERR ;;)

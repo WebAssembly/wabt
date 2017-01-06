@@ -2,1751 +2,1751 @@
 ;;; STDIN_FILE: third_party/testsuite/typecheck.wast
 (;; STDOUT ;;;
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:5:6: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:5:6: type stack size too small at i32.eqz. got 0, expected at least 1
     (i32.eqz) (drop)
      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:12:13: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:12:13: type stack size too small at i32.eqz. got 0, expected at least 1
     (block (i32.eqz) (drop))
             ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:10:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:10:11: type stack at end of function is 1. expected 0
   (module (func $type-unary-operand-missing-in-block
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:19:11: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:19:11: type stack size too small at i32.eqz. got 0, expected at least 1
    (loop (i32.eqz) (drop))
           ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:17:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:17:11: type stack at end of function is 1. expected 0
   (module (func $type-unary-operand-missing-in-loop
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:26:16: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:26:16: type stack size too small at i32.eqz. got 0, expected at least 1
     (if (then (i32.eqz) (drop)))
                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:24:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:24:11: type stack at end of function is 1. expected 0
   (module (func $type-unary-operand-missing-in-if
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:33:41: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:33:41: type stack size too small at i32.eqz. got 0, expected at least 1
     (if i32 (then (i32.const 0)) (else (i32.eqz))) (drop)
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:31:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:31:11: type stack at end of function is 1. expected 0
   (module (func $type-unary-operand-missing-in-else
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:40:6: type stack size too small at i32.add. got 0, expected at least 2
+  out/third_party/testsuite/typecheck.wast:40:6: type stack size too small at i32.add. got 0, expected at least 2
     (i32.add) (drop)
      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:46:20: type stack size too small at i32.add. got 1, expected at least 2
+  out/third_party/testsuite/typecheck.wast:46:20: type stack size too small at i32.add. got 1, expected at least 2
     (i32.const 0) (i32.add) (drop)
                    ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:45:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:45:11: type stack at end of function is 1. expected 0
   (module (func $type-binary-2nd-operand-missing
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:53:13: type stack size too small at i32.add. got 0, expected at least 2
+  out/third_party/testsuite/typecheck.wast:53:13: type stack size too small at i32.add. got 0, expected at least 2
     (block (i32.add) (drop))
             ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:51:11: type stack at end of function is 2. expected 0
+  out/third_party/testsuite/typecheck.wast:51:11: type stack at end of function is 2. expected 0
   (module (func $type-binary-1st-operand-missing-in-block
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:60:27: type stack size too small at i32.add. got 1, expected at least 2
+  out/third_party/testsuite/typecheck.wast:60:27: type stack size too small at i32.add. got 1, expected at least 2
     (block (i32.const 0) (i32.add) (drop))
                           ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:60:6: type stack at end of block is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:60:6: type stack at end of block is 1. expected 0
     (block (i32.const 0) (i32.add) (drop))
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:58:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:58:11: type stack at end of function is 1. expected 0
   (module (func $type-binary-2nd-operand-missing-in-block
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:67:12: type stack size too small at i32.add. got 0, expected at least 2
+  out/third_party/testsuite/typecheck.wast:67:12: type stack size too small at i32.add. got 0, expected at least 2
     (loop (i32.add) (drop))
            ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:65:11: type stack at end of function is 2. expected 0
+  out/third_party/testsuite/typecheck.wast:65:11: type stack at end of function is 2. expected 0
   (module (func $type-binary-1st-operand-missing-in-loop
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:74:26: type stack size too small at i32.add. got 1, expected at least 2
+  out/third_party/testsuite/typecheck.wast:74:26: type stack size too small at i32.add. got 1, expected at least 2
     (loop (i32.const 0) (i32.add) (drop))
                          ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:74:6: type stack at end of loop is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:74:6: type stack at end of loop is 1. expected 0
     (loop (i32.const 0) (i32.add) (drop))
      ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:72:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:72:11: type stack at end of function is 1. expected 0
   (module (func $type-binary-2nd-operand-missing-in-loop
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:81:20: type stack size too small at drop. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:81:20: type stack size too small at drop. got 0, expected at least 1
     (if (i32.add) (drop))
                    ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:79:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:79:11: type stack at end of function is 1. expected 0
   (module (func $type-binary-1st-operand-missing-in-if
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:88:24: type stack size too small at i32.add. got 0, expected at least 2
+  out/third_party/testsuite/typecheck.wast:88:24: type stack size too small at i32.add. got 0, expected at least 2
     (if (i32.const 0) (i32.add) (drop))
                        ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:88:9: type stack at end of if true branch is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:88:9: type stack at end of if true branch is 1. expected 0
     (if (i32.const 0) (i32.add) (drop))
         ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:88:34: type stack size too small at drop. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:88:34: type stack size too small at drop. got 0, expected at least 1
     (if (i32.const 0) (i32.add) (drop))
                                  ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:86:11: type stack at end of function is 2. expected 0
+  out/third_party/testsuite/typecheck.wast:86:11: type stack at end of function is 2. expected 0
   (module (func $type-binary-2nd-operand-missing-in-if
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:95:41: type stack size too small at i32.add. got 0, expected at least 2
+  out/third_party/testsuite/typecheck.wast:95:41: type stack size too small at i32.add. got 0, expected at least 2
     (if i32 (then (i32.const 0)) (else (i32.add) (i32.const 0)))
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:95:13: type stack at end of if false branch is 2. expected 1
+  out/third_party/testsuite/typecheck.wast:95:13: type stack at end of if false branch is 2. expected 1
     (if i32 (then (i32.const 0)) (else (i32.add) (i32.const 0)))
             ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:93:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:93:11: type stack at end of function is 1. expected 0
   (module (func $type-binary-1st-operand-missing-in-else
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:103:41: type stack size too small at i32.add. got 0, expected at least 2
+  out/third_party/testsuite/typecheck.wast:103:41: type stack size too small at i32.add. got 0, expected at least 2
     (if i32 (then (i32.const 0)) (else (i32.add)))
                                         ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:101:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:101:11: type stack at end of function is 1. expected 0
   (module (func $type-binary-2nd-operand-missing-in-else
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:111:9: type stack size too small at if condition. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:111:9: type stack size too small at if condition. got 0, expected at least 1
     (if (then))
         ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:118:16: type stack size too small at if condition. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:118:16: type stack size too small at if condition. got 0, expected at least 1
     (block (if (then)))
                ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:116:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:116:11: type stack at end of function is 1. expected 0
   (module (func $type-if-operand-missing-in-block
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:125:15: type stack size too small at if condition. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:125:15: type stack size too small at if condition. got 0, expected at least 1
     (loop (if (then)))
               ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:123:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:123:11: type stack at end of function is 1. expected 0
   (module (func $type-if-operand-missing-in-loop
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:132:19: type stack size too small at if condition. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:132:19: type stack size too small at if condition. got 0, expected at least 1
     (if (then (if (then))))
                   ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:130:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:130:11: type stack at end of function is 1. expected 0
   (module (func $type-if-operand-missing-in-if
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:139:44: type stack size too small at if condition. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:139:44: type stack size too small at if condition. got 0, expected at least 1
     (if i32 (then (i32.const 0)) (else (if (then)) (i32.const 0)))
                                            ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:137:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:137:11: type stack at end of function is 1. expected 0
   (module (func $type-if-operand-missing-in-else
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:147:17: type stack size too small at br value. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:147:17: type stack size too small at br value. got 0, expected at least 1
     (block i32 (br 0))
                 ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:155:17: type stack size too small at br value. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:155:17: type stack size too small at br value. got 0, expected at least 1
     (block i32 (br 0))
                 ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:153:11: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:153:11: type stack at end of function is 1. expected 0
   (module (func $type-br-operand-missing-in-block
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:164:22: type stack size too small at br value. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:164:22: type stack size too small at br value. got 0, expected at least 1
       (if i32 (then (br 0)))
                      ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:164:15: type stack size too small at if false branch. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:164:15: type stack size too small at if false branch. got 0, expected at least 1
       (if i32 (then (br 0)))
               ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:164:15: type stack at end of if false branch is 0. expected 1
+  out/third_party/testsuite/typecheck.wast:164:15: type stack at end of if false branch is 0. expected 1
       (if i32 (then (br 0)))
               ^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:162:6: type stack at end of block is 2. expected 0
+  out/third_party/testsuite/typecheck.wast:162:6: type stack at end of block is 2. expected 0
     (block
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:166:6: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:166:6: type stack size too small at i32.eqz. got 0, expected at least 1
     (i32.eqz) (drop)
      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:174:43: type stack size too small at br value. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:174:43: type stack size too small at br value. got 0, expected at least 1
       (if i32 (then (i32.const 0)) (else (br 0)))
                                           ^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:172:6: type stack at end of block is 2. expected 0
+  out/third_party/testsuite/typecheck.wast:172:6: type stack at end of block is 2. expected 0
     (block
      ^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:176:6: type stack size too small at i32.eqz. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:176:6: type stack size too small at i32.eqz. got 0, expected at least 1
     (i32.eqz) (drop)
      ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:183:6: type stack size too small at return. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:183:6: type stack size too small at return. got 0, expected at least 1
     (return)
      ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:190:13: type stack size too small at return. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:190:13: type stack size too small at return. got 0, expected at least 1
     (block (return))
             ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:197:12: type stack size too small at return. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:197:12: type stack size too small at return. got 0, expected at least 1
     (loop (return))
            ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:204:16: type stack size too small at return. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:204:16: type stack size too small at return. got 0, expected at least 1
     (if (then (return)))
                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:211:41: type stack size too small at return. got 0, expected at least 1
+  out/third_party/testsuite/typecheck.wast:211:41: type stack size too small at return. got 0, expected at least 1
     (if i32 (then (i32.const 0)) (else (return))) (drop)
                                         ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:219:35: type mismatch at if condition. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:219:35: type mismatch at if condition. got f32, expected i32
 (assert_invalid (module (func (if (f32.const 0) (nop) (nop)))) "type mismatch")
                                   ^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:222:39: type mismatch at br_if condition. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:222:39: type mismatch at br_if condition. got f32, expected i32
 (assert_invalid (module (func (block (br_if 0 (f32.const 0))))) "type mismatch")
                                       ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:226:25: type mismatch at br_table key. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:226:25: type mismatch at br_table key. got f32, expected i32
   (module (func (block (br_table 0 (f32.const 0)))))
                         ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:230:51: type mismatch for argument 0 of call. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:230:51: type mismatch for argument 0 of call. got f32, expected i32
 ...id (module (func (param i32)) (func (call 0 (f32.const 0)))) "type mismatch")
                                         ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:237:8: type mismatch at call_indirect function index. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:237:8: type mismatch at call_indirect function index. got f32, expected i32
       (call_indirect 0 (i32.const 0) (f32.const 0))))
        ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:246:12: type mismatch at call_indirect function index. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:246:12: type mismatch at call_indirect function index. got f32, expected i32
     (func (call_indirect 0 (f32.const 0))))
            ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:250:45: type mismatch at return. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:250:45: type mismatch at return. got f32, expected i32
 ..._invalid (module (func (result i32) (return (f32.const 0)))) "type mismatch")
                                         ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:253:44: type mismatch at set_local. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:253:44: type mismatch at set_local. got f32, expected i32
 ...alid (module (func (local i32) (set_local 0 (f32.const 0)))) "type mismatch")
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:256:43: type mismatch at i32.load. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:256:43: type mismatch at i32.load. got f32, expected i32
 ..._invalid (module (memory 1) (func (i32.load (f32.const 0)))) "type mismatch")
                                       ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:256:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:256:36: type stack at end of function is 1. expected 0
 ..._invalid (module (memory 1) (func (i32.load (f32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:257:43: type mismatch at i32.load8_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:257:43: type mismatch at i32.load8_s. got f32, expected i32
 ...valid (module (memory 1) (func (i32.load8_s (f32.const 0)))) "type mismatch")
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:257:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:257:36: type stack at end of function is 1. expected 0
 ...valid (module (memory 1) (func (i32.load8_s (f32.const 0)))) "type mismatch")
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:258:43: type mismatch at i32.load8_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:258:43: type mismatch at i32.load8_u. got f32, expected i32
 ...valid (module (memory 1) (func (i32.load8_u (f32.const 0)))) "type mismatch")
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:258:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:258:36: type stack at end of function is 1. expected 0
 ...valid (module (memory 1) (func (i32.load8_u (f32.const 0)))) "type mismatch")
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:259:43: type mismatch at i32.load16_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:259:43: type mismatch at i32.load16_s. got f32, expected i32
 ...alid (module (memory 1) (func (i32.load16_s (f32.const 0)))) "type mismatch")
                                   ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:259:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:259:36: type stack at end of function is 1. expected 0
 ...alid (module (memory 1) (func (i32.load16_s (f32.const 0)))) "type mismatch")
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:260:43: type mismatch at i32.load16_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:260:43: type mismatch at i32.load16_u. got f32, expected i32
 ...alid (module (memory 1) (func (i32.load16_u (f32.const 0)))) "type mismatch")
                                   ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:260:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:260:36: type stack at end of function is 1. expected 0
 ...alid (module (memory 1) (func (i32.load16_u (f32.const 0)))) "type mismatch")
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:261:43: type mismatch at i64.load. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:261:43: type mismatch at i64.load. got f32, expected i32
 ..._invalid (module (memory 1) (func (i64.load (f32.const 0)))) "type mismatch")
                                       ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:261:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:261:36: type stack at end of function is 1. expected 0
 ..._invalid (module (memory 1) (func (i64.load (f32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:262:43: type mismatch at i64.load8_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:262:43: type mismatch at i64.load8_s. got f32, expected i32
 ...valid (module (memory 1) (func (i64.load8_s (f32.const 0)))) "type mismatch")
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:262:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:262:36: type stack at end of function is 1. expected 0
 ...valid (module (memory 1) (func (i64.load8_s (f32.const 0)))) "type mismatch")
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:263:43: type mismatch at i64.load8_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:263:43: type mismatch at i64.load8_u. got f32, expected i32
 ...valid (module (memory 1) (func (i64.load8_u (f32.const 0)))) "type mismatch")
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:263:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:263:36: type stack at end of function is 1. expected 0
 ...valid (module (memory 1) (func (i64.load8_u (f32.const 0)))) "type mismatch")
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:264:43: type mismatch at i64.load16_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:264:43: type mismatch at i64.load16_s. got f32, expected i32
 ...alid (module (memory 1) (func (i64.load16_s (f32.const 0)))) "type mismatch")
                                   ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:264:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:264:36: type stack at end of function is 1. expected 0
 ...alid (module (memory 1) (func (i64.load16_s (f32.const 0)))) "type mismatch")
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:265:43: type mismatch at i64.load16_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:265:43: type mismatch at i64.load16_u. got f32, expected i32
 ...alid (module (memory 1) (func (i64.load16_u (f32.const 0)))) "type mismatch")
                                   ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:265:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:265:36: type stack at end of function is 1. expected 0
 ...alid (module (memory 1) (func (i64.load16_u (f32.const 0)))) "type mismatch")
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:266:43: type mismatch at i64.load32_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:266:43: type mismatch at i64.load32_s. got f32, expected i32
 ...alid (module (memory 1) (func (i64.load32_s (f32.const 0)))) "type mismatch")
                                   ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:266:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:266:36: type stack at end of function is 1. expected 0
 ...alid (module (memory 1) (func (i64.load32_s (f32.const 0)))) "type mismatch")
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:267:43: type mismatch at i64.load32_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:267:43: type mismatch at i64.load32_u. got f32, expected i32
 ...alid (module (memory 1) (func (i64.load32_u (f32.const 0)))) "type mismatch")
                                   ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:267:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:267:36: type stack at end of function is 1. expected 0
 ...alid (module (memory 1) (func (i64.load32_u (f32.const 0)))) "type mismatch")
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:268:43: type mismatch at f32.load. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:268:43: type mismatch at f32.load. got f32, expected i32
 ..._invalid (module (memory 1) (func (f32.load (f32.const 0)))) "type mismatch")
                                       ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:268:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:268:36: type stack at end of function is 1. expected 0
 ..._invalid (module (memory 1) (func (f32.load (f32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:269:43: type mismatch at f64.load. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:269:43: type mismatch at f64.load. got f32, expected i32
 ..._invalid (module (memory 1) (func (f64.load (f32.const 0)))) "type mismatch")
                                       ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:269:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:269:36: type stack at end of function is 1. expected 0
 ..._invalid (module (memory 1) (func (f64.load (f32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:272:43: type mismatch at i32.store. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:272:43: type mismatch at i32.store. got f32, expected i32
 ...nvalid (module (memory 1) (func (i32.store (f32.const 0) (i32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:273:43: type mismatch at i32.store8. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:273:43: type mismatch at i32.store8. got f32, expected i32
 ...valid (module (memory 1) (func (i32.store8 (f32.const 0) (i32.const 0)))) ...
                                    ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:274:43: type mismatch at i32.store16. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:274:43: type mismatch at i32.store16. got f32, expected i32
 ...valid (module (memory 1) (func (i32.store16 (f32.const 0) (i32.const 0))))...
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:275:43: type mismatch at i64.store. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:275:43: type mismatch at i64.store. got f32, expected i32
 ...nvalid (module (memory 1) (func (i64.store (f32.const 0) (i32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:275:43: type mismatch at i64.store. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:275:43: type mismatch at i64.store. got i32, expected i64
 ...nvalid (module (memory 1) (func (i64.store (f32.const 0) (i32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:276:43: type mismatch at i64.store8. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:276:43: type mismatch at i64.store8. got f32, expected i32
 ...valid (module (memory 1) (func (i64.store8 (f32.const 0) (i64.const 0)))) ...
                                    ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:277:43: type mismatch at i64.store16. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:277:43: type mismatch at i64.store16. got f32, expected i32
 ...valid (module (memory 1) (func (i64.store16 (f32.const 0) (i64.const 0))))...
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:278:43: type mismatch at i64.store32. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:278:43: type mismatch at i64.store32. got f32, expected i32
 ...valid (module (memory 1) (func (i64.store32 (f32.const 0) (i64.const 0))))...
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:279:43: type mismatch at f32.store. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:279:43: type mismatch at f32.store. got f32, expected i32
 ...nvalid (module (memory 1) (func (f32.store (f32.const 0) (f32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:280:43: type mismatch at f64.store. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:280:43: type mismatch at f64.store. got f32, expected i32
 ...nvalid (module (memory 1) (func (f64.store (f32.const 0) (f64.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:283:43: type mismatch at i32.store. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:283:43: type mismatch at i32.store. got f32, expected i32
 ...nvalid (module (memory 1) (func (i32.store (i32.const 0) (f32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:284:43: type mismatch at i32.store8. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:284:43: type mismatch at i32.store8. got f32, expected i32
 ...valid (module (memory 1) (func (i32.store8 (i32.const 0) (f32.const 0)))) ...
                                    ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:285:43: type mismatch at i32.store16. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:285:43: type mismatch at i32.store16. got f32, expected i32
 ...valid (module (memory 1) (func (i32.store16 (i32.const 0) (f32.const 0))))...
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:286:43: type mismatch at i64.store. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:286:43: type mismatch at i64.store. got f32, expected i64
 ...nvalid (module (memory 1) (func (i64.store (i32.const 0) (f32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:287:43: type mismatch at i64.store8. got f64, expected i64
+  out/third_party/testsuite/typecheck.wast:287:43: type mismatch at i64.store8. got f64, expected i64
 ...valid (module (memory 1) (func (i64.store8 (i32.const 0) (f64.const 0)))) ...
                                    ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:288:43: type mismatch at i64.store16. got f64, expected i64
+  out/third_party/testsuite/typecheck.wast:288:43: type mismatch at i64.store16. got f64, expected i64
 ...valid (module (memory 1) (func (i64.store16 (i32.const 0) (f64.const 0))))...
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:289:43: type mismatch at i64.store32. got f64, expected i64
+  out/third_party/testsuite/typecheck.wast:289:43: type mismatch at i64.store32. got f64, expected i64
 ...valid (module (memory 1) (func (i64.store32 (i32.const 0) (f64.const 0))))...
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:290:43: type mismatch at f32.store. got i32, expected f32
+  out/third_party/testsuite/typecheck.wast:290:43: type mismatch at f32.store. got i32, expected f32
 ...nvalid (module (memory 1) (func (f32.store (i32.const 0) (i32.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:291:43: type mismatch at f64.store. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:291:43: type mismatch at f64.store. got i64, expected f64
 ...nvalid (module (memory 1) (func (f64.store (i32.const 0) (i64.const 0)))) ...
                                     ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:294:32: type mismatch at i32.add. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:294:32: type mismatch at i32.add. got i64, expected i32
 (assert_invalid (module (func (i32.add (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:294:32: type mismatch at i32.add. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:294:32: type mismatch at i32.add. got f32, expected i32
 (assert_invalid (module (func (i32.add (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:294:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:294:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.add (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:295:32: type mismatch at i32.and. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:295:32: type mismatch at i32.and. got i64, expected i32
 (assert_invalid (module (func (i32.and (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:295:32: type mismatch at i32.and. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:295:32: type mismatch at i32.and. got f32, expected i32
 (assert_invalid (module (func (i32.and (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:295:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:295:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.and (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:296:32: type mismatch at i32.div_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:296:32: type mismatch at i32.div_s. got i64, expected i32
 (assert_invalid (module (func (i32.div_s (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:296:32: type mismatch at i32.div_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:296:32: type mismatch at i32.div_s. got f32, expected i32
 (assert_invalid (module (func (i32.div_s (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:296:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:296:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i32.div_s (i64.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:297:32: type mismatch at i32.div_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:297:32: type mismatch at i32.div_u. got i64, expected i32
 (assert_invalid (module (func (i32.div_u (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:297:32: type mismatch at i32.div_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:297:32: type mismatch at i32.div_u. got f32, expected i32
 (assert_invalid (module (func (i32.div_u (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:297:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:297:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i32.div_u (i64.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:298:32: type mismatch at i32.mul. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:298:32: type mismatch at i32.mul. got i64, expected i32
 (assert_invalid (module (func (i32.mul (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:298:32: type mismatch at i32.mul. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:298:32: type mismatch at i32.mul. got f32, expected i32
 (assert_invalid (module (func (i32.mul (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:298:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:298:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.mul (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:299:32: type mismatch at i32.or. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:299:32: type mismatch at i32.or. got i64, expected i32
 (assert_invalid (module (func (i32.or (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:299:32: type mismatch at i32.or. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:299:32: type mismatch at i32.or. got f32, expected i32
 (assert_invalid (module (func (i32.or (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:299:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:299:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (i32.or (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:300:32: type mismatch at i32.rem_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:300:32: type mismatch at i32.rem_s. got i64, expected i32
 (assert_invalid (module (func (i32.rem_s (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:300:32: type mismatch at i32.rem_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:300:32: type mismatch at i32.rem_s. got f32, expected i32
 (assert_invalid (module (func (i32.rem_s (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:300:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:300:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i32.rem_s (i64.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:301:32: type mismatch at i32.rem_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:301:32: type mismatch at i32.rem_u. got i64, expected i32
 (assert_invalid (module (func (i32.rem_u (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:301:32: type mismatch at i32.rem_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:301:32: type mismatch at i32.rem_u. got f32, expected i32
 (assert_invalid (module (func (i32.rem_u (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:301:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:301:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i32.rem_u (i64.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:302:32: type mismatch at i32.rotl. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:302:32: type mismatch at i32.rotl. got i64, expected i32
 (assert_invalid (module (func (i32.rotl (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:302:32: type mismatch at i32.rotl. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:302:32: type mismatch at i32.rotl. got f32, expected i32
 (assert_invalid (module (func (i32.rotl (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:302:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:302:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.rotl (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:303:32: type mismatch at i32.rotr. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:303:32: type mismatch at i32.rotr. got i64, expected i32
 (assert_invalid (module (func (i32.rotr (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:303:32: type mismatch at i32.rotr. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:303:32: type mismatch at i32.rotr. got f32, expected i32
 (assert_invalid (module (func (i32.rotr (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:303:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:303:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.rotr (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:304:32: type mismatch at i32.shl. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:304:32: type mismatch at i32.shl. got i64, expected i32
 (assert_invalid (module (func (i32.shl (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:304:32: type mismatch at i32.shl. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:304:32: type mismatch at i32.shl. got f32, expected i32
 (assert_invalid (module (func (i32.shl (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:304:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:304:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.shl (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:305:32: type mismatch at i32.shr_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:305:32: type mismatch at i32.shr_s. got i64, expected i32
 (assert_invalid (module (func (i32.shr_s (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:305:32: type mismatch at i32.shr_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:305:32: type mismatch at i32.shr_s. got f32, expected i32
 (assert_invalid (module (func (i32.shr_s (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:305:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:305:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i32.shr_s (i64.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:306:32: type mismatch at i32.shr_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:306:32: type mismatch at i32.shr_u. got i64, expected i32
 (assert_invalid (module (func (i32.shr_u (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:306:32: type mismatch at i32.shr_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:306:32: type mismatch at i32.shr_u. got f32, expected i32
 (assert_invalid (module (func (i32.shr_u (i64.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:306:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:306:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i32.shr_u (i64.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:307:32: type mismatch at i32.sub. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:307:32: type mismatch at i32.sub. got i64, expected i32
 (assert_invalid (module (func (i32.sub (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:307:32: type mismatch at i32.sub. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:307:32: type mismatch at i32.sub. got f32, expected i32
 (assert_invalid (module (func (i32.sub (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:307:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:307:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.sub (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:308:32: type mismatch at i32.xor. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:308:32: type mismatch at i32.xor. got i64, expected i32
 (assert_invalid (module (func (i32.xor (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:308:32: type mismatch at i32.xor. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:308:32: type mismatch at i32.xor. got f32, expected i32
 (assert_invalid (module (func (i32.xor (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:308:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:308:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.xor (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:309:32: type mismatch at i64.add. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:309:32: type mismatch at i64.add. got i32, expected i64
 (assert_invalid (module (func (i64.add (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:309:32: type mismatch at i64.add. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:309:32: type mismatch at i64.add. got f32, expected i64
 (assert_invalid (module (func (i64.add (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:309:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:309:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.add (i32.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:310:32: type mismatch at i64.and. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:310:32: type mismatch at i64.and. got i32, expected i64
 (assert_invalid (module (func (i64.and (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:310:32: type mismatch at i64.and. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:310:32: type mismatch at i64.and. got f32, expected i64
 (assert_invalid (module (func (i64.and (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:310:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:310:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.and (i32.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:311:32: type mismatch at i64.div_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:311:32: type mismatch at i64.div_s. got i32, expected i64
 (assert_invalid (module (func (i64.div_s (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:311:32: type mismatch at i64.div_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:311:32: type mismatch at i64.div_s. got f32, expected i64
 (assert_invalid (module (func (i64.div_s (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:311:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:311:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i64.div_s (i32.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:312:32: type mismatch at i64.div_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:312:32: type mismatch at i64.div_u. got i32, expected i64
 (assert_invalid (module (func (i64.div_u (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:312:32: type mismatch at i64.div_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:312:32: type mismatch at i64.div_u. got f32, expected i64
 (assert_invalid (module (func (i64.div_u (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:312:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:312:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i64.div_u (i32.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:313:32: type mismatch at i64.mul. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:313:32: type mismatch at i64.mul. got i32, expected i64
 (assert_invalid (module (func (i64.mul (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:313:32: type mismatch at i64.mul. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:313:32: type mismatch at i64.mul. got f32, expected i64
 (assert_invalid (module (func (i64.mul (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:313:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:313:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.mul (i32.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:314:32: type mismatch at i64.or. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:314:32: type mismatch at i64.or. got i32, expected i64
 (assert_invalid (module (func (i64.or (i32.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:314:32: type mismatch at i64.or. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:314:32: type mismatch at i64.or. got f32, expected i64
 (assert_invalid (module (func (i64.or (i32.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:314:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:314:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (i64.or (i32.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:315:32: type mismatch at i64.rem_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:315:32: type mismatch at i64.rem_s. got i32, expected i64
 (assert_invalid (module (func (i64.rem_s (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:315:32: type mismatch at i64.rem_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:315:32: type mismatch at i64.rem_s. got f32, expected i64
 (assert_invalid (module (func (i64.rem_s (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:315:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:315:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i64.rem_s (i32.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:316:32: type mismatch at i64.rem_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:316:32: type mismatch at i64.rem_u. got i32, expected i64
 (assert_invalid (module (func (i64.rem_u (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:316:32: type mismatch at i64.rem_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:316:32: type mismatch at i64.rem_u. got f32, expected i64
 (assert_invalid (module (func (i64.rem_u (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:316:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:316:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i64.rem_u (i32.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:317:32: type mismatch at i64.rotl. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:317:32: type mismatch at i64.rotl. got i32, expected i64
 (assert_invalid (module (func (i64.rotl (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:317:32: type mismatch at i64.rotl. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:317:32: type mismatch at i64.rotl. got f32, expected i64
 (assert_invalid (module (func (i64.rotl (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:317:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:317:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.rotl (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:318:32: type mismatch at i64.rotr. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:318:32: type mismatch at i64.rotr. got i32, expected i64
 (assert_invalid (module (func (i64.rotr (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:318:32: type mismatch at i64.rotr. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:318:32: type mismatch at i64.rotr. got f32, expected i64
 (assert_invalid (module (func (i64.rotr (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:318:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:318:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.rotr (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:319:32: type mismatch at i64.shl. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:319:32: type mismatch at i64.shl. got i32, expected i64
 (assert_invalid (module (func (i64.shl (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:319:32: type mismatch at i64.shl. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:319:32: type mismatch at i64.shl. got f32, expected i64
 (assert_invalid (module (func (i64.shl (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:319:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:319:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.shl (i32.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:320:32: type mismatch at i64.shr_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:320:32: type mismatch at i64.shr_s. got i32, expected i64
 (assert_invalid (module (func (i64.shr_s (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:320:32: type mismatch at i64.shr_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:320:32: type mismatch at i64.shr_s. got f32, expected i64
 (assert_invalid (module (func (i64.shr_s (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:320:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:320:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i64.shr_s (i32.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:321:32: type mismatch at i64.shr_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:321:32: type mismatch at i64.shr_u. got i32, expected i64
 (assert_invalid (module (func (i64.shr_u (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:321:32: type mismatch at i64.shr_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:321:32: type mismatch at i64.shr_u. got f32, expected i64
 (assert_invalid (module (func (i64.shr_u (i32.const 0) (f32.const 0)))) "type...
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:321:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:321:25: type stack at end of function is 1. expected 0
 ...valid (module (func (i64.shr_u (i32.const 0) (f32.const 0)))) "type mismat...
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:322:32: type mismatch at i64.sub. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:322:32: type mismatch at i64.sub. got i32, expected i64
 (assert_invalid (module (func (i64.sub (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:322:32: type mismatch at i64.sub. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:322:32: type mismatch at i64.sub. got f32, expected i64
 (assert_invalid (module (func (i64.sub (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:322:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:322:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.sub (i32.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:323:32: type mismatch at i64.xor. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:323:32: type mismatch at i64.xor. got i32, expected i64
 (assert_invalid (module (func (i64.xor (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:323:32: type mismatch at i64.xor. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:323:32: type mismatch at i64.xor. got f32, expected i64
 (assert_invalid (module (func (i64.xor (i32.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:323:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:323:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.xor (i32.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:324:32: type mismatch at f32.add. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:324:32: type mismatch at f32.add. got i64, expected f32
 (assert_invalid (module (func (f32.add (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:324:32: type mismatch at f32.add. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:324:32: type mismatch at f32.add. got f64, expected f32
 (assert_invalid (module (func (f32.add (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:324:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:324:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f32.add (i64.const 0) (f64.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:325:32: type mismatch at f32.copysign. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:325:32: type mismatch at f32.copysign. got i64, expected f32
 (assert_invalid (module (func (f32.copysign (i64.const 0) (f64.const 0)))) "t...
                                ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:325:32: type mismatch at f32.copysign. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:325:32: type mismatch at f32.copysign. got f64, expected f32
 (assert_invalid (module (func (f32.copysign (i64.const 0) (f64.const 0)))) "t...
                                ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:325:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:325:25: type stack at end of function is 1. expected 0
 ...alid (module (func (f32.copysign (i64.const 0) (f64.const 0)))) "type mism...
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:326:32: type mismatch at f32.div. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:326:32: type mismatch at f32.div. got i64, expected f32
 (assert_invalid (module (func (f32.div (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:326:32: type mismatch at f32.div. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:326:32: type mismatch at f32.div. got f64, expected f32
 (assert_invalid (module (func (f32.div (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:326:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:326:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f32.div (i64.const 0) (f64.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:327:32: type mismatch at f32.max. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:327:32: type mismatch at f32.max. got i64, expected f32
 (assert_invalid (module (func (f32.max (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:327:32: type mismatch at f32.max. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:327:32: type mismatch at f32.max. got f64, expected f32
 (assert_invalid (module (func (f32.max (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:327:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:327:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f32.max (i64.const 0) (f64.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:328:32: type mismatch at f32.min. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:328:32: type mismatch at f32.min. got i64, expected f32
 (assert_invalid (module (func (f32.min (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:328:32: type mismatch at f32.min. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:328:32: type mismatch at f32.min. got f64, expected f32
 (assert_invalid (module (func (f32.min (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:328:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:328:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f32.min (i64.const 0) (f64.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:329:32: type mismatch at f32.mul. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:329:32: type mismatch at f32.mul. got i64, expected f32
 (assert_invalid (module (func (f32.mul (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:329:32: type mismatch at f32.mul. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:329:32: type mismatch at f32.mul. got f64, expected f32
 (assert_invalid (module (func (f32.mul (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:329:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:329:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f32.mul (i64.const 0) (f64.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:330:32: type mismatch at f32.sub. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:330:32: type mismatch at f32.sub. got i64, expected f32
 (assert_invalid (module (func (f32.sub (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:330:32: type mismatch at f32.sub. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:330:32: type mismatch at f32.sub. got f64, expected f32
 (assert_invalid (module (func (f32.sub (i64.const 0) (f64.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:330:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:330:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f32.sub (i64.const 0) (f64.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:331:32: type mismatch at f64.add. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:331:32: type mismatch at f64.add. got i64, expected f64
 (assert_invalid (module (func (f64.add (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:331:32: type mismatch at f64.add. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:331:32: type mismatch at f64.add. got f32, expected f64
 (assert_invalid (module (func (f64.add (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:331:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:331:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f64.add (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:332:32: type mismatch at f64.copysign. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:332:32: type mismatch at f64.copysign. got i64, expected f64
 (assert_invalid (module (func (f64.copysign (i64.const 0) (f32.const 0)))) "t...
                                ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:332:32: type mismatch at f64.copysign. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:332:32: type mismatch at f64.copysign. got f32, expected f64
 (assert_invalid (module (func (f64.copysign (i64.const 0) (f32.const 0)))) "t...
                                ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:332:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:332:25: type stack at end of function is 1. expected 0
 ...alid (module (func (f64.copysign (i64.const 0) (f32.const 0)))) "type mism...
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:333:32: type mismatch at f64.div. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:333:32: type mismatch at f64.div. got i64, expected f64
 (assert_invalid (module (func (f64.div (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:333:32: type mismatch at f64.div. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:333:32: type mismatch at f64.div. got f32, expected f64
 (assert_invalid (module (func (f64.div (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:333:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:333:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f64.div (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:334:32: type mismatch at f64.max. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:334:32: type mismatch at f64.max. got i64, expected f64
 (assert_invalid (module (func (f64.max (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:334:32: type mismatch at f64.max. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:334:32: type mismatch at f64.max. got f32, expected f64
 (assert_invalid (module (func (f64.max (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:334:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:334:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f64.max (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:335:32: type mismatch at f64.min. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:335:32: type mismatch at f64.min. got i64, expected f64
 (assert_invalid (module (func (f64.min (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:335:32: type mismatch at f64.min. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:335:32: type mismatch at f64.min. got f32, expected f64
 (assert_invalid (module (func (f64.min (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:335:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:335:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f64.min (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:336:32: type mismatch at f64.mul. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:336:32: type mismatch at f64.mul. got i64, expected f64
 (assert_invalid (module (func (f64.mul (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:336:32: type mismatch at f64.mul. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:336:32: type mismatch at f64.mul. got f32, expected f64
 (assert_invalid (module (func (f64.mul (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:336:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:336:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f64.mul (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:337:32: type mismatch at f64.sub. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:337:32: type mismatch at f64.sub. got i64, expected f64
 (assert_invalid (module (func (f64.sub (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:337:32: type mismatch at f64.sub. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:337:32: type mismatch at f64.sub. got f32, expected f64
 (assert_invalid (module (func (f64.sub (i64.const 0) (f32.const 0)))) "type m...
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:337:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:337:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (f64.sub (i64.const 0) (f32.const 0)))) "type mismatch")
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:340:32: type mismatch at i32.eqz. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:340:32: type mismatch at i32.eqz. got i64, expected i32
 (assert_invalid (module (func (i32.eqz (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:340:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:340:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.eqz (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:341:32: type mismatch at i32.clz. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:341:32: type mismatch at i32.clz. got i64, expected i32
 (assert_invalid (module (func (i32.clz (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:341:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:341:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.clz (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:342:32: type mismatch at i32.ctz. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:342:32: type mismatch at i32.ctz. got i64, expected i32
 (assert_invalid (module (func (i32.ctz (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:342:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:342:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.ctz (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:343:32: type mismatch at i32.popcnt. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:343:32: type mismatch at i32.popcnt. got i64, expected i32
 (assert_invalid (module (func (i32.popcnt (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:343:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:343:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.popcnt (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:344:32: type mismatch at i64.eqz. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:344:32: type mismatch at i64.eqz. got i32, expected i64
 (assert_invalid (module (func (i64.eqz (i32.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:344:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:344:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.eqz (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:345:32: type mismatch at i64.clz. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:345:32: type mismatch at i64.clz. got i32, expected i64
 (assert_invalid (module (func (i64.clz (i32.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:345:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:345:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.clz (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:346:32: type mismatch at i64.ctz. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:346:32: type mismatch at i64.ctz. got i32, expected i64
 (assert_invalid (module (func (i64.ctz (i32.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:346:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:346:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.ctz (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:347:32: type mismatch at i64.popcnt. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:347:32: type mismatch at i64.popcnt. got i32, expected i64
 (assert_invalid (module (func (i64.popcnt (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:347:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:347:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.popcnt (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:348:32: type mismatch at f32.abs. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:348:32: type mismatch at f32.abs. got i64, expected f32
 (assert_invalid (module (func (f32.abs (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:348:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:348:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.abs (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:349:32: type mismatch at f32.ceil. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:349:32: type mismatch at f32.ceil. got i64, expected f32
 (assert_invalid (module (func (f32.ceil (i64.const 0)))) "type mismatch")
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:349:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:349:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.ceil (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:350:32: type mismatch at f32.floor. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:350:32: type mismatch at f32.floor. got i64, expected f32
 (assert_invalid (module (func (f32.floor (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:350:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:350:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.floor (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:351:32: type mismatch at f32.nearest. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:351:32: type mismatch at f32.nearest. got i64, expected f32
 (assert_invalid (module (func (f32.nearest (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:351:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:351:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.nearest (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:352:32: type mismatch at f32.neg. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:352:32: type mismatch at f32.neg. got i64, expected f32
 (assert_invalid (module (func (f32.neg (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:352:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:352:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.neg (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:353:32: type mismatch at f32.sqrt. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:353:32: type mismatch at f32.sqrt. got i64, expected f32
 (assert_invalid (module (func (f32.sqrt (i64.const 0)))) "type mismatch")
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:353:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:353:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.sqrt (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:354:32: type mismatch at f32.trunc. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:354:32: type mismatch at f32.trunc. got i64, expected f32
 (assert_invalid (module (func (f32.trunc (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:354:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:354:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.trunc (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:355:32: type mismatch at f64.abs. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:355:32: type mismatch at f64.abs. got i64, expected f64
 (assert_invalid (module (func (f64.abs (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:355:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:355:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.abs (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:356:32: type mismatch at f64.ceil. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:356:32: type mismatch at f64.ceil. got i64, expected f64
 (assert_invalid (module (func (f64.ceil (i64.const 0)))) "type mismatch")
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:356:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:356:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.ceil (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:357:32: type mismatch at f64.floor. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:357:32: type mismatch at f64.floor. got i64, expected f64
 (assert_invalid (module (func (f64.floor (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:357:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:357:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.floor (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:358:32: type mismatch at f64.nearest. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:358:32: type mismatch at f64.nearest. got i64, expected f64
 (assert_invalid (module (func (f64.nearest (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:358:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:358:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.nearest (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:359:32: type mismatch at f64.neg. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:359:32: type mismatch at f64.neg. got i64, expected f64
 (assert_invalid (module (func (f64.neg (i64.const 0)))) "type mismatch")
                                ^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:359:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:359:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.neg (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:360:32: type mismatch at f64.sqrt. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:360:32: type mismatch at f64.sqrt. got i64, expected f64
 (assert_invalid (module (func (f64.sqrt (i64.const 0)))) "type mismatch")
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:360:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:360:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.sqrt (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:361:32: type mismatch at f64.trunc. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:361:32: type mismatch at f64.trunc. got i64, expected f64
 (assert_invalid (module (func (f64.trunc (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:361:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:361:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.trunc (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:364:32: type mismatch at i32.eq. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:364:32: type mismatch at i32.eq. got i64, expected i32
 (assert_invalid (module (func (i32.eq (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:364:32: type mismatch at i32.eq. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:364:32: type mismatch at i32.eq. got f32, expected i32
 (assert_invalid (module (func (i32.eq (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:364:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:364:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (i32.eq (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:365:32: type mismatch at i32.ge_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:365:32: type mismatch at i32.ge_s. got i64, expected i32
 (assert_invalid (module (func (i32.ge_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:365:32: type mismatch at i32.ge_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:365:32: type mismatch at i32.ge_s. got f32, expected i32
 (assert_invalid (module (func (i32.ge_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:365:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:365:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.ge_s (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:366:32: type mismatch at i32.ge_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:366:32: type mismatch at i32.ge_u. got i64, expected i32
 (assert_invalid (module (func (i32.ge_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:366:32: type mismatch at i32.ge_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:366:32: type mismatch at i32.ge_u. got f32, expected i32
 (assert_invalid (module (func (i32.ge_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:366:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:366:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.ge_u (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:367:32: type mismatch at i32.gt_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:367:32: type mismatch at i32.gt_s. got i64, expected i32
 (assert_invalid (module (func (i32.gt_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:367:32: type mismatch at i32.gt_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:367:32: type mismatch at i32.gt_s. got f32, expected i32
 (assert_invalid (module (func (i32.gt_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:367:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:367:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.gt_s (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:368:32: type mismatch at i32.gt_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:368:32: type mismatch at i32.gt_u. got i64, expected i32
 (assert_invalid (module (func (i32.gt_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:368:32: type mismatch at i32.gt_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:368:32: type mismatch at i32.gt_u. got f32, expected i32
 (assert_invalid (module (func (i32.gt_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:368:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:368:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.gt_u (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:369:32: type mismatch at i32.le_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:369:32: type mismatch at i32.le_s. got i64, expected i32
 (assert_invalid (module (func (i32.le_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:369:32: type mismatch at i32.le_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:369:32: type mismatch at i32.le_s. got f32, expected i32
 (assert_invalid (module (func (i32.le_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:369:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:369:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.le_s (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:370:32: type mismatch at i32.le_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:370:32: type mismatch at i32.le_u. got i64, expected i32
 (assert_invalid (module (func (i32.le_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:370:32: type mismatch at i32.le_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:370:32: type mismatch at i32.le_u. got f32, expected i32
 (assert_invalid (module (func (i32.le_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:370:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:370:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.le_u (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:371:32: type mismatch at i32.lt_s. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:371:32: type mismatch at i32.lt_s. got i64, expected i32
 (assert_invalid (module (func (i32.lt_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:371:32: type mismatch at i32.lt_s. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:371:32: type mismatch at i32.lt_s. got f32, expected i32
 (assert_invalid (module (func (i32.lt_s (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:371:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:371:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.lt_s (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:372:32: type mismatch at i32.lt_u. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:372:32: type mismatch at i32.lt_u. got i64, expected i32
 (assert_invalid (module (func (i32.lt_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:372:32: type mismatch at i32.lt_u. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:372:32: type mismatch at i32.lt_u. got f32, expected i32
 (assert_invalid (module (func (i32.lt_u (i64.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:372:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:372:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i32.lt_u (i64.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:373:32: type mismatch at i32.ne. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:373:32: type mismatch at i32.ne. got i64, expected i32
 (assert_invalid (module (func (i32.ne (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:373:32: type mismatch at i32.ne. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:373:32: type mismatch at i32.ne. got f32, expected i32
 (assert_invalid (module (func (i32.ne (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:373:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:373:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (i32.ne (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:374:32: type mismatch at i64.eq. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:374:32: type mismatch at i64.eq. got i32, expected i64
 (assert_invalid (module (func (i64.eq (i32.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:374:32: type mismatch at i64.eq. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:374:32: type mismatch at i64.eq. got f32, expected i64
 (assert_invalid (module (func (i64.eq (i32.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:374:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:374:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (i64.eq (i32.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:375:32: type mismatch at i64.ge_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:375:32: type mismatch at i64.ge_s. got i32, expected i64
 (assert_invalid (module (func (i64.ge_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:375:32: type mismatch at i64.ge_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:375:32: type mismatch at i64.ge_s. got f32, expected i64
 (assert_invalid (module (func (i64.ge_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:375:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:375:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.ge_s (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:376:32: type mismatch at i64.ge_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:376:32: type mismatch at i64.ge_u. got i32, expected i64
 (assert_invalid (module (func (i64.ge_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:376:32: type mismatch at i64.ge_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:376:32: type mismatch at i64.ge_u. got f32, expected i64
 (assert_invalid (module (func (i64.ge_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:376:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:376:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.ge_u (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:377:32: type mismatch at i64.gt_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:377:32: type mismatch at i64.gt_s. got i32, expected i64
 (assert_invalid (module (func (i64.gt_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:377:32: type mismatch at i64.gt_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:377:32: type mismatch at i64.gt_s. got f32, expected i64
 (assert_invalid (module (func (i64.gt_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:377:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:377:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.gt_s (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:378:32: type mismatch at i64.gt_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:378:32: type mismatch at i64.gt_u. got i32, expected i64
 (assert_invalid (module (func (i64.gt_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:378:32: type mismatch at i64.gt_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:378:32: type mismatch at i64.gt_u. got f32, expected i64
 (assert_invalid (module (func (i64.gt_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:378:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:378:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.gt_u (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:379:32: type mismatch at i64.le_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:379:32: type mismatch at i64.le_s. got i32, expected i64
 (assert_invalid (module (func (i64.le_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:379:32: type mismatch at i64.le_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:379:32: type mismatch at i64.le_s. got f32, expected i64
 (assert_invalid (module (func (i64.le_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:379:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:379:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.le_s (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:380:32: type mismatch at i64.le_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:380:32: type mismatch at i64.le_u. got i32, expected i64
 (assert_invalid (module (func (i64.le_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:380:32: type mismatch at i64.le_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:380:32: type mismatch at i64.le_u. got f32, expected i64
 (assert_invalid (module (func (i64.le_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:380:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:380:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.le_u (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:381:32: type mismatch at i64.lt_s. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:381:32: type mismatch at i64.lt_s. got i32, expected i64
 (assert_invalid (module (func (i64.lt_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:381:32: type mismatch at i64.lt_s. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:381:32: type mismatch at i64.lt_s. got f32, expected i64
 (assert_invalid (module (func (i64.lt_s (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:381:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:381:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.lt_s (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:382:32: type mismatch at i64.lt_u. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:382:32: type mismatch at i64.lt_u. got i32, expected i64
 (assert_invalid (module (func (i64.lt_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:382:32: type mismatch at i64.lt_u. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:382:32: type mismatch at i64.lt_u. got f32, expected i64
 (assert_invalid (module (func (i64.lt_u (i32.const 0) (f32.const 0)))) "type ...
                                ^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:382:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:382:25: type stack at end of function is 1. expected 0
 ...nvalid (module (func (i64.lt_u (i32.const 0) (f32.const 0)))) "type mismat...
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:383:32: type mismatch at i64.ne. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:383:32: type mismatch at i64.ne. got i32, expected i64
 (assert_invalid (module (func (i64.ne (i32.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:383:32: type mismatch at i64.ne. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:383:32: type mismatch at i64.ne. got f32, expected i64
 (assert_invalid (module (func (i64.ne (i32.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:383:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:383:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (i64.ne (i32.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:384:32: type mismatch at f32.eq. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:384:32: type mismatch at f32.eq. got i64, expected f32
 (assert_invalid (module (func (f32.eq (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:384:32: type mismatch at f32.eq. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:384:32: type mismatch at f32.eq. got f64, expected f32
 (assert_invalid (module (func (f32.eq (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:384:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:384:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f32.eq (i64.const 0) (f64.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:385:32: type mismatch at f32.ge. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:385:32: type mismatch at f32.ge. got i64, expected f32
 (assert_invalid (module (func (f32.ge (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:385:32: type mismatch at f32.ge. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:385:32: type mismatch at f32.ge. got f64, expected f32
 (assert_invalid (module (func (f32.ge (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:385:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:385:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f32.ge (i64.const 0) (f64.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:386:32: type mismatch at f32.gt. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:386:32: type mismatch at f32.gt. got i64, expected f32
 (assert_invalid (module (func (f32.gt (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:386:32: type mismatch at f32.gt. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:386:32: type mismatch at f32.gt. got f64, expected f32
 (assert_invalid (module (func (f32.gt (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:386:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:386:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f32.gt (i64.const 0) (f64.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:387:32: type mismatch at f32.le. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:387:32: type mismatch at f32.le. got i64, expected f32
 (assert_invalid (module (func (f32.le (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:387:32: type mismatch at f32.le. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:387:32: type mismatch at f32.le. got f64, expected f32
 (assert_invalid (module (func (f32.le (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:387:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:387:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f32.le (i64.const 0) (f64.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:388:32: type mismatch at f32.lt. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:388:32: type mismatch at f32.lt. got i64, expected f32
 (assert_invalid (module (func (f32.lt (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:388:32: type mismatch at f32.lt. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:388:32: type mismatch at f32.lt. got f64, expected f32
 (assert_invalid (module (func (f32.lt (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:388:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:388:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f32.lt (i64.const 0) (f64.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:389:32: type mismatch at f32.ne. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:389:32: type mismatch at f32.ne. got i64, expected f32
 (assert_invalid (module (func (f32.ne (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:389:32: type mismatch at f32.ne. got f64, expected f32
+  out/third_party/testsuite/typecheck.wast:389:32: type mismatch at f32.ne. got f64, expected f32
 (assert_invalid (module (func (f32.ne (i64.const 0) (f64.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:389:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:389:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f32.ne (i64.const 0) (f64.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:390:32: type mismatch at f64.eq. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:390:32: type mismatch at f64.eq. got i64, expected f64
 (assert_invalid (module (func (f64.eq (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:390:32: type mismatch at f64.eq. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:390:32: type mismatch at f64.eq. got f32, expected f64
 (assert_invalid (module (func (f64.eq (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:390:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:390:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f64.eq (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:391:32: type mismatch at f64.ge. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:391:32: type mismatch at f64.ge. got i64, expected f64
 (assert_invalid (module (func (f64.ge (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:391:32: type mismatch at f64.ge. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:391:32: type mismatch at f64.ge. got f32, expected f64
 (assert_invalid (module (func (f64.ge (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:391:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:391:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f64.ge (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:392:32: type mismatch at f64.gt. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:392:32: type mismatch at f64.gt. got i64, expected f64
 (assert_invalid (module (func (f64.gt (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:392:32: type mismatch at f64.gt. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:392:32: type mismatch at f64.gt. got f32, expected f64
 (assert_invalid (module (func (f64.gt (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:392:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:392:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f64.gt (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:393:32: type mismatch at f64.le. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:393:32: type mismatch at f64.le. got i64, expected f64
 (assert_invalid (module (func (f64.le (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:393:32: type mismatch at f64.le. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:393:32: type mismatch at f64.le. got f32, expected f64
 (assert_invalid (module (func (f64.le (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:393:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:393:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f64.le (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:394:32: type mismatch at f64.lt. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:394:32: type mismatch at f64.lt. got i64, expected f64
 (assert_invalid (module (func (f64.lt (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:394:32: type mismatch at f64.lt. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:394:32: type mismatch at f64.lt. got f32, expected f64
 (assert_invalid (module (func (f64.lt (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:394:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:394:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f64.lt (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:395:32: type mismatch at f64.ne. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:395:32: type mismatch at f64.ne. got i64, expected f64
 (assert_invalid (module (func (f64.ne (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:395:32: type mismatch at f64.ne. got f32, expected f64
+  out/third_party/testsuite/typecheck.wast:395:32: type mismatch at f64.ne. got f32, expected f64
 (assert_invalid (module (func (f64.ne (i64.const 0) (f32.const 0)))) "type mi...
                                ^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:395:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:395:25: type stack at end of function is 1. expected 0
 ...invalid (module (func (f64.ne (i64.const 0) (f32.const 0)))) "type mismatch")
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:398:32: type mismatch at i32.wrap/i64. got f32, expected i64
+  out/third_party/testsuite/typecheck.wast:398:32: type mismatch at i32.wrap/i64. got f32, expected i64
 (assert_invalid (module (func (i32.wrap/i64 (f32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:398:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:398:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.wrap/i64 (f32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:399:32: type mismatch at i32.trunc_s/f32. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:399:32: type mismatch at i32.trunc_s/f32. got i64, expected f32
 (assert_invalid (module (func (i32.trunc_s/f32 (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:399:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:399:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.trunc_s/f32 (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:400:32: type mismatch at i32.trunc_u/f32. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:400:32: type mismatch at i32.trunc_u/f32. got i64, expected f32
 (assert_invalid (module (func (i32.trunc_u/f32 (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:400:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:400:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.trunc_u/f32 (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:401:32: type mismatch at i32.trunc_s/f64. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:401:32: type mismatch at i32.trunc_s/f64. got i64, expected f64
 (assert_invalid (module (func (i32.trunc_s/f64 (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:401:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:401:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.trunc_s/f64 (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:402:32: type mismatch at i32.trunc_u/f64. got i64, expected f64
+  out/third_party/testsuite/typecheck.wast:402:32: type mismatch at i32.trunc_u/f64. got i64, expected f64
 (assert_invalid (module (func (i32.trunc_u/f64 (i64.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:402:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:402:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i32.trunc_u/f64 (i64.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:403:32: type mismatch at i32.reinterpret/f32. got i64, expected f32
+  out/third_party/testsuite/typecheck.wast:403:32: type mismatch at i32.reinterpret/f32. got i64, expected f32
 (assert_invalid (module (func (i32.reinterpret/f32 (i64.const 0)))) "type mis...
                                ^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:403:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:403:25: type stack at end of function is 1. expected 0
 ..._invalid (module (func (i32.reinterpret/f32 (i64.const 0)))) "type mismatch")
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:404:32: type mismatch at i64.extend_s/i32. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:404:32: type mismatch at i64.extend_s/i32. got f32, expected i32
 (assert_invalid (module (func (i64.extend_s/i32 (f32.const 0)))) "type mismat...
                                ^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:404:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:404:25: type stack at end of function is 1. expected 0
 ...ert_invalid (module (func (i64.extend_s/i32 (f32.const 0)))) "type mismatch")
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:405:32: type mismatch at i64.extend_u/i32. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:405:32: type mismatch at i64.extend_u/i32. got f32, expected i32
 (assert_invalid (module (func (i64.extend_u/i32 (f32.const 0)))) "type mismat...
                                ^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:405:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:405:25: type stack at end of function is 1. expected 0
 ...ert_invalid (module (func (i64.extend_u/i32 (f32.const 0)))) "type mismatch")
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:406:32: type mismatch at i64.trunc_s/f32. got i32, expected f32
+  out/third_party/testsuite/typecheck.wast:406:32: type mismatch at i64.trunc_s/f32. got i32, expected f32
 (assert_invalid (module (func (i64.trunc_s/f32 (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:406:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:406:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.trunc_s/f32 (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:407:32: type mismatch at i64.trunc_u/f32. got i32, expected f32
+  out/third_party/testsuite/typecheck.wast:407:32: type mismatch at i64.trunc_u/f32. got i32, expected f32
 (assert_invalid (module (func (i64.trunc_u/f32 (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:407:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:407:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.trunc_u/f32 (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:408:32: type mismatch at i64.trunc_s/f64. got i32, expected f64
+  out/third_party/testsuite/typecheck.wast:408:32: type mismatch at i64.trunc_s/f64. got i32, expected f64
 (assert_invalid (module (func (i64.trunc_s/f64 (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:408:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:408:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.trunc_s/f64 (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:409:32: type mismatch at i64.trunc_u/f64. got i32, expected f64
+  out/third_party/testsuite/typecheck.wast:409:32: type mismatch at i64.trunc_u/f64. got i32, expected f64
 (assert_invalid (module (func (i64.trunc_u/f64 (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:409:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:409:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (i64.trunc_u/f64 (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:410:32: type mismatch at i64.reinterpret/f64. got i32, expected f64
+  out/third_party/testsuite/typecheck.wast:410:32: type mismatch at i64.reinterpret/f64. got i32, expected f64
 (assert_invalid (module (func (i64.reinterpret/f64 (i32.const 0)))) "type mis...
                                ^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:410:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:410:25: type stack at end of function is 1. expected 0
 ..._invalid (module (func (i64.reinterpret/f64 (i32.const 0)))) "type mismatch")
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:411:32: type mismatch at f32.convert_s/i32. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:411:32: type mismatch at f32.convert_s/i32. got i64, expected i32
 (assert_invalid (module (func (f32.convert_s/i32 (i64.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:411:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:411:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f32.convert_s/i32 (i64.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:412:32: type mismatch at f32.convert_u/i32. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:412:32: type mismatch at f32.convert_u/i32. got i64, expected i32
 (assert_invalid (module (func (f32.convert_u/i32 (i64.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:412:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:412:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f32.convert_u/i32 (i64.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:413:32: type mismatch at f32.convert_s/i64. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:413:32: type mismatch at f32.convert_s/i64. got i32, expected i64
 (assert_invalid (module (func (f32.convert_s/i64 (i32.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:413:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:413:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f32.convert_s/i64 (i32.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:414:32: type mismatch at f32.convert_u/i64. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:414:32: type mismatch at f32.convert_u/i64. got i32, expected i64
 (assert_invalid (module (func (f32.convert_u/i64 (i32.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:414:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:414:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f32.convert_u/i64 (i32.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:415:32: type mismatch at f32.demote/f64. got i32, expected f64
+  out/third_party/testsuite/typecheck.wast:415:32: type mismatch at f32.demote/f64. got i32, expected f64
 (assert_invalid (module (func (f32.demote/f64 (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:415:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:415:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f32.demote/f64 (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:416:32: type mismatch at f32.reinterpret/i32. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:416:32: type mismatch at f32.reinterpret/i32. got i64, expected i32
 (assert_invalid (module (func (f32.reinterpret/i32 (i64.const 0)))) "type mis...
                                ^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:416:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:416:25: type stack at end of function is 1. expected 0
 ..._invalid (module (func (f32.reinterpret/i32 (i64.const 0)))) "type mismatch")
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:417:32: type mismatch at f64.convert_s/i32. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:417:32: type mismatch at f64.convert_s/i32. got i64, expected i32
 (assert_invalid (module (func (f64.convert_s/i32 (i64.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:417:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:417:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f64.convert_s/i32 (i64.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:418:32: type mismatch at f64.convert_u/i32. got i64, expected i32
+  out/third_party/testsuite/typecheck.wast:418:32: type mismatch at f64.convert_u/i32. got i64, expected i32
 (assert_invalid (module (func (f64.convert_u/i32 (i64.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:418:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:418:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f64.convert_u/i32 (i64.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:419:32: type mismatch at f64.convert_s/i64. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:419:32: type mismatch at f64.convert_s/i64. got i32, expected i64
 (assert_invalid (module (func (f64.convert_s/i64 (i32.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:419:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:419:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f64.convert_s/i64 (i32.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:420:32: type mismatch at f64.convert_u/i64. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:420:32: type mismatch at f64.convert_u/i64. got i32, expected i64
 (assert_invalid (module (func (f64.convert_u/i64 (i32.const 0)))) "type misma...
                                ^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:420:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:420:25: type stack at end of function is 1. expected 0
 ...rt_invalid (module (func (f64.convert_u/i64 (i32.const 0)))) "type mismatch")
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:421:32: type mismatch at f64.promote/f32. got i32, expected f32
+  out/third_party/testsuite/typecheck.wast:421:32: type mismatch at f64.promote/f32. got i32, expected f32
 (assert_invalid (module (func (f64.promote/f32 (i32.const 0)))) "type mismatch")
                                ^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:421:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:421:25: type stack at end of function is 1. expected 0
 (assert_invalid (module (func (f64.promote/f32 (i32.const 0)))) "type mismatch")
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:422:32: type mismatch at f64.reinterpret/i64. got i32, expected i64
+  out/third_party/testsuite/typecheck.wast:422:32: type mismatch at f64.reinterpret/i64. got i32, expected i64
 (assert_invalid (module (func (f64.reinterpret/i64 (i32.const 0)))) "type mis...
                                ^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:422:25: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:422:25: type stack at end of function is 1. expected 0
 ..._invalid (module (func (f64.reinterpret/i64 (i32.const 0)))) "type mismatch")
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:425:43: type mismatch at grow_memory. got f32, expected i32
+  out/third_party/testsuite/typecheck.wast:425:43: type mismatch at grow_memory. got f32, expected i32
 ...valid (module (memory 1) (func (grow_memory (f32.const 0)))) "type mismatch")
                                    ^^^^^^^^^^^
 assert_invalid error:
-  third_party/testsuite/typecheck.wast:425:36: type stack at end of function is 1. expected 0
+  out/third_party/testsuite/typecheck.wast:425:36: type stack at end of function is 1. expected 0
 ...valid (module (memory 1) (func (grow_memory (f32.const 0)))) "type mismatch")
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 0/0 tests passed.

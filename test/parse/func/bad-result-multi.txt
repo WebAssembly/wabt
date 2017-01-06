@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (result i32 i64)))
 (;; STDERR ;;;
-parse/func/bad-result-multi.txt:2:9: multiple result values not currently supported.
+out/test/parse/func/bad-result-multi.txt:2:9: multiple result values not currently supported.
 (module (func (result i32 i64)))
         ^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -90,8 +90,8 @@ static WasmResult pop_label(Context* ctx) {
 static WasmResult get_label_at(Context* ctx,
                                LabelNode** label,
                                uint32_t depth) {
-  if (depth > ctx->label_stack.size) {
-    print_error(ctx, "accessing stack depth: %u > max: %" PRIzd, depth,
+  if (depth >= ctx->label_stack.size) {
+    print_error(ctx, "accessing stack depth: %u >= max: %" PRIzd, depth,
                 ctx->label_stack.size);
     return WASM_ERROR;
   }
@@ -116,7 +116,10 @@ static void dup_name(Context* ctx,
 
 static WasmResult append_expr(Context* ctx, WasmExpr* expr) {
   LabelNode* label;
-  CHECK_RESULT(top_label(ctx, &label));
+  if (WASM_FAILED(top_label(ctx, &label))) {
+    wasm_free(ctx->allocator, expr);
+    return WASM_ERROR;
+  }
   if (*label->first) {
     label->last->next = expr;
     label->last = expr;

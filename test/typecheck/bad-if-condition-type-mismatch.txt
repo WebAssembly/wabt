@@ -9,13 +9,13 @@
     end)
 )
 (;; STDERR ;;;
-typecheck/bad-if-condition-type-mismatch.txt:5:5: type mismatch at if condition. got f32, expected i32
+out/test/typecheck/bad-if-condition-type-mismatch.txt:5:5: type mismatch at if condition. got f32, expected i32
     if 
     ^^^
-typecheck/bad-if-condition-type-mismatch.txt:5:5: type stack at end of if true branch is 1. expected 0
+out/test/typecheck/bad-if-condition-type-mismatch.txt:5:5: type stack at end of if true branch is 1. expected 0
     if 
     ^^^
-typecheck/bad-if-condition-type-mismatch.txt:5:5: type stack at end of if false branch is 1. expected 0
+out/test/typecheck/bad-if-condition-type-mismatch.txt:5:5: type stack at end of if false branch is 1. expected 0
     if 
     ^^^
 ;;; STDERR ;;)

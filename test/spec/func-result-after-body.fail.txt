@@ -3,7 +3,7 @@
 ;;; STDIN_FILE: third_party/testsuite/func-result-after-body.fail.wast
 (;; STDERR ;;;
 Error running "wast2wasm":
-third_party/testsuite/func-result-after-body.fail.wast:1:22: syntax error, unexpected RESULT
+out/third_party/testsuite/func-result-after-body.fail.wast:1:22: syntax error, unexpected RESULT
 (module (func (nop) (result i32)))
                      ^^^^^^
 

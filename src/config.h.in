@@ -51,8 +51,10 @@
 #elif COMPILER_IS_MSVC
 #include <malloc.h>
 #define alloca _alloca
-#elif __MINGW32__
+#elif defined(__MINGW32__)
 #include <malloc.h>
+#elif defined(__FreeBSD__)
+#include <stdlib.h>
 #else
 #error no alloca
 #endif

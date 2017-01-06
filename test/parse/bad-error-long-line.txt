@@ -1,7 +1,7 @@
 ;;; ERROR: 1
                                                                                                                                                                          whoops                      (; some text at the end of the line ;)
 (;; STDERR ;;;
-parse/bad-error-long-line.txt:2:170: unexpected token "whoops"
+out/test/parse/bad-error-long-line.txt:2:170: unexpected token "whoops"
 ...                                  whoops                      (; some text...
                                      ^^^^^^
 ;;; STDERR ;;)

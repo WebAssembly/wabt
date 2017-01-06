@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (i32.load align=foo (i32.const 0))))
 (;; STDERR ;;;
-parse/expr/bad-load-align.txt:2:25: unexpected token "align=foo"
+out/test/parse/expr/bad-load-align.txt:2:25: unexpected token "align=foo"
 (module (func (i32.load align=foo (i32.const 0))))
                         ^^^^^^^^^
 ;;; STDERR ;;)

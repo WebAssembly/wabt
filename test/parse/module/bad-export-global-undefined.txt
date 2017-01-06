@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (export "foo" (global 0)))
 (;; STDERR ;;;
-parse/module/bad-export-global-undefined.txt:2:31: global variable out of range (max 0)
+out/test/parse/module/bad-export-global-undefined.txt:2:31: global variable out of range (max 0)
 (module (export "foo" (global 0)))
                               ^
 ;;; STDERR ;;)

@@ -43,10 +43,6 @@ WasmResult wasm_write_binary_module(struct WasmAllocator*,
                                     const struct WasmModule*,
                                     const WasmWriteBinaryOptions*);
 
-WasmResult wasm_write_binary_script(struct WasmAllocator*,
-                                    struct WasmWriter*,
-                                    const struct WasmScript*,
-                                    const WasmWriteBinaryOptions*);
 
 /* returns the length of the leb128 */
 uint32_t wasm_u32_leb128_length(uint32_t value);

@@ -548,7 +548,7 @@ static void write_init_expr(Context* ctx,
                             const WasmModule* module,
                             const WasmExpr* expr) {
   if (expr)
-    write_expr(ctx, module, NULL, expr);
+    write_expr_list(ctx, module, NULL, expr);
   wasm_write_opcode(&ctx->stream, WASM_OPCODE_END);
 }
 
@@ -645,8 +645,7 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   end_section(ctx);
 }
 
-static void write_module(Context* ctx, const WasmModule* module) {
-
+static WasmResult write_module(Context* ctx, const WasmModule* module) {
   size_t i;
   wasm_write_u32(&ctx->stream, WASM_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   wasm_write_u32(&ctx->stream, WASM_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -834,7 +833,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
     }
   }
 
-  if (module->tables.size && module->elem_segments.size) {
+  if (module->elem_segments.size) {
     begin_known_section(ctx, WASM_BINARY_SECTION_ELEM, LEB_SECTION_SIZE_GUESS);
     wasm_write_u32_leb128(&ctx->stream, module->elem_segments.size,
                           "num elem segments");
@@ -878,7 +877,7 @@ static void write_module(Context* ctx, const WasmModule* module) {
     end_section(ctx);
   }
 
-  if (module->memories.size && module->data_segments.size) {
+  if (module->data_segments.size) {
     begin_known_section(ctx, WASM_BINARY_SECTION_DATA, LEB_SECTION_SIZE_GUESS);
     wasm_write_u32_leb128(&ctx->stream, module->data_segments.size,
                           "num data segments");
@@ -949,26 +948,8 @@ static void write_module(Context* ctx, const WasmModule* module) {
       write_reloc_section(ctx, &ctx->reloc_sections.data[i]);
     }
   }
-}
 
-static void write_commands(Context* ctx, const WasmScript* script) {
-  size_t i;
-  WasmBool wrote_module = WASM_FALSE;
-  for (i = 0; i < script->commands.size; ++i) {
-    const WasmCommand* command = &script->commands.data[i];
-    if (command->type != WASM_COMMAND_TYPE_MODULE)
-      continue;
-
-    write_module(ctx, &command->module);
-    wrote_module = WASM_TRUE;
-    break;
-  }
-  if (!wrote_module) {
-    /* just write an empty module */
-    WasmModule module;
-    WASM_ZERO_MEMORY(module);
-    write_module(ctx, &module);
-  }
+  return ctx->stream.result;
 }
 
 void wasm_destroy_reloc_section(WasmAllocator* allocator,
@@ -992,22 +973,5 @@ WasmResult wasm_write_binary_module(WasmAllocator* allocator,
   ctx.options = options;
   ctx.log_stream = options->log_stream;
   wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
-  write_module(&ctx, module);
-  destroy_context(&ctx);
-  return ctx.stream.result;
-}
-
-WasmResult wasm_write_binary_script(WasmAllocator* allocator,
-                                    WasmWriter* writer,
-                                    const WasmScript* script,
-                                    const WasmWriteBinaryOptions* options) {
-  Context ctx;
-  WASM_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
-  ctx.options = options;
-  ctx.log_stream = options->log_stream;
-  wasm_init_stream(&ctx.stream, writer, ctx.log_stream);
-  write_commands(&ctx, script);
-  destroy_context(&ctx);
-  return ctx.stream.result;
+  return write_module(&ctx, module);
 }

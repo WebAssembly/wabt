@@ -1,0 +1,20 @@
+;;; FLAGS: -v --no-check
+(module
+  (data (i32.const 0) "hello"))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+; section "DATA" (11)
+0000008: 0b                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num data segments
+; data segment header 0
+000000b: 00                                        ; memory index
+000000c: 41                                        ; i32.const
+000000d: 00                                        ; i32 literal
+000000e: 0b                                        ; end
+000000f: 05                                        ; data segment size
+; data segment data 0
+0000010: 6865 6c6c 6f                              ; data segment data
+0000009: 0b                                        ; FIXUP section size
+;;; STDOUT ;;)

@@ -4,7 +4,7 @@
           f32.const 0 
           store.float32))
 (;; STDERR ;;;
-parse/expr/bad-store-type.txt:5:11: unexpected token "store.float32"
+out/test/parse/expr/bad-store-type.txt:5:11: unexpected token "store.float32"
           store.float32))
           ^^^^^^^^^^^^^
 ;;; STDERR ;;)
