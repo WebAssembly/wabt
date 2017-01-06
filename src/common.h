@@ -178,7 +178,6 @@ typedef struct WasmLimits {
   WasmBool has_max;
 } WasmLimits;
 
-
 enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
 /*

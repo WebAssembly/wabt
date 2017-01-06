@@ -100,7 +100,6 @@ static void write_header(Context* ctx, const char* name, int index) {
     }                               \
   } while (1)
 
-
 uint32_t wasm_u32_leb128_length(uint32_t value) {
   uint8_t data[MAX_U32_LEB128_BYTES] WASM_UNUSED;
   uint32_t i = 0;
@@ -327,7 +326,8 @@ static void add_reloc(Context* ctx, WasmRelocType reloc_type) {
       ctx->current_reloc_section->section_index != ctx->last_section_index) {
     ctx->current_reloc_section =
         wasm_append_reloc_section(ctx->allocator, &ctx->reloc_sections);
-    ctx->current_reloc_section->name = wasm_get_section_name(ctx->last_section_type);
+    ctx->current_reloc_section->name =
+        wasm_get_section_name(ctx->last_section_type);
     ctx->current_reloc_section->section_index = ctx->last_section_index;
   }
 
@@ -338,11 +338,10 @@ static void add_reloc(Context* ctx, WasmRelocType reloc_type) {
   r->offset = ctx->stream.offset - ctx->last_section_payload_offset;
 }
 
-static void write_u32_leb128_with_reloc(
-    Context* ctx,
-    uint32_t value,
-    const char* desc,
-    WasmRelocType reloc_type) {
+static void write_u32_leb128_with_reloc(Context* ctx,
+                                        uint32_t value,
+                                        const char* desc,
+                                        WasmRelocType reloc_type) {
   if (ctx->options->linkable) {
     add_reloc(ctx, reloc_type);
     wasm_write_fixed_u32_leb128(&ctx->stream, value, desc);
@@ -629,7 +628,8 @@ static void write_global_header(Context* ctx, const WasmGlobal* global) {
 
 static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   char section_name[128];
-  sprintf(section_name, "%s.%s", WASM_BINARY_SECTION_RELOC, reloc_section->name);
+  sprintf(section_name, "%s.%s", WASM_BINARY_SECTION_RELOC,
+          reloc_section->name);
   begin_custom_section(ctx, section_name, LEB_SECTION_SIZE_GUESS);
   wasm_write_u32_leb128(&ctx->stream, reloc_section->section_index,
                         "reloc section");
@@ -954,7 +954,6 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
 
 void wasm_destroy_reloc_section(WasmAllocator* allocator,
                                 RelocSection* reloc_section) {
-
   wasm_destroy_reloc_vector(allocator, &reloc_section->relocations);
 }
 

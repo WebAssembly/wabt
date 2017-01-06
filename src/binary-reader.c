@@ -1677,7 +1677,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     }
     CALLBACK0(end_names_section);
   } else if (strncmp(section_name.start, WASM_BINARY_SECTION_RELOC,
-             strlen(WASM_BINARY_SECTION_RELOC)) == 0) {
+                     strlen(WASM_BINARY_SECTION_RELOC)) == 0) {
     CALLBACK_SECTION(begin_reloc_section, section_size);
     uint32_t i, num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
