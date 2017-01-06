@@ -342,7 +342,7 @@ static void write_u32_leb128_with_reloc(Context* ctx,
                                         uint32_t value,
                                         const char* desc,
                                         WasmRelocType reloc_type) {
-  if (ctx->options->linkable) {
+  if (ctx->options->relocatable) {
     add_reloc(ctx, reloc_type);
     wasm_write_fixed_u32_leb128(&ctx->stream, value, desc);
   } else {
@@ -943,7 +943,7 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
     wasm_destroy_string_slice_vector(ctx->allocator, &index_to_name);
   }
 
-  if (ctx->options->linkable) {
+  if (ctx->options->relocatable) {
     for (i = 0; i < ctx->reloc_sections.size; i++) {
       write_reloc_section(ctx, &ctx->reloc_sections.data[i]);
     }

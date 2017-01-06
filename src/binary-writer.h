@@ -32,7 +32,7 @@ enum WasmPrintChars;
 typedef struct WasmWriteBinaryOptions {
   struct WasmStream* log_stream;
   WasmBool canonicalize_lebs;
-  WasmBool linkable;
+  WasmBool relocatable;
   WasmBool write_debug_names;
   WasmBool is_invalid;
 } WasmWriteBinaryOptions;
