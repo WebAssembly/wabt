@@ -31,7 +31,8 @@ typedef struct Context {
   WasmMemoryWriter json_writer;
   WasmStream json_stream;
   WasmStringSlice source_filename;
-  WasmStringSlice json_filename_noext;
+  WasmStringSlice module_filename_noext;
+  WasmBool write_modules; /* Whether to write the modules files. */
   const WasmWriteBinarySpecOptions* spec_options;
   WasmResult result;
   size_t num_modules;
@@ -95,11 +96,12 @@ static WasmStringSlice get_basename(const char* s) {
 }
 
 static char* get_module_filename(Context* ctx) {
-  size_t buflen = ctx->json_filename_noext.length + 20;
+  size_t buflen = ctx->module_filename_noext.length + 20;
   char* str = wasm_alloc(ctx->allocator, buflen, WASM_DEFAULT_ALIGN);
-  size_t length = wasm_snprintf(
-      str, buflen, PRIstringslice ".%" PRIzd ".wasm",
-      WASM_PRINTF_STRING_SLICE_ARG(ctx->json_filename_noext), ctx->num_modules);
+  size_t length =
+      wasm_snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
+                    WASM_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
+                    ctx->num_modules);
   convert_backslash_to_slash(str, length);
   return str;
 }
@@ -290,6 +292,9 @@ static void write_module(Context* ctx,
                          char* filename,
                          const WasmModule* module,
                          WasmBool is_invalid) {
+  if (!ctx->write_modules)
+    return;
+
   WasmMemoryWriter writer;
   WasmResult result = wasm_init_mem_writer(ctx->allocator, &writer);
   if (WASM_SUCCEEDED(result)) {
@@ -309,6 +314,9 @@ static void write_raw_module(Context* ctx,
                              char* filename,
                              const WasmRawModule* raw_module,
                              WasmBool is_invalid) {
+  if (!ctx->write_modules)
+    return;
+
   if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT) {
     write_module(ctx, filename, raw_module->text, is_invalid);
   } else {
@@ -473,7 +481,10 @@ WasmResult wasm_write_binary_spec_script(
   ctx.result = WASM_OK;
   ctx.source_filename.start = source_filename;
   ctx.source_filename.length = strlen(source_filename);
-  ctx.json_filename_noext = strip_extension(ctx.spec_options->json_filename);
+  ctx.module_filename_noext = strip_extension(
+      ctx.spec_options->json_filename ? ctx.spec_options->json_filename
+                                      : source_filename);
+  ctx.write_modules = ctx.spec_options->json_filename != NULL;
 
   WasmResult result = wasm_init_mem_writer(ctx.allocator, &ctx.json_writer);
   if (WASM_SUCCEEDED(result)) {
