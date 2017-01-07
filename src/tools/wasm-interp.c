@@ -1189,6 +1189,7 @@ static WasmResult on_assert_malformed_command(Context* ctx,
       new_custom_error_handler(ctx, "assert_malformed");
   WasmInterpreterEnvironment env;
   WASM_ZERO_MEMORY(env);
+  init_environment(ctx->allocator, &env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
