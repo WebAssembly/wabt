@@ -69,6 +69,11 @@ typedef struct Context {
   size_t last_section_payload_offset;
 } Context;
 
+void wasm_destroy_reloc_section(WasmAllocator* allocator,
+                                RelocSection* reloc_section) {
+  wasm_destroy_reloc_vector(allocator, &reloc_section->relocations);
+}
+
 static uint8_t log2_u32(uint32_t x) {
   uint8_t result = 0;
   while (x > 1) {
@@ -947,19 +952,11 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
     for (i = 0; i < ctx->reloc_sections.size; i++) {
       write_reloc_section(ctx, &ctx->reloc_sections.data[i]);
     }
+    WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->reloc_sections,
+                                     reloc_section);
   }
 
   return ctx->stream.result;
-}
-
-void wasm_destroy_reloc_section(WasmAllocator* allocator,
-                                RelocSection* reloc_section) {
-  wasm_destroy_reloc_vector(allocator, &reloc_section->relocations);
-}
-
-void destroy_context(Context* ctx) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->reloc_sections,
-                                   reloc_section);
 }
 
 WasmResult wasm_write_binary_module(WasmAllocator* allocator,
