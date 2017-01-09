@@ -65,6 +65,11 @@ static WasmResult do_begin_section(Context* ctx,
                                    const char* name,
                                    size_t offset,
                                    size_t size) {
+  WasmBool section_match = !ctx->options->section_name ||
+                           !strcasecmp(ctx->options->section_name, name);
+  if (section_match)
+    ctx->section_found = WASM_TRUE;
+
   switch (ctx->options->mode) {
     case WASM_DUMP_HEADERS:
       printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010" PRIzx
@@ -72,18 +77,19 @@ static WasmResult do_begin_section(Context* ctx,
              name, offset, offset + size, size);
       break;
     case WASM_DUMP_DETAILS:
-      if (!ctx->options->section_name || !strcasecmp(ctx->options->section_name, name)) {
+      if (section_match) {
         printf("%s:\n", name);
         ctx->print_details = WASM_TRUE;
-        ctx->section_found = WASM_TRUE;
       } else {
         ctx->print_details = WASM_FALSE;
       }
       break;
     case WASM_DUMP_RAW_DATA:
-      printf("\nContents of section %s:\n", name);
-      wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size, offset,
-                             WASM_PRINT_CHARS, NULL, NULL);
+      if (section_match) {
+        printf("\nContents of section %s:\n", name);
+        wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size,
+                               offset, WASM_PRINT_CHARS, NULL, NULL);
+      }
       break;
     case WASM_DUMP_DISASSEMBLE:
       break;
@@ -151,7 +157,7 @@ static WasmResult begin_module(uint32_t version, void* user_data) {
 
 static WasmResult end_module(void *user_data) {
   Context* ctx = user_data;
-  if (ctx->options->mode == WASM_DUMP_DETAILS && ctx->options->section_name) {
+  if (ctx->options->section_name) {
     if (!ctx->section_found) {
       printf("Section not found: %s\n", ctx->options->section_name);
       return WASM_ERROR;
