@@ -52,7 +52,8 @@ static WasmOption s_options[] = {
     {FLAG_HEADERS, 'h', "headers", NULL, NOPE, "print headers"},
     {FLAG_SECTION, 'j', "section", NULL, YEP, "select just one section"},
     {FLAG_RAW, 'r', "raw", NULL, NOPE, "print raw section contents"},
-    {FLAG_DISASSEMBLE, 'd', "disassemble", NULL, NOPE, "disassemble function bodies"},
+    {FLAG_DISASSEMBLE, 'd', "disassemble", NULL, NOPE,
+     "disassemble function bodies"},
     {FLAG_DEBUG, '\0', "debug", NULL, NOPE, "disassemble function bodies"},
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE, "Verbose output"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
@@ -148,7 +149,7 @@ int main(int argc, char** argv) {
     s_objdump_options.print_header = 0;
   }
   // Pass 2: Print extra information based on section type
-  if (s_objdump_options.verbose || s_objdump_options.section_name) {
+  if (s_objdump_options.verbose) {
     s_objdump_options.mode = WASM_DUMP_DETAILS;
     result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
     if (WASM_FAILED(result))
