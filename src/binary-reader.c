@@ -1880,7 +1880,7 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
     switch (external_kind) {
       case WASM_EXTERNAL_KIND_FUNC:
         RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
-                           "invalid export func index");
+                           "invalid export func index: %d", item_index);
         break;
       case WASM_EXTERNAL_KIND_TABLE:
         RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),

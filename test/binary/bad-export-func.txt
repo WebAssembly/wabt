@@ -7,6 +7,6 @@ section(FUNCTION) { count[1] sig[0] }
 section(EXPORT) { count[1] str("foo") func_kind func[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000001b: invalid export func index
+error: @0x0000001b: invalid export func index: 1
 
 ;;; STDERR ;;)

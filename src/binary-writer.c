@@ -695,9 +695,9 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
       wasm_write_u8(&ctx->stream, import->kind, "import kind");
       switch (import->kind) {
         case WASM_EXTERNAL_KIND_FUNC:
-          write_u32_leb128_with_reloc(
-              ctx, wasm_get_func_type_index_by_decl(module, &import->func.decl),
-              "import signature index", WASM_RELOC_TYPE_INDEX);
+          wasm_write_u32_leb128(&ctx->stream, wasm_get_func_type_index_by_decl(
+                                                  module, &import->func.decl),
+                                "import signature index");
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           write_table(ctx, &import->table);

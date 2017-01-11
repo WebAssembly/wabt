@@ -1,14 +1,14 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS:
+;;; FLAGS: -r
 (module
-  (import "foo" "bar" (func (param i32) (result i32)))
+  (import "linker" "bar" (func (param i32) (result i32)))
   (func (param i32)
      get_local 0
      call 0
      call 1)
 )
 (module
-  (import "does" "nothing" (func (param f64)))
+  (import "linker" "baz" (func (param f64)))
   (func (param i64)
      f64.const 1
      call 0
@@ -20,11 +20,10 @@ linked.wasm:	file format wasm 0x00000d
 
 Sections:
      TYPE start=0x0000000a end=0x0000001c (size=0x00000012) count: 4
-   IMPORT start=0x0000001e end=0x00000040 (size=0x00000022) count: 2
- FUNCTION start=0x00000046 end=0x00000049 (size=0x00000003) count: 2
-     CODE start=0x0000004b end=0x00000077 (size=0x0000002c) count: 2
-   CUSTOM start=0x0000007d end=0x00000090 (size=0x00000013) "reloc.IMPORT"
-   CUSTOM start=0x00000096 end=0x000000ab (size=0x00000015) "reloc.CODE"
+   IMPORT start=0x00000022 end=0x0000003d (size=0x0000001b) count: 2
+ FUNCTION start=0x00000043 end=0x00000046 (size=0x00000003) count: 2
+     CODE start=0x00000048 end=0x00000074 (size=0x0000002c) count: 2
+   CUSTOM start=0x0000007a end=0x0000008f (size=0x00000015) "reloc.CODE"
 
 Section Details:
 TYPE:
@@ -33,18 +32,14 @@ TYPE:
  - [2] (f64) -> nil
  - [3] (i64) -> nil
 IMPORT:
- - func[0] sig=0 <- foo.bar
- - func[1] sig=2 <- does.nothing
+ - func[0] sig=0 <- linker.bar
+ - func[1] sig=0 <- linker.baz
 FUNCTION:
  - func[2] sig=1
  - func[3] sig=3
 CODE:
  - func 0
  - func 1
-CUSTOM:
- - name: "reloc.IMPORT"
-  - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0xa
-  - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0x1d
 CUSTOM:
  - name: "reloc.CODE"
   - RELOC_FUNC_INDEX     section=4 offset=0x6
@@ -54,12 +49,12 @@ CUSTOM:
 
 Code Disassembly:
 func 0
- 00004e: 20 00                      | get_local 0
- 000050: 10 80 80 80 80 00          | call 0
- 000056: 10 82 80 80 80 00          | call 0x2
+ 00004b: 20 00                      | get_local 0
+ 00004d: 10 80 80 80 80 00          | call 0
+ 000053: 10 82 80 80 80 00          | call 0x2
 func 1
- 00005f: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
- 000068: 10 81 80 80 80 00          | call 0x1
- 00006e: 42 0a                      | i64.const 10
- 000070: 10 83 80 80 80 00          | call 0x3
+ 00005c: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
+ 000065: 10 81 80 80 80 00          | call 0x1
+ 00006b: 42 0a                      | i64.const 10
+ 00006d: 10 83 80 80 80 00          | call 0x3
 ;;; STDOUT ;;)
