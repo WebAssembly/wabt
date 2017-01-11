@@ -75,6 +75,7 @@ void wasm_write_data(WasmStream* stream,
                      desc);
   stream->offset += size;
 }
+
 void wasm_move_data(WasmStream* stream,
                     size_t dst_offset,
                     size_t src_offset,

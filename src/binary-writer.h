@@ -27,11 +27,12 @@ struct WasmStream;
 enum WasmPrintChars;
 
 #define WASM_WRITE_BINARY_OPTIONS_DEFAULT \
-  { NULL, WASM_TRUE, WASM_FALSE, WASM_FALSE }
+  { NULL, WASM_TRUE, WASM_FALSE, WASM_FALSE, WASM_FALSE }
 
 typedef struct WasmWriteBinaryOptions {
   struct WasmStream* log_stream;
   WasmBool canonicalize_lebs;
+  WasmBool relocatable;
   WasmBool write_debug_names;
   WasmBool is_invalid;
 } WasmWriteBinaryOptions;
@@ -41,6 +42,9 @@ WasmResult wasm_write_binary_module(struct WasmAllocator*,
                                     struct WasmWriter*,
                                     const struct WasmModule*,
                                     const WasmWriteBinaryOptions*);
+
+/* returns the length of the leb128 */
+uint32_t wasm_u32_leb128_length(uint32_t value);
 
 void wasm_write_u32_leb128(struct WasmStream* stream,
                            uint32_t value,

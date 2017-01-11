@@ -153,6 +153,16 @@ typedef enum WasmType {
   WASM_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
 } WasmType;
 
+typedef enum WasmRelocType {
+  WASM_RELOC_FUNC_INDEX = 0,
+  WASM_RELOC_FUNC_INDEX_SLEB = 1,
+  WASM_RELOC_TABLE_INDEX = 2,
+  WASM_RELOC_GLOBAL_INDEX = 3,
+  WASM_RELOC_TYPE_INDEX = 4,
+  WASM_RELOC_DATA = 5,
+  WASM_NUM_RELOC_TYPES,
+} WasmRelocType;
+
 /* matches binary format, do not change */
 typedef enum WasmExternalKind {
   WASM_EXTERNAL_KIND_FUNC = 0,
@@ -454,6 +464,15 @@ extern const char* g_wasm_kind_name[];
 static WASM_INLINE const char* wasm_get_kind_name(WasmExternalKind kind) {
   assert(kind < WASM_NUM_EXTERNAL_KINDS);
   return g_wasm_kind_name[kind];
+}
+
+/* reloc */
+
+extern const char* g_wasm_reloc_type_name[];
+
+static WASM_INLINE const char* wasm_get_reloc_type_name(WasmRelocType reloc) {
+  assert(reloc < WASM_NUM_RELOC_TYPES);
+  return g_wasm_reloc_type_name[reloc];
 }
 
 /* type */

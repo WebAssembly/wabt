@@ -33,7 +33,7 @@ BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := ASAN MSAN LSAN UBSAN
 CONFIGS := NORMAL $(SANITIZERS) NO_RE2C_BISON NO_TESTS
 EXECUTABLES := wast2wasm wasm2wast wasm-interp wasmopcodecnt hexfloat_test \
-	wasmdump wast-desugar
+	wasmdump wast-desugar wasm-link
 
 # directory names
 GCC_DIR := gcc/

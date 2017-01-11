@@ -1,0 +1,55 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS: 
+(module
+  (export "foo" (func 0))
+  (func (param i32)
+     i32.const 1
+     call 0)
+)
+(module
+  (export "bar" (func 0))
+  (func (param i32)
+     i32.const 2
+     call 0)
+)
+(;; STDOUT ;;;
+linked.wasm:	file format wasm 0x00000d
+
+Sections:
+     TYPE start=0x0000000a end=0x00000013 (size=0x00000009) count: 2
+ FUNCTION start=0x00000019 end=0x0000001c (size=0x00000003) count: 2
+   EXPORT start=0x0000001e end=0x00000033 (size=0x00000015) count: 2
+     CODE start=0x00000035 end=0x0000004c (size=0x00000017) count: 2
+   CUSTOM start=0x00000052 end=0x00000065 (size=0x00000013) "reloc.EXPORT"
+   CUSTOM start=0x0000006b end=0x0000007c (size=0x00000011) "reloc.CODE"
+
+Section Details:
+TYPE:
+ - [0] (i32) -> nil
+ - [1] (i32) -> nil
+FUNCTION:
+ - func[0] sig=0
+ - func[1] sig=1
+EXPORT:
+ - func[0] foo
+ - func[1] bar
+CODE:
+ - func 0
+ - func 1
+CUSTOM:
+ - name: "reloc.EXPORT"
+  - RELOC_FUNC_INDEX     section=3 offset=0x6
+  - RELOC_FUNC_INDEX     section=3 offset=0x10
+CUSTOM:
+ - name: "reloc.CODE"
+  - RELOC_FUNC_INDEX     section=4 offset=0x6
+  - RELOC_FUNC_INDEX     section=4 offset=0x11
+
+Code Disassembly:
+func 0
+ 000038: 41 01                      | i32.const 0x1
+ 00003a: 10 80 80 80 80 00          | call 0
+func 1
+ 000043: 41 02                      | i32.const 0x2
+ 000045: 10 81 80 80 80 00          | call 0x1
+;;; STDOUT ;;)

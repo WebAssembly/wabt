@@ -1,0 +1,34 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS:
+(module
+  (memory 1 1)
+  (data (i32.const 0) "foo")
+  (data (i32.const 10) "bar")
+)
+(module
+  (memory 1 1)
+  (data (i32.const 0) "hello")
+  (data (i32.const 100) "world")
+)
+(;; STDOUT ;;;
+linked.wasm:	file format wasm 0x00000d
+
+Sections:
+   MEMORY start=0x0000000e end=0x00000012 (size=0x00000004) count: 1
+     DATA start=0x00000018 end=0x00000041 (size=0x00000029) count: 4
+
+Section Details:
+MEMORY:
+ - memory[0] pages: initial=2 max=2
+DATA:
+ - memory[0] - init i32=0
+  - 0000000: 666f 6f                                  foo
+ - memory[0] - init i32=10
+  - 0000000: 6261 72                                  bar
+ - memory[0] - init i32=65536
+  - 0000000: 6865 6c6c 6f                             hello
+ - memory[0] - init i32=65636
+  - 0000000: 776f 726c 64                             world
+
+Code Disassembly:
+;;; STDOUT ;;)

@@ -61,6 +61,7 @@ enum {
   FLAG_HELP,
   FLAG_DUMP_MODULE,
   FLAG_OUTPUT,
+  FLAG_RELOCATABLE,
   FLAG_SPEC,
   FLAG_USE_LIBC_ALLOCATOR,
   FLAG_NO_CANONICALIZE_LEB128S,
@@ -95,8 +96,9 @@ static WasmOption s_options[] = {
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
     {FLAG_DUMP_MODULE, 'd', "dump-module", NULL, NOPE,
      "print a hexdump of the module to stdout"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", YEP,
-     "output file for the generated binary format"},
+    {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
+    {FLAG_RELOCATABLE, 'r', NULL, NULL, NOPE,
+     "create a relocatable wasm binary (suitable for linking with wasm-link)"},
     {FLAG_SPEC, 0, "spec", NULL, NOPE,
      "parse a file with multiple modules and assertions, like the spec "
      "tests"},
@@ -134,6 +136,10 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_OUTPUT:
       s_outfile = argument;
+      break;
+
+    case FLAG_RELOCATABLE:
+      s_write_binary_options.relocatable = WASM_TRUE;
       break;
 
     case FLAG_SPEC:
@@ -231,7 +237,7 @@ int main(int argc, char** argv) {
 
   WasmAstLexer* lexer = wasm_new_ast_file_lexer(allocator, s_infile);
   if (!lexer)
-    WASM_FATAL("unable to read %s\n", s_infile);
+    WASM_FATAL("unable to read file: %s\n", s_infile);
 
   WasmScript script;
   WasmResult result = wasm_parse_ast(lexer, &script, &s_error_handler);

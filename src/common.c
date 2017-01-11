@@ -38,6 +38,12 @@ const char* g_wasm_kind_name[] = {"func", "table", "memory", "global"};
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_kind_name) ==
                    WASM_NUM_EXTERNAL_KINDS);
 
+const char* g_wasm_reloc_type_name[] = {
+    "RELOC_FUNC_INDEX",   "RELOC_FUNC_INDEX_SLEB",   "RELOC_TABLE_INDEX",
+    "RELOC_GLOBAL_INDEX", "RELOC_GLOBAL_TYPE_INDEX", "RELOC_DATA"};
+WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_reloc_type_name) ==
+                   WASM_NUM_RELOC_TYPES);
+
 WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
   uint32_t opcode_align = wasm_get_opcode_memory_size(opcode);
   return alignment == WASM_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
