@@ -70,6 +70,7 @@ TOOLS = {
       '--wast2wasm=%(wast2wasm)s',
       '--wasm-link=%(wasm-link)s',
       '--wasmdump=%(wasmdump)s',
+      '--wasm-interp=%(wasm-interp)s',
     ]),
     'VERBOSE-FLAGS': ['-v']
   },
