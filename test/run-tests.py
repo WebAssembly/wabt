@@ -59,17 +59,14 @@ TOOLS = {
   'run-wasmdump': {
     'EXE': 'test/run-wasmdump.py',
     'FLAGS': ' '.join([
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasmdump=%(wasmdump)s',
+      '--bindir=%(bindir)s',
     ]),
     'VERBOSE-FLAGS': ['-v']
   },
   'run-wasm-link': {
     'EXE': 'test/run-wasm-link.py',
     'FLAGS': ' '.join([
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasm-link=%(wasm-link)s',
-      '--wasmdump=%(wasmdump)s',
+      '--bindir=%(bindir)s',
     ]),
     'VERBOSE-FLAGS': ['-v']
   },
@@ -77,8 +74,7 @@ TOOLS = {
     'EXE': 'test/run-roundtrip.py',
     'FLAGS': ' '.join([
       '-v',
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasm2wast=%(wasm2wast)s',
+      '--bindir=%(bindir)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -92,9 +88,7 @@ TOOLS = {
   'run-interp': {
     'EXE': 'test/run-interp.py',
     'FLAGS': ' '.join([
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasmdump=%(wasmdump)s',
-      '--wasm-interp=%(wasm-interp)s',
+      '--bindir=%(bindir)s',
       '--run-all-exports',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
@@ -109,9 +103,7 @@ TOOLS = {
   'run-interp-spec': {
     'EXE': 'test/run-interp.py',
     'FLAGS': ' '.join([
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasmdump=%(wasmdump)s',
-      '--wasm-interp=%(wasm-interp)s',
+      '--bindir=%(bindir)s',
       '--spec',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
@@ -126,7 +118,7 @@ TOOLS = {
   'run-gen-wasm': {
     'EXE': 'test/run-gen-wasm.py',
     'FLAGS': ' '.join([
-      '--wasm2wast=%(wasm2wast)s',
+      '--bindir=%(bindir)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -140,7 +132,7 @@ TOOLS = {
   'run-gen-wasm-interp': {
     'EXE': 'test/run-gen-wasm-interp.py',
     'FLAGS': ' '.join([
-      '--wasm-interp=%(wasm-interp)s',
+      '--bindir=%(bindir)s',
       '--run-all-exports',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
@@ -155,8 +147,7 @@ TOOLS = {
   'run-opcodecnt': {
     'EXE': 'test/run-opcodecnt.py',
     'FLAGS': ' '.join([
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasmopcodecnt=%(wasmopcodecnt)s',
+      '--bindir=%(bindir)s',
       '--no-error-cmdline',
     ]),
     'VERBOSE-FLAGS': [
@@ -169,8 +160,7 @@ TOOLS = {
   'run-gen-spec-js': {
     'EXE': 'test/run-gen-spec-js.py',
     'FLAGS': ' '.join([
-      '--wast2wasm=%(wast2wasm)s',
-      '--wasm2wast=%(wasm2wast)s',
+      '--bindir=%(bindir)s',
       '--no-error-cmdline',
       '-o', '%(out_dir)s',
     ]),
@@ -290,8 +280,7 @@ class TestInfo(object):
     result.expected_stderr = ''
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
-    result.flags = ['--wast2wasm', '%(wast2wasm)s', '--wasm2wast',
-                    '%(wasm2wast)s', '-v']
+    result.flags = ['--bindir', '%(bindir)s', '-v']
     result.expected_error = 0
     result.slow = self.slow
     result.skip = self.skip
@@ -753,13 +742,9 @@ def main(args):
   parser.add_argument('-a', '--arg',
                       help='additional args to pass to executable',
                       action='append')
-  parser.add_argument('--exe-dir', metavar='PATH',
-                      help='directory to search for all executables. '
-                          'This can be overridden by the other executable '
-                          'flags.')
-  for exe_basename in find_exe.EXECUTABLES:
-    parser.add_argument('--%s' % exe_basename, metavar='PATH',
-                        help='override %s executable.' % exe_basename)
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('-f', '--fail-fast',
@@ -810,15 +795,9 @@ def main(args):
 
   variables = {}
   variables['test_dir'] = os.path.abspath(TEST_DIR)
-
+  variables['bindir'] = options.bindir
   for exe_basename in find_exe.EXECUTABLES:
-    attr_name = exe_basename.replace('-', '_')
-    exe_override = getattr(options, attr_name)
-    if options.exe_dir:
-      if not exe_override:
-        exe_override = os.path.join(options.exe_dir, exe_basename)
-        setattr(options, attr_name, exe_override)
-
+    exe_override = os.path.join(options.bindir, exe_basename)
     variables[exe_basename] = find_exe.FindExecutable(exe_basename,
                                                       exe_override)
 
