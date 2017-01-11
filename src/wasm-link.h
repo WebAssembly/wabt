@@ -21,6 +21,8 @@
 #include "common.h"
 #include "vector.h"
 
+#define LINKER_IMPORT_MODULE_NAME "linker"
+
 typedef struct FunctionImport {
   WasmStringSlice name;
   uint32_t sig_index;

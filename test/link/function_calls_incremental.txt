@@ -43,8 +43,8 @@ TYPE:
  - [5] (i32) -> nil
 IMPORT:
  - func[0] sig=0 <- linker.bar
- - func[1] sig=0 <- linker.does_nothing
- - func[2] sig=0 <- linker.hello_world
+ - func[1] sig=2 <- linker.does_nothing
+ - func[2] sig=4 <- linker.hello_world
 FUNCTION:
  - func[3] sig=1
  - func[4] sig=3

@@ -33,7 +33,7 @@ TYPE:
  - [3] (i64) -> nil
 IMPORT:
  - func[0] sig=0 <- linker.bar
- - func[1] sig=0 <- linker.baz
+ - func[1] sig=2 <- linker.baz
 FUNCTION:
  - func[2] sig=1
  - func[3] sig=3

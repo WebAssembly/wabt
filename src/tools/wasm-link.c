@@ -340,20 +340,23 @@ static void write_combined_memory_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
-#define IMPORT_MODULE_NAME "linker"
-
-static void write_import(Context* ctx, FunctionImport* import) {
-  wasm_write_str(&ctx->stream, IMPORT_MODULE_NAME, strlen(IMPORT_MODULE_NAME),
-                 WASM_PRINT_CHARS, "import module name");
+static void write_function_import(Context* ctx,
+                                  FunctionImport* import,
+                                  uint32_t offset) {
+  wasm_write_str(&ctx->stream, LINKER_IMPORT_MODULE_NAME,
+                 strlen(LINKER_IMPORT_MODULE_NAME), WASM_PRINT_CHARS,
+                 "import module name");
   wasm_write_str(&ctx->stream, import->name.start, import->name.length,
                  WASM_PRINT_CHARS, "import field name");
   wasm_write_u8(&ctx->stream, WASM_EXTERNAL_KIND_FUNC, "import kind");
-  wasm_write_u32_leb128(&ctx->stream, import->sig_index, "import signature index");
+  wasm_write_u32_leb128(&ctx->stream, import->sig_index + offset,
+                        "import signature index");
 }
 
 static void write_global_import(Context* ctx, GlobalImport* import) {
-  wasm_write_str(&ctx->stream, IMPORT_MODULE_NAME, strlen(IMPORT_MODULE_NAME),
-                 WASM_PRINT_CHARS, "import module name");
+  wasm_write_str(&ctx->stream, LINKER_IMPORT_MODULE_NAME,
+                 strlen(LINKER_IMPORT_MODULE_NAME), WASM_PRINT_CHARS,
+                 "import module name");
   wasm_write_str(&ctx->stream, import->name.start, import->name.length,
                  WASM_PRINT_CHARS, "import field name");
   wasm_write_u8(&ctx->stream, WASM_EXTERNAL_KIND_GLOBAL, "import kind");
@@ -384,7 +387,7 @@ static void write_import_section(Context* ctx) {
     for (j = 0; j < imports->size; j++) {
       FunctionImport* import = &imports->data[j];
       if (import->active)
-        write_import(ctx, import);
+        write_function_import(ctx, import, binary->type_index_offset);
     }
 
     GlobalImportVector* globals = &binary->global_imports;
@@ -606,6 +609,7 @@ static void resolve_symbols(Context* ctx) {
       /* We found the symbol exported by another module */
       ExportInfo* export_info = &export_list.data[export_index];
 
+      /* TODO(sbc): verify the foriegn function has the correct signature */
       import->active = WASM_FALSE;
       import->foreign_binary = export_info->binary;
       import->foreign_index = export_info->export->index;

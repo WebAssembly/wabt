@@ -55,7 +55,7 @@ static WasmResult on_import(uint32_t index,
                             WasmStringSlice field_name,
                             void* user_data) {
   Context* ctx = user_data;
-  if (!wasm_string_slice_eq_cstr(&module_name, "linker")) {
+  if (!wasm_string_slice_eq_cstr(&module_name, LINKER_IMPORT_MODULE_NAME)) {
     WASM_FATAL("unsupported import module: " PRIstringslice,
                WASM_PRINTF_STRING_SLICE_ARG(module_name));
   }
