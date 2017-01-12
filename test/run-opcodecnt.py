@@ -31,10 +31,9 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wast2wasm-executable', metavar='PATH',
-                      help='override wast2wasm executable.')
-  parser.add_argument('--wasmopcodecnt-executable', metavar='PATH',
-                      help='override wasmopcodecnt executable.')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
@@ -48,7 +47,7 @@ def main(args):
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.wast2wasm_executable),
+      find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '-v': options.verbose,
@@ -56,7 +55,7 @@ def main(args):
   })
 
   wasmopcodecnt = utils.Executable(find_exe.GetWasmOpcodeCntExecutable(
-      options.wasmopcodecnt_executable),
+      options.bindir),
       error_cmdline=options.error_cmdline)
   wasmopcodecnt.AppendOptionalArgs({
     '--use-libc-allocator': options.use_libc_allocator

@@ -36,8 +36,9 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wasm2wast', metavar='PATH',
-                      help='set the wasm2wast executable to use.')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
@@ -54,7 +55,7 @@ def main(args):
       sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
 
   wasm2wast = utils.Executable(
-      find_exe.GetWasm2WastExecutable(options.wasm2wast),
+      find_exe.GetWasm2WastExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
     '--no-debug-names': options.no_debug_names,
