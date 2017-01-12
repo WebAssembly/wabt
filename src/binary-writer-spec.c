@@ -290,8 +290,7 @@ static void write_action_result_type(Context* ctx,
 
 static void write_module(Context* ctx,
                          char* filename,
-                         const WasmModule* module,
-                         WasmBool is_invalid) {
+                         const WasmModule* module) {
   if (!ctx->write_modules)
     return;
 
@@ -299,7 +298,6 @@ static void write_module(Context* ctx,
   WasmResult result = wasm_init_mem_writer(ctx->allocator, &writer);
   if (WASM_SUCCEEDED(result)) {
     WasmWriteBinaryOptions options = ctx->spec_options->write_binary_options;
-    options.is_invalid = is_invalid;
     result = wasm_write_binary_module(ctx->allocator, &writer.base, module,
                                       &options);
     if (WASM_SUCCEEDED(result))
@@ -312,13 +310,12 @@ static void write_module(Context* ctx,
 
 static void write_raw_module(Context* ctx,
                              char* filename,
-                             const WasmRawModule* raw_module,
-                             WasmBool is_invalid) {
+                             const WasmRawModule* raw_module) {
   if (!ctx->write_modules)
     return;
 
   if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT) {
-    write_module(ctx, filename, raw_module->text, is_invalid);
+    write_module(ctx, filename, raw_module->text);
   } else {
     WasmFileStream stream;
     WasmResult result = wasm_init_file_writer(&stream.writer, filename);
@@ -343,7 +340,7 @@ static void write_invalid_module(Context* ctx,
   write_separator(ctx);
   write_key(ctx, "text");
   write_escaped_string_slice(ctx, text);
-  write_raw_module(ctx, filename, module, WASM_TRUE);
+  write_raw_module(ctx, filename, module);
   wasm_free(ctx->allocator, filename);
 }
 
@@ -373,7 +370,7 @@ static void write_commands(Context* ctx, WasmScript* script) {
         }
         write_key(ctx, "filename");
         write_escaped_string_slice(ctx, get_basename(filename));
-        write_module(ctx, filename, module, WASM_FALSE);
+        write_module(ctx, filename, module);
         wasm_free(ctx->allocator, filename);
         ctx->num_modules++;
         last_module_index = (int)i;
