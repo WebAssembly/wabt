@@ -32,10 +32,11 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wasm-interp-executable', metavar='PATH',
-                      help='override wasm-interp executable.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
@@ -52,7 +53,7 @@ def main(args):
       sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
 
   wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.wasm_interp_executable),
+      options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_interp.AppendOptionalArgs({
     '--run-all-exports': options.run_all_exports,

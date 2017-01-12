@@ -101,10 +101,9 @@ def main(args):
                       action='store_true')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wast2wasm', metavar='PATH',
-                      help='set the wast2wasm executable to use.')
-  parser.add_argument('--wasm2wast', metavar='PATH',
-                      help='set the wasm2wast executable to use.')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
   parser.add_argument('--no-error-cmdline',
@@ -121,7 +120,7 @@ def main(args):
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.wast2wasm),
+      find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
@@ -130,7 +129,7 @@ def main(args):
   })
 
   wasm2wast = utils.Executable(
-      find_exe.GetWasm2WastExecutable(options.wasm2wast),
+      find_exe.GetWasm2WastExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
     '--no-debug-names': not options.debug_names,

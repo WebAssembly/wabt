@@ -29,8 +29,12 @@ EXECUTABLES = [
 ]
 
 
+def GetDefaultPath():
+  return os.path.join(REPO_ROOT_DIR, 'out')
+
+
 def GetDefaultExe(basename):
-  result = os.path.join(REPO_ROOT_DIR, 'out', basename)
+  result = os.path.join(GetDefaultPath(), basename)
   if IS_WINDOWS:
     result += '.exe'
   return result
@@ -39,6 +43,8 @@ def GetDefaultExe(basename):
 def FindExeWithFallback(name, default_exe_list, override_exe=None):
   result = override_exe
   if result is not None:
+    if os.path.isdir(result):
+      result = os.path.join(result, name)
     if IS_WINDOWS and os.path.splitext(result)[1] != '.exe':
       result += '.exe'
     if os.path.exists(result):

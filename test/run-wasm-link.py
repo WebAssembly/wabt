@@ -34,14 +34,9 @@ def main(args):
                       help='final output is relocatable')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wast2wasm', metavar='PATH',
-                      help='set the wast2wasm executable to use.')
-  parser.add_argument('--wasm-link', metavar='PATH',
-                      help='set the wasm-link executable to use.')
-  parser.add_argument('--wasm-interp', metavar='PATH',
-                      help='set the wasm-interp executable to use.')
-  parser.add_argument('--wasmdump', metavar='PATH',
-                      help='set the wasmdump executable to use.')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
                           ' an error occurs', dest='error_cmdline',
@@ -58,7 +53,7 @@ def main(args):
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.wast2wasm),
+      find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
     '--debug-names': options.debug_names,
@@ -67,7 +62,7 @@ def main(args):
   })
 
   wasm_link = utils.Executable(
-      find_exe.GetWasmlinkExecutable(options.wasm_link),
+      find_exe.GetWasmlinkExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_link.AppendOptionalArgs({
     '-v': options.verbose,
@@ -75,11 +70,11 @@ def main(args):
   })
 
   wasmdump = utils.Executable(
-      find_exe.GetWasmdumpExecutable(options.wasmdump),
+      find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
   wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.wasm_interp),
+      options.bindir),
       error_cmdline=options.error_cmdline)
 
   wast2wasm.verbose = options.print_cmd

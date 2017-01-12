@@ -32,10 +32,9 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
-  parser.add_argument('--wast2wasm', metavar='PATH',
-                      help='override wast2wasm executable.')
-  parser.add_argument('--wasm2wast', metavar='PATH',
-                      help='override wasm2wast executable.')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('--js-engine', metavar='PATH',
                       help='the path to the JavaScript engine with which to run'
                       ' the generated JavaScript. If not specified, JavaScript'
@@ -59,7 +58,7 @@ def main(args):
 
   with utils.TempDirectory(options.out_dir, 'run-gen-spec-js-') as out_dir:
     wast2wasm = utils.Executable(
-        find_exe.GetWast2WasmExecutable(options.wast2wasm),
+        find_exe.GetWast2WasmExecutable(options.bindir),
         '--spec',
         '--no-check-assert-invalid',
         error_cmdline=options.error_cmdline)
@@ -73,8 +72,7 @@ def main(args):
         '--temp-dir', out_dir,
         error_cmdline=options.error_cmdline)
     gen_spec_js.AppendOptionalArgs({
-      '--wast2wasm': options.wast2wasm,
-      '--wasm2wast': options.wasm2wast,
+      '--bindir': options.bindir,
       '--prefix': options.prefix_js,
     })
     gen_spec_js.verbose = options.print_cmd

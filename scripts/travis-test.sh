@@ -35,8 +35,7 @@ set_run_test_args() {
   local BUILD_TYPE=$2
   local CONFIG=${3:-}
 
-  local EXE_DIR=out/${COMPILER}/${BUILD_TYPE}/${CONFIG}
-  RUN_TEST_ARGS="--exe-dir ${EXE_DIR}"
+  RUN_TEST_ARGS="--bindir out/${COMPILER}/${BUILD_TYPE}/${CONFIG}"
 }
 
 if [ ${CC} = "gcc" ]; then

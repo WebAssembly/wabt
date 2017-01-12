@@ -27,7 +27,7 @@ import re
 import struct
 import sys
 
-from find_exe import GetWast2WasmExecutable, GetWasm2WastExecutable
+import find_exe
 from utils import ChangeDir, ChangeExt, Error, Executable
 import utils
 
@@ -421,10 +421,9 @@ def main(args):
   parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
   parser.add_argument('-P', '--prefix', metavar='PATH', help='prefix file.',
                       default=os.path.join(SCRIPT_DIR, 'gen-spec-prefix.js'))
-  parser.add_argument('--wast2wasm', metavar='PATH',
-                      help='set the wast2wasm executable to use.')
-  parser.add_argument('--wasm2wast', metavar='PATH',
-                      help='set the wasm2wast executable to use.')
+  parser.add_argument('--bindir', metavar='PATH',
+                      default=find_exe.GetDefaultPath(),
+                      help='directory to search for all executables.')
   parser.add_argument('--temp-dir', metavar='PATH',
                       help='set the directory that temporary wasm/wast'
                            ' files are written.')
@@ -438,9 +437,9 @@ def main(args):
   parser.add_argument('file', help='spec json file.')
   options = parser.parse_args(args)
 
-  wast2wasm = Executable(GetWast2WasmExecutable(options.wast2wasm),
+  wast2wasm = Executable(find_exe.GetWast2WasmExecutable(options.bindir),
                          error_cmdline=options.error_cmdline)
-  wasm2wast = Executable(GetWasm2WastExecutable(options.wasm2wast),
+  wasm2wast = Executable(find_exe.GetWasm2WastExecutable(options.bindir),
                          error_cmdline=options.error_cmdline)
 
   wast2wasm.verbose = options.print_cmd
