@@ -584,8 +584,8 @@ static void resolve_symbols(Context* ctx) {
       ExportInfo* info = wasm_append_export_info(ctx->allocator, &export_list);
       info->export = export;
       info->binary = binary;
-      WasmBinding* binding =
-          wasm_insert_binding(ctx->allocator, &export_map, &export->name);
+      WasmStringSlice name = wasm_dup_string_slice(ctx->allocator, export->name);
+      WasmBinding* binding = wasm_insert_binding(ctx->allocator, &export_map, &name);
       binding->index = export_list.size - 1;
     }
   }
@@ -616,8 +616,8 @@ static void resolve_symbols(Context* ctx) {
     }
   }
 
-  wasm_destroy_binding_hash(ctx->allocator, &export_map);
   wasm_destroy_export_info_vector(ctx->allocator, &export_list);
+  wasm_destroy_binding_hash(ctx->allocator, &export_map);
 }
 
 static void calculate_reloc_offsets(Context* ctx) {
