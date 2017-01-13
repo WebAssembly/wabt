@@ -129,6 +129,8 @@ void wasm_destroy_section(WasmAllocator* allocator, Section* section) {
 
 void wasm_destroy_binary(WasmAllocator* allocator, InputBinary* binary) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, binary->sections, section);
+  wasm_destroy_function_import_vector(allocator, &binary->function_imports);
+  wasm_destroy_global_import_vector(allocator, &binary->global_imports);
   wasm_free(allocator, binary->data);
 }
 
@@ -613,6 +615,9 @@ static void resolve_symbols(Context* ctx) {
       binary->active_function_imports--;
     }
   }
+
+  wasm_destroy_binding_hash(ctx->allocator, &export_map);
+  wasm_destroy_export_info_vector(ctx->allocator, &export_list);
 }
 
 static void calculate_reloc_offsets(Context* ctx) {

@@ -722,5 +722,9 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   WasmReadBinaryOptions read_options = WASM_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = WASM_TRUE;
 
-  return wasm_read_binary(allocator, data, size, &reader, 1, &read_options);
+  WasmResult res =
+    wasm_read_binary(allocator, data, size, &reader, 1, &read_options);
+
+  wasm_destroy_uint32_vector(allocator, &context.section_starts);
+  return res;
 }
