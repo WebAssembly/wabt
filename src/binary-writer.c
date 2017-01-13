@@ -400,7 +400,7 @@ static void write_expr(Context* ctx,
              (index >= 0 && (size_t)index < module->funcs.size));
       wasm_write_opcode(&ctx->stream, WASM_OPCODE_CALL);
       write_u32_leb128_with_reloc(ctx, index, "function index",
-                                  WASM_RELOC_FUNC_INDEX);
+                                  WASM_RELOC_FUNC_INDEX_LEB);
       break;
     }
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
@@ -455,7 +455,7 @@ static void write_expr(Context* ctx,
       int index = wasm_get_global_index_by_var(module, &expr->get_global.var);
       wasm_write_opcode(&ctx->stream, WASM_OPCODE_GET_GLOBAL);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  WASM_RELOC_GLOBAL_INDEX);
+                                  WASM_RELOC_GLOBAL_INDEX_LEB);
       break;
     }
     case WASM_EXPR_TYPE_GET_LOCAL: {
@@ -506,7 +506,7 @@ static void write_expr(Context* ctx,
       int index = wasm_get_global_index_by_var(module, &expr->get_global.var);
       wasm_write_opcode(&ctx->stream, WASM_OPCODE_SET_GLOBAL);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  WASM_RELOC_GLOBAL_INDEX);
+                                  WASM_RELOC_GLOBAL_INDEX_LEB);
       break;
     }
     case WASM_EXPR_TYPE_SET_LOCAL: {
@@ -796,7 +796,7 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
           assert(ctx->options->is_invalid ||
                  (index >= 0 && (size_t)index < module->funcs.size));
           write_u32_leb128_with_reloc(ctx, index, "export func index",
-                                      WASM_RELOC_FUNC_INDEX);
+                                      WASM_RELOC_FUNC_INDEX_LEB);
           break;
         }
         case WASM_EXTERNAL_KIND_TABLE: {
@@ -857,7 +857,7 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
         assert(ctx->options->is_invalid ||
                (index >= 0 && (size_t)index < module->funcs.size));
         write_u32_leb128_with_reloc(ctx, index, "function index",
-                                    WASM_RELOC_FUNC_INDEX);
+                                    WASM_RELOC_FUNC_INDEX_LEB);
       }
     }
     end_section(ctx);

@@ -143,7 +143,7 @@ static void apply_relocation(Section* section, Reloc* r) {
 
   uint32_t offset = 0;
   switch (r->type) {
-    case WASM_RELOC_FUNC_INDEX:
+    case WASM_RELOC_FUNC_INDEX_LEB:
       if (cur_value >= binary->function_imports.size) {
         /* locally declared function call */
         offset = binary->function_index_offset;
@@ -163,7 +163,7 @@ static void apply_relocation(Section* section, Reloc* r) {
         }
       }
       break;
-    case WASM_RELOC_GLOBAL_INDEX:
+    case WASM_RELOC_GLOBAL_INDEX_LEB:
       if (cur_value >= binary->global_imports.size) {
         offset = binary->global_index_offset;
       } else {
