@@ -170,9 +170,6 @@ static void apply_relocation(Section* section, Reloc* r) {
         offset = binary->imported_global_index_offset;
       }
       break;
-    case WASM_RELOC_TYPE_INDEX:
-      offset = binary->type_index_offset;
-      break;
     default:
       WASM_FATAL("unhandled relocation type: %d\n", r->type);
       break;
