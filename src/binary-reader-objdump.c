@@ -23,9 +23,14 @@
 
 #include "binary-reader.h"
 #include "literal.h"
+#include "vector.h"
+
+typedef uint32_t Uint32;
+WASM_DEFINE_VECTOR(uint32, Uint32);
 
 typedef struct Context {
   const WasmObjdumpOptions* options;
+  WasmAllocator* allocator;
   WasmStream* out_stream;
   const uint8_t* data;
   size_t size;
@@ -37,13 +42,14 @@ typedef struct Context {
   WasmBool header_printed;
   int section_found;
 
+  Uint32Vector section_starts;
+
   WasmStringSlice import_module_name;
   WasmStringSlice import_field_name;
 
   int function_index;
   int global_index;
 } Context;
-
 
 static WasmBool should_print_details(Context* ctx) {
   if (ctx->options->mode != WASM_DUMP_DETAILS)
@@ -100,7 +106,10 @@ static WasmResult do_begin_section(Context* ctx,
 static WasmResult begin_section(WasmBinaryReaderContext* ctx,
                                 WasmBinarySection type,
                                 uint32_t size) {
-  return do_begin_section(ctx->user_data, wasm_get_section_name(type),
+  Context* context = ctx->user_data;
+  uint32_t section_offset = ctx->offset;
+  wasm_append_uint32_value(context->allocator, &context->section_starts, &section_offset);
+  return do_begin_section(context, wasm_get_section_name(type),
                           ctx->offset, size);
 }
 
@@ -570,8 +579,11 @@ WasmResult on_reloc(WasmRelocType type,
                     uint32_t section,
                     uint32_t offset,
                     void* user_data) {
-  print_details(user_data, "  - %-20s section=%d offset=%#x\n",
-                wasm_get_reloc_type_name(type), section, offset);
+  Context* ctx = user_data;
+  assert(section < ctx->section_starts.size);
+  uint32_t total_offset = ctx->section_starts.data[section] + offset;
+  print_details(user_data, "  - %-22s section=%d offset=%#x (%#x)\n",
+                wasm_get_reloc_type_name(type), section, total_offset, offset);
   return WASM_OK;
 }
 
@@ -684,6 +696,7 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   reader = s_binary_reader;
   Context context;
   WASM_ZERO_MEMORY(context);
+  context.allocator = allocator;
   context.header_printed = WASM_FALSE;
   context.print_details = WASM_FALSE;
   context.section_found = WASM_FALSE;

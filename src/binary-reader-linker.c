@@ -38,7 +38,7 @@ static WasmResult on_reloc(WasmRelocType type,
   if (section_index >= binary->sections.size) {
     WASM_FATAL("invalid section index: %d\n", section_index);
   }
-  Section* sec = &binary->sections.data[section_index - 1];
+  Section* sec = &binary->sections.data[section_index];
   if (offset + RELOC_SIZE > sec->size) {
     WASM_FATAL("invalid relocation offset: %#x\n", offset);
   }

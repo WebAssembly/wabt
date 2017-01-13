@@ -670,7 +670,7 @@ static void write_binary(Context* ctx) {
   WASM_ZERO_MEMORY(sections);
   uint32_t section_indices[WASM_NUM_BINARY_SECTIONS];
   WASM_ZERO_MEMORY(section_indices);
-  uint32_t section_index = 1;
+  uint32_t section_index = 0;
 
   size_t i, j;
   for (j = 0; j < ctx->inputs.size; j++) {

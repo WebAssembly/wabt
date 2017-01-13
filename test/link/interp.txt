@@ -80,15 +80,15 @@ CODE:
  - func 4
 CUSTOM:
  - name: "reloc.EXPORT"
-  - RELOC_FUNC_INDEX_LEB section=4 offset=0xa
-  - RELOC_FUNC_INDEX_LEB section=4 offset=0x1d
-  - RELOC_FUNC_INDEX_LEB section=4 offset=0x30
-  - RELOC_FUNC_INDEX_LEB section=4 offset=0x3e
-  - RELOC_FUNC_INDEX_LEB section=4 offset=0x4c
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x3e (0xa)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x51 (0x1d)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x64 (0x30)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x72 (0x3e)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x80 (0x4c)
 CUSTOM:
  - name: "reloc.CODE"
-  - RELOC_FUNC_INDEX_LEB section=5 offset=0xd
-  - RELOC_FUNC_INDEX_LEB section=5 offset=0x17
+  - RELOC_FUNC_INDEX_LEB   section=4 offset=0x94 (0xd)
+  - RELOC_FUNC_INDEX_LEB   section=4 offset=0x9e (0x17)
 
 Code Disassembly:
 func 0

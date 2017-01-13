@@ -64,7 +64,7 @@ typedef struct Context {
 
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
-  size_t last_section_index;
+  size_t current_section_index;
   WasmBinarySection last_section_type;
   size_t last_section_payload_offset;
 } Context;
@@ -280,7 +280,6 @@ static void begin_known_section(Context* ctx,
                 wasm_get_section_name(section_code), section_code);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
   wasm_write_u8(&ctx->stream, section_code, "section code");
-  ctx->last_section_index++;
   ctx->last_section_type = section_code;
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
@@ -297,7 +296,6 @@ static void begin_custom_section(Context* ctx,
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
   wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_CUSTOM,
                 "custom section code");
-  ctx->last_section_index++;
   ctx->last_section_type = WASM_BINARY_SECTION_CUSTOM;
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
@@ -313,6 +311,7 @@ static void end_section(Context* ctx) {
                               ctx->last_section_leb_size_guess,
                               "FIXUP section size");
   ctx->last_section_leb_size_guess = 0;
+  ctx->current_section_index++;
 }
 
 static uint32_t get_label_var_depth(Context* ctx, const WasmVar* var) {
@@ -328,12 +327,12 @@ static void write_expr_list(Context* ctx,
 static void add_reloc(Context* ctx, WasmRelocType reloc_type) {
   // Add a new reloc section if needed
   if (!ctx->current_reloc_section ||
-      ctx->current_reloc_section->section_index != ctx->last_section_index) {
+      ctx->current_reloc_section->section_index != ctx->current_section_index) {
     ctx->current_reloc_section =
         wasm_append_reloc_section(ctx->allocator, &ctx->reloc_sections);
     ctx->current_reloc_section->name =
         wasm_get_section_name(ctx->last_section_type);
-    ctx->current_reloc_section->section_index = ctx->last_section_index;
+    ctx->current_reloc_section->section_index = ctx->current_section_index;
   }
 
   // Add a new relocation to the curent reloc section
