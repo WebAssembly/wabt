@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 WebAssembly Community Group participants
+ * Copyright 2017 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ static WasmResult on_import(uint32_t index,
                             WasmStringSlice field_name,
                             void* user_data) {
   Context* ctx = user_data;
-  if (!wasm_string_slice_eq_cstr(&module_name, LINKER_IMPORT_MODULE_NAME)) {
+  if (!wasm_string_slice_eq_cstr(&module_name, WASM_LINK_MODULE_NAME)) {
     WASM_FATAL("unsupported import module: " PRIstringslice,
                WASM_PRINTF_STRING_SLICE_ARG(module_name));
   }

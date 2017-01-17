@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 WebAssembly Community Group participants
+ * Copyright 2017 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 #include "common.h"
 #include "vector.h"
 
-#define LINKER_IMPORT_MODULE_NAME "linker"
+#define WASM_LINK_MODULE_NAME "__extern"
 
 typedef struct FunctionImport {
   WasmStringSlice name;

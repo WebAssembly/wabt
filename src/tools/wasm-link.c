@@ -343,8 +343,8 @@ static void write_combined_memory_section(Context* ctx,
 static void write_function_import(Context* ctx,
                                   FunctionImport* import,
                                   uint32_t offset) {
-  wasm_write_str(&ctx->stream, LINKER_IMPORT_MODULE_NAME,
-                 strlen(LINKER_IMPORT_MODULE_NAME), WASM_PRINT_CHARS,
+  wasm_write_str(&ctx->stream, WASM_LINK_MODULE_NAME,
+                 strlen(WASM_LINK_MODULE_NAME), WASM_PRINT_CHARS,
                  "import module name");
   wasm_write_str(&ctx->stream, import->name.start, import->name.length,
                  WASM_PRINT_CHARS, "import field name");
@@ -354,8 +354,8 @@ static void write_function_import(Context* ctx,
 }
 
 static void write_global_import(Context* ctx, GlobalImport* import) {
-  wasm_write_str(&ctx->stream, LINKER_IMPORT_MODULE_NAME,
-                 strlen(LINKER_IMPORT_MODULE_NAME), WASM_PRINT_CHARS,
+  wasm_write_str(&ctx->stream, WASM_LINK_MODULE_NAME,
+                 strlen(WASM_LINK_MODULE_NAME), WASM_PRINT_CHARS,
                  "import module name");
   wasm_write_str(&ctx->stream, import->name.start, import->name.length,
                  WASM_PRINT_CHARS, "import field name");
