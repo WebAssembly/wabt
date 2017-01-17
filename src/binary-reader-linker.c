@@ -139,15 +139,18 @@ static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
     /* We don't currently support merging name sections unless they contain
      * a name for every function. */
     size_t i;
+    uint32_t total_funcs = binary->function_imports.size;
     for (i = 0; i < binary->sections.size; i++) {
       if (binary->sections.data[i].section_code ==
           WASM_BINARY_SECTION_FUNCTION) {
-        if (binary->sections.data[i].count != sec->count) {
-          WASM_FATAL(
-              "name section count (%d) does not match function count (%d)\n",
-              sec->count, binary->sections.data[i].count);
-        }
+        total_funcs += binary->sections.data[i].count;
+        break;
       }
+    }
+    if (total_funcs != sec->count) {
+      WASM_FATAL(
+          "name section count (%d) does not match function count (%d)\n",
+          sec->count, total_funcs);
     }
   }
 
