@@ -1,7 +1,7 @@
 ;;; TOOL: run-wasm-link
 ;;; FLAGS: 
 (module
-  (import "linker" "bar" (global i32))
+  (import "__extern" "bar" (global i32))
   (global i32 (i32.const 1))
   (global i32 (i32.const 2))
   (func (param i32)
@@ -13,7 +13,7 @@
      call 0)
 )
 (module
-  (import "linker" "baz" (global i64))
+  (import "__extern" "baz" (global i64))
   (global i64 (i64.const 2))
   (func (param i64) (param i64)
      get_global 0
@@ -25,19 +25,19 @@ linked.wasm:	file format wasm 0x00000d
 
 Sections:
      TYPE start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
-   IMPORT start=0x0000001a end=0x00000037 (size=0x0000001d) count: 2
- FUNCTION start=0x0000003d end=0x00000040 (size=0x00000003) count: 2
-   GLOBAL start=0x00000042 end=0x00000052 (size=0x00000010) count: 3
-     CODE start=0x00000054 end=0x00000087 (size=0x00000033) count: 2
-   CUSTOM start=0x0000008d end=0x000000a8 (size=0x0000001b) "reloc.CODE"
+   IMPORT start=0x0000001a end=0x0000003b (size=0x00000021) count: 2
+ FUNCTION start=0x00000041 end=0x00000044 (size=0x00000003) count: 2
+   GLOBAL start=0x00000046 end=0x00000056 (size=0x00000010) count: 3
+     CODE start=0x00000058 end=0x0000008b (size=0x00000033) count: 2
+   CUSTOM start=0x00000091 end=0x000000ac (size=0x0000001b) "reloc.CODE"
 
 Section Details:
 TYPE:
  - [0] (i32) -> nil
  - [1] (i64, i64) -> nil
 IMPORT:
- - global[0] i32 mutable=0 <- linker.bar
- - global[1] i64 mutable=0 <- linker.baz
+ - global[0] i32 mutable=0 <- __extern.bar
+ - global[1] i64 mutable=0 <- __extern.baz
 FUNCTION:
  - func[0] sig=0
  - func[1] sig=1
@@ -50,24 +50,24 @@ CODE:
  - func 1
 CUSTOM:
  - name: "reloc.CODE"
-  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x58 (0x4)
-  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x5e (0xa)
-  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x65 (0x11)
-  - RELOC_FUNC_INDEX_LEB   section=4 offset=0x6c (0x18)
-  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x75 (0x21)
-  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x7b (0x27)
-  - RELOC_FUNC_INDEX_LEB   section=4 offset=0x81 (0x2d)
+  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x5c (0x4)
+  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x62 (0xa)
+  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x69 (0x11)
+  - RELOC_FUNC_INDEX_LEB   section=4 offset=0x70 (0x18)
+  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x79 (0x21)
+  - RELOC_GLOBAL_INDEX_LEB section=4 offset=0x7f (0x27)
+  - RELOC_FUNC_INDEX_LEB   section=4 offset=0x85 (0x2d)
 
 Code Disassembly:
 func 0
- 000057: 23 83 80 80 80 00          | get_global 0x3
- 00005d: 23 82 80 80 80 00          | get_global 0x2
- 000063: 6a                         | i32.add
- 000064: 23 80 80 80 80 00          | get_global 0
- 00006a: 6a                         | i32.add
- 00006b: 10 80 80 80 80 00          | call 0
+ 00005b: 23 83 80 80 80 00          | get_global 0x3
+ 000061: 23 82 80 80 80 00          | get_global 0x2
+ 000067: 6a                         | i32.add
+ 000068: 23 80 80 80 80 00          | get_global 0
+ 00006e: 6a                         | i32.add
+ 00006f: 10 80 80 80 80 00          | call 0
 func 1
- 000074: 23 81 80 80 80 00          | get_global 0x1
- 00007a: 23 84 80 80 80 00          | get_global 0x4
- 000080: 10 81 80 80 80 00          | call 0x1
+ 000078: 23 81 80 80 80 00          | get_global 0x1
+ 00007e: 23 84 80 80 80 00          | get_global 0x4
+ 000084: 10 81 80 80 80 00          | call 0x1
 ;;; STDOUT ;;)

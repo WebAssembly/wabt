@@ -4,8 +4,8 @@
   (export "export1" (func $export1))
   (export "call_import1" (func $call_import1))
   (export "call_import2" (func $call_import2))
-  (import "linker" "export2" (func $import1 (result i32)))
-  (import "linker" "export3" (func $import2 (result i64)))
+  (import "__extern" "export2" (func $import1 (result i32)))
+  (import "__extern" "export3" (func $import2 (result i64)))
   (func $export1 (result f32)
     f32.const 1
     return

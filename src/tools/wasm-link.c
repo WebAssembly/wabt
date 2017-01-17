@@ -90,7 +90,8 @@ static void on_option(struct WasmOptionParser* parser,
 }
 
 static void on_argument(struct WasmOptionParser* parser, const char* argument) {
-  wasm_append_string_value(parser->user_data, &s_infiles, &argument);
+  WasmAllocator* allocator = parser->user_data;
+  wasm_append_string_value(allocator, &s_infiles, &argument);
 }
 
 static void on_option_error(struct WasmOptionParser* parser,
@@ -585,6 +586,8 @@ static void resolve_symbols(Context* ctx) {
       ExportInfo* info = wasm_append_export_info(ctx->allocator, &export_list);
       info->export = export;
       info->binary = binary;
+
+      /* TODO(sbc): Handle duplicate names */
       WasmStringSlice name = wasm_dup_string_slice(ctx->allocator, export->name);
       WasmBinding* binding = wasm_insert_binding(ctx->allocator, &export_map, &name);
       binding->index = export_list.size - 1;

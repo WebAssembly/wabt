@@ -1,14 +1,14 @@
 ;;; TOOL: run-wasm-link
 ;;; FLAGS: --incremental -r
 (module
-  (import "linker" "bar" (func (param i32) (result i32)))
+  (import "__extern" "bar" (func (param i32) (result i32)))
   (func (param i32)
      get_local 0
      call 0
      call 1)
 )
 (module
-  (import "linker" "does_nothing" (func (param f64)))
+  (import "__extern" "does_nothing" (func (param f64)))
   (func (param i64)
      f64.const 1
      call 0
@@ -16,7 +16,7 @@
      call 1)
 )
 (module
-  (import "linker" "hello_world" (func (param f32)))
+  (import "__extern" "hello_world" (func (param f32)))
   (func (param i32)
      f32.const 1
      call 0
@@ -28,10 +28,10 @@ linked.wasm:	file format wasm 0x00000d
 
 Sections:
      TYPE start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
-   IMPORT start=0x0000002a end=0x00000063 (size=0x00000039) count: 3
- FUNCTION start=0x00000069 end=0x0000006d (size=0x00000004) count: 3
-     CODE start=0x0000006f end=0x000000b1 (size=0x00000042) count: 3
-   CUSTOM start=0x000000b7 end=0x000000d0 (size=0x00000019) "reloc.CODE"
+   IMPORT start=0x0000002a end=0x00000069 (size=0x0000003f) count: 3
+ FUNCTION start=0x0000006f end=0x00000073 (size=0x00000004) count: 3
+     CODE start=0x00000075 end=0x000000b7 (size=0x00000042) count: 3
+   CUSTOM start=0x000000bd end=0x000000d6 (size=0x00000019) "reloc.CODE"
 
 Section Details:
 TYPE:
@@ -42,9 +42,9 @@ TYPE:
  - [4] (f32) -> nil
  - [5] (i32) -> nil
 IMPORT:
- - func[0] sig=0 <- linker.bar
- - func[1] sig=2 <- linker.does_nothing
- - func[2] sig=4 <- linker.hello_world
+ - func[0] sig=0 <- __extern.bar
+ - func[1] sig=2 <- __extern.does_nothing
+ - func[2] sig=4 <- __extern.hello_world
 FUNCTION:
  - func[3] sig=1
  - func[4] sig=3
@@ -55,26 +55,26 @@ CODE:
  - func 2
 CUSTOM:
  - name: "reloc.CODE"
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x75 (0x6)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x7b (0xc)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x8d (0x1e)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x95 (0x26)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0xa3 (0x34)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0xab (0x3c)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x7b (0x6)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x81 (0xc)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x93 (0x1e)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x9b (0x26)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0xa9 (0x34)
+  - RELOC_FUNC_INDEX_LEB   section=3 offset=0xb1 (0x3c)
 
 Code Disassembly:
 func 0
- 000072: 20 00                      | get_local 0
- 000074: 10 80 80 80 80 00          | call 0
- 00007a: 10 83 80 80 80 00          | call 0x3
+ 000078: 20 00                      | get_local 0
+ 00007a: 10 80 80 80 80 00          | call 0
+ 000080: 10 83 80 80 80 00          | call 0x3
 func 1
- 000083: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
- 00008c: 10 81 80 80 80 00          | call 0x1
- 000092: 42 0a                      | i64.const 10
- 000094: 10 84 80 80 80 00          | call 0x4
+ 000089: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
+ 000092: 10 81 80 80 80 00          | call 0x1
+ 000098: 42 0a                      | i64.const 10
+ 00009a: 10 84 80 80 80 00          | call 0x4
 func 2
- 00009d: 43 00 00 80 3f             | f32.const 0x1p+0
- 0000a2: 10 82 80 80 80 00          | call 0x2
- 0000a8: 41 0a                      | i32.const 0xa
- 0000aa: 10 85 80 80 80 00          | call 0x5
+ 0000a3: 43 00 00 80 3f             | f32.const 0x1p+0
+ 0000a8: 10 82 80 80 80 00          | call 0x2
+ 0000ae: 41 0a                      | i32.const 0xa
+ 0000b0: 10 85 80 80 80 00          | call 0x5
 ;;; STDOUT ;;)
