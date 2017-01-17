@@ -48,7 +48,7 @@ WASM_DEFINE_VECTOR(reloc, Reloc);
 
 typedef struct RelocSection {
   const char* name;
-  uint32_t section_index;
+  WasmBinarySection section_code;
   RelocVector relocations;
 } RelocSection;
 WASM_DEFINE_VECTOR(reloc_section, RelocSection);
@@ -64,7 +64,6 @@ typedef struct Context {
 
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
-  size_t current_section_index;
   WasmBinarySection last_section_type;
   size_t last_section_payload_offset;
 } Context;
@@ -311,7 +310,6 @@ static void end_section(Context* ctx) {
                               ctx->last_section_leb_size_guess,
                               "FIXUP section size");
   ctx->last_section_leb_size_guess = 0;
-  ctx->current_section_index++;
 }
 
 static uint32_t get_label_var_depth(Context* ctx, const WasmVar* var) {
@@ -327,12 +325,12 @@ static void write_expr_list(Context* ctx,
 static void add_reloc(Context* ctx, WasmRelocType reloc_type) {
   // Add a new reloc section if needed
   if (!ctx->current_reloc_section ||
-      ctx->current_reloc_section->section_index != ctx->current_section_index) {
+      ctx->current_reloc_section->section_code != ctx->last_section_type) {
     ctx->current_reloc_section =
         wasm_append_reloc_section(ctx->allocator, &ctx->reloc_sections);
     ctx->current_reloc_section->name =
         wasm_get_section_name(ctx->last_section_type);
-    ctx->current_reloc_section->section_index = ctx->current_section_index;
+    ctx->current_reloc_section->section_code = ctx->last_section_type;
   }
 
   // Add a new relocation to the curent reloc section
@@ -635,8 +633,8 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   sprintf(section_name, "%s.%s", WASM_BINARY_SECTION_RELOC,
           reloc_section->name);
   begin_custom_section(ctx, section_name, LEB_SECTION_SIZE_GUESS);
-  wasm_write_u32_leb128(&ctx->stream, reloc_section->section_index,
-                        "reloc section");
+  wasm_write_u32_leb128(&ctx->stream, reloc_section->section_code,
+                        "reloc section type");
   RelocVector* relocs = &reloc_section->relocations;
   wasm_write_u32_leb128(&ctx->stream, relocs->size, "num relocs");
 

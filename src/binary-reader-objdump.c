@@ -42,7 +42,8 @@ typedef struct Context {
   WasmBool header_printed;
   int section_found;
 
-  Uint32Vector section_starts;
+  uint32_t section_starts[WASM_NUM_BINARY_SECTIONS];
+  WasmBinarySection reloc_section;
 
   WasmStringSlice import_module_name;
   WasmStringSlice import_field_name;
@@ -107,8 +108,7 @@ static WasmResult begin_section(WasmBinaryReaderContext* ctx,
                                 WasmBinarySection type,
                                 uint32_t size) {
   Context* context = ctx->user_data;
-  uint32_t section_offset = ctx->offset;
-  wasm_append_uint32_value(context->allocator, &context->section_starts, &section_offset);
+  context->section_starts[type] = ctx->offset;
   return do_begin_section(context, wasm_get_section_name(type),
                           ctx->offset, size);
 }
@@ -575,15 +575,21 @@ static WasmResult on_local_name(uint32_t func_index,
   return WASM_OK;
 }
 
+WasmResult on_reloc_count(uint32_t count, WasmBinarySection section_code,
+    WasmStringSlice section_name, void* user_data) {
+  Context* ctx = user_data;
+  ctx->reloc_section = section_code;
+  print_details(user_data, "  - section: %s\n", wasm_get_section_name(section_code));
+  return WASM_OK;
+}
+
 WasmResult on_reloc(WasmRelocType type,
-                    uint32_t section,
                     uint32_t offset,
                     void* user_data) {
   Context* ctx = user_data;
-  assert(section < ctx->section_starts.size);
-  uint32_t total_offset = ctx->section_starts.data[section] + offset;
-  print_details(user_data, "  - %-22s section=%d offset=%#x (%#x)\n",
-                wasm_get_reloc_type_name(type), section, total_offset, offset);
+  uint32_t total_offset = ctx->section_starts[ctx->reloc_section] + offset;
+  print_details(user_data, "   - %-22s offset=%#x (%#x)\n",
+                wasm_get_reloc_type_name(type), total_offset, offset);
   return WASM_OK;
 }
 
@@ -678,6 +684,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_function_name = on_function_name,
     .on_local_name = on_local_name,
 
+    .on_reloc_count = on_reloc_count,
     .on_reloc = on_reloc,
 
     .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
@@ -722,9 +729,5 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   WasmReadBinaryOptions read_options = WASM_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = WASM_TRUE;
 
-  WasmResult res =
-    wasm_read_binary(allocator, data, size, &reader, 1, &read_options);
-
-  wasm_destroy_uint32_vector(allocator, &context.section_starts);
-  return res;
+  return wasm_read_binary(allocator, data, size, &reader, 1, &read_options);
 }

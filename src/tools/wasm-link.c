@@ -462,8 +462,7 @@ static void write_combined_data_section(Context* ctx,
 
 static void write_combined_reloc_section(Context* ctx,
                                          WasmBinarySection section_code,
-                                         SectionPtrVector* sections,
-                                         uint32_t section_index) {
+                                         SectionPtrVector* sections) {
   size_t i, j;
   uint32_t total_relocs = 0;
 
@@ -485,7 +484,7 @@ static void write_combined_reloc_section(Context* ctx,
   WRITE_UNKNOWN_SIZE(stream);
   wasm_write_str(stream, section_name, strlen(section_name), WASM_PRINT_CHARS,
                  "reloc section name");
-  wasm_write_u32_leb128(&ctx->stream, section_index, "reloc section");
+  wasm_write_u32_leb128(&ctx->stream, section_code, "reloc section");
   wasm_write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 
   for (i = 0; i < sections->size; i++) {
@@ -677,9 +676,6 @@ static void write_binary(Context* ctx) {
   /* Find all the sections of each type */
   SectionPtrVector sections[WASM_NUM_BINARY_SECTIONS];
   WASM_ZERO_MEMORY(sections);
-  uint32_t section_indices[WASM_NUM_BINARY_SECTIONS];
-  WASM_ZERO_MEMORY(section_indices);
-  uint32_t section_index = 0;
 
   size_t i, j;
   for (j = 0; j < ctx->inputs.size; j++) {
@@ -697,8 +693,7 @@ static void write_binary(Context* ctx) {
 
   /* Write known sections first */
   for (i = FIRST_KNOWN_SECTION; i < WASM_NUM_BINARY_SECTIONS; i++) {
-    if (write_combined_section(ctx, i, &sections[i]))
-      section_indices[i] = section_index++;
+    write_combined_section(ctx, i, &sections[i]);
   }
 
   /* Write custom sections */
@@ -713,7 +708,7 @@ static void write_binary(Context* ctx) {
 
   /* Generate a new set of reloction sections */
   for (i = FIRST_KNOWN_SECTION; i < WASM_NUM_BINARY_SECTIONS; i++) {
-    write_combined_reloc_section(ctx, i, &sections[i], section_indices[i]);
+    write_combined_reloc_section(ctx, i, &sections[i]);
   }
 
   for (i = 0; i < WASM_NUM_BINARY_SECTIONS; i++) {

@@ -630,7 +630,6 @@ LOGGING_UINT32(on_function_names_count)
 LOGGING_UINT32_UINT32(on_local_names_count, "index", "count")
 LOGGING_END(names_section)
 LOGGING_BEGIN(reloc_section)
-LOGGING_UINT32(on_reloc_count)
 LOGGING_END(reloc_section)
 LOGGING_UINT32_UINT32(on_init_expr_get_global_expr, "index", "global_index")
 
@@ -967,6 +966,17 @@ static WasmResult logging_on_init_expr_i64_const_expr(uint32_t index,
   LOGF("on_init_expr_i64_const_expr(index: %u, value: %" PRIu64 ")\n", index,
        value);
   FORWARD(on_init_expr_i64_const_expr, index, value);
+}
+
+static WasmResult logging_on_reloc_count(uint32_t count,
+                                         WasmBinarySection section_code,
+                                         WasmStringSlice section_name,
+                                         void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_reloc_count(count: %d, section: %s, section_name: "
+       PRIstringslice ")\n", count, wasm_get_section_name(section_code),
+       WASM_PRINTF_STRING_SLICE_ARG(section_name));
+  FORWARD(on_reloc_count, count, section_code, section_name);
 }
 
 static WasmBinaryReader s_logging_binary_reader = {
@@ -1682,12 +1692,15 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     uint32_t i, num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
     in_u32_leb128(ctx, &num_relocs, "relocation count count");
-    CALLBACK(on_reloc_count, num_relocs);
+    WASM_ZERO_MEMORY(section_name);
+    if (section == WASM_BINARY_SECTION_CUSTOM)
+      in_str(ctx, &section_name, "section name");
+    CALLBACK(on_reloc_count, num_relocs, section, section_name);
     for (i = 0; i < num_relocs; ++i) {
       uint32_t reloc_type, offset;
       in_u32_leb128(ctx, &reloc_type, "relocation type");
       in_u32_leb128(ctx, &offset, "offset");
-      CALLBACK(on_reloc, reloc_type, section, offset);
+      CALLBACK(on_reloc, reloc_type, offset);
     }
     CALLBACK0(end_reloc_section);
   } else {

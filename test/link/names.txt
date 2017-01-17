@@ -53,13 +53,15 @@ CUSTOM:
   - local[0] $param3
 CUSTOM:
  - name: "reloc.EXPORT"
-  - RELOC_FUNC_INDEX_LEB   section=2 offset=0x29 (0x6)
-  - RELOC_FUNC_INDEX_LEB   section=2 offset=0x33 (0x10)
+  - section: EXPORT
+   - RELOC_FUNC_INDEX_LEB   offset=0x29 (0x6)
+   - RELOC_FUNC_INDEX_LEB   offset=0x33 (0x10)
 CUSTOM:
  - name: "reloc.CODE"
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x40 (0x6)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x4b (0x11)
-  - RELOC_FUNC_INDEX_LEB   section=3 offset=0x56 (0x1c)
+  - section: CODE
+   - RELOC_FUNC_INDEX_LEB   offset=0x40 (0x6)
+   - RELOC_FUNC_INDEX_LEB   offset=0x4b (0x11)
+   - RELOC_FUNC_INDEX_LEB   offset=0x56 (0x1c)
 
 Code Disassembly:
 func 0

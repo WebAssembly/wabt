@@ -25,25 +25,44 @@ typedef struct Context {
   WasmAllocator* allocator;
   InputBinary* binary;
 
+  Section* reloc_section;
+
   WasmStringSlice import_name;
   Section* current_section;
 } Context;
 
+static WasmResult on_reloc_count(uint32_t count, WasmBinarySection section_code,
+                                 WasmStringSlice section_name,
+                                 void* user_data) {
+  Context* ctx = user_data;
+  InputBinary* binary = ctx->binary;
+  if (section_code == WASM_BINARY_SECTION_CUSTOM) {
+    WASM_FATAL("relocation for custom sections not yet supported\n");
+  }
+
+  uint32_t i;
+  for (i = 0; i < binary->sections.size; i++) {
+    Section* sec = &binary->sections.data[i];
+    if (sec->section_code != section_code)
+      continue;
+    ctx->reloc_section = sec;
+    return WASM_OK;
+  }
+
+  WASM_FATAL("section not found: %d\n", section_code);
+  return WASM_ERROR;
+}
+
 static WasmResult on_reloc(WasmRelocType type,
-                           uint32_t section_index,
                            uint32_t offset,
                            void* user_data) {
   Context* ctx = user_data;
-  InputBinary* binary = ctx->binary;
-  if (section_index >= binary->sections.size) {
-    WASM_FATAL("invalid section index: %d\n", section_index);
-  }
-  Section* sec = &binary->sections.data[section_index];
-  if (offset + RELOC_SIZE > sec->size) {
+
+  if (offset + RELOC_SIZE > ctx->reloc_section->size) {
     WASM_FATAL("invalid relocation offset: %#x\n", offset);
   }
 
-  Reloc* reloc = wasm_append_reloc(ctx->allocator, &sec->relocations);
+  Reloc* reloc = wasm_append_reloc(ctx->allocator, &ctx->reloc_section->relocations);
   reloc->type = type;
   reloc->offset = offset;
 
@@ -245,6 +264,7 @@ static WasmBinaryReader s_binary_reader = {
     .begin_section = begin_section,
     .begin_custom_section = begin_custom_section,
 
+    .on_reloc_count = on_reloc_count,
     .on_reloc = on_reloc,
 
     .on_import = on_import,
