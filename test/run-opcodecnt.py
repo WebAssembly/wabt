@@ -38,7 +38,7 @@ def main(args):
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
@@ -50,15 +50,15 @@ def main(args):
       find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
-    '-v': options.verbose,
-    '--use-libc-allocator': options.use_libc_allocator
+      '-v': options.verbose,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
-  wasmopcodecnt = utils.Executable(find_exe.GetWasmOpcodeCntExecutable(
-      options.bindir),
+  wasmopcodecnt = utils.Executable(
+      find_exe.GetWasmOpcodeCntExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasmopcodecnt.AppendOptionalArgs({
-    '--use-libc-allocator': options.use_libc_allocator
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wast2wasm.verbose = options.print_cmd
@@ -78,5 +78,3 @@ if __name__ == '__main__':
   except Error as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)
-
-

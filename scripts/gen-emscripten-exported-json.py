@@ -78,8 +78,7 @@ def ProcessFile(nm, file_):
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
-  parser.add_argument('-v', '--verbose',
-                      help='print more diagnostic messages.',
+  parser.add_argument('-v', '--verbose', help='print more diagnostic messages.',
                       action='store_true')
   parser.add_argument('--emscripten-dir', metavar='PATH',
                       help='emscripten directory',

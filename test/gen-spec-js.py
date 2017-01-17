@@ -46,17 +46,21 @@ F64_SIGN_BIT = F64_NEG_ZERO
 F64_SIG_MASK = 0xfffffffffffff
 F64_QUIET_NAN_TAG = 0x8000000000000
 
+
 def I32ToJS(value):
   # JavaScript will return all i32 values as signed.
   if value >= 2**31:
     value -= 2**32
   return str(value)
 
+
 def IsNaNF32(f32_bits):
   return (F32_INF < f32_bits < F32_NEG_ZERO) or (f32_bits > F32_NEG_INF)
 
+
 def ReinterpretF32(f32_bits):
-    return struct.unpack('<f', struct.pack('<I', f32_bits))[0]
+  return struct.unpack('<f', struct.pack('<I', f32_bits))[0]
+
 
 def NaNF32ToString(f32_bits):
   result = '-' if f32_bits & F32_SIGN_BIT else ''
@@ -65,6 +69,7 @@ def NaNF32ToString(f32_bits):
   if sig != F32_QUIET_NAN_TAG:
     result += ':0x%x' % sig
   return result
+
 
 def F32ToWasm(f32_bits):
   if IsNaNF32(f32_bits):
@@ -76,6 +81,7 @@ def F32ToWasm(f32_bits):
   else:
     return 'f32.const %s' % float.hex(ReinterpretF32(f32_bits))
 
+
 def F32ToJS(f32_bits):
   assert not IsNaNF32(f32_bits)
   if f32_bits == F32_INF:
@@ -85,11 +91,14 @@ def F32ToJS(f32_bits):
   else:
     return 'f32(%s)' % ReinterpretF32(f32_bits)
 
+
 def IsNaNF64(f64_bits):
   return (F64_INF < f64_bits < F64_NEG_ZERO) or (f64_bits > F64_NEG_INF)
 
+
 def ReinterpretF64(f64_bits):
   return struct.unpack('<d', struct.pack('<Q', f64_bits))[0]
+
 
 def NaNF64ToString(f64_bits):
   result = '-' if f64_bits & F64_SIGN_BIT else ''
@@ -98,6 +107,7 @@ def NaNF64ToString(f64_bits):
   if sig != F64_QUIET_NAN_TAG:
     result += ':0x%x' % sig
   return result
+
 
 def F64ToWasm(f64_bits):
   if IsNaNF64(f64_bits):
@@ -108,6 +118,7 @@ def F64ToWasm(f64_bits):
     return 'f64.const -infinity'
   else:
     return 'f64.const %s' % float.hex(ReinterpretF64(f64_bits))
+
 
 def F64ToJS(f64_bits):
   assert not IsNaNF64(f64_bits)
@@ -128,7 +139,7 @@ def UnescapeWasmString(s):
   while i < len(s):
     c = s[i]
     if c == '\\':
-      x = s[i+1:i+3]
+      x = s[i + 1:i + 3]
       if len(x) != 2:
         raise Error('String with invalid escape: \"%s\"' % s)
       result += chr(int(x, 16))
@@ -137,6 +148,7 @@ def UnescapeWasmString(s):
       result += c
       i += 1
   return result
+
 
 def EscapeJSString(s):
   result = ''
@@ -159,8 +171,10 @@ def IsValidJSConstant(const):
   elif type_ == 'f64':
     return not IsNaNF64(int(const['value']))
 
+
 def IsValidJSAction(action):
   return all(IsValidJSConstant(x) for x in action.get('args', []))
+
 
 def IsValidJSCommand(command):
   type_ = command['type']
@@ -185,8 +199,8 @@ def CollectInvalidModuleCommands(commands):
       module_name = command.get('name')
       if module_name:
         module_map[module_name] = pair
-    elif command['type'] in ('assert_return', 'assert_return_nan',
-                             'assert_trap'):
+    elif command['type'] in ('assert_return', 'assert_return_nan', 'assert_trap'
+                            ):
       if IsValidJSCommand(command):
         continue
 
@@ -201,6 +215,7 @@ def CollectInvalidModuleCommands(commands):
 
 
 class ModuleExtender(object):
+
   def __init__(self, wast2wasm, wasm2wast, temp_dir):
     self.wast2wasm = wast2wasm
     self.wasm2wast = wasm2wast
@@ -250,8 +265,8 @@ class ModuleExtender(object):
       self.lines.append('get_local 0')
       self._Reinterpret(type_)
       self._Compare(type_)
-      self.lines.extend(['i32.eqz', 'br_if 0', 'return', 'end',
-                         'unreachable', ')'])
+      self.lines.extend(
+          ['i32.eqz', 'br_if 0', 'return', 'end', 'unreachable', ')'])
 
       # Change the command to assert_return, it won't return NaN anymore.
       command['type'] = 'assert_return'
@@ -286,16 +301,20 @@ class ModuleExtender(object):
       raise Error('Unexpected action: %s' % action['type'])
 
   def _Reinterpret(self, type_):
-    self.lines.extend({'i32': [],
-                       'i64': [],
-                       'f32': ['i32.reinterpret/f32'],
-                       'f64': ['i64.reinterpret/f64']}[type_])
+    self.lines.extend({
+        'i32': [],
+        'i64': [],
+        'f32': ['i32.reinterpret/f32'],
+        'f64': ['i64.reinterpret/f64']
+    }[type_])
 
   def _Compare(self, type_):
-    self.lines.append({'i32': 'i32.eq',
-                       'i64': 'i64.eq',
-                       'f32': 'i32.eq',
-                       'f64': 'i64.eq'}[type_])
+    self.lines.append({
+        'i32': 'i32.eq',
+        'i64': 'i64.eq',
+        'f32': 'i32.eq',
+        'f64': 'i64.eq'
+    }[type_])
 
   def _Constant(self, const):
     inst = None
@@ -322,6 +341,7 @@ class ModuleExtender(object):
 
 
 class JSWriter(object):
+
   def __init__(self, base_dir, commands, out_file):
     self.base_dir = base_dir
     self.commands = commands
@@ -333,16 +353,16 @@ class JSWriter(object):
 
   def _WriteCommand(self, command):
     command_funcs = {
-      'module': self._WriteModuleCommand,
-      'action': self._WriteActionCommand,
-      'register': self._WriteRegisterCommand,
-      'assert_malformed': self._WriteAssertModuleCommand,
-      'assert_invalid': self._WriteAssertModuleCommand,
-      'assert_unlinkable': self._WriteAssertModuleCommand,
-      'assert_uninstantiable': self._WriteAssertModuleCommand,
-      'assert_return': self._WriteAssertReturnCommand,
-      'assert_return_nan': self._WriteAssertActionCommand,
-      'assert_trap': self._WriteAssertActionCommand,
+        'module': self._WriteModuleCommand,
+        'action': self._WriteActionCommand,
+        'register': self._WriteRegisterCommand,
+        'assert_malformed': self._WriteAssertModuleCommand,
+        'assert_invalid': self._WriteAssertModuleCommand,
+        'assert_unlinkable': self._WriteAssertModuleCommand,
+        'assert_uninstantiable': self._WriteAssertModuleCommand,
+        'assert_return': self._WriteAssertReturnCommand,
+        'assert_return_nan': self._WriteAssertActionCommand,
+        'assert_trap': self._WriteAssertActionCommand,
     }
 
     func = command_funcs.get(command['type'])
@@ -412,8 +432,7 @@ class JSWriter(object):
       args = '(%s)' % self._ConstantList(action.get('args', []))
 
     return '%s.exports["%s"]%s' % (action.get('module', '$$'),
-                                   EscapeJSString(action['field']),
-                                   args)
+                                   EscapeJSString(action['field']), args)
 
 
 def main(args):
@@ -426,10 +445,10 @@ def main(args):
                       help='directory to search for all executables.')
   parser.add_argument('--temp-dir', metavar='PATH',
                       help='set the directory that temporary wasm/wast'
-                           ' files are written.')
+                      ' files are written.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
@@ -437,10 +456,12 @@ def main(args):
   parser.add_argument('file', help='spec json file.')
   options = parser.parse_args(args)
 
-  wast2wasm = Executable(find_exe.GetWast2WasmExecutable(options.bindir),
-                         error_cmdline=options.error_cmdline)
-  wasm2wast = Executable(find_exe.GetWasm2WastExecutable(options.bindir),
-                         error_cmdline=options.error_cmdline)
+  wast2wasm = Executable(
+      find_exe.GetWast2WasmExecutable(options.bindir),
+      error_cmdline=options.error_cmdline)
+  wasm2wast = Executable(
+      find_exe.GetWasm2WastExecutable(options.bindir),
+      error_cmdline=options.error_cmdline)
 
   wast2wasm.verbose = options.print_cmd
   wasm2wast.verbose = options.print_cmd
@@ -481,6 +502,7 @@ def main(args):
     out_file.close()
 
   return 0
+
 
 if __name__ == '__main__':
   try:

@@ -48,9 +48,10 @@ def main(args):
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd',
+                      help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='wast file.')
@@ -58,22 +59,18 @@ def main(args):
 
   with utils.TempDirectory(options.out_dir, 'run-gen-spec-js-') as out_dir:
     wast2wasm = utils.Executable(
-        find_exe.GetWast2WasmExecutable(options.bindir),
-        '--spec',
-        '--no-check-assert-invalid',
-        error_cmdline=options.error_cmdline)
+        find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
+        '--no-check-assert-invalid', error_cmdline=options.error_cmdline)
     wast2wasm.AppendOptionalArgs({
-      '-v': options.verbose,
-      '--use-libc-allocator': options.use_libc_allocator
+        '-v': options.verbose,
+        '--use-libc-allocator': options.use_libc_allocator
     })
 
-    gen_spec_js = utils.Executable(
-        sys.executable, GEN_SPEC_JS_PY,
-        '--temp-dir', out_dir,
-        error_cmdline=options.error_cmdline)
+    gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY, '--temp-dir',
+                                   out_dir, error_cmdline=options.error_cmdline)
     gen_spec_js.AppendOptionalArgs({
-      '--bindir': options.bindir,
-      '--prefix': options.prefix_js,
+        '--bindir': options.bindir,
+        '--prefix': options.prefix_js,
     })
     gen_spec_js.verbose = options.print_cmd
 
@@ -88,6 +85,7 @@ def main(args):
     else:
       # Write JavaScript output to stdout
       gen_spec_js.RunWithArgs(json_file)
+
 
 if __name__ == '__main__':
   try:
