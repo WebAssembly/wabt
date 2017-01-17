@@ -39,8 +39,8 @@ FUNCTION:
  - func[2] sig=1
  - func[3] sig=3
 CODE:
- - func 0
- - func 1
+ - func 2
+ - func 3
 CUSTOM:
  - name: "reloc.IMPORT"
   - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0xa
@@ -53,11 +53,11 @@ CUSTOM:
   - RELOC_FUNC_INDEX     section=4 offset=0x26
 
 Code Disassembly:
-func 0
+func 2
  00004e: 20 00                      | get_local 0
  000050: 10 80 80 80 80 00          | call 0
  000056: 10 82 80 80 80 00          | call 0x2
-func 1
+func 3
  00005f: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  000068: 10 81 80 80 80 00          | call 0x1
  00006e: 42 0a                      | i64.const 10

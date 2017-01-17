@@ -149,17 +149,17 @@
 no-canonicalize.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+func 1
  000077: 20 00                      | get_local 0
  000079: 20 01                      | get_local 0x1
  00007b: 11 01 00                   | call_indirect 1 0
  00007e: 1a                         | drop
-func 1
+func 2
  000086: 20 00                      | get_local 0
  000088: 41 01                      | i32.const 0x1
  00008a: 6a                         | i32.add
  00008b: 1a                         | drop
-func 2
+func 3
  000093: 20 00                      | get_local 0
  000095: 41 02                      | i32.const 0x2
  000097: 6c                         | i32.mul

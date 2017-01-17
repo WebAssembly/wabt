@@ -69,9 +69,9 @@ ELEM:
   - func[5]
   - func[5]
 CODE:
- - func 0
- - func 1
- - func 2
+ - func 3
+ - func 4
+ - func 5
 CUSTOM:
  - name: "reloc.IMPORT"
   - RELOC_GLOBAL_TYPE_INDEX section=2 offset=0xa
@@ -96,16 +96,16 @@ CUSTOM:
   - RELOC_FUNC_INDEX     section=6 offset=0x3c
 
 Code Disassembly:
-func 0
+func 3
  0000a3: 20 00                      | get_local 0
  0000a5: 10 80 80 80 80 00          | call 0
  0000ab: 10 83 80 80 80 00          | call 0x3
-func 1
+func 4
  0000b4: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  0000bd: 10 81 80 80 80 00          | call 0x1
  0000c3: 42 0a                      | i64.const 10
  0000c5: 10 84 80 80 80 00          | call 0x4
-func 2
+func 5
  0000ce: 43 00 00 80 3f             | f32.const 0x1p+0
  0000d3: 10 82 80 80 80 00          | call 0x2
  0000d9: 41 0a                      | i32.const 0xa
