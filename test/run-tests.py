@@ -207,9 +207,9 @@ def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, stdout=None if console_out else
-                               subprocess.PIPE, stderr=None if console_out else
-                               subprocess.PIPE, universal_newlines=True,
+    process = subprocess.Popen(command, cwd=cwd, stdout=None if console_out
+                               else subprocess.PIPE, stderr=None if console_out
+                               else subprocess.PIPE, universal_newlines=True,
                                **kwargs)
     timer = threading.Timer(timeout, KillProcess)
     try:
@@ -503,8 +503,8 @@ class Status(object):
       percent = 100 * (self.passed + self.failed) / (self.total - self.skipped)
     else:
       percent = 100
-    status = '[+%d|-%d|%%%d] (%.2fs) %s\r' % (self.passed, self.failed, percent,
-                                              total_duration, name)
+    status = '[+%d|-%d|%%%d] (%.2fs) %s\r' % (self.passed, self.failed,
+                                              percent, total_duration, name)
     self.last_length = len(status)
     self.last_finished = info
     sys.stderr.write(status)
@@ -735,8 +735,9 @@ def main(args):
   parser.add_argument('-r', '--rebase',
                       help='rebase a test to its current output.',
                       action='store_true')
-  parser.add_argument('-j', '--jobs', help='number of jobs to use to run tests',
-                      type=int, default=GetDefaultJobCount())
+  parser.add_argument('-j', '--jobs',
+                      help='number of jobs to use to run tests', type=int,
+                      default=GetDefaultJobCount())
   parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                       help='per test timeout in seconds')
   parser.add_argument('--no-roundtrip',

@@ -34,8 +34,8 @@ def main(args):
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                      ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',

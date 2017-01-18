@@ -511,7 +511,8 @@ def Run(input_file_name):
 
 def main(args):
   arg_parser = argparse.ArgumentParser()
-  arg_parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
+  arg_parser.add_argument('-o', '--output', metavar='PATH',
+                          help='output file.')
   arg_parser.add_argument('-v', '--verbose',
                           help='print more diagnotic messages.',
                           action='store_true')

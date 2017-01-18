@@ -35,10 +35,11 @@ def main(args):
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
-  parser.add_argument('--js-engine', metavar='PATH',
-                      help='the path to the JavaScript engine with which to run'
-                      ' the generated JavaScript. If not specified, JavaScript'
-                      ' output will be written to stdout.')
+  parser.add_argument(
+      '--js-engine', metavar='PATH',
+      help='the path to the JavaScript engine with which to run'
+      ' the generated JavaScript. If not specified, JavaScript'
+      ' output will be written to stdout.')
   parser.add_argument('--js-engine-flags', metavar='FLAGS',
                       help='additional flags for JavaScript engine.',
                       action='append', default=[])
@@ -47,8 +48,8 @@ def main(args):
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                      ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
@@ -66,15 +67,17 @@ def main(args):
         '--use-libc-allocator': options.use_libc_allocator
     })
 
-    gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY, '--temp-dir',
-                                   out_dir, error_cmdline=options.error_cmdline)
+    gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY,
+                                   '--temp-dir', out_dir,
+                                   error_cmdline=options.error_cmdline)
     gen_spec_js.AppendOptionalArgs({
         '--bindir': options.bindir,
         '--prefix': options.prefix_js,
     })
     gen_spec_js.verbose = options.print_cmd
 
-    json_file = utils.ChangeDir(utils.ChangeExt(options.file, '.json'), out_dir)
+    json_file = utils.ChangeDir(
+        utils.ChangeExt(options.file, '.json'), out_dir)
     js_file = utils.ChangeExt(json_file, '.js')
     wast2wasm.RunWithArgs(options.file, '-o', json_file)
 

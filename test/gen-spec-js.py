@@ -199,8 +199,8 @@ def CollectInvalidModuleCommands(commands):
       module_name = command.get('name')
       if module_name:
         module_map[module_name] = pair
-    elif command['type'] in ('assert_return', 'assert_return_nan', 'assert_trap'
-                            ):
+    elif command['type'] in ('assert_return', 'assert_return_nan',
+                             'assert_trap'):
       if IsValidJSCommand(command):
         continue
 
@@ -447,8 +447,8 @@ def main(args):
                       help='set the directory that temporary wasm/wast'
                       ' files are written.')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                      ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
