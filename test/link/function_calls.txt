@@ -38,8 +38,8 @@ FUNCTION:
  - func[2] sig=1
  - func[3] sig=3
 CODE:
- - func 0
- - func 1
+ - func 2
+ - func 3
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
@@ -49,11 +49,11 @@ CUSTOM:
    - RELOC_FUNC_INDEX_LEB   offset=0x72 (0x26)
 
 Code Disassembly:
-func 0
+func 2
  00004f: 20 00                      | get_local 0
  000051: 10 80 80 80 80 00          | call 0
  000057: 10 82 80 80 80 00          | call 0x2
-func 1
+func 3
  000060: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  000069: 10 81 80 80 80 00          | call 0x1
  00006f: 42 0a                      | i64.const 10

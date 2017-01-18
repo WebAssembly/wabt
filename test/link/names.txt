@@ -45,9 +45,9 @@ EXPORT:
  - func[1] foo
  - func[3] bar
 CODE:
- - func 0
  - func 1
  - func 2
+ - func 3
 CUSTOM:
  - name: "name"
  - func[0] $import_func
@@ -70,13 +70,13 @@ CUSTOM:
    - RELOC_FUNC_INDEX_LEB   offset=0x6f (0x1c)
 
 Code Disassembly:
-func 0
+func 1
  000056: 41 01                      | i32.const 0x1
  000058: 10 80 80 80 80 00          | call 0
-func 1
+func 2
  000061: 42 01                      | i64.const 1
  000063: 10 81 80 80 80 00          | call 0x1
-func 2
+func 3
  00006c: 41 02                      | i32.const 0x2
  00006e: 10 83 80 80 80 00          | call 0x3
 ;;; STDOUT ;;)

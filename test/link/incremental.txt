@@ -68,9 +68,9 @@ ELEM:
   - func[5]
   - func[5]
 CODE:
- - func 0
- - func 1
- - func 2
+ - func 3
+ - func 4
+ - func 5
 CUSTOM:
  - name: "reloc.ELEM"
   - section: ELEM
@@ -92,16 +92,16 @@ CUSTOM:
    - RELOC_FUNC_INDEX_LEB   offset=0xeb (0x3c)
 
 Code Disassembly:
-func 0
+func 3
  0000b2: 20 00                      | get_local 0
  0000b4: 10 80 80 80 80 00          | call 0
  0000ba: 10 83 80 80 80 00          | call 0x3
-func 1
+func 4
  0000c3: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  0000cc: 10 81 80 80 80 00          | call 0x1
  0000d2: 42 0a                      | i64.const 10
  0000d4: 10 84 80 80 80 00          | call 0x4
-func 2
+func 5
  0000dd: 43 00 00 80 3f             | f32.const 0x1p+0
  0000e2: 10 82 80 80 80 00          | call 0x2
  0000e8: 41 0a                      | i32.const 0xa
