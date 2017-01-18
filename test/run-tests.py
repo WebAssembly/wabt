@@ -37,155 +37,132 @@ import time
 import find_exe
 from utils import Error
 
-
 IS_WINDOWS = sys.platform == 'win32'
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(TEST_DIR)
 OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 ROUNDTRIP_PY = os.path.join(TEST_DIR, 'run-roundtrip.py')
-DEFAULT_TIMEOUT = 10 # seconds
+DEFAULT_TIMEOUT = 10  # seconds
 SLOW_TIMEOUT_MULTIPLIER = 2
-
 
 # default configurations for tests
 TOOLS = {
-  'wast2wasm': {
-    'EXE': '%(wast2wasm)s',
-    'VERBOSE-FLAGS': ['-v']
-  },
-  'wast-desugar': {
-    'EXE': '%(wast-desugar)s'
-  },
-  'run-wasmdump': {
-    'EXE': 'test/run-wasmdump.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-    ]),
-    'VERBOSE-FLAGS': ['-v']
-  },
-  'run-wasm-link': {
-    'EXE': 'test/run-wasm-link.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-    ]),
-    'VERBOSE-FLAGS': ['-v']
-  },
-  'run-roundtrip': {
-    'EXE': 'test/run-roundtrip.py',
-    'FLAGS': ' '.join([
-      '-v',
-      '--bindir=%(bindir)s',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-interp': {
-    'EXE': 'test/run-interp.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-      '--run-all-exports',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-interp-spec': {
-    'EXE': 'test/run-interp.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-      '--spec',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-gen-wasm': {
-    'EXE': 'test/run-gen-wasm.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-gen-wasm-interp': {
-    'EXE': 'test/run-gen-wasm-interp.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-      '--run-all-exports',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-opcodecnt': {
-    'EXE': 'test/run-opcodecnt.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-      '--no-error-cmdline',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
-  'run-gen-spec-js': {
-    'EXE': 'test/run-gen-spec-js.py',
-    'FLAGS': ' '.join([
-      '--bindir=%(bindir)s',
-      '--no-error-cmdline',
-      '-o', '%(out_dir)s',
-    ]),
-    'VERBOSE-FLAGS': [
-      ' '.join([
-        '--print-cmd',
-      ]),
-      '-v'
-    ]
-  },
+    'wast2wasm': {
+        'EXE': '%(wast2wasm)s',
+        'VERBOSE-FLAGS': ['-v']
+    },
+    'wast-desugar': {
+        'EXE': '%(wast-desugar)s'
+    },
+    'run-wasmdump': {
+        'EXE': 'test/run-wasmdump.py',
+        'FLAGS': ' '.join(['--bindir=%(bindir)s',]),
+        'VERBOSE-FLAGS': ['-v']
+    },
+    'run-wasm-link': {
+        'EXE': 'test/run-wasm-link.py',
+        'FLAGS': ' '.join(['--bindir=%(bindir)s',]),
+        'VERBOSE-FLAGS': ['-v']
+    },
+    'run-roundtrip': {
+        'EXE':
+            'test/run-roundtrip.py',
+        'FLAGS':
+            ' '.join([
+                '-v',
+                '--bindir=%(bindir)s',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+            ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
+    'run-interp': {
+        'EXE':
+            'test/run-interp.py',
+        'FLAGS':
+            ' '.join([
+                '--bindir=%(bindir)s',
+                '--run-all-exports',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+            ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
+    'run-interp-spec': {
+        'EXE':
+            'test/run-interp.py',
+        'FLAGS':
+            ' '.join([
+                '--bindir=%(bindir)s',
+                '--spec',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+            ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
+    'run-gen-wasm': {
+        'EXE':
+            'test/run-gen-wasm.py',
+        'FLAGS':
+            ' '.join([
+                '--bindir=%(bindir)s',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+            ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
+    'run-gen-wasm-interp': {
+        'EXE':
+            'test/run-gen-wasm-interp.py',
+        'FLAGS':
+            ' '.join([
+                '--bindir=%(bindir)s',
+                '--run-all-exports',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+            ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
+    'run-opcodecnt': {
+        'EXE': 'test/run-opcodecnt.py',
+        'FLAGS': ' '.join([
+            '--bindir=%(bindir)s',
+            '--no-error-cmdline',
+        ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
+    'run-gen-spec-js': {
+        'EXE':
+            'test/run-gen-spec-js.py',
+        'FLAGS':
+            ' '.join([
+                '--bindir=%(bindir)s',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+            ]),
+        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+    },
 }
 
 ROUNDTRIP_TOOLS = ('wast2wasm',)
 
 
 def Indent(s, spaces):
-  return ''.join(' '*spaces + l for l in s.splitlines(1))
+  return ''.join(' ' * spaces + l for l in s.splitlines(1))
 
 
 def DiffLines(expected, actual):
   expected_lines = [line for line in expected.splitlines() if line]
   actual_lines = [line for line in actual.splitlines() if line]
-  return list(difflib.unified_diff(expected_lines, actual_lines,
-                                   fromfile='expected', tofile='actual',
-                                   lineterm=''))
+  return list(
+      difflib.unified_diff(expected_lines, actual_lines, fromfile='expected',
+                           tofile='actual', lineterm=''))
 
 
 def AppendBeforeExt(file_path, suffix):
@@ -194,6 +171,7 @@ def AppendBeforeExt(file_path, suffix):
 
 
 class Cell(object):
+
   def __init__(self, value):
     self.value = [value]
 
@@ -207,6 +185,7 @@ class Cell(object):
 def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
   process = None
   is_timeout = Cell(False)
+
   def KillProcess(timeout=True):
     if process:
       try:
@@ -228,11 +207,9 @@ def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command,
-                               cwd=cwd,
-                               stdout=None if console_out else subprocess.PIPE,
-                               stderr=None if console_out else subprocess.PIPE,
-                               universal_newlines=True,
+    process = subprocess.Popen(command, cwd=cwd, stdout=None if console_out
+                               else subprocess.PIPE, stderr=None if console_out
+                               else subprocess.PIPE, universal_newlines=True,
                                **kwargs)
     timer = threading.Timer(timeout, KillProcess)
     try:
@@ -254,6 +231,7 @@ def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
 
 
 class TestInfo(object):
+
   def __init__(self):
     self.filename = ''
     self.header = []
@@ -372,8 +350,8 @@ class TestInfo(object):
               self.ParseDirective(key, value)
             elif state in ('stdout', 'stderr'):
               if not re.match(r'%s ;;\)$' % state.upper(), directive):
-                raise Error('Bad directive in %s block: %s' % (
-                    state, directive))
+                raise Error('Bad directive in %s block: %s' % (state,
+                                                               directive))
               state = 'none'
             else:
               raise Error('Unexpected directive: %s' % directive)
@@ -474,6 +452,7 @@ class TestInfo(object):
 
 
 class Status(object):
+
   def __init__(self, verbose):
     self.verbose = verbose
     self.start_time = None
@@ -558,7 +537,7 @@ def GetAllTestInfo(test_names, status):
   return infos
 
 
-def RunTest(info, options, variables, verbose_level = 0):
+def RunTest(info, options, variables, verbose_level=0):
   timeout = options.timeout
   if info.slow:
     timeout *= SLOW_TIMEOUT_MULTIPLIER
@@ -640,8 +619,7 @@ def YesNoPrompt(question, default='yes'):
 
   The "answer" return value is True for "yes" or False for "no".
   """
-  valid = {'yes': True, 'y': True, 'ye': True,
-           'no': False, 'n': False}
+  valid = {'yes': True, 'y': True, 'ye': True, 'no': False, 'n': False}
   if default is None:
     prompt = ' [y/n] '
   elif default == 'yes':
@@ -747,21 +725,19 @@ def main(args):
                       help='directory to search for all executables.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
-  parser.add_argument('-f', '--fail-fast',
-                      help='Exit on first failure. '
-                           'Extra options with \'--jobs 1\'',
-                      action='store_true')
+  parser.add_argument('-f', '--fail-fast', help='Exit on first failure. '
+                      'Extra options with \'--jobs 1\'', action='store_true')
   parser.add_argument('--stop-interactive',
                       help='Enter interactive mode on errors. '
-                           'Extra options with \'--jobs 1\'',
-                      action='store_true')
+                      'Extra options with \'--jobs 1\'', action='store_true')
   parser.add_argument('-l', '--list', help='list all tests.',
                       action='store_true')
   parser.add_argument('-r', '--rebase',
                       help='rebase a test to its current output.',
                       action='store_true')
-  parser.add_argument('-j', '--jobs', help='number of jobs to use to run tests',
-                      type=int, default=GetDefaultJobCount())
+  parser.add_argument('-j', '--jobs',
+                      help='number of jobs to use to run tests', type=int,
+                      default=GetDefaultJobCount())
   parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                       help='per test timeout in seconds')
   parser.add_argument('--no-roundtrip',
@@ -778,8 +754,8 @@ def main(args):
       parser.error('--stop-interactive only works with -j1')
 
   if options.patterns:
-    pattern_re = '|'.join(fnmatch.translate('*%s*' % p)
-                          for p in options.patterns)
+    pattern_re = '|'.join(
+        fnmatch.translate('*%s*' % p) for p in options.patterns)
   else:
     pattern_re = '.*'
 

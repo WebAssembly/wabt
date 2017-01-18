@@ -38,8 +38,8 @@ def main(args):
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
@@ -49,17 +49,17 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  gen_wasm = utils.Executable(
-      sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
+  gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
+                              error_cmdline=options.error_cmdline)
 
-  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.bindir),
+  wasm_interp = utils.Executable(
+      find_exe.GetWasmInterpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_interp.AppendOptionalArgs({
-    '--run-all-exports': options.run_all_exports,
-    '--spec': options.spec,
-    '--trace': options.verbose,
-    '--use-libc-allocator': options.use_libc_allocator
+      '--run-all-exports': options.run_all_exports,
+      '--spec': options.spec,
+      '--trace': options.verbose,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   gen_wasm.verbose = options.print_cmd
@@ -79,4 +79,3 @@ if __name__ == '__main__':
   except Error as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)
-

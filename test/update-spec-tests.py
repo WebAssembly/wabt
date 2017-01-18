@@ -52,8 +52,9 @@ def main(args):
     os.remove(test_filename)
 
   for added_test_name in testsuite_tests - spec_tests:
-    wast_filename = os.path.join(os.path.relpath(TESTSUITE_DIR, REPO_ROOT_DIR),
-                                 added_test_name + '.wast')
+    wast_filename = os.path.join(
+        os.path.relpath(TESTSUITE_DIR, REPO_ROOT_DIR),
+        added_test_name + '.wast')
     test_filename = os.path.join(SPEC_TEST_DIR, added_test_name + '.txt')
     if options.verbose:
       print('Adding %s' % test_filename)
@@ -64,6 +65,7 @@ def main(args):
       f.write(';;; STDIN_FILE: %s\n' % wast_filename)
 
   return 0
+
 
 if __name__ == '__main__':
   sys.exit(main(sys.argv[1:]))

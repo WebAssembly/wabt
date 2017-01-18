@@ -37,10 +37,11 @@ def main(args):
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd',
+                      help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
@@ -52,23 +53,23 @@ def main(args):
       find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
-    '-v': options.verbose,
-    '--spec': options.spec,
-    '--use-libc-allocator': options.use_libc_allocator
+      '-v': options.verbose,
+      '--spec': options.spec,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wasmdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
-  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.bindir),
+  wasm_interp = utils.Executable(
+      find_exe.GetWasmInterpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_interp.AppendOptionalArgs({
-    '--run-all-exports': options.run_all_exports,
-    '--spec': options.spec,
-    '--trace': options.verbose,
-    '--use-libc-allocator': options.use_libc_allocator
+      '--run-all-exports': options.run_all_exports,
+      '--spec': options.spec,
+      '--trace': options.verbose,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wast2wasm.verbose = options.print_cmd
@@ -96,4 +97,3 @@ if __name__ == '__main__':
   except Error as e:
     sys.stderr.write(str(e) + '\n')
     sys.exit(1)
-
