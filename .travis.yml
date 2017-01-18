@@ -8,6 +8,7 @@ addons:
       - bison
       - gcc-4.8-multilib
       - g++-4.8-multilib
+      - linux-libc-dev:i386
 script:
   - scripts/travis-build.sh
   - scripts/travis-test.sh
