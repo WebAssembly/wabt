@@ -24,13 +24,6 @@ environment:
     EXTRA_CONFIG_FLAGS:
     PARALLEL_FLAG: "/m:"
 
-install:
-  - pip install flake8
-
-before_build:
-  # Check the style of a subset of Python code until the other code is updated.
-  - flake8 --ignore=E111,E114 ./scripts/
-
 build_script:
   - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% %EXTRA_CONFIG_FLAGS% -G "%GENERATOR%"
   - cmake --build . --config %CONFIG% -- %PARALLEL_FLAG%%DEGREE_OF_PARALLELISM%
