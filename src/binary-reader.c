@@ -106,10 +106,6 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
 
-#define V(NAME, name, code) [code] = #NAME,
-static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
-#undef V
-
 typedef struct Context {
   WasmAllocator* allocator;
   const uint8_t* data;
@@ -2026,7 +2022,8 @@ static void read_sections(Context* ctx) {
     if (ctx->last_known_section_code != WASM_NUM_BINARY_SECTIONS &&
         section_code != WASM_BINARY_SECTION_CUSTOM &&
         section_code <= ctx->last_known_section_code) {
-      RAISE_ERROR("section %s out of order", s_section_name[section_code]);
+      RAISE_ERROR("section %s out of order",
+                  wasm_get_section_name(section_code));
     }
 
     CALLBACK_CTX(begin_section, section_code, section_size);
