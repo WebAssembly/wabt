@@ -15,13 +15,7 @@
 # limitations under the License.
 #
 
-if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
-  sudo apt-get update -qq
-  sudo apt-get install -qq re2c bison gcc-4.8-multilib g++-4.8-multilib
-elif [[ ${TRAVIS_OS_NAME} = "osx" ]]; then
+if [[ ${TRAVIS_OS_NAME} = "osx" ]]; then
   brew update
   brew install re2c bison
-else
-  echo "unknown TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"
-  exit 1
 fi
