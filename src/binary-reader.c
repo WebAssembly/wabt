@@ -106,10 +106,6 @@ WASM_DEFINE_VECTOR(uint32, Uint32);
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
 
-#define V(NAME, name, code) [code] = #NAME,
-static const char* s_section_name[] = {WASM_FOREACH_BINARY_SECTION(V)};
-#undef V
-
 typedef struct Context {
   WasmAllocator* allocator;
   const uint8_t* data;
@@ -1817,11 +1813,12 @@ static void read_function_section(Context* ctx, uint32_t section_size) {
   in_u32_leb128(ctx, &ctx->num_function_signatures, "function signature count");
   CALLBACK(on_function_signatures_count, ctx->num_function_signatures);
   for (i = 0; i < ctx->num_function_signatures; ++i) {
+    uint32_t func_index = ctx->num_func_imports + i;
     uint32_t sig_index;
     in_u32_leb128(ctx, &sig_index, "function signature index");
     RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                        "invalid function signature index: %d", sig_index);
-    CALLBACK(on_function_signature, i, sig_index);
+    CALLBACK(on_function_signature, func_index, sig_index);
   }
   CALLBACK_CTX0(end_function_signatures_section);
 }
@@ -1834,10 +1831,11 @@ static void read_table_section(Context* ctx, uint32_t section_size) {
                      ctx->num_tables);
   CALLBACK(on_table_count, ctx->num_tables);
   for (i = 0; i < ctx->num_tables; ++i) {
+    uint32_t table_index = ctx->num_table_imports + i;
     WasmType elem_type;
     WasmLimits elem_limits;
     read_table(ctx, &elem_type, &elem_limits);
-    CALLBACK(on_table, i, elem_type, &elem_limits);
+    CALLBACK(on_table, table_index, elem_type, &elem_limits);
   }
   CALLBACK_CTX0(end_table_section);
 }
@@ -1849,9 +1847,10 @@ static void read_memory_section(Context* ctx, uint32_t section_size) {
   RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
   CALLBACK(on_memory_count, ctx->num_memories);
   for (i = 0; i < ctx->num_memories; ++i) {
+    uint32_t memory_index = ctx->num_memory_imports + i;
     WasmLimits page_limits;
     read_memory(ctx, &page_limits);
-    CALLBACK(on_memory, i, &page_limits);
+    CALLBACK(on_memory, memory_index, &page_limits);
   }
   CALLBACK_CTX0(end_memory_section);
 }
@@ -1862,14 +1861,15 @@ static void read_global_section(Context* ctx, uint32_t section_size) {
   in_u32_leb128(ctx, &ctx->num_globals, "global count");
   CALLBACK(on_global_count, ctx->num_globals);
   for (i = 0; i < ctx->num_globals; ++i) {
+    uint32_t global_index = ctx->num_global_imports + i;
     WasmType global_type;
     WasmBool mutable_;
     read_global_header(ctx, &global_type, &mutable_);
-    CALLBACK(begin_global, i, global_type, mutable_);
-    CALLBACK(begin_global_init_expr, i);
-    read_init_expr(ctx, i);
-    CALLBACK(end_global_init_expr, i);
-    CALLBACK(end_global, i);
+    CALLBACK(begin_global, global_index, global_type, mutable_);
+    CALLBACK(begin_global_init_expr, global_index);
+    read_init_expr(ctx, global_index);
+    CALLBACK(end_global_init_expr, global_index);
+    CALLBACK(end_global, global_index);
   }
   CALLBACK_CTX0(end_global_section);
 }
@@ -1964,9 +1964,10 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
                      "function signature count != function body count");
   CALLBACK(on_function_bodies_count, ctx->num_function_bodies);
   for (i = 0; i < ctx->num_function_bodies; ++i) {
+    uint32_t func_index = ctx->num_func_imports + i;
     uint32_t func_offset = ctx->offset;
     ctx->offset = func_offset;
-    CALLBACK(begin_function_body, i);
+    CALLBACK(begin_function_body, func_index);
     uint32_t body_size;
     in_u32_leb128(ctx, &body_size, "function body size");
     uint32_t body_start_offset = ctx->offset;
@@ -1988,7 +1989,7 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
 
     read_function_body(ctx, end_offset);
 
-    CALLBACK(end_function_body, i);
+    CALLBACK(end_function_body, func_index);
   }
   CALLBACK_CTX0(end_function_bodies_section);
 }
@@ -2034,7 +2035,8 @@ static void read_sections(Context* ctx) {
     if (ctx->last_known_section_code != WASM_NUM_BINARY_SECTIONS &&
         section_code != WASM_BINARY_SECTION_CUSTOM &&
         section_code <= ctx->last_known_section_code) {
-      RAISE_ERROR("section %s out of order", s_section_name[section_code]);
+      RAISE_ERROR("section %s out of order",
+                  wasm_get_section_name(section_code));
     }
 
     CALLBACK_CTX(begin_section, section_code, section_size);

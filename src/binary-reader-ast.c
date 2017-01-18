@@ -375,7 +375,8 @@ static WasmResult begin_global(uint32_t index,
                                WasmBool mutable_,
                                void* user_data) {
   Context* ctx = user_data;
-  assert(index < ctx->module->globals.capacity);
+  assert(index - ctx->module->num_global_imports <
+         ctx->module->globals.capacity);
 
   WasmModuleField* field =
       wasm_append_module_field(ctx->allocator, ctx->module);
@@ -394,10 +395,8 @@ static WasmResult begin_global(uint32_t index,
 
 static WasmResult begin_global_init_expr(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  assert(ctx->module->num_global_imports + index ==
-         ctx->module->globals.size - 1);
-  WasmGlobal* global =
-      ctx->module->globals.data[index + ctx->module->num_global_imports];
+  assert(index == ctx->module->globals.size - 1);
+  WasmGlobal* global = ctx->module->globals.data[index];
   ctx->current_init_expr = &global->init_expr;
   return WASM_OK;
 }
@@ -479,8 +478,7 @@ static WasmResult on_function_bodies_count(uint32_t count, void* user_data) {
 static WasmResult begin_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   assert(index < ctx->module->funcs.size);
-  ctx->current_func =
-      ctx->module->funcs.data[index + ctx->module->num_func_imports];
+  ctx->current_func = ctx->module->funcs.data[index];
   push_label(ctx, LABEL_TYPE_FUNC, &ctx->current_func->first_expr);
   return WASM_OK;
 }

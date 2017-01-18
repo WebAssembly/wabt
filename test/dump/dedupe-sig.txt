@@ -52,6 +52,6 @@
 dedupe-sig.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+func 1
  000026: 42 00                      | i64.const 0
 ;;; STDOUT ;;)
