@@ -1653,8 +1653,6 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     CALLBACK_SECTION(begin_names_section, section_size);
     uint32_t i, num_functions;
     in_u32_leb128(ctx, &num_functions, "function name count");
-    RAISE_ERROR_UNLESS(num_functions <= num_total_funcs(ctx),
-                       "function name count > function signature count");
     CALLBACK(on_function_names_count, num_functions);
     for (i = 0; i < num_functions; ++i) {
       WasmStringSlice function_name;
