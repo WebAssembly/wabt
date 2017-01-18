@@ -48,8 +48,8 @@ def FilesAreEqual(filename1, filename2, verbose=False):
       hexdump1 = utils.Hexdump(data1)
       hexdump2 = utils.Hexdump(data2)
       diff_lines = []
-      for line in (difflib.unified_diff(
-          hexdump1, hexdump2, fromfile=filename1, tofile=filename2)):
+      for line in (difflib.unified_diff(hexdump1, hexdump2, fromfile=filename1,
+                                        tofile=filename2)):
         diff_lines.append(line)
       msg += ''.join(diff_lines)
     msg += '\n'
@@ -77,8 +77,7 @@ def TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename, verbose):
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
-def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename,
-                         verbose):
+def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
@@ -107,10 +106,11 @@ def main(args):
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd',
+                      help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--no-check', action='store_true')
@@ -123,18 +123,18 @@ def main(args):
       find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
-    '--debug-names': options.debug_names,
-    '--no-check': options.no_check,
-    '--use-libc-allocator': options.use_libc_allocator
+      '--debug-names': options.debug_names,
+      '--no-check': options.no_check,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wasm2wast = utils.Executable(
       find_exe.GetWasm2WastExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
-    '--no-debug-names': not options.debug_names,
-    '--generate-names': options.generate_names,
-    '--use-libc-allocator': options.use_libc_allocator
+      '--no-debug-names': not options.debug_names,
+      '--generate-names': options.generate_names,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wast2wasm.verbose = options.print_cmd
@@ -150,8 +150,8 @@ def main(args):
       result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
                                          filename, options.verbose)
     else:
-      result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir,
-                                  filename, options.verbose)
+      result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename,
+                                  options.verbose)
     if result == ERROR:
       sys.stderr.write(msg)
     return result

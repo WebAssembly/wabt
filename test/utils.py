@@ -28,13 +28,15 @@ import tempfile
 # Get signal names from numbers in Python
 # http://stackoverflow.com/a/2549950
 SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
-                       if v.startswith('SIG') and not v.startswith('SIG_'))
+                if v.startswith('SIG') and not v.startswith('SIG_'))
+
 
 class Error(Exception):
   pass
 
 
 class Executable(object):
+
   def __init__(self, exe, *before_args, **kwargs):
     self.exe = exe
     self.before_args = list(before_args)
@@ -61,8 +63,7 @@ class Executable(object):
     error = None
     try:
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE,
-                                 **kwargs)
+                                 stderr=subprocess.PIPE, **kwargs)
       stdout, stderr = process.communicate()
       stdout = stdout.decode('ascii')
       stderr = stderr.decode('ascii')
@@ -73,8 +74,8 @@ class Executable(object):
       if process.returncode < 0:
         # Terminated by signal
         signame = SIGNAMES.get(-process.returncode, '<unknown>')
-        error = Error('Signal raised running "%s": %s\n%s' % (
-                      err_cmd_str, signame, stderr))
+        error = Error('Signal raised running "%s": %s\n%s' % (err_cmd_str,
+                                                              signame, stderr))
       elif process.returncode > 0:
         error = Error('Error running "%s":\n%s' % (err_cmd_str, stderr))
     except OSError as e:
@@ -142,7 +143,7 @@ def Hexdump(data):
   lines = []
   while p < end:
     line_start = p
-    line_end = p +  DUMP_OCTETS_PER_LINE
+    line_end = p + DUMP_OCTETS_PER_LINE
     line = '%07x: ' % p
     while p < line_end:
       for i in xrange(DUMP_OCTETS_PER_GROUP):

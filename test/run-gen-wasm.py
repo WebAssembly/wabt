@@ -40,8 +40,8 @@ def main(args):
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd', action='store_true',
                       help='print the commands that are run.')
@@ -51,28 +51,27 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  gen_wasm = utils.Executable(
-      sys.executable, GEN_WASM_PY, error_cmdline=options.error_cmdline)
+  gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
+                              error_cmdline=options.error_cmdline)
 
   wasm2wast = utils.Executable(
       find_exe.GetWasm2WastExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
-    '--no-debug-names': options.no_debug_names,
-    '--generate-names': options.generate_names,
-    '--use-libc-allocator': options.use_libc_allocator
+      '--no-debug-names': options.no_debug_names,
+      '--generate-names': options.generate_names,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   gen_wasm.verbose = options.print_cmd
   wasm2wast.verbose = options.print_cmd
-  wasm2wast.AppendOptionalArgs({
-    '--verbose': options.verbose,
-  })
+  wasm2wast.AppendOptionalArgs({'--verbose': options.verbose,})
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     gen_wasm.RunWithArgs(options.file, '-o', out_file)
     wasm2wast.RunWithArgs(out_file)
+
 
 if __name__ == '__main__':
   try:

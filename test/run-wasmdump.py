@@ -34,10 +34,11 @@ def main(args):
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when' +
-                          ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when'
+                      + ' an error occurs', dest='error_cmdline',
                       action='store_false')
-  parser.add_argument('-p', '--print-cmd', help='print the commands that are run.',
+  parser.add_argument('-p', '--print-cmd',
+                      help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--headers', action='store_true')
   parser.add_argument('--no-check', action='store_true')
@@ -54,21 +55,21 @@ def main(args):
       find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
-    '--debug-names': options.debug_names,
-    '--no-check': options.no_check,
-    '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
-    '--spec': options.spec,
-    '-v': options.verbose,
-    '-c': options.compile_only,
-    '--use-libc-allocator': options.use_libc_allocator
+      '--debug-names': options.debug_names,
+      '--no-check': options.no_check,
+      '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
+      '--spec': options.spec,
+      '-v': options.verbose,
+      '-c': options.compile_only,
+      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wasmdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasmdump.AppendOptionalArgs({
-    '-h': options.headers,
-    '-v': options.dump_verbose,
+      '-h': options.headers,
+      '-v': options.dump_verbose,
   })
 
   wast2wasm.verbose = options.print_cmd
