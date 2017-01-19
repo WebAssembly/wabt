@@ -134,6 +134,7 @@ void wasm_destroy_binary(WasmAllocator* allocator,
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, binary->sections, section);
   wasm_destroy_function_import_vector(allocator, &binary->function_imports);
   wasm_destroy_global_import_vector(allocator, &binary->global_imports);
+  wasm_destroy_string_slice_vector(allocator, &binary->debug_names);
   wasm_destroy_export_vector(allocator, &binary->exports);
   wasm_free(allocator, binary->data);
 }
