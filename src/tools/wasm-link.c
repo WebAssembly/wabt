@@ -220,52 +220,6 @@ static void write_section_payload(Context* ctx, Section* sec) {
   wasm_write_fixed_u32_leb128_at(STREAM, fixup_offset, \
                                  (STREAM)->offset - start, "fixup size");
 
-static void write_combined_custom_section(Context* ctx,
-                                          const SectionPtrVector* sections,
-                                          const WasmStringSlice* name) {
-  /* Write this section, along with all the following sections with the
-   * same name. */
-  size_t i;
-  size_t total_size = 0;
-  size_t total_count = 0;
-
-  /* Reloc sections are handled seperatedly. */
-  if (wasm_string_slice_startswith(name, "reloc"))
-    return;
-
-  if (!wasm_string_slice_eq_cstr(name, "name")) {
-    WASM_FATAL("Don't know how to link custom section: " PRIstringslice "\n",
-               WASM_PRINTF_STRING_SLICE_ARG(*name));
-  }
-
-  /* First pass to calculate total size and count */
-  for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
-    if (!wasm_string_slices_are_equal(name, &sec->data_custom.name))
-      continue;
-    total_size += sec->payload_size;
-    total_count += sec->count;
-  }
-
-  WasmStream* stream = &ctx->stream;
-  wasm_write_u8(stream, WASM_BINARY_SECTION_CUSTOM, "section code");
-  WRITE_UNKNOWN_SIZE(stream);
-  wasm_write_str(stream, name->start, name->length, WASM_PRINT_CHARS,
-                 "custom section name");
-  wasm_write_u32_leb128(stream, total_count, "element count");
-
-  for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
-    if (!wasm_string_slices_are_equal(name, &sec->data_custom.name))
-      continue;
-    apply_relocations(sec);
-    write_section_payload(ctx, sec);
-    sec->data_custom.linked = WASM_TRUE;
-  }
-
-  FIXUP_SIZE(stream);
-}
-
 static void write_combined_table_section(Context* ctx,
                                          const SectionPtrVector* sections) {
   /* Total section size includes the element count leb128 which is
@@ -341,25 +295,27 @@ static void write_combined_memory_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
+static void write_c_str(WasmStream* stream, const char* str, const char* desc) {
+  wasm_write_str(stream, str, strlen(str), WASM_PRINT_CHARS, desc);
+}
+
+static void write_slice(WasmStream* stream, WasmStringSlice str, const char* desc) {
+  wasm_write_str(stream, str.start, str.length, WASM_PRINT_CHARS, desc);
+}
+
 static void write_function_import(Context* ctx,
                                   FunctionImport* import,
                                   uint32_t offset) {
-  wasm_write_str(&ctx->stream, WASM_LINK_MODULE_NAME,
-                 strlen(WASM_LINK_MODULE_NAME), WASM_PRINT_CHARS,
-                 "import module name");
-  wasm_write_str(&ctx->stream, import->name.start, import->name.length,
-                 WASM_PRINT_CHARS, "import field name");
+  write_c_str(&ctx->stream, WASM_LINK_MODULE_NAME, "import module name");
+  write_slice(&ctx->stream, import->name, "import field name");
   wasm_write_u8(&ctx->stream, WASM_EXTERNAL_KIND_FUNC, "import kind");
   wasm_write_u32_leb128(&ctx->stream, import->sig_index + offset,
                         "import signature index");
 }
 
 static void write_global_import(Context* ctx, GlobalImport* import) {
-  wasm_write_str(&ctx->stream, WASM_LINK_MODULE_NAME,
-                 strlen(WASM_LINK_MODULE_NAME), WASM_PRINT_CHARS,
-                 "import module name");
-  wasm_write_str(&ctx->stream, import->name.start, import->name.length,
-                 WASM_PRINT_CHARS, "import field name");
+  write_c_str(&ctx->stream, WASM_LINK_MODULE_NAME, "import module name");
+  write_slice(&ctx->stream, import->name, "import field name");
   wasm_write_u8(&ctx->stream, WASM_EXTERNAL_KIND_GLOBAL, "import kind");
   wasm_write_type(&ctx->stream, import->type);
   wasm_write_u8(&ctx->stream, import->mutable, "global mutability");
@@ -460,6 +416,44 @@ static void write_combined_data_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
+static void write_names_section(Context* ctx) {
+  uint32_t total_count = 0;
+  size_t i, j;
+  for (i = 0; i < ctx->inputs.size; i++) {
+    InputBinary* binary = &ctx->inputs.data[i];
+    for (j = 0; j < binary->debug_names.size; j++) {
+      if (j < binary->function_imports.size) {
+        if (!binary->function_imports.data[j].active)
+          continue;
+      }
+      total_count++;
+    }
+  }
+
+  if (!total_count)
+    return;
+
+  WasmStream* stream = &ctx->stream;
+  wasm_write_u8(stream, WASM_BINARY_SECTION_CUSTOM, "section code");
+  WRITE_UNKNOWN_SIZE(stream);
+  write_c_str(stream, "name", "custom section name");
+  wasm_write_u32_leb128(stream, total_count, "element count");
+
+  for (i = 0; i < ctx->inputs.size; i++) {
+    InputBinary* binary = &ctx->inputs.data[i];
+    for (j = 0; j < binary->debug_names.size; j++) {
+      if (j < binary->function_imports.size) {
+        if (!binary->function_imports.data[j].active)
+          continue;
+      }
+      write_slice(stream, binary->debug_names.data[j], "function name");
+      wasm_write_u32_leb128(stream, 0, "local name count");
+    }
+  }
+
+  FIXUP_SIZE(stream);
+}
+
 static void write_combined_reloc_section(Context* ctx,
                                          WasmBinarySection section_code,
                                          SectionPtrVector* sections) {
@@ -482,8 +476,7 @@ static void write_combined_reloc_section(Context* ctx,
   WasmStream* stream = &ctx->stream;
   wasm_write_u8(stream, WASM_BINARY_SECTION_CUSTOM, "section code");
   WRITE_UNKNOWN_SIZE(stream);
-  wasm_write_str(stream, section_name, strlen(section_name), WASM_PRINT_CHARS,
-                 "reloc section name");
+  write_c_str(stream, section_name, "reloc section name");
   wasm_write_u32_leb128(&ctx->stream, section_code, "reloc section");
   wasm_write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 
@@ -696,15 +689,7 @@ static void write_binary(Context* ctx) {
     write_combined_section(ctx, i, &sections[i]);
   }
 
-  /* Write custom sections */
-  SectionPtrVector* custom_sections = &sections[WASM_BINARY_SECTION_CUSTOM];
-  for (i = 0; i < custom_sections->size; i++) {
-    Section* section = custom_sections->data[i];
-    if (section->data_custom.linked)
-      continue;
-    write_combined_custom_section(ctx, custom_sections,
-                                  &section->data_custom.name);
-  }
+  write_names_section(ctx);
 
   /* Generate a new set of reloction sections */
   for (i = FIRST_KNOWN_SECTION; i < WASM_NUM_BINARY_SECTIONS; i++) {

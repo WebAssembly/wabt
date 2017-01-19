@@ -260,6 +260,14 @@ static WasmResult on_export(uint32_t index,
   return WASM_OK;
 }
 
+static WasmResult on_function_name(uint32_t index,
+                                   WasmStringSlice name,
+                                   void* user_data) {
+  Context* ctx = user_data;
+  wasm_append_string_slice_value(ctx->allocator, &ctx->binary->debug_names, &name);
+  return WASM_OK;
+}
+
 static WasmBinaryReader s_binary_reader = {
     .begin_section = begin_section,
     .begin_custom_section = begin_custom_section,
@@ -283,6 +291,8 @@ static WasmBinaryReader s_binary_reader = {
 
     .on_elem_segment_function_index_count =
         on_elem_segment_function_index_count,
+
+    .on_function_name = on_function_name,
 };
 
 WasmResult wasm_read_binary_linker(struct WasmAllocator* allocator,
@@ -298,6 +308,7 @@ WasmResult wasm_read_binary_linker(struct WasmAllocator* allocator,
   reader.user_data = &context;
 
   WasmReadBinaryOptions read_options = WASM_READ_BINARY_OPTIONS_DEFAULT;
+  read_options.read_debug_names = WASM_TRUE;
   return wasm_read_binary(allocator, input_info->data, input_info->size,
                           &reader, 1, &read_options);
 }

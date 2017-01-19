@@ -125,6 +125,8 @@ typedef struct InputBinary {
   uint32_t memory_page_offset;
 
   uint32_t table_elem_count;
+
+  WasmStringSliceVector debug_names;
 } InputBinary;
 WASM_DEFINE_VECTOR(binary, InputBinary);
 

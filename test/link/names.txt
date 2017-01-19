@@ -1,7 +1,8 @@
 ;;; TOOL: run-wasm-link
 ;;; FLAGS: --debug-names -r
 (module
-  (import "__extern" "baz" (func $import_func))
+  (import "__extern" "baz" (func $import_func1))
+  (import "__extern" "missing" (func $import_func2))
   (export "foo" (func $name1))
   (func $name1 (param $param1 i32)
      i32.const 1
@@ -21,13 +22,13 @@ linked.wasm:	file format wasm 0x00000d
 
 Sections:
      TYPE start=0x0000000a end=0x0000001a (size=0x00000010) count: 4
-   IMPORT start=0x00000020 end=0x00000030 (size=0x00000010) count: 1
- FUNCTION start=0x00000036 end=0x0000003a (size=0x00000004) count: 3
-   EXPORT start=0x0000003c end=0x00000051 (size=0x00000015) count: 2
-     CODE start=0x00000053 end=0x00000075 (size=0x00000022) count: 3
-   CUSTOM start=0x0000007b end=0x000000bf (size=0x00000044) "name"
-   CUSTOM start=0x000000c5 end=0x000000d8 (size=0x00000013) "reloc.EXPORT"
-   CUSTOM start=0x000000de end=0x000000f1 (size=0x00000013) "reloc.CODE"
+   IMPORT start=0x00000020 end=0x00000034 (size=0x00000014) count: 1
+ FUNCTION start=0x0000003a end=0x0000003e (size=0x00000004) count: 3
+   EXPORT start=0x00000040 end=0x00000055 (size=0x00000015) count: 2
+     CODE start=0x00000057 end=0x00000079 (size=0x00000022) count: 3
+   CUSTOM start=0x0000007f end=0x000000ac (size=0x0000002d) "name"
+   CUSTOM start=0x000000b2 end=0x000000c5 (size=0x00000013) "reloc.EXPORT"
+   CUSTOM start=0x000000cb end=0x000000de (size=0x00000013) "reloc.CODE"
 
 Section Details:
 TYPE:
@@ -36,47 +37,44 @@ TYPE:
  - [2] (i64) -> nil
  - [3] (i32) -> nil
 IMPORT:
- - func[0] sig=0 <- __extern.baz
+ - func[0] sig=0 <- __extern.missing
 FUNCTION:
  - func[1] sig=1
  - func[2] sig=2
  - func[3] sig=3
 EXPORT:
  - func[1] foo
- - func[3] bar
+ - func[3] baz
 CODE:
  - func 1
  - func 2
  - func 3
 CUSTOM:
  - name: "name"
- - func[0] $import_func
+ - func[0] $import_func2
  - func[1] $name1
-  - local[0] $param1
  - func[2] $name2
-  - local[0] $param2
  - func[3] $name3
-  - local[0] $param3
 CUSTOM:
  - name: "reloc.EXPORT"
   - section: EXPORT
-   - RELOC_FUNC_INDEX_LEB   offset=0x42 (0x6)
-   - RELOC_FUNC_INDEX_LEB   offset=0x4c (0x10)
+   - RELOC_FUNC_INDEX_LEB   offset=0x46 (0x6)
+   - RELOC_FUNC_INDEX_LEB   offset=0x50 (0x10)
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
-   - RELOC_FUNC_INDEX_LEB   offset=0x59 (0x6)
-   - RELOC_FUNC_INDEX_LEB   offset=0x64 (0x11)
-   - RELOC_FUNC_INDEX_LEB   offset=0x6f (0x1c)
+   - RELOC_FUNC_INDEX_LEB   offset=0x5d (0x6)
+   - RELOC_FUNC_INDEX_LEB   offset=0x68 (0x11)
+   - RELOC_FUNC_INDEX_LEB   offset=0x73 (0x1c)
 
 Code Disassembly:
 func 1
- 000056: 41 01                      | i32.const 0x1
- 000058: 10 80 80 80 80 00          | call 0
+ 00005a: 41 01                      | i32.const 0x1
+ 00005c: 10 83 80 80 80 00          | call 0x3
 func 2
- 000061: 42 01                      | i64.const 1
- 000063: 10 81 80 80 80 00          | call 0x1
+ 000065: 42 01                      | i64.const 1
+ 000067: 10 81 80 80 80 00          | call 0x1
 func 3
- 00006c: 41 02                      | i32.const 0x2
- 00006e: 10 83 80 80 80 00          | call 0x3
+ 000070: 41 02                      | i32.const 0x2
+ 000072: 10 83 80 80 80 00          | call 0x3
 ;;; STDOUT ;;)
