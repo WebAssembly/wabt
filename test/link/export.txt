@@ -39,13 +39,13 @@ CODE:
 CUSTOM:
  - name: "reloc.EXPORT"
   - section: EXPORT
-   - RELOC_FUNC_INDEX_LEB   offset=0x24 (0x6)
-   - RELOC_FUNC_INDEX_LEB   offset=0x2e (0x10)
+   - R_FUNC_INDEX_LEB   offset=0x24 (0x6)
+   - R_FUNC_INDEX_LEB   offset=0x2e (0x10)
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
-   - RELOC_FUNC_INDEX_LEB   offset=0x3b (0x6)
-   - RELOC_FUNC_INDEX_LEB   offset=0x46 (0x11)
+   - R_FUNC_INDEX_LEB   offset=0x3b (0x6)
+   - R_FUNC_INDEX_LEB   offset=0x46 (0x11)
 
 Code Disassembly:
 func 0

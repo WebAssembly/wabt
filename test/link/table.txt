@@ -46,11 +46,11 @@ CODE:
 CUSTOM:
  - name: "reloc.ELEM"
   - section: ELEM
-   - RELOC_FUNC_INDEX_LEB   offset=0x38 (0x6)
-   - RELOC_FUNC_INDEX_LEB   offset=0x3d (0xb)
-   - RELOC_FUNC_INDEX_LEB   offset=0x42 (0x10)
-   - RELOC_FUNC_INDEX_LEB   offset=0x47 (0x15)
-   - RELOC_FUNC_INDEX_LEB   offset=0x4c (0x1a)
+   - R_FUNC_INDEX_LEB   offset=0x38 (0x6)
+   - R_FUNC_INDEX_LEB   offset=0x3d (0xb)
+   - R_FUNC_INDEX_LEB   offset=0x42 (0x10)
+   - R_FUNC_INDEX_LEB   offset=0x47 (0x15)
+   - R_FUNC_INDEX_LEB   offset=0x4c (0x1a)
 
 Code Disassembly:
 func 0

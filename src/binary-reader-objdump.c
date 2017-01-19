@@ -583,7 +583,7 @@ WasmResult on_reloc(WasmRelocType type,
                     void* user_data) {
   Context* ctx = user_data;
   uint32_t total_offset = ctx->section_starts[ctx->reloc_section] + offset;
-  print_details(user_data, "   - %-22s offset=%#x (%#x)\n",
+  print_details(user_data, "   - %-18s offset=%#x (%#x)\n",
                 wasm_get_reloc_type_name(type), total_offset, offset);
   return WASM_OK;
 }

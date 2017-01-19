@@ -170,6 +170,11 @@ static void apply_relocation(WasmSection* section, WasmReloc* r) {
         }
       }
       break;
+    case WASM_RELOC_TABLE_INDEX_SLEB:
+      printf("%s: table index reloc: %d offset=%d\n", binary->filename,
+             cur_value, binary->table_index_offset);
+      offset = binary->table_index_offset;
+      break;
     case WASM_RELOC_GLOBAL_INDEX_LEB:
       if (cur_value >= binary->global_imports.size) {
         offset = binary->global_index_offset;
@@ -178,7 +183,8 @@ static void apply_relocation(WasmSection* section, WasmReloc* r) {
       }
       break;
     default:
-      WASM_FATAL("unhandled relocation type: %d\n", r->type);
+      WASM_FATAL("unhandled relocation type: %s\n",
+                 wasm_get_reloc_type_name(r->type));
       break;
   }
 
@@ -633,6 +639,7 @@ static void calculate_reloc_offsets(Context* ctx) {
   uint32_t type_count = 0;
   uint32_t global_count = 0;
   uint32_t function_count = 0;
+  uint32_t table_elem_count = 0;
   uint32_t total_function_imports = 0;
   uint32_t total_global_imports = 0;
   for (i = 0; i < ctx->inputs.size; i++) {
@@ -650,6 +657,8 @@ static void calculate_reloc_offsets(Context* ctx) {
 
   for (i = 0; i < ctx->inputs.size; i++) {
     WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
+    binary->table_index_offset = table_elem_count;
+    table_elem_count += binary->table_elem_count;
     for (j = 0; j < binary->sections.size; j++) {
       WasmSection* sec = &binary->sections.data[j];
       switch (sec->section_code) {

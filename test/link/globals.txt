@@ -51,13 +51,13 @@ CODE:
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
-   - RELOC_GLOBAL_INDEX_LEB offset=0x5c (0x4)
-   - RELOC_GLOBAL_INDEX_LEB offset=0x62 (0xa)
-   - RELOC_GLOBAL_INDEX_LEB offset=0x69 (0x11)
-   - RELOC_FUNC_INDEX_LEB   offset=0x70 (0x18)
-   - RELOC_GLOBAL_INDEX_LEB offset=0x79 (0x21)
-   - RELOC_GLOBAL_INDEX_LEB offset=0x7f (0x27)
-   - RELOC_FUNC_INDEX_LEB   offset=0x85 (0x2d)
+   - R_GLOBAL_INDEX_LEB offset=0x5c (0x4)
+   - R_GLOBAL_INDEX_LEB offset=0x62 (0xa)
+   - R_GLOBAL_INDEX_LEB offset=0x69 (0x11)
+   - R_FUNC_INDEX_LEB   offset=0x70 (0x18)
+   - R_GLOBAL_INDEX_LEB offset=0x79 (0x21)
+   - R_GLOBAL_INDEX_LEB offset=0x7f (0x27)
+   - R_FUNC_INDEX_LEB   offset=0x85 (0x2d)
 
 Code Disassembly:
 func 0

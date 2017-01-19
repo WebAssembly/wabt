@@ -33,7 +33,7 @@ typedef enum WasmObjdumpMode {
 
 typedef struct WasmObjdumpOptions {
   WasmBool headers;
-  WasmBool verbose;
+  WasmBool details;
   WasmBool raw;
   WasmBool disassemble;
   WasmBool debug;

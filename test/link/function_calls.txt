@@ -43,10 +43,10 @@ CODE:
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
-   - RELOC_FUNC_INDEX_LEB   offset=0x52 (0x6)
-   - RELOC_FUNC_INDEX_LEB   offset=0x58 (0xc)
-   - RELOC_FUNC_INDEX_LEB   offset=0x6a (0x1e)
-   - RELOC_FUNC_INDEX_LEB   offset=0x72 (0x26)
+   - R_FUNC_INDEX_LEB   offset=0x52 (0x6)
+   - R_FUNC_INDEX_LEB   offset=0x58 (0xc)
+   - R_FUNC_INDEX_LEB   offset=0x6a (0x1e)
+   - R_FUNC_INDEX_LEB   offset=0x72 (0x26)
 
 Code Disassembly:
 func 2

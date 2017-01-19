@@ -119,7 +119,7 @@ typedef struct WasmLinkerInputBinary {
   uint32_t imported_function_index_offset;
   uint32_t global_index_offset;
   uint32_t imported_global_index_offset;
-  uint32_t indirect_function_index_offset;
+  uint32_t table_index_offset;
   uint32_t memory_page_count;
   uint32_t memory_page_offset;
 

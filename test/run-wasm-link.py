@@ -48,6 +48,7 @@ def main(args):
                       ' a time to produce the final linked binary.',
                       action='store_true')
   parser.add_argument('--debug-names', action='store_true')
+  parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -59,7 +60,7 @@ def main(args):
   wast2wasm.AppendOptionalArgs({
       '--debug-names': options.debug_names,
       '--use-libc-allocator': options.use_libc_allocator,
-      '-v': options.verbose,
+      '-v': options.dump_verbose,
   })
 
   wasm_link = utils.Executable(
@@ -104,10 +105,10 @@ def main(args):
           os.rename(output, partialy_linked)
           wasm_link.RunWithArgs('-r', '-o', output, partialy_linked, f)
         #wasmdump.RunWithArgs('-d', '-h', output)
-      wasmdump.RunWithArgs('-d', '-v', '-h', output)
+      wasmdump.RunWithArgs('-d', '-x', '-h', output)
     else:
       wasm_link.RunWithArgs('-o', output, *wasm_files)
-      wasmdump.RunWithArgs('-d', '-h', '-v', output)
+      wasmdump.RunWithArgs('-d', '-x', '-h', output)
 
     if options.spec:
       with open(out_file) as json_file:
