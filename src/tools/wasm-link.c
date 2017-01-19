@@ -42,7 +42,8 @@ static WasmOption s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
      "use multiple times for more info"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
-    {FLAG_RELOCATABLE, 'r', "relocatable", NULL, NOPE, "output a relocatable object file"},
+    {FLAG_RELOCATABLE, 'r', "relocatable", NULL, NOPE,
+     "output a relocatable object file"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
@@ -59,7 +60,7 @@ static WasmStream s_log_stream;
 
 typedef struct Context {
   WasmStream stream;
-  InputBinaryVector inputs;
+  WasmLinkerInputBinaryVector inputs;
   ssize_t current_section_payload_offset;
   WasmAllocator* allocator;
 } Context;
@@ -117,7 +118,7 @@ static void parse_options(WasmAllocator* allocator, int argc, char** argv) {
   }
 }
 
-void wasm_destroy_section(WasmAllocator* allocator, Section* section) {
+void wasm_destroy_section(WasmAllocator* allocator, WasmSection* section) {
   wasm_destroy_reloc_vector(allocator, &section->relocations);
   switch (section->section_code) {
     case WASM_BINARY_SECTION_DATA:
@@ -128,7 +129,8 @@ void wasm_destroy_section(WasmAllocator* allocator, Section* section) {
   }
 }
 
-void wasm_destroy_binary(WasmAllocator* allocator, InputBinary* binary) {
+void wasm_destroy_binary(WasmAllocator* allocator,
+                         WasmLinkerInputBinary* binary) {
   WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, binary->sections, section);
   wasm_destroy_function_import_vector(allocator, &binary->function_imports);
   wasm_destroy_global_import_vector(allocator, &binary->global_imports);
@@ -136,8 +138,8 @@ void wasm_destroy_binary(WasmAllocator* allocator, InputBinary* binary) {
   wasm_free(allocator, binary->data);
 }
 
-static void apply_relocation(Section* section, Reloc* r) {
-  InputBinary* binary = section->binary;
+static void apply_relocation(WasmSection* section, WasmReloc* r) {
+  WasmLinkerInputBinary* binary = section->binary;
   uint8_t* section_data = &binary->data[section->offset];
   size_t section_size = section->size;
 
@@ -155,7 +157,7 @@ static void apply_relocation(Section* section, Reloc* r) {
           wasm_writef(&s_log_stream, "func reloc %d + %d\n", cur_value, offset);
       } else {
         /* imported function call */
-        FunctionImport* import = &binary->function_imports.data[cur_value];
+        WasmFunctionImport* import = &binary->function_imports.data[cur_value];
         offset = binary->imported_function_index_offset;
         if (!import->active) {
           cur_value = import->foreign_index;
@@ -184,7 +186,7 @@ static void apply_relocation(Section* section, Reloc* r) {
                                   section_data + section_size, cur_value);
 }
 
-static void apply_relocations(Section* section) {
+static void apply_relocations(WasmSection* section) {
   if (!section->relocations.size)
     return;
 
@@ -195,12 +197,12 @@ static void apply_relocations(Section* section) {
   /* Perform relocations in-place */
   size_t i;
   for (i = 0; i < section->relocations.size; i++) {
-    Reloc* reloc = &section->relocations.data[i];
+    WasmReloc* reloc = &section->relocations.data[i];
     apply_relocation(section, reloc);
   }
 }
 
-static void write_section_payload(Context* ctx, Section* sec) {
+static void write_section_payload(Context* ctx, WasmSection* sec) {
   assert(ctx->current_section_payload_offset != -1);
 
   sec->output_payload_offset =
@@ -221,7 +223,7 @@ static void write_section_payload(Context* ctx, Section* sec) {
                                  (STREAM)->offset - start, "fixup size");
 
 static void write_combined_table_section(Context* ctx,
-                                         const SectionPtrVector* sections) {
+                                         const WasmSectionPtrVector* sections) {
   /* Total section size includes the element count leb128 which is
    * always 1 in the current spec */
   uint32_t table_count = 1;
@@ -230,7 +232,7 @@ static void write_combined_table_section(Context* ctx,
 
   size_t i;
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     elem_count += sec->binary->table_elem_count;
   }
 
@@ -245,14 +247,14 @@ static void write_combined_table_section(Context* ctx,
 }
 
 static void write_combined_elem_section(Context* ctx,
-                                        const SectionPtrVector* sections) {
+                                        const WasmSectionPtrVector* sections) {
   WasmStream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
   size_t i;
   uint32_t total_elem_count = 0;
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     total_elem_count += sec->binary->table_elem_count;
   }
 
@@ -266,7 +268,7 @@ static void write_combined_elem_section(Context* ctx,
   ctx->current_section_payload_offset = stream->offset;
 
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     apply_relocations(sec);
     write_section_payload(ctx, sec);
   }
@@ -274,8 +276,9 @@ static void write_combined_elem_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
-static void write_combined_memory_section(Context* ctx,
-                                          const SectionPtrVector* sections) {
+static void write_combined_memory_section(
+    Context* ctx,
+    const WasmSectionPtrVector* sections) {
   WasmStream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
@@ -286,7 +289,7 @@ static void write_combined_memory_section(Context* ctx,
   limits.has_max = WASM_TRUE;
   size_t i;
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     limits.initial += sec->memory_limits.initial;
   }
   limits.max = limits.initial;
@@ -299,12 +302,14 @@ static void write_c_str(WasmStream* stream, const char* str, const char* desc) {
   wasm_write_str(stream, str, strlen(str), WASM_PRINT_CHARS, desc);
 }
 
-static void write_slice(WasmStream* stream, WasmStringSlice str, const char* desc) {
+static void write_slice(WasmStream* stream,
+                        WasmStringSlice str,
+                        const char* desc) {
   wasm_write_str(stream, str.start, str.length, WASM_PRINT_CHARS, desc);
 }
 
 static void write_function_import(Context* ctx,
-                                  FunctionImport* import,
+                                  WasmFunctionImport* import,
                                   uint32_t offset) {
   write_c_str(&ctx->stream, WASM_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
@@ -313,7 +318,7 @@ static void write_function_import(Context* ctx,
                         "import signature index");
 }
 
-static void write_global_import(Context* ctx, GlobalImport* import) {
+static void write_global_import(Context* ctx, WasmGlobalImport* import) {
   write_c_str(&ctx->stream, WASM_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
   wasm_write_u8(&ctx->stream, WASM_EXTERNAL_KIND_GLOBAL, "import kind");
@@ -327,10 +332,10 @@ static void write_import_section(Context* ctx) {
   uint32_t num_imports = 0;
   size_t i, j;
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
-    FunctionImportVector* imports = &binary->function_imports;
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
+    WasmFunctionImportVector* imports = &binary->function_imports;
     for (j = 0; j < imports->size; j++) {
-      FunctionImport* import = &imports->data[j];
+      WasmFunctionImport* import = &imports->data[j];
       if (import->active)
         num_imports++;
     }
@@ -339,15 +344,15 @@ static void write_import_section(Context* ctx) {
   wasm_write_u32_leb128(&ctx->stream, num_imports, "num imports");
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
-    FunctionImportVector* imports = &binary->function_imports;
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
+    WasmFunctionImportVector* imports = &binary->function_imports;
     for (j = 0; j < imports->size; j++) {
-      FunctionImport* import = &imports->data[j];
+      WasmFunctionImport* import = &imports->data[j];
       if (import->active)
         write_function_import(ctx, import, binary->type_index_offset);
     }
 
-    GlobalImportVector* globals = &binary->global_imports;
+    WasmGlobalImportVector* globals = &binary->global_imports;
     for (j = 0; j < globals->size; j++) {
       write_global_import(ctx, &globals->data[j]);
     }
@@ -356,9 +361,10 @@ static void write_import_section(Context* ctx) {
   FIXUP_SIZE(&ctx->stream);
 }
 
-static void write_combined_function_section(Context* ctx,
-                                            const SectionPtrVector* sections,
-                                            uint32_t total_count) {
+static void write_combined_function_section(
+    Context* ctx,
+    const WasmSectionPtrVector* sections,
+    uint32_t total_count) {
   WasmStream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
@@ -366,7 +372,7 @@ static void write_combined_function_section(Context* ctx,
 
   size_t i;
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     uint32_t count = sec->count;
     uint32_t input_offset = 0;
     uint32_t sig_index = 0;
@@ -385,7 +391,7 @@ static void write_combined_function_section(Context* ctx,
 }
 
 static void write_data_segment(WasmStream* stream,
-                               DataSegment* segment,
+                               WasmDataSegment* segment,
                                uint32_t offset) {
   assert(segment->memory_index == 0);
   wasm_write_u32_leb128(stream, segment->memory_index, "memory index");
@@ -397,7 +403,7 @@ static void write_data_segment(WasmStream* stream,
 }
 
 static void write_combined_data_section(Context* ctx,
-                                        SectionPtrVector* sections,
+                                        WasmSectionPtrVector* sections,
                                         uint32_t total_count) {
   WasmStream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
@@ -405,9 +411,9 @@ static void write_combined_data_section(Context* ctx,
   wasm_write_u32_leb128(stream, total_count, "data segment count");
   size_t i, j;
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     for (j = 0; j < sec->data_segments.size; j++) {
-      DataSegment* segment = &sec->data_segments.data[j];
+      WasmDataSegment* segment = &sec->data_segments.data[j];
       write_data_segment(stream, segment,
                          sec->binary->memory_page_offset * WASM_PAGE_SIZE);
     }
@@ -420,7 +426,7 @@ static void write_names_section(Context* ctx) {
   uint32_t total_count = 0;
   size_t i, j;
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->debug_names.size; j++) {
       if (j < binary->function_imports.size) {
         if (!binary->function_imports.data[j].active)
@@ -440,7 +446,7 @@ static void write_names_section(Context* ctx) {
   wasm_write_u32_leb128(stream, total_count, "element count");
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->debug_names.size; j++) {
       if (j < binary->function_imports.size) {
         if (!binary->function_imports.data[j].active)
@@ -456,13 +462,13 @@ static void write_names_section(Context* ctx) {
 
 static void write_combined_reloc_section(Context* ctx,
                                          WasmBinarySection section_code,
-                                         SectionPtrVector* sections) {
+                                         WasmSectionPtrVector* sections) {
   size_t i, j;
   uint32_t total_relocs = 0;
 
   /* First pass to know total reloc count */
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     total_relocs += sec->relocations.size;
   }
 
@@ -481,8 +487,8 @@ static void write_combined_reloc_section(Context* ctx,
   wasm_write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
-    RelocVector* relocs = &sec->relocations;
+    WasmSection* sec = sections->data[i];
+    WasmRelocVector* relocs = &sec->relocations;
     for (j = 0; j < relocs->size; j++) {
       wasm_write_u32_leb128(&ctx->stream, relocs->data[j].type, "reloc type");
       uint32_t new_offset = relocs->data[j].offset + sec->output_payload_offset;
@@ -495,7 +501,7 @@ static void write_combined_reloc_section(Context* ctx,
 
 static WasmBool write_combined_section(Context* ctx,
                                        WasmBinarySection section_code,
-                                       SectionPtrVector* sections) {
+                                       WasmSectionPtrVector* sections) {
   if (!sections->size)
     return WASM_FALSE;
 
@@ -510,7 +516,7 @@ static WasmBool write_combined_section(Context* ctx,
 
   /* Sum section size and element count */
   for (i = 0; i < sections->size; i++) {
-    Section* sec = sections->data[i];
+    WasmSection* sec = sections->data[i];
     total_size += sec->payload_size;
     total_count += sec->count;
   }
@@ -547,7 +553,7 @@ static WasmBool write_combined_section(Context* ctx,
       wasm_write_u32_leb128(stream, total_count, "element count");
       ctx->current_section_payload_offset = ctx->stream.offset;
       for (i = 0; i < sections->size; i++) {
-        Section* sec = sections->data[i];
+        WasmSection* sec = sections->data[i];
         apply_relocations(sec);
         write_section_payload(ctx, sec);
       }
@@ -558,8 +564,8 @@ static WasmBool write_combined_section(Context* ctx,
 }
 
 typedef struct ExportInfo {
-  Export* export;
-  InputBinary* binary;
+  WasmExport* export;
+  WasmLinkerInputBinary* binary;
 } ExportInfo;
 WASM_DEFINE_VECTOR(export_info, ExportInfo);
 
@@ -572,16 +578,18 @@ static void resolve_symbols(Context* ctx) {
 
   size_t i, j;
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->exports.size; j++) {
-      Export* export = &binary->exports.data[j];
+      WasmExport* export = &binary->exports.data[j];
       ExportInfo* info = wasm_append_export_info(ctx->allocator, &export_list);
       info->export = export;
       info->binary = binary;
 
       /* TODO(sbc): Handle duplicate names */
-      WasmStringSlice name = wasm_dup_string_slice(ctx->allocator, export->name);
-      WasmBinding* binding = wasm_insert_binding(ctx->allocator, &export_map, &name);
+      WasmStringSlice name =
+          wasm_dup_string_slice(ctx->allocator, export->name);
+      WasmBinding* binding =
+          wasm_insert_binding(ctx->allocator, &export_map, &name);
       binding->index = export_list.size - 1;
     }
   }
@@ -591,13 +599,15 @@ static void resolve_symbols(Context* ctx) {
    * ones.
    */
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->function_imports.size; j++) {
-      FunctionImport* import = &binary->function_imports.data[j];
-      int export_index = wasm_find_binding_index_by_name(&export_map, &import->name);
+      WasmFunctionImport* import = &binary->function_imports.data[j];
+      int export_index =
+          wasm_find_binding_index_by_name(&export_map, &import->name);
       if (export_index == -1) {
         if (!s_relocatable)
-          WASM_FATAL("undefined symbol: " PRIstringslice "\n", WASM_PRINTF_STRING_SLICE_ARG(import->name));
+          WASM_FATAL("undefined symbol: " PRIstringslice "\n",
+                     WASM_PRINTF_STRING_SLICE_ARG(import->name));
         continue;
       }
 
@@ -625,7 +635,7 @@ static void calculate_reloc_offsets(Context* ctx) {
   uint32_t total_function_imports = 0;
   uint32_t total_global_imports = 0;
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     /* The imported_function_index_offset is the sum of all the function
      * imports from objects that precede this one.  i.e. the current running
      * total */
@@ -638,9 +648,9 @@ static void calculate_reloc_offsets(Context* ctx) {
   }
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    InputBinary* binary = &ctx->inputs.data[i];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->sections.size; j++) {
-      Section* sec = &binary->sections.data[j];
+      WasmSection* sec = &binary->sections.data[j];
       switch (sec->section_code) {
         case WASM_BINARY_SECTION_TYPE:
           binary->type_index_offset = type_count;
@@ -667,15 +677,15 @@ static void calculate_reloc_offsets(Context* ctx) {
 
 static void write_binary(Context* ctx) {
   /* Find all the sections of each type */
-  SectionPtrVector sections[WASM_NUM_BINARY_SECTIONS];
+  WasmSectionPtrVector sections[WASM_NUM_BINARY_SECTIONS];
   WASM_ZERO_MEMORY(sections);
 
   size_t i, j;
   for (j = 0; j < ctx->inputs.size; j++) {
-    InputBinary* binary = &ctx->inputs.data[j];
+    WasmLinkerInputBinary* binary = &ctx->inputs.data[j];
     for (i = 0; i < binary->sections.size; i++) {
-      Section* s = &binary->sections.data[i];
-      SectionPtrVector* sec_list = &sections[s->section_code];
+      WasmSection* s = &binary->sections.data[i];
+      WasmSectionPtrVector* sec_list = &sections[s->section_code];
       wasm_append_section_ptr_value(ctx->allocator, sec_list, &s);
     }
   }
@@ -705,14 +715,20 @@ static void dump_reloc_offsets(Context* ctx) {
   if (s_verbose) {
     uint32_t i;
     for (i = 0; i < ctx->inputs.size; i++) {
-      InputBinary* binary = &ctx->inputs.data[i];
+      WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
       wasm_writef(&s_log_stream, "Relocation info for: %s\n", binary->filename);
-      wasm_writef(&s_log_stream, " - type index offset       : %d\n", binary->type_index_offset);
-      wasm_writef(&s_log_stream, " - mem page offset         : %d\n", binary->memory_page_offset);
-      wasm_writef(&s_log_stream, " - function index offset   : %d\n", binary->function_index_offset);
-      wasm_writef(&s_log_stream, " - global index offset     : %d\n", binary->global_index_offset);
-      wasm_writef(&s_log_stream, " - imported function offset: %d\n", binary->imported_function_index_offset);
-      wasm_writef(&s_log_stream, " - imported global offset  : %d\n", binary->imported_global_index_offset);
+      wasm_writef(&s_log_stream, " - type index offset       : %d\n",
+                  binary->type_index_offset);
+      wasm_writef(&s_log_stream, " - mem page offset         : %d\n",
+                  binary->memory_page_offset);
+      wasm_writef(&s_log_stream, " - function index offset   : %d\n",
+                  binary->function_index_offset);
+      wasm_writef(&s_log_stream, " - global index offset     : %d\n",
+                  binary->global_index_offset);
+      wasm_writef(&s_log_stream, " - imported function offset: %d\n",
+                  binary->imported_function_index_offset);
+      wasm_writef(&s_log_stream, " - imported global offset  : %d\n",
+                  binary->imported_global_index_offset);
     }
   }
 }
@@ -764,7 +780,8 @@ int main(int argc, char** argv) {
     result = wasm_read_file(context.allocator, input_filename, &data, &size);
     if (WASM_FAILED(result))
       return result;
-    InputBinary* b = wasm_append_binary(context.allocator, &context.inputs);
+    WasmLinkerInputBinary* b =
+        wasm_append_binary(context.allocator, &context.inputs);
     b->data = data;
     b->size = size;
     b->filename = input_filename;

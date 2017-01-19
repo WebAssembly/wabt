@@ -21,12 +21,12 @@
 #include "stream.h"
 
 struct WasmAllocator;
-struct InputBinary;
+struct WasmLinkerInputBinary;
 
 WASM_EXTERN_C_BEGIN
 
 WasmResult wasm_read_binary_linker(struct WasmAllocator* allocator,
-                                   struct InputBinary* input_info);
+                                   struct WasmLinkerInputBinary* input_info);
 
 WASM_EXTERN_C_END
 

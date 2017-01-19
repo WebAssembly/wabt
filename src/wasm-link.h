@@ -23,54 +23,53 @@
 
 #define WASM_LINK_MODULE_NAME "__extern"
 
-typedef struct FunctionImport {
+struct WasmLinkerInputBinary;
+
+typedef struct WasmFunctionImport {
   WasmStringSlice name;
   uint32_t sig_index;
   WasmBool active; /* Is this import present in the linked binary */
-  struct InputBinary* foreign_binary;
+  struct WasmLinkerInputBinary* foreign_binary;
   uint32_t foreign_index;
-} FunctionImport;
-WASM_DEFINE_VECTOR(function_import, FunctionImport);
+} WasmFunctionImport;
+WASM_DEFINE_VECTOR(function_import, WasmFunctionImport);
 
-typedef struct GlobalImport {
+typedef struct WasmGlobalImport {
   WasmStringSlice name;
   WasmType type;
   WasmBool mutable;
-} GlobalImport;
-WASM_DEFINE_VECTOR(global_import, GlobalImport);
+} WasmGlobalImport;
+WASM_DEFINE_VECTOR(global_import, WasmGlobalImport);
 
-typedef struct DataSegment {
+typedef struct WasmDataSegment {
   uint32_t memory_index;
   uint32_t offset;
   const uint8_t* data;
   size_t size;
-} DataSegment;
-WASM_DEFINE_VECTOR(data_segment, DataSegment);
+} WasmDataSegment;
+WASM_DEFINE_VECTOR(data_segment, WasmDataSegment);
 
-typedef struct Reloc {
+typedef struct WasmReloc {
   WasmRelocType type;
   size_t offset;
-} Reloc;
-WASM_DEFINE_VECTOR(reloc, Reloc);
+} WasmReloc;
+WASM_DEFINE_VECTOR(reloc, WasmReloc);
 
-typedef struct Export {
+typedef struct WasmExport {
   WasmExternalKind kind;
   WasmStringSlice name;
   uint32_t index;
-} Export;
-WASM_DEFINE_VECTOR(export, Export);
+} WasmExport;
+WASM_DEFINE_VECTOR(export, WasmExport);
 
-struct InputBinary;
-
-typedef struct SectionDataCustom {
-  WasmBool linked;
+typedef struct WasmSectionDataCustom {
   /* Reference to string data stored in the containing InputBinary */
   WasmStringSlice name;
-} SectionDataCustom;
+} WasmSectionDataCustom;
 
-typedef struct Section {
-  struct InputBinary* binary; /* The binary to which this section belongs */
-  RelocVector relocations;    /* The relocations for this section */
+typedef struct WasmSection {
+  struct WasmLinkerInputBinary* binary; /* The binary to which this section belongs */
+  WasmRelocVector relocations;    /* The relocations for this section */
 
   WasmBinarySection section_code;
   size_t size;
@@ -84,9 +83,9 @@ typedef struct Section {
 
   union {
     /* CUSTOM section data */
-    SectionDataCustom data_custom;
+    WasmSectionDataCustom data_custom;
     /* DATA section data */
-    DataSegmentVector data_segments;
+    WasmDataSegmentVector data_segments;
     /* MEMORY section data */
     WasmLimits memory_limits;
   };
@@ -94,25 +93,25 @@ typedef struct Section {
   /* The offset at which this section appears within the combined output
    * section. */
   size_t output_payload_offset;
-} Section;
-WASM_DEFINE_VECTOR(section, Section);
+} WasmSection;
+WASM_DEFINE_VECTOR(section, WasmSection);
 
-typedef Section* SectionPtr;
-WASM_DEFINE_VECTOR(section_ptr, SectionPtr);
+typedef WasmSection* WasmSectionPtr;
+WASM_DEFINE_VECTOR(section_ptr, WasmSectionPtr);
 
 WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
 
-typedef struct InputBinary {
+typedef struct WasmLinkerInputBinary {
   const char* filename;
   uint8_t* data;
   size_t size;
-  SectionVector sections;
+  WasmSectionVector sections;
 
-  ExportVector exports;
+  WasmExportVector exports;
 
-  FunctionImportVector function_imports;
+  WasmFunctionImportVector function_imports;
   uint32_t active_function_imports;
-  GlobalImportVector global_imports;
+  WasmGlobalImportVector global_imports;
   uint32_t active_global_imports;
 
   uint32_t type_index_offset;
@@ -127,7 +126,7 @@ typedef struct InputBinary {
   uint32_t table_elem_count;
 
   WasmStringSliceVector debug_names;
-} InputBinary;
-WASM_DEFINE_VECTOR(binary, InputBinary);
+} WasmLinkerInputBinary;
+WASM_DEFINE_VECTOR(binary, WasmLinkerInputBinary);
 
 #endif /* WASM_LINK_H_ */
