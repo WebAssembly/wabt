@@ -254,7 +254,7 @@ if (NOT EMSCRIPTEN)
   target_link_libraries(wasmdump libwasm)
 
   # wasm-link
-  add_executable(wasm-link src/tools/wasm-link.c)
+  add_executable(wasm-link src/tools/wasm-link.c src/binary-reader-linker.c)
   add_dependencies(everything wasm-link)
   target_link_libraries(wasm-link libwasm)
 

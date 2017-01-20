@@ -147,6 +147,15 @@ int main(int argc, char** argv) {
   // Perform serveral passed over the binary in order to print out different
   // types of information.
   s_objdump_options.print_header = 1;
+  if (!s_objdump_options.headers && !s_objdump_options.details &&
+      !s_objdump_options.disassemble && !s_objdump_options.raw) {
+    printf("At least one of the following switches must be given:\n");
+    printf(" -d/--disassemble\n");
+    printf(" -h/--headers\n");
+    printf(" -x/--details\n");
+    printf(" -s/--full-contents\n");
+    return 1;
+  }
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {

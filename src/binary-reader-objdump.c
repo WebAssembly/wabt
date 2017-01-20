@@ -23,9 +23,14 @@
 
 #include "binary-reader.h"
 #include "literal.h"
+#include "vector.h"
+
+typedef uint32_t Uint32;
+WASM_DEFINE_VECTOR(uint32, Uint32);
 
 typedef struct Context {
   const WasmObjdumpOptions* options;
+  WasmAllocator* allocator;
   WasmStream* out_stream;
   const uint8_t* data;
   size_t size;
@@ -37,10 +42,12 @@ typedef struct Context {
   WasmBool header_printed;
   int section_found;
 
+  uint32_t section_starts[WASM_NUM_BINARY_SECTIONS];
+  WasmBinarySection reloc_section;
+
   WasmStringSlice import_module_name;
   WasmStringSlice import_field_name;
 } Context;
-
 
 static WasmBool should_print_details(Context* ctx) {
   if (ctx->options->mode != WASM_DUMP_DETAILS)
@@ -97,8 +104,10 @@ static WasmResult do_begin_section(Context* ctx,
 static WasmResult begin_section(WasmBinaryReaderContext* ctx,
                                 WasmBinarySection type,
                                 uint32_t size) {
-  return do_begin_section(ctx->user_data, wasm_get_section_name(type),
-                          ctx->offset, size);
+  Context* context = ctx->user_data;
+  context->section_starts[type] = ctx->offset;
+  return do_begin_section(context, wasm_get_section_name(type), ctx->offset,
+                          size);
 }
 
 static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
@@ -565,12 +574,24 @@ static WasmResult on_local_name(uint32_t func_index,
   return WASM_OK;
 }
 
+WasmResult on_reloc_count(uint32_t count,
+                          WasmBinarySection section_code,
+                          WasmStringSlice section_name,
+                          void* user_data) {
+  Context* ctx = user_data;
+  ctx->reloc_section = section_code;
+  print_details(user_data, "  - section: %s\n",
+                wasm_get_section_name(section_code));
+  return WASM_OK;
+}
+
 WasmResult on_reloc(WasmRelocType type,
-                    uint32_t section,
                     uint32_t offset,
                     void* user_data) {
-  print_details(user_data, "  - %-20s section=%d offset=%#x\n",
-                wasm_get_reloc_type_name(type), section, offset);
+  Context* ctx = user_data;
+  uint32_t total_offset = ctx->section_starts[ctx->reloc_section] + offset;
+  print_details(user_data, "   - %-18s offset=%#x (%#x)\n",
+                wasm_get_reloc_type_name(type), total_offset, offset);
   return WASM_OK;
 }
 
@@ -665,6 +686,7 @@ static WasmBinaryReader s_binary_reader = {
     .on_function_name = on_function_name,
     .on_local_name = on_local_name,
 
+    .on_reloc_count = on_reloc_count,
     .on_reloc = on_reloc,
 
     .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
@@ -683,6 +705,7 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   reader = s_binary_reader;
   Context context;
   WASM_ZERO_MEMORY(context);
+  context.allocator = allocator;
   context.header_printed = WASM_FALSE;
   context.print_details = WASM_FALSE;
   context.section_found = WASM_FALSE;

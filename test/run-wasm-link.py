@@ -16,9 +16,11 @@
 #
 
 import argparse
+import json
 import os
 import sys
 import tempfile
+from collections import OrderedDict
 
 import find_exe
 import utils
@@ -28,6 +30,8 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
+  parser.add_argument('-r', '--relocatable', action='store_true',
+                      help='final output is relocatable')
   parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
@@ -44,6 +48,8 @@ def main(args):
                       ' a time to produce the final linked binary.',
                       action='store_true')
   parser.add_argument('--debug-names', action='store_true')
+  parser.add_argument('--dump-verbose', action='store_true')
+  parser.add_argument('--spec', action='store_true')
   parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -54,22 +60,28 @@ def main(args):
   wast2wasm.AppendOptionalArgs({
       '--debug-names': options.debug_names,
       '--use-libc-allocator': options.use_libc_allocator,
-      '-v': options.verbose,
+      '-v': options.dump_verbose,
   })
 
   wasm_link = utils.Executable(
       find_exe.GetWasmlinkExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasm_link.AppendOptionalArgs({'-v': options.verbose,})
+  wasm_link.AppendOptionalArgs({
+      '-v': options.verbose,
+      '-r': options.relocatable,
+  })
 
   wasmdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasmdump.AppendOptionalArgs({})
+
+  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
+      options.bindir), error_cmdline=options.error_cmdline)
 
   wast2wasm.verbose = options.print_cmd
   wasm_link.verbose = options.print_cmd
   wasmdump.verbose = options.print_cmd
+  wasm_interp.verbose = options.print_cmd
 
   filename = options.file
 
@@ -77,7 +89,8 @@ def main(args):
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     out_file = os.path.join(out_dir, basename_noext + '.json')
-    wast2wasm.RunWithArgs('--spec', '-r', '-o', out_file, filename)
+    wast2wasm.RunWithArgs('--spec', '--no-check', '-r', '-o', out_file,
+                          filename)
 
     wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
     wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
@@ -90,12 +103,27 @@ def main(args):
           wasm_link.RunWithArgs('-o', output, f)
         else:
           os.rename(output, partialy_linked)
-          wasm_link.RunWithArgs('-o', output, partialy_linked, f)
+          wasm_link.RunWithArgs('-r', '-o', output, partialy_linked, f)
         #wasmdump.RunWithArgs('-d', '-h', output)
       wasmdump.RunWithArgs('-d', '-x', '-h', output)
     else:
       wasm_link.RunWithArgs('-o', output, *wasm_files)
       wasmdump.RunWithArgs('-d', '-x', '-h', output)
+
+    if options.spec:
+      with open(out_file) as json_file:
+        spec = json.load(json_file, object_pairs_hook=OrderedDict)
+        spec['commands'] = [c for c in spec['commands']
+                            if c['type'] != 'module']
+        module = OrderedDict([('type', 'module'),
+                              ('line', 0),
+                              ('filename', os.path.basename(output)),])
+        spec['commands'].insert(0, module)
+
+      with open(out_file, 'wb') as json_file:
+        json.dump(spec, json_file, indent=4)
+
+      wasm_interp.RunWithArgs('--spec', out_file)
 
 
 if __name__ == '__main__':

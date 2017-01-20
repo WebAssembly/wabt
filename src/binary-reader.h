@@ -294,9 +294,11 @@ typedef struct WasmBinaryReader {
   /* names section */
   WasmResult (*begin_reloc_section)(WasmBinaryReaderContext* ctx,
                                     uint32_t size);
-  WasmResult (*on_reloc_count)(uint32_t count, void* user_data);
+  WasmResult (*on_reloc_count)(uint32_t count,
+                               WasmBinarySection section_code,
+                               WasmStringSlice section_name,
+                               void* user_data);
   WasmResult (*on_reloc)(WasmRelocType type,
-                         uint32_t section_index,
                          uint32_t offset,
                          void* user_data);
   WasmResult (*end_reloc_section)(WasmBinaryReaderContext* ctx);

@@ -48,7 +48,7 @@ WASM_DEFINE_VECTOR(reloc, Reloc);
 
 typedef struct RelocSection {
   const char* name;
-  uint32_t section_index;
+  WasmBinarySection section_code;
   RelocVector relocations;
 } RelocSection;
 WASM_DEFINE_VECTOR(reloc_section, RelocSection);
@@ -64,7 +64,6 @@ typedef struct Context {
 
   size_t last_section_offset;
   size_t last_section_leb_size_guess;
-  size_t last_section_index;
   WasmBinarySection last_section_type;
   size_t last_section_payload_offset;
 } Context;
@@ -280,7 +279,6 @@ static void begin_known_section(Context* ctx,
                 wasm_get_section_name(section_code), section_code);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
   wasm_write_u8(&ctx->stream, section_code, "section code");
-  ctx->last_section_index++;
   ctx->last_section_type = section_code;
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
@@ -297,7 +295,6 @@ static void begin_custom_section(Context* ctx,
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
   wasm_write_u8(&ctx->stream, WASM_BINARY_SECTION_CUSTOM,
                 "custom section code");
-  ctx->last_section_index++;
   ctx->last_section_type = WASM_BINARY_SECTION_CUSTOM;
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
@@ -328,12 +325,12 @@ static void write_expr_list(Context* ctx,
 static void add_reloc(Context* ctx, WasmRelocType reloc_type) {
   // Add a new reloc section if needed
   if (!ctx->current_reloc_section ||
-      ctx->current_reloc_section->section_index != ctx->last_section_index) {
+      ctx->current_reloc_section->section_code != ctx->last_section_type) {
     ctx->current_reloc_section =
         wasm_append_reloc_section(ctx->allocator, &ctx->reloc_sections);
     ctx->current_reloc_section->name =
         wasm_get_section_name(ctx->last_section_type);
-    ctx->current_reloc_section->section_index = ctx->last_section_index;
+    ctx->current_reloc_section->section_code = ctx->last_section_type;
   }
 
   // Add a new relocation to the curent reloc section
@@ -400,7 +397,7 @@ static void write_expr(Context* ctx,
              (index >= 0 && (size_t)index < module->funcs.size));
       wasm_write_opcode(&ctx->stream, WASM_OPCODE_CALL);
       write_u32_leb128_with_reloc(ctx, index, "function index",
-                                  WASM_RELOC_FUNC_INDEX);
+                                  WASM_RELOC_FUNC_INDEX_LEB);
       break;
     }
     case WASM_EXPR_TYPE_CALL_INDIRECT: {
@@ -455,7 +452,7 @@ static void write_expr(Context* ctx,
       int index = wasm_get_global_index_by_var(module, &expr->get_global.var);
       wasm_write_opcode(&ctx->stream, WASM_OPCODE_GET_GLOBAL);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  WASM_RELOC_GLOBAL_INDEX);
+                                  WASM_RELOC_GLOBAL_INDEX_LEB);
       break;
     }
     case WASM_EXPR_TYPE_GET_LOCAL: {
@@ -506,7 +503,7 @@ static void write_expr(Context* ctx,
       int index = wasm_get_global_index_by_var(module, &expr->get_global.var);
       wasm_write_opcode(&ctx->stream, WASM_OPCODE_SET_GLOBAL);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  WASM_RELOC_GLOBAL_INDEX);
+                                  WASM_RELOC_GLOBAL_INDEX_LEB);
       break;
     }
     case WASM_EXPR_TYPE_SET_LOCAL: {
@@ -636,8 +633,8 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   sprintf(section_name, "%s.%s", WASM_BINARY_SECTION_RELOC,
           reloc_section->name);
   begin_custom_section(ctx, section_name, LEB_SECTION_SIZE_GUESS);
-  wasm_write_u32_leb128(&ctx->stream, reloc_section->section_index,
-                        "reloc section");
+  wasm_write_u32_leb128(&ctx->stream, reloc_section->section_code,
+                        "reloc section type");
   RelocVector* relocs = &reloc_section->relocations;
   wasm_write_u32_leb128(&ctx->stream, relocs->size, "num relocs");
 
@@ -695,9 +692,9 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
       wasm_write_u8(&ctx->stream, import->kind, "import kind");
       switch (import->kind) {
         case WASM_EXTERNAL_KIND_FUNC:
-          write_u32_leb128_with_reloc(
-              ctx, wasm_get_func_type_index_by_decl(module, &import->func.decl),
-              "import signature index", WASM_RELOC_TYPE_INDEX);
+          wasm_write_u32_leb128(&ctx->stream, wasm_get_func_type_index_by_decl(
+                                                  module, &import->func.decl),
+                                "import signature index");
           break;
         case WASM_EXTERNAL_KIND_TABLE:
           write_table(ctx, &import->table);
@@ -795,8 +792,7 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
           int index = wasm_get_func_index_by_var(module, &export->var);
           assert(ctx->options->is_invalid ||
                  (index >= 0 && (size_t)index < module->funcs.size));
-          write_u32_leb128_with_reloc(ctx, index, "export func index",
-                                      WASM_RELOC_FUNC_INDEX);
+          wasm_write_u32_leb128(&ctx->stream, index, "export func index");
           break;
         }
         case WASM_EXTERNAL_KIND_TABLE: {
@@ -857,7 +853,7 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
         assert(ctx->options->is_invalid ||
                (index >= 0 && (size_t)index < module->funcs.size));
         write_u32_leb128_with_reloc(ctx, index, "function index",
-                                    WASM_RELOC_FUNC_INDEX);
+                                    WASM_RELOC_FUNC_INDEX_LEB);
       }
     }
     end_section(ctx);
