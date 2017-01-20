@@ -82,6 +82,7 @@
 basic.wasm:	file format wasm 0x00000d
 
 Sections:
+
      TYPE start=0x0000000a end=0x00000011 (size=0x00000007) count: 1
  FUNCTION start=0x00000013 end=0x00000015 (size=0x00000002) count: 1
    MEMORY start=0x00000017 end=0x0000001a (size=0x00000003) count: 1
@@ -89,7 +90,8 @@ Sections:
      CODE start=0x00000023 end=0x00000039 (size=0x00000016) count: 1
 
 Code Disassembly:
-func 0
+
+000024 func[0]:
  000026: 41 00                      | i32.const 0
  000028: 41 00                      | i32.const 0
  00002a: 28 02 00                   | i32.load 2 0

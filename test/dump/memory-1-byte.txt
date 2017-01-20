@@ -15,4 +15,5 @@
 memory-1-byte.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
+
 ;;; STDOUT ;;)

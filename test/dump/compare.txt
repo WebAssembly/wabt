@@ -313,7 +313,8 @@
 compare.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000016 func[0]:
  000019: 41 00                      | i32.const 0
  00001b: 41 00                      | i32.const 0
  00001d: 4f                         | i32.ge_u

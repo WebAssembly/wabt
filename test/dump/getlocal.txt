@@ -88,7 +88,8 @@
 getlocal.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000015 func[0]:
  000025: 20 00                      | get_local 0
  000027: 1a                         | drop
  000028: 20 01                      | get_local 0x1

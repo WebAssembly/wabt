@@ -44,6 +44,7 @@
 linked.wasm:	file format wasm 0x00000d
 
 Sections:
+
      TYPE start=0x0000000a end=0x0000001f (size=0x00000015) count: 5
    IMPORT start=0x00000025 end=0x00000026 (size=0x00000001) count: 0
  FUNCTION start=0x0000002c end=0x00000032 (size=0x00000006) count: 5
@@ -52,6 +53,7 @@ Sections:
    CUSTOM start=0x000000a8 end=0x000000b9 (size=0x00000011) "reloc.CODE"
 
 Section Details:
+
 TYPE:
  - [0] () -> i32
  - [1] () -> i64
@@ -71,12 +73,6 @@ EXPORT:
  - func[2] call_import2
  - func[3] export2
  - func[4] export3
-CODE:
- - func 0
- - func 1
- - func 2
- - func 3
- - func 4
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
@@ -84,19 +80,22 @@ CUSTOM:
    - R_FUNC_INDEX_LEB   offset=0x8e (0x17)
 
 Code Disassembly:
-func 0
+
+000078 func[0]:
  00007a: 43 00 00 80 3f             | f32.const 0x1p+0
  00007f: 0f                         | return
-func 1
+000081 func[1]:
  000083: 10 83 80 80 80 00          | call 0x3
+           000084: R_FUNC_INDEX_LEB
  000089: 0f                         | return
-func 2
+00008b func[2]:
  00008d: 10 84 80 80 80 00          | call 0x4
+           00008e: R_FUNC_INDEX_LEB
  000093: 0f                         | return
-func 3
+000095 func[3]:
  000097: 41 2a                      | i32.const 0x2a
  000099: 0f                         | return
-func 4
+00009b func[4]:
  00009d: 42 e3 00                   | i64.const 99
  0000a0: 0f                         | return
 5/5 tests passed.

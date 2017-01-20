@@ -49,6 +49,7 @@
 export-multi.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000020 func[0]:
  000022: 01                         | nop
 ;;; STDOUT ;;)

@@ -70,7 +70,8 @@
 callimport.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 1
+
+000029 func[1]:
  00002b: 41 01                      | i32.const 0x1
  00002d: 43 00 00 00 40             | f32.const 0x1p+1
  000032: 10 00                      | call 0

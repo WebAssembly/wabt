@@ -29,7 +29,7 @@ typedef uint32_t Uint32;
 WASM_DEFINE_VECTOR(uint32, Uint32);
 
 typedef struct Context {
-  const WasmObjdumpOptions* options;
+  WasmObjdumpOptions* options;
   WasmAllocator* allocator;
   WasmStream* out_stream;
   const uint8_t* data;
@@ -47,6 +47,8 @@ typedef struct Context {
 
   WasmStringSlice import_module_name;
   WasmStringSlice import_field_name;
+
+  uint32_t next_reloc;
 } Context;
 
 static WasmBool should_print_details(Context* ctx) {
@@ -65,49 +67,46 @@ static void WASM_PRINTF_FORMAT(2, 3)
   va_end(args);
 }
 
-static WasmResult do_begin_section(Context* ctx,
-                                   const char* name,
-                                   size_t offset,
-                                   size_t size) {
-  WasmBool section_match = !ctx->options->section_name ||
-                           !strcasecmp(ctx->options->section_name, name);
-  if (section_match)
-    ctx->section_found = WASM_TRUE;
+static WasmResult begin_section(WasmBinaryReaderContext* ctx,
+                                WasmBinarySection section_code,
+                                uint32_t size) {
+  Context* context = ctx->user_data;
+  context->section_starts[section_code] = ctx->offset;
 
-  switch (ctx->options->mode) {
+  const char* name = wasm_get_section_name(section_code);
+
+  WasmBool section_match = !context->options->section_name ||
+                           !strcasecmp(context->options->section_name, name);
+  if (section_match)
+    context->section_found = WASM_TRUE;
+
+  switch (context->options->mode) {
+    case WASM_DUMP_PREPASS:
+      break;
     case WASM_DUMP_HEADERS:
-      printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010" PRIzx
-             ") ",
-             name, offset, offset + size, size);
+      printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010x) ",
+             name, ctx->offset, ctx->offset + size, size);
       break;
     case WASM_DUMP_DETAILS:
       if (section_match) {
-        printf("%s:\n", name);
-        ctx->print_details = WASM_TRUE;
+        if (section_code != WASM_BINARY_SECTION_CODE)
+          printf("%s:\n", name);
+        context->print_details = WASM_TRUE;
       } else {
-        ctx->print_details = WASM_FALSE;
+        context->print_details = WASM_FALSE;
       }
       break;
     case WASM_DUMP_RAW_DATA:
       if (section_match) {
         printf("\nContents of section %s:\n", name);
-        wasm_write_memory_dump(ctx->out_stream, ctx->data + offset, size,
-                               offset, WASM_PRINT_CHARS, NULL, NULL);
+        wasm_write_memory_dump(context->out_stream, context->data + ctx->offset,
+                               size, ctx->offset, WASM_PRINT_CHARS, NULL, NULL);
       }
       break;
     case WASM_DUMP_DISASSEMBLE:
       break;
   }
   return WASM_OK;
-}
-
-static WasmResult begin_section(WasmBinaryReaderContext* ctx,
-                                WasmBinarySection type,
-                                uint32_t size) {
-  Context* context = ctx->user_data;
-  context->section_starts[type] = ctx->offset;
-  return do_begin_section(context, wasm_get_section_name(type), ctx->offset,
-                          size);
 }
 
 static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
@@ -146,17 +145,18 @@ static WasmResult begin_module(uint32_t version, void* user_data) {
   switch (ctx->options->mode) {
     case WASM_DUMP_HEADERS:
       printf("\n");
-      printf("Sections:\n");
+      printf("Sections:\n\n");
       break;
     case WASM_DUMP_DETAILS:
       printf("\n");
-      printf("Section Details:\n");
+      printf("Section Details:\n\n");
       break;
     case WASM_DUMP_DISASSEMBLE:
       printf("\n");
-      printf("Code Disassembly:\n");
+      printf("Code Disassembly:\n\n");
       break;
     case WASM_DUMP_RAW_DATA:
+    case WASM_DUMP_PREPASS:
       break;
   }
 
@@ -242,6 +242,19 @@ static void log_opcode(Context* ctx,
   printf("\n");
 
   ctx->last_opcode_end = ctx->current_opcode_offset + data_size;
+
+  if (ctx->options->relocs) {
+    if (ctx->next_reloc < ctx->options->code_relocations.size) {
+      WasmReloc* reloc = &ctx->options->code_relocations.data[ctx->next_reloc];
+      size_t code_start = ctx->section_starts[WASM_BINARY_SECTION_CODE];
+      size_t abs_offset = code_start + reloc->offset;
+      if (ctx->last_opcode_end > abs_offset) {
+        printf("           %06" PRIzx ": %s\n", abs_offset,
+               wasm_get_reloc_type_name(reloc->type));
+        ctx->next_reloc++;
+      }
+    }
+  }
 }
 
 static WasmResult on_opcode_bare(WasmBinaryReaderContext* ctx) {
@@ -380,13 +393,18 @@ static WasmResult on_function_signature(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult begin_function_body(uint32_t index, void* user_data) {
-  Context* ctx = user_data;
+static WasmResult begin_function_body(WasmBinaryReaderContext* context,
+                                      uint32_t index) {
+  Context* ctx = context->user_data;
 
-  if (should_print_details(ctx))
-    printf(" - func %d\n", index);
-  if (ctx->options->mode == WASM_DUMP_DISASSEMBLE)
-    printf("func %d\n", index);
+  if (ctx->options->mode == WASM_DUMP_DISASSEMBLE) {
+    if (index < ctx->options->function_names.size)
+      printf("%06" PRIx64 " <" PRIstringslice ">:\n", context->offset,
+             WASM_PRINTF_STRING_SLICE_ARG(
+                 ctx->options->function_names.data[index]));
+    else
+      printf("%06" PRIx64 " func[%d]:\n", context->offset, index);
+  }
 
   ctx->last_opcode_end = 0;
   return WASM_OK;
@@ -558,8 +576,12 @@ static WasmResult on_init_expr_i64_const_expr(uint32_t index,
 static WasmResult on_function_name(uint32_t index,
                                    WasmStringSlice name,
                                    void* user_data) {
-  print_details(user_data, " - func[%d] " PRIstringslice "\n", index,
+  Context* ctx = user_data;
+  print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
                 WASM_PRINTF_STRING_SLICE_ARG(name));
+  if (ctx->options->mode == WASM_DUMP_PREPASS)
+    wasm_append_string_slice_value(ctx->allocator,
+                                   &ctx->options->function_names, &name);
   return WASM_OK;
 }
 
@@ -592,6 +614,14 @@ WasmResult on_reloc(WasmRelocType type,
   uint32_t total_offset = ctx->section_starts[ctx->reloc_section] + offset;
   print_details(user_data, "   - %-18s offset=%#x (%#x)\n",
                 wasm_get_reloc_type_name(type), total_offset, offset);
+  if (ctx->options->mode == WASM_DUMP_PREPASS &&
+      ctx->reloc_section == WASM_BINARY_SECTION_CODE) {
+    WasmReloc reloc;
+    reloc.offset = offset;
+    reloc.type = type;
+    wasm_append_reloc_value(ctx->allocator, &ctx->options->code_relocations,
+                            &reloc);
+  }
   return WASM_OK;
 }
 
@@ -699,10 +729,7 @@ static WasmBinaryReader s_binary_reader = {
 WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
                                     const uint8_t* data,
                                     size_t size,
-                                    const WasmObjdumpOptions* options) {
-  WasmBinaryReader reader;
-  WASM_ZERO_MEMORY(reader);
-  reader = s_binary_reader;
+                                    WasmObjdumpOptions* options) {
   Context context;
   WASM_ZERO_MEMORY(context);
   context.allocator = allocator;
@@ -713,6 +740,16 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   context.size = size;
   context.options = options;
   context.out_stream = wasm_init_stdout_stream();
+
+  WasmBinaryReader reader;
+  WASM_ZERO_MEMORY(reader);
+  if (options->mode == WASM_DUMP_PREPASS) {
+    reader.on_function_name = on_function_name;
+    reader.on_reloc_count = on_reloc_count;
+    reader.on_reloc = on_reloc;
+  } else {
+    reader = s_binary_reader;
+  }
 
   if (options->mode == WASM_DUMP_DISASSEMBLE) {
     reader.on_opcode = on_opcode;
@@ -728,8 +765,8 @@ WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
   }
 
   reader.user_data = &context;
+
   WasmReadBinaryOptions read_options = WASM_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = WASM_TRUE;
-
   return wasm_read_binary(allocator, data, size, &reader, 1, &read_options);
 }

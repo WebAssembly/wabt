@@ -37,5 +37,6 @@
 param-multi.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000019 func[0]:
 ;;; STDOUT ;;)

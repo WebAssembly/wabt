@@ -103,6 +103,7 @@
 global.wasm:	file format wasm 0x00000d
 
 Section Details:
+
 IMPORT:
  - global[0] i32 mutable=0 <- foo.i32_global
  - global[1] i64 mutable=0 <- foo.i64_global
@@ -119,4 +120,5 @@ GLOBAL:
  - global[11] f64 mutable=0 - init global=3
 
 Code Disassembly:
+
 ;;; STDOUT ;;)

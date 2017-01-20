@@ -339,7 +339,8 @@
 loop-257-exprs.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000016 func[0]:
  000019: 03 40                      | loop
  00001b: 01                         |   nop
  00001c: 01                         |   nop

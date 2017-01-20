@@ -52,9 +52,10 @@
 return.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+00001a func[0]:
  00001c: 41 2a                      | i32.const 0x2a
  00001e: 0f                         | return
-func 1
+000020 func[1]:
  000022: 0f                         | return
 ;;; STDOUT ;;)

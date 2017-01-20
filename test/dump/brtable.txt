@@ -78,7 +78,8 @@
 brtable.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000015 func[0]:
  000017: 02 40                      | block
  000019: 02 40                      |   block
  00001b: 02 40                      |     block

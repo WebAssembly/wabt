@@ -38,6 +38,7 @@ enum {
   FLAG_DISASSEMBLE,
   FLAG_DEBUG,
   FLAG_DETAILS,
+  FLAG_RELOCS,
   FLAG_HELP,
   NUM_FLAGS
 };
@@ -56,6 +57,8 @@ static WasmOption s_options[] = {
      "disassemble function bodies"},
     {FLAG_DEBUG, '\0', "debug", NULL, NOPE, "disassemble function bodies"},
     {FLAG_DETAILS, 'x', "details", NULL, NOPE, "Show section details"},
+    {FLAG_RELOCS, 'r', "reloc", NULL, NOPE,
+     "show relocations inline with disassembly"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
 };
 
@@ -88,6 +91,10 @@ static void on_option(struct WasmOptionParser* parser,
 
     case FLAG_DETAILS:
       s_objdump_options.details = WASM_TRUE;
+      break;
+
+    case FLAG_RELOCS:
+      s_objdump_options.relocs = WASM_TRUE;
       break;
 
     case FLAG_SECTION:
@@ -156,6 +163,11 @@ int main(int argc, char** argv) {
     printf(" -s/--full-contents\n");
     return 1;
   }
+
+  s_objdump_options.mode = WASM_DUMP_PREPASS;
+  result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+  if (WASM_FAILED(result))
+    goto done;
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {

@@ -19,12 +19,22 @@
 
 #include "common.h"
 #include "stream.h"
+#include "vector.h"
 
 struct WasmAllocator;
 struct WasmModule;
 struct WasmReadBinaryOptions;
 
+typedef struct WasmReloc {
+  WasmRelocType type;
+  size_t offset;
+} WasmReloc;
+WASM_DEFINE_VECTOR(reloc, WasmReloc);
+
+WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
+
 typedef enum WasmObjdumpMode {
+  WASM_DUMP_PREPASS,
   WASM_DUMP_HEADERS,
   WASM_DUMP_DETAILS,
   WASM_DUMP_DISASSEMBLE,
@@ -37,10 +47,13 @@ typedef struct WasmObjdumpOptions {
   WasmBool raw;
   WasmBool disassemble;
   WasmBool debug;
+  WasmBool relocs;
   WasmObjdumpMode mode;
   const char* infile;
   const char* section_name;
   WasmBool print_header;
+  WasmStringSliceVector function_names;
+  WasmRelocVector code_relocations;
 } WasmObjdumpOptions;
 
 WASM_EXTERN_C_BEGIN
@@ -48,7 +61,7 @@ WASM_EXTERN_C_BEGIN
 WasmResult wasm_read_binary_objdump(struct WasmAllocator* allocator,
                                     const uint8_t* data,
                                     size_t size,
-                                    const WasmObjdumpOptions* options);
+                                    WasmObjdumpOptions* options);
 
 WASM_EXTERN_C_END
 

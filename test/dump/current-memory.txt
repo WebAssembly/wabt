@@ -46,6 +46,7 @@
 current-memory.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+00001b func[0]:
  00001d: 3f 00                      | current_memory 0
 ;;; STDOUT ;;)

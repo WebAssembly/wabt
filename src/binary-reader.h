@@ -167,7 +167,8 @@ typedef struct WasmBinaryReader {
   WasmResult (*begin_function_body_pass)(uint32_t index,
                                          uint32_t pass,
                                          void* user_data);
-  WasmResult (*begin_function_body)(uint32_t index, void* user_data);
+  WasmResult (*begin_function_body)(WasmBinaryReaderContext* ctx,
+                                    uint32_t index);
   WasmResult (*on_local_decl_count)(uint32_t count, void* user_data);
   WasmResult (*on_local_decl)(uint32_t decl_index,
                               uint32_t count,

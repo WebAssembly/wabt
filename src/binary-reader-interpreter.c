@@ -1131,8 +1131,9 @@ static WasmResult drop_types_for_return(Context* ctx, uint32_t arity) {
   return WASM_OK;
 }
 
-static WasmResult begin_function_body(uint32_t index, void* user_data) {
-  Context* ctx = user_data;
+static WasmResult begin_function_body(WasmBinaryReaderContext* context,
+                                      uint32_t index) {
+  Context* ctx = context->user_data;
   WasmInterpreterFunc* func = get_func_by_module_index(ctx, index);
   WasmInterpreterFuncSignature* sig =
       get_signature_by_env_index(ctx, func->sig_index);

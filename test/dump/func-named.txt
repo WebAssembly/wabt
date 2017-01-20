@@ -33,5 +33,6 @@
 func-named.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000015 func[0]:
 ;;; STDOUT ;;)
