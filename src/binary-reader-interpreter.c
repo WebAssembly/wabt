@@ -127,7 +127,7 @@ typedef struct Context {
   uint32_t table_offset;
   WasmBool is_host_import;
   WasmInterpreterModule* host_import_module;
-  uint32_t import_index;
+  uint32_t import_env_index;
 } Context;
 
 static Label* get_label(Context* ctx, uint32_t depth) {
@@ -439,7 +439,7 @@ static WasmResult on_import(uint32_t index,
 
     import->kind = export->kind;
     ctx->is_host_import = WASM_FALSE;
-    ctx->import_index = export->index;
+    ctx->import_env_index = export->index;
   }
   return WASM_OK;
 }
@@ -514,16 +514,18 @@ static WasmPrintErrorCallback make_print_error_callback(Context* ctx) {
   return result;
 }
 
-static WasmResult on_import_func(uint32_t index,
+static WasmResult on_import_func(uint32_t import_index,
+                                 uint32_t func_index,
                                  uint32_t sig_index,
                                  void* user_data) {
   Context* ctx = user_data;
-  assert(index < ctx->module->defined.imports.size);
-  WasmInterpreterImport* import = &ctx->module->defined.imports.data[index];
+  assert(import_index < ctx->module->defined.imports.size);
+  WasmInterpreterImport* import =
+      &ctx->module->defined.imports.data[import_index];
   assert(sig_index < ctx->env->sigs.size);
   import->func.sig_index = translate_sig_index_to_env(ctx, sig_index);
 
-  uint32_t func_index;
+  uint32_t func_env_index;
   if (ctx->is_host_import) {
     WasmInterpreterFunc* func =
         wasm_append_interpreter_func(ctx->allocator, &ctx->env->funcs);
@@ -540,23 +542,23 @@ static WasmResult on_import_func(uint32_t index,
                                             host_delegate->user_data));
     assert(func->host.callback);
 
-    func_index = ctx->env->funcs.size - 1;
+    func_env_index = ctx->env->funcs.size - 1;
     append_export(ctx, ctx->host_import_module, WASM_EXTERNAL_KIND_FUNC,
-                  func_index, import->field_name);
+                  func_env_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, WASM_EXTERNAL_KIND_FUNC));
-    assert(ctx->import_index < ctx->env->funcs.size);
-    WasmInterpreterFunc* func = &ctx->env->funcs.data[ctx->import_index];
+    assert(ctx->import_env_index < ctx->env->funcs.size);
+    WasmInterpreterFunc* func = &ctx->env->funcs.data[ctx->import_env_index];
     if (!wasm_func_signatures_are_equal(ctx->env, import->func.sig_index,
                                         func->sig_index)) {
       print_error(ctx, "import signature mismatch");
       return WASM_ERROR;
     }
 
-    func_index = ctx->import_index;
+    func_env_index = ctx->import_env_index;
   }
   wasm_append_uint32_value(ctx->allocator, &ctx->func_index_mapping,
-                           &func_index);
+                           &func_env_index);
   ctx->num_func_imports++;
   return WASM_OK;
 }
@@ -569,7 +571,8 @@ static void init_table_func_indexes(Context* ctx, WasmInterpreterTable* table) {
     table->func_indexes.data[i] = WASM_INVALID_INDEX;
 }
 
-static WasmResult on_import_table(uint32_t index,
+static WasmResult on_import_table(uint32_t import_index,
+                                  uint32_t table_index,
                                   WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
@@ -579,8 +582,9 @@ static WasmResult on_import_table(uint32_t index,
     return WASM_ERROR;
   }
 
-  assert(index < ctx->module->defined.imports.size);
-  WasmInterpreterImport* import = &ctx->module->defined.imports.data[index];
+  assert(import_index < ctx->module->defined.imports.size);
+  WasmInterpreterImport* import =
+      &ctx->module->defined.imports.data[import_index];
 
   if (ctx->is_host_import) {
     WasmInterpreterTable* table =
@@ -601,17 +605,18 @@ static WasmResult on_import_table(uint32_t index,
                   ctx->module->table_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, WASM_EXTERNAL_KIND_TABLE));
-    assert(ctx->import_index < ctx->env->tables.size);
-    WasmInterpreterTable* table = &ctx->env->tables.data[ctx->import_index];
+    assert(ctx->import_env_index < ctx->env->tables.size);
+    WasmInterpreterTable* table = &ctx->env->tables.data[ctx->import_env_index];
     CHECK_RESULT(check_import_limits(ctx, elem_limits, &table->limits));
 
     import->table.limits = *elem_limits;
-    ctx->module->table_index = ctx->import_index;
+    ctx->module->table_index = ctx->import_env_index;
   }
   return WASM_OK;
 }
 
-static WasmResult on_import_memory(uint32_t index,
+static WasmResult on_import_memory(uint32_t import_index,
+                                   uint32_t memory_index,
                                    const WasmLimits* page_limits,
                                    void* user_data) {
   Context* ctx = user_data;
@@ -620,8 +625,9 @@ static WasmResult on_import_memory(uint32_t index,
     return WASM_ERROR;
   }
 
-  assert(index < ctx->module->defined.imports.size);
-  WasmInterpreterImport* import = &ctx->module->defined.imports.data[index];
+  assert(import_index < ctx->module->defined.imports.size);
+  WasmInterpreterImport* import =
+      &ctx->module->defined.imports.data[import_index];
 
   if (ctx->is_host_import) {
     WasmInterpreterMemory* memory =
@@ -642,25 +648,28 @@ static WasmResult on_import_memory(uint32_t index,
                   ctx->module->memory_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, WASM_EXTERNAL_KIND_MEMORY));
-    assert(ctx->import_index < ctx->env->memories.size);
-    WasmInterpreterMemory* memory = &ctx->env->memories.data[ctx->import_index];
+    assert(ctx->import_env_index < ctx->env->memories.size);
+    WasmInterpreterMemory* memory =
+        &ctx->env->memories.data[ctx->import_env_index];
     CHECK_RESULT(check_import_limits(ctx, page_limits, &memory->page_limits));
 
     import->memory.limits = *page_limits;
-    ctx->module->memory_index = ctx->import_index;
+    ctx->module->memory_index = ctx->import_env_index;
   }
   return WASM_OK;
 }
 
-static WasmResult on_import_global(uint32_t index,
+static WasmResult on_import_global(uint32_t import_index,
+                                   uint32_t global_index,
                                    WasmType type,
                                    WasmBool mutable,
                                    void* user_data) {
   Context* ctx = user_data;
-  assert(index < ctx->module->defined.imports.size);
-  WasmInterpreterImport* import = &ctx->module->defined.imports.data[index];
+  assert(import_index < ctx->module->defined.imports.size);
+  WasmInterpreterImport* import =
+      &ctx->module->defined.imports.data[import_index];
 
-  uint32_t global_index = ctx->env->globals.size - 1;
+  uint32_t global_env_index = ctx->env->globals.size - 1;
   if (ctx->is_host_import) {
     WasmInterpreterGlobal* global =
         wasm_append_interpreter_global(ctx->allocator, &ctx->env->globals);
@@ -673,18 +682,18 @@ static WasmResult on_import_global(uint32_t index,
                                               make_print_error_callback(ctx),
                                               host_delegate->user_data));
 
-    global_index = ctx->env->globals.size - 1;
+    global_env_index = ctx->env->globals.size - 1;
     append_export(ctx, ctx->host_import_module, WASM_EXTERNAL_KIND_GLOBAL,
-                  global_index, import->field_name);
+                  global_env_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, WASM_EXTERNAL_KIND_GLOBAL));
     // TODO: check type and mutability
     import->global.type = type;
     import->global.mutable_ = mutable;
-    global_index = ctx->import_index;
+    global_env_index = ctx->import_env_index;
   }
   wasm_append_uint32_value(ctx->allocator, &ctx->global_index_mapping,
-                           &global_index);
+                           &global_env_index);
   return WASM_OK;
 }
 

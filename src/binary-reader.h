@@ -80,17 +80,21 @@ typedef struct WasmBinaryReader {
                           WasmStringSlice module_name,
                           WasmStringSlice field_name,
                           void* user_data);
-  WasmResult (*on_import_func)(uint32_t index,
+  WasmResult (*on_import_func)(uint32_t import_index,
+                               uint32_t func_index,
                                uint32_t sig_index,
                                void* user_data);
-  WasmResult (*on_import_table)(uint32_t index,
+  WasmResult (*on_import_table)(uint32_t import_index,
+                                uint32_t table_index,
                                 WasmType elem_type,
                                 const WasmLimits* elem_limits,
                                 void* user_data);
-  WasmResult (*on_import_memory)(uint32_t index,
+  WasmResult (*on_import_memory)(uint32_t import_index,
+                                 uint32_t memory_index,
                                  const WasmLimits* page_limits,
                                  void* user_data);
-  WasmResult (*on_import_global)(uint32_t index,
+  WasmResult (*on_import_global)(uint32_t import_index,
+                                 uint32_t global_index,
                                  WasmType type,
                                  WasmBool mutable_,
                                  void* user_data);

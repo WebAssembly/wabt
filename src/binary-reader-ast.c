@@ -208,13 +208,14 @@ static WasmResult on_import(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult on_import_func(uint32_t index,
+static WasmResult on_import_func(uint32_t import_index,
+                                 uint32_t func_index,
                                  uint32_t sig_index,
                                  void* user_data) {
   Context* ctx = user_data;
-  assert(index == ctx->module->imports.size - 1);
+  assert(import_index == ctx->module->imports.size - 1);
   assert(sig_index < ctx->module->func_types.size);
-  WasmImport* import = ctx->module->imports.data[index];
+  WasmImport* import = ctx->module->imports.data[import_index];
 
   import->kind = WASM_EXTERNAL_KIND_FUNC;
   import->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
@@ -229,13 +230,14 @@ static WasmResult on_import_func(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult on_import_table(uint32_t index,
+static WasmResult on_import_table(uint32_t import_index,
+                                  uint32_t table_index,
                                   WasmType elem_type,
                                   const WasmLimits* elem_limits,
                                   void* user_data) {
   Context* ctx = user_data;
-  assert(index == ctx->module->imports.size - 1);
-  WasmImport* import = ctx->module->imports.data[index];
+  assert(import_index == ctx->module->imports.size - 1);
+  WasmImport* import = ctx->module->imports.data[import_index];
   import->kind = WASM_EXTERNAL_KIND_TABLE;
   import->table.elem_limits = *elem_limits;
 
@@ -245,12 +247,13 @@ static WasmResult on_import_table(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult on_import_memory(uint32_t index,
+static WasmResult on_import_memory(uint32_t import_index,
+                                   uint32_t memory_index,
                                    const WasmLimits* page_limits,
                                    void* user_data) {
   Context* ctx = user_data;
-  assert(index == ctx->module->imports.size - 1);
-  WasmImport* import = ctx->module->imports.data[index];
+  assert(import_index == ctx->module->imports.size - 1);
+  WasmImport* import = ctx->module->imports.data[import_index];
   import->kind = WASM_EXTERNAL_KIND_MEMORY;
   import->memory.page_limits = *page_limits;
 
@@ -261,13 +264,14 @@ static WasmResult on_import_memory(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult on_import_global(uint32_t index,
+static WasmResult on_import_global(uint32_t import_index,
+                                   uint32_t global_index,
                                    WasmType type,
                                    WasmBool mutable_,
                                    void* user_data) {
   Context* ctx = user_data;
-  assert(index == ctx->module->imports.size - 1);
-  WasmImport* import = ctx->module->imports.data[index];
+  assert(import_index == ctx->module->imports.size - 1);
+  WasmImport* import = ctx->module->imports.data[import_index];
   import->kind = WASM_EXTERNAL_KIND_GLOBAL;
   import->global.type = type;
   import->global.mutable_ = mutable_;
