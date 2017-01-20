@@ -58,10 +58,6 @@ def main(args):
       '--use-libc-allocator': options.use_libc_allocator
   })
 
-  wasmdump = utils.Executable(
-      find_exe.GetWasmdumpExecutable(options.bindir),
-      error_cmdline=options.error_cmdline)
-
   wasm_interp = utils.Executable(
       find_exe.GetWasmInterpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
@@ -79,13 +75,6 @@ def main(args):
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
     wast2wasm.RunWithArgs(options.file, '-o', out_file)
-    if options.spec:
-      wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
-      wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
-    else:
-      wasm_files = [out_file]
-    for wasm_file in wasm_files:
-      wasmdump.RunWithArgs(wasm_file)
     wasm_interp.RunWithArgs(out_file)
 
   return 0

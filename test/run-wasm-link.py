@@ -92,10 +92,10 @@ def main(args):
           os.rename(output, partialy_linked)
           wasm_link.RunWithArgs('-o', output, partialy_linked, f)
         #wasmdump.RunWithArgs('-d', '-h', output)
-      wasmdump.RunWithArgs('-d', '-v', '-h', output)
+      wasmdump.RunWithArgs('-d', '-x', '-h', output)
     else:
       wasm_link.RunWithArgs('-o', output, *wasm_files)
-      wasmdump.RunWithArgs('-d', '-h', '-v', output)
+      wasmdump.RunWithArgs('-d', '-x', '-h', output)
 
 
 if __name__ == '__main__':

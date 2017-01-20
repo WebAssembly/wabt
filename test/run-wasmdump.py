@@ -69,7 +69,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wasmdump.AppendOptionalArgs({
       '-h': options.headers,
-      '-v': options.dump_verbose,
+      '-x': options.dump_verbose,
   })
 
   wast2wasm.verbose = options.print_cmd
