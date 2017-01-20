@@ -552,7 +552,6 @@ LOGGING_UINT32(on_signature_count)
 LOGGING_END(signature_section)
 LOGGING_BEGIN(import_section)
 LOGGING_UINT32(on_import_count)
-LOGGING_UINT32_UINT32(on_import_func, "index", "sig_index")
 LOGGING_END(import_section)
 LOGGING_BEGIN(function_signatures_section)
 LOGGING_UINT32(on_function_signatures_count)
@@ -683,36 +682,55 @@ static WasmResult logging_on_import(uint32_t index,
   FORWARD(on_import, index, module_name, field_name);
 }
 
-static WasmResult logging_on_import_table(uint32_t index,
+static WasmResult logging_on_import_func(uint32_t import_index,
+                                         uint32_t func_index,
+                                         uint32_t sig_index,
+                                         void* user_data) {
+  LoggingContext* ctx = user_data;
+  LOGF("on_import_func(import_index: %u, func_index: %u, sig_index: %u)\n",
+       import_index, func_index, sig_index);
+  FORWARD(on_import_func, import_index, func_index, sig_index);
+}
+
+
+static WasmResult logging_on_import_table(uint32_t import_index,
+                                          uint32_t table_index,
                                           WasmType elem_type,
                                           const WasmLimits* elem_limits,
                                           void* user_data) {
   LoggingContext* ctx = user_data;
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
-  LOGF("on_import_table(index: %u, elem_type: %s, %s)\n", index,
-       wasm_get_type_name(elem_type), buf);
-  FORWARD(on_import_table, index, elem_type, elem_limits);
+  LOGF(
+      "on_import_table(import_index: %u, table_index: %u, elem_type: %s, %s)\n",
+      import_index, table_index, wasm_get_type_name(elem_type), buf);
+  FORWARD(on_import_table, import_index, table_index, elem_type, elem_limits);
 }
 
-static WasmResult logging_on_import_memory(uint32_t index,
+static WasmResult logging_on_import_memory(uint32_t import_index,
+                                           uint32_t memory_index,
                                            const WasmLimits* page_limits,
                                            void* user_data) {
   LoggingContext* ctx = user_data;
   char buf[100];
   sprint_limits(buf, sizeof(buf), page_limits);
-  LOGF("on_import_memory(index: %u, %s)\n", index, buf);
-  FORWARD(on_import_memory, index, page_limits);
+  LOGF("on_import_memory(import_index: %u, memory_index: %u, %s)\n",
+       import_index, memory_index, buf);
+  FORWARD(on_import_memory, import_index, memory_index, page_limits);
 }
 
-static WasmResult logging_on_import_global(uint32_t index,
+static WasmResult logging_on_import_global(uint32_t import_index,
+                                           uint32_t global_index,
                                            WasmType type,
                                            WasmBool mutable_,
                                            void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_import_global(index: %u, type: %s, mutable: %s)\n", index,
-       wasm_get_type_name(type), mutable_ ? "true" : "false");
-  FORWARD(on_import_global, index, type, mutable_);
+  LOGF(
+      "on_import_global(import_index: %u, global_index: %u, type: %s, mutable: "
+      "%s)\n",
+      import_index, global_index, wasm_get_type_name(type),
+      mutable_ ? "true" : "false");
+  FORWARD(on_import_global, import_index, global_index, type, mutable_);
 }
 
 static WasmResult logging_on_table(uint32_t index,
@@ -1756,7 +1774,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         in_u32_leb128(ctx, &sig_index, "import signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid import signature index");
-        CALLBACK(on_import_func, i, sig_index);
+        CALLBACK(on_import_func, i, ctx->num_func_imports, sig_index);
         ctx->num_func_imports++;
         break;
       }
@@ -1765,7 +1783,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         WasmType elem_type;
         WasmLimits elem_limits;
         read_table(ctx, &elem_type, &elem_limits);
-        CALLBACK(on_import_table, i, elem_type, &elem_limits);
+        CALLBACK(on_import_table, i, ctx->num_table_imports, elem_type,
+                 &elem_limits);
         ctx->num_table_imports++;
         break;
       }
@@ -1773,7 +1792,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
       case WASM_EXTERNAL_KIND_MEMORY: {
         WasmLimits page_limits;
         read_memory(ctx, &page_limits);
-        CALLBACK(on_import_memory, i, &page_limits);
+        CALLBACK(on_import_memory, i, ctx->num_memory_imports, &page_limits);
         ctx->num_memory_imports++;
         break;
       }
@@ -1782,7 +1801,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         WasmType type;
         WasmBool mutable_;
         read_global_header(ctx, &type, &mutable_);
-        CALLBACK(on_import_global, i, type, mutable_);
+        CALLBACK(on_import_global, i, ctx->num_global_imports, type, mutable_);
         ctx->num_global_imports++;
         break;
       }
