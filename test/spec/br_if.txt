@@ -141,5 +141,74 @@ assert_invalid error:
   out/third_party/testsuite/br_if.wast:288:37: label variable out of range (max 1)
   (module (func $large-label (br_if 0x10000001 (i32.const 1))))
                                     ^^^^^^^^^^
-34/34 tests passed.
+out/third_party/testsuite/br_if.wast:171: assert_invalid passed:
+  error: type stack size too small at i32.ctz. got 0, expected at least 1
+  error: @0x0000001e: on_unary_expr callback failed
+out/third_party/testsuite/br_if.wast:175: assert_invalid passed:
+  error: type stack size too small at i64.ctz. got 0, expected at least 1
+  error: @0x0000001e: on_unary_expr callback failed
+out/third_party/testsuite/br_if.wast:179: assert_invalid passed:
+  error: type stack size too small at f32.neg. got 0, expected at least 1
+  error: @0x0000001e: on_unary_expr callback failed
+out/third_party/testsuite/br_if.wast:183: assert_invalid passed:
+  error: type stack size too small at f64.neg. got 0, expected at least 1
+  error: @0x0000001e: on_unary_expr callback failed
+out/third_party/testsuite/br_if.wast:188: assert_invalid passed:
+  error: type stack size too small at i32.ctz. got 0, expected at least 1
+  error: @0x0000001e: on_unary_expr callback failed
+out/third_party/testsuite/br_if.wast:192: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got i64.
+  error: @0x0000001d: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:196: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got f32.
+  error: @0x00000020: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:200: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got i64.
+  error: @0x0000001d: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:205: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x0000001e: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:211: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x0000001e: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:217: assert_invalid passed:
+  error: type stack at end of block is 1. expected 0
+  error: @0x00000020: on_end_expr callback failed
+out/third_party/testsuite/br_if.wast:223: assert_invalid passed:
+  error: type stack at end of block is 1. expected 0
+  error: @0x00000020: on_end_expr callback failed
+out/third_party/testsuite/br_if.wast:230: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x0000001f: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:236: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x0000001f: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:242: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got i64.
+  error: @0x00000020: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:248: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got i64.
+  error: @0x00000020: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:255: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x0000001c: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:261: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got i64.
+  error: @0x0000001d: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:267: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x0000001f: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:273: assert_invalid passed:
+  error: type mismatch in br_if, expected i32 but got i64.
+  error: @0x00000020: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:280: assert_invalid passed:
+  error: invalid depth: 1 (max 1)
+  error: @0x0000001b: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:284: assert_invalid passed:
+  error: invalid depth: 5 (max 3)
+  error: @0x0000001f: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:288: assert_invalid passed:
+  error: invalid depth: 268435457 (max 1)
+  error: @0x0000001f: on_br_if_expr callback failed
+57/57 tests passed.
 ;;; STDOUT ;;)

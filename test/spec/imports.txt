@@ -131,6 +131,14 @@ out/third_party/testsuite/imports.wast:242: assert_unlinkable passed:
 out/third_party/testsuite/imports.wast:246: assert_unlinkable passed:
   error: unknown host global import "spectest.memory"
   error: @0x0000001e: on_import_global callback failed
+out/third_party/testsuite/imports.wast:288: assert_invalid passed:
+  error: unknown import module ""
+  error: @0x0000000d: on_import callback failed
+out/third_party/testsuite/imports.wast:292: assert_invalid passed:
+  error: unknown import module ""
+  error: @0x0000000d: on_import callback failed
+out/third_party/testsuite/imports.wast:296: assert_invalid passed:
+  error: @0x0000000b: table count (2) must be 0 or 1
 out/third_party/testsuite/imports.wast:313: assert_unlinkable passed:
   error: unknown module field "unknown"
   error: @0x00000018: on_import callback failed
@@ -161,6 +169,14 @@ out/third_party/testsuite/imports.wast:347: assert_unlinkable passed:
 out/third_party/testsuite/imports.wast:351: assert_unlinkable passed:
   error: unknown host table import "spectest.print"
   error: @0x0000001e: on_import_table callback failed
+out/third_party/testsuite/imports.wast:383: assert_invalid passed:
+  error: unknown import module ""
+  error: @0x0000000d: on_import callback failed
+out/third_party/testsuite/imports.wast:387: assert_invalid passed:
+  error: unknown import module ""
+  error: @0x0000000d: on_import callback failed
+out/third_party/testsuite/imports.wast:391: assert_invalid passed:
+  error: @0x0000000b: memory count must be 0 or 1
 out/third_party/testsuite/imports.wast:406: assert_unlinkable passed:
   error: unknown module field "unknown"
   error: @0x00000018: on_import callback failed
@@ -203,5 +219,5 @@ out/third_party/testsuite/imports.wast:457: assert_unlinkable passed:
 out/third_party/testsuite/imports.wast:461: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
   error: @0x0000001f: on_import_memory callback failed
-85/85 tests passed.
+91/91 tests passed.
 ;;; STDOUT ;;)

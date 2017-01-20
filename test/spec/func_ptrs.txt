@@ -31,5 +31,20 @@ assert_invalid error:
                                                           ^^
 called host spectest.print(i32:83) =>
 four(i32:83) =>
-26/26 tests passed.
+out/third_party/testsuite/func_ptrs.wast:31: assert_invalid passed:
+  error: @0x0000000b: elem section without table section
+out/third_party/testsuite/func_ptrs.wast:32: assert_invalid passed:
+  error: @0x00000015: elem section without table section
+out/third_party/testsuite/func_ptrs.wast:35: assert_invalid passed:
+  error: type mismatch in elem segment, expected i32 but got i64
+  error: @0x00000015: end_elem_segment_init_expr callback failed
+out/third_party/testsuite/func_ptrs.wast:39: assert_invalid passed:
+  error: @0x00000015: expected END opcode after initializer expression
+out/third_party/testsuite/func_ptrs.wast:43: assert_invalid passed:
+  error: @0x00000013: unexpected opcode in initializer expression: 1 (0x1)
+out/third_party/testsuite/func_ptrs.wast:47: assert_invalid passed:
+  error: @0x0000000c: invalid function signature index: 42
+out/third_party/testsuite/func_ptrs.wast:48: assert_invalid passed:
+  error: @0x0000001c: invalid import signature index
+33/33 tests passed.
 ;;; STDOUT ;;)

@@ -1275,21 +1275,17 @@ static WasmResult on_assert_unlinkable_command(Context* ctx,
 static WasmResult on_assert_invalid_command(Context* ctx,
                                             WasmStringSlice filename,
                                             WasmStringSlice text) {
-  /* TODO: need to correctly support invalid asserts in interpreter */
-  return WASM_OK;
-#if 0
   WasmBinaryErrorHandler* error_handler =
       new_custom_error_handler(ctx, "assert_invalid");
+  WasmInterpreterEnvironment env;
+  WASM_ZERO_MEMORY(env);
+  init_environment(ctx->allocator, &env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   WasmInterpreterModule* module;
-  WasmInterpreterEnvironmentMark mark =
-      wasm_mark_interpreter_environment(&ctx->env);
   WasmResult result =
-      read_module(ctx->allocator, path, &ctx->env, error_handler, &module);
-  wasm_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
-
+      read_module(ctx->allocator, path, &env, error_handler, &module);
   if (WASM_FAILED(result)) {
     ctx->passed++;
     result = WASM_OK;
@@ -1299,9 +1295,9 @@ static WasmResult on_assert_invalid_command(Context* ctx,
   }
 
   wasm_free(ctx->allocator, path);
+  wasm_destroy_interpreter_environment(ctx->allocator, &env);
   destroy_custom_error_handler(ctx->allocator, error_handler);
   return result;
-#endif
 }
 
 static WasmResult on_assert_uninstantiable_command(Context* ctx,

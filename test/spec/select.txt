@@ -5,5 +5,8 @@ assert_invalid error:
   out/third_party/testsuite/select.wast:55:27: type stack size too small at select. got 0, expected at least 2
   (module (func $arity-0 (select (nop) (nop) (i32.const 1))))
                           ^^^^^^
-28/28 tests passed.
+out/third_party/testsuite/select.wast:55: assert_invalid passed:
+  error: type stack size too small at select. got 0, expected at least 2
+  error: @0x0000001c: on_select_expr callback failed
+29/29 tests passed.
 ;;; STDOUT ;;)

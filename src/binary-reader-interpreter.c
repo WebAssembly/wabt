@@ -121,6 +121,7 @@ typedef struct Context {
   Uint32Vector global_index_mapping;
 
   uint32_t num_func_imports;
+  uint32_t num_global_imports;
 
   /* values cached in the Context so they can be shared between callbacks */
   WasmInterpreterTypedValue init_expr_value;
@@ -486,11 +487,17 @@ static WasmResult check_import_limits(Context* ctx,
   return WASM_OK;
 }
 
-static void append_export(Context* ctx,
-                          WasmInterpreterModule* module,
-                          WasmExternalKind kind,
-                          uint32_t item_index,
-                          WasmStringSlice name) {
+static WasmResult append_export(Context* ctx,
+                                WasmInterpreterModule* module,
+                                WasmExternalKind kind,
+                                uint32_t item_index,
+                                WasmStringSlice name) {
+  if (wasm_find_binding_index_by_name(&module->export_bindings, &name) != -1) {
+    print_error(ctx, "duplicate export \"" PRIstringslice "\"",
+                WASM_PRINTF_STRING_SLICE_ARG(name));
+    return WASM_ERROR;
+  }
+
   WasmInterpreterExport* export =
       wasm_append_interpreter_export(ctx->allocator, &module->exports);
   export->name = wasm_dup_string_slice(ctx->allocator, name);
@@ -500,6 +507,7 @@ static void append_export(Context* ctx,
   WasmBinding* binding = wasm_insert_binding(
       ctx->allocator, &module->export_bindings, &export->name);
   binding->index = module->exports.size - 1;
+  return WASM_OK;
 }
 
 static void on_host_import_print_error(const char* msg, void* user_data) {
@@ -694,6 +702,7 @@ static WasmResult on_import_global(uint32_t import_index,
   }
   wasm_append_uint32_value(ctx->allocator, &ctx->global_index_mapping,
                            &global_env_index);
+  ctx->num_global_imports++;
   return WASM_OK;
 }
 
@@ -785,6 +794,12 @@ static WasmResult begin_global(uint32_t index,
 static WasmResult end_global_init_expr(uint32_t index, void* user_data) {
   Context* ctx = user_data;
   WasmInterpreterGlobal* global = get_global_by_module_index(ctx, index);
+  if (ctx->init_expr_value.type != global->typed_value.type) {
+    print_error(ctx, "type mismatch in global, expected %s but got %s.",
+                wasm_get_type_name(global->typed_value.type),
+                wasm_get_type_name(ctx->init_expr_value.type));
+    return WASM_ERROR;
+  }
   global->typed_value = ctx->init_expr_value;
   return WASM_OK;
 }
@@ -811,8 +826,18 @@ static WasmResult on_init_expr_get_global_expr(uint32_t index,
                                                uint32_t global_index,
                                                void* user_data) {
   Context* ctx = user_data;
+  if (global_index >= ctx->num_global_imports) {
+    print_error(ctx,
+                "initializer expression can only reference an imported global");
+    return WASM_ERROR;
+  }
   WasmInterpreterGlobal* ref_global =
       get_global_by_module_index(ctx, global_index);
+  if (ref_global->mutable_) {
+    print_error(ctx,
+                "initializer expression cannot reference a mutable global");
+    return WASM_ERROR;
+  }
   ctx->init_expr_value = ref_global->typed_value;
   return WASM_OK;
 }
@@ -854,28 +879,49 @@ static WasmResult on_export(uint32_t index,
       item_index = ctx->module->memory_index;
       break;
 
-    case WASM_EXTERNAL_KIND_GLOBAL:
+    case WASM_EXTERNAL_KIND_GLOBAL: {
       item_index = translate_global_index_to_env(ctx, item_index);
+      WasmInterpreterGlobal* global = &ctx->env->globals.data[item_index];
+      if (global->mutable_) {
+        print_error(ctx, "mutable globals cannot be exported");
+        return WASM_ERROR;
+      }
       break;
+    }
 
     case WASM_NUM_EXTERNAL_KINDS:
       assert(0);
       break;
   }
-  append_export(ctx, ctx->module, kind, item_index, name);
-  return WASM_OK;
+  return append_export(ctx, ctx->module, kind, item_index, name);
 }
 
 static WasmResult on_start_function(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
-  ctx->module->defined.start_func_index =
-      translate_func_index_to_env(ctx, func_index);
+  uint32_t start_func_index = translate_func_index_to_env(ctx, func_index);
+  WasmInterpreterFunc* start_func =
+      get_func_by_env_index(ctx, start_func_index);
+  WasmInterpreterFuncSignature* sig =
+      get_signature_by_env_index(ctx, start_func->sig_index);
+  if (sig->param_types.size != 0) {
+    print_error(ctx, "start function must be nullary");
+    return WASM_ERROR;
+  }
+  if (sig->result_types.size != 0) {
+    print_error(ctx, "start function must not return anything");
+    return WASM_ERROR;
+  }
+  ctx->module->defined.start_func_index = start_func_index;
   return WASM_OK;
 }
 
 static WasmResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  assert(ctx->init_expr_value.type == WASM_TYPE_I32);
+  if (ctx->init_expr_value.type != WASM_TYPE_I32) {
+    print_error(ctx, "type mismatch in elem segment, expected i32 but got %s",
+                wasm_get_type_name(ctx->init_expr_value.type));
+    return WASM_ERROR;
+  }
   ctx->table_offset = ctx->init_expr_value.value.i32;
   return WASM_OK;
 }
@@ -891,6 +937,13 @@ static WasmResult on_elem_segment_function_index_check(uint32_t index,
     print_error(ctx,
                 "elem segment offset is out of bounds: %u >= max value %" PRIzd,
                 ctx->table_offset, table->func_indexes.size);
+    return WASM_ERROR;
+  }
+
+  uint32_t max_func_index = ctx->func_index_mapping.size;
+  if (func_index >= max_func_index) {
+    print_error(ctx, "invalid func_index: %d (max %d)", func_index,
+                max_func_index);
     return WASM_ERROR;
   }
 
@@ -919,7 +972,11 @@ static WasmResult on_data_segment_data_check(uint32_t index,
   assert(ctx->module->memory_index != WASM_INVALID_INDEX);
   WasmInterpreterMemory* memory =
       &ctx->env->memories.data[ctx->module->memory_index];
-  assert(ctx->init_expr_value.type == WASM_TYPE_I32);
+  if (ctx->init_expr_value.type != WASM_TYPE_I32) {
+    print_error(ctx, "type mismatch in data segment, expected i32 but got %s",
+                wasm_get_type_name(ctx->init_expr_value.type));
+    return WASM_ERROR;
+  }
   uint32_t address = ctx->init_expr_value.value.i32;
   uint64_t end_address = (uint64_t)address + (uint64_t)size;
   if (end_address > memory->byte_size) {
@@ -964,10 +1021,14 @@ static void push_label(Context* ctx,
   LOGF("   : +depth %" PRIzd "\n", ctx->label_stack.size - 1);
 }
 
+static void wasm_destroy_label(WasmAllocator* allocator, Label* label) {
+  wasm_destroy_type_vector(allocator, &label->sig);
+}
+
 static void pop_label(Context* ctx) {
   LOGF("   : -depth %" PRIzd "\n", ctx->label_stack.size - 1);
   Label* label = top_label(ctx);
-  wasm_destroy_type_vector(ctx->allocator, &label->sig);
+  wasm_destroy_label(ctx->allocator, label);
   ctx->label_stack.size--;
   /* reduce the depth_fixups stack as well, but it may be smaller than
    * label_stack so only do it conditionally. */
@@ -1257,6 +1318,26 @@ static WasmResult on_local_decl(uint32_t decl_index,
   return WASM_OK;
 }
 
+static WasmResult check_has_memory(Context* ctx, WasmOpcode opcode) {
+  if (ctx->module->memory_index == WASM_INVALID_INDEX) {
+    print_error(ctx, "%s requires an imported or defined memory.",
+                wasm_get_opcode_name(opcode));
+    return WASM_ERROR;
+  }
+  return WASM_OK;
+}
+
+static WasmResult check_align(Context* ctx,
+                              uint32_t alignment_log2,
+                              uint32_t natural_alignment) {
+  if (alignment_log2 >= 32 || (1U << alignment_log2) > natural_alignment) {
+    print_error(ctx, "alignment must not be larger than natural alignment (%u)",
+                natural_alignment);
+    return WASM_ERROR;
+  }
+  return WASM_OK;
+}
+
 static WasmResult on_unary_expr(WasmOpcode opcode, void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(check_opcode1(ctx, opcode));
@@ -1391,6 +1472,9 @@ static WasmResult on_br_if_expr(uint32_t depth, void* user_data) {
   CHECK_DEPTH(ctx, depth);
   depth = translate_depth(ctx, depth);
   CHECK_RESULT(pop_and_check_1_type(ctx, WASM_TYPE_I32, "br_if"));
+  Label* label = get_label(ctx, depth);
+  if (label->label_type != LABEL_TYPE_LOOP)
+    CHECK_RESULT(check_n_types(ctx, &label->sig, "br_if"));
   /* flip the br_if so if <cond> is true it can drop values from the stack */
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_BR_UNLESS));
   uint32_t fixup_br_offset = get_istream_offset(ctx);
@@ -1419,6 +1503,7 @@ static WasmResult on_br_table_expr(WasmBinaryReaderContext* context,
   uint32_t i;
   for (i = 0; i <= num_targets; ++i) {
     uint32_t depth = i != num_targets ? target_depths[i] : default_target_depth;
+    CHECK_DEPTH(ctx, depth);
     depth = translate_depth(ctx, depth);
     Label* label = get_label(ctx, depth);
     CHECK_RESULT(check_n_types(ctx, &label->sig, "br_table"));
@@ -1457,6 +1542,10 @@ static WasmResult on_call_expr(uint32_t func_index, void* user_data) {
 
 static WasmResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = user_data;
+  if (ctx->module->table_index == WASM_INVALID_INDEX) {
+    print_error(ctx, "found call_indirect operator, but no table");
+    return WASM_ERROR;
+  }
   WasmInterpreterFuncSignature* sig =
       get_signature_by_module_index(ctx, sig_index);
   CHECK_RESULT(pop_and_check_1_type(ctx, WASM_TYPE_I32, "call_indirect"));
@@ -1577,6 +1666,7 @@ static WasmResult on_tee_local_expr(uint32_t local_index, void* user_data) {
 
 static WasmResult on_grow_memory_expr(void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(check_has_memory(ctx, WASM_OPCODE_GROW_MEMORY));
   CHECK_RESULT(pop_and_check_1_type(ctx, WASM_TYPE_I32, "grow_memory"));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_GROW_MEMORY));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
@@ -1589,6 +1679,9 @@ static WasmResult on_load_expr(WasmOpcode opcode,
                                uint32_t offset,
                                void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(check_has_memory(ctx, opcode));
+  CHECK_RESULT(
+      check_align(ctx, alignment_log2, wasm_get_opcode_memory_size(opcode)));
   CHECK_RESULT(check_opcode1(ctx, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
@@ -1601,6 +1694,9 @@ static WasmResult on_store_expr(WasmOpcode opcode,
                                 uint32_t offset,
                                 void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(check_has_memory(ctx, opcode));
+  CHECK_RESULT(
+      check_align(ctx, alignment_log2, wasm_get_opcode_memory_size(opcode)));
   CHECK_RESULT(check_opcode2(ctx, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
@@ -1610,6 +1706,7 @@ static WasmResult on_store_expr(WasmOpcode opcode,
 
 static WasmResult on_current_memory_expr(void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(check_has_memory(ctx, WASM_OPCODE_CURRENT_MEMORY));
   CHECK_RESULT(emit_opcode(ctx, WASM_OPCODE_CURRENT_MEMORY));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   push_type(ctx, WASM_TYPE_I32);
@@ -1748,7 +1845,7 @@ static WasmBinaryReader s_binary_reader_segments = {
 
 static void destroy_context(Context* ctx) {
   wasm_destroy_type_vector(ctx->allocator, &ctx->type_stack);
-  wasm_destroy_label_vector(ctx->allocator, &ctx->label_stack);
+  WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->label_stack, label);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->depth_fixups,
                                    uint32_vector);
   WASM_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->func_fixups,
