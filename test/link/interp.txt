@@ -47,10 +47,9 @@ Sections:
      TYPE start=0x0000000a end=0x0000001f (size=0x00000015) count: 5
    IMPORT start=0x00000025 end=0x00000026 (size=0x00000001) count: 0
  FUNCTION start=0x0000002c end=0x00000032 (size=0x00000006) count: 5
-   EXPORT start=0x00000034 end=0x00000085 (size=0x00000051) count: 5
-     CODE start=0x00000087 end=0x000000b2 (size=0x0000002b) count: 5
-   CUSTOM start=0x000000b8 end=0x000000d1 (size=0x00000019) "reloc.EXPORT"
-   CUSTOM start=0x000000d7 end=0x000000e8 (size=0x00000011) "reloc.CODE"
+   EXPORT start=0x00000038 end=0x00000075 (size=0x0000003d) count: 5
+     CODE start=0x00000077 end=0x000000a2 (size=0x0000002b) count: 5
+   CUSTOM start=0x000000a8 end=0x000000b9 (size=0x00000011) "reloc.CODE"
 
 Section Details:
 TYPE:
@@ -79,34 +78,26 @@ CODE:
  - func 3
  - func 4
 CUSTOM:
- - name: "reloc.EXPORT"
-  - section: EXPORT
-   - R_FUNC_INDEX_LEB   offset=0x3e (0xa)
-   - R_FUNC_INDEX_LEB   offset=0x51 (0x1d)
-   - R_FUNC_INDEX_LEB   offset=0x64 (0x30)
-   - R_FUNC_INDEX_LEB   offset=0x72 (0x3e)
-   - R_FUNC_INDEX_LEB   offset=0x80 (0x4c)
-CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
-   - R_FUNC_INDEX_LEB   offset=0x94 (0xd)
-   - R_FUNC_INDEX_LEB   offset=0x9e (0x17)
+   - R_FUNC_INDEX_LEB   offset=0x84 (0xd)
+   - R_FUNC_INDEX_LEB   offset=0x8e (0x17)
 
 Code Disassembly:
 func 0
- 00008a: 43 00 00 80 3f             | f32.const 0x1p+0
- 00008f: 0f                         | return
+ 00007a: 43 00 00 80 3f             | f32.const 0x1p+0
+ 00007f: 0f                         | return
 func 1
- 000093: 10 83 80 80 80 00          | call 0x3
- 000099: 0f                         | return
+ 000083: 10 83 80 80 80 00          | call 0x3
+ 000089: 0f                         | return
 func 2
- 00009d: 10 84 80 80 80 00          | call 0x4
- 0000a3: 0f                         | return
+ 00008d: 10 84 80 80 80 00          | call 0x4
+ 000093: 0f                         | return
 func 3
- 0000a7: 41 2a                      | i32.const 0x2a
- 0000a9: 0f                         | return
+ 000097: 41 2a                      | i32.const 0x2a
+ 000099: 0f                         | return
 func 4
- 0000ad: 42 e3 00                   | i64.const 99
- 0000b0: 0f                         | return
+ 00009d: 42 e3 00                   | i64.const 99
+ 0000a0: 0f                         | return
 5/5 tests passed.
 ;;; STDOUT ;;)

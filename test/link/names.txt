@@ -24,11 +24,10 @@ Sections:
      TYPE start=0x0000000a end=0x0000001a (size=0x00000010) count: 4
    IMPORT start=0x00000020 end=0x00000034 (size=0x00000014) count: 1
  FUNCTION start=0x0000003a end=0x0000003e (size=0x00000004) count: 3
-   EXPORT start=0x00000040 end=0x00000055 (size=0x00000015) count: 2
-     CODE start=0x00000057 end=0x00000079 (size=0x00000022) count: 3
-   CUSTOM start=0x0000007f end=0x000000ac (size=0x0000002d) "name"
-   CUSTOM start=0x000000b2 end=0x000000c5 (size=0x00000013) "reloc.EXPORT"
-   CUSTOM start=0x000000cb end=0x000000de (size=0x00000013) "reloc.CODE"
+   EXPORT start=0x00000044 end=0x00000051 (size=0x0000000d) count: 2
+     CODE start=0x00000053 end=0x00000075 (size=0x00000022) count: 3
+   CUSTOM start=0x0000007b end=0x000000a8 (size=0x0000002d) "name"
+   CUSTOM start=0x000000ae end=0x000000c1 (size=0x00000013) "reloc.CODE"
 
 Section Details:
 TYPE:
@@ -56,25 +55,20 @@ CUSTOM:
  - func[2] $name2
  - func[3] $name3
 CUSTOM:
- - name: "reloc.EXPORT"
-  - section: EXPORT
-   - R_FUNC_INDEX_LEB   offset=0x46 (0x6)
-   - R_FUNC_INDEX_LEB   offset=0x50 (0x10)
-CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
-   - R_FUNC_INDEX_LEB   offset=0x5d (0x6)
-   - R_FUNC_INDEX_LEB   offset=0x68 (0x11)
-   - R_FUNC_INDEX_LEB   offset=0x73 (0x1c)
+   - R_FUNC_INDEX_LEB   offset=0x59 (0x6)
+   - R_FUNC_INDEX_LEB   offset=0x64 (0x11)
+   - R_FUNC_INDEX_LEB   offset=0x6f (0x1c)
 
 Code Disassembly:
 func 1
- 00005a: 41 01                      | i32.const 0x1
- 00005c: 10 83 80 80 80 00          | call 0x3
+ 000056: 41 01                      | i32.const 0x1
+ 000058: 10 83 80 80 80 00          | call 0x3
 func 2
- 000065: 42 01                      | i64.const 1
- 000067: 10 81 80 80 80 00          | call 0x1
+ 000061: 42 01                      | i64.const 1
+ 000063: 10 81 80 80 80 00          | call 0x1
 func 3
- 000070: 41 02                      | i32.const 0x2
- 000072: 10 83 80 80 80 00          | call 0x3
+ 00006c: 41 02                      | i32.const 0x2
+ 00006e: 10 83 80 80 80 00          | call 0x3
 ;;; STDOUT ;;)

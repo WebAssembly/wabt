@@ -792,8 +792,7 @@ static WasmResult write_module(Context* ctx, const WasmModule* module) {
           int index = wasm_get_func_index_by_var(module, &export->var);
           assert(ctx->options->is_invalid ||
                  (index >= 0 && (size_t)index < module->funcs.size));
-          write_u32_leb128_with_reloc(ctx, index, "export func index",
-                                      WASM_RELOC_FUNC_INDEX_LEB);
+          wasm_write_u32_leb128(&ctx->stream, index, "export func index");
           break;
         }
         case WASM_EXTERNAL_KIND_TABLE: {
