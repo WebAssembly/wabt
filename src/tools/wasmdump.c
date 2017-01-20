@@ -33,11 +33,11 @@
 
 enum {
   FLAG_HEADERS,
-  FLAG_RAW,
   FLAG_SECTION,
+  FLAG_RAW,
   FLAG_DISASSEMBLE,
-  FLAG_VERBOSE,
   FLAG_DEBUG,
+  FLAG_DETAILS,
   FLAG_HELP,
   NUM_FLAGS
 };
@@ -51,11 +51,11 @@ static const char s_description[] =
 static WasmOption s_options[] = {
     {FLAG_HEADERS, 'h', "headers", NULL, NOPE, "print headers"},
     {FLAG_SECTION, 'j', "section", NULL, YEP, "select just one section"},
-    {FLAG_RAW, 'r', "raw", NULL, NOPE, "print raw section contents"},
+    {FLAG_RAW, 's', "full-contents", NULL, NOPE, "print raw section contents"},
     {FLAG_DISASSEMBLE, 'd', "disassemble", NULL, NOPE,
      "disassemble function bodies"},
     {FLAG_DEBUG, '\0', "debug", NULL, NOPE, "disassemble function bodies"},
-    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE, "Verbose output"},
+    {FLAG_DETAILS, 'x', "details", NULL, NOPE, "Show section details"},
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
 };
 
@@ -86,8 +86,8 @@ static void on_option(struct WasmOptionParser* parser,
       s_objdump_options.disassemble = WASM_TRUE;
       break;
 
-    case FLAG_VERBOSE:
-      s_objdump_options.verbose = WASM_TRUE;
+    case FLAG_DETAILS:
+      s_objdump_options.details = WASM_TRUE;
       break;
 
     case FLAG_SECTION:
@@ -127,6 +127,15 @@ int main(int argc, char** argv) {
   wasm_init_stdio();
 
   parse_options(argc, argv);
+  if (!s_objdump_options.headers && !s_objdump_options.details && !s_objdump_options.disassemble && !s_objdump_options.raw) {
+    fprintf(stderr, "At least one of the following switches must be given:\n");
+    fprintf(stderr, " -d/--disassemble\n");
+    fprintf(stderr, " -h/--headers\n");
+    fprintf(stderr, " -x/--details\n");
+    fprintf(stderr, " -s/--full-contents\n");
+    return 1;
+  }
+
   WasmAllocator* allocator = &g_wasm_libc_allocator;
 
   void* data;
@@ -137,7 +146,6 @@ int main(int argc, char** argv) {
 
   // Perform serveral passed over the binary in order to print out different
   // types of information.
-
   s_objdump_options.print_header = 1;
 
   // Pass 1: Print the section headers
@@ -149,7 +157,7 @@ int main(int argc, char** argv) {
     s_objdump_options.print_header = 0;
   }
   // Pass 2: Print extra information based on section type
-  if (s_objdump_options.verbose) {
+  if (s_objdump_options.details) {
     s_objdump_options.mode = WASM_DUMP_DETAILS;
     result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
     if (WASM_FAILED(result))
