@@ -127,6 +127,15 @@ int main(int argc, char** argv) {
   wasm_init_stdio();
 
   parse_options(argc, argv);
+  if (!s_objdump_options.headers && !s_objdump_options.details && !s_objdump_options.disassemble && !s_objdump_options.raw) {
+    fprintf(stderr, "At least one of the following switches must be given:\n");
+    fprintf(stderr, " -d/--disassemble\n");
+    fprintf(stderr, " -h/--headers\n");
+    fprintf(stderr, " -x/--details\n");
+    fprintf(stderr, " -s/--full-contents\n");
+    return 1;
+  }
+
   WasmAllocator* allocator = &g_wasm_libc_allocator;
 
   void* data;
@@ -137,7 +146,6 @@ int main(int argc, char** argv) {
 
   // Perform serveral passed over the binary in order to print out different
   // types of information.
-
   s_objdump_options.print_header = 1;
   if (!s_objdump_options.headers && !s_objdump_options.details && !s_objdump_options.disassemble && !s_objdump_options.raw) {
     printf("At least one of the following switches must be given:\n");
