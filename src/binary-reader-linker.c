@@ -83,7 +83,8 @@ static WasmResult on_import(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult on_import_func(uint32_t index,
+static WasmResult on_import_func(uint32_t import_index,
+                                 uint32_t global_index,
                                  uint32_t sig_index,
                                  void* user_data) {
   Context* ctx = user_data;
@@ -96,7 +97,8 @@ static WasmResult on_import_func(uint32_t index,
   return WASM_OK;
 }
 
-static WasmResult on_import_global(uint32_t index,
+static WasmResult on_import_global(uint32_t import_index,
+                                   uint32_t global_index,
                                    WasmType type,
                                    WasmBool mutable,
                                    void* user_data) {
