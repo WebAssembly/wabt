@@ -31,7 +31,8 @@ typedef struct Context {
   WasmSection* current_section;
 } Context;
 
-static WasmResult on_reloc_count(uint32_t count, WasmBinarySection section_code,
+static WasmResult on_reloc_count(uint32_t count,
+                                 WasmBinarySection section_code,
                                  WasmStringSlice section_name,
                                  void* user_data) {
   Context* ctx = user_data;
@@ -170,9 +171,8 @@ static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
       }
     }
     if (total_funcs != sec->count) {
-      WASM_FATAL(
-          "name section count (%d) does not match function count (%d)\n",
-          sec->count, total_funcs);
+      WASM_FATAL("name section count (%d) does not match function count (%d)\n",
+                 sec->count, total_funcs);
     }
   }
 

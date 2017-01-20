@@ -146,7 +146,8 @@ static uint32_t relocate_func_index(WasmLinkerInputBinary* binary,
     /* locally declared function call */
     offset = binary->function_index_offset;
     if (s_verbose)
-      wasm_writef(&s_log_stream, "func reloc %d + %d\n", function_index, offset);
+      wasm_writef(&s_log_stream, "func reloc %d + %d\n", function_index,
+                  offset);
   } else {
     /* imported function call */
     WasmFunctionImport* import = &binary->function_imports.data[function_index];
@@ -248,7 +249,7 @@ static void write_slice(WasmStream* stream,
                                  (STREAM)->offset - start, "fixup size");
 
 static void write_table_section(Context* ctx,
-                                         const WasmSectionPtrVector* sections) {
+                                const WasmSectionPtrVector* sections) {
   /* Total section size includes the element count leb128 which is
    * always 1 in the current spec */
   uint32_t table_count = 1;
@@ -415,10 +416,9 @@ static void write_import_section(Context* ctx) {
   FIXUP_SIZE(&ctx->stream);
 }
 
-static void write_function_section(
-    Context* ctx,
-    const WasmSectionPtrVector* sections,
-    uint32_t total_count) {
+static void write_function_section(Context* ctx,
+                                   const WasmSectionPtrVector* sections,
+                                   uint32_t total_count) {
   WasmStream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 

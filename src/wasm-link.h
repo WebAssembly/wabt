@@ -68,8 +68,9 @@ typedef struct WasmSectionDataCustom {
 } WasmSectionDataCustom;
 
 typedef struct WasmSection {
-  struct WasmLinkerInputBinary* binary; /* The binary to which this section belongs */
-  WasmRelocVector relocations;    /* The relocations for this section */
+  /* The binary to which this section belongs */
+  struct WasmLinkerInputBinary* binary;
+  WasmRelocVector relocations; /* The relocations for this section */
 
   WasmBinarySection section_code;
   size_t size;

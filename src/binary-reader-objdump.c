@@ -106,8 +106,8 @@ static WasmResult begin_section(WasmBinaryReaderContext* ctx,
                                 uint32_t size) {
   Context* context = ctx->user_data;
   context->section_starts[type] = ctx->offset;
-  return do_begin_section(context, wasm_get_section_name(type),
-                          ctx->offset, size);
+  return do_begin_section(context, wasm_get_section_name(type), ctx->offset,
+                          size);
 }
 
 static WasmResult begin_custom_section(WasmBinaryReaderContext* ctx,
@@ -574,11 +574,14 @@ static WasmResult on_local_name(uint32_t func_index,
   return WASM_OK;
 }
 
-WasmResult on_reloc_count(uint32_t count, WasmBinarySection section_code,
-    WasmStringSlice section_name, void* user_data) {
+WasmResult on_reloc_count(uint32_t count,
+                          WasmBinarySection section_code,
+                          WasmStringSlice section_name,
+                          void* user_data) {
   Context* ctx = user_data;
   ctx->reloc_section = section_code;
-  print_details(user_data, "  - section: %s\n", wasm_get_section_name(section_code));
+  print_details(user_data, "  - section: %s\n",
+                wasm_get_section_name(section_code));
   return WASM_OK;
 }
 

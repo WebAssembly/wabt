@@ -39,7 +39,7 @@ WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_kind_name) ==
                    WASM_NUM_EXTERNAL_KINDS);
 
 const char* g_wasm_reloc_type_name[] = {
-    "R_FUNC_INDEX_LEB",   "R_TABLE_INDEX_SLEB", "R_TABLE_INDEX_I32",
+    "R_FUNC_INDEX_LEB", "R_TABLE_INDEX_SLEB", "R_TABLE_INDEX_I32",
     "R_GLOBAL_INDEX_LEB", "R_DATA"};
 WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_reloc_type_name) ==
                    WASM_NUM_RELOC_TYPES);

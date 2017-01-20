@@ -154,9 +154,9 @@ typedef enum WasmType {
 } WasmType;
 
 typedef enum WasmRelocType {
-  WASM_RELOC_FUNC_INDEX_LEB = 0, /* e.g. immediate of call instruction */
+  WASM_RELOC_FUNC_INDEX_LEB = 0,   /* e.g. immediate of call instruction */
   WASM_RELOC_TABLE_INDEX_SLEB = 1, /* e.g. loading address of function */
-  WASM_RELOC_TABLE_INDEX_I32 = 2, /* e.g. function address in DATA */
+  WASM_RELOC_TABLE_INDEX_I32 = 2,  /* e.g. function address in DATA */
   WASM_RELOC_GLOBAL_INDEX_LEB = 3, /* e.g immediate of get_global inst */
   WASM_RELOC_DATA = 4,
   WASM_NUM_RELOC_TYPES,

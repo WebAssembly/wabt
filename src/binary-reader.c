@@ -987,8 +987,9 @@ static WasmResult logging_on_reloc_count(uint32_t count,
                                          WasmStringSlice section_name,
                                          void* user_data) {
   LoggingContext* ctx = user_data;
-  LOGF("on_reloc_count(count: %d, section: %s, section_name: "
-       PRIstringslice ")\n", count, wasm_get_section_name(section_code),
+  LOGF("on_reloc_count(count: %d, section: %s, section_name: " PRIstringslice
+       ")\n",
+       count, wasm_get_section_name(section_code),
        WASM_PRINTF_STRING_SLICE_ARG(section_name));
   FORWARD(on_reloc_count, count, section_code, section_name);
 }
