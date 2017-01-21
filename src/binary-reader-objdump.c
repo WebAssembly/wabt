@@ -399,11 +399,11 @@ static WasmResult begin_function_body(WasmBinaryReaderContext* context,
 
   if (ctx->options->mode == WASM_DUMP_DISASSEMBLE) {
     if (index < ctx->options->function_names.size)
-      printf("%06" PRIx64 " <" PRIstringslice ">:\n", context->offset,
+      printf("%06" PRIzx " <" PRIstringslice ">:\n", context->offset,
              WASM_PRINTF_STRING_SLICE_ARG(
                  ctx->options->function_names.data[index]));
     else
-      printf("%06" PRIx64 " func[%d]:\n", context->offset, index);
+      printf("%06" PRIzx " func[%d]:\n", context->offset, index);
   }
 
   ctx->last_opcode_end = 0;
