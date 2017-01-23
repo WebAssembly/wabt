@@ -68,7 +68,8 @@
 callindirect.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000026 func[0]:
  000028: 41 00                      | i32.const 0
  00002a: 41 00                      | i32.const 0
  00002c: 11 00 00                   | call_indirect 0 0

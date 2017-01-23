@@ -48,13 +48,17 @@
 memory-data-size.0.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
+
 memory-data-size.1.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
+
 memory-data-size.2.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
+
 memory-data-size.3.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
+
 ;;; STDOUT ;;)

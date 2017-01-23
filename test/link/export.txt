@@ -16,6 +16,7 @@
 linked.wasm:	file format wasm 0x00000d
 
 Sections:
+
      TYPE start=0x0000000a end=0x00000013 (size=0x00000009) count: 2
  FUNCTION start=0x00000019 end=0x0000001c (size=0x00000003) count: 2
    EXPORT start=0x00000022 end=0x0000002f (size=0x0000000d) count: 2
@@ -23,6 +24,7 @@ Sections:
    CUSTOM start=0x0000004e end=0x0000005f (size=0x00000011) "reloc.CODE"
 
 Section Details:
+
 TYPE:
  - [0] (i32) -> nil
  - [1] (i32) -> nil
@@ -32,9 +34,6 @@ FUNCTION:
 EXPORT:
  - func[0] foo
  - func[1] bar
-CODE:
- - func 0
- - func 1
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
@@ -42,10 +41,13 @@ CUSTOM:
    - R_FUNC_INDEX_LEB   offset=0x42 (0x11)
 
 Code Disassembly:
-func 0
+
+000032 func[0]:
  000034: 41 01                      | i32.const 0x1
  000036: 10 80 80 80 80 00          | call 0
-func 1
+           000037: R_FUNC_INDEX_LEB
+00003d func[1]:
  00003f: 41 02                      | i32.const 0x2
  000041: 10 81 80 80 80 00          | call 0x1
+           000042: R_FUNC_INDEX_LEB
 ;;; STDOUT ;;)

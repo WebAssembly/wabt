@@ -88,15 +88,13 @@
 debug-names.wasm:	file format wasm 0x00000d
 
 Section Details:
+
 TYPE:
  - [0] (i32) -> nil
  - [1] (f32) -> nil
 FUNCTION:
  - func[0] sig=0
  - func[1] sig=1
-CODE:
- - func 0
- - func 1
 CUSTOM:
  - name: "name"
  - func[0] $F1
@@ -109,6 +107,7 @@ CUSTOM:
   - local[3] $F2L3
 
 Code Disassembly:
-func 0
-func 1
+
+00001b <$F1>:
+000022 <$F2>:
 ;;; STDOUT ;;)

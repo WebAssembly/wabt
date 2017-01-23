@@ -13,6 +13,7 @@
 linked.wasm:	file format wasm 0x00000d
 
 Sections:
+
      TYPE start=0x0000000a end=0x00000017 (size=0x0000000d) count: 3
  FUNCTION start=0x0000001d end=0x00000021 (size=0x00000004) count: 3
     TABLE start=0x00000027 end=0x0000002c (size=0x00000005) count: 1
@@ -21,6 +22,7 @@ Sections:
    CUSTOM start=0x00000063 end=0x0000007a (size=0x00000017) "reloc.ELEM"
 
 Section Details:
+
 TYPE:
  - [0] (i32) -> nil
  - [1] (i64) -> nil
@@ -39,10 +41,6 @@ ELEM:
   - func[2]
   - func[1]
   - func[1]
-CODE:
- - func 0
- - func 1
- - func 2
 CUSTOM:
  - name: "reloc.ELEM"
   - section: ELEM
@@ -53,7 +51,8 @@ CUSTOM:
    - R_FUNC_INDEX_LEB   offset=0x4c (0x1a)
 
 Code Disassembly:
-func 0
-func 1
-func 2
+
+000054 func[0]:
+000057 func[1]:
+00005a func[2]:
 ;;; STDOUT ;;)

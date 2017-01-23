@@ -53,7 +53,8 @@
 expr-brif.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000016 func[0]:
  000018: 02 7f                      | block i32
  00001a: 41 2a                      |   i32.const 0x2a
  00001c: 41 00                      |   i32.const 0

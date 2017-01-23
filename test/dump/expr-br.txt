@@ -46,7 +46,8 @@
 expr-br.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000016 func[0]:
  000018: 02 7f                      | block i32
  00001a: 41 01                      |   i32.const 0x1
  00001c: 0c 00                      |   br 0

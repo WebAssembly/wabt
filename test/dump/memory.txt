@@ -41,6 +41,7 @@
 memory.wasm:	file format wasm 0x00000d
 
 Section Details:
+
 MEMORY:
  - memory[0] pages: initial=1
 DATA:
@@ -52,4 +53,5 @@ DATA:
   - 0000020: 6d65 742c 2063 6f6e 7365 6374 6574 7572  met, consectetur
 
 Code Disassembly:
+
 ;;; STDOUT ;;)

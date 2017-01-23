@@ -105,10 +105,10 @@ def main(args):
           os.rename(output, partialy_linked)
           wasm_link.RunWithArgs('-r', '-o', output, partialy_linked, f)
         #wasmdump.RunWithArgs('-d', '-h', output)
-      wasmdump.RunWithArgs('-d', '-x', '-h', output)
+      wasmdump.RunWithArgs('-d', '-x', '-r', '-h', output)
     else:
       wasm_link.RunWithArgs('-o', output, *wasm_files)
-      wasmdump.RunWithArgs('-d', '-x', '-h', output)
+      wasmdump.RunWithArgs('-d', '-x', '-r', '-h', output)
 
     if options.spec:
       with open(out_file) as json_file:

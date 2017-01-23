@@ -89,6 +89,7 @@
 table.wasm:	file format wasm 0x00000d
 
 Section Details:
+
 TYPE:
  - [0] (i32) -> nil
  - [1] (i32, i64) -> nil
@@ -106,14 +107,11 @@ ELEM:
   - func[0]
   - func[1]
   - func[2]
-CODE:
- - func 0
- - func 1
- - func 2
 
 Code Disassembly:
-func 0
-func 1
-func 2
+
+000034 func[0]:
+000037 func[1]:
+00003a func[2]:
  00003c: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
 ;;; STDOUT ;;)

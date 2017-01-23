@@ -82,7 +82,8 @@
 if.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000016 func[0]:
  000018: 41 01                      | i32.const 0x1
  00001a: 04 40                      | if
  00001c: 01                         |   nop
@@ -94,7 +95,7 @@ func 0
  000028: 43 00 00 00 40             |   f32.const 0x1p+1
  00002d: 0b                         | end
  00002e: 1a                         | drop
-func 1
+000030 func[1]:
  000032: 41 01                      | i32.const 0x1
  000034: 04 40                      | if
  000036: 0f                         |   return

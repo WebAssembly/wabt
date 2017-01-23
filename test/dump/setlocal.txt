@@ -100,7 +100,8 @@
 setlocal.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000015 func[0]:
  000025: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  00002e: 21 00                      | set_local 0
  000030: 43 00 00 00 00             | f32.const 0x0p+0

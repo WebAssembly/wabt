@@ -14,10 +14,12 @@
 linked.wasm:	file format wasm 0x00000d
 
 Sections:
+
    MEMORY start=0x0000000e end=0x00000012 (size=0x00000004) count: 1
      DATA start=0x00000018 end=0x00000041 (size=0x00000029) count: 4
 
 Section Details:
+
 MEMORY:
  - memory[0] pages: initial=2 max=2
 DATA:
@@ -31,4 +33,5 @@ DATA:
   - 0000000: 776f 726c 64                             world
 
 Code Disassembly:
+
 ;;; STDOUT ;;)

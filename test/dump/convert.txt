@@ -92,7 +92,8 @@
 convert.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000015 func[0]:
  000017: 41 00                      | i32.const 0
  000019: b8                         | f64.convert_u/i32
  00001a: ab                         | i32.trunc_u/f64

@@ -45,7 +45,8 @@
 if-then-list.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
+
+000015 func[0]:
  000017: 41 01                      | i32.const 0x1
  000019: 04 40                      | if
  00001b: 01                         |   nop

@@ -507,6 +507,14 @@ static WasmResult logging_begin_custom_section(WasmBinaryReaderContext* context,
     FORWARD(name, value);                                             \
   }
 
+#define LOGGING_UINT32_CTX(name)                                     \
+  static WasmResult logging_##name(WasmBinaryReaderContext* context, \
+                                   uint32_t value) {                 \
+    LoggingContext* ctx = context->user_data;                        \
+    LOGF(#name "(%u)\n", value);                                     \
+    FORWARD_CTX(name, value);                                        \
+  }
+
 #define LOGGING_UINT32_DESC(name, desc)                               \
   static WasmResult logging_##name(uint32_t value, void* user_data) { \
     LoggingContext* ctx = user_data;                                  \
@@ -577,7 +585,7 @@ LOGGING_UINT32(on_start_function)
 LOGGING_END(start_section)
 LOGGING_BEGIN(function_bodies_section)
 LOGGING_UINT32(on_function_bodies_count)
-LOGGING_UINT32(begin_function_body)
+LOGGING_UINT32_CTX(begin_function_body)
 LOGGING_UINT32(end_function_body)
 LOGGING_UINT32(on_local_decl_count)
 LOGGING_OPCODE(on_binary_expr)
@@ -1985,7 +1993,7 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
     uint32_t func_index = ctx->num_func_imports + i;
     uint32_t func_offset = ctx->offset;
     ctx->offset = func_offset;
-    CALLBACK(begin_function_body, func_index);
+    CALLBACK_CTX(begin_function_body, func_index);
     uint32_t body_size;
     in_u32_leb128(ctx, &body_size, "function body size");
     uint32_t body_start_offset = ctx->offset;

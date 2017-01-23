@@ -24,6 +24,7 @@
 linked.wasm:	file format wasm 0x00000d
 
 Sections:
+
      TYPE start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
    IMPORT start=0x0000001a end=0x0000003b (size=0x00000021) count: 2
  FUNCTION start=0x00000041 end=0x00000044 (size=0x00000003) count: 2
@@ -32,6 +33,7 @@ Sections:
    CUSTOM start=0x00000091 end=0x000000ac (size=0x0000001b) "reloc.CODE"
 
 Section Details:
+
 TYPE:
  - [0] (i32) -> nil
  - [1] (i64, i64) -> nil
@@ -45,9 +47,6 @@ GLOBAL:
  - global[2] i32 mutable=0 - init i32=1
  - global[3] i32 mutable=0 - init i32=2
  - global[4] i64 mutable=0 - init i64=2
-CODE:
- - func 0
- - func 1
 CUSTOM:
  - name: "reloc.CODE"
   - section: CODE
@@ -60,15 +59,23 @@ CUSTOM:
    - R_FUNC_INDEX_LEB   offset=0x85 (0x2d)
 
 Code Disassembly:
-func 0
+
+000059 func[0]:
  00005b: 23 83 80 80 80 00          | get_global 0x3
+           00005c: R_GLOBAL_INDEX_LEB
  000061: 23 82 80 80 80 00          | get_global 0x2
+           000062: R_GLOBAL_INDEX_LEB
  000067: 6a                         | i32.add
  000068: 23 80 80 80 80 00          | get_global 0
+           000069: R_GLOBAL_INDEX_LEB
  00006e: 6a                         | i32.add
  00006f: 10 80 80 80 80 00          | call 0
-func 1
+           000070: R_FUNC_INDEX_LEB
+000076 func[1]:
  000078: 23 81 80 80 80 00          | get_global 0x1
+           000079: R_GLOBAL_INDEX_LEB
  00007e: 23 84 80 80 80 00          | get_global 0x4
+           00007f: R_GLOBAL_INDEX_LEB
  000084: 10 81 80 80 80 00          | call 0x1
+           000085: R_FUNC_INDEX_LEB
 ;;; STDOUT ;;)

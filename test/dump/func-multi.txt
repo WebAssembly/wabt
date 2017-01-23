@@ -47,7 +47,8 @@
 func-multi.wasm:	file format wasm 0x00000d
 
 Code Disassembly:
-func 0
-func 1
-func 2
+
+000017 func[0]:
+00001a func[1]:
+00001d func[2]:
 ;;; STDOUT ;;)
