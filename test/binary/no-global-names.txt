@@ -1,0 +1,35 @@
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(GLOBAL) {
+  count[1]
+  type[i32] mut[0] init_expr[i32.const 0 end]
+}
+section(EXPORT) {
+  count[2]
+  str("bar") func_kind func[0]
+  str("d_glob") global_kind global[0]
+}
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    return
+  }
+}
+section("name") {
+  func_count[1]
+  str("bar")
+  local_count[0]
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func bar (type 0)
+    return)
+  (global (;0;) i32 (i32.const 0))
+  (export "bar" (func bar))
+  (export "d_glob" (global 0)))
+;;; STDOUT ;;)
