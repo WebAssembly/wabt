@@ -303,7 +303,9 @@ static WasmResult visit_func(Context* ctx,
 static WasmResult visit_export(Context* ctx,
                                uint32_t export_index,
                                WasmExport* export) {
-  use_name_for_func_var(ctx->allocator, ctx->module, &export->var);
+  if (export->kind == WASM_EXTERNAL_KIND_FUNC) {
+    use_name_for_func_var(ctx->allocator, ctx->module, &export->var);
+  }
   return WASM_OK;
 }
 
