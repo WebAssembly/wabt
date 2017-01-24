@@ -144,6 +144,7 @@ static void write_command_type(Context* ctx, const WasmCommand* command) {
       "assert_return",
       "assert_return_nan",
       "assert_trap",
+      "assert_exhaustion",
   };
   WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(s_command_names) ==
                      WASM_NUM_COMMAND_TYPES);
@@ -450,6 +451,12 @@ static void write_commands(Context* ctx, WasmScript* script) {
         write_separator(ctx);
         write_key(ctx, "text");
         write_escaped_string_slice(ctx, command->assert_trap.text);
+        break;
+
+      case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
+        write_location(ctx, &command->assert_trap.action.loc);
+        write_separator(ctx);
+        write_action(ctx, &command->assert_trap.action);
         break;
 
       case WASM_NUM_COMMAND_TYPES:

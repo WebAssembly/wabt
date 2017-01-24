@@ -207,7 +207,7 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 %token MODULE TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
 %token REGISTER INVOKE GET
 %token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
-%token ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP
+%token ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP ASSERT_EXHAUSTION
 %token INPUT OUTPUT
 %token EOF 0 "EOF"
 
@@ -1095,7 +1095,7 @@ export :
 ;
 
 inline_export_opt :
-    /* empty */ { 
+    /* empty */ {
       WASM_ZERO_MEMORY($$);
       $$.has_export = WASM_FALSE;
     }
@@ -1391,6 +1391,12 @@ assertion :
       $$->assert_trap.action = $3;
       $$->assert_trap.text = $4;
     }
+  | LPAR ASSERT_EXHAUSTION action quoted_text RPAR {
+      $$ = new_command(parser->allocator);
+      $$->type = WASM_COMMAND_TYPE_ASSERT_EXHAUSTION;
+      $$->assert_trap.action = $3;
+      $$->assert_trap.text = $4;
+    }
 ;
 
 cmd :
@@ -1479,6 +1485,7 @@ script :
             module_var = &command->assert_return_nan.action.module_var;
             goto has_module_var;
           case WASM_COMMAND_TYPE_ASSERT_TRAP:
+          case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
             module_var = &command->assert_trap.action.module_var;
             goto has_module_var;
           case WASM_COMMAND_TYPE_ACTION:

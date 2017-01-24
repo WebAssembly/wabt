@@ -1326,6 +1326,7 @@ static void check_command(Context* ctx, const WasmCommand* command) {
     }
 
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
+    case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
       /* ignore result type */
       check_action(ctx, &command->assert_trap.action);
       break;

@@ -560,6 +560,7 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       wasm_destroy_action(allocator, &command->assert_return_nan.action);
       break;
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
+    case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
       wasm_destroy_action(allocator, &command->assert_trap.action);
       wasm_destroy_string_slice(allocator, &command->assert_trap.text);
       break;

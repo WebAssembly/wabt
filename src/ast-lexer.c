@@ -441,6 +441,7 @@ int wasm_ast_lexer_lex(WASM_AST_PARSER_STYPE* lval,
     <i> "assert_return"       { RETURN(ASSERT_RETURN); }
     <i> "assert_return_nan"   { RETURN(ASSERT_RETURN_NAN); }
     <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
+    <i> "assert_exhaustion"   { RETURN(ASSERT_EXHAUSTION); }
     <i> "input"               { RETURN(INPUT); }
     <i> "output"              { RETURN(OUTPUT); }
     <i> name                  { TEXT; RETURN(VAR); }
