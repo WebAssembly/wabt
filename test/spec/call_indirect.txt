@@ -85,5 +85,13 @@ assert_invalid error:
   out/third_party/testsuite/call_indirect.wast:359:5: type stack at end of function is 1. expected 0
     (func $large-type (call_indirect 1012321300 (i32.const 0)))
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+assert_invalid error:
+  out/third_party/testsuite/call_indirect.wast:366:32: function variable out of range (max 0)
+  (module (table anyfunc (elem 0 0)))
+                               ^
+assert_invalid error:
+  out/third_party/testsuite/call_indirect.wast:366:34: function variable out of range (max 0)
+  (module (table anyfunc (elem 0 0)))
+                                 ^
 48/48 tests passed.
 ;;; STDOUT ;;)
