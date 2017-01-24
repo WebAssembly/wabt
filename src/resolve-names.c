@@ -356,6 +356,7 @@ static void visit_command(Context* ctx, WasmCommand* command) {
     case WASM_COMMAND_TYPE_ASSERT_RETURN:
     case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
     case WASM_COMMAND_TYPE_ASSERT_TRAP:
+    case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
     case WASM_COMMAND_TYPE_REGISTER:
       /* Don't resolve a module_var, since it doesn't really behave like other
        * vars. You can't reference a module by index. */
