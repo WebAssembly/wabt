@@ -278,13 +278,6 @@ static void write_export_section(Context* ctx) {
   for (i = 0; i < ctx->inputs.size; i++) {
     WasmLinkerInputBinary* binary = &ctx->inputs.data[i];
     total_exports += binary->exports.size;
-    /*
-    for (j = 0; j < binary->exports.size; j++) {
-      WasmExport* export = &binary->exports.data[j];
-      if (exports) {
-      }
-    }
-    */
   }
 
   WasmStream* stream = &ctx->stream;
