@@ -880,9 +880,9 @@ static WasmResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
   return WASM_OK;
 }
 
-static WasmResult on_elem_segment_function_index(uint32_t index,
-                                                 uint32_t func_index,
-                                                 void* user_data) {
+static WasmResult on_elem_segment_function_index_check(uint32_t index,
+                                                       uint32_t func_index,
+                                                       void* user_data) {
   Context* ctx = user_data;
   assert(ctx->module->table_index != WASM_INVALID_INDEX);
   WasmInterpreterTable* table =
@@ -899,6 +899,38 @@ static WasmResult on_elem_segment_function_index(uint32_t index,
   return WASM_OK;
 }
 
+static WasmResult on_elem_segment_function_index(uint32_t index,
+                                                 uint32_t func_index,
+                                                 void* user_data) {
+  Context* ctx = user_data;
+  assert(ctx->module->table_index != WASM_INVALID_INDEX);
+  WasmInterpreterTable* table =
+      &ctx->env->tables.data[ctx->module->table_index];
+  table->func_indexes.data[ctx->table_offset++] =
+      translate_func_index_to_env(ctx, func_index);
+  return WASM_OK;
+}
+
+static WasmResult on_data_segment_data_check(uint32_t index,
+                                             const void* src_data,
+                                             uint32_t size,
+                                             void* user_data) {
+  Context* ctx = user_data;
+  assert(ctx->module->memory_index != WASM_INVALID_INDEX);
+  WasmInterpreterMemory* memory =
+      &ctx->env->memories.data[ctx->module->memory_index];
+  assert(ctx->init_expr_value.type == WASM_TYPE_I32);
+  uint32_t address = ctx->init_expr_value.value.i32;
+  uint64_t end_address = (uint64_t)address + (uint64_t)size;
+  if (end_address > memory->byte_size) {
+    print_error(ctx, "data segment is out of bounds: [%u, %" PRIu64
+                     ") >= max value %u",
+                address, end_address, memory->byte_size);
+    return WASM_ERROR;
+  }
+  return WASM_OK;
+}
+
 static WasmResult on_data_segment_data(uint32_t index,
                                        const void* src_data,
                                        uint32_t size,
@@ -907,16 +939,8 @@ static WasmResult on_data_segment_data(uint32_t index,
   assert(ctx->module->memory_index != WASM_INVALID_INDEX);
   WasmInterpreterMemory* memory =
       &ctx->env->memories.data[ctx->module->memory_index];
-  assert(ctx->init_expr_value.type == WASM_TYPE_I32);
   uint32_t address = ctx->init_expr_value.value.i32;
   uint8_t* dst_data = memory->data;
-  uint64_t end_address = (uint64_t)address + (uint64_t)size;
-  if (size > 0 && end_address > memory->byte_size) {
-    print_error(ctx, "data segment is out of bounds: [%u, %" PRIu64
-                     ") >= max value %u",
-                address, end_address, memory->byte_size);
-    return WASM_ERROR;
-  }
   memcpy(&dst_data[address], src_data, size);
   return WASM_OK;
 }
@@ -1695,8 +1719,24 @@ static WasmBinaryReader s_binary_reader = {
     .end_function_body = end_function_body,
 
     .end_elem_segment_init_expr = end_elem_segment_init_expr,
-    .on_elem_segment_function_index = on_elem_segment_function_index,
+    .on_elem_segment_function_index = on_elem_segment_function_index_check,
 
+    .on_data_segment_data = on_data_segment_data_check,
+
+    .on_init_expr_f32_const_expr = on_init_expr_f32_const_expr,
+    .on_init_expr_f64_const_expr = on_init_expr_f64_const_expr,
+    .on_init_expr_get_global_expr = on_init_expr_get_global_expr,
+    .on_init_expr_i32_const_expr = on_init_expr_i32_const_expr,
+    .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,
+};
+
+/* Second pass to assign data and elem segments after they are checked above. */
+static WasmBinaryReader s_binary_reader_segments = {
+    .user_data = NULL,
+    .on_error = on_error,
+
+    .end_elem_segment_init_expr = end_elem_segment_init_expr,
+    .on_elem_segment_function_index = on_elem_segment_function_index,
     .on_data_segment_data = on_data_segment_data,
 
     .on_init_expr_f32_const_expr = on_init_expr_f32_const_expr,
@@ -1760,6 +1800,13 @@ WasmResult wasm_read_binary_interpreter(WasmAllocator* allocator,
                                        num_function_passes, options);
   wasm_steal_mem_writer_output_buffer(&ctx.istream_writer, &env->istream);
   if (WASM_SUCCEEDED(result)) {
+    /* Another pass on the read binary to assign data and elem segments. */
+    reader = s_binary_reader_segments;
+    reader.user_data = &ctx;
+    result = wasm_read_binary(allocator, data, size, &reader,
+                              num_function_passes, options);
+    assert(WASM_SUCCEEDED(result));
+
     env->istream.size = ctx.istream_offset;
     ctx.module->defined.istream_end = env->istream.size;
     *out_module = module;

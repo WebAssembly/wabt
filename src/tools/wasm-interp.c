@@ -1484,12 +1484,13 @@ static WasmResult on_assert_exhaustion_command(Context* ctx,
     ctx->total++;
     WasmResult result = run_action(ctx, action, &iresult, &results, RUN_QUIET);
     if (WASM_SUCCEEDED(result)) {
-        if (iresult == WASM_INTERPRETER_TRAP_CALL_STACK_EXHAUSTED) {
-            ctx->passed++;
-        } else {
-            print_command_error(ctx, "expected call stack exhaustion");
-            result = WASM_ERROR;
-        }
+      if (iresult == WASM_INTERPRETER_TRAP_CALL_STACK_EXHAUSTED ||
+          iresult == WASM_INTERPRETER_TRAP_VALUE_STACK_EXHAUSTED) {
+        ctx->passed++;
+      } else {
+        print_command_error(ctx, "expected call stack exhaustion");
+        result = WASM_ERROR;
+      }
     }
 
     wasm_destroy_interpreter_typed_value_vector(ctx->allocator, &results);

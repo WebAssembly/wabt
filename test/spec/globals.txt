@@ -42,28 +42,28 @@ assert_invalid error:
   (module (global i32 (get_global 1)) (global i32 (i32.const 0)))
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_malformed error:
-  out/third_party/testsuite/globals.wast:102:20: error in binary module: @0x00000022: global mutability must be 0 or 1
-(assert_malformed (module "\00asm\0d\00\00\00\02\94\80\80\80\00\01\08\73\70\6...
-                   ^^^^^^
+  out/third_party/testsuite/globals.wast:103:4: error in binary module: @0x00000022: global mutability must be 0 or 1
+  (module
+   ^^^^^^
 assert_malformed error:
-  out/third_party/testsuite/globals.wast:107:20: error in binary module: @0x00000011: global mutability must be 0 or 1
-(assert_malformed (module "\00asm\0d\00\00\00\06\86\80\80\80\00\01\7f\ff\41\0...
-                   ^^^^^^
+  out/third_party/testsuite/globals.wast:116:4: error in binary module: @0x00000022: global mutability must be 0 or 1
+  (module
+   ^^^^^^
 assert_malformed error:
-  out/third_party/testsuite/globals.wast:108:20: error in binary module: @0x00000011: global mutability must be 0 or 1
-(assert_malformed (module "\00asm\0d\00\00\00\06\86\80\80\80\00\01\7f\d4\41\0...
-                   ^^^^^^
+  out/third_party/testsuite/globals.wast:133:4: error in binary module: @0x00000011: global mutability must be 0 or 1
+  (module
+   ^^^^^^
 assert_malformed error:
-  out/third_party/testsuite/globals.wast:109:20: error in binary module: @0x00000011: global mutability must be 0 or 1
-(assert_malformed (module "\00asm\0d\00\00\00\06\86\80\80\80\00\01\7f\02\41\0...
-                   ^^^^^^
-out/third_party/testsuite/globals.wast:102: assert_malformed passed:
+  out/third_party/testsuite/globals.wast:145:4: error in binary module: @0x00000011: global mutability must be 0 or 1
+  (module
+   ^^^^^^
+out/third_party/testsuite/globals.wast:103: assert_malformed passed:
   error: @0x00000022: global mutability must be 0 or 1
-out/third_party/testsuite/globals.wast:107: assert_malformed passed:
+out/third_party/testsuite/globals.wast:116: assert_malformed passed:
+  error: @0x00000022: global mutability must be 0 or 1
+out/third_party/testsuite/globals.wast:133: assert_malformed passed:
   error: @0x00000011: global mutability must be 0 or 1
-out/third_party/testsuite/globals.wast:108: assert_malformed passed:
-  error: @0x00000011: global mutability must be 0 or 1
-out/third_party/testsuite/globals.wast:109: assert_malformed passed:
+out/third_party/testsuite/globals.wast:145: assert_malformed passed:
   error: @0x00000011: global mutability must be 0 or 1
 20/20 tests passed.
 ;;; STDOUT ;;)
