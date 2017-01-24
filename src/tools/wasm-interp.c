@@ -1476,6 +1476,26 @@ static WasmResult on_assert_trap_command(Context* ctx,
   return result;
 }
 
+static WasmResult on_assert_exhaustion_command(Context* ctx,
+                                         Action* action) {
+    WasmInterpreterTypedValueVector results;
+    WasmInterpreterResult iresult;
+
+    ctx->total++;
+    WasmResult result = run_action(ctx, action, &iresult, &results, RUN_QUIET);
+    if (WASM_SUCCEEDED(result)) {
+        if (iresult == WASM_INTERPRETER_TRAP_CALL_STACK_EXHAUSTED) {
+            ctx->passed++;
+        } else {
+            print_command_error(ctx, "expected call stack exhaustion");
+            result = WASM_ERROR;
+        }
+    }
+
+    wasm_destroy_interpreter_typed_value_vector(ctx->allocator, &results);
+    return result;
+}
+
 static void destroy_action(WasmAllocator* allocator, Action* action) {
   wasm_destroy_interpreter_typed_value_vector(allocator, &action->args);
 }
@@ -1611,6 +1631,18 @@ static WasmResult parse_command(Context* ctx) {
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     on_assert_trap_command(ctx, &action, text);
+    destroy_action(ctx->allocator, &action);
+  } else if (match(ctx, "\"assert_exhaustion\"")) {
+    Action action;
+    WasmStringSlice text;
+    WASM_ZERO_MEMORY(action);
+    WASM_ZERO_MEMORY(text);
+
+    EXPECT(",");
+    CHECK_RESULT(parse_line(ctx));
+    EXPECT(",");
+    CHECK_RESULT(parse_action(ctx, &action));
+    on_assert_exhaustion_command(ctx, &action);
     destroy_action(ctx->allocator, &action);
   } else {
     print_command_error(ctx, "unknown command type");
