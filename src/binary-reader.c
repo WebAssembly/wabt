@@ -1712,10 +1712,10 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     CALLBACK_SECTION(begin_reloc_section, section_size);
     uint32_t i, num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
-    in_u32_leb128(ctx, &num_relocs, "relocation count count");
     WASM_ZERO_MEMORY(section_name);
     if (section == WASM_BINARY_SECTION_CUSTOM)
       in_str(ctx, &section_name, "section name");
+    in_u32_leb128(ctx, &num_relocs, "relocation count");
     CALLBACK(on_reloc_count, num_relocs, section, section_name);
     for (i = 0; i < num_relocs; ++i) {
       uint32_t reloc_type, offset;
