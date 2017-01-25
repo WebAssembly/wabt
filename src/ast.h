@@ -330,6 +330,9 @@ typedef enum WasmCommandType {
   WASM_COMMAND_TYPE_REGISTER,
   WASM_COMMAND_TYPE_ASSERT_MALFORMED,
   WASM_COMMAND_TYPE_ASSERT_INVALID,
+  /* This is a module that is invalid, but cannot be written as a binary module
+   * (e.g. it has unresolvable names.) */
+  WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY,
   WASM_COMMAND_TYPE_ASSERT_UNLINKABLE,
   WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE,
   WASM_COMMAND_TYPE_ASSERT_RETURN,
@@ -504,6 +507,13 @@ void wasm_make_type_binding_reverse_mapping(
     const WasmTypeVector*,
     const WasmBindingHash*,
     WasmStringSliceVector* out_reverse_mapping);
+
+typedef void (*WasmDuplicateBindingCallback)(WasmBindingHashEntry* a,
+                                             WasmBindingHashEntry* b,
+                                             void* user_data);
+void wasm_find_duplicate_bindings(const WasmBindingHash*,
+                                  WasmDuplicateBindingCallback callback,
+                                  void* user_data);
 
 static WASM_INLINE WasmBool
 wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {

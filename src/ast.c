@@ -177,6 +177,30 @@ void wasm_make_type_binding_reverse_mapping(
   }
 }
 
+void wasm_find_duplicate_bindings(const WasmBindingHash* bindings,
+                                  WasmDuplicateBindingCallback callback,
+                                  void* user_data) {
+  size_t i;
+  for (i = 0; i < bindings->entries.capacity; ++i) {
+    WasmBindingHashEntry* entry = &bindings->entries.data[i];
+    if (wasm_hash_entry_is_free(entry))
+      continue;
+
+    /* only follow the chain if this is the first entry in the chain */
+    if (entry->prev != NULL)
+      continue;
+
+    WasmBindingHashEntry* a = entry;
+    for (; a; a = a->next) {
+      WasmBindingHashEntry* b = a->next;
+      for (; b; b = b->next) {
+        if (wasm_string_slices_are_equal(&a->binding.name, &b->binding.name))
+          callback(a, b, user_data);
+      }
+    }
+  }
+}
+
 WasmModuleField* wasm_append_module_field(struct WasmAllocator* allocator,
                                           WasmModule* module) {
   WasmModuleField* result =
@@ -539,6 +563,7 @@ void wasm_destroy_command(WasmAllocator* allocator, WasmCommand* command) {
       wasm_destroy_string_slice(allocator, &command->assert_malformed.text);
       break;
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
+    case WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
       wasm_destroy_raw_module(allocator, &command->assert_invalid.module);
       wasm_destroy_string_slice(allocator, &command->assert_invalid.text);
       break;

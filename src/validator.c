@@ -1022,6 +1022,24 @@ static void check_export(Context* ctx, const WasmExport* export_) {
   }
 }
 
+static void on_duplicate_binding(WasmBindingHashEntry* a,
+                                 WasmBindingHashEntry* b,
+                                 void* user_data) {
+  Context* ctx = user_data;
+  /* choose the location that is later in the file */
+  WasmLocation* a_loc = &a->binding.loc;
+  WasmLocation* b_loc = &b->binding.loc;
+  WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
+  print_error(ctx, loc, "redefinition of export \"" PRIstringslice "\"",
+              WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
+}
+
+static void check_duplicate_export_bindings(Context* ctx,
+                                            const WasmModule* module) {
+  wasm_find_duplicate_bindings(&module->export_bindings, on_duplicate_binding,
+                               ctx);
+}
+
 static void check_module(Context* ctx, const WasmModule* module) {
   WasmBool seen_start = WASM_FALSE;
 
@@ -1097,6 +1115,7 @@ static void check_module(Context* ctx, const WasmModule* module) {
 
   check_elem_segments(ctx, module);
   check_data_segments(ctx, module);
+  check_duplicate_export_bindings(ctx, module);
 }
 
 typedef struct BinaryErrorCallbackData {
@@ -1274,6 +1293,7 @@ static void check_command(Context* ctx, const WasmCommand* command) {
     case WASM_COMMAND_TYPE_REGISTER:
     case WASM_COMMAND_TYPE_ASSERT_MALFORMED:
     case WASM_COMMAND_TYPE_ASSERT_INVALID:
+    case WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
     case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
     case WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
       /* ignore */
@@ -1378,6 +1398,7 @@ WasmResult wasm_validate_assert_invalid_and_malformed(
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
     if (command->type != WASM_COMMAND_TYPE_ASSERT_INVALID &&
+        command->type != WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY &&
         command->type != WASM_COMMAND_TYPE_ASSERT_MALFORMED) {
       continue;
     }
@@ -1389,7 +1410,8 @@ WasmResult wasm_validate_assert_invalid_and_malformed(
     ctx2.result = WASM_OK;
     ctx2.script = script;
 
-    if (command->type == WASM_COMMAND_TYPE_ASSERT_INVALID) {
+    if (command->type == WASM_COMMAND_TYPE_ASSERT_INVALID ||
+        command->type == WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY) {
       ctx2.error_handler = assert_invalid_error_handler;
       check_raw_module(&ctx2, &command->assert_invalid.module);
       wasm_destroy_context(&ctx2);
