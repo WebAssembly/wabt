@@ -139,6 +139,7 @@ static void write_command_type(Context* ctx, const WasmCommand* command) {
       "register",
       "assert_malformed",
       "assert_invalid",
+      NULL, /* ASSERT_INVALID_NON_BINARY, this command will never be written */
       "assert_unlinkable",
       "assert_uninstantiable",
       "assert_return",
@@ -150,6 +151,7 @@ static void write_command_type(Context* ctx, const WasmCommand* command) {
                      WASM_NUM_COMMAND_TYPES);
 
   write_key(ctx, "type");
+  assert(s_command_names[command->type] != NULL);
   write_string(ctx, s_command_names[command->type]);
 }
 
@@ -292,16 +294,13 @@ static void write_action_result_type(Context* ctx,
 static void write_module(Context* ctx,
                          char* filename,
                          const WasmModule* module) {
-  if (!ctx->write_modules)
-    return;
-
   WasmMemoryWriter writer;
   WasmResult result = wasm_init_mem_writer(ctx->allocator, &writer);
   if (WASM_SUCCEEDED(result)) {
     WasmWriteBinaryOptions options = ctx->spec_options->write_binary_options;
     result = wasm_write_binary_module(ctx->allocator, &writer.base, module,
                                       &options);
-    if (WASM_SUCCEEDED(result))
+    if (WASM_SUCCEEDED(result) && ctx->write_modules)
       result = wasm_write_output_buffer_to_file(&writer.buf, filename);
     wasm_close_mem_writer(&writer);
   }
@@ -312,12 +311,9 @@ static void write_module(Context* ctx,
 static void write_raw_module(Context* ctx,
                              char* filename,
                              const WasmRawModule* raw_module) {
-  if (!ctx->write_modules)
-    return;
-
   if (raw_module->type == WASM_RAW_MODULE_TYPE_TEXT) {
     write_module(ctx, filename, raw_module->text);
-  } else {
+  } else if (ctx->write_modules) {
     WasmFileStream stream;
     WasmResult result = wasm_init_file_writer(&stream.writer, filename);
     if (WASM_SUCCEEDED(result)) {
@@ -353,6 +349,13 @@ static void write_commands(Context* ctx, WasmScript* script) {
   int last_module_index = -1;
   for (i = 0; i < script->commands.size; ++i) {
     WasmCommand* command = &script->commands.data[i];
+
+    if (command->type == WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY)
+      continue;
+
+    if (i != 0)
+      write_separator(ctx);
+    wasm_writef(&ctx->json_stream, "\n");
 
     wasm_writef(&ctx->json_stream, "  {");
     write_command_type(ctx, command);
@@ -459,15 +462,13 @@ static void write_commands(Context* ctx, WasmScript* script) {
         write_action(ctx, &command->assert_trap.action);
         break;
 
+      case WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
       case WASM_NUM_COMMAND_TYPES:
         assert(0);
         break;
     }
 
     wasm_writef(&ctx->json_stream, "}");
-    if (i != script->commands.size - 1)
-      write_separator(ctx);
-    wasm_writef(&ctx->json_stream, "\n");
   }
   wasm_writef(&ctx->json_stream, "]}\n");
 }

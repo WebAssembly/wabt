@@ -56,34 +56,30 @@ static void pop_label(Context* ctx) {
   ctx->labels.size--;
 }
 
+typedef struct FindDuplicateBindingContext {
+  Context* ctx;
+  const char* desc;
+} FindDuplicateBindingContext;
+
+static void on_duplicate_binding(WasmBindingHashEntry* a,
+                                 WasmBindingHashEntry* b,
+                                 void* user_data) {
+  FindDuplicateBindingContext* fdbc = user_data;
+  /* choose the location that is later in the file */
+  WasmLocation* a_loc = &a->binding.loc;
+  WasmLocation* b_loc = &b->binding.loc;
+  WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
+  print_error(fdbc->ctx, loc, "redefinition of %s \"" PRIstringslice "\"",
+              fdbc->desc, WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
+}
+
 static void check_duplicate_bindings(Context* ctx,
                                      const WasmBindingHash* bindings,
                                      const char* desc) {
-  size_t i;
-  for (i = 0; i < bindings->entries.capacity; ++i) {
-    WasmBindingHashEntry* entry = &bindings->entries.data[i];
-    if (wasm_hash_entry_is_free(entry))
-      continue;
-
-    /* only follow the chain if this is the first entry in the chain */
-    if (entry->prev != NULL)
-      continue;
-
-    WasmBindingHashEntry* a = entry;
-    for (; a; a = a->next) {
-      WasmBindingHashEntry* b = a->next;
-      for (; b; b = b->next) {
-        if (wasm_string_slices_are_equal(&a->binding.name, &b->binding.name)) {
-          /* choose the location that is later in the file */
-          WasmLocation* a_loc = &a->binding.loc;
-          WasmLocation* b_loc = &b->binding.loc;
-          WasmLocation* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
-          print_error(ctx, loc, "redefinition of %s \"" PRIstringslice "\"",
-                      desc, WASM_PRINTF_STRING_SLICE_ARG(a->binding.name));
-        }
-      }
-    }
-  }
+  FindDuplicateBindingContext fdbc;
+  fdbc.ctx = ctx;
+  fdbc.desc = desc;
+  wasm_find_duplicate_bindings(bindings, on_duplicate_binding, &fdbc);
 }
 
 static void resolve_label_var(Context* ctx, WasmVar* var) {
@@ -320,7 +316,6 @@ static void visit_module(Context* ctx, WasmModule* module) {
   ctx->current_module = module;
   check_duplicate_bindings(ctx, &module->func_bindings, "function");
   check_duplicate_bindings(ctx, &module->global_bindings, "global");
-  check_duplicate_bindings(ctx, &module->export_bindings, "export");
   check_duplicate_bindings(ctx, &module->func_type_bindings, "function type");
   check_duplicate_bindings(ctx, &module->table_bindings, "table");
   check_duplicate_bindings(ctx, &module->memory_bindings, "memory");
@@ -346,6 +341,13 @@ static void visit_raw_module(Context* ctx, WasmRawModule* raw_module) {
     visit_module(ctx, raw_module->text);
 }
 
+void dummy_source_error_callback(const WasmLocation* loc,
+                                 const char* error,
+                                 const char* source_line,
+                                 size_t source_line_length,
+                                 size_t source_line_column_offset,
+                                 void* user_data) {}
+
 static void visit_command(Context* ctx, WasmCommand* command) {
   switch (command->type) {
     case WASM_COMMAND_TYPE_MODULE:
@@ -367,9 +369,36 @@ static void visit_command(Context* ctx, WasmCommand* command) {
        * assertion is to test for malformed binary modules. */
       break;
 
-    case WASM_COMMAND_TYPE_ASSERT_INVALID:
-      /* The module may be invalid because the names cannot be resolved (or are
-       * duplicates). In either case, don't resolve. */
+    case WASM_COMMAND_TYPE_ASSERT_INVALID: {
+      /* The module may be invalid because the names cannot be resolved; we
+       * don't want to print errors or fail if that's the case, but we still
+       * should try to resolve names when possible. */
+      WasmSourceErrorHandler new_error_handler;
+      new_error_handler.on_error = dummy_source_error_callback;
+      new_error_handler.source_line_max_length =
+          ctx->error_handler->source_line_max_length;
+
+      Context new_ctx;
+      WASM_ZERO_MEMORY(new_ctx);
+      new_ctx.allocator = ctx->allocator;
+      new_ctx.error_handler = &new_error_handler;
+      new_ctx.lexer = ctx->lexer;
+      new_ctx.visitor = ctx->visitor;
+      new_ctx.visitor.user_data = &new_ctx;
+      new_ctx.result = WASM_OK;
+
+      visit_raw_module(&new_ctx, &command->assert_invalid.module);
+      wasm_destroy_label_ptr_vector(new_ctx.allocator, &new_ctx.labels);
+      if (WASM_FAILED(new_ctx.result)) {
+        command->type = WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY;
+      }
+      break;
+    }
+
+    case WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
+      /* The only reason a module would be "non-binary" is if the names cannot
+       * be resolved. So we assume name resolution has already been tried and
+       * failed, so skip it. */
       break;
 
     case WASM_COMMAND_TYPE_ASSERT_UNLINKABLE:
