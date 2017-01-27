@@ -117,8 +117,8 @@ Some examples:
 # parse binary file test.wasm and write s-expression file test.wast
 $ out/wasm2wast test.wasm -o test.wast
 
-# parse test.wasm and write test.wast, using the debug names, if any
-$ out/wasm2wast test.wasm --debug-names -o test.wast
+# parse test.wasm and write test.wast
+$ out/wasm2wast test.wasm -o test.wast
 ```
 
 You can use `-h` to get additional help:
