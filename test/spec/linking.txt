@@ -17,6 +17,7 @@ out/third_party/testsuite/linking.wast:183: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
   error: @0x00000042: on_data_segment_data callback failed
 out/third_party/testsuite/linking.wast:255: assert_unlinkable passed:
+  error: duplicate export "print"
   error: unknown module field "tab"
   error: @0x00000033: on_import callback failed
 out/third_party/testsuite/linking.wast:266: assert_unlinkable passed:

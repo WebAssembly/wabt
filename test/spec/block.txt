@@ -145,5 +145,65 @@ assert_invalid error:
   out/third_party/testsuite/block.wast:246:11: type mismatch at function. got i64, expected i32
   (module (func $type-break-operand-num-vs-num (result i32)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-14/14 tests passed.
+out/third_party/testsuite/block.wast:133: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001c: end_function_body callback failed
+out/third_party/testsuite/block.wast:137: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001c: end_function_body callback failed
+out/third_party/testsuite/block.wast:141: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001c: end_function_body callback failed
+out/third_party/testsuite/block.wast:145: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001c: end_function_body callback failed
+out/third_party/testsuite/block.wast:150: assert_invalid passed:
+  error: type stack at end of block is 1. expected 0
+  error: @0x0000001c: on_end_expr callback failed
+out/third_party/testsuite/block.wast:156: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001d: end_function_body callback failed
+out/third_party/testsuite/block.wast:162: assert_invalid passed:
+  error: type stack at end of block is 1. expected 0
+  error: @0x00000020: on_end_expr callback failed
+out/third_party/testsuite/block.wast:169: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001c: on_br_expr callback failed
+out/third_party/testsuite/block.wast:175: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001c: on_br_expr callback failed
+out/third_party/testsuite/block.wast:182: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000021: end_function_body callback failed
+out/third_party/testsuite/block.wast:188: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000022: end_function_body callback failed
+out/third_party/testsuite/block.wast:194: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000023: end_function_body callback failed
+out/third_party/testsuite/block.wast:200: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000024: end_function_body callback failed
+out/third_party/testsuite/block.wast:207: assert_invalid passed:
+  error: type stack at end of func is 1. expected 0
+  error: @0x00000024: end_function_body callback failed
+out/third_party/testsuite/block.wast:213: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000025: end_function_body callback failed
+out/third_party/testsuite/block.wast:220: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000026: end_function_body callback failed
+out/third_party/testsuite/block.wast:226: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x00000027: end_function_body callback failed
+out/third_party/testsuite/block.wast:233: assert_invalid passed:
+  error: type stack size too small at i32.ctz. got 0, expected at least 1
+  error: @0x0000001e: on_unary_expr callback failed
+out/third_party/testsuite/block.wast:240: assert_invalid passed:
+  error: type stack size too small at i64.ctz. got 0, expected at least 1
+  error: @0x0000001f: on_unary_expr callback failed
+out/third_party/testsuite/block.wast:246: assert_invalid passed:
+  error: type stack size too small at i64.ctz. got 0, expected at least 1
+  error: @0x00000020: on_unary_expr callback failed
+34/34 tests passed.
 ;;; STDOUT ;;)

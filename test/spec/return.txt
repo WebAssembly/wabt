@@ -13,5 +13,14 @@ assert_invalid error:
   out/third_party/testsuite/return.wast:278:54: type mismatch at return. got i64, expected f64
   (module (func $type-value-num-vs-num (result f64) (return (i64.const 1))))
                                                      ^^^^^^
-57/57 tests passed.
+out/third_party/testsuite/return.wast:270: assert_invalid passed:
+  error: type stack size too small at return. got 0, expected at least 1
+  error: @0x00000019: on_return_expr callback failed
+out/third_party/testsuite/return.wast:274: assert_invalid passed:
+  error: type stack size too small at return. got 0, expected at least 1
+  error: @0x0000001a: on_return_expr callback failed
+out/third_party/testsuite/return.wast:278: assert_invalid passed:
+  error: type mismatch in return, expected f64 but got i64.
+  error: @0x0000001b: on_return_expr callback failed
+60/60 tests passed.
 ;;; STDOUT ;;)
