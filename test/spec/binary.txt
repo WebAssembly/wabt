@@ -1,54 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/binary.wast
 (;; STDOUT ;;;
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:6:20: error in binary module: @0x00000000: unable to read uint32_t: magic
-(assert_malformed (module "") "unexpected end")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:7:20: error in binary module: @0x00000000: unable to read uint32_t: magic
-(assert_malformed (module "\01") "unexpected end")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:8:20: error in binary module: @0x00000000: unable to read uint32_t: magic
-(assert_malformed (module "\00as") "unexpected end")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:9:20: error in binary module: @0x00000004: bad magic value
-(assert_malformed (module "asm\00") "magic header not detected")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:10:20: error in binary module: @0x00000004: bad magic value
-(assert_malformed (module "msa\00") "magic header not detected")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:11:20: error in binary module: @0x00000004: bad magic value
-(assert_malformed (module "msa\00\0d\00\00\00") "magic header not detected")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:12:20: error in binary module: @0x00000004: bad magic value
-(assert_malformed (module "msa\00\00\00\00\0d") "magic header not detected")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:14:20: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_malformed (module "\00asm") "unexpected end")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:15:20: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_malformed (module "\00asm\0d") "unexpected end")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:16:20: error in binary module: @0x00000004: unable to read uint32_t: version
-(assert_malformed (module "\00asm\0d\00\00") "unexpected end")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:17:20: error in binary module: @0x00000008: bad wasm file version: 0xe (expected 0xd)
-(assert_malformed (module "\00asm\0e\00\00\00") "unknown binary version")
-                   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/binary.wast:18:20: error in binary module: @0x00000008: bad wasm file version: 0xd000000 (expected 0xd)
-(assert_malformed (module "\00asm\00\00\00\0d") "unknown binary version")
-                   ^^^^^^
 out/third_party/testsuite/binary.wast:6: assert_malformed passed:
   error: @0x00000000: unable to read uint32_t: magic
 out/third_party/testsuite/binary.wast:7: assert_malformed passed:

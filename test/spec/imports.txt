@@ -1,30 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
 (;; STDOUT ;;;
-assert_invalid error:
-  out/third_party/testsuite/imports.wast:288:45: only one table allowed
-  (module (import "" "" (table 10 anyfunc)) (import "" "" (table 10 anyfunc)))
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/imports.wast:292:45: only one table allowed
-  (module (import "" "" (table 10 anyfunc)) (table 10 anyfunc))
-                                            ^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/imports.wast:296:30: only one table allowed
-  (module (table 10 anyfunc) (table 10 anyfunc))
-                             ^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/imports.wast:383:37: only one memory block allowed
-  (module (import "" "" (memory 1)) (import "" "" (memory 1)))
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/imports.wast:387:37: only one memory block allowed
-  (module (import "" "" (memory 1)) (memory 0))
-                                    ^^^^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/imports.wast:391:22: only one memory block allowed
-  (module (memory 0) (memory 0))
-                     ^^^^^^^^^^
 called host spectest.print(i32:13) =>
 called host spectest.print(i32:14, f32:42) =>
 called host spectest.print(i32:13) =>

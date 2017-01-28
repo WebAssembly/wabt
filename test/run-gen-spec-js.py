@@ -61,7 +61,7 @@ def main(args):
   with utils.TempDirectory(options.out_dir, 'run-gen-spec-js-') as out_dir:
     wast2wasm = utils.Executable(
         find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
-        '--no-check-assert-invalid', error_cmdline=options.error_cmdline)
+        error_cmdline=options.error_cmdline)
     wast2wasm.AppendOptionalArgs({
         '-v': options.verbose,
         '--use-libc-allocator': options.use_libc_allocator

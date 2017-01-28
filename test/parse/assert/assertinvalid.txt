@@ -11,17 +11,3 @@
     (func (result i32)
       nop))
   "type mismatch")
-(;; STDOUT ;;;
-assert_invalid error:
-  out/test/parse/assert/assertinvalid.txt:7:25: function variable out of range (max 1)
-    (export "foo" (func 1)))
-                        ^
-assert_invalid error:
-  out/test/parse/assert/assertinvalid.txt:11:5: type stack size too small at function. got 0, expected at least 1
-    (func (result i32)
-    ^^^^^^
-assert_invalid error:
-  out/test/parse/assert/assertinvalid.txt:11:5: type stack at end of function is 0. expected 1
-    (func (result i32)
-    ^^^^^^
-;;; STDOUT ;;)

@@ -1,22 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
-assert_invalid error:
-  out/third_party/testsuite/labels.wast:298:28: type stack size too small at f32.neg. got 0, expected at least 1
-  (module (func (block $l (f32.neg (br_if $l (i32.const 1))) (nop))))
-                           ^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/labels.wast:298:18: type stack at end of block is 1. expected 0
-  (module (func (block $l (f32.neg (br_if $l (i32.const 1))) (nop))))
-                 ^^^^^
-assert_invalid error:
-  out/third_party/testsuite/labels.wast:302:18: type stack at end of block is 1. expected 0
-  (module (func (block $l (br_if $l (f32.const 0) (i32.const 1)))))
-                 ^^^^^
-assert_invalid error:
-  out/third_party/testsuite/labels.wast:306:18: type stack at end of block is 1. expected 0
-  (module (func (block $l (br_if $l (f32.const 0) (i32.const 1)))))
-                 ^^^^^
 out/third_party/testsuite/labels.wast:298: assert_invalid passed:
   error: type stack size too small at f32.neg. got 0, expected at least 1
   error: @0x0000001e: on_unary_expr callback failed

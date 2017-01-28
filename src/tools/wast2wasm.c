@@ -46,7 +46,6 @@ static WasmWriteBinarySpecOptions s_write_binary_spec_options =
 static WasmBool s_spec;
 static WasmBool s_use_libc_allocator;
 static WasmBool s_validate = WASM_TRUE;
-static WasmBool s_validate_assert_invalid_and_malformed = WASM_TRUE;
 
 static WasmSourceErrorHandler s_error_handler =
     WASM_SOURCE_ERROR_HANDLER_DEFAULT;
@@ -67,7 +66,6 @@ enum {
   FLAG_NO_CANONICALIZE_LEB128S,
   FLAG_DEBUG_NAMES,
   FLAG_NO_CHECK,
-  FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED,
   NUM_FLAGS
 };
 
@@ -110,9 +108,6 @@ static WasmOption s_options[] = {
      "Write debug names to the generated binary file"},
     {FLAG_NO_CHECK, 0, "no-check", NULL, NOPE,
      "Don't check for invalid modules"},
-    {FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED, 0,
-     "no-check-assert-invalid-and-malformed", NULL, NOPE,
-     "Don't run the assert_invalid or assert_malformed checks"},
 };
 WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
 
@@ -161,10 +156,6 @@ static void on_option(struct WasmOptionParser* parser,
     case FLAG_NO_CHECK:
       s_validate = WASM_FALSE;
       break;
-
-    case FLAG_NO_CHECK_ASSERT_INVALID_AND_MALFORMED:
-      s_validate_assert_invalid_and_malformed = WASM_FALSE;
-      break;
   }
 }
 
@@ -207,18 +198,6 @@ static void write_buffer_to_file(const char* filename,
   }
 }
 
-static void init_source_error_handler(WasmSourceErrorHandler* error_handler,
-                                      WasmDefaultErrorHandlerInfo* info,
-                                      const char* header) {
-  info->header = header;
-  info->out_file = stdout;
-  info->print_header = WASM_PRINT_ERROR_HEADER_ALWAYS;
-
-  error_handler->on_error = wasm_default_source_error_callback;
-  error_handler->source_line_max_length = WASM_SOURCE_LINE_MAX_LENGTH_DEFAULT;
-  error_handler->user_data = info;
-}
-
 int main(int argc, char** argv) {
   WasmStackAllocator stack_allocator;
   WasmAllocator* allocator;
@@ -249,23 +228,6 @@ int main(int argc, char** argv) {
     if (WASM_SUCCEEDED(result) && s_validate) {
       result =
           wasm_validate_script(allocator, lexer, &script, &s_error_handler);
-    }
-
-    if (WASM_SUCCEEDED(result) && s_validate_assert_invalid_and_malformed) {
-      WasmDefaultErrorHandlerInfo assert_invalid_info;
-      WasmSourceErrorHandler assert_invalid_error_handler;
-      init_source_error_handler(&assert_invalid_error_handler,
-                                &assert_invalid_info, "assert_invalid error");
-
-      WasmDefaultErrorHandlerInfo assert_malformed_info;
-      WasmSourceErrorHandler assert_malformed_error_handler;
-      init_source_error_handler(&assert_malformed_error_handler,
-                                &assert_malformed_info,
-                                "assert_malformed error");
-
-      result = wasm_validate_assert_invalid_and_malformed(
-          allocator, lexer, &script, &assert_invalid_error_handler,
-          &assert_malformed_error_handler, &s_error_handler);
     }
 
     if (WASM_SUCCEEDED(result)) {

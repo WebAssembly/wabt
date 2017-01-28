@@ -1118,70 +1118,6 @@ static void check_module(Context* ctx, const WasmModule* module) {
   check_duplicate_export_bindings(ctx, module);
 }
 
-typedef struct BinaryErrorCallbackData {
-  Context* ctx;
-  WasmLocation* loc;
-} BinaryErrorCallbackData;
-
-static void on_read_binary_error(uint32_t offset,
-                                 const char* error,
-                                 void* user_data) {
-  BinaryErrorCallbackData* data = user_data;
-  if (offset == WASM_UNKNOWN_OFFSET) {
-    print_error(data->ctx, data->loc, "error in binary module: %s", error);
-  } else {
-    print_error(data->ctx, data->loc, "error in binary module: @0x%08x: %s",
-                offset, error);
-  }
-}
-
-typedef struct ReadModule {
-  WasmModule module;
-  WasmBool owned;
-} ReadModule;
-
-static void destroy_read_module(WasmAllocator* allocator,
-                                ReadModule* read_module) {
-  if (read_module->owned)
-    wasm_destroy_module(allocator, &read_module->module);
-}
-
-static WasmResult read_raw_module(Context* ctx,
-                                  WasmRawModule* raw,
-                                  ReadModule* out_module) {
-  if (raw->type != WASM_RAW_MODULE_TYPE_BINARY) {
-    out_module->module = *raw->text;
-    out_module->owned = WASM_FALSE;
-    return WASM_OK;
-  }
-
-  WASM_ZERO_MEMORY(*out_module);
-  WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
-  BinaryErrorCallbackData user_data;
-  user_data.ctx = ctx;
-  user_data.loc = &raw->binary.loc;
-  WasmBinaryErrorHandler error_handler;
-  error_handler.on_error = on_read_binary_error;
-  error_handler.user_data = &user_data;
-  WasmResult result =
-      wasm_read_binary_ast(ctx->allocator, raw->binary.data, raw->binary.size,
-                           &options, &error_handler, &out_module->module);
-  out_module->owned = WASM_SUCCEEDED(result);
-  return result;
-}
-
-static void check_raw_module(Context* ctx, WasmRawModule* raw) {
-  ReadModule read_module;
-  if (WASM_SUCCEEDED(read_raw_module(ctx, raw, &read_module))) {
-    WasmModule* module = &read_module.module;
-    ctx->result = wasm_resolve_names_module(ctx->allocator, ctx->lexer, module,
-                                            ctx->error_handler);
-    if (WASM_SUCCEEDED(ctx->result))
-      check_module(ctx, module);
-  }
-  destroy_read_module(ctx->allocator, &read_module);
-}
-
 /* returns the result type of the invoked function, checked by the caller;
  * returning NULL means that another error occured first, so the result type
  * should be ignored. */
@@ -1375,64 +1311,6 @@ WasmResult wasm_validate_script(WasmAllocator* allocator,
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
-  wasm_destroy_context(&ctx);
-  return ctx.result;
-}
-
-WasmResult wasm_validate_assert_invalid_and_malformed(
-    WasmAllocator* allocator,
-    WasmAstLexer* lexer,
-    const struct WasmScript* script,
-    WasmSourceErrorHandler* assert_invalid_error_handler,
-    WasmSourceErrorHandler* assert_malformed_error_handler,
-    WasmSourceErrorHandler* error_handler) {
-  Context ctx;
-  WASM_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
-  ctx.lexer = lexer;
-  ctx.error_handler = error_handler;
-  ctx.result = WASM_OK;
-  ctx.script = script;
-
-  size_t i;
-  for (i = 0; i < script->commands.size; ++i) {
-    WasmCommand* command = &script->commands.data[i];
-    if (command->type != WASM_COMMAND_TYPE_ASSERT_INVALID &&
-        command->type != WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY &&
-        command->type != WASM_COMMAND_TYPE_ASSERT_MALFORMED) {
-      continue;
-    }
-
-    Context ctx2;
-    WASM_ZERO_MEMORY(ctx2);
-    ctx2.allocator = allocator;
-    ctx2.lexer = lexer;
-    ctx2.result = WASM_OK;
-    ctx2.script = script;
-
-    if (command->type == WASM_COMMAND_TYPE_ASSERT_INVALID ||
-        command->type == WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY) {
-      ctx2.error_handler = assert_invalid_error_handler;
-      check_raw_module(&ctx2, &command->assert_invalid.module);
-      wasm_destroy_context(&ctx2);
-      if (WASM_SUCCEEDED(ctx2.result)) {
-        print_error(
-            &ctx, wasm_get_raw_module_location(&command->assert_invalid.module),
-            "expected module to be invalid");
-      }
-    } else if (command->type == WASM_COMMAND_TYPE_ASSERT_MALFORMED) {
-      ctx2.error_handler = assert_malformed_error_handler;
-      ReadModule read_module;
-      read_raw_module(&ctx2, &command->assert_malformed.module, &read_module);
-      destroy_read_module(ctx.allocator, &read_module);
-      wasm_destroy_context(&ctx2);
-      if (WASM_SUCCEEDED(ctx2.result)) {
-        print_error(&ctx, wasm_get_raw_module_location(
-                              &command->assert_malformed.module),
-                    "expected module to be malformed");
-      }
-    }
-  }
   wasm_destroy_context(&ctx);
   return ctx.result;
 }
