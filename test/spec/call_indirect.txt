@@ -86,11 +86,11 @@ assert_invalid error:
     (func $large-type (call_indirect 1012321300 (i32.const 0)))
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 assert_invalid error:
-  out/third_party/testsuite/call_indirect.wast:366:32: function variable out of range (max 0)
+  out/third_party/testsuite/call_indirect.wast:368:32: function variable out of range (max 0)
   (module (table anyfunc (elem 0 0)))
                                ^
 assert_invalid error:
-  out/third_party/testsuite/call_indirect.wast:366:34: function variable out of range (max 0)
+  out/third_party/testsuite/call_indirect.wast:368:34: function variable out of range (max 0)
   (module (table anyfunc (elem 0 0)))
                                  ^
 out/third_party/testsuite/call_indirect.wast:229: assert_invalid passed:
@@ -136,8 +136,17 @@ out/third_party/testsuite/call_indirect.wast:350: assert_invalid passed:
   error: @0x00000021: invalid call_indirect signature index
 out/third_party/testsuite/call_indirect.wast:357: assert_invalid passed:
   error: @0x00000025: invalid call_indirect signature index
-out/third_party/testsuite/call_indirect.wast:366: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:368: assert_invalid passed:
   error: invalid func_index: 0 (max 0)
   error: @0x00000018: on_elem_segment_function_index callback failed
-64/64 tests passed.
+out/third_party/testsuite/call_indirect.wast:376: assert_unlinkable passed:
+  error: elem segment offset is out of bounds: 10 >= max value 10
+  error: @0x00000021: on_elem_segment_function_index callback failed
+out/third_party/testsuite/call_indirect.wast:385: assert_unlinkable passed:
+  error: elem segment offset is out of bounds: 4294967295 >= max value 10
+  error: @0x00000021: on_elem_segment_function_index callback failed
+out/third_party/testsuite/call_indirect.wast:394: assert_unlinkable passed:
+  error: elem segment offset is out of bounds: 4294967286 >= max value 10
+  error: @0x00000021: on_elem_segment_function_index callback failed
+67/67 tests passed.
 ;;; STDOUT ;;)
