@@ -1,10 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDOUT ;;;
-assert_invalid error:
-  out/third_party/testsuite/switch.wast:150:41: label variable out of range (max 1)
-(assert_invalid (module (func (br_table 3 (i32.const 0)))) "unknown label")
-                                        ^
 out/third_party/testsuite/switch.wast:150: assert_invalid passed:
   error: invalid depth: 3 (max 1)
   error: @0x0000001c: on_br_table_expr callback failed

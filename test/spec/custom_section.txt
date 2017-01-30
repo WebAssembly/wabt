@@ -1,22 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/custom_section.wast
 (;; STDOUT ;;;
-assert_malformed error:
-  out/third_party/testsuite/custom_section.wast:58:4: error in binary module: @0x0000000a: unable to read u32 leb128: string length
-  (module
-   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/custom_section.wast:66:4: error in binary module: @0x0000000a: invalid section size: extends past end
-  (module
-   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/custom_section.wast:74:4: error in binary module: @0x00000031: invalid section code: 36; max is 11
-  (module
-   ^^^^^^
-assert_malformed error:
-  out/third_party/testsuite/custom_section.wast:83:4: error in binary module: @0x0000003e: function signature count != function body count
-  (module
-   ^^^^^^
 out/third_party/testsuite/custom_section.wast:58: assert_malformed passed:
   error: @0x0000000a: unable to read u32 leb128: string length
 out/third_party/testsuite/custom_section.wast:66: assert_malformed passed:

@@ -3,9 +3,3 @@
   (module
     "\00asm\bc\0a\00\00")
   "unknown binary version")
-(;; STDOUT ;;;
-assert_malformed error:
-  out/test/parse/assert/assertmalformed.txt:3:4: error in binary module: @0x00000008: bad wasm file version: 0xabc (expected 0xd)
-  (module
-   ^^^^^^
-;;; STDOUT ;;)

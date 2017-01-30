@@ -1,18 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
-assert_invalid error:
-  out/third_party/testsuite/start.wast:2:25: function variable out of range (max 1)
-  (module (func) (start 1))
-                        ^
-assert_invalid error:
-  out/third_party/testsuite/start.wast:9:5: start function must not return anything
-    (start $main)
-    ^^^^^^^^^^^^^
-assert_invalid error:
-  out/third_party/testsuite/start.wast:16:5: start function must be nullary
-    (start $main)
-    ^^^^^^^^^^^^^
 out/third_party/testsuite/start.wast:2: assert_invalid passed:
   error: @0x00000015: invalid start function index
 out/third_party/testsuite/start.wast:7: assert_invalid passed:

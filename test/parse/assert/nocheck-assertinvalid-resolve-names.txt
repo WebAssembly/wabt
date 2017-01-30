@@ -1,9 +1,0 @@
-;;; FLAGS: --spec --no-check-assert-invalid
-
-(assert_invalid
-  (module
-    (func
-      block $l
-        br $g
-      end))
-  "foo")

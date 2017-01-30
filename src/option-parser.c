@@ -43,8 +43,10 @@ static int option_match(const char* s,
         return -1;
       break;
     }
-    if (s[i] != full[i])
+    if (s[i] == '\0')
       break;
+    if (s[i] != full[i])
+      return -1;
   }
   return i;
 }
