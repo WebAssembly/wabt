@@ -81,6 +81,9 @@ DEFINE_STRUCT(
     WabtMemoryWriter, memory_writer,
     base, buf)
 
+DEFINE_STRUCT0(
+    WabtModule, module)
+
 DEFINE_STRUCT(
     WabtOutputBuffer, output_buffer,
     allocator, start, size, capacity)

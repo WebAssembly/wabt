@@ -94,12 +94,13 @@ function onInputKeyDown(e) {
 }
 
 function compile(text) {
-  wasm.ready.then(function() {
+  wabt.ready.then(function() {
     output.textContent = '';
     try {
-      var stackAllocator = new wasm.StackAllocator(wasm.LibcAllocator);
-      var script = wasm.parseAst(stackAllocator.allocator, 'test.wast', text);
-      script.check();
+      var stackAllocator = new wabt.StackAllocator(wabt.LibcAllocator);
+      var script = wabt.parseAst(stackAllocator.allocator, 'test.wast', text);
+      script.resolveNames();
+      script.validate();
       var binaryOutput = script.toBinary({log: true});
       output.textContent = binaryOutput.log;
       var blob = new Blob([binaryOutput.buffer]);

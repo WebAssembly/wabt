@@ -243,17 +243,7 @@ int main(int argc, char** argv) {
         if (WABT_FAILED(wabt_init_mem_writer(allocator, &writer)))
           WABT_FATAL("unable to open memory writer for writing\n");
 
-        /* Write the first module, if any. */
-        const WabtModule* module = NULL;
-        size_t i;
-        for (i = 0; i < script.commands.size; ++i) {
-          const WabtCommand* command = &script.commands.data[i];
-          if (command->type != WABT_COMMAND_TYPE_MODULE)
-            continue;
-          module = &command->module;
-          break;
-        }
-
+        WabtModule* module = wabt_get_first_module(&script);
         if (module) {
           result = wabt_write_binary_module(allocator, &writer.base, module,
                                             &s_write_binary_options);
