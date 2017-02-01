@@ -36,11 +36,11 @@
 
 static const char* s_infile;
 static const char* s_outfile;
-static WasmBool s_use_libc_allocator;
-static WasmBool s_generate_names;
+static WabtBool s_use_libc_allocator;
+static WabtBool s_generate_names;
 
-static WasmSourceErrorHandler s_error_handler =
-    WASM_SOURCE_ERROR_HANDLER_DEFAULT;
+static WabtSourceErrorHandler s_error_handler =
+    WABT_SOURCE_ERROR_HANDLER_DEFAULT;
 
 enum {
   FLAG_HELP,
@@ -63,25 +63,25 @@ static const char s_description[] =
     "  # generate names for indexed variables\n"
     "  $ wast-desugar --generate-names test.wast\n";
 
-static WasmOption s_options[] = {
-    {FLAG_HELP, 'h', "help", NULL, WASM_OPTION_NO_ARGUMENT,
+static WabtOption s_options[] = {
+    {FLAG_HELP, 'h', "help", NULL, WABT_OPTION_NO_ARGUMENT,
      "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", WASM_OPTION_HAS_ARGUMENT,
+    {FLAG_OUTPUT, 'o', "output", "FILE", WABT_OPTION_HAS_ARGUMENT,
      "output file for the formatted file"},
     {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL,
-     WASM_OPTION_NO_ARGUMENT,
+     WABT_OPTION_NO_ARGUMENT,
      "use malloc, free, etc. instead of stack allocator"},
-    {FLAG_GENERATE_NAMES, 0, "generate-names", NULL, WASM_OPTION_NO_ARGUMENT,
+    {FLAG_GENERATE_NAMES, 0, "generate-names", NULL, WABT_OPTION_NO_ARGUMENT,
      "Give auto-generated names to non-named functions, types, etc."},
 };
-WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
+WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static void on_option(struct WasmOptionParser* parser,
-                      struct WasmOption* option,
+static void on_option(struct WabtOptionParser* parser,
+                      struct WabtOption* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_HELP:
-      wasm_print_help(parser, PROGRAM_NAME);
+      wabt_print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -90,104 +90,104 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = WASM_TRUE;
+      s_use_libc_allocator = WABT_TRUE;
       break;
 
     case FLAG_GENERATE_NAMES:
-      s_generate_names = WASM_TRUE;
+      s_generate_names = WABT_TRUE;
       break;
   }
 }
 
-static void on_argument(struct WasmOptionParser* parser, const char* argument) {
+static void on_argument(struct WabtOptionParser* parser, const char* argument) {
   s_infile = argument;
 }
 
-static void on_option_error(struct WasmOptionParser* parser,
+static void on_option_error(struct WabtOptionParser* parser,
                             const char* message) {
-  WASM_FATAL("%s\n", message);
+  WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WasmOptionParser parser;
-  WASM_ZERO_MEMORY(parser);
+  WabtOptionParser parser;
+  WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
-  parser.num_options = WASM_ARRAY_SIZE(s_options);
+  parser.num_options = WABT_ARRAY_SIZE(s_options);
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wasm_parse_options(&parser, argc, argv);
+  wabt_parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wasm_print_help(&parser, PROGRAM_NAME);
-    WASM_FATAL("No filename given.\n");
+    wabt_print_help(&parser, PROGRAM_NAME);
+    WABT_FATAL("No filename given.\n");
   }
 }
 
 typedef struct Context {
-  WasmAllocator* allocator;
-  WasmMemoryWriter json_writer;
-  WasmMemoryWriter module_writer;
-  WasmStream json_stream;
-  WasmStringSlice output_filename_noext;
+  WabtAllocator* allocator;
+  WabtMemoryWriter json_writer;
+  WabtMemoryWriter module_writer;
+  WabtStream json_stream;
+  WabtStringSlice output_filename_noext;
   char* module_filename;
-  WasmResult result;
+  WabtResult result;
 } Context;
 
 int main(int argc, char** argv) {
-  WasmStackAllocator stack_allocator;
-  WasmAllocator* allocator;
+  WabtStackAllocator stack_allocator;
+  WabtAllocator* allocator;
 
-  wasm_init_stdio();
+  wabt_init_stdio();
   parse_options(argc, argv);
 
   if (s_use_libc_allocator) {
-    allocator = &g_wasm_libc_allocator;
+    allocator = &g_wabt_libc_allocator;
   } else {
-    wasm_init_stack_allocator(&stack_allocator, &g_wasm_libc_allocator);
+    wabt_init_stack_allocator(&stack_allocator, &g_wabt_libc_allocator);
     allocator = &stack_allocator.allocator;
   }
 
-  WasmAstLexer* lexer = wasm_new_ast_file_lexer(allocator, s_infile);
+  WabtAstLexer* lexer = wabt_new_ast_file_lexer(allocator, s_infile);
   if (!lexer)
-    WASM_FATAL("unable to read %s\n", s_infile);
+    WABT_FATAL("unable to read %s\n", s_infile);
 
-  WasmScript script;
-  WasmResult result = wasm_parse_ast(lexer, &script, &s_error_handler);
+  WabtScript script;
+  WabtResult result = wabt_parse_ast(lexer, &script, &s_error_handler);
 
-  if (WASM_SUCCEEDED(result)) {
-    WasmModule* module = wasm_get_first_module(&script);
+  if (WABT_SUCCEEDED(result)) {
+    WabtModule* module = wabt_get_first_module(&script);
     if (!module)
-      WASM_FATAL("no module in file.\n");
+      WABT_FATAL("no module in file.\n");
 
     if (s_generate_names)
-      result = wasm_generate_names(allocator, module);
+      result = wabt_generate_names(allocator, module);
 
-    if (WASM_SUCCEEDED(result))
-      result = wasm_apply_names(allocator, module);
+    if (WABT_SUCCEEDED(result))
+      result = wabt_apply_names(allocator, module);
 
-    if (WASM_SUCCEEDED(result)) {
-      WasmFileWriter file_writer;
+    if (WABT_SUCCEEDED(result)) {
+      WabtFileWriter file_writer;
       if (s_outfile) {
-        result = wasm_init_file_writer(&file_writer, s_outfile);
+        result = wabt_init_file_writer(&file_writer, s_outfile);
       } else {
-        wasm_init_file_writer_existing(&file_writer, stdout);
+        wabt_init_file_writer_existing(&file_writer, stdout);
       }
 
-      if (WASM_SUCCEEDED(result)) {
-        result = wasm_write_ast(allocator, &file_writer.base, module);
-        wasm_close_file_writer(&file_writer);
+      if (WABT_SUCCEEDED(result)) {
+        result = wabt_write_ast(allocator, &file_writer.base, module);
+        wabt_close_file_writer(&file_writer);
       }
     }
   }
 
-  wasm_destroy_ast_lexer(lexer);
+  wabt_destroy_ast_lexer(lexer);
 
   if (s_use_libc_allocator)
-    wasm_destroy_script(&script);
-  wasm_print_allocator_stats(allocator);
-  wasm_destroy_allocator(allocator);
+    wabt_destroy_script(&script);
+  wabt_print_allocator_stats(allocator);
+  wabt_destroy_allocator(allocator);
   return result;
 }
 

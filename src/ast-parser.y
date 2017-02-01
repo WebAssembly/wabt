@@ -41,7 +41,7 @@
 #define YYMAXDEPTH 10000000
 
 #define DUPTEXT(dst, src)                                                   \
-  (dst).start = wasm_strndup(parser->allocator, (src).start, (src).length); \
+  (dst).start = wabt_strndup(parser->allocator, (src).start, (src).length); \
   (dst).length = (src).length
 
 #define YYLLOC_DEFAULT(Current, Rhs, N)                       \
@@ -61,23 +61,23 @@
 
 #define APPEND_FIELD_TO_LIST(module, field, KIND, kind, loc_, item) \
   do {                                                              \
-    field = wasm_append_module_field(parser->allocator, module);    \
+    field = wabt_append_module_field(parser->allocator, module);    \
     field->loc = loc_;                                              \
-    field->type = WASM_MODULE_FIELD_TYPE_##KIND;                    \
+    field->type = WABT_MODULE_FIELD_TYPE_##KIND;                    \
     field->kind = item;                                             \
   } while (0)
 
 #define APPEND_ITEM_TO_VECTOR(module, Kind, kind, kinds, item_ptr)      \
   do {                                                                  \
-    Wasm##Kind* dummy = item_ptr;                                       \
-    wasm_append_##kind##_ptr_value(parser->allocator, &(module)->kinds, \
+    Wabt##Kind* dummy = item_ptr;                                       \
+    wabt_append_##kind##_ptr_value(parser->allocator, &(module)->kinds, \
                                    &dummy);                             \
   } while (0)
 
 #define INSERT_BINDING(module, kind, kinds, loc_, name)            \
   do                                                               \
     if ((name).start) {                                            \
-      WasmBinding* binding = wasm_insert_binding(                  \
+      WabtBinding* binding = wabt_insert_binding(                  \
           parser->allocator, &(module)->kind##_bindings, &(name)); \
       binding->loc = loc_;                                         \
       binding->index = (module)->kinds.size - 1;                   \
@@ -87,10 +87,10 @@
 #define APPEND_INLINE_EXPORT(module, KIND, loc_, value, index_)         \
   do                                                                    \
     if ((value).export_.has_export) {                                   \
-      WasmModuleField* export_field;                                    \
+      WabtModuleField* export_field;                                    \
       APPEND_FIELD_TO_LIST(module, export_field, EXPORT, export_, loc_, \
                            (value).export_.export_);                    \
-      export_field->export_.kind = WASM_EXTERNAL_KIND_##KIND;           \
+      export_field->export_.kind = WABT_EXTERNAL_KIND_##KIND;           \
       export_field->export_.var.loc = loc_;                             \
       export_field->export_.var.index = index_;                         \
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
@@ -103,7 +103,7 @@
 #define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)           \
   do {                                                             \
     if ((module)->kinds.size != (module)->num_##kind##_imports) {  \
-      wasm_ast_parser_error(                                       \
+      wabt_ast_parser_error(                                       \
           &loc_, lexer, parser,                                    \
           "imports must occur before all non-import definitions"); \
     }                                                              \
@@ -111,87 +111,87 @@
 
 #define CHECK_END_LABEL(loc, begin_label, end_label)                     \
   do {                                                                   \
-    if (!wasm_string_slice_is_empty(&(end_label))) {                     \
-      if (wasm_string_slice_is_empty(&(begin_label))) {                  \
-        wasm_ast_parser_error(&loc, lexer, parser,                       \
+    if (!wabt_string_slice_is_empty(&(end_label))) {                     \
+      if (wabt_string_slice_is_empty(&(begin_label))) {                  \
+        wabt_ast_parser_error(&loc, lexer, parser,                       \
                               "unexpected label \"" PRIstringslice "\"", \
-                              WASM_PRINTF_STRING_SLICE_ARG(end_label));  \
-      } else if (!wasm_string_slices_are_equal(&(begin_label),           \
+                              WABT_PRINTF_STRING_SLICE_ARG(end_label));  \
+      } else if (!wabt_string_slices_are_equal(&(begin_label),           \
                                                &(end_label))) {          \
-        wasm_ast_parser_error(&loc, lexer, parser,                       \
+        wabt_ast_parser_error(&loc, lexer, parser,                       \
                               "mismatching label \"" PRIstringslice      \
                               "\" != \"" PRIstringslice "\"",            \
-                              WASM_PRINTF_STRING_SLICE_ARG(begin_label), \
-                              WASM_PRINTF_STRING_SLICE_ARG(end_label));  \
+                              WABT_PRINTF_STRING_SLICE_ARG(begin_label), \
+                              WABT_PRINTF_STRING_SLICE_ARG(end_label));  \
       }                                                                  \
-      wasm_destroy_string_slice(parser->allocator, &(end_label));        \
+      wabt_destroy_string_slice(parser->allocator, &(end_label));        \
     }                                                                    \
   } while (0)
 
-#define YYMALLOC(size) wasm_alloc(parser->allocator, size, WASM_DEFAULT_ALIGN)
-#define YYFREE(p) wasm_free(parser->allocator, p)
+#define YYMALLOC(size) wabt_alloc(parser->allocator, size, WABT_DEFAULT_ALIGN)
+#define YYFREE(p) wabt_free(parser->allocator, p)
 
 #define USE_NATURAL_ALIGNMENT (~0)
 
-static WasmExprList join_exprs1(WasmLocation* loc, WasmExpr* expr1);
-static WasmExprList join_exprs2(WasmLocation* loc, WasmExprList* expr1,
-                                WasmExpr* expr2);
+static WabtExprList join_exprs1(WabtLocation* loc, WabtExpr* expr1);
+static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
+                                WabtExpr* expr2);
 
-static WasmFuncField* new_func_field(WasmAllocator* allocator) {
-  return wasm_alloc_zero(allocator, sizeof(WasmFuncField), WASM_DEFAULT_ALIGN);
+static WabtFuncField* new_func_field(WabtAllocator* allocator) {
+  return wabt_alloc_zero(allocator, sizeof(WabtFuncField), WABT_DEFAULT_ALIGN);
 }
 
-static WasmFunc* new_func(WasmAllocator* allocator) {
-  return wasm_alloc_zero(allocator, sizeof(WasmFunc), WASM_DEFAULT_ALIGN);
+static WabtFunc* new_func(WabtAllocator* allocator) {
+  return wabt_alloc_zero(allocator, sizeof(WabtFunc), WABT_DEFAULT_ALIGN);
 }
 
-static WasmCommand* new_command(WasmAllocator* allocator) {
-  return wasm_alloc_zero(allocator, sizeof(WasmCommand), WASM_DEFAULT_ALIGN);
+static WabtCommand* new_command(WabtAllocator* allocator) {
+  return wabt_alloc_zero(allocator, sizeof(WabtCommand), WABT_DEFAULT_ALIGN);
 }
 
-static WasmModule* new_module(WasmAllocator* allocator) {
-  return wasm_alloc_zero(allocator, sizeof(WasmModule), WASM_DEFAULT_ALIGN);
+static WabtModule* new_module(WabtAllocator* allocator) {
+  return wabt_alloc_zero(allocator, sizeof(WabtModule), WABT_DEFAULT_ALIGN);
 }
 
-static WasmImport* new_import(WasmAllocator* allocator) {
-  return wasm_alloc_zero(allocator, sizeof(WasmImport), WASM_DEFAULT_ALIGN);
+static WabtImport* new_import(WabtAllocator* allocator) {
+  return wabt_alloc_zero(allocator, sizeof(WabtImport), WABT_DEFAULT_ALIGN);
 }
 
-static WasmTextListNode* new_text_list_node(WasmAllocator* allocator) {
-  return wasm_alloc_zero(allocator, sizeof(WasmTextListNode),
-                         WASM_DEFAULT_ALIGN);
+static WabtTextListNode* new_text_list_node(WabtAllocator* allocator) {
+  return wabt_alloc_zero(allocator, sizeof(WabtTextListNode),
+                         WABT_DEFAULT_ALIGN);
 }
 
-static WasmResult parse_const(WasmType type, WasmLiteralType literal_type,
-                              const char* s, const char* end, WasmConst* out);
-static void dup_text_list(WasmAllocator*, WasmTextList* text_list,
+static WabtResult parse_const(WabtType type, WabtLiteralType literal_type,
+                              const char* s, const char* end, WabtConst* out);
+static void dup_text_list(WabtAllocator*, WabtTextList* text_list,
                           void** out_data, size_t* out_size);
 
-static WasmBool is_empty_signature(WasmFuncSignature* sig);
+static WabtBool is_empty_signature(WabtFuncSignature* sig);
 
-static void append_implicit_func_declaration(WasmAllocator*, WasmLocation*,
-                                             WasmModule*, WasmFuncDeclaration*);
+static void append_implicit_func_declaration(WabtAllocator*, WabtLocation*,
+                                             WabtModule*, WabtFuncDeclaration*);
 
 typedef struct BinaryErrorCallbackData {
-  WasmLocation* loc;
-  WasmAstLexer* lexer;
-  WasmAstParser* parser;
+  WabtLocation* loc;
+  WabtAstLexer* lexer;
+  WabtAstParser* parser;
 } BinaryErrorCallbackData;
 
 static void on_read_binary_error(uint32_t offset, const char* error,
                                  void* user_data);
 
-#define wasm_ast_parser_lex wasm_ast_lexer_lex
+#define wabt_ast_parser_lex wabt_ast_lexer_lex
 
 %}
 
-%define api.prefix {wasm_ast_parser_}
+%define api.prefix {wabt_ast_parser_}
 %define api.pure true
-%define api.value.type {WasmToken}
-%define api.token.prefix {WASM_TOKEN_TYPE_}
+%define api.value.type {WabtToken}
+%define api.token.prefix {WABT_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {WasmAstLexer* lexer} {WasmAstParser* parser}
-%parse-param {WasmAstLexer* lexer} {WasmAstParser* parser}
+%lex-param {WabtAstLexer* lexer} {WabtAstParser* parser}
+%parse-param {WabtAstLexer* lexer} {WabtAstParser* parser}
 %locations
 
 %token LPAR "("
@@ -257,32 +257,32 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 /* These non-terminals use the types below that have destructors, but the
  * memory is shared with the lexer, so should not be destroyed. */
 %destructor {} ALIGN_EQ_NAT OFFSET_EQ_NAT TEXT VAR NAT INT FLOAT
-%destructor { wasm_destroy_block(parser->allocator, &$$); } <block>
-%destructor { wasm_destroy_command(parser->allocator, $$); wasm_free(parser->allocator, $$); } <command>
-%destructor { wasm_destroy_command_vector_and_elements(parser->allocator, &$$); } <commands>
-%destructor { wasm_destroy_const_vector(parser->allocator, &$$); } <consts>
-%destructor { wasm_destroy_elem_segment(parser->allocator, &$$); } <elem_segment>
-%destructor { wasm_destroy_export(parser->allocator, &$$); } <export_>
-%destructor { wasm_destroy_exported_func(parser->allocator, &$$); } <exported_func>
-%destructor { wasm_destroy_exported_memory(parser->allocator, &$$); } <exported_memory>
-%destructor { wasm_destroy_exported_table(parser->allocator, &$$); } <exported_table>
-%destructor { wasm_destroy_expr(parser->allocator, $$); } <expr>
-%destructor { wasm_destroy_expr_list(parser->allocator, $$.first); } <expr_list>
-%destructor { wasm_destroy_func_fields(parser->allocator, $$); } <func_fields>
-%destructor { wasm_destroy_func(parser->allocator, $$); wasm_free(parser->allocator, $$); } <func>
-%destructor { wasm_destroy_func_signature(parser->allocator, &$$); } <func_sig>
-%destructor { wasm_destroy_func_type(parser->allocator, &$$); } <func_type>
-%destructor { wasm_destroy_import(parser->allocator, $$); wasm_free(parser->allocator, $$); } <import>
-%destructor { wasm_destroy_data_segment(parser->allocator, &$$); } <data_segment>
-%destructor { wasm_destroy_module(parser->allocator, $$); wasm_free(parser->allocator, $$); } <module>
-%destructor { wasm_destroy_raw_module(parser->allocator, &$$); } <raw_module>
-%destructor { wasm_destroy_string_slice(parser->allocator, &$$.text); } <literal>
-%destructor { wasm_destroy_script(&$$); } <script>
-%destructor { wasm_destroy_string_slice(parser->allocator, &$$); } <text>
-%destructor { wasm_destroy_text_list(parser->allocator, &$$); } <text_list>
-%destructor { wasm_destroy_type_vector(parser->allocator, &$$); } <types>
-%destructor { wasm_destroy_var_vector_and_elements(parser->allocator, &$$); } <vars>
-%destructor { wasm_destroy_var(parser->allocator, &$$); } <var>
+%destructor { wabt_destroy_block(parser->allocator, &$$); } <block>
+%destructor { wabt_destroy_command(parser->allocator, $$); wabt_free(parser->allocator, $$); } <command>
+%destructor { wabt_destroy_command_vector_and_elements(parser->allocator, &$$); } <commands>
+%destructor { wabt_destroy_const_vector(parser->allocator, &$$); } <consts>
+%destructor { wabt_destroy_elem_segment(parser->allocator, &$$); } <elem_segment>
+%destructor { wabt_destroy_export(parser->allocator, &$$); } <export_>
+%destructor { wabt_destroy_exported_func(parser->allocator, &$$); } <exported_func>
+%destructor { wabt_destroy_exported_memory(parser->allocator, &$$); } <exported_memory>
+%destructor { wabt_destroy_exported_table(parser->allocator, &$$); } <exported_table>
+%destructor { wabt_destroy_expr(parser->allocator, $$); } <expr>
+%destructor { wabt_destroy_expr_list(parser->allocator, $$.first); } <expr_list>
+%destructor { wabt_destroy_func_fields(parser->allocator, $$); } <func_fields>
+%destructor { wabt_destroy_func(parser->allocator, $$); wabt_free(parser->allocator, $$); } <func>
+%destructor { wabt_destroy_func_signature(parser->allocator, &$$); } <func_sig>
+%destructor { wabt_destroy_func_type(parser->allocator, &$$); } <func_type>
+%destructor { wabt_destroy_import(parser->allocator, $$); wabt_free(parser->allocator, $$); } <import>
+%destructor { wabt_destroy_data_segment(parser->allocator, &$$); } <data_segment>
+%destructor { wabt_destroy_module(parser->allocator, $$); wabt_free(parser->allocator, $$); } <module>
+%destructor { wabt_destroy_raw_module(parser->allocator, &$$); } <raw_module>
+%destructor { wabt_destroy_string_slice(parser->allocator, &$$.text); } <literal>
+%destructor { wabt_destroy_script(&$$); } <script>
+%destructor { wabt_destroy_string_slice(parser->allocator, &$$); } <text>
+%destructor { wabt_destroy_text_list(parser->allocator, &$$); } <text_list>
+%destructor { wabt_destroy_type_vector(parser->allocator, &$$); } <types>
+%destructor { wabt_destroy_var_vector_and_elements(parser->allocator, &$$); } <vars>
+%destructor { wabt_destroy_var(parser->allocator, &$$); } <var>
 
 
 %nonassoc LOW
@@ -296,14 +296,14 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 
 non_empty_text_list :
     TEXT {
-      WasmTextListNode* node = new_text_list_node(parser->allocator);
+      WabtTextListNode* node = new_text_list_node(parser->allocator);
       DUPTEXT(node->text, $1);
       node->next = NULL;
       $$.first = $$.last = node;
     }
   | non_empty_text_list TEXT {
       $$ = $1;
-      WasmTextListNode* node = new_text_list_node(parser->allocator);
+      WabtTextListNode* node = new_text_list_node(parser->allocator);
       DUPTEXT(node->text, $2);
       node->next = NULL;
       $$.last->next = node;
@@ -317,10 +317,10 @@ text_list :
 
 quoted_text :
     TEXT {
-      WasmTextListNode node;
+      WabtTextListNode node;
       node.text = $1;
       node.next = NULL;
-      WasmTextList text_list;
+      WabtTextList text_list;
       text_list.first = &node;
       text_list.last = &node;
       void* data;
@@ -334,10 +334,10 @@ quoted_text :
 /* Types */
 
 value_type_list :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | value_type_list VALUE_TYPE {
       $$ = $1;
-      wasm_append_type_value(parser->allocator, &$$, &$2);
+      wabt_append_type_value(parser->allocator, &$$, &$2);
     }
 ;
 elem_type :
@@ -345,32 +345,32 @@ elem_type :
 ;
 global_type :
     VALUE_TYPE {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.type = $1;
-      $$.mutable_ = WASM_FALSE;
+      $$.mutable_ = WABT_FALSE;
     }
   | LPAR MUT VALUE_TYPE RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.type = $3;
-      $$.mutable_ = WASM_TRUE;
+      $$.mutable_ = WABT_TRUE;
     }
 ;
 func_type :
     LPAR FUNC func_sig RPAR { $$ = $3; }
 ;
 func_sig :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | LPAR PARAM value_type_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.param_types = $3;
     }
   | LPAR PARAM value_type_list RPAR LPAR RESULT value_type_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.param_types = $3;
       $$.result_types = $7;
     }
   | LPAR RESULT value_type_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.result_types = $3;
     }
 ;
@@ -383,12 +383,12 @@ memory_sig :
 ;
 limits :
     nat {
-      $$.has_max = WASM_FALSE;
+      $$.has_max = WABT_FALSE;
       $$.initial = $1;
       $$.max = 0;
     }
   | nat nat {
-      $$.has_max = WASM_TRUE;
+      $$.has_max = WABT_TRUE;
       $$.initial = $1;
       $$.max = $2;
     }
@@ -401,11 +401,11 @@ type_use :
 
 nat :
     NAT {
-      if (WASM_FAILED(wasm_parse_uint64($1.text.start,
+      if (WABT_FAILED(wabt_parse_uint64($1.text.start,
                                         $1.text.start + $1.text.length, &$$))) {
-        wasm_ast_parser_error(&@1, lexer, parser,
+        wabt_ast_parser_error(&@1, lexer, parser,
                               "invalid int " PRIstringslice "\"",
-                              WASM_PRINTF_STRING_SLICE_ARG($1.text));
+                              WABT_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -428,24 +428,24 @@ literal :
 var :
     nat {
       $$.loc = @1;
-      $$.type = WASM_VAR_TYPE_INDEX;
+      $$.type = WABT_VAR_TYPE_INDEX;
       $$.index = $1;
     }
   | VAR {
       $$.loc = @1;
-      $$.type = WASM_VAR_TYPE_NAME;
+      $$.type = WABT_VAR_TYPE_NAME;
       DUPTEXT($$.name, $1);
     }
 ;
 var_list :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | var_list var {
       $$ = $1;
-      wasm_append_var_value(parser->allocator, &$$, &$2);
+      wabt_append_var_value(parser->allocator, &$$, &$2);
     }
 ;
 bind_var_opt :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | bind_var
 ;
 bind_var :
@@ -453,29 +453,29 @@ bind_var :
 ;
 
 labeling_opt :
-    /* empty */ %prec LOW { WASM_ZERO_MEMORY($$); }
+    /* empty */ %prec LOW { WABT_ZERO_MEMORY($$); }
   | bind_var
 ;
 
 offset_opt :
     /* empty */ { $$ = 0; }
   | OFFSET_EQ_NAT {
-    if (WASM_FAILED(wasm_parse_int64($1.start, $1.start + $1.length, &$$,
-                                     WASM_PARSE_SIGNED_AND_UNSIGNED))) {
-      wasm_ast_parser_error(&@1, lexer, parser,
+    if (WABT_FAILED(wabt_parse_int64($1.start, $1.start + $1.length, &$$,
+                                     WABT_PARSE_SIGNED_AND_UNSIGNED))) {
+      wabt_ast_parser_error(&@1, lexer, parser,
                             "invalid offset \"" PRIstringslice "\"",
-                            WASM_PRINTF_STRING_SLICE_ARG($1));
+                            WABT_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
 align_opt :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN_EQ_NAT {
-      if (WASM_FAILED(wasm_parse_int32($1.start, $1.start + $1.length, &$$,
-                                       WASM_PARSE_UNSIGNED_ONLY))) {
-        wasm_ast_parser_error(&@1, lexer, parser,
+      if (WABT_FAILED(wabt_parse_int32($1.start, $1.start + $1.length, &$$,
+                                       WABT_PARSE_UNSIGNED_ONLY))) {
+        wabt_ast_parser_error(&@1, lexer, parser,
                               "invalid alignment \"" PRIstringslice "\"",
-                              WASM_PRINTF_STRING_SLICE_ARG($1));
+                              WABT_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -487,129 +487,129 @@ instr :
 ;
 plain_instr :
     UNREACHABLE {
-      $$ = wasm_new_unreachable_expr(parser->allocator);
+      $$ = wabt_new_unreachable_expr(parser->allocator);
     }
   | NOP {
-      $$ = wasm_new_nop_expr(parser->allocator);
+      $$ = wabt_new_nop_expr(parser->allocator);
     }
   | DROP {
-      $$ = wasm_new_drop_expr(parser->allocator);
+      $$ = wabt_new_drop_expr(parser->allocator);
     }
   | SELECT {
-      $$ = wasm_new_select_expr(parser->allocator);
+      $$ = wabt_new_select_expr(parser->allocator);
     }
   | BR var {
-      $$ = wasm_new_br_expr(parser->allocator);
+      $$ = wabt_new_br_expr(parser->allocator);
       $$->br.var = $2;
     }
   | BR_IF var {
-      $$ = wasm_new_br_if_expr(parser->allocator);
+      $$ = wabt_new_br_if_expr(parser->allocator);
       $$->br_if.var = $2;
     }
   | BR_TABLE var_list var {
-      $$ = wasm_new_br_table_expr(parser->allocator);
+      $$ = wabt_new_br_table_expr(parser->allocator);
       $$->br_table.targets = $2;
       $$->br_table.default_target = $3;
     }
   | RETURN {
-      $$ = wasm_new_return_expr(parser->allocator);
+      $$ = wabt_new_return_expr(parser->allocator);
     }
   | CALL var {
-      $$ = wasm_new_call_expr(parser->allocator);
+      $$ = wabt_new_call_expr(parser->allocator);
       $$->call.var = $2;
     }
   | CALL_INDIRECT var {
-      $$ = wasm_new_call_indirect_expr(parser->allocator);
+      $$ = wabt_new_call_indirect_expr(parser->allocator);
       $$->call_indirect.var = $2;
     }
   | GET_LOCAL var {
-      $$ = wasm_new_get_local_expr(parser->allocator);
+      $$ = wabt_new_get_local_expr(parser->allocator);
       $$->get_local.var = $2;
     }
   | SET_LOCAL var {
-      $$ = wasm_new_set_local_expr(parser->allocator);
+      $$ = wabt_new_set_local_expr(parser->allocator);
       $$->set_local.var = $2;
     }
   | TEE_LOCAL var {
-      $$ = wasm_new_tee_local_expr(parser->allocator);
+      $$ = wabt_new_tee_local_expr(parser->allocator);
       $$->tee_local.var = $2;
     }
   | GET_GLOBAL var {
-      $$ = wasm_new_get_global_expr(parser->allocator);
+      $$ = wabt_new_get_global_expr(parser->allocator);
       $$->get_global.var = $2;
     }
   | SET_GLOBAL var {
-      $$ = wasm_new_set_global_expr(parser->allocator);
+      $$ = wabt_new_set_global_expr(parser->allocator);
       $$->set_global.var = $2;
     }
   | LOAD offset_opt align_opt {
-      $$ = wasm_new_load_expr(parser->allocator);
+      $$ = wabt_new_load_expr(parser->allocator);
       $$->load.opcode = $1;
       $$->load.offset = $2;
       $$->load.align = $3;
     }
   | STORE offset_opt align_opt {
-      $$ = wasm_new_store_expr(parser->allocator);
+      $$ = wabt_new_store_expr(parser->allocator);
       $$->store.opcode = $1;
       $$->store.offset = $2;
       $$->store.align = $3;
     }
   | CONST literal {
-      $$ = wasm_new_const_expr(parser->allocator);
+      $$ = wabt_new_const_expr(parser->allocator);
       $$->const_.loc = @1;
-      if (WASM_FAILED(parse_const($1, $2.type, $2.text.start,
+      if (WABT_FAILED(parse_const($1, $2.type, $2.text.start,
                                   $2.text.start + $2.text.length,
                                   &$$->const_))) {
-        wasm_ast_parser_error(&@2, lexer, parser,
+        wabt_ast_parser_error(&@2, lexer, parser,
                               "invalid literal \"" PRIstringslice "\"",
-                              WASM_PRINTF_STRING_SLICE_ARG($2.text));
+                              WABT_PRINTF_STRING_SLICE_ARG($2.text));
       }
-      wasm_free(parser->allocator, (char*)$2.text.start);
+      wabt_free(parser->allocator, (char*)$2.text.start);
     }
   | UNARY {
-      $$ = wasm_new_unary_expr(parser->allocator);
+      $$ = wabt_new_unary_expr(parser->allocator);
       $$->unary.opcode = $1;
     }
   | BINARY {
-      $$ = wasm_new_binary_expr(parser->allocator);
+      $$ = wabt_new_binary_expr(parser->allocator);
       $$->binary.opcode = $1;
     }
   | COMPARE {
-      $$ = wasm_new_compare_expr(parser->allocator);
+      $$ = wabt_new_compare_expr(parser->allocator);
       $$->compare.opcode = $1;
     }
   | CONVERT {
-      $$ = wasm_new_convert_expr(parser->allocator);
+      $$ = wabt_new_convert_expr(parser->allocator);
       $$->convert.opcode = $1;
     }
   | CURRENT_MEMORY {
-      $$ = wasm_new_current_memory_expr(parser->allocator);
+      $$ = wabt_new_current_memory_expr(parser->allocator);
     }
   | GROW_MEMORY {
-      $$ = wasm_new_grow_memory_expr(parser->allocator);
+      $$ = wabt_new_grow_memory_expr(parser->allocator);
     }
 ;
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
-      $$ = wasm_new_block_expr(parser->allocator);
+      $$ = wabt_new_block_expr(parser->allocator);
       $$->block = $3;
       $$->block.label = $2;
       CHECK_END_LABEL(@5, $$->block.label, $5);
     }
   | LOOP labeling_opt block END labeling_opt {
-      $$ = wasm_new_loop_expr(parser->allocator);
+      $$ = wabt_new_loop_expr(parser->allocator);
       $$->loop = $3;
       $$->loop.label = $2;
       CHECK_END_LABEL(@5, $$->block.label, $5);
     }
   | IF labeling_opt block END labeling_opt {
-      $$ = wasm_new_if_expr(parser->allocator);
+      $$ = wabt_new_if_expr(parser->allocator);
       $$->if_.true_ = $3;
       $$->if_.true_.label = $2;
       CHECK_END_LABEL(@5, $$->block.label, $5);
     }
   | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
-      $$ = wasm_new_if_expr(parser->allocator);
+      $$ = wabt_new_if_expr(parser->allocator);
       $$->if_.true_ = $3;
       $$->if_.true_.label = $2;
       $$->if_.false_ = $6.first;
@@ -619,7 +619,7 @@ block_instr :
 ;
 block :
     value_type_list instr_list {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.sig = $1;
       $$.first = $2.first;
     }
@@ -634,63 +634,63 @@ expr1 :
       $$ = join_exprs2(&@1, &$2, $1);
     }
   | BLOCK labeling_opt block {
-      WasmExpr* expr = wasm_new_block_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_block_expr(parser->allocator);
       expr->block = $3;
       expr->block.label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | LOOP labeling_opt block {
-      WasmExpr* expr = wasm_new_loop_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_loop_expr(parser->allocator);
       expr->loop = $3;
       expr->loop.label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | IF labeling_opt value_type_list if_ {
       $$ = $4;
-      WasmExpr* if_ = $4.last;
-      assert(if_->type == WASM_EXPR_TYPE_IF);
+      WabtExpr* if_ = $4.last;
+      assert(if_->type == WABT_EXPR_TYPE_IF);
       if_->if_.true_.label = $2;
       if_->if_.true_.sig = $3;
     }
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_if_expr(parser->allocator);
       expr->if_.true_.first = $3.first;
       expr->if_.false_ = $7.first;
       $$ = join_exprs1(&@1, expr);
     }
   | LPAR THEN instr_list RPAR {
-      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_if_expr(parser->allocator);
       expr->if_.true_.first = $3.first;
       $$ = join_exprs1(&@1, expr);
     }
   | expr LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_if_expr(parser->allocator);
       expr->if_.true_.first = $4.first;
       expr->if_.false_ = $8.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr LPAR THEN instr_list RPAR {
-      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_if_expr(parser->allocator);
       expr->if_.true_.first = $4.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr expr {
-      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_if_expr(parser->allocator);
       expr->if_.true_.first = $2.first;
       expr->if_.false_ = $3.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr {
-      WasmExpr* expr = wasm_new_if_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_if_expr(parser->allocator);
       expr->if_.true_.first = $2.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
 ;
 
 instr_list :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | instr instr_list {
       $$.first = $1.first;
       $1.last->next = $2.first;
@@ -699,7 +699,7 @@ instr_list :
     }
 ;
 expr_list :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | expr expr_list {
       $$.first = $1.first;
       $1.last->next = $2.first;
@@ -716,19 +716,19 @@ func_fields :
     func_body
   | LPAR RESULT value_type_list RPAR func_body {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_RESULT_TYPES;
+      $$->type = WABT_FUNC_FIELD_TYPE_RESULT_TYPES;
       $$->types = $3;
       $$->next = $5;
     }
   | LPAR PARAM value_type_list RPAR func_fields {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_PARAM_TYPES;
+      $$->type = WABT_FUNC_FIELD_TYPE_PARAM_TYPES;
       $$->types = $3;
       $$->next = $5;
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_BOUND_PARAM;
+      $$->type = WABT_FUNC_FIELD_TYPE_BOUND_PARAM;
       $$->bound_type.loc = @2;
       $$->bound_type.name = $3;
       $$->bound_type.type = $4;
@@ -738,19 +738,19 @@ func_fields :
 func_body :
     instr_list {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_EXPRS;
+      $$->type = WABT_FUNC_FIELD_TYPE_EXPRS;
       $$->first_expr = $1.first;
       $$->next = NULL;
     }
   | LPAR LOCAL value_type_list RPAR func_body {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_LOCAL_TYPES;
+      $$->type = WABT_FUNC_FIELD_TYPE_LOCAL_TYPES;
       $$->types = $3;
       $$->next = $5;
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR func_body {
       $$ = new_func_field(parser->allocator);
-      $$->type = WASM_FUNC_FIELD_TYPE_BOUND_LOCAL;
+      $$->type = WABT_FUNC_FIELD_TYPE_BOUND_LOCAL;
       $$->bound_type.loc = @2;
       $$->bound_type.name = $3;
       $$->bound_type.type = $4;
@@ -760,31 +760,31 @@ func_body :
 func_info :
     func_fields {
       $$ = new_func(parser->allocator);
-      WasmFuncField* field = $1;
+      WabtFuncField* field = $1;
 
       while (field) {
-        WasmFuncField* next = field->next;
+        WabtFuncField* next = field->next;
         switch (field->type) {
-          case WASM_FUNC_FIELD_TYPE_EXPRS:
+          case WABT_FUNC_FIELD_TYPE_EXPRS:
             $$->first_expr = field->first_expr;
             break;
 
-          case WASM_FUNC_FIELD_TYPE_PARAM_TYPES:
-          case WASM_FUNC_FIELD_TYPE_LOCAL_TYPES: {
-            WasmTypeVector* types =
-                field->type == WASM_FUNC_FIELD_TYPE_PARAM_TYPES
+          case WABT_FUNC_FIELD_TYPE_PARAM_TYPES:
+          case WABT_FUNC_FIELD_TYPE_LOCAL_TYPES: {
+            WabtTypeVector* types =
+                field->type == WABT_FUNC_FIELD_TYPE_PARAM_TYPES
                     ? &$$->decl.sig.param_types
                     : &$$->local_types;
-            wasm_extend_types(parser->allocator, types, &field->types);
-            wasm_destroy_type_vector(parser->allocator, &field->types);
+            wabt_extend_types(parser->allocator, types, &field->types);
+            wabt_destroy_type_vector(parser->allocator, &field->types);
             break;
           }
 
-          case WASM_FUNC_FIELD_TYPE_BOUND_PARAM:
-          case WASM_FUNC_FIELD_TYPE_BOUND_LOCAL: {
-            WasmTypeVector* types;
-            WasmBindingHash* bindings;
-            if (field->type == WASM_FUNC_FIELD_TYPE_BOUND_PARAM) {
+          case WABT_FUNC_FIELD_TYPE_BOUND_PARAM:
+          case WABT_FUNC_FIELD_TYPE_BOUND_LOCAL: {
+            WabtTypeVector* types;
+            WabtBindingHash* bindings;
+            if (field->type == WABT_FUNC_FIELD_TYPE_BOUND_PARAM) {
               types = &$$->decl.sig.param_types;
               bindings = &$$->param_bindings;
             } else {
@@ -792,52 +792,52 @@ func_info :
               bindings = &$$->local_bindings;
             }
 
-            wasm_append_type_value(parser->allocator, types,
+            wabt_append_type_value(parser->allocator, types,
                                    &field->bound_type.type);
-            WasmBinding* binding = wasm_insert_binding(
+            WabtBinding* binding = wabt_insert_binding(
                 parser->allocator, bindings, &field->bound_type.name);
             binding->loc = field->bound_type.loc;
             binding->index = types->size - 1;
             break;
           }
 
-          case WASM_FUNC_FIELD_TYPE_RESULT_TYPES:
+          case WABT_FUNC_FIELD_TYPE_RESULT_TYPES:
             $$->decl.sig.result_types = field->types;
             break;
         }
 
         /* we steal memory from the func field, but not the linked list nodes */
-        wasm_free(parser->allocator, field);
+        wabt_free(parser->allocator, field);
         field = next;
       }
     }
 ;
 func :
     LPAR FUNC bind_var_opt inline_export type_use func_info RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.func = $6;
-      $$.func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$.func->decl.flags |= WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$.func->decl.type_var = $5;
       $$.func->name = $3;
       $$.export_ = $4;
     }
   /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
   | LPAR FUNC bind_var_opt type_use func_info RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.func = $5;
-      $$.func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$.func->decl.flags |= WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$.func->decl.type_var = $4;
       $$.func->name = $3;
     }
   | LPAR FUNC bind_var_opt inline_export func_info RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.func = $5;
       $$.func->name = $3;
       $$.export_ = $4;
     }
   /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
   | LPAR FUNC bind_var_opt func_info RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.func = $4;
       $$.func->name = $3;
     }
@@ -854,15 +854,15 @@ offset :
 
 elem :
     LPAR ELEM var offset var_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.table_var = $3;
       $$.offset = $4.first;
       $$.vars = $5;
     }
   | LPAR ELEM offset var_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.table_var.loc = @2;
-      $$.table_var.type = WASM_VAR_TYPE_INDEX;
+      $$.table_var.type = WABT_VAR_TYPE_INDEX;
       $$.table_var.index = 0;
       $$.offset = $3.first;
       $$.vars = $4;
@@ -873,22 +873,22 @@ table :
     LPAR TABLE bind_var_opt inline_export_opt table_sig RPAR {
       $$.table = $5;
       $$.table.name = $3;
-      $$.has_elem_segment = WASM_FALSE;
+      $$.has_elem_segment = WABT_FALSE;
       $$.export_ = $4;
     }
   | LPAR TABLE bind_var_opt inline_export_opt elem_type
          LPAR ELEM var_list RPAR RPAR {
-      WasmExpr* expr = wasm_new_const_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_const_expr(parser->allocator);
       expr->loc = @2;
-      expr->const_.type = WASM_TYPE_I32;
+      expr->const_.type = WABT_TYPE_I32;
       expr->const_.u32 = 0;
 
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.table.name = $3;
       $$.table.elem_limits.initial = $8.size;
       $$.table.elem_limits.max = $8.size;
-      $$.table.elem_limits.has_max = WASM_TRUE;
-      $$.has_elem_segment = WASM_TRUE;
+      $$.table.elem_limits.has_max = WABT_TRUE;
+      $$.has_elem_segment = WABT_TRUE;
       $$.elem_segment.offset = expr;
       $$.elem_segment.vars = $8;
       $$.export_ = $4;
@@ -897,88 +897,88 @@ table :
 
 data :
     LPAR DATA var offset text_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.memory_var = $3;
       $$.offset = $4.first;
       dup_text_list(parser->allocator, &$5, &$$.data, &$$.size);
-      wasm_destroy_text_list(parser->allocator, &$5);
+      wabt_destroy_text_list(parser->allocator, &$5);
     }
   | LPAR DATA offset text_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.memory_var.loc = @2;
-      $$.memory_var.type = WASM_VAR_TYPE_INDEX;
+      $$.memory_var.type = WABT_VAR_TYPE_INDEX;
       $$.memory_var.index = 0;
       $$.offset = $3.first;
       dup_text_list(parser->allocator, &$4, &$$.data, &$$.size);
-      wasm_destroy_text_list(parser->allocator, &$4);
+      wabt_destroy_text_list(parser->allocator, &$4);
     }
 ;
 
 memory :
     LPAR MEMORY bind_var_opt inline_export_opt memory_sig RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.memory = $5;
       $$.memory.name = $3;
-      $$.has_data_segment = WASM_FALSE;
+      $$.has_data_segment = WABT_FALSE;
       $$.export_ = $4;
     }
   | LPAR MEMORY bind_var_opt inline_export LPAR DATA text_list RPAR RPAR {
-      WasmExpr* expr = wasm_new_const_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_const_expr(parser->allocator);
       expr->loc = @2;
-      expr->const_.type = WASM_TYPE_I32;
+      expr->const_.type = WABT_TYPE_I32;
       expr->const_.u32 = 0;
 
-      WASM_ZERO_MEMORY($$);
-      $$.has_data_segment = WASM_TRUE;
+      WABT_ZERO_MEMORY($$);
+      $$.has_data_segment = WABT_TRUE;
       $$.data_segment.offset = expr;
       dup_text_list(parser->allocator, &$7, &$$.data_segment.data,
                     &$$.data_segment.size);
-      wasm_destroy_text_list(parser->allocator, &$7);
-      uint32_t byte_size = WASM_ALIGN_UP_TO_PAGE($$.data_segment.size);
-      uint32_t page_size = WASM_BYTES_TO_PAGES(byte_size);
+      wabt_destroy_text_list(parser->allocator, &$7);
+      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE($$.data_segment.size);
+      uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
       $$.memory.name = $3;
       $$.memory.page_limits.initial = page_size;
       $$.memory.page_limits.max = page_size;
-      $$.memory.page_limits.has_max = WASM_TRUE;
+      $$.memory.page_limits.has_max = WABT_TRUE;
       $$.export_ = $4;
     }
   /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
   | LPAR MEMORY bind_var_opt LPAR DATA text_list RPAR RPAR {
-      WasmExpr* expr = wasm_new_const_expr(parser->allocator);
+      WabtExpr* expr = wabt_new_const_expr(parser->allocator);
       expr->loc = @2;
-      expr->const_.type = WASM_TYPE_I32;
+      expr->const_.type = WABT_TYPE_I32;
       expr->const_.u32 = 0;
 
-      WASM_ZERO_MEMORY($$);
-      $$.has_data_segment = WASM_TRUE;
+      WABT_ZERO_MEMORY($$);
+      $$.has_data_segment = WABT_TRUE;
       $$.data_segment.offset = expr;
       dup_text_list(parser->allocator, &$6, &$$.data_segment.data,
                     &$$.data_segment.size);
-      wasm_destroy_text_list(parser->allocator, &$6);
-      uint32_t byte_size = WASM_ALIGN_UP_TO_PAGE($$.data_segment.size);
-      uint32_t page_size = WASM_BYTES_TO_PAGES(byte_size);
+      wabt_destroy_text_list(parser->allocator, &$6);
+      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE($$.data_segment.size);
+      uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
       $$.memory.name = $3;
       $$.memory.page_limits.initial = page_size;
       $$.memory.page_limits.max = page_size;
-      $$.memory.page_limits.has_max = WASM_TRUE;
-      $$.export_.has_export = WASM_FALSE;
+      $$.memory.page_limits.has_max = WABT_TRUE;
+      $$.export_.has_export = WABT_FALSE;
     }
 ;
 
 global :
     LPAR GLOBAL bind_var_opt inline_export global_type const_expr RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.global = $5;
       $$.global.name = $3;
       $$.global.init_expr = $6.first;
       $$.export_ = $4;
     }
   | LPAR GLOBAL bind_var_opt global_type const_expr RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.global = $4;
       $$.global.name = $3;
       $$.global.init_expr = $5.first;
-      $$.export_.has_export = WASM_FALSE;
+      $$.export_.has_export = WABT_FALSE;
     }
 ;
 
@@ -988,32 +988,32 @@ global :
 import_kind :
     LPAR FUNC bind_var_opt type_use RPAR {
       $$ = new_import(parser->allocator);
-      $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->kind = WABT_EXTERNAL_KIND_FUNC;
       $$->func.name = $3;
-      $$->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $4;
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new_import(parser->allocator);
-      $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->kind = WABT_EXTERNAL_KIND_FUNC;
       $$->func.name = $3;
       $$->func.decl.sig = $4;
     }
   | LPAR TABLE bind_var_opt table_sig RPAR {
       $$ = new_import(parser->allocator);
-      $$->kind = WASM_EXTERNAL_KIND_TABLE;
+      $$->kind = WABT_EXTERNAL_KIND_TABLE;
       $$->table = $4;
       $$->table.name = $3;
     }
   | LPAR MEMORY bind_var_opt memory_sig RPAR {
       $$ = new_import(parser->allocator);
-      $$->kind = WASM_EXTERNAL_KIND_MEMORY;
+      $$->kind = WABT_EXTERNAL_KIND_MEMORY;
       $$->memory = $4;
       $$->memory.name = $3;
     }
   | LPAR GLOBAL bind_var_opt global_type RPAR {
       $$ = new_import(parser->allocator);
-      $$->kind = WASM_EXTERNAL_KIND_GLOBAL;
+      $$->kind = WABT_EXTERNAL_KIND_GLOBAL;
       $$->global = $4;
       $$->global.name = $3;
     }
@@ -1026,32 +1026,32 @@ import :
     }
   | LPAR FUNC bind_var_opt inline_import type_use RPAR {
       $$ = $4;
-      $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->kind = WABT_EXTERNAL_KIND_FUNC;
       $$->func.name = $3;
-      $$->func.decl.flags = WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $5;
     }
   | LPAR FUNC bind_var_opt inline_import func_sig RPAR {
       $$ = $4;
-      $$->kind = WASM_EXTERNAL_KIND_FUNC;
+      $$->kind = WABT_EXTERNAL_KIND_FUNC;
       $$->func.name = $3;
       $$->func.decl.sig = $5;
     }
   | LPAR TABLE bind_var_opt inline_import table_sig RPAR {
       $$ = $4;
-      $$->kind = WASM_EXTERNAL_KIND_TABLE;
+      $$->kind = WABT_EXTERNAL_KIND_TABLE;
       $$->table = $5;
       $$->table.name = $3;
     }
   | LPAR MEMORY bind_var_opt inline_import memory_sig RPAR {
       $$ = $4;
-      $$->kind = WASM_EXTERNAL_KIND_MEMORY;
+      $$->kind = WABT_EXTERNAL_KIND_MEMORY;
       $$->memory = $5;
       $$->memory.name = $3;
     }
   | LPAR GLOBAL bind_var_opt inline_import global_type RPAR {
       $$ = $4;
-      $$->kind = WASM_EXTERNAL_KIND_GLOBAL;
+      $$->kind = WABT_EXTERNAL_KIND_GLOBAL;
       $$->global = $5;
       $$->global.name = $3;
     }
@@ -1067,23 +1067,23 @@ inline_import :
 
 export_kind :
     LPAR FUNC var RPAR {
-      WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXTERNAL_KIND_FUNC;
+      WABT_ZERO_MEMORY($$);
+      $$.kind = WABT_EXTERNAL_KIND_FUNC;
       $$.var = $3;
     }
   | LPAR TABLE var RPAR {
-      WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXTERNAL_KIND_TABLE;
+      WABT_ZERO_MEMORY($$);
+      $$.kind = WABT_EXTERNAL_KIND_TABLE;
       $$.var = $3;
     }
   | LPAR MEMORY var RPAR {
-      WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXTERNAL_KIND_MEMORY;
+      WABT_ZERO_MEMORY($$);
+      $$.kind = WABT_EXTERNAL_KIND_MEMORY;
       $$.var = $3;
     }
   | LPAR GLOBAL var RPAR {
-      WASM_ZERO_MEMORY($$);
-      $$.kind = WASM_EXTERNAL_KIND_GLOBAL;
+      WABT_ZERO_MEMORY($$);
+      $$.kind = WABT_EXTERNAL_KIND_GLOBAL;
       $$.var = $3;
     }
 ;
@@ -1096,15 +1096,15 @@ export :
 
 inline_export_opt :
     /* empty */ {
-      WASM_ZERO_MEMORY($$);
-      $$.has_export = WASM_FALSE;
+      WABT_ZERO_MEMORY($$);
+      $$.has_export = WABT_FALSE;
     }
   | inline_export
 ;
 inline_export :
     LPAR EXPORT quoted_text RPAR {
-      WASM_ZERO_MEMORY($$);
-      $$.has_export = WASM_TRUE;
+      WABT_ZERO_MEMORY($$);
+      $$.has_export = WABT_TRUE;
       $$.export_.name = $3;
     }
 ;
@@ -1114,7 +1114,7 @@ inline_export :
 
 type_def :
     LPAR TYPE func_type RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.sig = $3;
     }
   | LPAR TYPE bind_var func_type RPAR {
@@ -1133,7 +1133,7 @@ module_fields :
     }
   | module_fields type_def {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, FUNC_TYPE, func_type, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, FuncType, func_type, func_types,
                             &field->func_type);
@@ -1141,7 +1141,7 @@ module_fields :
     }
   | module_fields global {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, GLOBAL, global, @2, $2.global);
       APPEND_ITEM_TO_VECTOR($$, Global, global, globals, &field->global);
       INSERT_BINDING($$, global, globals, @2, $2.global.name);
@@ -1149,14 +1149,14 @@ module_fields :
     }
   | module_fields table {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, TABLE, table, @2, $2.table);
       APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->table);
       INSERT_BINDING($$, table, tables, @2, $2.table.name);
       APPEND_INLINE_EXPORT($$, TABLE, @2, $2, $$->tables.size - 1);
 
       if ($2.has_elem_segment) {
-        WasmModuleField* elem_segment_field;
+        WabtModuleField* elem_segment_field;
         APPEND_FIELD_TO_LIST($$, elem_segment_field, ELEM_SEGMENT, elem_segment,
                              @2, $2.elem_segment);
         APPEND_ITEM_TO_VECTOR($$, ElemSegment, elem_segment, elem_segments,
@@ -1166,14 +1166,14 @@ module_fields :
     }
   | module_fields memory {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, MEMORY, memory, @2, $2.memory);
       APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories, &field->memory);
       INSERT_BINDING($$, memory, memories, @2, $2.memory.name);
       APPEND_INLINE_EXPORT($$, MEMORY, @2, $2, $$->memories.size - 1);
 
       if ($2.has_data_segment) {
-        WasmModuleField* data_segment_field;
+        WabtModuleField* data_segment_field;
         APPEND_FIELD_TO_LIST($$, data_segment_field, DATA_SEGMENT, data_segment,
                              @2, $2.data_segment);
         APPEND_ITEM_TO_VECTOR($$, DataSegment, data_segment, data_segments,
@@ -1182,78 +1182,78 @@ module_fields :
     }
   | module_fields func {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, FUNC, func, @2, *$2.func);
       append_implicit_func_declaration(parser->allocator, &@2, $$,
                                        &field->func.decl);
       APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->func);
       INSERT_BINDING($$, func, funcs, @2, $2.func->name);
       APPEND_INLINE_EXPORT($$, FUNC, @2, $2, $$->funcs.size - 1);
-      wasm_free(parser->allocator, $2.func);
+      wabt_free(parser->allocator, $2.func);
     }
   | module_fields elem {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, ELEM_SEGMENT, elem_segment, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, ElemSegment, elem_segment, elem_segments,
                             &field->elem_segment);
     }
   | module_fields data {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, DATA_SEGMENT, data_segment, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, DataSegment, data_segment, data_segments,
                             &field->data_segment);
     }
   | module_fields start {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, START, start, @2, $2);
       $$->start = &field->start;
     }
   | module_fields import {
       $$ = $1;
-      WasmModuleField* field;
+      WabtModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, IMPORT, import, @2, *$2);
       CHECK_IMPORT_ORDERING($$, func, funcs, @2);
       CHECK_IMPORT_ORDERING($$, table, tables, @2);
       CHECK_IMPORT_ORDERING($$, memory, memories, @2);
       CHECK_IMPORT_ORDERING($$, global, globals, @2);
       switch ($2->kind) {
-        case WASM_EXTERNAL_KIND_FUNC:
+        case WABT_EXTERNAL_KIND_FUNC:
           append_implicit_func_declaration(parser->allocator, &@2, $$,
                                            &field->import.func.decl);
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
           INSERT_BINDING($$, func, funcs, @2, field->import.func.name);
           $$->num_func_imports++;
           break;
-        case WASM_EXTERNAL_KIND_TABLE:
+        case WABT_EXTERNAL_KIND_TABLE:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
           INSERT_BINDING($$, table, tables, @2, field->import.table.name);
           $$->num_table_imports++;
           break;
-        case WASM_EXTERNAL_KIND_MEMORY:
+        case WABT_EXTERNAL_KIND_MEMORY:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING($$, memory, memories, @2, field->import.memory.name);
           $$->num_memory_imports++;
           break;
-        case WASM_EXTERNAL_KIND_GLOBAL:
+        case WABT_EXTERNAL_KIND_GLOBAL:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING($$, global, globals, @2, field->import.global.name);
           $$->num_global_imports++;
           break;
-        case WASM_NUM_EXTERNAL_KINDS:
+        case WABT_NUM_EXTERNAL_KINDS:
           assert(0);
           break;
       }
-      wasm_free(parser->allocator, $2);
+      wabt_free(parser->allocator, $2);
       APPEND_ITEM_TO_VECTOR($$, Import, import, imports, &field->import);
     }
   | module_fields export {
       $$ = $1;
-      WasmModuleField* field = wasm_append_module_field(parser->allocator, $$);
+      WabtModuleField* field = wabt_append_module_field(parser->allocator, $$);
       APPEND_FIELD_TO_LIST($$, field, EXPORT, export_, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, Export, export, exports, &field->export_);
       INSERT_BINDING($$, export, exports, @2, $2.name);
@@ -1262,7 +1262,7 @@ module_fields :
 
 raw_module :
     LPAR MODULE bind_var_opt module_fields RPAR {
-      $$.type = WASM_RAW_MODULE_TYPE_TEXT;
+      $$.type = WABT_RAW_MODULE_TYPE_TEXT;
       $$.text = $4;
       $$.text->name = $3;
       $$.text->loc = @2;
@@ -1271,45 +1271,45 @@ raw_module :
        * explicitly */
       size_t i;
       for (i = 0; i < $4->funcs.size; ++i) {
-        WasmFunc* func = $4->funcs.data[i];
-        if (wasm_decl_has_func_type(&func->decl) &&
+        WabtFunc* func = $4->funcs.data[i];
+        if (wabt_decl_has_func_type(&func->decl) &&
             is_empty_signature(&func->decl.sig)) {
-          WasmFuncType* func_type =
-              wasm_get_func_type_by_var($4, &func->decl.type_var);
+          WabtFuncType* func_type =
+              wabt_get_func_type_by_var($4, &func->decl.type_var);
           if (func_type) {
             func->decl.sig = func_type->sig;
-            func->decl.flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
+            func->decl.flags |= WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
           }
         }
       }
     }
   | LPAR MODULE bind_var_opt non_empty_text_list RPAR {
-      $$.type = WASM_RAW_MODULE_TYPE_BINARY;
+      $$.type = WABT_RAW_MODULE_TYPE_BINARY;
       $$.binary.name = $3;
       $$.binary.loc = @2;
       dup_text_list(parser->allocator, &$4, &$$.binary.data, &$$.binary.size);
-      wasm_destroy_text_list(parser->allocator, &$4);
+      wabt_destroy_text_list(parser->allocator, &$4);
     }
 ;
 
 module :
     raw_module {
-      if ($1.type == WASM_RAW_MODULE_TYPE_TEXT) {
+      if ($1.type == WABT_RAW_MODULE_TYPE_TEXT) {
         $$ = $1.text;
       } else {
-        assert($1.type == WASM_RAW_MODULE_TYPE_BINARY);
+        assert($1.type == WABT_RAW_MODULE_TYPE_BINARY);
         $$ = new_module(parser->allocator);
-        WasmReadBinaryOptions options = WASM_READ_BINARY_OPTIONS_DEFAULT;
+        WabtReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorCallbackData user_data;
         user_data.loc = &$1.binary.loc;
         user_data.lexer = lexer;
         user_data.parser = parser;
-        WasmBinaryErrorHandler error_handler;
+        WabtBinaryErrorHandler error_handler;
         error_handler.on_error = on_read_binary_error;
         error_handler.user_data = &user_data;
-        wasm_read_binary_ast(parser->allocator, $1.binary.data, $1.binary.size,
+        wabt_read_binary_ast(parser->allocator, $1.binary.data, $1.binary.size,
                              &options, &error_handler, $$);
-        wasm_free(parser->allocator, $1.binary.data);
+        wabt_free(parser->allocator, $1.binary.data);
         $$->name = $1.binary.name;
         $$->loc = $1.binary.loc;
       }
@@ -1320,31 +1320,31 @@ module :
 
 script_var_opt :
     /* empty */ {
-      WASM_ZERO_MEMORY($$);
-      $$.type = WASM_VAR_TYPE_INDEX;
+      WABT_ZERO_MEMORY($$);
+      $$.type = WABT_VAR_TYPE_INDEX;
       $$.index = INVALID_VAR_INDEX;
     }
   | VAR {
-      WASM_ZERO_MEMORY($$);
-      $$.type = WASM_VAR_TYPE_NAME;
+      WABT_ZERO_MEMORY($$);
+      $$.type = WABT_VAR_TYPE_NAME;
       DUPTEXT($$.name, $1);
     }
 ;
 
 action :
     LPAR INVOKE script_var_opt quoted_text const_list RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.loc = @2;
       $$.module_var = $3;
-      $$.type = WASM_ACTION_TYPE_INVOKE;
+      $$.type = WABT_ACTION_TYPE_INVOKE;
       $$.invoke.name = $4;
       $$.invoke.args = $5;
     }
   | LPAR GET script_var_opt quoted_text RPAR {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.loc = @2;
       $$.module_var = $3;
-      $$.type = WASM_ACTION_TYPE_GET;
+      $$.type = WABT_ACTION_TYPE_GET;
       $$.invoke.name = $4;
     }
 ;
@@ -1352,48 +1352,48 @@ action :
 assertion :
     LPAR ASSERT_MALFORMED raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_MALFORMED;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_MALFORMED;
       $$->assert_malformed.module = $3;
       $$->assert_malformed.text = $4;
     }
   | LPAR ASSERT_INVALID raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_INVALID;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_INVALID;
       $$->assert_invalid.module = $3;
       $$->assert_invalid.text = $4;
     }
   | LPAR ASSERT_UNLINKABLE raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_UNLINKABLE;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_UNLINKABLE;
       $$->assert_unlinkable.module = $3;
       $$->assert_unlinkable.text = $4;
     }
   | LPAR ASSERT_TRAP raw_module quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE;
       $$->assert_uninstantiable.module = $3;
       $$->assert_uninstantiable.text = $4;
     }
   | LPAR ASSERT_RETURN action const_list RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_RETURN;
       $$->assert_return.action = $3;
       $$->assert_return.expected = $4;
     }
   | LPAR ASSERT_RETURN_NAN action RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_RETURN_NAN;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_RETURN_NAN;
       $$->assert_return_nan.action = $3;
     }
   | LPAR ASSERT_TRAP action quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_TRAP;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_TRAP;
       $$->assert_trap.action = $3;
       $$->assert_trap.text = $4;
     }
   | LPAR ASSERT_EXHAUSTION action quoted_text RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ASSERT_EXHAUSTION;
+      $$->type = WABT_COMMAND_TYPE_ASSERT_EXHAUSTION;
       $$->assert_trap.action = $3;
       $$->assert_trap.text = $4;
     }
@@ -1402,103 +1402,103 @@ assertion :
 cmd :
     action {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_ACTION;
+      $$->type = WABT_COMMAND_TYPE_ACTION;
       $$->action = $1;
     }
   | assertion
   | module {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_MODULE;
+      $$->type = WABT_COMMAND_TYPE_MODULE;
       $$->module = *$1;
-      wasm_free(parser->allocator, $1);
+      wabt_free(parser->allocator, $1);
     }
   | LPAR REGISTER quoted_text script_var_opt RPAR {
       $$ = new_command(parser->allocator);
-      $$->type = WASM_COMMAND_TYPE_REGISTER;
+      $$->type = WABT_COMMAND_TYPE_REGISTER;
       $$->register_.module_name = $3;
       $$->register_.var = $4;
       $$->register_.var.loc = @4;
     }
 ;
 cmd_list :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | cmd_list cmd {
       $$ = $1;
-      wasm_append_command_value(parser->allocator, &$$, $2);
-      wasm_free(parser->allocator, $2);
+      wabt_append_command_value(parser->allocator, &$$, $2);
+      wabt_free(parser->allocator, $2);
     }
 ;
 
 const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
-      if (WASM_FAILED(parse_const($2, $3.type, $3.text.start,
+      if (WABT_FAILED(parse_const($2, $3.type, $3.text.start,
                                   $3.text.start + $3.text.length, &$$))) {
-        wasm_ast_parser_error(&@3, lexer, parser,
+        wabt_ast_parser_error(&@3, lexer, parser,
                               "invalid literal \"" PRIstringslice "\"",
-                              WASM_PRINTF_STRING_SLICE_ARG($3.text));
+                              WABT_PRINTF_STRING_SLICE_ARG($3.text));
       }
-      wasm_free(parser->allocator, (char*)$3.text.start);
+      wabt_free(parser->allocator, (char*)$3.text.start);
     }
 ;
 const_list :
-    /* empty */ { WASM_ZERO_MEMORY($$); }
+    /* empty */ { WABT_ZERO_MEMORY($$); }
   | const_list const {
       $$ = $1;
-      wasm_append_const_value(parser->allocator, &$$, &$2);
+      wabt_append_const_value(parser->allocator, &$$, &$2);
     }
 ;
 
 script :
     cmd_list {
-      WASM_ZERO_MEMORY($$);
+      WABT_ZERO_MEMORY($$);
       $$.allocator = parser->allocator;
       $$.commands = $1;
 
       int last_module_index = -1;
       size_t i;
       for (i = 0; i < $$.commands.size; ++i) {
-        WasmCommand* command = &$$.commands.data[i];
-        WasmVar* module_var = NULL;
+        WabtCommand* command = &$$.commands.data[i];
+        WabtVar* module_var = NULL;
         switch (command->type) {
-          case WASM_COMMAND_TYPE_MODULE: {
+          case WABT_COMMAND_TYPE_MODULE: {
             last_module_index = i;
 
             /* Wire up module name bindings. */
-            WasmModule* module = &command->module;
+            WabtModule* module = &command->module;
             if (module->name.length == 0)
               continue;
 
-            WasmStringSlice module_name =
-                wasm_dup_string_slice(parser->allocator, module->name);
-            WasmBinding* binding = wasm_insert_binding(
+            WabtStringSlice module_name =
+                wabt_dup_string_slice(parser->allocator, module->name);
+            WabtBinding* binding = wabt_insert_binding(
                 parser->allocator, &$$.module_bindings, &module_name);
             binding->loc = module->loc;
             binding->index = i;
             break;
           }
 
-          case WASM_COMMAND_TYPE_ASSERT_RETURN:
+          case WABT_COMMAND_TYPE_ASSERT_RETURN:
             module_var = &command->assert_return.action.module_var;
             goto has_module_var;
-          case WASM_COMMAND_TYPE_ASSERT_RETURN_NAN:
+          case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN:
             module_var = &command->assert_return_nan.action.module_var;
             goto has_module_var;
-          case WASM_COMMAND_TYPE_ASSERT_TRAP:
-          case WASM_COMMAND_TYPE_ASSERT_EXHAUSTION:
+          case WABT_COMMAND_TYPE_ASSERT_TRAP:
+          case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
             module_var = &command->assert_trap.action.module_var;
             goto has_module_var;
-          case WASM_COMMAND_TYPE_ACTION:
+          case WABT_COMMAND_TYPE_ACTION:
             module_var = &command->action.module_var;
             goto has_module_var;
-          case WASM_COMMAND_TYPE_REGISTER:
+          case WABT_COMMAND_TYPE_REGISTER:
             module_var = &command->register_.var;
             goto has_module_var;
 
           has_module_var: {
             /* Resolve actions with an invalid index to use the preceding
              * module. */
-            if (module_var->type == WASM_VAR_TYPE_INDEX &&
+            if (module_var->type == WABT_VAR_TYPE_INDEX &&
                 module_var->index == INVALID_VAR_INDEX) {
               module_var->index = last_module_index;
             }
@@ -1521,7 +1521,7 @@ script_start :
 
 %%
 
-static void append_expr_list(WasmExprList* expr_list, WasmExprList* expr) {
+static void append_expr_list(WabtExprList* expr_list, WabtExprList* expr) {
   if (!expr->first)
     return;
   if (expr_list->last)
@@ -1532,7 +1532,7 @@ static void append_expr_list(WasmExprList* expr_list, WasmExprList* expr) {
   expr_list->size += expr->size;
 }
 
-static void append_expr(WasmExprList* expr_list, WasmExpr* expr) {
+static void append_expr(WabtExprList* expr_list, WabtExpr* expr) {
   if (expr_list->last)
     expr_list->last->next = expr;
   else
@@ -1541,49 +1541,49 @@ static void append_expr(WasmExprList* expr_list, WasmExpr* expr) {
   expr_list->size++;
 }
 
-static WasmExprList join_exprs1(WasmLocation* loc, WasmExpr* expr1) {
-  WasmExprList result;
-  WASM_ZERO_MEMORY(result);
+static WabtExprList join_exprs1(WabtLocation* loc, WabtExpr* expr1) {
+  WabtExprList result;
+  WABT_ZERO_MEMORY(result);
   append_expr(&result, expr1);
   expr1->loc = *loc;
   return result;
 }
 
-static WasmExprList join_exprs2(WasmLocation* loc, WasmExprList* expr1,
-                                WasmExpr* expr2) {
-  WasmExprList result;
-  WASM_ZERO_MEMORY(result);
+static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
+                                WabtExpr* expr2) {
+  WabtExprList result;
+  WABT_ZERO_MEMORY(result);
   append_expr_list(&result, expr1);
   append_expr(&result, expr2);
   expr2->loc = *loc;
   return result;
 }
 
-static WasmResult parse_const(WasmType type,
-                              WasmLiteralType literal_type,
+static WabtResult parse_const(WabtType type,
+                              WabtLiteralType literal_type,
                               const char* s,
                               const char* end,
-                              WasmConst* out) {
+                              WabtConst* out) {
   out->type = type;
   switch (type) {
-    case WASM_TYPE_I32:
-      return wasm_parse_int32(s, end, &out->u32,
-                              WASM_PARSE_SIGNED_AND_UNSIGNED);
-    case WASM_TYPE_I64:
-      return wasm_parse_int64(s, end, &out->u64,
-                              WASM_PARSE_SIGNED_AND_UNSIGNED);
-    case WASM_TYPE_F32:
-      return wasm_parse_float(literal_type, s, end, &out->f32_bits);
-    case WASM_TYPE_F64:
-      return wasm_parse_double(literal_type, s, end, &out->f64_bits);
+    case WABT_TYPE_I32:
+      return wabt_parse_int32(s, end, &out->u32,
+                              WABT_PARSE_SIGNED_AND_UNSIGNED);
+    case WABT_TYPE_I64:
+      return wabt_parse_int64(s, end, &out->u64,
+                              WABT_PARSE_SIGNED_AND_UNSIGNED);
+    case WABT_TYPE_F32:
+      return wabt_parse_float(literal_type, s, end, &out->f32_bits);
+    case WABT_TYPE_F64:
+      return wabt_parse_double(literal_type, s, end, &out->f64_bits);
     default:
       assert(0);
       break;
   }
-  return WASM_ERROR;
+  return WABT_ERROR;
 }
 
-static size_t copy_string_contents(WasmStringSlice* text, char* dest) {
+static size_t copy_string_contents(WabtStringSlice* text, char* dest) {
   const char* src = text->start + 1;
   const char* end = text->start + text->length - 1;
 
@@ -1613,8 +1613,8 @@ static size_t copy_string_contents(WasmStringSlice* text, char* dest) {
            * sequence */
           uint32_t hi;
           uint32_t lo;
-          if (WASM_SUCCEEDED(wasm_parse_hexdigit(src[0], &hi)) &&
-              WASM_SUCCEEDED(wasm_parse_hexdigit(src[1], &lo))) {
+          if (WABT_SUCCEEDED(wabt_parse_hexdigit(src[0], &hi)) &&
+              WABT_SUCCEEDED(wabt_parse_hexdigit(src[1], &lo))) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);
@@ -1632,13 +1632,13 @@ static size_t copy_string_contents(WasmStringSlice* text, char* dest) {
   return dest - dest_start;
 }
 
-static void dup_text_list(WasmAllocator* allocator,
-                          WasmTextList* text_list,
+static void dup_text_list(WabtAllocator* allocator,
+                          WabtTextList* text_list,
                           void** out_data,
                           size_t* out_size) {
   /* walk the linked list to see how much total space is needed */
   size_t total_size = 0;
-  WasmTextListNode* node;
+  WabtTextListNode* node;
   for (node = text_list->first; node; node = node->next) {
     /* Always allocate enough space for the entire string including the escape
      * characters. It will only get shorter, and this way we only have to
@@ -1648,7 +1648,7 @@ static void dup_text_list(WasmAllocator* allocator,
     size_t size = (end > src) ? (end - src) : 0;
     total_size += size;
   }
-  char* result = wasm_alloc(allocator, total_size, 1);
+  char* result = wabt_alloc(allocator, total_size, 1);
   char* dest = result;
   for (node = text_list->first; node; node = node->next) {
     size_t actual_size = copy_string_contents(&node->text, dest);
@@ -1658,56 +1658,56 @@ static void dup_text_list(WasmAllocator* allocator,
   *out_size = dest - result;
 }
 
-static WasmBool is_empty_signature(WasmFuncSignature* sig) {
+static WabtBool is_empty_signature(WabtFuncSignature* sig) {
   return sig->result_types.size == 0 && sig->param_types.size == 0;
 }
 
-static void append_implicit_func_declaration(WasmAllocator* allocator,
-                                             WasmLocation* loc,
-                                             WasmModule* module,
-                                             WasmFuncDeclaration* decl) {
-  if (wasm_decl_has_func_type(decl))
+static void append_implicit_func_declaration(WabtAllocator* allocator,
+                                             WabtLocation* loc,
+                                             WabtModule* module,
+                                             WabtFuncDeclaration* decl) {
+  if (wabt_decl_has_func_type(decl))
     return;
 
-  int sig_index = wasm_get_func_type_index_by_decl(module, decl);
+  int sig_index = wabt_get_func_type_index_by_decl(module, decl);
   if (sig_index == -1) {
-    wasm_append_implicit_func_type(allocator, loc, module, &decl->sig);
+    wabt_append_implicit_func_type(allocator, loc, module, &decl->sig);
   } else {
     /* signature already exists, share that one and destroy this one */
-    wasm_destroy_func_signature(allocator, &decl->sig);
-    WasmFuncSignature* sig = &module->func_types.data[sig_index]->sig;
+    wabt_destroy_func_signature(allocator, &decl->sig);
+    WabtFuncSignature* sig = &module->func_types.data[sig_index]->sig;
     decl->sig = *sig;
   }
 
-  decl->flags |= WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
+  decl->flags |= WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
 }
 
-WasmResult wasm_parse_ast(WasmAstLexer* lexer,
-                          struct WasmScript* out_script,
-                          WasmSourceErrorHandler* error_handler) {
-  WasmAstParser parser;
-  WASM_ZERO_MEMORY(parser);
-  WasmAllocator* allocator = wasm_ast_lexer_get_allocator(lexer);
+WabtResult wabt_parse_ast(WabtAstLexer* lexer,
+                          struct WabtScript* out_script,
+                          WabtSourceErrorHandler* error_handler) {
+  WabtAstParser parser;
+  WABT_ZERO_MEMORY(parser);
+  WabtAllocator* allocator = wabt_ast_lexer_get_allocator(lexer);
   parser.allocator = allocator;
   parser.script.allocator = allocator;
   parser.error_handler = error_handler;
-  int result = wasm_ast_parser_parse(lexer, &parser);
+  int result = wabt_ast_parser_parse(lexer, &parser);
   *out_script = parser.script;
-  return result == 0 && parser.errors == 0 ? WASM_OK : WASM_ERROR;
+  return result == 0 && parser.errors == 0 ? WABT_OK : WABT_ERROR;
 }
 
 static void on_read_binary_error(uint32_t offset, const char* error,
                                  void* user_data) {
   BinaryErrorCallbackData* data = user_data;
-  if (offset == WASM_UNKNOWN_OFFSET) {
-    wasm_ast_parser_error(data->loc, data->lexer, data->parser,
+  if (offset == WABT_UNKNOWN_OFFSET) {
+    wabt_ast_parser_error(data->loc, data->lexer, data->parser,
                           "error in binary module: %s", error);
   } else {
-    wasm_ast_parser_error(data->loc, data->lexer, data->parser,
+    wabt_ast_parser_error(data->loc, data->lexer, data->parser,
                           "error in binary module: @0x%08x: %s", offset, error);
   }
 }
 
 /* see comment above definition of YYMAXDEPTH at the top of this file */
-WASM_STATIC_ASSERT(YYSTACK_ALLOC_MAXIMUM >= UINT32_MAX);
-WASM_STATIC_ASSERT(YYSTACK_BYTES((uint64_t)YYMAXDEPTH) <= UINT32_MAX);
+WABT_STATIC_ASSERT(YYSTACK_ALLOC_MAXIMUM >= UINT32_MAX);
+WABT_STATIC_ASSERT(YYSTACK_BYTES((uint64_t)YYMAXDEPTH) <= UINT32_MAX);

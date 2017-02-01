@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef WASM_VECTOR_SORT_H_
-#define WASM_VECTOR_SORT_H_
+#ifndef WABT_VECTOR_SORT_H_
+#define WABT_VECTOR_SORT_H_
 
 #include "vector.h"
 
 /*
- * Define algorithm to sort wasm vectors (defined by macro WASM_VECTOR).
+ * Define algorithm to sort wabt vectors (defined by macro WABT_VECTOR).
  *
  */
 
-#define WASM_DEFINE_VECTOR_SORT(name, type)                                    \
-  static void wasm_sort_##name##_vector(                                       \
-    struct WasmAllocator* allocator,                                           \
+#define WABT_DEFINE_VECTOR_SORT(name, type)                                    \
+  static void wabt_sort_##name##_vector(                                       \
+    struct WabtAllocator* allocator,                                           \
     type##Vector* in_vec,                                                      \
     type##Vector* out_vec,                                                     \
     void (*swap_fcn)(type* v1, type*v2),                                       \
@@ -37,7 +37,7 @@
     if (in_vec->size == 0)                                                     \
       return;                                                                  \
     for (i = 0; i < in_vec->size; ++i) {                                       \
-      wasm_append_##name##_value(allocator, out_vec, &in_vec->data[i]);        \
+      wabt_append_##name##_value(allocator, out_vec, &in_vec->data[i]);        \
       if (out_vec->size < 2)                                                   \
         continue;                                                              \
       for (j = out_vec->size; j >= 2; --j) {                                   \
@@ -49,4 +49,4 @@
     }                                                                          \
   }
 
-#endif // WASM_VECTOR_SORT_H_
+#endif // WABT_VECTOR_SORT_H_

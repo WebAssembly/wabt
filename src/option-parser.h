@@ -14,53 +14,53 @@
  * limitations under the License.
  */
 
-#ifndef WASM_OPTION_PARSER_H_
-#define WASM_OPTION_PARSER_H_
+#ifndef WABT_OPTION_PARSER_H_
+#define WABT_OPTION_PARSER_H_
 
 #include "common.h"
 
-typedef enum WasmHasArgument {
-  WASM_OPTION_NO_ARGUMENT,
-  WASM_OPTION_HAS_ARGUMENT,
-} WasmHasArgument;
+typedef enum WabtHasArgument {
+  WABT_OPTION_NO_ARGUMENT,
+  WABT_OPTION_HAS_ARGUMENT,
+} WabtHasArgument;
 
-struct WasmOption;
-struct WasmOptionParser;
-typedef void (*WasmOptionCallback)(struct WasmOptionParser*,
-                                   struct WasmOption*,
+struct WabtOption;
+struct WabtOptionParser;
+typedef void (*WabtOptionCallback)(struct WabtOptionParser*,
+                                   struct WabtOption*,
                                    const char* argument);
-typedef void (*WasmArgumentCallback)(struct WasmOptionParser*,
+typedef void (*WabtArgumentCallback)(struct WabtOptionParser*,
                                      const char* argument);
-typedef void (*WasmOptionErrorCallback)(struct WasmOptionParser*,
+typedef void (*WabtOptionErrorCallback)(struct WabtOptionParser*,
                                         const char* message);
 
-typedef struct WasmOption {
+typedef struct WabtOption {
   int id;
   char short_name;
   const char* long_name;
   const char* metavar;
-  WasmHasArgument has_argument;
+  WabtHasArgument has_argument;
   const char* help;
-} WasmOption;
+} WabtOption;
 
-typedef struct WasmOptionParser {
+typedef struct WabtOptionParser {
   const char* description;
-  WasmOption* options;
+  WabtOption* options;
   int num_options;
-  WasmOptionCallback on_option;
-  WasmArgumentCallback on_argument;
-  WasmOptionErrorCallback on_error;
+  WabtOptionCallback on_option;
+  WabtArgumentCallback on_argument;
+  WabtOptionErrorCallback on_error;
   void* user_data;
 
-  /* cached after call to wasm_parse_options */
+  /* cached after call to wabt_parse_options */
   char* argv0;
-} WasmOptionParser;
+} WabtOptionParser;
 
-WASM_EXTERN_C_BEGIN
-void wasm_parse_options(WasmOptionParser* parser,
+WABT_EXTERN_C_BEGIN
+void wabt_parse_options(WabtOptionParser* parser,
                         int argc,
                         char** argv);
-void wasm_print_help(WasmOptionParser* parser, const char* program_name);
-WASM_EXTERN_C_END
+void wabt_print_help(WabtOptionParser* parser, const char* program_name);
+WABT_EXTERN_C_END
 
-#endif /* WASM_OPTION_PARSER_H_ */
+#endif /* WABT_OPTION_PARSER_H_ */

@@ -26,97 +26,97 @@
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text) [code] = text,
 static const char* s_interpreter_opcode_name[] = {
-    WASM_FOREACH_OPCODE(V)
-    [WASM_OPCODE_ALLOCA] = "alloca",
-    [WASM_OPCODE_BR_UNLESS] = "br_unless",
-    [WASM_OPCODE_CALL_HOST] = "call_host",
-    [WASM_OPCODE_DATA] = "data",
-    [WASM_OPCODE_DROP_KEEP] = "drop_keep",
+    WABT_FOREACH_OPCODE(V)
+    [WABT_OPCODE_ALLOCA] = "alloca",
+    [WABT_OPCODE_BR_UNLESS] = "br_unless",
+    [WABT_OPCODE_CALL_HOST] = "call_host",
+    [WABT_OPCODE_DATA] = "data",
+    [WABT_OPCODE_DROP_KEEP] = "drop_keep",
 };
 #undef V
 
 #define CHECK_RESULT(expr) \
   do {                     \
-    if (WASM_FAILED(expr)) \
-      return WASM_ERROR;   \
+    if (WABT_FAILED(expr)) \
+      return WABT_ERROR;   \
   } while (0)
 
-static const char* wasm_get_interpreter_opcode_name(uint8_t opcode) {
-  assert(opcode < WASM_ARRAY_SIZE(s_interpreter_opcode_name));
+static const char* wabt_get_interpreter_opcode_name(uint8_t opcode) {
+  assert(opcode < WABT_ARRAY_SIZE(s_interpreter_opcode_name));
   return s_interpreter_opcode_name[opcode];
 }
 
-void wasm_init_interpreter_environment(WasmAllocator* allocator,
-                                       WasmInterpreterEnvironment* env) {
-  WASM_ZERO_MEMORY(*env);
-  wasm_init_output_buffer(allocator, &env->istream, INITIAL_ISTREAM_CAPACITY);
+void wabt_init_interpreter_environment(WabtAllocator* allocator,
+                                       WabtInterpreterEnvironment* env) {
+  WABT_ZERO_MEMORY(*env);
+  wabt_init_output_buffer(allocator, &env->istream, INITIAL_ISTREAM_CAPACITY);
 }
 
-static void wasm_destroy_interpreter_func_signature(
-    WasmAllocator* allocator,
-    WasmInterpreterFuncSignature* sig) {
-  wasm_destroy_type_vector(allocator, &sig->param_types);
-  wasm_destroy_type_vector(allocator, &sig->result_types);
+static void wabt_destroy_interpreter_func_signature(
+    WabtAllocator* allocator,
+    WabtInterpreterFuncSignature* sig) {
+  wabt_destroy_type_vector(allocator, &sig->param_types);
+  wabt_destroy_type_vector(allocator, &sig->result_types);
 }
 
-static void wasm_destroy_interpreter_func(
-    WasmAllocator* allocator,
-    WasmInterpreterFunc* func) {
+static void wabt_destroy_interpreter_func(
+    WabtAllocator* allocator,
+    WabtInterpreterFunc* func) {
   if (!func->is_host)
-    wasm_destroy_type_vector(allocator, &func->defined.param_and_local_types);
+    wabt_destroy_type_vector(allocator, &func->defined.param_and_local_types);
 }
 
-static void wasm_destroy_interpreter_memory(WasmAllocator* unused,
-                                            WasmInterpreterMemory* memory) {
+static void wabt_destroy_interpreter_memory(WabtAllocator* unused,
+                                            WabtInterpreterMemory* memory) {
   if (memory->allocator) {
-    wasm_free(memory->allocator, memory->data);
+    wabt_free(memory->allocator, memory->data);
   } else {
     assert(memory->data == NULL);
   }
 }
 
-static void wasm_destroy_interpreter_table(WasmAllocator* allocator,
-                                           WasmInterpreterTable* table) {
-  wasm_destroy_uint32_array(allocator, &table->func_indexes);
+static void wabt_destroy_interpreter_table(WabtAllocator* allocator,
+                                           WabtInterpreterTable* table) {
+  wabt_destroy_uint32_array(allocator, &table->func_indexes);
 }
 
-static void wasm_destroy_interpreter_import(WasmAllocator* allocator,
-                                            WasmInterpreterImport* import) {
-  wasm_destroy_string_slice(allocator, &import->module_name);
-  wasm_destroy_string_slice(allocator, &import->field_name);
+static void wabt_destroy_interpreter_import(WabtAllocator* allocator,
+                                            WabtInterpreterImport* import) {
+  wabt_destroy_string_slice(allocator, &import->module_name);
+  wabt_destroy_string_slice(allocator, &import->field_name);
 }
 
-static void wasm_destroy_interpreter_module(WasmAllocator* allocator,
-                                            WasmInterpreterModule* module) {
-  wasm_destroy_interpreter_export_vector(allocator, &module->exports);
-  wasm_destroy_binding_hash(allocator, &module->export_bindings);
-  wasm_destroy_string_slice(allocator, &module->name);
+static void wabt_destroy_interpreter_module(WabtAllocator* allocator,
+                                            WabtInterpreterModule* module) {
+  wabt_destroy_interpreter_export_vector(allocator, &module->exports);
+  wabt_destroy_binding_hash(allocator, &module->export_bindings);
+  wabt_destroy_string_slice(allocator, &module->name);
   if (!module->is_host) {
-    WASM_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->defined.imports,
+    WABT_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->defined.imports,
                                     interpreter_import);
   }
 }
 
-void wasm_destroy_interpreter_environment(WasmAllocator* allocator,
-                                          WasmInterpreterEnvironment* env) {
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->modules,
+void wabt_destroy_interpreter_environment(WabtAllocator* allocator,
+                                          WabtInterpreterEnvironment* env) {
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->modules,
                                    interpreter_module);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->sigs,
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->sigs,
                                    interpreter_func_signature);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->funcs, interpreter_func);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->memories,
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->funcs, interpreter_func);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->memories,
                                    interpreter_memory);
-  WASM_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->tables, interpreter_table);
-  wasm_destroy_interpreter_global_vector(allocator, &env->globals);
-  wasm_destroy_output_buffer(&env->istream);
-  wasm_destroy_binding_hash(allocator, &env->module_bindings);
-  wasm_destroy_binding_hash(allocator, &env->registered_module_bindings);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->tables, interpreter_table);
+  wabt_destroy_interpreter_global_vector(allocator, &env->globals);
+  wabt_destroy_output_buffer(&env->istream);
+  wabt_destroy_binding_hash(allocator, &env->module_bindings);
+  wabt_destroy_binding_hash(allocator, &env->registered_module_bindings);
 }
 
-WasmInterpreterEnvironmentMark wasm_mark_interpreter_environment(
-    WasmInterpreterEnvironment* env) {
-  WasmInterpreterEnvironmentMark mark;
-  WASM_ZERO_MEMORY(mark);
+WabtInterpreterEnvironmentMark wabt_mark_interpreter_environment(
+    WabtInterpreterEnvironment* env) {
+  WabtInterpreterEnvironmentMark mark;
+  WABT_ZERO_MEMORY(mark);
   mark.modules_size = env->modules.size;
   mark.sigs_size = env->sigs.size;
   mark.funcs_size = env->funcs.size;
@@ -127,36 +127,36 @@ WasmInterpreterEnvironmentMark wasm_mark_interpreter_environment(
   return mark;
 }
 
-void wasm_reset_interpreter_environment_to_mark(
-    WasmAllocator* allocator,
-    WasmInterpreterEnvironment* env,
-    WasmInterpreterEnvironmentMark mark) {
+void wabt_reset_interpreter_environment_to_mark(
+    WabtAllocator* allocator,
+    WabtInterpreterEnvironment* env,
+    WabtInterpreterEnvironmentMark mark) {
   size_t i;
 
 #define DESTROY_PAST_MARK(destroy_name, names)                                 \
   do {                                                                         \
     assert(mark.names##_size <= env->names.size);                              \
     for (i = mark.names##_size; i < env->names.size; ++i)                      \
-      wasm_destroy_interpreter_##destroy_name(allocator, &env->names.data[i]); \
+      wabt_destroy_interpreter_##destroy_name(allocator, &env->names.data[i]); \
     env->names.size = mark.names##_size;                                       \
   } while (0)
 
   /* Destroy entries in the binding hash. */
   for (i = mark.modules_size; i < env->modules.size; ++i) {
-    const WasmStringSlice* name = &env->modules.data[i].name;
-    if (!wasm_string_slice_is_empty(name))
-      wasm_remove_binding(allocator, &env->module_bindings, name);
+    const WabtStringSlice* name = &env->modules.data[i].name;
+    if (!wabt_string_slice_is_empty(name))
+      wabt_remove_binding(allocator, &env->module_bindings, name);
   }
 
   /* registered_module_bindings maps from an arbitrary name to a module index,
    * so we have to iterate through the entire table to find entries to remove.
    */
   for (i = 0; i < env->registered_module_bindings.entries.capacity; ++i) {
-    WasmBindingHashEntry* entry =
+    WabtBindingHashEntry* entry =
         &env->registered_module_bindings.entries.data[i];
-    if (!wasm_hash_entry_is_free(entry) &&
+    if (!wabt_hash_entry_is_free(entry) &&
         entry->binding.index >= (int)mark.modules_size) {
-      wasm_remove_binding(allocator, &env->registered_module_bindings,
+      wabt_remove_binding(allocator, &env->registered_module_bindings,
                           &entry->binding.name);
     }
   }
@@ -172,31 +172,31 @@ void wasm_reset_interpreter_environment_to_mark(
 #undef DESTROY_PAST_MARK
 }
 
-WasmInterpreterModule* wasm_append_host_module(WasmAllocator* allocator,
-                                               WasmInterpreterEnvironment* env,
-                                               WasmStringSlice name) {
-  WasmInterpreterModule* module =
-      wasm_append_interpreter_module(allocator, &env->modules);
-  module->name = wasm_dup_string_slice(allocator, name);
-  module->memory_index = WASM_INVALID_INDEX;
-  module->table_index = WASM_INVALID_INDEX;
-  module->is_host = WASM_TRUE;
+WabtInterpreterModule* wabt_append_host_module(WabtAllocator* allocator,
+                                               WabtInterpreterEnvironment* env,
+                                               WabtStringSlice name) {
+  WabtInterpreterModule* module =
+      wabt_append_interpreter_module(allocator, &env->modules);
+  module->name = wabt_dup_string_slice(allocator, name);
+  module->memory_index = WABT_INVALID_INDEX;
+  module->table_index = WABT_INVALID_INDEX;
+  module->is_host = WABT_TRUE;
 
-  WasmStringSlice dup_name = wasm_dup_string_slice(allocator, name);
-  WasmBinding* binding = wasm_insert_binding(
+  WabtStringSlice dup_name = wabt_dup_string_slice(allocator, name);
+  WabtBinding* binding = wabt_insert_binding(
       allocator, &env->registered_module_bindings, &dup_name);
   binding->index = env->modules.size - 1;
   return module;
 }
 
-void wasm_init_interpreter_thread(WasmAllocator* allocator,
-                                  WasmInterpreterEnvironment* env,
-                                  WasmInterpreterThread* thread,
-                                  WasmInterpreterThreadOptions* options) {
-  WASM_ZERO_MEMORY(*thread);
-  wasm_new_interpreter_value_array(allocator, &thread->value_stack,
+void wabt_init_interpreter_thread(WabtAllocator* allocator,
+                                  WabtInterpreterEnvironment* env,
+                                  WabtInterpreterThread* thread,
+                                  WabtInterpreterThreadOptions* options) {
+  WABT_ZERO_MEMORY(*thread);
+  wabt_new_interpreter_value_array(allocator, &thread->value_stack,
                                    options->value_stack_size);
-  wasm_new_uint32_array(allocator, &thread->call_stack,
+  wabt_new_uint32_array(allocator, &thread->call_stack,
                         options->call_stack_size);
   thread->allocator = allocator;
   thread->env = env;
@@ -207,30 +207,30 @@ void wasm_init_interpreter_thread(WasmAllocator* allocator,
   thread->pc = options->pc;
 }
 
-WasmInterpreterResult wasm_push_thread_value(WasmInterpreterThread* thread,
-                                             WasmInterpreterValue value) {
+WabtInterpreterResult wabt_push_thread_value(WabtInterpreterThread* thread,
+                                             WabtInterpreterValue value) {
   if (thread->value_stack_top >= thread->value_stack_end)
-    return WASM_INTERPRETER_TRAP_VALUE_STACK_EXHAUSTED;
+    return WABT_INTERPRETER_TRAP_VALUE_STACK_EXHAUSTED;
   *thread->value_stack_top++ = value;
-  return WASM_INTERPRETER_OK;
+  return WABT_INTERPRETER_OK;
 }
 
-WasmInterpreterExport* wasm_get_interpreter_export_by_name(
-    WasmInterpreterModule* module,
-    const WasmStringSlice* name) {
+WabtInterpreterExport* wabt_get_interpreter_export_by_name(
+    WabtInterpreterModule* module,
+    const WabtStringSlice* name) {
   int field_index =
-      wasm_find_binding_index_by_name(&module->export_bindings, name);
+      wabt_find_binding_index_by_name(&module->export_bindings, name);
   if (field_index < 0)
     return NULL;
   assert((size_t)field_index < module->exports.size);
   return &module->exports.data[field_index];
 }
 
-void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
-                                     WasmInterpreterThread* thread) {
-  wasm_destroy_interpreter_value_array(allocator, &thread->value_stack);
-  wasm_destroy_uint32_array(allocator, &thread->call_stack);
-  wasm_destroy_interpreter_typed_value_vector(allocator, &thread->host_args);
+void wabt_destroy_interpreter_thread(WabtAllocator* allocator,
+                                     WabtInterpreterThread* thread) {
+  wabt_destroy_interpreter_value_array(allocator, &thread->value_stack);
+  wabt_destroy_uint32_array(allocator, &thread->call_stack);
+  wabt_destroy_interpreter_typed_value_vector(allocator, &thread->host_args);
 }
 
 /* 3 32222222 222...00
@@ -269,31 +269,31 @@ void wasm_destroy_interpreter_thread(WasmAllocator* allocator,
 #define F32_SIG_MASK 0x7fffff
 #define F32_SIGN_MASK 0x80000000U
 
-WASM_INLINE WasmBool is_nan_f32(uint32_t f32_bits) {
+WABT_INLINE WabtBool wabt_is_nan_f32(uint32_t f32_bits) {
   return (f32_bits > F32_INF && f32_bits < F32_NEG_ZERO) ||
          (f32_bits > F32_NEG_INF);
 }
 
-static WASM_INLINE WasmBool is_zero_f32(uint32_t f32_bits) {
+static WABT_INLINE WabtBool is_zero_f32(uint32_t f32_bits) {
   return f32_bits == 0 || f32_bits == F32_NEG_ZERO;
 }
 
-static WASM_INLINE WasmBool is_in_range_i32_trunc_s_f32(uint32_t f32_bits) {
+static WABT_INLINE WabtBool is_in_range_i32_trunc_s_f32(uint32_t f32_bits) {
   return (f32_bits < 0x4f000000U) ||
          (f32_bits >= F32_NEG_ZERO && f32_bits <= 0xcf000000U);
 }
 
-static WASM_INLINE WasmBool is_in_range_i64_trunc_s_f32(uint32_t f32_bits) {
+static WABT_INLINE WabtBool is_in_range_i64_trunc_s_f32(uint32_t f32_bits) {
   return (f32_bits < 0x5f000000U) ||
          (f32_bits >= F32_NEG_ZERO && f32_bits <= 0xdf000000U);
 }
 
-static WASM_INLINE WasmBool is_in_range_i32_trunc_u_f32(uint32_t f32_bits) {
+static WABT_INLINE WabtBool is_in_range_i32_trunc_u_f32(uint32_t f32_bits) {
   return (f32_bits < 0x4f800000U) ||
          (f32_bits >= F32_NEG_ZERO && f32_bits < F32_NEG_ONE);
 }
 
-static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
+static WABT_INLINE WabtBool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
   return (f32_bits < 0x5f800000U) ||
          (f32_bits >= F32_NEG_ZERO && f32_bits < F32_NEG_ONE);
 }
@@ -334,36 +334,36 @@ static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
 #define F64_SIG_MASK 0xfffffffffffffULL
 #define F64_SIGN_MASK 0x8000000000000000ULL
 
-WASM_INLINE WasmBool is_nan_f64(uint64_t f64_bits) {
+WABT_INLINE WabtBool wabt_is_nan_f64(uint64_t f64_bits) {
   return (f64_bits > F64_INF && f64_bits < F64_NEG_ZERO) ||
          (f64_bits > F64_NEG_INF);
 }
 
-static WASM_INLINE WasmBool is_zero_f64(uint64_t f64_bits) {
+static WABT_INLINE WabtBool is_zero_f64(uint64_t f64_bits) {
   return f64_bits == 0 || f64_bits == F64_NEG_ZERO;
 }
 
-static WASM_INLINE WasmBool is_in_range_i32_trunc_s_f64(uint64_t f64_bits) {
+static WABT_INLINE WabtBool is_in_range_i32_trunc_s_f64(uint64_t f64_bits) {
   return (f64_bits <= 0x41dfffffffc00000ULL) ||
          (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc1e0000000000000ULL);
 }
 
-static WASM_INLINE WasmBool is_in_range_i32_trunc_u_f64(uint64_t f64_bits) {
+static WABT_INLINE WabtBool is_in_range_i32_trunc_u_f64(uint64_t f64_bits) {
   return (f64_bits <= 0x41efffffffe00000ULL) ||
          (f64_bits >= F64_NEG_ZERO && f64_bits < F64_NEG_ONE);
 }
 
-static WASM_INLINE WasmBool is_in_range_i64_trunc_s_f64(uint64_t f64_bits) {
+static WABT_INLINE WabtBool is_in_range_i64_trunc_s_f64(uint64_t f64_bits) {
   return (f64_bits < 0x43e0000000000000ULL) ||
          (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc3e0000000000000ULL);
 }
 
-static WASM_INLINE WasmBool is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
+static WABT_INLINE WabtBool is_in_range_i64_trunc_u_f64(uint64_t f64_bits) {
   return (f64_bits < 0x43f0000000000000ULL) ||
          (f64_bits >= F64_NEG_ZERO && f64_bits < F64_NEG_ONE);
 }
 
-static WASM_INLINE WasmBool is_in_range_f64_demote_f32(uint64_t f64_bits) {
+static WABT_INLINE WabtBool is_in_range_f64_demote_f32(uint64_t f64_bits) {
   return (f64_bits <= 0x47efffffe0000000ULL) ||
          (f64_bits >= F64_NEG_ZERO && f64_bits <= 0xc7efffffe0000000ULL);
 }
@@ -372,23 +372,23 @@ static WASM_INLINE WasmBool is_in_range_f64_demote_f32(uint64_t f64_bits) {
  * should be rounded to F32_MAX and not set to infinity. Unfortunately, UBSAN
  * complains that the value is not representable as a float, so we'll special
  * case them. */
-static WASM_INLINE WasmBool
+static WABT_INLINE WabtBool
 is_in_range_f64_demote_f32_round_to_f32_max(uint64_t f64_bits) {
   return f64_bits > 0x47efffffe0000000ULL && f64_bits < 0x47effffff0000000ULL;
 }
 
-static WASM_INLINE WasmBool
+static WABT_INLINE WabtBool
 is_in_range_f64_demote_f32_round_to_neg_f32_max(uint64_t f64_bits) {
   return f64_bits > 0xc7efffffe0000000ULL && f64_bits < 0xc7effffff0000000ULL;
 }
 
-#define IS_NAN_F32 is_nan_f32
-#define IS_NAN_F64 is_nan_f64
+#define IS_NAN_F32 wabt_is_nan_f32
+#define IS_NAN_F64 wabt_is_nan_f64
 #define IS_ZERO_F32 is_zero_f32
 #define IS_ZERO_F64 is_zero_f64
 
 #define DEFINE_BITCAST(name, src, dst) \
-  static WASM_INLINE dst name(src x) { \
+  static WABT_INLINE dst name(src x) { \
     dst result;                        \
     memcpy(&result, &x, sizeof(dst));  \
     return result;                     \
@@ -462,12 +462,12 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define TYPE_FIELD_NAME_F32 f32_bits
 #define TYPE_FIELD_NAME_F64 f64_bits
 
-#define TRAP(type) return WASM_INTERPRETER_TRAP_##type
+#define TRAP(type) return WABT_INTERPRETER_TRAP_##type
 #define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
 #define TRAP_IF(cond, type)                \
   do {                                     \
-    if (WASM_UNLIKELY(cond))               \
-      return WASM_INTERPRETER_TRAP_##type; \
+    if (WABT_UNLIKELY(cond))               \
+      return WABT_INTERPRETER_TRAP_##type; \
   } while (0)
 
 #define CHECK_STACK()                                         \
@@ -475,7 +475,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
           VALUE_STACK_EXHAUSTED)
 
 #define PUSH_NEG_1_AND_BREAK_IF(cond) \
-  if (WASM_UNLIKELY(cond)) {          \
+  if (WABT_UNLIKELY(cond)) {          \
     PUSH_I32(-1);                     \
     break;                            \
   }
@@ -527,7 +527,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define GET_MEMORY(var)                      \
   uint32_t memory_index = read_u32(&pc);     \
   assert(memory_index < env->memories.size); \
-  WasmInterpreterMemory* var = &env->memories.data[memory_index]
+  WabtInterpreterMemory* var = &env->memories.data[memory_index]
 
 #define LOAD(type, mem_type)                                        \
   do {                                                              \
@@ -588,7 +588,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type rhs = POP_##type();                                  \
     VALUE_TYPE_##type lhs = POP_##type();                                  \
     uint32_t amount = rhs & SHIFT_MASK_##type;                             \
-    if (WASM_LIKELY(amount != 0)) {                                        \
+    if (WABT_LIKELY(amount != 0)) {                                        \
       PUSH_##type(                                                         \
           (lhs ROT_##dir##_0_SHIFT_OP amount) |                            \
           (lhs ROT_##dir##_1_SHIFT_OP((SHIFT_MASK_##type + 1) - amount))); \
@@ -626,7 +626,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type rhs = POP_##type();                       \
     VALUE_TYPE_##type lhs = POP_##type();                       \
     TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);                  \
-    if (WASM_UNLIKELY(lhs == VALUE_TYPE_SIGNED_MAX_##type &&    \
+    if (WABT_UNLIKELY(lhs == VALUE_TYPE_SIGNED_MAX_##type &&    \
                       rhs == VALUE_TYPE_UNSIGNED_MAX_##type)) { \
       PUSH_##type(0);                                           \
     } else {                                                    \
@@ -653,7 +653,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                           \
     VALUE_TYPE_##type rhs = POP_##type();                        \
     VALUE_TYPE_##type lhs = POP_##type();                        \
-    if (WASM_UNLIKELY(IS_ZERO_##type(rhs))) {                    \
+    if (WABT_UNLIKELY(IS_ZERO_##type(rhs))) {                    \
       if (IS_NAN_##type(lhs)) {                                  \
         PUSH_##type(lhs | type##_QUIET_NAN);                     \
       } else if (IS_ZERO_##type(lhs)) {                          \
@@ -684,9 +684,9 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     VALUE_TYPE_##type rhs = POP_##type();                                      \
     VALUE_TYPE_##type lhs = POP_##type();                                      \
     VALUE_TYPE_##type result;                                                  \
-    if (WASM_UNLIKELY(IS_NAN_##type(lhs))) {                                   \
+    if (WABT_UNLIKELY(IS_NAN_##type(lhs))) {                                   \
       result = lhs | type##_QUIET_NAN_BIT;                                     \
-    } else if (WASM_UNLIKELY(IS_NAN_##type(rhs))) {                            \
+    } else if (WABT_UNLIKELY(IS_NAN_##type(rhs))) {                            \
       result = rhs | type##_QUIET_NAN_BIT;                                     \
     } else if ((lhs ^ rhs) & type##_SIGN_MASK) {                               \
       /* min(-0.0, 0.0) => -0.0; since we know the sign bits are different, we \
@@ -702,80 +702,80 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     PUSH_##type(result);                                                       \
   } while (0)
 
-static WASM_INLINE uint32_t read_u32_at(const uint8_t* pc) {
+static WABT_INLINE uint32_t read_u32_at(const uint8_t* pc) {
   uint32_t result;
   memcpy(&result, pc, sizeof(uint32_t));
   return result;
 }
 
-static WASM_INLINE uint32_t read_u32(const uint8_t** pc) {
+static WABT_INLINE uint32_t read_u32(const uint8_t** pc) {
   uint32_t result = read_u32_at(*pc);
   *pc += sizeof(uint32_t);
   return result;
 }
 
-static WASM_INLINE uint64_t read_u64_at(const uint8_t* pc) {
+static WABT_INLINE uint64_t read_u64_at(const uint8_t* pc) {
   uint64_t result;
   memcpy(&result, pc, sizeof(uint64_t));
   return result;
 }
 
-static WASM_INLINE uint64_t read_u64(const uint8_t** pc) {
+static WABT_INLINE uint64_t read_u64(const uint8_t** pc) {
   uint64_t result = read_u64_at(*pc);
   *pc += sizeof(uint64_t);
   return result;
 }
 
-static WASM_INLINE void read_table_entry_at(const uint8_t* pc,
+static WABT_INLINE void read_table_entry_at(const uint8_t* pc,
                                             uint32_t* out_offset,
                                             uint32_t* out_drop,
                                             uint8_t* out_keep) {
-  *out_offset = read_u32_at(pc + WASM_TABLE_ENTRY_OFFSET_OFFSET);
-  *out_drop = read_u32_at(pc + WASM_TABLE_ENTRY_DROP_OFFSET);
-  *out_keep = *(pc + WASM_TABLE_ENTRY_KEEP_OFFSET);
+  *out_offset = read_u32_at(pc + WABT_TABLE_ENTRY_OFFSET_OFFSET);
+  *out_drop = read_u32_at(pc + WABT_TABLE_ENTRY_DROP_OFFSET);
+  *out_keep = *(pc + WABT_TABLE_ENTRY_KEEP_OFFSET);
 }
 
-WasmBool wasm_func_signatures_are_equal(WasmInterpreterEnvironment* env,
+WabtBool wabt_func_signatures_are_equal(WabtInterpreterEnvironment* env,
                                         uint32_t sig_index_0,
                                         uint32_t sig_index_1) {
   if (sig_index_0 == sig_index_1)
-    return WASM_TRUE;
-  WasmInterpreterFuncSignature* sig_0 = &env->sigs.data[sig_index_0];
-  WasmInterpreterFuncSignature* sig_1 = &env->sigs.data[sig_index_1];
-  return wasm_type_vectors_are_equal(&sig_0->param_types,
+    return WABT_TRUE;
+  WabtInterpreterFuncSignature* sig_0 = &env->sigs.data[sig_index_0];
+  WabtInterpreterFuncSignature* sig_1 = &env->sigs.data[sig_index_1];
+  return wabt_type_vectors_are_equal(&sig_0->param_types,
                                      &sig_1->param_types) &&
-         wasm_type_vectors_are_equal(&sig_0->result_types,
+         wabt_type_vectors_are_equal(&sig_0->result_types,
                                      &sig_1->result_types);
 }
 
-WasmInterpreterResult wasm_call_host(WasmInterpreterThread* thread,
-                                     WasmInterpreterFunc* func) {
+WabtInterpreterResult wabt_call_host(WabtInterpreterThread* thread,
+                                     WabtInterpreterFunc* func) {
   assert(func->is_host);
   assert(func->sig_index < thread->env->sigs.size);
-  WasmInterpreterFuncSignature* sig = &thread->env->sigs.data[func->sig_index];
+  WabtInterpreterFuncSignature* sig = &thread->env->sigs.data[func->sig_index];
 
   uint32_t num_args = sig->param_types.size;
   if (thread->host_args.size < num_args) {
-    wasm_resize_interpreter_typed_value_vector(thread->allocator,
+    wabt_resize_interpreter_typed_value_vector(thread->allocator,
                                                &thread->host_args, num_args);
   }
 
   uint32_t i;
   for (i = num_args; i > 0; --i) {
-    WasmInterpreterValue value = POP();
-    WasmInterpreterTypedValue* arg = &thread->host_args.data[i - 1];
+    WabtInterpreterValue value = POP();
+    WabtInterpreterTypedValue* arg = &thread->host_args.data[i - 1];
     arg->type = sig->param_types.data[i - 1];
     arg->value = value;
   }
 
   uint32_t num_results = sig->result_types.size;
-  WasmInterpreterTypedValue* call_result_values =
-      alloca(sizeof(WasmInterpreterTypedValue) * num_results);
+  WabtInterpreterTypedValue* call_result_values =
+      alloca(sizeof(WabtInterpreterTypedValue) * num_results);
 
-  WasmResult call_result = func->host.callback(
+  WabtResult call_result = func->host.callback(
       func, sig, num_args, thread->host_args.data, num_results,
       call_result_values, func->host.user_data);
-  TRAP_IF(call_result != WASM_OK, HOST_TRAPPED);
+  TRAP_IF(call_result != WABT_OK, HOST_TRAPPED);
 
   for (i = 0; i < num_results; ++i) {
     TRAP_IF(call_result_values[i].type != sig->result_types.data[i],
@@ -783,16 +783,16 @@ WasmInterpreterResult wasm_call_host(WasmInterpreterThread* thread,
     PUSH(call_result_values[i].value);
   }
 
-  return WASM_INTERPRETER_OK;
+  return WABT_INTERPRETER_OK;
 }
 
-WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
+WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
                                            uint32_t num_instructions,
                                            uint32_t* call_stack_return_top) {
-  WasmInterpreterResult result = WASM_INTERPRETER_OK;
+  WabtInterpreterResult result = WABT_INTERPRETER_OK;
   assert(call_stack_return_top < thread->call_stack_end);
 
-  WasmInterpreterEnvironment* env = thread->env;
+  WabtInterpreterEnvironment* env = thread->env;
 
   const uint8_t* istream = env->istream.start;
   const uint8_t* pc = &istream[thread->pc];
@@ -800,31 +800,31 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
   for (i = 0; i < num_instructions; ++i) {
     uint8_t opcode = *pc++;
     switch (opcode) {
-      case WASM_OPCODE_SELECT: {
+      case WABT_OPCODE_SELECT: {
         VALUE_TYPE_I32 cond = POP_I32();
-        WasmInterpreterValue false_ = POP();
-        WasmInterpreterValue true_ = POP();
+        WabtInterpreterValue false_ = POP();
+        WabtInterpreterValue true_ = POP();
         PUSH(cond ? true_ : false_);
         break;
       }
 
-      case WASM_OPCODE_BR:
+      case WABT_OPCODE_BR:
         GOTO(read_u32(&pc));
         break;
 
-      case WASM_OPCODE_BR_IF: {
+      case WABT_OPCODE_BR_IF: {
         uint32_t new_pc = read_u32(&pc);
         if (POP_I32())
           GOTO(new_pc);
         break;
       }
 
-      case WASM_OPCODE_BR_TABLE: {
+      case WABT_OPCODE_BR_TABLE: {
         uint32_t num_targets = read_u32(&pc);
         uint32_t table_offset = read_u32(&pc);
         VALUE_TYPE_I32 key = POP_I32();
         uint32_t key_offset =
-            (key >= num_targets ? num_targets : key) * WASM_TABLE_ENTRY_SIZE;
+            (key >= num_targets ? num_targets : key) * WABT_TABLE_ENTRY_SIZE;
         const uint8_t* entry = istream + table_offset + key_offset;
         uint32_t new_pc;
         uint32_t drop_count;
@@ -835,87 +835,87 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         break;
       }
 
-      case WASM_OPCODE_RETURN:
+      case WABT_OPCODE_RETURN:
         if (thread->call_stack_top == call_stack_return_top) {
-          result = WASM_INTERPRETER_RETURNED;
+          result = WABT_INTERPRETER_RETURNED;
           goto exit_loop;
         }
         GOTO(POP_CALL());
         break;
 
-      case WASM_OPCODE_UNREACHABLE:
+      case WABT_OPCODE_UNREACHABLE:
         TRAP(UNREACHABLE);
         break;
 
-      case WASM_OPCODE_I32_CONST:
+      case WABT_OPCODE_I32_CONST:
         PUSH_I32(read_u32(&pc));
         break;
 
-      case WASM_OPCODE_I64_CONST:
+      case WABT_OPCODE_I64_CONST:
         PUSH_I64(read_u64(&pc));
         break;
 
-      case WASM_OPCODE_F32_CONST:
+      case WABT_OPCODE_F32_CONST:
         PUSH_F32(read_u32(&pc));
         break;
 
-      case WASM_OPCODE_F64_CONST:
+      case WABT_OPCODE_F64_CONST:
         PUSH_F64(read_u64(&pc));
         break;
 
-      case WASM_OPCODE_GET_GLOBAL: {
+      case WABT_OPCODE_GET_GLOBAL: {
         uint32_t index = read_u32(&pc);
         assert(index < env->globals.size);
         PUSH(env->globals.data[index].typed_value.value);
         break;
       }
 
-      case WASM_OPCODE_SET_GLOBAL: {
+      case WABT_OPCODE_SET_GLOBAL: {
         uint32_t index = read_u32(&pc);
         assert(index < env->globals.size);
         env->globals.data[index].typed_value.value = POP();
         break;
       }
 
-      case WASM_OPCODE_GET_LOCAL: {
-        WasmInterpreterValue value = PICK(read_u32(&pc));
+      case WABT_OPCODE_GET_LOCAL: {
+        WabtInterpreterValue value = PICK(read_u32(&pc));
         PUSH(value);
         break;
       }
 
-      case WASM_OPCODE_SET_LOCAL: {
-        WasmInterpreterValue value = POP();
+      case WABT_OPCODE_SET_LOCAL: {
+        WabtInterpreterValue value = POP();
         PICK(read_u32(&pc)) = value;
         break;
       }
 
-      case WASM_OPCODE_TEE_LOCAL:
+      case WABT_OPCODE_TEE_LOCAL:
         PICK(read_u32(&pc)) = TOP();
         break;
 
-      case WASM_OPCODE_CALL: {
+      case WABT_OPCODE_CALL: {
         uint32_t offset = read_u32(&pc);
         PUSH_CALL();
         GOTO(offset);
         break;
       }
 
-      case WASM_OPCODE_CALL_INDIRECT: {
+      case WABT_OPCODE_CALL_INDIRECT: {
         uint32_t table_index = read_u32(&pc);
         assert(table_index < env->tables.size);
-        WasmInterpreterTable* table = &env->tables.data[table_index];
+        WabtInterpreterTable* table = &env->tables.data[table_index];
         uint32_t sig_index = read_u32(&pc);
         assert(sig_index < env->sigs.size);
         VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= table->func_indexes.size, UNDEFINED_TABLE_INDEX);
         uint32_t func_index = table->func_indexes.data[entry_index];
-        TRAP_IF(func_index == WASM_INVALID_INDEX, UNINITIALIZED_TABLE_ELEMENT);
-        WasmInterpreterFunc* func = &env->funcs.data[func_index];
+        TRAP_IF(func_index == WABT_INVALID_INDEX, UNINITIALIZED_TABLE_ELEMENT);
+        WabtInterpreterFunc* func = &env->funcs.data[func_index];
         TRAP_UNLESS(
-            wasm_func_signatures_are_equal(env, func->sig_index, sig_index),
+            wabt_func_signatures_are_equal(env, func->sig_index, sig_index),
             INDIRECT_CALL_SIGNATURE_MISMATCH);
         if (func->is_host) {
-          wasm_call_host(thread, func);
+          wabt_call_host(thread, func);
         } else {
           PUSH_CALL();
           GOTO(func->defined.offset);
@@ -923,113 +923,113 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         break;
       }
 
-      case WASM_OPCODE_CALL_HOST: {
+      case WABT_OPCODE_CALL_HOST: {
         uint32_t func_index = read_u32(&pc);
         assert(func_index < env->funcs.size);
-        WasmInterpreterFunc* func = &env->funcs.data[func_index];
-        wasm_call_host(thread, func);
+        WabtInterpreterFunc* func = &env->funcs.data[func_index];
+        wabt_call_host(thread, func);
         break;
       }
 
-      case WASM_OPCODE_I32_LOAD8_S:
+      case WABT_OPCODE_I32_LOAD8_S:
         LOAD(I32, I8);
         break;
 
-      case WASM_OPCODE_I32_LOAD8_U:
+      case WABT_OPCODE_I32_LOAD8_U:
         LOAD(I32, U8);
         break;
 
-      case WASM_OPCODE_I32_LOAD16_S:
+      case WABT_OPCODE_I32_LOAD16_S:
         LOAD(I32, I16);
         break;
 
-      case WASM_OPCODE_I32_LOAD16_U:
+      case WABT_OPCODE_I32_LOAD16_U:
         LOAD(I32, U16);
         break;
 
-      case WASM_OPCODE_I64_LOAD8_S:
+      case WABT_OPCODE_I64_LOAD8_S:
         LOAD(I64, I8);
         break;
 
-      case WASM_OPCODE_I64_LOAD8_U:
+      case WABT_OPCODE_I64_LOAD8_U:
         LOAD(I64, U8);
         break;
 
-      case WASM_OPCODE_I64_LOAD16_S:
+      case WABT_OPCODE_I64_LOAD16_S:
         LOAD(I64, I16);
         break;
 
-      case WASM_OPCODE_I64_LOAD16_U:
+      case WABT_OPCODE_I64_LOAD16_U:
         LOAD(I64, U16);
         break;
 
-      case WASM_OPCODE_I64_LOAD32_S:
+      case WABT_OPCODE_I64_LOAD32_S:
         LOAD(I64, I32);
         break;
 
-      case WASM_OPCODE_I64_LOAD32_U:
+      case WABT_OPCODE_I64_LOAD32_U:
         LOAD(I64, U32);
         break;
 
-      case WASM_OPCODE_I32_LOAD:
+      case WABT_OPCODE_I32_LOAD:
         LOAD(I32, U32);
         break;
 
-      case WASM_OPCODE_I64_LOAD:
+      case WABT_OPCODE_I64_LOAD:
         LOAD(I64, U64);
         break;
 
-      case WASM_OPCODE_F32_LOAD:
+      case WABT_OPCODE_F32_LOAD:
         LOAD(F32, F32);
         break;
 
-      case WASM_OPCODE_F64_LOAD:
+      case WABT_OPCODE_F64_LOAD:
         LOAD(F64, F64);
         break;
 
-      case WASM_OPCODE_I32_STORE8:
+      case WABT_OPCODE_I32_STORE8:
         STORE(I32, U8);
         break;
 
-      case WASM_OPCODE_I32_STORE16:
+      case WABT_OPCODE_I32_STORE16:
         STORE(I32, U16);
         break;
 
-      case WASM_OPCODE_I64_STORE8:
+      case WABT_OPCODE_I64_STORE8:
         STORE(I64, U8);
         break;
 
-      case WASM_OPCODE_I64_STORE16:
+      case WABT_OPCODE_I64_STORE16:
         STORE(I64, U16);
         break;
 
-      case WASM_OPCODE_I64_STORE32:
+      case WABT_OPCODE_I64_STORE32:
         STORE(I64, U32);
         break;
 
-      case WASM_OPCODE_I32_STORE:
+      case WABT_OPCODE_I32_STORE:
         STORE(I32, U32);
         break;
 
-      case WASM_OPCODE_I64_STORE:
+      case WABT_OPCODE_I64_STORE:
         STORE(I64, U64);
         break;
 
-      case WASM_OPCODE_F32_STORE:
+      case WABT_OPCODE_F32_STORE:
         STORE(F32, F32);
         break;
 
-      case WASM_OPCODE_F64_STORE:
+      case WABT_OPCODE_F64_STORE:
         STORE(F64, F64);
         break;
 
-      case WASM_OPCODE_CURRENT_MEMORY: {
+      case WABT_OPCODE_CURRENT_MEMORY: {
         GET_MEMORY(memory);
         PUSH_I32(memory->page_limits.initial);
         break;
       }
 
-      case WASM_OPCODE_GROW_MEMORY: {
+      case WABT_OPCODE_GROW_MEMORY: {
         GET_MEMORY(memory);
         uint32_t old_page_size = memory->page_limits.initial;
         uint32_t old_byte_size = memory->byte_size;
@@ -1037,14 +1037,14 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         uint32_t new_page_size = old_page_size + grow_pages;
         uint32_t max_page_size = memory->page_limits.has_max
                                      ? memory->page_limits.max
-                                     : WASM_MAX_PAGES;
+                                     : WABT_MAX_PAGES;
         PUSH_NEG_1_AND_BREAK_IF(new_page_size > max_page_size);
-        PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WASM_PAGE_SIZE >
+        PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WABT_PAGE_SIZE >
                                 UINT32_MAX);
-        uint32_t new_byte_size = new_page_size * WASM_PAGE_SIZE;
-        WasmAllocator* allocator = memory->allocator;
-        void* new_data = wasm_realloc(allocator, memory->data, new_byte_size,
-                                      WASM_DEFAULT_ALIGN);
+        uint32_t new_byte_size = new_page_size * WABT_PAGE_SIZE;
+        WabtAllocator* allocator = memory->allocator;
+        void* new_data = wabt_realloc(allocator, memory->data, new_byte_size,
+                                      WABT_DEFAULT_ALIGN);
         PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
@@ -1055,507 +1055,507 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         break;
       }
 
-      case WASM_OPCODE_I32_ADD:
+      case WABT_OPCODE_I32_ADD:
         BINOP(I32, I32, +);
         break;
 
-      case WASM_OPCODE_I32_SUB:
+      case WABT_OPCODE_I32_SUB:
         BINOP(I32, I32, -);
         break;
 
-      case WASM_OPCODE_I32_MUL:
+      case WABT_OPCODE_I32_MUL:
         BINOP(I32, I32, *);
         break;
 
-      case WASM_OPCODE_I32_DIV_S:
+      case WABT_OPCODE_I32_DIV_S:
         BINOP_DIV_S(I32);
         break;
 
-      case WASM_OPCODE_I32_DIV_U:
+      case WABT_OPCODE_I32_DIV_U:
         BINOP_DIV_REM_U(I32, / );
         break;
 
-      case WASM_OPCODE_I32_REM_S:
+      case WABT_OPCODE_I32_REM_S:
         BINOP_REM_S(I32);
         break;
 
-      case WASM_OPCODE_I32_REM_U:
+      case WABT_OPCODE_I32_REM_U:
         BINOP_DIV_REM_U(I32, % );
         break;
 
-      case WASM_OPCODE_I32_AND:
+      case WABT_OPCODE_I32_AND:
         BINOP(I32, I32, &);
         break;
 
-      case WASM_OPCODE_I32_OR:
+      case WABT_OPCODE_I32_OR:
         BINOP(I32, I32, | );
         break;
 
-      case WASM_OPCODE_I32_XOR:
+      case WABT_OPCODE_I32_XOR:
         BINOP(I32, I32, ^);
         break;
 
-      case WASM_OPCODE_I32_SHL:
+      case WABT_OPCODE_I32_SHL:
         BINOP_SHIFT(I32, <<, UNSIGNED);
         break;
 
-      case WASM_OPCODE_I32_SHR_U:
+      case WABT_OPCODE_I32_SHR_U:
         BINOP_SHIFT(I32, >>, UNSIGNED);
         break;
 
-      case WASM_OPCODE_I32_SHR_S:
+      case WABT_OPCODE_I32_SHR_S:
         BINOP_SHIFT(I32, >>, SIGNED);
         break;
 
-      case WASM_OPCODE_I32_EQ:
+      case WABT_OPCODE_I32_EQ:
         BINOP(I32, I32, == );
         break;
 
-      case WASM_OPCODE_I32_NE:
+      case WABT_OPCODE_I32_NE:
         BINOP(I32, I32, != );
         break;
 
-      case WASM_OPCODE_I32_LT_S:
+      case WABT_OPCODE_I32_LT_S:
         BINOP_SIGNED(I32, I32, < );
         break;
 
-      case WASM_OPCODE_I32_LE_S:
+      case WABT_OPCODE_I32_LE_S:
         BINOP_SIGNED(I32, I32, <= );
         break;
 
-      case WASM_OPCODE_I32_LT_U:
+      case WABT_OPCODE_I32_LT_U:
         BINOP(I32, I32, < );
         break;
 
-      case WASM_OPCODE_I32_LE_U:
+      case WABT_OPCODE_I32_LE_U:
         BINOP(I32, I32, <= );
         break;
 
-      case WASM_OPCODE_I32_GT_S:
+      case WABT_OPCODE_I32_GT_S:
         BINOP_SIGNED(I32, I32, > );
         break;
 
-      case WASM_OPCODE_I32_GE_S:
+      case WABT_OPCODE_I32_GE_S:
         BINOP_SIGNED(I32, I32, >= );
         break;
 
-      case WASM_OPCODE_I32_GT_U:
+      case WABT_OPCODE_I32_GT_U:
         BINOP(I32, I32, > );
         break;
 
-      case WASM_OPCODE_I32_GE_U:
+      case WABT_OPCODE_I32_GE_U:
         BINOP(I32, I32, >= );
         break;
 
-      case WASM_OPCODE_I32_CLZ: {
+      case WABT_OPCODE_I32_CLZ: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_I32(value != 0 ? wasm_clz_u32(value) : 32);
+        PUSH_I32(value != 0 ? wabt_clz_u32(value) : 32);
         break;
       }
 
-      case WASM_OPCODE_I32_CTZ: {
+      case WABT_OPCODE_I32_CTZ: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_I32(value != 0 ? wasm_ctz_u32(value) : 32);
+        PUSH_I32(value != 0 ? wabt_ctz_u32(value) : 32);
         break;
       }
 
-      case WASM_OPCODE_I32_POPCNT: {
+      case WABT_OPCODE_I32_POPCNT: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_I32(wasm_popcount_u32(value));
+        PUSH_I32(wabt_popcount_u32(value));
         break;
       }
 
-      case WASM_OPCODE_I32_EQZ: {
+      case WABT_OPCODE_I32_EQZ: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I32(value == 0);
         break;
       }
 
-      case WASM_OPCODE_I64_ADD:
+      case WABT_OPCODE_I64_ADD:
         BINOP(I64, I64, +);
         break;
 
-      case WASM_OPCODE_I64_SUB:
+      case WABT_OPCODE_I64_SUB:
         BINOP(I64, I64, -);
         break;
 
-      case WASM_OPCODE_I64_MUL:
+      case WABT_OPCODE_I64_MUL:
         BINOP(I64, I64, *);
         break;
 
-      case WASM_OPCODE_I64_DIV_S:
+      case WABT_OPCODE_I64_DIV_S:
         BINOP_DIV_S(I64);
         break;
 
-      case WASM_OPCODE_I64_DIV_U:
+      case WABT_OPCODE_I64_DIV_U:
         BINOP_DIV_REM_U(I64, / );
         break;
 
-      case WASM_OPCODE_I64_REM_S:
+      case WABT_OPCODE_I64_REM_S:
         BINOP_REM_S(I64);
         break;
 
-      case WASM_OPCODE_I64_REM_U:
+      case WABT_OPCODE_I64_REM_U:
         BINOP_DIV_REM_U(I64, % );
         break;
 
-      case WASM_OPCODE_I64_AND:
+      case WABT_OPCODE_I64_AND:
         BINOP(I64, I64, &);
         break;
 
-      case WASM_OPCODE_I64_OR:
+      case WABT_OPCODE_I64_OR:
         BINOP(I64, I64, | );
         break;
 
-      case WASM_OPCODE_I64_XOR:
+      case WABT_OPCODE_I64_XOR:
         BINOP(I64, I64, ^);
         break;
 
-      case WASM_OPCODE_I64_SHL:
+      case WABT_OPCODE_I64_SHL:
         BINOP_SHIFT(I64, <<, UNSIGNED);
         break;
 
-      case WASM_OPCODE_I64_SHR_U:
+      case WABT_OPCODE_I64_SHR_U:
         BINOP_SHIFT(I64, >>, UNSIGNED);
         break;
 
-      case WASM_OPCODE_I64_SHR_S:
+      case WABT_OPCODE_I64_SHR_S:
         BINOP_SHIFT(I64, >>, SIGNED);
         break;
 
-      case WASM_OPCODE_I64_EQ:
+      case WABT_OPCODE_I64_EQ:
         BINOP(I32, I64, == );
         break;
 
-      case WASM_OPCODE_I64_NE:
+      case WABT_OPCODE_I64_NE:
         BINOP(I32, I64, != );
         break;
 
-      case WASM_OPCODE_I64_LT_S:
+      case WABT_OPCODE_I64_LT_S:
         BINOP_SIGNED(I32, I64, < );
         break;
 
-      case WASM_OPCODE_I64_LE_S:
+      case WABT_OPCODE_I64_LE_S:
         BINOP_SIGNED(I32, I64, <= );
         break;
 
-      case WASM_OPCODE_I64_LT_U:
+      case WABT_OPCODE_I64_LT_U:
         BINOP(I32, I64, < );
         break;
 
-      case WASM_OPCODE_I64_LE_U:
+      case WABT_OPCODE_I64_LE_U:
         BINOP(I32, I64, <= );
         break;
 
-      case WASM_OPCODE_I64_GT_S:
+      case WABT_OPCODE_I64_GT_S:
         BINOP_SIGNED(I32, I64, > );
         break;
 
-      case WASM_OPCODE_I64_GE_S:
+      case WABT_OPCODE_I64_GE_S:
         BINOP_SIGNED(I32, I64, >= );
         break;
 
-      case WASM_OPCODE_I64_GT_U:
+      case WABT_OPCODE_I64_GT_U:
         BINOP(I32, I64, > );
         break;
 
-      case WASM_OPCODE_I64_GE_U:
+      case WABT_OPCODE_I64_GE_U:
         BINOP(I32, I64, >= );
         break;
 
-      case WASM_OPCODE_I64_CLZ: {
+      case WABT_OPCODE_I64_CLZ: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_I64(value != 0 ? wasm_clz_u64(value) : 64);
+        PUSH_I64(value != 0 ? wabt_clz_u64(value) : 64);
         break;
       }
 
-      case WASM_OPCODE_I64_CTZ: {
+      case WABT_OPCODE_I64_CTZ: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_I64(value != 0 ? wasm_ctz_u64(value) : 64);
+        PUSH_I64(value != 0 ? wabt_ctz_u64(value) : 64);
         break;
       }
 
-      case WASM_OPCODE_I64_POPCNT: {
+      case WABT_OPCODE_I64_POPCNT: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_I64(wasm_popcount_u64(value));
+        PUSH_I64(wabt_popcount_u64(value));
         break;
       }
 
-      case WASM_OPCODE_F32_ADD:
+      case WABT_OPCODE_F32_ADD:
         BINOP_FLOAT(F32, +);
         break;
 
-      case WASM_OPCODE_F32_SUB:
+      case WABT_OPCODE_F32_SUB:
         BINOP_FLOAT(F32, -);
         break;
 
-      case WASM_OPCODE_F32_MUL:
+      case WABT_OPCODE_F32_MUL:
         BINOP_FLOAT(F32, *);
         break;
 
-      case WASM_OPCODE_F32_DIV:
+      case WABT_OPCODE_F32_DIV:
         BINOP_FLOAT_DIV(F32);
         break;
 
-      case WASM_OPCODE_F32_MIN:
+      case WABT_OPCODE_F32_MIN:
         MINMAX_FLOAT(F32, MIN);
         break;
 
-      case WASM_OPCODE_F32_MAX:
+      case WABT_OPCODE_F32_MAX:
         MINMAX_FLOAT(F32, MAX);
         break;
 
-      case WASM_OPCODE_F32_ABS:
+      case WABT_OPCODE_F32_ABS:
         TOP().f32_bits &= ~F32_SIGN_MASK;
         break;
 
-      case WASM_OPCODE_F32_NEG:
+      case WABT_OPCODE_F32_NEG:
         TOP().f32_bits ^= F32_SIGN_MASK;
         break;
 
-      case WASM_OPCODE_F32_COPYSIGN: {
+      case WABT_OPCODE_F32_COPYSIGN: {
         VALUE_TYPE_F32 rhs = POP_F32();
         VALUE_TYPE_F32 lhs = POP_F32();
         PUSH_F32((lhs & ~F32_SIGN_MASK) | (rhs & F32_SIGN_MASK));
         break;
       }
 
-      case WASM_OPCODE_F32_CEIL:
+      case WABT_OPCODE_F32_CEIL:
         UNOP_FLOAT(F32, ceilf);
         break;
 
-      case WASM_OPCODE_F32_FLOOR:
+      case WABT_OPCODE_F32_FLOOR:
         UNOP_FLOAT(F32, floorf);
         break;
 
-      case WASM_OPCODE_F32_TRUNC:
+      case WABT_OPCODE_F32_TRUNC:
         UNOP_FLOAT(F32, truncf);
         break;
 
-      case WASM_OPCODE_F32_NEAREST:
+      case WABT_OPCODE_F32_NEAREST:
         UNOP_FLOAT(F32, nearbyintf);
         break;
 
-      case WASM_OPCODE_F32_SQRT:
+      case WABT_OPCODE_F32_SQRT:
         UNOP_FLOAT(F32, sqrtf);
         break;
 
-      case WASM_OPCODE_F32_EQ:
+      case WABT_OPCODE_F32_EQ:
         BINOP_FLOAT_COMPARE(F32, == );
         break;
 
-      case WASM_OPCODE_F32_NE:
+      case WABT_OPCODE_F32_NE:
         BINOP_FLOAT_COMPARE(F32, != );
         break;
 
-      case WASM_OPCODE_F32_LT:
+      case WABT_OPCODE_F32_LT:
         BINOP_FLOAT_COMPARE(F32, < );
         break;
 
-      case WASM_OPCODE_F32_LE:
+      case WABT_OPCODE_F32_LE:
         BINOP_FLOAT_COMPARE(F32, <= );
         break;
 
-      case WASM_OPCODE_F32_GT:
+      case WABT_OPCODE_F32_GT:
         BINOP_FLOAT_COMPARE(F32, > );
         break;
 
-      case WASM_OPCODE_F32_GE:
+      case WABT_OPCODE_F32_GE:
         BINOP_FLOAT_COMPARE(F32, >= );
         break;
 
-      case WASM_OPCODE_F64_ADD:
+      case WABT_OPCODE_F64_ADD:
         BINOP_FLOAT(F64, +);
         break;
 
-      case WASM_OPCODE_F64_SUB:
+      case WABT_OPCODE_F64_SUB:
         BINOP_FLOAT(F64, -);
         break;
 
-      case WASM_OPCODE_F64_MUL:
+      case WABT_OPCODE_F64_MUL:
         BINOP_FLOAT(F64, *);
         break;
 
-      case WASM_OPCODE_F64_DIV:
+      case WABT_OPCODE_F64_DIV:
         BINOP_FLOAT_DIV(F64);
         break;
 
-      case WASM_OPCODE_F64_MIN:
+      case WABT_OPCODE_F64_MIN:
         MINMAX_FLOAT(F64, MIN);
         break;
 
-      case WASM_OPCODE_F64_MAX:
+      case WABT_OPCODE_F64_MAX:
         MINMAX_FLOAT(F64, MAX);
         break;
 
-      case WASM_OPCODE_F64_ABS:
+      case WABT_OPCODE_F64_ABS:
         TOP().f64_bits &= ~F64_SIGN_MASK;
         break;
 
-      case WASM_OPCODE_F64_NEG:
+      case WABT_OPCODE_F64_NEG:
         TOP().f64_bits ^= F64_SIGN_MASK;
         break;
 
-      case WASM_OPCODE_F64_COPYSIGN: {
+      case WABT_OPCODE_F64_COPYSIGN: {
         VALUE_TYPE_F64 rhs = POP_F64();
         VALUE_TYPE_F64 lhs = POP_F64();
         PUSH_F64((lhs & ~F64_SIGN_MASK) | (rhs & F64_SIGN_MASK));
         break;
       }
 
-      case WASM_OPCODE_F64_CEIL:
+      case WABT_OPCODE_F64_CEIL:
         UNOP_FLOAT(F64, ceil);
         break;
 
-      case WASM_OPCODE_F64_FLOOR:
+      case WABT_OPCODE_F64_FLOOR:
         UNOP_FLOAT(F64, floor);
         break;
 
-      case WASM_OPCODE_F64_TRUNC:
+      case WABT_OPCODE_F64_TRUNC:
         UNOP_FLOAT(F64, trunc);
         break;
 
-      case WASM_OPCODE_F64_NEAREST:
+      case WABT_OPCODE_F64_NEAREST:
         UNOP_FLOAT(F64, nearbyint);
         break;
 
-      case WASM_OPCODE_F64_SQRT:
+      case WABT_OPCODE_F64_SQRT:
         UNOP_FLOAT(F64, sqrt);
         break;
 
-      case WASM_OPCODE_F64_EQ:
+      case WABT_OPCODE_F64_EQ:
         BINOP_FLOAT_COMPARE(F64, == );
         break;
 
-      case WASM_OPCODE_F64_NE:
+      case WABT_OPCODE_F64_NE:
         BINOP_FLOAT_COMPARE(F64, != );
         break;
 
-      case WASM_OPCODE_F64_LT:
+      case WABT_OPCODE_F64_LT:
         BINOP_FLOAT_COMPARE(F64, < );
         break;
 
-      case WASM_OPCODE_F64_LE:
+      case WABT_OPCODE_F64_LE:
         BINOP_FLOAT_COMPARE(F64, <= );
         break;
 
-      case WASM_OPCODE_F64_GT:
+      case WABT_OPCODE_F64_GT:
         BINOP_FLOAT_COMPARE(F64, > );
         break;
 
-      case WASM_OPCODE_F64_GE:
+      case WABT_OPCODE_F64_GE:
         BINOP_FLOAT_COMPARE(F64, >= );
         break;
 
-      case WASM_OPCODE_I32_TRUNC_S_F32: {
+      case WABT_OPCODE_I32_TRUNC_S_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_s_f32(value), INTEGER_OVERFLOW);
         PUSH_I32((int32_t)BITCAST_TO_F32(value));
         break;
       }
 
-      case WASM_OPCODE_I32_TRUNC_S_F64: {
+      case WABT_OPCODE_I32_TRUNC_S_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_s_f64(value), INTEGER_OVERFLOW);
         PUSH_I32((int32_t)BITCAST_TO_F64(value));
         break;
       }
 
-      case WASM_OPCODE_I32_TRUNC_U_F32: {
+      case WABT_OPCODE_I32_TRUNC_U_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_u_f32(value), INTEGER_OVERFLOW);
         PUSH_I32((uint32_t)BITCAST_TO_F32(value));
         break;
       }
 
-      case WASM_OPCODE_I32_TRUNC_U_F64: {
+      case WABT_OPCODE_I32_TRUNC_U_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_u_f64(value), INTEGER_OVERFLOW);
         PUSH_I32((uint32_t)BITCAST_TO_F64(value));
         break;
       }
 
-      case WASM_OPCODE_I32_WRAP_I64: {
+      case WABT_OPCODE_I32_WRAP_I64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I32((uint32_t)value);
         break;
       }
 
-      case WASM_OPCODE_I64_TRUNC_S_F32: {
+      case WABT_OPCODE_I64_TRUNC_S_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_s_f32(value), INTEGER_OVERFLOW);
         PUSH_I64((int64_t)BITCAST_TO_F32(value));
         break;
       }
 
-      case WASM_OPCODE_I64_TRUNC_S_F64: {
+      case WABT_OPCODE_I64_TRUNC_S_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_s_f64(value), INTEGER_OVERFLOW);
         PUSH_I64((int64_t)BITCAST_TO_F64(value));
         break;
       }
 
-      case WASM_OPCODE_I64_TRUNC_U_F32: {
+      case WABT_OPCODE_I64_TRUNC_U_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_u_f32(value), INTEGER_OVERFLOW);
         PUSH_I64((uint64_t)BITCAST_TO_F32(value));
         break;
       }
 
-      case WASM_OPCODE_I64_TRUNC_U_F64: {
+      case WABT_OPCODE_I64_TRUNC_U_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
+        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_u_f64(value), INTEGER_OVERFLOW);
         PUSH_I64((uint64_t)BITCAST_TO_F64(value));
         break;
       }
 
-      case WASM_OPCODE_I64_EXTEND_S_I32: {
+      case WABT_OPCODE_I64_EXTEND_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I64((int64_t)BITCAST_I32_TO_SIGNED(value));
         break;
       }
 
-      case WASM_OPCODE_I64_EXTEND_U_I32: {
+      case WABT_OPCODE_I64_EXTEND_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I64((uint64_t)value);
         break;
       }
 
-      case WASM_OPCODE_F32_CONVERT_S_I32: {
+      case WABT_OPCODE_F32_CONVERT_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F32(BITCAST_FROM_F32((float)BITCAST_I32_TO_SIGNED(value)));
         break;
       }
 
-      case WASM_OPCODE_F32_CONVERT_U_I32: {
+      case WABT_OPCODE_F32_CONVERT_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F32(BITCAST_FROM_F32((float)value));
         break;
       }
 
-      case WASM_OPCODE_F32_CONVERT_S_I64: {
+      case WABT_OPCODE_F32_CONVERT_S_I64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F32(BITCAST_FROM_F32((float)BITCAST_I64_TO_SIGNED(value)));
         break;
       }
 
-      case WASM_OPCODE_F32_CONVERT_U_I64: {
+      case WABT_OPCODE_F32_CONVERT_U_I64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F32(BITCAST_FROM_F32((float)value));
         break;
       }
 
-      case WASM_OPCODE_F32_DEMOTE_F64: {
+      case WABT_OPCODE_F32_DEMOTE_F64: {
         VALUE_TYPE_F64 value = POP_F64();
-        if (WASM_LIKELY(is_in_range_f64_demote_f32(value))) {
+        if (WABT_LIKELY(is_in_range_f64_demote_f32(value))) {
           PUSH_F32(BITCAST_FROM_F32((float)BITCAST_TO_F64(value)));
         } else if (is_in_range_f64_demote_f32_round_to_f32_max(value)) {
           PUSH_F32(F32_MAX);
@@ -1573,116 +1573,116 @@ WasmInterpreterResult wasm_run_interpreter(WasmInterpreterThread* thread,
         break;
       }
 
-      case WASM_OPCODE_F32_REINTERPRET_I32: {
+      case WABT_OPCODE_F32_REINTERPRET_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F32(value);
         break;
       }
 
-      case WASM_OPCODE_F64_CONVERT_S_I32: {
+      case WABT_OPCODE_F64_CONVERT_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F64(BITCAST_FROM_F64((double)BITCAST_I32_TO_SIGNED(value)));
         break;
       }
 
-      case WASM_OPCODE_F64_CONVERT_U_I32: {
+      case WABT_OPCODE_F64_CONVERT_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F64(BITCAST_FROM_F64((double)value));
         break;
       }
 
-      case WASM_OPCODE_F64_CONVERT_S_I64: {
+      case WABT_OPCODE_F64_CONVERT_S_I64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F64(BITCAST_FROM_F64((double)BITCAST_I64_TO_SIGNED(value)));
         break;
       }
 
-      case WASM_OPCODE_F64_CONVERT_U_I64: {
+      case WABT_OPCODE_F64_CONVERT_U_I64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F64(BITCAST_FROM_F64((double)value));
         break;
       }
 
-      case WASM_OPCODE_F64_PROMOTE_F32: {
+      case WABT_OPCODE_F64_PROMOTE_F32: {
         VALUE_TYPE_F32 value = POP_F32();
         PUSH_F64(BITCAST_FROM_F64((double)BITCAST_TO_F32(value)));
         break;
       }
 
-      case WASM_OPCODE_F64_REINTERPRET_I64: {
+      case WABT_OPCODE_F64_REINTERPRET_I64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F64(value);
         break;
       }
 
-      case WASM_OPCODE_I32_REINTERPRET_F32: {
+      case WABT_OPCODE_I32_REINTERPRET_F32: {
         VALUE_TYPE_F32 value = POP_F32();
         PUSH_I32(value);
         break;
       }
 
-      case WASM_OPCODE_I64_REINTERPRET_F64: {
+      case WABT_OPCODE_I64_REINTERPRET_F64: {
         VALUE_TYPE_F64 value = POP_F64();
         PUSH_I64(value);
         break;
       }
 
-      case WASM_OPCODE_I32_ROTR:
+      case WABT_OPCODE_I32_ROTR:
         BINOP_ROT(I32, RIGHT);
         break;
 
-      case WASM_OPCODE_I32_ROTL:
+      case WABT_OPCODE_I32_ROTL:
         BINOP_ROT(I32, LEFT);
         break;
 
-      case WASM_OPCODE_I64_ROTR:
+      case WABT_OPCODE_I64_ROTR:
         BINOP_ROT(I64, RIGHT);
         break;
 
-      case WASM_OPCODE_I64_ROTL:
+      case WABT_OPCODE_I64_ROTL:
         BINOP_ROT(I64, LEFT);
         break;
 
-      case WASM_OPCODE_I64_EQZ: {
+      case WABT_OPCODE_I64_EQZ: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I64(value == 0);
         break;
       }
 
-      case WASM_OPCODE_ALLOCA: {
-        WasmInterpreterValue* old_value_stack_top = thread->value_stack_top;
+      case WABT_OPCODE_ALLOCA: {
+        WabtInterpreterValue* old_value_stack_top = thread->value_stack_top;
         thread->value_stack_top += read_u32(&pc);
         CHECK_STACK();
         memset(old_value_stack_top, 0,
                (thread->value_stack_top - old_value_stack_top) *
-                   sizeof(WasmInterpreterValue));
+                   sizeof(WabtInterpreterValue));
         break;
       }
 
-      case WASM_OPCODE_BR_UNLESS: {
+      case WABT_OPCODE_BR_UNLESS: {
         uint32_t new_pc = read_u32(&pc);
         if (!POP_I32())
           GOTO(new_pc);
         break;
       }
 
-      case WASM_OPCODE_DROP:
+      case WABT_OPCODE_DROP:
         (void)POP();
         break;
 
-      case WASM_OPCODE_DROP_KEEP: {
+      case WABT_OPCODE_DROP_KEEP: {
         uint32_t drop_count = read_u32(&pc);
         uint8_t keep_count = *pc++;
         DROP_KEEP(drop_count, keep_count);
         break;
       }
 
-      case WASM_OPCODE_DATA:
+      case WABT_OPCODE_DATA:
         /* shouldn't ever execute this */
         assert(0);
         break;
 
-      case WASM_OPCODE_NOP:
+      case WABT_OPCODE_NOP:
         break;
 
       default:
@@ -1696,370 +1696,370 @@ exit_loop:
   return result;
 }
 
-void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
+void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
   const uint8_t* istream = thread->env->istream.start;
   const uint8_t* pc = &istream[thread->pc];
   size_t value_stack_depth = thread->value_stack_top - thread->value_stack.data;
   size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data;
 
-  wasm_writef(stream, "#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ",
+  wabt_writef(stream, "#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ",
               call_stack_depth, pc - (uint8_t*)thread->env->istream.start,
               value_stack_depth);
 
   uint8_t opcode = *pc++;
   switch (opcode) {
-    case WASM_OPCODE_SELECT:
-      wasm_writef(stream, "%s %u, %" PRIu64 ", %" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(3).i32,
+    case WABT_OPCODE_SELECT:
+      wabt_writef(stream, "%s %u, %" PRIu64 ", %" PRIu64 "\n",
+                  wabt_get_interpreter_opcode_name(opcode), PICK(3).i32,
                   PICK(2).i64, PICK(1).i64);
       break;
 
-    case WASM_OPCODE_BR:
-      wasm_writef(stream, "%s @%u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_BR:
+      wabt_writef(stream, "%s @%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WASM_OPCODE_BR_IF:
-      wasm_writef(stream, "%s @%u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+    case WABT_OPCODE_BR_IF:
+      wabt_writef(stream, "%s @%u, %u\n",
+                  wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_BR_TABLE: {
+    case WABT_OPCODE_BR_TABLE: {
       uint32_t num_targets = read_u32_at(pc);
       uint32_t table_offset = read_u32_at(pc + 4);
       VALUE_TYPE_I32 key = TOP().i32;
-      wasm_writef(stream, "%s %u, $#%u, table:$%u\n",
-                  wasm_get_interpreter_opcode_name(opcode), key, num_targets,
+      wabt_writef(stream, "%s %u, $#%u, table:$%u\n",
+                  wabt_get_interpreter_opcode_name(opcode), key, num_targets,
                   table_offset);
       break;
     }
 
-    case WASM_OPCODE_NOP:
-    case WASM_OPCODE_RETURN:
-    case WASM_OPCODE_UNREACHABLE:
-    case WASM_OPCODE_DROP:
-      wasm_writef(stream, "%s\n", wasm_get_interpreter_opcode_name(opcode));
+    case WABT_OPCODE_NOP:
+    case WABT_OPCODE_RETURN:
+    case WABT_OPCODE_UNREACHABLE:
+    case WABT_OPCODE_DROP:
+      wabt_writef(stream, "%s\n", wabt_get_interpreter_opcode_name(opcode));
       break;
 
-    case WASM_OPCODE_CURRENT_MEMORY: {
+    case WABT_OPCODE_CURRENT_MEMORY: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+      wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   memory_index);
       break;
     }
 
-    case WASM_OPCODE_I32_CONST:
-      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_I32_CONST:
+      wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WASM_OPCODE_I64_CONST:
-      wasm_writef(stream, "%s $%" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), read_u64_at(pc));
+    case WABT_OPCODE_I64_CONST:
+      wabt_writef(stream, "%s $%" PRIu64 "\n",
+                  wabt_get_interpreter_opcode_name(opcode), read_u64_at(pc));
       break;
 
-    case WASM_OPCODE_F32_CONST:
-      wasm_writef(stream, "%s $%g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_F32_CONST:
+      wabt_writef(stream, "%s $%g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(read_u32_at(pc)));
       break;
 
-    case WASM_OPCODE_F64_CONST:
-      wasm_writef(stream, "%s $%g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_F64_CONST:
+      wabt_writef(stream, "%s $%g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(read_u64_at(pc)));
       break;
 
-    case WASM_OPCODE_GET_LOCAL:
-    case WASM_OPCODE_GET_GLOBAL:
-      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_GET_LOCAL:
+    case WABT_OPCODE_GET_GLOBAL:
+      wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WASM_OPCODE_SET_LOCAL:
-    case WASM_OPCODE_SET_GLOBAL:
-    case WASM_OPCODE_TEE_LOCAL:
-      wasm_writef(stream, "%s $%u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+    case WABT_OPCODE_SET_LOCAL:
+    case WABT_OPCODE_SET_GLOBAL:
+    case WABT_OPCODE_TEE_LOCAL:
+      wabt_writef(stream, "%s $%u, %u\n",
+                  wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_CALL:
-      wasm_writef(stream, "%s @%u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_CALL:
+      wabt_writef(stream, "%s @%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WASM_OPCODE_CALL_INDIRECT:
-      wasm_writef(stream, "%s $%u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+    case WABT_OPCODE_CALL_INDIRECT:
+      wabt_writef(stream, "%s $%u, %u\n",
+                  wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_CALL_HOST:
-      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_CALL_HOST:
+      wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WASM_OPCODE_I32_LOAD8_S:
-    case WASM_OPCODE_I32_LOAD8_U:
-    case WASM_OPCODE_I32_LOAD16_S:
-    case WASM_OPCODE_I32_LOAD16_U:
-    case WASM_OPCODE_I64_LOAD8_S:
-    case WASM_OPCODE_I64_LOAD8_U:
-    case WASM_OPCODE_I64_LOAD16_S:
-    case WASM_OPCODE_I64_LOAD16_U:
-    case WASM_OPCODE_I64_LOAD32_S:
-    case WASM_OPCODE_I64_LOAD32_U:
-    case WASM_OPCODE_I32_LOAD:
-    case WASM_OPCODE_I64_LOAD:
-    case WASM_OPCODE_F32_LOAD:
-    case WASM_OPCODE_F64_LOAD: {
+    case WABT_OPCODE_I32_LOAD8_S:
+    case WABT_OPCODE_I32_LOAD8_U:
+    case WABT_OPCODE_I32_LOAD16_S:
+    case WABT_OPCODE_I32_LOAD16_U:
+    case WABT_OPCODE_I64_LOAD8_S:
+    case WABT_OPCODE_I64_LOAD8_U:
+    case WABT_OPCODE_I64_LOAD16_S:
+    case WABT_OPCODE_I64_LOAD16_U:
+    case WABT_OPCODE_I64_LOAD32_S:
+    case WABT_OPCODE_I64_LOAD32_U:
+    case WABT_OPCODE_I32_LOAD:
+    case WABT_OPCODE_I64_LOAD:
+    case WABT_OPCODE_F32_LOAD:
+    case WABT_OPCODE_F64_LOAD: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u:%u+$%u\n",
-                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+      wabt_writef(stream, "%s $%u:%u+$%u\n",
+                  wabt_get_interpreter_opcode_name(opcode), memory_index,
                   TOP().i32, read_u32_at(pc));
       break;
     }
 
-    case WASM_OPCODE_I32_STORE8:
-    case WASM_OPCODE_I32_STORE16:
-    case WASM_OPCODE_I32_STORE: {
+    case WABT_OPCODE_I32_STORE8:
+    case WABT_OPCODE_I32_STORE16:
+    case WABT_OPCODE_I32_STORE: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u:%u+$%u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+      wabt_writef(stream, "%s $%u:%u+$%u, %u\n",
+                  wabt_get_interpreter_opcode_name(opcode), memory_index,
                   PICK(2).i32, read_u32_at(pc), PICK(1).i32);
       break;
     }
 
-    case WASM_OPCODE_I64_STORE8:
-    case WASM_OPCODE_I64_STORE16:
-    case WASM_OPCODE_I64_STORE32:
-    case WASM_OPCODE_I64_STORE: {
+    case WABT_OPCODE_I64_STORE8:
+    case WABT_OPCODE_I64_STORE16:
+    case WABT_OPCODE_I64_STORE32:
+    case WABT_OPCODE_I64_STORE: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u:%u+$%u, %" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+      wabt_writef(stream, "%s $%u:%u+$%u, %" PRIu64 "\n",
+                  wabt_get_interpreter_opcode_name(opcode), memory_index,
                   PICK(2).i32, read_u32_at(pc), PICK(1).i64);
       break;
     }
 
-    case WASM_OPCODE_F32_STORE: {
+    case WABT_OPCODE_F32_STORE: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u:%u+$%u, %g\n",
-                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+      wabt_writef(stream, "%s $%u:%u+$%u, %g\n",
+                  wabt_get_interpreter_opcode_name(opcode), memory_index,
                   PICK(2).i32, read_u32_at(pc),
                   bitcast_u32_to_f32(PICK(1).f32_bits));
       break;
     }
 
-    case WASM_OPCODE_F64_STORE: {
+    case WABT_OPCODE_F64_STORE: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u:%u+$%u, %g\n",
-                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+      wabt_writef(stream, "%s $%u:%u+$%u, %g\n",
+                  wabt_get_interpreter_opcode_name(opcode), memory_index,
                   PICK(2).i32, read_u32_at(pc),
                   bitcast_u64_to_f64(PICK(1).f64_bits));
       break;
     }
 
-    case WASM_OPCODE_GROW_MEMORY: {
+    case WABT_OPCODE_GROW_MEMORY: {
       uint32_t memory_index = read_u32(&pc);
-      wasm_writef(stream, "%s $%u:%u\n",
-                  wasm_get_interpreter_opcode_name(opcode), memory_index,
+      wabt_writef(stream, "%s $%u:%u\n",
+                  wabt_get_interpreter_opcode_name(opcode), memory_index,
                   TOP().i32);
       break;
     }
 
-    case WASM_OPCODE_I32_ADD:
-    case WASM_OPCODE_I32_SUB:
-    case WASM_OPCODE_I32_MUL:
-    case WASM_OPCODE_I32_DIV_S:
-    case WASM_OPCODE_I32_DIV_U:
-    case WASM_OPCODE_I32_REM_S:
-    case WASM_OPCODE_I32_REM_U:
-    case WASM_OPCODE_I32_AND:
-    case WASM_OPCODE_I32_OR:
-    case WASM_OPCODE_I32_XOR:
-    case WASM_OPCODE_I32_SHL:
-    case WASM_OPCODE_I32_SHR_U:
-    case WASM_OPCODE_I32_SHR_S:
-    case WASM_OPCODE_I32_EQ:
-    case WASM_OPCODE_I32_NE:
-    case WASM_OPCODE_I32_LT_S:
-    case WASM_OPCODE_I32_LE_S:
-    case WASM_OPCODE_I32_LT_U:
-    case WASM_OPCODE_I32_LE_U:
-    case WASM_OPCODE_I32_GT_S:
-    case WASM_OPCODE_I32_GE_S:
-    case WASM_OPCODE_I32_GT_U:
-    case WASM_OPCODE_I32_GE_U:
-    case WASM_OPCODE_I32_ROTR:
-    case WASM_OPCODE_I32_ROTL:
-      wasm_writef(stream, "%s %u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i32,
+    case WABT_OPCODE_I32_ADD:
+    case WABT_OPCODE_I32_SUB:
+    case WABT_OPCODE_I32_MUL:
+    case WABT_OPCODE_I32_DIV_S:
+    case WABT_OPCODE_I32_DIV_U:
+    case WABT_OPCODE_I32_REM_S:
+    case WABT_OPCODE_I32_REM_U:
+    case WABT_OPCODE_I32_AND:
+    case WABT_OPCODE_I32_OR:
+    case WABT_OPCODE_I32_XOR:
+    case WABT_OPCODE_I32_SHL:
+    case WABT_OPCODE_I32_SHR_U:
+    case WABT_OPCODE_I32_SHR_S:
+    case WABT_OPCODE_I32_EQ:
+    case WABT_OPCODE_I32_NE:
+    case WABT_OPCODE_I32_LT_S:
+    case WABT_OPCODE_I32_LE_S:
+    case WABT_OPCODE_I32_LT_U:
+    case WABT_OPCODE_I32_LE_U:
+    case WABT_OPCODE_I32_GT_S:
+    case WABT_OPCODE_I32_GE_S:
+    case WABT_OPCODE_I32_GT_U:
+    case WABT_OPCODE_I32_GE_U:
+    case WABT_OPCODE_I32_ROTR:
+    case WABT_OPCODE_I32_ROTL:
+      wabt_writef(stream, "%s %u, %u\n",
+                  wabt_get_interpreter_opcode_name(opcode), PICK(2).i32,
                   PICK(1).i32);
       break;
 
-    case WASM_OPCODE_I32_CLZ:
-    case WASM_OPCODE_I32_CTZ:
-    case WASM_OPCODE_I32_POPCNT:
-    case WASM_OPCODE_I32_EQZ:
-      wasm_writef(stream, "%s %u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_I32_CLZ:
+    case WABT_OPCODE_I32_CTZ:
+    case WABT_OPCODE_I32_POPCNT:
+    case WABT_OPCODE_I32_EQZ:
+      wabt_writef(stream, "%s %u\n", wabt_get_interpreter_opcode_name(opcode),
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_I64_ADD:
-    case WASM_OPCODE_I64_SUB:
-    case WASM_OPCODE_I64_MUL:
-    case WASM_OPCODE_I64_DIV_S:
-    case WASM_OPCODE_I64_DIV_U:
-    case WASM_OPCODE_I64_REM_S:
-    case WASM_OPCODE_I64_REM_U:
-    case WASM_OPCODE_I64_AND:
-    case WASM_OPCODE_I64_OR:
-    case WASM_OPCODE_I64_XOR:
-    case WASM_OPCODE_I64_SHL:
-    case WASM_OPCODE_I64_SHR_U:
-    case WASM_OPCODE_I64_SHR_S:
-    case WASM_OPCODE_I64_EQ:
-    case WASM_OPCODE_I64_NE:
-    case WASM_OPCODE_I64_LT_S:
-    case WASM_OPCODE_I64_LE_S:
-    case WASM_OPCODE_I64_LT_U:
-    case WASM_OPCODE_I64_LE_U:
-    case WASM_OPCODE_I64_GT_S:
-    case WASM_OPCODE_I64_GE_S:
-    case WASM_OPCODE_I64_GT_U:
-    case WASM_OPCODE_I64_GE_U:
-    case WASM_OPCODE_I64_ROTR:
-    case WASM_OPCODE_I64_ROTL:
-      wasm_writef(stream, "%s %" PRIu64 ", %" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), PICK(2).i64,
+    case WABT_OPCODE_I64_ADD:
+    case WABT_OPCODE_I64_SUB:
+    case WABT_OPCODE_I64_MUL:
+    case WABT_OPCODE_I64_DIV_S:
+    case WABT_OPCODE_I64_DIV_U:
+    case WABT_OPCODE_I64_REM_S:
+    case WABT_OPCODE_I64_REM_U:
+    case WABT_OPCODE_I64_AND:
+    case WABT_OPCODE_I64_OR:
+    case WABT_OPCODE_I64_XOR:
+    case WABT_OPCODE_I64_SHL:
+    case WABT_OPCODE_I64_SHR_U:
+    case WABT_OPCODE_I64_SHR_S:
+    case WABT_OPCODE_I64_EQ:
+    case WABT_OPCODE_I64_NE:
+    case WABT_OPCODE_I64_LT_S:
+    case WABT_OPCODE_I64_LE_S:
+    case WABT_OPCODE_I64_LT_U:
+    case WABT_OPCODE_I64_LE_U:
+    case WABT_OPCODE_I64_GT_S:
+    case WABT_OPCODE_I64_GE_S:
+    case WABT_OPCODE_I64_GT_U:
+    case WABT_OPCODE_I64_GE_U:
+    case WABT_OPCODE_I64_ROTR:
+    case WABT_OPCODE_I64_ROTL:
+      wabt_writef(stream, "%s %" PRIu64 ", %" PRIu64 "\n",
+                  wabt_get_interpreter_opcode_name(opcode), PICK(2).i64,
                   PICK(1).i64);
       break;
 
-    case WASM_OPCODE_I64_CLZ:
-    case WASM_OPCODE_I64_CTZ:
-    case WASM_OPCODE_I64_POPCNT:
-    case WASM_OPCODE_I64_EQZ:
-      wasm_writef(stream, "%s %" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), TOP().i64);
+    case WABT_OPCODE_I64_CLZ:
+    case WABT_OPCODE_I64_CTZ:
+    case WABT_OPCODE_I64_POPCNT:
+    case WABT_OPCODE_I64_EQZ:
+      wabt_writef(stream, "%s %" PRIu64 "\n",
+                  wabt_get_interpreter_opcode_name(opcode), TOP().i64);
       break;
 
-    case WASM_OPCODE_F32_ADD:
-    case WASM_OPCODE_F32_SUB:
-    case WASM_OPCODE_F32_MUL:
-    case WASM_OPCODE_F32_DIV:
-    case WASM_OPCODE_F32_MIN:
-    case WASM_OPCODE_F32_MAX:
-    case WASM_OPCODE_F32_COPYSIGN:
-    case WASM_OPCODE_F32_EQ:
-    case WASM_OPCODE_F32_NE:
-    case WASM_OPCODE_F32_LT:
-    case WASM_OPCODE_F32_LE:
-    case WASM_OPCODE_F32_GT:
-    case WASM_OPCODE_F32_GE:
-      wasm_writef(
-          stream, "%s %g, %g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_F32_ADD:
+    case WABT_OPCODE_F32_SUB:
+    case WABT_OPCODE_F32_MUL:
+    case WABT_OPCODE_F32_DIV:
+    case WABT_OPCODE_F32_MIN:
+    case WABT_OPCODE_F32_MAX:
+    case WABT_OPCODE_F32_COPYSIGN:
+    case WABT_OPCODE_F32_EQ:
+    case WABT_OPCODE_F32_NE:
+    case WABT_OPCODE_F32_LT:
+    case WABT_OPCODE_F32_LE:
+    case WABT_OPCODE_F32_GT:
+    case WABT_OPCODE_F32_GE:
+      wabt_writef(
+          stream, "%s %g, %g\n", wabt_get_interpreter_opcode_name(opcode),
           bitcast_u32_to_f32(PICK(2).i32), bitcast_u32_to_f32(PICK(1).i32));
       break;
 
-    case WASM_OPCODE_F32_ABS:
-    case WASM_OPCODE_F32_NEG:
-    case WASM_OPCODE_F32_CEIL:
-    case WASM_OPCODE_F32_FLOOR:
-    case WASM_OPCODE_F32_TRUNC:
-    case WASM_OPCODE_F32_NEAREST:
-    case WASM_OPCODE_F32_SQRT:
-      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_F32_ABS:
+    case WABT_OPCODE_F32_NEG:
+    case WABT_OPCODE_F32_CEIL:
+    case WABT_OPCODE_F32_FLOOR:
+    case WABT_OPCODE_F32_TRUNC:
+    case WABT_OPCODE_F32_NEAREST:
+    case WABT_OPCODE_F32_SQRT:
+      wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(TOP().i32));
       break;
 
-    case WASM_OPCODE_F64_ADD:
-    case WASM_OPCODE_F64_SUB:
-    case WASM_OPCODE_F64_MUL:
-    case WASM_OPCODE_F64_DIV:
-    case WASM_OPCODE_F64_MIN:
-    case WASM_OPCODE_F64_MAX:
-    case WASM_OPCODE_F64_COPYSIGN:
-    case WASM_OPCODE_F64_EQ:
-    case WASM_OPCODE_F64_NE:
-    case WASM_OPCODE_F64_LT:
-    case WASM_OPCODE_F64_LE:
-    case WASM_OPCODE_F64_GT:
-    case WASM_OPCODE_F64_GE:
-      wasm_writef(
-          stream, "%s %g, %g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_F64_ADD:
+    case WABT_OPCODE_F64_SUB:
+    case WABT_OPCODE_F64_MUL:
+    case WABT_OPCODE_F64_DIV:
+    case WABT_OPCODE_F64_MIN:
+    case WABT_OPCODE_F64_MAX:
+    case WABT_OPCODE_F64_COPYSIGN:
+    case WABT_OPCODE_F64_EQ:
+    case WABT_OPCODE_F64_NE:
+    case WABT_OPCODE_F64_LT:
+    case WABT_OPCODE_F64_LE:
+    case WABT_OPCODE_F64_GT:
+    case WABT_OPCODE_F64_GE:
+      wabt_writef(
+          stream, "%s %g, %g\n", wabt_get_interpreter_opcode_name(opcode),
           bitcast_u64_to_f64(PICK(2).i64), bitcast_u64_to_f64(PICK(1).i64));
       break;
 
-    case WASM_OPCODE_F64_ABS:
-    case WASM_OPCODE_F64_NEG:
-    case WASM_OPCODE_F64_CEIL:
-    case WASM_OPCODE_F64_FLOOR:
-    case WASM_OPCODE_F64_TRUNC:
-    case WASM_OPCODE_F64_NEAREST:
-    case WASM_OPCODE_F64_SQRT:
-      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_F64_ABS:
+    case WABT_OPCODE_F64_NEG:
+    case WABT_OPCODE_F64_CEIL:
+    case WABT_OPCODE_F64_FLOOR:
+    case WABT_OPCODE_F64_TRUNC:
+    case WABT_OPCODE_F64_NEAREST:
+    case WABT_OPCODE_F64_SQRT:
+      wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(TOP().i64));
       break;
 
-    case WASM_OPCODE_I32_TRUNC_S_F32:
-    case WASM_OPCODE_I32_TRUNC_U_F32:
-    case WASM_OPCODE_I64_TRUNC_S_F32:
-    case WASM_OPCODE_I64_TRUNC_U_F32:
-    case WASM_OPCODE_F64_PROMOTE_F32:
-    case WASM_OPCODE_I32_REINTERPRET_F32:
-      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_I32_TRUNC_S_F32:
+    case WABT_OPCODE_I32_TRUNC_U_F32:
+    case WABT_OPCODE_I64_TRUNC_S_F32:
+    case WABT_OPCODE_I64_TRUNC_U_F32:
+    case WABT_OPCODE_F64_PROMOTE_F32:
+    case WABT_OPCODE_I32_REINTERPRET_F32:
+      wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(TOP().i32));
       break;
 
-    case WASM_OPCODE_I32_TRUNC_S_F64:
-    case WASM_OPCODE_I32_TRUNC_U_F64:
-    case WASM_OPCODE_I64_TRUNC_S_F64:
-    case WASM_OPCODE_I64_TRUNC_U_F64:
-    case WASM_OPCODE_F32_DEMOTE_F64:
-    case WASM_OPCODE_I64_REINTERPRET_F64:
-      wasm_writef(stream, "%s %g\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_I32_TRUNC_S_F64:
+    case WABT_OPCODE_I32_TRUNC_U_F64:
+    case WABT_OPCODE_I64_TRUNC_S_F64:
+    case WABT_OPCODE_I64_TRUNC_U_F64:
+    case WABT_OPCODE_F32_DEMOTE_F64:
+    case WABT_OPCODE_I64_REINTERPRET_F64:
+      wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(TOP().i64));
       break;
 
-    case WASM_OPCODE_I32_WRAP_I64:
-    case WASM_OPCODE_F32_CONVERT_S_I64:
-    case WASM_OPCODE_F32_CONVERT_U_I64:
-    case WASM_OPCODE_F64_CONVERT_S_I64:
-    case WASM_OPCODE_F64_CONVERT_U_I64:
-    case WASM_OPCODE_F64_REINTERPRET_I64:
-      wasm_writef(stream, "%s %" PRIu64 "\n",
-                  wasm_get_interpreter_opcode_name(opcode), TOP().i64);
+    case WABT_OPCODE_I32_WRAP_I64:
+    case WABT_OPCODE_F32_CONVERT_S_I64:
+    case WABT_OPCODE_F32_CONVERT_U_I64:
+    case WABT_OPCODE_F64_CONVERT_S_I64:
+    case WABT_OPCODE_F64_CONVERT_U_I64:
+    case WABT_OPCODE_F64_REINTERPRET_I64:
+      wabt_writef(stream, "%s %" PRIu64 "\n",
+                  wabt_get_interpreter_opcode_name(opcode), TOP().i64);
       break;
 
-    case WASM_OPCODE_I64_EXTEND_S_I32:
-    case WASM_OPCODE_I64_EXTEND_U_I32:
-    case WASM_OPCODE_F32_CONVERT_S_I32:
-    case WASM_OPCODE_F32_CONVERT_U_I32:
-    case WASM_OPCODE_F32_REINTERPRET_I32:
-    case WASM_OPCODE_F64_CONVERT_S_I32:
-    case WASM_OPCODE_F64_CONVERT_U_I32:
-      wasm_writef(stream, "%s %u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_I64_EXTEND_S_I32:
+    case WABT_OPCODE_I64_EXTEND_U_I32:
+    case WABT_OPCODE_F32_CONVERT_S_I32:
+    case WABT_OPCODE_F32_CONVERT_U_I32:
+    case WABT_OPCODE_F32_REINTERPRET_I32:
+    case WABT_OPCODE_F64_CONVERT_S_I32:
+    case WABT_OPCODE_F64_CONVERT_U_I32:
+      wabt_writef(stream, "%s %u\n", wabt_get_interpreter_opcode_name(opcode),
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_ALLOCA:
-      wasm_writef(stream, "%s $%u\n", wasm_get_interpreter_opcode_name(opcode),
+    case WABT_OPCODE_ALLOCA:
+      wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WASM_OPCODE_BR_UNLESS:
-      wasm_writef(stream, "%s @%u, %u\n",
-                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+    case WABT_OPCODE_BR_UNLESS:
+      wabt_writef(stream, "%s @%u, %u\n",
+                  wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WASM_OPCODE_DROP_KEEP:
-      wasm_writef(stream, "%s $%u $%u\n",
-                  wasm_get_interpreter_opcode_name(opcode), read_u32_at(pc),
+    case WABT_OPCODE_DROP_KEEP:
+      wabt_writef(stream, "%s $%u $%u\n",
+                  wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   *(pc + 4));
       break;
 
-    case WASM_OPCODE_DATA:
+    case WABT_OPCODE_DATA:
       /* shouldn't ever execute this */
       assert(0);
       break;
@@ -2070,8 +2070,8 @@ void wasm_trace_pc(WasmInterpreterThread* thread, WasmStream* stream) {
   }
 }
 
-void wasm_disassemble(WasmInterpreterEnvironment* env,
-                      WasmStream* stream,
+void wabt_disassemble(WabtInterpreterEnvironment* env,
+                      WabtStream* stream,
                       uint32_t from,
                       uint32_t to) {
   /* TODO(binji): mark function entries */
@@ -2084,312 +2084,312 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
   const uint8_t* pc = &istream[from];
 
   while ((uint32_t)(pc - istream) < to) {
-    wasm_writef(stream, "%4" PRIzd "| ", pc - istream);
+    wabt_writef(stream, "%4" PRIzd "| ", pc - istream);
 
     uint8_t opcode = *pc++;
     switch (opcode) {
-      case WASM_OPCODE_SELECT:
-        wasm_writef(stream, "%s %%[-3], %%[-2], %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode));
+      case WABT_OPCODE_SELECT:
+        wabt_writef(stream, "%s %%[-3], %%[-2], %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WASM_OPCODE_BR:
-        wasm_writef(stream, "%s @%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_BR:
+        wabt_writef(stream, "%s @%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_BR_IF:
-        wasm_writef(stream, "%s @%u, %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_BR_IF:
+        wabt_writef(stream, "%s @%u, %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_BR_TABLE: {
+      case WABT_OPCODE_BR_TABLE: {
         uint32_t num_targets = read_u32(&pc);
         uint32_t table_offset = read_u32(&pc);
-        wasm_writef(stream, "%s %%[-1], $#%u, table:$%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), num_targets,
+        wabt_writef(stream, "%s %%[-1], $#%u, table:$%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), num_targets,
                     table_offset);
         break;
       }
 
-      case WASM_OPCODE_NOP:
-      case WASM_OPCODE_RETURN:
-      case WASM_OPCODE_UNREACHABLE:
-      case WASM_OPCODE_DROP:
-        wasm_writef(stream, "%s\n", wasm_get_interpreter_opcode_name(opcode));
+      case WABT_OPCODE_NOP:
+      case WABT_OPCODE_RETURN:
+      case WABT_OPCODE_UNREACHABLE:
+      case WABT_OPCODE_DROP:
+        wabt_writef(stream, "%s\n", wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WASM_OPCODE_CURRENT_MEMORY: {
+      case WABT_OPCODE_CURRENT_MEMORY: {
         uint32_t memory_index = read_u32(&pc);
-        wasm_writef(stream, "%s $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), memory_index);
+        wabt_writef(stream, "%s $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), memory_index);
         break;
       }
 
-      case WASM_OPCODE_I32_CONST:
-        wasm_writef(stream, "%s $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_I32_CONST:
+        wabt_writef(stream, "%s $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_I64_CONST:
-        wasm_writef(stream, "%s $%" PRIu64 "\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u64(&pc));
+      case WABT_OPCODE_I64_CONST:
+        wabt_writef(stream, "%s $%" PRIu64 "\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u64(&pc));
         break;
 
-      case WASM_OPCODE_F32_CONST:
-        wasm_writef(stream, "%s $%g\n",
-                    wasm_get_interpreter_opcode_name(opcode),
+      case WABT_OPCODE_F32_CONST:
+        wabt_writef(stream, "%s $%g\n",
+                    wabt_get_interpreter_opcode_name(opcode),
                     bitcast_u32_to_f32(read_u32(&pc)));
         break;
 
-      case WASM_OPCODE_F64_CONST:
-        wasm_writef(stream, "%s $%g\n",
-                    wasm_get_interpreter_opcode_name(opcode),
+      case WABT_OPCODE_F64_CONST:
+        wabt_writef(stream, "%s $%g\n",
+                    wabt_get_interpreter_opcode_name(opcode),
                     bitcast_u64_to_f64(read_u64(&pc)));
         break;
 
-      case WASM_OPCODE_GET_LOCAL:
-      case WASM_OPCODE_GET_GLOBAL:
-        wasm_writef(stream, "%s $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_GET_LOCAL:
+      case WABT_OPCODE_GET_GLOBAL:
+        wabt_writef(stream, "%s $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_SET_LOCAL:
-      case WASM_OPCODE_SET_GLOBAL:
-      case WASM_OPCODE_TEE_LOCAL:
-        wasm_writef(stream, "%s $%u, %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_SET_LOCAL:
+      case WABT_OPCODE_SET_GLOBAL:
+      case WABT_OPCODE_TEE_LOCAL:
+        wabt_writef(stream, "%s $%u, %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_CALL:
-        wasm_writef(stream, "%s @%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_CALL:
+        wabt_writef(stream, "%s @%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_CALL_INDIRECT: {
+      case WABT_OPCODE_CALL_INDIRECT: {
         uint32_t table_index = read_u32(&pc);
-        wasm_writef(stream, "%s $%u:%u, %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), table_index,
+        wabt_writef(stream, "%s $%u:%u, %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode), table_index,
                     read_u32(&pc));
         break;
       }
 
-      case WASM_OPCODE_CALL_HOST:
-        wasm_writef(stream, "%s $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_CALL_HOST:
+        wabt_writef(stream, "%s $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_I32_LOAD8_S:
-      case WASM_OPCODE_I32_LOAD8_U:
-      case WASM_OPCODE_I32_LOAD16_S:
-      case WASM_OPCODE_I32_LOAD16_U:
-      case WASM_OPCODE_I64_LOAD8_S:
-      case WASM_OPCODE_I64_LOAD8_U:
-      case WASM_OPCODE_I64_LOAD16_S:
-      case WASM_OPCODE_I64_LOAD16_U:
-      case WASM_OPCODE_I64_LOAD32_S:
-      case WASM_OPCODE_I64_LOAD32_U:
-      case WASM_OPCODE_I32_LOAD:
-      case WASM_OPCODE_I64_LOAD:
-      case WASM_OPCODE_F32_LOAD:
-      case WASM_OPCODE_F64_LOAD: {
+      case WABT_OPCODE_I32_LOAD8_S:
+      case WABT_OPCODE_I32_LOAD8_U:
+      case WABT_OPCODE_I32_LOAD16_S:
+      case WABT_OPCODE_I32_LOAD16_U:
+      case WABT_OPCODE_I64_LOAD8_S:
+      case WABT_OPCODE_I64_LOAD8_U:
+      case WABT_OPCODE_I64_LOAD16_S:
+      case WABT_OPCODE_I64_LOAD16_U:
+      case WABT_OPCODE_I64_LOAD32_S:
+      case WABT_OPCODE_I64_LOAD32_U:
+      case WABT_OPCODE_I32_LOAD:
+      case WABT_OPCODE_I64_LOAD:
+      case WABT_OPCODE_F32_LOAD:
+      case WABT_OPCODE_F64_LOAD: {
         uint32_t memory_index = read_u32(&pc);
-        wasm_writef(stream, "%s $%u:%%[-1]+$%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), memory_index,
+        wabt_writef(stream, "%s $%u:%%[-1]+$%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), memory_index,
                     read_u32(&pc));
         break;
       }
 
-      case WASM_OPCODE_I32_STORE8:
-      case WASM_OPCODE_I32_STORE16:
-      case WASM_OPCODE_I32_STORE:
-      case WASM_OPCODE_I64_STORE8:
-      case WASM_OPCODE_I64_STORE16:
-      case WASM_OPCODE_I64_STORE32:
-      case WASM_OPCODE_I64_STORE:
-      case WASM_OPCODE_F32_STORE:
-      case WASM_OPCODE_F64_STORE: {
+      case WABT_OPCODE_I32_STORE8:
+      case WABT_OPCODE_I32_STORE16:
+      case WABT_OPCODE_I32_STORE:
+      case WABT_OPCODE_I64_STORE8:
+      case WABT_OPCODE_I64_STORE16:
+      case WABT_OPCODE_I64_STORE32:
+      case WABT_OPCODE_I64_STORE:
+      case WABT_OPCODE_F32_STORE:
+      case WABT_OPCODE_F64_STORE: {
         uint32_t memory_index = read_u32(&pc);
-        wasm_writef(stream, "%s %%[-2]+$%u, $%u:%%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), memory_index,
+        wabt_writef(stream, "%s %%[-2]+$%u, $%u:%%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode), memory_index,
                     read_u32(&pc));
         break;
       }
 
-      case WASM_OPCODE_I32_ADD:
-      case WASM_OPCODE_I32_SUB:
-      case WASM_OPCODE_I32_MUL:
-      case WASM_OPCODE_I32_DIV_S:
-      case WASM_OPCODE_I32_DIV_U:
-      case WASM_OPCODE_I32_REM_S:
-      case WASM_OPCODE_I32_REM_U:
-      case WASM_OPCODE_I32_AND:
-      case WASM_OPCODE_I32_OR:
-      case WASM_OPCODE_I32_XOR:
-      case WASM_OPCODE_I32_SHL:
-      case WASM_OPCODE_I32_SHR_U:
-      case WASM_OPCODE_I32_SHR_S:
-      case WASM_OPCODE_I32_EQ:
-      case WASM_OPCODE_I32_NE:
-      case WASM_OPCODE_I32_LT_S:
-      case WASM_OPCODE_I32_LE_S:
-      case WASM_OPCODE_I32_LT_U:
-      case WASM_OPCODE_I32_LE_U:
-      case WASM_OPCODE_I32_GT_S:
-      case WASM_OPCODE_I32_GE_S:
-      case WASM_OPCODE_I32_GT_U:
-      case WASM_OPCODE_I32_GE_U:
-      case WASM_OPCODE_I32_ROTR:
-      case WASM_OPCODE_I32_ROTL:
-      case WASM_OPCODE_F32_ADD:
-      case WASM_OPCODE_F32_SUB:
-      case WASM_OPCODE_F32_MUL:
-      case WASM_OPCODE_F32_DIV:
-      case WASM_OPCODE_F32_MIN:
-      case WASM_OPCODE_F32_MAX:
-      case WASM_OPCODE_F32_COPYSIGN:
-      case WASM_OPCODE_F32_EQ:
-      case WASM_OPCODE_F32_NE:
-      case WASM_OPCODE_F32_LT:
-      case WASM_OPCODE_F32_LE:
-      case WASM_OPCODE_F32_GT:
-      case WASM_OPCODE_F32_GE:
-      case WASM_OPCODE_I64_ADD:
-      case WASM_OPCODE_I64_SUB:
-      case WASM_OPCODE_I64_MUL:
-      case WASM_OPCODE_I64_DIV_S:
-      case WASM_OPCODE_I64_DIV_U:
-      case WASM_OPCODE_I64_REM_S:
-      case WASM_OPCODE_I64_REM_U:
-      case WASM_OPCODE_I64_AND:
-      case WASM_OPCODE_I64_OR:
-      case WASM_OPCODE_I64_XOR:
-      case WASM_OPCODE_I64_SHL:
-      case WASM_OPCODE_I64_SHR_U:
-      case WASM_OPCODE_I64_SHR_S:
-      case WASM_OPCODE_I64_EQ:
-      case WASM_OPCODE_I64_NE:
-      case WASM_OPCODE_I64_LT_S:
-      case WASM_OPCODE_I64_LE_S:
-      case WASM_OPCODE_I64_LT_U:
-      case WASM_OPCODE_I64_LE_U:
-      case WASM_OPCODE_I64_GT_S:
-      case WASM_OPCODE_I64_GE_S:
-      case WASM_OPCODE_I64_GT_U:
-      case WASM_OPCODE_I64_GE_U:
-      case WASM_OPCODE_I64_ROTR:
-      case WASM_OPCODE_I64_ROTL:
-      case WASM_OPCODE_F64_ADD:
-      case WASM_OPCODE_F64_SUB:
-      case WASM_OPCODE_F64_MUL:
-      case WASM_OPCODE_F64_DIV:
-      case WASM_OPCODE_F64_MIN:
-      case WASM_OPCODE_F64_MAX:
-      case WASM_OPCODE_F64_COPYSIGN:
-      case WASM_OPCODE_F64_EQ:
-      case WASM_OPCODE_F64_NE:
-      case WASM_OPCODE_F64_LT:
-      case WASM_OPCODE_F64_LE:
-      case WASM_OPCODE_F64_GT:
-      case WASM_OPCODE_F64_GE:
-        wasm_writef(stream, "%s %%[-2], %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode));
+      case WABT_OPCODE_I32_ADD:
+      case WABT_OPCODE_I32_SUB:
+      case WABT_OPCODE_I32_MUL:
+      case WABT_OPCODE_I32_DIV_S:
+      case WABT_OPCODE_I32_DIV_U:
+      case WABT_OPCODE_I32_REM_S:
+      case WABT_OPCODE_I32_REM_U:
+      case WABT_OPCODE_I32_AND:
+      case WABT_OPCODE_I32_OR:
+      case WABT_OPCODE_I32_XOR:
+      case WABT_OPCODE_I32_SHL:
+      case WABT_OPCODE_I32_SHR_U:
+      case WABT_OPCODE_I32_SHR_S:
+      case WABT_OPCODE_I32_EQ:
+      case WABT_OPCODE_I32_NE:
+      case WABT_OPCODE_I32_LT_S:
+      case WABT_OPCODE_I32_LE_S:
+      case WABT_OPCODE_I32_LT_U:
+      case WABT_OPCODE_I32_LE_U:
+      case WABT_OPCODE_I32_GT_S:
+      case WABT_OPCODE_I32_GE_S:
+      case WABT_OPCODE_I32_GT_U:
+      case WABT_OPCODE_I32_GE_U:
+      case WABT_OPCODE_I32_ROTR:
+      case WABT_OPCODE_I32_ROTL:
+      case WABT_OPCODE_F32_ADD:
+      case WABT_OPCODE_F32_SUB:
+      case WABT_OPCODE_F32_MUL:
+      case WABT_OPCODE_F32_DIV:
+      case WABT_OPCODE_F32_MIN:
+      case WABT_OPCODE_F32_MAX:
+      case WABT_OPCODE_F32_COPYSIGN:
+      case WABT_OPCODE_F32_EQ:
+      case WABT_OPCODE_F32_NE:
+      case WABT_OPCODE_F32_LT:
+      case WABT_OPCODE_F32_LE:
+      case WABT_OPCODE_F32_GT:
+      case WABT_OPCODE_F32_GE:
+      case WABT_OPCODE_I64_ADD:
+      case WABT_OPCODE_I64_SUB:
+      case WABT_OPCODE_I64_MUL:
+      case WABT_OPCODE_I64_DIV_S:
+      case WABT_OPCODE_I64_DIV_U:
+      case WABT_OPCODE_I64_REM_S:
+      case WABT_OPCODE_I64_REM_U:
+      case WABT_OPCODE_I64_AND:
+      case WABT_OPCODE_I64_OR:
+      case WABT_OPCODE_I64_XOR:
+      case WABT_OPCODE_I64_SHL:
+      case WABT_OPCODE_I64_SHR_U:
+      case WABT_OPCODE_I64_SHR_S:
+      case WABT_OPCODE_I64_EQ:
+      case WABT_OPCODE_I64_NE:
+      case WABT_OPCODE_I64_LT_S:
+      case WABT_OPCODE_I64_LE_S:
+      case WABT_OPCODE_I64_LT_U:
+      case WABT_OPCODE_I64_LE_U:
+      case WABT_OPCODE_I64_GT_S:
+      case WABT_OPCODE_I64_GE_S:
+      case WABT_OPCODE_I64_GT_U:
+      case WABT_OPCODE_I64_GE_U:
+      case WABT_OPCODE_I64_ROTR:
+      case WABT_OPCODE_I64_ROTL:
+      case WABT_OPCODE_F64_ADD:
+      case WABT_OPCODE_F64_SUB:
+      case WABT_OPCODE_F64_MUL:
+      case WABT_OPCODE_F64_DIV:
+      case WABT_OPCODE_F64_MIN:
+      case WABT_OPCODE_F64_MAX:
+      case WABT_OPCODE_F64_COPYSIGN:
+      case WABT_OPCODE_F64_EQ:
+      case WABT_OPCODE_F64_NE:
+      case WABT_OPCODE_F64_LT:
+      case WABT_OPCODE_F64_LE:
+      case WABT_OPCODE_F64_GT:
+      case WABT_OPCODE_F64_GE:
+        wabt_writef(stream, "%s %%[-2], %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WASM_OPCODE_I32_CLZ:
-      case WASM_OPCODE_I32_CTZ:
-      case WASM_OPCODE_I32_POPCNT:
-      case WASM_OPCODE_I32_EQZ:
-      case WASM_OPCODE_I64_CLZ:
-      case WASM_OPCODE_I64_CTZ:
-      case WASM_OPCODE_I64_POPCNT:
-      case WASM_OPCODE_I64_EQZ:
-      case WASM_OPCODE_F32_ABS:
-      case WASM_OPCODE_F32_NEG:
-      case WASM_OPCODE_F32_CEIL:
-      case WASM_OPCODE_F32_FLOOR:
-      case WASM_OPCODE_F32_TRUNC:
-      case WASM_OPCODE_F32_NEAREST:
-      case WASM_OPCODE_F32_SQRT:
-      case WASM_OPCODE_F64_ABS:
-      case WASM_OPCODE_F64_NEG:
-      case WASM_OPCODE_F64_CEIL:
-      case WASM_OPCODE_F64_FLOOR:
-      case WASM_OPCODE_F64_TRUNC:
-      case WASM_OPCODE_F64_NEAREST:
-      case WASM_OPCODE_F64_SQRT:
-      case WASM_OPCODE_I32_TRUNC_S_F32:
-      case WASM_OPCODE_I32_TRUNC_U_F32:
-      case WASM_OPCODE_I64_TRUNC_S_F32:
-      case WASM_OPCODE_I64_TRUNC_U_F32:
-      case WASM_OPCODE_F64_PROMOTE_F32:
-      case WASM_OPCODE_I32_REINTERPRET_F32:
-      case WASM_OPCODE_I32_TRUNC_S_F64:
-      case WASM_OPCODE_I32_TRUNC_U_F64:
-      case WASM_OPCODE_I64_TRUNC_S_F64:
-      case WASM_OPCODE_I64_TRUNC_U_F64:
-      case WASM_OPCODE_F32_DEMOTE_F64:
-      case WASM_OPCODE_I64_REINTERPRET_F64:
-      case WASM_OPCODE_I32_WRAP_I64:
-      case WASM_OPCODE_F32_CONVERT_S_I64:
-      case WASM_OPCODE_F32_CONVERT_U_I64:
-      case WASM_OPCODE_F64_CONVERT_S_I64:
-      case WASM_OPCODE_F64_CONVERT_U_I64:
-      case WASM_OPCODE_F64_REINTERPRET_I64:
-      case WASM_OPCODE_I64_EXTEND_S_I32:
-      case WASM_OPCODE_I64_EXTEND_U_I32:
-      case WASM_OPCODE_F32_CONVERT_S_I32:
-      case WASM_OPCODE_F32_CONVERT_U_I32:
-      case WASM_OPCODE_F32_REINTERPRET_I32:
-      case WASM_OPCODE_F64_CONVERT_S_I32:
-      case WASM_OPCODE_F64_CONVERT_U_I32:
-        wasm_writef(stream, "%s %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode));
+      case WABT_OPCODE_I32_CLZ:
+      case WABT_OPCODE_I32_CTZ:
+      case WABT_OPCODE_I32_POPCNT:
+      case WABT_OPCODE_I32_EQZ:
+      case WABT_OPCODE_I64_CLZ:
+      case WABT_OPCODE_I64_CTZ:
+      case WABT_OPCODE_I64_POPCNT:
+      case WABT_OPCODE_I64_EQZ:
+      case WABT_OPCODE_F32_ABS:
+      case WABT_OPCODE_F32_NEG:
+      case WABT_OPCODE_F32_CEIL:
+      case WABT_OPCODE_F32_FLOOR:
+      case WABT_OPCODE_F32_TRUNC:
+      case WABT_OPCODE_F32_NEAREST:
+      case WABT_OPCODE_F32_SQRT:
+      case WABT_OPCODE_F64_ABS:
+      case WABT_OPCODE_F64_NEG:
+      case WABT_OPCODE_F64_CEIL:
+      case WABT_OPCODE_F64_FLOOR:
+      case WABT_OPCODE_F64_TRUNC:
+      case WABT_OPCODE_F64_NEAREST:
+      case WABT_OPCODE_F64_SQRT:
+      case WABT_OPCODE_I32_TRUNC_S_F32:
+      case WABT_OPCODE_I32_TRUNC_U_F32:
+      case WABT_OPCODE_I64_TRUNC_S_F32:
+      case WABT_OPCODE_I64_TRUNC_U_F32:
+      case WABT_OPCODE_F64_PROMOTE_F32:
+      case WABT_OPCODE_I32_REINTERPRET_F32:
+      case WABT_OPCODE_I32_TRUNC_S_F64:
+      case WABT_OPCODE_I32_TRUNC_U_F64:
+      case WABT_OPCODE_I64_TRUNC_S_F64:
+      case WABT_OPCODE_I64_TRUNC_U_F64:
+      case WABT_OPCODE_F32_DEMOTE_F64:
+      case WABT_OPCODE_I64_REINTERPRET_F64:
+      case WABT_OPCODE_I32_WRAP_I64:
+      case WABT_OPCODE_F32_CONVERT_S_I64:
+      case WABT_OPCODE_F32_CONVERT_U_I64:
+      case WABT_OPCODE_F64_CONVERT_S_I64:
+      case WABT_OPCODE_F64_CONVERT_U_I64:
+      case WABT_OPCODE_F64_REINTERPRET_I64:
+      case WABT_OPCODE_I64_EXTEND_S_I32:
+      case WABT_OPCODE_I64_EXTEND_U_I32:
+      case WABT_OPCODE_F32_CONVERT_S_I32:
+      case WABT_OPCODE_F32_CONVERT_U_I32:
+      case WABT_OPCODE_F32_REINTERPRET_I32:
+      case WABT_OPCODE_F64_CONVERT_S_I32:
+      case WABT_OPCODE_F64_CONVERT_U_I32:
+        wabt_writef(stream, "%s %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WASM_OPCODE_GROW_MEMORY: {
+      case WABT_OPCODE_GROW_MEMORY: {
         uint32_t memory_index = read_u32(&pc);
-        wasm_writef(stream, "%s $%u:%%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), memory_index);
+        wabt_writef(stream, "%s $%u:%%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode), memory_index);
         break;
       }
 
-      case WASM_OPCODE_ALLOCA:
-        wasm_writef(stream, "%s $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_ALLOCA:
+        wabt_writef(stream, "%s $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_BR_UNLESS:
-        wasm_writef(stream, "%s @%u, %%[-1]\n",
-                    wasm_get_interpreter_opcode_name(opcode), read_u32(&pc));
+      case WABT_OPCODE_BR_UNLESS:
+        wabt_writef(stream, "%s @%u, %%[-1]\n",
+                    wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WASM_OPCODE_DROP_KEEP: {
+      case WABT_OPCODE_DROP_KEEP: {
         uint32_t drop = read_u32(&pc);
         uint32_t keep = *pc++;
-        wasm_writef(stream, "%s $%u $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), drop, keep);
+        wabt_writef(stream, "%s $%u $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), drop, keep);
         break;
       }
 
-      case WASM_OPCODE_DATA: {
+      case WABT_OPCODE_DATA: {
         uint32_t num_bytes = read_u32(&pc);
-        wasm_writef(stream, "%s $%u\n",
-                    wasm_get_interpreter_opcode_name(opcode), num_bytes);
+        wabt_writef(stream, "%s $%u\n",
+                    wabt_get_interpreter_opcode_name(opcode), num_bytes);
         /* for now, the only reason this is emitted is for br_table, so display
          * it as a list of table entries */
-        if (num_bytes % WASM_TABLE_ENTRY_SIZE == 0) {
-          uint32_t num_entries = num_bytes / WASM_TABLE_ENTRY_SIZE;
+        if (num_bytes % WABT_TABLE_ENTRY_SIZE == 0) {
+          uint32_t num_entries = num_bytes / WABT_TABLE_ENTRY_SIZE;
           uint32_t i;
           for (i = 0; i < num_entries; ++i) {
-            wasm_writef(stream, "%4" PRIzd "| ", pc - istream);
+            wabt_writef(stream, "%4" PRIzd "| ", pc - istream);
             uint32_t offset;
             uint32_t drop;
             uint8_t keep;
             read_table_entry_at(pc, &offset, &drop, &keep);
-            wasm_writef(stream, "  entry %d: offset: %u drop: %u keep: %u\n", i,
+            wabt_writef(stream, "  entry %d: offset: %u drop: %u keep: %u\n", i,
                         offset, drop, keep);
-            pc += WASM_TABLE_ENTRY_SIZE;
+            pc += WABT_TABLE_ENTRY_SIZE;
           }
         } else {
           /* just skip those data bytes */
@@ -2406,11 +2406,11 @@ void wasm_disassemble(WasmInterpreterEnvironment* env,
   }
 }
 
-void wasm_disassemble_module(WasmInterpreterEnvironment* env,
-                             WasmStream* stream,
-                             WasmInterpreterModule* module) {
+void wabt_disassemble_module(WabtInterpreterEnvironment* env,
+                             WabtStream* stream,
+                             WabtInterpreterModule* module) {
   assert(!module->is_host);
-  wasm_disassemble(env, stream, module->defined.istream_start,
+  wabt_disassemble(env, stream, module->defined.istream_start,
                    module->defined.istream_end);
 }
 

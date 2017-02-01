@@ -51,123 +51,123 @@
 
 static const char s_hex_digits[] = "0123456789abcdef";
 
-WasmResult wasm_parse_hexdigit(char c, uint32_t* out) {
+WabtResult wabt_parse_hexdigit(char c, uint32_t* out) {
   if ((unsigned int)(c - '0') <= 9) {
     *out = c - '0';
-    return WASM_OK;
+    return WABT_OK;
   } else if ((unsigned int)(c - 'a') <= 6) {
     *out = 10 + (c - 'a');
-    return WASM_OK;
+    return WABT_OK;
   } else if ((unsigned int)(c - 'A') <= 6) {
     *out = 10 + (c - 'A');
-    return WASM_OK;
+    return WABT_OK;
   }
-  return WASM_ERROR;
+  return WABT_ERROR;
 }
 
 /* return 1 if the non-NULL-terminated string starting with |start| and ending
  with |end| starts with the NULL-terminated string |prefix|. */
-static WasmBool string_starts_with(const char* start,
+static WabtBool string_starts_with(const char* start,
                                    const char* end,
                                    const char* prefix) {
   while (start < end && *prefix) {
     if (*start != *prefix)
-      return WASM_FALSE;
+      return WABT_FALSE;
     start++;
     prefix++;
   }
   return *prefix == 0;
 }
 
-WasmResult wasm_parse_uint64(const char* s, const char* end, uint64_t* out) {
+WabtResult wabt_parse_uint64(const char* s, const char* end, uint64_t* out) {
   if (s == end)
-    return WASM_ERROR;
+    return WABT_ERROR;
   uint64_t value = 0;
   if (*s == '0' && s + 1 < end && s[1] == 'x') {
     s += 2;
     if (s == end)
-      return WASM_ERROR;
+      return WABT_ERROR;
     for (; s < end; ++s) {
       uint32_t digit;
-      if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit)))
-        return WASM_ERROR;
+      if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit)))
+        return WABT_ERROR;
       uint64_t old_value = value;
       value = value * 16 + digit;
       /* check for overflow */
       if (old_value > value)
-        return WASM_ERROR;
+        return WABT_ERROR;
     }
   } else {
     for (; s < end; ++s) {
       uint32_t digit = (*s - '0');
       if (digit > 9)
-        return WASM_ERROR;
+        return WABT_ERROR;
       uint64_t old_value = value;
       value = value * 10 + digit;
       /* check for overflow */
       if (old_value > value)
-        return WASM_ERROR;
+        return WABT_ERROR;
     }
   }
   if (s != end)
-    return WASM_ERROR;
+    return WABT_ERROR;
   *out = value;
-  return WASM_OK;
+  return WABT_OK;
 }
 
-WasmResult wasm_parse_int64(const char* s,
+WabtResult wabt_parse_int64(const char* s,
                             const char* end,
                             uint64_t* out,
-                            WasmParseIntType parse_type) {
-  WasmBool has_sign = WASM_FALSE;
+                            WabtParseIntType parse_type) {
+  WabtBool has_sign = WABT_FALSE;
   if (*s == '-' || *s == '+') {
-    if (parse_type == WASM_PARSE_UNSIGNED_ONLY)
-      return WASM_ERROR;
+    if (parse_type == WABT_PARSE_UNSIGNED_ONLY)
+      return WABT_ERROR;
     if (*s == '-')
-      has_sign = WASM_TRUE;
+      has_sign = WABT_TRUE;
     s++;
   }
   uint64_t value = 0;
-  WasmResult result = wasm_parse_uint64(s, end, &value);
+  WabtResult result = wabt_parse_uint64(s, end, &value);
   if (has_sign) {
     if (value > (uint64_t)INT64_MAX + 1) /* abs(INT64_MIN) == INT64_MAX + 1 */
-      return WASM_ERROR;
+      return WABT_ERROR;
     value = UINT64_MAX - value + 1;
   }
   *out = value;
   return result;
 }
 
-WasmResult wasm_parse_int32(const char* s,
+WabtResult wabt_parse_int32(const char* s,
                             const char* end,
                             uint32_t* out,
-                            WasmParseIntType parse_type) {
+                            WabtParseIntType parse_type) {
   uint64_t value;
-  WasmBool has_sign = WASM_FALSE;
+  WabtBool has_sign = WABT_FALSE;
   if (*s == '-' || *s == '+') {
-    if (parse_type == WASM_PARSE_UNSIGNED_ONLY)
-      return WASM_ERROR;
+    if (parse_type == WABT_PARSE_UNSIGNED_ONLY)
+      return WABT_ERROR;
     if (*s == '-')
-      has_sign = WASM_TRUE;
+      has_sign = WABT_TRUE;
     s++;
   }
-  if (WASM_FAILED(wasm_parse_uint64(s, end, &value)))
-    return WASM_ERROR;
+  if (WABT_FAILED(wabt_parse_uint64(s, end, &value)))
+    return WABT_ERROR;
 
   if (has_sign) {
     if (value > (uint64_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
-      return WASM_ERROR;
+      return WABT_ERROR;
     value = UINT32_MAX - value + 1;
   } else {
     if (value > (uint64_t)UINT32_MAX)
-      return WASM_ERROR;
+      return WABT_ERROR;
   }
   *out = (uint32_t)value;
-  return WASM_OK;
+  return WABT_OK;
 }
 
 /* floats */
-static uint32_t make_float(WasmBool sign, int exp, uint32_t sig) {
+static uint32_t make_float(WabtBool sign, int exp, uint32_t sig) {
   assert(exp >= F32_MIN_EXP && exp <= F32_MAX_EXP);
   assert(sig <= F32_SIG_MASK);
   return ((uint32_t)sign << F32_SIGN_SHIFT) |
@@ -184,12 +184,12 @@ static uint32_t shift_float_and_round_to_nearest(uint32_t significand,
   return significand;
 }
 
-static WasmResult parse_float_nan(const char* s,
+static WabtResult parse_float_nan(const char* s,
                                   const char* end,
                                   uint32_t* out_bits) {
-  WasmBool is_neg = WASM_FALSE;
+  WabtBool is_neg = WABT_FALSE;
   if (*s == '-') {
-    is_neg = WASM_TRUE;
+    is_neg = WABT_TRUE;
     s++;
   } else if (*s == '+') {
     s++;
@@ -205,31 +205,31 @@ static WasmResult parse_float_nan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit)))
-        return WASM_ERROR;
+      if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit)))
+        return WABT_ERROR;
       tag = tag * 16 + digit;
       /* check for overflow */
       if (tag > F32_SIG_MASK)
-        return WASM_ERROR;
+        return WABT_ERROR;
     }
 
     /* NaN cannot have a zero tag, that is reserved for infinity */
     if (tag == 0)
-      return WASM_ERROR;
+      return WABT_ERROR;
   } else {
     tag = F32_QUIET_NAN_TAG;
   }
 
   *out_bits = make_float(is_neg, F32_MAX_EXP, tag);
-  return WASM_OK;
+  return WABT_OK;
 }
 
 static void parse_float_hex(const char* s,
                             const char* end,
                             uint32_t* out_bits) {
-  WasmBool is_neg = WASM_FALSE;
+  WabtBool is_neg = WABT_FALSE;
   if (*s == '-') {
-    is_neg = WASM_TRUE;
+    is_neg = WABT_TRUE;
     s++;
   } else if (*s == '+') {
     s++;
@@ -245,7 +245,7 @@ static void parse_float_hex(const char* s,
    0x10000000.0p0 => significand = 1, significand_exponent = 28
    0x0.000001p0 => significand = 1, significand_exponent = -24
    */
-  WasmBool seen_dot = WASM_FALSE;
+  WabtBool seen_dot = WABT_FALSE;
   uint32_t significand = 0;
   /* how much to shift |significand| if a non-zero value is appended */
   int significand_shift = 0;
@@ -257,9 +257,9 @@ static void parse_float_hex(const char* s,
       if (significand != 0)
         significand_exponent += significand_shift;
       significand_shift = 0;
-      seen_dot = WASM_TRUE;
+      seen_dot = WABT_TRUE;
       continue;
-    } else if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit))) {
+    } else if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit))) {
       break;
     }
     significand_shift += HEX_DIGIT_BITS;
@@ -290,13 +290,13 @@ static void parse_float_hex(const char* s,
 
   assert(s < end);
   int exponent = 0;
-  WasmBool exponent_is_neg = WASM_FALSE;
+  WabtBool exponent_is_neg = WABT_FALSE;
   /* exponent is always positive, but significand_exponent is signed.
    significand_exponent_add is negated if exponent will be negative, so it  can
    be easily summed to see if the exponent is too large (see below) */
   int significand_exponent_add = 0;
   if (*s == '-') {
-    exponent_is_neg = WASM_TRUE;
+    exponent_is_neg = WABT_TRUE;
     significand_exponent_add = -significand_exponent;
     s++;
   } else if (*s == '+') {
@@ -315,7 +315,7 @@ static void parse_float_hex(const char* s,
   if (exponent_is_neg)
     exponent = -exponent;
 
-  significand_bits = sizeof(uint32_t) * 8 - wasm_clz_u32(significand);
+  significand_bits = sizeof(uint32_t) * 8 - wabt_clz_u32(significand);
   /* -1 for the implicit 1 bit of the significand */
   exponent += significand_exponent + significand_bits - 1;
 
@@ -365,9 +365,9 @@ static void parse_float_hex(const char* s,
 static void parse_float_infinity(const char* s,
                                  const char* end,
                                  uint32_t* out_bits) {
-  WasmBool is_neg = WASM_FALSE;
+  WabtBool is_neg = WABT_FALSE;
   if (*s == '-') {
-    is_neg = WASM_TRUE;
+    is_neg = WABT_TRUE;
     s++;
   } else if (*s == '+') {
     s++;
@@ -376,13 +376,13 @@ static void parse_float_infinity(const char* s,
   *out_bits = make_float(is_neg, F32_MAX_EXP, 0);
 }
 
-WasmResult wasm_parse_float(WasmLiteralType literal_type,
+WabtResult wabt_parse_float(WabtLiteralType literal_type,
                             const char* s,
                             const char* end,
                             uint32_t* out_bits) {
   switch (literal_type) {
-    case WASM_LITERAL_TYPE_INT:
-    case WASM_LITERAL_TYPE_FLOAT: {
+    case WABT_LITERAL_TYPE_INT:
+    case WABT_LITERAL_TYPE_FLOAT: {
       errno = 0;
       char* endptr;
       float value;
@@ -390,37 +390,37 @@ WasmResult wasm_parse_float(WasmLiteralType literal_type,
       if (endptr != end ||
           ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) &&
            errno != 0))
-        return WASM_ERROR;
+        return WABT_ERROR;
 
       memcpy(out_bits, &value, sizeof(value));
-      return WASM_OK;
+      return WABT_OK;
     }
 
-    case WASM_LITERAL_TYPE_HEXFLOAT:
+    case WABT_LITERAL_TYPE_HEXFLOAT:
       parse_float_hex(s, end, out_bits);
-      return WASM_OK;
+      return WABT_OK;
 
-    case WASM_LITERAL_TYPE_INFINITY:
+    case WABT_LITERAL_TYPE_INFINITY:
       parse_float_infinity(s, end, out_bits);
-      return WASM_OK;
+      return WABT_OK;
 
-    case WASM_LITERAL_TYPE_NAN:
+    case WABT_LITERAL_TYPE_NAN:
       return parse_float_nan(s, end, out_bits);
 
     default:
       assert(0);
-      return WASM_ERROR;
+      return WABT_ERROR;
   }
 }
 
-void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
+void wabt_write_float_hex(char* out, size_t size, uint32_t bits) {
   /* 1234567890123456 */
   /* -0x#.######p-### */
   /* -nan:0x###### */
   /* -infinity */
-  char buffer[WASM_MAX_FLOAT_HEX];
+  char buffer[WABT_MAX_FLOAT_HEX];
   char* p = buffer;
-  WasmBool is_neg = (bits >> F32_SIGN_SHIFT);
+  WabtBool is_neg = (bits >> F32_SIGN_SHIFT);
   int exp = ((bits >> F32_SIG_BITS) & F32_EXP_MASK) - F32_EXP_BIAS;
   uint32_t sig = bits & F32_SIG_MASK;
 
@@ -452,7 +452,7 @@ void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
       }
     }
   } else {
-    WasmBool is_zero = sig == 0 && exp == F32_MIN_EXP;
+    WabtBool is_zero = sig == 0 && exp == F32_MIN_EXP;
     strcpy(p, "0x");
     p += 2;
     *p++ = is_zero ? '0' : '1';
@@ -463,7 +463,7 @@ void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
     if (sig) {
       if (exp == F32_MIN_EXP) {
         /* subnormal; shift the significand up, and shift out the implicit 1 */
-        uint32_t leading_zeroes = wasm_clz_u32(sig);
+        uint32_t leading_zeroes = wabt_clz_u32(sig);
         if (leading_zeroes < 31)
           sig <<= leading_zeroes + 1;
         else
@@ -503,7 +503,7 @@ void wasm_write_float_hex(char* out, size_t size, uint32_t bits) {
 }
 
 /* doubles */
-static uint64_t make_double(WasmBool sign, int exp, uint64_t sig) {
+static uint64_t make_double(WabtBool sign, int exp, uint64_t sig) {
   assert(exp >= F64_MIN_EXP && exp <= F64_MAX_EXP);
   assert(sig <= F64_SIG_MASK);
   return ((uint64_t)sign << F64_SIGN_SHIFT) |
@@ -520,12 +520,12 @@ static uint64_t shift_double_and_round_to_nearest(uint64_t significand,
   return significand;
 }
 
-static WasmResult parse_double_nan(const char* s,
+static WabtResult parse_double_nan(const char* s,
                                    const char* end,
                                    uint64_t* out_bits) {
-  WasmBool is_neg = WASM_FALSE;
+  WabtBool is_neg = WABT_FALSE;
   if (*s == '-') {
-    is_neg = WASM_TRUE;
+    is_neg = WABT_TRUE;
     s++;
   } else if (*s == '+') {
     s++;
@@ -537,36 +537,36 @@ static WasmResult parse_double_nan(const char* s,
   if (s != end) {
     tag = 0;
     if (!string_starts_with(s, end, ":0x"))
-      return WASM_ERROR;
+      return WABT_ERROR;
     s += 3;
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit)))
-        return WASM_ERROR;
+      if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit)))
+        return WABT_ERROR;
       tag = tag * 16 + digit;
       /* check for overflow */
       if (tag > F64_SIG_MASK)
-        return WASM_ERROR;
+        return WABT_ERROR;
     }
 
     /* NaN cannot have a zero tag, that is reserved for infinity */
     if (tag == 0)
-      return WASM_ERROR;
+      return WABT_ERROR;
   } else {
     tag = F64_QUIET_NAN_TAG;
   }
 
   *out_bits = make_double(is_neg, F64_MAX_EXP, tag);
-  return WASM_OK;
+  return WABT_OK;
 }
 
 static void parse_double_hex(const char* s,
                              const char* end,
                              uint64_t* out_bits) {
-  WasmBool is_neg = WASM_FALSE;
+  WabtBool is_neg = WABT_FALSE;
   if (*s == '-') {
-    is_neg = WASM_TRUE;
+    is_neg = WABT_TRUE;
     s++;
   } else if (*s == '+') {
     s++;
@@ -575,7 +575,7 @@ static void parse_double_hex(const char* s,
   s += 2;
 
   /* see the similar comment in parse_float_hex */
-  WasmBool seen_dot = WASM_FALSE;
+  WabtBool seen_dot = WABT_FALSE;
   uint64_t significand = 0;
   /* how much to shift |significand| if a non-zero value is appended */
   int significand_shift = 0;
@@ -587,9 +587,9 @@ static void parse_double_hex(const char* s,
       if (significand != 0)
         significand_exponent += significand_shift;
       significand_shift = 0;
-      seen_dot = WASM_TRUE;
+      seen_dot = WABT_TRUE;
       continue;
-    } else if (WASM_FAILED(wasm_parse_hexdigit(*s, &digit))) {
+    } else if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit))) {
       break;
     }
     significand_shift += HEX_DIGIT_BITS;
@@ -620,13 +620,13 @@ static void parse_double_hex(const char* s,
 
   assert(s < end);
   int exponent = 0;
-  WasmBool exponent_is_neg = WASM_FALSE;
+  WabtBool exponent_is_neg = WABT_FALSE;
   /* exponent is always positive, but significand_exponent is signed.
    significand_exponent_add is negated if exponent will be negative, so it  can
    be easily summed to see if the exponent is too large (see below) */
   int significand_exponent_add = 0;
   if (*s == '-') {
-    exponent_is_neg = WASM_TRUE;
+    exponent_is_neg = WABT_TRUE;
     significand_exponent_add = -significand_exponent;
     s++;
   } else if (*s == '+') {
@@ -645,7 +645,7 @@ static void parse_double_hex(const char* s,
   if (exponent_is_neg)
     exponent = -exponent;
 
-  significand_bits = sizeof(uint64_t) * 8 - wasm_clz_u64(significand);
+  significand_bits = sizeof(uint64_t) * 8 - wabt_clz_u64(significand);
   /* -1 for the implicit 1 bit of the significand */
   exponent += significand_exponent + significand_bits - 1;
 
@@ -695,9 +695,9 @@ static void parse_double_hex(const char* s,
 static void parse_double_infinity(const char* s,
                                   const char* end,
                                   uint64_t* out_bits) {
-  WasmBool is_neg = WASM_FALSE;
+  WabtBool is_neg = WABT_FALSE;
   if (*s == '-') {
-    is_neg = WASM_TRUE;
+    is_neg = WABT_TRUE;
     s++;
   } else if (*s == '+') {
     s++;
@@ -706,13 +706,13 @@ static void parse_double_infinity(const char* s,
   *out_bits = make_double(is_neg, F64_MAX_EXP, 0);
 }
 
-WasmResult wasm_parse_double(WasmLiteralType literal_type,
+WabtResult wabt_parse_double(WabtLiteralType literal_type,
                              const char* s,
                              const char* end,
                              uint64_t* out_bits) {
   switch (literal_type) {
-    case WASM_LITERAL_TYPE_INT:
-    case WASM_LITERAL_TYPE_FLOAT: {
+    case WABT_LITERAL_TYPE_INT:
+    case WABT_LITERAL_TYPE_FLOAT: {
       errno = 0;
       char* endptr;
       double value;
@@ -720,37 +720,37 @@ WasmResult wasm_parse_double(WasmLiteralType literal_type,
       if (endptr != end ||
           ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) &&
            errno != 0))
-        return WASM_ERROR;
+        return WABT_ERROR;
 
       memcpy(out_bits, &value, sizeof(value));
-      return WASM_OK;
+      return WABT_OK;
     }
 
-    case WASM_LITERAL_TYPE_HEXFLOAT:
+    case WABT_LITERAL_TYPE_HEXFLOAT:
       parse_double_hex(s, end, out_bits);
-      return WASM_OK;
+      return WABT_OK;
 
-    case WASM_LITERAL_TYPE_INFINITY:
+    case WABT_LITERAL_TYPE_INFINITY:
       parse_double_infinity(s, end, out_bits);
-      return WASM_OK;
+      return WABT_OK;
 
-    case WASM_LITERAL_TYPE_NAN:
+    case WABT_LITERAL_TYPE_NAN:
       return parse_double_nan(s, end, out_bits);
 
     default:
       assert(0);
-      return WASM_ERROR;
+      return WABT_ERROR;
   }
 }
 
-void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
+void wabt_write_double_hex(char* out, size_t size, uint64_t bits) {
   /* 123456789012345678901234 */
   /* -0x#.#############p-#### */
   /* -nan:0x############# */
   /* -infinity */
-  char buffer[WASM_MAX_DOUBLE_HEX];
+  char buffer[WABT_MAX_DOUBLE_HEX];
   char* p = buffer;
-  WasmBool is_neg = (bits >> F64_SIGN_SHIFT);
+  WabtBool is_neg = (bits >> F64_SIGN_SHIFT);
   int exp = ((bits >> F64_SIG_BITS) & F64_EXP_MASK) - F64_EXP_BIAS;
   uint64_t sig = bits & F64_SIG_MASK;
 
@@ -782,7 +782,7 @@ void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
       }
     }
   } else {
-    WasmBool is_zero = sig == 0 && exp == F64_MIN_EXP;
+    WabtBool is_zero = sig == 0 && exp == F64_MIN_EXP;
     strcpy(p, "0x");
     p += 2;
     *p++ = is_zero ? '0' : '1';
@@ -793,7 +793,7 @@ void wasm_write_double_hex(char* out, size_t size, uint64_t bits) {
     if (sig) {
       if (exp == F64_MIN_EXP) {
         /* subnormal; shift the significand up, and shift out the implicit 1 */
-        uint32_t leading_zeroes = wasm_clz_u64(sig);
+        uint32_t leading_zeroes = wabt_clz_u64(sig);
         if (leading_zeroes < 63)
           sig <<= leading_zeroes + 1;
         else

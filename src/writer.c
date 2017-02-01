@@ -28,41 +28,41 @@
 
 #define INITIAL_OUTPUT_BUFFER_CAPACITY (64 * 1024)
 
-static WasmResult write_data_to_file(size_t offset,
+static WabtResult write_data_to_file(size_t offset,
                                      const void* data,
                                      size_t size,
                                      void* user_data) {
   if (size == 0)
-    return WASM_OK;
-  WasmFileWriter* writer = user_data;
+    return WABT_OK;
+  WabtFileWriter* writer = user_data;
   if (offset != writer->offset) {
     if (fseek(writer->file, offset, SEEK_SET) != 0) {
       ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
-      return WASM_ERROR;
+      return WABT_ERROR;
     }
     writer->offset = offset;
   }
   if (fwrite(data, size, 1, writer->file) != 1) {
     ERROR("fwrite size=%" PRIzd " failed, errno=%d\n", size, errno);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
   writer->offset += size;
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult move_data_in_file(size_t dst_offset,
+static WabtResult move_data_in_file(size_t dst_offset,
                                     size_t src_offset,
                                     size_t size,
                                     void* user_data) {
   if (size == 0)
-    return WASM_OK;
+    return WABT_OK;
   /* TODO(binji): implement if needed. */
   ERROR0("move_data_in_file not implemented!\n");
-  return WASM_ERROR;
+  return WABT_ERROR;
 }
 
-void wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file) {
-  WASM_ZERO_MEMORY(*writer);
+void wabt_init_file_writer_existing(WabtFileWriter* writer, FILE* file) {
+  WABT_ZERO_MEMORY(*writer);
   writer->file = file;
   writer->offset = 0;
   writer->base.user_data = writer;
@@ -70,62 +70,62 @@ void wasm_init_file_writer_existing(WasmFileWriter* writer, FILE* file) {
   writer->base.move_data = move_data_in_file;
 }
 
-WasmResult wasm_init_file_writer(WasmFileWriter* writer, const char* filename) {
+WabtResult wabt_init_file_writer(WabtFileWriter* writer, const char* filename) {
   FILE* file = fopen(filename, "wb");
   if (!file) {
     ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
-  wasm_init_file_writer_existing(writer, file);
-  return WASM_OK;
+  wabt_init_file_writer_existing(writer, file);
+  return WABT_OK;
 }
 
-void wasm_close_file_writer(WasmFileWriter* writer) {
+void wabt_close_file_writer(WabtFileWriter* writer) {
   fclose(writer->file);
 }
 
-void wasm_init_output_buffer(WasmAllocator* allocator,
-                             WasmOutputBuffer* buf,
+void wabt_init_output_buffer(WabtAllocator* allocator,
+                             WabtOutputBuffer* buf,
                              size_t initial_capacity) {
   assert(initial_capacity != 0);
   buf->allocator = allocator;
-  buf->start = wasm_alloc(allocator, initial_capacity, WASM_DEFAULT_ALIGN);
+  buf->start = wabt_alloc(allocator, initial_capacity, WABT_DEFAULT_ALIGN);
   buf->size = 0;
   buf->capacity = initial_capacity;
 }
 
-static void ensure_output_buffer_capacity(WasmOutputBuffer* buf,
+static void ensure_output_buffer_capacity(WabtOutputBuffer* buf,
                                           size_t ensure_capacity) {
   if (ensure_capacity > buf->capacity) {
     assert(buf->capacity != 0);
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
-    buf->start = wasm_realloc(buf->allocator, buf->start, new_capacity,
-                              WASM_DEFAULT_ALIGN);
+    buf->start = wabt_realloc(buf->allocator, buf->start, new_capacity,
+                              WABT_DEFAULT_ALIGN);
     buf->capacity = new_capacity;
   }
 }
 
-static WasmResult write_data_to_output_buffer(size_t offset,
+static WabtResult write_data_to_output_buffer(size_t offset,
                                               const void* data,
                                               size_t size,
                                               void* user_data) {
-  WasmMemoryWriter* writer = user_data;
+  WabtMemoryWriter* writer = user_data;
   size_t end = offset + size;
   ensure_output_buffer_capacity(&writer->buf, end);
   memcpy((void*)((size_t)writer->buf.start + offset), data, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
-  return WASM_OK;
+  return WABT_OK;
 }
 
-static WasmResult move_data_in_output_buffer(size_t dst_offset,
+static WabtResult move_data_in_output_buffer(size_t dst_offset,
                                              size_t src_offset,
                                              size_t size,
                                              void* user_data) {
-  WasmMemoryWriter* writer = user_data;
+  WabtMemoryWriter* writer = user_data;
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
@@ -135,63 +135,63 @@ static WasmResult move_data_in_output_buffer(size_t dst_offset,
   memmove(dst, src, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
-  return WASM_OK;
+  return WABT_OK;
 }
 
-WasmResult wasm_init_mem_writer(WasmAllocator* allocator,
-                                WasmMemoryWriter* writer) {
-  WASM_ZERO_MEMORY(*writer);
+WabtResult wabt_init_mem_writer(WabtAllocator* allocator,
+                                WabtMemoryWriter* writer) {
+  WABT_ZERO_MEMORY(*writer);
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;
-  wasm_init_output_buffer(allocator, &writer->buf,
+  wabt_init_output_buffer(allocator, &writer->buf,
                           INITIAL_OUTPUT_BUFFER_CAPACITY);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-WasmResult wasm_init_mem_writer_existing(WasmMemoryWriter* writer,
-                                         WasmOutputBuffer* buf) {
-  WASM_ZERO_MEMORY(*writer);
+WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
+                                         WabtOutputBuffer* buf) {
+  WABT_ZERO_MEMORY(*writer);
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;
   writer->buf = *buf;
   /* Clear buffer, since ownership has passed to the writer. */
-  WASM_ZERO_MEMORY(*buf);
-  return WASM_OK;
+  WABT_ZERO_MEMORY(*buf);
+  return WABT_OK;
 }
 
-void wasm_steal_mem_writer_output_buffer(WasmMemoryWriter* writer,
-                                         WasmOutputBuffer* out_buf) {
+void wabt_steal_mem_writer_output_buffer(WabtMemoryWriter* writer,
+                                         WabtOutputBuffer* out_buf) {
   *out_buf= writer->buf;
   writer->buf.start = NULL;
   writer->buf.size = 0;
   writer->buf.capacity = 0;
 }
 
-void wasm_close_mem_writer(WasmMemoryWriter* writer) {
-  wasm_destroy_output_buffer(&writer->buf);
+void wabt_close_mem_writer(WabtMemoryWriter* writer) {
+  wabt_destroy_output_buffer(&writer->buf);
 }
 
-WasmResult wasm_write_output_buffer_to_file(WasmOutputBuffer* buf,
+WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
                                             const char* filename) {
   FILE* file = fopen(filename, "wb");
   if (!file) {
     ERROR("unable to open %s for writing\n", filename);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   ssize_t bytes = fwrite(buf->start, 1, buf->size, file);
   if (bytes < 0 || (size_t)bytes != buf->size) {
     ERROR("failed to write %" PRIzd " bytes to %s\n", buf->size, filename);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   fclose(file);
-  return WASM_OK;
+  return WABT_OK;
 }
 
-void wasm_destroy_output_buffer(WasmOutputBuffer* buf) {
+void wabt_destroy_output_buffer(WabtOutputBuffer* buf) {
   if (buf->allocator)
-    wasm_free(buf->allocator, buf->start);
+    wabt_free(buf->allocator, buf->start);
 }

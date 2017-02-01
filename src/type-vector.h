@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-#ifndef WASM_TYPE_VECTOR_H_
-#define WASM_TYPE_VECTOR_H_
+#ifndef WABT_TYPE_VECTOR_H_
+#define WABT_TYPE_VECTOR_H_
 
 #include "common.h"
 #include "vector.h"
 
-WASM_DEFINE_VECTOR(type, WasmType)
+WABT_DEFINE_VECTOR(type, WabtType)
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-static WASM_INLINE WasmBool
-wasm_type_vectors_are_equal(const WasmTypeVector* types1,
-                            const WasmTypeVector* types2) {
+static WABT_INLINE WabtBool
+wabt_type_vectors_are_equal(const WabtTypeVector* types1,
+                            const WabtTypeVector* types2) {
   if (types1->size != types2->size)
-    return WASM_FALSE;
+    return WABT_FALSE;
   size_t i;
   for (i = 0; i < types1->size; ++i) {
     if (types1->data[i] != types2->data[i])
-      return WASM_FALSE;
+      return WABT_FALSE;
   }
-  return WASM_TRUE;
+  return WABT_TRUE;
 }
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_TYPE_VECTOR_H_ */
+#endif /* WABT_TYPE_VECTOR_H_ */

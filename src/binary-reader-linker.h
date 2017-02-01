@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_READER_LINKER_H_
-#define WASM_BINARY_READER_LINKER_H_
+#ifndef WABT_BINARY_READER_LINKER_H_
+#define WABT_BINARY_READER_LINKER_H_
 
 #include "common.h"
 #include "stream.h"
 
-struct WasmAllocator;
-struct WasmLinkerInputBinary;
+struct WabtAllocator;
+struct WabtLinkerInputBinary;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-WasmResult wasm_read_binary_linker(struct WasmAllocator* allocator,
-                                   struct WasmLinkerInputBinary* input_info);
+WabtResult wabt_read_binary_linker(struct WabtAllocator* allocator,
+                                   struct WabtLinkerInputBinary* input_info);
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_READER_LINKER_H_ */
+#endif /* WABT_BINARY_READER_LINKER_H_ */

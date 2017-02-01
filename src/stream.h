@@ -14,88 +14,88 @@
  * limitations under the License.
  */
 
-#ifndef WASM_STREAM_H_
-#define WASM_STREAM_H_
+#ifndef WABT_STREAM_H_
+#define WABT_STREAM_H_
 
 #include <stdio.h>
 
 #include "common.h"
 #include "writer.h"
 
-typedef struct WasmStream {
-  WasmWriter* writer;
+typedef struct WabtStream {
+  WabtWriter* writer;
   size_t offset;
-  WasmResult result;
+  WabtResult result;
   /* if non-NULL, log all writes to this stream */
-  struct WasmStream* log_stream;
-} WasmStream;
+  struct WabtStream* log_stream;
+} WabtStream;
 
-typedef struct WasmFileStream {
-  WasmStream base;
-  WasmFileWriter writer;
-} WasmFileStream;
+typedef struct WabtFileStream {
+  WabtStream base;
+  WabtFileWriter writer;
+} WabtFileStream;
 
 /* whether to display the ASCII characters in the debug output for
- * wasm_write_memory */
-typedef enum WasmPrintChars {
-  WASM_DONT_PRINT_CHARS,
-  WASM_PRINT_CHARS,
-} WasmPrintChars;
+ * wabt_write_memory */
+typedef enum WabtPrintChars {
+  WABT_DONT_PRINT_CHARS,
+  WABT_PRINT_CHARS,
+} WabtPrintChars;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-void wasm_init_stream(WasmStream* stream,
-                      WasmWriter* writer,
-                      WasmStream* log_stream);
-void wasm_init_file_stream_from_existing(WasmFileStream* stream, FILE* file);
-WasmStream* wasm_init_stdout_stream(void);
-WasmStream* wasm_init_stderr_stream(void);
+void wabt_init_stream(WabtStream* stream,
+                      WabtWriter* writer,
+                      WabtStream* log_stream);
+void wabt_init_file_stream_from_existing(WabtFileStream* stream, FILE* file);
+WabtStream* wabt_init_stdout_stream(void);
+WabtStream* wabt_init_stderr_stream(void);
 
-/* helper functions for writing to a WasmStream. the |desc| parameter is
+/* helper functions for writing to a WabtStream. the |desc| parameter is
  * optional, and will be appended to the log stream if |stream.log_stream| is
  * non-NULL. */
-void wasm_write_data_at(WasmStream*,
+void wabt_write_data_at(WabtStream*,
                         size_t offset,
                         const void* src,
                         size_t size,
-                        WasmPrintChars print_chars,
+                        WabtPrintChars print_chars,
                         const char* desc);
-void wasm_write_data(WasmStream*,
+void wabt_write_data(WabtStream*,
                      const void* src,
                      size_t size,
                      const char* desc);
-void wasm_move_data(WasmStream*,
+void wabt_move_data(WabtStream*,
                     size_t dst_offset,
                     size_t src_offset,
                     size_t size);
 
-void WASM_PRINTF_FORMAT(2, 3) wasm_writef(WasmStream*, const char* format, ...);
+void WABT_PRINTF_FORMAT(2, 3) wabt_writef(WabtStream*, const char* format, ...);
 /* specified as uint32_t instead of uint8_t so we can check if the value given
  * is in range before wrapping */
-void wasm_write_u8(WasmStream*, uint32_t value, const char* desc);
-void wasm_write_u32(WasmStream*, uint32_t value, const char* desc);
-void wasm_write_u64(WasmStream*, uint64_t value, const char* desc);
+void wabt_write_u8(WabtStream*, uint32_t value, const char* desc);
+void wabt_write_u32(WabtStream*, uint32_t value, const char* desc);
+void wabt_write_u64(WabtStream*, uint64_t value, const char* desc);
 
-static WASM_INLINE void wasm_write_char(WasmStream* stream, char c) {
-  wasm_write_u8(stream, c, NULL);
+static WABT_INLINE void wabt_write_char(WabtStream* stream, char c) {
+  wabt_write_u8(stream, c, NULL);
 }
 
 /* dump memory as text, similar to the xxd format */
-void wasm_write_memory_dump(WasmStream*,
+void wabt_write_memory_dump(WabtStream*,
                             const void* start,
                             size_t size,
                             size_t offset,
-                            WasmPrintChars print_chars,
+                            WabtPrintChars print_chars,
                             const char* prefix,
                             const char* desc);
 
-static WASM_INLINE void wasm_write_output_buffer_memory_dump(
-    WasmStream* stream,
-    struct WasmOutputBuffer* buf) {
-  wasm_write_memory_dump(stream, buf->start, buf->size, 0,
-                         WASM_DONT_PRINT_CHARS, NULL, NULL);
+static WABT_INLINE void wabt_write_output_buffer_memory_dump(
+    WabtStream* stream,
+    struct WabtOutputBuffer* buf) {
+  wabt_write_memory_dump(stream, buf->start, buf->size, 0,
+                         WABT_DONT_PRINT_CHARS, NULL, NULL);
 }
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_STREAM_H_ */
+#endif /* WABT_STREAM_H_ */

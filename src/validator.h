@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef WASM_VALIDATOR_H_
-#define WASM_VALIDATOR_H_
+#ifndef WABT_VALIDATOR_H_
+#define WABT_VALIDATOR_H_
 
 #include "ast-lexer.h"
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmModule;
-struct WasmScript;
+struct WabtAllocator;
+struct WabtModule;
+struct WabtScript;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 /* perform all checks on the AST; the module is valid if and only if this
  * function succeeds. */
-WasmResult wasm_validate_script(struct WasmAllocator*,
-                                WasmAstLexer*,
-                                const struct WasmScript*,
-                                WasmSourceErrorHandler*);
+WabtResult wabt_validate_script(struct WabtAllocator*,
+                                WabtAstLexer*,
+                                const struct WabtScript*,
+                                WabtSourceErrorHandler*);
 
-#endif /* WASM_VALIDATOR_H_ */
+#endif /* WABT_VALIDATOR_H_ */

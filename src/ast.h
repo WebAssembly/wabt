@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WASM_AST_H_
-#define WASM_AST_H_
+#ifndef WABT_AST_H_
+#define WABT_AST_H_
 
 #include <assert.h>
 #include <stddef.h>
@@ -26,230 +26,230 @@
 #include "type-vector.h"
 #include "vector.h"
 
-typedef enum WasmVarType {
-  WASM_VAR_TYPE_INDEX,
-  WASM_VAR_TYPE_NAME,
-} WasmVarType;
+typedef enum WabtVarType {
+  WABT_VAR_TYPE_INDEX,
+  WABT_VAR_TYPE_NAME,
+} WabtVarType;
 
-typedef struct WasmVar {
-  WasmLocation loc;
-  WasmVarType type;
+typedef struct WabtVar {
+  WabtLocation loc;
+  WabtVarType type;
   union {
     int64_t index;
-    WasmStringSlice name;
+    WabtStringSlice name;
   };
-} WasmVar;
-WASM_DEFINE_VECTOR(var, WasmVar);
+} WabtVar;
+WABT_DEFINE_VECTOR(var, WabtVar);
 
-typedef WasmStringSlice WasmLabel;
-WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
+typedef WabtStringSlice WabtLabel;
+WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-typedef struct WasmConst {
-  WasmLocation loc;
-  WasmType type;
+typedef struct WabtConst {
+  WabtLocation loc;
+  WabtType type;
   union {
     uint32_t u32;
     uint64_t u64;
     uint32_t f32_bits;
     uint64_t f64_bits;
   };
-} WasmConst;
-WASM_DEFINE_VECTOR(const, WasmConst);
+} WabtConst;
+WABT_DEFINE_VECTOR(const, WabtConst);
 
-typedef enum WasmExprType {
-  WASM_EXPR_TYPE_BINARY,
-  WASM_EXPR_TYPE_BLOCK,
-  WASM_EXPR_TYPE_BR,
-  WASM_EXPR_TYPE_BR_IF,
-  WASM_EXPR_TYPE_BR_TABLE,
-  WASM_EXPR_TYPE_CALL,
-  WASM_EXPR_TYPE_CALL_INDIRECT,
-  WASM_EXPR_TYPE_COMPARE,
-  WASM_EXPR_TYPE_CONST,
-  WASM_EXPR_TYPE_CONVERT,
-  WASM_EXPR_TYPE_CURRENT_MEMORY,
-  WASM_EXPR_TYPE_DROP,
-  WASM_EXPR_TYPE_GET_GLOBAL,
-  WASM_EXPR_TYPE_GET_LOCAL,
-  WASM_EXPR_TYPE_GROW_MEMORY,
-  WASM_EXPR_TYPE_IF,
-  WASM_EXPR_TYPE_LOAD,
-  WASM_EXPR_TYPE_LOOP,
-  WASM_EXPR_TYPE_NOP,
-  WASM_EXPR_TYPE_RETURN,
-  WASM_EXPR_TYPE_SELECT,
-  WASM_EXPR_TYPE_SET_GLOBAL,
-  WASM_EXPR_TYPE_SET_LOCAL,
-  WASM_EXPR_TYPE_STORE,
-  WASM_EXPR_TYPE_TEE_LOCAL,
-  WASM_EXPR_TYPE_UNARY,
-  WASM_EXPR_TYPE_UNREACHABLE,
-} WasmExprType;
+typedef enum WabtExprType {
+  WABT_EXPR_TYPE_BINARY,
+  WABT_EXPR_TYPE_BLOCK,
+  WABT_EXPR_TYPE_BR,
+  WABT_EXPR_TYPE_BR_IF,
+  WABT_EXPR_TYPE_BR_TABLE,
+  WABT_EXPR_TYPE_CALL,
+  WABT_EXPR_TYPE_CALL_INDIRECT,
+  WABT_EXPR_TYPE_COMPARE,
+  WABT_EXPR_TYPE_CONST,
+  WABT_EXPR_TYPE_CONVERT,
+  WABT_EXPR_TYPE_CURRENT_MEMORY,
+  WABT_EXPR_TYPE_DROP,
+  WABT_EXPR_TYPE_GET_GLOBAL,
+  WABT_EXPR_TYPE_GET_LOCAL,
+  WABT_EXPR_TYPE_GROW_MEMORY,
+  WABT_EXPR_TYPE_IF,
+  WABT_EXPR_TYPE_LOAD,
+  WABT_EXPR_TYPE_LOOP,
+  WABT_EXPR_TYPE_NOP,
+  WABT_EXPR_TYPE_RETURN,
+  WABT_EXPR_TYPE_SELECT,
+  WABT_EXPR_TYPE_SET_GLOBAL,
+  WABT_EXPR_TYPE_SET_LOCAL,
+  WABT_EXPR_TYPE_STORE,
+  WABT_EXPR_TYPE_TEE_LOCAL,
+  WABT_EXPR_TYPE_UNARY,
+  WABT_EXPR_TYPE_UNREACHABLE,
+} WabtExprType;
 
-typedef WasmTypeVector WasmBlockSignature;
+typedef WabtTypeVector WabtBlockSignature;
 
-typedef struct WasmBlock {
-  WasmLabel label;
-  WasmBlockSignature sig;
-  struct WasmExpr* first;
-} WasmBlock;
+typedef struct WabtBlock {
+  WabtLabel label;
+  WabtBlockSignature sig;
+  struct WabtExpr* first;
+} WabtBlock;
 
-typedef struct WasmExpr WasmExpr;
-struct WasmExpr {
-  WasmLocation loc;
-  WasmExprType type;
-  WasmExpr* next;
+typedef struct WabtExpr WabtExpr;
+struct WabtExpr {
+  WabtLocation loc;
+  WabtExprType type;
+  WabtExpr* next;
   union {
-    struct { WasmOpcode opcode; } binary, compare, convert, unary;
-    WasmBlock block, loop;
-    struct { WasmVar var; } br, br_if;
-    struct { WasmVarVector targets; WasmVar default_target; } br_table;
-    struct { WasmVar var; } call, call_indirect;
-    WasmConst const_;
-    struct { WasmVar var; } get_global, set_global;
-    struct { WasmVar var; } get_local, set_local, tee_local;
-    struct { WasmBlock true_; struct WasmExpr* false_; } if_;
-    struct { WasmOpcode opcode; uint32_t align; uint64_t offset; } load, store;
+    struct { WabtOpcode opcode; } binary, compare, convert, unary;
+    WabtBlock block, loop;
+    struct { WabtVar var; } br, br_if;
+    struct { WabtVarVector targets; WabtVar default_target; } br_table;
+    struct { WabtVar var; } call, call_indirect;
+    WabtConst const_;
+    struct { WabtVar var; } get_global, set_global;
+    struct { WabtVar var; } get_local, set_local, tee_local;
+    struct { WabtBlock true_; struct WabtExpr* false_; } if_;
+    struct { WabtOpcode opcode; uint32_t align; uint64_t offset; } load, store;
   };
 };
 
-typedef struct WasmFuncSignature {
-  WasmTypeVector param_types;
-  WasmTypeVector result_types;
-} WasmFuncSignature;
+typedef struct WabtFuncSignature {
+  WabtTypeVector param_types;
+  WabtTypeVector result_types;
+} WabtFuncSignature;
 
-typedef struct WasmFuncType {
-  WasmStringSlice name;
-  WasmFuncSignature sig;
-} WasmFuncType;
-typedef WasmFuncType* WasmFuncTypePtr;
-WASM_DEFINE_VECTOR(func_type_ptr, WasmFuncTypePtr);
+typedef struct WabtFuncType {
+  WabtStringSlice name;
+  WabtFuncSignature sig;
+} WabtFuncType;
+typedef WabtFuncType* WabtFuncTypePtr;
+WABT_DEFINE_VECTOR(func_type_ptr, WabtFuncTypePtr);
 
 enum {
-  WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE = 1,
+  WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE = 1,
   /* set if the signature is owned by module */
-  WASM_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE = 2,
+  WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE = 2,
 };
-typedef uint32_t WasmFuncDeclarationFlags;
+typedef uint32_t WabtFuncDeclarationFlags;
 
-typedef struct WasmFuncDeclaration {
-  WasmFuncDeclarationFlags flags;
-  WasmVar type_var;
-  WasmFuncSignature sig;
-} WasmFuncDeclaration;
+typedef struct WabtFuncDeclaration {
+  WabtFuncDeclarationFlags flags;
+  WabtVar type_var;
+  WabtFuncSignature sig;
+} WabtFuncDeclaration;
 
-typedef struct WasmFunc {
-  WasmStringSlice name;
-  WasmFuncDeclaration decl;
-  WasmTypeVector local_types;
-  WasmBindingHash param_bindings;
-  WasmBindingHash local_bindings;
-  WasmExpr* first_expr;
-} WasmFunc;
-typedef WasmFunc* WasmFuncPtr;
-WASM_DEFINE_VECTOR(func_ptr, WasmFuncPtr);
+typedef struct WabtFunc {
+  WabtStringSlice name;
+  WabtFuncDeclaration decl;
+  WabtTypeVector local_types;
+  WabtBindingHash param_bindings;
+  WabtBindingHash local_bindings;
+  WabtExpr* first_expr;
+} WabtFunc;
+typedef WabtFunc* WabtFuncPtr;
+WABT_DEFINE_VECTOR(func_ptr, WabtFuncPtr);
 
-typedef struct WasmGlobal {
-  WasmStringSlice name;
-  WasmType type;
-  WasmBool mutable_;
-  WasmExpr* init_expr;
-} WasmGlobal;
-typedef WasmGlobal* WasmGlobalPtr;
-WASM_DEFINE_VECTOR(global_ptr, WasmGlobalPtr);
+typedef struct WabtGlobal {
+  WabtStringSlice name;
+  WabtType type;
+  WabtBool mutable_;
+  WabtExpr* init_expr;
+} WabtGlobal;
+typedef WabtGlobal* WabtGlobalPtr;
+WABT_DEFINE_VECTOR(global_ptr, WabtGlobalPtr);
 
-typedef struct WasmTable {
-  WasmStringSlice name;
-  WasmLimits elem_limits;
-} WasmTable;
-typedef WasmTable* WasmTablePtr;
-WASM_DEFINE_VECTOR(table_ptr, WasmTablePtr);
+typedef struct WabtTable {
+  WabtStringSlice name;
+  WabtLimits elem_limits;
+} WabtTable;
+typedef WabtTable* WabtTablePtr;
+WABT_DEFINE_VECTOR(table_ptr, WabtTablePtr);
 
-typedef struct WasmElemSegment {
-  WasmVar table_var;
-  WasmExpr* offset;
-  WasmVarVector vars;
-} WasmElemSegment;
-typedef WasmElemSegment* WasmElemSegmentPtr;
-WASM_DEFINE_VECTOR(elem_segment_ptr, WasmElemSegmentPtr);
+typedef struct WabtElemSegment {
+  WabtVar table_var;
+  WabtExpr* offset;
+  WabtVarVector vars;
+} WabtElemSegment;
+typedef WabtElemSegment* WabtElemSegmentPtr;
+WABT_DEFINE_VECTOR(elem_segment_ptr, WabtElemSegmentPtr);
 
-typedef struct WasmMemory {
-  WasmStringSlice name;
-  WasmLimits page_limits;
-} WasmMemory;
-typedef WasmMemory* WasmMemoryPtr;
-WASM_DEFINE_VECTOR(memory_ptr, WasmMemoryPtr);
+typedef struct WabtMemory {
+  WabtStringSlice name;
+  WabtLimits page_limits;
+} WabtMemory;
+typedef WabtMemory* WabtMemoryPtr;
+WABT_DEFINE_VECTOR(memory_ptr, WabtMemoryPtr);
 
-typedef struct WasmDataSegment {
-  WasmVar memory_var;
-  WasmExpr* offset;
+typedef struct WabtDataSegment {
+  WabtVar memory_var;
+  WabtExpr* offset;
   void* data;
   size_t size;
-} WasmDataSegment;
-typedef WasmDataSegment* WasmDataSegmentPtr;
-WASM_DEFINE_VECTOR(data_segment_ptr, WasmDataSegmentPtr);
+} WabtDataSegment;
+typedef WabtDataSegment* WabtDataSegmentPtr;
+WABT_DEFINE_VECTOR(data_segment_ptr, WabtDataSegmentPtr);
 
-typedef struct WasmImport {
-  WasmStringSlice module_name;
-  WasmStringSlice field_name;
-  WasmExternalKind kind;
+typedef struct WabtImport {
+  WabtStringSlice module_name;
+  WabtStringSlice field_name;
+  WabtExternalKind kind;
   union {
-    /* an imported func is has the type WasmFunc so it can be more easily
+    /* an imported func is has the type WabtFunc so it can be more easily
      * included in the Module's vector of funcs; but only the
-     * WasmFuncDeclaration will have any useful information */
-    WasmFunc func;
-    WasmTable table;
-    WasmMemory memory;
-    WasmGlobal global;
+     * WabtFuncDeclaration will have any useful information */
+    WabtFunc func;
+    WabtTable table;
+    WabtMemory memory;
+    WabtGlobal global;
   };
-} WasmImport;
-typedef WasmImport* WasmImportPtr;
-WASM_DEFINE_VECTOR(import_ptr, WasmImportPtr);
+} WabtImport;
+typedef WabtImport* WabtImportPtr;
+WABT_DEFINE_VECTOR(import_ptr, WabtImportPtr);
 
-typedef struct WasmExport {
-  WasmStringSlice name;
-  WasmExternalKind kind;
-  WasmVar var;
-} WasmExport;
-typedef WasmExport* WasmExportPtr;
-WASM_DEFINE_VECTOR(export_ptr, WasmExportPtr);
+typedef struct WabtExport {
+  WabtStringSlice name;
+  WabtExternalKind kind;
+  WabtVar var;
+} WabtExport;
+typedef WabtExport* WabtExportPtr;
+WABT_DEFINE_VECTOR(export_ptr, WabtExportPtr);
 
-typedef enum WasmModuleFieldType {
-  WASM_MODULE_FIELD_TYPE_FUNC,
-  WASM_MODULE_FIELD_TYPE_GLOBAL,
-  WASM_MODULE_FIELD_TYPE_IMPORT,
-  WASM_MODULE_FIELD_TYPE_EXPORT,
-  WASM_MODULE_FIELD_TYPE_FUNC_TYPE,
-  WASM_MODULE_FIELD_TYPE_TABLE,
-  WASM_MODULE_FIELD_TYPE_ELEM_SEGMENT,
-  WASM_MODULE_FIELD_TYPE_MEMORY,
-  WASM_MODULE_FIELD_TYPE_DATA_SEGMENT,
-  WASM_MODULE_FIELD_TYPE_START,
-} WasmModuleFieldType;
+typedef enum WabtModuleFieldType {
+  WABT_MODULE_FIELD_TYPE_FUNC,
+  WABT_MODULE_FIELD_TYPE_GLOBAL,
+  WABT_MODULE_FIELD_TYPE_IMPORT,
+  WABT_MODULE_FIELD_TYPE_EXPORT,
+  WABT_MODULE_FIELD_TYPE_FUNC_TYPE,
+  WABT_MODULE_FIELD_TYPE_TABLE,
+  WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT,
+  WABT_MODULE_FIELD_TYPE_MEMORY,
+  WABT_MODULE_FIELD_TYPE_DATA_SEGMENT,
+  WABT_MODULE_FIELD_TYPE_START,
+} WabtModuleFieldType;
 
-typedef struct WasmModuleField {
-  WasmLocation loc;
-  WasmModuleFieldType type;
-  struct WasmModuleField* next;
+typedef struct WabtModuleField {
+  WabtLocation loc;
+  WabtModuleFieldType type;
+  struct WabtModuleField* next;
   union {
-    WasmFunc func;
-    WasmGlobal global;
-    WasmImport import;
-    WasmExport export_;
-    WasmFuncType func_type;
-    WasmTable table;
-    WasmElemSegment elem_segment;
-    WasmMemory memory;
-    WasmDataSegment data_segment;
-    WasmVar start;
+    WabtFunc func;
+    WabtGlobal global;
+    WabtImport import;
+    WabtExport export_;
+    WabtFuncType func_type;
+    WabtTable table;
+    WabtElemSegment elem_segment;
+    WabtMemory memory;
+    WabtDataSegment data_segment;
+    WabtVar start;
   };
-} WasmModuleField;
+} WabtModuleField;
 
-typedef struct WasmModule {
-  WasmLocation loc;
-  WasmStringSlice name;
-  WasmModuleField* first_field;
-  WasmModuleField* last_field;
+typedef struct WabtModule {
+  WabtLocation loc;
+  WabtStringSlice name;
+  WabtModuleField* first_field;
+  WabtModuleField* last_field;
 
   uint32_t num_func_imports;
   uint32_t num_table_imports;
@@ -257,343 +257,343 @@ typedef struct WasmModule {
   uint32_t num_global_imports;
 
   /* cached for convenience; the pointers are shared with values that are
-   * stored in either WasmModuleField or WasmImport. */
-  WasmFuncPtrVector funcs;
-  WasmGlobalPtrVector globals;
-  WasmImportPtrVector imports;
-  WasmExportPtrVector exports;
-  WasmFuncTypePtrVector func_types;
-  WasmTablePtrVector tables;
-  WasmElemSegmentPtrVector elem_segments;
-  WasmMemoryPtrVector memories;
-  WasmDataSegmentPtrVector data_segments;
-  WasmVar* start;
+   * stored in either WabtModuleField or WabtImport. */
+  WabtFuncPtrVector funcs;
+  WabtGlobalPtrVector globals;
+  WabtImportPtrVector imports;
+  WabtExportPtrVector exports;
+  WabtFuncTypePtrVector func_types;
+  WabtTablePtrVector tables;
+  WabtElemSegmentPtrVector elem_segments;
+  WabtMemoryPtrVector memories;
+  WabtDataSegmentPtrVector data_segments;
+  WabtVar* start;
 
-  WasmBindingHash func_bindings;
-  WasmBindingHash global_bindings;
-  WasmBindingHash export_bindings;
-  WasmBindingHash func_type_bindings;
-  WasmBindingHash table_bindings;
-  WasmBindingHash memory_bindings;
-} WasmModule;
+  WabtBindingHash func_bindings;
+  WabtBindingHash global_bindings;
+  WabtBindingHash export_bindings;
+  WabtBindingHash func_type_bindings;
+  WabtBindingHash table_bindings;
+  WabtBindingHash memory_bindings;
+} WabtModule;
 
-typedef enum WasmRawModuleType {
-  WASM_RAW_MODULE_TYPE_TEXT,
-  WASM_RAW_MODULE_TYPE_BINARY,
-} WasmRawModuleType;
+typedef enum WabtRawModuleType {
+  WABT_RAW_MODULE_TYPE_TEXT,
+  WABT_RAW_MODULE_TYPE_BINARY,
+} WabtRawModuleType;
 
 /* "raw" means that the binary module has not yet been decoded. This is only
  * necessary when embedded in assert_invalid. In that case we want to defer
- * decoding errors until wasm_check_assert_invalid is called. This isn't needed
+ * decoding errors until wabt_check_assert_invalid is called. This isn't needed
  * when parsing text, as assert_invalid always assumes that text parsing
  * succeeds. */
-typedef struct WasmRawModule {
-  WasmRawModuleType type;
+typedef struct WabtRawModule {
+  WabtRawModuleType type;
   union {
-    WasmModule* text;
+    WabtModule* text;
     struct {
-      WasmLocation loc;
-      WasmStringSlice name;
+      WabtLocation loc;
+      WabtStringSlice name;
       void* data;
       size_t size;
     } binary;
   };
-} WasmRawModule;
+} WabtRawModule;
 
-typedef enum WasmActionType {
-  WASM_ACTION_TYPE_INVOKE,
-  WASM_ACTION_TYPE_GET,
-} WasmActionType;
+typedef enum WabtActionType {
+  WABT_ACTION_TYPE_INVOKE,
+  WABT_ACTION_TYPE_GET,
+} WabtActionType;
 
-typedef struct WasmActionInvoke {
-  WasmStringSlice name;
-  WasmConstVector args;
-} WasmActionInvoke;
+typedef struct WabtActionInvoke {
+  WabtStringSlice name;
+  WabtConstVector args;
+} WabtActionInvoke;
 
-typedef struct WasmActionGet {
-  WasmStringSlice name;
-} WasmActionGet;
+typedef struct WabtActionGet {
+  WabtStringSlice name;
+} WabtActionGet;
 
-typedef struct WasmAction {
-  WasmLocation loc;
-  WasmActionType type;
-  WasmVar module_var;
+typedef struct WabtAction {
+  WabtLocation loc;
+  WabtActionType type;
+  WabtVar module_var;
   union {
-    WasmActionInvoke invoke;
-    WasmActionGet get;
+    WabtActionInvoke invoke;
+    WabtActionGet get;
   };
-} WasmAction;
+} WabtAction;
 
-typedef enum WasmCommandType {
-  WASM_COMMAND_TYPE_MODULE,
-  WASM_COMMAND_TYPE_ACTION,
-  WASM_COMMAND_TYPE_REGISTER,
-  WASM_COMMAND_TYPE_ASSERT_MALFORMED,
-  WASM_COMMAND_TYPE_ASSERT_INVALID,
+typedef enum WabtCommandType {
+  WABT_COMMAND_TYPE_MODULE,
+  WABT_COMMAND_TYPE_ACTION,
+  WABT_COMMAND_TYPE_REGISTER,
+  WABT_COMMAND_TYPE_ASSERT_MALFORMED,
+  WABT_COMMAND_TYPE_ASSERT_INVALID,
   /* This is a module that is invalid, but cannot be written as a binary module
    * (e.g. it has unresolvable names.) */
-  WASM_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY,
-  WASM_COMMAND_TYPE_ASSERT_UNLINKABLE,
-  WASM_COMMAND_TYPE_ASSERT_UNINSTANTIABLE,
-  WASM_COMMAND_TYPE_ASSERT_RETURN,
-  WASM_COMMAND_TYPE_ASSERT_RETURN_NAN,
-  WASM_COMMAND_TYPE_ASSERT_TRAP,
-  WASM_COMMAND_TYPE_ASSERT_EXHAUSTION,
-  WASM_NUM_COMMAND_TYPES,
-} WasmCommandType;
+  WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY,
+  WABT_COMMAND_TYPE_ASSERT_UNLINKABLE,
+  WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE,
+  WABT_COMMAND_TYPE_ASSERT_RETURN,
+  WABT_COMMAND_TYPE_ASSERT_RETURN_NAN,
+  WABT_COMMAND_TYPE_ASSERT_TRAP,
+  WABT_COMMAND_TYPE_ASSERT_EXHAUSTION,
+  WABT_NUM_COMMAND_TYPES,
+} WabtCommandType;
 
-typedef struct WasmCommand {
-  WasmCommandType type;
+typedef struct WabtCommand {
+  WabtCommandType type;
   union {
-    WasmModule module;
-    WasmAction action;
-    struct { WasmStringSlice module_name; WasmVar var; } register_;
-    struct { WasmAction action; WasmConstVector expected; } assert_return;
-    struct { WasmAction action; } assert_return_nan;
-    struct { WasmAction action; WasmStringSlice text; } assert_trap;
+    WabtModule module;
+    WabtAction action;
+    struct { WabtStringSlice module_name; WabtVar var; } register_;
+    struct { WabtAction action; WabtConstVector expected; } assert_return;
+    struct { WabtAction action; } assert_return_nan;
+    struct { WabtAction action; WabtStringSlice text; } assert_trap;
     struct {
-      WasmRawModule module;
-      WasmStringSlice text;
+      WabtRawModule module;
+      WabtStringSlice text;
     } assert_malformed, assert_invalid, assert_unlinkable,
         assert_uninstantiable;
   };
-} WasmCommand;
-WASM_DEFINE_VECTOR(command, WasmCommand);
+} WabtCommand;
+WABT_DEFINE_VECTOR(command, WabtCommand);
 
-typedef struct WasmScript {
-  struct WasmAllocator* allocator;
-  WasmCommandVector commands;
-  WasmBindingHash module_bindings;
-} WasmScript;
+typedef struct WabtScript {
+  struct WabtAllocator* allocator;
+  WabtCommandVector commands;
+  WabtBindingHash module_bindings;
+} WabtScript;
 
-typedef struct WasmExprVisitor {
+typedef struct WabtExprVisitor {
   void* user_data;
-  WasmResult (*on_binary_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_block_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_block_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_br_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_br_if_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_br_table_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_call_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_call_indirect_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_compare_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_const_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_convert_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_current_memory_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_drop_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_get_global_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_get_local_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_grow_memory_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_if_expr)(WasmExpr*, void* user_data);
-  WasmResult (*after_if_true_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_if_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_load_expr)(WasmExpr*, void* user_data);
-  WasmResult (*begin_loop_expr)(WasmExpr*, void* user_data);
-  WasmResult (*end_loop_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_nop_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_return_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_select_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_set_global_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_set_local_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_store_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_tee_local_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_unary_expr)(WasmExpr*, void* user_data);
-  WasmResult (*on_unreachable_expr)(WasmExpr*, void* user_data);
-} WasmExprVisitor;
+  WabtResult (*on_binary_expr)(WabtExpr*, void* user_data);
+  WabtResult (*begin_block_expr)(WabtExpr*, void* user_data);
+  WabtResult (*end_block_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_br_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_br_if_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_br_table_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_call_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_call_indirect_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_compare_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_const_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_convert_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_current_memory_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_drop_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_get_global_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_get_local_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_grow_memory_expr)(WabtExpr*, void* user_data);
+  WabtResult (*begin_if_expr)(WabtExpr*, void* user_data);
+  WabtResult (*after_if_true_expr)(WabtExpr*, void* user_data);
+  WabtResult (*end_if_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_load_expr)(WabtExpr*, void* user_data);
+  WabtResult (*begin_loop_expr)(WabtExpr*, void* user_data);
+  WabtResult (*end_loop_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_nop_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_return_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_select_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_set_global_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_set_local_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_store_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_tee_local_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_unary_expr)(WabtExpr*, void* user_data);
+  WabtResult (*on_unreachable_expr)(WabtExpr*, void* user_data);
+} WabtExprVisitor;
 
-WASM_EXTERN_C_BEGIN
-WasmModuleField* wasm_append_module_field(struct WasmAllocator*, WasmModule*);
+WABT_EXTERN_C_BEGIN
+WabtModuleField* wabt_append_module_field(struct WabtAllocator*, WabtModule*);
 /* ownership of the function signature is passed to the module */
-WasmFuncType* wasm_append_implicit_func_type(struct WasmAllocator*,
-                                             WasmLocation*,
-                                             WasmModule*,
-                                             WasmFuncSignature*);
+WabtFuncType* wabt_append_implicit_func_type(struct WabtAllocator*,
+                                             WabtLocation*,
+                                             WabtModule*,
+                                             WabtFuncSignature*);
 
-/* WasmExpr creation functions */
-WasmExpr* wasm_new_binary_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_block_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_br_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_br_if_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_br_table_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_call_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_call_indirect_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_compare_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_const_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_convert_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_current_memory_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_drop_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_get_global_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_get_local_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_grow_memory_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_if_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_load_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_loop_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_nop_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_return_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_select_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_set_global_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_set_local_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_store_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_tee_local_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_unary_expr(struct WasmAllocator*);
-WasmExpr* wasm_new_unreachable_expr(struct WasmAllocator*);
+/* WabtExpr creation functions */
+WabtExpr* wabt_new_binary_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_block_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_br_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_br_if_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_br_table_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_call_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_call_indirect_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_compare_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_const_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_convert_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_current_memory_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_drop_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_get_global_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_get_local_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_grow_memory_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_if_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_load_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_loop_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_nop_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_return_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_select_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_set_global_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_set_local_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_store_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_tee_local_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_unary_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_unreachable_expr(struct WabtAllocator*);
 
 /* destruction functions. not needed unless you're creating your own AST
  elements */
-void wasm_destroy_script(struct WasmScript*);
-void wasm_destroy_action(struct WasmAllocator*, struct WasmAction*);
-void wasm_destroy_block(struct WasmAllocator*, struct WasmBlock*);
-void wasm_destroy_command_vector_and_elements(struct WasmAllocator*,
-                                              WasmCommandVector*);
-void wasm_destroy_command(struct WasmAllocator*, WasmCommand*);
-void wasm_destroy_data_segment(struct WasmAllocator*, WasmDataSegment*);
-void wasm_destroy_elem_segment(struct WasmAllocator*, WasmElemSegment*);
-void wasm_destroy_export(struct WasmAllocator*, WasmExport*);
-void wasm_destroy_expr(struct WasmAllocator*, WasmExpr*);
-void wasm_destroy_expr_list(struct WasmAllocator*, WasmExpr*);
-void wasm_destroy_func_declaration(struct WasmAllocator*, WasmFuncDeclaration*);
-void wasm_destroy_func_signature(struct WasmAllocator*, WasmFuncSignature*);
-void wasm_destroy_func_type(struct WasmAllocator*, WasmFuncType*);
-void wasm_destroy_func(struct WasmAllocator*, WasmFunc*);
-void wasm_destroy_import(struct WasmAllocator*, WasmImport*);
-void wasm_destroy_memory(struct WasmAllocator*, WasmMemory*);
-void wasm_destroy_module(struct WasmAllocator*, WasmModule*);
-void wasm_destroy_raw_module(struct WasmAllocator*, WasmRawModule*);
-void wasm_destroy_table(struct WasmAllocator*, WasmTable*);
-void wasm_destroy_var_vector_and_elements(struct WasmAllocator*,
-                                          WasmVarVector*);
-void wasm_destroy_var(struct WasmAllocator*, WasmVar*);
+void wabt_destroy_script(struct WabtScript*);
+void wabt_destroy_action(struct WabtAllocator*, struct WabtAction*);
+void wabt_destroy_block(struct WabtAllocator*, struct WabtBlock*);
+void wabt_destroy_command_vector_and_elements(struct WabtAllocator*,
+                                              WabtCommandVector*);
+void wabt_destroy_command(struct WabtAllocator*, WabtCommand*);
+void wabt_destroy_data_segment(struct WabtAllocator*, WabtDataSegment*);
+void wabt_destroy_elem_segment(struct WabtAllocator*, WabtElemSegment*);
+void wabt_destroy_export(struct WabtAllocator*, WabtExport*);
+void wabt_destroy_expr(struct WabtAllocator*, WabtExpr*);
+void wabt_destroy_expr_list(struct WabtAllocator*, WabtExpr*);
+void wabt_destroy_func_declaration(struct WabtAllocator*, WabtFuncDeclaration*);
+void wabt_destroy_func_signature(struct WabtAllocator*, WabtFuncSignature*);
+void wabt_destroy_func_type(struct WabtAllocator*, WabtFuncType*);
+void wabt_destroy_func(struct WabtAllocator*, WabtFunc*);
+void wabt_destroy_import(struct WabtAllocator*, WabtImport*);
+void wabt_destroy_memory(struct WabtAllocator*, WabtMemory*);
+void wabt_destroy_module(struct WabtAllocator*, WabtModule*);
+void wabt_destroy_raw_module(struct WabtAllocator*, WabtRawModule*);
+void wabt_destroy_table(struct WabtAllocator*, WabtTable*);
+void wabt_destroy_var_vector_and_elements(struct WabtAllocator*,
+                                          WabtVarVector*);
+void wabt_destroy_var(struct WabtAllocator*, WabtVar*);
 
 /* traversal functions */
-WasmResult wasm_visit_func(WasmFunc* func, WasmExprVisitor*);
-WasmResult wasm_visit_expr_list(WasmExpr* expr, WasmExprVisitor*);
+WabtResult wabt_visit_func(WabtFunc* func, WabtExprVisitor*);
+WabtResult wabt_visit_expr_list(WabtExpr* expr, WabtExprVisitor*);
 
 /* convenience functions for looking through the AST */
-int wasm_get_index_from_var(const WasmBindingHash* bindings,
-                            const WasmVar* var);
-int wasm_get_func_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_global_index_by_var(const WasmModule* func, const WasmVar* var);
-int wasm_get_func_type_index_by_var(const WasmModule* module,
-                                    const WasmVar* var);
-int wasm_get_func_type_index_by_sig(const WasmModule* module,
-                                    const WasmFuncSignature* sig);
-int wasm_get_func_type_index_by_decl(const WasmModule* module,
-                                     const WasmFuncDeclaration* decl);
-int wasm_get_table_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_memory_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_import_index_by_var(const WasmModule* module, const WasmVar* var);
-int wasm_get_local_index_by_var(const WasmFunc* func, const WasmVar* var);
-int wasm_get_module_index_by_var(const WasmScript* script, const WasmVar* var);
+int wabt_get_index_from_var(const WabtBindingHash* bindings,
+                            const WabtVar* var);
+int wabt_get_func_index_by_var(const WabtModule* module, const WabtVar* var);
+int wabt_get_global_index_by_var(const WabtModule* func, const WabtVar* var);
+int wabt_get_func_type_index_by_var(const WabtModule* module,
+                                    const WabtVar* var);
+int wabt_get_func_type_index_by_sig(const WabtModule* module,
+                                    const WabtFuncSignature* sig);
+int wabt_get_func_type_index_by_decl(const WabtModule* module,
+                                     const WabtFuncDeclaration* decl);
+int wabt_get_table_index_by_var(const WabtModule* module, const WabtVar* var);
+int wabt_get_memory_index_by_var(const WabtModule* module, const WabtVar* var);
+int wabt_get_import_index_by_var(const WabtModule* module, const WabtVar* var);
+int wabt_get_local_index_by_var(const WabtFunc* func, const WabtVar* var);
+int wabt_get_module_index_by_var(const WabtScript* script, const WabtVar* var);
 
-WasmFuncPtr wasm_get_func_by_var(const WasmModule* module, const WasmVar* var);
-WasmGlobalPtr wasm_get_global_by_var(const WasmModule* func,
-                                     const WasmVar* var);
-WasmFuncTypePtr wasm_get_func_type_by_var(const WasmModule* module,
-                                          const WasmVar* var);
-WasmTablePtr wasm_get_table_by_var(const WasmModule* module,
-                                   const WasmVar* var);
-WasmMemoryPtr wasm_get_memory_by_var(const WasmModule* module,
-                                     const WasmVar* var);
-WasmImportPtr wasm_get_import_by_var(const WasmModule* module,
-                                     const WasmVar* var);
-WasmExportPtr wasm_get_export_by_name(const WasmModule* module,
-                                      const WasmStringSlice* name);
-WasmModule* wasm_get_first_module(const WasmScript* script);
-WasmModule* wasm_get_module_by_var(const WasmScript* script,
-                                   const WasmVar* var);
+WabtFuncPtr wabt_get_func_by_var(const WabtModule* module, const WabtVar* var);
+WabtGlobalPtr wabt_get_global_by_var(const WabtModule* func,
+                                     const WabtVar* var);
+WabtFuncTypePtr wabt_get_func_type_by_var(const WabtModule* module,
+                                          const WabtVar* var);
+WabtTablePtr wabt_get_table_by_var(const WabtModule* module,
+                                   const WabtVar* var);
+WabtMemoryPtr wabt_get_memory_by_var(const WabtModule* module,
+                                     const WabtVar* var);
+WabtImportPtr wabt_get_import_by_var(const WabtModule* module,
+                                     const WabtVar* var);
+WabtExportPtr wabt_get_export_by_name(const WabtModule* module,
+                                      const WabtStringSlice* name);
+WabtModule* wabt_get_first_module(const WabtScript* script);
+WabtModule* wabt_get_module_by_var(const WabtScript* script,
+                                   const WabtVar* var);
 
-void wasm_make_type_binding_reverse_mapping(
-    struct WasmAllocator*,
-    const WasmTypeVector*,
-    const WasmBindingHash*,
-    WasmStringSliceVector* out_reverse_mapping);
+void wabt_make_type_binding_reverse_mapping(
+    struct WabtAllocator*,
+    const WabtTypeVector*,
+    const WabtBindingHash*,
+    WabtStringSliceVector* out_reverse_mapping);
 
-typedef void (*WasmDuplicateBindingCallback)(WasmBindingHashEntry* a,
-                                             WasmBindingHashEntry* b,
+typedef void (*WabtDuplicateBindingCallback)(WabtBindingHashEntry* a,
+                                             WabtBindingHashEntry* b,
                                              void* user_data);
-void wasm_find_duplicate_bindings(const WasmBindingHash*,
-                                  WasmDuplicateBindingCallback callback,
+void wabt_find_duplicate_bindings(const WabtBindingHash*,
+                                  WabtDuplicateBindingCallback callback,
                                   void* user_data);
 
-static WASM_INLINE WasmBool
-wasm_decl_has_func_type(const WasmFuncDeclaration* decl) {
-  return (WasmBool)((decl->flags & WASM_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) !=
+static WABT_INLINE WabtBool
+wabt_decl_has_func_type(const WabtFuncDeclaration* decl) {
+  return (WabtBool)((decl->flags & WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) !=
                     0);
 }
 
-static WASM_INLINE WasmBool
-wasm_signatures_are_equal(const WasmFuncSignature* sig1,
-                          const WasmFuncSignature* sig2) {
-  return (WasmBool)(
-      wasm_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
-      wasm_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
+static WABT_INLINE WabtBool
+wabt_signatures_are_equal(const WabtFuncSignature* sig1,
+                          const WabtFuncSignature* sig2) {
+  return (WabtBool)(
+      wabt_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
+      wabt_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
 }
 
-static WASM_INLINE size_t wasm_get_num_params(const WasmFunc* func) {
+static WABT_INLINE size_t wabt_get_num_params(const WabtFunc* func) {
   return func->decl.sig.param_types.size;
 }
 
-static WASM_INLINE size_t wasm_get_num_results(const WasmFunc* func) {
+static WABT_INLINE size_t wabt_get_num_results(const WabtFunc* func) {
   return func->decl.sig.result_types.size;
 }
 
-static WASM_INLINE size_t wasm_get_num_locals(const WasmFunc* func) {
+static WABT_INLINE size_t wabt_get_num_locals(const WabtFunc* func) {
   return func->local_types.size;
 }
 
-static WASM_INLINE size_t wasm_get_num_params_and_locals(const WasmFunc* func) {
-  return wasm_get_num_params(func) + wasm_get_num_locals(func);
+static WABT_INLINE size_t wabt_get_num_params_and_locals(const WabtFunc* func) {
+  return wabt_get_num_params(func) + wabt_get_num_locals(func);
 }
 
-static WASM_INLINE WasmType wasm_get_param_type(const WasmFunc* func,
+static WABT_INLINE WabtType wabt_get_param_type(const WabtFunc* func,
                                                 int index) {
   assert((size_t)index < func->decl.sig.param_types.size);
   return func->decl.sig.param_types.data[index];
 }
 
-static WASM_INLINE WasmType wasm_get_local_type(const WasmFunc* func,
+static WABT_INLINE WabtType wabt_get_local_type(const WabtFunc* func,
                                                 int index) {
-  assert((size_t)index < wasm_get_num_locals(func));
+  assert((size_t)index < wabt_get_num_locals(func));
   return func->local_types.data[index];
 }
 
-static WASM_INLINE WasmType wasm_get_result_type(const WasmFunc* func,
+static WABT_INLINE WabtType wabt_get_result_type(const WabtFunc* func,
                                                  int index) {
   assert((size_t)index < func->decl.sig.result_types.size);
   return func->decl.sig.result_types.data[index];
 }
 
-static WASM_INLINE WasmType
-wasm_get_func_type_param_type(const WasmFuncType* func_type, int index) {
+static WABT_INLINE WabtType
+wabt_get_func_type_param_type(const WabtFuncType* func_type, int index) {
   return func_type->sig.param_types.data[index];
 }
 
-static WASM_INLINE size_t
-wasm_get_func_type_num_params(const WasmFuncType* func_type) {
+static WABT_INLINE size_t
+wabt_get_func_type_num_params(const WabtFuncType* func_type) {
   return func_type->sig.param_types.size;
 }
 
-static WASM_INLINE WasmType
-wasm_get_func_type_result_type(const WasmFuncType* func_type, int index) {
+static WABT_INLINE WabtType
+wabt_get_func_type_result_type(const WabtFuncType* func_type, int index) {
   return func_type->sig.result_types.data[index];
 }
 
-static WASM_INLINE size_t
-wasm_get_func_type_num_results(const WasmFuncType* func_type) {
+static WABT_INLINE size_t
+wabt_get_func_type_num_results(const WabtFuncType* func_type) {
   return func_type->sig.result_types.size;
 }
 
-static WASM_INLINE const WasmLocation* wasm_get_raw_module_location(
-    const WasmRawModule* raw) {
+static WABT_INLINE const WabtLocation* wabt_get_raw_module_location(
+    const WabtRawModule* raw) {
   switch (raw->type) {
-    case WASM_RAW_MODULE_TYPE_BINARY: return &raw->binary.loc;
-    case WASM_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
+    case WABT_RAW_MODULE_TYPE_BINARY: return &raw->binary.loc;
+    case WABT_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
     default:
       assert(0);
       return NULL;
   }
 }
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_AST_H_ */
+#endif /* WABT_AST_H_ */

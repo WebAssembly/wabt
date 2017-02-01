@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_READER_INTERPRETER_H_
-#define WASM_BINARY_READER_INTERPRETER_H_
+#ifndef WABT_BINARY_READER_INTERPRETER_H_
+#define WABT_BINARY_READER_INTERPRETER_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmInterpreterEnvironment;
-struct WasmInterpreterModule;
-struct WasmReadBinaryOptions;
+struct WabtAllocator;
+struct WabtInterpreterEnvironment;
+struct WabtInterpreterModule;
+struct WabtReadBinaryOptions;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_read_binary_interpreter(
-    struct WasmAllocator* allocator,
-    struct WasmAllocator* memory_allocator,
-    struct WasmInterpreterEnvironment* env,
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_read_binary_interpreter(
+    struct WabtAllocator* allocator,
+    struct WabtAllocator* memory_allocator,
+    struct WabtInterpreterEnvironment* env,
     const void* data,
     size_t size,
-    const struct WasmReadBinaryOptions* options,
-    WasmBinaryErrorHandler*,
-    struct WasmInterpreterModule** out_module);
-WASM_EXTERN_C_END
+    const struct WabtReadBinaryOptions* options,
+    WabtBinaryErrorHandler*,
+    struct WabtInterpreterModule** out_module);
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_READER_INTERPRETER_H_ */
+#endif /* WABT_BINARY_READER_INTERPRETER_H_ */

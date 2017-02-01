@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-var wasm = {};
+var wabt = {};
 
-wasm.ready = new Promise(function(resolve, reject) {
-  wasm.$resolve = resolve;
-  wasm.$reject = reject;
+wabt.ready = new Promise(function(resolve, reject) {
+  wabt.$resolve = resolve;
+  wabt.$reject = reject;
 });
 
 var Module = {};
@@ -49,9 +49,9 @@ function loadbuffer(addr, len) {
   return new Uint8Array(HEAPU8.buffer, addr, len);
 }
 
-function sizeof(structName) { return Module['_wasm_sizeof_' + structName](); }
+function sizeof(structName) { return Module['_wabt_sizeof_' + structName](); }
 function offsetof(structName, fieldName) {
-  return Module['_wasm_offsetof_' + structName + '_' + fieldName]();
+  return Module['_wabt_offsetof_' + structName + '_' + fieldName]();
 }
 
 function malloc(size) {
@@ -531,13 +531,13 @@ BufferValue.prototype.toString = function() {
   return '<Buffer>@' + this.$addr + ', ' + this.size + ' bytes';
 };
 
-// Wasm enums //////////////////////////////////////////////////////////////////
+// Wabt enums //////////////////////////////////////////////////////////////////
 
-// WasmResult
+// WabtResult
 var OK = 0;
 var ERROR = 1;
 
-// Wasm low-level types ////////////////////////////////////////////////////////
+// Wabt low-level types ////////////////////////////////////////////////////////
 
 var I = (function() {
 
@@ -633,23 +633,23 @@ Writer.define('writer', {
   move_data: Fn(I32, [U32, U32, U32, UserData]),
 });
 
-// Wasm low-level functions ////////////////////////////////////////////////////
+// Wabt low-level functions ////////////////////////////////////////////////////
 
-var checkAst = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wasm_check_ast');
-var closeMemWriter = Fn(Void, [Ptr(MemoryWriter)]).define('_wasm_close_mem_writer');
-var defaultBinaryErrorCallback = BinaryErrorHandlerCallback.define('_wasm_default_binary_error_callback');
-var defaultSourceErrorCallback = SourceErrorHandlerCallback.define('_wasm_default_source_error_callback');
-var destroyAstLexer = Fn(Void, [Ptr(AstLexer)]).define('_wasm_destroy_ast_lexer');
-var destroyOutputBuffer = Fn(Void, [Ptr(OutputBuffer)]).define('_wasm_destroy_output_buffer');
-var destroyScript = Fn(Void, [Ptr(Script)]).define('_wasm_destroy_script');
-var destroyStackAllocator = Fn(Void, [Ptr(StackAllocator)]).define('_wasm_destroy_stack_allocator');
-var getLibcAllocator = Fn(Ptr(Allocator), []).define('_wasm_get_libc_allocator');
-var initMemWriter = Fn(I32, [Ptr(Allocator), Ptr(MemoryWriter)]).define('_wasm_init_mem_writer');
-var initStackAllocator = Fn(Void, [Ptr(StackAllocator), Ptr(Allocator)]).define('_wasm_init_stack_allocator');
-var initStream = Fn(Void, [Ptr(Stream), Ptr(Writer), Ptr(Stream)]).define('_wasm_init_stream');
-var newAstBufferLexer = Fn(Ptr(AstLexer), [Ptr(Allocator), Str, BufPtr, BufLen]).define('_wasm_new_ast_buffer_lexer');
-var parseAst = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wasm_parse_ast');
-var writeBinaryScript = Fn(I32, [Ptr(Allocator), Ptr(Writer), Ptr(Script), Ptr(WriteBinaryOptions)]).define('_wasm_write_binary_script');
+var checkAst = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_check_ast');
+var closeMemWriter = Fn(Void, [Ptr(MemoryWriter)]).define('_wabt_close_mem_writer');
+var defaultBinaryErrorCallback = BinaryErrorHandlerCallback.define('_wabt_default_binary_error_callback');
+var defaultSourceErrorCallback = SourceErrorHandlerCallback.define('_wabt_default_source_error_callback');
+var destroyAstLexer = Fn(Void, [Ptr(AstLexer)]).define('_wabt_destroy_ast_lexer');
+var destroyOutputBuffer = Fn(Void, [Ptr(OutputBuffer)]).define('_wabt_destroy_output_buffer');
+var destroyScript = Fn(Void, [Ptr(Script)]).define('_wabt_destroy_script');
+var destroyStackAllocator = Fn(Void, [Ptr(StackAllocator)]).define('_wabt_destroy_stack_allocator');
+var getLibcAllocator = Fn(Ptr(Allocator), []).define('_wabt_get_libc_allocator');
+var initMemWriter = Fn(I32, [Ptr(Allocator), Ptr(MemoryWriter)]).define('_wabt_init_mem_writer');
+var initStackAllocator = Fn(Void, [Ptr(StackAllocator), Ptr(Allocator)]).define('_wabt_init_stack_allocator');
+var initStream = Fn(Void, [Ptr(Stream), Ptr(Writer), Ptr(Stream)]).define('_wabt_init_stream');
+var newAstBufferLexer = Fn(Ptr(AstLexer), [Ptr(Allocator), Str, BufPtr, BufLen]).define('_wabt_new_ast_buffer_lexer');
+var parseAst = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_parse_ast');
+var writeBinaryScript = Fn(I32, [Ptr(Allocator), Ptr(Writer), Ptr(Script), Ptr(WriteBinaryOptions)]).define('_wabt_write_binary_script');
 
 return {
   // Types
@@ -1033,10 +1033,10 @@ ReadBinaryOptions.prototype.$destroy = function() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-var resolve = wasm.$resolve;
+var resolve = wabt.$resolve;
 
-wasm = {
-  ready: wasm.ready,
+wabt = {
+  ready: wabt.ready,
 
   // Types
   LibcAllocator: LibcAllocator,
@@ -1051,13 +1051,13 @@ resolve();
 };
 
 /*
-wasm.ready.then(function() {
+wabt.ready.then(function() {
   if (false) {
     try {
-      var sa = new wasm.StackAllocator(wasm.LibcAllocator);
+      var sa = new wabt.StackAllocator(wabt.LibcAllocator);
       var a = sa.allocator;
       var data = '(module\n  (func (result i32)\n    (i32.const 1)))';
-      var s = wasm.parseAst(a, 'foo.wast', data);
+      var s = wabt.parseAst(a, 'foo.wast', data);
       s.check();
       var output = s.toBinary({log: true});
       print('log output:\n' + output.log);
@@ -1071,8 +1071,8 @@ wasm.ready.then(function() {
 
   if (false) {
     try {
-      var a = new wasm.StackAllocator(wasm.LibcAllocator);
-      var ma = wasm.LibcAllocator;
+      var a = new wabt.StackAllocator(wabt.LibcAllocator);
+      var ma = wabt.LibcAllocator;
       var buf = new Uint8Array([
           0,  97, 115, 109,  11,   0,   0,   0,   4, 116, 121, 112, 101,   8,   2,  64,
           1,   1,   0,  64,   0,   0,   6, 105, 109, 112, 111, 114, 116,  12,   1,   0,
@@ -1080,8 +1080,8 @@ wasm.ready.then(function() {
         105, 111, 110,   2,   1,   1,   6, 101, 120, 112, 111, 114, 116,   4,   1,   0,
           1, 102,   4,  99, 111, 100, 101,   8,   1,   6,   0,  16,  42,  24,   1,   0,
       ]);
-      var im = wasm.readInterpreterModule(a.allocator, ma, buf, {});
-      var it = new wasm.InterpreterThread(a.allocator, im);
+      var im = wabt.readInterpreterModule(a.allocator, ma, buf, {});
+      var it = new wabt.InterpreterThread(a.allocator, im);
       im.run(it, 1000, 0);
     } catch(e) {
       print('ERROR:' + (e.stack ? e.stack : e));
@@ -1093,7 +1093,7 @@ wasm.ready.then(function() {
 
   if (true) {
     try {
-      var sa = new wasm.StackAllocator(wasm.LibcAllocator);
+      var sa = new wabt.StackAllocator(wabt.LibcAllocator);
       var a = sa.allocator;
       var source = `
         (module
@@ -1115,15 +1115,15 @@ wasm.ready.then(function() {
             (return (get_local $b)))
           (export "test" $test))
       `;
-      var s = wasm.parseAst(a, 'foo.wast', source);
+      var s = wabt.parseAst(a, 'foo.wast', source);
       s.check();
       var output = s.toBinary();
-      var im = wasm.readInterpreterModule(a, wasm.LibcAllocator, output.buffer);
+      var im = wabt.readInterpreterModule(a, wabt.LibcAllocator, output.buffer);
       if (true) {
         print('disassemble:\n' + im.disassemble(0, 1000));
       }
       if (true) {
-        var it = new wasm.InterpreterThread(a, im);
+        var it = new wabt.InterpreterThread(a, im);
         print('running');
         do {
           print(im.tracePC(it).trimRight());

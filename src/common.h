@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WASM_COMMON_H_
-#define WASM_COMMON_H_
+#ifndef WABT_COMMON_H_
+#define WABT_COMMON_H_
 
 #include <assert.h>
 #include <stdarg.h>
@@ -26,158 +26,158 @@
 #include "config.h"
 
 #ifdef __cplusplus
-#define WASM_EXTERN_C extern "C"
-#define WASM_EXTERN_C_BEGIN extern "C" {
-#define WASM_EXTERN_C_END }
+#define WABT_EXTERN_C extern "C"
+#define WABT_EXTERN_C_BEGIN extern "C" {
+#define WABT_EXTERN_C_END }
 #else
-#define WASM_EXTERN_C
-#define WASM_EXTERN_C_BEGIN
-#define WASM_EXTERN_C_END
+#define WABT_EXTERN_C
+#define WABT_EXTERN_C_BEGIN
+#define WABT_EXTERN_C_END
 #endif
 
-#define WASM_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
-#define WASM_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define WASM_ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
-#define WASM_USE(x) (void)x
+#define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
+#define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#define WABT_ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
+#define WABT_USE(x) (void)x
 
-#define WASM_UNKNOWN_OFFSET ((uint32_t)~0)
-#define WASM_PAGE_SIZE 0x10000 /* 64k */
-#define WASM_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space */
-#define WASM_BYTES_TO_PAGES(x) ((x) >> 16)
-#define WASM_ALIGN_UP_TO_PAGE(x) \
-  (((x) + WASM_PAGE_SIZE - 1) & ~(WASM_PAGE_SIZE - 1))
+#define WABT_UNKNOWN_OFFSET ((uint32_t)~0)
+#define WABT_PAGE_SIZE 0x10000 /* 64k */
+#define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space */
+#define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
+#define WABT_ALIGN_UP_TO_PAGE(x) \
+  (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
 
 #define PRIstringslice "%.*s"
-#define WASM_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
+#define WABT_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
 
-#define WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
-#define WASM_SNPRINTF_ALLOCA(buffer, len, format)                          \
+#define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
+#define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
   va_list args;                                                            \
   va_list args_copy;                                                       \
   va_start(args, format);                                                  \
   va_copy(args_copy, args);                                                \
-  char fixed_buf[WASM_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                    \
+  char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                    \
   char* buffer = fixed_buf;                                                \
-  size_t len = wasm_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
+  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
   va_end(args);                                                            \
   if (len + 1 > sizeof(fixed_buf)) {                                       \
     buffer = alloca(len + 1);                                              \
-    len = wasm_vsnprintf(buffer, len + 1, format, args_copy);              \
+    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
   }                                                                        \
   va_end(args_copy)
 
-struct WasmAllocator;
+struct WabtAllocator;
 
-typedef enum WasmBool {
-  WASM_FALSE,
-  WASM_TRUE,
-} WasmBool;
+typedef enum WabtBool {
+  WABT_FALSE,
+  WABT_TRUE,
+} WabtBool;
 
-typedef enum WasmResult {
-  WASM_OK,
-  WASM_ERROR,
-} WasmResult;
+typedef enum WabtResult {
+  WABT_OK,
+  WABT_ERROR,
+} WabtResult;
 
-#define WASM_SUCCEEDED(x) ((x) == WASM_OK)
-#define WASM_FAILED(x) ((x) == WASM_ERROR)
+#define WABT_SUCCEEDED(x) ((x) == WABT_OK)
+#define WABT_FAILED(x) ((x) == WABT_ERROR)
 
-typedef struct WasmStringSlice {
+typedef struct WabtStringSlice {
   const char* start;
   size_t length;
-} WasmStringSlice;
+} WabtStringSlice;
 
-typedef struct WasmLocation {
+typedef struct WabtLocation {
   const char* filename;
   int line;
   int first_column;
   int last_column;
-} WasmLocation;
+} WabtLocation;
 
-typedef void (*WasmSourceErrorCallback)(const WasmLocation*,
+typedef void (*WabtSourceErrorCallback)(const WabtLocation*,
                                         const char* error,
                                         const char* source_line,
                                         size_t source_line_length,
                                         size_t source_line_column_offset,
                                         void* user_data);
 
-typedef struct WasmSourceErrorHandler {
-  WasmSourceErrorCallback on_error;
+typedef struct WabtSourceErrorHandler {
+  WabtSourceErrorCallback on_error;
   /* on_error will be called with with source_line trimmed to this length */
   size_t source_line_max_length;
   void* user_data;
-} WasmSourceErrorHandler;
+} WabtSourceErrorHandler;
 
-#define WASM_SOURCE_LINE_MAX_LENGTH_DEFAULT 80
-#define WASM_SOURCE_ERROR_HANDLER_DEFAULT                                    \
+#define WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT 80
+#define WABT_SOURCE_ERROR_HANDLER_DEFAULT                                    \
   {                                                                          \
-    wasm_default_source_error_callback, WASM_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
+    wabt_default_source_error_callback, WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
         NULL                                                                 \
   }
 
-typedef void (*WasmBinaryErrorCallback)(uint32_t offset,
+typedef void (*WabtBinaryErrorCallback)(uint32_t offset,
                                         const char* error,
                                         void* user_data);
 
-typedef struct WasmBinaryErrorHandler {
-  WasmBinaryErrorCallback on_error;
+typedef struct WabtBinaryErrorHandler {
+  WabtBinaryErrorCallback on_error;
   void* user_data;
-} WasmBinaryErrorHandler;
+} WabtBinaryErrorHandler;
 
-#define WASM_BINARY_ERROR_HANDLER_DEFAULT \
-  { wasm_default_binary_error_callback, NULL }
+#define WABT_BINARY_ERROR_HANDLER_DEFAULT \
+  { wabt_default_binary_error_callback, NULL }
 
 /* This data structure is not required; it is just used by the default error
  * handler callbacks. */
-typedef enum WasmPrintErrorHeader {
-  WASM_PRINT_ERROR_HEADER_NEVER,
-  WASM_PRINT_ERROR_HEADER_ONCE,
-  WASM_PRINT_ERROR_HEADER_ALWAYS,
-} WasmPrintErrorHeader;
+typedef enum WabtPrintErrorHeader {
+  WABT_PRINT_ERROR_HEADER_NEVER,
+  WABT_PRINT_ERROR_HEADER_ONCE,
+  WABT_PRINT_ERROR_HEADER_ALWAYS,
+} WabtPrintErrorHeader;
 
-typedef struct WasmDefaultErrorHandlerInfo {
+typedef struct WabtDefaultErrorHandlerInfo {
   const char* header;
   FILE* out_file;
-  WasmPrintErrorHeader print_header;
-} WasmDefaultErrorHandlerInfo;
+  WabtPrintErrorHeader print_header;
+} WabtDefaultErrorHandlerInfo;
 
 /* matches binary format, do not change */
-typedef enum WasmType {
-  WASM_TYPE_I32 = -0x01,
-  WASM_TYPE_I64 = -0x02,
-  WASM_TYPE_F32 = -0x03,
-  WASM_TYPE_F64 = -0x04,
-  WASM_TYPE_ANYFUNC = -0x10,
-  WASM_TYPE_FUNC = -0x20,
-  WASM_TYPE_VOID = -0x40,
-  WASM_TYPE____ = WASM_TYPE_VOID, /* convenient for the opcode table below */
-  WASM_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
-} WasmType;
+typedef enum WabtType {
+  WABT_TYPE_I32 = -0x01,
+  WABT_TYPE_I64 = -0x02,
+  WABT_TYPE_F32 = -0x03,
+  WABT_TYPE_F64 = -0x04,
+  WABT_TYPE_ANYFUNC = -0x10,
+  WABT_TYPE_FUNC = -0x20,
+  WABT_TYPE_VOID = -0x40,
+  WABT_TYPE____ = WABT_TYPE_VOID, /* convenient for the opcode table below */
+  WABT_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
+} WabtType;
 
-typedef enum WasmRelocType {
-  WASM_RELOC_FUNC_INDEX_LEB = 0,   /* e.g. immediate of call instruction */
-  WASM_RELOC_TABLE_INDEX_SLEB = 1, /* e.g. loading address of function */
-  WASM_RELOC_TABLE_INDEX_I32 = 2,  /* e.g. function address in DATA */
-  WASM_RELOC_GLOBAL_INDEX_LEB = 3, /* e.g immediate of get_global inst */
-  WASM_RELOC_DATA = 4,
-  WASM_NUM_RELOC_TYPES,
-} WasmRelocType;
+typedef enum WabtRelocType {
+  WABT_RELOC_FUNC_INDEX_LEB = 0,   /* e.g. immediate of call instruction */
+  WABT_RELOC_TABLE_INDEX_SLEB = 1, /* e.g. loading address of function */
+  WABT_RELOC_TABLE_INDEX_I32 = 2,  /* e.g. function address in DATA */
+  WABT_RELOC_GLOBAL_INDEX_LEB = 3, /* e.g immediate of get_global inst */
+  WABT_RELOC_DATA = 4,
+  WABT_NUM_RELOC_TYPES,
+} WabtRelocType;
 
 /* matches binary format, do not change */
-typedef enum WasmExternalKind {
-  WASM_EXTERNAL_KIND_FUNC = 0,
-  WASM_EXTERNAL_KIND_TABLE = 1,
-  WASM_EXTERNAL_KIND_MEMORY = 2,
-  WASM_EXTERNAL_KIND_GLOBAL = 3,
-  WASM_NUM_EXTERNAL_KINDS,
-} WasmExternalKind;
+typedef enum WabtExternalKind {
+  WABT_EXTERNAL_KIND_FUNC = 0,
+  WABT_EXTERNAL_KIND_TABLE = 1,
+  WABT_EXTERNAL_KIND_MEMORY = 2,
+  WABT_EXTERNAL_KIND_GLOBAL = 3,
+  WABT_NUM_EXTERNAL_KINDS,
+} WabtExternalKind;
 
-typedef struct WasmLimits {
+typedef struct WabtLimits {
   uint64_t initial;
   uint64_t max;
-  WasmBool has_max;
-} WasmLimits;
+  WabtBool has_max;
+} WabtLimits;
 
-enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
+enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
 /*
  *   tr: result type
@@ -190,7 +190,7 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
  *
  *  tr  t1    t2   m  code  NAME text
  *  ============================ */
-#define WASM_FOREACH_OPCODE(V)                                          \
+#define WABT_FOREACH_OPCODE(V)                                          \
   V(___, ___, ___, 0, 0x00, UNREACHABLE, "unreachable")                 \
   V(___, ___, ___, 0, 0x01, NOP, "nop")                                 \
   V(___, ___, ___, 0, 0x02, BLOCK, "block")                             \
@@ -364,132 +364,132 @@ enum { WASM_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(F32, I32, ___, 0, 0xbe, F32_REINTERPRET_I32, "f32.reinterpret/i32") \
   V(F64, I64, ___, 0, 0xbf, F64_REINTERPRET_I64, "f64.reinterpret/i64")
 
-typedef enum WasmOpcode {
+typedef enum WabtOpcode {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  WASM_OPCODE_##NAME = code,
-  WASM_FOREACH_OPCODE(V)
+  WABT_OPCODE_##NAME = code,
+  WABT_FOREACH_OPCODE(V)
 #undef V
-  WASM_NUM_OPCODES
-} WasmOpcode;
+  WABT_NUM_OPCODES
+} WabtOpcode;
 
-typedef struct WasmOpcodeInfo {
+typedef struct WabtOpcodeInfo {
   const char* name;
-  WasmType result_type;
-  WasmType param1_type;
-  WasmType param2_type;
+  WabtType result_type;
+  WabtType param1_type;
+  WabtType param2_type;
   int memory_size;
-} WasmOpcodeInfo;
+} WabtOpcodeInfo;
 
-typedef enum WasmLiteralType {
-  WASM_LITERAL_TYPE_INT,
-  WASM_LITERAL_TYPE_FLOAT,
-  WASM_LITERAL_TYPE_HEXFLOAT,
-  WASM_LITERAL_TYPE_INFINITY,
-  WASM_LITERAL_TYPE_NAN,
-} WasmLiteralType;
+typedef enum WabtLiteralType {
+  WABT_LITERAL_TYPE_INT,
+  WABT_LITERAL_TYPE_FLOAT,
+  WABT_LITERAL_TYPE_HEXFLOAT,
+  WABT_LITERAL_TYPE_INFINITY,
+  WABT_LITERAL_TYPE_NAN,
+} WabtLiteralType;
 
-typedef struct WasmLiteral {
-  WasmLiteralType type;
-  WasmStringSlice text;
-} WasmLiteral;
+typedef struct WabtLiteral {
+  WabtLiteralType type;
+  WabtStringSlice text;
+} WabtLiteral;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 /* return 1 if |alignment| matches the alignment of |opcode|, or if |alignment|
- * is WASM_USE_NATURAL_ALIGNMENT */
-WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment);
+ * is WABT_USE_NATURAL_ALIGNMENT */
+WabtBool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment);
 
-/* if |alignment| is WASM_USE_NATURAL_ALIGNMENT, return the alignment of
+/* if |alignment| is WABT_USE_NATURAL_ALIGNMENT, return the alignment of
  * |opcode|, else return |alignment| */
-uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment);
+uint32_t wabt_get_opcode_alignment(WabtOpcode opcode, uint32_t alignment);
 
-WasmStringSlice wasm_empty_string_slice(void);
-WasmBool wasm_string_slice_eq_cstr(const WasmStringSlice* s1, const char* s2);
-WasmBool wasm_string_slice_startswith(const WasmStringSlice* s1, const char* s2);
-WasmStringSlice wasm_string_slice_from_cstr(const char* string);
-WasmBool wasm_string_slice_is_empty(const WasmStringSlice*);
-WasmBool wasm_string_slices_are_equal(const WasmStringSlice*,
-                                      const WasmStringSlice*);
-void wasm_destroy_string_slice(struct WasmAllocator*, WasmStringSlice*);
-WasmResult wasm_read_file(struct WasmAllocator* allocator,
+WabtStringSlice wabt_empty_string_slice(void);
+WabtBool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2);
+WabtBool wabt_string_slice_startswith(const WabtStringSlice* s1, const char* s2);
+WabtStringSlice wabt_string_slice_from_cstr(const char* string);
+WabtBool wabt_string_slice_is_empty(const WabtStringSlice*);
+WabtBool wabt_string_slices_are_equal(const WabtStringSlice*,
+                                      const WabtStringSlice*);
+void wabt_destroy_string_slice(struct WabtAllocator*, WabtStringSlice*);
+WabtResult wabt_read_file(struct WabtAllocator* allocator,
                           const char* filename,
                           void** out_data,
                           size_t* out_size);
 
-void wasm_default_source_error_callback(const WasmLocation*,
+void wabt_default_source_error_callback(const WabtLocation*,
                                         const char* error,
                                         const char* source_line,
                                         size_t source_line_length,
                                         size_t source_line_column_offset,
                                         void* user_data);
 
-void wasm_default_binary_error_callback(uint32_t offset,
+void wabt_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data);
 
-void wasm_init_stdio();
+void wabt_init_stdio();
 
 /* opcode info */
-extern WasmOpcodeInfo g_wasm_opcode_info[];
+extern WabtOpcodeInfo g_wabt_opcode_info[];
 
-static WASM_INLINE const char* wasm_get_opcode_name(WasmOpcode opcode) {
-  assert(opcode < WASM_NUM_OPCODES);
-  return g_wasm_opcode_info[opcode].name;
+static WABT_INLINE const char* wabt_get_opcode_name(WabtOpcode opcode) {
+  assert(opcode < WABT_NUM_OPCODES);
+  return g_wabt_opcode_info[opcode].name;
 }
 
-static WASM_INLINE WasmType wasm_get_opcode_result_type(WasmOpcode opcode) {
-  assert(opcode < WASM_NUM_OPCODES);
-  return g_wasm_opcode_info[opcode].result_type;
+static WABT_INLINE WabtType wabt_get_opcode_result_type(WabtOpcode opcode) {
+  assert(opcode < WABT_NUM_OPCODES);
+  return g_wabt_opcode_info[opcode].result_type;
 }
 
-static WASM_INLINE WasmType wasm_get_opcode_param_type_1(WasmOpcode opcode) {
-  assert(opcode < WASM_NUM_OPCODES);
-  return g_wasm_opcode_info[opcode].param1_type;
+static WABT_INLINE WabtType wabt_get_opcode_param_type_1(WabtOpcode opcode) {
+  assert(opcode < WABT_NUM_OPCODES);
+  return g_wabt_opcode_info[opcode].param1_type;
 }
 
-static WASM_INLINE WasmType wasm_get_opcode_param_type_2(WasmOpcode opcode) {
-  assert(opcode < WASM_NUM_OPCODES);
-  return g_wasm_opcode_info[opcode].param2_type;
+static WABT_INLINE WabtType wabt_get_opcode_param_type_2(WabtOpcode opcode) {
+  assert(opcode < WABT_NUM_OPCODES);
+  return g_wabt_opcode_info[opcode].param2_type;
 }
 
-static WASM_INLINE int wasm_get_opcode_memory_size(WasmOpcode opcode) {
-  assert(opcode < WASM_NUM_OPCODES);
-  return g_wasm_opcode_info[opcode].memory_size;
+static WABT_INLINE int wabt_get_opcode_memory_size(WabtOpcode opcode) {
+  assert(opcode < WABT_NUM_OPCODES);
+  return g_wabt_opcode_info[opcode].memory_size;
 }
 
 /* external kind */
 
-extern const char* g_wasm_kind_name[];
+extern const char* g_wabt_kind_name[];
 
-static WASM_INLINE const char* wasm_get_kind_name(WasmExternalKind kind) {
-  assert(kind < WASM_NUM_EXTERNAL_KINDS);
-  return g_wasm_kind_name[kind];
+static WABT_INLINE const char* wabt_get_kind_name(WabtExternalKind kind) {
+  assert(kind < WABT_NUM_EXTERNAL_KINDS);
+  return g_wabt_kind_name[kind];
 }
 
 /* reloc */
 
-extern const char* g_wasm_reloc_type_name[];
+extern const char* g_wabt_reloc_type_name[];
 
-static WASM_INLINE const char* wasm_get_reloc_type_name(WasmRelocType reloc) {
-  assert(reloc < WASM_NUM_RELOC_TYPES);
-  return g_wasm_reloc_type_name[reloc];
+static WABT_INLINE const char* wabt_get_reloc_type_name(WabtRelocType reloc) {
+  assert(reloc < WABT_NUM_RELOC_TYPES);
+  return g_wabt_reloc_type_name[reloc];
 }
 
 /* type */
 
-static WASM_INLINE const char* wasm_get_type_name(WasmType type) {
+static WABT_INLINE const char* wabt_get_type_name(WabtType type) {
   switch (type) {
-    case WASM_TYPE_I32: return "i32";
-    case WASM_TYPE_I64: return "i64";
-    case WASM_TYPE_F32: return "f32";
-    case WASM_TYPE_F64: return "f64";
-    case WASM_TYPE_ANYFUNC: return "anyfunc";
-    case WASM_TYPE_FUNC: return "func";
-    case WASM_TYPE_VOID: return "void";
-    case WASM_TYPE_ANY: return "any";
+    case WABT_TYPE_I32: return "i32";
+    case WABT_TYPE_I64: return "i64";
+    case WABT_TYPE_F32: return "f32";
+    case WABT_TYPE_F64: return "f64";
+    case WABT_TYPE_ANYFUNC: return "anyfunc";
+    case WABT_TYPE_FUNC: return "func";
+    case WABT_TYPE_VOID: return "void";
+    case WABT_TYPE_ANY: return "any";
     default: return NULL;
   }
 }
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_COMMON_H_ */
+#endif /* WABT_COMMON_H_ */

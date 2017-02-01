@@ -162,14 +162,14 @@ SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover")
 
 find_package(BISON 3.0)
 if (RUN_BISON AND BISON_FOUND)
-  set(WASM_AST_PARSER_GEN_C ${WABT_BINARY_DIR}/ast-parser-gen.c)
-  BISON_TARGET(WASM_AST_PARSER_GEN_C
+  set(AST_PARSER_GEN_C ${WABT_BINARY_DIR}/ast-parser-gen.c)
+  BISON_TARGET(AST_PARSER_GEN_C
     ${WABT_SOURCE_DIR}/src/ast-parser.y
-    ${WASM_AST_PARSER_GEN_C}
+    ${AST_PARSER_GEN_C}
     COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/ast-parser-gen.h
   )
 else ()
-  set(WASM_AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.c)
+  set(AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.c)
   include_directories(src/prebuilt)
 endif ()
 
@@ -177,7 +177,7 @@ if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
   # yyerror passes a non-string-literal to a printf-like function, which is a
   # warning.
   set_source_files_properties(
-    ${WASM_AST_PARSER_GEN_C}
+    ${AST_PARSER_GEN_C}
     PROPERTIES
     COMPILE_FLAGS -Wno-format-security
   )
@@ -186,25 +186,25 @@ endif ()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 find_package(RE2C 0.13)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
-  set(WASM_AST_LEXER_C ${WABT_SOURCE_DIR}/src/ast-lexer.c)
-  set(WASM_AST_LEXER_GEN_C ${WABT_BINARY_DIR}/ast-lexer-gen.c)
+  set(AST_LEXER_C ${WABT_SOURCE_DIR}/src/ast-lexer.c)
+  set(AST_LEXER_GEN_C ${WABT_BINARY_DIR}/ast-lexer-gen.c)
   RE2C_TARGET(
-    NAME WASM_AST_LEXER_GEN_C
-    INPUT ${WASM_AST_LEXER_C}
-    OUTPUT ${WASM_AST_LEXER_GEN_C}
+    NAME AST_LEXER_GEN_C
+    INPUT ${AST_LEXER_C}
+    OUTPUT ${AST_LEXER_GEN_C}
     OPTIONS -bc
   )
 else ()
-  set(WASM_AST_LEXER_GEN_C src/prebuilt/ast-lexer-gen.c)
+  set(AST_LEXER_GEN_C src/prebuilt/ast-lexer-gen.c)
 endif ()
 
 add_custom_target(everything)
 
-add_library(libwasm STATIC
+add_library(libwabt STATIC
   src/ast.c
   src/ast-parser-lexer-shared.c
-  ${WASM_AST_LEXER_GEN_C}
-  ${WASM_AST_PARSER_GEN_C}
+  ${AST_LEXER_GEN_C}
+  ${AST_PARSER_GEN_C}
   src/validator.c
   src/binary-reader.c
   src/binary-writer.c
@@ -229,39 +229,39 @@ add_library(libwasm STATIC
   src/vector.c
   src/writer.c
 )
-set_target_properties(libwasm PROPERTIES OUTPUT_NAME wasm)
+set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
 
 if (NOT EMSCRIPTEN)
   # wast2wasm
   add_executable(wast2wasm src/tools/wast2wasm.c)
   add_dependencies(everything wast2wasm)
-  target_link_libraries(wast2wasm libwasm)
+  target_link_libraries(wast2wasm libwabt)
 
   # wasm2wast
   add_executable(wasm2wast src/tools/wasm2wast.c)
   add_dependencies(everything wasm2wast)
-  target_link_libraries(wasm2wast libwasm)
+  target_link_libraries(wasm2wast libwabt)
 
   # wasmopcodecnt
   add_executable(wasmopcodecnt src/tools/wasmopcodecnt.c
     src/binary-reader-opcnt.c)
   add_dependencies(everything wasmopcodecnt)
-  target_link_libraries(wasmopcodecnt libwasm)
+  target_link_libraries(wasmopcodecnt libwabt)
 
   # wasmdump
   add_executable(wasmdump src/tools/wasmdump.c src/binary-reader-objdump.c)
   add_dependencies(everything wasmdump)
-  target_link_libraries(wasmdump libwasm)
+  target_link_libraries(wasmdump libwabt)
 
   # wasm-link
   add_executable(wasm-link src/tools/wasm-link.c src/binary-reader-linker.c)
   add_dependencies(everything wasm-link)
-  target_link_libraries(wasm-link libwasm)
+  target_link_libraries(wasm-link libwabt)
 
   # wasm-interp
   add_executable(wasm-interp src/tools/wasm-interp.c)
   add_dependencies(everything wasm-interp)
-  target_link_libraries(wasm-interp libwasm)
+  target_link_libraries(wasm-interp libwabt)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
     target_link_libraries(wasm-interp m)
   endif ()
@@ -269,7 +269,7 @@ if (NOT EMSCRIPTEN)
   # wast-desugar
   add_executable(wast-desugar src/tools/wast-desugar.c)
   add_dependencies(everything wast-desugar)
-  target_link_libraries(wast-desugar libwasm)
+  target_link_libraries(wast-desugar libwabt)
 
   # symlinks for wast2wasm and wasm2wast
   if (NOT WIN32)
@@ -335,25 +335,25 @@ else ()
 
   # just dump everything into one binary so we can reference it from JavaScript
   add_definitions(-Wno-warn-absolute-paths)
-  add_executable(libwasmjs src/emscripten-helpers.c)
-  add_dependencies(everything libwasmjs)
-  target_link_libraries(libwasmjs libwasm)
-  set_target_properties(libwasmjs PROPERTIES OUTPUT_NAME libwasm)
+  add_executable(libwabtjs src/emscripten-helpers.c)
+  add_dependencies(everything libwabtjs)
+  target_link_libraries(libwabtjs libwabt)
+  set_target_properties(libwabtjs PROPERTIES OUTPUT_NAME libwabt)
 
-  set(WASM_JS ${WABT_SOURCE_DIR}/src/wasm.js)
+  set(WABT_JS ${WABT_SOURCE_DIR}/src/wabt.js)
   set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
 
-  set(LIBWASM_LINK_FLAGS
-    --pre-js ${WASM_JS}
+  set(LIBWABT_LINK_FLAGS
+    --pre-js ${WABT_JS}
     -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
     -s RESERVED_FUNCTION_POINTERS=10
     -s NO_EXIT_RUNTIME=1
   )
-  string(REPLACE ";" " " LIBWASM_LINK_FLAGS_STR "${LIBWASM_LINK_FLAGS}")
+  string(REPLACE ";" " " LIBWABT_LINK_FLAGS_STR "${LIBWABT_LINK_FLAGS}")
 
-  set_target_properties(libwasmjs
+  set_target_properties(libwabtjs
     PROPERTIES
-    LINK_FLAGS "${LIBWASM_LINK_FLAGS_STR}"
-    LINK_DEPENDS "${WASM_JS};${EMSCRIPTEN_EXPORTED_JSON}"
+    LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
+    LINK_DEPENDS "${WABT_JS};${EMSCRIPTEN_EXPORTED_JSON}"
   )
 endif ()

@@ -29,116 +29,116 @@
 #include "allocator.h"
 
 #define V(rtype, type1, type2, mem_size, code, NAME, text)                 \
-  [code] = {text, WASM_TYPE_##rtype, WASM_TYPE_##type1, WASM_TYPE_##type2, \
+  [code] = {text, WABT_TYPE_##rtype, WABT_TYPE_##type1, WABT_TYPE_##type2, \
             mem_size},
-WasmOpcodeInfo g_wasm_opcode_info[] = {WASM_FOREACH_OPCODE(V)};
+WabtOpcodeInfo g_wabt_opcode_info[] = {WABT_FOREACH_OPCODE(V)};
 #undef V
 
-const char* g_wasm_kind_name[] = {"func", "table", "memory", "global"};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_kind_name) ==
-                   WASM_NUM_EXTERNAL_KINDS);
+const char* g_wabt_kind_name[] = {"func", "table", "memory", "global"};
+WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_kind_name) ==
+                   WABT_NUM_EXTERNAL_KINDS);
 
-const char* g_wasm_reloc_type_name[] = {
+const char* g_wabt_reloc_type_name[] = {
     "R_FUNC_INDEX_LEB", "R_TABLE_INDEX_SLEB", "R_TABLE_INDEX_I32",
     "R_GLOBAL_INDEX_LEB", "R_DATA"};
-WASM_STATIC_ASSERT(WASM_ARRAY_SIZE(g_wasm_reloc_type_name) ==
-                   WASM_NUM_RELOC_TYPES);
+WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_reloc_type_name) ==
+                   WABT_NUM_RELOC_TYPES);
 
-WasmBool wasm_is_naturally_aligned(WasmOpcode opcode, uint32_t alignment) {
-  uint32_t opcode_align = wasm_get_opcode_memory_size(opcode);
-  return alignment == WASM_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
+WabtBool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment) {
+  uint32_t opcode_align = wabt_get_opcode_memory_size(opcode);
+  return alignment == WABT_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
 }
 
-uint32_t wasm_get_opcode_alignment(WasmOpcode opcode, uint32_t alignment) {
-  if (alignment == WASM_USE_NATURAL_ALIGNMENT)
-    return wasm_get_opcode_memory_size(opcode);
+uint32_t wabt_get_opcode_alignment(WabtOpcode opcode, uint32_t alignment) {
+  if (alignment == WABT_USE_NATURAL_ALIGNMENT)
+    return wabt_get_opcode_memory_size(opcode);
   return alignment;
 }
 
-WasmStringSlice wasm_empty_string_slice(void) {
-  WasmStringSlice result;
+WabtStringSlice wabt_empty_string_slice(void) {
+  WabtStringSlice result;
   result.start = "";
   result.length = 0;
   return result;
 }
 
-WasmBool wasm_string_slice_eq_cstr(const WasmStringSlice* s1, const char* s2) {
+WabtBool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2) {
   size_t s2_len = strlen(s2);
   if (s2_len != s1->length)
-    return WASM_FALSE;
+    return WABT_FALSE;
 
-  return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
+  return strncmp(s1->start, s2, s2_len) == 0 ? WABT_TRUE : WABT_FALSE;
 }
 
-WasmBool wasm_string_slice_startswith(const WasmStringSlice* s1,
+WabtBool wabt_string_slice_startswith(const WabtStringSlice* s1,
                                       const char* s2) {
   size_t s2_len = strlen(s2);
   if (s2_len > s1->length)
-    return WASM_FALSE;
+    return WABT_FALSE;
 
-  return strncmp(s1->start, s2, s2_len) == 0 ? WASM_TRUE : WASM_FALSE;
+  return strncmp(s1->start, s2, s2_len) == 0 ? WABT_TRUE : WABT_FALSE;
 }
 
-WasmStringSlice wasm_string_slice_from_cstr(const char* string) {
-  WasmStringSlice result;
+WabtStringSlice wabt_string_slice_from_cstr(const char* string) {
+  WabtStringSlice result;
   result.start = string;
   result.length = strlen(string);
   return result;
 }
 
-WasmBool wasm_string_slice_is_empty(const WasmStringSlice* str) {
+WabtBool wabt_string_slice_is_empty(const WabtStringSlice* str) {
   assert(str);
   return str->start == NULL || str->length == 0;
 }
 
-WasmBool wasm_string_slices_are_equal(const WasmStringSlice* a,
-                                      const WasmStringSlice* b) {
+WabtBool wabt_string_slices_are_equal(const WabtStringSlice* a,
+                                      const WabtStringSlice* b) {
   assert(a && b);
   return a->start && b->start && a->length == b->length &&
          memcmp(a->start, b->start, a->length) == 0;
 }
 
-void wasm_destroy_string_slice(WasmAllocator* allocator, WasmStringSlice* str) {
+void wabt_destroy_string_slice(WabtAllocator* allocator, WabtStringSlice* str) {
   assert(str);
-  wasm_free(allocator, (void*)str->start);
+  wabt_free(allocator, (void*)str->start);
 }
 
-WasmResult wasm_read_file(WasmAllocator* allocator,
+WabtResult wabt_read_file(WabtAllocator* allocator,
                           const char* filename,
                           void** out_data,
                           size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
     fprintf(stderr, "unable to read file: %s\n", filename);
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (fseek(infile, 0, SEEK_END) < 0) {
     fprintf(stderr, "fseek to end failed.\n");
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   long size = ftell(infile);
   if (size < 0) {
     fprintf(stderr, "ftell failed.\n");
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   if (fseek(infile, 0, SEEK_SET) < 0) {
     fprintf(stderr, "fseek to beginning failed.\n");
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
-  void* data = wasm_alloc(allocator, size, WASM_DEFAULT_ALIGN);
+  void* data = wabt_alloc(allocator, size, WABT_DEFAULT_ALIGN);
   if (size != 0 && fread(data, size, 1, infile) != 1) {
     fprintf(stderr, "fread failed.\n");
-    return WASM_ERROR;
+    return WABT_ERROR;
   }
 
   *out_data = data;
   *out_size = size;
   fclose(infile);
-  return WASM_OK;
+  return WABT_OK;
 }
 
 static void print_carets(FILE* out,
@@ -157,7 +157,7 @@ static void print_carets(FILE* out,
 }
 
 static void print_source_error(FILE* out,
-                               const WasmLocation* loc,
+                               const WabtLocation* loc,
                                const char* error,
                                const char* source_line,
                                size_t source_line_length,
@@ -172,17 +172,17 @@ static void print_source_error(FILE* out,
   }
 }
 
-static void print_error_header(FILE* out, WasmDefaultErrorHandlerInfo* info) {
+static void print_error_header(FILE* out, WabtDefaultErrorHandlerInfo* info) {
   if (info && info->header) {
     switch (info->print_header) {
-      case WASM_PRINT_ERROR_HEADER_NEVER:
+      case WABT_PRINT_ERROR_HEADER_NEVER:
         break;
 
-      case WASM_PRINT_ERROR_HEADER_ONCE:
-        info->print_header = WASM_PRINT_ERROR_HEADER_NEVER;
+      case WABT_PRINT_ERROR_HEADER_ONCE:
+        info->print_header = WABT_PRINT_ERROR_HEADER_NEVER;
         /* Fallthrough. */
 
-      case WASM_PRINT_ERROR_HEADER_ALWAYS:
+      case WABT_PRINT_ERROR_HEADER_ALWAYS:
         fprintf(out, "%s:\n", info->header);
         break;
     }
@@ -192,37 +192,37 @@ static void print_error_header(FILE* out, WasmDefaultErrorHandlerInfo* info) {
 }
 
 static FILE* get_default_error_handler_info_output_file(
-    WasmDefaultErrorHandlerInfo* info) {
+    WabtDefaultErrorHandlerInfo* info) {
   return info && info->out_file ? info->out_file : stderr;
 }
 
-void wasm_default_source_error_callback(const WasmLocation* loc,
+void wabt_default_source_error_callback(const WabtLocation* loc,
                                         const char* error,
                                         const char* source_line,
                                         size_t source_line_length,
                                         size_t source_line_column_offset,
                                         void* user_data) {
-  WasmDefaultErrorHandlerInfo* info = user_data;
+  WabtDefaultErrorHandlerInfo* info = user_data;
   FILE* out = get_default_error_handler_info_output_file(info);
   print_error_header(out, info);
   print_source_error(out, loc, error, source_line, source_line_length,
                      source_line_column_offset);
 }
 
-void wasm_default_binary_error_callback(uint32_t offset,
+void wabt_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data) {
-  WasmDefaultErrorHandlerInfo* info = user_data;
+  WabtDefaultErrorHandlerInfo* info = user_data;
   FILE* out = get_default_error_handler_info_output_file(info);
   print_error_header(out, info);
-  if (offset == WASM_UNKNOWN_OFFSET)
+  if (offset == WABT_UNKNOWN_OFFSET)
     fprintf(out, "error: %s\n", error);
   else
     fprintf(out, "error: @0x%08x: %s\n", offset, error);
   fflush(out);
 }
 
-void wasm_init_stdio() {
+void wabt_init_stdio() {
 #if COMPILER_IS_MSVC
   int result = _setmode(_fileno(stdout), _O_BINARY);
   if (result == -1)

@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-#ifndef WASM_BINARY_WRITER_SPEC_H_
-#define WASM_BINARY_WRITER_SPEC_H_
+#ifndef WABT_BINARY_WRITER_SPEC_H_
+#define WABT_BINARY_WRITER_SPEC_H_
 
 #include "ast.h"
 #include "binary-writer.h"
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmWriter;
+struct WabtAllocator;
+struct WabtWriter;
 
-#define WASM_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
-  { NULL, WASM_WRITE_BINARY_OPTIONS_DEFAULT }
+#define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
+  { NULL, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
 
-typedef struct WasmWriteBinarySpecOptions {
+typedef struct WabtWriteBinarySpecOptions {
   const char* json_filename;
-  WasmWriteBinaryOptions write_binary_options;
-} WasmWriteBinarySpecOptions;
+  WabtWriteBinaryOptions write_binary_options;
+} WabtWriteBinarySpecOptions;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_write_binary_spec_script(struct WasmAllocator*,
-                                         struct WasmScript*,
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_write_binary_spec_script(struct WabtAllocator*,
+                                         struct WabtScript*,
                                          const char* source_filename,
-                                         const WasmWriteBinarySpecOptions*);
-WASM_EXTERN_C_END
+                                         const WabtWriteBinarySpecOptions*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_BINARY_WRITER_SPEC_H_ */
+#endif /* WABT_BINARY_WRITER_SPEC_H_ */

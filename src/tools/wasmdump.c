@@ -28,8 +28,8 @@
 
 #define PROGRAM_NAME "wasmdump"
 
-#define NOPE WASM_OPTION_NO_ARGUMENT
-#define YEP WASM_OPTION_HAS_ARGUMENT
+#define NOPE WABT_OPTION_NO_ARGUMENT
+#define YEP WABT_OPTION_HAS_ARGUMENT
 
 enum {
   FLAG_HEADERS,
@@ -49,7 +49,7 @@ static const char s_description[] =
     "examples:\n"
     "  $ wasmdump test.wasm\n";
 
-static WasmOption s_options[] = {
+static WabtOption s_options[] = {
     {FLAG_HEADERS, 'h', "headers", NULL, NOPE, "print headers"},
     {FLAG_SECTION, 'j', "section", NULL, YEP, "select just one section"},
     {FLAG_RAW, 's', "full-contents", NULL, NOPE, "print raw section contents"},
@@ -62,39 +62,39 @@ static WasmOption s_options[] = {
     {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
 };
 
-WASM_STATIC_ASSERT(NUM_FLAGS == WASM_ARRAY_SIZE(s_options));
+WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static WasmObjdumpOptions s_objdump_options;
+static WabtObjdumpOptions s_objdump_options;
 
-static void on_argument(struct WasmOptionParser* parser, const char* argument) {
+static void on_argument(struct WabtOptionParser* parser, const char* argument) {
   s_objdump_options.infile = argument;
 }
 
-static void on_option(struct WasmOptionParser* parser,
-                      struct WasmOption* option,
+static void on_option(struct WabtOptionParser* parser,
+                      struct WabtOption* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_HEADERS:
-      s_objdump_options.headers = WASM_TRUE;
+      s_objdump_options.headers = WABT_TRUE;
       break;
 
     case FLAG_RAW:
-      s_objdump_options.raw = WASM_TRUE;
+      s_objdump_options.raw = WABT_TRUE;
       break;
 
     case FLAG_DEBUG:
-      s_objdump_options.debug = WASM_TRUE;
+      s_objdump_options.debug = WABT_TRUE;
 
     case FLAG_DISASSEMBLE:
-      s_objdump_options.disassemble = WASM_TRUE;
+      s_objdump_options.disassemble = WABT_TRUE;
       break;
 
     case FLAG_DETAILS:
-      s_objdump_options.details = WASM_TRUE;
+      s_objdump_options.details = WABT_TRUE;
       break;
 
     case FLAG_RELOCS:
-      s_objdump_options.relocs = WASM_TRUE;
+      s_objdump_options.relocs = WABT_TRUE;
       break;
 
     case FLAG_SECTION:
@@ -102,36 +102,36 @@ static void on_option(struct WasmOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wasm_print_help(parser, PROGRAM_NAME);
+      wabt_print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
   }
 }
 
-static void on_option_error(struct WasmOptionParser* parser,
+static void on_option_error(struct WabtOptionParser* parser,
                             const char* message) {
-  WASM_FATAL("%s\n", message);
+  WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WasmOptionParser parser;
-  WASM_ZERO_MEMORY(parser);
+  WabtOptionParser parser;
+  WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
-  parser.num_options = WASM_ARRAY_SIZE(s_options);
+  parser.num_options = WABT_ARRAY_SIZE(s_options);
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wasm_parse_options(&parser, argc, argv);
+  wabt_parse_options(&parser, argc, argv);
 
   if (!s_objdump_options.infile) {
-    wasm_print_help(&parser, PROGRAM_NAME);
-    WASM_FATAL("No filename given.\n");
+    wabt_print_help(&parser, PROGRAM_NAME);
+    WABT_FATAL("No filename given.\n");
   }
 }
 
 int main(int argc, char** argv) {
-  wasm_init_stdio();
+  wabt_init_stdio();
 
   parse_options(argc, argv);
   if (!s_objdump_options.headers && !s_objdump_options.details && !s_objdump_options.disassemble && !s_objdump_options.raw) {
@@ -143,12 +143,12 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  WasmAllocator* allocator = &g_wasm_libc_allocator;
+  WabtAllocator* allocator = &g_wabt_libc_allocator;
 
   void* data;
   size_t size;
-  WasmResult result = wasm_read_file(allocator, s_objdump_options.infile, &data, &size);
-  if (WASM_FAILED(result))
+  WabtResult result = wabt_read_file(allocator, s_objdump_options.infile, &data, &size);
+  if (WABT_FAILED(result))
     return result;
 
   // Perform serveral passed over the binary in order to print out different
@@ -164,41 +164,41 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  s_objdump_options.mode = WASM_DUMP_PREPASS;
-  result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-  if (WASM_FAILED(result))
+  s_objdump_options.mode = WABT_DUMP_PREPASS;
+  result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+  if (WABT_FAILED(result))
     goto done;
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
-    s_objdump_options.mode = WASM_DUMP_HEADERS;
-    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-    if (WASM_FAILED(result))
+    s_objdump_options.mode = WABT_DUMP_HEADERS;
+    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
-    s_objdump_options.mode = WASM_DUMP_DETAILS;
-    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-    if (WASM_FAILED(result))
+    s_objdump_options.mode = WABT_DUMP_DETAILS;
+    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   if (s_objdump_options.disassemble) {
-    s_objdump_options.mode = WASM_DUMP_DISASSEMBLE;
-    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
-    if (WASM_FAILED(result))
+    s_objdump_options.mode = WABT_DUMP_DISASSEMBLE;
+    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   // Pass 3: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
-    s_objdump_options.mode = WASM_DUMP_RAW_DATA;
-    result = wasm_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    s_objdump_options.mode = WABT_DUMP_RAW_DATA;
+    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
   }
 
 done:
-  wasm_free(allocator, data);
+  wabt_free(allocator, data);
   return result;
 }

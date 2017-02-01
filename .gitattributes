@@ -10,4 +10,4 @@
 *.txt text
 *.y text
 demo/primer.css binary
-demo/libwasm.js binary
+demo/libwabt.js binary

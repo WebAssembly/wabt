@@ -23,7 +23,7 @@
  using _snprintf or vsnprintf will not-properly null-terminate, and will return
  -1 instead of the number of characters needed on overflow. */
 #if COMPILER_IS_MSVC
-int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
+int wabt_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
   int result = -1;
   if (size != 0)
     result = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
@@ -33,10 +33,10 @@ int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
 }
 
 #if !HAVE_SNPRINTF
-int wasm_snprintf(char* str, size_t size, const char* format, ...) {
+int wabt_snprintf(char* str, size_t size, const char* format, ...) {
   va_list args;
   va_start(args, format);
-  int result = wasm_vsnprintf(str, size, format, args);
+  int result = wabt_vsnprintf(str, size, format, args);
   va_end(args);
   return result;
 }

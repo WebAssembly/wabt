@@ -14,65 +14,65 @@
  * limitations under the License.
  */
 
-#ifndef WASM_LINK_H_
-#define WASM_LINK_H_
+#ifndef WABT_LINK_H_
+#define WABT_LINK_H_
 
 #include "binary.h"
 #include "common.h"
 #include "vector.h"
 
-#define WASM_LINK_MODULE_NAME "__extern"
+#define WABT_LINK_MODULE_NAME "__extern"
 
-struct WasmLinkerInputBinary;
+struct WabtLinkerInputBinary;
 
-typedef struct WasmFunctionImport {
-  WasmStringSlice name;
+typedef struct WabtFunctionImport {
+  WabtStringSlice name;
   uint32_t sig_index;
-  WasmBool active; /* Is this import present in the linked binary */
-  struct WasmLinkerInputBinary* foreign_binary;
+  WabtBool active; /* Is this import present in the linked binary */
+  struct WabtLinkerInputBinary* foreign_binary;
   uint32_t foreign_index;
-} WasmFunctionImport;
-WASM_DEFINE_VECTOR(function_import, WasmFunctionImport);
+} WabtFunctionImport;
+WABT_DEFINE_VECTOR(function_import, WabtFunctionImport);
 
-typedef struct WasmGlobalImport {
-  WasmStringSlice name;
-  WasmType type;
-  WasmBool mutable;
-} WasmGlobalImport;
-WASM_DEFINE_VECTOR(global_import, WasmGlobalImport);
+typedef struct WabtGlobalImport {
+  WabtStringSlice name;
+  WabtType type;
+  WabtBool mutable;
+} WabtGlobalImport;
+WABT_DEFINE_VECTOR(global_import, WabtGlobalImport);
 
-typedef struct WasmDataSegment {
+typedef struct WabtDataSegment {
   uint32_t memory_index;
   uint32_t offset;
   const uint8_t* data;
   size_t size;
-} WasmDataSegment;
-WASM_DEFINE_VECTOR(data_segment, WasmDataSegment);
+} WabtDataSegment;
+WABT_DEFINE_VECTOR(data_segment, WabtDataSegment);
 
-typedef struct WasmReloc {
-  WasmRelocType type;
+typedef struct WabtReloc {
+  WabtRelocType type;
   size_t offset;
-} WasmReloc;
-WASM_DEFINE_VECTOR(reloc, WasmReloc);
+} WabtReloc;
+WABT_DEFINE_VECTOR(reloc, WabtReloc);
 
-typedef struct WasmExport {
-  WasmExternalKind kind;
-  WasmStringSlice name;
+typedef struct WabtExport {
+  WabtExternalKind kind;
+  WabtStringSlice name;
   uint32_t index;
-} WasmExport;
-WASM_DEFINE_VECTOR(export, WasmExport);
+} WabtExport;
+WABT_DEFINE_VECTOR(export, WabtExport);
 
-typedef struct WasmSectionDataCustom {
+typedef struct WabtSectionDataCustom {
   /* Reference to string data stored in the containing InputBinary */
-  WasmStringSlice name;
-} WasmSectionDataCustom;
+  WabtStringSlice name;
+} WabtSectionDataCustom;
 
-typedef struct WasmSection {
+typedef struct WabtSection {
   /* The binary to which this section belongs */
-  struct WasmLinkerInputBinary* binary;
-  WasmRelocVector relocations; /* The relocations for this section */
+  struct WabtLinkerInputBinary* binary;
+  WabtRelocVector relocations; /* The relocations for this section */
 
-  WasmBinarySection section_code;
+  WabtBinarySection section_code;
   size_t size;
   size_t offset;
 
@@ -84,35 +84,35 @@ typedef struct WasmSection {
 
   union {
     /* CUSTOM section data */
-    WasmSectionDataCustom data_custom;
+    WabtSectionDataCustom data_custom;
     /* DATA section data */
-    WasmDataSegmentVector data_segments;
+    WabtDataSegmentVector data_segments;
     /* MEMORY section data */
-    WasmLimits memory_limits;
+    WabtLimits memory_limits;
   };
 
   /* The offset at which this section appears within the combined output
    * section. */
   size_t output_payload_offset;
-} WasmSection;
-WASM_DEFINE_VECTOR(section, WasmSection);
+} WabtSection;
+WABT_DEFINE_VECTOR(section, WabtSection);
 
-typedef WasmSection* WasmSectionPtr;
-WASM_DEFINE_VECTOR(section_ptr, WasmSectionPtr);
+typedef WabtSection* WabtSectionPtr;
+WABT_DEFINE_VECTOR(section_ptr, WabtSectionPtr);
 
-WASM_DEFINE_VECTOR(string_slice, WasmStringSlice);
+WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-typedef struct WasmLinkerInputBinary {
+typedef struct WabtLinkerInputBinary {
   const char* filename;
   uint8_t* data;
   size_t size;
-  WasmSectionVector sections;
+  WabtSectionVector sections;
 
-  WasmExportVector exports;
+  WabtExportVector exports;
 
-  WasmFunctionImportVector function_imports;
+  WabtFunctionImportVector function_imports;
   uint32_t active_function_imports;
-  WasmGlobalImportVector global_imports;
+  WabtGlobalImportVector global_imports;
   uint32_t active_global_imports;
 
   uint32_t type_index_offset;
@@ -126,8 +126,8 @@ typedef struct WasmLinkerInputBinary {
 
   uint32_t table_elem_count;
 
-  WasmStringSliceVector debug_names;
-} WasmLinkerInputBinary;
-WASM_DEFINE_VECTOR(binary, WasmLinkerInputBinary);
+  WabtStringSliceVector debug_names;
+} WabtLinkerInputBinary;
+WABT_DEFINE_VECTOR(binary, WabtLinkerInputBinary);
 
-#endif /* WASM_LINK_H_ */
+#endif /* WABT_LINK_H_ */

@@ -22,43 +22,43 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
-static WasmFileStream s_stdout_stream;
-static WasmFileStream s_stderr_stream;
+static WabtFileStream s_stdout_stream;
+static WabtFileStream s_stderr_stream;
 
-void wasm_init_stream(WasmStream* stream,
-                      WasmWriter* writer,
-                      WasmStream* log_stream) {
+void wabt_init_stream(WabtStream* stream,
+                      WabtWriter* writer,
+                      WabtStream* log_stream) {
   stream->writer = writer;
   stream->offset = 0;
-  stream->result = WASM_OK;
+  stream->result = WABT_OK;
   stream->log_stream = log_stream;
 }
 
-void wasm_init_file_stream_from_existing(WasmFileStream* stream, FILE* file) {
-  wasm_init_file_writer_existing(&stream->writer, file);
-  wasm_init_stream(&stream->base, &stream->writer.base, NULL);
+void wabt_init_file_stream_from_existing(WabtFileStream* stream, FILE* file) {
+  wabt_init_file_writer_existing(&stream->writer, file);
+  wabt_init_stream(&stream->base, &stream->writer.base, NULL);
 }
 
-WasmStream* wasm_init_stdout_stream(void) {
-  wasm_init_file_stream_from_existing(&s_stdout_stream, stdout);
+WabtStream* wabt_init_stdout_stream(void) {
+  wabt_init_file_stream_from_existing(&s_stdout_stream, stdout);
   return &s_stdout_stream.base;
 }
 
-WasmStream* wasm_init_stderr_stream(void) {
-  wasm_init_file_stream_from_existing(&s_stderr_stream, stderr);
+WabtStream* wabt_init_stderr_stream(void) {
+  wabt_init_file_stream_from_existing(&s_stderr_stream, stderr);
   return &s_stderr_stream.base;
 }
 
-void wasm_write_data_at(WasmStream* stream,
+void wabt_write_data_at(WabtStream* stream,
                         size_t offset,
                         const void* src,
                         size_t size,
-                        WasmPrintChars print_chars,
+                        WabtPrintChars print_chars,
                         const char* desc) {
-  if (WASM_FAILED(stream->result))
+  if (WABT_FAILED(stream->result))
     return;
   if (stream->log_stream) {
-    wasm_write_memory_dump(stream->log_stream, src, size, offset, print_chars,
+    wabt_write_memory_dump(stream->log_stream, src, size, offset, print_chars,
                            NULL, desc);
   }
   if (stream->writer->write_data) {
@@ -67,23 +67,23 @@ void wasm_write_data_at(WasmStream* stream,
   }
 }
 
-void wasm_write_data(WasmStream* stream,
+void wabt_write_data(WabtStream* stream,
                      const void* src,
                      size_t size,
                      const char* desc) {
-  wasm_write_data_at(stream, stream->offset, src, size, WASM_DONT_PRINT_CHARS,
+  wabt_write_data_at(stream, stream->offset, src, size, WABT_DONT_PRINT_CHARS,
                      desc);
   stream->offset += size;
 }
 
-void wasm_move_data(WasmStream* stream,
+void wabt_move_data(WabtStream* stream,
                     size_t dst_offset,
                     size_t src_offset,
                     size_t size) {
-  if (WASM_FAILED(stream->result))
+  if (WABT_FAILED(stream->result))
     return;
   if (stream->log_stream) {
-    wasm_writef(stream->log_stream, "; move data: [%" PRIzx ", %" PRIzx
+    wabt_writef(stream->log_stream, "; move data: [%" PRIzx ", %" PRIzx
                                     ") -> [%" PRIzx ", %" PRIzx ")\n",
                 src_offset, src_offset + size, dst_offset, dst_offset + size);
   }
@@ -93,36 +93,36 @@ void wasm_move_data(WasmStream* stream,
   }
 }
 
-void wasm_writef(WasmStream* stream, const char* format, ...) {
-  WASM_SNPRINTF_ALLOCA(buffer, length, format);
-  wasm_write_data(stream, buffer, length, NULL);
+void wabt_writef(WabtStream* stream, const char* format, ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  wabt_write_data(stream, buffer, length, NULL);
 }
 
-void wasm_write_u8(WasmStream* stream, uint32_t value, const char* desc) {
+void wabt_write_u8(WabtStream* stream, uint32_t value, const char* desc) {
   assert(value <= UINT8_MAX);
   uint8_t value8 = value;
-  wasm_write_data_at(stream, stream->offset, &value8, sizeof(value8),
-                     WASM_DONT_PRINT_CHARS, desc);
+  wabt_write_data_at(stream, stream->offset, &value8, sizeof(value8),
+                     WABT_DONT_PRINT_CHARS, desc);
   stream->offset += sizeof(value8);
 }
 
-void wasm_write_u32(WasmStream* stream, uint32_t value, const char* desc) {
-  wasm_write_data_at(stream, stream->offset, &value, sizeof(value),
-                     WASM_DONT_PRINT_CHARS, desc);
+void wabt_write_u32(WabtStream* stream, uint32_t value, const char* desc) {
+  wabt_write_data_at(stream, stream->offset, &value, sizeof(value),
+                     WABT_DONT_PRINT_CHARS, desc);
   stream->offset += sizeof(value);
 }
 
-void wasm_write_u64(WasmStream* stream, uint64_t value, const char* desc) {
-  wasm_write_data_at(stream, stream->offset, &value, sizeof(value),
-                     WASM_DONT_PRINT_CHARS, desc);
+void wabt_write_u64(WabtStream* stream, uint64_t value, const char* desc) {
+  wabt_write_data_at(stream, stream->offset, &value, sizeof(value),
+                     WABT_DONT_PRINT_CHARS, desc);
   stream->offset += sizeof(value);
 }
 
-void wasm_write_memory_dump(WasmStream* stream,
+void wabt_write_memory_dump(WabtStream* stream,
                             const void* start,
                             size_t size,
                             size_t offset,
-                            WasmPrintChars print_chars,
+                            WabtPrintChars print_chars,
                             const char* prefix,
                             const char* desc) {
   const uint8_t* p = start;
@@ -131,32 +131,32 @@ void wasm_write_memory_dump(WasmStream* stream,
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
     if (prefix)
-      wasm_writef(stream, "%s", prefix);
-    wasm_writef(stream, "%07" PRIzx ": ", (size_t)p - (size_t)start + offset);
+      wabt_writef(stream, "%s", prefix);
+    wabt_writef(stream, "%07" PRIzx ": ", (size_t)p - (size_t)start + offset);
     while (p < line_end) {
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
         if (p < end) {
-          wasm_writef(stream, "%02x", *p);
+          wabt_writef(stream, "%02x", *p);
         } else {
-          wasm_write_char(stream, ' ');
-          wasm_write_char(stream, ' ');
+          wabt_write_char(stream, ' ');
+          wabt_write_char(stream, ' ');
         }
       }
-      wasm_write_char(stream, ' ');
+      wabt_write_char(stream, ' ');
     }
 
-    if (print_chars == WASM_PRINT_CHARS) {
-      wasm_write_char(stream, ' ');
+    if (print_chars == WABT_PRINT_CHARS) {
+      wabt_write_char(stream, ' ');
       p = line;
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_LINE && p < end; ++i, ++p)
-        wasm_write_char(stream, isprint(*p) ? *p : '.');
+        wabt_write_char(stream, isprint(*p) ? *p : '.');
     }
 
     /* if there are multiple lines, only print the desc on the last one */
     if (p >= end && desc)
-      wasm_writef(stream, "  ; %s", desc);
-    wasm_write_char(stream, '\n');
+      wabt_writef(stream, "  ; %s", desc);
+    wabt_write_char(stream, '\n');
   }
 }

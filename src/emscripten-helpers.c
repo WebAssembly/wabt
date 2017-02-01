@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef WASM_EMSCRIPTEN_HELPERS_H_
-#define WASM_EMSCRIPTEN_HELPERS_H_
+#ifndef WABT_EMSCRIPTEN_HELPERS_H_
+#define WABT_EMSCRIPTEN_HELPERS_H_
 
 #include <stddef.h>
 
-#include "wasm-allocator.h"
-#include "wasm-ast.h"
-#include "wasm-binary-reader.h"
-#include "wasm-binary-writer.h"
-#include "wasm-common.h"
-#include "wasm-stack-allocator.h"
-#include "wasm-stream.h"
-#include "wasm-writer.h"
+#include "allocator.h"
+#include "ast.h"
+#include "binary-reader.h"
+#include "binary-writer.h"
+#include "common.h"
+#include "stack-allocator.h"
+#include "stream.h"
+#include "writer.h"
 
 /* TODO(binji): it would be nicer to generate this as static data, but it's not
  * currently easy to do. Maybe use LLVM's python bindings for this? */
 
 #define DEFINE_SIZEOF(Name, name) \
-  size_t wasm_sizeof_##name(void) { return sizeof(Name); }
+  size_t wabt_sizeof_##name(void) { return sizeof(Name); }
 
 #define DEFINE_OFFSETOF(Name, name, member)      \
-  size_t wasm_offsetof_##name##_##member(void) { \
+  size_t wabt_offsetof_##name##_##member(void) { \
     return offsetof(Name, member);               \
   }
 
@@ -62,61 +62,61 @@
   DEFINE_SIZEOF(Name, name)            \
   FOREACH(DEFINE_OFFSETOF, Name, name, __VA_ARGS__)
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
 /* clang-format off */
 DEFINE_STRUCT(
-    WasmAllocator, allocator,
+    WabtAllocator, allocator,
     alloc, realloc, free, destroy, mark, reset_to_mark, print_stats)
 
 DEFINE_STRUCT(
-    WasmBinaryErrorHandler, binary_error_handler,
+    WabtBinaryErrorHandler, binary_error_handler,
     on_error, user_data)
 
 DEFINE_STRUCT(
-    WasmLocation, location,
+    WabtLocation, location,
     filename, line, first_column, last_column)
 
 DEFINE_STRUCT(
-    WasmMemoryWriter, memory_writer,
+    WabtMemoryWriter, memory_writer,
     base, buf)
 
 DEFINE_STRUCT(
-    WasmOutputBuffer, output_buffer,
+    WabtOutputBuffer, output_buffer,
     allocator, start, size, capacity)
 
 DEFINE_STRUCT(
-    WasmReadBinaryOptions, read_binary_options,
+    WabtReadBinaryOptions, read_binary_options,
     read_debug_names)
 
 DEFINE_STRUCT0(
-    WasmScript, script)
+    WabtScript, script)
 
 DEFINE_STRUCT(
-    WasmSourceErrorHandler, source_error_handler,
+    WabtSourceErrorHandler, source_error_handler,
     on_error, source_line_max_length, user_data)
 
 DEFINE_STRUCT(
-    WasmStackAllocator, stack_allocator,
+    WabtStackAllocator, stack_allocator,
     allocator);
 
 DEFINE_STRUCT(
-    WasmStream, stream,
+    WabtStream, stream,
     writer, offset, result, log_stream)
 
 DEFINE_STRUCT(
-    WasmStringSlice, string_slice,
+    WabtStringSlice, string_slice,
     start, length)
 
 DEFINE_STRUCT(
-    WasmWriter, writer,
+    WabtWriter, writer,
     write_data, move_data)
 
 DEFINE_STRUCT(
-    WasmWriteBinaryOptions, write_binary_options,
+    WabtWriteBinaryOptions, write_binary_options,
     log_stream, canonicalize_lebs, write_debug_names)
 /* clang-format on */
 
-WASM_EXTERN_C_END
+WABT_EXTERN_C_END
 
-#endif /* WASM_EMSCRIPTEN_HELPERS_H_ */
+#endif /* WABT_EMSCRIPTEN_HELPERS_H_ */

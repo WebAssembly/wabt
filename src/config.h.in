@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#ifndef WASM_CONFIG_H_
-#define WASM_CONFIG_H_
+#ifndef WABT_CONFIG_H_
+#define WABT_CONFIG_H_
 
-/* TODO(binji): nice way to define these with WASM_ prefix? */
+/* TODO(binji): nice way to define these with WABT_ prefix? */
 
 /* Whether <alloca.h> is available */
 #cmakedefine01 HAVE_ALLOCA_H
@@ -61,35 +61,35 @@
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 
-#define WASM_UNUSED __attribute__ ((unused))
-#define WASM_WARN_UNUSED __attribute__ ((warn_unused_result))
-#define WASM_INLINE inline
-#define WASM_STATIC_ASSERT(x) _Static_assert((x), #x)
-#define WASM_UNLIKELY(x) __builtin_expect(!!(x), 0)
-#define WASM_LIKELY(x) __builtin_expect(!!(x), 1)
-#define WASM_PRINTF_FORMAT(format_arg, first_arg) \
+#define WABT_UNUSED __attribute__ ((unused))
+#define WABT_WARN_UNUSED __attribute__ ((warn_unused_result))
+#define WABT_INLINE inline
+#define WABT_STATIC_ASSERT(x) _Static_assert((x), #x)
+#define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
+#define WABT_PRINTF_FORMAT(format_arg, first_arg) \
   __attribute__((format(printf, (format_arg), (first_arg))))
 
 #if SIZEOF_INT == 4
-#define wasm_clz_u32(x) __builtin_clz(x)
-#define wasm_ctz_u32(x) __builtin_ctz(x)
-#define wasm_popcount_u32(x) __builtin_popcount(x)
+#define wabt_clz_u32(x) __builtin_clz(x)
+#define wabt_ctz_u32(x) __builtin_ctz(x)
+#define wabt_popcount_u32(x) __builtin_popcount(x)
 #elif SIZEOF_LONG == 4
-#define wasm_clz_u32(x) __builtin_clzl(x)
-#define wasm_ctz_u32(x) __builtin_ctzl(x)
-#define wasm_popcount_u32(x) __builtin_popcountl(x)
+#define wabt_clz_u32(x) __builtin_clzl(x)
+#define wabt_ctz_u32(x) __builtin_ctzl(x)
+#define wabt_popcount_u32(x) __builtin_popcountl(x)
 #else
 #error "don't know how to define 32-bit builtins"
 #endif
 
 #if SIZEOF_LONG == 8
-#define wasm_clz_u64(x) __builtin_clzl(x)
-#define wasm_ctz_u64(x) __builtin_ctzl(x)
-#define wasm_popcount_u64(x) __builtin_popcountl(x)
+#define wabt_clz_u64(x) __builtin_clzl(x)
+#define wabt_ctz_u64(x) __builtin_ctzl(x)
+#define wabt_popcount_u64(x) __builtin_popcountl(x)
 #elif SIZEOF_LONG_LONG == 8
-#define wasm_clz_u64(x) __builtin_clzll(x)
-#define wasm_ctz_u64(x) __builtin_ctzll(x)
-#define wasm_popcount_u64(x) __builtin_popcountll(x)
+#define wabt_clz_u64(x) __builtin_clzll(x)
+#define wabt_ctz_u64(x) __builtin_ctzll(x)
+#define wabt_popcount_u64(x) __builtin_popcountll(x)
 #else
 #error "don't know how to define 64-bit builtins"
 #endif
@@ -99,23 +99,23 @@
 #elif COMPILER_IS_MSVC
 
 #include <vcruntime_string.h>
-#define WASM_UNUSED
-#define WASM_WARN_UNUSED _Check_return_
-#define WASM_INLINE __inline
-#define WASM_STATIC_ASSERT(x) _STATIC_ASSERT(x)
-#define WASM_UNLIKELY(x) (x)
-#define WASM_LIKELY(x) (x)
-#define WASM_PRINTF_FORMAT(format_arg, first_arg)
+#define WABT_UNUSED
+#define WABT_WARN_UNUSED _Check_return_
+#define WABT_INLINE __inline
+#define WABT_STATIC_ASSERT(x) _STATIC_ASSERT(x)
+#define WABT_UNLIKELY(x) (x)
+#define WABT_LIKELY(x) (x)
+#define WABT_PRINTF_FORMAT(format_arg, first_arg)
 
 #define WABT_UNREACHABLE __assume(0)
 
-__inline unsigned long wasm_clz_u32(unsigned long mask) {
+__inline unsigned long wabt_clz_u32(unsigned long mask) {
   unsigned long index;
   _BitScanReverse(&index, mask);
   return sizeof(unsigned long) * 8 - (index + 1);
 }
 
-__inline unsigned long wasm_clz_u64(unsigned __int64 mask) {
+__inline unsigned long wabt_clz_u64(unsigned __int64 mask) {
 #if _M_X64
   unsigned long index;
   _BitScanReverse64(&index, mask);
@@ -138,13 +138,13 @@ __inline unsigned long wasm_clz_u64(unsigned __int64 mask) {
 #endif
 }
 
-__inline unsigned long wasm_ctz_u32(unsigned long mask) {
+__inline unsigned long wabt_ctz_u32(unsigned long mask) {
     unsigned long index;
     _BitScanForward(&index, mask);
     return index;
 }
 
-__inline unsigned long wasm_ctz_u64(unsigned __int64 mask) {
+__inline unsigned long wabt_ctz_u64(unsigned __int64 mask) {
 #if _M_X64
     unsigned long index;
     _BitScanForward64(&index, mask);
@@ -152,19 +152,19 @@ __inline unsigned long wasm_ctz_u64(unsigned __int64 mask) {
 #elif _M_IX86
     unsigned long low_mask = (unsigned long)mask;
     if (low_mask) {
-        return wasm_ctz_u32(low_mask);
+        return wabt_ctz_u32(low_mask);
     }
     unsigned long high_mask;
     memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
            sizeof(unsigned long));
-    return sizeof(unsigned long) * 8 + wasm_ctz_u32(high_mask);
+    return sizeof(unsigned long) * 8 + wabt_ctz_u32(high_mask);
 #else
 #error unexpected architecture
 #endif
 }
 
 
-#define wasm_popcount_u32 __popcnt
+#define wabt_popcount_u32 __popcnt
 #if _M_X64
 #elif _M_IX86
 __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
@@ -173,12 +173,12 @@ __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
     memcpy(&high_value, (unsigned char*)&value + sizeof(unsigned long),
            sizeof(unsigned long));
     memcpy(&low_value, &value, sizeof(unsigned long));
-    return wasm_popcount_u32(high_value) + wasm_popcount_u32(low_value);
+    return wabt_popcount_u32(high_value) + wabt_popcount_u32(low_value);
 }
 #else
 #error unexpected architecture
 #endif
-#define wasm_popcount_u64 __popcnt64
+#define wabt_popcount_u64 __popcnt64
 
 #else
 
@@ -215,20 +215,20 @@ __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
 
 
 #if HAVE_SNPRINTF
-#define wasm_snprintf snprintf
+#define wabt_snprintf snprintf
 #elif COMPILER_IS_MSVC
 /* can't just use _snprintf because it doesn't always null terminate */
 #include <stdarg.h>
-int wasm_snprintf(char* str, size_t size, const char* format, ...);
+int wabt_snprintf(char* str, size_t size, const char* format, ...);
 #else
 #error no snprintf
 #endif
 
 #if COMPILER_IS_MSVC
 /* can't just use vsnprintf because it doesn't always null terminate */
-int wasm_vsnprintf(char* str, size_t size, const char* format, va_list ap);
+int wabt_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 #else
-#define wasm_vsnprintf vsnprintf
+#define wabt_vsnprintf vsnprintf
 #endif
 
 #if !HAVE_SSIZE_T
@@ -243,4 +243,4 @@ typedef int ssize_t;
 #endif
 #endif
 
-#endif /* WASM_CONFIG_H_ */
+#endif /* WABT_CONFIG_H_ */

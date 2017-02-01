@@ -28,7 +28,7 @@
 
 static int option_match(const char* s,
                         const char* full,
-                        WasmHasArgument has_argument) {
+                        WabtHasArgument has_argument) {
   int i;
   for (i = 0; ; i++) {
     if (full[i] == '\0') {
@@ -51,13 +51,13 @@ static int option_match(const char* s,
   return i;
 }
 
-static void WASM_PRINTF_FORMAT(2, 3)
-    error(WasmOptionParser* parser, const char* format, ...) {
-  WASM_SNPRINTF_ALLOCA(buffer, length, format);
+static void WABT_PRINTF_FORMAT(2, 3)
+    error(WabtOptionParser* parser, const char* format, ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
   parser->on_error(parser, buffer);
 }
 
-void wasm_parse_options(WasmOptionParser* parser,
+void wabt_parse_options(WabtOptionParser* parser,
                         int argc,
                         char** argv) {
   parser->argv0 = argv[0];
@@ -74,7 +74,7 @@ void wasm_parse_options(WasmOptionParser* parser,
         int best_length = 0;
         int best_count = 0;
         for (j = 0; j < parser->num_options; ++j) {
-          WasmOption* option = &parser->options[j];
+          WabtOption* option = &parser->options[j];
           if (option->long_name) {
             int match_length =
                 option_match(&arg[2], option->long_name, option->has_argument);
@@ -96,7 +96,7 @@ void wasm_parse_options(WasmOptionParser* parser,
           continue;
         }
 
-        WasmOption* best_option = &parser->options[best_index];
+        WabtOption* best_option = &parser->options[best_index];
         const char* option_argument = NULL;
         if (best_option->has_argument) {
           if (arg[best_length] == '=') {
@@ -122,9 +122,9 @@ void wasm_parse_options(WasmOptionParser* parser,
 
         /* allow short names to be combined, e.g. "-d -v" => "-dv" */
         for (k = 1; arg[k]; ++k) {
-          WasmBool matched = WASM_FALSE;
+          WabtBool matched = WABT_FALSE;
           for (j = 0; j < parser->num_options; ++j) {
-            WasmOption* option = &parser->options[j];
+            WabtOption* option = &parser->options[j];
             if (option->short_name && arg[k] == option->short_name) {
               const char* option_argument = NULL;
               if (option->has_argument) {
@@ -145,7 +145,7 @@ void wasm_parse_options(WasmOptionParser* parser,
                 option_argument = argv[i];
               }
               parser->on_option(parser, option, option_argument);
-              matched = WASM_TRUE;
+              matched = WABT_TRUE;
               break;
             }
           }
@@ -163,7 +163,7 @@ void wasm_parse_options(WasmOptionParser* parser,
   }
 }
 
-void wasm_print_help(WasmOptionParser* parser, const char* program_name) {
+void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
   int i;
   /* TODO(binji): do something more generic for filename here */
   printf("usage: %s [options] filename\n\n", program_name);
@@ -173,14 +173,14 @@ void wasm_print_help(WasmOptionParser* parser, const char* program_name) {
   const int extra_space = 8;
   int longest_name_length = 0;
   for (i = 0; i < parser->num_options; ++i) {
-    WasmOption* option = &parser->options[i];
+    WabtOption* option = &parser->options[i];
     int length;
     if (option->long_name) {
       if (option->metavar) {
         length =
-            wasm_snprintf(NULL, 0, "%s=%s", option->long_name, option->metavar);
+            wabt_snprintf(NULL, 0, "%s=%s", option->long_name, option->metavar);
       } else {
-        length = wasm_snprintf(NULL, 0, "%s", option->long_name);
+        length = wabt_snprintf(NULL, 0, "%s", option->long_name);
       }
     } else {
       continue;
@@ -194,7 +194,7 @@ void wasm_print_help(WasmOptionParser* parser, const char* program_name) {
   char* buffer = alloca(buffer_size);
 
   for (i = 0; i < parser->num_options; ++i) {
-    WasmOption* option = &parser->options[i];
+    WabtOption* option = &parser->options[i];
     if (!option->short_name && !option->long_name)
       continue;
 
@@ -205,11 +205,11 @@ void wasm_print_help(WasmOptionParser* parser, const char* program_name) {
 
     char format[20];
     if (option->long_name) {
-      wasm_snprintf(format, sizeof(format), "--%%-%ds",
+      wabt_snprintf(format, sizeof(format), "--%%-%ds",
                     longest_name_length + extra_space);
 
       if (option->metavar) {
-        wasm_snprintf(buffer, buffer_size, "%s=%s", option->long_name,
+        wabt_snprintf(buffer, buffer_size, "%s=%s", option->long_name,
                       option->metavar);
         printf(format, buffer);
       } else {
@@ -217,7 +217,7 @@ void wasm_print_help(WasmOptionParser* parser, const char* program_name) {
       }
     } else {
       /* +2 for the extra "--" above */
-      wasm_snprintf(format, sizeof(format), "%%-%ds",
+      wabt_snprintf(format, sizeof(format), "%%-%ds",
                     longest_name_length + extra_space + 2);
       printf(format, "");
     }

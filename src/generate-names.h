@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef WASM_GENERATE_NAMES_H_
-#define WASM_GENERATE_NAMES_H_
+#ifndef WABT_GENERATE_NAMES_H_
+#define WABT_GENERATE_NAMES_H_
 
 #include "common.h"
 
-struct WasmAllocator;
-struct WasmModule;
+struct WabtAllocator;
+struct WabtModule;
 
-WASM_EXTERN_C_BEGIN
-WasmResult wasm_generate_names(struct WasmAllocator*, struct WasmModule*);
-WASM_EXTERN_C_END
+WABT_EXTERN_C_BEGIN
+WabtResult wabt_generate_names(struct WabtAllocator*, struct WabtModule*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_GENERATE_NAMES_H_ */
+#endif /* WABT_GENERATE_NAMES_H_ */

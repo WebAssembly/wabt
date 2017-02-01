@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WASM_AST_LEXER_H_
-#define WASM_AST_LEXER_H_
+#ifndef WABT_AST_LEXER_H_
+#define WABT_AST_LEXER_H_
 
 #include <stddef.h>
 #include <stdio.h>
@@ -23,15 +23,15 @@
 #include "common.h"
 #include "vector.h"
 
-struct WasmAllocator;
+struct WabtAllocator;
 
-typedef enum WasmAstLexerSourceType {
-  WASM_LEXER_SOURCE_TYPE_FILE,
-  WASM_LEXER_SOURCE_TYPE_BUFFER,
-} WasmAstLexerSourceType;
+typedef enum WabtAstLexerSourceType {
+  WABT_LEXER_SOURCE_TYPE_FILE,
+  WABT_LEXER_SOURCE_TYPE_BUFFER,
+} WabtAstLexerSourceType;
 
-typedef struct WasmAstLexerSource {
-  WasmAstLexerSourceType type;
+typedef struct WabtAstLexerSource {
+  WabtAstLexerSourceType type;
   union {
     FILE* file;
     struct {
@@ -40,11 +40,11 @@ typedef struct WasmAstLexerSource {
       size_t read_offset;
     } buffer;
   };
-} WasmAstLexerSource;
+} WabtAstLexerSource;
 
-typedef struct WasmAstLexer {
-  struct WasmAllocator* allocator;
-  WasmAstLexerSource source;
+typedef struct WabtAstLexer {
+  struct WabtAllocator* allocator;
+  WabtAstLexerSource source;
   const char* filename;
   int line;
   int comment_nesting;
@@ -52,24 +52,24 @@ typedef struct WasmAstLexer {
   size_t line_file_offset;   /* file offset of the start of the current line */
 
   /* lexing data needed by re2c */
-  WasmBool eof;
+  WabtBool eof;
   char* buffer;
   size_t buffer_size;
   char* marker;
   char* token;
   char* cursor;
   char* limit;
-} WasmAstLexer;
+} WabtAstLexer;
 
-WASM_EXTERN_C_BEGIN
+WABT_EXTERN_C_BEGIN
 
-WasmAstLexer* wasm_new_ast_file_lexer(struct WasmAllocator*,
+WabtAstLexer* wabt_new_ast_file_lexer(struct WabtAllocator*,
                                       const char* filename);
-WasmAstLexer* wasm_new_ast_buffer_lexer(struct WasmAllocator*,
+WabtAstLexer* wabt_new_ast_buffer_lexer(struct WabtAllocator*,
                                         const char* filename,
                                         const void* data,
                                         size_t size);
-void wasm_destroy_ast_lexer(WasmAstLexer*);
-WASM_EXTERN_C_END
+void wabt_destroy_ast_lexer(WabtAstLexer*);
+WABT_EXTERN_C_END
 
-#endif /* WASM_AST_LEXER_H_ */
+#endif /* WABT_AST_LEXER_H_ */
