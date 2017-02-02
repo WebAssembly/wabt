@@ -31,5 +31,5 @@ WabtResult wabt_validate_script(struct WabtAllocator*,
                                 WabtAstLexer*,
                                 const struct WabtScript*,
                                 WabtSourceErrorHandler*);
-
+WABT_EXTERN_C_END
 #endif /* WABT_VALIDATOR_H_ */
