@@ -546,6 +546,7 @@ var AstLexer = Struct('AstLexer');
 var BinaryErrorHandler = Struct('BinaryErrorHandler');
 var Location = Struct('Location');
 var MemoryWriter = Struct('MemoryWriter');
+var Module = Struct('Module');
 var OutputBuffer = Struct('OutputBuffer');
 var ReadBinaryOptions = Struct('ReadBinaryOptions');
 var Script = Struct('Script');
@@ -586,6 +587,8 @@ MemoryWriter.define('memory_writer', {
   base: Writer,
   buf: OutputBuffer,
 });
+
+Module.define('module');
 
 OutputBuffer.define('output_buffer', {
   allocator: Allocator,
@@ -635,7 +638,6 @@ Writer.define('writer', {
 
 // Wabt low-level functions ////////////////////////////////////////////////////
 
-var checkAst = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_check_ast');
 var closeMemWriter = Fn(Void, [Ptr(MemoryWriter)]).define('_wabt_close_mem_writer');
 var defaultBinaryErrorCallback = BinaryErrorHandlerCallback.define('_wabt_default_binary_error_callback');
 var defaultSourceErrorCallback = SourceErrorHandlerCallback.define('_wabt_default_source_error_callback');
@@ -643,13 +645,16 @@ var destroyAstLexer = Fn(Void, [Ptr(AstLexer)]).define('_wabt_destroy_ast_lexer'
 var destroyOutputBuffer = Fn(Void, [Ptr(OutputBuffer)]).define('_wabt_destroy_output_buffer');
 var destroyScript = Fn(Void, [Ptr(Script)]).define('_wabt_destroy_script');
 var destroyStackAllocator = Fn(Void, [Ptr(StackAllocator)]).define('_wabt_destroy_stack_allocator');
+var getFirstModule = Fn(Ptr(Module), [Ptr(Script)]).define('_wabt_get_first_module');
 var getLibcAllocator = Fn(Ptr(Allocator), []).define('_wabt_get_libc_allocator');
 var initMemWriter = Fn(I32, [Ptr(Allocator), Ptr(MemoryWriter)]).define('_wabt_init_mem_writer');
 var initStackAllocator = Fn(Void, [Ptr(StackAllocator), Ptr(Allocator)]).define('_wabt_init_stack_allocator');
 var initStream = Fn(Void, [Ptr(Stream), Ptr(Writer), Ptr(Stream)]).define('_wabt_init_stream');
 var newAstBufferLexer = Fn(Ptr(AstLexer), [Ptr(Allocator), Str, BufPtr, BufLen]).define('_wabt_new_ast_buffer_lexer');
 var parseAst = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_parse_ast');
-var writeBinaryScript = Fn(I32, [Ptr(Allocator), Ptr(Writer), Ptr(Script), Ptr(WriteBinaryOptions)]).define('_wabt_write_binary_script');
+var resolveNamesScript = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_resolve_names_script');
+var validateScript = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_validate_script');
+var writeBinaryModule = Fn(I32, [Ptr(Allocator), Ptr(Writer), Ptr(Module), Ptr(WriteBinaryOptions)]).define('_wabt_write_binary_module');
 
 return {
   // Types
@@ -658,6 +663,7 @@ return {
   BinaryErrorHandler: BinaryErrorHandler,
   Location: Location,
   MemoryWriter: MemoryWriter,
+  Module: Module,
   OutputBuffer: OutputBuffer,
   ReadBinaryOptions: ReadBinaryOptions,
   Script: Script,
@@ -669,7 +675,6 @@ return {
   Writer: Writer,
 
   // Functions
-  checkAst: checkAst,
   closeMemWriter: closeMemWriter,
   defaultBinaryErrorCallback: defaultBinaryErrorCallback,
   defaultSourceErrorCallback: defaultSourceErrorCallback,
@@ -677,13 +682,16 @@ return {
   destroyOutputBuffer: destroyOutputBuffer,
   destroyScript: destroyScript,
   destroyStackAllocator: destroyStackAllocator,
+  getFirstModule: getFirstModule,
   getLibcAllocator: getLibcAllocator,
   initMemWriter: initMemWriter,
   initStackAllocator: initStackAllocator,
   initStream: initStream,
   newAstBufferLexer: newAstBufferLexer,
   parseAst: parseAst,
-  writeBinaryScript: writeBinaryScript,
+  resolveNamesScript: resolveNamesScript,
+  validateScript: validateScript,
+  writeBinaryModule: writeBinaryModule,
 };
 
 })();
@@ -946,21 +954,32 @@ function Script() {
   this.$errorHandler = null;
 }
 Script.prototype = Object.create(Object.prototype);
-Script.prototype.check = function() {
-  var result = I.checkAst(
+Script.prototype.resolveNames = function() {
+  var result = I.resolveNamesScript(
       this.$allocator.$, this.$astLexer.$, this.$, this.$errorHandler.$);
   if (result != OK) {
-    throw new Error('check failed:\n' + this.$errorHandler.errorMessage);
+    throw new Error('resolveNames failed:\n' + this.$errorHandler.errorMessage);
+  }
+};
+Script.prototype.validate = function() {
+  var result = I.validateScript(
+      this.$allocator.$, this.$astLexer.$, this.$, this.$errorHandler.$);
+  if (result != OK) {
+    throw new Error('validate failed:\n' + this.$errorHandler.errorMessage);
   }
 };
 Script.prototype.toBinary = function(options) {
   var mw = new MemoryWriter(this.$allocator);
   options = new WriteBinaryOptions(this.$allocator, options || {});
   try {
+    var module = I.getFirstModule(this.$);
+    if (module.$addr === 0) {
+      throw new Error('Script has no module.');
+    }
     var result =
-        I.writeBinaryScript(this.$allocator.$, mw.writer.$, this.$, options.$);
+        I.writeBinaryModule(this.$allocator.$, mw.writer.$, module, options.$);
     if (result != OK) {
-      throw new Error('writeBinaryScript failed');
+      throw new Error('writeBinaryModule failed');
     }
     return {buffer: mw.buf.buf, log: options.log}
   } finally {
@@ -1049,97 +1068,3 @@ wabt = {
 resolve();
 
 };
-
-/*
-wabt.ready.then(function() {
-  if (false) {
-    try {
-      var sa = new wabt.StackAllocator(wabt.LibcAllocator);
-      var a = sa.allocator;
-      var data = '(module\n  (func (result i32)\n    (i32.const 1)))';
-      var s = wabt.parseAst(a, 'foo.wast', data);
-      s.check();
-      var output = s.toBinary({log: true});
-      print('log output:\n' + output.log);
-      print('output:\n' + output.buffer);
-    } catch(e) {
-      print('ERROR' + (e.stack ? e.stack : e));
-    }
-    if (s) s.$destroy();
-    if (sa) sa.$destroy();
-  }
-
-  if (false) {
-    try {
-      var a = new wabt.StackAllocator(wabt.LibcAllocator);
-      var ma = wabt.LibcAllocator;
-      var buf = new Uint8Array([
-          0,  97, 115, 109,  11,   0,   0,   0,   4, 116, 121, 112, 101,   8,   2,  64,
-          1,   1,   0,  64,   0,   0,   6, 105, 109, 112, 111, 114, 116,  12,   1,   0,
-          3, 115, 116, 100,   5, 112, 114, 105, 110, 116,   8, 102, 117, 110,  99, 116,
-        105, 111, 110,   2,   1,   1,   6, 101, 120, 112, 111, 114, 116,   4,   1,   0,
-          1, 102,   4,  99, 111, 100, 101,   8,   1,   6,   0,  16,  42,  24,   1,   0,
-      ]);
-      var im = wabt.readInterpreterModule(a.allocator, ma, buf, {});
-      var it = new wabt.InterpreterThread(a.allocator, im);
-      im.run(it, 1000, 0);
-    } catch(e) {
-      print('ERROR:' + (e.stack ? e.stack : e));
-    }
-    if (it) it.$destroy();
-    if (im) im.$destroy();
-    if (a) a.$destroy();
-  }
-
-  if (true) {
-    try {
-      var sa = new wabt.StackAllocator(wabt.LibcAllocator);
-      var a = sa.allocator;
-      var source = `
-        (module
-          (func $test (result i32)
-            (call $fib (i32.const 4)))
-          (func $fib (param $p i32) (result i32)
-            (local $a i32)
-            (local $b i32)
-            (local $t i32)
-            (set_local $a (i32.const 1))
-            (set_local $b (i32.const 1))
-            (loop $exit $cont
-              (set_local $p (i32.sub (get_local $p) (i32.const 1)))
-              (br_if $exit (i32.le_s (get_local $p) (i32.const 0)))
-              (set_local $t (get_local $b))
-              (set_local $b (i32.add (get_local $a) (get_local $b)))
-              (set_local $a (get_local $t))
-              (br $cont))
-            (return (get_local $b)))
-          (export "test" $test))
-      `;
-      var s = wabt.parseAst(a, 'foo.wast', source);
-      s.check();
-      var output = s.toBinary();
-      var im = wabt.readInterpreterModule(a, wabt.LibcAllocator, output.buffer);
-      if (true) {
-        print('disassemble:\n' + im.disassemble(0, 1000));
-      }
-      if (true) {
-        var it = new wabt.InterpreterThread(a, im);
-        print('running');
-        do {
-          print(im.tracePC(it).trimRight());
-        } while (im.run(it, 1, 0));
-        print('done');
-      }
-    } catch(e) {
-      print('ERROR:' + (e.stack ? e.stack : e));
-    }
-    if (it) it.$destroy();
-    if (im) im.$destroy();
-    if (s) s.$destroy();
-    if (sa) sa.$destroy();
-  }
-
-}).catch(function(error) {
-  print('ERROR:' + (error.stack ? error.stack : error));
-});
-*/

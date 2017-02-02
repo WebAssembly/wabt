@@ -341,12 +341,12 @@ static void visit_raw_module(Context* ctx, WabtRawModule* raw_module) {
     visit_module(ctx, raw_module->text);
 }
 
-void dummy_source_error_callback(const WabtLocation* loc,
-                                 const char* error,
-                                 const char* source_line,
-                                 size_t source_line_length,
-                                 size_t source_line_column_offset,
-                                 void* user_data) {}
+static void dummy_source_error_callback(const WabtLocation* loc,
+                                        const char* error,
+                                        const char* source_line,
+                                        size_t source_line_length,
+                                        size_t source_line_column_offset,
+                                        void* user_data) {}
 
 static void visit_command(Context* ctx, WabtCommand* command) {
   switch (command->type) {
