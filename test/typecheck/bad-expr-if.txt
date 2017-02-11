@@ -12,7 +12,4 @@
 out/test/typecheck/bad-expr-if.txt:10:5: type stack size too small at i32.add. got 1, expected at least 2
     i32.add))
     ^^^^^^^
-out/test/typecheck/bad-expr-if.txt:3:3: type stack at end of function is 2. expected 1
-  (func (result i32)
-  ^^^^^^^^^^
 ;;; STDERR ;;)

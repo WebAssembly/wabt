@@ -205,7 +205,9 @@ add_library(libwabt STATIC
   src/ast-parser-lexer-shared.c
   ${AST_LEXER_GEN_C}
   ${AST_PARSER_GEN_C}
+  src/type-checker.c
   src/validator.c
+
   src/binary-reader.c
   src/binary-writer.c
   src/binary-writer-spec.c

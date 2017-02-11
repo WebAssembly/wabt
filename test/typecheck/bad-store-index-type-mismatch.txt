@@ -6,7 +6,7 @@
     f32.const 0
     i32.store))
 (;; STDERR ;;;
-out/test/typecheck/bad-store-index-type-mismatch.txt:7:5: type mismatch at i32.store. got f32, expected i32
+out/test/typecheck/bad-store-index-type-mismatch.txt:7:5: type mismatch in i32.store, expected i32 but got f32.
     i32.store))
     ^^^^^^^^^
 ;;; STDERR ;;)

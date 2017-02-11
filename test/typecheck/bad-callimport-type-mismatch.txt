@@ -5,7 +5,7 @@
     f32.const 0
     call 0))
 (;; STDERR ;;;
-out/test/typecheck/bad-callimport-type-mismatch.txt:6:5: type mismatch for argument 0 of call. got f32, expected i32
+out/test/typecheck/bad-callimport-type-mismatch.txt:6:5: type mismatch in call, expected i32 but got f32.
     call 0))
     ^^^^^^
 ;;; STDERR ;;)

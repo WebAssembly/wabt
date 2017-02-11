@@ -6,7 +6,7 @@
       nop
     end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-br-defined-later.txt:4:8: label variable out of range (max 1)
+out/test/parse/expr/bad-br-defined-later.txt:4:5: invalid depth: 1 (max 0)
     br 1
-       ^
+    ^^^^
 ;;; STDERR ;;)

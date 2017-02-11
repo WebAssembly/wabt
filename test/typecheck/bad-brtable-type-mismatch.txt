@@ -11,7 +11,7 @@
     end
     i32.const 2))
 (;; STDERR ;;;
-out/test/typecheck/bad-brtable-type-mismatch.txt:7:9: type mismatch at br_table key. got f32, expected i32
+out/test/typecheck/bad-brtable-type-mismatch.txt:7:9: type mismatch in br_table, expected i32 but got f32.
         br_table 0 1 
         ^^^^^^^^^^^^
 ;;; STDERR ;;)

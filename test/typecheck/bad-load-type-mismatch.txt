@@ -6,7 +6,7 @@
     i32.load
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-load-type-mismatch.txt:6:5: type mismatch at i32.load. got f32, expected i32
+out/test/typecheck/bad-load-type-mismatch.txt:6:5: type mismatch in i32.load, expected i32 but got f32.
     i32.load
     ^^^^^^^^
 ;;; STDERR ;;)

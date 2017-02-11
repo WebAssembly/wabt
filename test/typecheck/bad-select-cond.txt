@@ -6,7 +6,7 @@
     f32.const 0
     select))
 (;; STDERR ;;;
-out/test/typecheck/bad-select-cond.txt:7:5: type mismatch at select. got f32, expected i32
+out/test/typecheck/bad-select-cond.txt:7:5: type mismatch in select, expected i32 but got f32.
     select))
     ^^^^^^
 ;;; STDERR ;;)

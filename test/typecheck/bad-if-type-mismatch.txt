@@ -2,20 +2,14 @@
 (module
   (func
     i32.const 0
-    if
+    if i32
       f32.const 0
     else
       i32.const 0
     end
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-if-type-mismatch.txt:5:5: type stack at end of if true branch is 1. expected 0
-    if
-    ^^
-out/test/typecheck/bad-if-type-mismatch.txt:5:5: type stack at end of if false branch is 1. expected 0
-    if
-    ^^
-out/test/typecheck/bad-if-type-mismatch.txt:10:5: type stack size too small at drop. got 0, expected at least 1
-    drop))
-    ^^^^
+out/test/typecheck/bad-if-type-mismatch.txt:6:7: type mismatch in if true branch, expected i32 but got f32.
+      f32.const 0
+      ^^^^^^^^^^^
 ;;; STDERR ;;)
