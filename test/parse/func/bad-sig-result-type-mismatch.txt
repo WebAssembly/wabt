@@ -6,10 +6,7 @@
 out/test/parse/func/bad-sig-result-type-mismatch.txt:4:3: type mismatch for result 0 of function. got i64, expected f32
   (func (type $t) (param i32) (result i64)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/parse/func/bad-sig-result-type-mismatch.txt:4:3: type stack size too small at function. got 0, expected at least 1
-  (func (type $t) (param i32) (result i64)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/parse/func/bad-sig-result-type-mismatch.txt:4:3: type stack at end of function is 0. expected 1
+out/test/parse/func/bad-sig-result-type-mismatch.txt:4:3: type stack size too small at implicit return. got 0, expected at least 1
   (func (type $t) (param i32) (result i64)))
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

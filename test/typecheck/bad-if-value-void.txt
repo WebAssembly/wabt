@@ -3,14 +3,15 @@
   (func
     block $b
       i32.const 0
-      if 
-        br $b
+      if f32
+        nop
       else
         f32.const 0
       end
+      drop
     end))
 (;; STDERR ;;;
-out/test/typecheck/bad-if-value-void.txt:6:7: type stack at end of if false branch is 1. expected 0
-      if 
-      ^^^
+out/test/typecheck/bad-if-value-void.txt:7:9: type stack size too small at if true branch. got 0, expected at least 1
+        nop
+        ^^^
 ;;; STDERR ;;)

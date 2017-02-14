@@ -33,16 +33,8 @@
       return WABT_ERROR;   \
   } while (0)
 
-typedef enum LabelType {
-  LABEL_TYPE_FUNC,
-  LABEL_TYPE_BLOCK,
-  LABEL_TYPE_LOOP,
-  LABEL_TYPE_IF,
-  LABEL_TYPE_ELSE,
-} LabelType;
-
 typedef struct LabelNode {
-  LabelType label_type;
+  WabtLabelType label_type;
   WabtExpr** first;
   WabtExpr* last;
 } LabelNode;
@@ -67,7 +59,9 @@ static void WABT_PRINTF_FORMAT(2, 3)
   handle_error(ctx, WABT_UNKNOWN_OFFSET, buffer);
 }
 
-static void push_label(Context* ctx, LabelType label_type, WabtExpr** first) {
+static void push_label(Context* ctx,
+                       WabtLabelType label_type,
+                       WabtExpr** first) {
   LabelNode label;
   label.label_type = label_type;
   label.first = first;
@@ -484,7 +478,7 @@ static WabtResult begin_function_body(WabtBinaryReaderContext* context,
   Context* ctx = context->user_data;
   assert(index < ctx->module->funcs.size);
   ctx->current_func = ctx->module->funcs.data[index];
-  push_label(ctx, LABEL_TYPE_FUNC, &ctx->current_func->first_expr);
+  push_label(ctx, WABT_LABEL_TYPE_FUNC, &ctx->current_func->first_expr);
   return WABT_OK;
 }
 
@@ -523,7 +517,7 @@ static WabtResult on_block_expr(uint32_t num_types,
   src.data = sig_types;
   wabt_extend_types(ctx->allocator, &expr->block.sig, &src);
   append_expr(ctx, expr);
-  push_label(ctx, LABEL_TYPE_BLOCK, &expr->block.first);
+  push_label(ctx, WABT_LABEL_TYPE_BLOCK, &expr->block.first);
   return WABT_OK;
 }
 
@@ -610,7 +604,7 @@ static WabtResult on_else_expr(void* user_data) {
   Context* ctx = user_data;
   LabelNode* label;
   CHECK_RESULT(top_label(ctx, &label));
-  if (label->label_type != LABEL_TYPE_IF) {
+  if (label->label_type != WABT_LABEL_TYPE_IF) {
     print_error(ctx, "else expression without matching if");
     return WABT_ERROR;
   }
@@ -619,7 +613,7 @@ static WabtResult on_else_expr(void* user_data) {
   CHECK_RESULT(get_label_at(ctx, &parent_label, 1));
   assert(parent_label->last->type == WABT_EXPR_TYPE_IF);
 
-  label->label_type = LABEL_TYPE_ELSE;
+  label->label_type = WABT_LABEL_TYPE_ELSE;
   label->first = &parent_label->last->if_.false_;
   label->last = NULL;
   return WABT_OK;
@@ -695,7 +689,7 @@ static WabtResult on_if_expr(uint32_t num_types,
   src.data = sig_types;
   wabt_extend_types(ctx->allocator, &expr->if_.true_.sig, &src);
   append_expr(ctx, expr);
-  push_label(ctx, LABEL_TYPE_IF, &expr->if_.true_.first);
+  push_label(ctx, WABT_LABEL_TYPE_IF, &expr->if_.true_.first);
   return WABT_OK;
 }
 
@@ -722,7 +716,7 @@ static WabtResult on_loop_expr(uint32_t num_types,
   src.data = sig_types;
   wabt_extend_types(ctx->allocator, &expr->loop.sig, &src);
   append_expr(ctx, expr);
-  push_label(ctx, LABEL_TYPE_LOOP, &expr->loop.first);
+  push_label(ctx, WABT_LABEL_TYPE_LOOP, &expr->loop.first);
   return WABT_OK;
 }
 

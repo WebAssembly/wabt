@@ -27,21 +27,7 @@
 #include "ast-parser-lexer-shared.h"
 #include "binary-reader-ast.h"
 #include "binary-reader.h"
-#include "resolve-names.h"
-
-typedef enum LabelType {
-  LABEL_TYPE_FUNC,
-  LABEL_TYPE_BLOCK,
-  LABEL_TYPE_LOOP,
-  LABEL_TYPE_IF,
-} LabelType;
-
-typedef struct LabelNode {
-  LabelType label_type;
-  const WabtTypeVector* sig;
-  struct LabelNode* next;
-  size_t type_stack_limit;
-} LabelNode;
+#include "type-checker.h"
 
 typedef enum ActionResultKind {
   ACTION_RESULT_KIND_ERROR,
@@ -68,9 +54,8 @@ typedef struct Context {
   int current_memory_index;
   int current_global_index;
   int num_imported_globals;
-  WabtTypeVector type_stack;
-  LabelNode* top_label;
-  int max_depth;
+  WabtTypeChecker typechecker;
+  const WabtLocation* expr_loc; /* Cached for access by on_typechecker_error */
   WabtResult result;
 } Context;
 
@@ -81,6 +66,11 @@ static void WABT_PRINTF_FORMAT(3, 4)
   va_start(args, fmt);
   wabt_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
+}
+
+static void on_typechecker_error(const char* msg, void* user_data) {
+  Context* ctx = user_data;
+  print_error(ctx, ctx->expr_loc, "%s", msg);
 }
 
 static WabtBool is_power_of_two(uint32_t x) {
@@ -138,6 +128,13 @@ static WabtResult check_global_var(Context* ctx,
   if (out_global_index)
     *out_global_index = index;
   return WABT_OK;
+}
+
+static WabtType get_global_var_type_or_any(Context* ctx, const WabtVar* var) {
+  const WabtGlobal* global;
+  if (WABT_SUCCEEDED(check_global_var(ctx, var, &global, NULL)))
+    return global->type;
+  return WABT_TYPE_ANY;
 }
 
 static WabtResult check_func_type_var(Context* ctx,
@@ -211,6 +208,12 @@ static WabtResult check_local_var(Context* ctx,
   return WABT_ERROR;
 }
 
+static WabtType get_local_var_type_or_any(Context* ctx, const WabtVar* var) {
+  WabtType type = WABT_TYPE_ANY;
+  check_local_var(ctx, var, &type);
+  return type;
+}
+
 static void check_align(Context* ctx,
                         const WabtLocation* loc,
                         uint32_t alignment,
@@ -234,132 +237,12 @@ static void check_offset(Context* ctx,
   }
 }
 
-static LabelNode* find_label_by_var(LabelNode* top_label, const WabtVar* var) {
-  assert(var->type == WABT_VAR_TYPE_INDEX);
-  LabelNode* node = top_label;
-  int i = 0;
-  while (node && i != var->index) {
-    node = node->next;
-    i++;
-  }
-  return node;
-}
-
-static WabtResult check_label_var(Context* ctx,
-                                  LabelNode* top_label,
-                                  const WabtVar* var,
-                                  LabelNode** out_node) {
-  LabelNode* node = find_label_by_var(top_label, var);
-  if (node) {
-    if (out_node)
-      *out_node = node;
-    return WABT_OK;
-  }
-
-  print_error(ctx, &var->loc, "label variable out of range (max %d)",
-              ctx->max_depth);
-  return WABT_ERROR;
-}
-
-static void push_label(Context* ctx,
-                       const WabtLocation* loc,
-                       LabelNode* node,
-                       LabelType label_type,
-                       const WabtTypeVector* sig) {
-  node->label_type = label_type;
-  node->next = ctx->top_label;
-  node->sig = sig;
-  node->type_stack_limit = ctx->type_stack.size;
-  ctx->top_label = node;
-  ctx->max_depth++;
-}
-
-static void pop_label(Context* ctx) {
-  ctx->max_depth--;
-  ctx->top_label = ctx->top_label->next;
-}
-
-static size_t type_stack_limit(Context* ctx) {
-  assert(ctx->top_label != NULL);
-  return ctx->top_label->type_stack_limit;
-}
-
-static WabtResult check_type_stack_limit(Context* ctx,
-                                         const WabtLocation* loc,
-                                         size_t expected,
-                                         const char* desc) {
-  size_t limit = type_stack_limit(ctx);
-  size_t avail = ctx->type_stack.size - limit;
-  if (expected > avail) {
-    print_error(ctx, loc, "type stack size too small at %s. got %" PRIzd
-                          ", expected at least %" PRIzd,
-                desc, avail, expected);
-    return WABT_ERROR;
-  }
-  return WABT_OK;
-}
-
-static WabtResult check_type_stack_limit_exact(Context* ctx,
-                                               const WabtLocation* loc,
-                                               size_t expected,
-                                               const char* desc) {
-  size_t limit = type_stack_limit(ctx);
-  size_t avail = ctx->type_stack.size - limit;
-  if (expected != avail) {
-    print_error(ctx, loc,
-                "type stack at end of %s is %" PRIzd ". expected %" PRIzd, desc,
-                avail, expected);
-    return WABT_ERROR;
-  }
-  return WABT_OK;
-}
-
-static void reset_type_stack_to_limit(Context* ctx) {
-  ctx->type_stack.size = type_stack_limit(ctx);
-}
-
-static void push_type(Context* ctx, WabtType type) {
-  if (type != WABT_TYPE_VOID)
-    wabt_append_type_value(ctx->allocator, &ctx->type_stack, &type);
-}
-
-static void push_types(Context* ctx, const WabtTypeVector* types) {
-  size_t i;
-  for (i = 0; i < types->size; ++i)
-    push_type(ctx, types->data[i]);
-}
-
-static WabtType peek_type(Context* ctx, size_t depth, int arity) {
-  if (arity > 0) {
-    if (depth < ctx->type_stack.size - type_stack_limit(ctx)) {
-      return ctx->type_stack.data[ctx->type_stack.size - depth - 1];
-    } else {
-      /* return any type to allow type-checking to continue; the caller should
-       * have already raised an error about the stack underflow. */
-      return WABT_TYPE_I32;
-    }
-  } else {
-    return WABT_TYPE_VOID;
-  }
-}
-
-static WabtType top_type(Context* ctx) {
-  return peek_type(ctx, 0, 1);
-}
-
-static WabtType pop_type(Context* ctx) {
-  WabtType result = top_type(ctx);
-  if (ctx->type_stack.size > type_stack_limit(ctx))
-    ctx->type_stack.size--;
-  return result;
-}
-
 static void check_type(Context* ctx,
                        const WabtLocation* loc,
                        WabtType actual,
                        WabtType expected,
                        const char* desc) {
-  if (actual != expected) {
+  if (expected != actual) {
     print_error(ctx, loc, "type mismatch at %s. got %s, expected %s", desc,
                 wabt_get_type_name(actual), wabt_get_type_name(expected));
   }
@@ -372,7 +255,8 @@ static void check_type_index(Context* ctx,
                              const char* desc,
                              int index,
                              const char* index_kind) {
-  if (actual != expected) {
+  if (expected != actual && expected != WABT_TYPE_ANY &&
+      actual != WABT_TYPE_ANY) {
     print_error(ctx, loc, "type mismatch for %s %d of %s. got %s, expected %s",
                 index_kind, index, desc, wabt_get_type_name(actual),
                 wabt_get_type_name(expected));
@@ -419,67 +303,11 @@ static void check_const_type(Context* ctx,
                              WabtType actual,
                              const WabtConstVector* expected,
                              const char* desc) {
-  assert(actual != WABT_TYPE_ANY);
   WabtTypeVector actual_types;
-
   WABT_ZERO_MEMORY(actual_types);
   actual_types.size = actual == WABT_TYPE_VOID ? 0 : 1;
   actual_types.data = &actual;
   check_const_types(ctx, loc, &actual_types, expected, desc);
-}
-
-static void pop_and_check_1_type(Context* ctx,
-                                 const WabtLocation* loc,
-                                 WabtType expected,
-                                 const char* desc) {
-  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, loc, 1, desc))) {
-    WabtType actual = pop_type(ctx);
-    check_type(ctx, loc, actual, expected, desc);
-  }
-}
-
-static void pop_and_check_2_types(Context* ctx,
-                                  const WabtLocation* loc,
-                                  WabtType expected1,
-                                  WabtType expected2,
-                                  const char* desc) {
-  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, loc, 2, desc))) {
-    WabtType actual2 = pop_type(ctx);
-    WabtType actual1 = pop_type(ctx);
-    check_type(ctx, loc, actual1, expected1, desc);
-    check_type(ctx, loc, actual2, expected2, desc);
-  }
-}
-
-static void check_opcode1(Context* ctx,
-                          const WabtLocation* loc,
-                          WabtOpcode opcode) {
-  pop_and_check_1_type(ctx, loc, wabt_get_opcode_param_type_1(opcode),
-                       wabt_get_opcode_name(opcode));
-  push_type(ctx, wabt_get_opcode_result_type(opcode));
-}
-
-static void check_opcode2(Context* ctx,
-                          const WabtLocation* loc,
-                          WabtOpcode opcode) {
-  pop_and_check_2_types(ctx, loc, wabt_get_opcode_param_type_1(opcode),
-                        wabt_get_opcode_param_type_2(opcode),
-                        wabt_get_opcode_name(opcode));
-  push_type(ctx, wabt_get_opcode_result_type(opcode));
-}
-
-static void check_n_types(Context* ctx,
-                          const WabtLocation* loc,
-                          const WabtTypeVector* expected,
-                          const char* desc) {
-  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, loc, expected->size, desc))) {
-    size_t i;
-    for (i = 0; i < expected->size; ++i) {
-      WabtType actual =
-          ctx->type_stack.data[ctx->type_stack.size - expected->size + i];
-      check_type(ctx, loc, actual, expected->data[i], desc);
-    }
-  }
 }
 
 static void check_assert_return_nan_type(Context* ctx,
@@ -494,75 +322,16 @@ static void check_assert_return_nan_type(Context* ctx,
   }
 }
 
-static WabtResult check_br(Context* ctx,
-                           const WabtLocation* loc,
-                           const WabtVar* var,
-                           const WabtBlockSignature** out_sig,
-                           const char* desc) {
-  LabelNode* node;
-  WabtResult result = check_label_var(ctx, ctx->top_label, var, &node);
-  if (WABT_SUCCEEDED(result)) {
-    if (node->label_type != LABEL_TYPE_LOOP) {
-      check_n_types(ctx, loc, node->sig, desc);
-    }
-
-    if (out_sig)
-      *out_sig = node->sig;
-  }
-  return result;
-}
-
-static void check_call(Context* ctx,
-                       const WabtLocation* loc,
-                       const WabtStringSlice* callee_name,
-                       const WabtFuncSignature* sig,
-                       const char* desc) {
-  size_t expected_args = sig->param_types.size;
-  size_t limit = type_stack_limit(ctx);
-  size_t avail = ctx->type_stack.size - limit;
-  size_t i;
-  if (expected_args <= avail) {
-    for (i = 0; i < sig->param_types.size; ++i) {
-      WabtType actual =
-          ctx->type_stack.data[ctx->type_stack.size - expected_args + i];
-      WabtType expected = sig->param_types.data[i];
-      check_type_index(ctx, loc, actual, expected, desc, i, "argument");
-    }
-    ctx->type_stack.size -= expected_args;
-  } else {
-    print_error(ctx, loc, "type stack size too small at %s. got %" PRIzd
-                          ", expected at least %" PRIzd,
-                desc, avail, expected_args);
-    ctx->type_stack.size = limit;
-  }
-  for (i = 0; i < sig->result_types.size; ++i)
-    push_type(ctx, sig->result_types.data[i]);
-}
-
 static void check_expr(Context* ctx, const WabtExpr* expr);
 
-static void check_block(Context* ctx,
-                        const WabtLocation* loc,
-                        const WabtExpr* first,
-                        const char* desc) {
-  WabtBool check_result = WABT_TRUE;
+static void check_expr_list(Context* ctx,
+                            const WabtLocation* loc,
+                            const WabtExpr* first) {
   if (first) {
     const WabtExpr* expr;
-    for (expr = first; expr; expr = expr->next) {
+    for (expr = first; expr; expr = expr->next)
       check_expr(ctx, expr);
-      /* stop typechecking if we hit unreachable code */
-      if (top_type(ctx) == WABT_TYPE_ANY) {
-        check_result = WABT_FALSE;
-        break;
-      }
-    }
   }
-  if (check_result) {
-    assert(ctx->top_label != NULL);
-    check_n_types(ctx, loc, ctx->top_label->sig, desc);
-    check_type_stack_limit_exact(ctx, loc, ctx->top_label->sig->size, desc);
-  }
-  ctx->type_stack.size = ctx->top_label->type_stack_limit;
 }
 
 static void check_has_memory(Context* ctx,
@@ -575,51 +344,47 @@ static void check_has_memory(Context* ctx,
 }
 
 static void check_expr(Context* ctx, const WabtExpr* expr) {
+  ctx->expr_loc = &expr->loc;
+
   switch (expr->type) {
     case WABT_EXPR_TYPE_BINARY:
-      check_opcode2(ctx, &expr->loc, expr->binary.opcode);
+      wabt_typechecker_on_binary(&ctx->typechecker, expr->binary.opcode);
       break;
 
-    case WABT_EXPR_TYPE_BLOCK: {
-      LabelNode node;
-      push_label(ctx, &expr->loc, &node, LABEL_TYPE_BLOCK, &expr->block.sig);
-      check_block(ctx, &expr->loc, expr->block.first, "block");
-      pop_label(ctx);
-      push_types(ctx, &expr->block.sig);
+    case WABT_EXPR_TYPE_BLOCK:
+      wabt_typechecker_on_block(&ctx->typechecker, &expr->block.sig);
+      check_expr_list(ctx, &expr->loc, expr->block.first);
+      wabt_typechecker_on_end(&ctx->typechecker);
       break;
-    }
 
     case WABT_EXPR_TYPE_BR:
-      check_br(ctx, &expr->loc, &expr->br.var, NULL, "br value");
-      reset_type_stack_to_limit(ctx);
-      push_type(ctx, WABT_TYPE_ANY);
+      wabt_typechecker_on_br(&ctx->typechecker, expr->br.var.index);
       break;
 
-    case WABT_EXPR_TYPE_BR_IF: {
-      const WabtBlockSignature* sig;
-      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "br_if condition");
-      check_br(ctx, &expr->loc, &expr->br_if.var, &sig, "br_if value");
+    case WABT_EXPR_TYPE_BR_IF:
+      wabt_typechecker_on_br_if(&ctx->typechecker, expr->br_if.var.index);
       break;
-    }
 
     case WABT_EXPR_TYPE_BR_TABLE: {
-      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "br_table key");
+      wabt_typechecker_begin_br_table(&ctx->typechecker);
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
-        check_br(ctx, &expr->loc, &expr->br_table.targets.data[i], NULL,
-                 "br_table target");
+        wabt_typechecker_on_br_table_target(
+            &ctx->typechecker, expr->br_table.targets.data[i].index);
       }
-      check_br(ctx, &expr->loc, &expr->br_table.default_target, NULL,
-               "br_table default target");
-      reset_type_stack_to_limit(ctx);
-      push_type(ctx, WABT_TYPE_ANY);
+      wabt_typechecker_on_br_table_target(&ctx->typechecker,
+                                          expr->br_table.default_target.index);
+      wabt_typechecker_end_br_table(&ctx->typechecker);
       break;
     }
 
     case WABT_EXPR_TYPE_CALL: {
       const WabtFunc* callee;
-      if (WABT_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee)))
-        check_call(ctx, &expr->loc, &callee->name, &callee->decl.sig, "call");
+      if (WABT_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee))) {
+        wabt_typechecker_on_call(&ctx->typechecker,
+                                 &callee->decl.sig.param_types,
+                                 &callee->decl.sig.result_types);
+      }
       break;
     }
 
@@ -631,148 +396,118 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       }
       if (WABT_SUCCEEDED(
               check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
-        WabtType type = pop_type(ctx);
-        check_type(ctx, &expr->loc, type, WABT_TYPE_I32,
-                   "call_indirect function index");
-        check_call(ctx, &expr->loc, NULL, &func_type->sig, "call_indirect");
+        wabt_typechecker_on_call_indirect(&ctx->typechecker,
+                                          &func_type->sig.param_types,
+                                          &func_type->sig.result_types);
       }
       break;
     }
 
     case WABT_EXPR_TYPE_COMPARE:
-      check_opcode2(ctx, &expr->loc, expr->compare.opcode);
+      wabt_typechecker_on_compare(&ctx->typechecker, expr->compare.opcode);
       break;
 
     case WABT_EXPR_TYPE_CONST:
-      push_type(ctx, expr->const_.type);
+      wabt_typechecker_on_const(&ctx->typechecker, expr->const_.type);
       break;
 
     case WABT_EXPR_TYPE_CONVERT:
-      check_opcode1(ctx, &expr->loc, expr->convert.opcode);
+      wabt_typechecker_on_convert(&ctx->typechecker, expr->convert.opcode);
       break;
 
     case WABT_EXPR_TYPE_DROP:
-      if (WABT_SUCCEEDED(check_type_stack_limit(ctx, &expr->loc, 1, "drop")))
-        pop_type(ctx);
+      wabt_typechecker_on_drop(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_GET_GLOBAL: {
-      const WabtGlobal* global;
-      if (WABT_SUCCEEDED(
-              check_global_var(ctx, &expr->get_global.var, &global, NULL)))
-        push_type(ctx, global->type);
+    case WABT_EXPR_TYPE_GET_GLOBAL:
+      wabt_typechecker_on_get_global(
+          &ctx->typechecker,
+          get_global_var_type_or_any(ctx, &expr->get_global.var));
       break;
-    }
 
-    case WABT_EXPR_TYPE_GET_LOCAL: {
-      WabtType type;
-      if (WABT_SUCCEEDED(check_local_var(ctx, &expr->get_local.var, &type)))
-        push_type(ctx, type);
+    case WABT_EXPR_TYPE_GET_LOCAL:
+      wabt_typechecker_on_get_local(
+          &ctx->typechecker,
+          get_local_var_type_or_any(ctx, &expr->get_local.var));
       break;
-    }
 
     case WABT_EXPR_TYPE_GROW_MEMORY:
       check_has_memory(ctx, &expr->loc, WABT_OPCODE_GROW_MEMORY);
-      check_opcode1(ctx, &expr->loc, WABT_OPCODE_GROW_MEMORY);
+      wabt_typechecker_on_grow_memory(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_IF: {
-      LabelNode node;
-      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "if condition");
-      push_label(ctx, &expr->loc, &node, LABEL_TYPE_IF, &expr->if_.true_.sig);
-      check_block(ctx, &expr->loc, expr->if_.true_.first, "if true branch");
-      check_block(ctx, &expr->loc, expr->if_.false_, "if false branch");
-      pop_label(ctx);
-      push_types(ctx, &expr->if_.true_.sig);
+    case WABT_EXPR_TYPE_IF:
+      wabt_typechecker_on_if(&ctx->typechecker, &expr->if_.true_.sig);
+      check_expr_list(ctx, &expr->loc, expr->if_.true_.first);
+      if (expr->if_.false_) {
+        wabt_typechecker_on_else(&ctx->typechecker);
+        check_expr_list(ctx, &expr->loc, expr->if_.false_);
+      }
+      wabt_typechecker_on_end(&ctx->typechecker);
       break;
-    }
 
     case WABT_EXPR_TYPE_LOAD:
       check_has_memory(ctx, &expr->loc, expr->load.opcode);
       check_align(ctx, &expr->loc, expr->load.align,
                   get_opcode_natural_alignment(expr->load.opcode));
       check_offset(ctx, &expr->loc, expr->load.offset);
-      check_opcode1(ctx, &expr->loc, expr->load.opcode);
+      wabt_typechecker_on_load(&ctx->typechecker, expr->load.opcode);
       break;
 
-    case WABT_EXPR_TYPE_LOOP: {
-      LabelNode node;
-      push_label(ctx, &expr->loc, &node, LABEL_TYPE_LOOP, &expr->loop.sig);
-      check_block(ctx, &expr->loc, expr->loop.first, "loop");
-      pop_label(ctx);
-      push_types(ctx, &expr->block.sig);
+    case WABT_EXPR_TYPE_LOOP:
+      wabt_typechecker_on_loop(&ctx->typechecker, &expr->loop.sig);
+      check_expr_list(ctx, &expr->loc, expr->loop.first);
+      wabt_typechecker_on_end(&ctx->typechecker);
       break;
-    }
 
     case WABT_EXPR_TYPE_CURRENT_MEMORY:
       check_has_memory(ctx, &expr->loc, WABT_OPCODE_CURRENT_MEMORY);
-      push_type(ctx, WABT_TYPE_I32);
+      wabt_typechecker_on_current_memory(&ctx->typechecker);
       break;
 
     case WABT_EXPR_TYPE_NOP:
       break;
 
-    case WABT_EXPR_TYPE_RETURN: {
-      check_n_types(ctx, &expr->loc, &ctx->current_func->decl.sig.result_types,
-                    "return");
-      reset_type_stack_to_limit(ctx);
-      push_type(ctx, WABT_TYPE_ANY);
+    case WABT_EXPR_TYPE_RETURN:
+      wabt_typechecker_on_return(&ctx->typechecker);
       break;
-    }
 
-    case WABT_EXPR_TYPE_SELECT: {
-      pop_and_check_1_type(ctx, &expr->loc, WABT_TYPE_I32, "select");
-      if (WABT_SUCCEEDED(
-              check_type_stack_limit(ctx, &expr->loc, 2, "select"))) {
-        WabtType type1 = pop_type(ctx);
-        WabtType type2 = pop_type(ctx);
-        check_type(ctx, &expr->loc, type2, type1, "select");
-        push_type(ctx, type1);
-      }
+    case WABT_EXPR_TYPE_SELECT:
+      wabt_typechecker_on_select(&ctx->typechecker);
       break;
-    }
 
-    case WABT_EXPR_TYPE_SET_GLOBAL: {
-      WabtType type = WABT_TYPE_I32;
-      const WabtGlobal* global;
-      if (WABT_SUCCEEDED(
-              check_global_var(ctx, &expr->set_global.var, &global, NULL))) {
-        type = global->type;
-      }
-      pop_and_check_1_type(ctx, &expr->loc, type, "set_global");
+    case WABT_EXPR_TYPE_SET_GLOBAL:
+      wabt_typechecker_on_set_global(
+          &ctx->typechecker,
+          get_global_var_type_or_any(ctx, &expr->set_global.var));
       break;
-    }
 
-    case WABT_EXPR_TYPE_SET_LOCAL: {
-      WabtType type = WABT_TYPE_I32;
-      check_local_var(ctx, &expr->set_local.var, &type);
-      pop_and_check_1_type(ctx, &expr->loc, type, "set_local");
+    case WABT_EXPR_TYPE_SET_LOCAL:
+      wabt_typechecker_on_set_local(
+          &ctx->typechecker,
+          get_local_var_type_or_any(ctx, &expr->set_local.var));
       break;
-    }
 
     case WABT_EXPR_TYPE_STORE:
       check_has_memory(ctx, &expr->loc, expr->store.opcode);
       check_align(ctx, &expr->loc, expr->store.align,
                   get_opcode_natural_alignment(expr->store.opcode));
       check_offset(ctx, &expr->loc, expr->store.offset);
-      check_opcode2(ctx, &expr->loc, expr->store.opcode);
+      wabt_typechecker_on_store(&ctx->typechecker, expr->store.opcode);
       break;
 
-    case WABT_EXPR_TYPE_TEE_LOCAL: {
-      WabtType local_type = WABT_TYPE_I32;
-      check_local_var(ctx, &expr->tee_local.var, &local_type);
-      if (check_type_stack_limit(ctx, &expr->loc, 1, "tee_local"))
-        check_type(ctx, &expr->loc, top_type(ctx), local_type, "tee_local");
+    case WABT_EXPR_TYPE_TEE_LOCAL:
+      wabt_typechecker_on_tee_local(
+          &ctx->typechecker,
+          get_local_var_type_or_any(ctx, &expr->tee_local.var));
       break;
-    }
 
     case WABT_EXPR_TYPE_UNARY:
-      check_opcode1(ctx, &expr->loc, expr->unary.opcode);
+      wabt_typechecker_on_unary(&ctx->typechecker, expr->unary.opcode);
       break;
 
     case WABT_EXPR_TYPE_UNREACHABLE:
-      reset_type_stack_to_limit(ctx);
-      push_type(ctx, WABT_TYPE_ANY);
+      wabt_typechecker_on_unreachable(&ctx->typechecker);
       break;
   }
 }
@@ -806,12 +541,11 @@ static void check_func(Context* ctx,
     }
   }
 
-  /* The function has an implicit label; branching to it is equivalent to the
-   * returning from the function. */
-  LabelNode node;
-  push_label(ctx, loc, &node, LABEL_TYPE_FUNC, &func->decl.sig.result_types);
-  check_block(ctx, loc, func->first_expr, "function");
-  pop_label(ctx);
+  ctx->expr_loc = loc;
+  wabt_typechecker_begin_function(&ctx->typechecker,
+                                  &func->decl.sig.result_types);
+  check_expr_list(ctx, loc, func->first_expr);
+  wabt_typechecker_end_function(&ctx->typechecker);
   ctx->current_func = NULL;
 }
 
@@ -1294,7 +1028,7 @@ static void check_command(Context* ctx, const WabtCommand* command) {
 }
 
 static void wabt_destroy_context(Context* ctx) {
-  wabt_destroy_type_vector(ctx->allocator, &ctx->type_stack);
+  wabt_destroy_typechecker(&ctx->typechecker);
 }
 
 WabtResult wabt_validate_script(WabtAllocator* allocator,
@@ -1308,6 +1042,13 @@ WabtResult wabt_validate_script(WabtAllocator* allocator,
   ctx.error_handler = error_handler;
   ctx.result = WABT_OK;
   ctx.script = script;
+
+  WabtTypeCheckerErrorHandler tc_error_handler;
+  tc_error_handler.on_error = on_typechecker_error;
+  tc_error_handler.user_data = &ctx;
+  ctx.typechecker.allocator = allocator;
+  ctx.typechecker.error_handler = &tc_error_handler;
+
   size_t i;
   for (i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);

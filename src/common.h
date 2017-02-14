@@ -81,6 +81,15 @@ typedef enum WabtResult {
 #define WABT_SUCCEEDED(x) ((x) == WABT_OK)
 #define WABT_FAILED(x) ((x) == WABT_ERROR)
 
+typedef enum WabtLabelType {
+  WABT_LABEL_TYPE_FUNC,
+  WABT_LABEL_TYPE_BLOCK,
+  WABT_LABEL_TYPE_LOOP,
+  WABT_LABEL_TYPE_IF,
+  WABT_LABEL_TYPE_ELSE,
+  WABT_NUM_LABEL_TYPES,
+} WabtLabelType;
+
 typedef struct WabtStringSlice {
   const char* start;
   size_t length;

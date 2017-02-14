@@ -2,8 +2,8 @@
 ;;; STDIN_FILE: third_party/testsuite/br_table.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/br_table.wast:1386: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000023: end_function_body callback failed
+  error: type stack at end of block is 1, expected 0
+  error: @0x00000022: on_end_expr callback failed
 out/third_party/testsuite/br_table.wast:1393: assert_invalid passed:
   error: type stack size too small at br_table. got 0, expected at least 1
   error: @0x00000020: on_br_table_expr callback failed
@@ -23,22 +23,22 @@ out/third_party/testsuite/br_table.wast:1424: assert_invalid passed:
   error: type mismatch in br_table, expected i32 but got i64.
   error: @0x00000022: on_br_table_expr callback failed
 out/third_party/testsuite/br_table.wast:1431: assert_invalid passed:
-  error: invalid depth: 2 (max 2)
+  error: invalid depth: 2 (max 1)
   error: @0x0000001f: on_br_table_expr callback failed
 out/third_party/testsuite/br_table.wast:1437: assert_invalid passed:
-  error: invalid depth: 5 (max 3)
+  error: invalid depth: 5 (max 2)
   error: @0x00000021: on_br_table_expr callback failed
 out/third_party/testsuite/br_table.wast:1443: assert_invalid passed:
-  error: invalid depth: 268435457 (max 2)
+  error: invalid depth: 268435457 (max 1)
   error: @0x00000024: on_br_table_expr callback failed
 out/third_party/testsuite/br_table.wast:1450: assert_invalid passed:
-  error: invalid depth: 2 (max 2)
+  error: invalid depth: 2 (max 1)
   error: @0x0000001f: on_br_table_expr callback failed
 out/third_party/testsuite/br_table.wast:1456: assert_invalid passed:
-  error: invalid depth: 5 (max 3)
+  error: invalid depth: 5 (max 2)
   error: @0x00000021: on_br_table_expr callback failed
 out/third_party/testsuite/br_table.wast:1462: assert_invalid passed:
-  error: invalid depth: 268435457 (max 2)
+  error: invalid depth: 268435457 (max 1)
   error: @0x00000024: on_br_table_expr callback failed
 156/156 tests passed.
 ;;; STDOUT ;;)

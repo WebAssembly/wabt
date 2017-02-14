@@ -5,7 +5,7 @@
     f32.reinterpret/i32
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-cast-type-mismatch.txt:5:5: type mismatch at f32.reinterpret/i32. got f32, expected i32
+out/test/typecheck/bad-cast-type-mismatch.txt:5:5: type mismatch in f32.reinterpret/i32, expected i32 but got f32.
     f32.reinterpret/i32
     ^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

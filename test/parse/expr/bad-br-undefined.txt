@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func br 1))
 (;; STDERR ;;;
-out/test/parse/expr/bad-br-undefined.txt:2:18: label variable out of range (max 1)
+out/test/parse/expr/bad-br-undefined.txt:2:15: invalid depth: 1 (max 0)
 (module (func br 1))
-                 ^
+              ^^^^
 ;;; STDERR ;;)

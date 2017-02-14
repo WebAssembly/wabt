@@ -24,29 +24,13 @@
 #include "allocator.h"
 #include "binary-reader.h"
 #include "interpreter.h"
+#include "type-checker.h"
 #include "writer.h"
-
-#define LOG 0
-
-#if LOG
-#define LOGF(...) fprintf(stderr, __VA_ARGS__)
-#else
-#define LOGF(...) (void)0
-#endif
 
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WABT_FAILED(expr)) \
       return WABT_ERROR;   \
-  } while (0)
-
-#define CHECK_DEPTH(ctx, depth)                                         \
-  do {                                                                  \
-    if ((depth) >= (ctx)->label_stack.size) {                           \
-      print_error((ctx), "invalid depth: %d (max %" PRIzd ")", (depth), \
-                  ((ctx)->label_stack.size));                           \
-      return WABT_ERROR;                                                \
-    }                                                                   \
   } while (0)
 
 #define CHECK_LOCAL(ctx, local_index)                                       \
@@ -70,30 +54,11 @@
     }                                                                         \
   } while (0)
 
-#define RETURN_IF_TOP_TYPE_IS_ANY(ctx) \
-  if (top_type_is_any(ctx))            \
-  return
-
-#define RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx) \
-  if (top_type_is_any(ctx))               \
-  return WABT_OK
-
 typedef uint32_t Uint32;
 WABT_DEFINE_VECTOR(uint32, Uint32);
 WABT_DEFINE_VECTOR(uint32_vector, Uint32Vector);
 
-typedef enum LabelType {
-  LABEL_TYPE_FUNC,
-  LABEL_TYPE_BLOCK,
-  LABEL_TYPE_LOOP,
-  LABEL_TYPE_IF,
-  LABEL_TYPE_ELSE,
-} LabelType;
-
 typedef struct Label {
-  LabelType label_type;
-  WabtTypeVector sig;
-  uint32_t type_stack_limit;
   uint32_t offset; /* branch location in the istream */
   uint32_t fixup_offset;
 } Label;
@@ -107,11 +72,10 @@ typedef struct Context {
   WabtInterpreterEnvironment* env;
   WabtInterpreterModule* module;
   WabtInterpreterFunc* current_func;
-  WabtTypeVector type_stack;
+  WabtTypeChecker typechecker;
   LabelVector label_stack;
   Uint32VectorVector func_fixups;
   Uint32VectorVector depth_fixups;
-  uint32_t depth;
   WabtMemoryWriter istream_writer;
   uint32_t istream_offset;
   /* mappings from module index space to env index space; this won't just be a
@@ -133,11 +97,11 @@ typedef struct Context {
 
 static Label* get_label(Context* ctx, uint32_t depth) {
   assert(depth < ctx->label_stack.size);
-  return &ctx->label_stack.data[depth];
+  return &ctx->label_stack.data[ctx->label_stack.size - depth - 1];
 }
 
 static Label* top_label(Context* ctx) {
-  return get_label(ctx, ctx->label_stack.size - 1);
+  return get_label(ctx, 0);
 }
 
 static void handle_error(uint32_t offset, const char* message, Context* ctx) {
@@ -151,6 +115,11 @@ static void WABT_PRINTF_FORMAT(2, 3)
     print_error(Context* ctx, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   handle_error(WABT_INVALID_OFFSET, buffer, ctx);
+}
+
+static void on_typechecker_error(const char* msg, void* user_data) {
+  Context* ctx = user_data;
+  print_error(ctx, "%s", msg);
 }
 
 static uint32_t translate_sig_index_to_env(Context* ctx, uint32_t sig_index) {
@@ -226,11 +195,6 @@ static WabtType get_local_type_by_index(WabtInterpreterFunc* func,
   return func->defined.param_and_local_types.data[local_index];
 }
 
-static uint32_t translate_local_index(Context* ctx, uint32_t local_index) {
-  assert(local_index < ctx->type_stack.size);
-  return ctx->type_stack.size - local_index;
-}
-
 static uint32_t get_istream_offset(Context* ctx) {
   return ctx->istream_offset;
 }
@@ -274,10 +238,8 @@ static WabtResult emit_drop_keep(Context* ctx, uint32_t drop, uint8_t keep) {
   assert(keep <= 1);
   if (drop > 0) {
     if (drop == 1 && keep == 0) {
-      LOGF("%3" PRIzd ": drop\n", ctx->type_stack.size);
       CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_DROP));
     } else {
-      LOGF("%3" PRIzd ": drop_keep %u %u\n", ctx->type_stack.size, drop, keep);
       CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_DROP_KEEP));
       CHECK_RESULT(emit_i32(ctx, drop));
       CHECK_RESULT(emit_i8(ctx, keep));
@@ -300,41 +262,68 @@ static WabtResult append_fixup(Context* ctx,
 static WabtResult emit_br_offset(Context* ctx,
                                  uint32_t depth,
                                  uint32_t offset) {
-  if (offset == WABT_INVALID_OFFSET)
-    CHECK_RESULT(append_fixup(ctx, &ctx->depth_fixups, depth));
+  if (offset == WABT_INVALID_OFFSET) {
+    /* depth_fixups stores the depth counting up from zero, where zero is the
+     * top-level function scope. */
+    depth =  ctx->label_stack.size - 1 - depth;
+    CHECK_RESULT(
+        append_fixup(ctx, &ctx->depth_fixups, depth));
+  }
   CHECK_RESULT(emit_i32(ctx, offset));
   return WABT_OK;
 }
 
-static uint32_t get_label_br_arity(Label* label) {
-  return label->label_type != LABEL_TYPE_LOOP ? label->sig.size : 0;
+static WabtResult get_br_drop_keep_count(Context* ctx,
+                                         uint32_t depth,
+                                         uint32_t* out_drop_count,
+                                         uint32_t* out_keep_count) {
+  WabtTypeCheckerLabel* label;
+  CHECK_RESULT(wabt_typechecker_get_label(&ctx->typechecker, depth, &label));
+  *out_keep_count =
+      label->label_type != WABT_LABEL_TYPE_LOOP ? label->sig.size : 0;
+  if (wabt_typechecker_is_unreachable(&ctx->typechecker)) {
+    *out_drop_count = 0;
+  } else {
+    *out_drop_count =
+        (ctx->typechecker.type_stack.size - label->type_stack_limit) -
+        *out_keep_count;
+  }
+  return WABT_OK;
 }
 
-static WabtResult emit_br(Context* ctx, uint32_t depth) {
-  Label* label = get_label(ctx, depth);
-  uint32_t arity = get_label_br_arity(label);
-  assert(ctx->type_stack.size >= label->type_stack_limit + arity);
-  uint32_t drop_count =
-      (ctx->type_stack.size - label->type_stack_limit) - arity;
-  CHECK_RESULT(emit_drop_keep(ctx, drop_count, arity));
+static WabtResult get_return_drop_keep_count(Context* ctx,
+                                             uint32_t* out_drop_count,
+                                             uint32_t* out_keep_count) {
+  if (WABT_FAILED(get_br_drop_keep_count(ctx, ctx->label_stack.size - 1,
+                                         out_drop_count, out_keep_count))) {
+    return WABT_ERROR;
+  }
+
+  *out_drop_count += ctx->current_func->defined.param_and_local_types.size;
+  return WABT_OK;
+}
+
+static WabtResult emit_br(Context* ctx,
+                          uint32_t depth,
+                          uint32_t drop_count,
+                          uint32_t keep_count) {
+  CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_BR));
-  CHECK_RESULT(emit_br_offset(ctx, depth, label->offset));
+  CHECK_RESULT(emit_br_offset(ctx, depth, get_label(ctx, depth)->offset));
   return WABT_OK;
 }
 
 static WabtResult emit_br_table_offset(Context* ctx, uint32_t depth) {
-  Label* label = get_label(ctx, depth);
-  uint32_t arity = get_label_br_arity(label);
-  assert(ctx->type_stack.size >= label->type_stack_limit + arity);
-  uint32_t drop_count =
-      (ctx->type_stack.size - label->type_stack_limit) - arity;
-  CHECK_RESULT(emit_br_offset(ctx, depth, label->offset));
+  uint32_t drop_count, keep_count;
+  CHECK_RESULT(get_br_drop_keep_count(ctx, depth, &drop_count, &keep_count));
+  CHECK_RESULT(emit_br_offset(ctx, depth, get_label(ctx, depth)->offset));
   CHECK_RESULT(emit_i32(ctx, drop_count));
-  CHECK_RESULT(emit_i8(ctx, arity));
+  CHECK_RESULT(emit_i8(ctx, keep_count));
   return WABT_OK;
 }
 
-static WabtResult fixup_top_label(Context* ctx, uint32_t offset) {
+static WabtResult fixup_top_label(Context* ctx) {
+  uint32_t offset = get_istream_offset(ctx);
   uint32_t top = ctx->label_stack.size - 1;
   if (top >= ctx->depth_fixups.size) {
     /* nothing to fixup */
@@ -1002,33 +991,13 @@ static WabtResult on_data_segment_data(uint32_t index,
   return WABT_OK;
 }
 
-static uint32_t translate_depth(Context* ctx, uint32_t depth) {
-  assert(depth < ctx->label_stack.size);
-  return ctx->label_stack.size - 1 - depth;
-}
-
-static void push_label(Context* ctx,
-                       LabelType label_type,
-                       const WabtTypeVector* sig,
-                       uint32_t offset,
-                       uint32_t fixup_offset) {
+static void push_label(Context* ctx, uint32_t offset, uint32_t fixup_offset) {
   Label* label = wabt_append_label(ctx->allocator, &ctx->label_stack);
-  label->label_type = label_type;
-  wabt_extend_types(ctx->allocator, &label->sig, sig);
-  label->type_stack_limit = ctx->type_stack.size;
   label->offset = offset;
   label->fixup_offset = fixup_offset;
-  LOGF("   : +depth %" PRIzd "\n", ctx->label_stack.size - 1);
-}
-
-static void wabt_destroy_label(WabtAllocator* allocator, Label* label) {
-  wabt_destroy_type_vector(allocator, &label->sig);
 }
 
 static void pop_label(Context* ctx) {
-  LOGF("   : -depth %" PRIzd "\n", ctx->label_stack.size - 1);
-  Label* label = top_label(ctx);
-  wabt_destroy_label(ctx->allocator, label);
   ctx->label_stack.size--;
   /* reduce the depth_fixups stack as well, but it may be smaller than
    * label_stack so only do it conditionally. */
@@ -1040,180 +1009,6 @@ static void pop_label(Context* ctx) {
       wabt_destroy_uint32_vector(ctx->allocator, &ctx->depth_fixups.data[i]);
     ctx->depth_fixups.size = ctx->label_stack.size;
   }
-}
-
-static WabtType top_type(Context* ctx) {
-  Label* label = top_label(ctx);
-  WABT_USE(label);
-  assert(ctx->type_stack.size > label->type_stack_limit);
-  return ctx->type_stack.data[ctx->type_stack.size - 1];
-}
-
-static WabtBool top_type_is_any(Context* ctx) {
-  if (ctx->type_stack.size >
-      ctx->current_func->defined.param_and_local_types.size) {
-    WabtType top_type = ctx->type_stack.data[ctx->type_stack.size - 1];
-    if (top_type == WABT_TYPE_ANY)
-      return WABT_TRUE;
-  }
-  return WABT_FALSE;
-}
-
-/* TODO(binji): share a lot of the type-checking code w/ wabt-ast-checker.c */
-/* TODO(binji): flip actual + expected types, to match wabt-ast-checker.c */
-static size_t type_stack_limit(Context* ctx) {
-  return top_label(ctx)->type_stack_limit;
-}
-
-static WabtResult check_type_stack_limit(Context* ctx,
-                                         size_t expected,
-                                         const char* desc) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  size_t limit = type_stack_limit(ctx);
-  size_t avail = ctx->type_stack.size - limit;
-  if (expected > avail) {
-    print_error(ctx, "type stack size too small at %s. got %" PRIzd
-                     ", expected at least %" PRIzd,
-                desc, avail, expected);
-    return WABT_ERROR;
-  }
-  return WABT_OK;
-}
-
-static WabtResult check_type_stack_limit_exact(Context* ctx,
-                                               size_t expected,
-                                               const char* desc) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  size_t limit = type_stack_limit(ctx);
-  size_t avail = ctx->type_stack.size - limit;
-  if (expected != avail) {
-    print_error(ctx, "type stack at end of %s is %" PRIzd ". expected %" PRIzd,
-                desc, avail, expected);
-    return WABT_ERROR;
-  }
-  return WABT_OK;
-}
-
-static void reset_type_stack_to_limit(Context* ctx) {
-  ctx->type_stack.size = type_stack_limit(ctx);
-}
-
-static WabtResult check_type(Context* ctx,
-                             WabtType expected,
-                             WabtType actual,
-                             const char* desc) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  if (expected != actual) {
-    print_error(ctx, "type mismatch in %s, expected %s but got %s.", desc,
-                wabt_get_type_name(expected), wabt_get_type_name(actual));
-    return WABT_ERROR;
-  }
-  return WABT_OK;
-}
-
-static WabtResult check_n_types(Context* ctx,
-                                const WabtTypeVector* expected,
-                                const char* desc) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  CHECK_RESULT(check_type_stack_limit(ctx, expected->size, desc));
-  /* check the top of the type stack, with values pushed in reverse, against
-   * the expected type list; for example, if:
-   *   expected = [i32, f32, i32, f64]
-   * then
-   *   type_stack must be [ ..., f64, i32, f32, i32] */
-  size_t i;
-  for (i = 0; i < expected->size; ++i) {
-    WabtType actual =
-        ctx->type_stack.data[ctx->type_stack.size - expected->size + i];
-    CHECK_RESULT(
-        check_type(ctx, expected->data[expected->size - i - 1], actual, desc));
-  }
-  return WABT_OK;
-}
-
-static WabtType pop_type(Context* ctx) {
-  WabtType type = top_type(ctx);
-  if (type != WABT_TYPE_ANY) {
-    LOGF("%3" PRIzd "->%3" PRIzd ": pop  %s\n", ctx->type_stack.size,
-         ctx->type_stack.size - 1, wabt_get_type_name(type));
-    ctx->type_stack.size--;
-  }
-  return type;
-}
-
-static void push_type(Context* ctx, WabtType type) {
-  RETURN_IF_TOP_TYPE_IS_ANY(ctx);
-  if (type != WABT_TYPE_VOID) {
-    LOGF("%3" PRIzd "->%3" PRIzd ": push %s\n", ctx->type_stack.size,
-         ctx->type_stack.size + 1, wabt_get_type_name(type));
-    wabt_append_type_value(ctx->allocator, &ctx->type_stack, &type);
-  }
-}
-
-static void push_types(Context* ctx, const WabtTypeVector* types) {
-  RETURN_IF_TOP_TYPE_IS_ANY(ctx);
-  size_t i;
-  for (i = 0; i < types->size; ++i)
-    push_type(ctx, types->data[i]);
-}
-
-static WabtResult pop_and_check_1_type(Context* ctx,
-                                       WabtType expected,
-                                       const char* desc) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, 1, desc))) {
-    WabtType actual = pop_type(ctx);
-    CHECK_RESULT(check_type(ctx, expected, actual, desc));
-    return WABT_OK;
-  }
-  return WABT_ERROR;
-}
-
-static WabtResult pop_and_check_2_types(Context* ctx,
-                                        WabtType expected1,
-                                        WabtType expected2,
-                                        const char* desc) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  if (WABT_SUCCEEDED(check_type_stack_limit(ctx, 2, desc))) {
-    WabtType actual2 = pop_type(ctx);
-    WabtType actual1 = pop_type(ctx);
-    CHECK_RESULT(check_type(ctx, expected1, actual1, desc));
-    CHECK_RESULT(check_type(ctx, expected2, actual2, desc));
-    return WABT_OK;
-  }
-  return WABT_ERROR;
-}
-
-static WabtResult check_opcode1(Context* ctx, WabtOpcode opcode) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  CHECK_RESULT(pop_and_check_1_type(ctx, wabt_get_opcode_param_type_1(opcode),
-                                    wabt_get_opcode_name(opcode)));
-  push_type(ctx, wabt_get_opcode_result_type(opcode));
-  return WABT_OK;
-}
-
-static WabtResult check_opcode2(Context* ctx, WabtOpcode opcode) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  CHECK_RESULT(pop_and_check_2_types(ctx, wabt_get_opcode_param_type_1(opcode),
-                                     wabt_get_opcode_param_type_2(opcode),
-                                     wabt_get_opcode_name(opcode)));
-  push_type(ctx, wabt_get_opcode_result_type(opcode));
-  return WABT_OK;
-}
-
-static WabtResult drop_types_for_return(Context* ctx, uint32_t arity) {
-  RETURN_OK_IF_TOP_TYPE_IS_ANY(ctx);
-  /* drop the locals and params, but keep the return value, if any.  */
-  if (ctx->type_stack.size >= arity) {
-    uint32_t drop_count = ctx->type_stack.size - arity;
-    CHECK_RESULT(emit_drop_keep(ctx, drop_count, arity));
-  } else {
-    /* it is possible for the size of the type stack to be smaller than the
-     * return arity if the last instruction of the function is
-     * return. In that case the type stack should be empty */
-    assert(ctx->type_stack.size == 0);
-  }
-  return WABT_OK;
 }
 
 static WabtResult begin_function_body(WabtBinaryReaderContext* context,
@@ -1230,9 +1025,7 @@ static WabtResult begin_function_body(WabtBinaryReaderContext* context,
 
   ctx->current_func = func;
   ctx->depth_fixups.size = 0;
-  ctx->type_stack.size = 0;
   ctx->label_stack.size = 0;
-  ctx->depth = 0;
 
   /* fixup function references */
   uint32_t defined_index = translate_module_func_index_to_defined(ctx, index);
@@ -1243,43 +1036,28 @@ static WabtResult begin_function_body(WabtBinaryReaderContext* context,
 
   /* append param types */
   for (i = 0; i < sig->param_types.size; ++i) {
-    WabtType type = sig->param_types.data[i];
     wabt_append_type_value(ctx->allocator, &func->defined.param_and_local_types,
-                           &type);
-    wabt_append_type_value(ctx->allocator, &ctx->type_stack, &type);
+                           &sig->param_types.data[i]);
   }
 
+  CHECK_RESULT(
+      wabt_typechecker_begin_function(&ctx->typechecker, &sig->result_types));
+
   /* push implicit func label (equivalent to return) */
-  push_label(ctx, LABEL_TYPE_FUNC, &sig->result_types, WABT_INVALID_OFFSET,
-             WABT_INVALID_OFFSET);
+  push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
   return WABT_OK;
 }
 
 static WabtResult end_function_body(uint32_t index, void* user_data) {
   Context* ctx = user_data;
-  Label* label = top_label(ctx);
-  if (!label || label->label_type != LABEL_TYPE_FUNC) {
-    print_error(ctx, "unexpected function end");
-    return WABT_ERROR;
-  }
-
-  CHECK_RESULT(check_n_types(ctx, &label->sig, "implicit return"));
-  CHECK_RESULT(check_type_stack_limit_exact(ctx, label->sig.size, "func"));
-  fixup_top_label(ctx, get_istream_offset(ctx));
-  if (top_type_is_any(ctx)) {
-    /* if the top type is any it means that this code is unreachable, at least
-     * from the normal fallthrough, though it's possible that this code was
-     * reached by branching to the implicit function label. If so, we have
-     * already validated that the stack at that location, so we just need to
-     * reset it to that state. */
-    reset_type_stack_to_limit(ctx);
-    push_types(ctx, &label->sig);
-  }
-  CHECK_RESULT(drop_types_for_return(ctx, label->sig.size));
+  fixup_top_label(ctx);
+  uint32_t drop_count, keep_count;
+  CHECK_RESULT(get_return_drop_keep_count(ctx, &drop_count, &keep_count));
+  CHECK_RESULT(wabt_typechecker_end_function(&ctx->typechecker));
+  CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_RETURN));
   pop_label(ctx);
   ctx->current_func = NULL;
-  ctx->type_stack.size = 0;
   return WABT_OK;
 }
 
@@ -1295,7 +1073,6 @@ static WabtResult on_local_decl(uint32_t decl_index,
                                 WabtType type,
                                 void* user_data) {
   Context* ctx = user_data;
-  LOGF("%3" PRIzd ": alloca\n", ctx->type_stack.size);
   WabtInterpreterFunc* func = ctx->current_func;
   func->defined.local_count += count;
 
@@ -1303,17 +1080,12 @@ static WabtResult on_local_decl(uint32_t decl_index,
   for (i = 0; i < count; ++i) {
     wabt_append_type_value(ctx->allocator, &func->defined.param_and_local_types,
                            &type);
-    push_type(ctx, type);
   }
 
   if (decl_index == func->defined.local_decl_count - 1) {
     /* last local declaration, allocate space for all locals. */
     CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_ALLOCA));
     CHECK_RESULT(emit_i32(ctx, func->defined.local_count));
-    /* fixup the function label's type_stack_limit to include these values. */
-    Label* label = top_label(ctx);
-    assert(label->label_type == LABEL_TYPE_FUNC);
-    label->type_stack_limit += func->defined.local_count;
   }
   return WABT_OK;
 }
@@ -1340,14 +1112,14 @@ static WabtResult check_align(Context* ctx,
 
 static WabtResult on_unary_expr(WabtOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(check_opcode1(ctx, opcode));
+  CHECK_RESULT(wabt_typechecker_on_unary(&ctx->typechecker, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
   return WABT_OK;
 }
 
 static WabtResult on_binary_expr(WabtOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(check_opcode2(ctx, opcode));
+  CHECK_RESULT(wabt_typechecker_on_binary(&ctx->typechecker, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
   return WABT_OK;
 }
@@ -1359,8 +1131,8 @@ static WabtResult on_block_expr(uint32_t num_types,
   WabtTypeVector sig;
   sig.size = num_types;
   sig.data = sig_types;
-  push_label(ctx, LABEL_TYPE_BLOCK, &sig, WABT_INVALID_OFFSET,
-             WABT_INVALID_OFFSET);
+  CHECK_RESULT(wabt_typechecker_on_block(&ctx->typechecker, &sig));
+  push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
   return WABT_OK;
 }
 
@@ -1371,8 +1143,8 @@ static WabtResult on_loop_expr(uint32_t num_types,
   WabtTypeVector sig;
   sig.size = num_types;
   sig.data = sig_types;
-  push_label(ctx, LABEL_TYPE_LOOP, &sig, get_istream_offset(ctx),
-             WABT_INVALID_OFFSET);
+  CHECK_RESULT(wabt_typechecker_on_loop(&ctx->typechecker, &sig));
+  push_label(ctx, get_istream_offset(ctx), WABT_INVALID_OFFSET);
   return WABT_OK;
 }
 
@@ -1380,106 +1152,63 @@ static WabtResult on_if_expr(uint32_t num_types,
                              WabtType* sig_types,
                              void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(check_type_stack_limit(ctx, 1, "if"));
-  CHECK_RESULT(pop_and_check_1_type(ctx, WABT_TYPE_I32, "if"));
-  CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_BR_UNLESS));
-  uint32_t fixup_offset = get_istream_offset(ctx);
-  CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
-
   WabtTypeVector sig;
   sig.size = num_types;
   sig.data = sig_types;
-  push_label(ctx, LABEL_TYPE_IF, &sig, WABT_INVALID_OFFSET, fixup_offset);
+  CHECK_RESULT(wabt_typechecker_on_if(&ctx->typechecker, &sig));
+  CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_BR_UNLESS));
+  uint32_t fixup_offset = get_istream_offset(ctx);
+  CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
+  push_label(ctx, WABT_INVALID_OFFSET, fixup_offset);
   return WABT_OK;
 }
 
 static WabtResult on_else_expr(void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(wabt_typechecker_on_else(&ctx->typechecker));
   Label* label = top_label(ctx);
-  if (!label || label->label_type != LABEL_TYPE_IF) {
-    print_error(ctx, "unexpected else operator");
-    return WABT_ERROR;
-  }
-
-  CHECK_RESULT(check_n_types(ctx, &label->sig, "if true branch"));
-
-  label->label_type = LABEL_TYPE_ELSE;
   uint32_t fixup_cond_offset = label->fixup_offset;
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_BR));
   label->fixup_offset = get_istream_offset(ctx);
   CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
   CHECK_RESULT(emit_i32_at(ctx, fixup_cond_offset, get_istream_offset(ctx)));
-  /* reset the type stack for the other branch arm */
-  ctx->type_stack.size = label->type_stack_limit;
   return WABT_OK;
 }
 
 static WabtResult on_end_expr(void* user_data) {
   Context* ctx = user_data;
-  Label* label = top_label(ctx);
-  if (!label) {
-    print_error(ctx, "unexpected end operator");
-    return WABT_ERROR;
+  WabtTypeCheckerLabel* label;
+  CHECK_RESULT(wabt_typechecker_get_label(&ctx->typechecker, 0, &label));
+  WabtLabelType label_type = label->label_type;
+  CHECK_RESULT(wabt_typechecker_on_end(&ctx->typechecker));
+  if (label_type == WABT_LABEL_TYPE_IF || label_type == WABT_LABEL_TYPE_ELSE) {
+    CHECK_RESULT(emit_i32_at(ctx, top_label(ctx)->fixup_offset,
+                             get_istream_offset(ctx)));
   }
-
-  const char* desc = NULL;
-  switch (label->label_type) {
-    case LABEL_TYPE_IF:
-    case LABEL_TYPE_ELSE:
-      desc = (label->label_type == LABEL_TYPE_IF) ? "if true branch"
-                                                  : "if false branch";
-      CHECK_RESULT(
-          emit_i32_at(ctx, label->fixup_offset, get_istream_offset(ctx)));
-      break;
-
-    case LABEL_TYPE_BLOCK:
-      desc = "block";
-      break;
-
-    case LABEL_TYPE_LOOP:
-      desc = "loop";
-      break;
-
-    case LABEL_TYPE_FUNC:
-      print_error(ctx, "unexpected end operator");
-      return WABT_ERROR;
-  }
-
-  CHECK_RESULT(check_n_types(ctx, &label->sig, desc));
-  CHECK_RESULT(check_type_stack_limit_exact(ctx, label->sig.size, desc));
-  fixup_top_label(ctx, get_istream_offset(ctx));
-  reset_type_stack_to_limit(ctx);
-  push_types(ctx, &label->sig);
+  fixup_top_label(ctx);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult on_br_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
-  CHECK_DEPTH(ctx, depth);
-  depth = translate_depth(ctx, depth);
-  Label* label = get_label(ctx, depth);
-  if (label->label_type != LABEL_TYPE_LOOP)
-    CHECK_RESULT(check_n_types(ctx, &label->sig, "br"));
-  CHECK_RESULT(emit_br(ctx, depth));
-  reset_type_stack_to_limit(ctx);
-  push_type(ctx, WABT_TYPE_ANY);
+  uint32_t drop_count, keep_count;
+  CHECK_RESULT(get_br_drop_keep_count(ctx, depth, &drop_count, &keep_count));
+  CHECK_RESULT(wabt_typechecker_on_br(&ctx->typechecker, depth));
+  CHECK_RESULT(emit_br(ctx, depth, drop_count, keep_count));
   return WABT_OK;
 }
 
 static WabtResult on_br_if_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
-  CHECK_DEPTH(ctx, depth);
-  depth = translate_depth(ctx, depth);
-  CHECK_RESULT(pop_and_check_1_type(ctx, WABT_TYPE_I32, "br_if"));
-  Label* label = get_label(ctx, depth);
-  if (label->label_type != LABEL_TYPE_LOOP)
-    CHECK_RESULT(check_n_types(ctx, &label->sig, "br_if"));
+  uint32_t drop_count, keep_count;
+  CHECK_RESULT(wabt_typechecker_on_br_if(&ctx->typechecker, depth));
+  CHECK_RESULT(get_br_drop_keep_count(ctx, depth, &drop_count, &keep_count));
   /* flip the br_if so if <cond> is true it can drop values from the stack */
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_BR_UNLESS));
   uint32_t fixup_br_offset = get_istream_offset(ctx);
   CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
-  CHECK_RESULT(emit_br(ctx, depth));
+  CHECK_RESULT(emit_br(ctx, depth, drop_count, keep_count));
   CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset, get_istream_offset(ctx)));
   return WABT_OK;
 }
@@ -1489,7 +1218,7 @@ static WabtResult on_br_table_expr(WabtBinaryReaderContext* context,
                                    uint32_t* target_depths,
                                    uint32_t default_target_depth) {
   Context* ctx = context->user_data;
-  CHECK_RESULT(pop_and_check_1_type(ctx, WABT_TYPE_I32, "br_table"));
+  CHECK_RESULT(wabt_typechecker_begin_br_table(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_BR_TABLE));
   CHECK_RESULT(emit_i32(ctx, num_targets));
   uint32_t fixup_table_offset = get_istream_offset(ctx);
@@ -1503,15 +1232,11 @@ static WabtResult on_br_table_expr(WabtBinaryReaderContext* context,
   uint32_t i;
   for (i = 0; i <= num_targets; ++i) {
     uint32_t depth = i != num_targets ? target_depths[i] : default_target_depth;
-    CHECK_DEPTH(ctx, depth);
-    depth = translate_depth(ctx, depth);
-    Label* label = get_label(ctx, depth);
-    CHECK_RESULT(check_n_types(ctx, &label->sig, "br_table"));
+    CHECK_RESULT(wabt_typechecker_on_br_table_target(&ctx->typechecker, depth));
     CHECK_RESULT(emit_br_table_offset(ctx, depth));
   }
 
-  reset_type_stack_to_limit(ctx);
-  push_type(ctx, WABT_TYPE_ANY);
+  CHECK_RESULT(wabt_typechecker_end_br_table(&ctx->typechecker));
   return WABT_OK;
 }
 
@@ -1520,13 +1245,8 @@ static WabtResult on_call_expr(uint32_t func_index, void* user_data) {
   WabtInterpreterFunc* func = get_func_by_module_index(ctx, func_index);
   WabtInterpreterFuncSignature* sig =
       get_signature_by_env_index(ctx, func->sig_index);
-  CHECK_RESULT(check_type_stack_limit(ctx, sig->param_types.size, "call"));
-
-  uint32_t i;
-  for (i = sig->param_types.size; i > 0; --i) {
-    WabtType arg = pop_type(ctx);
-    CHECK_RESULT(check_type(ctx, sig->param_types.data[i - 1], arg, "call"));
-  }
+  CHECK_RESULT(wabt_typechecker_on_call(&ctx->typechecker, &sig->param_types,
+                                        &sig->result_types));
 
   if (func->is_host) {
     CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_CALL_HOST));
@@ -1535,7 +1255,6 @@ static WabtResult on_call_expr(uint32_t func_index, void* user_data) {
     CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_CALL));
     CHECK_RESULT(emit_func_offset(ctx, func, func_index));
   }
-  push_types(ctx, &sig->result_types);
 
   return WABT_OK;
 }
@@ -1548,61 +1267,51 @@ static WabtResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   }
   WabtInterpreterFuncSignature* sig =
       get_signature_by_module_index(ctx, sig_index);
-  CHECK_RESULT(pop_and_check_1_type(ctx, WABT_TYPE_I32, "call_indirect"));
-  CHECK_RESULT(
-      check_type_stack_limit(ctx, sig->param_types.size, "call_indirect"));
-
-  uint32_t i;
-  for (i = sig->param_types.size; i > 0; --i) {
-    WabtType arg = pop_type(ctx);
-    CHECK_RESULT(
-        check_type(ctx, sig->param_types.data[i - 1], arg, "call_indirect"));
-  }
+  CHECK_RESULT(wabt_typechecker_on_call_indirect(
+      &ctx->typechecker, &sig->param_types, &sig->result_types));
 
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_CALL_INDIRECT));
   CHECK_RESULT(emit_i32(ctx, ctx->module->table_index));
   CHECK_RESULT(emit_i32(ctx, translate_sig_index_to_env(ctx, sig_index)));
-  push_types(ctx, &sig->result_types);
   return WABT_OK;
 }
 
 static WabtResult on_drop_expr(void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(check_type_stack_limit(ctx, 1, "drop"));
+  CHECK_RESULT(wabt_typechecker_on_drop(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_DROP));
-  pop_type(ctx);
   return WABT_OK;
 }
 
 static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(wabt_typechecker_on_const(&ctx->typechecker, WABT_TYPE_I32));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_I32_CONST));
   CHECK_RESULT(emit_i32(ctx, value));
-  push_type(ctx, WABT_TYPE_I32);
   return WABT_OK;
 }
 
 static WabtResult on_i64_const_expr(uint64_t value, void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(wabt_typechecker_on_const(&ctx->typechecker, WABT_TYPE_I64));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_I64_CONST));
   CHECK_RESULT(emit_i64(ctx, value));
-  push_type(ctx, WABT_TYPE_I64);
   return WABT_OK;
 }
 
 static WabtResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(wabt_typechecker_on_const(&ctx->typechecker, WABT_TYPE_F32));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_F32_CONST));
   CHECK_RESULT(emit_i32(ctx, value_bits));
-  push_type(ctx, WABT_TYPE_F32);
   return WABT_OK;
 }
 
 static WabtResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(wabt_typechecker_on_const(&ctx->typechecker, WABT_TYPE_F64));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_F64_CONST));
   CHECK_RESULT(emit_i64(ctx, value_bits));
-  push_type(ctx, WABT_TYPE_F64);
   return WABT_OK;
 }
 
@@ -1610,9 +1319,9 @@ static WabtResult on_get_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = user_data;
   CHECK_GLOBAL(ctx, global_index);
   WabtType type = get_global_type_by_module_index(ctx, global_index);
+  CHECK_RESULT(wabt_typechecker_on_get_global(&ctx->typechecker, type));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_GET_GLOBAL));
   CHECK_RESULT(emit_i32(ctx, translate_global_index_to_env(ctx, global_index)));
-  push_type(ctx, type);
   return WABT_OK;
 }
 
@@ -1625,20 +1334,29 @@ static WabtResult on_set_global_expr(uint32_t global_index, void* user_data) {
                 global_index);
     return WABT_ERROR;
   }
-  CHECK_RESULT(
-      pop_and_check_1_type(ctx, global->typed_value.type, "set_global"));
+  CHECK_RESULT(wabt_typechecker_on_set_global(&ctx->typechecker,
+                                              global->typed_value.type));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_SET_GLOBAL));
   CHECK_RESULT(emit_i32(ctx, translate_global_index_to_env(ctx, global_index)));
   return WABT_OK;
+}
+
+static uint32_t translate_local_index(Context* ctx, uint32_t local_index) {
+  return ctx->typechecker.type_stack.size +
+         ctx->current_func->defined.param_and_local_types.size - local_index;
 }
 
 static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
   CHECK_LOCAL(ctx, local_index);
   WabtType type = get_local_type_by_index(ctx->current_func, local_index);
+  /* Get the translated index before calling wabt_typechecker_on_get_local
+   * because it will update the type stack size. We need the index to be
+   * relative to the old stack size. */
+  uint32_t translated_local_index = translate_local_index(ctx, local_index);
+  CHECK_RESULT(wabt_typechecker_on_get_local(&ctx->typechecker, type));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_GET_LOCAL));
-  CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
-  push_type(ctx, type);
+  CHECK_RESULT(emit_i32(ctx, translated_local_index));
   return WABT_OK;
 }
 
@@ -1646,7 +1364,7 @@ static WabtResult on_set_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
   CHECK_LOCAL(ctx, local_index);
   WabtType type = get_local_type_by_index(ctx->current_func, local_index);
-  CHECK_RESULT(pop_and_check_1_type(ctx, type, "set_local"));
+  CHECK_RESULT(wabt_typechecker_on_set_local(&ctx->typechecker, type));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_SET_LOCAL));
   CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
   return WABT_OK;
@@ -1656,9 +1374,7 @@ static WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
   CHECK_LOCAL(ctx, local_index);
   WabtType type = get_local_type_by_index(ctx->current_func, local_index);
-  CHECK_RESULT(check_type_stack_limit(ctx, 1, "tee_local"));
-  WabtType value = top_type(ctx);
-  CHECK_RESULT(check_type(ctx, type, value, "tee_local"));
+  CHECK_RESULT(wabt_typechecker_on_tee_local(&ctx->typechecker, type));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_TEE_LOCAL));
   CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
   return WABT_OK;
@@ -1667,10 +1383,9 @@ static WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
 static WabtResult on_grow_memory_expr(void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(check_has_memory(ctx, WABT_OPCODE_GROW_MEMORY));
-  CHECK_RESULT(pop_and_check_1_type(ctx, WABT_TYPE_I32, "grow_memory"));
+  CHECK_RESULT(wabt_typechecker_on_grow_memory(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_GROW_MEMORY));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
-  push_type(ctx, WABT_TYPE_I32);
   return WABT_OK;
 }
 
@@ -1682,7 +1397,7 @@ static WabtResult on_load_expr(WabtOpcode opcode,
   CHECK_RESULT(check_has_memory(ctx, opcode));
   CHECK_RESULT(
       check_align(ctx, alignment_log2, wabt_get_opcode_memory_size(opcode)));
-  CHECK_RESULT(check_opcode1(ctx, opcode));
+  CHECK_RESULT(wabt_typechecker_on_load(&ctx->typechecker, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   CHECK_RESULT(emit_i32(ctx, offset));
@@ -1697,7 +1412,7 @@ static WabtResult on_store_expr(WabtOpcode opcode,
   CHECK_RESULT(check_has_memory(ctx, opcode));
   CHECK_RESULT(
       check_align(ctx, alignment_log2, wabt_get_opcode_memory_size(opcode)));
-  CHECK_RESULT(check_opcode2(ctx, opcode));
+  CHECK_RESULT(wabt_typechecker_on_store(&ctx->typechecker, opcode));
   CHECK_RESULT(emit_opcode(ctx, opcode));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
   CHECK_RESULT(emit_i32(ctx, offset));
@@ -1707,9 +1422,9 @@ static WabtResult on_store_expr(WabtOpcode opcode,
 static WabtResult on_current_memory_expr(void* user_data) {
   Context* ctx = user_data;
   CHECK_RESULT(check_has_memory(ctx, WABT_OPCODE_CURRENT_MEMORY));
+  CHECK_RESULT(wabt_typechecker_on_current_memory(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_CURRENT_MEMORY));
   CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
-  push_type(ctx, WABT_TYPE_I32);
   return WABT_OK;
 }
 
@@ -1719,33 +1434,25 @@ static WabtResult on_nop_expr(void* user_data) {
 
 static WabtResult on_return_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtInterpreterFuncSignature* sig =
-      get_signature_by_env_index(ctx, ctx->current_func->sig_index);
-  CHECK_RESULT(check_n_types(ctx, &sig->result_types, "return"));
-  CHECK_RESULT(drop_types_for_return(ctx, sig->result_types.size));
+  uint32_t drop_count, keep_count;
+  CHECK_RESULT(get_return_drop_keep_count(ctx, &drop_count, &keep_count));
+  CHECK_RESULT(wabt_typechecker_on_return(&ctx->typechecker));
+  CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_RETURN));
-  reset_type_stack_to_limit(ctx);
-  push_type(ctx, WABT_TYPE_ANY);
   return WABT_OK;
 }
 
 static WabtResult on_select_expr(void* user_data) {
   Context* ctx = user_data;
-  CHECK_RESULT(pop_and_check_1_type(ctx, WABT_TYPE_I32, "select"));
-  CHECK_RESULT(check_type_stack_limit(ctx, 2, "select"));
-  WabtType right = pop_type(ctx);
-  WabtType left = pop_type(ctx);
-  CHECK_RESULT(check_type(ctx, left, right, "select"));
+  CHECK_RESULT(wabt_typechecker_on_select(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_SELECT));
-  push_type(ctx, left);
   return WABT_OK;
 }
 
 static WabtResult on_unreachable_expr(void* user_data) {
   Context* ctx = user_data;
+  CHECK_RESULT(wabt_typechecker_on_unreachable(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_UNREACHABLE));
-  reset_type_stack_to_limit(ctx);
-  push_type(ctx, WABT_TYPE_ANY);
   return WABT_OK;
 }
 
@@ -1844,8 +1551,7 @@ static WabtBinaryReader s_binary_reader_segments = {
 };
 
 static void destroy_context(Context* ctx) {
-  wabt_destroy_type_vector(ctx->allocator, &ctx->type_stack);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->label_stack, label);
+  wabt_destroy_label_vector(ctx->allocator, &ctx->label_stack);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->depth_fixups,
                                    uint32_vector);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->func_fixups,
@@ -1853,6 +1559,7 @@ static void destroy_context(Context* ctx) {
   wabt_destroy_uint32_vector(ctx->allocator, &ctx->sig_index_mapping);
   wabt_destroy_uint32_vector(ctx->allocator, &ctx->func_index_mapping);
   wabt_destroy_uint32_vector(ctx->allocator, &ctx->global_index_mapping);
+  wabt_destroy_typechecker(&ctx->typechecker);
 }
 
 WabtResult wabt_read_binary_interpreter(WabtAllocator* allocator,
@@ -1888,6 +1595,12 @@ WabtResult wabt_read_binary_interpreter(WabtAllocator* allocator,
   ctx.istream_offset = env->istream.size;
   CHECK_RESULT(
       wabt_init_mem_writer_existing(&ctx.istream_writer, &env->istream));
+
+  WabtTypeCheckerErrorHandler tc_error_handler;
+  tc_error_handler.on_error = on_typechecker_error;
+  tc_error_handler.user_data = &ctx;
+  ctx.typechecker.allocator = allocator;
+  ctx.typechecker.error_handler = &tc_error_handler;
 
   reader = s_binary_reader;
   reader.user_data = &ctx;

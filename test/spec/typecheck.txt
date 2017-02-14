@@ -165,6 +165,7 @@ out/third_party/testsuite/typecheck.wast:274: assert_invalid passed:
   error: @0x00000026: on_store_expr callback failed
 out/third_party/testsuite/typecheck.wast:275: assert_invalid passed:
   error: type mismatch in i64.store, expected i32 but got f32.
+  error: type mismatch in i64.store, expected i64 but got i32.
   error: @0x00000026: on_store_expr callback failed
 out/third_party/testsuite/typecheck.wast:276: assert_invalid passed:
   error: type mismatch in i64.store8, expected i32 but got f32.
@@ -210,135 +211,179 @@ out/third_party/testsuite/typecheck.wast:291: assert_invalid passed:
   error: @0x00000023: on_store_expr callback failed
 out/third_party/testsuite/typecheck.wast:294: assert_invalid passed:
   error: type mismatch in i32.add, expected i32 but got i64.
+  error: type mismatch in i32.add, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:295: assert_invalid passed:
   error: type mismatch in i32.and, expected i32 but got i64.
+  error: type mismatch in i32.and, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:296: assert_invalid passed:
   error: type mismatch in i32.div_s, expected i32 but got i64.
+  error: type mismatch in i32.div_s, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:297: assert_invalid passed:
   error: type mismatch in i32.div_u, expected i32 but got i64.
+  error: type mismatch in i32.div_u, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:298: assert_invalid passed:
   error: type mismatch in i32.mul, expected i32 but got i64.
+  error: type mismatch in i32.mul, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:299: assert_invalid passed:
   error: type mismatch in i32.or, expected i32 but got i64.
+  error: type mismatch in i32.or, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:300: assert_invalid passed:
   error: type mismatch in i32.rem_s, expected i32 but got i64.
+  error: type mismatch in i32.rem_s, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:301: assert_invalid passed:
   error: type mismatch in i32.rem_u, expected i32 but got i64.
+  error: type mismatch in i32.rem_u, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:302: assert_invalid passed:
   error: type mismatch in i32.rotl, expected i32 but got i64.
+  error: type mismatch in i32.rotl, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:303: assert_invalid passed:
   error: type mismatch in i32.rotr, expected i32 but got i64.
+  error: type mismatch in i32.rotr, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:304: assert_invalid passed:
   error: type mismatch in i32.shl, expected i32 but got i64.
+  error: type mismatch in i32.shl, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:305: assert_invalid passed:
   error: type mismatch in i32.shr_s, expected i32 but got i64.
+  error: type mismatch in i32.shr_s, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:306: assert_invalid passed:
   error: type mismatch in i32.shr_u, expected i32 but got i64.
+  error: type mismatch in i32.shr_u, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:307: assert_invalid passed:
   error: type mismatch in i32.sub, expected i32 but got i64.
+  error: type mismatch in i32.sub, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:308: assert_invalid passed:
   error: type mismatch in i32.xor, expected i32 but got i64.
+  error: type mismatch in i32.xor, expected i32 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:309: assert_invalid passed:
   error: type mismatch in i64.add, expected i64 but got i32.
+  error: type mismatch in i64.add, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:310: assert_invalid passed:
   error: type mismatch in i64.and, expected i64 but got i32.
+  error: type mismatch in i64.and, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:311: assert_invalid passed:
   error: type mismatch in i64.div_s, expected i64 but got i32.
+  error: type mismatch in i64.div_s, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:312: assert_invalid passed:
   error: type mismatch in i64.div_u, expected i64 but got i32.
+  error: type mismatch in i64.div_u, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:313: assert_invalid passed:
   error: type mismatch in i64.mul, expected i64 but got i32.
+  error: type mismatch in i64.mul, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:314: assert_invalid passed:
   error: type mismatch in i64.or, expected i64 but got i32.
+  error: type mismatch in i64.or, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:315: assert_invalid passed:
   error: type mismatch in i64.rem_s, expected i64 but got i32.
+  error: type mismatch in i64.rem_s, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:316: assert_invalid passed:
   error: type mismatch in i64.rem_u, expected i64 but got i32.
+  error: type mismatch in i64.rem_u, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:317: assert_invalid passed:
   error: type mismatch in i64.rotl, expected i64 but got i32.
+  error: type mismatch in i64.rotl, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:318: assert_invalid passed:
   error: type mismatch in i64.rotr, expected i64 but got i32.
+  error: type mismatch in i64.rotr, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:319: assert_invalid passed:
   error: type mismatch in i64.shl, expected i64 but got i32.
+  error: type mismatch in i64.shl, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:320: assert_invalid passed:
   error: type mismatch in i64.shr_s, expected i64 but got i32.
+  error: type mismatch in i64.shr_s, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:321: assert_invalid passed:
   error: type mismatch in i64.shr_u, expected i64 but got i32.
+  error: type mismatch in i64.shr_u, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:322: assert_invalid passed:
   error: type mismatch in i64.sub, expected i64 but got i32.
+  error: type mismatch in i64.sub, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:323: assert_invalid passed:
   error: type mismatch in i64.xor, expected i64 but got i32.
+  error: type mismatch in i64.xor, expected i64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:324: assert_invalid passed:
   error: type mismatch in f32.add, expected f32 but got i64.
+  error: type mismatch in f32.add, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:325: assert_invalid passed:
   error: type mismatch in f32.copysign, expected f32 but got i64.
+  error: type mismatch in f32.copysign, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:326: assert_invalid passed:
   error: type mismatch in f32.div, expected f32 but got i64.
+  error: type mismatch in f32.div, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:327: assert_invalid passed:
   error: type mismatch in f32.max, expected f32 but got i64.
+  error: type mismatch in f32.max, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:328: assert_invalid passed:
   error: type mismatch in f32.min, expected f32 but got i64.
+  error: type mismatch in f32.min, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:329: assert_invalid passed:
   error: type mismatch in f32.mul, expected f32 but got i64.
+  error: type mismatch in f32.mul, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:330: assert_invalid passed:
   error: type mismatch in f32.sub, expected f32 but got i64.
+  error: type mismatch in f32.sub, expected f32 but got f64.
   error: @0x00000023: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:331: assert_invalid passed:
   error: type mismatch in f64.add, expected f64 but got i64.
+  error: type mismatch in f64.add, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:332: assert_invalid passed:
   error: type mismatch in f64.copysign, expected f64 but got i64.
+  error: type mismatch in f64.copysign, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:333: assert_invalid passed:
   error: type mismatch in f64.div, expected f64 but got i64.
+  error: type mismatch in f64.div, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:334: assert_invalid passed:
   error: type mismatch in f64.max, expected f64 but got i64.
+  error: type mismatch in f64.max, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:335: assert_invalid passed:
   error: type mismatch in f64.min, expected f64 but got i64.
+  error: type mismatch in f64.min, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:336: assert_invalid passed:
   error: type mismatch in f64.mul, expected f64 but got i64.
+  error: type mismatch in f64.mul, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:337: assert_invalid passed:
   error: type mismatch in f64.sub, expected f64 but got i64.
+  error: type mismatch in f64.sub, expected f64 but got f32.
   error: @0x0000001f: on_binary_expr callback failed
 out/third_party/testsuite/typecheck.wast:340: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got i64.
@@ -408,99 +453,131 @@ out/third_party/testsuite/typecheck.wast:361: assert_invalid passed:
   error: @0x0000001a: on_unary_expr callback failed
 out/third_party/testsuite/typecheck.wast:364: assert_invalid passed:
   error: type mismatch in i32.eq, expected i32 but got i64.
+  error: type mismatch in i32.eq, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:365: assert_invalid passed:
   error: type mismatch in i32.ge_s, expected i32 but got i64.
+  error: type mismatch in i32.ge_s, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:366: assert_invalid passed:
   error: type mismatch in i32.ge_u, expected i32 but got i64.
+  error: type mismatch in i32.ge_u, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:367: assert_invalid passed:
   error: type mismatch in i32.gt_s, expected i32 but got i64.
+  error: type mismatch in i32.gt_s, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:368: assert_invalid passed:
   error: type mismatch in i32.gt_u, expected i32 but got i64.
+  error: type mismatch in i32.gt_u, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:369: assert_invalid passed:
   error: type mismatch in i32.le_s, expected i32 but got i64.
+  error: type mismatch in i32.le_s, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:370: assert_invalid passed:
   error: type mismatch in i32.le_u, expected i32 but got i64.
+  error: type mismatch in i32.le_u, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:371: assert_invalid passed:
   error: type mismatch in i32.lt_s, expected i32 but got i64.
+  error: type mismatch in i32.lt_s, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:372: assert_invalid passed:
   error: type mismatch in i32.lt_u, expected i32 but got i64.
+  error: type mismatch in i32.lt_u, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:373: assert_invalid passed:
   error: type mismatch in i32.ne, expected i32 but got i64.
+  error: type mismatch in i32.ne, expected i32 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:374: assert_invalid passed:
   error: type mismatch in i64.eq, expected i64 but got i32.
+  error: type mismatch in i64.eq, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:375: assert_invalid passed:
   error: type mismatch in i64.ge_s, expected i64 but got i32.
+  error: type mismatch in i64.ge_s, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:376: assert_invalid passed:
   error: type mismatch in i64.ge_u, expected i64 but got i32.
+  error: type mismatch in i64.ge_u, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:377: assert_invalid passed:
   error: type mismatch in i64.gt_s, expected i64 but got i32.
+  error: type mismatch in i64.gt_s, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:378: assert_invalid passed:
   error: type mismatch in i64.gt_u, expected i64 but got i32.
+  error: type mismatch in i64.gt_u, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:379: assert_invalid passed:
   error: type mismatch in i64.le_s, expected i64 but got i32.
+  error: type mismatch in i64.le_s, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:380: assert_invalid passed:
   error: type mismatch in i64.le_u, expected i64 but got i32.
+  error: type mismatch in i64.le_u, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:381: assert_invalid passed:
   error: type mismatch in i64.lt_s, expected i64 but got i32.
+  error: type mismatch in i64.lt_s, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:382: assert_invalid passed:
   error: type mismatch in i64.lt_u, expected i64 but got i32.
+  error: type mismatch in i64.lt_u, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:383: assert_invalid passed:
   error: type mismatch in i64.ne, expected i64 but got i32.
+  error: type mismatch in i64.ne, expected i64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:384: assert_invalid passed:
   error: type mismatch in f32.eq, expected f32 but got i64.
+  error: type mismatch in f32.eq, expected f32 but got f64.
   error: @0x00000023: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:385: assert_invalid passed:
   error: type mismatch in f32.ge, expected f32 but got i64.
+  error: type mismatch in f32.ge, expected f32 but got f64.
   error: @0x00000023: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:386: assert_invalid passed:
   error: type mismatch in f32.gt, expected f32 but got i64.
+  error: type mismatch in f32.gt, expected f32 but got f64.
   error: @0x00000023: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:387: assert_invalid passed:
   error: type mismatch in f32.le, expected f32 but got i64.
+  error: type mismatch in f32.le, expected f32 but got f64.
   error: @0x00000023: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:388: assert_invalid passed:
   error: type mismatch in f32.lt, expected f32 but got i64.
+  error: type mismatch in f32.lt, expected f32 but got f64.
   error: @0x00000023: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:389: assert_invalid passed:
   error: type mismatch in f32.ne, expected f32 but got i64.
+  error: type mismatch in f32.ne, expected f32 but got f64.
   error: @0x00000023: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:390: assert_invalid passed:
   error: type mismatch in f64.eq, expected f64 but got i64.
+  error: type mismatch in f64.eq, expected f64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:391: assert_invalid passed:
   error: type mismatch in f64.ge, expected f64 but got i64.
+  error: type mismatch in f64.ge, expected f64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:392: assert_invalid passed:
   error: type mismatch in f64.gt, expected f64 but got i64.
+  error: type mismatch in f64.gt, expected f64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:393: assert_invalid passed:
   error: type mismatch in f64.le, expected f64 but got i64.
+  error: type mismatch in f64.le, expected f64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:394: assert_invalid passed:
   error: type mismatch in f64.lt, expected f64 but got i64.
+  error: type mismatch in f64.lt, expected f64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:395: assert_invalid passed:
   error: type mismatch in f64.ne, expected f64 but got i64.
+  error: type mismatch in f64.ne, expected f64 but got f32.
   error: @0x0000001f: on_compare_expr callback failed
 out/third_party/testsuite/typecheck.wast:398: assert_invalid passed:
   error: type mismatch in i32.wrap/i64, expected i64 but got f32.
