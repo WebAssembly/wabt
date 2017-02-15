@@ -24,6 +24,7 @@ option(USE_ASAN "Use address sanitizer" OFF)
 option(USE_MSAN "Use memory sanitizer" OFF)
 option(USE_LSAN "Use leak sanitizer" OFF)
 option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
+option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
   set(COMPILER_IS_CLANG 1)
@@ -234,6 +235,11 @@ add_library(libwabt STATIC
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
 
 if (NOT EMSCRIPTEN)
+  if (CODE_COVERAGE)
+    add_definitions("-fprofile-arcs -ftest-coverage")
+    link_libraries(gcov)
+  endif ()
+
   # wast2wasm
   add_executable(wast2wasm src/tools/wast2wasm.c)
   add_dependencies(everything wast2wasm)
