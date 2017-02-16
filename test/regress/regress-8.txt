@@ -1,0 +1,54 @@
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(IMPORT) {
+  count[10]
+  str("m") str("0") global_kind i32 mut[0]
+  str("m") str("1") global_kind i32 mut[0]
+  str("m") str("2") global_kind i32 mut[0]
+  str("m") str("3") global_kind i32 mut[0]
+  str("m") str("4") global_kind i32 mut[0]
+  str("m") str("5") global_kind i32 mut[0]
+  str("m") str("6") global_kind i32 mut[0]
+  str("m") str("7") global_kind i32 mut[0]
+  str("m") str("8") global_kind i32 mut[0]
+  str("m") str("9") global_kind i32 mut[0]
+}
+section(GLOBAL) {
+  count[10]
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+  i64 mut[0] i64.const 0 end
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (import "m" "0" (global (;0;) i32))
+  (import "m" "1" (global (;1;) i32))
+  (import "m" "2" (global (;2;) i32))
+  (import "m" "3" (global (;3;) i32))
+  (import "m" "4" (global (;4;) i32))
+  (import "m" "5" (global (;5;) i32))
+  (import "m" "6" (global (;6;) i32))
+  (import "m" "7" (global (;7;) i32))
+  (import "m" "8" (global (;8;) i32))
+  (import "m" "9" (global (;9;) i32))
+  (global (;10;) i64 (i64.const 0))
+  (global (;11;) i64 (i64.const 0))
+  (global (;12;) i64 (i64.const 0))
+  (global (;13;) i64 (i64.const 0))
+  (global (;14;) i64 (i64.const 0))
+  (global (;15;) i64 (i64.const 0))
+  (global (;16;) i64 (i64.const 0))
+  (global (;17;) i64 (i64.const 0))
+  (global (;18;) i64 (i64.const 0))
+  (global (;19;) i64 (i64.const 0)))
+;;; STDOUT ;;)

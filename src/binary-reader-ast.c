@@ -280,7 +280,9 @@ static WabtResult on_import_global(uint32_t import_index,
 static WabtResult on_function_signatures_count(uint32_t count,
                                                void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_func_ptrs(ctx->allocator, &ctx->module->funcs, count);
+  wabt_reserve_func_ptrs(ctx->allocator,
+                         &ctx->module->funcs,
+                         ctx->module->num_func_imports + count);
   return WABT_OK;
 }
 
@@ -311,7 +313,8 @@ static WabtResult on_function_signature(uint32_t index,
 
 static WabtResult on_table_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_table_ptrs(ctx->allocator, &ctx->module->tables, count);
+  wabt_reserve_table_ptrs(ctx->allocator, &ctx->module->tables,
+                          ctx->module->num_table_imports + count);
   return WABT_OK;
 }
 
@@ -338,7 +341,8 @@ static WabtResult on_table(uint32_t index,
 
 static WabtResult on_memory_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_memory_ptrs(ctx->allocator, &ctx->module->memories, count);
+  wabt_reserve_memory_ptrs(ctx->allocator, &ctx->module->memories,
+                           ctx->module->num_memory_imports + count);
   return WABT_OK;
 }
 
@@ -364,7 +368,8 @@ static WabtResult on_memory(uint32_t index,
 
 static WabtResult on_global_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_global_ptrs(ctx->allocator, &ctx->module->globals, count);
+  wabt_reserve_global_ptrs(ctx->allocator, &ctx->module->globals,
+                           ctx->module->num_global_imports + count);
   return WABT_OK;
 }
 
@@ -373,8 +378,7 @@ static WabtResult begin_global(uint32_t index,
                                WabtBool mutable_,
                                void* user_data) {
   Context* ctx = user_data;
-  assert(index - ctx->module->num_global_imports <
-         ctx->module->globals.capacity);
+  assert(index < ctx->module->globals.capacity);
 
   WabtModuleField* field =
       wabt_append_module_field(ctx->allocator, ctx->module);
