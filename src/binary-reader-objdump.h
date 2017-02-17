@@ -21,7 +21,6 @@
 #include "stream.h"
 #include "vector.h"
 
-struct WabtAllocator;
 struct WabtModule;
 struct WabtReadBinaryOptions;
 
@@ -58,8 +57,7 @@ typedef struct WabtObjdumpOptions {
 
 WABT_EXTERN_C_BEGIN
 
-WabtResult wabt_read_binary_objdump(struct WabtAllocator* allocator,
-                                    const uint8_t* data,
+WabtResult wabt_read_binary_objdump(const uint8_t* data,
                                     size_t size,
                                     WabtObjdumpOptions* options);
 

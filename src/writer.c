@@ -85,12 +85,9 @@ void wabt_close_file_writer(WabtFileWriter* writer) {
   fclose(writer->file);
 }
 
-void wabt_init_output_buffer(WabtAllocator* allocator,
-                             WabtOutputBuffer* buf,
-                             size_t initial_capacity) {
+void wabt_init_output_buffer(WabtOutputBuffer* buf, size_t initial_capacity) {
   assert(initial_capacity != 0);
-  buf->allocator = allocator;
-  buf->start = wabt_alloc(allocator, initial_capacity, WABT_DEFAULT_ALIGN);
+  buf->start = wabt_alloc(initial_capacity);
   buf->size = 0;
   buf->capacity = initial_capacity;
 }
@@ -102,8 +99,7 @@ static void ensure_output_buffer_capacity(WabtOutputBuffer* buf,
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
-    buf->start = wabt_realloc(buf->allocator, buf->start, new_capacity,
-                              WABT_DEFAULT_ALIGN);
+    buf->start = wabt_realloc(buf->start, new_capacity);
     buf->capacity = new_capacity;
   }
 }
@@ -138,14 +134,12 @@ static WabtResult move_data_in_output_buffer(size_t dst_offset,
   return WABT_OK;
 }
 
-WabtResult wabt_init_mem_writer(WabtAllocator* allocator,
-                                WabtMemoryWriter* writer) {
+WabtResult wabt_init_mem_writer(WabtMemoryWriter* writer) {
   WABT_ZERO_MEMORY(*writer);
   writer->base.user_data = writer;
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;
-  wabt_init_output_buffer(allocator, &writer->buf,
-                          INITIAL_OUTPUT_BUFFER_CAPACITY);
+  wabt_init_output_buffer(&writer->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
   return WABT_OK;
 }
 
@@ -192,6 +186,5 @@ WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
 }
 
 void wabt_destroy_output_buffer(WabtOutputBuffer* buf) {
-  if (buf->allocator)
-    wabt_free(buf->allocator, buf->start);
+  wabt_free(buf->start);
 }

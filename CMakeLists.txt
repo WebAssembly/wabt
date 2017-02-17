@@ -221,13 +221,11 @@ add_library(libwabt STATIC
   src/generate-names.c
   src/resolve-names.c
 
-  src/allocator.c
   src/binary.c
   src/common.c
   src/config.c
   src/literal.c
   src/option-parser.c
-  src/stack-allocator.c
   src/stream.c
   src/vector.c
   src/writer.c

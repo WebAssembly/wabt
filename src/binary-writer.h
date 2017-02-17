@@ -19,7 +19,6 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtModule;
 struct WabtScript;
 struct WabtWriter;
@@ -37,8 +36,7 @@ typedef struct WabtWriteBinaryOptions {
 } WabtWriteBinaryOptions;
 
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_write_binary_module(struct WabtAllocator*,
-                                    struct WabtWriter*,
+WabtResult wabt_write_binary_module(struct WabtWriter*,
                                     const struct WabtModule*,
                                     const WabtWriteBinaryOptions*);
 

@@ -14,10 +14,9 @@ examples:
   $ wasm2wast test.wasm --no-debug-names -o test.wast
 
 options:
-  -v, --verbose                   use multiple times for more info
-  -h, --help                      print this help message
-  -o, --output=FILENAME           output file for the generated wast file, by default use stdout
-      --use-libc-allocator        use malloc, free, etc. instead of stack allocator
-      --no-debug-names            Ignore debug names in the binary file
-      --generate-names            Give auto-generated names to non-named functions, types, etc.
+  -v, --verbose                use multiple times for more info
+  -h, --help                   print this help message
+  -o, --output=FILENAME        output file for the generated wast file, by default use stdout
+      --no-debug-names         Ignore debug names in the binary file
+      --generate-names         Give auto-generated names to non-named functions, types, etc.
 ;;; STDOUT ;;)

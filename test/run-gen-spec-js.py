@@ -54,7 +54,6 @@ def main(args):
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
                       action='store_true')
-  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='wast file.')
   options = parser.parse_args(args)
 
@@ -62,10 +61,7 @@ def main(args):
     wast2wasm = utils.Executable(
         find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
         error_cmdline=options.error_cmdline)
-    wast2wasm.AppendOptionalArgs({
-        '-v': options.verbose,
-        '--use-libc-allocator': options.use_libc_allocator
-    })
+    wast2wasm.AppendOptionalArgs({'-v': options.verbose})
 
     gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY,
                                    '--temp-dir', out_dir,

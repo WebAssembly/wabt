@@ -88,14 +88,11 @@ static WabtBindingHashEntry* hash_new_entry(WabtBindingHash* hash,
   return entry;
 }
 
-static void hash_resize(WabtAllocator* allocator,
-                        WabtBindingHash* hash,
-                        size_t desired_capacity) {
+static void hash_resize(WabtBindingHash* hash, size_t desired_capacity) {
   WabtBindingHash new_hash;
   WABT_ZERO_MEMORY(new_hash);
   /* TODO(binji): better plural */
-  wabt_reserve_binding_hash_entrys(allocator, &new_hash.entries,
-                                   desired_capacity);
+  wabt_reserve_binding_hash_entrys(&new_hash.entries, desired_capacity);
 
   /* update the free list */
   size_t i;
@@ -123,19 +120,18 @@ static void hash_resize(WabtAllocator* allocator,
 
   /* we are sharing the WabtStringSlices, so we only need to destroy the old
    * binding vector */
-  wabt_destroy_binding_hash_entry_vector(allocator, &hash->entries);
+  wabt_destroy_binding_hash_entry_vector(&hash->entries);
   *hash = new_hash;
 }
 
-WabtBinding* wabt_insert_binding(WabtAllocator* allocator,
-                                 WabtBindingHash* hash,
+WabtBinding* wabt_insert_binding(WabtBindingHash* hash,
                                  const WabtStringSlice* name) {
   if (hash->entries.size == 0)
-    hash_resize(allocator, hash, INITIAL_HASH_CAPACITY);
+    hash_resize(hash, INITIAL_HASH_CAPACITY);
 
   if (!hash->free_head) {
     /* no more free space, allocate more */
-    hash_resize(allocator, hash, hash->entries.capacity * 2);
+    hash_resize(hash, hash->entries.capacity * 2);
   }
 
   WabtBindingHashEntry* entry = hash_new_entry(hash, name);
@@ -159,29 +155,25 @@ int wabt_find_binding_index_by_name(const WabtBindingHash* hash,
   return -1;
 }
 
-void wabt_remove_binding(struct WabtAllocator* allocator,
-                         WabtBindingHash* hash,
-                         const WabtStringSlice* name) {
+void wabt_remove_binding(WabtBindingHash* hash, const WabtStringSlice* name) {
   int index = wabt_find_binding_index_by_name(hash, name);
   if (index == -1)
     return;
 
   WabtBindingHashEntry* entry = &hash->entries.data[index];
-  wabt_destroy_string_slice(allocator, &entry->binding.name);
+  wabt_destroy_string_slice(&entry->binding.name);
   WABT_ZERO_MEMORY(*entry);
 }
 
-static void destroy_binding_hash_entry(WabtAllocator* allocator,
-                                       WabtBindingHashEntry* entry) {
-  wabt_destroy_string_slice(allocator, &entry->binding.name);
+static void destroy_binding_hash_entry(WabtBindingHashEntry* entry) {
+  wabt_destroy_string_slice(&entry->binding.name);
 }
 
-void wabt_destroy_binding_hash(WabtAllocator* allocator,
-                               WabtBindingHash* hash) {
+void wabt_destroy_binding_hash(WabtBindingHash* hash) {
   /* Can't use WABT_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
    * capacity. */
   size_t i;
   for (i = 0; i < hash->entries.capacity; ++i)
-    destroy_binding_hash_entry(allocator, &hash->entries.data[i]);
-  wabt_destroy_binding_hash_entry_vector(allocator, &hash->entries);
+    destroy_binding_hash_entry(&hash->entries.data[i]);
+  wabt_destroy_binding_hash_entry_vector(&hash->entries);
 }

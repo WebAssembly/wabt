@@ -26,8 +26,6 @@
 #include <io.h>
 #endif
 
-#include "allocator.h"
-
 #define V(rtype, type1, type2, mem_size, code, NAME, text)                 \
   [code] = {text, WABT_TYPE_##rtype, WABT_TYPE_##type1, WABT_TYPE_##type2, \
             mem_size},
@@ -98,13 +96,12 @@ WabtBool wabt_string_slices_are_equal(const WabtStringSlice* a,
          memcmp(a->start, b->start, a->length) == 0;
 }
 
-void wabt_destroy_string_slice(WabtAllocator* allocator, WabtStringSlice* str) {
+void wabt_destroy_string_slice(WabtStringSlice* str) {
   assert(str);
-  wabt_free(allocator, (void*)str->start);
+  wabt_free((void*)str->start);
 }
 
-WabtResult wabt_read_file(WabtAllocator* allocator,
-                          const char* filename,
+WabtResult wabt_read_file(const char* filename,
                           void** out_data,
                           size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
@@ -129,7 +126,7 @@ WabtResult wabt_read_file(WabtAllocator* allocator,
     return WABT_ERROR;
   }
 
-  void* data = wabt_alloc(allocator, size, WABT_DEFAULT_ALIGN);
+  void* data = wabt_alloc(size);
   if (size != 0 && fread(data, size, 1, infile) != 1) {
     fprintf(stderr, "fread failed.\n");
     return WABT_ERROR;

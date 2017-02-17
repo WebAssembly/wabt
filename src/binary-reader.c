@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "allocator.h"
 #include "binary.h"
 #include "config.h"
 #include "stream.h"
@@ -107,7 +106,6 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
     RAISE_ERROR(__VA_ARGS__);
 
 typedef struct Context {
-  WabtAllocator* allocator;
   const uint8_t* data;
   size_t data_size;
   size_t offset;
@@ -425,8 +423,8 @@ static uint32_t num_total_globals(Context* ctx) {
 }
 
 static void destroy_context(Context* ctx) {
-  wabt_destroy_type_vector(ctx->allocator, &ctx->param_types);
-  wabt_destroy_uint32_vector(ctx->allocator, &ctx->target_depths);
+  wabt_destroy_type_vector(&ctx->param_types);
+  wabt_destroy_uint32_vector(&ctx->target_depths);
 }
 
 /* Logging */
@@ -1327,8 +1325,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         uint32_t num_targets;
         in_u32_leb128(ctx, &num_targets, "br_table target count");
         if (num_targets > ctx->target_depths.capacity) {
-          wabt_reserve_uint32s(ctx->allocator, &ctx->target_depths,
-                               num_targets);
+          wabt_reserve_uint32s(&ctx->target_depths, num_targets);
           ctx->target_depths.size = num_targets;
         }
 
@@ -1746,7 +1743,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     in_u32_leb128(ctx, &num_params, "function param count");
 
     if (num_params > ctx->param_types.capacity)
-      wabt_reserve_types(ctx->allocator, &ctx->param_types, num_params);
+      wabt_reserve_types(&ctx->param_types, num_params);
 
     uint32_t j;
     for (j = 0; j < num_params; ++j) {
@@ -2091,8 +2088,7 @@ static void read_sections(Context* ctx) {
   }
 }
 
-WabtResult wabt_read_binary(WabtAllocator* allocator,
-                            const void* data,
+WabtResult wabt_read_binary(const void* data,
                             size_t size,
                             WabtBinaryReader* reader,
                             uint32_t num_function_passes,
@@ -2109,7 +2105,6 @@ WabtResult wabt_read_binary(WabtAllocator* allocator,
   WABT_ZERO_MEMORY(context);
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
-  ctx->allocator = allocator;
   ctx->data = data;
   ctx->data_size = ctx->read_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
@@ -2121,10 +2116,8 @@ WabtResult wabt_read_binary(WabtAllocator* allocator,
     return WABT_ERROR;
   }
 
-  wabt_reserve_types(allocator, &ctx->param_types,
-                     INITIAL_PARAM_TYPES_CAPACITY);
-  wabt_reserve_uint32s(allocator, &ctx->target_depths,
-                       INITIAL_BR_TABLE_TARGET_CAPACITY);
+  wabt_reserve_types(&ctx->param_types, INITIAL_PARAM_TYPES_CAPACITY);
+  wabt_reserve_uint32s(&ctx->target_depths, INITIAL_BR_TABLE_TARGET_CAPACITY);
 
   uint32_t magic;
   in_u32(ctx, &magic, "magic");

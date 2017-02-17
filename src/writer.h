@@ -19,7 +19,6 @@
 
 #include <stdio.h>
 
-#include "allocator.h"
 #include "common.h"
 
 typedef struct WabtWriter {
@@ -35,7 +34,6 @@ typedef struct WabtWriter {
 } WabtWriter;
 
 typedef struct WabtOutputBuffer {
-  WabtAllocator* allocator;
   void* start;
   size_t size;
   size_t capacity;
@@ -60,8 +58,7 @@ void wabt_init_file_writer_existing(WabtFileWriter* writer, FILE* file);
 void wabt_close_file_writer(WabtFileWriter* writer);
 
 /* WabtMemoryWriter */
-WabtResult wabt_init_mem_writer(WabtAllocator* allocator,
-                                WabtMemoryWriter* writer);
+WabtResult wabt_init_mem_writer(WabtMemoryWriter* writer);
 /* Passes ownership of the buffer to writer */
 WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
                                          WabtOutputBuffer* buf);
@@ -70,9 +67,7 @@ void wabt_steal_mem_writer_output_buffer(WabtMemoryWriter* writer,
 void wabt_close_mem_writer(WabtMemoryWriter* writer);
 
 /* WabtOutputBuffer */
-void wabt_init_output_buffer(WabtAllocator* allocator,
-                             WabtOutputBuffer* buf,
-                             size_t initial_capacity);
+void wabt_init_output_buffer(WabtOutputBuffer* buf, size_t initial_capacity);
 WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
                                             const char* filename);
 void wabt_destroy_output_buffer(WabtOutputBuffer* buf);

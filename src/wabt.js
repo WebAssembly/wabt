@@ -541,7 +541,6 @@ var ERROR = 1;
 
 var I = (function() {
 
-var Allocator = Struct('Allocator');
 var AstLexer = Struct('AstLexer');
 var BinaryErrorHandler = Struct('BinaryErrorHandler');
 var Location = Struct('Location');
@@ -551,7 +550,6 @@ var OutputBuffer = Struct('OutputBuffer');
 var ReadBinaryOptions = Struct('ReadBinaryOptions');
 var Script = Struct('Script');
 var SourceErrorHandler = Struct('SourceErrorHandler');
-var StackAllocator = Struct('StackAllocator');
 var Stream = Struct('Stream');
 var StrSlice = Struct('StrSlice');
 var WriteBinaryOptions = Struct('WriteBinaryOptions');
@@ -560,16 +558,6 @@ var Writer = Struct('Writer');
 var BinaryErrorHandlerCallback = Fn(Void, [U32, Str, UserData]);
 var SourceErrorHandlerCallback =
     Fn(Void, [Ptr(Location), Str, StrPtr, StrLen, U32, UserData]);
-
-Allocator.define('allocator', {
-  alloc: Fn(VoidPtr, [Ptr(Allocator), U32, U32, Str, I32]),
-  realloc: Fn(VoidPtr, [Ptr(Allocator), VoidPtr, U32, U32, Str, I32]),
-  free: Fn(VoidPtr, [Ptr(Allocator), VoidPtr, Str, I32]),
-  destroy: Fn(Void, [Ptr(Allocator)]),
-  mark: Fn(I32, [Ptr(Allocator)]),
-  reset_to_mark: Fn(Void, [Ptr(Allocator), I32]),
-  print_stats: Fn(Void, [Ptr(Allocator)]),
-});
 
 BinaryErrorHandler.define('binary_error_handler', {
   on_error: BinaryErrorHandlerCallback,
@@ -591,7 +579,6 @@ MemoryWriter.define('memory_writer', {
 Module.define('module');
 
 OutputBuffer.define('output_buffer', {
-  allocator: Allocator,
   start: BufPtr,
   size: BufLen,
   capacity: U32,
@@ -607,10 +594,6 @@ SourceErrorHandler.define('source_error_handler', {
   on_error: SourceErrorHandlerCallback,
   source_line_max_length: U32,
   user_data: UserData,
-});
-
-StackAllocator.define('stack_allocator', {
-  allocator: Allocator,
 });
 
 Stream.define('stream', {
@@ -644,21 +627,17 @@ var defaultSourceErrorCallback = SourceErrorHandlerCallback.define('_wabt_defaul
 var destroyAstLexer = Fn(Void, [Ptr(AstLexer)]).define('_wabt_destroy_ast_lexer');
 var destroyOutputBuffer = Fn(Void, [Ptr(OutputBuffer)]).define('_wabt_destroy_output_buffer');
 var destroyScript = Fn(Void, [Ptr(Script)]).define('_wabt_destroy_script');
-var destroyStackAllocator = Fn(Void, [Ptr(StackAllocator)]).define('_wabt_destroy_stack_allocator');
 var getFirstModule = Fn(Ptr(Module), [Ptr(Script)]).define('_wabt_get_first_module');
-var getLibcAllocator = Fn(Ptr(Allocator), []).define('_wabt_get_libc_allocator');
-var initMemWriter = Fn(I32, [Ptr(Allocator), Ptr(MemoryWriter)]).define('_wabt_init_mem_writer');
-var initStackAllocator = Fn(Void, [Ptr(StackAllocator), Ptr(Allocator)]).define('_wabt_init_stack_allocator');
+var initMemWriter = Fn(I32, [Ptr(MemoryWriter)]).define('_wabt_init_mem_writer');
 var initStream = Fn(Void, [Ptr(Stream), Ptr(Writer), Ptr(Stream)]).define('_wabt_init_stream');
-var newAstBufferLexer = Fn(Ptr(AstLexer), [Ptr(Allocator), Str, BufPtr, BufLen]).define('_wabt_new_ast_buffer_lexer');
+var newAstBufferLexer = Fn(Ptr(AstLexer), [Str, BufPtr, BufLen]).define('_wabt_new_ast_buffer_lexer');
 var parseAst = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_parse_ast');
-var resolveNamesScript = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_resolve_names_script');
-var validateScript = Fn(I32, [Ptr(Allocator), Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_validate_script');
-var writeBinaryModule = Fn(I32, [Ptr(Allocator), Ptr(Writer), Ptr(Module), Ptr(WriteBinaryOptions)]).define('_wabt_write_binary_module');
+var resolveNamesScript = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_resolve_names_script');
+var validateScript = Fn(I32, [Ptr(AstLexer), Ptr(Script), Ptr(SourceErrorHandler)]).define('_wabt_validate_script');
+var writeBinaryModule = Fn(I32, [Ptr(Writer), Ptr(Module), Ptr(WriteBinaryOptions)]).define('_wabt_write_binary_module');
 
 return {
   // Types
-  Allocator: Allocator,
   AstLexer: AstLexer,
   BinaryErrorHandler: BinaryErrorHandler,
   Location: Location,
@@ -668,7 +647,6 @@ return {
   ReadBinaryOptions: ReadBinaryOptions,
   Script: Script,
   SourceErrorHandler: SourceErrorHandler,
-  StackAllocator: StackAllocator,
   Stream: Stream,
   StrSlice: StrSlice,
   WriteBinaryOptions: WriteBinaryOptions,
@@ -681,11 +659,8 @@ return {
   destroyAstLexer: destroyAstLexer,
   destroyOutputBuffer: destroyOutputBuffer,
   destroyScript: destroyScript,
-  destroyStackAllocator: destroyStackAllocator,
   getFirstModule: getFirstModule,
-  getLibcAllocator: getLibcAllocator,
   initMemWriter: initMemWriter,
-  initStackAllocator: initStackAllocator,
   initStream: initStream,
   newAstBufferLexer: newAstBufferLexer,
   parseAst: parseAst,
@@ -765,28 +740,6 @@ function defineBufferGetter(proto, name, ptrName, lenName) {
 
 // Friendly objects ////////////////////////////////////////////////////////////
 
-// Allocator
-function Allocator() {
-  this.$ = null;
-}
-define$From(Allocator);
-Allocator.prototype = Object.create(Object.prototype);
-
-// StackAllocator
-function StackAllocator(fallbackAllocator) {
-  this.$ = Value.$malloc(I.StackAllocator);
-  I.initStackAllocator(this.$, fallbackAllocator.$);
-  this.allocator = Allocator.$from(this.$.allocator);
-}
-StackAllocator.prototype = Object.create(Object.prototype);
-StackAllocator.prototype.$destroy = function() {
-  I.destroyStackAllocator(this.$);
-  this.$.$free();
-};
-
-// LibcAllocator
-LibcAllocator = Allocator.$from(I.getLibcAllocator());
-
 // Writer
 function Writer(writeData, moveData) {
   this.$ = Value.$malloc(I.Writer);
@@ -804,9 +757,9 @@ Writer.prototype.$destroy = function() {
 };
 
 // MemoryWriter
-function MemoryWriter(allocator) {
+function MemoryWriter() {
   this.$ = Value.$malloc(I.MemoryWriter);
-  var result = I.initMemWriter(allocator.$, this.$);
+  var result = I.initMemWriter(this.$);
   if (result != OK) {
     throw new Error('unable to initialize MemoryWriter');
   }
@@ -848,7 +801,7 @@ Stream.prototype.$destroy = function() {
 
 // StringStream
 function StringStream() {
-  this.$writer = new MemoryWriter(LibcAllocator);
+  this.$writer = new MemoryWriter();
   Stream.call(this, this.$writer.writer, null);
 }
 StringStream.prototype = Object.create(Object.prototype);
@@ -863,13 +816,12 @@ StringStream.prototype.$destroy = function() {
 };
 
 // parseAst
-function parseAst(allocator, filename, buffer) {
+function parseAst(filename, buffer) {
   var sourceLineMaxLength = 80;
-  var astLexer = new AstLexer(allocator, filename, buffer);
+  var astLexer = new AstLexer(filename, buffer);
   var errorHandler = new SourceErrorHandler(sourceLineMaxLength);
   var script = new Script();
   var result = I.parseAst(astLexer.$, script.$, errorHandler.$);
-  script.$allocator = allocator;
   script.$astLexer = astLexer;
   script.$errorHandler = errorHandler;
   if (result != OK) {
@@ -880,11 +832,10 @@ function parseAst(allocator, filename, buffer) {
 }
 
 // AstLexer
-function AstLexer(allocator, filename, buffer) {
+function AstLexer(filename, buffer) {
   this.$filename = StrValue.$mallocCStr(filename);
   this.$buffer = BufferValue.$malloc(buffer);
-  this.$ = I.newAstBufferLexer(allocator.$, this.$filename, this.$buffer,
-                               this.$buffer.size);
+  this.$ = I.newAstBufferLexer(this.$filename, this.$buffer, this.$buffer.size);
   if (this.$ === null) {
     this.$buffer.$free();
     this.$filename.$free();
@@ -949,35 +900,32 @@ Location.prototype.$destroy = function() {
 // Script
 function Script() {
   this.$ = Value.$malloc(I.Script);
-  this.$allocator = null;
   this.$astLexer = null;
   this.$errorHandler = null;
 }
 Script.prototype = Object.create(Object.prototype);
 Script.prototype.resolveNames = function() {
-  var result = I.resolveNamesScript(
-      this.$allocator.$, this.$astLexer.$, this.$, this.$errorHandler.$);
+  var result =
+      I.resolveNamesScript(this.$astLexer.$, this.$, this.$errorHandler.$);
   if (result != OK) {
     throw new Error('resolveNames failed:\n' + this.$errorHandler.errorMessage);
   }
 };
 Script.prototype.validate = function() {
-  var result = I.validateScript(
-      this.$allocator.$, this.$astLexer.$, this.$, this.$errorHandler.$);
+  var result = I.validateScript(this.$astLexer.$, this.$, this.$errorHandler.$);
   if (result != OK) {
     throw new Error('validate failed:\n' + this.$errorHandler.errorMessage);
   }
 };
 Script.prototype.toBinary = function(options) {
-  var mw = new MemoryWriter(this.$allocator);
-  options = new WriteBinaryOptions(this.$allocator, options || {});
+  var mw = new MemoryWriter();
+  options = new WriteBinaryOptions(options || {});
   try {
     var module = I.getFirstModule(this.$);
     if (module.$addr === 0) {
       throw new Error('Script has no module.');
     }
-    var result =
-        I.writeBinaryModule(this.$allocator.$, mw.writer.$, module, options.$);
+    var result = I.writeBinaryModule(mw.writer.$, module, options.$);
     if (result != OK) {
       throw new Error('writeBinaryModule failed');
     }
@@ -995,7 +943,7 @@ Script.prototype.$destroy = function() {
 };
 
 // WriteBinaryOptions
-function WriteBinaryOptions(allocator, options) {
+function WriteBinaryOptions(options) {
   this.$ = Value.$malloc(I.WriteBinaryOptions);
   if (options.log) {
     this.$logStream = new StringStream();
@@ -1056,10 +1004,6 @@ var resolve = wabt.$resolve;
 
 wabt = {
   ready: wabt.ready,
-
-  // Types
-  LibcAllocator: LibcAllocator,
-  StackAllocator: StackAllocator,
 
   // Functions
   parseAst: parseAst,

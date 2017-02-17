@@ -54,7 +54,6 @@ typedef struct RelocSection {
 WABT_DEFINE_VECTOR(reloc_section, RelocSection);
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtStream stream;
   WabtStream* log_stream;
   const WabtWriteBinaryOptions* options;
@@ -68,9 +67,8 @@ typedef struct Context {
   size_t last_section_payload_offset;
 } Context;
 
-void wabt_destroy_reloc_section(WabtAllocator* allocator,
-                                RelocSection* reloc_section) {
-  wabt_destroy_reloc_vector(allocator, &reloc_section->relocations);
+void wabt_destroy_reloc_section(RelocSection* reloc_section) {
+  wabt_destroy_reloc_vector(&reloc_section->relocations);
 }
 
 static uint8_t log2_u32(uint32_t x) {
@@ -327,15 +325,14 @@ static void add_reloc(Context* ctx, WabtRelocType reloc_type) {
   if (!ctx->current_reloc_section ||
       ctx->current_reloc_section->section_code != ctx->last_section_type) {
     ctx->current_reloc_section =
-        wabt_append_reloc_section(ctx->allocator, &ctx->reloc_sections);
+        wabt_append_reloc_section(&ctx->reloc_sections);
     ctx->current_reloc_section->name =
         wabt_get_section_name(ctx->last_section_type);
     ctx->current_reloc_section->section_code = ctx->last_section_type;
   }
 
   // Add a new relocation to the curent reloc section
-  Reloc* r = wabt_append_reloc(ctx->allocator,
-                               &ctx->current_reloc_section->relocations);
+  Reloc* r = wabt_append_reloc(&ctx->current_reloc_section->relocations);
   r->type = reloc_type;
   r->offset = ctx->stream.offset - ctx->last_section_payload_offset;
 }
@@ -903,8 +900,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
 
       if (num_params_and_locals) {
         wabt_make_type_binding_reverse_mapping(
-            ctx->allocator, &func->decl.sig.param_types, &func->param_bindings,
-            &index_to_name);
+            &func->decl.sig.param_types, &func->param_bindings, &index_to_name);
         size_t j;
         for (j = 0; j < num_params; ++j) {
           WabtStringSlice name = index_to_name.data[j];
@@ -914,8 +910,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
         }
 
         wabt_make_type_binding_reverse_mapping(
-            ctx->allocator, &func->local_types, &func->local_bindings,
-            &index_to_name);
+            &func->local_types, &func->local_bindings, &index_to_name);
         for (j = 0; j < num_locals; ++j) {
           WabtStringSlice name = index_to_name.data[j];
           wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd,
@@ -927,27 +922,24 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
     }
     end_section(ctx);
 
-    wabt_destroy_string_slice_vector(ctx->allocator, &index_to_name);
+    wabt_destroy_string_slice_vector(&index_to_name);
   }
 
   if (ctx->options->relocatable) {
     for (i = 0; i < ctx->reloc_sections.size; i++) {
       write_reloc_section(ctx, &ctx->reloc_sections.data[i]);
     }
-    WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->reloc_sections,
-                                     reloc_section);
+    WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->reloc_sections, reloc_section);
   }
 
   return ctx->stream.result;
 }
 
-WabtResult wabt_write_binary_module(WabtAllocator* allocator,
-                                    WabtWriter* writer,
+WabtResult wabt_write_binary_module(WabtWriter* writer,
                                     const WabtModule* module,
                                     const WabtWriteBinaryOptions* options) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.options = options;
   ctx.log_stream = options->log_stream;
   wabt_init_stream(&ctx.stream, writer, ctx.log_stream);

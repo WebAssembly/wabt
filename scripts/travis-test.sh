@@ -48,12 +48,10 @@ for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
   if [[ -n "${SANITIZER:-}" ]]; then
     if set_run_test_args ${COMPILER} ${BUILD_TYPE} ${SANITIZER}; then
       run_tests
-      run_tests -a=--use-libc-allocator
     fi
   else
     if set_run_test_args ${COMPILER} ${BUILD_TYPE}; then
       run_tests
-      run_tests -a=--use-libc-allocator
     fi
   fi
 done

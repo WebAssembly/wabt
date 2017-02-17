@@ -22,17 +22,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "allocator.h"
 #include "binary-reader.h"
 #include "common.h"
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtOpcntData* opcnt_data;
 } Context;
 
-static WabtResult add_int_counter_value(struct WabtAllocator* allocator,
-                                        WabtIntCounterVector* vec,
+static WabtResult add_int_counter_value(WabtIntCounterVector* vec,
                                         intmax_t value) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
@@ -44,13 +41,13 @@ static WabtResult add_int_counter_value(struct WabtAllocator* allocator,
   WabtIntCounter counter;
   counter.value = value;
   counter.count = 1;
-  wabt_append_int_counter_value(allocator, vec, &counter);
+  wabt_append_int_counter_value(vec, &counter);
   return WABT_OK;
 }
 
-static WabtResult add_int_pair_counter_value(struct WabtAllocator* allocator,
-                                             WabtIntPairCounterVector* vec,
-                                             intmax_t first, intmax_t second) {
+static WabtResult add_int_pair_counter_value(WabtIntPairCounterVector* vec,
+                                             intmax_t first,
+                                             intmax_t second) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].first == first && vec->data[i].second == second) {
@@ -62,7 +59,7 @@ static WabtResult add_int_pair_counter_value(struct WabtAllocator* allocator,
   counter.first = first;
   counter.second = second;
   counter.count = 1;
-  wabt_append_int_pair_counter_value(allocator, vec, &counter);
+  wabt_append_int_pair_counter_value(vec, &counter);
   return WABT_OK;
 }
 
@@ -74,8 +71,7 @@ static WabtResult on_opcode(WabtBinaryReaderContext* context,
     WabtIntCounter Counter;
     Counter.value = opcnt_vec->size;
     Counter.count = 0;
-    wabt_append_int_counter_value(ctx->opcnt_data->allocator,
-                                  opcnt_vec, &Counter);
+    wabt_append_int_counter_value(opcnt_vec, &Counter);
   }
   ++opcnt_vec->data[opcode].count;
   return WABT_OK;
@@ -83,26 +79,22 @@ static WabtResult on_opcode(WabtBinaryReaderContext* context,
 
 static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
-  return add_int_counter_value(ctx->opcnt_data->allocator,
-                               &ctx->opcnt_data->i32_const_vec, (int32_t)value);
+  return add_int_counter_value(&ctx->opcnt_data->i32_const_vec, (int32_t)value);
 }
 
 static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  return add_int_counter_value(ctx->opcnt_data->allocator,
-                               &ctx->opcnt_data->get_local_vec, local_index);
+  return add_int_counter_value(&ctx->opcnt_data->get_local_vec, local_index);
 }
 
 static WabtResult on_set_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  return add_int_counter_value(ctx->opcnt_data->allocator,
-                               &ctx->opcnt_data->set_local_vec, local_index);
+  return add_int_counter_value(&ctx->opcnt_data->set_local_vec, local_index);
 }
 
 static  WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  return add_int_counter_value(ctx->opcnt_data->allocator,
-                               &ctx->opcnt_data->tee_local_vec, local_index);
+  return add_int_counter_value(&ctx->opcnt_data->tee_local_vec, local_index);
 }
 
 static  WabtResult on_load_expr(WabtOpcode opcode,
@@ -111,8 +103,7 @@ static  WabtResult on_load_expr(WabtOpcode opcode,
                                 void* user_data) {
   Context* ctx = user_data;
   if (opcode == WABT_OPCODE_I32_LOAD)
-    return add_int_pair_counter_value(ctx->opcnt_data->allocator,
-                                      &ctx->opcnt_data->i32_load_vec,
+    return add_int_pair_counter_value(&ctx->opcnt_data->i32_load_vec,
                                       alignment_log2, offset);
   return WABT_OK;
 }
@@ -123,8 +114,7 @@ static  WabtResult on_store_expr(WabtOpcode opcode,
                                  void* user_data) {
   Context* ctx = user_data;
   if (opcode == WABT_OPCODE_I32_STORE)
-    return add_int_pair_counter_value(ctx->opcnt_data->allocator,
-                                      &ctx->opcnt_data->i32_store_vec,
+    return add_int_pair_counter_value(&ctx->opcnt_data->i32_store_vec,
                                       alignment_log2, offset);
   return WABT_OK;
 }
@@ -149,29 +139,23 @@ static WabtBinaryReader s_binary_reader = {
   .on_store_expr = on_store_expr
 };
 
-void wabt_init_opcnt_data(struct WabtAllocator* allocator,
-                          WabtOpcntData* data) {
+void wabt_init_opcnt_data(WabtOpcntData* data) {
   WABT_ZERO_MEMORY(*data);
-  data->allocator = allocator;
 }
 
-void wabt_destroy_opcnt_data(struct WabtAllocator* allocator,
-                             WabtOpcntData* data) {
-  assert(allocator == data->allocator);
-  wabt_destroy_int_counter_vector(allocator, &data->opcode_vec);
-  wabt_destroy_int_counter_vector(allocator, &data->i32_const_vec);
-  wabt_destroy_int_counter_vector(allocator, &data->get_local_vec);
-  wabt_destroy_int_pair_counter_vector(allocator, &data->i32_load_vec);
+void wabt_destroy_opcnt_data(WabtOpcntData* data) {
+  wabt_destroy_int_counter_vector(&data->opcode_vec);
+  wabt_destroy_int_counter_vector(&data->i32_const_vec);
+  wabt_destroy_int_counter_vector(&data->get_local_vec);
+  wabt_destroy_int_pair_counter_vector(&data->i32_load_vec);
 }
 
-WabtResult wabt_read_binary_opcnt(struct WabtAllocator* allocator,
-                                  const void* data,
+WabtResult wabt_read_binary_opcnt(const void* data,
                                   size_t size,
                                   const struct WabtReadBinaryOptions* options,
                                   WabtOpcntData* opcnt_data) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.opcnt_data = opcnt_data;
 
   WabtBinaryReader reader;
@@ -179,6 +163,6 @@ WabtResult wabt_read_binary_opcnt(struct WabtAllocator* allocator,
   reader = s_binary_reader;
   reader.user_data = &ctx;
 
-  return wabt_read_binary(allocator, data, size, &reader, 1, options);
+  return wabt_read_binary(data, size, &reader, 1, options);
 }
 

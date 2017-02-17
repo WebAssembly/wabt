@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include "allocator.h"
 #include "ast-parser.h"
 #include "ast-parser-lexer-shared.h"
 #include "vector.h"
@@ -114,8 +113,7 @@ static WabtResult fill(WabtLocation* loc,
 
     /* TODO(binji): could just alloc instead, because we know we'll need to
      * memmove below */
-    char* new_buffer = wabt_realloc(lexer->allocator, lexer->buffer,
-                                    new_buffer_size, WABT_DEFAULT_ALIGN);
+    char* new_buffer = wabt_realloc(lexer->buffer, new_buffer_size);
     if (new_buffer == NULL) {
       wabt_ast_parser_error(loc, lexer, parser,
                             "unable to reallocate lexer buffer.");
@@ -468,22 +466,17 @@ int wabt_ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
   }
 }
 
-static WabtAstLexer* wabt_new_lexer(WabtAllocator* allocator,
-                                    WabtAstLexerSourceType type,
+static WabtAstLexer* wabt_new_lexer(WabtAstLexerSourceType type,
                                     const char* filename) {
-  WabtAstLexer* lexer =
-      wabt_alloc_zero(allocator, sizeof(WabtAstLexer), WABT_DEFAULT_ALIGN);
-  lexer->allocator = allocator;
+  WabtAstLexer* lexer = wabt_alloc_zero(sizeof(WabtAstLexer));
   lexer->line = 1;
   lexer->filename = filename;
   lexer->source.type = type;
   return lexer;
 }
 
-WabtAstLexer* wabt_new_ast_file_lexer(WabtAllocator* allocator,
-                                      const char* filename) {
-  WabtAstLexer* lexer =
-      wabt_new_lexer(allocator, WABT_LEXER_SOURCE_TYPE_FILE, filename);
+WabtAstLexer* wabt_new_ast_file_lexer(const char* filename) {
+  WabtAstLexer* lexer = wabt_new_lexer(WABT_LEXER_SOURCE_TYPE_FILE, filename);
   lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
     wabt_destroy_ast_lexer(lexer);
@@ -492,12 +485,10 @@ WabtAstLexer* wabt_new_ast_file_lexer(WabtAllocator* allocator,
   return lexer;
 }
 
-WabtAstLexer* wabt_new_ast_buffer_lexer(WabtAllocator* allocator,
-                                        const char* filename,
+WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
                                         const void* data,
                                         size_t size) {
-  WabtAstLexer* lexer =
-      wabt_new_lexer(allocator, WABT_LEXER_SOURCE_TYPE_BUFFER, filename);
+  WabtAstLexer* lexer = wabt_new_lexer(WABT_LEXER_SOURCE_TYPE_BUFFER, filename);
   lexer->source.buffer.data = data;
   lexer->source.buffer.size = size;
   lexer->source.buffer.read_offset = 0;
@@ -507,12 +498,8 @@ WabtAstLexer* wabt_new_ast_buffer_lexer(WabtAllocator* allocator,
 void wabt_destroy_ast_lexer(WabtAstLexer* lexer) {
   if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE && lexer->source.file)
     fclose(lexer->source.file);
-  wabt_free(lexer->allocator, lexer->buffer);
-  wabt_free(lexer->allocator, lexer);
-}
-
-WabtAllocator* wabt_ast_lexer_get_allocator(WabtAstLexer* lexer) {
-  return lexer->allocator;
+  wabt_free(lexer->buffer);
+  wabt_free(lexer);
 }
 
 typedef enum WabtLineOffsetPosition {

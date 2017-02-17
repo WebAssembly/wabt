@@ -20,11 +20,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "allocator.h"
 #include "binary-reader.h"
 #include "binary-reader-opcnt.h"
 #include "option-parser.h"
-#include "stack-allocator.h"
 #include "stream.h"
 #include "vector-sort.h"
 
@@ -42,8 +40,6 @@ static const char* s_separator = ": ";
 static WabtReadBinaryOptions s_read_binary_options =
     WABT_READ_BINARY_OPTIONS_DEFAULT;
 
-static WabtBool s_use_libc_allocator;
-
 static WabtFileWriter s_log_stream_writer;
 static WabtStream s_log_stream;
 
@@ -54,7 +50,6 @@ enum {
   FLAG_VERBOSE,
   FLAG_HELP,
   FLAG_OUTPUT,
-  FLAG_USE_LIBC_ALLOCATOR,
   FLAG_CUTOFF,
   FLAG_SEPARATOR,
   NUM_FLAGS
@@ -82,12 +77,6 @@ static WabtOption s_options[] = {
      "FILENAME",
      YEP,
      "output file for the opcode counts, by default use stdout"},
-    {FLAG_USE_LIBC_ALLOCATOR,
-     0,
-     "use-libc-allocator",
-     NULL,
-     NOPE,
-     "use malloc, free, etc. instead of stack allocator"},
     {FLAG_CUTOFF,
      'c',
      "cutoff",
@@ -122,10 +111,6 @@ static void on_option(struct WabtOptionParser* parser,
 
     case FLAG_OUTPUT:
       s_outfile = argument;
-      break;
-
-    case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = WABT_TRUE;
       break;
 
     case FLAG_CUTOFF:
@@ -302,10 +287,12 @@ static int int_pair_counter_gt(WabtIntPairCounter* counter_1,
   return 0;
 }
 
-static void display_sorted_int_counter_vector(
-    FILE* out, const char* title, struct WabtAllocator* allocator,
-    WabtIntCounterVector* vec, int_counter_lt_fcn lt_fcn,
-    display_name_fcn display_fcn, const char* opcode_name) {
+static void display_sorted_int_counter_vector(FILE* out,
+                                              const char* title,
+                                              WabtIntCounterVector* vec,
+                                              int_counter_lt_fcn lt_fcn,
+                                              display_name_fcn display_fcn,
+                                              const char* opcode_name) {
   if (vec->size == 0)
     return;
 
@@ -316,22 +303,25 @@ static void display_sorted_int_counter_vector(
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
-    wabt_append_int_counter_value(allocator, &filtered_vec, &vec->data[i]);
+    wabt_append_int_counter_value(&filtered_vec, &vec->data[i]);
   }
   WabtIntCounterVector sorted_vec;
   WABT_ZERO_MEMORY(sorted_vec);
-  wabt_sort_int_counter_vector(allocator, &filtered_vec, &sorted_vec,
+  wabt_sort_int_counter_vector(&filtered_vec, &sorted_vec,
                                swap_int_counters, lt_fcn);
   fprintf(out, "%s\n", title);
   display_int_counter_vector(out, &sorted_vec, display_fcn, opcode_name);
-  wabt_destroy_int_counter_vector(allocator, &filtered_vec);
-  wabt_destroy_int_counter_vector(allocator, &sorted_vec);
+  wabt_destroy_int_counter_vector(&filtered_vec);
+  wabt_destroy_int_counter_vector(&sorted_vec);
 }
 
 static void display_sorted_int_pair_counter_vector(
-    FILE* out, const char* title, struct WabtAllocator* allocator,
-    WabtIntPairCounterVector* vec, int_pair_counter_lt_fcn lt_fcn,
-    display_name_fcn display_first_fcn, display_name_fcn display_second_fcn,
+    FILE* out,
+    const char* title,
+    WabtIntPairCounterVector* vec,
+    int_pair_counter_lt_fcn lt_fcn,
+    display_name_fcn display_first_fcn,
+    display_name_fcn display_second_fcn,
     const char* opcode_name) {
   if (vec->size == 0)
     return;
@@ -343,16 +333,16 @@ static void display_sorted_int_pair_counter_vector(
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
-    wabt_append_int_pair_counter_value(allocator, &filtered_vec, &vec->data[i]);
+    wabt_append_int_pair_counter_value(&filtered_vec, &vec->data[i]);
   }
   WABT_ZERO_MEMORY(sorted_vec);
-  wabt_sort_int_pair_counter_vector(allocator, &filtered_vec, &sorted_vec,
+  wabt_sort_int_pair_counter_vector(&filtered_vec, &sorted_vec,
                                     swap_int_pair_counters, lt_fcn);
   fprintf(out, "%s\n", title);
   display_int_pair_counter_vector(out, &sorted_vec, display_first_fcn,
                                   display_second_fcn, opcode_name);
-  wabt_destroy_int_pair_counter_vector(allocator, &filtered_vec);
-  wabt_destroy_int_pair_counter_vector(allocator, &sorted_vec);
+  wabt_destroy_int_pair_counter_vector(&filtered_vec);
+  wabt_destroy_int_pair_counter_vector(&sorted_vec);
 }
 
 int main(int argc, char** argv) {
@@ -360,25 +350,13 @@ int main(int argc, char** argv) {
   wabt_init_stdio();
   parse_options(argc, argv);
 
-  WabtStackAllocator stack_allocator;
-  WabtAllocator *allocator;
-  if (s_use_libc_allocator) {
-    allocator = &g_wabt_libc_allocator;
-  } else {
-    wabt_init_stack_allocator(&stack_allocator, &g_wabt_libc_allocator);
-    allocator = &stack_allocator.allocator;
-  }
-
-
   void* data;
   size_t size;
-  WabtResult result = wabt_read_file(allocator, s_infile, &data, &size);
+  WabtResult result = wabt_read_file(s_infile, &data, &size);
   if (WABT_FAILED(result)) {
     const char* input_name = s_infile ? s_infile : "stdin";
     ERROR("Unable to parse: %s", input_name);
-    wabt_free(allocator, data);
-    wabt_print_allocator_stats(allocator);
-    wabt_destroy_allocator(allocator);
+    wabt_free(data);
   }
   FILE* out = stdout;
   if (s_outfile) {
@@ -389,42 +367,36 @@ int main(int argc, char** argv) {
   }
   if (WABT_SUCCEEDED(result)) {
     WabtOpcntData opcnt_data;
-    wabt_init_opcnt_data(allocator, &opcnt_data);
-    result = wabt_read_binary_opcnt(
-        allocator, data, size, &s_read_binary_options, &opcnt_data);
+    wabt_init_opcnt_data(&opcnt_data);
+    result =
+        wabt_read_binary_opcnt(data, size, &s_read_binary_options, &opcnt_data);
     if (WABT_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
-          out, "Opcode counts:", allocator, &opcnt_data.opcode_vec,
-          opcode_counter_gt, display_opcode_name, NULL);
+          out, "Opcode counts:", &opcnt_data.opcode_vec, opcode_counter_gt,
+          display_opcode_name, NULL);
       display_sorted_int_counter_vector(
-          out, "\ni32.const:", allocator, &opcnt_data.i32_const_vec,
-          int_counter_gt, display_intmax,
-          wabt_get_opcode_name(WABT_OPCODE_I32_CONST));
+          out, "\ni32.const:", &opcnt_data.i32_const_vec, int_counter_gt,
+          display_intmax, wabt_get_opcode_name(WABT_OPCODE_I32_CONST));
       display_sorted_int_counter_vector(
-          out, "\nget_local:", allocator, &opcnt_data.get_local_vec,
-          int_counter_gt, display_intmax,
-          wabt_get_opcode_name(WABT_OPCODE_GET_LOCAL));
+          out, "\nget_local:", &opcnt_data.get_local_vec, int_counter_gt,
+          display_intmax, wabt_get_opcode_name(WABT_OPCODE_GET_LOCAL));
       display_sorted_int_counter_vector(
-          out, "\nset_local:", allocator, &opcnt_data.set_local_vec,
-          int_counter_gt, display_intmax,
-          wabt_get_opcode_name(WABT_OPCODE_SET_LOCAL));
+          out, "\nset_local:", &opcnt_data.set_local_vec, int_counter_gt,
+          display_intmax, wabt_get_opcode_name(WABT_OPCODE_SET_LOCAL));
       display_sorted_int_counter_vector(
-          out, "\ntee_local:", allocator, &opcnt_data.tee_local_vec,
-          int_counter_gt, display_intmax,
-          wabt_get_opcode_name(WABT_OPCODE_TEE_LOCAL));
+          out, "\ntee_local:", &opcnt_data.tee_local_vec, int_counter_gt,
+          display_intmax, wabt_get_opcode_name(WABT_OPCODE_TEE_LOCAL));
       display_sorted_int_pair_counter_vector(
-          out, "\ni32.load:", allocator, &opcnt_data.i32_load_vec,
-          int_pair_counter_gt, display_intmax, display_intmax,
+          out, "\ni32.load:", &opcnt_data.i32_load_vec, int_pair_counter_gt,
+          display_intmax, display_intmax,
           wabt_get_opcode_name(WABT_OPCODE_I32_LOAD));
       display_sorted_int_pair_counter_vector(
-          out, "\ni32.store:", allocator, &opcnt_data.i32_store_vec,
-          int_pair_counter_gt, display_intmax, display_intmax,
+          out, "\ni32.store:", &opcnt_data.i32_store_vec, int_pair_counter_gt,
+          display_intmax, display_intmax,
           wabt_get_opcode_name(WABT_OPCODE_I32_STORE));
     }
-    wabt_destroy_opcnt_data(allocator, &opcnt_data);
+    wabt_destroy_opcnt_data(&opcnt_data);
   }
-  wabt_free(allocator, data);
-  wabt_print_allocator_stats(allocator);
-  wabt_destroy_allocator(allocator);
+  wabt_free(data);
   return result;
 }

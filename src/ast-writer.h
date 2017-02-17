@@ -19,12 +19,10 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtModule;
 struct WabtWriter;
 
-WABT_EXTERN_C WabtResult wabt_write_ast(struct WabtAllocator*,
-                                        struct WabtWriter*,
+WABT_EXTERN_C WabtResult wabt_write_ast(struct WabtWriter*,
                                         const struct WabtModule*);
 
 #endif /* WABT_AST_WRITER_H_ */

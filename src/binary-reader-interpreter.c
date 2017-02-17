@@ -21,7 +21,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "allocator.h"
 #include "binary-reader.h"
 #include "interpreter.h"
 #include "type-checker.h"
@@ -65,10 +64,8 @@ typedef struct Label {
 WABT_DEFINE_VECTOR(label, Label);
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtBinaryReader* reader;
   WabtBinaryErrorHandler* error_handler;
-  WabtAllocator* memory_allocator;
   WabtInterpreterEnvironment* env;
   WabtInterpreterModule* module;
   WabtInterpreterFunc* current_func;
@@ -252,10 +249,10 @@ static WabtResult append_fixup(Context* ctx,
                                Uint32VectorVector* fixups_vector,
                                uint32_t index) {
   if (index >= fixups_vector->size)
-    wabt_resize_uint32_vector_vector(ctx->allocator, fixups_vector, index + 1);
+    wabt_resize_uint32_vector_vector(fixups_vector, index + 1);
   Uint32Vector* fixups = &fixups_vector->data[index];
   uint32_t offset = get_istream_offset(ctx);
-  wabt_append_uint32_value(ctx->allocator, fixups, &offset);
+  wabt_append_uint32_value(fixups, &offset);
   return WABT_OK;
 }
 
@@ -358,11 +355,11 @@ static void on_error(WabtBinaryReaderContext* ctx, const char* message) {
 
 static WabtResult on_signature_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_resize_uint32_vector(ctx->allocator, &ctx->sig_index_mapping, count);
+  wabt_resize_uint32_vector(&ctx->sig_index_mapping, count);
   uint32_t i;
   for (i = 0; i < count; ++i)
     ctx->sig_index_mapping.data[i] = ctx->env->sigs.size + i;
-  wabt_resize_interpreter_func_signature_vector(ctx->allocator, &ctx->env->sigs,
+  wabt_resize_interpreter_func_signature_vector(&ctx->env->sigs,
                                                 ctx->env->sigs.size + count);
   return WABT_OK;
 }
@@ -376,11 +373,11 @@ static WabtResult on_signature(uint32_t index,
   Context* ctx = user_data;
   WabtInterpreterFuncSignature* sig = get_signature_by_module_index(ctx, index);
 
-  wabt_reserve_types(ctx->allocator, &sig->param_types, param_count);
+  wabt_reserve_types(&sig->param_types, param_count);
   sig->param_types.size = param_count;
   memcpy(sig->param_types.data, param_types, param_count * sizeof(WabtType));
 
-  wabt_reserve_types(ctx->allocator, &sig->result_types, result_count);
+  wabt_reserve_types(&sig->result_types, result_count);
   sig->result_types.size = result_count;
   memcpy(sig->result_types.data, result_types, result_count * sizeof(WabtType));
   return WABT_OK;
@@ -388,8 +385,7 @@ static WabtResult on_signature(uint32_t index,
 
 static WabtResult on_import_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_new_interpreter_import_array(ctx->allocator,
-                                    &ctx->module->defined.imports, count);
+  wabt_new_interpreter_import_array(&ctx->module->defined.imports, count);
   return WABT_OK;
 }
 
@@ -400,8 +396,8 @@ static WabtResult on_import(uint32_t index,
   Context* ctx = user_data;
   assert(index < ctx->module->defined.imports.size);
   WabtInterpreterImport* import = &ctx->module->defined.imports.data[index];
-  import->module_name = wabt_dup_string_slice(ctx->allocator, module_name);
-  import->field_name = wabt_dup_string_slice(ctx->allocator, field_name);
+  import->module_name = wabt_dup_string_slice(module_name);
+  import->field_name = wabt_dup_string_slice(field_name);
   int module_index = wabt_find_binding_index_by_name(
       &ctx->env->registered_module_bindings, &import->module_name);
   if (module_index < 0) {
@@ -488,13 +484,13 @@ static WabtResult append_export(Context* ctx,
   }
 
   WabtInterpreterExport* export =
-      wabt_append_interpreter_export(ctx->allocator, &module->exports);
-  export->name = wabt_dup_string_slice(ctx->allocator, name);
+      wabt_append_interpreter_export(&module->exports);
+  export->name = wabt_dup_string_slice(name);
   export->kind = kind;
   export->index = item_index;
 
-  WabtBinding* binding = wabt_insert_binding(
-      ctx->allocator, &module->export_bindings, &export->name);
+  WabtBinding* binding =
+      wabt_insert_binding(&module->export_bindings, &export->name);
   binding->index = module->exports.size - 1;
   return WABT_OK;
 }
@@ -524,8 +520,7 @@ static WabtResult on_import_func(uint32_t import_index,
 
   uint32_t func_env_index;
   if (ctx->is_host_import) {
-    WabtInterpreterFunc* func =
-        wabt_append_interpreter_func(ctx->allocator, &ctx->env->funcs);
+    WabtInterpreterFunc* func = wabt_append_interpreter_func(&ctx->env->funcs);
     func->is_host = WABT_TRUE;
     func->sig_index = import->func.sig_index;
     func->host.module_name = import->module_name;
@@ -554,15 +549,13 @@ static WabtResult on_import_func(uint32_t import_index,
 
     func_env_index = ctx->import_env_index;
   }
-  wabt_append_uint32_value(ctx->allocator, &ctx->func_index_mapping,
-                           &func_env_index);
+  wabt_append_uint32_value(&ctx->func_index_mapping, &func_env_index);
   ctx->num_func_imports++;
   return WABT_OK;
 }
 
 static void init_table_func_indexes(Context* ctx, WabtInterpreterTable* table) {
-  wabt_new_uint32_array(ctx->allocator, &table->func_indexes,
-                        table->limits.initial);
+  wabt_new_uint32_array(&table->func_indexes, table->limits.initial);
   size_t i;
   for (i = 0; i < table->func_indexes.size; ++i)
     table->func_indexes.data[i] = WABT_INVALID_INDEX;
@@ -585,7 +578,7 @@ static WabtResult on_import_table(uint32_t import_index,
 
   if (ctx->is_host_import) {
     WabtInterpreterTable* table =
-        wabt_append_interpreter_table(ctx->allocator, &ctx->env->tables);
+        wabt_append_interpreter_table(&ctx->env->tables);
     table->limits = *elem_limits;
     init_table_func_indexes(ctx, table);
 
@@ -628,8 +621,7 @@ static WabtResult on_import_memory(uint32_t import_index,
 
   if (ctx->is_host_import) {
     WabtInterpreterMemory* memory =
-        wabt_append_interpreter_memory(ctx->allocator, &ctx->env->memories);
-    memory->allocator = ctx->memory_allocator;
+        wabt_append_interpreter_memory(&ctx->env->memories);
 
     WabtInterpreterHostImportDelegate* host_delegate =
         &ctx->host_import_module->host.import_delegate;
@@ -669,7 +661,7 @@ static WabtResult on_import_global(uint32_t import_index,
   uint32_t global_env_index = ctx->env->globals.size - 1;
   if (ctx->is_host_import) {
     WabtInterpreterGlobal* global =
-        wabt_append_interpreter_global(ctx->allocator, &ctx->env->globals);
+        wabt_append_interpreter_global(&ctx->env->globals);
     global->typed_value.type = type;
     global->mutable_ = mutable;
 
@@ -689,8 +681,7 @@ static WabtResult on_import_global(uint32_t import_index,
     import->global.mutable_ = mutable;
     global_env_index = ctx->import_env_index;
   }
-  wabt_append_uint32_value(ctx->allocator, &ctx->global_index_mapping,
-                           &global_env_index);
+  wabt_append_uint32_value(&ctx->global_index_mapping, &global_env_index);
   ctx->num_global_imports++;
   return WABT_OK;
 }
@@ -699,14 +690,13 @@ static WabtResult on_function_signatures_count(uint32_t count,
                                                void* user_data) {
   Context* ctx = user_data;
   size_t old_size = ctx->func_index_mapping.size;
-  wabt_resize_uint32_vector(ctx->allocator, &ctx->func_index_mapping,
-                            old_size + count);
+  wabt_resize_uint32_vector(&ctx->func_index_mapping, old_size + count);
   uint32_t i;
   for (i = 0; i < count; ++i)
     ctx->func_index_mapping.data[old_size + i] = ctx->env->funcs.size + i;
-  wabt_resize_interpreter_func_vector(ctx->allocator, &ctx->env->funcs,
+  wabt_resize_interpreter_func_vector(&ctx->env->funcs,
                                       ctx->env->funcs.size + count);
-  wabt_resize_uint32_vector_vector(ctx->allocator, &ctx->func_fixups, count);
+  wabt_resize_uint32_vector_vector(&ctx->func_fixups, count);
   return WABT_OK;
 }
 
@@ -730,7 +720,7 @@ static WabtResult on_table(uint32_t index,
     return WABT_ERROR;
   }
   WabtInterpreterTable* table =
-      wabt_append_interpreter_table(ctx->allocator, &ctx->env->tables);
+      wabt_append_interpreter_table(&ctx->env->tables);
   table->limits = *elem_limits;
   init_table_func_indexes(ctx, table);
   ctx->module->table_index = ctx->env->tables.size - 1;
@@ -746,12 +736,10 @@ static WabtResult on_memory(uint32_t index,
     return WABT_ERROR;
   }
   WabtInterpreterMemory* memory =
-      wabt_append_interpreter_memory(ctx->allocator, &ctx->env->memories);
-  memory->allocator = ctx->memory_allocator;
+      wabt_append_interpreter_memory(&ctx->env->memories);
   memory->page_limits = *page_limits;
   memory->byte_size = page_limits->initial * WABT_PAGE_SIZE;
-  memory->data = wabt_alloc_zero(ctx->memory_allocator, memory->byte_size,
-                                 WABT_DEFAULT_ALIGN);
+  memory->data = wabt_alloc_zero(memory->byte_size);
   ctx->module->memory_index = ctx->env->memories.size - 1;
   return WABT_OK;
 }
@@ -759,12 +747,11 @@ static WabtResult on_memory(uint32_t index,
 static WabtResult on_global_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
   size_t old_size = ctx->global_index_mapping.size;
-  wabt_resize_uint32_vector(ctx->allocator, &ctx->global_index_mapping,
-                            old_size + count);
+  wabt_resize_uint32_vector(&ctx->global_index_mapping, old_size + count);
   uint32_t i;
   for (i = 0; i < count; ++i)
     ctx->global_index_mapping.data[old_size + i] = ctx->env->globals.size + i;
-  wabt_resize_interpreter_global_vector(ctx->allocator, &ctx->env->globals,
+  wabt_resize_interpreter_global_vector(&ctx->env->globals,
                                         ctx->env->globals.size + count);
   return WABT_OK;
 }
@@ -992,7 +979,7 @@ static WabtResult on_data_segment_data(uint32_t index,
 }
 
 static void push_label(Context* ctx, uint32_t offset, uint32_t fixup_offset) {
-  Label* label = wabt_append_label(ctx->allocator, &ctx->label_stack);
+  Label* label = wabt_append_label(&ctx->label_stack);
   label->offset = offset;
   label->fixup_offset = fixup_offset;
 }
@@ -1006,7 +993,7 @@ static void pop_label(Context* ctx) {
     uint32_t to = ctx->depth_fixups.size;
     uint32_t i;
     for (i = from; i < to; ++i)
-      wabt_destroy_uint32_vector(ctx->allocator, &ctx->depth_fixups.data[i]);
+      wabt_destroy_uint32_vector(&ctx->depth_fixups.data[i]);
     ctx->depth_fixups.size = ctx->label_stack.size;
   }
 }
@@ -1036,7 +1023,7 @@ static WabtResult begin_function_body(WabtBinaryReaderContext* context,
 
   /* append param types */
   for (i = 0; i < sig->param_types.size; ++i) {
-    wabt_append_type_value(ctx->allocator, &func->defined.param_and_local_types,
+    wabt_append_type_value(&func->defined.param_and_local_types,
                            &sig->param_types.data[i]);
   }
 
@@ -1078,8 +1065,7 @@ static WabtResult on_local_decl(uint32_t decl_index,
 
   uint32_t i;
   for (i = 0; i < count; ++i) {
-    wabt_append_type_value(ctx->allocator, &func->defined.param_and_local_types,
-                           &type);
+    wabt_append_type_value(&func->defined.param_and_local_types, &type);
   }
 
   if (decl_index == func->defined.local_decl_count - 1) {
@@ -1551,20 +1537,16 @@ static WabtBinaryReader s_binary_reader_segments = {
 };
 
 static void destroy_context(Context* ctx) {
-  wabt_destroy_label_vector(ctx->allocator, &ctx->label_stack);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->depth_fixups,
-                                   uint32_vector);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->allocator, ctx->func_fixups,
-                                   uint32_vector);
-  wabt_destroy_uint32_vector(ctx->allocator, &ctx->sig_index_mapping);
-  wabt_destroy_uint32_vector(ctx->allocator, &ctx->func_index_mapping);
-  wabt_destroy_uint32_vector(ctx->allocator, &ctx->global_index_mapping);
+  wabt_destroy_label_vector(&ctx->label_stack);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->depth_fixups, uint32_vector);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->func_fixups, uint32_vector);
+  wabt_destroy_uint32_vector(&ctx->sig_index_mapping);
+  wabt_destroy_uint32_vector(&ctx->func_index_mapping);
+  wabt_destroy_uint32_vector(&ctx->global_index_mapping);
   wabt_destroy_typechecker(&ctx->typechecker);
 }
 
-WabtResult wabt_read_binary_interpreter(WabtAllocator* allocator,
-                                        WabtAllocator* memory_allocator,
-                                        WabtInterpreterEnvironment* env,
+WabtResult wabt_read_binary_interpreter(WabtInterpreterEnvironment* env,
                                         const void* data,
                                         size_t size,
                                         const WabtReadBinaryOptions* options,
@@ -1575,16 +1557,13 @@ WabtResult wabt_read_binary_interpreter(WabtAllocator* allocator,
 
   WabtInterpreterEnvironmentMark mark = wabt_mark_interpreter_environment(env);
 
-  WabtInterpreterModule* module =
-      wabt_append_interpreter_module(allocator, &env->modules);
+  WabtInterpreterModule* module = wabt_append_interpreter_module(&env->modules);
 
   WABT_ZERO_MEMORY(ctx);
   WABT_ZERO_MEMORY(reader);
 
-  ctx.allocator = allocator;
   ctx.reader = &reader;
   ctx.error_handler = error_handler;
-  ctx.memory_allocator = memory_allocator;
   ctx.env = env;
   ctx.module = module;
   ctx.module->is_host = WABT_FALSE;
@@ -1599,29 +1578,28 @@ WabtResult wabt_read_binary_interpreter(WabtAllocator* allocator,
   WabtTypeCheckerErrorHandler tc_error_handler;
   tc_error_handler.on_error = on_typechecker_error;
   tc_error_handler.user_data = &ctx;
-  ctx.typechecker.allocator = allocator;
   ctx.typechecker.error_handler = &tc_error_handler;
 
   reader = s_binary_reader;
   reader.user_data = &ctx;
 
   const uint32_t num_function_passes = 1;
-  WabtResult result = wabt_read_binary(allocator, data, size, &reader,
-                                       num_function_passes, options);
+  WabtResult result =
+      wabt_read_binary(data, size, &reader, num_function_passes, options);
   wabt_steal_mem_writer_output_buffer(&ctx.istream_writer, &env->istream);
   if (WABT_SUCCEEDED(result)) {
     /* Another pass on the read binary to assign data and elem segments. */
     reader = s_binary_reader_segments;
     reader.user_data = &ctx;
-    result = wabt_read_binary(allocator, data, size, &reader,
-                              num_function_passes, options);
+    result =
+        wabt_read_binary(data, size, &reader, num_function_passes, options);
     assert(WABT_SUCCEEDED(result));
 
     env->istream.size = ctx.istream_offset;
     ctx.module->defined.istream_end = env->istream.size;
     *out_module = module;
   } else {
-    wabt_reset_interpreter_environment_to_mark(allocator, env, mark);
+    wabt_reset_interpreter_environment_to_mark(env, mark);
     *out_module = NULL;
   }
   destroy_context(&ctx);

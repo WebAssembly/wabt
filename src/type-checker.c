@@ -78,22 +78,21 @@ static void push_label(WabtTypeChecker* tc,
                        WabtLabelType label_type,
                        const WabtTypeVector* sig) {
   WabtTypeCheckerLabel* label =
-      wabt_append_type_checker_label(tc->allocator, &tc->label_stack);
+      wabt_append_type_checker_label(&tc->label_stack);
   label->label_type = label_type;
-  wabt_extend_types(tc->allocator, &label->sig, sig);
+  wabt_extend_types(&label->sig, sig);
   label->type_stack_limit = tc->type_stack.size;
   label->unreachable = WABT_FALSE;
 }
 
-static void wabt_destroy_type_checker_label(WabtAllocator* allocator,
-                                            WabtTypeCheckerLabel* label) {
-  wabt_destroy_type_vector(allocator, &label->sig);
+static void wabt_destroy_type_checker_label(WabtTypeCheckerLabel* label) {
+  wabt_destroy_type_vector(&label->sig);
 }
 
 static WabtResult pop_label(WabtTypeChecker* tc) {
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(top_label(tc, &label));
-  wabt_destroy_type_checker_label(tc->allocator, label);
+  wabt_destroy_type_checker_label(label);
   tc->label_stack.size--;
   return WABT_OK;
 }
@@ -146,7 +145,7 @@ static WabtResult drop_types(WabtTypeChecker* tc, size_t drop_count) {
 
 static void push_type(WabtTypeChecker* tc, WabtType type) {
   if (type != WABT_TYPE_VOID)
-    wabt_append_type_value(tc->allocator, &tc->type_stack, &type);
+    wabt_append_type_value(&tc->type_stack, &type);
 }
 
 static void push_types(WabtTypeChecker* tc, const WabtTypeVector* types) {
@@ -290,9 +289,8 @@ static WabtResult check_opcode2(WabtTypeChecker* tc, WabtOpcode opcode) {
 }
 
 void wabt_destroy_typechecker(WabtTypeChecker* tc) {
-  wabt_destroy_type_vector(tc->allocator, &tc->type_stack);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(tc->allocator, tc->label_stack,
-                                   type_checker_label);
+  wabt_destroy_type_vector(&tc->type_stack);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(tc->label_stack, type_checker_label);
 }
 
 WabtResult wabt_typechecker_begin_function(WabtTypeChecker* tc,

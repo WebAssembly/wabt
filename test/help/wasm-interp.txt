@@ -31,5 +31,4 @@ options:
   -t, --trace                        trace execution
       --spec                         run spec tests (input file should be .json)
       --run-all-exports              run all the exported functions, in order. useful for testing
-      --use-libc-allocator           use malloc, free, etc. instead of stack allocator
 ;;; STDOUT ;;)

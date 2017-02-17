@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "allocator.h"
 #include "common.h"
 #include "option-parser.h"
 #include "stream.h"
@@ -143,11 +142,9 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  WabtAllocator* allocator = &g_wabt_libc_allocator;
-
   void* data;
   size_t size;
-  WabtResult result = wabt_read_file(allocator, s_objdump_options.infile, &data, &size);
+  WabtResult result = wabt_read_file(s_objdump_options.infile, &data, &size);
   if (WABT_FAILED(result))
     return result;
 
@@ -165,14 +162,14 @@ int main(int argc, char** argv) {
   }
 
   s_objdump_options.mode = WABT_DUMP_PREPASS;
-  result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+  result = wabt_read_binary_objdump(data, size, &s_objdump_options);
   if (WABT_FAILED(result))
     goto done;
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
     s_objdump_options.mode = WABT_DUMP_HEADERS;
-    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
@@ -180,14 +177,14 @@ int main(int argc, char** argv) {
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
     s_objdump_options.mode = WABT_DUMP_DETAILS;
-    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   if (s_objdump_options.disassemble) {
     s_objdump_options.mode = WABT_DUMP_DISASSEMBLE;
-    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
@@ -195,10 +192,10 @@ int main(int argc, char** argv) {
   // Pass 3: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
     s_objdump_options.mode = WABT_DUMP_RAW_DATA;
-    result = wabt_read_binary_objdump(allocator, data, size, &s_objdump_options);
+    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
   }
 
 done:
-  wabt_free(allocator, data);
+  wabt_free(data);
   return result;
 }

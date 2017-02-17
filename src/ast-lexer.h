@@ -23,8 +23,6 @@
 #include "common.h"
 #include "vector.h"
 
-struct WabtAllocator;
-
 typedef enum WabtAstLexerSourceType {
   WABT_LEXER_SOURCE_TYPE_FILE,
   WABT_LEXER_SOURCE_TYPE_BUFFER,
@@ -43,7 +41,6 @@ typedef struct WabtAstLexerSource {
 } WabtAstLexerSource;
 
 typedef struct WabtAstLexer {
-  struct WabtAllocator* allocator;
   WabtAstLexerSource source;
   const char* filename;
   int line;
@@ -63,10 +60,8 @@ typedef struct WabtAstLexer {
 
 WABT_EXTERN_C_BEGIN
 
-WabtAstLexer* wabt_new_ast_file_lexer(struct WabtAllocator*,
-                                      const char* filename);
-WabtAstLexer* wabt_new_ast_buffer_lexer(struct WabtAllocator*,
-                                        const char* filename,
+WabtAstLexer* wabt_new_ast_file_lexer(const char* filename);
+WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
                                         const void* data,
                                         size_t size);
 void wabt_destroy_ast_lexer(WabtAstLexer*);

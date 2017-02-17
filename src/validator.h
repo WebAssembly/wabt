@@ -20,15 +20,13 @@
 #include "ast-lexer.h"
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtModule;
 struct WabtScript;
 
 WABT_EXTERN_C_BEGIN
 /* perform all checks on the AST; the module is valid if and only if this
  * function succeeds. */
-WabtResult wabt_validate_script(struct WabtAllocator*,
-                                WabtAstLexer*,
+WabtResult wabt_validate_script(WabtAstLexer*,
                                 const struct WabtScript*,
                                 WabtSourceErrorHandler*);
 WABT_EXTERN_C_END

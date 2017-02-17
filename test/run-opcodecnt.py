@@ -42,7 +42,6 @@ def main(args):
                       action='store_false')
   parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
-  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -51,15 +50,11 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
       '-v': options.verbose,
-      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wasmopcodecnt = utils.Executable(
       find_exe.GetWasmOpcodeCntExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasmopcodecnt.AppendOptionalArgs({
-      '--use-libc-allocator': options.use_libc_allocator
-  })
 
   wast2wasm.verbose = options.print_cmd
   wasmopcodecnt.verbose = options.print_cmd

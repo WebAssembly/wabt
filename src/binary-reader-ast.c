@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "allocator.h"
 #include "ast.h"
 #include "binary-reader.h"
 #include "common.h"
@@ -41,7 +40,6 @@ typedef struct LabelNode {
 WABT_DEFINE_VECTOR(label_node, LabelNode);
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtBinaryErrorHandler* error_handler;
   WabtModule* module;
 
@@ -67,7 +65,7 @@ static void push_label(Context* ctx,
   label.first = first;
   label.last = NULL;
   ctx->max_depth++;
-  wabt_append_label_node_value(ctx->allocator, &ctx->label_stack, &label);
+  wabt_append_label_node_value(&ctx->label_stack, &label);
 }
 
 static WabtResult pop_label(Context* ctx) {
@@ -102,7 +100,7 @@ static void dup_name(Context* ctx,
                      WabtStringSlice* name,
                      WabtStringSlice* out_name) {
   if (name->length > 0) {
-    *out_name = wabt_dup_string_slice(ctx->allocator, *name);
+    *out_name = wabt_dup_string_slice(*name);
   } else {
     WABT_ZERO_MEMORY(*out_name);
   }
@@ -111,7 +109,7 @@ static void dup_name(Context* ctx,
 static WabtResult append_expr(Context* ctx, WabtExpr* expr) {
   LabelNode* label;
   if (WABT_FAILED(top_label(ctx, &label))) {
-    wabt_free(ctx->allocator, expr);
+    wabt_free(expr);
     return WABT_ERROR;
   }
   if (*label->first) {
@@ -138,7 +136,7 @@ static void on_error(WabtBinaryReaderContext* reader_context,
 
 static WabtResult on_signature_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_func_type_ptrs(ctx->allocator, &ctx->module->func_types, count);
+  wabt_reserve_func_type_ptrs(&ctx->module->func_types, count);
   return WABT_OK;
 }
 
@@ -149,34 +147,32 @@ static WabtResult on_signature(uint32_t index,
                                WabtType* result_types,
                                void* user_data) {
   Context* ctx = user_data;
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_FUNC_TYPE;
 
   WabtFuncType* func_type = &field->func_type;
   WABT_ZERO_MEMORY(*func_type);
 
-  wabt_reserve_types(ctx->allocator, &func_type->sig.param_types, param_count);
+  wabt_reserve_types(&func_type->sig.param_types, param_count);
   func_type->sig.param_types.size = param_count;
   memcpy(func_type->sig.param_types.data, param_types,
          param_count * sizeof(WabtType));
 
-  wabt_reserve_types(ctx->allocator, &func_type->sig.result_types,
-                     result_count);
+  wabt_reserve_types(&func_type->sig.result_types, result_count);
   func_type->sig.result_types.size = result_count;
   memcpy(func_type->sig.result_types.data, result_types,
          result_count * sizeof(WabtType));
 
   assert(index < ctx->module->func_types.capacity);
   WabtFuncTypePtr* func_type_ptr =
-      wabt_append_func_type_ptr(ctx->allocator, &ctx->module->func_types);
+      wabt_append_func_type_ptr(&ctx->module->func_types);
   *func_type_ptr = func_type;
   return WABT_OK;
 }
 
 static WabtResult on_import_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_import_ptrs(ctx->allocator, &ctx->module->imports, count);
+  wabt_reserve_import_ptrs(&ctx->module->imports, count);
   return WABT_OK;
 }
 
@@ -187,17 +183,15 @@ static WabtResult on_import(uint32_t index,
   Context* ctx = user_data;
   assert(index < ctx->module->imports.capacity);
 
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_IMPORT;
 
   WabtImport* import = &field->import;
   WABT_ZERO_MEMORY(*import);
-  import->module_name = wabt_dup_string_slice(ctx->allocator, module_name);
-  import->field_name = wabt_dup_string_slice(ctx->allocator, field_name);
+  import->module_name = wabt_dup_string_slice(module_name);
+  import->field_name = wabt_dup_string_slice(field_name);
 
-  WabtImportPtr* import_ptr =
-      wabt_append_import_ptr(ctx->allocator, &ctx->module->imports);
+  WabtImportPtr* import_ptr = wabt_append_import_ptr(&ctx->module->imports);
   *import_ptr = import;
   return WABT_OK;
 }
@@ -219,7 +213,7 @@ static WabtResult on_import_func(uint32_t import_index,
   import->func.decl.sig = ctx->module->func_types.data[sig_index]->sig;
 
   WabtFuncPtr func_ptr = &import->func;
-  wabt_append_func_ptr_value(ctx->allocator, &ctx->module->funcs, &func_ptr);
+  wabt_append_func_ptr_value(&ctx->module->funcs, &func_ptr);
   ctx->module->num_func_imports++;
   return WABT_OK;
 }
@@ -236,7 +230,7 @@ static WabtResult on_import_table(uint32_t import_index,
   import->table.elem_limits = *elem_limits;
 
   WabtTablePtr table_ptr = &import->table;
-  wabt_append_table_ptr_value(ctx->allocator, &ctx->module->tables, &table_ptr);
+  wabt_append_table_ptr_value(&ctx->module->tables, &table_ptr);
   ctx->module->num_table_imports++;
   return WABT_OK;
 }
@@ -252,8 +246,7 @@ static WabtResult on_import_memory(uint32_t import_index,
   import->memory.page_limits = *page_limits;
 
   WabtMemoryPtr memory_ptr = &import->memory;
-  wabt_append_memory_ptr_value(ctx->allocator, &ctx->module->memories,
-                               &memory_ptr);
+  wabt_append_memory_ptr_value(&ctx->module->memories, &memory_ptr);
   ctx->module->num_memory_imports++;
   return WABT_OK;
 }
@@ -271,8 +264,7 @@ static WabtResult on_import_global(uint32_t import_index,
   import->global.mutable_ = mutable_;
 
   WabtGlobalPtr global_ptr = &import->global;
-  wabt_append_global_ptr_value(ctx->allocator, &ctx->module->globals,
-                               &global_ptr);
+  wabt_append_global_ptr_value(&ctx->module->globals, &global_ptr);
   ctx->module->num_global_imports++;
   return WABT_OK;
 }
@@ -280,8 +272,7 @@ static WabtResult on_import_global(uint32_t import_index,
 static WabtResult on_function_signatures_count(uint32_t count,
                                                void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_func_ptrs(ctx->allocator,
-                         &ctx->module->funcs,
+  wabt_reserve_func_ptrs(&ctx->module->funcs,
                          ctx->module->num_func_imports + count);
   return WABT_OK;
 }
@@ -293,8 +284,7 @@ static WabtResult on_function_signature(uint32_t index,
   assert(index < ctx->module->funcs.capacity);
   assert(sig_index < ctx->module->func_types.size);
 
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_FUNC;
 
   WabtFunc* func = &field->func;
@@ -305,15 +295,14 @@ static WabtResult on_function_signature(uint32_t index,
   func->decl.type_var.index = sig_index;
   func->decl.sig = ctx->module->func_types.data[sig_index]->sig;
 
-  WabtFuncPtr* func_ptr =
-      wabt_append_func_ptr(ctx->allocator, &ctx->module->funcs);
+  WabtFuncPtr* func_ptr = wabt_append_func_ptr(&ctx->module->funcs);
   *func_ptr = func;
   return WABT_OK;
 }
 
 static WabtResult on_table_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_table_ptrs(ctx->allocator, &ctx->module->tables,
+  wabt_reserve_table_ptrs(&ctx->module->tables,
                           ctx->module->num_table_imports + count);
   return WABT_OK;
 }
@@ -325,23 +314,21 @@ static WabtResult on_table(uint32_t index,
   Context* ctx = user_data;
   assert(index < ctx->module->tables.capacity);
 
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_TABLE;
 
   WabtTable* table = &field->table;
   WABT_ZERO_MEMORY(*table);
   table->elem_limits = *elem_limits;
 
-  WabtTablePtr* table_ptr =
-      wabt_append_table_ptr(ctx->allocator, &ctx->module->tables);
+  WabtTablePtr* table_ptr = wabt_append_table_ptr(&ctx->module->tables);
   *table_ptr = table;
   return WABT_OK;
 }
 
 static WabtResult on_memory_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_memory_ptrs(ctx->allocator, &ctx->module->memories,
+  wabt_reserve_memory_ptrs(&ctx->module->memories,
                            ctx->module->num_memory_imports + count);
   return WABT_OK;
 }
@@ -352,23 +339,21 @@ static WabtResult on_memory(uint32_t index,
   Context* ctx = user_data;
   assert(index < ctx->module->memories.capacity);
 
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_MEMORY;
 
   WabtMemory* memory = &field->memory;
   WABT_ZERO_MEMORY(*memory);
   memory->page_limits = *page_limits;
 
-  WabtMemoryPtr* memory_ptr =
-      wabt_append_memory_ptr(ctx->allocator, &ctx->module->memories);
+  WabtMemoryPtr* memory_ptr = wabt_append_memory_ptr(&ctx->module->memories);
   *memory_ptr = memory;
   return WABT_OK;
 }
 
 static WabtResult on_global_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_global_ptrs(ctx->allocator, &ctx->module->globals,
+  wabt_reserve_global_ptrs(&ctx->module->globals,
                            ctx->module->num_global_imports + count);
   return WABT_OK;
 }
@@ -380,8 +365,7 @@ static WabtResult begin_global(uint32_t index,
   Context* ctx = user_data;
   assert(index < ctx->module->globals.capacity);
 
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_GLOBAL;
 
   WabtGlobal* global = &field->global;
@@ -389,8 +373,7 @@ static WabtResult begin_global(uint32_t index,
   global->type = type;
   global->mutable_ = mutable_;
 
-  WabtGlobalPtr* global_ptr =
-      wabt_append_global_ptr(ctx->allocator, &ctx->module->globals);
+  WabtGlobalPtr* global_ptr = wabt_append_global_ptr(&ctx->module->globals);
   *global_ptr = global;
   return WABT_OK;
 }
@@ -411,7 +394,7 @@ static WabtResult end_global_init_expr(uint32_t index, void* user_data) {
 
 static WabtResult on_export_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_export_ptrs(ctx->allocator, &ctx->module->exports, count);
+  wabt_reserve_export_ptrs(&ctx->module->exports, count);
   return WABT_OK;
 }
 
@@ -421,13 +404,12 @@ static WabtResult on_export(uint32_t index,
                             WabtStringSlice name,
                             void* user_data) {
   Context* ctx = user_data;
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_EXPORT;
 
   WabtExport* export = &field->export_;
   WABT_ZERO_MEMORY(*export);
-  export->name = wabt_dup_string_slice(ctx->allocator, name);
+  export->name = wabt_dup_string_slice(name);
   switch (kind) {
     case WABT_EXTERNAL_KIND_FUNC:
       assert(item_index < ctx->module->funcs.size);
@@ -450,16 +432,14 @@ static WabtResult on_export(uint32_t index,
   export->kind = kind;
 
   assert(index < ctx->module->exports.capacity);
-  WabtExportPtr* export_ptr =
-      wabt_append_export_ptr(ctx->allocator, &ctx->module->exports);
+  WabtExportPtr* export_ptr = wabt_append_export_ptr(&ctx->module->exports);
   *export_ptr = export;
   return WABT_OK;
 }
 
 static WabtResult on_start_function(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_START;
 
   field->start.type = WABT_VAR_TYPE_INDEX;
@@ -493,8 +473,7 @@ static WabtResult on_local_decl(uint32_t decl_index,
   Context* ctx = user_data;
   size_t old_local_count = ctx->current_func->local_types.size;
   size_t new_local_count = old_local_count + count;
-  wabt_reserve_types(ctx->allocator, &ctx->current_func->local_types,
-                     new_local_count);
+  wabt_reserve_types(&ctx->current_func->local_types, new_local_count);
   WabtTypeVector* types = &ctx->current_func->local_types;
   size_t i;
   for (i = 0; i < count; ++i)
@@ -505,7 +484,7 @@ static WabtResult on_local_decl(uint32_t decl_index,
 
 static WabtResult on_binary_expr(WabtOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_binary_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_binary_expr();
   expr->binary.opcode = opcode;
   return append_expr(ctx, expr);
 }
@@ -514,12 +493,12 @@ static WabtResult on_block_expr(uint32_t num_types,
                                 WabtType* sig_types,
                                 void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_block_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_block_expr();
   WabtTypeVector src;
   WABT_ZERO_MEMORY(src);
   src.size = num_types;
   src.data = sig_types;
-  wabt_extend_types(ctx->allocator, &expr->block.sig, &src);
+  wabt_extend_types(&expr->block.sig, &src);
   append_expr(ctx, expr);
   push_label(ctx, WABT_LABEL_TYPE_BLOCK, &expr->block.first);
   return WABT_OK;
@@ -527,7 +506,7 @@ static WabtResult on_block_expr(uint32_t num_types,
 
 static WabtResult on_br_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_br_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_br_expr();
   expr->br.var.type = WABT_VAR_TYPE_INDEX;
   expr->br.var.index = depth;
   return append_expr(ctx, expr);
@@ -535,7 +514,7 @@ static WabtResult on_br_expr(uint32_t depth, void* user_data) {
 
 static WabtResult on_br_if_expr(uint32_t depth, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_br_if_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_br_if_expr();
   expr->br_if.var.type = WABT_VAR_TYPE_INDEX;
   expr->br_if.var.index = depth;
   return append_expr(ctx, expr);
@@ -546,8 +525,8 @@ static WabtResult on_br_table_expr(WabtBinaryReaderContext* context,
                                    uint32_t* target_depths,
                                    uint32_t default_target_depth) {
   Context* ctx = context->user_data;
-  WabtExpr* expr = wabt_new_br_table_expr(ctx->allocator);
-  wabt_reserve_vars(ctx->allocator, &expr->br_table.targets, num_targets);
+  WabtExpr* expr = wabt_new_br_table_expr();
+  wabt_reserve_vars(&expr->br_table.targets, num_targets);
   expr->br_table.targets.size = num_targets;
   uint32_t i;
   for (i = 0; i < num_targets; ++i) {
@@ -563,7 +542,7 @@ static WabtResult on_br_table_expr(WabtBinaryReaderContext* context,
 static WabtResult on_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = user_data;
   assert(func_index < ctx->module->funcs.size);
-  WabtExpr* expr = wabt_new_call_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_call_expr();
   expr->call.var.type = WABT_VAR_TYPE_INDEX;
   expr->call.var.index = func_index;
   return append_expr(ctx, expr);
@@ -572,7 +551,7 @@ static WabtResult on_call_expr(uint32_t func_index, void* user_data) {
 static WabtResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = user_data;
   assert(sig_index < ctx->module->func_types.size);
-  WabtExpr* expr = wabt_new_call_indirect_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_call_indirect_expr();
   expr->call_indirect.var.type = WABT_VAR_TYPE_INDEX;
   expr->call_indirect.var.index = sig_index;
   return append_expr(ctx, expr);
@@ -580,27 +559,27 @@ static WabtResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
 
 static WabtResult on_compare_expr(WabtOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_compare_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_compare_expr();
   expr->compare.opcode = opcode;
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_convert_expr(WabtOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_convert_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_convert_expr();
   expr->convert.opcode = opcode;
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_current_memory_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_current_memory_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_current_memory_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_drop_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_drop_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_drop_expr();
   return append_expr(ctx, expr);
 }
 
@@ -630,7 +609,7 @@ static WabtResult on_end_expr(void* user_data) {
 
 static WabtResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F32;
   expr->const_.f32_bits = value_bits;
   return append_expr(ctx, expr);
@@ -638,7 +617,7 @@ static WabtResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
 
 static WabtResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F64;
   expr->const_.f64_bits = value_bits;
   return append_expr(ctx, expr);
@@ -646,7 +625,7 @@ static WabtResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
 
 static WabtResult on_get_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_get_global_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_get_global_expr();
   expr->get_global.var.type = WABT_VAR_TYPE_INDEX;
   expr->get_global.var.index = global_index;
   return append_expr(ctx, expr);
@@ -654,7 +633,7 @@ static WabtResult on_get_global_expr(uint32_t global_index, void* user_data) {
 
 static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_get_local_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_get_local_expr();
   expr->get_local.var.type = WABT_VAR_TYPE_INDEX;
   expr->get_local.var.index = local_index;
   return append_expr(ctx, expr);
@@ -662,13 +641,13 @@ static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
 
 static WabtResult on_grow_memory_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_grow_memory_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_grow_memory_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I32;
   expr->const_.u32 = value;
   return append_expr(ctx, expr);
@@ -676,7 +655,7 @@ static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
 
 static WabtResult on_i64_const_expr(uint64_t value, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I64;
   expr->const_.u64 = value;
   return append_expr(ctx, expr);
@@ -686,12 +665,12 @@ static WabtResult on_if_expr(uint32_t num_types,
                              WabtType* sig_types,
                              void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_if_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_if_expr();
   WabtTypeVector src;
   WABT_ZERO_MEMORY(src);
   src.size = num_types;
   src.data = sig_types;
-  wabt_extend_types(ctx->allocator, &expr->if_.true_.sig, &src);
+  wabt_extend_types(&expr->if_.true_.sig, &src);
   append_expr(ctx, expr);
   push_label(ctx, WABT_LABEL_TYPE_IF, &expr->if_.true_.first);
   return WABT_OK;
@@ -702,7 +681,7 @@ static WabtResult on_load_expr(WabtOpcode opcode,
                                uint32_t offset,
                                void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_load_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_load_expr();
   expr->load.opcode = opcode;
   expr->load.align = 1 << alignment_log2;
   expr->load.offset = offset;
@@ -713,12 +692,12 @@ static WabtResult on_loop_expr(uint32_t num_types,
                                WabtType* sig_types,
                                void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_loop_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_loop_expr();
   WabtTypeVector src;
   WABT_ZERO_MEMORY(src);
   src.size = num_types;
   src.data = sig_types;
-  wabt_extend_types(ctx->allocator, &expr->loop.sig, &src);
+  wabt_extend_types(&expr->loop.sig, &src);
   append_expr(ctx, expr);
   push_label(ctx, WABT_LABEL_TYPE_LOOP, &expr->loop.first);
   return WABT_OK;
@@ -726,25 +705,25 @@ static WabtResult on_loop_expr(uint32_t num_types,
 
 static WabtResult on_nop_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_nop_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_nop_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_return_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_return_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_return_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_select_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_select_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_select_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_set_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_set_global_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_set_global_expr();
   expr->set_global.var.type = WABT_VAR_TYPE_INDEX;
   expr->set_global.var.index = global_index;
   return append_expr(ctx, expr);
@@ -752,7 +731,7 @@ static WabtResult on_set_global_expr(uint32_t global_index, void* user_data) {
 
 static WabtResult on_set_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_set_local_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_set_local_expr();
   expr->set_local.var.type = WABT_VAR_TYPE_INDEX;
   expr->set_local.var.index = local_index;
   return append_expr(ctx, expr);
@@ -763,7 +742,7 @@ static WabtResult on_store_expr(WabtOpcode opcode,
                                 uint32_t offset,
                                 void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_store_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_store_expr();
   expr->store.opcode = opcode;
   expr->store.align = 1 << alignment_log2;
   expr->store.offset = offset;
@@ -772,7 +751,7 @@ static WabtResult on_store_expr(WabtOpcode opcode,
 
 static WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_tee_local_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_tee_local_expr();
   expr->tee_local.var.type = WABT_VAR_TYPE_INDEX;
   expr->tee_local.var.index = local_index;
   return append_expr(ctx, expr);
@@ -780,14 +759,14 @@ static WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
 
 static WabtResult on_unary_expr(WabtOpcode opcode, void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_unary_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_unary_expr();
   expr->unary.opcode = opcode;
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_unreachable_expr(void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_unreachable_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_unreachable_expr();
   return append_expr(ctx, expr);
 }
 
@@ -800,7 +779,7 @@ static WabtResult end_function_body(uint32_t index, void* user_data) {
 
 static WabtResult on_elem_segment_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_elem_segment_ptrs(ctx->allocator, &ctx->module->elem_segments,
+  wabt_reserve_elem_segment_ptrs(&ctx->module->elem_segments,
                                  count);
   return WABT_OK;
 }
@@ -809,8 +788,7 @@ static WabtResult begin_elem_segment(uint32_t index,
                                      uint32_t table_index,
                                      void* user_data) {
   Context* ctx = user_data;
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT;
 
   WabtElemSegment* segment = &field->elem_segment;
@@ -821,7 +799,7 @@ static WabtResult begin_elem_segment(uint32_t index,
   assert(index == ctx->module->elem_segments.size);
   assert(index < ctx->module->elem_segments.capacity);
   WabtElemSegmentPtr* segment_ptr =
-      wabt_append_elem_segment_ptr(ctx->allocator, &ctx->module->elem_segments);
+      wabt_append_elem_segment_ptr(&ctx->module->elem_segments);
   *segment_ptr = segment;
   return WABT_OK;
 }
@@ -848,7 +826,7 @@ static WabtResult on_elem_segment_function_index_count(
   Context* ctx = context->user_data;
   assert(index == ctx->module->elem_segments.size - 1);
   WabtElemSegment* segment = ctx->module->elem_segments.data[index];
-  wabt_reserve_vars(ctx->allocator, &segment->vars, count);
+  wabt_reserve_vars(&segment->vars, count);
   return WABT_OK;
 }
 
@@ -858,7 +836,7 @@ static WabtResult on_elem_segment_function_index(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->elem_segments.size - 1);
   WabtElemSegment* segment = ctx->module->elem_segments.data[index];
-  WabtVar* var = wabt_append_var(ctx->allocator, &segment->vars);
+  WabtVar* var = wabt_append_var(&segment->vars);
   var->type = WABT_VAR_TYPE_INDEX;
   var->index = func_index;
   return WABT_OK;
@@ -866,8 +844,7 @@ static WabtResult on_elem_segment_function_index(uint32_t index,
 
 static WabtResult on_data_segment_count(uint32_t count, void* user_data) {
   Context* ctx = user_data;
-  wabt_reserve_data_segment_ptrs(ctx->allocator, &ctx->module->data_segments,
-                                 count);
+  wabt_reserve_data_segment_ptrs(&ctx->module->data_segments, count);
   return WABT_OK;
 }
 
@@ -875,8 +852,7 @@ static WabtResult begin_data_segment(uint32_t index,
                                      uint32_t memory_index,
                                      void* user_data) {
   Context* ctx = user_data;
-  WabtModuleField* field =
-      wabt_append_module_field(ctx->allocator, ctx->module);
+  WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_DATA_SEGMENT;
 
   WabtDataSegment* segment = &field->data_segment;
@@ -887,7 +863,7 @@ static WabtResult begin_data_segment(uint32_t index,
   assert(index == ctx->module->data_segments.size);
   assert(index < ctx->module->data_segments.capacity);
   WabtDataSegmentPtr* segment_ptr =
-      wabt_append_data_segment_ptr(ctx->allocator, &ctx->module->data_segments);
+      wabt_append_data_segment_ptr(&ctx->module->data_segments);
   *segment_ptr = segment;
   return WABT_OK;
 }
@@ -914,7 +890,7 @@ static WabtResult on_data_segment_data(uint32_t index,
   Context* ctx = user_data;
   assert(index == ctx->module->data_segments.size - 1);
   WabtDataSegment* segment = ctx->module->data_segments.data[index];
-  segment->data = wabt_alloc(ctx->allocator, size, WABT_DEFAULT_ALIGN);
+  segment->data = wabt_alloc(size);
   segment->size = size;
   memcpy(segment->data, data, size);
   return WABT_OK;
@@ -939,8 +915,8 @@ static WabtResult on_function_name(uint32_t index,
   WabtStringSlice new_name;
   dup_name(ctx, &name, &new_name);
 
-  WabtBinding* binding = wabt_insert_binding(
-      ctx->allocator, &ctx->module->func_bindings, &new_name);
+  WabtBinding* binding =
+      wabt_insert_binding(&ctx->module->func_bindings, &new_name);
   binding->index = index;
 
   WabtFunc* func = ctx->module->funcs.data[index];
@@ -968,7 +944,7 @@ static WabtResult on_init_expr_f32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F32;
   expr->const_.f32_bits = value;
   *ctx->current_init_expr = expr;
@@ -979,7 +955,7 @@ static WabtResult on_init_expr_f64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F64;
   expr->const_.f64_bits = value;
   *ctx->current_init_expr = expr;
@@ -990,7 +966,7 @@ static WabtResult on_init_expr_get_global_expr(uint32_t index,
                                                uint32_t global_index,
                                                void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_get_global_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_get_global_expr();
   expr->get_global.var.type = WABT_VAR_TYPE_INDEX;
   expr->get_global.var.index = global_index;
   *ctx->current_init_expr = expr;
@@ -1001,7 +977,7 @@ static WabtResult on_init_expr_i32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I32;
   expr->const_.u32 = value;
   *ctx->current_init_expr = expr;
@@ -1012,7 +988,7 @@ static WabtResult on_init_expr_i64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
   Context* ctx = user_data;
-  WabtExpr* expr = wabt_new_const_expr(ctx->allocator);
+  WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I64;
   expr->const_.u64 = value;
   *ctx->current_init_expr = expr;
@@ -1041,7 +1017,7 @@ static WabtResult on_local_name(uint32_t func_index,
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  binding = wabt_insert_binding(ctx->allocator, bindings, &new_name);
+  binding = wabt_insert_binding(bindings, &new_name);
   binding->index = index;
   return WABT_OK;
 }
@@ -1142,20 +1118,18 @@ static WabtBinaryReader s_binary_reader = {
     .on_init_expr_i64_const_expr = on_init_expr_i64_const_expr,
 };
 
-static void wabt_destroy_label_node(WabtAllocator* allocator, LabelNode* node) {
+static void wabt_destroy_label_node(LabelNode* node) {
   if (*node->first)
-    wabt_destroy_expr_list(allocator, *node->first);
+    wabt_destroy_expr_list(*node->first);
 }
 
-WabtResult wabt_read_binary_ast(struct WabtAllocator* allocator,
-                                const void* data,
+WabtResult wabt_read_binary_ast(const void* data,
                                 size_t size,
                                 const WabtReadBinaryOptions* options,
                                 WabtBinaryErrorHandler* error_handler,
                                 struct WabtModule* out_module) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.error_handler = error_handler;
   ctx.module = out_module;
 
@@ -1164,10 +1138,9 @@ WabtResult wabt_read_binary_ast(struct WabtAllocator* allocator,
   reader = s_binary_reader;
   reader.user_data = &ctx;
 
-  WabtResult result =
-      wabt_read_binary(allocator, data, size, &reader, 1, options);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, ctx.label_stack, label_node);
+  WabtResult result = wabt_read_binary(data, size, &reader, 1, options);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx.label_stack, label_node);
   if (WABT_FAILED(result))
-    wabt_destroy_module(allocator, out_module);
+    wabt_destroy_module(out_module);
   return result;
 }

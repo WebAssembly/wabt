@@ -361,7 +361,6 @@ typedef struct WabtCommand {
 WABT_DEFINE_VECTOR(command, WabtCommand);
 
 typedef struct WabtScript {
-  struct WabtAllocator* allocator;
   WabtCommandVector commands;
   WabtBindingHash module_bindings;
 } WabtScript;
@@ -402,67 +401,64 @@ typedef struct WabtExprVisitor {
 } WabtExprVisitor;
 
 WABT_EXTERN_C_BEGIN
-WabtModuleField* wabt_append_module_field(struct WabtAllocator*, WabtModule*);
+WabtModuleField* wabt_append_module_field(WabtModule*);
 /* ownership of the function signature is passed to the module */
-WabtFuncType* wabt_append_implicit_func_type(struct WabtAllocator*,
-                                             WabtLocation*,
+WabtFuncType* wabt_append_implicit_func_type(WabtLocation*,
                                              WabtModule*,
                                              WabtFuncSignature*);
 
 /* WabtExpr creation functions */
-WabtExpr* wabt_new_binary_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_block_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_br_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_br_if_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_br_table_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_call_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_call_indirect_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_compare_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_const_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_convert_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_current_memory_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_drop_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_get_global_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_get_local_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_grow_memory_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_if_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_load_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_loop_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_nop_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_return_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_select_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_set_global_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_set_local_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_store_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_tee_local_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_unary_expr(struct WabtAllocator*);
-WabtExpr* wabt_new_unreachable_expr(struct WabtAllocator*);
+WabtExpr* wabt_new_binary_expr(void);
+WabtExpr* wabt_new_block_expr(void);
+WabtExpr* wabt_new_br_expr(void);
+WabtExpr* wabt_new_br_if_expr(void);
+WabtExpr* wabt_new_br_table_expr(void);
+WabtExpr* wabt_new_call_expr(void);
+WabtExpr* wabt_new_call_indirect_expr(void);
+WabtExpr* wabt_new_compare_expr(void);
+WabtExpr* wabt_new_const_expr(void);
+WabtExpr* wabt_new_convert_expr(void);
+WabtExpr* wabt_new_current_memory_expr(void);
+WabtExpr* wabt_new_drop_expr(void);
+WabtExpr* wabt_new_get_global_expr(void);
+WabtExpr* wabt_new_get_local_expr(void);
+WabtExpr* wabt_new_grow_memory_expr(void);
+WabtExpr* wabt_new_if_expr(void);
+WabtExpr* wabt_new_load_expr(void);
+WabtExpr* wabt_new_loop_expr(void);
+WabtExpr* wabt_new_nop_expr(void);
+WabtExpr* wabt_new_return_expr(void);
+WabtExpr* wabt_new_select_expr(void);
+WabtExpr* wabt_new_set_global_expr(void);
+WabtExpr* wabt_new_set_local_expr(void);
+WabtExpr* wabt_new_store_expr(void);
+WabtExpr* wabt_new_tee_local_expr(void);
+WabtExpr* wabt_new_unary_expr(void);
+WabtExpr* wabt_new_unreachable_expr(void);
 
 /* destruction functions. not needed unless you're creating your own AST
  elements */
 void wabt_destroy_script(struct WabtScript*);
-void wabt_destroy_action(struct WabtAllocator*, struct WabtAction*);
-void wabt_destroy_block(struct WabtAllocator*, struct WabtBlock*);
-void wabt_destroy_command_vector_and_elements(struct WabtAllocator*,
-                                              WabtCommandVector*);
-void wabt_destroy_command(struct WabtAllocator*, WabtCommand*);
-void wabt_destroy_data_segment(struct WabtAllocator*, WabtDataSegment*);
-void wabt_destroy_elem_segment(struct WabtAllocator*, WabtElemSegment*);
-void wabt_destroy_export(struct WabtAllocator*, WabtExport*);
-void wabt_destroy_expr(struct WabtAllocator*, WabtExpr*);
-void wabt_destroy_expr_list(struct WabtAllocator*, WabtExpr*);
-void wabt_destroy_func_declaration(struct WabtAllocator*, WabtFuncDeclaration*);
-void wabt_destroy_func_signature(struct WabtAllocator*, WabtFuncSignature*);
-void wabt_destroy_func_type(struct WabtAllocator*, WabtFuncType*);
-void wabt_destroy_func(struct WabtAllocator*, WabtFunc*);
-void wabt_destroy_import(struct WabtAllocator*, WabtImport*);
-void wabt_destroy_memory(struct WabtAllocator*, WabtMemory*);
-void wabt_destroy_module(struct WabtAllocator*, WabtModule*);
-void wabt_destroy_raw_module(struct WabtAllocator*, WabtRawModule*);
-void wabt_destroy_table(struct WabtAllocator*, WabtTable*);
-void wabt_destroy_var_vector_and_elements(struct WabtAllocator*,
-                                          WabtVarVector*);
-void wabt_destroy_var(struct WabtAllocator*, WabtVar*);
+void wabt_destroy_action(struct WabtAction*);
+void wabt_destroy_block(struct WabtBlock*);
+void wabt_destroy_command_vector_and_elements(WabtCommandVector*);
+void wabt_destroy_command(WabtCommand*);
+void wabt_destroy_data_segment(WabtDataSegment*);
+void wabt_destroy_elem_segment(WabtElemSegment*);
+void wabt_destroy_export(WabtExport*);
+void wabt_destroy_expr(WabtExpr*);
+void wabt_destroy_expr_list(WabtExpr*);
+void wabt_destroy_func_declaration(WabtFuncDeclaration*);
+void wabt_destroy_func_signature(WabtFuncSignature*);
+void wabt_destroy_func_type(WabtFuncType*);
+void wabt_destroy_func(WabtFunc*);
+void wabt_destroy_import(WabtImport*);
+void wabt_destroy_memory(WabtMemory*);
+void wabt_destroy_module(WabtModule*);
+void wabt_destroy_raw_module(WabtRawModule*);
+void wabt_destroy_table(WabtTable*);
+void wabt_destroy_var_vector_and_elements(WabtVarVector*);
+void wabt_destroy_var(WabtVar*);
 
 /* traversal functions */
 WabtResult wabt_visit_func(WabtFunc* func, WabtExprVisitor*);
@@ -503,7 +499,6 @@ WabtModule* wabt_get_module_by_var(const WabtScript* script,
                                    const WabtVar* var);
 
 void wabt_make_type_binding_reverse_mapping(
-    struct WabtAllocator*,
     const WabtTypeVector*,
     const WabtBindingHash*,
     WabtStringSliceVector* out_reverse_mapping);

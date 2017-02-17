@@ -30,7 +30,6 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
 
 typedef struct Context {
   WabtObjdumpOptions* options;
-  WabtAllocator* allocator;
   WabtStream* out_stream;
   const uint8_t* data;
   size_t size;
@@ -580,8 +579,7 @@ static WabtResult on_function_name(uint32_t index,
   print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
                 WABT_PRINTF_STRING_SLICE_ARG(name));
   if (ctx->options->mode == WABT_DUMP_PREPASS)
-    wabt_append_string_slice_value(ctx->allocator,
-                                   &ctx->options->function_names, &name);
+    wabt_append_string_slice_value(&ctx->options->function_names, &name);
   return WABT_OK;
 }
 
@@ -619,8 +617,7 @@ WabtResult on_reloc(WabtRelocType type,
     WabtReloc reloc;
     reloc.offset = offset;
     reloc.type = type;
-    wabt_append_reloc_value(ctx->allocator, &ctx->options->code_relocations,
-                            &reloc);
+    wabt_append_reloc_value(&ctx->options->code_relocations, &reloc);
   }
   return WABT_OK;
 }
@@ -726,13 +723,11 @@ static WabtBinaryReader s_binary_reader = {
     .on_init_expr_get_global_expr = on_init_expr_get_global_expr,
 };
 
-WabtResult wabt_read_binary_objdump(struct WabtAllocator* allocator,
-                                    const uint8_t* data,
+WabtResult wabt_read_binary_objdump(const uint8_t* data,
                                     size_t size,
                                     WabtObjdumpOptions* options) {
   Context context;
   WABT_ZERO_MEMORY(context);
-  context.allocator = allocator;
   context.header_printed = WABT_FALSE;
   context.print_details = WABT_FALSE;
   context.section_found = WABT_FALSE;
@@ -768,5 +763,5 @@ WabtResult wabt_read_binary_objdump(struct WabtAllocator* allocator,
 
   WabtReadBinaryOptions read_options = WABT_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = WABT_TRUE;
-  return wabt_read_binary(allocator, data, size, &reader, 1, &read_options);
+  return wabt_read_binary(data, size, &reader, 1, &read_options);
 }

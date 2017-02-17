@@ -16,7 +16,6 @@
 
 #include "wasm-link.h"
 
-#include "allocator.h"
 #include "binary-reader.h"
 #include "binding-hash.h"
 #include "binary-writer.h"
@@ -62,7 +61,6 @@ typedef struct Context {
   WabtStream stream;
   WabtLinkerInputBinaryVector inputs;
   ssize_t current_section_payload_offset;
-  WabtAllocator* allocator;
 } Context;
 
 static void on_option(struct WabtOptionParser* parser,
@@ -91,8 +89,7 @@ static void on_option(struct WabtOptionParser* parser,
 }
 
 static void on_argument(struct WabtOptionParser* parser, const char* argument) {
-  WabtAllocator* allocator = parser->user_data;
-  wabt_append_string_value(allocator, &s_infiles, &argument);
+  wabt_append_string_value(&s_infiles, &argument);
 }
 
 static void on_option_error(struct WabtOptionParser* parser,
@@ -100,7 +97,7 @@ static void on_option_error(struct WabtOptionParser* parser,
   WABT_FATAL("%s\n", message);
 }
 
-static void parse_options(WabtAllocator* allocator, int argc, char** argv) {
+static void parse_options(int argc, char** argv) {
   WabtOptionParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
@@ -109,7 +106,6 @@ static void parse_options(WabtAllocator* allocator, int argc, char** argv) {
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  parser.user_data = allocator;
   wabt_parse_options(&parser, argc, argv);
 
   if (!s_infiles.size) {
@@ -118,25 +114,24 @@ static void parse_options(WabtAllocator* allocator, int argc, char** argv) {
   }
 }
 
-void wabt_destroy_section(WabtAllocator* allocator, WabtSection* section) {
-  wabt_destroy_reloc_vector(allocator, &section->relocations);
+void wabt_destroy_section(WabtSection* section) {
+  wabt_destroy_reloc_vector(&section->relocations);
   switch (section->section_code) {
     case WABT_BINARY_SECTION_DATA:
-      wabt_destroy_data_segment_vector(allocator, &section->data_segments);
+      wabt_destroy_data_segment_vector(&section->data_segments);
       break;
     default:
       break;
   }
 }
 
-void wabt_destroy_binary(WabtAllocator* allocator,
-                         WabtLinkerInputBinary* binary) {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, binary->sections, section);
-  wabt_destroy_function_import_vector(allocator, &binary->function_imports);
-  wabt_destroy_global_import_vector(allocator, &binary->global_imports);
-  wabt_destroy_string_slice_vector(allocator, &binary->debug_names);
-  wabt_destroy_export_vector(allocator, &binary->exports);
-  wabt_free(allocator, binary->data);
+void wabt_destroy_binary(WabtLinkerInputBinary* binary) {
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(binary->sections, section);
+  wabt_destroy_function_import_vector(&binary->function_imports);
+  wabt_destroy_global_import_vector(&binary->global_imports);
+  wabt_destroy_string_slice_vector(&binary->debug_names);
+  wabt_destroy_export_vector(&binary->exports);
+  wabt_free(binary->data);
 }
 
 static uint32_t relocate_func_index(WabtLinkerInputBinary* binary,
@@ -631,15 +626,13 @@ static void resolve_symbols(Context* ctx) {
     WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->exports.size; j++) {
       WabtExport* export = &binary->exports.data[j];
-      ExportInfo* info = wabt_append_export_info(ctx->allocator, &export_list);
+      ExportInfo* info = wabt_append_export_info(&export_list);
       info->export = export;
       info->binary = binary;
 
       /* TODO(sbc): Handle duplicate names */
-      WabtStringSlice name =
-          wabt_dup_string_slice(ctx->allocator, export->name);
-      WabtBinding* binding =
-          wabt_insert_binding(ctx->allocator, &export_map, &name);
+      WabtStringSlice name = wabt_dup_string_slice(export->name);
+      WabtBinding* binding = wabt_insert_binding(&export_map, &name);
       binding->index = export_list.size - 1;
     }
   }
@@ -672,8 +665,8 @@ static void resolve_symbols(Context* ctx) {
     }
   }
 
-  wabt_destroy_export_info_vector(ctx->allocator, &export_list);
-  wabt_destroy_binding_hash(ctx->allocator, &export_map);
+  wabt_destroy_export_info_vector(&export_list);
+  wabt_destroy_binding_hash(&export_map);
 }
 
 static void calculate_reloc_offsets(Context* ctx) {
@@ -739,7 +732,7 @@ static void write_binary(Context* ctx) {
     for (i = 0; i < binary->sections.size; i++) {
       WabtSection* s = &binary->sections.data[i];
       WabtSectionPtrVector* sec_list = &sections[s->section_code];
-      wabt_append_section_ptr_value(ctx->allocator, sec_list, &s);
+      wabt_append_section_ptr_value(sec_list, &s);
     }
   }
 
@@ -760,7 +753,7 @@ static void write_binary(Context* ctx) {
   }
 
   for (i = 0; i < WABT_NUM_BINARY_SECTIONS; i++) {
-    wabt_destroy_section_ptr_vector(ctx->allocator, &sections[i]);
+    wabt_destroy_section_ptr_vector(&sections[i]);
   }
 }
 
@@ -789,7 +782,7 @@ static void dump_reloc_offsets(Context* ctx) {
 static WabtResult perform_link(Context* ctx) {
   WabtMemoryWriter writer;
   WABT_ZERO_MEMORY(writer);
-  if (WABT_FAILED(wabt_init_mem_writer(ctx->allocator, &writer)))
+  if (WABT_FAILED(wabt_init_mem_writer(&writer)))
     WABT_FATAL("unable to open memory writer for writing\n");
 
   WabtStream* log_stream = NULL;
@@ -818,9 +811,8 @@ int main(int argc, char** argv) {
 
   Context context;
   WABT_ZERO_MEMORY(context);
-  context.allocator = &g_wabt_libc_allocator;
 
-  parse_options(context.allocator, argc, argv);
+  parse_options(argc, argv);
 
   WabtResult result = WABT_OK;
   size_t i;
@@ -830,15 +822,14 @@ int main(int argc, char** argv) {
       wabt_writef(&s_log_stream, "reading file: %s\n", input_filename);
     void* data;
     size_t size;
-    result = wabt_read_file(context.allocator, input_filename, &data, &size);
+    result = wabt_read_file(input_filename, &data, &size);
     if (WABT_FAILED(result))
       return result;
-    WabtLinkerInputBinary* b =
-        wabt_append_binary(context.allocator, &context.inputs);
+    WabtLinkerInputBinary* b = wabt_append_binary(&context.inputs);
     b->data = data;
     b->size = size;
     b->filename = input_filename;
-    result = wabt_read_binary_linker(context.allocator, b);
+    result = wabt_read_binary_linker(b);
     if (WABT_FAILED(result))
       WABT_FATAL("error parsing file: %s\n", input_filename);
   }
@@ -848,10 +839,7 @@ int main(int argc, char** argv) {
     return result;
 
   /* Cleanup */
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(context.allocator, context.inputs, binary);
-  wabt_destroy_string_vector(context.allocator, &s_infiles);
-
-  wabt_print_allocator_stats(context.allocator);
-  wabt_destroy_allocator(context.allocator);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(context.inputs, binary);
+  wabt_destroy_string_vector(&s_infiles);
   return result;
 }

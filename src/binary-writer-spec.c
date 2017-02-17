@@ -27,7 +27,6 @@
 #include "writer.h"
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtMemoryWriter json_writer;
   WabtStream json_stream;
   WabtStringSlice source_filename;
@@ -97,7 +96,7 @@ static WabtStringSlice get_basename(const char* s) {
 
 static char* get_module_filename(Context* ctx) {
   size_t buflen = ctx->module_filename_noext.length + 20;
-  char* str = wabt_alloc(ctx->allocator, buflen, WABT_DEFAULT_ALIGN);
+  char* str = wabt_alloc(buflen);
   size_t length =
       wabt_snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
                     WABT_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
@@ -295,11 +294,10 @@ static void write_module(Context* ctx,
                          char* filename,
                          const WabtModule* module) {
   WabtMemoryWriter writer;
-  WabtResult result = wabt_init_mem_writer(ctx->allocator, &writer);
+  WabtResult result = wabt_init_mem_writer(&writer);
   if (WABT_SUCCEEDED(result)) {
     WabtWriteBinaryOptions options = ctx->spec_options->write_binary_options;
-    result = wabt_write_binary_module(ctx->allocator, &writer.base, module,
-                                      &options);
+    result = wabt_write_binary_module(&writer.base, module, &options);
     if (WABT_SUCCEEDED(result) && ctx->write_modules)
       result = wabt_write_output_buffer_to_file(&writer.buf, filename);
     wabt_close_mem_writer(&writer);
@@ -338,7 +336,7 @@ static void write_invalid_module(Context* ctx,
   write_key(ctx, "text");
   write_escaped_string_slice(ctx, text);
   write_raw_module(ctx, filename, module);
-  wabt_free(ctx->allocator, filename);
+  wabt_free(filename);
 }
 
 static void write_commands(Context* ctx, WabtScript* script) {
@@ -375,7 +373,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_key(ctx, "filename");
         write_escaped_string_slice(ctx, get_basename(filename));
         write_module(ctx, filename, module);
-        wabt_free(ctx->allocator, filename);
+        wabt_free(filename);
         ctx->num_modules++;
         last_module_index = (int)i;
         break;
@@ -474,14 +472,12 @@ static void write_commands(Context* ctx, WabtScript* script) {
 }
 
 WabtResult wabt_write_binary_spec_script(
-    WabtAllocator* allocator,
     WabtScript* script,
     const char* source_filename,
     const WabtWriteBinarySpecOptions* spec_options) {
   assert(source_filename);
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.spec_options = spec_options;
   ctx.result = WABT_OK;
   ctx.source_filename.start = source_filename;
@@ -491,7 +487,7 @@ WabtResult wabt_write_binary_spec_script(
                                       : source_filename);
   ctx.write_modules = ctx.spec_options->json_filename != NULL;
 
-  WabtResult result = wabt_init_mem_writer(ctx.allocator, &ctx.json_writer);
+  WabtResult result = wabt_init_mem_writer(&ctx.json_writer);
   if (WABT_SUCCEEDED(result)) {
     wabt_init_stream(&ctx.json_stream, &ctx.json_writer.base, NULL);
     write_commands(&ctx, script);

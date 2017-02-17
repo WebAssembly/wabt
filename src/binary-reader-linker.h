@@ -20,13 +20,11 @@
 #include "common.h"
 #include "stream.h"
 
-struct WabtAllocator;
 struct WabtLinkerInputBinary;
 
 WABT_EXTERN_C_BEGIN
 
-WabtResult wabt_read_binary_linker(struct WabtAllocator* allocator,
-                                   struct WabtLinkerInputBinary* input_info);
+WabtResult wabt_read_binary_linker(struct WabtLinkerInputBinary* input_info);
 
 WABT_EXTERN_C_END
 

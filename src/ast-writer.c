@@ -31,9 +31,6 @@
 #define NO_FORCE_NEWLINE 0
 #define FORCE_NEWLINE 1
 
-#define ALLOC_FAILURE \
-  fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
-
 static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -55,7 +52,6 @@ typedef enum NextChar {
 } NextChar;
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtStream stream;
   WabtResult result;
   int indent;
@@ -526,8 +522,7 @@ static void write_type_bindings(Context* ctx,
                                 const WabtFunc* func,
                                 const WabtTypeVector* types,
                                 const WabtBindingHash* bindings) {
-  wabt_make_type_binding_reverse_mapping(ctx->allocator, types, bindings,
-                                         &ctx->index_to_name);
+  wabt_make_type_binding_reverse_mapping(types, bindings, &ctx->index_to_name);
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -748,17 +743,14 @@ static void write_module(Context* ctx, const WabtModule* module) {
   write_next_char(ctx);
 }
 
-WabtResult wabt_write_ast(WabtAllocator* allocator,
-                          WabtWriter* writer,
-                          const WabtModule* module) {
+WabtResult wabt_write_ast(WabtWriter* writer, const WabtModule* module) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.result = WABT_OK;
   wabt_init_stream(&ctx.stream, writer, NULL);
   write_module(&ctx, module);
   /* the memory for the actual string slice is shared with the module, so we
    * only need to free the vector */
-  wabt_destroy_string_slice_vector(allocator, &ctx.index_to_name);
+  wabt_destroy_string_slice_vector(&ctx.index_to_name);
   return ctx.result;
 }

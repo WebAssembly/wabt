@@ -40,7 +40,6 @@ WABT_DEFINE_VECTOR(type_checker_label, WabtTypeCheckerLabel);
 
 typedef struct WabtTypeChecker {
   WabtTypeCheckerErrorHandler* error_handler;
-  WabtAllocator* allocator;
   WabtTypeVector type_stack;
   WabtTypeCheckerLabelVector label_stack;
 } WabtTypeChecker;
