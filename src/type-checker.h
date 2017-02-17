@@ -34,7 +34,7 @@ typedef struct WabtTypeCheckerLabel {
   WabtLabelType label_type;
   WabtTypeVector sig;
   size_t type_stack_limit;
-  WabtBool unreachable;
+  bool unreachable;
 } WabtTypeCheckerLabel;
 WABT_DEFINE_VECTOR(type_checker_label, WabtTypeCheckerLabel);
 
@@ -51,7 +51,7 @@ WABT_EXTERN_C_BEGIN
 
 void wabt_destroy_typechecker(WabtTypeChecker*);
 
-WabtBool wabt_typechecker_is_unreachable(WabtTypeChecker* tc);
+bool wabt_typechecker_is_unreachable(WabtTypeChecker* tc);
 WabtResult wabt_typechecker_get_label(WabtTypeChecker* tc,
                                       size_t depth,
                                       WabtTypeCheckerLabel** out_label);

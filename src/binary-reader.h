@@ -24,11 +24,11 @@
 #include "common.h"
 
 #define WABT_READ_BINARY_OPTIONS_DEFAULT \
-  { NULL, WABT_FALSE }
+  { NULL, false }
 
 typedef struct WabtReadBinaryOptions {
   struct WabtStream* log_stream;
-  WabtBool read_debug_names;
+  bool read_debug_names;
 } WabtReadBinaryOptions;
 
 typedef struct WabtBinaryReaderContext {
@@ -94,7 +94,7 @@ typedef struct WabtBinaryReader {
   WabtResult (*on_import_global)(uint32_t import_index,
                                  uint32_t global_index,
                                  WabtType type,
-                                 WabtBool mutable_,
+                                 bool mutable_,
                                  void* user_data);
   WabtResult (*end_import_section)(WabtBinaryReaderContext* ctx);
 
@@ -133,7 +133,7 @@ typedef struct WabtBinaryReader {
   WabtResult (*on_global_count)(uint32_t count, void* user_data);
   WabtResult (*begin_global)(uint32_t index,
                              WabtType type,
-                             WabtBool mutable_,
+                             bool mutable_,
                              void* user_data);
   WabtResult (*begin_global_init_expr)(uint32_t index, void* user_data);
   WabtResult (*end_global_init_expr)(uint32_t index, void* user_data);

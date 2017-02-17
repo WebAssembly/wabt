@@ -127,7 +127,7 @@ WABT_DEFINE_VECTOR(interpreter_typed_value, WabtInterpreterTypedValue);
 
 typedef struct WabtInterpreterGlobal {
   WabtInterpreterTypedValue typed_value;
-  WabtBool mutable_;
+  bool mutable_;
   uint32_t import_index; /* or INVALID_INDEX if not imported */
 } WabtInterpreterGlobal;
 WABT_DEFINE_VECTOR(interpreter_global, WabtInterpreterGlobal);
@@ -145,7 +145,7 @@ typedef struct WabtInterpreterImport {
     } table, memory;
     struct {
       WabtType type;
-      WabtBool mutable_;
+      bool mutable_;
     } global;
   };
 } WabtInterpreterImport;
@@ -164,7 +164,7 @@ typedef WabtResult (*WabtInterpreterHostFuncCallback)(
 
 typedef struct WabtInterpreterFunc {
   uint32_t sig_index;
-  WabtBool is_host;
+  bool is_host;
   union {
     struct {
       uint32_t offset;
@@ -221,7 +221,7 @@ typedef struct WabtInterpreterModule {
   WabtBindingHash export_bindings;
   uint32_t memory_index; /* INVALID_INDEX if not defined */
   uint32_t table_index;  /* INVALID_INDEX if not defined */
-  WabtBool is_host;
+  bool is_host;
   union {
     struct {
       WabtInterpreterImportArray imports;
@@ -283,11 +283,11 @@ typedef struct WabtInterpreterThreadOptions {
 } WabtInterpreterThreadOptions;
 
 WABT_EXTERN_C_BEGIN
-WabtBool wabt_is_nan_f32(uint32_t f32_bits);
-WabtBool wabt_is_nan_f64(uint64_t f64_bits);
-WabtBool wabt_func_signatures_are_equal(WabtInterpreterEnvironment* env,
-                                        uint32_t sig_index_0,
-                                        uint32_t sig_index_1);
+bool wabt_is_nan_f32(uint32_t f32_bits);
+bool wabt_is_nan_f64(uint64_t f64_bits);
+bool wabt_func_signatures_are_equal(WabtInterpreterEnvironment* env,
+                                    uint32_t sig_index_0,
+                                    uint32_t sig_index_1);
 
 void wabt_init_interpreter_environment(WabtInterpreterEnvironment* env);
 void wabt_destroy_interpreter_environment(WabtInterpreterEnvironment* env);

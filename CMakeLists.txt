@@ -92,6 +92,12 @@ else ()
     -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g
   )
 
+  if (MINGW)
+    # Mingw won't define format (e.g. PRIu64) or limit (e.g. UINT32_MAX) macros
+    # in C++ without these.
+    add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1)
+  endif ()
+
   if (COMPILER_IS_GNU)
     # disable -Wclobbered: it seems to be guessing incorrectly about a local
     # variable being clobbered by longjmp.
@@ -163,14 +169,14 @@ SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover")
 
 find_package(BISON 3.0)
 if (RUN_BISON AND BISON_FOUND)
-  set(AST_PARSER_GEN_C ${WABT_BINARY_DIR}/ast-parser-gen.c)
+  set(AST_PARSER_GEN_C ${WABT_BINARY_DIR}/ast-parser-gen.cc)
   BISON_TARGET(AST_PARSER_GEN_C
     ${WABT_SOURCE_DIR}/src/ast-parser.y
     ${AST_PARSER_GEN_C}
     COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/ast-parser-gen.h
   )
 else ()
-  set(AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.c)
+  set(AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.cc)
   include_directories(src/prebuilt)
 endif ()
 
@@ -187,8 +193,8 @@ endif ()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 find_package(RE2C 0.13)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
-  set(AST_LEXER_C ${WABT_SOURCE_DIR}/src/ast-lexer.c)
-  set(AST_LEXER_GEN_C ${WABT_BINARY_DIR}/ast-lexer-gen.c)
+  set(AST_LEXER_C ${WABT_SOURCE_DIR}/src/ast-lexer.cc)
+  set(AST_LEXER_GEN_C ${WABT_BINARY_DIR}/ast-lexer-gen.cc)
   RE2C_TARGET(
     NAME AST_LEXER_GEN_C
     INPUT ${AST_LEXER_C}
@@ -196,39 +202,39 @@ if (RUN_RE2C AND RE2C_EXECUTABLE)
     OPTIONS -bc
   )
 else ()
-  set(AST_LEXER_GEN_C src/prebuilt/ast-lexer-gen.c)
+  set(AST_LEXER_GEN_C src/prebuilt/ast-lexer-gen.cc)
 endif ()
 
 add_custom_target(everything)
 
 add_library(libwabt STATIC
-  src/ast.c
-  src/ast-parser-lexer-shared.c
+  src/ast.cc
+  src/ast-parser-lexer-shared.cc
   ${AST_LEXER_GEN_C}
   ${AST_PARSER_GEN_C}
-  src/type-checker.c
-  src/validator.c
+  src/type-checker.cc
+  src/validator.cc
 
-  src/binary-reader.c
-  src/binary-writer.c
-  src/binary-writer-spec.c
-  src/binary-reader-ast.c
-  src/binding-hash.c
-  src/ast-writer.c
-  src/interpreter.c
-  src/binary-reader-interpreter.c
-  src/apply-names.c
-  src/generate-names.c
-  src/resolve-names.c
+  src/binary-reader.cc
+  src/binary-writer.cc
+  src/binary-writer-spec.cc
+  src/binary-reader-ast.cc
+  src/binding-hash.cc
+  src/ast-writer.cc
+  src/interpreter.cc
+  src/binary-reader-interpreter.cc
+  src/apply-names.cc
+  src/generate-names.cc
+  src/resolve-names.cc
 
-  src/binary.c
-  src/common.c
-  src/config.c
-  src/literal.c
-  src/option-parser.c
-  src/stream.c
-  src/vector.c
-  src/writer.c
+  src/binary.cc
+  src/common.cc
+  src/config.cc
+  src/literal.cc
+  src/option-parser.cc
+  src/stream.cc
+  src/vector.cc
+  src/writer.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
 
@@ -239,33 +245,33 @@ if (NOT EMSCRIPTEN)
   endif ()
 
   # wast2wasm
-  add_executable(wast2wasm src/tools/wast2wasm.c)
+  add_executable(wast2wasm src/tools/wast2wasm.cc)
   add_dependencies(everything wast2wasm)
   target_link_libraries(wast2wasm libwabt)
 
   # wasm2wast
-  add_executable(wasm2wast src/tools/wasm2wast.c)
+  add_executable(wasm2wast src/tools/wasm2wast.cc)
   add_dependencies(everything wasm2wast)
   target_link_libraries(wasm2wast libwabt)
 
   # wasmopcodecnt
-  add_executable(wasmopcodecnt src/tools/wasmopcodecnt.c
-    src/binary-reader-opcnt.c)
+  add_executable(wasmopcodecnt src/tools/wasmopcodecnt.cc
+    src/binary-reader-opcnt.cc)
   add_dependencies(everything wasmopcodecnt)
   target_link_libraries(wasmopcodecnt libwabt)
 
   # wasmdump
-  add_executable(wasmdump src/tools/wasmdump.c src/binary-reader-objdump.c)
+  add_executable(wasmdump src/tools/wasmdump.cc src/binary-reader-objdump.cc)
   add_dependencies(everything wasmdump)
   target_link_libraries(wasmdump libwabt)
 
   # wasm-link
-  add_executable(wasm-link src/tools/wasm-link.c src/binary-reader-linker.c)
+  add_executable(wasm-link src/tools/wasm-link.cc src/binary-reader-linker.cc)
   add_dependencies(everything wasm-link)
   target_link_libraries(wasm-link libwabt)
 
   # wasm-interp
-  add_executable(wasm-interp src/tools/wasm-interp.c)
+  add_executable(wasm-interp src/tools/wasm-interp.cc)
   add_dependencies(everything wasm-interp)
   target_link_libraries(wasm-interp libwabt)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
@@ -273,7 +279,7 @@ if (NOT EMSCRIPTEN)
   endif ()
 
   # wast-desugar
-  add_executable(wast-desugar src/tools/wast-desugar.c)
+  add_executable(wast-desugar src/tools/wast-desugar.cc)
   add_dependencies(everything wast-desugar)
   target_link_libraries(wast-desugar libwabt)
 
@@ -302,7 +308,7 @@ if (NOT EMSCRIPTEN)
     endif ()
 
     set(HEXFLOAT_TEST_SRCS
-      src/literal.c
+      src/literal.cc
       test/hexfloat.cc
       third_party/gtest/googletest/src/gtest-all.cc
       third_party/gtest/googletest/src/gtest_main.cc
@@ -333,6 +339,7 @@ if (NOT EMSCRIPTEN)
   # install
   install(
     TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt wasmdump wast-desugar
+        wasm-link
     DESTINATION bin
   )
 
@@ -341,7 +348,7 @@ else ()
 
   # just dump everything into one binary so we can reference it from JavaScript
   add_definitions(-Wno-warn-absolute-paths)
-  add_executable(libwabtjs src/emscripten-helpers.c)
+  add_executable(libwabtjs src/emscripten-helpers.cc)
   add_dependencies(everything libwabtjs)
   target_link_libraries(libwabtjs libwabt)
   set_target_properties(libwabtjs PROPERTIES OUTPUT_NAME libwabt)
