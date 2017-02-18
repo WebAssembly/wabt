@@ -28,7 +28,6 @@
 #include "common.h"
 #include "option-parser.h"
 #include "resolve-names.h"
-#include "stack-allocator.h"
 #include "stream.h"
 #include "validator.h"
 #include "writer.h"
@@ -44,7 +43,6 @@ static WabtWriteBinaryOptions s_write_binary_options =
 static WabtWriteBinarySpecOptions s_write_binary_spec_options =
     WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static WabtBool s_spec;
-static WabtBool s_use_libc_allocator;
 static WabtBool s_validate = WABT_TRUE;
 
 static WabtSourceErrorHandler s_error_handler =
@@ -62,7 +60,6 @@ enum {
   FLAG_OUTPUT,
   FLAG_RELOCATABLE,
   FLAG_SPEC,
-  FLAG_USE_LIBC_ALLOCATOR,
   FLAG_NO_CANONICALIZE_LEB128S,
   FLAG_DEBUG_NAMES,
   FLAG_NO_CHECK,
@@ -100,8 +97,6 @@ static WabtOption s_options[] = {
     {FLAG_SPEC, 0, "spec", NULL, NOPE,
      "parse a file with multiple modules and assertions, like the spec "
      "tests"},
-    {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
-     "use malloc, free, etc. instead of stack allocator"},
     {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", NULL, NOPE,
      "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
     {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
@@ -139,10 +134,6 @@ static void on_option(struct WabtOptionParser* parser,
 
     case FLAG_SPEC:
       s_spec = WABT_TRUE;
-      break;
-
-    case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = WABT_TRUE;
       break;
 
     case FLAG_NO_CANONICALIZE_LEB128S:
@@ -199,22 +190,12 @@ static void write_buffer_to_file(const char* filename,
 }
 
 int main(int argc, char** argv) {
-  WabtStackAllocator stack_allocator;
-  WabtAllocator* allocator;
-
   wabt_init_stdio();
 
   wabt_init_file_stream_from_existing(&s_log_stream, stdout);
   parse_options(argc, argv);
 
-  if (s_use_libc_allocator) {
-    allocator = &g_wabt_libc_allocator;
-  } else {
-    wabt_init_stack_allocator(&stack_allocator, &g_wabt_libc_allocator);
-    allocator = &stack_allocator.allocator;
-  }
-
-  WabtAstLexer* lexer = wabt_new_ast_file_lexer(allocator, s_infile);
+  WabtAstLexer* lexer = wabt_new_ast_file_lexer(s_infile);
   if (!lexer)
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
@@ -222,30 +203,27 @@ int main(int argc, char** argv) {
   WabtResult result = wabt_parse_ast(lexer, &script, &s_error_handler);
 
   if (WABT_SUCCEEDED(result)) {
-    result =
-        wabt_resolve_names_script(allocator, lexer, &script, &s_error_handler);
+    result = wabt_resolve_names_script(lexer, &script, &s_error_handler);
 
-    if (WABT_SUCCEEDED(result) && s_validate) {
-      result =
-          wabt_validate_script(allocator, lexer, &script, &s_error_handler);
-    }
+    if (WABT_SUCCEEDED(result) && s_validate)
+      result = wabt_validate_script(lexer, &script, &s_error_handler);
 
     if (WABT_SUCCEEDED(result)) {
       if (s_spec) {
         s_write_binary_spec_options.json_filename = s_outfile;
         s_write_binary_spec_options.write_binary_options =
             s_write_binary_options;
-        result = wabt_write_binary_spec_script(allocator, &script, s_infile,
+        result = wabt_write_binary_spec_script(&script, s_infile,
                                                &s_write_binary_spec_options);
       } else {
         WabtMemoryWriter writer;
         WABT_ZERO_MEMORY(writer);
-        if (WABT_FAILED(wabt_init_mem_writer(allocator, &writer)))
+        if (WABT_FAILED(wabt_init_mem_writer(&writer)))
           WABT_FATAL("unable to open memory writer for writing\n");
 
         WabtModule* module = wabt_get_first_module(&script);
         if (module) {
-          result = wabt_write_binary_module(allocator, &writer.base, module,
+          result = wabt_write_binary_module(&writer.base, module,
                                             &s_write_binary_options);
         } else {
           WABT_FATAL("no module found\n");
@@ -259,10 +237,6 @@ int main(int argc, char** argv) {
   }
 
   wabt_destroy_ast_lexer(lexer);
-
-  if (s_use_libc_allocator)
-    wabt_destroy_script(&script);
-  wabt_print_allocator_stats(allocator);
-  wabt_destroy_allocator(allocator);
+  wabt_destroy_script(&script);
   return result;
 }

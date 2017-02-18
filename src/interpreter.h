@@ -105,7 +105,6 @@ typedef struct WabtInterpreterTable {
 WABT_DEFINE_VECTOR(interpreter_table, WabtInterpreterTable);
 
 typedef struct WabtInterpreterMemory {
-  WabtAllocator* allocator;
   void* data;
   WabtLimits page_limits;
   uint32_t byte_size; /* Cached from page_limits. */
@@ -261,7 +260,6 @@ typedef struct WabtInterpreterEnvironment {
 } WabtInterpreterEnvironment;
 
 typedef struct WabtInterpreterThread {
-  WabtAllocator* allocator;
   WabtInterpreterEnvironment* env;
   WabtInterpreterValueArray value_stack;
   WabtUint32Array call_stack;
@@ -291,27 +289,21 @@ WabtBool wabt_func_signatures_are_equal(WabtInterpreterEnvironment* env,
                                         uint32_t sig_index_0,
                                         uint32_t sig_index_1);
 
-void wabt_init_interpreter_environment(WabtAllocator* allocator,
-                                       WabtInterpreterEnvironment* env);
-void wabt_destroy_interpreter_environment(WabtAllocator* allocator,
-                                          WabtInterpreterEnvironment* env);
+void wabt_init_interpreter_environment(WabtInterpreterEnvironment* env);
+void wabt_destroy_interpreter_environment(WabtInterpreterEnvironment* env);
 WabtInterpreterEnvironmentMark wabt_mark_interpreter_environment(
     WabtInterpreterEnvironment* env);
 void wabt_reset_interpreter_environment_to_mark(
-    WabtAllocator* allocator,
     WabtInterpreterEnvironment* env,
     WabtInterpreterEnvironmentMark mark);
-WabtInterpreterModule* wabt_append_host_module(WabtAllocator* allocator,
-                                               WabtInterpreterEnvironment* env,
+WabtInterpreterModule* wabt_append_host_module(WabtInterpreterEnvironment* env,
                                                WabtStringSlice name);
-void wabt_init_interpreter_thread(WabtAllocator* allocator,
-                                  WabtInterpreterEnvironment* env,
+void wabt_init_interpreter_thread(WabtInterpreterEnvironment* env,
                                   WabtInterpreterThread* thread,
                                   WabtInterpreterThreadOptions* options);
 WabtInterpreterResult wabt_push_thread_value(WabtInterpreterThread* thread,
                                              WabtInterpreterValue value);
-void wabt_destroy_interpreter_thread(WabtAllocator* allocator,
-                                     WabtInterpreterThread* thread);
+void wabt_destroy_interpreter_thread(WabtInterpreterThread* thread);
 WabtInterpreterResult wabt_call_host(WabtInterpreterThread* thread,
                                      WabtInterpreterFunc* func);
 WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,

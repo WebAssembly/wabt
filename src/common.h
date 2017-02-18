@@ -22,6 +22,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 
@@ -65,8 +67,6 @@
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
   }                                                                        \
   va_end(args_copy)
-
-struct WabtAllocator;
 
 typedef enum WabtBool {
   WABT_FALSE,
@@ -403,6 +403,46 @@ typedef struct WabtLiteral {
 } WabtLiteral;
 
 WABT_EXTERN_C_BEGIN
+static WABT_INLINE void* wabt_alloc(size_t size) {
+  return malloc(size);
+}
+
+static WABT_INLINE void* wabt_alloc_zero(size_t size) {
+  return calloc(size, 1);
+}
+
+static WABT_INLINE void* wabt_realloc(void* p, size_t size) {
+  /* Realloc normally frees if size is 0, but we don't want that behavior. */
+  if (size == 0)
+    return p;
+  return realloc(p, size);
+}
+
+static WABT_INLINE void wabt_free(void* p) {
+  free(p);
+}
+
+static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
+  size_t real_len = 0;
+  const char* p = s;
+  while (real_len < len && *p) {
+    p++;
+    real_len++;
+  }
+
+  char* new_s = (char*)wabt_alloc(real_len + 1);
+  memcpy(new_s, s, real_len);
+  new_s[real_len] = 0;
+  return new_s;
+}
+
+static WABT_INLINE WabtStringSlice wabt_dup_string_slice(WabtStringSlice str) {
+  WabtStringSlice result;
+  result.start = wabt_strndup(str.start, str.length);
+  result.length = str.length;
+  return result;
+}
+
 /* return 1 if |alignment| matches the alignment of |opcode|, or if |alignment|
  * is WABT_USE_NATURAL_ALIGNMENT */
 WabtBool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment);
@@ -413,14 +453,14 @@ uint32_t wabt_get_opcode_alignment(WabtOpcode opcode, uint32_t alignment);
 
 WabtStringSlice wabt_empty_string_slice(void);
 WabtBool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2);
-WabtBool wabt_string_slice_startswith(const WabtStringSlice* s1, const char* s2);
+WabtBool wabt_string_slice_startswith(const WabtStringSlice* s1,
+                                      const char* s2);
 WabtStringSlice wabt_string_slice_from_cstr(const char* string);
 WabtBool wabt_string_slice_is_empty(const WabtStringSlice*);
 WabtBool wabt_string_slices_are_equal(const WabtStringSlice*,
                                       const WabtStringSlice*);
-void wabt_destroy_string_slice(struct WabtAllocator*, WabtStringSlice*);
-WabtResult wabt_read_file(struct WabtAllocator* allocator,
-                          const char* filename,
+void wabt_destroy_string_slice(WabtStringSlice*);
+WabtResult wabt_read_file(const char* filename,
                           void** out_data,
                           size_t* out_size);
 

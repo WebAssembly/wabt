@@ -19,15 +19,12 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtInterpreterEnvironment;
 struct WabtInterpreterModule;
 struct WabtReadBinaryOptions;
 
 WABT_EXTERN_C_BEGIN
 WabtResult wabt_read_binary_interpreter(
-    struct WabtAllocator* allocator,
-    struct WabtAllocator* memory_allocator,
     struct WabtInterpreterEnvironment* env,
     const void* data,
     size_t size,

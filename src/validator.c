@@ -23,7 +23,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "allocator.h"
 #include "ast-parser-lexer-shared.h"
 #include "binary-reader-ast.h"
 #include "binary-reader.h"
@@ -45,7 +44,6 @@ typedef struct ActionResult {
 
 typedef struct Context {
   WabtSourceErrorHandler* error_handler;
-  WabtAllocator* allocator;
   WabtAstLexer* lexer;
   const WabtScript* script;
   const WabtModule* current_module;
@@ -1031,13 +1029,11 @@ static void wabt_destroy_context(Context* ctx) {
   wabt_destroy_typechecker(&ctx->typechecker);
 }
 
-WabtResult wabt_validate_script(WabtAllocator* allocator,
-                                WabtAstLexer* lexer,
+WabtResult wabt_validate_script(WabtAstLexer* lexer,
                                 const struct WabtScript* script,
                                 WabtSourceErrorHandler* error_handler) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
   ctx.result = WABT_OK;
@@ -1046,7 +1042,6 @@ WabtResult wabt_validate_script(WabtAllocator* allocator,
   WabtTypeCheckerErrorHandler tc_error_handler;
   tc_error_handler.on_error = on_typechecker_error;
   tc_error_handler.user_data = &ctx;
-  ctx.typechecker.allocator = allocator;
   ctx.typechecker.error_handler = &tc_error_handler;
 
   size_t i;

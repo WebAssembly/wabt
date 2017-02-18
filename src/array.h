@@ -19,40 +19,35 @@
 
 #include <stddef.h>
 
-#include "allocator.h"
 #include "common.h"
 
-#define WABT_DEFINE_ARRAY(name, type)                                        \
-  typedef struct type##Array {                                               \
-    type* data;                                                              \
-    size_t size;                                                             \
-  } type##Array;                                                             \
-                                                                             \
-  WABT_EXTERN_C_BEGIN                                                        \
-  static WABT_INLINE void wabt_destroy_##name##_array(                       \
-      struct WabtAllocator* allocator, type##Array* array) WABT_UNUSED;      \
-  static WABT_INLINE void wabt_new_##name##_array(                           \
-      struct WabtAllocator* allocator, type##Array* array, size_t size)      \
-      WABT_UNUSED;                                                           \
-  WABT_EXTERN_C_END                                                          \
-                                                                             \
-  void wabt_destroy_##name##_array(struct WabtAllocator* allocator,          \
-                                   type##Array* array) {                     \
-    wabt_free(allocator, array->data);                                       \
-  }                                                                          \
-  void wabt_new_##name##_array(struct WabtAllocator* allocator,              \
-                               type##Array* array, size_t size) {            \
-    array->size = size;                                                      \
-    array->data =                                                            \
-        wabt_alloc_zero(allocator, size * sizeof(type), WABT_DEFAULT_ALIGN); \
+#define WABT_DEFINE_ARRAY(name, type)                                       \
+  typedef struct type##Array {                                              \
+    type* data;                                                             \
+    size_t size;                                                            \
+  } type##Array;                                                            \
+                                                                            \
+  WABT_EXTERN_C_BEGIN                                                       \
+  static WABT_INLINE void wabt_destroy_##name##_array(type##Array* array)   \
+      WABT_UNUSED;                                                          \
+  static WABT_INLINE void wabt_new_##name##_array(type##Array* array,       \
+                                                  size_t size) WABT_UNUSED; \
+  WABT_EXTERN_C_END                                                         \
+                                                                            \
+  void wabt_destroy_##name##_array(type##Array* array) {                    \
+    wabt_free(array->data);                                                 \
+  }                                                                         \
+  void wabt_new_##name##_array(type##Array* array, size_t size) {           \
+    array->size = size;                                                     \
+    array->data = wabt_alloc_zero(size * sizeof(type));                     \
   }
 
-#define WABT_DESTROY_ARRAY_AND_ELEMENTS(allocator, v, name) \
-  {                                                         \
-    size_t i;                                               \
-    for (i = 0; i < (v).size; ++i)                          \
-      wabt_destroy_##name(allocator, &((v).data[i]));       \
-    wabt_destroy_##name##_array(allocator, &(v));           \
+#define WABT_DESTROY_ARRAY_AND_ELEMENTS(v, name) \
+  {                                              \
+    size_t i;                                    \
+    for (i = 0; i < (v).size; ++i)               \
+      wabt_destroy_##name(&((v).data[i]));       \
+    wabt_destroy_##name##_array(&(v));           \
   }
 
 #endif /* WABT_ARRAY_H_ */

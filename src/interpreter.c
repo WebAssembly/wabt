@@ -46,71 +46,55 @@ static const char* wabt_get_interpreter_opcode_name(uint8_t opcode) {
   return s_interpreter_opcode_name[opcode];
 }
 
-void wabt_init_interpreter_environment(WabtAllocator* allocator,
-                                       WabtInterpreterEnvironment* env) {
+void wabt_init_interpreter_environment(WabtInterpreterEnvironment* env) {
   WABT_ZERO_MEMORY(*env);
-  wabt_init_output_buffer(allocator, &env->istream, INITIAL_ISTREAM_CAPACITY);
+  wabt_init_output_buffer(&env->istream, INITIAL_ISTREAM_CAPACITY);
 }
 
 static void wabt_destroy_interpreter_func_signature(
-    WabtAllocator* allocator,
     WabtInterpreterFuncSignature* sig) {
-  wabt_destroy_type_vector(allocator, &sig->param_types);
-  wabt_destroy_type_vector(allocator, &sig->result_types);
+  wabt_destroy_type_vector(&sig->param_types);
+  wabt_destroy_type_vector(&sig->result_types);
 }
 
-static void wabt_destroy_interpreter_func(
-    WabtAllocator* allocator,
-    WabtInterpreterFunc* func) {
+static void wabt_destroy_interpreter_func(WabtInterpreterFunc* func) {
   if (!func->is_host)
-    wabt_destroy_type_vector(allocator, &func->defined.param_and_local_types);
+    wabt_destroy_type_vector(&func->defined.param_and_local_types);
 }
 
-static void wabt_destroy_interpreter_memory(WabtAllocator* unused,
-                                            WabtInterpreterMemory* memory) {
-  if (memory->allocator) {
-    wabt_free(memory->allocator, memory->data);
-  } else {
-    assert(memory->data == NULL);
-  }
+static void wabt_destroy_interpreter_memory(WabtInterpreterMemory* memory) {
+  wabt_free(memory->data);
 }
 
-static void wabt_destroy_interpreter_table(WabtAllocator* allocator,
-                                           WabtInterpreterTable* table) {
-  wabt_destroy_uint32_array(allocator, &table->func_indexes);
+static void wabt_destroy_interpreter_table(WabtInterpreterTable* table) {
+  wabt_destroy_uint32_array(&table->func_indexes);
 }
 
-static void wabt_destroy_interpreter_import(WabtAllocator* allocator,
-                                            WabtInterpreterImport* import) {
-  wabt_destroy_string_slice(allocator, &import->module_name);
-  wabt_destroy_string_slice(allocator, &import->field_name);
+static void wabt_destroy_interpreter_import(WabtInterpreterImport* import) {
+  wabt_destroy_string_slice(&import->module_name);
+  wabt_destroy_string_slice(&import->field_name);
 }
 
-static void wabt_destroy_interpreter_module(WabtAllocator* allocator,
-                                            WabtInterpreterModule* module) {
-  wabt_destroy_interpreter_export_vector(allocator, &module->exports);
-  wabt_destroy_binding_hash(allocator, &module->export_bindings);
-  wabt_destroy_string_slice(allocator, &module->name);
+static void wabt_destroy_interpreter_module(WabtInterpreterModule* module) {
+  wabt_destroy_interpreter_export_vector(&module->exports);
+  wabt_destroy_binding_hash(&module->export_bindings);
+  wabt_destroy_string_slice(&module->name);
   if (!module->is_host) {
-    WABT_DESTROY_ARRAY_AND_ELEMENTS(allocator, module->defined.imports,
+    WABT_DESTROY_ARRAY_AND_ELEMENTS(module->defined.imports,
                                     interpreter_import);
   }
 }
 
-void wabt_destroy_interpreter_environment(WabtAllocator* allocator,
-                                          WabtInterpreterEnvironment* env) {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->modules,
-                                   interpreter_module);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->sigs,
-                                   interpreter_func_signature);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->funcs, interpreter_func);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->memories,
-                                   interpreter_memory);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(allocator, env->tables, interpreter_table);
-  wabt_destroy_interpreter_global_vector(allocator, &env->globals);
+void wabt_destroy_interpreter_environment(WabtInterpreterEnvironment* env) {
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->modules, interpreter_module);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->sigs, interpreter_func_signature);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->funcs, interpreter_func);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->memories, interpreter_memory);
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->tables, interpreter_table);
+  wabt_destroy_interpreter_global_vector(&env->globals);
   wabt_destroy_output_buffer(&env->istream);
-  wabt_destroy_binding_hash(allocator, &env->module_bindings);
-  wabt_destroy_binding_hash(allocator, &env->registered_module_bindings);
+  wabt_destroy_binding_hash(&env->module_bindings);
+  wabt_destroy_binding_hash(&env->registered_module_bindings);
 }
 
 WabtInterpreterEnvironmentMark wabt_mark_interpreter_environment(
@@ -128,24 +112,23 @@ WabtInterpreterEnvironmentMark wabt_mark_interpreter_environment(
 }
 
 void wabt_reset_interpreter_environment_to_mark(
-    WabtAllocator* allocator,
     WabtInterpreterEnvironment* env,
     WabtInterpreterEnvironmentMark mark) {
   size_t i;
 
-#define DESTROY_PAST_MARK(destroy_name, names)                                 \
-  do {                                                                         \
-    assert(mark.names##_size <= env->names.size);                              \
-    for (i = mark.names##_size; i < env->names.size; ++i)                      \
-      wabt_destroy_interpreter_##destroy_name(allocator, &env->names.data[i]); \
-    env->names.size = mark.names##_size;                                       \
+#define DESTROY_PAST_MARK(destroy_name, names)                      \
+  do {                                                              \
+    assert(mark.names##_size <= env->names.size);                   \
+    for (i = mark.names##_size; i < env->names.size; ++i)           \
+      wabt_destroy_interpreter_##destroy_name(&env->names.data[i]); \
+    env->names.size = mark.names##_size;                            \
   } while (0)
 
   /* Destroy entries in the binding hash. */
   for (i = mark.modules_size; i < env->modules.size; ++i) {
     const WabtStringSlice* name = &env->modules.data[i].name;
     if (!wabt_string_slice_is_empty(name))
-      wabt_remove_binding(allocator, &env->module_bindings, name);
+      wabt_remove_binding(&env->module_bindings, name);
   }
 
   /* registered_module_bindings maps from an arbitrary name to a module index,
@@ -156,7 +139,7 @@ void wabt_reset_interpreter_environment_to_mark(
         &env->registered_module_bindings.entries.data[i];
     if (!wabt_hash_entry_is_free(entry) &&
         entry->binding.index >= (int)mark.modules_size) {
-      wabt_remove_binding(allocator, &env->registered_module_bindings,
+      wabt_remove_binding(&env->registered_module_bindings,
                           &entry->binding.name);
     }
   }
@@ -172,33 +155,28 @@ void wabt_reset_interpreter_environment_to_mark(
 #undef DESTROY_PAST_MARK
 }
 
-WabtInterpreterModule* wabt_append_host_module(WabtAllocator* allocator,
-                                               WabtInterpreterEnvironment* env,
+WabtInterpreterModule* wabt_append_host_module(WabtInterpreterEnvironment* env,
                                                WabtStringSlice name) {
-  WabtInterpreterModule* module =
-      wabt_append_interpreter_module(allocator, &env->modules);
-  module->name = wabt_dup_string_slice(allocator, name);
+  WabtInterpreterModule* module = wabt_append_interpreter_module(&env->modules);
+  module->name = wabt_dup_string_slice(name);
   module->memory_index = WABT_INVALID_INDEX;
   module->table_index = WABT_INVALID_INDEX;
   module->is_host = WABT_TRUE;
 
-  WabtStringSlice dup_name = wabt_dup_string_slice(allocator, name);
-  WabtBinding* binding = wabt_insert_binding(
-      allocator, &env->registered_module_bindings, &dup_name);
+  WabtStringSlice dup_name = wabt_dup_string_slice(name);
+  WabtBinding* binding =
+      wabt_insert_binding(&env->registered_module_bindings, &dup_name);
   binding->index = env->modules.size - 1;
   return module;
 }
 
-void wabt_init_interpreter_thread(WabtAllocator* allocator,
-                                  WabtInterpreterEnvironment* env,
+void wabt_init_interpreter_thread(WabtInterpreterEnvironment* env,
                                   WabtInterpreterThread* thread,
                                   WabtInterpreterThreadOptions* options) {
   WABT_ZERO_MEMORY(*thread);
-  wabt_new_interpreter_value_array(allocator, &thread->value_stack,
+  wabt_new_interpreter_value_array(&thread->value_stack,
                                    options->value_stack_size);
-  wabt_new_uint32_array(allocator, &thread->call_stack,
-                        options->call_stack_size);
-  thread->allocator = allocator;
+  wabt_new_uint32_array(&thread->call_stack, options->call_stack_size);
   thread->env = env;
   thread->value_stack_top = thread->value_stack.data;
   thread->value_stack_end = thread->value_stack.data + thread->value_stack.size;
@@ -226,11 +204,10 @@ WabtInterpreterExport* wabt_get_interpreter_export_by_name(
   return &module->exports.data[field_index];
 }
 
-void wabt_destroy_interpreter_thread(WabtAllocator* allocator,
-                                     WabtInterpreterThread* thread) {
-  wabt_destroy_interpreter_value_array(allocator, &thread->value_stack);
-  wabt_destroy_uint32_array(allocator, &thread->call_stack);
-  wabt_destroy_interpreter_typed_value_vector(allocator, &thread->host_args);
+void wabt_destroy_interpreter_thread(WabtInterpreterThread* thread) {
+  wabt_destroy_interpreter_value_array(&thread->value_stack);
+  wabt_destroy_uint32_array(&thread->call_stack);
+  wabt_destroy_interpreter_typed_value_vector(&thread->host_args);
 }
 
 /* 3 32222222 222...00
@@ -756,8 +733,7 @@ WabtInterpreterResult wabt_call_host(WabtInterpreterThread* thread,
 
   uint32_t num_args = sig->param_types.size;
   if (thread->host_args.size < num_args) {
-    wabt_resize_interpreter_typed_value_vector(thread->allocator,
-                                               &thread->host_args, num_args);
+    wabt_resize_interpreter_typed_value_vector(&thread->host_args, num_args);
   }
 
   uint32_t i;
@@ -1042,9 +1018,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WABT_PAGE_SIZE >
                                 UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WABT_PAGE_SIZE;
-        WabtAllocator* allocator = memory->allocator;
-        void* new_data = wabt_realloc(allocator, memory->data, new_byte_size,
-                                      WABT_DEFAULT_ALIGN);
+        void* new_data = wabt_realloc(memory->data, new_byte_size);
         PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);

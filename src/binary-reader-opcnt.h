@@ -20,7 +20,6 @@
 #include "common.h"
 #include "vector.h"
 
-struct WabtAllocator;
 struct WabtModule;
 struct WabtReadBinaryOptions;
 
@@ -42,7 +41,6 @@ typedef struct WabtIntPairCounter {
 WABT_DEFINE_VECTOR(int_pair_counter, WabtIntPairCounter);
 
 typedef struct WabtOpcntData {
-  struct WabtAllocator* allocator;
   WabtIntCounterVector opcode_vec;
   WabtIntCounterVector i32_const_vec;
   WabtIntCounterVector get_local_vec;
@@ -52,12 +50,10 @@ typedef struct WabtOpcntData {
   WabtIntPairCounterVector i32_store_vec;
 } WabtOpcntData;
 
-void wabt_init_opcnt_data(struct WabtAllocator* allocator, WabtOpcntData* data);
-void wabt_destroy_opcnt_data(struct WabtAllocator* allocator,
-                             WabtOpcntData* data);
+void wabt_init_opcnt_data(WabtOpcntData* data);
+void wabt_destroy_opcnt_data(WabtOpcntData* data);
 
-WabtResult wabt_read_binary_opcnt(struct WabtAllocator* allocator,
-                                  const void* data,
+WabtResult wabt_read_binary_opcnt(const void* data,
                                   size_t size,
                                   const struct WabtReadBinaryOptions* options,
                                   WabtOpcntData* opcnt_data);

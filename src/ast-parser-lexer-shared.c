@@ -71,69 +71,64 @@ void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
   va_end(args_copy);
 }
 
-void wabt_destroy_optional_export(WabtAllocator* allocator,
-                                  WabtOptionalExport* export_) {
+void wabt_destroy_optional_export(WabtOptionalExport* export_) {
   if (export_->has_export)
-    wabt_destroy_export(allocator, &export_->export_);
+    wabt_destroy_export(&export_->export_);
 }
 
-void wabt_destroy_exported_func(WabtAllocator* allocator,
-                                WabtExportedFunc* exported_func) {
-  wabt_destroy_optional_export(allocator, &exported_func->export_);
-  wabt_destroy_func(allocator, exported_func->func);
-  wabt_free(allocator, exported_func->func);
+void wabt_destroy_exported_func(WabtExportedFunc* exported_func) {
+  wabt_destroy_optional_export(&exported_func->export_);
+  wabt_destroy_func(exported_func->func);
+  wabt_free(exported_func->func);
 }
 
-void wabt_destroy_text_list(WabtAllocator* allocator, WabtTextList* text_list) {
+void wabt_destroy_text_list(WabtTextList* text_list) {
   WabtTextListNode* node = text_list->first;
   while (node) {
     WabtTextListNode* next = node->next;
-    wabt_destroy_string_slice(allocator, &node->text);
-    wabt_free(allocator, node);
+    wabt_destroy_string_slice(&node->text);
+    wabt_free(node);
     node = next;
   }
 }
 
-void wabt_destroy_func_fields(struct WabtAllocator* allocator,
-                              WabtFuncField* func_field) {
+void wabt_destroy_func_fields(WabtFuncField* func_field) {
   /* destroy the entire linked-list */
   while (func_field) {
     WabtFuncField* next_func_field = func_field->next;
 
     switch (func_field->type) {
       case WABT_FUNC_FIELD_TYPE_EXPRS:
-        wabt_destroy_expr_list(allocator, func_field->first_expr);
+        wabt_destroy_expr_list(func_field->first_expr);
         break;
 
       case WABT_FUNC_FIELD_TYPE_PARAM_TYPES:
       case WABT_FUNC_FIELD_TYPE_LOCAL_TYPES:
       case WABT_FUNC_FIELD_TYPE_RESULT_TYPES:
-        wabt_destroy_type_vector(allocator, &func_field->types);
+        wabt_destroy_type_vector(&func_field->types);
         break;
 
       case WABT_FUNC_FIELD_TYPE_BOUND_PARAM:
       case WABT_FUNC_FIELD_TYPE_BOUND_LOCAL:
-        wabt_destroy_string_slice(allocator, &func_field->bound_type.name);
+        wabt_destroy_string_slice(&func_field->bound_type.name);
         break;
     }
 
-    wabt_free(allocator, func_field);
+    wabt_free(func_field);
     func_field = next_func_field;
   }
 }
 
-void wabt_destroy_exported_memory(WabtAllocator* allocator,
-                                  WabtExportedMemory* memory) {
-  wabt_destroy_memory(allocator, &memory->memory);
-  wabt_destroy_optional_export(allocator, &memory->export_);
+void wabt_destroy_exported_memory(WabtExportedMemory* memory) {
+  wabt_destroy_memory(&memory->memory);
+  wabt_destroy_optional_export(&memory->export_);
   if (memory->has_data_segment)
-    wabt_destroy_data_segment(allocator, &memory->data_segment);
+    wabt_destroy_data_segment(&memory->data_segment);
 }
 
-void wabt_destroy_exported_table(WabtAllocator* allocator,
-                                 WabtExportedTable* table) {
-  wabt_destroy_table(allocator, &table->table);
-  wabt_destroy_optional_export(allocator, &table->export_);
+void wabt_destroy_exported_table(WabtExportedTable* table) {
+  wabt_destroy_table(&table->table);
+  wabt_destroy_optional_export(&table->export_);
   if (table->has_elem_segment)
-    wabt_destroy_elem_segment(allocator, &table->elem_segment);
+    wabt_destroy_elem_segment(&table->elem_segment);
 }

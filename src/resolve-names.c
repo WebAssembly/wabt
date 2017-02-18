@@ -19,7 +19,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "allocator.h"
 #include "ast.h"
 #include "ast-parser-lexer-shared.h"
 
@@ -27,7 +26,6 @@ typedef WabtLabel* LabelPtr;
 WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtSourceErrorHandler* error_handler;
   WabtAstLexer* lexer;
   WabtScript* script;
@@ -48,7 +46,7 @@ static void WABT_PRINTF_FORMAT(3, 4)
 }
 
 static void push_label(Context* ctx, WabtLabel* label) {
-  wabt_append_label_ptr_value(ctx->allocator, &ctx->labels, &label);
+  wabt_append_label_ptr_value(&ctx->labels, &label);
 }
 
 static void pop_label(Context* ctx) {
@@ -88,7 +86,7 @@ static void resolve_label_var(Context* ctx, WabtVar* var) {
     for (i = ctx->labels.size - 1; i >= 0; --i) {
       WabtLabel* label = ctx->labels.data[i];
       if (wabt_string_slices_are_equal(label, &var->name)) {
-        wabt_destroy_string_slice(ctx->allocator, &var->name);
+        wabt_destroy_string_slice(&var->name);
         var->type = WABT_VAR_TYPE_INDEX;
         var->index = ctx->labels.size - i - 1;
         return;
@@ -113,7 +111,7 @@ static void resolve_var(Context* ctx,
       return;
     }
 
-    wabt_destroy_string_slice(ctx->allocator, &var->name);
+    wabt_destroy_string_slice(&var->name);
     var->index = index;
     var->type = WABT_VAR_TYPE_INDEX;
   }
@@ -150,7 +148,7 @@ static void resolve_local_var(Context* ctx, WabtVar* var) {
       return;
     }
 
-    wabt_destroy_string_slice(ctx->allocator, &var->name);
+    wabt_destroy_string_slice(&var->name);
     var->index = index;
     var->type = WABT_VAR_TYPE_INDEX;
   }
@@ -380,7 +378,6 @@ static void visit_command(Context* ctx, WabtCommand* command) {
 
       Context new_ctx;
       WABT_ZERO_MEMORY(new_ctx);
-      new_ctx.allocator = ctx->allocator;
       new_ctx.error_handler = &new_error_handler;
       new_ctx.lexer = ctx->lexer;
       new_ctx.visitor = ctx->visitor;
@@ -388,7 +385,7 @@ static void visit_command(Context* ctx, WabtCommand* command) {
       new_ctx.result = WABT_OK;
 
       visit_raw_module(&new_ctx, &command->assert_invalid.module);
-      wabt_destroy_label_ptr_vector(new_ctx.allocator, &new_ctx.labels);
+      wabt_destroy_label_ptr_vector(&new_ctx.labels);
       if (WABT_FAILED(new_ctx.result)) {
         command->type = WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY;
       }
@@ -422,12 +419,10 @@ static void visit_script(Context* ctx, WabtScript* script) {
 }
 
 static void init_context(Context* ctx,
-                         WabtAllocator* allocator,
                          WabtAstLexer* lexer,
                          WabtScript* script,
                          WabtSourceErrorHandler* error_handler) {
   WABT_ZERO_MEMORY(*ctx);
-  ctx->allocator = allocator;
   ctx->lexer = lexer;
   ctx->error_handler = error_handler;
   ctx->result = WABT_OK;
@@ -451,24 +446,22 @@ static void init_context(Context* ctx,
   ctx->visitor.on_tee_local_expr = on_tee_local_expr;
 }
 
-WabtResult wabt_resolve_names_module(WabtAllocator* allocator,
-                                     WabtAstLexer* lexer,
+WabtResult wabt_resolve_names_module(WabtAstLexer* lexer,
                                      WabtModule* module,
                                      WabtSourceErrorHandler* error_handler) {
   Context ctx;
-  init_context(&ctx, allocator, lexer, NULL, error_handler);
+  init_context(&ctx, lexer, NULL, error_handler);
   visit_module(&ctx, module);
-  wabt_destroy_label_ptr_vector(allocator, &ctx.labels);
+  wabt_destroy_label_ptr_vector(&ctx.labels);
   return ctx.result;
 }
 
-WabtResult wabt_resolve_names_script(WabtAllocator* allocator,
-                                     WabtAstLexer* lexer,
+WabtResult wabt_resolve_names_script(WabtAstLexer* lexer,
                                      WabtScript* script,
                                      WabtSourceErrorHandler* error_handler) {
   Context ctx;
-  init_context(&ctx, allocator, lexer, script, error_handler);
+  init_context(&ctx, lexer, script, error_handler);
   visit_script(&ctx, script);
-  wabt_destroy_label_ptr_vector(allocator, &ctx.labels);
+  wabt_destroy_label_ptr_vector(&ctx.labels);
   return ctx.result;
 }

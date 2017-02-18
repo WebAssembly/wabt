@@ -28,7 +28,6 @@
 #include "config.h"
 #include "generate-names.h"
 #include "option-parser.h"
-#include "stack-allocator.h"
 #include "stream.h"
 #include "writer.h"
 
@@ -36,7 +35,6 @@
 
 static const char* s_infile;
 static const char* s_outfile;
-static WabtBool s_use_libc_allocator;
 static WabtBool s_generate_names;
 
 static WabtSourceErrorHandler s_error_handler =
@@ -45,7 +43,6 @@ static WabtSourceErrorHandler s_error_handler =
 enum {
   FLAG_HELP,
   FLAG_OUTPUT,
-  FLAG_USE_LIBC_ALLOCATOR,
   FLAG_GENERATE_NAMES,
   NUM_FLAGS
 };
@@ -68,9 +65,6 @@ static WabtOption s_options[] = {
      "print this help message"},
     {FLAG_OUTPUT, 'o', "output", "FILE", WABT_OPTION_HAS_ARGUMENT,
      "output file for the formatted file"},
-    {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL,
-     WABT_OPTION_NO_ARGUMENT,
-     "use malloc, free, etc. instead of stack allocator"},
     {FLAG_GENERATE_NAMES, 0, "generate-names", NULL, WABT_OPTION_NO_ARGUMENT,
      "Give auto-generated names to non-named functions, types, etc."},
 };
@@ -87,10 +81,6 @@ static void on_option(struct WabtOptionParser* parser,
 
     case FLAG_OUTPUT:
       s_outfile = argument;
-      break;
-
-    case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = WABT_TRUE;
       break;
 
     case FLAG_GENERATE_NAMES:
@@ -126,7 +116,6 @@ static void parse_options(int argc, char** argv) {
 }
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtMemoryWriter json_writer;
   WabtMemoryWriter module_writer;
   WabtStream json_stream;
@@ -136,20 +125,10 @@ typedef struct Context {
 } Context;
 
 int main(int argc, char** argv) {
-  WabtStackAllocator stack_allocator;
-  WabtAllocator* allocator;
-
   wabt_init_stdio();
   parse_options(argc, argv);
 
-  if (s_use_libc_allocator) {
-    allocator = &g_wabt_libc_allocator;
-  } else {
-    wabt_init_stack_allocator(&stack_allocator, &g_wabt_libc_allocator);
-    allocator = &stack_allocator.allocator;
-  }
-
-  WabtAstLexer* lexer = wabt_new_ast_file_lexer(allocator, s_infile);
+  WabtAstLexer* lexer = wabt_new_ast_file_lexer(s_infile);
   if (!lexer)
     WABT_FATAL("unable to read %s\n", s_infile);
 
@@ -162,10 +141,10 @@ int main(int argc, char** argv) {
       WABT_FATAL("no module in file.\n");
 
     if (s_generate_names)
-      result = wabt_generate_names(allocator, module);
+      result = wabt_generate_names(module);
 
     if (WABT_SUCCEEDED(result))
-      result = wabt_apply_names(allocator, module);
+      result = wabt_apply_names(module);
 
     if (WABT_SUCCEEDED(result)) {
       WabtFileWriter file_writer;
@@ -176,18 +155,14 @@ int main(int argc, char** argv) {
       }
 
       if (WABT_SUCCEEDED(result)) {
-        result = wabt_write_ast(allocator, &file_writer.base, module);
+        result = wabt_write_ast(&file_writer.base, module);
         wabt_close_file_writer(&file_writer);
       }
     }
   }
 
   wabt_destroy_ast_lexer(lexer);
-
-  if (s_use_libc_allocator)
-    wabt_destroy_script(&script);
-  wabt_print_allocator_stats(allocator);
-  wabt_destroy_allocator(allocator);
+  wabt_destroy_script(&script);
   return result;
 }
 

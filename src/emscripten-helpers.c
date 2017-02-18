@@ -19,12 +19,10 @@
 
 #include <stddef.h>
 
-#include "allocator.h"
 #include "ast.h"
 #include "binary-reader.h"
 #include "binary-writer.h"
 #include "common.h"
-#include "stack-allocator.h"
 #include "stream.h"
 #include "writer.h"
 
@@ -66,10 +64,6 @@ WABT_EXTERN_C_BEGIN
 
 /* clang-format off */
 DEFINE_STRUCT(
-    WabtAllocator, allocator,
-    alloc, realloc, free, destroy, mark, reset_to_mark, print_stats)
-
-DEFINE_STRUCT(
     WabtBinaryErrorHandler, binary_error_handler,
     on_error, user_data)
 
@@ -86,7 +80,7 @@ DEFINE_STRUCT0(
 
 DEFINE_STRUCT(
     WabtOutputBuffer, output_buffer,
-    allocator, start, size, capacity)
+    start, size, capacity)
 
 DEFINE_STRUCT(
     WabtReadBinaryOptions, read_binary_options,
@@ -98,10 +92,6 @@ DEFINE_STRUCT0(
 DEFINE_STRUCT(
     WabtSourceErrorHandler, source_error_handler,
     on_error, source_line_max_length, user_data)
-
-DEFINE_STRUCT(
-    WabtStackAllocator, stack_allocator,
-    allocator);
 
 DEFINE_STRUCT(
     WabtStream, stream,

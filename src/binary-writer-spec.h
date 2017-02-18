@@ -21,7 +21,6 @@
 #include "binary-writer.h"
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtWriter;
 
 #define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
@@ -33,8 +32,7 @@ typedef struct WabtWriteBinarySpecOptions {
 } WabtWriteBinarySpecOptions;
 
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_write_binary_spec_script(struct WabtAllocator*,
-                                         struct WabtScript*,
+WabtResult wabt_write_binary_spec_script(struct WabtScript*,
                                          const char* source_filename,
                                          const WabtWriteBinarySpecOptions*);
 WABT_EXTERN_C_END

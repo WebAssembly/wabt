@@ -45,7 +45,6 @@ def main(args):
                       action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
-  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -55,7 +54,6 @@ def main(args):
   wast2wasm.AppendOptionalArgs({
       '-v': options.verbose,
       '--spec': options.spec,
-      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wasm_interp = utils.Executable(
@@ -65,7 +63,6 @@ def main(args):
       '--run-all-exports': options.run_all_exports,
       '--spec': options.spec,
       '--trace': options.verbose,
-      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wast2wasm.verbose = options.print_cmd

@@ -97,8 +97,7 @@ function compile(text) {
   wabt.ready.then(function() {
     output.textContent = '';
     try {
-      var stackAllocator = new wabt.StackAllocator(wabt.LibcAllocator);
-      var script = wabt.parseAst(stackAllocator.allocator, 'test.wast', text);
+      var script = wabt.parseAst('test.wast', text);
       script.resolveNames();
       script.validate();
       var binaryOutput = script.toBinary({log: true});
@@ -115,7 +114,6 @@ function compile(text) {
       download.classList.add('disabled');
     } finally {
       if (script) script.$destroy();
-      if (stackAllocator) stackAllocator.$destroy();
     }
   });
 }

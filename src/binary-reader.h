@@ -23,8 +23,6 @@
 #include "binary.h"
 #include "common.h"
 
-struct WabtAllocator;
-
 #define WABT_READ_BINARY_OPTIONS_DEFAULT \
   { NULL, WABT_FALSE }
 
@@ -324,8 +322,7 @@ typedef struct WabtBinaryReader {
 } WabtBinaryReader;
 
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_read_binary(struct WabtAllocator* allocator,
-                            const void* data,
+WabtResult wabt_read_binary(const void* data,
                             size_t size,
                             WabtBinaryReader* reader,
                             uint32_t num_function_passes,

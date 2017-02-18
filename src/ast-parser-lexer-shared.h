@@ -30,8 +30,6 @@
 
 #define WABT_INVALID_LINE_OFFSET ((size_t)~0)
 
-struct WabtAllocator;
-
 typedef struct WabtExprList {
   WabtExpr* first;
   WabtExpr* last;
@@ -149,14 +147,12 @@ typedef union WabtToken {
 } WabtToken;
 
 typedef struct WabtAstParser {
-  struct WabtAllocator* allocator;
   WabtScript script;
   WabtSourceErrorHandler* error_handler;
   int errors;
 } WabtAstParser;
 
 WABT_EXTERN_C_BEGIN
-struct WabtAllocator* wabt_ast_lexer_get_allocator(WabtAstLexer* lexer);
 int wabt_ast_lexer_lex(union WabtToken*,
                        struct WabtLocation*,
                        WabtAstLexer*,
@@ -177,13 +173,13 @@ void wabt_ast_format_error(WabtSourceErrorHandler*,
                            WabtAstLexer*,
                            const char* format,
                            va_list);
-void wabt_destroy_optional_export(WabtAllocator*, WabtOptionalExport*);
-void wabt_destroy_exported_func(WabtAllocator*, WabtExportedFunc*);
-void wabt_destroy_exported_global(WabtAllocator*, WabtExportedFunc*);
-void wabt_destroy_exported_memory(WabtAllocator*, WabtExportedMemory*);
-void wabt_destroy_exported_table(WabtAllocator*, WabtExportedTable*);
-void wabt_destroy_func_fields(WabtAllocator*, WabtFuncField*);
-void wabt_destroy_text_list(WabtAllocator*, WabtTextList*);
+void wabt_destroy_optional_export(WabtOptionalExport*);
+void wabt_destroy_exported_func(WabtExportedFunc*);
+void wabt_destroy_exported_global(WabtExportedFunc*);
+void wabt_destroy_exported_memory(WabtExportedMemory*);
+void wabt_destroy_exported_table(WabtExportedTable*);
+void wabt_destroy_func_fields(WabtFuncField*);
+void wabt_destroy_text_list(WabtTextList*);
 WABT_EXTERN_C_END
 
 #endif /* WABT_AST_PARSER_LEXER_SHARED_H_ */

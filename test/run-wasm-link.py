@@ -50,7 +50,6 @@ def main(args):
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--spec', action='store_true')
-  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -59,7 +58,6 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
       '--debug-names': options.debug_names,
-      '--use-libc-allocator': options.use_libc_allocator,
       '-v': options.dump_verbose,
   })
 

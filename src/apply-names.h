@@ -19,7 +19,6 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtModule;
 
 /* Use function, import, function type, parameter and local names in WabtVars
@@ -38,7 +37,7 @@ struct WabtModule;
  *    (call $foo ...)
  */
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_apply_names(struct WabtAllocator*, struct WabtModule*);
+WabtResult wabt_apply_names(struct WabtModule*);
 WABT_EXTERN_C_END
 
 #endif /* WABT_APPLY_NAMES_H_ */

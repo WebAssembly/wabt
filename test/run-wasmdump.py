@@ -46,7 +46,6 @@ def main(args):
   parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--no-canonicalize-leb128s', action='store_true')
-  parser.add_argument('--use-libc-allocator', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -61,7 +60,6 @@ def main(args):
       '--spec': options.spec,
       '-v': options.verbose,
       '-c': options.compile_only,
-      '--use-libc-allocator': options.use_libc_allocator
   })
 
   wasmdump = utils.Executable(

@@ -19,13 +19,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "allocator.h"
 #include "binary-reader.h"
 #include "binary-reader-interpreter.h"
 #include "interpreter.h"
 #include "literal.h"
 #include "option-parser.h"
-#include "stack-allocator.h"
 #include "stream.h"
 
 #define INSTRUCTION_QUANTUM 1000
@@ -44,7 +42,6 @@ static WabtInterpreterThreadOptions s_thread_options =
 static WabtBool s_trace;
 static WabtBool s_spec;
 static WabtBool s_run_all_exports;
-static WabtBool s_use_libc_allocator;
 static WabtStream* s_stdout_stream;
 
 static WabtBinaryErrorHandler s_error_handler =
@@ -69,7 +66,6 @@ enum {
   FLAG_TRACE,
   FLAG_SPEC,
   FLAG_RUN_ALL_EXPORTS,
-  FLAG_USE_LIBC_ALLOCATOR,
   NUM_FLAGS
 };
 
@@ -107,8 +103,6 @@ static WabtOption s_options[] = {
      "run spec tests (input file should be .json)"},
     {FLAG_RUN_ALL_EXPORTS, 0, "run-all-exports", NULL, NOPE,
      "run all the exported functions, in order. useful for testing"},
-    {FLAG_USE_LIBC_ALLOCATOR, 0, "use-libc-allocator", NULL, NOPE,
-     "use malloc, free, etc. instead of stack allocator"},
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
@@ -148,10 +142,6 @@ static void on_option(struct WabtOptionParser* parser,
 
     case FLAG_RUN_ALL_EXPORTS:
       s_run_all_exports = WABT_TRUE;
-      break;
-
-    case FLAG_USE_LIBC_ALLOCATOR:
-      s_use_libc_allocator = WABT_TRUE;
       break;
   }
 }
@@ -323,8 +313,7 @@ static WabtInterpreterResult push_args(
   return WABT_INTERPRETER_OK;
 }
 
-static void copy_results(WabtAllocator* allocator,
-                         WabtInterpreterThread* thread,
+static void copy_results(WabtInterpreterThread* thread,
                          const WabtInterpreterFuncSignature* sig,
                          WabtInterpreterTypedValueVector* out_results) {
   size_t expected_results = sig->result_types.size;
@@ -335,8 +324,7 @@ static void copy_results(WabtAllocator* allocator,
   /* Don't clear out the vector, in case it is being reused. Just reset the
    * size to zero. */
   out_results->size = 0;
-  wabt_resize_interpreter_typed_value_vector(allocator, out_results,
-                                             expected_results);
+  wabt_resize_interpreter_typed_value_vector(out_results, expected_results);
   size_t i;
   for (i = 0; i < expected_results; ++i) {
     out_results->data[i].type = sig->result_types.data[i];
@@ -345,7 +333,6 @@ static void copy_results(WabtAllocator* allocator,
 }
 
 static WabtInterpreterResult run_function(
-    WabtAllocator* allocator,
     WabtInterpreterThread* thread,
     uint32_t func_index,
     const WabtInterpreterTypedValueVector* args,
@@ -362,7 +349,7 @@ static WabtInterpreterResult run_function(
                   ? wabt_call_host(thread, func)
                   : run_defined_function(thread, func->defined.offset);
     if (iresult == WABT_INTERPRETER_OK)
-      copy_results(allocator, thread, sig, out_results);
+      copy_results(thread, sig, out_results);
   }
 
   /* Always reset the value and call stacks */
@@ -371,8 +358,7 @@ static WabtInterpreterResult run_function(
   return iresult;
 }
 
-static WabtInterpreterResult run_start_function(WabtAllocator* allocator,
-                                                WabtInterpreterThread* thread,
+static WabtInterpreterResult run_start_function(WabtInterpreterThread* thread,
                                                 WabtInterpreterModule* module) {
   if (module->defined.start_func_index == WABT_INVALID_INDEX)
     return WABT_INTERPRETER_OK;
@@ -384,14 +370,13 @@ static WabtInterpreterResult run_start_function(WabtAllocator* allocator,
   WABT_ZERO_MEMORY(args);
   WABT_ZERO_MEMORY(results);
 
-  WabtInterpreterResult iresult = run_function(
-      allocator, thread, module->defined.start_func_index, &args, &results);
+  WabtInterpreterResult iresult =
+      run_function(thread, module->defined.start_func_index, &args, &results);
   assert(results.size == 0);
   return iresult;
 }
 
 static WabtInterpreterResult run_export(
-    WabtAllocator* allocator,
     WabtInterpreterThread* thread,
     const WabtInterpreterExport* export,
     const WabtInterpreterTypedValueVector* args,
@@ -402,11 +387,10 @@ static WabtInterpreterResult run_export(
   }
 
   assert(export->kind == WABT_EXTERNAL_KIND_FUNC);
-  return run_function(allocator, thread, export->index, args, out_results);
+  return run_function(thread, export->index, args, out_results);
 }
 
 static WabtInterpreterResult run_export_by_name(
-    WabtAllocator* allocator,
     WabtInterpreterThread* thread,
     WabtInterpreterModule* module,
     const WabtStringSlice* name,
@@ -419,11 +403,10 @@ static WabtInterpreterResult run_export_by_name(
     return WABT_INTERPRETER_UNKNOWN_EXPORT;
   if (export->kind != WABT_EXTERNAL_KIND_FUNC)
     return WABT_INTERPRETER_EXPORT_KIND_MISMATCH;
-  return run_export(allocator, thread, export, args, out_results);
+  return run_export(thread, export, args, out_results);
 }
 
 static WabtInterpreterResult get_global_export_by_name(
-    WabtAllocator* allocator,
     WabtInterpreterThread* thread,
     WabtInterpreterModule* module,
     const WabtStringSlice* name,
@@ -441,13 +424,11 @@ static WabtInterpreterResult get_global_export_by_name(
   /* Don't clear out the vector, in case it is being reused. Just reset the
    * size to zero. */
   out_results->size = 0;
-  wabt_append_interpreter_typed_value_value(allocator, out_results,
-                                            &global->typed_value);
+  wabt_append_interpreter_typed_value_value(out_results, &global->typed_value);
   return WABT_INTERPRETER_OK;
 }
 
-static void run_all_exports(WabtAllocator* allocator,
-                            WabtInterpreterModule* module,
+static void run_all_exports(WabtInterpreterModule* module,
                             WabtInterpreterThread* thread,
                             RunVerbosity verbose) {
   WabtInterpreterTypedValueVector args;
@@ -457,19 +438,17 @@ static void run_all_exports(WabtAllocator* allocator,
   uint32_t i;
   for (i = 0; i < module->exports.size; ++i) {
     WabtInterpreterExport* export = &module->exports.data[i];
-    WabtInterpreterResult iresult =
-        run_export(allocator, thread, export, &args, &results);
+    WabtInterpreterResult iresult = run_export(thread, export, &args, &results);
     if (verbose) {
       print_call(wabt_empty_string_slice(), export->name, &args, &results,
                  iresult);
     }
   }
-  wabt_destroy_interpreter_typed_value_vector(allocator, &args);
-  wabt_destroy_interpreter_typed_value_vector(allocator, &results);
+  wabt_destroy_interpreter_typed_value_vector(&args);
+  wabt_destroy_interpreter_typed_value_vector(&results);
 }
 
-static WabtResult read_module(WabtAllocator* allocator,
-                              const char* module_filename,
+static WabtResult read_module(const char* module_filename,
                               WabtInterpreterEnvironment* env,
                               WabtBinaryErrorHandler* error_handler,
                               WabtInterpreterModule** out_module) {
@@ -479,18 +458,16 @@ static WabtResult read_module(WabtAllocator* allocator,
 
   *out_module = NULL;
 
-  result = wabt_read_file(allocator, module_filename, &data, &size);
+  result = wabt_read_file(module_filename, &data, &size);
   if (WABT_SUCCEEDED(result)) {
-    WabtAllocator* memory_allocator = &g_wabt_libc_allocator;
-    result = wabt_read_binary_interpreter(allocator, memory_allocator, env,
-                                          data, size, &s_read_binary_options,
-                                          error_handler, out_module);
+    result = wabt_read_binary_interpreter(
+        env, data, size, &s_read_binary_options, error_handler, out_module);
 
     if (WABT_SUCCEEDED(result)) {
       if (s_verbose)
         wabt_disassemble_module(env, s_stdout_stream, *out_module);
     }
-    wabt_free(allocator, data);
+    wabt_free(data);
   }
   return result;
 }
@@ -572,8 +549,7 @@ static WabtResult spectest_import_memory(WabtInterpreterImport* import,
     memory->page_limits.initial = 1;
     memory->page_limits.max = 2;
     memory->byte_size = memory->page_limits.initial * WABT_MAX_PAGES;
-    memory->data = wabt_alloc_zero(memory->allocator, memory->byte_size,
-                                   WABT_DEFAULT_ALIGN);
+    memory->data = wabt_alloc_zero(memory->byte_size);
     return WABT_OK;
   } else {
     print_error(callback, "unknown host memory import " PRIimport,
@@ -622,40 +598,36 @@ static WabtResult spectest_import_global(WabtInterpreterImport* import,
   }
 }
 
-static void init_environment(WabtAllocator* allocator,
-                             WabtInterpreterEnvironment* env) {
-  wabt_init_interpreter_environment(allocator, env);
-  WabtInterpreterModule* host_module = wabt_append_host_module(
-      allocator, env, wabt_string_slice_from_cstr("spectest"));
+static void init_environment(WabtInterpreterEnvironment* env) {
+  wabt_init_interpreter_environment(env);
+  WabtInterpreterModule* host_module =
+      wabt_append_host_module(env, wabt_string_slice_from_cstr("spectest"));
   host_module->host.import_delegate.import_func = spectest_import_func;
   host_module->host.import_delegate.import_table = spectest_import_table;
   host_module->host.import_delegate.import_memory = spectest_import_memory;
   host_module->host.import_delegate.import_global = spectest_import_global;
 }
 
-static WabtResult read_and_run_module(WabtAllocator* allocator,
-                                      const char* module_filename) {
+static WabtResult read_and_run_module(const char* module_filename) {
   WabtResult result;
   WabtInterpreterEnvironment env;
   WabtInterpreterModule* module = NULL;
   WabtInterpreterThread thread;
 
-  init_environment(allocator, &env);
-  wabt_init_interpreter_thread(allocator, &env, &thread, &s_thread_options);
-  result =
-      read_module(allocator, module_filename, &env, &s_error_handler, &module);
+  init_environment(&env);
+  wabt_init_interpreter_thread(&env, &thread, &s_thread_options);
+  result = read_module(module_filename, &env, &s_error_handler, &module);
   if (WABT_SUCCEEDED(result)) {
-    WabtInterpreterResult iresult =
-        run_start_function(allocator, &thread, module);
+    WabtInterpreterResult iresult = run_start_function(&thread, module);
     if (iresult == WABT_INTERPRETER_OK) {
       if (s_run_all_exports)
-        run_all_exports(allocator, module, &thread, RUN_VERBOSE);
+        run_all_exports(module, &thread, RUN_VERBOSE);
     } else {
       print_interpreter_result("error running start function", iresult);
     }
   }
-  wabt_destroy_interpreter_thread(allocator, &thread);
-  wabt_destroy_interpreter_environment(allocator, &env);
+  wabt_destroy_interpreter_thread(&thread);
+  wabt_destroy_interpreter_environment(&env);
   return result;
 }
 
@@ -664,7 +636,6 @@ WABT_DEFINE_VECTOR(interpreter_thread, WabtInterpreterThread);
 /* An extremely simple JSON parser that only knows how to parse the expected
  * format from wast2wabt. */
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtInterpreterEnvironment env;
   WabtInterpreterThread thread;
   WabtInterpreterModule* last_module;
@@ -937,7 +908,7 @@ static WabtResult parse_type_vector(Context* ctx, WabtTypeVector* out_types) {
     WabtType type;
     CHECK_RESULT(parse_type_object(ctx, &type));
     first = WABT_FALSE;
-    wabt_append_type_value(ctx->allocator, out_types, &type);
+    wabt_append_type_value(out_types, &type);
   }
   return WABT_OK;
 }
@@ -1001,8 +972,7 @@ static WabtResult parse_const_vector(
       EXPECT(",");
     WabtInterpreterTypedValue value;
     CHECK_RESULT(parse_const(ctx, &value));
-    wabt_append_interpreter_typed_value_value(ctx->allocator, out_values,
-                                              &value);
+    wabt_append_interpreter_typed_value_value(out_values, &value);
     first = WABT_FALSE;
   }
   return WABT_OK;
@@ -1039,7 +1009,7 @@ static char* create_module_path(Context* ctx, WabtStringSlice filename) {
   const char* spec_json_filename = ctx->loc.filename;
   WabtStringSlice dirname = get_dirname(spec_json_filename);
   size_t path_len = dirname.length + 1 + filename.length + 1;
-  char* path = wabt_alloc(ctx->allocator, path_len, 1);
+  char* path = wabt_alloc(path_len);
 
   if (dirname.length == 0) {
     wabt_snprintf(path, path_len, PRIstringslice,
@@ -1059,33 +1029,33 @@ static WabtResult on_module_command(Context* ctx,
   char* path = create_module_path(ctx, filename);
   WabtInterpreterEnvironmentMark mark =
       wabt_mark_interpreter_environment(&ctx->env);
-  WabtResult result = read_module(ctx->allocator, path, &ctx->env,
-                                  &s_error_handler, &ctx->last_module);
+  WabtResult result =
+      read_module(path, &ctx->env, &s_error_handler, &ctx->last_module);
 
   if (WABT_FAILED(result)) {
-    wabt_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+    wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
     print_command_error(ctx, "error reading module: \"%s\"", path);
-    wabt_free(ctx->allocator, path);
+    wabt_free(path);
     return WABT_ERROR;
   }
 
-  wabt_free(ctx->allocator, path);
+  wabt_free(path);
 
   WabtInterpreterResult iresult =
-      run_start_function(ctx->allocator, &ctx->thread, ctx->last_module);
+      run_start_function(&ctx->thread, ctx->last_module);
   if (iresult != WABT_INTERPRETER_OK) {
-    wabt_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+    wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
     print_interpreter_result("error running start function", iresult);
     return WABT_ERROR;
   }
 
   if (!wabt_string_slice_is_empty(&name)) {
-    ctx->last_module->name = wabt_dup_string_slice(ctx->allocator, name);
+    ctx->last_module->name = wabt_dup_string_slice(name);
 
     /* The binding also needs its own copy of the name. */
-    WabtStringSlice binding_name = wabt_dup_string_slice(ctx->allocator, name);
-    WabtBinding* binding = wabt_insert_binding(
-        ctx->allocator, &ctx->env.module_bindings, &binding_name);
+    WabtStringSlice binding_name = wabt_dup_string_slice(name);
+    WabtBinding* binding =
+        wabt_insert_binding(&ctx->env.module_bindings, &binding_name);
     binding->index = ctx->env.modules.size - 1;
   }
   return WABT_OK;
@@ -1111,9 +1081,9 @@ static WabtResult run_action(Context* ctx,
 
   switch (action->type) {
     case ACTION_TYPE_INVOKE:
-      *out_iresult = run_export_by_name(ctx->allocator, &ctx->thread, module,
-                                        &action->field_name, &action->args,
-                                        out_results, verbose);
+      *out_iresult =
+          run_export_by_name(&ctx->thread, module, &action->field_name,
+                             &action->args, out_results, verbose);
       if (verbose) {
         print_call(wabt_empty_string_slice(), action->field_name, &action->args,
                    out_results, *out_iresult);
@@ -1121,9 +1091,8 @@ static WabtResult run_action(Context* ctx,
       return WABT_OK;
 
     case ACTION_TYPE_GET: {
-      *out_iresult =
-          get_global_export_by_name(ctx->allocator, &ctx->thread, module,
-                                    &action->field_name, out_results);
+      *out_iresult = get_global_export_by_name(
+          &ctx->thread, module, &action->field_name, out_results);
       return WABT_OK;
     }
 
@@ -1148,38 +1117,37 @@ static WabtResult on_action_command(Context* ctx, Action* action) {
     }
   }
 
-  wabt_destroy_interpreter_typed_value_vector(ctx->allocator, &results);
+  wabt_destroy_interpreter_typed_value_vector(&results);
   return result;
 }
 
 static WabtBinaryErrorHandler* new_custom_error_handler(Context* ctx,
                                                         const char* desc) {
   size_t header_size = ctx->source_filename.length + strlen(desc) + 100;
-  char* header = wabt_alloc(ctx->allocator, header_size, 1);
+  char* header = wabt_alloc(header_size);
   wabt_snprintf(header, header_size, PRIstringslice ":%d: %s passed",
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
                 ctx->command_line_number, desc);
 
-  WabtDefaultErrorHandlerInfo* info = wabt_alloc_zero(
-      ctx->allocator, sizeof(WabtDefaultErrorHandlerInfo), WABT_DEFAULT_ALIGN);
+  WabtDefaultErrorHandlerInfo* info =
+      wabt_alloc_zero(sizeof(WabtDefaultErrorHandlerInfo));
   info->header = header;
   info->out_file = stdout;
   info->print_header = WABT_PRINT_ERROR_HEADER_ONCE;
 
-  WabtBinaryErrorHandler* error_handler = wabt_alloc_zero(
-      ctx->allocator, sizeof(WabtBinaryErrorHandler), WABT_DEFAULT_ALIGN);
+  WabtBinaryErrorHandler* error_handler =
+      wabt_alloc_zero(sizeof(WabtBinaryErrorHandler));
   error_handler->on_error = wabt_default_binary_error_callback;
   error_handler->user_data = info;
   return error_handler;
 }
 
 static void destroy_custom_error_handler(
-    WabtAllocator* allocator,
     WabtBinaryErrorHandler* error_handler) {
   WabtDefaultErrorHandlerInfo* info = error_handler->user_data;
-  wabt_free(allocator, (void*)info->header);
-  wabt_free(allocator, info);
-  wabt_free(allocator, error_handler);
+  wabt_free((void*)info->header);
+  wabt_free(info);
+  wabt_free(error_handler);
 }
 
 static WabtResult on_assert_malformed_command(Context* ctx,
@@ -1189,13 +1157,12 @@ static WabtResult on_assert_malformed_command(Context* ctx,
       new_custom_error_handler(ctx, "assert_malformed");
   WabtInterpreterEnvironment env;
   WABT_ZERO_MEMORY(env);
-  init_environment(ctx->allocator, &env);
+  init_environment(&env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   WabtInterpreterModule* module;
-  WabtResult result =
-      read_module(ctx->allocator, path, &env, error_handler, &module);
+  WabtResult result = read_module(path, &env, error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
     result = WABT_OK;
@@ -1204,9 +1171,9 @@ static WabtResult on_assert_malformed_command(Context* ctx,
     result = WABT_ERROR;
   }
 
-  wabt_free(ctx->allocator, path);
-  wabt_destroy_interpreter_environment(ctx->allocator, &env);
-  destroy_custom_error_handler(ctx->allocator, error_handler);
+  wabt_free(path);
+  wabt_destroy_interpreter_environment(&env);
+  destroy_custom_error_handler(error_handler);
   return result;
 }
 
@@ -1237,9 +1204,9 @@ static WabtResult on_register_command(Context* ctx,
     return WABT_ERROR;
   }
 
-  WabtStringSlice dup_as = wabt_dup_string_slice(ctx->allocator, as);
-  WabtBinding* binding = wabt_insert_binding(
-      ctx->allocator, &ctx->env.registered_module_bindings, &dup_as);
+  WabtStringSlice dup_as = wabt_dup_string_slice(as);
+  WabtBinding* binding =
+      wabt_insert_binding(&ctx->env.registered_module_bindings, &dup_as);
   binding->index = module_index;
   return WABT_OK;
 }
@@ -1255,9 +1222,8 @@ static WabtResult on_assert_unlinkable_command(Context* ctx,
   WabtInterpreterModule* module;
   WabtInterpreterEnvironmentMark mark =
       wabt_mark_interpreter_environment(&ctx->env);
-  WabtResult result =
-      read_module(ctx->allocator, path, &ctx->env, error_handler, &module);
-  wabt_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
+  WabtResult result = read_module(path, &ctx->env, error_handler, &module);
+  wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
 
   if (WABT_FAILED(result)) {
     ctx->passed++;
@@ -1267,8 +1233,8 @@ static WabtResult on_assert_unlinkable_command(Context* ctx,
     result = WABT_ERROR;
   }
 
-  wabt_free(ctx->allocator, path);
-  destroy_custom_error_handler(ctx->allocator, error_handler);
+  wabt_free(path);
+  destroy_custom_error_handler(error_handler);
   return result;
 }
 
@@ -1279,13 +1245,12 @@ static WabtResult on_assert_invalid_command(Context* ctx,
       new_custom_error_handler(ctx, "assert_invalid");
   WabtInterpreterEnvironment env;
   WABT_ZERO_MEMORY(env);
-  init_environment(ctx->allocator, &env);
+  init_environment(&env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   WabtInterpreterModule* module;
-  WabtResult result =
-      read_module(ctx->allocator, path, &env, error_handler, &module);
+  WabtResult result = read_module(path, &env, error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
     result = WABT_OK;
@@ -1294,9 +1259,9 @@ static WabtResult on_assert_invalid_command(Context* ctx,
     result = WABT_ERROR;
   }
 
-  wabt_free(ctx->allocator, path);
-  wabt_destroy_interpreter_environment(ctx->allocator, &env);
-  destroy_custom_error_handler(ctx->allocator, error_handler);
+  wabt_free(path);
+  wabt_destroy_interpreter_environment(&env);
+  destroy_custom_error_handler(error_handler);
   return result;
 }
 
@@ -1308,12 +1273,10 @@ static WabtResult on_assert_uninstantiable_command(Context* ctx,
   WabtInterpreterModule* module;
   WabtInterpreterEnvironmentMark mark =
       wabt_mark_interpreter_environment(&ctx->env);
-  WabtResult result =
-      read_module(ctx->allocator, path, &ctx->env, &s_error_handler, &module);
+  WabtResult result = read_module(path, &ctx->env, &s_error_handler, &module);
 
   if (WABT_SUCCEEDED(result)) {
-    WabtInterpreterResult iresult =
-        run_start_function(ctx->allocator, &ctx->thread, module);
+    WabtInterpreterResult iresult = run_start_function(&ctx->thread, module);
     if (iresult == WABT_INTERPRETER_OK) {
       print_command_error(ctx, "expected error running start function: \"%s\"",
                           path);
@@ -1327,8 +1290,8 @@ static WabtResult on_assert_uninstantiable_command(Context* ctx,
     result = WABT_ERROR;
   }
 
-  wabt_reset_interpreter_environment_to_mark(ctx->allocator, &ctx->env, mark);
-  wabt_free(ctx->allocator, path);
+  wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
+  wabt_free(path);
   return result;
 }
 
@@ -1390,7 +1353,7 @@ static WabtResult on_assert_return_command(
   if (WABT_SUCCEEDED(result))
     ctx->passed++;
 
-  wabt_destroy_interpreter_typed_value_vector(ctx->allocator, &results);
+  wabt_destroy_interpreter_typed_value_vector(&results);
   return result;
 }
 
@@ -1446,7 +1409,7 @@ static WabtResult on_assert_return_nan_command(Context* ctx, Action* action) {
   if (WABT_SUCCEEDED(result))
     ctx->passed++;
 
-  wabt_destroy_interpreter_typed_value_vector(ctx->allocator, &results);
+  wabt_destroy_interpreter_typed_value_vector(&results);
   return WABT_OK;
 }
 
@@ -1468,7 +1431,7 @@ static WabtResult on_assert_trap_command(Context* ctx,
     }
   }
 
-  wabt_destroy_interpreter_typed_value_vector(ctx->allocator, &results);
+  wabt_destroy_interpreter_typed_value_vector(&results);
   return result;
 }
 
@@ -1489,12 +1452,12 @@ static WabtResult on_assert_exhaustion_command(Context* ctx,
       }
     }
 
-    wabt_destroy_interpreter_typed_value_vector(ctx->allocator, &results);
+    wabt_destroy_interpreter_typed_value_vector(&results);
     return result;
 }
 
-static void destroy_action(WabtAllocator* allocator, Action* action) {
-  wabt_destroy_interpreter_typed_value_vector(allocator, &action->args);
+static void destroy_action(Action* action) {
+  wabt_destroy_interpreter_typed_value_vector(&action->args);
 }
 
 static WabtResult parse_command(Context* ctx) {
@@ -1521,7 +1484,7 @@ static WabtResult parse_command(Context* ctx) {
     EXPECT(",");
     CHECK_RESULT(parse_action(ctx, &action));
     on_action_command(ctx, &action);
-    destroy_action(ctx->allocator, &action);
+    destroy_action(&action);
   } else if (match(ctx, "\"register\"")) {
     WabtStringSlice as;
     WabtStringSlice name;
@@ -1597,8 +1560,8 @@ static WabtResult parse_command(Context* ctx) {
     EXPECT_KEY("expected");
     CHECK_RESULT(parse_const_vector(ctx, &expected));
     on_assert_return_command(ctx, &action, &expected);
-    wabt_destroy_interpreter_typed_value_vector(ctx->allocator, &expected);
-    destroy_action(ctx->allocator, &action);
+    wabt_destroy_interpreter_typed_value_vector(&expected);
+    destroy_action(&action);
   } else if (match(ctx, "\"assert_return_nan\"")) {
     Action action;
     WabtTypeVector expected;
@@ -1613,8 +1576,8 @@ static WabtResult parse_command(Context* ctx) {
     EXPECT_KEY("expected");
     CHECK_RESULT(parse_type_vector(ctx, &expected));
     on_assert_return_nan_command(ctx, &action);
-    wabt_destroy_type_vector(ctx->allocator, &expected);
-    destroy_action(ctx->allocator, &action);
+    wabt_destroy_type_vector(&expected);
+    destroy_action(&action);
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
     WabtStringSlice text;
@@ -1628,7 +1591,7 @@ static WabtResult parse_command(Context* ctx) {
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     on_assert_trap_command(ctx, &action, text);
-    destroy_action(ctx->allocator, &action);
+    destroy_action(&action);
   } else if (match(ctx, "\"assert_exhaustion\"")) {
     Action action;
     WabtStringSlice text;
@@ -1640,7 +1603,7 @@ static WabtResult parse_command(Context* ctx) {
     EXPECT(",");
     CHECK_RESULT(parse_action(ctx, &action));
     on_assert_exhaustion_command(ctx, &action);
-    destroy_action(ctx->allocator, &action);
+    destroy_action(&action);
   } else {
     print_command_error(ctx, "unknown command type");
     return WABT_ERROR;
@@ -1667,27 +1630,23 @@ static WabtResult parse_commands(Context* ctx) {
 }
 
 static void destroy_context(Context* ctx) {
-  wabt_destroy_interpreter_thread(ctx->allocator, &ctx->thread);
-  wabt_destroy_interpreter_environment(ctx->allocator, &ctx->env);
-  wabt_free(ctx->allocator, ctx->json_data);
+  wabt_destroy_interpreter_thread(&ctx->thread);
+  wabt_destroy_interpreter_environment(&ctx->env);
+  wabt_free(ctx->json_data);
 }
 
-static WabtResult read_and_run_spec_json(WabtAllocator* allocator,
-                                         const char* spec_json_filename) {
+static WabtResult read_and_run_spec_json(const char* spec_json_filename) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.allocator = allocator;
   ctx.loc.filename = spec_json_filename;
   ctx.loc.line = 1;
   ctx.loc.first_column = 1;
-  init_environment(allocator, &ctx.env);
-  wabt_init_interpreter_thread(allocator, &ctx.env, &ctx.thread,
-                               &s_thread_options);
+  init_environment(&ctx.env);
+  wabt_init_interpreter_thread(&ctx.env, &ctx.thread, &s_thread_options);
 
   void* data;
   size_t size;
-  WabtResult result =
-      wabt_read_file(allocator, spec_json_filename, &data, &size);
+  WabtResult result = wabt_read_file(spec_json_filename, &data, &size);
   if (WABT_FAILED(result))
     return WABT_ERROR;
 
@@ -1701,28 +1660,14 @@ static WabtResult read_and_run_spec_json(WabtAllocator* allocator,
 }
 
 int main(int argc, char** argv) {
-  WabtStackAllocator stack_allocator;
-  WabtAllocator* allocator;
-
   wabt_init_stdio();
   parse_options(argc, argv);
 
   s_stdout_stream = wabt_init_stdout_stream();
 
-  if (s_use_libc_allocator) {
-    allocator = &g_wabt_libc_allocator;
-  } else {
-    wabt_init_stack_allocator(&stack_allocator, &g_wabt_libc_allocator);
-    allocator = &stack_allocator.allocator;
-  }
-  WabtResult result;
   if (s_spec) {
-    result = read_and_run_spec_json(allocator, s_infile);
+    return read_and_run_spec_json(s_infile);
   } else {
-    result = read_and_run_module(allocator, s_infile);
+    return read_and_run_module(s_infile);
   }
-
-  wabt_print_allocator_stats(allocator);
-  wabt_destroy_allocator(allocator);
-  return result;
 }

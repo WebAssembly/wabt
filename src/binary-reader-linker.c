@@ -22,7 +22,6 @@
 #define RELOC_SIZE 5
 
 typedef struct Context {
-  WabtAllocator* allocator;
   WabtLinkerInputBinary* binary;
 
   WabtSection* reloc_section;
@@ -63,8 +62,7 @@ static WabtResult on_reloc(WabtRelocType type,
     WABT_FATAL("invalid relocation offset: %#x\n", offset);
   }
 
-  WabtReloc* reloc =
-      wabt_append_reloc(ctx->allocator, &ctx->reloc_section->relocations);
+  WabtReloc* reloc = wabt_append_reloc(&ctx->reloc_section->relocations);
   reloc->type = type;
   reloc->offset = offset;
 
@@ -89,8 +87,8 @@ static WabtResult on_import_func(uint32_t import_index,
                                  uint32_t sig_index,
                                  void* user_data) {
   Context* ctx = user_data;
-  WabtFunctionImport* import = wabt_append_function_import(
-      ctx->allocator, &ctx->binary->function_imports);
+  WabtFunctionImport* import =
+      wabt_append_function_import(&ctx->binary->function_imports);
   import->name = ctx->import_name;
   import->sig_index = sig_index;
   import->active = WABT_TRUE;
@@ -105,7 +103,7 @@ static WabtResult on_import_global(uint32_t import_index,
                                    void* user_data) {
   Context* ctx = user_data;
   WabtGlobalImport* import =
-      wabt_append_global_import(ctx->allocator, &ctx->binary->global_imports);
+      wabt_append_global_import(&ctx->binary->global_imports);
   import->name = ctx->import_name;
   import->type = type;
   import->mutable = mutable;
@@ -118,7 +116,7 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
                                 uint32_t size) {
   Context* context = ctx->user_data;
   WabtLinkerInputBinary* binary = context->binary;
-  WabtSection* sec = wabt_append_section(context->allocator, &binary->sections);
+  WabtSection* sec = wabt_append_section(&binary->sections);
   context->current_section = sec;
   sec->section_code = section_code;
   sec->size = size;
@@ -220,8 +218,7 @@ static WabtResult begin_data_segment(uint32_t index,
                                      void* user_data) {
   Context* ctx = user_data;
   WabtSection* sec = ctx->current_section;
-  WabtDataSegment* segment =
-      wabt_append_data_segment(ctx->allocator, &sec->data_segments);
+  WabtDataSegment* segment = wabt_append_data_segment(&sec->data_segments);
   segment->memory_index = memory_index;
   return WABT_OK;
 }
@@ -258,8 +255,7 @@ static WabtResult on_export(uint32_t index,
                             WabtStringSlice name,
                             void* user_data) {
   Context* ctx = user_data;
-  WabtExport* export =
-      wabt_append_export(ctx->allocator, &ctx->binary->exports);
+  WabtExport* export = wabt_append_export(&ctx->binary->exports);
   export->name = name;
   export->kind = kind;
   export->index = item_index;
@@ -270,8 +266,7 @@ static WabtResult on_function_name(uint32_t index,
                                    WabtStringSlice name,
                                    void* user_data) {
   Context* ctx = user_data;
-  wabt_append_string_slice_value(ctx->allocator, &ctx->binary->debug_names,
-                                 &name);
+  wabt_append_string_slice_value(&ctx->binary->debug_names, &name);
   return WABT_OK;
 }
 
@@ -302,11 +297,9 @@ static WabtBinaryReader s_binary_reader = {
     .on_function_name = on_function_name,
 };
 
-WabtResult wabt_read_binary_linker(struct WabtAllocator* allocator,
-                                   WabtLinkerInputBinary* input_info) {
+WabtResult wabt_read_binary_linker(WabtLinkerInputBinary* input_info) {
   Context context;
   WABT_ZERO_MEMORY(context);
-  context.allocator = allocator;
   context.binary = input_info;
 
   WabtBinaryReader reader;
@@ -316,6 +309,6 @@ WabtResult wabt_read_binary_linker(struct WabtAllocator* allocator,
 
   WabtReadBinaryOptions read_options = WABT_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = WABT_TRUE;
-  return wabt_read_binary(allocator, input_info->data, input_info->size,
-                          &reader, 1, &read_options);
+  return wabt_read_binary(input_info->data, input_info->size, &reader, 1,
+                          &read_options);
 }

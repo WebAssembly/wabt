@@ -19,20 +19,17 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtAstLexer;
 struct WabtModule;
 struct WabtScript;
 struct WabtSourceErrorHandler;
 
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_resolve_names_module(struct WabtAllocator*,
-                                     struct WabtAstLexer*,
+WabtResult wabt_resolve_names_module(struct WabtAstLexer*,
                                      struct WabtModule*,
                                      struct WabtSourceErrorHandler*);
 
-WabtResult wabt_resolve_names_script(struct WabtAllocator*,
-                                     struct WabtAstLexer*,
+WabtResult wabt_resolve_names_script(struct WabtAstLexer*,
                                      struct WabtScript*,
                                      struct WabtSourceErrorHandler*);
 WABT_EXTERN_C_END

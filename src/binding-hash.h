@@ -20,8 +20,6 @@
 #include "common.h"
 #include "vector.h"
 
-struct WabtAllocator;
-
 typedef struct WabtBinding {
   WabtLocation loc;
   WabtStringSlice name;
@@ -41,17 +39,13 @@ typedef struct WabtBindingHash {
 } WabtBindingHash;
 
 WABT_EXTERN_C_BEGIN
-WabtBinding* wabt_insert_binding(struct WabtAllocator*,
-                                 WabtBindingHash*,
-                                 const WabtStringSlice*);
-void wabt_remove_binding(struct WabtAllocator*,
-                         WabtBindingHash*,
-                         const WabtStringSlice*);
+WabtBinding* wabt_insert_binding(WabtBindingHash*, const WabtStringSlice*);
+void wabt_remove_binding(WabtBindingHash*, const WabtStringSlice*);
 WabtBool wabt_hash_entry_is_free(const WabtBindingHashEntry*);
 /* returns -1 if the name is not in the hash */
 int wabt_find_binding_index_by_name(const WabtBindingHash*,
                                     const WabtStringSlice* name);
-void wabt_destroy_binding_hash(struct WabtAllocator*, WabtBindingHash*);
+void wabt_destroy_binding_hash(WabtBindingHash*);
 WABT_EXTERN_C_END
 
 #endif /* WABT_BINDING_HASH_H_ */

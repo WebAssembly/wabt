@@ -28,7 +28,6 @@ options:
   -o, --output=FILE                    output wasm binary file
   -r,                                  create a relocatable wasm binary (suitable for linking with wasm-link)
       --spec                           parse a file with multiple modules and assertions, like the spec tests
-      --use-libc-allocator             use malloc, free, etc. instead of stack allocator
       --no-canonicalize-leb128s        Write all LEB128 sizes as 5-bytes instead of their minimal size
       --debug-names                    Write debug names to the generated binary file
       --no-check                       Don't check for invalid modules

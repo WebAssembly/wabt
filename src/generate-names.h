@@ -19,11 +19,10 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtModule;
 
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_generate_names(struct WabtAllocator*, struct WabtModule*);
+WabtResult wabt_generate_names(struct WabtModule*);
 WABT_EXTERN_C_END
 
 #endif /* WABT_GENERATE_NAMES_H_ */

@@ -19,13 +19,11 @@
 
 #include "common.h"
 
-struct WabtAllocator;
 struct WabtModule;
 struct WabtReadBinaryOptions;
 
 WABT_EXTERN_C_BEGIN
-WabtResult wabt_read_binary_ast(struct WabtAllocator* allocator,
-                                const void* data,
+WabtResult wabt_read_binary_ast(const void* data,
                                 size_t size,
                                 const struct WabtReadBinaryOptions* options,
                                 WabtBinaryErrorHandler*,
