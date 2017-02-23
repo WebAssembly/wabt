@@ -30,12 +30,12 @@ out/third_party/testsuite/globals.wast:95: assert_invalid passed:
   error: initializer expression can only reference an imported global
   error: @0x0000000f: on_init_expr_get_global_expr callback failed
 out/third_party/testsuite/globals.wast:103: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xd (expected 0x1)
+  error: @0x00000022: global mutability must be 0 or 1
 out/third_party/testsuite/globals.wast:116: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xd (expected 0x1)
+  error: @0x00000022: global mutability must be 0 or 1
 out/third_party/testsuite/globals.wast:133: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xd (expected 0x1)
+  error: @0x00000011: global mutability must be 0 or 1
 out/third_party/testsuite/globals.wast:145: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xd (expected 0x1)
+  error: @0x00000011: global mutability must be 0 or 1
 30/30 tests passed.
 ;;; STDOUT ;;)
