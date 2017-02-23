@@ -59,16 +59,19 @@ out/third_party/testsuite/br_if.wast:267: assert_invalid passed:
   error: type stack size too small at br_if. got 0, expected at least 1
   error: @0x0000001f: on_br_if_expr callback failed
 out/third_party/testsuite/br_if.wast:273: assert_invalid passed:
+  error: type stack size too small at br_if. got 0, expected at least 1
+  error: @0x00000022: on_br_if_expr callback failed
+out/third_party/testsuite/br_if.wast:279: assert_invalid passed:
   error: type mismatch in br_if, expected i32 but got i64.
   error: @0x00000020: on_br_if_expr callback failed
-out/third_party/testsuite/br_if.wast:280: assert_invalid passed:
+out/third_party/testsuite/br_if.wast:286: assert_invalid passed:
   error: invalid depth: 1 (max 0)
   error: @0x0000001b: on_br_if_expr callback failed
-out/third_party/testsuite/br_if.wast:284: assert_invalid passed:
+out/third_party/testsuite/br_if.wast:290: assert_invalid passed:
   error: invalid depth: 5 (max 2)
   error: @0x0000001f: on_br_if_expr callback failed
-out/third_party/testsuite/br_if.wast:288: assert_invalid passed:
+out/third_party/testsuite/br_if.wast:294: assert_invalid passed:
   error: invalid depth: 268435457 (max 0)
   error: @0x0000001f: on_br_if_expr callback failed
-57/57 tests passed.
+58/58 tests passed.
 ;;; STDOUT ;;)
