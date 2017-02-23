@@ -90,4 +90,11 @@ function assert_return_nan(action) {
   };
 }
 
+function assert_exhaustion(action) {
+  try { action() } catch (e) {
+    if (e instanceof RangeError) return;
+  }
+  throw new Error("RangeError expected");
+}
+
 let f32 = Math.fround;

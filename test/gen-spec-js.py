@@ -183,9 +183,7 @@ def IsValidJSCommand(command):
     expected = command['expected']
     return (IsValidJSAction(action) and
             all(IsValidJSConstant(x) for x in expected))
-  elif type_ == 'assert_return_nan':
-    return IsValidJSAction(action)
-  elif type_ == 'assert_trap':
+  elif type_ in ('assert_return_nan', 'assert_trap', 'assert_exhaustion'):
     return IsValidJSAction(action)
 
 
@@ -200,7 +198,7 @@ def CollectInvalidModuleCommands(commands):
       if module_name:
         module_map[module_name] = pair
     elif command['type'] in ('assert_return', 'assert_return_nan',
-                             'assert_trap'):
+                             'assert_trap', 'assert_exhaustion'):
       if IsValidJSCommand(command):
         continue
 
@@ -270,7 +268,7 @@ class ModuleExtender(object):
 
       # Change the command to assert_return, it won't return NaN anymore.
       command['type'] = 'assert_return'
-    elif command_type == 'assert_trap':
+    elif command_type in ('assert_trap', 'assert_exhaustion'):
       self.lines.append('(func (export "%s")' % new_field)
       self._Action(command['action'])
       self.lines.extend(['br 0', ')'])
@@ -363,6 +361,7 @@ class JSWriter(object):
         'assert_return': self._WriteAssertReturnCommand,
         'assert_return_nan': self._WriteAssertActionCommand,
         'assert_trap': self._WriteAssertActionCommand,
+        'assert_exhaustion': self._WriteAssertActionCommand,
     }
 
     func = command_funcs.get(command['type'])
