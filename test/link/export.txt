@@ -13,7 +13,7 @@
      call 0)
 )
 (;; STDOUT ;;;
-linked.wasm:	file format wasm 0x00000d
+linked.wasm:	file format wasm 0x000001
 
 Sections:
 

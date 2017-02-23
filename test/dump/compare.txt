@@ -117,7 +117,7 @@
     drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -310,7 +310,7 @@
 0000015: 9f02                                      ; FIXUP func body size
 ; move data: [14, 136) -> [15, 137)
 0000013: a202                                      ; FIXUP section size
-compare.wasm:	file format wasm 0x00000d
+compare.wasm:	file format wasm 0x000001
 
 Code Disassembly:
 

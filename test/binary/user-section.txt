@@ -7,7 +7,7 @@ section(TYPE) { count[1] function params[0] results[1] i32 }
 section("bar") { count[5] }
 section("foo") { count[6] }
 (;; STDOUT ;;;
-begin_module(13)
+begin_module(1)
 begin_custom_section: 'foo' size=5
 end_custom_section
 begin_signature_section

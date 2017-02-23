@@ -23,7 +23,7 @@
     drop))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 0000 0000 00                              ; section size (guess)
@@ -146,7 +146,7 @@
 0000099: 0b                                        ; end
 000008d: 8880 8080 00                              ; FIXUP func body size
 000006b: aa80 8080 00                              ; FIXUP section size
-no-canonicalize.wasm:	file format wasm 0x00000d
+no-canonicalize.wasm:	file format wasm 0x000001
 
 Code Disassembly:
 

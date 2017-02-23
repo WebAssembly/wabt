@@ -17,7 +17,7 @@
   (global f64 (get_global 3)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "IMPORT" (2)
 0000008: 02                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -100,7 +100,7 @@
 0000086: 03                                        ; global index
 0000087: 0b                                        ; end
 0000054: 33                                        ; FIXUP section size
-global.wasm:	file format wasm 0x00000d
+global.wasm:	file format wasm 0x000001
 
 Section Details:
 
