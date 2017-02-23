@@ -332,6 +332,7 @@ WabtResult wabt_typechecker_on_br_if(WabtTypeChecker* tc, size_t depth) {
 }
 
 WabtResult wabt_typechecker_begin_br_table(WabtTypeChecker* tc) {
+  tc->br_table_sig = WABT_TYPE_ANY;
   return pop_and_check_1_type(tc, WABT_TYPE_I32, "br_table");
 }
 
@@ -340,6 +341,13 @@ WabtResult wabt_typechecker_on_br_table_target(WabtTypeChecker* tc,
   WabtResult result = WABT_OK;
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(wabt_typechecker_get_label(tc, depth, &label));
+  assert(label->sig.size <= 1);
+  WabtType label_sig =
+      label->sig.size == 0 ? WABT_TYPE_VOID : label->sig.data[0];
+  COMBINE_RESULT(result,
+                 check_type(tc, tc->br_table_sig, label_sig, "br_table"));
+  tc->br_table_sig = label_sig;
+
   if (label->label_type != WABT_LABEL_TYPE_LOOP)
     COMBINE_RESULT(result, check_signature(tc, &label->sig, "br_table"));
   return result;
@@ -421,6 +429,7 @@ static WabtResult on_end(WabtTypeChecker* tc,
 }
 
 WabtResult wabt_typechecker_on_end(WabtTypeChecker* tc) {
+  WabtResult result = WABT_OK;
   static const char* s_label_type_name[] = {"function", "block", "loop", "if",
                                             "if false branch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) ==
@@ -428,8 +437,15 @@ WabtResult wabt_typechecker_on_end(WabtTypeChecker* tc) {
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(top_label(tc, &label));
   assert(label->label_type < WABT_NUM_LABEL_TYPES);
+  if (label->label_type == WABT_LABEL_TYPE_IF) {
+    if (label->sig.size != 0) {
+      print_error(tc, "if without else cannot have type signature.");
+      result = WABT_ERROR;
+    }
+  }
   const char* desc = s_label_type_name[label->label_type];
-  return on_end(tc, label, desc, desc);
+  COMBINE_RESULT(result, on_end(tc, label, desc, desc));
+  return result;
 }
 
 WabtResult wabt_typechecker_on_grow_memory(WabtTypeChecker* tc) {

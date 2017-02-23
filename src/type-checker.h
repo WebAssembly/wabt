@@ -42,6 +42,9 @@ typedef struct WabtTypeChecker {
   WabtTypeCheckerErrorHandler* error_handler;
   WabtTypeVector type_stack;
   WabtTypeCheckerLabelVector label_stack;
+/* TODO(binji): will need to be complete signature when signatures with
+ * multiple types are allowed. */
+  WabtType br_table_sig;
 } WabtTypeChecker;
 
 WABT_EXTERN_C_BEGIN
