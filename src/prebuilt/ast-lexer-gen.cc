@@ -116,7 +116,7 @@ static WabtResult fill(WabtLocation* loc,
     /* TODO(binji): could just alloc instead, because we know we'll need to
      * memmove below */
     char* new_buffer = (char*)wabt_realloc(lexer->buffer, new_buffer_size);
-    if (new_buffer == NULL) {
+    if (new_buffer == nullptr) {
       wabt_ast_parser_error(loc, lexer, parser,
                             "unable to reallocate lexer buffer.");
       return WABT_ERROR;
@@ -6683,7 +6683,7 @@ WabtAstLexer* wabt_new_ast_file_lexer(const char* filename) {
   lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
     wabt_destroy_ast_lexer(lexer);
-    return NULL;
+    return nullptr;
   }
   return lexer;
 }

@@ -210,7 +210,7 @@ WabtInterpreterExport* wabt_get_interpreter_export_by_name(
   int field_index =
       wabt_find_binding_index_by_name(&module->export_bindings, name);
   if (field_index < 0)
-    return NULL;
+    return nullptr;
   assert((size_t)field_index < module->exports.size);
   return &module->exports.data[field_index];
 }
@@ -1031,7 +1031,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
                                 UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WABT_PAGE_SIZE;
         void* new_data = wabt_realloc(memory->data, new_byte_size);
-        PUSH_NEG_1_AND_BREAK_IF(new_data == NULL);
+        PUSH_NEG_1_AND_BREAK_IF(!new_data);
         memset((void*)((intptr_t)new_data + old_byte_size), 0,
                new_byte_size - old_byte_size);
         memory->data = new_data;

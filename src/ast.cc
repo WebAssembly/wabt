@@ -29,7 +29,7 @@ WabtExportPtr wabt_get_export_by_name(const WabtModule* module,
                                       const WabtStringSlice* name) {
   int index = wabt_find_binding_index_by_name(&module->export_bindings, name);
   if (index == -1)
-    return NULL;
+    return nullptr;
   return module->exports.data[index];
 }
 
@@ -78,7 +78,7 @@ int wabt_get_module_index_by_var(const WabtScript* script, const WabtVar* var) {
 WabtFuncPtr wabt_get_func_by_var(const WabtModule* module, const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->func_bindings, var);
   if (index < 0 || (size_t)index >= module->funcs.size)
-    return NULL;
+    return nullptr;
   return module->funcs.data[index];
 }
 
@@ -86,7 +86,7 @@ WabtGlobalPtr wabt_get_global_by_var(const WabtModule* module,
                                      const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->global_bindings, var);
   if (index < 0 || (size_t)index >= module->globals.size)
-    return NULL;
+    return nullptr;
   return module->globals.data[index];
 }
 
@@ -94,7 +94,7 @@ WabtTablePtr wabt_get_table_by_var(const WabtModule* module,
                                    const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->table_bindings, var);
   if (index < 0 || (size_t)index >= module->tables.size)
-    return NULL;
+    return nullptr;
   return module->tables.data[index];
 }
 
@@ -102,7 +102,7 @@ WabtMemoryPtr wabt_get_memory_by_var(const WabtModule* module,
                                    const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->memory_bindings, var);
   if (index < 0 || (size_t)index >= module->memories.size)
-    return NULL;
+    return nullptr;
   return module->memories.data[index];
 }
 
@@ -110,7 +110,7 @@ WabtFuncTypePtr wabt_get_func_type_by_var(const WabtModule* module,
                                           const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->func_type_bindings, var);
   if (index < 0 || (size_t)index >= module->func_types.size)
-    return NULL;
+    return nullptr;
   return module->func_types.data[index];
 }
 
@@ -139,14 +139,14 @@ WabtModule* wabt_get_first_module(const WabtScript* script) {
     if (command->type == WABT_COMMAND_TYPE_MODULE)
       return &command->module;
   }
-  return NULL;
+  return nullptr;
 }
 
 WabtModule* wabt_get_module_by_var(const WabtScript* script,
                                    const WabtVar* var) {
   int index = wabt_get_index_from_var(&script->module_bindings, var);
   if (index < 0 || (size_t)index >= script->commands.size)
-    return NULL;
+    return nullptr;
   WabtCommand* command = &script->commands.data[index];
   assert(command->type == WABT_COMMAND_TYPE_MODULE);
   return &command->module;
@@ -184,7 +184,7 @@ void wabt_find_duplicate_bindings(const WabtBindingHash* bindings,
       continue;
 
     /* only follow the chain if this is the first entry in the chain */
-    if (entry->prev != NULL)
+    if (entry->prev)
       continue;
 
     WabtBindingHashEntry* a = entry;
@@ -457,7 +457,7 @@ void wabt_destroy_module(WabtModule* module) {
   wabt_destroy_string_slice(&module->name);
 
   WabtModuleField* field = module->first_field;
-  while (field != NULL) {
+  while (field) {
     WabtModuleField* next_field = field->next;
     destroy_module_field(field);
     wabt_free(field);

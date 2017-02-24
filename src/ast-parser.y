@@ -61,7 +61,7 @@
       (Current).first_column = YYRHSLOC(Rhs, 1).first_column; \
       (Current).last_column = YYRHSLOC(Rhs, N).last_column;   \
     } else {                                                  \
-      (Current).filename = NULL;                              \
+      (Current).filename = nullptr;                           \
       (Current).line = YYRHSLOC(Rhs, 0).line;                 \
       (Current).first_column = (Current).last_column =        \
           YYRHSLOC(Rhs, 0).last_column;                       \
@@ -305,20 +305,20 @@ non_empty_text_list :
     TEXT {
       WabtTextListNode* node = new_text_list_node();
       DUPTEXT(node->text, $1);
-      node->next = NULL;
+      node->next = nullptr;
       $$.first = $$.last = node;
     }
   | non_empty_text_list TEXT {
       $$ = $1;
       WabtTextListNode* node = new_text_list_node();
       DUPTEXT(node->text, $2);
-      node->next = NULL;
+      node->next = nullptr;
       $$.last->next = node;
       $$.last = node;
     }
 ;
 text_list :
-    /* empty */ { $$.first = $$.last = NULL; }
+    /* empty */ { $$.first = $$.last = nullptr; }
   | non_empty_text_list
 ;
 
@@ -326,7 +326,7 @@ quoted_text :
     TEXT {
       WabtTextListNode node;
       node.text = $1;
-      node.next = NULL;
+      node.next = nullptr;
       WabtTextList text_list;
       text_list.first = &node;
       text_list.last = &node;
@@ -747,7 +747,7 @@ func_body :
       $$ = new_func_field();
       $$->type = WABT_FUNC_FIELD_TYPE_EXPRS;
       $$->first_expr = $1.first;
-      $$->next = NULL;
+      $$->next = nullptr;
     }
   | LPAR LOCAL value_type_list RPAR func_body {
       $$ = new_func_field();
@@ -1460,7 +1460,7 @@ script :
       size_t i;
       for (i = 0; i < $$.commands.size; ++i) {
         WabtCommand* command = &$$.commands.data[i];
-        WabtVar* module_var = NULL;
+        WabtVar* module_var = nullptr;
         switch (command->type) {
           case WABT_COMMAND_TYPE_MODULE: {
             last_module_index = i;

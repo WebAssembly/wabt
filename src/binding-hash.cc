@@ -48,7 +48,7 @@ static WabtBindingHashEntry* hash_new_entry(WabtBindingHash* hash,
     WabtBindingHashEntry* free_entry = hash->free_head;
     hash->free_head = free_entry->next;
     if (free_entry->next)
-      free_entry->next->prev = NULL;
+      free_entry->next->prev = nullptr;
 
     /* our main position is already claimed. Check to see if the entry in that
      * position is in its main position */
@@ -68,7 +68,7 @@ static WabtBindingHashEntry* hash_new_entry(WabtBindingHash* hash,
 
       other_entry->next = free_entry;
       *free_entry = *entry;
-      entry->next = NULL;
+      entry->next = nullptr;
     }
   } else {
     /* remove from the free list */
@@ -78,12 +78,12 @@ static WabtBindingHashEntry* hash_new_entry(WabtBindingHash* hash,
       entry->prev->next = entry->next;
     else
       hash->free_head = entry->next;
-    entry->next = NULL;
+    entry->next = nullptr;
   }
 
   WABT_ZERO_MEMORY(entry->binding);
   entry->binding.name = *name;
-  entry->prev = NULL;
+  entry->prev = nullptr;
   /* entry->next is set above */
   return entry;
 }
@@ -105,7 +105,7 @@ static void hash_resize(WabtBindingHash* hash, size_t desired_capacity) {
     entry->next = new_hash.free_head;
     new_hash.free_head = entry;
   }
-  new_hash.free_head->prev = NULL;
+  new_hash.free_head->prev = nullptr;
 
   /* copy from the old hash to the new hash */
   for (i = 0; i < hash->entries.capacity; ++i) {

@@ -100,7 +100,7 @@ WabtStringSlice wabt_string_slice_from_cstr(const char* string) {
 
 bool wabt_string_slice_is_empty(const WabtStringSlice* str) {
   assert(str);
-  return str->start == NULL || str->length == 0;
+  return !str->start || str->length == 0;
 }
 
 bool wabt_string_slices_are_equal(const WabtStringSlice* a,

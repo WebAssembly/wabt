@@ -97,7 +97,7 @@ void wabt_parse_options(WabtOptionParser* parser,
         }
 
         WabtOption* best_option = &parser->options[best_index];
-        const char* option_argument = NULL;
+        const char* option_argument = nullptr;
         if (best_option->has_argument) {
           if (arg[best_length] == '=') {
             option_argument = &arg[best_length + 1];
@@ -126,7 +126,7 @@ void wabt_parse_options(WabtOptionParser* parser,
           for (j = 0; j < parser->num_options; ++j) {
             WabtOption* option = &parser->options[j];
             if (option->short_name && arg[k] == option->short_name) {
-              const char* option_argument = NULL;
+              const char* option_argument = nullptr;
               if (option->has_argument) {
                 /* a short option with a required argument cannot be followed
                  * by other short options */
@@ -177,10 +177,10 @@ void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
     int length;
     if (option->long_name) {
       if (option->metavar) {
-        length =
-            wabt_snprintf(NULL, 0, "%s=%s", option->long_name, option->metavar);
+        length = wabt_snprintf(nullptr, 0, "%s=%s", option->long_name,
+                               option->metavar);
       } else {
-        length = wabt_snprintf(NULL, 0, "%s", option->long_name);
+        length = wabt_snprintf(nullptr, 0, "%s", option->long_name);
       }
     } else {
       continue;

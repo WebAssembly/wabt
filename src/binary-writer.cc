@@ -542,7 +542,7 @@ static void write_init_expr(Context* ctx,
                             const WabtModule* module,
                             const WabtExpr* expr) {
   if (expr)
-    write_expr_list(ctx, module, NULL, expr);
+    write_expr_list(ctx, module, nullptr, expr);
   wabt_write_opcode(&ctx->stream, WABT_OPCODE_END);
 }
 

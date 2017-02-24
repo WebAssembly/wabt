@@ -99,7 +99,8 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
       if (section_match) {
         printf("\nContents of section %s:\n", name);
         wabt_write_memory_dump(context->out_stream, context->data + ctx->offset,
-                               size, ctx->offset, WABT_PRINT_CHARS, NULL, NULL);
+                               size, ctx->offset, WABT_PRINT_CHARS, nullptr,
+                               nullptr);
       }
       break;
     case WABT_DUMP_DISASSEMBLE:
@@ -259,7 +260,7 @@ static void log_opcode(Context* ctx,
 
 static WabtResult on_opcode_bare(WabtBinaryReaderContext* ctx) {
   Context* context = (Context*)ctx->user_data;
-  log_opcode(context, ctx->data, 0, NULL);
+  log_opcode(context, ctx->data, 0, nullptr);
   return WABT_OK;
 }
 
@@ -315,7 +316,7 @@ WabtResult on_br_table_expr(WabtBinaryReaderContext* ctx,
   Context* context = (Context*)ctx->user_data;
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   /* TODO(sbc): Print targets */
-  log_opcode(context, ctx->data, immediate_len, NULL);
+  log_opcode(context, ctx->data, immediate_len, nullptr);
   return WABT_OK;
 }
 
@@ -323,7 +324,7 @@ static WabtResult on_end_expr(void* user_data) {
   Context* context = (Context*)user_data;
   context->indent_level--;
   assert(context->indent_level >= 0);
-  log_opcode(context, NULL, 0, NULL);
+  log_opcode(context, nullptr, 0, nullptr);
   return WABT_OK;
 }
 
@@ -354,7 +355,7 @@ static WabtResult on_opcode_block_sig(WabtBinaryReaderContext* ctx,
   if (num_types)
     log_opcode(context, ctx->data, 1, "%s", wabt_type_name(*sig_types));
   else
-    log_opcode(context, ctx->data, 1, NULL);
+    log_opcode(context, ctx->data, 1, nullptr);
   context->indent_level++;
   return WABT_OK;
 }
@@ -653,7 +654,7 @@ static WabtResult on_data_segment_data(uint32_t index,
   Context* ctx = (Context*)user_data;
   if (should_print_details(ctx)) {
     wabt_write_memory_dump(ctx->out_stream, src_data, size, 0, WABT_PRINT_CHARS,
-                           "  - ", NULL);
+                           "  - ", nullptr);
   }
   return WABT_OK;
 }

@@ -158,7 +158,7 @@ WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
 void wabt_steal_mem_writer_output_buffer(WabtMemoryWriter* writer,
                                          WabtOutputBuffer* out_buf) {
   *out_buf= writer->buf;
-  writer->buf.start = NULL;
+  writer->buf.start = nullptr;
   writer->buf.size = 0;
   writer->buf.capacity = 0;
 }

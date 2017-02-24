@@ -42,7 +42,7 @@ WabtResult wabt_typechecker_get_label(WabtTypeChecker* tc,
     assert(tc->label_stack.size > 0);
     print_error(tc, "invalid depth: %" PRIzd " (max %" PRIzd ")",
                 depth, tc->label_stack.size - 1);
-    *out_label = NULL;
+    *out_label = nullptr;
     return WABT_ERROR;
   }
   *out_label = &tc->label_stack.data[tc->label_stack.size - depth - 1];

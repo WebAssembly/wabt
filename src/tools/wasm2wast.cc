@@ -34,7 +34,7 @@
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
-static WabtReadBinaryOptions s_read_binary_options = {NULL, true};
+static WabtReadBinaryOptions s_read_binary_options = {nullptr, true};
 static bool s_generate_names;
 
 static WabtBinaryErrorHandler s_error_handler =
@@ -67,14 +67,14 @@ static const char s_description[] =
     "  $ wasm2wast test.wasm --no-debug-names -o test.wast\n";
 
 static WabtOption s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
+    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
     {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
      "output file for the generated wast file, by default use stdout"},
-    {FLAG_NO_DEBUG_NAMES, 0, "no-debug-names", NULL, NOPE,
+    {FLAG_NO_DEBUG_NAMES, 0, "no-debug-names", nullptr, NOPE,
      "Ignore debug names in the binary file"},
-    {FLAG_GENERATE_NAMES, 0, "generate-names", NULL, NOPE,
+    {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, NOPE,
      "Give auto-generated names to non-named functions, types, etc."},
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
@@ -86,7 +86,7 @@ static void on_option(struct WabtOptionParser* parser,
     case FLAG_VERBOSE:
       s_verbose++;
       wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
 
