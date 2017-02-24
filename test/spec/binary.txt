@@ -22,8 +22,10 @@ out/third_party/testsuite/binary.wast:15: assert_malformed passed:
 out/third_party/testsuite/binary.wast:16: assert_malformed passed:
   error: @0x00000004: unable to read uint32_t: version
 out/third_party/testsuite/binary.wast:17: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xe (expected 0xd)
+  error: @0x00000008: bad wasm file version: 0xd (expected 0x1)
 out/third_party/testsuite/binary.wast:18: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xd000000 (expected 0xd)
-12/12 tests passed.
+  error: @0x00000008: bad wasm file version: 0xe (expected 0x1)
+out/third_party/testsuite/binary.wast:19: assert_malformed passed:
+  error: @0x00000008: bad wasm file version: 0x1000000 (expected 0x1)
+13/13 tests passed.
 ;;; STDOUT ;;)
