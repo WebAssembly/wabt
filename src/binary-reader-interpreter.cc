@@ -1044,7 +1044,7 @@ static WabtResult end_function_body(uint32_t index, void* user_data) {
   CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
   CHECK_RESULT(emit_opcode(ctx, WABT_OPCODE_RETURN));
   pop_label(ctx);
-  ctx->current_func = NULL;
+  ctx->current_func = nullptr;
   return WABT_OK;
 }
 
@@ -1578,7 +1578,7 @@ WabtResult wabt_read_binary_interpreter(WabtInterpreterEnvironment* env,
     *out_module = module;
   } else {
     wabt_reset_interpreter_environment_to_mark(env, mark);
-    *out_module = NULL;
+    *out_module = nullptr;
   }
   destroy_context(&ctx);
   return result;

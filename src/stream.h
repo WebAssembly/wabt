@@ -26,7 +26,7 @@ typedef struct WabtStream {
   WabtWriter* writer;
   size_t offset;
   WabtResult result;
-  /* if non-NULL, log all writes to this stream */
+  /* if non-null, log all writes to this stream */
   struct WabtStream* log_stream;
 } WabtStream;
 
@@ -53,7 +53,7 @@ WabtStream* wabt_init_stderr_stream(void);
 
 /* helper functions for writing to a WabtStream. the |desc| parameter is
  * optional, and will be appended to the log stream if |stream.log_stream| is
- * non-NULL. */
+ * non-null. */
 void wabt_write_data_at(WabtStream*,
                         size_t offset,
                         const void* src,
@@ -77,7 +77,7 @@ void wabt_write_u32(WabtStream*, uint32_t value, const char* desc);
 void wabt_write_u64(WabtStream*, uint64_t value, const char* desc);
 
 static WABT_INLINE void wabt_write_char(WabtStream* stream, char c) {
-  wabt_write_u8(stream, c, NULL);
+  wabt_write_u8(stream, c, nullptr);
 }
 
 /* dump memory as text, similar to the xxd format */
@@ -93,7 +93,7 @@ static WABT_INLINE void wabt_write_output_buffer_memory_dump(
     WabtStream* stream,
     struct WabtOutputBuffer* buf) {
   wabt_write_memory_dump(stream, buf->start, buf->size, 0,
-                         WABT_DONT_PRINT_CHARS, NULL, NULL);
+                         WABT_DONT_PRINT_CHARS, nullptr, nullptr);
 }
 
 WABT_EXTERN_C_END

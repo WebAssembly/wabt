@@ -585,7 +585,7 @@ static WABT_INLINE const WabtLocation* wabt_get_raw_module_location(
     case WABT_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
     default:
       assert(0);
-      return NULL;
+      return nullptr;
   }
 }
 

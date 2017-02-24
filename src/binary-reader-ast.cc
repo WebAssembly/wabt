@@ -63,7 +63,7 @@ static void push_label(Context* ctx,
   LabelNode label;
   label.label_type = label_type;
   label.first = first;
-  label.last = NULL;
+  label.last = nullptr;
   ctx->max_depth++;
   wabt_append_label_node_value(&ctx->label_stack, &label);
 }
@@ -388,7 +388,7 @@ static WabtResult begin_global_init_expr(uint32_t index, void* user_data) {
 
 static WabtResult end_global_init_expr(uint32_t index, void* user_data) {
   Context* ctx = (Context*)user_data;
-  ctx->current_init_expr = NULL;
+  ctx->current_init_expr = nullptr;
   return WABT_OK;
 }
 
@@ -598,7 +598,7 @@ static WabtResult on_else_expr(void* user_data) {
 
   label->label_type = WABT_LABEL_TYPE_ELSE;
   label->first = &parent_label->last->if_.false_;
-  label->last = NULL;
+  label->last = nullptr;
   return WABT_OK;
 }
 
@@ -773,7 +773,7 @@ static WabtResult on_unreachable_expr(void* user_data) {
 static WabtResult end_function_body(uint32_t index, void* user_data) {
   Context* ctx = (Context*)user_data;
   CHECK_RESULT(pop_label(ctx));
-  ctx->current_func = NULL;
+  ctx->current_func = nullptr;
   return WABT_OK;
 }
 
@@ -815,7 +815,7 @@ static WabtResult begin_elem_segment_init_expr(uint32_t index,
 
 static WabtResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
   Context* ctx = (Context*)user_data;
-  ctx->current_init_expr = NULL;
+  ctx->current_init_expr = nullptr;
   return WABT_OK;
 }
 
@@ -879,7 +879,7 @@ static WabtResult begin_data_segment_init_expr(uint32_t index,
 
 static WabtResult end_data_segment_init_expr(uint32_t index, void* user_data) {
   Context* ctx = (Context*)user_data;
-  ctx->current_init_expr = NULL;
+  ctx->current_init_expr = nullptr;
   return WABT_OK;
 }
 

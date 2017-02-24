@@ -24,7 +24,7 @@
 #include "common.h"
 
 #define WABT_READ_BINARY_OPTIONS_DEFAULT \
-  { NULL, false }
+  { nullptr, false }
 
 typedef struct WabtReadBinaryOptions {
   struct WabtStream* log_stream;

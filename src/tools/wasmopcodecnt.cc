@@ -64,32 +64,15 @@ static const char s_description[] =
     "  $ wasmopcodecnt test.wasm -o test.dist\n";
 
 static WabtOption s_options[] = {
-    {FLAG_VERBOSE,
-     'v',
-     "verbose",
-     NULL,
-     NOPE,
+    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
-    {FLAG_OUTPUT,
-     'o',
-     "output",
-     "FILENAME",
-     YEP,
+    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
+    {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
      "output file for the opcode counts, by default use stdout"},
-    {FLAG_CUTOFF,
-     'c',
-     "cutoff",
-     "N",
-     YEP,
+    {FLAG_CUTOFF, 'c', "cutoff", "N", YEP,
      "cutoff for reporting counts less than N"},
-    {FLAG_SEPARATOR,
-     's',
-     "separator",
-     "SEPARATOR",
-     YEP,
-     "Separator text between element and count when reporting counts"}
-};
+    {FLAG_SEPARATOR, 's', "separator", "SEPARATOR", YEP,
+     "Separator text between element and count when reporting counts"}};
 
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
@@ -100,7 +83,7 @@ static void on_option(struct WabtOptionParser* parser,
     case FLAG_VERBOSE:
       s_verbose++;
       wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
 
@@ -375,7 +358,7 @@ int main(int argc, char** argv) {
     if (WABT_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
           out, "Opcode counts:", &opcnt_data.opcode_vec, opcode_counter_gt,
-          display_opcode_name, NULL);
+          display_opcode_name, nullptr);
       display_sorted_int_counter_vector(
           out, "\ni32.const:", &opcnt_data.i32_const_vec, int_counter_gt,
           display_intmax, wabt_get_opcode_name(WABT_OPCODE_I32_CONST));

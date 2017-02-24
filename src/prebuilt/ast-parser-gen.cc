@@ -118,7 +118,7 @@
       (Current).first_column = YYRHSLOC(Rhs, 1).first_column; \
       (Current).last_column = YYRHSLOC(Rhs, N).last_column;   \
     } else {                                                  \
-      (Current).filename = NULL;                              \
+      (Current).filename = nullptr;                           \
       (Current).line = YYRHSLOC(Rhs, 0).line;                 \
       (Current).first_column = (Current).last_column =        \
           YYRHSLOC(Rhs, 0).last_column;                       \
@@ -2279,7 +2279,7 @@ yyreduce:
     {
       WabtTextListNode* node = new_text_list_node();
       DUPTEXT(node->text, (yyvsp[0].text));
-      node->next = NULL;
+      node->next = nullptr;
       (yyval.text_list).first = (yyval.text_list).last = node;
     }
 #line 2286 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
@@ -2291,7 +2291,7 @@ yyreduce:
       (yyval.text_list) = (yyvsp[-1].text_list);
       WabtTextListNode* node = new_text_list_node();
       DUPTEXT(node->text, (yyvsp[0].text));
-      node->next = NULL;
+      node->next = nullptr;
       (yyval.text_list).last->next = node;
       (yyval.text_list).last = node;
     }
@@ -2300,7 +2300,7 @@ yyreduce:
 
   case 4:
 #line 321 "src/ast-parser.y" /* yacc.c:1646  */
-    { (yyval.text_list).first = (yyval.text_list).last = NULL; }
+    { (yyval.text_list).first = (yyval.text_list).last = nullptr; }
 #line 2305 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
@@ -2309,7 +2309,7 @@ yyreduce:
     {
       WabtTextListNode node;
       node.text = (yyvsp[0].text);
-      node.next = NULL;
+      node.next = nullptr;
       WabtTextList text_list;
       text_list.first = &node;
       text_list.last = &node;
@@ -3054,7 +3054,7 @@ yyreduce:
       (yyval.func_fields) = new_func_field();
       (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_EXPRS;
       (yyval.func_fields)->first_expr = (yyvsp[0].expr_list).first;
-      (yyval.func_fields)->next = NULL;
+      (yyval.func_fields)->next = nullptr;
     }
 #line 3060 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
@@ -4053,7 +4053,7 @@ yyreduce:
       size_t i;
       for (i = 0; i < (yyval.script).commands.size; ++i) {
         WabtCommand* command = &(yyval.script).commands.data[i];
-        WabtVar* module_var = NULL;
+        WabtVar* module_var = nullptr;
         switch (command->type) {
           case WABT_COMMAND_TYPE_MODULE: {
             last_module_index = i;

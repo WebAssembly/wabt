@@ -83,22 +83,22 @@ static void write_indent(Context* ctx) {
   static size_t s_indent_len = sizeof(s_indent) - 1;
   size_t indent = ctx->indent;
   while (indent > s_indent_len) {
-    wabt_write_data(&ctx->stream, s_indent, s_indent_len, NULL);
+    wabt_write_data(&ctx->stream, s_indent, s_indent_len, nullptr);
     indent -= s_indent_len;
   }
   if (indent > 0) {
-    wabt_write_data(&ctx->stream, s_indent, indent, NULL);
+    wabt_write_data(&ctx->stream, s_indent, indent, nullptr);
   }
 }
 
 static void write_next_char(Context* ctx) {
   switch (ctx->next_char) {
     case NEXT_CHAR_SPACE:
-      wabt_write_data(&ctx->stream, " ", 1, NULL);
+      wabt_write_data(&ctx->stream, " ", 1, nullptr);
       break;
     case NEXT_CHAR_NEWLINE:
     case NEXT_CHAR_FORCE_NEWLINE:
-      wabt_write_data(&ctx->stream, "\n", 1, NULL);
+      wabt_write_data(&ctx->stream, "\n", 1, nullptr);
       write_indent(ctx);
       break;
 
@@ -113,7 +113,7 @@ static void write_data_with_next_char(Context* ctx,
                                       const void* src,
                                       size_t size) {
   write_next_char(ctx);
-  wabt_write_data(&ctx->stream, src, size, NULL);
+  wabt_write_data(&ctx->stream, src, size, nullptr);
 }
 
 static void WABT_PRINTF_FORMAT(2, 3)
@@ -125,7 +125,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
 }
 
 static void write_putc(Context* ctx, char c) {
-  wabt_write_data(&ctx->stream, &c, 1, NULL);
+  wabt_write_data(&ctx->stream, &c, 1, nullptr);
 }
 
 static void write_puts(Context* ctx, const char* s, NextChar next_char) {
@@ -189,7 +189,7 @@ static bool write_string_slice_opt(Context* ctx,
                                        NextChar next_char) {
   if (str->start)
     write_string_slice(ctx, str, next_char);
-  return str->start != NULL;
+  return !!str->start;
 }
 
 static void write_string_slice_or_index(Context* ctx,
@@ -250,7 +250,7 @@ static void write_br_var(Context* ctx, const WabtVar* var, NextChar next_char) {
 
 static void write_type(Context* ctx, WabtType type, NextChar next_char) {
   const char* type_name = wabt_get_type_name(type);
-  assert(type_name != NULL);
+  assert(type_name);
   write_puts(ctx, type_name, next_char);
 }
 
@@ -284,7 +284,7 @@ static void write_begin_block(Context* ctx,
   write_puts_space(ctx, text);
   bool has_label =
       write_string_slice_opt(ctx, &block->label, NEXT_CHAR_SPACE);
-  write_types(ctx, &block->sig, NULL);
+  write_types(ctx, &block->sig, nullptr);
   if (!has_label)
     writef(ctx, " ;; label = @%d", ctx->depth);
   write_newline(ctx, FORCE_NEWLINE);
@@ -538,7 +538,7 @@ static void write_type_bindings(Context* ctx,
     }
 
     const WabtStringSlice* name = &ctx->index_to_name.data[i];
-    bool has_name = name->start != NULL;
+    bool has_name = !!name->start;
     if (has_name)
       write_string_slice(ctx, name, NEXT_CHAR_SPACE);
     write_type(ctx, types->data[i], NEXT_CHAR_SPACE);
@@ -704,7 +704,7 @@ static void write_start_function(Context* ctx, const WabtVar* start) {
 static void write_module(Context* ctx, const WabtModule* module) {
   write_open_newline(ctx, "module");
   const WabtModuleField* field;
-  for (field = module->first_field; field != NULL; field = field->next) {
+  for (field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case WABT_MODULE_FIELD_TYPE_FUNC:
         write_func(ctx, module, &field->func);
@@ -747,7 +747,7 @@ WabtResult wabt_write_ast(WabtWriter* writer, const WabtModule* module) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
   ctx.result = WABT_OK;
-  wabt_init_stream(&ctx.stream, writer, NULL);
+  wabt_init_stream(&ctx.stream, writer, nullptr);
   write_module(&ctx, module);
   /* the memory for the actual string slice is shared with the module, so we
    * only need to free the vector */

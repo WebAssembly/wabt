@@ -91,17 +91,17 @@ static const char s_description[] =
     "  $ wasm-interp test.wasm -V 100 --run-all-exports\n";
 
 static WabtOption s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
+    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
     {FLAG_VALUE_STACK_SIZE, 'V', "value-stack-size", "SIZE", YEP,
      "size in elements of the value stack"},
     {FLAG_CALL_STACK_SIZE, 'C', "call-stack-size", "SIZE", YEP,
      "size in frames of the call stack"},
-    {FLAG_TRACE, 't', "trace", NULL, NOPE, "trace execution"},
-    {FLAG_SPEC, 0, "spec", NULL, NOPE,
+    {FLAG_TRACE, 't', "trace", nullptr, NOPE, "trace execution"},
+    {FLAG_SPEC, 0, "spec", nullptr, NOPE,
      "run spec tests (input file should be .json)"},
-    {FLAG_RUN_ALL_EXPORTS, 0, "run-all-exports", NULL, NOPE,
+    {FLAG_RUN_ALL_EXPORTS, 0, "run-all-exports", nullptr, NOPE,
      "run all the exported functions, in order. useful for testing"},
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
@@ -113,7 +113,7 @@ static void on_option(struct WabtOptionParser* parser,
     case FLAG_VERBOSE:
       s_verbose++;
       wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
 
@@ -183,7 +183,7 @@ static WabtStringSlice get_dirname(const char* s) {
    * s = "foo.bar", => ""
    */
   const char* last_slash = strrchr(s, '/');
-  if (last_slash == NULL)
+  if (last_slash == nullptr)
     last_slash = s;
 
   WabtStringSlice result;
@@ -457,7 +457,7 @@ static WabtResult read_module(const char* module_filename,
   void* data;
   size_t size;
 
-  *out_module = NULL;
+  *out_module = nullptr;
 
   result = wabt_read_file(module_filename, &data, &size);
   if (WABT_SUCCEEDED(result)) {
@@ -612,7 +612,7 @@ static void init_environment(WabtInterpreterEnvironment* env) {
 static WabtResult read_and_run_module(const char* module_filename) {
   WabtResult result;
   WabtInterpreterEnvironment env;
-  WabtInterpreterModule* module = NULL;
+  WabtInterpreterModule* module = nullptr;
   WabtInterpreterThread thread;
 
   init_environment(&env);

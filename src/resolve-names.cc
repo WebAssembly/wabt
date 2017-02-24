@@ -266,7 +266,7 @@ static void visit_func(Context* ctx, WabtFunc* func) {
   check_duplicate_bindings(ctx, &func->local_bindings, "local");
 
   wabt_visit_func(func, &ctx->visitor);
-  ctx->current_func = NULL;
+  ctx->current_func = nullptr;
 }
 
 static void visit_export(Context* ctx, WabtExport* export_) {
@@ -331,7 +331,7 @@ static void visit_module(Context* ctx, WabtModule* module) {
     visit_data_segment(ctx, module->data_segments.data[i]);
   if (module->start)
     resolve_func_var(ctx, module->start);
-  ctx->current_module = NULL;
+  ctx->current_module = nullptr;
 }
 
 static void visit_raw_module(Context* ctx, WabtRawModule* raw_module) {
@@ -450,7 +450,7 @@ WabtResult wabt_resolve_names_module(WabtAstLexer* lexer,
                                      WabtModule* module,
                                      WabtSourceErrorHandler* error_handler) {
   Context ctx;
-  init_context(&ctx, lexer, NULL, error_handler);
+  init_context(&ctx, lexer, nullptr, error_handler);
   visit_module(&ctx, module);
   wabt_destroy_label_ptr_vector(&ctx.labels);
   return ctx.result;

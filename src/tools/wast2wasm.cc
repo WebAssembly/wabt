@@ -86,22 +86,22 @@ static const char s_description[] =
     "  $ wast2wasm spec-test.wast --spec -o spec-test.json\n";
 
 static WabtOption s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
-    {FLAG_DUMP_MODULE, 'd', "dump-module", NULL, NOPE,
+    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
+    {FLAG_DUMP_MODULE, 'd', "dump-module", nullptr, NOPE,
      "print a hexdump of the module to stdout"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
-    {FLAG_RELOCATABLE, 'r', NULL, NULL, NOPE,
+    {FLAG_RELOCATABLE, 'r', nullptr, nullptr, NOPE,
      "create a relocatable wasm binary (suitable for linking with wasm-link)"},
-    {FLAG_SPEC, 0, "spec", NULL, NOPE,
+    {FLAG_SPEC, 0, "spec", nullptr, NOPE,
      "parse a file with multiple modules and assertions, like the spec "
      "tests"},
-    {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", NULL, NOPE,
+    {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", nullptr, NOPE,
      "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
-    {FLAG_DEBUG_NAMES, 0, "debug-names", NULL, NOPE,
+    {FLAG_DEBUG_NAMES, 0, "debug-names", nullptr, NOPE,
      "Write debug names to the generated binary file"},
-    {FLAG_NO_CHECK, 0, "no-check", NULL, NOPE,
+    {FLAG_NO_CHECK, 0, "no-check", nullptr, NOPE,
      "Don't check for invalid modules"},
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));

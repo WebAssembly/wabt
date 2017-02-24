@@ -38,12 +38,12 @@ static const char s_description[] =
     "  $ wasm-link m1.wasm m2.wasm -o out.wasm\n";
 
 static WabtOption s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", NULL, NOPE,
+    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
-    {FLAG_RELOCATABLE, 'r', "relocatable", NULL, NOPE,
+    {FLAG_RELOCATABLE, 'r', "relocatable", nullptr, NOPE,
      "output a relocatable object file"},
-    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
+    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
@@ -70,7 +70,7 @@ static void on_option(struct WabtOptionParser* parser,
     case FLAG_VERBOSE:
       s_verbose++;
       wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, NULL);
+      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       break;
 
     case FLAG_OUTPUT:
@@ -785,7 +785,7 @@ static WabtResult perform_link(Context* ctx) {
   if (WABT_FAILED(wabt_init_mem_writer(&writer)))
     WABT_FATAL("unable to open memory writer for writing\n");
 
-  WabtStream* log_stream = NULL;
+  WabtStream* log_stream = nullptr;
   if (s_verbose)
     log_stream = &s_log_stream;
 

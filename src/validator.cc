@@ -130,7 +130,7 @@ static WabtResult check_global_var(Context* ctx,
 
 static WabtType get_global_var_type_or_any(Context* ctx, const WabtVar* var) {
   const WabtGlobal* global;
-  if (WABT_SUCCEEDED(check_global_var(ctx, var, &global, NULL)))
+  if (WABT_SUCCEEDED(check_global_var(ctx, var, &global, nullptr)))
     return global->type;
   return WABT_TYPE_ANY;
 }
@@ -544,7 +544,7 @@ static void check_func(Context* ctx,
                                   &func->decl.sig.result_types);
   check_expr_list(ctx, loc, func->first_expr);
   wabt_typechecker_end_function(&ctx->typechecker);
-  ctx->current_func = NULL;
+  ctx->current_func = nullptr;
 }
 
 static void print_const_expr_error(Context* ctx,
@@ -563,7 +563,7 @@ static void check_const_init_expr(Context* ctx,
                                   const char* desc) {
   WabtType type = WABT_TYPE_VOID;
   if (expr) {
-    if (expr->next != NULL) {
+    if (expr->next) {
       print_const_expr_error(ctx, loc, desc);
       return;
     }
@@ -574,7 +574,7 @@ static void check_const_init_expr(Context* ctx,
         break;
 
       case WABT_EXPR_TYPE_GET_GLOBAL: {
-        const WabtGlobal* ref_global = NULL;
+        const WabtGlobal* ref_global = nullptr;
         int ref_global_index;
         if (WABT_FAILED(check_global_var(ctx, &expr->get_global.var,
                                          &ref_global, &ref_global_index))) {
@@ -664,7 +664,7 @@ static void check_elem_segments(Context* ctx, const WabtModule* module) {
     size_t i;
     for (i = 0; i < elem_segment->vars.size; ++i) {
       if (!WABT_SUCCEEDED(
-              check_func_var(ctx, &elem_segment->vars.data[i], NULL)))
+              check_func_var(ctx, &elem_segment->vars.data[i], nullptr)))
         continue;
     }
 
@@ -704,7 +704,7 @@ static void check_import(Context* ctx,
   switch (import->kind) {
     case WABT_EXTERNAL_KIND_FUNC:
       if (wabt_decl_has_func_type(&import->func.decl))
-        check_func_type_var(ctx, &import->func.decl.type_var, NULL);
+        check_func_type_var(ctx, &import->func.decl.type_var, nullptr);
       break;
     case WABT_EXTERNAL_KIND_TABLE:
       check_table(ctx, loc, &import->table);
@@ -730,17 +730,18 @@ static void check_import(Context* ctx,
 static void check_export(Context* ctx, const WabtExport* export_) {
   switch (export_->kind) {
     case WABT_EXTERNAL_KIND_FUNC:
-      check_func_var(ctx, &export_->var, NULL);
+      check_func_var(ctx, &export_->var, nullptr);
       break;
     case WABT_EXTERNAL_KIND_TABLE:
-      check_table_var(ctx, &export_->var, NULL);
+      check_table_var(ctx, &export_->var, nullptr);
       break;
     case WABT_EXTERNAL_KIND_MEMORY:
-      check_memory_var(ctx, &export_->var, NULL);
+      check_memory_var(ctx, &export_->var, nullptr);
       break;
     case WABT_EXTERNAL_KIND_GLOBAL: {
       const WabtGlobal* global;
-      if (WABT_SUCCEEDED(check_global_var(ctx, &export_->var, &global, NULL))) {
+      if (WABT_SUCCEEDED(
+              check_global_var(ctx, &export_->var, &global, nullptr))) {
         if (global->mutable_) {
           print_error(ctx, &export_->var.loc,
                       "mutable globals cannot be exported");
@@ -782,7 +783,7 @@ static void check_module(Context* ctx, const WabtModule* module) {
   ctx->num_imported_globals = 0;
 
   WabtModuleField* field;
-  for (field = module->first_field; field != NULL; field = field->next) {
+  for (field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case WABT_MODULE_FIELD_TYPE_FUNC:
         check_func(ctx, &field->loc, &field->func);
@@ -827,7 +828,7 @@ static void check_module(Context* ctx, const WabtModule* module) {
           print_error(ctx, &field->loc, "only one start function allowed");
         }
 
-        const WabtFunc* start_func = NULL;
+        const WabtFunc* start_func = nullptr;
         check_func_var(ctx, &field->start, &start_func);
         if (start_func) {
           if (wabt_get_num_params(start_func) != 0) {
@@ -851,7 +852,7 @@ static void check_module(Context* ctx, const WabtModule* module) {
 }
 
 /* returns the result type of the invoked function, checked by the caller;
- * returning NULL means that another error occured first, so the result type
+ * returning nullptr means that another error occured first, so the result type
  * should be ignored. */
 static const WabtTypeVector* check_invoke(Context* ctx,
                                           const WabtAction* action) {
@@ -860,7 +861,7 @@ static const WabtTypeVector* check_invoke(Context* ctx,
       wabt_get_module_by_var(ctx->script, &action->module_var);
   if (!module) {
     print_error(ctx, &action->loc, "unknown module");
-    return NULL;
+    return nullptr;
   }
 
   WabtExport* export_ = wabt_get_export_by_name(module, &invoke->name);
@@ -868,13 +869,13 @@ static const WabtTypeVector* check_invoke(Context* ctx,
     print_error(ctx, &action->loc,
                 "unknown function export \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(invoke->name));
-    return NULL;
+    return nullptr;
   }
 
   WabtFunc* func = wabt_get_func_by_var(module, &export_->var);
   if (!func) {
     /* this error will have already been reported, just skip it */
-    return NULL;
+    return nullptr;
   }
 
   size_t actual_args = invoke->args.size;
@@ -884,7 +885,7 @@ static const WabtTypeVector* check_invoke(Context* ctx,
                                    ", expected %" PRIzd,
                 actual_args > expected_args ? "many" : "few", actual_args,
                 expected_args);
-    return NULL;
+    return nullptr;
   }
   size_t i;
   for (i = 0; i < actual_args; ++i) {

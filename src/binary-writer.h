@@ -26,7 +26,7 @@ struct WabtWriter;
 struct WabtStream;
 
 #define WABT_WRITE_BINARY_OPTIONS_DEFAULT \
-  { NULL, true, false, false }
+  { nullptr, true, false, false }
 
 typedef struct WabtWriteBinaryOptions {
   struct WabtStream* log_stream;

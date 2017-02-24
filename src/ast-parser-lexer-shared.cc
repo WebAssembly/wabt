@@ -47,7 +47,7 @@ void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
   }
 
-  char* source_line = NULL;
+  char* source_line = nullptr;
   size_t source_line_length = 0;
   int source_line_column_offset = 0;
   size_t source_line_max_length = error_handler->source_line_max_length;

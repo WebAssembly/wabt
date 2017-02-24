@@ -36,7 +36,7 @@ void wabt_init_stream(WabtStream* stream,
 
 void wabt_init_file_stream_from_existing(WabtFileStream* stream, FILE* file) {
   wabt_init_file_writer_existing(&stream->writer, file);
-  wabt_init_stream(&stream->base, &stream->writer.base, NULL);
+  wabt_init_stream(&stream->base, &stream->writer.base, nullptr);
 }
 
 WabtStream* wabt_init_stdout_stream(void) {
@@ -59,7 +59,7 @@ void wabt_write_data_at(WabtStream* stream,
     return;
   if (stream->log_stream) {
     wabt_write_memory_dump(stream->log_stream, src, size, offset, print_chars,
-                           NULL, desc);
+                           nullptr, desc);
   }
   if (stream->writer->write_data) {
     stream->result = stream->writer->write_data(offset, src, size,
@@ -95,7 +95,7 @@ void wabt_move_data(WabtStream* stream,
 
 void wabt_writef(WabtStream* stream, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  wabt_write_data(stream, buffer, length, NULL);
+  wabt_write_data(stream, buffer, length, nullptr);
 }
 
 void wabt_write_u8(WabtStream* stream, uint32_t value, const char* desc) {

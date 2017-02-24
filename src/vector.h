@@ -64,7 +64,7 @@
                                                                               \
   void wabt_destroy_##name##_vector(type##Vector* vec) {                      \
     wabt_free(vec->data);                                                     \
-    vec->data = NULL;                                                         \
+    vec->data = nullptr;                                                      \
     vec->size = 0;                                                            \
     vec->capacity = 0;                                                        \
   }                                                                           \

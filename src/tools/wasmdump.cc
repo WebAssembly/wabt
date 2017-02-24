@@ -49,16 +49,17 @@ static const char s_description[] =
     "  $ wasmdump test.wasm\n";
 
 static WabtOption s_options[] = {
-    {FLAG_HEADERS, 'h', "headers", NULL, NOPE, "print headers"},
-    {FLAG_SECTION, 'j', "section", NULL, YEP, "select just one section"},
-    {FLAG_RAW, 's', "full-contents", NULL, NOPE, "print raw section contents"},
-    {FLAG_DISASSEMBLE, 'd', "disassemble", NULL, NOPE,
+    {FLAG_HEADERS, 'h', "headers", nullptr, NOPE, "print headers"},
+    {FLAG_SECTION, 'j', "section", nullptr, YEP, "select just one section"},
+    {FLAG_RAW, 's', "full-contents", nullptr, NOPE,
+     "print raw section contents"},
+    {FLAG_DISASSEMBLE, 'd', "disassemble", nullptr, NOPE,
      "disassemble function bodies"},
-    {FLAG_DEBUG, '\0', "debug", NULL, NOPE, "disassemble function bodies"},
-    {FLAG_DETAILS, 'x', "details", NULL, NOPE, "Show section details"},
-    {FLAG_RELOCS, 'r', "reloc", NULL, NOPE,
+    {FLAG_DEBUG, '\0', "debug", nullptr, NOPE, "disassemble function bodies"},
+    {FLAG_DETAILS, 'x', "details", nullptr, NOPE, "Show section details"},
+    {FLAG_RELOCS, 'r', "reloc", nullptr, NOPE,
      "show relocations inline with disassembly"},
-    {FLAG_HELP, 'h', "help", NULL, NOPE, "print this help message"},
+    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
 };
 
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));

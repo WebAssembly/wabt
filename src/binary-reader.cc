@@ -448,11 +448,11 @@ static void write_indent(LoggingContext* ctx) {
   static size_t s_indent_len = sizeof(s_indent) - 1;
   size_t indent = ctx->indent;
   while (indent > s_indent_len) {
-    wabt_write_data(ctx->stream, s_indent, s_indent_len, NULL);
+    wabt_write_data(ctx->stream, s_indent, s_indent_len, nullptr);
     indent -= s_indent_len;
   }
   if (indent > 0) {
-    wabt_write_data(ctx->stream, s_indent, indent, NULL);
+    wabt_write_data(ctx->stream, s_indent, indent, nullptr);
   }
 }
 

@@ -115,7 +115,7 @@ typedef struct WabtSourceErrorHandler {
 #define WABT_SOURCE_ERROR_HANDLER_DEFAULT                                    \
   {                                                                          \
     wabt_default_source_error_callback, WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
-        NULL                                                                 \
+        nullptr                                                              \
   }
 
 typedef void (*WabtBinaryErrorCallback)(uint32_t offset,
@@ -128,7 +128,7 @@ typedef struct WabtBinaryErrorHandler {
 } WabtBinaryErrorHandler;
 
 #define WABT_BINARY_ERROR_HANDLER_DEFAULT \
-  { wabt_default_binary_error_callback, NULL }
+  { wabt_default_binary_error_callback, nullptr }
 
 /* This data structure is not required; it is just used by the default error
  * handler callbacks. */
@@ -536,7 +536,7 @@ static WABT_INLINE const char* wabt_get_type_name(WabtType type) {
     case WABT_TYPE_FUNC: return "func";
     case WABT_TYPE_VOID: return "void";
     case WABT_TYPE_ANY: return "any";
-    default: return NULL;
+    default: return nullptr;
   }
 }
 
