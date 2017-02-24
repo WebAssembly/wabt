@@ -48,7 +48,7 @@ typedef struct WabtTextList {
 
 typedef struct WabtOptionalExport {
   WabtExport export_;
-  WabtBool has_export;
+  bool has_export;
 } WabtOptionalExport;
 
 typedef struct WabtExportedFunc {
@@ -65,14 +65,14 @@ typedef struct WabtExportedTable {
   WabtTable table;
   WabtElemSegment elem_segment;
   WabtOptionalExport export_;
-  WabtBool has_elem_segment;
+  bool has_elem_segment;
 } WabtExportedTable;
 
 typedef struct WabtExportedMemory {
   WabtMemory memory;
   WabtDataSegment data_segment;
   WabtOptionalExport export_;
-  WabtBool has_data_segment;
+  bool has_data_segment;
 } WabtExportedMemory;
 
 typedef enum WabtFuncFieldType {
@@ -150,6 +150,10 @@ typedef struct WabtAstParser {
   WabtScript script;
   WabtSourceErrorHandler* error_handler;
   int errors;
+  /* Cached pointers to reallocated parser buffers, so they don't leak. */
+  int16_t* yyssa;
+  YYSTYPE* yyvsa;
+  YYLTYPE* yylsa;
 } WabtAstParser;
 
 WABT_EXTERN_C_BEGIN

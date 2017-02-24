@@ -49,7 +49,7 @@ typedef struct WabtAstLexer {
   size_t line_file_offset;   /* file offset of the start of the current line */
 
   /* lexing data needed by re2c */
-  WabtBool eof;
+  bool eof;
   char* buffer;
   size_t buffer_size;
   char* marker;

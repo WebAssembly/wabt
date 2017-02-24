@@ -24,17 +24,17 @@ WABT_DEFINE_VECTOR(type, WabtType)
 
 WABT_EXTERN_C_BEGIN
 
-static WABT_INLINE WabtBool
-wabt_type_vectors_are_equal(const WabtTypeVector* types1,
-                            const WabtTypeVector* types2) {
+static WABT_INLINE bool wabt_type_vectors_are_equal(
+    const WabtTypeVector* types1,
+    const WabtTypeVector* types2) {
   if (types1->size != types2->size)
-    return WABT_FALSE;
+    return false;
   size_t i;
   for (i = 0; i < types1->size; ++i) {
     if (types1->data[i] != types2->data[i])
-      return WABT_FALSE;
+      return false;
   }
-  return WABT_TRUE;
+  return true;
 }
 
 WABT_EXTERN_C_END

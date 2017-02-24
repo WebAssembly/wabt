@@ -41,7 +41,7 @@ typedef struct WabtBindingHash {
 WABT_EXTERN_C_BEGIN
 WabtBinding* wabt_insert_binding(WabtBindingHash*, const WabtStringSlice*);
 void wabt_remove_binding(WabtBindingHash*, const WabtStringSlice*);
-WabtBool wabt_hash_entry_is_free(const WabtBindingHashEntry*);
+bool wabt_hash_entry_is_free(const WabtBindingHashEntry*);
 /* returns -1 if the name is not in the hash */
 int wabt_find_binding_index_by_name(const WabtBindingHash*,
                                     const WabtStringSlice* name);

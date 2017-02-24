@@ -39,7 +39,7 @@
   }                                                                         \
   void wabt_new_##name##_array(type##Array* array, size_t size) {           \
     array->size = size;                                                     \
-    array->data = wabt_alloc_zero(size * sizeof(type));                     \
+    array->data = (type*)wabt_alloc_zero(size * sizeof(type));              \
   }
 
 #define WABT_DESTROY_ARRAY_AND_ELEMENTS(v, name) \
