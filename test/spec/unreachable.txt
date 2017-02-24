@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/unreachable.wast
 (;; STDOUT ;;;
-57/57 tests passed.
+59/59 tests passed.
 ;;; STDOUT ;;)

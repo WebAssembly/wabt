@@ -1,0 +1,108 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/if.wast
+(;; STDOUT ;;;
+out/third_party/testsuite/if.wast:183: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:187: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:191: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:195: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:200: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:204: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:208: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:212: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: @0x0000001e: end_function_body callback failed
+out/third_party/testsuite/if.wast:217: assert_invalid passed:
+  error: type stack at end of if is 1, expected 0
+  error: @0x0000001e: on_end_expr callback failed
+out/third_party/testsuite/if.wast:223: assert_invalid passed:
+  error: type stack at end of if is 1, expected 0
+  error: @0x0000001e: on_end_expr callback failed
+out/third_party/testsuite/if.wast:229: assert_invalid passed:
+  error: type stack at end of if false branch is 1, expected 0
+  error: @0x0000001f: on_end_expr callback failed
+out/third_party/testsuite/if.wast:235: assert_invalid passed:
+  error: type stack at end of if true branch is 1, expected 0
+  error: @0x0000001e: on_else_expr callback failed
+out/third_party/testsuite/if.wast:242: assert_invalid passed:
+  error: type stack size too small at if true branch. got 0, expected at least 1
+  error: @0x0000001d: on_else_expr callback failed
+out/third_party/testsuite/if.wast:248: assert_invalid passed:
+  error: if without else cannot have type signature.
+  error: @0x0000001f: on_end_expr callback failed
+out/third_party/testsuite/if.wast:254: assert_invalid passed:
+  error: if without else cannot have type signature.
+  error: type stack size too small at if. got 0, expected at least 1
+  error: @0x0000001d: on_end_expr callback failed
+out/third_party/testsuite/if.wast:260: assert_invalid passed:
+  error: if without else cannot have type signature.
+  error: @0x0000001f: on_end_expr callback failed
+out/third_party/testsuite/if.wast:267: assert_invalid passed:
+  error: type stack size too small at if true branch. got 0, expected at least 1
+  error: @0x0000001e: on_else_expr callback failed
+out/third_party/testsuite/if.wast:273: assert_invalid passed:
+  error: type stack size too small at if false branch. got 0, expected at least 1
+  error: @0x00000021: on_end_expr callback failed
+out/third_party/testsuite/if.wast:279: assert_invalid passed:
+  error: type stack size too small at if true branch. got 0, expected at least 1
+  error: @0x0000001e: on_else_expr callback failed
+out/third_party/testsuite/if.wast:286: assert_invalid passed:
+  error: type mismatch in if true branch, expected i32 but got i64.
+  error: @0x0000001f: on_else_expr callback failed
+out/third_party/testsuite/if.wast:292: assert_invalid passed:
+  error: type mismatch in if false branch, expected i32 but got i64.
+  error: @0x00000022: on_end_expr callback failed
+out/third_party/testsuite/if.wast:298: assert_invalid passed:
+  error: type mismatch in if true branch, expected i32 but got i64.
+  error: @0x0000001f: on_else_expr callback failed
+out/third_party/testsuite/if.wast:304: assert_invalid passed:
+  error: type mismatch in if true branch, expected i32 but got i64.
+  error: @0x0000001f: on_else_expr callback failed
+out/third_party/testsuite/if.wast:311: assert_invalid passed:
+  error: type mismatch in implicit return, expected i32 but got i64.
+  error: @0x00000025: end_function_body callback failed
+out/third_party/testsuite/if.wast:321: assert_invalid passed:
+  error: type mismatch in implicit return, expected i32 but got i64.
+  error: @0x00000025: end_function_body callback failed
+out/third_party/testsuite/if.wast:331: assert_invalid passed:
+  error: type mismatch in implicit return, expected i32 but got i64.
+  error: @0x00000027: end_function_body callback failed
+out/third_party/testsuite/if.wast:342: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001e: on_br_expr callback failed
+out/third_party/testsuite/if.wast:348: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x00000021: on_br_expr callback failed
+out/third_party/testsuite/if.wast:354: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001e: on_br_expr callback failed
+out/third_party/testsuite/if.wast:360: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x00000021: on_br_expr callback failed
+out/third_party/testsuite/if.wast:366: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001f: on_br_expr callback failed
+out/third_party/testsuite/if.wast:372: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x00000022: on_br_expr callback failed
+out/third_party/testsuite/if.wast:379: assert_invalid passed:
+  error: type mismatch in br, expected i32 but got i64.
+  error: @0x00000020: on_br_expr callback failed
+out/third_party/testsuite/if.wast:385: assert_invalid passed:
+  error: type mismatch in br, expected i32 but got i64.
+  error: @0x00000023: on_br_expr callback failed
+72/72 tests passed.
+;;; STDOUT ;;)

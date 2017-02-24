@@ -64,11 +64,23 @@
 #define WABT_UNUSED __attribute__ ((unused))
 #define WABT_WARN_UNUSED __attribute__ ((warn_unused_result))
 #define WABT_INLINE inline
-#define WABT_STATIC_ASSERT(x) _Static_assert((x), #x)
 #define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
 #define WABT_PRINTF_FORMAT(format_arg, first_arg) \
   __attribute__((format(printf, (format_arg), (first_arg))))
+
+#ifdef __cplusplus
+#if __cplusplus >= 201103L
+#define WABT_STATIC_ASSERT(x) static_assert((x), #x)
+#else
+#define WABT_STATIC_ASSERT__(x, c) \
+  static int static_assert_##c[(x ? 0 : -1)] WABT_UNUSED
+#define WABT_STATIC_ASSERT_(x, c) WABT_STATIC_ASSERT__(x, c)
+#define WABT_STATIC_ASSERT(x) WABT_STATIC_ASSERT_(x, __COUNTER__)
+#endif
+#else
+#define WABT_STATIC_ASSERT(x) _Static_assert((x), #x)
+#endif
 
 #if SIZEOF_INT == 4
 #define wabt_clz_u32(x) __builtin_clz(x)
@@ -98,7 +110,9 @@
 
 #elif COMPILER_IS_MSVC
 
-#include <vcruntime_string.h>
+#include <intrin.h>
+#include <string.h>
+
 #define WABT_UNUSED
 #define WABT_WARN_UNUSED _Check_return_
 #define WABT_INLINE __inline

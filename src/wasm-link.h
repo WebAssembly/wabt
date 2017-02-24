@@ -28,7 +28,7 @@ struct WabtLinkerInputBinary;
 typedef struct WabtFunctionImport {
   WabtStringSlice name;
   uint32_t sig_index;
-  WabtBool active; /* Is this import present in the linked binary */
+  bool active; /* Is this import present in the linked binary */
   struct WabtLinkerInputBinary* foreign_binary;
   uint32_t foreign_index;
 } WabtFunctionImport;
@@ -37,7 +37,7 @@ WABT_DEFINE_VECTOR(function_import, WabtFunctionImport);
 typedef struct WabtGlobalImport {
   WabtStringSlice name;
   WabtType type;
-  WabtBool mutable;
+  bool mutable_;
 } WabtGlobalImport;
 WABT_DEFINE_VECTOR(global_import, WabtGlobalImport);
 

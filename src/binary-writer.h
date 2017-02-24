@@ -18,21 +18,21 @@
 #define WABT_BINARY_WRITER_H_
 
 #include "common.h"
+#include "stream.h"
 
 struct WabtModule;
 struct WabtScript;
 struct WabtWriter;
 struct WabtStream;
-enum WabtPrintChars;
 
 #define WABT_WRITE_BINARY_OPTIONS_DEFAULT \
-  { NULL, WABT_TRUE, WABT_FALSE, WABT_FALSE }
+  { nullptr, true, false, false }
 
 typedef struct WabtWriteBinaryOptions {
   struct WabtStream* log_stream;
-  WabtBool canonicalize_lebs;
-  WabtBool relocatable;
-  WabtBool write_debug_names;
+  bool canonicalize_lebs;
+  bool relocatable;
+  bool write_debug_names;
 } WabtWriteBinaryOptions;
 
 WABT_EXTERN_C_BEGIN
@@ -69,10 +69,10 @@ void wabt_write_type(struct WabtStream* stream, WabtType type);
 void wabt_write_str(struct WabtStream* stream,
                     const char* s,
                     size_t length,
-                    enum WabtPrintChars print_chars,
+                    WabtPrintChars print_chars,
                     const char* desc);
 
-void wabt_write_opcode(struct WabtStream* stream, uint8_t opcode);
+void wabt_write_opcode(struct WabtStream* stream, WabtOpcode opcode);
 
 void wabt_write_limits(struct WabtStream* stream, const WabtLimits* limits);
 WABT_EXTERN_C_END

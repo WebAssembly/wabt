@@ -11,5 +11,5 @@ init(i32:8, f64:15.2) =>
 init(i32:16, f64:15.3) =>
 init(i32:24, f64:15.4) =>
 run(i32:32, f64:3) =>
-704/704 tests passed.
+724/724 tests passed.
 ;;; STDOUT ;;)

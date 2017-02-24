@@ -28,16 +28,26 @@
 
 #define INVALID_VAR_INDEX (-1)
 
-/* the default value for YYMAXDEPTH is 10000, which can be easily hit since our
-   grammar is right-recursive.
+#define RELOCATE_STACK(type, array, stack_base, old_byte_size, new_size)      \
+  do {                                                                        \
+    if ((stack_base) == (array)) {                                            \
+      (stack_base) = (type*)wabt_alloc((new_size) * sizeof(*(stack_base)));   \
+      memcpy((stack_base), (array), old_byte_size);                           \
+    } else {                                                                  \
+      (stack_base) = (type*)wabt_realloc((stack_base),                        \
+                                         (new_size) * sizeof(*(stack_base))); \
+    }                                                                         \
+    /* Cache the pointer in the parser struct to be free'd later. */          \
+    parser->array = (stack_base);                                             \
+  } while (0)
 
-   we can increase YYMAXDEPTH, but the generated parser says that "results are
-   undefined" if YYSTACK_ALLOC_MAXIMUM < YYSTACK_BYTES(YYMAXDEPTH) with
-   infinite-precision arithmetic. That's tricky to write a static assertion
-   for, so let's "just" limit YYSTACK_BYTES(YYMAXDEPTH) to UINT32_MAX and use
-   64-bit arithmetic. this static assert is done at the end of the file, so all
-   defines are available. */
-#define YYMAXDEPTH 10000000
+#define yyoverflow(message, ss, ss_size, vs, vs_size, ls, ls_size, new_size) \
+  do {                                                                       \
+    *(new_size) *= 2;                                                        \
+    RELOCATE_STACK(yytype_int16, yyssa, *(ss), (ss_size), *(new_size));      \
+    RELOCATE_STACK(YYSTYPE, yyvsa, *(vs), (vs_size), *(new_size));           \
+    RELOCATE_STACK(YYLTYPE, yylsa, *(ls), (ls_size), *(new_size));           \
+  } while (0)
 
 #define DUPTEXT(dst, src)                                \
   (dst).start = wabt_strndup((src).start, (src).length); \
@@ -51,7 +61,7 @@
       (Current).first_column = YYRHSLOC(Rhs, 1).first_column; \
       (Current).last_column = YYRHSLOC(Rhs, N).last_column;   \
     } else {                                                  \
-      (Current).filename = NULL;                              \
+      (Current).filename = nullptr;                           \
       (Current).line = YYRHSLOC(Rhs, 0).line;                 \
       (Current).first_column = (Current).last_column =        \
           YYRHSLOC(Rhs, 0).last_column;                       \
@@ -136,27 +146,27 @@ static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
                                 WabtExpr* expr2);
 
 static WabtFuncField* new_func_field(void) {
-  return wabt_alloc_zero(sizeof(WabtFuncField));
+  return (WabtFuncField*)wabt_alloc_zero(sizeof(WabtFuncField));
 }
 
 static WabtFunc* new_func(void) {
-  return wabt_alloc_zero(sizeof(WabtFunc));
+  return (WabtFunc*)wabt_alloc_zero(sizeof(WabtFunc));
 }
 
 static WabtCommand* new_command(void) {
-  return wabt_alloc_zero(sizeof(WabtCommand));
+  return (WabtCommand*)wabt_alloc_zero(sizeof(WabtCommand));
 }
 
 static WabtModule* new_module(void) {
-  return wabt_alloc_zero(sizeof(WabtModule));
+  return (WabtModule*)wabt_alloc_zero(sizeof(WabtModule));
 }
 
 static WabtImport* new_import(void) {
-  return wabt_alloc_zero(sizeof(WabtImport));
+  return (WabtImport*)wabt_alloc_zero(sizeof(WabtImport));
 }
 
 static WabtTextListNode* new_text_list_node(void) {
-  return wabt_alloc_zero(sizeof(WabtTextListNode));
+  return (WabtTextListNode*)wabt_alloc_zero(sizeof(WabtTextListNode));
 }
 
 static WabtResult parse_const(WabtType type, WabtLiteralType literal_type,
@@ -164,7 +174,7 @@ static WabtResult parse_const(WabtType type, WabtLiteralType literal_type,
 static void dup_text_list(WabtTextList * text_list, void** out_data,
                           size_t* out_size);
 
-static WabtBool is_empty_signature(WabtFuncSignature* sig);
+static bool is_empty_signature(WabtFuncSignature* sig);
 
 static void append_implicit_func_declaration(WabtLocation*, WabtModule*,
                                              WabtFuncDeclaration*);
@@ -295,20 +305,20 @@ non_empty_text_list :
     TEXT {
       WabtTextListNode* node = new_text_list_node();
       DUPTEXT(node->text, $1);
-      node->next = NULL;
+      node->next = nullptr;
       $$.first = $$.last = node;
     }
   | non_empty_text_list TEXT {
       $$ = $1;
       WabtTextListNode* node = new_text_list_node();
       DUPTEXT(node->text, $2);
-      node->next = NULL;
+      node->next = nullptr;
       $$.last->next = node;
       $$.last = node;
     }
 ;
 text_list :
-    /* empty */ { $$.first = $$.last = NULL; }
+    /* empty */ { $$.first = $$.last = nullptr; }
   | non_empty_text_list
 ;
 
@@ -316,14 +326,14 @@ quoted_text :
     TEXT {
       WabtTextListNode node;
       node.text = $1;
-      node.next = NULL;
+      node.next = nullptr;
       WabtTextList text_list;
       text_list.first = &node;
       text_list.last = &node;
       void* data;
       size_t size;
       dup_text_list(&text_list, &data, &size);
-      $$.start = data;
+      $$.start = (const char*)data;
       $$.length = size;
     }
 ;
@@ -344,12 +354,12 @@ global_type :
     VALUE_TYPE {
       WABT_ZERO_MEMORY($$);
       $$.type = $1;
-      $$.mutable_ = WABT_FALSE;
+      $$.mutable_ = false;
     }
   | LPAR MUT VALUE_TYPE RPAR {
       WABT_ZERO_MEMORY($$);
       $$.type = $3;
-      $$.mutable_ = WABT_TRUE;
+      $$.mutable_ = true;
     }
 ;
 func_type :
@@ -380,12 +390,12 @@ memory_sig :
 ;
 limits :
     nat {
-      $$.has_max = WABT_FALSE;
+      $$.has_max = false;
       $$.initial = $1;
       $$.max = 0;
     }
   | nat nat {
-      $$.has_max = WABT_TRUE;
+      $$.has_max = true;
       $$.initial = $1;
       $$.max = $2;
     }
@@ -737,7 +747,7 @@ func_body :
       $$ = new_func_field();
       $$->type = WABT_FUNC_FIELD_TYPE_EXPRS;
       $$->first_expr = $1.first;
-      $$->next = NULL;
+      $$->next = nullptr;
     }
   | LPAR LOCAL value_type_list RPAR func_body {
       $$ = new_func_field();
@@ -869,7 +879,7 @@ table :
     LPAR TABLE bind_var_opt inline_export_opt table_sig RPAR {
       $$.table = $5;
       $$.table.name = $3;
-      $$.has_elem_segment = WABT_FALSE;
+      $$.has_elem_segment = false;
       $$.export_ = $4;
     }
   | LPAR TABLE bind_var_opt inline_export_opt elem_type
@@ -883,8 +893,8 @@ table :
       $$.table.name = $3;
       $$.table.elem_limits.initial = $8.size;
       $$.table.elem_limits.max = $8.size;
-      $$.table.elem_limits.has_max = WABT_TRUE;
-      $$.has_elem_segment = WABT_TRUE;
+      $$.table.elem_limits.has_max = true;
+      $$.has_elem_segment = true;
       $$.elem_segment.offset = expr;
       $$.elem_segment.vars = $8;
       $$.export_ = $4;
@@ -915,7 +925,7 @@ memory :
       WABT_ZERO_MEMORY($$);
       $$.memory = $5;
       $$.memory.name = $3;
-      $$.has_data_segment = WABT_FALSE;
+      $$.has_data_segment = false;
       $$.export_ = $4;
     }
   | LPAR MEMORY bind_var_opt inline_export LPAR DATA text_list RPAR RPAR {
@@ -925,7 +935,7 @@ memory :
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY($$);
-      $$.has_data_segment = WABT_TRUE;
+      $$.has_data_segment = true;
       $$.data_segment.offset = expr;
       dup_text_list(&$7, &$$.data_segment.data, &$$.data_segment.size);
       wabt_destroy_text_list(&$7);
@@ -934,7 +944,7 @@ memory :
       $$.memory.name = $3;
       $$.memory.page_limits.initial = page_size;
       $$.memory.page_limits.max = page_size;
-      $$.memory.page_limits.has_max = WABT_TRUE;
+      $$.memory.page_limits.has_max = true;
       $$.export_ = $4;
     }
   /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
@@ -945,7 +955,7 @@ memory :
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY($$);
-      $$.has_data_segment = WABT_TRUE;
+      $$.has_data_segment = true;
       $$.data_segment.offset = expr;
       dup_text_list(&$6, &$$.data_segment.data, &$$.data_segment.size);
       wabt_destroy_text_list(&$6);
@@ -954,8 +964,8 @@ memory :
       $$.memory.name = $3;
       $$.memory.page_limits.initial = page_size;
       $$.memory.page_limits.max = page_size;
-      $$.memory.page_limits.has_max = WABT_TRUE;
-      $$.export_.has_export = WABT_FALSE;
+      $$.memory.page_limits.has_max = true;
+      $$.export_.has_export = false;
     }
 ;
 
@@ -972,7 +982,7 @@ global :
       $$.global = $4;
       $$.global.name = $3;
       $$.global.init_expr = $5.first;
-      $$.export_.has_export = WABT_FALSE;
+      $$.export_.has_export = false;
     }
 ;
 
@@ -1091,14 +1101,14 @@ export :
 inline_export_opt :
     /* empty */ {
       WABT_ZERO_MEMORY($$);
-      $$.has_export = WABT_FALSE;
+      $$.has_export = false;
     }
   | inline_export
 ;
 inline_export :
     LPAR EXPORT quoted_text RPAR {
       WABT_ZERO_MEMORY($$);
-      $$.has_export = WABT_TRUE;
+      $$.has_export = true;
       $$.export_.name = $3;
     }
 ;
@@ -1450,7 +1460,7 @@ script :
       size_t i;
       for (i = 0; i < $$.commands.size; ++i) {
         WabtCommand* command = &$$.commands.data[i];
-        WabtVar* module_var = NULL;
+        WabtVar* module_var = nullptr;
         switch (command->type) {
           case WABT_COMMAND_TYPE_MODULE: {
             last_module_index = i;
@@ -1637,7 +1647,7 @@ static void dup_text_list(WabtTextList* text_list,
     size_t size = (end > src) ? (end - src) : 0;
     total_size += size;
   }
-  char* result = wabt_alloc(total_size);
+  char* result = (char*)wabt_alloc(total_size);
   char* dest = result;
   for (node = text_list->first; node; node = node->next) {
     size_t actual_size = copy_string_contents(&node->text, dest);
@@ -1647,7 +1657,7 @@ static void dup_text_list(WabtTextList* text_list,
   *out_size = dest - result;
 }
 
-static WabtBool is_empty_signature(WabtFuncSignature* sig) {
+static bool is_empty_signature(WabtFuncSignature* sig) {
   return sig->result_types.size == 0 && sig->param_types.size == 0;
 }
 
@@ -1677,13 +1687,16 @@ WabtResult wabt_parse_ast(WabtAstLexer* lexer,
   WABT_ZERO_MEMORY(parser);
   parser.error_handler = error_handler;
   int result = wabt_ast_parser_parse(lexer, &parser);
+  wabt_free(parser.yyssa);
+  wabt_free(parser.yyvsa);
+  wabt_free(parser.yylsa);
   *out_script = parser.script;
   return result == 0 && parser.errors == 0 ? WABT_OK : WABT_ERROR;
 }
 
 static void on_read_binary_error(uint32_t offset, const char* error,
                                  void* user_data) {
-  BinaryErrorCallbackData* data = user_data;
+  BinaryErrorCallbackData* data = (BinaryErrorCallbackData*)user_data;
   if (offset == WABT_UNKNOWN_OFFSET) {
     wabt_ast_parser_error(data->loc, data->lexer, data->parser,
                           "error in binary module: %s", error);
@@ -1692,7 +1705,3 @@ static void on_read_binary_error(uint32_t offset, const char* error,
                           "error in binary module: @0x%08x: %s", offset, error);
   }
 }
-
-/* see comment above definition of YYMAXDEPTH at the top of this file */
-WABT_STATIC_ASSERT(YYSTACK_ALLOC_MAXIMUM >= UINT32_MAX);
-WABT_STATIC_ASSERT(YYSTACK_BYTES((uint64_t)YYMAXDEPTH) <= UINT32_MAX);

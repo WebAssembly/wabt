@@ -152,7 +152,7 @@ WABT_DEFINE_VECTOR(func_ptr, WabtFuncPtr);
 typedef struct WabtGlobal {
   WabtStringSlice name;
   WabtType type;
-  WabtBool mutable_;
+  bool mutable_;
   WabtExpr* init_expr;
 } WabtGlobal;
 typedef WabtGlobal* WabtGlobalPtr;
@@ -510,18 +510,18 @@ void wabt_find_duplicate_bindings(const WabtBindingHash*,
                                   WabtDuplicateBindingCallback callback,
                                   void* user_data);
 
-static WABT_INLINE WabtBool
+static WABT_INLINE bool
 wabt_decl_has_func_type(const WabtFuncDeclaration* decl) {
-  return (WabtBool)((decl->flags & WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) !=
-                    0);
+  return (bool)((decl->flags & WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) != 0);
 }
 
-static WABT_INLINE WabtBool
+static WABT_INLINE bool
 wabt_signatures_are_equal(const WabtFuncSignature* sig1,
                           const WabtFuncSignature* sig2) {
-  return (WabtBool)(
-      wabt_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
-      wabt_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
+  return (bool)(wabt_type_vectors_are_equal(&sig1->param_types,
+                                            &sig2->param_types) &&
+                wabt_type_vectors_are_equal(&sig1->result_types,
+                                            &sig2->result_types));
 }
 
 static WABT_INLINE size_t wabt_get_num_params(const WabtFunc* func) {
@@ -585,7 +585,7 @@ static WABT_INLINE const WabtLocation* wabt_get_raw_module_location(
     case WABT_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
     default:
       assert(0);
-      return NULL;
+      return nullptr;
   }
 }
 

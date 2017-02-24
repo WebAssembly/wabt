@@ -41,16 +41,16 @@ typedef enum WabtObjdumpMode {
 } WabtObjdumpMode;
 
 typedef struct WabtObjdumpOptions {
-  WabtBool headers;
-  WabtBool details;
-  WabtBool raw;
-  WabtBool disassemble;
-  WabtBool debug;
-  WabtBool relocs;
+  bool headers;
+  bool details;
+  bool raw;
+  bool disassemble;
+  bool debug;
+  bool relocs;
   WabtObjdumpMode mode;
   const char* infile;
   const char* section_name;
-  WabtBool print_header;
+  bool print_header;
   WabtStringSliceVector function_names;
   WabtRelocVector code_relocations;
 } WabtObjdumpOptions;

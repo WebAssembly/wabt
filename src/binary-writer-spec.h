@@ -24,7 +24,7 @@
 struct WabtWriter;
 
 #define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
-  { NULL, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
+  { nullptr, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
 
 typedef struct WabtWriteBinarySpecOptions {
   const char* json_filename;

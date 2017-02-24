@@ -21,11 +21,6 @@ import difflib
 import fnmatch
 import multiprocessing
 import os
-try:
-  import Queue
-except ImportError:
-  # Python3?
-  import queue as Queue
 import re
 import shlex
 import shutil
@@ -553,24 +548,8 @@ def RunTest(info, options, variables, verbose_level=0):
     cmd = info.GetCommand(rel_gen_input_path, variables, options.arg,
                           verbose_level)
     return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0)
-  except Exception as e:
+  except (Exception, KeyboardInterrupt) as e:
     return e
-
-
-def ThreadWorker(i, options, variables, inq, outq, should_run):
-  try:
-    while should_run.Get():
-      try:
-        info = inq.get(False)
-        out = RunTest(info, options, variables)
-        outq.put((info, out))
-      except Queue.Empty:
-        # Seems this can be fired even when the queue isn't actually empty.
-        # Double-check, via inq.empty()
-        if inq.empty():
-          break
-  except KeyboardInterrupt:
-    pass
 
 
 def HandleTestResult(status, info, result, rebase=False):
@@ -642,46 +621,26 @@ def YesNoPrompt(question, default='yes'):
 
 
 def RunMultiThreaded(infos_to_run, status, options, variables):
-  should_stop_on_error = options.stop_interactive
-  continued_errors = 0
-  num_threads = options.jobs
   test_count = len(infos_to_run)
-
-  all_threads = []
+  pool = multiprocessing.Pool(options.jobs)
   try:
-    inq = Queue.Queue()
-    outq = Queue.Queue()
-    for info in infos_to_run:
-      inq.put_nowait(info)
-    should_run = Cell(True)
-    for i in range(num_threads):
-      args = (i, options, variables, inq, outq, should_run)
-      thread = threading.Thread(target=ThreadWorker, args=args)
-      all_threads.append(thread)
-      thread.start()
-
-    finished_tests = 0
-    while finished_tests < test_count:
-      try:
-        info, result = outq.get(True, 0.01)
-      except Queue.Empty:
-        status.UpdateTimer()
-        continue
-
-      finished_tests += 1
-      HandleTestResult(status, info, result, options.rebase)
-      if should_stop_on_error and status.failed > continued_errors:
-        should_continue = YesNoPrompt(question='Continue testing?',
-                                      default='yes')
-        if not should_continue:
-          should_run.Set(False)
-          break
-        continued_errors += 1
+    results = [(info, pool.apply_async(RunTest, (info, options, variables)))
+               for info in infos_to_run]
+    while results:
+      new_results = []
+      for info, result in results:
+        if result.ready():
+          HandleTestResult(status, info, result.get(0), options.rebase)
+        else:
+          new_results.append((info, result))
+      time.sleep(0.01)
+      results = new_results
+    pool.close()
+  except KeyboardInterrupt:
+    pass
   finally:
-    should_run.Set(False)
-    for thread in all_threads:
-      if thread.is_alive():
-        thread.join(timeout=5)
+    pool.terminate()
+    pool.join()
 
 
 def RunSingleThreaded(infos_to_run, status, options, variables):

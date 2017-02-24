@@ -63,15 +63,10 @@
   size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
   va_end(args);                                                            \
   if (len + 1 > sizeof(fixed_buf)) {                                       \
-    buffer = alloca(len + 1);                                              \
+    buffer = (char*)alloca(len + 1);                                       \
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
   }                                                                        \
   va_end(args_copy)
-
-typedef enum WabtBool {
-  WABT_FALSE,
-  WABT_TRUE,
-} WabtBool;
 
 typedef enum WabtResult {
   WABT_OK,
@@ -120,7 +115,7 @@ typedef struct WabtSourceErrorHandler {
 #define WABT_SOURCE_ERROR_HANDLER_DEFAULT                                    \
   {                                                                          \
     wabt_default_source_error_callback, WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
-        NULL                                                                 \
+        nullptr                                                              \
   }
 
 typedef void (*WabtBinaryErrorCallback)(uint32_t offset,
@@ -133,7 +128,7 @@ typedef struct WabtBinaryErrorHandler {
 } WabtBinaryErrorHandler;
 
 #define WABT_BINARY_ERROR_HANDLER_DEFAULT \
-  { wabt_default_binary_error_callback, NULL }
+  { wabt_default_binary_error_callback, nullptr }
 
 /* This data structure is not required; it is just used by the default error
  * handler callbacks. */
@@ -183,7 +178,7 @@ typedef enum WabtExternalKind {
 typedef struct WabtLimits {
   uint64_t initial;
   uint64_t max;
-  WabtBool has_max;
+  bool has_max;
 } WabtLimits;
 
 enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
@@ -445,20 +440,20 @@ static WABT_INLINE WabtStringSlice wabt_dup_string_slice(WabtStringSlice str) {
 
 /* return 1 if |alignment| matches the alignment of |opcode|, or if |alignment|
  * is WABT_USE_NATURAL_ALIGNMENT */
-WabtBool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment);
+bool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment);
 
 /* if |alignment| is WABT_USE_NATURAL_ALIGNMENT, return the alignment of
  * |opcode|, else return |alignment| */
 uint32_t wabt_get_opcode_alignment(WabtOpcode opcode, uint32_t alignment);
 
 WabtStringSlice wabt_empty_string_slice(void);
-WabtBool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2);
-WabtBool wabt_string_slice_startswith(const WabtStringSlice* s1,
+bool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2);
+bool wabt_string_slice_startswith(const WabtStringSlice* s1,
                                       const char* s2);
 WabtStringSlice wabt_string_slice_from_cstr(const char* string);
-WabtBool wabt_string_slice_is_empty(const WabtStringSlice*);
-WabtBool wabt_string_slices_are_equal(const WabtStringSlice*,
-                                      const WabtStringSlice*);
+bool wabt_string_slice_is_empty(const WabtStringSlice*);
+bool wabt_string_slices_are_equal(const WabtStringSlice*,
+                                  const WabtStringSlice*);
 void wabt_destroy_string_slice(WabtStringSlice*);
 WabtResult wabt_read_file(const char* filename,
                           void** out_data,
@@ -479,29 +474,35 @@ void wabt_init_stdio();
 
 /* opcode info */
 extern WabtOpcodeInfo g_wabt_opcode_info[];
+void wabt_init_opcode_info(void);
 
 static WABT_INLINE const char* wabt_get_opcode_name(WabtOpcode opcode) {
   assert(opcode < WABT_NUM_OPCODES);
+  wabt_init_opcode_info();
   return g_wabt_opcode_info[opcode].name;
 }
 
 static WABT_INLINE WabtType wabt_get_opcode_result_type(WabtOpcode opcode) {
   assert(opcode < WABT_NUM_OPCODES);
+  wabt_init_opcode_info();
   return g_wabt_opcode_info[opcode].result_type;
 }
 
 static WABT_INLINE WabtType wabt_get_opcode_param_type_1(WabtOpcode opcode) {
   assert(opcode < WABT_NUM_OPCODES);
+  wabt_init_opcode_info();
   return g_wabt_opcode_info[opcode].param1_type;
 }
 
 static WABT_INLINE WabtType wabt_get_opcode_param_type_2(WabtOpcode opcode) {
   assert(opcode < WABT_NUM_OPCODES);
+  wabt_init_opcode_info();
   return g_wabt_opcode_info[opcode].param2_type;
 }
 
 static WABT_INLINE int wabt_get_opcode_memory_size(WabtOpcode opcode) {
   assert(opcode < WABT_NUM_OPCODES);
+  wabt_init_opcode_info();
   return g_wabt_opcode_info[opcode].memory_size;
 }
 
@@ -535,7 +536,7 @@ static WABT_INLINE const char* wabt_get_type_name(WabtType type) {
     case WABT_TYPE_FUNC: return "func";
     case WABT_TYPE_VOID: return "void";
     case WABT_TYPE_ANY: return "any";
-    default: return NULL;
+    default: return nullptr;
   }
 }
 
