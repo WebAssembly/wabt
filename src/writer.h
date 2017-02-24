@@ -21,7 +21,7 @@
 
 #include "common.h"
 
-typedef struct WabtWriter {
+struct WabtWriter {
   void* user_data;
   WabtResult (*write_data)(size_t offset,
                            const void* data,
@@ -31,24 +31,24 @@ typedef struct WabtWriter {
                           size_t src_offset,
                           size_t size,
                           void* user_data);
-} WabtWriter;
+};
 
-typedef struct WabtOutputBuffer {
+struct WabtOutputBuffer {
   void* start;
   size_t size;
   size_t capacity;
-} WabtOutputBuffer;
+};
 
-typedef struct WabtMemoryWriter {
+struct WabtMemoryWriter {
   WabtWriter base;
   WabtOutputBuffer buf;
-} WabtMemoryWriter;
+};
 
-typedef struct WabtFileWriter {
+struct WabtFileWriter {
   WabtWriter base;
   FILE* file;
   size_t offset;
-} WabtFileWriter;
+};
 
 WABT_EXTERN_C_BEGIN
 

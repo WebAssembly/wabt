@@ -24,23 +24,23 @@
 struct WabtModule;
 struct WabtReadBinaryOptions;
 
-typedef struct WabtReloc {
+struct WabtReloc {
   WabtRelocType type;
   size_t offset;
-} WabtReloc;
+};
 WABT_DEFINE_VECTOR(reloc, WabtReloc);
 
 WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-typedef enum WabtObjdumpMode {
+enum WabtObjdumpMode {
   WABT_DUMP_PREPASS,
   WABT_DUMP_HEADERS,
   WABT_DUMP_DETAILS,
   WABT_DUMP_DISASSEMBLE,
   WABT_DUMP_RAW_DATA,
-} WabtObjdumpMode;
+};
 
-typedef struct WabtObjdumpOptions {
+struct WabtObjdumpOptions {
   bool headers;
   bool details;
   bool raw;
@@ -53,7 +53,7 @@ typedef struct WabtObjdumpOptions {
   bool print_header;
   WabtStringSliceVector function_names;
   WabtRelocVector code_relocations;
-} WabtObjdumpOptions;
+};
 
 WABT_EXTERN_C_BEGIN
 

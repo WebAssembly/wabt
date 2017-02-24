@@ -25,9 +25,9 @@
 #include "binary-reader.h"
 #include "common.h"
 
-typedef struct Context {
+struct Context {
   WabtOpcntData* opcnt_data;
-} Context;
+};
 
 static WabtResult add_int_counter_value(WabtIntCounterVector* vec,
                                         intmax_t value) {

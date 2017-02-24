@@ -116,7 +116,7 @@ static WabtResult fill(WabtLocation* loc,
     /* TODO(binji): could just alloc instead, because we know we'll need to
      * memmove below */
     char* new_buffer = (char*)wabt_realloc(lexer->buffer, new_buffer_size);
-    if (new_buffer == nullptr) {
+    if (!new_buffer) {
       wabt_ast_parser_error(loc, lexer, parser,
                             "unable to reallocate lexer buffer.");
       return WABT_ERROR;
@@ -6705,10 +6705,10 @@ void wabt_destroy_ast_lexer(WabtAstLexer* lexer) {
   wabt_free(lexer);
 }
 
-typedef enum WabtLineOffsetPosition {
+enum WabtLineOffsetPosition {
   WABT_LINE_OFFSET_POSITION_START,
   WABT_LINE_OFFSET_POSITION_END,
-} WabtLineOffsetPosition;
+};
 
 static WabtResult scan_forward_for_line_offset_in_buffer(
     const char* buffer_start,

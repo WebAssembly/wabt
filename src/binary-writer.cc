@@ -40,20 +40,20 @@ static const size_t LEB_SECTION_SIZE_GUESS = 1;
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
-typedef struct Reloc {
+struct Reloc {
   WabtRelocType type;
   size_t offset;
-} Reloc;
+};
 WABT_DEFINE_VECTOR(reloc, Reloc);
 
-typedef struct RelocSection {
+struct RelocSection {
   const char* name;
   WabtBinarySection section_code;
   RelocVector relocations;
-} RelocSection;
+};
 WABT_DEFINE_VECTOR(reloc_section, RelocSection);
 
-typedef struct Context {
+struct Context {
   WabtStream stream;
   WabtStream* log_stream;
   const WabtWriteBinaryOptions* options;
@@ -65,7 +65,7 @@ typedef struct Context {
   size_t last_section_leb_size_guess;
   WabtBinarySection last_section_type;
   size_t last_section_payload_offset;
-} Context;
+};
 
 void wabt_destroy_reloc_section(RelocSection* reloc_section) {
   wabt_destroy_reloc_vector(&reloc_section->relocations);

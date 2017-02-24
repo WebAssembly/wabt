@@ -25,7 +25,7 @@
 typedef WabtLabel* LabelPtr;
 WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
-typedef struct Context {
+struct Context {
   WabtSourceErrorHandler* error_handler;
   WabtAstLexer* lexer;
   WabtScript* script;
@@ -34,7 +34,7 @@ typedef struct Context {
   WabtExprVisitor visitor;
   LabelPtrVector labels;
   WabtResult result;
-} Context;
+};
 
 static void WABT_PRINTF_FORMAT(3, 4)
     print_error(Context* ctx, const WabtLocation* loc, const char* fmt, ...) {
@@ -54,10 +54,10 @@ static void pop_label(Context* ctx) {
   ctx->labels.size--;
 }
 
-typedef struct FindDuplicateBindingContext {
+struct FindDuplicateBindingContext {
   Context* ctx;
   const char* desc;
-} FindDuplicateBindingContext;
+};
 
 static void on_duplicate_binding(WabtBindingHashEntry* a,
                                  WabtBindingHashEntry* b,

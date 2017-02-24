@@ -30,67 +30,67 @@
 
 #define WABT_INVALID_LINE_OFFSET ((size_t)~0)
 
-typedef struct WabtExprList {
+struct WabtExprList {
   WabtExpr* first;
   WabtExpr* last;
   size_t size;
-} WabtExprList;
+};
 
-typedef struct WabtTextListNode {
+struct WabtTextListNode {
   WabtStringSlice text;
   struct WabtTextListNode* next;
-} WabtTextListNode;
+};
 
-typedef struct WabtTextList {
+struct WabtTextList {
   WabtTextListNode* first;
   WabtTextListNode* last;
-} WabtTextList;
+};
 
-typedef struct WabtOptionalExport {
+struct WabtOptionalExport {
   WabtExport export_;
   bool has_export;
-} WabtOptionalExport;
+};
 
-typedef struct WabtExportedFunc {
+struct WabtExportedFunc {
   WabtFunc* func;
   WabtOptionalExport export_;
-} WabtExportedFunc;
+};
 
-typedef struct WabtExportedGlobal {
+struct WabtExportedGlobal {
   WabtGlobal global;
   WabtOptionalExport export_;
-} WabtExportedGlobal;
+};
 
-typedef struct WabtExportedTable {
+struct WabtExportedTable {
   WabtTable table;
   WabtElemSegment elem_segment;
   WabtOptionalExport export_;
   bool has_elem_segment;
-} WabtExportedTable;
+};
 
-typedef struct WabtExportedMemory {
+struct WabtExportedMemory {
   WabtMemory memory;
   WabtDataSegment data_segment;
   WabtOptionalExport export_;
   bool has_data_segment;
-} WabtExportedMemory;
+};
 
-typedef enum WabtFuncFieldType {
+enum WabtFuncFieldType {
   WABT_FUNC_FIELD_TYPE_EXPRS,
   WABT_FUNC_FIELD_TYPE_PARAM_TYPES,
   WABT_FUNC_FIELD_TYPE_BOUND_PARAM,
   WABT_FUNC_FIELD_TYPE_RESULT_TYPES,
   WABT_FUNC_FIELD_TYPE_LOCAL_TYPES,
   WABT_FUNC_FIELD_TYPE_BOUND_LOCAL,
-} WabtFuncFieldType;
+};
 
-typedef struct WabtBoundType {
+struct WabtBoundType {
   WabtLocation loc;
   WabtStringSlice name;
   WabtType type;
-} WabtBoundType;
+};
 
-typedef struct WabtFuncField {
+struct WabtFuncField {
   WabtFuncFieldType type;
   union {
     WabtExpr* first_expr;     /* WABT_FUNC_FIELD_TYPE_EXPRS */
@@ -98,9 +98,9 @@ typedef struct WabtFuncField {
     WabtBoundType bound_type; /* WABT_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
   };
   struct WabtFuncField* next;
-} WabtFuncField;
+};
 
-typedef union WabtToken {
+union WabtToken {
   /* terminals */
   WabtStringSlice text;
   WabtType type;
@@ -144,9 +144,9 @@ typedef union WabtToken {
   uint64_t u64;
   WabtVar var;
   WabtVarVector vars;
-} WabtToken;
+};
 
-typedef struct WabtAstParser {
+struct WabtAstParser {
   WabtScript script;
   WabtSourceErrorHandler* error_handler;
   int errors;
@@ -154,7 +154,7 @@ typedef struct WabtAstParser {
   int16_t* yyssa;
   YYSTYPE* yyvsa;
   YYLTYPE* yylsa;
-} WabtAstParser;
+};
 
 WABT_EXTERN_C_BEGIN
 int wabt_ast_lexer_lex(union WabtToken*,

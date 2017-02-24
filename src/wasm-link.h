@@ -25,49 +25,49 @@
 
 struct WabtLinkerInputBinary;
 
-typedef struct WabtFunctionImport {
+struct WabtFunctionImport {
   WabtStringSlice name;
   uint32_t sig_index;
   bool active; /* Is this import present in the linked binary */
   struct WabtLinkerInputBinary* foreign_binary;
   uint32_t foreign_index;
-} WabtFunctionImport;
+};
 WABT_DEFINE_VECTOR(function_import, WabtFunctionImport);
 
-typedef struct WabtGlobalImport {
+struct WabtGlobalImport {
   WabtStringSlice name;
   WabtType type;
   bool mutable_;
-} WabtGlobalImport;
+};
 WABT_DEFINE_VECTOR(global_import, WabtGlobalImport);
 
-typedef struct WabtDataSegment {
+struct WabtDataSegment {
   uint32_t memory_index;
   uint32_t offset;
   const uint8_t* data;
   size_t size;
-} WabtDataSegment;
+};
 WABT_DEFINE_VECTOR(data_segment, WabtDataSegment);
 
-typedef struct WabtReloc {
+struct WabtReloc {
   WabtRelocType type;
   size_t offset;
-} WabtReloc;
+};
 WABT_DEFINE_VECTOR(reloc, WabtReloc);
 
-typedef struct WabtExport {
+struct WabtExport {
   WabtExternalKind kind;
   WabtStringSlice name;
   uint32_t index;
-} WabtExport;
+};
 WABT_DEFINE_VECTOR(export, WabtExport);
 
-typedef struct WabtSectionDataCustom {
+struct WabtSectionDataCustom {
   /* Reference to string data stored in the containing InputBinary */
   WabtStringSlice name;
-} WabtSectionDataCustom;
+};
 
-typedef struct WabtSection {
+struct WabtSection {
   /* The binary to which this section belongs */
   struct WabtLinkerInputBinary* binary;
   WabtRelocVector relocations; /* The relocations for this section */
@@ -94,7 +94,7 @@ typedef struct WabtSection {
   /* The offset at which this section appears within the combined output
    * section. */
   size_t output_payload_offset;
-} WabtSection;
+};
 WABT_DEFINE_VECTOR(section, WabtSection);
 
 typedef WabtSection* WabtSectionPtr;
@@ -102,7 +102,7 @@ WABT_DEFINE_VECTOR(section_ptr, WabtSectionPtr);
 
 WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-typedef struct WabtLinkerInputBinary {
+struct WabtLinkerInputBinary {
   const char* filename;
   uint8_t* data;
   size_t size;
@@ -127,7 +127,7 @@ typedef struct WabtLinkerInputBinary {
   uint32_t table_elem_count;
 
   WabtStringSliceVector debug_names;
-} WabtLinkerInputBinary;
+};
 WABT_DEFINE_VECTOR(binary, WabtLinkerInputBinary);
 
 #endif /* WABT_LINK_H_ */

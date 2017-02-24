@@ -26,19 +26,19 @@
 #define WABT_READ_BINARY_OPTIONS_DEFAULT \
   { nullptr, false }
 
-typedef struct WabtReadBinaryOptions {
+struct WabtReadBinaryOptions {
   struct WabtStream* log_stream;
   bool read_debug_names;
-} WabtReadBinaryOptions;
+};
 
-typedef struct WabtBinaryReaderContext {
+struct WabtBinaryReaderContext {
   const uint8_t* data;
   size_t size;
   size_t offset;
   void* user_data;
-} WabtBinaryReaderContext;
+};
 
-typedef struct WabtBinaryReader {
+struct WabtBinaryReader {
   void* user_data;
 
   void (*on_error)(WabtBinaryReaderContext* ctx, const char* message);
@@ -319,7 +319,7 @@ typedef struct WabtBinaryReader {
   WabtResult (*on_init_expr_i64_const_expr)(uint32_t index,
                                             uint64_t value,
                                             void* user_data);
-} WabtBinaryReader;
+};
 
 WABT_EXTERN_C_BEGIN
 WabtResult wabt_read_binary(const void* data,

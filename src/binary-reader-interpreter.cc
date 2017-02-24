@@ -57,13 +57,13 @@ typedef uint32_t Uint32;
 WABT_DEFINE_VECTOR(uint32, Uint32);
 WABT_DEFINE_VECTOR(uint32_vector, Uint32Vector);
 
-typedef struct Label {
+struct Label {
   uint32_t offset; /* branch location in the istream */
   uint32_t fixup_offset;
-} Label;
+};
 WABT_DEFINE_VECTOR(label, Label);
 
-typedef struct Context {
+struct Context {
   WabtBinaryReader* reader;
   WabtBinaryErrorHandler* error_handler;
   WabtInterpreterEnvironment* env;
@@ -90,7 +90,7 @@ typedef struct Context {
   bool is_host_import;
   WabtInterpreterModule* host_import_module;
   uint32_t import_env_index;
-} Context;
+};
 
 static Label* get_label(Context* ctx, uint32_t depth) {
   assert(depth < ctx->label_stack.size);

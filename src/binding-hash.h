@@ -20,23 +20,23 @@
 #include "common.h"
 #include "vector.h"
 
-typedef struct WabtBinding {
+struct WabtBinding {
   WabtLocation loc;
   WabtStringSlice name;
   int index;
-} WabtBinding;
+};
 
-typedef struct WabtBindingHashEntry {
+struct WabtBindingHashEntry {
   WabtBinding binding;
   struct WabtBindingHashEntry* next;
   struct WabtBindingHashEntry* prev; /* only valid when this entry is unused */
-} WabtBindingHashEntry;
+};
 WABT_DEFINE_VECTOR(binding_hash_entry, WabtBindingHashEntry);
 
-typedef struct WabtBindingHash {
+struct WabtBindingHash {
   WabtBindingHashEntryVector entries;
   WabtBindingHashEntry* free_head;
-} WabtBindingHash;
+};
 
 WABT_EXTERN_C_BEGIN
 WabtBinding* wabt_insert_binding(WabtBindingHash*, const WabtStringSlice*);

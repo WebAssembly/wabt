@@ -236,11 +236,11 @@ static bool is_empty_signature(WabtFuncSignature* sig);
 static void append_implicit_func_declaration(WabtLocation*, WabtModule*,
                                              WabtFuncDeclaration*);
 
-typedef struct BinaryErrorCallbackData {
+struct BinaryErrorCallbackData {
   WabtLocation* loc;
   WabtAstLexer* lexer;
   WabtAstParser* parser;
-} BinaryErrorCallbackData;
+};
 
 static void on_read_binary_error(uint32_t offset, const char* error,
                                  void* user_data);

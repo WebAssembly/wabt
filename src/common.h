@@ -68,34 +68,34 @@
   }                                                                        \
   va_end(args_copy)
 
-typedef enum WabtResult {
+enum WabtResult {
   WABT_OK,
   WABT_ERROR,
-} WabtResult;
+};
 
 #define WABT_SUCCEEDED(x) ((x) == WABT_OK)
 #define WABT_FAILED(x) ((x) == WABT_ERROR)
 
-typedef enum WabtLabelType {
+enum WabtLabelType {
   WABT_LABEL_TYPE_FUNC,
   WABT_LABEL_TYPE_BLOCK,
   WABT_LABEL_TYPE_LOOP,
   WABT_LABEL_TYPE_IF,
   WABT_LABEL_TYPE_ELSE,
   WABT_NUM_LABEL_TYPES,
-} WabtLabelType;
+};
 
-typedef struct WabtStringSlice {
+struct WabtStringSlice {
   const char* start;
   size_t length;
-} WabtStringSlice;
+};
 
-typedef struct WabtLocation {
+struct WabtLocation {
   const char* filename;
   int line;
   int first_column;
   int last_column;
-} WabtLocation;
+};
 
 typedef void (*WabtSourceErrorCallback)(const WabtLocation*,
                                         const char* error,
@@ -104,12 +104,12 @@ typedef void (*WabtSourceErrorCallback)(const WabtLocation*,
                                         size_t source_line_column_offset,
                                         void* user_data);
 
-typedef struct WabtSourceErrorHandler {
+struct WabtSourceErrorHandler {
   WabtSourceErrorCallback on_error;
   /* on_error will be called with with source_line trimmed to this length */
   size_t source_line_max_length;
   void* user_data;
-} WabtSourceErrorHandler;
+};
 
 #define WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT 80
 #define WABT_SOURCE_ERROR_HANDLER_DEFAULT                                    \
@@ -122,30 +122,30 @@ typedef void (*WabtBinaryErrorCallback)(uint32_t offset,
                                         const char* error,
                                         void* user_data);
 
-typedef struct WabtBinaryErrorHandler {
+struct WabtBinaryErrorHandler {
   WabtBinaryErrorCallback on_error;
   void* user_data;
-} WabtBinaryErrorHandler;
+};
 
 #define WABT_BINARY_ERROR_HANDLER_DEFAULT \
   { wabt_default_binary_error_callback, nullptr }
 
 /* This data structure is not required; it is just used by the default error
  * handler callbacks. */
-typedef enum WabtPrintErrorHeader {
+enum WabtPrintErrorHeader {
   WABT_PRINT_ERROR_HEADER_NEVER,
   WABT_PRINT_ERROR_HEADER_ONCE,
   WABT_PRINT_ERROR_HEADER_ALWAYS,
-} WabtPrintErrorHeader;
+};
 
-typedef struct WabtDefaultErrorHandlerInfo {
+struct WabtDefaultErrorHandlerInfo {
   const char* header;
   FILE* out_file;
   WabtPrintErrorHeader print_header;
-} WabtDefaultErrorHandlerInfo;
+};
 
 /* matches binary format, do not change */
-typedef enum WabtType {
+enum WabtType {
   WABT_TYPE_I32 = -0x01,
   WABT_TYPE_I64 = -0x02,
   WABT_TYPE_F32 = -0x03,
@@ -155,31 +155,31 @@ typedef enum WabtType {
   WABT_TYPE_VOID = -0x40,
   WABT_TYPE____ = WABT_TYPE_VOID, /* convenient for the opcode table below */
   WABT_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
-} WabtType;
+};
 
-typedef enum WabtRelocType {
+enum WabtRelocType {
   WABT_RELOC_FUNC_INDEX_LEB = 0,   /* e.g. immediate of call instruction */
   WABT_RELOC_TABLE_INDEX_SLEB = 1, /* e.g. loading address of function */
   WABT_RELOC_TABLE_INDEX_I32 = 2,  /* e.g. function address in DATA */
   WABT_RELOC_GLOBAL_INDEX_LEB = 3, /* e.g immediate of get_global inst */
   WABT_RELOC_DATA = 4,
   WABT_NUM_RELOC_TYPES,
-} WabtRelocType;
+};
 
 /* matches binary format, do not change */
-typedef enum WabtExternalKind {
+enum WabtExternalKind {
   WABT_EXTERNAL_KIND_FUNC = 0,
   WABT_EXTERNAL_KIND_TABLE = 1,
   WABT_EXTERNAL_KIND_MEMORY = 2,
   WABT_EXTERNAL_KIND_GLOBAL = 3,
   WABT_NUM_EXTERNAL_KINDS,
-} WabtExternalKind;
+};
 
-typedef struct WabtLimits {
+struct WabtLimits {
   uint64_t initial;
   uint64_t max;
   bool has_max;
-} WabtLimits;
+};
 
 enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
@@ -368,34 +368,34 @@ enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(F32, I32, ___, 0, 0xbe, F32_REINTERPRET_I32, "f32.reinterpret/i32") \
   V(F64, I64, ___, 0, 0xbf, F64_REINTERPRET_I64, "f64.reinterpret/i64")
 
-typedef enum WabtOpcode {
+enum WabtOpcode {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \
   WABT_OPCODE_##NAME = code,
   WABT_FOREACH_OPCODE(V)
 #undef V
   WABT_NUM_OPCODES
-} WabtOpcode;
+};
 
-typedef struct WabtOpcodeInfo {
+struct WabtOpcodeInfo {
   const char* name;
   WabtType result_type;
   WabtType param1_type;
   WabtType param2_type;
   int memory_size;
-} WabtOpcodeInfo;
+};
 
-typedef enum WabtLiteralType {
+enum WabtLiteralType {
   WABT_LITERAL_TYPE_INT,
   WABT_LITERAL_TYPE_FLOAT,
   WABT_LITERAL_TYPE_HEXFLOAT,
   WABT_LITERAL_TYPE_INFINITY,
   WABT_LITERAL_TYPE_NAN,
-} WabtLiteralType;
+};
 
-typedef struct WabtLiteral {
+struct WabtLiteral {
   WabtLiteralType type;
   WabtStringSlice text;
-} WabtLiteral;
+};
 
 WABT_EXTERN_C_BEGIN
 static WABT_INLINE void* wabt_alloc(size_t size) {

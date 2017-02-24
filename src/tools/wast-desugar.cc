@@ -115,14 +115,14 @@ static void parse_options(int argc, char** argv) {
   }
 }
 
-typedef struct Context {
+struct Context {
   WabtMemoryWriter json_writer;
   WabtMemoryWriter module_writer;
   WabtStream json_stream;
   WabtStringSlice output_filename_noext;
   char* module_filename;
   WabtResult result;
-} Context;
+};
 
 int main(int argc, char** argv) {
   wabt_init_stdio();

@@ -28,7 +28,7 @@
 typedef uint32_t Uint32;
 WABT_DEFINE_VECTOR(uint32, Uint32);
 
-typedef struct Context {
+struct Context {
   WabtObjdumpOptions* options;
   WabtStream* out_stream;
   const uint8_t* data;
@@ -48,7 +48,7 @@ typedef struct Context {
   WabtStringSlice import_field_name;
 
   uint32_t next_reloc;
-} Context;
+};
 
 static bool should_print_details(Context* ctx) {
   if (ctx->options->mode != WABT_DUMP_DETAILS)
