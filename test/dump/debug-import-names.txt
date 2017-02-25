@@ -4,7 +4,7 @@
   (import "bar" "foo" (func $foo)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "TYPE" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -36,7 +36,7 @@
 0000024: 2466 6f6f                                $foo  ; func name 0
 0000028: 00                                        ; num locals
 000001c: 0c                                        ; FIXUP section size
-debug-import-names.wasm:	file format wasm 0x00000d
+debug-import-names.wasm:	file format wasm 0x000001
 
 Sections:
 

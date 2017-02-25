@@ -3,7 +3,7 @@
   (data (i32.const 0) "hello"))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "DATA" (11)
 0000008: 0b                                        ; section code
 0000009: 00                                        ; section size (guess)

@@ -46,7 +46,7 @@ NAMED_VALUES = {
     'function': 0x60,  # -0x20
     'void': 0x40,  # -0x40
     'magic': (0, 0x61, 0x73, 0x6d),
-    'version': (0xd, 0, 0, 0),
+    'version': (1, 0, 0, 0),
 
     # section codes
     'USER': 0,

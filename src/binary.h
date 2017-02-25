@@ -20,7 +20,7 @@
 #include "common.h"
 
 #define WABT_BINARY_MAGIC 0x6d736100
-#define WABT_BINARY_VERSION 0x0d
+#define WABT_BINARY_VERSION 1
 #define WABT_BINARY_LIMITS_HAS_MAX_FLAG 0x1
 
 #define WABT_BINARY_SECTION_NAME "name"

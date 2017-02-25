@@ -6,7 +6,7 @@
 (module (memory 5))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "MEMORY" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -16,7 +16,7 @@
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "MEMORY" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -26,7 +26,7 @@
 000000c: 02                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "MEMORY" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -36,7 +36,7 @@
 000000c: 04                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
-0000004: 0d00 0000                                 ; WASM_BINARY_VERSION
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "MEMORY" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
@@ -45,19 +45,19 @@
 000000b: 00                                        ; limits: flags
 000000c: 05                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
-memory-data-size.0.wasm:	file format wasm 0x00000d
+memory-data-size.0.wasm:	file format wasm 0x000001
 
 Code Disassembly:
 
-memory-data-size.1.wasm:	file format wasm 0x00000d
+memory-data-size.1.wasm:	file format wasm 0x000001
 
 Code Disassembly:
 
-memory-data-size.2.wasm:	file format wasm 0x00000d
+memory-data-size.2.wasm:	file format wasm 0x000001
 
 Code Disassembly:
 
-memory-data-size.3.wasm:	file format wasm 0x00000d
+memory-data-size.3.wasm:	file format wasm 0x000001
 
 Code Disassembly:
 

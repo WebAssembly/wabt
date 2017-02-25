@@ -1,6 +1,6 @@
 (module
   "\00asm"            ;; magic
-  "\0d\00\00\00"      ;; version
+  "\01\00\00\00"      ;; version
   "\01\05"            ;; type section, 5 bytes
   "\01\60\00\01\7f"   ;; 1 type, function, no params, i32 result
   "\03\02"            ;; function section, 2 bytes
