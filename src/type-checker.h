@@ -25,27 +25,27 @@ struct WabtAllocator;
 
 typedef void (*WabtTypeCheckerErrorCallback)(const char* msg, void* user_data);
 
-typedef struct WabtTypeCheckerErrorHandler {
+struct WabtTypeCheckerErrorHandler {
   WabtTypeCheckerErrorCallback on_error;
   void* user_data;
-} WabtTypeCheckerErrorHandler;
+};
 
-typedef struct WabtTypeCheckerLabel {
+struct WabtTypeCheckerLabel {
   WabtLabelType label_type;
   WabtTypeVector sig;
   size_t type_stack_limit;
   bool unreachable;
-} WabtTypeCheckerLabel;
+};
 WABT_DEFINE_VECTOR(type_checker_label, WabtTypeCheckerLabel);
 
-typedef struct WabtTypeChecker {
+struct WabtTypeChecker {
   WabtTypeCheckerErrorHandler* error_handler;
   WabtTypeVector type_stack;
   WabtTypeCheckerLabelVector label_stack;
 /* TODO(binji): will need to be complete signature when signatures with
  * multiple types are allowed. */
   WabtType br_table_sig;
-} WabtTypeChecker;
+};
 
 WABT_EXTERN_C_BEGIN
 

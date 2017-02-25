@@ -104,7 +104,7 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
   if (!(cond))                        \
     RAISE_ERROR(__VA_ARGS__);
 
-typedef struct Context {
+struct Context {
   const uint8_t* data;
   size_t data_size;
   size_t offset;
@@ -128,13 +128,13 @@ typedef struct Context {
   uint32_t num_globals;
   uint32_t num_exports;
   uint32_t num_function_bodies;
-} Context;
+};
 
-typedef struct LoggingContext {
+struct LoggingContext {
   WabtStream* stream;
   WabtBinaryReader* reader;
   int indent;
-} LoggingContext;
+};
 
 static WabtBinaryReaderContext* get_user_context(Context* ctx) {
   ctx->user_ctx.user_data = ctx->reader->user_data;

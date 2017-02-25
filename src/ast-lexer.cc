@@ -502,10 +502,10 @@ void wabt_destroy_ast_lexer(WabtAstLexer* lexer) {
   wabt_free(lexer);
 }
 
-typedef enum WabtLineOffsetPosition {
+enum WabtLineOffsetPosition {
   WABT_LINE_OFFSET_POSITION_START,
   WABT_LINE_OFFSET_POSITION_END,
-} WabtLineOffsetPosition;
+};
 
 static WabtResult scan_forward_for_line_offset_in_buffer(
     const char* buffer_start,

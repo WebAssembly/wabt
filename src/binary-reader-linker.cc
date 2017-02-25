@@ -21,14 +21,14 @@
 
 #define RELOC_SIZE 5
 
-typedef struct Context {
+struct Context {
   WabtLinkerInputBinary* binary;
 
   WabtSection* reloc_section;
 
   WabtStringSlice import_name;
   WabtSection* current_section;
-} Context;
+};
 
 static WabtResult on_reloc_count(uint32_t count,
                                  WabtBinarySection section_code,

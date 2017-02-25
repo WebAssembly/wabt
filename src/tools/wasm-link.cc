@@ -57,11 +57,11 @@ static StringVector s_infiles;
 static WabtFileWriter s_log_stream_writer;
 static WabtStream s_log_stream;
 
-typedef struct Context {
+struct Context {
   WabtStream stream;
   WabtLinkerInputBinaryVector inputs;
   ssize_t current_section_payload_offset;
-} Context;
+};
 
 static void on_option(struct WabtOptionParser* parser,
                       struct WabtOption* option,
@@ -608,10 +608,10 @@ static bool write_combined_section(Context* ctx,
   return true;
 }
 
-typedef struct ExportInfo {
+struct ExportInfo {
   WabtExport* export_;
   WabtLinkerInputBinary* binary;
-} ExportInfo;
+};
 WABT_DEFINE_VECTOR(export_info, ExportInfo);
 
 static void resolve_symbols(Context* ctx) {

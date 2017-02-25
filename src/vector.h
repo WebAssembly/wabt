@@ -26,11 +26,11 @@
  * WABT_DEFINE_VECTOR(widget, WabtWidget) defines struct and functions like the
  * following:
  *
- * typedef struct WabtWidgetVector {
+ * struct WabtWidgetVector {
  *   WabtWidget* data;
  *   size_t size;
  *   size_t capacity;
- * } WabtWidgetVector;
+ * };
  *
  * void wabt_destroy_widget_vector(WabtWidgetVector* vec);
  * WabtWidget* wabt_append_widget(WabtWidgetVector* vec);
@@ -42,11 +42,11 @@
  */
 
 #define WABT_DEFINE_VECTOR(name, type)                                        \
-  typedef struct type##Vector {                                               \
+  struct type##Vector {                                                       \
     type* data;                                                               \
     size_t size;                                                              \
     size_t capacity;                                                          \
-  } type##Vector;                                                             \
+  };                                                                          \
                                                                               \
   WABT_EXTERN_C_BEGIN                                                         \
   static WABT_INLINE void wabt_destroy_##name##_vector(type##Vector* vec)     \

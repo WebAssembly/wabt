@@ -41,12 +41,12 @@
   V(DATA, data, 11)
 
 /* clang-format off */
-typedef enum WabtBinarySection {
+enum WabtBinarySection {
 #define V(NAME, name, code) WABT_BINARY_SECTION_##NAME = code,
   WABT_FOREACH_BINARY_SECTION(V)
 #undef V
   WABT_NUM_BINARY_SECTIONS
-} WabtBinarySection;
+};
 /* clang-format on */
 
 WABT_EXTERN_C_BEGIN

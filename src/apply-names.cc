@@ -30,7 +30,7 @@
 typedef WabtLabel* LabelPtr;
 WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
-typedef struct Context {
+struct Context {
   WabtModule* module;
   WabtFunc* current_func;
   WabtExprVisitor visitor;
@@ -38,7 +38,7 @@ typedef struct Context {
   WabtStringSliceVector param_index_to_name;
   WabtStringSliceVector local_index_to_name;
   LabelPtrVector labels;
-} Context;
+};
 
 static void push_label(Context* ctx, WabtLabel* label) {
   wabt_append_label_ptr_value(&ctx->labels, &label);

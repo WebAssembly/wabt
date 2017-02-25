@@ -27,12 +27,12 @@
       return WABT_ERROR;   \
   } while (0)
 
-typedef struct Context {
+struct Context {
   WabtModule* module;
   WabtExprVisitor visitor;
   WabtStringSliceVector index_to_name;
   uint32_t label_count;
-} Context;
+};
 
 static bool has_name(WabtStringSlice* str) {
   return str->length > 0;

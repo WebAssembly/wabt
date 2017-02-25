@@ -28,10 +28,10 @@
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */
 
-typedef enum WabtParseIntType {
+enum WabtParseIntType {
   WABT_PARSE_UNSIGNED_ONLY = 0,
   WABT_PARSE_SIGNED_AND_UNSIGNED = 1,
-} WabtParseIntType;
+};
 
 /* Size of char buffer required to hold hex representation of a float/double */
 #define WABT_MAX_FLOAT_HEX 20

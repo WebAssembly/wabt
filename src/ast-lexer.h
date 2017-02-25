@@ -23,12 +23,12 @@
 #include "common.h"
 #include "vector.h"
 
-typedef enum WabtAstLexerSourceType {
+enum WabtAstLexerSourceType {
   WABT_LEXER_SOURCE_TYPE_FILE,
   WABT_LEXER_SOURCE_TYPE_BUFFER,
-} WabtAstLexerSourceType;
+};
 
-typedef struct WabtAstLexerSource {
+struct WabtAstLexerSource {
   WabtAstLexerSourceType type;
   union {
     FILE* file;
@@ -38,9 +38,9 @@ typedef struct WabtAstLexerSource {
       size_t read_offset;
     } buffer;
   };
-} WabtAstLexerSource;
+};
 
-typedef struct WabtAstLexer {
+struct WabtAstLexer {
   WabtAstLexerSource source;
   const char* filename;
   int line;
@@ -56,7 +56,7 @@ typedef struct WabtAstLexer {
   char* token;
   char* cursor;
   char* limit;
-} WabtAstLexer;
+};
 
 WABT_EXTERN_C_BEGIN
 

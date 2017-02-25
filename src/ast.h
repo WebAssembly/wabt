@@ -26,25 +26,25 @@
 #include "type-vector.h"
 #include "vector.h"
 
-typedef enum WabtVarType {
+enum WabtVarType {
   WABT_VAR_TYPE_INDEX,
   WABT_VAR_TYPE_NAME,
-} WabtVarType;
+};
 
-typedef struct WabtVar {
+struct WabtVar {
   WabtLocation loc;
   WabtVarType type;
   union {
     int64_t index;
     WabtStringSlice name;
   };
-} WabtVar;
+};
 WABT_DEFINE_VECTOR(var, WabtVar);
 
 typedef WabtStringSlice WabtLabel;
 WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-typedef struct WabtConst {
+struct WabtConst {
   WabtLocation loc;
   WabtType type;
   union {
@@ -53,10 +53,10 @@ typedef struct WabtConst {
     uint32_t f32_bits;
     uint64_t f64_bits;
   };
-} WabtConst;
+};
 WABT_DEFINE_VECTOR(const, WabtConst);
 
-typedef enum WabtExprType {
+enum WabtExprType {
   WABT_EXPR_TYPE_BINARY,
   WABT_EXPR_TYPE_BLOCK,
   WABT_EXPR_TYPE_BR,
@@ -84,17 +84,16 @@ typedef enum WabtExprType {
   WABT_EXPR_TYPE_TEE_LOCAL,
   WABT_EXPR_TYPE_UNARY,
   WABT_EXPR_TYPE_UNREACHABLE,
-} WabtExprType;
+};
 
 typedef WabtTypeVector WabtBlockSignature;
 
-typedef struct WabtBlock {
+struct WabtBlock {
   WabtLabel label;
   WabtBlockSignature sig;
   struct WabtExpr* first;
-} WabtBlock;
+};
 
-typedef struct WabtExpr WabtExpr;
 struct WabtExpr {
   WabtLocation loc;
   WabtExprType type;
@@ -113,15 +112,15 @@ struct WabtExpr {
   };
 };
 
-typedef struct WabtFuncSignature {
+struct WabtFuncSignature {
   WabtTypeVector param_types;
   WabtTypeVector result_types;
-} WabtFuncSignature;
+};
 
-typedef struct WabtFuncType {
+struct WabtFuncType {
   WabtStringSlice name;
   WabtFuncSignature sig;
-} WabtFuncType;
+};
 typedef WabtFuncType* WabtFuncTypePtr;
 WABT_DEFINE_VECTOR(func_type_ptr, WabtFuncTypePtr);
 
@@ -132,64 +131,64 @@ enum {
 };
 typedef uint32_t WabtFuncDeclarationFlags;
 
-typedef struct WabtFuncDeclaration {
+struct WabtFuncDeclaration {
   WabtFuncDeclarationFlags flags;
   WabtVar type_var;
   WabtFuncSignature sig;
-} WabtFuncDeclaration;
+};
 
-typedef struct WabtFunc {
+struct WabtFunc {
   WabtStringSlice name;
   WabtFuncDeclaration decl;
   WabtTypeVector local_types;
   WabtBindingHash param_bindings;
   WabtBindingHash local_bindings;
   WabtExpr* first_expr;
-} WabtFunc;
+};
 typedef WabtFunc* WabtFuncPtr;
 WABT_DEFINE_VECTOR(func_ptr, WabtFuncPtr);
 
-typedef struct WabtGlobal {
+struct WabtGlobal {
   WabtStringSlice name;
   WabtType type;
   bool mutable_;
   WabtExpr* init_expr;
-} WabtGlobal;
+};
 typedef WabtGlobal* WabtGlobalPtr;
 WABT_DEFINE_VECTOR(global_ptr, WabtGlobalPtr);
 
-typedef struct WabtTable {
+struct WabtTable {
   WabtStringSlice name;
   WabtLimits elem_limits;
-} WabtTable;
+};
 typedef WabtTable* WabtTablePtr;
 WABT_DEFINE_VECTOR(table_ptr, WabtTablePtr);
 
-typedef struct WabtElemSegment {
+struct WabtElemSegment {
   WabtVar table_var;
   WabtExpr* offset;
   WabtVarVector vars;
-} WabtElemSegment;
+};
 typedef WabtElemSegment* WabtElemSegmentPtr;
 WABT_DEFINE_VECTOR(elem_segment_ptr, WabtElemSegmentPtr);
 
-typedef struct WabtMemory {
+struct WabtMemory {
   WabtStringSlice name;
   WabtLimits page_limits;
-} WabtMemory;
+};
 typedef WabtMemory* WabtMemoryPtr;
 WABT_DEFINE_VECTOR(memory_ptr, WabtMemoryPtr);
 
-typedef struct WabtDataSegment {
+struct WabtDataSegment {
   WabtVar memory_var;
   WabtExpr* offset;
   void* data;
   size_t size;
-} WabtDataSegment;
+};
 typedef WabtDataSegment* WabtDataSegmentPtr;
 WABT_DEFINE_VECTOR(data_segment_ptr, WabtDataSegmentPtr);
 
-typedef struct WabtImport {
+struct WabtImport {
   WabtStringSlice module_name;
   WabtStringSlice field_name;
   WabtExternalKind kind;
@@ -202,19 +201,19 @@ typedef struct WabtImport {
     WabtMemory memory;
     WabtGlobal global;
   };
-} WabtImport;
+};
 typedef WabtImport* WabtImportPtr;
 WABT_DEFINE_VECTOR(import_ptr, WabtImportPtr);
 
-typedef struct WabtExport {
+struct WabtExport {
   WabtStringSlice name;
   WabtExternalKind kind;
   WabtVar var;
-} WabtExport;
+};
 typedef WabtExport* WabtExportPtr;
 WABT_DEFINE_VECTOR(export_ptr, WabtExportPtr);
 
-typedef enum WabtModuleFieldType {
+enum WabtModuleFieldType {
   WABT_MODULE_FIELD_TYPE_FUNC,
   WABT_MODULE_FIELD_TYPE_GLOBAL,
   WABT_MODULE_FIELD_TYPE_IMPORT,
@@ -225,9 +224,9 @@ typedef enum WabtModuleFieldType {
   WABT_MODULE_FIELD_TYPE_MEMORY,
   WABT_MODULE_FIELD_TYPE_DATA_SEGMENT,
   WABT_MODULE_FIELD_TYPE_START,
-} WabtModuleFieldType;
+};
 
-typedef struct WabtModuleField {
+struct WabtModuleField {
   WabtLocation loc;
   WabtModuleFieldType type;
   struct WabtModuleField* next;
@@ -243,9 +242,9 @@ typedef struct WabtModuleField {
     WabtDataSegment data_segment;
     WabtVar start;
   };
-} WabtModuleField;
+};
 
-typedef struct WabtModule {
+struct WabtModule {
   WabtLocation loc;
   WabtStringSlice name;
   WabtModuleField* first_field;
@@ -275,19 +274,19 @@ typedef struct WabtModule {
   WabtBindingHash func_type_bindings;
   WabtBindingHash table_bindings;
   WabtBindingHash memory_bindings;
-} WabtModule;
+};
 
-typedef enum WabtRawModuleType {
+enum WabtRawModuleType {
   WABT_RAW_MODULE_TYPE_TEXT,
   WABT_RAW_MODULE_TYPE_BINARY,
-} WabtRawModuleType;
+};
 
 /* "raw" means that the binary module has not yet been decoded. This is only
  * necessary when embedded in assert_invalid. In that case we want to defer
  * decoding errors until wabt_check_assert_invalid is called. This isn't needed
  * when parsing text, as assert_invalid always assumes that text parsing
  * succeeds. */
-typedef struct WabtRawModule {
+struct WabtRawModule {
   WabtRawModuleType type;
   union {
     WabtModule* text;
@@ -298,23 +297,23 @@ typedef struct WabtRawModule {
       size_t size;
     } binary;
   };
-} WabtRawModule;
+};
 
-typedef enum WabtActionType {
+enum WabtActionType {
   WABT_ACTION_TYPE_INVOKE,
   WABT_ACTION_TYPE_GET,
-} WabtActionType;
+};
 
-typedef struct WabtActionInvoke {
+struct WabtActionInvoke {
   WabtStringSlice name;
   WabtConstVector args;
-} WabtActionInvoke;
+};
 
-typedef struct WabtActionGet {
+struct WabtActionGet {
   WabtStringSlice name;
-} WabtActionGet;
+};
 
-typedef struct WabtAction {
+struct WabtAction {
   WabtLocation loc;
   WabtActionType type;
   WabtVar module_var;
@@ -322,9 +321,9 @@ typedef struct WabtAction {
     WabtActionInvoke invoke;
     WabtActionGet get;
   };
-} WabtAction;
+};
 
-typedef enum WabtCommandType {
+enum WabtCommandType {
   WABT_COMMAND_TYPE_MODULE,
   WABT_COMMAND_TYPE_ACTION,
   WABT_COMMAND_TYPE_REGISTER,
@@ -340,9 +339,9 @@ typedef enum WabtCommandType {
   WABT_COMMAND_TYPE_ASSERT_TRAP,
   WABT_COMMAND_TYPE_ASSERT_EXHAUSTION,
   WABT_NUM_COMMAND_TYPES,
-} WabtCommandType;
+};
 
-typedef struct WabtCommand {
+struct WabtCommand {
   WabtCommandType type;
   union {
     WabtModule module;
@@ -357,15 +356,15 @@ typedef struct WabtCommand {
     } assert_malformed, assert_invalid, assert_unlinkable,
         assert_uninstantiable;
   };
-} WabtCommand;
+};
 WABT_DEFINE_VECTOR(command, WabtCommand);
 
-typedef struct WabtScript {
+struct WabtScript {
   WabtCommandVector commands;
   WabtBindingHash module_bindings;
-} WabtScript;
+};
 
-typedef struct WabtExprVisitor {
+struct WabtExprVisitor {
   void* user_data;
   WabtResult (*on_binary_expr)(WabtExpr*, void* user_data);
   WabtResult (*begin_block_expr)(WabtExpr*, void* user_data);
@@ -398,7 +397,7 @@ typedef struct WabtExprVisitor {
   WabtResult (*on_tee_local_expr)(WabtExpr*, void* user_data);
   WabtResult (*on_unary_expr)(WabtExpr*, void* user_data);
   WabtResult (*on_unreachable_expr)(WabtExpr*, void* user_data);
-} WabtExprVisitor;
+};
 
 WABT_EXTERN_C_BEGIN
 WabtModuleField* wabt_append_module_field(WabtModule*);

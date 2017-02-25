@@ -19,10 +19,10 @@
 
 #include "common.h"
 
-typedef enum WabtHasArgument {
+enum WabtHasArgument {
   WABT_OPTION_NO_ARGUMENT,
   WABT_OPTION_HAS_ARGUMENT,
-} WabtHasArgument;
+};
 
 struct WabtOption;
 struct WabtOptionParser;
@@ -34,16 +34,16 @@ typedef void (*WabtArgumentCallback)(struct WabtOptionParser*,
 typedef void (*WabtOptionErrorCallback)(struct WabtOptionParser*,
                                         const char* message);
 
-typedef struct WabtOption {
+struct WabtOption {
   int id;
   char short_name;
   const char* long_name;
   const char* metavar;
   WabtHasArgument has_argument;
   const char* help;
-} WabtOption;
+};
 
-typedef struct WabtOptionParser {
+struct WabtOptionParser {
   const char* description;
   WabtOption* options;
   int num_options;
@@ -54,7 +54,7 @@ typedef struct WabtOptionParser {
 
   /* cached after call to wabt_parse_options */
   char* argv0;
-} WabtOptionParser;
+};
 
 WABT_EXTERN_C_BEGIN
 void wabt_parse_options(WabtOptionParser* parser,

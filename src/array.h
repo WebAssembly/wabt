@@ -22,10 +22,10 @@
 #include "common.h"
 
 #define WABT_DEFINE_ARRAY(name, type)                                       \
-  typedef struct type##Array {                                              \
+  struct type##Array {                                                      \
     type* data;                                                             \
     size_t size;                                                            \
-  } type##Array;                                                            \
+  };                                                                        \
                                                                             \
   WABT_EXTERN_C_BEGIN                                                       \
   static WABT_INLINE void wabt_destroy_##name##_array(type##Array* array)   \

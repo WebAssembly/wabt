@@ -64,11 +64,11 @@ struct WabtStream;
   /* the expected export kind doesn't match. */                                \
   V(EXPORT_KIND_MISMATCH, "export kind mismatch")
 
-typedef enum WabtInterpreterResult {
+enum WabtInterpreterResult {
 #define V(name, str) WABT_INTERPRETER_##name,
   FOREACH_INTERPRETER_RESULT(V)
 #undef V
-} WabtInterpreterResult;
+};
 
 #define WABT_INVALID_INDEX ((uint32_t)~0)
 #define WABT_INVALID_OFFSET ((uint32_t)~0)
@@ -92,47 +92,47 @@ typedef uint32_t WabtUint32;
 WABT_DEFINE_ARRAY(uint32, WabtUint32);
 
 /* TODO(binji): identical to WabtFuncSignature. Share? */
-typedef struct WabtInterpreterFuncSignature {
+struct WabtInterpreterFuncSignature {
   WabtTypeVector param_types;
   WabtTypeVector result_types;
-} WabtInterpreterFuncSignature;
+};
 WABT_DEFINE_VECTOR(interpreter_func_signature, WabtInterpreterFuncSignature);
 
-typedef struct WabtInterpreterTable {
+struct WabtInterpreterTable {
   WabtLimits limits;
   WabtUint32Array func_indexes;
-} WabtInterpreterTable;
+};
 WABT_DEFINE_VECTOR(interpreter_table, WabtInterpreterTable);
 
-typedef struct WabtInterpreterMemory {
+struct WabtInterpreterMemory {
   void* data;
   WabtLimits page_limits;
   uint32_t byte_size; /* Cached from page_limits. */
-} WabtInterpreterMemory;
+};
 WABT_DEFINE_VECTOR(interpreter_memory, WabtInterpreterMemory);
 
-typedef union WabtInterpreterValue {
+union WabtInterpreterValue {
   uint32_t i32;
   uint64_t i64;
   uint32_t f32_bits;
   uint64_t f64_bits;
-} WabtInterpreterValue;
+};
 WABT_DEFINE_ARRAY(interpreter_value, WabtInterpreterValue);
 
-typedef struct WabtInterpreterTypedValue {
+struct WabtInterpreterTypedValue {
   WabtType type;
   WabtInterpreterValue value;
-} WabtInterpreterTypedValue;
+};
 WABT_DEFINE_VECTOR(interpreter_typed_value, WabtInterpreterTypedValue);
 
-typedef struct WabtInterpreterGlobal {
+struct WabtInterpreterGlobal {
   WabtInterpreterTypedValue typed_value;
   bool mutable_;
   uint32_t import_index; /* or INVALID_INDEX if not imported */
-} WabtInterpreterGlobal;
+};
 WABT_DEFINE_VECTOR(interpreter_global, WabtInterpreterGlobal);
 
-typedef struct WabtInterpreterImport {
+struct WabtInterpreterImport {
   WabtStringSlice module_name;
   WabtStringSlice field_name;
   WabtExternalKind kind;
@@ -148,7 +148,7 @@ typedef struct WabtInterpreterImport {
       bool mutable_;
     } global;
   };
-} WabtInterpreterImport;
+};
 WABT_DEFINE_ARRAY(interpreter_import, WabtInterpreterImport);
 
 struct WabtInterpreterFunc;
@@ -162,7 +162,7 @@ typedef WabtResult (*WabtInterpreterHostFuncCallback)(
     WabtInterpreterTypedValue* out_results,
     void* user_data);
 
-typedef struct WabtInterpreterFunc {
+struct WabtInterpreterFunc {
   uint32_t sig_index;
   bool is_host;
   union {
@@ -179,22 +179,22 @@ typedef struct WabtInterpreterFunc {
       void* user_data;
     } host;
   };
-} WabtInterpreterFunc;
+};
 WABT_DEFINE_VECTOR(interpreter_func, WabtInterpreterFunc);
 
-typedef struct WabtInterpreterExport {
+struct WabtInterpreterExport {
   WabtStringSlice name; /* Owned by the export_bindings hash */
   WabtExternalKind kind;
   uint32_t index;
-} WabtInterpreterExport;
+};
 WABT_DEFINE_VECTOR(interpreter_export, WabtInterpreterExport);
 
-typedef struct WabtPrintErrorCallback {
+struct WabtPrintErrorCallback {
   void* user_data;
   void (*print_error)(const char* msg, void* user_data);
-} WabtPrintErrorCallback;
+};
 
-typedef struct WabtInterpreterHostImportDelegate {
+struct WabtInterpreterHostImportDelegate {
   void *user_data;
   WabtResult (*import_func)(WabtInterpreterImport*,
                             WabtInterpreterFunc*,
@@ -213,9 +213,9 @@ typedef struct WabtInterpreterHostImportDelegate {
                               WabtInterpreterGlobal*,
                               WabtPrintErrorCallback,
                               void* user_data);
-} WabtInterpreterHostImportDelegate;
+};
 
-typedef struct WabtInterpreterModule {
+struct WabtInterpreterModule {
   WabtStringSlice name;
   WabtInterpreterExportVector exports;
   WabtBindingHash export_bindings;
@@ -233,11 +233,11 @@ typedef struct WabtInterpreterModule {
       WabtInterpreterHostImportDelegate import_delegate;
     } host;
   };
-} WabtInterpreterModule;
+};
 WABT_DEFINE_VECTOR(interpreter_module, WabtInterpreterModule);
 
 /* Used to track and reset the state of the environment. */
-typedef struct WabtInterpreterEnvironmentMark {
+struct WabtInterpreterEnvironmentMark {
   size_t modules_size;
   size_t sigs_size;
   size_t funcs_size;
@@ -245,9 +245,9 @@ typedef struct WabtInterpreterEnvironmentMark {
   size_t tables_size;
   size_t globals_size;
   size_t istream_size;
-} WabtInterpreterEnvironmentMark;
+};
 
-typedef struct WabtInterpreterEnvironment {
+struct WabtInterpreterEnvironment {
   WabtInterpreterModuleVector modules;
   WabtInterpreterFuncSignatureVector sigs;
   WabtInterpreterFuncVector funcs;
@@ -257,9 +257,9 @@ typedef struct WabtInterpreterEnvironment {
   WabtOutputBuffer istream;
   WabtBindingHash module_bindings;
   WabtBindingHash registered_module_bindings;
-} WabtInterpreterEnvironment;
+};
 
-typedef struct WabtInterpreterThread {
+struct WabtInterpreterThread {
   WabtInterpreterEnvironment* env;
   WabtInterpreterValueArray value_stack;
   WabtUint32Array call_stack;
@@ -271,16 +271,16 @@ typedef struct WabtInterpreterThread {
 
   /* a temporary buffer that is for passing args to host functions */
   WabtInterpreterTypedValueVector host_args;
-} WabtInterpreterThread;
+};
 
 #define WABT_INTERPRETER_THREAD_OPTIONS_DEFAULT \
   { 512 * 1024 / sizeof(WabtInterpreterValue), 64 * 1024, WABT_INVALID_OFFSET }
 
-typedef struct WabtInterpreterThreadOptions {
+struct WabtInterpreterThreadOptions {
   uint32_t value_stack_size;
   uint32_t call_stack_size;
   uint32_t pc;
-} WabtInterpreterThreadOptions;
+};
 
 WABT_EXTERN_C_BEGIN
 bool wabt_is_nan_f32(uint32_t f32_bits);

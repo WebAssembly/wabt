@@ -44,14 +44,14 @@ static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-typedef enum NextChar {
+enum NextChar {
   NEXT_CHAR_NONE,
   NEXT_CHAR_SPACE,
   NEXT_CHAR_NEWLINE,
   NEXT_CHAR_FORCE_NEWLINE,
-} NextChar;
+};
 
-typedef struct Context {
+struct Context {
   WabtStream stream;
   WabtResult result;
   int indent;
@@ -65,7 +65,7 @@ typedef struct Context {
   int table_index;
   int memory_index;
   int func_type_index;
-} Context;
+};
 
 static void indent(Context* ctx) {
   ctx->indent += INDENT_SIZE;

@@ -26,10 +26,10 @@ struct WabtWriter;
 #define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
   { nullptr, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
 
-typedef struct WabtWriteBinarySpecOptions {
+struct WabtWriteBinarySpecOptions {
   const char* json_filename;
   WabtWriteBinaryOptions write_binary_options;
-} WabtWriteBinarySpecOptions;
+};
 
 WABT_EXTERN_C_BEGIN
 WabtResult wabt_write_binary_spec_script(struct WabtScript*,

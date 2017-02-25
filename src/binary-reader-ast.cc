@@ -32,14 +32,14 @@
       return WABT_ERROR;   \
   } while (0)
 
-typedef struct LabelNode {
+struct LabelNode {
   WabtLabelType label_type;
   WabtExpr** first;
   WabtExpr* last;
-} LabelNode;
+};
 WABT_DEFINE_VECTOR(label_node, LabelNode);
 
-typedef struct Context {
+struct Context {
   WabtBinaryErrorHandler* error_handler;
   WabtModule* module;
 
@@ -47,7 +47,7 @@ typedef struct Context {
   LabelNodeVector label_stack;
   uint32_t max_depth;
   WabtExpr** current_init_expr;
-} Context;
+};
 
 static void handle_error(Context* ctx, uint32_t offset, const char* message);
 

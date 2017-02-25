@@ -25,22 +25,22 @@ struct WabtReadBinaryOptions;
 
 WABT_EXTERN_C_BEGIN
 
-typedef struct WabtIntCounter {
+struct WabtIntCounter {
   intmax_t value;
   size_t count;
-} WabtIntCounter;
+};
 
 WABT_DEFINE_VECTOR(int_counter, WabtIntCounter)
 
-typedef struct WabtIntPairCounter {
+struct WabtIntPairCounter {
   intmax_t first;
   intmax_t second;
   size_t count;
-} WabtIntPairCounter;
+};
 
 WABT_DEFINE_VECTOR(int_pair_counter, WabtIntPairCounter);
 
-typedef struct WabtOpcntData {
+struct WabtOpcntData {
   WabtIntCounterVector opcode_vec;
   WabtIntCounterVector i32_const_vec;
   WabtIntCounterVector get_local_vec;
@@ -48,7 +48,7 @@ typedef struct WabtOpcntData {
   WabtIntCounterVector tee_local_vec;
   WabtIntPairCounterVector i32_load_vec;
   WabtIntPairCounterVector i32_store_vec;
-} WabtOpcntData;
+};
 
 void wabt_init_opcnt_data(WabtOpcntData* data);
 void wabt_destroy_opcnt_data(WabtOpcntData* data);

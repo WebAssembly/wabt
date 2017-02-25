@@ -22,25 +22,25 @@
 #include "common.h"
 #include "writer.h"
 
-typedef struct WabtStream {
+struct WabtStream {
   WabtWriter* writer;
   size_t offset;
   WabtResult result;
   /* if non-null, log all writes to this stream */
   struct WabtStream* log_stream;
-} WabtStream;
+};
 
-typedef struct WabtFileStream {
+struct WabtFileStream {
   WabtStream base;
   WabtFileWriter writer;
-} WabtFileStream;
+};
 
 /* whether to display the ASCII characters in the debug output for
  * wabt_write_memory */
-typedef enum WabtPrintChars {
+enum WabtPrintChars {
   WABT_DONT_PRINT_CHARS,
   WABT_PRINT_CHARS,
-} WabtPrintChars;
+};
 
 WABT_EXTERN_C_BEGIN
 

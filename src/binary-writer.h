@@ -28,12 +28,12 @@ struct WabtStream;
 #define WABT_WRITE_BINARY_OPTIONS_DEFAULT \
   { nullptr, true, false, false }
 
-typedef struct WabtWriteBinaryOptions {
+struct WabtWriteBinaryOptions {
   struct WabtStream* log_stream;
   bool canonicalize_lebs;
   bool relocatable;
   bool write_debug_names;
-} WabtWriteBinaryOptions;
+};
 
 WABT_EXTERN_C_BEGIN
 WabtResult wabt_write_binary_module(struct WabtWriter*,

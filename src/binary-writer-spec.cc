@@ -26,7 +26,7 @@
 #include "stream.h"
 #include "writer.h"
 
-typedef struct Context {
+struct Context {
   WabtMemoryWriter json_writer;
   WabtStream json_stream;
   WabtStringSlice source_filename;
@@ -35,7 +35,7 @@ typedef struct Context {
   const WabtWriteBinarySpecOptions* spec_options;
   WabtResult result;
   size_t num_modules;
-} Context;
+};
 
 static void convert_backslash_to_slash(char* s, size_t length) {
   size_t i = 0;

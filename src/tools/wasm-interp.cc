@@ -53,10 +53,10 @@ static WabtStream s_log_stream;
 #define NOPE WABT_OPTION_NO_ARGUMENT
 #define YEP WABT_OPTION_HAS_ARGUMENT
 
-typedef enum RunVerbosity {
+enum RunVerbosity {
   RUN_QUIET = 0,
   RUN_VERBOSE = 1,
-} RunVerbosity;
+};
 
 enum {
   FLAG_VERBOSE,
@@ -636,7 +636,7 @@ WABT_DEFINE_VECTOR(interpreter_thread, WabtInterpreterThread);
 
 /* An extremely simple JSON parser that only knows how to parse the expected
  * format from wast2wabt. */
-typedef struct Context {
+struct Context {
   WabtInterpreterEnvironment env;
   WabtInterpreterThread thread;
   WabtInterpreterModule* last_module;
@@ -654,19 +654,19 @@ typedef struct Context {
   /* Test info */
   int passed;
   int total;
-} Context;
+};
 
-typedef enum ActionType {
+enum ActionType {
   ACTION_TYPE_INVOKE,
   ACTION_TYPE_GET,
-} ActionType;
+};
 
-typedef struct Action {
+struct Action {
   ActionType type;
   WabtStringSlice module_name;
   WabtStringSlice field_name;
   WabtInterpreterTypedValueVector args;
-} Action;
+};
 
 #define CHECK_RESULT(x)  \
   do {                   \

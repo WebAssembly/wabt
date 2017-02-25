@@ -28,21 +28,21 @@
 #include "binary-reader.h"
 #include "type-checker.h"
 
-typedef enum ActionResultKind {
+enum ActionResultKind {
   ACTION_RESULT_KIND_ERROR,
   ACTION_RESULT_KIND_TYPES,
   ACTION_RESULT_KIND_TYPE,
-} ActionResultKind;
+};
 
-typedef struct ActionResult {
+struct ActionResult {
   ActionResultKind kind;
   union {
     const WabtTypeVector* types;
     WabtType type;
   };
-} ActionResult;
+};
 
-typedef struct Context {
+struct Context {
   WabtSourceErrorHandler* error_handler;
   WabtAstLexer* lexer;
   const WabtScript* script;
@@ -55,7 +55,7 @@ typedef struct Context {
   WabtTypeChecker typechecker;
   const WabtLocation* expr_loc; /* Cached for access by on_typechecker_error */
   WabtResult result;
-} Context;
+};
 
 static void WABT_PRINTF_FORMAT(3, 4)
     print_error(Context* ctx, const WabtLocation* loc, const char* fmt, ...) {
