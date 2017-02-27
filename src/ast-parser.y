@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <algorithm>
+
 #include "ast-parser.h"
 #include "ast-parser-lexer-shared.h"
 #include "binary-reader-ast.h"
@@ -28,23 +30,28 @@
 
 #define INVALID_VAR_INDEX (-1)
 
-#define RELOCATE_STACK(type, array, stack_base, old_byte_size, new_size) \
-  do {                                                                   \
-    type* new_stack = new type[new_size]();                              \
-    memcpy((new_stack), (stack_base), old_byte_size);                    \
-    if ((stack_base) != (array)) {                                       \
-      delete[](stack_base);                                              \
-    }                                                                    \
-    /* Cache the pointer in the parser struct to be deleted later. */    \
-    parser->array = (stack_base) = new_stack;                            \
+#define RELOCATE_STACK(type, array, stack_base, old_size, new_size)   \
+  do {                                                                \
+    type* new_stack = new type[new_size]();                           \
+    std::move((stack_base), (stack_base) + (old_size), (new_stack));  \
+    if ((stack_base) != (array)) {                                    \
+      delete[](stack_base);                                           \
+    } else {                                                          \
+      for (size_t i = 0; i < (old_size); ++i) {                       \
+        (stack_base)[i].~type();                                      \
+      }                                                               \
+    }                                                                 \
+    /* Cache the pointer in the parser struct to be deleted later. */ \
+    parser->array = (stack_base) = new_stack;                         \
   } while (0)
 
 #define yyoverflow(message, ss, ss_size, vs, vs_size, ls, ls_size, new_size) \
   do {                                                                       \
+    size_t old_size = *(new_size);                                           \
     *(new_size) *= 2;                                                        \
-    RELOCATE_STACK(yytype_int16, yyssa, *(ss), (ss_size), *(new_size));      \
-    RELOCATE_STACK(YYSTYPE, yyvsa, *(vs), (vs_size), *(new_size));           \
-    RELOCATE_STACK(YYLTYPE, yylsa, *(ls), (ls_size), *(new_size));           \
+    RELOCATE_STACK(yytype_int16, yyssa, *(ss), old_size, *(new_size));       \
+    RELOCATE_STACK(YYSTYPE, yyvsa, *(vs), old_size, *(new_size));            \
+    RELOCATE_STACK(YYLTYPE, yylsa, *(ls), old_size, *(new_size));            \
   } while (0)
 
 #define DUPTEXT(dst, src)                                \
