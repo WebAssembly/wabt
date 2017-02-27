@@ -59,7 +59,7 @@ static WabtLabel* find_label_by_var(Context* ctx, WabtVar* var) {
     }
     return nullptr;
   } else {
-    if (var->index < 0 || (size_t)var->index >= ctx->labels.size)
+    if (var->index < 0 || static_cast<size_t>(var->index) >= ctx->labels.size)
       return nullptr;
     return ctx->labels.data[ctx->labels.size - 1 - var->index];
   }
@@ -121,19 +121,19 @@ static WabtResult use_name_for_param_and_local_var(Context* ctx,
                                                    WabtVar* var) {
   int local_index = wabt_get_local_index_by_var(func, var);
   if (local_index < 0 ||
-      (size_t)local_index >= wabt_get_num_params_and_locals(func))
+      static_cast<size_t>(local_index) >= wabt_get_num_params_and_locals(func))
     return WABT_ERROR;
 
   uint32_t num_params = wabt_get_num_params(func);
   WabtStringSlice* name;
-  if ((uint32_t)local_index < num_params) {
+  if (static_cast<uint32_t>(local_index) < num_params) {
     /* param */
-    assert((size_t)local_index < ctx->param_index_to_name.size);
+    assert(static_cast<size_t>(local_index) < ctx->param_index_to_name.size);
     name = &ctx->param_index_to_name.data[local_index];
   } else {
     /* local */
     local_index -= num_params;
-    assert((size_t)local_index < ctx->local_index_to_name.size);
+    assert(static_cast<size_t>(local_index) < ctx->local_index_to_name.size);
     name = &ctx->local_index_to_name.data[local_index];
   }
 
@@ -151,45 +151,45 @@ static WabtResult use_name_for_param_and_local_var(Context* ctx,
 }
 
 static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->block.label);
   return WABT_OK;
 }
 
 static WabtResult end_block_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->loop.label);
   return WABT_OK;
 }
 
 static WabtResult end_loop_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult on_br_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtLabel* label = find_label_by_var(ctx, &expr->br.var);
   use_name_for_var(label, &expr->br.var);
   return WABT_OK;
 }
 
 static WabtResult on_br_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtLabel* label = find_label_by_var(ctx, &expr->br_if.var);
   use_name_for_var(label, &expr->br_if.var);
   return WABT_OK;
 }
 
 static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   size_t i;
   WabtVarVector* targets = &expr->br_table.targets;
   for (i = 0; i < targets->size; ++i) {
@@ -204,58 +204,58 @@ static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
 }
 
 static WabtResult on_call_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(use_name_for_func_var(ctx->module, &expr->call.var));
   return WABT_OK;
 }
 
 static WabtResult on_call_indirect_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(
       use_name_for_func_type_var(ctx->module, &expr->call_indirect.var));
   return WABT_OK;
 }
 
 static WabtResult on_get_global_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(use_name_for_global_var(ctx->module, &expr->get_global.var));
   return WABT_OK;
 }
 
 static WabtResult on_get_local_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->get_local.var));
   return WABT_OK;
 }
 
 static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->if_.true_.label);
   return WABT_OK;
 }
 
 static WabtResult end_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult on_set_global_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(use_name_for_global_var(ctx->module, &expr->set_global.var));
   return WABT_OK;
 }
 
 static WabtResult on_set_local_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->set_local.var));
   return WABT_OK;
 }
 
 static WabtResult on_tee_local_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
                                                 &expr->tee_local.var));
   return WABT_OK;

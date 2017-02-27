@@ -31,11 +31,12 @@
 #define RELOCATE_STACK(type, array, stack_base, old_byte_size, new_size)      \
   do {                                                                        \
     if ((stack_base) == (array)) {                                            \
-      (stack_base) = (type*)wabt_alloc((new_size) * sizeof(*(stack_base)));   \
+      (stack_base) =                                                          \
+          static_cast<type*>(wabt_alloc((new_size) * sizeof(*(stack_base)))); \
       memcpy((stack_base), (array), old_byte_size);                           \
     } else {                                                                  \
-      (stack_base) = (type*)wabt_realloc((stack_base),                        \
-                                         (new_size) * sizeof(*(stack_base))); \
+      (stack_base) = static_cast<type*>(                                      \
+          wabt_realloc((stack_base), (new_size) * sizeof(*(stack_base))));    \
     }                                                                         \
     /* Cache the pointer in the parser struct to be free'd later. */          \
     parser->array = (stack_base);                                             \
@@ -146,27 +147,28 @@ static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
                                 WabtExpr* expr2);
 
 static WabtFuncField* new_func_field(void) {
-  return (WabtFuncField*)wabt_alloc_zero(sizeof(WabtFuncField));
+  return static_cast<WabtFuncField*>(wabt_alloc_zero(sizeof(WabtFuncField)));
 }
 
 static WabtFunc* new_func(void) {
-  return (WabtFunc*)wabt_alloc_zero(sizeof(WabtFunc));
+  return static_cast<WabtFunc*>(wabt_alloc_zero(sizeof(WabtFunc)));
 }
 
 static WabtCommand* new_command(void) {
-  return (WabtCommand*)wabt_alloc_zero(sizeof(WabtCommand));
+  return static_cast<WabtCommand*>(wabt_alloc_zero(sizeof(WabtCommand)));
 }
 
 static WabtModule* new_module(void) {
-  return (WabtModule*)wabt_alloc_zero(sizeof(WabtModule));
+  return static_cast<WabtModule*>(wabt_alloc_zero(sizeof(WabtModule)));
 }
 
 static WabtImport* new_import(void) {
-  return (WabtImport*)wabt_alloc_zero(sizeof(WabtImport));
+  return static_cast<WabtImport*>(wabt_alloc_zero(sizeof(WabtImport)));
 }
 
 static WabtTextListNode* new_text_list_node(void) {
-  return (WabtTextListNode*)wabt_alloc_zero(sizeof(WabtTextListNode));
+  return static_cast<WabtTextListNode*>(
+      wabt_alloc_zero(sizeof(WabtTextListNode)));
 }
 
 static WabtResult parse_const(WabtType type, WabtLiteralType literal_type,
@@ -333,7 +335,7 @@ quoted_text :
       void* data;
       size_t size;
       dup_text_list(&text_list, &data, &size);
-      $$.start = (const char*)data;
+      $$.start = static_cast<const char*>(data);
       $$.length = size;
     }
 ;
@@ -571,7 +573,7 @@ plain_instr :
                               "invalid literal \"" PRIstringslice "\"",
                               WABT_PRINTF_STRING_SLICE_ARG($2.text));
       }
-      wabt_free((char*)$2.text.start);
+      wabt_free(const_cast<char*>($2.text.start));
     }
   | UNARY {
       $$ = wabt_new_unary_expr();
@@ -1440,7 +1442,7 @@ const :
                               "invalid literal \"" PRIstringslice "\"",
                               WABT_PRINTF_STRING_SLICE_ARG($3.text));
       }
-      wabt_free((char*)$3.text.start);
+      wabt_free(const_cast<char*>($3.text.start));
     }
 ;
 const_list :

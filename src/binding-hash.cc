@@ -21,11 +21,11 @@
 static size_t hash_name(const WabtStringSlice* name) {
   // FNV-1a hash
   const uint32_t fnv_prime = 0x01000193;
-  const uint8_t* bp = (const uint8_t*)name->start;
+  const uint8_t* bp = reinterpret_cast<const uint8_t*>(name->start);
   const uint8_t* be = bp + name->length;
   uint32_t hval = 0x811c9dc5;
   while (bp < be) {
-    hval ^= (uint32_t)*bp++;
+    hval ^= static_cast<uint32_t>(*bp++);
     hval *= fnv_prime;
   }
   return hval;

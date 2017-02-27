@@ -410,13 +410,14 @@ static void write_expr(Context* ctx,
       switch (expr->const_.type) {
         case WABT_TYPE_I32: {
           wabt_write_opcode(&ctx->stream, WABT_OPCODE_I32_CONST);
-          wabt_write_i32_leb128(&ctx->stream, (int32_t)expr->const_.u32,
+          wabt_write_i32_leb128(&ctx->stream,
+                                static_cast<int32_t>(expr->const_.u32),
                                 "i32 literal");
           break;
         }
         case WABT_TYPE_I64:
           wabt_write_opcode(&ctx->stream, WABT_OPCODE_I64_CONST);
-          write_i64_leb128(&ctx->stream, (int64_t)expr->const_.u64,
+          write_i64_leb128(&ctx->stream, static_cast<int64_t>(expr->const_.u64),
                            "i64 literal");
           break;
         case WABT_TYPE_F32:
@@ -473,7 +474,8 @@ static void write_expr(Context* ctx,
       uint32_t align =
           wabt_get_opcode_alignment(expr->load.opcode, expr->load.align);
       wabt_write_u8(&ctx->stream, log2_u32(align), "alignment");
-      wabt_write_u32_leb128(&ctx->stream, (uint32_t)expr->load.offset,
+      wabt_write_u32_leb128(&ctx->stream,
+                            static_cast<uint32_t>(expr->load.offset),
                             "load offset");
       break;
     }
@@ -510,7 +512,8 @@ static void write_expr(Context* ctx,
       uint32_t align =
           wabt_get_opcode_alignment(expr->store.opcode, expr->store.align);
       wabt_write_u8(&ctx->stream, log2_u32(align), "alignment");
-      wabt_write_u32_leb128(&ctx->stream, (uint32_t)expr->store.offset,
+      wabt_write_u32_leb128(&ctx->stream,
+                            static_cast<uint32_t>(expr->store.offset),
                             "store offset");
       break;
     }

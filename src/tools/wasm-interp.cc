@@ -763,7 +763,7 @@ static WabtResult expect(Context* ctx, const char* s) {
 static WabtResult expect_key(Context* ctx, const char* key) {
   size_t keylen = strlen(key);
   size_t quoted_len = keylen + 2 + 1;
-  char* quoted = (char*)alloca(quoted_len);
+  char* quoted = static_cast<char*>(alloca(quoted_len));
   wabt_snprintf(quoted, quoted_len, "\"%s\"", key);
   EXPECT(quoted);
   EXPECT(":");
@@ -777,7 +777,7 @@ static WabtResult parse_uint32(Context* ctx, uint32_t* out_int) {
     int c = read_char(ctx);
     if (c >= '0' && c <= '9') {
       uint32_t last_result = result;
-      result = result * 10 + (uint32_t)(c - '0');
+      result = result * 10 + static_cast<uint32_t>(c - '0');
       if (result < last_result) {
         print_parse_error(ctx, "uint32 overflow");
         return WABT_ERROR;
@@ -1010,7 +1010,7 @@ static char* create_module_path(Context* ctx, WabtStringSlice filename) {
   const char* spec_json_filename = ctx->loc.filename;
   WabtStringSlice dirname = get_dirname(spec_json_filename);
   size_t path_len = dirname.length + 1 + filename.length + 1;
-  char* path = (char*)wabt_alloc(path_len);
+  char* path = static_cast<char*>(wabt_alloc(path_len));
 
   if (dirname.length == 0) {
     wabt_snprintf(path, path_len, PRIstringslice,
@@ -1074,10 +1074,10 @@ static WabtResult run_action(Context* ctx,
     module_index = wabt_find_binding_index_by_name(&ctx->env.module_bindings,
                                                    &action->module_name);
   } else {
-    module_index = (int)ctx->env.modules.size - 1;
+    module_index = static_cast<int>(ctx->env.modules.size) - 1;
   }
 
-  assert(module_index < (int)ctx->env.modules.size);
+  assert(module_index < static_cast<int>(ctx->env.modules.size));
   WabtInterpreterModule* module = &ctx->env.modules.data[module_index];
 
   switch (action->type) {
@@ -1125,20 +1125,19 @@ static WabtResult on_action_command(Context* ctx, Action* action) {
 static WabtBinaryErrorHandler* new_custom_error_handler(Context* ctx,
                                                         const char* desc) {
   size_t header_size = ctx->source_filename.length + strlen(desc) + 100;
-  char* header = (char*)wabt_alloc(header_size);
+  char* header = static_cast<char*>(wabt_alloc(header_size));
   wabt_snprintf(header, header_size, PRIstringslice ":%d: %s passed",
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
                 ctx->command_line_number, desc);
 
-  WabtDefaultErrorHandlerInfo* info =
-      (WabtDefaultErrorHandlerInfo*)wabt_alloc_zero(
-          sizeof(WabtDefaultErrorHandlerInfo));
+  WabtDefaultErrorHandlerInfo* info = static_cast<WabtDefaultErrorHandlerInfo*>(
+      wabt_alloc_zero(sizeof(WabtDefaultErrorHandlerInfo)));
   info->header = header;
   info->out_file = stdout;
   info->print_header = WABT_PRINT_ERROR_HEADER_ONCE;
 
-  WabtBinaryErrorHandler* error_handler =
-      (WabtBinaryErrorHandler*)wabt_alloc_zero(sizeof(WabtBinaryErrorHandler));
+  WabtBinaryErrorHandler* error_handler = static_cast<WabtBinaryErrorHandler*>(
+      wabt_alloc_zero(sizeof(WabtBinaryErrorHandler)));
   error_handler->on_error = wabt_default_binary_error_callback;
   error_handler->user_data = info;
   return error_handler;
@@ -1147,8 +1146,8 @@ static WabtBinaryErrorHandler* new_custom_error_handler(Context* ctx,
 static void destroy_custom_error_handler(
     WabtBinaryErrorHandler* error_handler) {
   WabtDefaultErrorHandlerInfo* info =
-      (WabtDefaultErrorHandlerInfo*)error_handler->user_data;
-  wabt_free((void*)info->header);
+      static_cast<WabtDefaultErrorHandlerInfo*>(error_handler->user_data);
+  wabt_free(const_cast<void*>(static_cast<const void*>(info->header)));
   wabt_free(info);
   wabt_free(error_handler);
 }
@@ -1194,15 +1193,16 @@ static WabtResult on_register_command(Context* ctx,
       const WabtStringSlice* module_name = &ctx->env.modules.data[i].name;
       if (!wabt_string_slice_is_empty(module_name) &&
           wabt_string_slices_are_equal(&name, module_name)) {
-        module_index = (int)i;
+        module_index = static_cast<int>(i);
         break;
       }
     }
   } else {
-    module_index = (int)ctx->env.modules.size - 1;
+    module_index = static_cast<int>(ctx->env.modules.size) - 1;
   }
 
-  if (module_index < 0 || module_index >= (int)ctx->env.modules.size) {
+  if (module_index < 0 ||
+      module_index >= static_cast<int>(ctx->env.modules.size)) {
     print_command_error(ctx, "unknown module in register");
     return WABT_ERROR;
   }
@@ -1653,7 +1653,7 @@ static WabtResult read_and_run_spec_json(const char* spec_json_filename) {
   if (WABT_FAILED(result))
     return WABT_ERROR;
 
-  ctx.json_data = (char*)data;
+  ctx.json_data = static_cast<char*>(data);
   ctx.json_data_size = size;
 
   result = parse_commands(&ctx);

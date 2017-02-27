@@ -125,14 +125,16 @@ void wabt_write_memory_dump(WabtStream* stream,
                             WabtPrintChars print_chars,
                             const char* prefix,
                             const char* desc) {
-  const uint8_t* p = (const uint8_t*)start;
+  const uint8_t* p = static_cast<const uint8_t*>(start);
   const uint8_t* end = p + size;
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
     if (prefix)
       wabt_writef(stream, "%s", prefix);
-    wabt_writef(stream, "%07" PRIzx ": ", (size_t)p - (size_t)start + offset);
+    wabt_writef(stream, "%07" PRIzx ": ",
+                reinterpret_cast<intptr_t>(p) -
+                    reinterpret_cast<intptr_t>(start) + offset);
     while (p < line_end) {
       int i;
       for (i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {

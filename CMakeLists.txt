@@ -90,6 +90,7 @@ else ()
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
   add_definitions(
     -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g -std=c++11
+    -Wold-style-cast
   )
 
   if (MINGW)
@@ -186,7 +187,7 @@ if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
   set_source_files_properties(
     ${AST_PARSER_GEN_C}
     PROPERTIES
-    COMPILE_FLAGS -Wno-format-security
+    COMPILE_FLAGS "-Wno-format-security -Wno-old-style-cast"
   )
 endif ()
 

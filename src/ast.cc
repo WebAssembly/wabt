@@ -22,7 +22,7 @@
 int wabt_get_index_from_var(const WabtBindingHash* hash, const WabtVar* var) {
   if (var->type == WABT_VAR_TYPE_NAME)
     return wabt_find_binding_index_by_name(hash, &var->name);
-  return (int)var->index;
+  return static_cast<int>(var->index);
 }
 
 WabtExportPtr wabt_get_export_by_name(const WabtModule* module,
@@ -56,7 +56,7 @@ int wabt_get_func_type_index_by_var(const WabtModule* module,
 
 int wabt_get_local_index_by_var(const WabtFunc* func, const WabtVar* var) {
   if (var->type == WABT_VAR_TYPE_INDEX)
-    return (int)var->index;
+    return static_cast<int>(var->index);
 
   int result =
       wabt_find_binding_index_by_name(&func->param_bindings, &var->name);
@@ -77,7 +77,7 @@ int wabt_get_module_index_by_var(const WabtScript* script, const WabtVar* var) {
 
 WabtFuncPtr wabt_get_func_by_var(const WabtModule* module, const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->func_bindings, var);
-  if (index < 0 || (size_t)index >= module->funcs.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->funcs.size)
     return nullptr;
   return module->funcs.data[index];
 }
@@ -85,7 +85,7 @@ WabtFuncPtr wabt_get_func_by_var(const WabtModule* module, const WabtVar* var) {
 WabtGlobalPtr wabt_get_global_by_var(const WabtModule* module,
                                      const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->global_bindings, var);
-  if (index < 0 || (size_t)index >= module->globals.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->globals.size)
     return nullptr;
   return module->globals.data[index];
 }
@@ -93,7 +93,7 @@ WabtGlobalPtr wabt_get_global_by_var(const WabtModule* module,
 WabtTablePtr wabt_get_table_by_var(const WabtModule* module,
                                    const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->table_bindings, var);
-  if (index < 0 || (size_t)index >= module->tables.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->tables.size)
     return nullptr;
   return module->tables.data[index];
 }
@@ -101,7 +101,7 @@ WabtTablePtr wabt_get_table_by_var(const WabtModule* module,
 WabtMemoryPtr wabt_get_memory_by_var(const WabtModule* module,
                                    const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->memory_bindings, var);
-  if (index < 0 || (size_t)index >= module->memories.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->memories.size)
     return nullptr;
   return module->memories.data[index];
 }
@@ -109,7 +109,7 @@ WabtMemoryPtr wabt_get_memory_by_var(const WabtModule* module,
 WabtFuncTypePtr wabt_get_func_type_by_var(const WabtModule* module,
                                           const WabtVar* var) {
   int index = wabt_get_index_from_var(&module->func_type_bindings, var);
-  if (index < 0 || (size_t)index >= module->func_types.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->func_types.size)
     return nullptr;
   return module->func_types.data[index];
 }
@@ -145,7 +145,7 @@ WabtModule* wabt_get_first_module(const WabtScript* script) {
 WabtModule* wabt_get_module_by_var(const WabtScript* script,
                                    const WabtVar* var) {
   int index = wabt_get_index_from_var(&script->module_bindings, var);
-  if (index < 0 || (size_t)index >= script->commands.size)
+  if (index < 0 || static_cast<size_t>(index) >= script->commands.size)
     return nullptr;
   WabtCommand* command = &script->commands.data[index];
   assert(command->type == WABT_COMMAND_TYPE_MODULE);
@@ -200,7 +200,7 @@ void wabt_find_duplicate_bindings(const WabtBindingHash* bindings,
 
 WabtModuleField* wabt_append_module_field(WabtModule* module) {
   WabtModuleField* result =
-      (WabtModuleField*)wabt_alloc_zero(sizeof(WabtModuleField));
+      static_cast<WabtModuleField*>(wabt_alloc_zero(sizeof(WabtModuleField)));
   if (!module->first_field)
     module->first_field = result;
   else if (module->last_field)
@@ -251,11 +251,12 @@ WabtFuncType* wabt_append_implicit_func_type(WabtLocation* loc,
   V(WABT_EXPR_TYPE_SELECT, select)                 \
   V(WABT_EXPR_TYPE_UNREACHABLE, unreachable)
 
-#define DEFINE_NEW_EXPR(type_, name)                                 \
-  WabtExpr* wabt_new_##name##_expr(void) {                           \
-    WabtExpr* result = (WabtExpr*)wabt_alloc_zero(sizeof(WabtExpr)); \
-    result->type = type_;                                            \
-    return result;                                                   \
+#define DEFINE_NEW_EXPR(type_, name)                               \
+  WabtExpr* wabt_new_##name##_expr(void) {                         \
+    WabtExpr* result =                                             \
+        static_cast<WabtExpr*>(wabt_alloc_zero(sizeof(WabtExpr))); \
+    result->type = type_;                                          \
+    return result;                                                 \
   }
 FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
 #undef DEFINE_NEW_EXPR

@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
   if (WABT_FAILED(result))
     return result;
 
-  uint8_t* data = (uint8_t*)void_data;
+  uint8_t* data = static_cast<uint8_t*>(void_data);
 
   // Perform serveral passed over the binary in order to print out different
   // types of information.

@@ -130,12 +130,12 @@ static void handle_error(Context* ctx, uint32_t offset, const char* message) {
 
 static void on_error(WabtBinaryReaderContext* reader_context,
                      const char* message) {
-  Context* ctx = (Context*)reader_context->user_data;
+  Context* ctx = static_cast<Context*>(reader_context->user_data);
   handle_error(ctx, reader_context->offset, message);
 }
 
 static WabtResult on_signature_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_func_type_ptrs(&ctx->module->func_types, count);
   return WABT_OK;
 }
@@ -146,7 +146,7 @@ static WabtResult on_signature(uint32_t index,
                                uint32_t result_count,
                                WabtType* result_types,
                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_FUNC_TYPE;
 
@@ -171,7 +171,7 @@ static WabtResult on_signature(uint32_t index,
 }
 
 static WabtResult on_import_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_import_ptrs(&ctx->module->imports, count);
   return WABT_OK;
 }
@@ -180,7 +180,7 @@ static WabtResult on_import(uint32_t index,
                             WabtStringSlice module_name,
                             WabtStringSlice field_name,
                             void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index < ctx->module->imports.capacity);
 
   WabtModuleField* field = wabt_append_module_field(ctx->module);
@@ -200,7 +200,7 @@ static WabtResult on_import_func(uint32_t import_index,
                                  uint32_t func_index,
                                  uint32_t sig_index,
                                  void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(import_index == ctx->module->imports.size - 1);
   assert(sig_index < ctx->module->func_types.size);
   WabtImport* import = ctx->module->imports.data[import_index];
@@ -223,7 +223,7 @@ static WabtResult on_import_table(uint32_t import_index,
                                   WabtType elem_type,
                                   const WabtLimits* elem_limits,
                                   void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(import_index == ctx->module->imports.size - 1);
   WabtImport* import = ctx->module->imports.data[import_index];
   import->kind = WABT_EXTERNAL_KIND_TABLE;
@@ -239,7 +239,7 @@ static WabtResult on_import_memory(uint32_t import_index,
                                    uint32_t memory_index,
                                    const WabtLimits* page_limits,
                                    void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(import_index == ctx->module->imports.size - 1);
   WabtImport* import = ctx->module->imports.data[import_index];
   import->kind = WABT_EXTERNAL_KIND_MEMORY;
@@ -256,7 +256,7 @@ static WabtResult on_import_global(uint32_t import_index,
                                    WabtType type,
                                    bool mutable_,
                                    void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(import_index == ctx->module->imports.size - 1);
   WabtImport* import = ctx->module->imports.data[import_index];
   import->kind = WABT_EXTERNAL_KIND_GLOBAL;
@@ -271,7 +271,7 @@ static WabtResult on_import_global(uint32_t import_index,
 
 static WabtResult on_function_signatures_count(uint32_t count,
                                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_func_ptrs(&ctx->module->funcs,
                          ctx->module->num_func_imports + count);
   return WABT_OK;
@@ -280,7 +280,7 @@ static WabtResult on_function_signatures_count(uint32_t count,
 static WabtResult on_function_signature(uint32_t index,
                                         uint32_t sig_index,
                                         void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index < ctx->module->funcs.capacity);
   assert(sig_index < ctx->module->func_types.size);
 
@@ -301,7 +301,7 @@ static WabtResult on_function_signature(uint32_t index,
 }
 
 static WabtResult on_table_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_table_ptrs(&ctx->module->tables,
                           ctx->module->num_table_imports + count);
   return WABT_OK;
@@ -311,7 +311,7 @@ static WabtResult on_table(uint32_t index,
                            WabtType elem_type,
                            const WabtLimits* elem_limits,
                            void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index < ctx->module->tables.capacity);
 
   WabtModuleField* field = wabt_append_module_field(ctx->module);
@@ -327,7 +327,7 @@ static WabtResult on_table(uint32_t index,
 }
 
 static WabtResult on_memory_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_memory_ptrs(&ctx->module->memories,
                            ctx->module->num_memory_imports + count);
   return WABT_OK;
@@ -336,7 +336,7 @@ static WabtResult on_memory_count(uint32_t count, void* user_data) {
 static WabtResult on_memory(uint32_t index,
                             const WabtLimits* page_limits,
                             void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index < ctx->module->memories.capacity);
 
   WabtModuleField* field = wabt_append_module_field(ctx->module);
@@ -352,7 +352,7 @@ static WabtResult on_memory(uint32_t index,
 }
 
 static WabtResult on_global_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_global_ptrs(&ctx->module->globals,
                            ctx->module->num_global_imports + count);
   return WABT_OK;
@@ -362,7 +362,7 @@ static WabtResult begin_global(uint32_t index,
                                WabtType type,
                                bool mutable_,
                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index < ctx->module->globals.capacity);
 
   WabtModuleField* field = wabt_append_module_field(ctx->module);
@@ -379,7 +379,7 @@ static WabtResult begin_global(uint32_t index,
 }
 
 static WabtResult begin_global_init_expr(uint32_t index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index == ctx->module->globals.size - 1);
   WabtGlobal* global = ctx->module->globals.data[index];
   ctx->current_init_expr = &global->init_expr;
@@ -387,13 +387,13 @@ static WabtResult begin_global_init_expr(uint32_t index, void* user_data) {
 }
 
 static WabtResult end_global_init_expr(uint32_t index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   ctx->current_init_expr = nullptr;
   return WABT_OK;
 }
 
 static WabtResult on_export_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_export_ptrs(&ctx->module->exports, count);
   return WABT_OK;
 }
@@ -403,7 +403,7 @@ static WabtResult on_export(uint32_t index,
                             uint32_t item_index,
                             WabtStringSlice name,
                             void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_EXPORT;
 
@@ -438,7 +438,7 @@ static WabtResult on_export(uint32_t index,
 }
 
 static WabtResult on_start_function(uint32_t func_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_START;
 
@@ -451,15 +451,15 @@ static WabtResult on_start_function(uint32_t func_index, void* user_data) {
 }
 
 static WabtResult on_function_bodies_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(ctx->module->num_func_imports + count == ctx->module->funcs.size);
-  (void)ctx;
+  WABT_USE(ctx);
   return WABT_OK;
 }
 
 static WabtResult begin_function_body(WabtBinaryReaderContext* context,
                                       uint32_t index) {
-  Context* ctx = (Context*)context->user_data;
+  Context* ctx = static_cast<Context*>(context->user_data);
   assert(index < ctx->module->funcs.size);
   ctx->current_func = ctx->module->funcs.data[index];
   push_label(ctx, WABT_LABEL_TYPE_FUNC, &ctx->current_func->first_expr);
@@ -470,7 +470,7 @@ static WabtResult on_local_decl(uint32_t decl_index,
                                 uint32_t count,
                                 WabtType type,
                                 void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   size_t old_local_count = ctx->current_func->local_types.size;
   size_t new_local_count = old_local_count + count;
   wabt_reserve_types(&ctx->current_func->local_types, new_local_count);
@@ -483,7 +483,7 @@ static WabtResult on_local_decl(uint32_t decl_index,
 }
 
 static WabtResult on_binary_expr(WabtOpcode opcode, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_binary_expr();
   expr->binary.opcode = opcode;
   return append_expr(ctx, expr);
@@ -492,7 +492,7 @@ static WabtResult on_binary_expr(WabtOpcode opcode, void* user_data) {
 static WabtResult on_block_expr(uint32_t num_types,
                                 WabtType* sig_types,
                                 void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_block_expr();
   WabtTypeVector src;
   WABT_ZERO_MEMORY(src);
@@ -505,7 +505,7 @@ static WabtResult on_block_expr(uint32_t num_types,
 }
 
 static WabtResult on_br_expr(uint32_t depth, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_br_expr();
   expr->br.var.type = WABT_VAR_TYPE_INDEX;
   expr->br.var.index = depth;
@@ -513,7 +513,7 @@ static WabtResult on_br_expr(uint32_t depth, void* user_data) {
 }
 
 static WabtResult on_br_if_expr(uint32_t depth, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_br_if_expr();
   expr->br_if.var.type = WABT_VAR_TYPE_INDEX;
   expr->br_if.var.index = depth;
@@ -524,7 +524,7 @@ static WabtResult on_br_table_expr(WabtBinaryReaderContext* context,
                                    uint32_t num_targets,
                                    uint32_t* target_depths,
                                    uint32_t default_target_depth) {
-  Context* ctx = (Context*)context->user_data;
+  Context* ctx = static_cast<Context*>(context->user_data);
   WabtExpr* expr = wabt_new_br_table_expr();
   wabt_reserve_vars(&expr->br_table.targets, num_targets);
   expr->br_table.targets.size = num_targets;
@@ -540,7 +540,7 @@ static WabtResult on_br_table_expr(WabtBinaryReaderContext* context,
 }
 
 static WabtResult on_call_expr(uint32_t func_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(func_index < ctx->module->funcs.size);
   WabtExpr* expr = wabt_new_call_expr();
   expr->call.var.type = WABT_VAR_TYPE_INDEX;
@@ -549,7 +549,7 @@ static WabtResult on_call_expr(uint32_t func_index, void* user_data) {
 }
 
 static WabtResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(sig_index < ctx->module->func_types.size);
   WabtExpr* expr = wabt_new_call_indirect_expr();
   expr->call_indirect.var.type = WABT_VAR_TYPE_INDEX;
@@ -558,33 +558,33 @@ static WabtResult on_call_indirect_expr(uint32_t sig_index, void* user_data) {
 }
 
 static WabtResult on_compare_expr(WabtOpcode opcode, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_compare_expr();
   expr->compare.opcode = opcode;
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_convert_expr(WabtOpcode opcode, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_convert_expr();
   expr->convert.opcode = opcode;
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_current_memory_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_current_memory_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_drop_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_drop_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_else_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   LabelNode* label;
   CHECK_RESULT(top_label(ctx, &label));
   if (label->label_type != WABT_LABEL_TYPE_IF) {
@@ -603,12 +603,12 @@ static WabtResult on_else_expr(void* user_data) {
 }
 
 static WabtResult on_end_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   return pop_label(ctx);
 }
 
 static WabtResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F32;
   expr->const_.f32_bits = value_bits;
@@ -616,7 +616,7 @@ static WabtResult on_f32_const_expr(uint32_t value_bits, void* user_data) {
 }
 
 static WabtResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F64;
   expr->const_.f64_bits = value_bits;
@@ -624,7 +624,7 @@ static WabtResult on_f64_const_expr(uint64_t value_bits, void* user_data) {
 }
 
 static WabtResult on_get_global_expr(uint32_t global_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_get_global_expr();
   expr->get_global.var.type = WABT_VAR_TYPE_INDEX;
   expr->get_global.var.index = global_index;
@@ -632,7 +632,7 @@ static WabtResult on_get_global_expr(uint32_t global_index, void* user_data) {
 }
 
 static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_get_local_expr();
   expr->get_local.var.type = WABT_VAR_TYPE_INDEX;
   expr->get_local.var.index = local_index;
@@ -640,13 +640,13 @@ static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
 }
 
 static WabtResult on_grow_memory_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_grow_memory_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I32;
   expr->const_.u32 = value;
@@ -654,7 +654,7 @@ static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
 }
 
 static WabtResult on_i64_const_expr(uint64_t value, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I64;
   expr->const_.u64 = value;
@@ -664,7 +664,7 @@ static WabtResult on_i64_const_expr(uint64_t value, void* user_data) {
 static WabtResult on_if_expr(uint32_t num_types,
                              WabtType* sig_types,
                              void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_if_expr();
   WabtTypeVector src;
   WABT_ZERO_MEMORY(src);
@@ -680,7 +680,7 @@ static WabtResult on_load_expr(WabtOpcode opcode,
                                uint32_t alignment_log2,
                                uint32_t offset,
                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_load_expr();
   expr->load.opcode = opcode;
   expr->load.align = 1 << alignment_log2;
@@ -691,7 +691,7 @@ static WabtResult on_load_expr(WabtOpcode opcode,
 static WabtResult on_loop_expr(uint32_t num_types,
                                WabtType* sig_types,
                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_loop_expr();
   WabtTypeVector src;
   WABT_ZERO_MEMORY(src);
@@ -704,25 +704,25 @@ static WabtResult on_loop_expr(uint32_t num_types,
 }
 
 static WabtResult on_nop_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_nop_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_return_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_return_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_select_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_select_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_set_global_expr(uint32_t global_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_set_global_expr();
   expr->set_global.var.type = WABT_VAR_TYPE_INDEX;
   expr->set_global.var.index = global_index;
@@ -730,7 +730,7 @@ static WabtResult on_set_global_expr(uint32_t global_index, void* user_data) {
 }
 
 static WabtResult on_set_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_set_local_expr();
   expr->set_local.var.type = WABT_VAR_TYPE_INDEX;
   expr->set_local.var.index = local_index;
@@ -741,7 +741,7 @@ static WabtResult on_store_expr(WabtOpcode opcode,
                                 uint32_t alignment_log2,
                                 uint32_t offset,
                                 void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_store_expr();
   expr->store.opcode = opcode;
   expr->store.align = 1 << alignment_log2;
@@ -750,7 +750,7 @@ static WabtResult on_store_expr(WabtOpcode opcode,
 }
 
 static WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_tee_local_expr();
   expr->tee_local.var.type = WABT_VAR_TYPE_INDEX;
   expr->tee_local.var.index = local_index;
@@ -758,27 +758,27 @@ static WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
 }
 
 static WabtResult on_unary_expr(WabtOpcode opcode, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_unary_expr();
   expr->unary.opcode = opcode;
   return append_expr(ctx, expr);
 }
 
 static WabtResult on_unreachable_expr(void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_unreachable_expr();
   return append_expr(ctx, expr);
 }
 
 static WabtResult end_function_body(uint32_t index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   CHECK_RESULT(pop_label(ctx));
   ctx->current_func = nullptr;
   return WABT_OK;
 }
 
 static WabtResult on_elem_segment_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_elem_segment_ptrs(&ctx->module->elem_segments,
                                  count);
   return WABT_OK;
@@ -787,7 +787,7 @@ static WabtResult on_elem_segment_count(uint32_t count, void* user_data) {
 static WabtResult begin_elem_segment(uint32_t index,
                                      uint32_t table_index,
                                      void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT;
 
@@ -806,7 +806,7 @@ static WabtResult begin_elem_segment(uint32_t index,
 
 static WabtResult begin_elem_segment_init_expr(uint32_t index,
                                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index == ctx->module->elem_segments.size - 1);
   WabtElemSegment* segment = ctx->module->elem_segments.data[index];
   ctx->current_init_expr = &segment->offset;
@@ -814,7 +814,7 @@ static WabtResult begin_elem_segment_init_expr(uint32_t index,
 }
 
 static WabtResult end_elem_segment_init_expr(uint32_t index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   ctx->current_init_expr = nullptr;
   return WABT_OK;
 }
@@ -823,7 +823,7 @@ static WabtResult on_elem_segment_function_index_count(
     WabtBinaryReaderContext* context,
     uint32_t index,
     uint32_t count) {
-  Context* ctx = (Context*)context->user_data;
+  Context* ctx = static_cast<Context*>(context->user_data);
   assert(index == ctx->module->elem_segments.size - 1);
   WabtElemSegment* segment = ctx->module->elem_segments.data[index];
   wabt_reserve_vars(&segment->vars, count);
@@ -833,7 +833,7 @@ static WabtResult on_elem_segment_function_index_count(
 static WabtResult on_elem_segment_function_index(uint32_t index,
                                                  uint32_t func_index,
                                                  void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index == ctx->module->elem_segments.size - 1);
   WabtElemSegment* segment = ctx->module->elem_segments.data[index];
   WabtVar* var = wabt_append_var(&segment->vars);
@@ -843,7 +843,7 @@ static WabtResult on_elem_segment_function_index(uint32_t index,
 }
 
 static WabtResult on_data_segment_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   wabt_reserve_data_segment_ptrs(&ctx->module->data_segments, count);
   return WABT_OK;
 }
@@ -851,7 +851,7 @@ static WabtResult on_data_segment_count(uint32_t count, void* user_data) {
 static WabtResult begin_data_segment(uint32_t index,
                                      uint32_t memory_index,
                                      void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModuleField* field = wabt_append_module_field(ctx->module);
   field->type = WABT_MODULE_FIELD_TYPE_DATA_SEGMENT;
 
@@ -870,7 +870,7 @@ static WabtResult begin_data_segment(uint32_t index,
 
 static WabtResult begin_data_segment_init_expr(uint32_t index,
                                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index == ctx->module->data_segments.size - 1);
   WabtDataSegment* segment = ctx->module->data_segments.data[index];
   ctx->current_init_expr = &segment->offset;
@@ -878,7 +878,7 @@ static WabtResult begin_data_segment_init_expr(uint32_t index,
 }
 
 static WabtResult end_data_segment_init_expr(uint32_t index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   ctx->current_init_expr = nullptr;
   return WABT_OK;
 }
@@ -887,7 +887,7 @@ static WabtResult on_data_segment_data(uint32_t index,
                                        const void* data,
                                        uint32_t size,
                                        void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   assert(index == ctx->module->data_segments.size - 1);
   WabtDataSegment* segment = ctx->module->data_segments.data[index];
   segment->data = wabt_alloc(size);
@@ -897,7 +897,7 @@ static WabtResult on_data_segment_data(uint32_t index,
 }
 
 static WabtResult on_function_names_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (count > ctx->module->funcs.size) {
     print_error(
         ctx, "expected function name count (%u) <= function count (%" PRIzd ")",
@@ -910,7 +910,7 @@ static WabtResult on_function_names_count(uint32_t count, void* user_data) {
 static WabtResult on_function_name(uint32_t index,
                                    WabtStringSlice name,
                                    void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
 
   WabtStringSlice new_name;
   dup_name(ctx, &name, &new_name);
@@ -927,7 +927,7 @@ static WabtResult on_function_name(uint32_t index,
 static WabtResult on_local_names_count(uint32_t index,
                                        uint32_t count,
                                        void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModule* module = ctx->module;
   assert(index < module->funcs.size);
   WabtFunc* func = module->funcs.data[index];
@@ -943,7 +943,7 @@ static WabtResult on_local_names_count(uint32_t index,
 static WabtResult on_init_expr_f32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F32;
   expr->const_.f32_bits = value;
@@ -954,7 +954,7 @@ static WabtResult on_init_expr_f32_const_expr(uint32_t index,
 static WabtResult on_init_expr_f64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_F64;
   expr->const_.f64_bits = value;
@@ -965,7 +965,7 @@ static WabtResult on_init_expr_f64_const_expr(uint32_t index,
 static WabtResult on_init_expr_get_global_expr(uint32_t index,
                                                uint32_t global_index,
                                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_get_global_expr();
   expr->get_global.var.type = WABT_VAR_TYPE_INDEX;
   expr->get_global.var.index = global_index;
@@ -976,7 +976,7 @@ static WabtResult on_init_expr_get_global_expr(uint32_t index,
 static WabtResult on_init_expr_i32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I32;
   expr->const_.u32 = value;
@@ -987,7 +987,7 @@ static WabtResult on_init_expr_i32_const_expr(uint32_t index,
 static WabtResult on_init_expr_i64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtExpr* expr = wabt_new_const_expr();
   expr->const_.type = WABT_TYPE_I64;
   expr->const_.u64 = value;
@@ -999,7 +999,7 @@ static WabtResult on_local_name(uint32_t func_index,
                                 uint32_t local_index,
                                 WabtStringSlice name,
                                 void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   WabtModule* module = ctx->module;
   WabtFunc* func = module->funcs.data[func_index];
   uint32_t num_params = wabt_get_num_params(func);

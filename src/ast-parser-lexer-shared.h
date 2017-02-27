@@ -28,7 +28,7 @@
 #define YYSTYPE WABT_AST_PARSER_STYPE
 #define YYLTYPE WABT_AST_PARSER_LTYPE
 
-#define WABT_INVALID_LINE_OFFSET ((size_t)~0)
+#define WABT_INVALID_LINE_OFFSET (static_cast<size_t>(~0))
 
 struct WabtExprList {
   WabtExpr* first;

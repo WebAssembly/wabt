@@ -52,13 +52,13 @@
 static const char s_hex_digits[] = "0123456789abcdef";
 
 WabtResult wabt_parse_hexdigit(char c, uint32_t* out) {
-  if ((unsigned int)(c - '0') <= 9) {
+  if (static_cast<unsigned int>(c - '0') <= 9) {
     *out = c - '0';
     return WABT_OK;
-  } else if ((unsigned int)(c - 'a') <= 6) {
+  } else if (static_cast<unsigned int>(c - 'a') <= 6) {
     *out = 10 + (c - 'a');
     return WABT_OK;
-  } else if ((unsigned int)(c - 'A') <= 6) {
+  } else if (static_cast<unsigned int>(c - 'A') <= 6) {
     *out = 10 + (c - 'A');
     return WABT_OK;
   }
@@ -130,7 +130,8 @@ WabtResult wabt_parse_int64(const char* s,
   uint64_t value = 0;
   WabtResult result = wabt_parse_uint64(s, end, &value);
   if (has_sign) {
-    if (value > (uint64_t)INT64_MAX + 1) /* abs(INT64_MIN) == INT64_MAX + 1 */
+    /* abs(INT64_MIN) == INT64_MAX + 1 */
+    if (value > static_cast<uint64_t>(INT64_MAX) + 1)
       return WABT_ERROR;
     value = UINT64_MAX - value + 1;
   }
@@ -155,14 +156,15 @@ WabtResult wabt_parse_int32(const char* s,
     return WABT_ERROR;
 
   if (has_sign) {
-    if (value > (uint64_t)INT32_MAX + 1) /* abs(INT32_MIN) == INT32_MAX + 1 */
+    /* abs(INT32_MIN) == INT32_MAX + 1 */
+    if (value > static_cast<uint64_t>(INT32_MAX) + 1)
       return WABT_ERROR;
     value = UINT32_MAX - value + 1;
   } else {
-    if (value > (uint64_t)UINT32_MAX)
+    if (value > static_cast<uint64_t>(UINT32_MAX))
       return WABT_ERROR;
   }
-  *out = (uint32_t)value;
+  *out = static_cast<uint32_t>(value);
   return WABT_OK;
 }
 
@@ -170,16 +172,16 @@ WabtResult wabt_parse_int32(const char* s,
 static uint32_t make_float(bool sign, int exp, uint32_t sig) {
   assert(exp >= F32_MIN_EXP && exp <= F32_MAX_EXP);
   assert(sig <= F32_SIG_MASK);
-  return ((uint32_t)sign << F32_SIGN_SHIFT) |
-         ((uint32_t)(exp + F32_EXP_BIAS) << F32_SIG_BITS) | sig;
+  return (static_cast<uint32_t>(sign) << F32_SIGN_SHIFT) |
+         (static_cast<uint32_t>(exp + F32_EXP_BIAS) << F32_SIG_BITS) | sig;
 }
 
 static uint32_t shift_float_and_round_to_nearest(uint32_t significand,
                                                  int shift) {
   assert(shift > 0);
   /* round ties to even */
-  if (significand & ((uint32_t)1 << shift))
-    significand += (uint32_t)1 << (shift - 1);
+  if (significand & (1U << shift))
+    significand += 1U << (shift - 1);
   significand >>= shift;
   return significand;
 }
@@ -506,16 +508,16 @@ void wabt_write_float_hex(char* out, size_t size, uint32_t bits) {
 static uint64_t make_double(bool sign, int exp, uint64_t sig) {
   assert(exp >= F64_MIN_EXP && exp <= F64_MAX_EXP);
   assert(sig <= F64_SIG_MASK);
-  return ((uint64_t)sign << F64_SIGN_SHIFT) |
-         ((uint64_t)(exp + F64_EXP_BIAS) << F64_SIG_BITS) | sig;
+  return (static_cast<uint64_t>(sign) << F64_SIGN_SHIFT) |
+         (static_cast<uint64_t>(exp + F64_EXP_BIAS) << F64_SIG_BITS) | sig;
 }
 
 static uint64_t shift_double_and_round_to_nearest(uint64_t significand,
                                                   int shift) {
   assert(shift > 0);
   /* round ties to even */
-  if (significand & ((uint64_t)1 << shift))
-    significand += (uint64_t)1 << (shift - 1);
+  if (significand & (static_cast<uint64_t>(1) << shift))
+    significand += static_cast<uint64_t>(1) << (shift - 1);
   significand >>= shift;
   return significand;
 }

@@ -22,9 +22,9 @@
       return WABT_ERROR;   \
   } while (0)
 
-#define COMBINE_RESULT(result_var, result)                \
-  do {                                                    \
-    (result_var) = (WabtResult)((result_var) | (result)); \
+#define COMBINE_RESULT(result_var, result)                           \
+  do {                                                               \
+    (result_var) = static_cast<WabtResult>((result_var) | (result)); \
   } while (0)
 
 static void WABT_PRINTF_FORMAT(2, 3)

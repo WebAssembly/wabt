@@ -43,7 +43,7 @@ void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
   char* buffer = fixed_buf;
   size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
   if (len + 1 > sizeof(fixed_buf)) {
-    buffer = (char*)alloca(len + 1);
+    buffer = static_cast<char*>(alloca(len + 1));
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
   }
 
@@ -52,7 +52,7 @@ void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
   int source_line_column_offset = 0;
   size_t source_line_max_length = error_handler->source_line_max_length;
   if (loc && lexer) {
-    source_line = (char*)alloca(source_line_max_length + 1);
+    source_line = static_cast<char*>(alloca(source_line_max_length + 1));
     WabtResult result = wabt_ast_lexer_get_source_line(
         lexer, loc, source_line_max_length, source_line, &source_line_length,
         &source_line_column_offset);

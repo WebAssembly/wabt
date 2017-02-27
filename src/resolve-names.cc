@@ -62,7 +62,8 @@ struct FindDuplicateBindingContext {
 static void on_duplicate_binding(WabtBindingHashEntry* a,
                                  WabtBindingHashEntry* b,
                                  void* user_data) {
-  FindDuplicateBindingContext* fdbc = (FindDuplicateBindingContext*)user_data;
+  FindDuplicateBindingContext* fdbc =
+      static_cast<FindDuplicateBindingContext*>(user_data);
   /* choose the location that is later in the file */
   WabtLocation* a_loc = &a->binding.loc;
   WabtLocation* b_loc = &b->binding.loc;
@@ -155,43 +156,43 @@ static void resolve_local_var(Context* ctx, WabtVar* var) {
 }
 
 static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->block.label);
   return WABT_OK;
 }
 
 static WabtResult end_block_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->loop.label);
   return WABT_OK;
 }
 
 static WabtResult end_loop_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult on_br_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_label_var(ctx, &expr->br.var);
   return WABT_OK;
 }
 
 static WabtResult on_br_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_label_var(ctx, &expr->br_if.var);
   return WABT_OK;
 }
 
 static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   size_t i;
   WabtVarVector* targets = &expr->br_table.targets;
   for (i = 0; i < targets->size; ++i) {
@@ -204,55 +205,55 @@ static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
 }
 
 static WabtResult on_call_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_func_var(ctx, &expr->call.var);
   return WABT_OK;
 }
 
 static WabtResult on_call_indirect_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_func_type_var(ctx, &expr->call_indirect.var);
   return WABT_OK;
 }
 
 static WabtResult on_get_global_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_global_var(ctx, &expr->get_global.var);
   return WABT_OK;
 }
 
 static WabtResult on_get_local_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_local_var(ctx, &expr->get_local.var);
   return WABT_OK;
 }
 
 static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->if_.true_.label);
   return WABT_OK;
 }
 
 static WabtResult end_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
   return WABT_OK;
 }
 
 static WabtResult on_set_global_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_global_var(ctx, &expr->set_global.var);
   return WABT_OK;
 }
 
 static WabtResult on_set_local_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_local_var(ctx, &expr->set_local.var);
   return WABT_OK;
 }
 
 static WabtResult on_tee_local_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   resolve_local_var(ctx, &expr->tee_local.var);
   return WABT_OK;
 }

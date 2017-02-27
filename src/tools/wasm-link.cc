@@ -742,14 +742,15 @@ static void write_binary(Context* ctx) {
 
   /* Write known sections first */
   for (i = FIRST_KNOWN_SECTION; i < WABT_NUM_BINARY_SECTIONS; i++) {
-    write_combined_section(ctx, (WabtBinarySection)i, &sections[i]);
+    write_combined_section(ctx, static_cast<WabtBinarySection>(i),
+                           &sections[i]);
   }
 
   write_names_section(ctx);
 
   /* Generate a new set of reloction sections */
   for (i = FIRST_KNOWN_SECTION; i < WABT_NUM_BINARY_SECTIONS; i++) {
-    write_reloc_section(ctx, (WabtBinarySection)i, &sections[i]);
+    write_reloc_section(ctx, static_cast<WabtBinarySection>(i), &sections[i]);
   }
 
   for (i = 0; i < WABT_NUM_BINARY_SECTIONS; i++) {
@@ -826,7 +827,7 @@ int main(int argc, char** argv) {
     if (WABT_FAILED(result))
       return result;
     WabtLinkerInputBinary* b = wabt_append_binary(&context.inputs);
-    b->data = (uint8_t*)data;
+    b->data = static_cast<uint8_t*>(data);
     b->size = size;
     b->filename = input_filename;
     result = wabt_read_binary_linker(b);
