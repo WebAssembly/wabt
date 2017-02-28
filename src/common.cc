@@ -20,10 +20,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <limits.h>
 
 #if COMPILER_IS_MSVC
 #include <fcntl.h>
 #include <io.h>
+#include <stdlib.h>
+#define PATH_MAX _MAX_PATH
 #endif
 
 WabtOpcodeInfo g_wabt_opcode_info[WABT_NUM_OPCODES];
@@ -120,29 +123,32 @@ WabtResult wabt_read_file(const char* filename,
                           size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
-    fprintf(stderr, "unable to read file: %s\n", filename);
+    const char* format = "unable to read file %s";
+    char msg[PATH_MAX + sizeof(format)];
+    wabt_snprintf(msg, sizeof(msg), format, filename);
+    perror(msg);
     return WABT_ERROR;
   }
 
   if (fseek(infile, 0, SEEK_END) < 0) {
-    fprintf(stderr, "fseek to end failed.\n");
+    perror("fseek to end failed");
     return WABT_ERROR;
   }
 
   long size = ftell(infile);
   if (size < 0) {
-    fprintf(stderr, "ftell failed.\n");
+    perror("ftell failed");
     return WABT_ERROR;
   }
 
   if (fseek(infile, 0, SEEK_SET) < 0) {
-    fprintf(stderr, "fseek to beginning failed.\n");
+    perror("fseek to beginning failed");
     return WABT_ERROR;
   }
 
   void* data = wabt_alloc(size);
   if (size != 0 && fread(data, size, 1, infile) != 1) {
-    fprintf(stderr, "fread failed.\n");
+    perror("fread failed");
     return WABT_ERROR;
   }
 

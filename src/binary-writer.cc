@@ -626,8 +626,8 @@ static void write_global_header(Context* ctx, const WabtGlobal* global) {
 
 static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   char section_name[128];
-  sprintf(section_name, "%s.%s", WABT_BINARY_SECTION_RELOC,
-          reloc_section->name);
+  wabt_snprintf(section_name, sizeof(section_name), "%s.%s",
+                WABT_BINARY_SECTION_RELOC, reloc_section->name);
   begin_custom_section(ctx, section_name, LEB_SECTION_SIZE_GUESS);
   wabt_write_u32_leb128(&ctx->stream, reloc_section->section_code,
                         "reloc section type");
