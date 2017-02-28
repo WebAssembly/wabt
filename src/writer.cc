@@ -34,7 +34,7 @@ static WabtResult write_data_to_file(size_t offset,
                                      void* user_data) {
   if (size == 0)
     return WABT_OK;
-  WabtFileWriter* writer = (WabtFileWriter*)user_data;
+  WabtFileWriter* writer = static_cast<WabtFileWriter*>(user_data);
   if (offset != writer->offset) {
     if (fseek(writer->file, offset, SEEK_SET) != 0) {
       ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
@@ -108,10 +108,12 @@ static WabtResult write_data_to_output_buffer(size_t offset,
                                               const void* data,
                                               size_t size,
                                               void* user_data) {
-  WabtMemoryWriter* writer = (WabtMemoryWriter*)user_data;
+  WabtMemoryWriter* writer = static_cast<WabtMemoryWriter*>(user_data);
   size_t end = offset + size;
   ensure_output_buffer_capacity(&writer->buf, end);
-  memcpy((void*)((size_t)writer->buf.start + offset), data, size);
+  memcpy(reinterpret_cast<void*>(reinterpret_cast<intptr_t>(writer->buf.start) +
+                                 offset),
+         data, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
   return WABT_OK;
@@ -121,13 +123,15 @@ static WabtResult move_data_in_output_buffer(size_t dst_offset,
                                              size_t src_offset,
                                              size_t size,
                                              void* user_data) {
-  WabtMemoryWriter* writer = (WabtMemoryWriter*)user_data;
+  WabtMemoryWriter* writer = static_cast<WabtMemoryWriter*>(user_data);
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
   ensure_output_buffer_capacity(&writer->buf, end);
-  void* dst = (void*)((size_t)writer->buf.start + dst_offset);
-  void* src = (void*)((size_t)writer->buf.start + src_offset);
+  void* dst = reinterpret_cast<void*>(
+      reinterpret_cast<size_t>(writer->buf.start) + dst_offset);
+  void* src = reinterpret_cast<void*>(
+      reinterpret_cast<size_t>(writer->buf.start) + src_offset);
   memmove(dst, src, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
@@ -176,7 +180,7 @@ WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
   }
 
   ssize_t bytes = fwrite(buf->start, 1, buf->size, file);
-  if (bytes < 0 || (size_t)bytes != buf->size) {
+  if (bytes < 0 || static_cast<size_t>(bytes) != buf->size) {
     ERROR("failed to write %" PRIzd " bytes to %s\n", buf->size, filename);
     return WABT_ERROR;
   }

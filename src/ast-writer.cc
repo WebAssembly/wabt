@@ -203,7 +203,7 @@ static void write_string_slice_or_index(Context* ctx,
 }
 
 static void write_quoted_data(Context* ctx, const void* data, size_t length) {
-  const uint8_t* u8_data = (const uint8_t*)data;
+  const uint8_t* u8_data = static_cast<const uint8_t*>(data);
   static const char s_hexdigits[] = "0123456789abcdef";
   write_next_char(ctx);
   write_putc(ctx, '\"');
@@ -310,13 +310,13 @@ static void write_const(Context* ctx, const WabtConst* const_) {
   switch (const_->type) {
     case WABT_TYPE_I32:
       write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_I32_CONST));
-      writef(ctx, "%d", (int32_t)const_->u32);
+      writef(ctx, "%d", static_cast<int32_t>(const_->u32));
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
     case WABT_TYPE_I64:
       write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_I64_CONST));
-      writef(ctx, "%" PRId64, (int64_t)const_->u64);
+      writef(ctx, "%" PRId64, static_cast<int64_t>(const_->u64));
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 

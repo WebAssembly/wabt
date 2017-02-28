@@ -70,8 +70,8 @@ enum WabtInterpreterResult {
 #undef V
 };
 
-#define WABT_INVALID_INDEX ((uint32_t)~0)
-#define WABT_INVALID_OFFSET ((uint32_t)~0)
+#define WABT_INVALID_INDEX static_cast<uint32_t>(~0)
+#define WABT_INVALID_OFFSET static_cast<uint32_t>(~0)
 #define WABT_TABLE_ENTRY_SIZE (sizeof(uint32_t) * 2 + sizeof(uint8_t))
 #define WABT_TABLE_ENTRY_OFFSET_OFFSET 0
 #define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)

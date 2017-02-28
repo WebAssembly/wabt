@@ -511,16 +511,16 @@ void wabt_find_duplicate_bindings(const WabtBindingHash*,
 
 static WABT_INLINE bool
 wabt_decl_has_func_type(const WabtFuncDeclaration* decl) {
-  return (bool)((decl->flags & WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) != 0);
+  return static_cast<bool>(
+      (decl->flags & WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) != 0);
 }
 
 static WABT_INLINE bool
 wabt_signatures_are_equal(const WabtFuncSignature* sig1,
                           const WabtFuncSignature* sig2) {
-  return (bool)(wabt_type_vectors_are_equal(&sig1->param_types,
-                                            &sig2->param_types) &&
-                wabt_type_vectors_are_equal(&sig1->result_types,
-                                            &sig2->result_types));
+  return static_cast<bool>(
+      wabt_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
+      wabt_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
 }
 
 static WABT_INLINE size_t wabt_get_num_params(const WabtFunc* func) {
@@ -541,19 +541,19 @@ static WABT_INLINE size_t wabt_get_num_params_and_locals(const WabtFunc* func) {
 
 static WABT_INLINE WabtType wabt_get_param_type(const WabtFunc* func,
                                                 int index) {
-  assert((size_t)index < func->decl.sig.param_types.size);
+  assert(static_cast<size_t>(index) < func->decl.sig.param_types.size);
   return func->decl.sig.param_types.data[index];
 }
 
 static WABT_INLINE WabtType wabt_get_local_type(const WabtFunc* func,
                                                 int index) {
-  assert((size_t)index < wabt_get_num_locals(func));
+  assert(static_cast<size_t>(index) < wabt_get_num_locals(func));
   return func->local_types.data[index];
 }
 
 static WABT_INLINE WabtType wabt_get_result_type(const WabtFunc* func,
                                                  int index) {
-  assert((size_t)index < func->decl.sig.result_types.size);
+  assert(static_cast<size_t>(index) < func->decl.sig.result_types.size);
   return func->decl.sig.result_types.data[index];
 }
 

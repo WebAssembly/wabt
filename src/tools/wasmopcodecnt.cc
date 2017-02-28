@@ -144,7 +144,7 @@ typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
 static void display_opcode_name(FILE* out, intmax_t opcode) {
   if (opcode >= 0 && opcode < WABT_NUM_OPCODES)
-    fprintf(out, "%s", wabt_get_opcode_name((WabtOpcode)opcode));
+    fprintf(out, "%s", wabt_get_opcode_name(static_cast<WabtOpcode>(opcode)));
   else
     fprintf(out, "?(%" PRIdMAX ")", opcode);
 }
@@ -210,13 +210,13 @@ static int opcode_counter_gt(WabtIntCounter* counter_1,
   const char* name_2 = "?2";
   if (counter_1->value < WABT_NUM_OPCODES) {
     const char* opcode_name =
-        wabt_get_opcode_name((WabtOpcode)counter_1->value);
+        wabt_get_opcode_name(static_cast<WabtOpcode>(counter_1->value));
     if (opcode_name)
       name_1 = opcode_name;
   }
   if (counter_2->value < WABT_NUM_OPCODES) {
     const char* opcode_name =
-        wabt_get_opcode_name((WabtOpcode)counter_2->value);
+        wabt_get_opcode_name(static_cast<WabtOpcode>(counter_2->value));
     if (opcode_name)
       name_2 = opcode_name;
   }

@@ -67,7 +67,7 @@ static void WABT_PRINTF_FORMAT(3, 4)
 }
 
 static void on_typechecker_error(const char* msg, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_error(ctx, ctx->expr_loc, "%s", msg);
 }
 
@@ -758,7 +758,7 @@ static void check_export(Context* ctx, const WabtExport* export_) {
 static void on_duplicate_binding(WabtBindingHashEntry* a,
                                  WabtBindingHashEntry* b,
                                  void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   /* choose the location that is later in the file */
   WabtLocation* a_loc = &a->binding.loc;
   WabtLocation* b_loc = &b->binding.loc;

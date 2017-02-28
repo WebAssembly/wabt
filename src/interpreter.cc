@@ -149,7 +149,7 @@ void wabt_reset_interpreter_environment_to_mark(
     WabtBindingHashEntry* entry =
         &env->registered_module_bindings.entries.data[i];
     if (!wabt_hash_entry_is_free(entry) &&
-        entry->binding.index >= (int)mark.modules_size) {
+        entry->binding.index >= static_cast<int>(mark.modules_size)) {
       wabt_remove_binding(&env->registered_module_bindings,
                           &entry->binding.name);
     }
@@ -211,7 +211,7 @@ WabtInterpreterExport* wabt_get_interpreter_export_by_name(
       wabt_find_binding_index_by_name(&module->export_bindings, name);
   if (field_index < 0)
     return nullptr;
-  assert((size_t)field_index < module->exports.size);
+  assert(static_cast<size_t>(field_index) < module->exports.size);
   return &module->exports.data[field_index];
 }
 
@@ -389,18 +389,18 @@ DEFINE_BITCAST(bitcast_u32_to_f32, uint32_t, float)
 DEFINE_BITCAST(bitcast_f64_to_u64, double, uint64_t)
 DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
-#define bitcast_i32_to_u32(x) ((uint32_t)x)
-#define bitcast_i64_to_u64(x) ((uint64_t)x)
+#define bitcast_i32_to_u32(x) (static_cast<uint32_t>(x))
+#define bitcast_i64_to_u64(x) (static_cast<uint64_t>(x))
 
 #define VALUE_TYPE_I32 uint32_t
 #define VALUE_TYPE_I64 uint64_t
 #define VALUE_TYPE_F32 uint32_t
 #define VALUE_TYPE_F64 uint64_t
 
-#define VALUE_TYPE_SIGNED_MAX_I32 (uint32_t)(0x80000000U)
-#define VALUE_TYPE_UNSIGNED_MAX_I32 (uint32_t)(0xFFFFFFFFU)
-#define VALUE_TYPE_SIGNED_MAX_I64 (uint64_t)(0x8000000000000000ULL)
-#define VALUE_TYPE_UNSIGNED_MAX_I64 (uint64_t)(0xFFFFFFFFFFFFFFFFULL)
+#define VALUE_TYPE_SIGNED_MAX_I32 (0x80000000U)
+#define VALUE_TYPE_UNSIGNED_MAX_I32 (0xFFFFFFFFU)
+#define VALUE_TYPE_SIGNED_MAX_I64 static_cast<uint64_t>(0x8000000000000000ULL)
+#define VALUE_TYPE_UNSIGNED_MAX_I64 static_cast<uint64_t>(0xFFFFFFFFFFFFFFFFULL)
 
 #define FLOAT_TYPE_F32 float
 #define FLOAT_TYPE_F64 double
@@ -478,7 +478,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                    \
     CHECK_STACK();                                        \
     (*thread->value_stack_top++).TYPE_FIELD_NAME_##type = \
-        (VALUE_TYPE_##type)(v);                           \
+        static_cast<VALUE_TYPE_##type>(v);                \
   } while (0)
 
 #define PUSH_I32(v) PUSH_TYPE(I32, (v))
@@ -517,28 +517,32 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   assert(memory_index < env->memories.size); \
   WabtInterpreterMemory* var = &env->memories.data[memory_index]
 
-#define LOAD(type, mem_type)                                        \
-  do {                                                              \
-    GET_MEMORY(memory);                                             \
-    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);          \
-    MEM_TYPE_##mem_type value;                                      \
-    TRAP_IF(offset + sizeof(value) > memory->byte_size,             \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                           \
-    void* src = (void*)((intptr_t)memory->data + (uint32_t)offset); \
-    memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));               \
-    PUSH_##type((MEM_TYPE_EXTEND_##type##_##mem_type)value);        \
+#define LOAD(type, mem_type)                                               \
+  do {                                                                     \
+    GET_MEMORY(memory);                                                    \
+    uint64_t offset = static_cast<uint64_t>(POP_I32()) + read_u32(&pc);    \
+    MEM_TYPE_##mem_type value;                                             \
+    TRAP_IF(offset + sizeof(value) > memory->byte_size,                    \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
+    void* src =                                                            \
+        reinterpret_cast<void*>(reinterpret_cast<intptr_t>(memory->data) + \
+                                static_cast<uint32_t>(offset));            \
+    memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                      \
+    PUSH_##type(static_cast<MEM_TYPE_EXTEND_##type##_##mem_type>(value));  \
   } while (0)
 
-#define STORE(type, mem_type)                                       \
-  do {                                                              \
-    GET_MEMORY(memory);                                             \
-    VALUE_TYPE_##type value = POP_##type();                         \
-    uint64_t offset = (uint64_t)POP_I32() + read_u32(&pc);          \
-    MEM_TYPE_##mem_type src = (MEM_TYPE_##mem_type)value;           \
-    TRAP_IF(offset + sizeof(src) > memory->byte_size,               \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                           \
-    void* dst = (void*)((intptr_t)memory->data + (uint32_t)offset); \
-    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                 \
+#define STORE(type, mem_type)                                              \
+  do {                                                                     \
+    GET_MEMORY(memory);                                                    \
+    VALUE_TYPE_##type value = POP_##type();                                \
+    uint64_t offset = static_cast<uint64_t>(POP_I32()) + read_u32(&pc);    \
+    MEM_TYPE_##mem_type src = static_cast<MEM_TYPE_##mem_type>(value);     \
+    TRAP_IF(offset + sizeof(src) > memory->byte_size,                      \
+            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
+    void* dst =                                                            \
+        reinterpret_cast<void*>(reinterpret_cast<intptr_t>(memory->data) + \
+                                static_cast<uint32_t>(offset));            \
+    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                        \
   } while (0)
 
 #define BINOP(rtype, type, op)            \
@@ -757,8 +761,8 @@ WabtInterpreterResult wabt_call_host(WabtInterpreterThread* thread,
 
   uint32_t num_results = sig->result_types.size;
   WabtInterpreterTypedValue* call_result_values =
-      (WabtInterpreterTypedValue*)alloca(sizeof(WabtInterpreterTypedValue) *
-                                         num_results);
+      static_cast<WabtInterpreterTypedValue*>(
+          alloca(sizeof(WabtInterpreterTypedValue) * num_results));
 
   WabtResult call_result = func->host.callback(
       func, sig, num_args, thread->host_args.data, num_results,
@@ -782,7 +786,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
 
   WabtInterpreterEnvironment* env = thread->env;
 
-  const uint8_t* istream = (const uint8_t*)env->istream.start;
+  const uint8_t* istream = static_cast<const uint8_t*>(env->istream.start);
   const uint8_t* pc = &istream[thread->pc];
   uint32_t i;
   for (i = 0; i < num_instructions; ++i) {
@@ -1027,13 +1031,14 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
                                      ? memory->page_limits.max
                                      : WABT_MAX_PAGES;
         PUSH_NEG_1_AND_BREAK_IF(new_page_size > max_page_size);
-        PUSH_NEG_1_AND_BREAK_IF((uint64_t)new_page_size * WABT_PAGE_SIZE >
-                                UINT32_MAX);
+        PUSH_NEG_1_AND_BREAK_IF(
+            static_cast<uint64_t>(new_page_size) * WABT_PAGE_SIZE > UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WABT_PAGE_SIZE;
         void* new_data = wabt_realloc(memory->data, new_byte_size);
         PUSH_NEG_1_AND_BREAK_IF(!new_data);
-        memset((void*)((intptr_t)new_data + old_byte_size), 0,
-               new_byte_size - old_byte_size);
+        memset(reinterpret_cast<void*>(reinterpret_cast<intptr_t>(new_data) +
+                                       old_byte_size),
+               0, new_byte_size - old_byte_size);
         memory->data = new_data;
         memory->page_limits.initial = new_page_size;
         memory->byte_size = new_byte_size;
@@ -1437,7 +1442,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F32 value = POP_F32();
         TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_s_f32(value), INTEGER_OVERFLOW);
-        PUSH_I32((int32_t)BITCAST_TO_F32(value));
+        PUSH_I32(static_cast<int32_t>(BITCAST_TO_F32(value)));
         break;
       }
 
@@ -1445,7 +1450,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F64 value = POP_F64();
         TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_s_f64(value), INTEGER_OVERFLOW);
-        PUSH_I32((int32_t)BITCAST_TO_F64(value));
+        PUSH_I32(static_cast<int32_t>(BITCAST_TO_F64(value)));
         break;
       }
 
@@ -1453,7 +1458,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F32 value = POP_F32();
         TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_u_f32(value), INTEGER_OVERFLOW);
-        PUSH_I32((uint32_t)BITCAST_TO_F32(value));
+        PUSH_I32(static_cast<uint32_t>(BITCAST_TO_F32(value)));
         break;
       }
 
@@ -1461,13 +1466,13 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F64 value = POP_F64();
         TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i32_trunc_u_f64(value), INTEGER_OVERFLOW);
-        PUSH_I32((uint32_t)BITCAST_TO_F64(value));
+        PUSH_I32(static_cast<uint32_t>(BITCAST_TO_F64(value)));
         break;
       }
 
       case WABT_OPCODE_I32_WRAP_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_I32((uint32_t)value);
+        PUSH_I32(static_cast<uint32_t>(value));
         break;
       }
 
@@ -1475,7 +1480,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F32 value = POP_F32();
         TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_s_f32(value), INTEGER_OVERFLOW);
-        PUSH_I64((int64_t)BITCAST_TO_F32(value));
+        PUSH_I64(static_cast<int64_t>(BITCAST_TO_F32(value)));
         break;
       }
 
@@ -1483,7 +1488,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F64 value = POP_F64();
         TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_s_f64(value), INTEGER_OVERFLOW);
-        PUSH_I64((int64_t)BITCAST_TO_F64(value));
+        PUSH_I64(static_cast<int64_t>(BITCAST_TO_F64(value)));
         break;
       }
 
@@ -1491,7 +1496,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F32 value = POP_F32();
         TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_u_f32(value), INTEGER_OVERFLOW);
-        PUSH_I64((uint64_t)BITCAST_TO_F32(value));
+        PUSH_I64(static_cast<uint64_t>(BITCAST_TO_F32(value)));
         break;
       }
 
@@ -1499,50 +1504,52 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         VALUE_TYPE_F64 value = POP_F64();
         TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
         TRAP_UNLESS(is_in_range_i64_trunc_u_f64(value), INTEGER_OVERFLOW);
-        PUSH_I64((uint64_t)BITCAST_TO_F64(value));
+        PUSH_I64(static_cast<uint64_t>(BITCAST_TO_F64(value)));
         break;
       }
 
       case WABT_OPCODE_I64_EXTEND_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_I64((int64_t)BITCAST_I32_TO_SIGNED(value));
+        PUSH_I64(static_cast<int64_t>(BITCAST_I32_TO_SIGNED(value)));
         break;
       }
 
       case WABT_OPCODE_I64_EXTEND_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_I64((uint64_t)value);
+        PUSH_I64(static_cast<uint64_t>(value));
         break;
       }
 
       case WABT_OPCODE_F32_CONVERT_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_F32(BITCAST_FROM_F32((float)BITCAST_I32_TO_SIGNED(value)));
+        PUSH_F32(
+            BITCAST_FROM_F32(static_cast<float>(BITCAST_I32_TO_SIGNED(value))));
         break;
       }
 
       case WABT_OPCODE_F32_CONVERT_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_F32(BITCAST_FROM_F32((float)value));
+        PUSH_F32(BITCAST_FROM_F32(static_cast<float>(value)));
         break;
       }
 
       case WABT_OPCODE_F32_CONVERT_S_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F32(BITCAST_FROM_F32((float)BITCAST_I64_TO_SIGNED(value)));
+        PUSH_F32(
+            BITCAST_FROM_F32(static_cast<float>(BITCAST_I64_TO_SIGNED(value))));
         break;
       }
 
       case WABT_OPCODE_F32_CONVERT_U_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F32(BITCAST_FROM_F32((float)value));
+        PUSH_F32(BITCAST_FROM_F32(static_cast<float>(value)));
         break;
       }
 
       case WABT_OPCODE_F32_DEMOTE_F64: {
         VALUE_TYPE_F64 value = POP_F64();
         if (WABT_LIKELY(is_in_range_f64_demote_f32(value))) {
-          PUSH_F32(BITCAST_FROM_F32((float)BITCAST_TO_F64(value)));
+          PUSH_F32(BITCAST_FROM_F32(static_cast<float>(BITCAST_TO_F64(value))));
         } else if (is_in_range_f64_demote_f32_round_to_f32_max(value)) {
           PUSH_F32(F32_MAX);
         } else if (is_in_range_f64_demote_f32_round_to_neg_f32_max(value)) {
@@ -1567,31 +1574,33 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
 
       case WABT_OPCODE_F64_CONVERT_S_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_F64(BITCAST_FROM_F64((double)BITCAST_I32_TO_SIGNED(value)));
+        PUSH_F64(BITCAST_FROM_F64(
+            static_cast<double>(BITCAST_I32_TO_SIGNED(value))));
         break;
       }
 
       case WABT_OPCODE_F64_CONVERT_U_I32: {
         VALUE_TYPE_I32 value = POP_I32();
-        PUSH_F64(BITCAST_FROM_F64((double)value));
+        PUSH_F64(BITCAST_FROM_F64(static_cast<double>(value)));
         break;
       }
 
       case WABT_OPCODE_F64_CONVERT_S_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F64(BITCAST_FROM_F64((double)BITCAST_I64_TO_SIGNED(value)));
+        PUSH_F64(BITCAST_FROM_F64(
+            static_cast<double>(BITCAST_I64_TO_SIGNED(value))));
         break;
       }
 
       case WABT_OPCODE_F64_CONVERT_U_I64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F64(BITCAST_FROM_F64((double)value));
+        PUSH_F64(BITCAST_FROM_F64(static_cast<double>(value)));
         break;
       }
 
       case WABT_OPCODE_F64_PROMOTE_F32: {
         VALUE_TYPE_F32 value = POP_F32();
-        PUSH_F64(BITCAST_FROM_F64((double)BITCAST_TO_F32(value)));
+        PUSH_F64(BITCAST_FROM_F64(static_cast<double>(BITCAST_TO_F32(value))));
         break;
       }
 
@@ -1683,13 +1692,15 @@ exit_loop:
 }
 
 void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
-  const uint8_t* istream = (const uint8_t*)thread->env->istream.start;
+  const uint8_t* istream =
+      static_cast<const uint8_t*>(thread->env->istream.start);
   const uint8_t* pc = &istream[thread->pc];
   size_t value_stack_depth = thread->value_stack_top - thread->value_stack.data;
   size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data;
 
   wabt_writef(stream, "#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ",
-              call_stack_depth, pc - (uint8_t*)thread->env->istream.start,
+              call_stack_depth,
+              pc - static_cast<uint8_t*>(thread->env->istream.start),
               value_stack_depth);
 
   uint8_t opcode = *pc++;
@@ -2066,10 +2077,10 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
     return;
   if (to > env->istream.size)
     to = env->istream.size;
-  const uint8_t* istream = (const uint8_t*)env->istream.start;
+  const uint8_t* istream = static_cast<const uint8_t*>(env->istream.start);
   const uint8_t* pc = &istream[from];
 
-  while ((uint32_t)(pc - istream) < to) {
+  while (static_cast<uint32_t>(pc - istream) < to) {
     wabt_writef(stream, "%4" PRIzd "| ", pc - istream);
 
     uint8_t opcode = *pc++;

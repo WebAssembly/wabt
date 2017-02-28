@@ -112,7 +112,7 @@ bool wabt_string_slices_are_equal(const WabtStringSlice* a,
 
 void wabt_destroy_string_slice(WabtStringSlice* str) {
   assert(str);
-  wabt_free((void*)str->start);
+  wabt_free(const_cast<void*>(static_cast<const void*>(str->start)));
 }
 
 WabtResult wabt_read_file(const char* filename,
@@ -157,14 +157,15 @@ static void print_carets(FILE* out,
                          size_t num_carets,
                          size_t max_line) {
   /* print the caret */
-  char* carets = (char*)alloca(max_line);
+  char* carets = static_cast<char*>(alloca(max_line));
   memset(carets, '^', max_line);
   if (num_carets > max_line - num_spaces)
     num_carets = max_line - num_spaces;
   /* always print at least one caret */
   if (num_carets == 0)
     num_carets = 1;
-  fprintf(out, "%*s%.*s\n", (int)num_spaces, "", (int)num_carets, carets);
+  fprintf(out, "%*s%.*s\n", static_cast<int>(num_spaces), "",
+          static_cast<int>(num_carets), carets);
 }
 
 static void print_source_error(FILE* out,
@@ -213,7 +214,8 @@ void wabt_default_source_error_callback(const WabtLocation* loc,
                                         size_t source_line_length,
                                         size_t source_line_column_offset,
                                         void* user_data) {
-  WabtDefaultErrorHandlerInfo* info = (WabtDefaultErrorHandlerInfo*)user_data;
+  WabtDefaultErrorHandlerInfo* info =
+      static_cast<WabtDefaultErrorHandlerInfo*>(user_data);
   FILE* out = get_default_error_handler_info_output_file(info);
   print_error_header(out, info);
   print_source_error(out, loc, error, source_line, source_line_length,
@@ -223,7 +225,8 @@ void wabt_default_source_error_callback(const WabtLocation* loc,
 void wabt_default_binary_error_callback(uint32_t offset,
                                         const char* error,
                                         void* user_data) {
-  WabtDefaultErrorHandlerInfo* info = (WabtDefaultErrorHandlerInfo*)user_data;
+  WabtDefaultErrorHandlerInfo* info =
+      static_cast<WabtDefaultErrorHandlerInfo*>(user_data);
   FILE* out = get_default_error_handler_info_output_file(info);
   print_error_header(out, info);
   if (offset == WABT_UNKNOWN_OFFSET)

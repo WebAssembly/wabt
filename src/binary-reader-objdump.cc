@@ -69,7 +69,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
 static WabtResult begin_section(WabtBinaryReaderContext* ctx,
                                 WabtBinarySection section_code,
                                 uint32_t size) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   context->section_starts[section_code] = ctx->offset;
 
   const char* name = wabt_get_section_name(section_code);
@@ -112,7 +112,7 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
 static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
                                        uint32_t size,
                                        WabtStringSlice section_name) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   print_details(context, " - name: \"" PRIstringslice "\"\n",
                 WABT_PRINTF_STRING_SLICE_ARG(section_name));
   if (context->options->mode == WABT_DUMP_HEADERS) {
@@ -123,7 +123,7 @@ static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
 }
 
 static WabtResult on_count(uint32_t count, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (ctx->options->mode == WABT_DUMP_HEADERS) {
     printf("count: %d\n", count);
   }
@@ -131,7 +131,7 @@ static WabtResult on_count(uint32_t count, void* user_data) {
 }
 
 static WabtResult begin_module(uint32_t version, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (ctx->options->print_header) {
     const char *basename = strrchr(ctx->options->infile, '/');
     if (basename)
@@ -164,7 +164,7 @@ static WabtResult begin_module(uint32_t version, void* user_data) {
 }
 
 static WabtResult end_module(void *user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (ctx->options->section_name) {
     if (!ctx->section_found) {
       printf("Section not found: %s\n", ctx->options->section_name);
@@ -176,7 +176,7 @@ static WabtResult end_module(void *user_data) {
 }
 
 static WabtResult on_opcode(WabtBinaryReaderContext* ctx, WabtOpcode opcode) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
 
   if (context->options->debug) {
     const char* opcode_name = wabt_get_opcode_name(opcode);
@@ -187,7 +187,7 @@ static WabtResult on_opcode(WabtBinaryReaderContext* ctx, WabtOpcode opcode) {
     if (ctx->offset != context->last_opcode_end + 1) {
       uint8_t missing_opcode = ctx->data[context->last_opcode_end];
       const char* opcode_name =
-          wabt_get_opcode_name((WabtOpcode)missing_opcode);
+          wabt_get_opcode_name(static_cast<WabtOpcode>(missing_opcode));
       fprintf(stderr, "warning: %#" PRIzx " missing opcode callback at %#" PRIzx
                       " (%#02x=%s)\n",
               ctx->offset, context->last_opcode_end + 1,
@@ -259,14 +259,14 @@ static void log_opcode(Context* ctx,
 }
 
 static WabtResult on_opcode_bare(WabtBinaryReaderContext* ctx) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   log_opcode(context, ctx->data, 0, nullptr);
   return WABT_OK;
 }
 
 static WabtResult on_opcode_uint32(WabtBinaryReaderContext* ctx,
                                    uint32_t value) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   log_opcode(context, ctx->data, immediate_len, "%#x", value);
   return WABT_OK;
@@ -275,7 +275,7 @@ static WabtResult on_opcode_uint32(WabtBinaryReaderContext* ctx,
 static WabtResult on_opcode_uint32_uint32(WabtBinaryReaderContext* ctx,
                                           uint32_t value,
                                           uint32_t value2) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   log_opcode(context, ctx->data, immediate_len, "%lu %lu", value, value2);
   return WABT_OK;
@@ -283,7 +283,7 @@ static WabtResult on_opcode_uint32_uint32(WabtBinaryReaderContext* ctx,
 
 static WabtResult on_opcode_uint64(WabtBinaryReaderContext* ctx,
                                    uint64_t value) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   log_opcode(context, ctx->data, immediate_len, "%d", value);
   return WABT_OK;
@@ -291,7 +291,7 @@ static WabtResult on_opcode_uint64(WabtBinaryReaderContext* ctx,
 
 static WabtResult on_opcode_f32(WabtBinaryReaderContext* ctx,
                                 uint32_t value) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   char buffer[WABT_MAX_FLOAT_HEX];
   wabt_write_float_hex(buffer, sizeof(buffer), value);
@@ -301,7 +301,7 @@ static WabtResult on_opcode_f32(WabtBinaryReaderContext* ctx,
 
 static WabtResult on_opcode_f64(WabtBinaryReaderContext* ctx,
                                 uint64_t value) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   char buffer[WABT_MAX_DOUBLE_HEX];
   wabt_write_double_hex(buffer, sizeof(buffer), value);
@@ -313,7 +313,7 @@ WabtResult on_br_table_expr(WabtBinaryReaderContext* ctx,
                             uint32_t num_targets,
                             uint32_t* target_depths,
                             uint32_t default_target_depth) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   /* TODO(sbc): Print targets */
   log_opcode(context, ctx->data, immediate_len, nullptr);
@@ -321,7 +321,7 @@ WabtResult on_br_table_expr(WabtBinaryReaderContext* ctx,
 }
 
 static WabtResult on_end_expr(void* user_data) {
-  Context* context = (Context*)user_data;
+  Context* context = static_cast<Context*>(user_data);
   context->indent_level--;
   assert(context->indent_level >= 0);
   log_opcode(context, nullptr, 0, nullptr);
@@ -351,7 +351,7 @@ static const char* wabt_type_name(WabtType type) {
 static WabtResult on_opcode_block_sig(WabtBinaryReaderContext* ctx,
                                       uint32_t num_types,
                                       WabtType* sig_types) {
-  Context* context = (Context*)ctx->user_data;
+  Context* context = static_cast<Context*>(ctx->user_data);
   if (num_types)
     log_opcode(context, ctx->data, 1, "%s", wabt_type_name(*sig_types));
   else
@@ -366,7 +366,7 @@ static WabtResult on_signature(uint32_t index,
                                uint32_t result_count,
                                WabtType* result_types,
                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
 
   if (!should_print_details(ctx))
     return WABT_OK;
@@ -390,13 +390,14 @@ static WabtResult on_signature(uint32_t index,
 static WabtResult on_function_signature(uint32_t index,
                                         uint32_t sig_index,
                                         void* user_data) {
-  print_details((Context*)user_data, " - func[%d] sig=%d\n", index, sig_index);
+  print_details(static_cast<Context*>(user_data), " - func[%d] sig=%d\n", index,
+                sig_index);
   return WABT_OK;
 }
 
 static WabtResult begin_function_body(WabtBinaryReaderContext* context,
                                       uint32_t index) {
-  Context* ctx = (Context*)context->user_data;
+  Context* ctx = static_cast<Context*>(context->user_data);
 
   if (ctx->options->mode == WABT_DUMP_DISASSEMBLE) {
     if (index < ctx->options->function_names.size)
@@ -415,7 +416,7 @@ static WabtResult on_import(uint32_t index,
                             WabtStringSlice module_name,
                             WabtStringSlice field_name,
                             void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   ctx->import_module_name = module_name;
   ctx->import_field_name = field_name;
   return WABT_OK;
@@ -425,7 +426,7 @@ static WabtResult on_import_func(uint32_t import_index,
                                  uint32_t func_index,
                                  uint32_t sig_index,
                                  void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx,
                 " - func[%d] sig=%d <- " PRIstringslice "." PRIstringslice "\n",
                 func_index, sig_index,
@@ -439,7 +440,7 @@ static WabtResult on_import_table(uint32_t import_index,
                                   WabtType elem_type,
                                   const WabtLimits* elem_limits,
                                   void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(
       ctx, " - " PRIstringslice "." PRIstringslice
            " -> table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
@@ -453,7 +454,7 @@ static WabtResult on_import_memory(uint32_t import_index,
                                    uint32_t memory_index,
                                    const WabtLimits* page_limits,
                                    void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - " PRIstringslice "." PRIstringslice " -> memory\n",
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
@@ -465,7 +466,7 @@ static WabtResult on_import_global(uint32_t import_index,
                                    WabtType type,
                                    bool mutable_,
                                    void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - global[%d] %s mutable=%d <- " PRIstringslice
                      "." PRIstringslice "\n",
                 global_index, wabt_get_type_name(type), mutable_,
@@ -477,7 +478,7 @@ static WabtResult on_import_global(uint32_t import_index,
 static WabtResult on_memory(uint32_t index,
                             const WabtLimits* page_limits,
                             void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - memory[%d] pages: initial=%" PRId64, index,
                 page_limits->initial);
   if (page_limits->has_max)
@@ -490,7 +491,7 @@ static WabtResult on_table(uint32_t index,
                            WabtType elem_type,
                            const WabtLimits* elem_limits,
                            void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - table[%d] type=%s initial=%" PRId64, index,
                 wabt_get_type_name(elem_type), elem_limits->initial);
   if (elem_limits->has_max)
@@ -504,7 +505,7 @@ static WabtResult on_export(uint32_t index,
                             uint32_t item_index,
                             WabtStringSlice name,
                             void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - %s[%d] ", wabt_get_kind_name(kind), item_index);
   print_details(ctx, PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(name));
   print_details(ctx, "\n");
@@ -514,7 +515,7 @@ static WabtResult on_export(uint32_t index,
 static WabtResult on_elem_segment_function_index(uint32_t index,
                                                  uint32_t func_index,
                                                  void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, "  - func[%d]\n", func_index);
   return WABT_OK;
 }
@@ -522,7 +523,7 @@ static WabtResult on_elem_segment_function_index(uint32_t index,
 static WabtResult begin_elem_segment(uint32_t index,
                                      uint32_t table_index,
                                      void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - segment[%d] table=%d\n", index, table_index);
   return WABT_OK;
 }
@@ -531,7 +532,7 @@ static WabtResult begin_global(uint32_t index,
                                WabtType type,
                                bool mutable_,
                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - global[%d] %s mutable=%d", index,
                 wabt_get_type_name(type), mutable_);
   return WABT_OK;
@@ -540,7 +541,7 @@ static WabtResult begin_global(uint32_t index,
 static WabtResult on_init_expr_f32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   char buffer[WABT_MAX_FLOAT_HEX];
   wabt_write_float_hex(buffer, sizeof(buffer), value);
   print_details(ctx, " - init f32=%s\n", buffer);
@@ -550,7 +551,7 @@ static WabtResult on_init_expr_f32_const_expr(uint32_t index,
 static WabtResult on_init_expr_f64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   char buffer[WABT_MAX_DOUBLE_HEX];
   wabt_write_float_hex(buffer, sizeof(buffer), value);
   print_details(ctx, " - init f64=%s\n", buffer);
@@ -560,7 +561,7 @@ static WabtResult on_init_expr_f64_const_expr(uint32_t index,
 static WabtResult on_init_expr_get_global_expr(uint32_t index,
                                                uint32_t global_index,
                                                void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - init global=%d\n", global_index);
   return WABT_OK;
 }
@@ -568,7 +569,7 @@ static WabtResult on_init_expr_get_global_expr(uint32_t index,
 static WabtResult on_init_expr_i32_const_expr(uint32_t index,
                                               uint32_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - init i32=%d\n", value);
   return WABT_OK;
 }
@@ -576,7 +577,7 @@ static WabtResult on_init_expr_i32_const_expr(uint32_t index,
 static WabtResult on_init_expr_i64_const_expr(uint32_t index,
                                               uint64_t value,
                                               void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - init i64=%" PRId64 "\n", value);
   return WABT_OK;
 }
@@ -584,7 +585,7 @@ static WabtResult on_init_expr_i64_const_expr(uint32_t index,
 static WabtResult on_function_name(uint32_t index,
                                    WabtStringSlice name,
                                    void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
                 WABT_PRINTF_STRING_SLICE_ARG(name));
   if (ctx->options->mode == WABT_DUMP_PREPASS)
@@ -596,7 +597,7 @@ static WabtResult on_local_name(uint32_t func_index,
                                 uint32_t local_index,
                                 WabtStringSlice name,
                                 void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (name.length) {
     print_details(ctx, "  - local[%d] " PRIstringslice "\n", local_index,
                   WABT_PRINTF_STRING_SLICE_ARG(name));
@@ -608,7 +609,7 @@ WabtResult on_reloc_count(uint32_t count,
                           WabtBinarySection section_code,
                           WabtStringSlice section_name,
                           void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   ctx->reloc_section = section_code;
   print_details(ctx, "  - section: %s\n", wabt_get_section_name(section_code));
   return WABT_OK;
@@ -617,7 +618,7 @@ WabtResult on_reloc_count(uint32_t count,
 WabtResult on_reloc(WabtRelocType type,
                     uint32_t offset,
                     void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   uint32_t total_offset = ctx->section_starts[ctx->reloc_section] + offset;
   print_details(ctx, "   - %-18s offset=%#x (%#x)\n",
                 wabt_get_reloc_type_name(type), total_offset, offset);
@@ -642,7 +643,7 @@ static void on_error(WabtBinaryReaderContext* ctx, const char* message) {
 static WabtResult begin_data_segment(uint32_t index,
                                      uint32_t memory_index,
                                      void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - memory[%d]", memory_index);
   return WABT_OK;
 }
@@ -651,7 +652,7 @@ static WabtResult on_data_segment_data(uint32_t index,
                                        const void* src_data,
                                        uint32_t size,
                                        void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (should_print_details(ctx)) {
     wabt_write_memory_dump(ctx->out_stream, src_data, size, 0, WABT_PRINT_CHARS,
                            "  - ", nullptr);

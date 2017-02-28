@@ -65,7 +65,7 @@ static WabtResult add_int_pair_counter_value(WabtIntPairCounterVector* vec,
 
 static WabtResult on_opcode(WabtBinaryReaderContext* context,
                             WabtOpcode opcode) {
-  Context* ctx = (Context*)context->user_data;
+  Context* ctx = static_cast<Context*>(context->user_data);
   WabtIntCounterVector* opcnt_vec = &ctx->opcnt_data->opcode_vec;
   while (opcode >= opcnt_vec->size) {
     WabtIntCounter Counter;
@@ -78,22 +78,23 @@ static WabtResult on_opcode(WabtBinaryReaderContext* context,
 }
 
 static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
-  Context* ctx = (Context*)user_data;
-  return add_int_counter_value(&ctx->opcnt_data->i32_const_vec, (int32_t)value);
+  Context* ctx = static_cast<Context*>(user_data);
+  return add_int_counter_value(&ctx->opcnt_data->i32_const_vec,
+                               static_cast<int32_t>(value));
 }
 
 static WabtResult on_get_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   return add_int_counter_value(&ctx->opcnt_data->get_local_vec, local_index);
 }
 
 static WabtResult on_set_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   return add_int_counter_value(&ctx->opcnt_data->set_local_vec, local_index);
 }
 
 static  WabtResult on_tee_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   return add_int_counter_value(&ctx->opcnt_data->tee_local_vec, local_index);
 }
 
@@ -101,7 +102,7 @@ static  WabtResult on_load_expr(WabtOpcode opcode,
                                 uint32_t alignment_log2,
                                 uint32_t offset,
                                 void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (opcode == WABT_OPCODE_I32_LOAD)
     return add_int_pair_counter_value(&ctx->opcnt_data->i32_load_vec,
                                       alignment_log2, offset);
@@ -112,7 +113,7 @@ static  WabtResult on_store_expr(WabtOpcode opcode,
                                  uint32_t alignment_log2,
                                  uint32_t offset,
                                  void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   if (opcode == WABT_OPCODE_I32_STORE)
     return add_int_pair_counter_value(&ctx->opcnt_data->i32_store_vec,
                                       alignment_log2, offset);

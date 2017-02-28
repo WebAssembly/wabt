@@ -43,7 +43,7 @@ static void generate_name(const char* prefix,
                           WabtStringSlice* str) {
   size_t prefix_len = strlen(prefix);
   size_t buffer_len = prefix_len + 20; /* add space for the number */
-  char* buffer = (char*)alloca(buffer_len);
+  char* buffer = static_cast<char*>(alloca(buffer_len));
   int actual_len = wabt_snprintf(buffer, buffer_len, "%s%u", prefix, index);
 
   WabtStringSlice buf;
@@ -93,19 +93,19 @@ static void generate_and_bind_local_names(WabtStringSliceVector* index_to_name,
 }
 
 static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$B", ctx->label_count++, &expr->block.label);
   return WABT_OK;
 }
 
 static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$L", ctx->label_count++, &expr->loop.label);
   return WABT_OK;
 }
 
 static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
-  Context* ctx = (Context*)user_data;
+  Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$L", ctx->label_count++, &expr->if_.true_.label);
   return WABT_OK;
 }

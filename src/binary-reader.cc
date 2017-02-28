@@ -181,7 +181,7 @@ static void in_f64(Context* ctx, uint64_t* out_value, const char* desc) {
 
 #undef IN_SIZE
 
-#define BYTE_AT(type, i, shift) (((type)p[i] & 0x7f) << (shift))
+#define BYTE_AT(type, i, shift) ((static_cast<type>(p[i]) & 0x7f) << (shift))
 
 #define LEB128_1(type) (BYTE_AT(type, 0, 0))
 #define LEB128_2(type) (BYTE_AT(type, 1, 7) | LEB128_1(type))
@@ -195,8 +195,8 @@ static void in_f64(Context* ctx, uint64_t* out_value, const char* desc) {
 #define LEB128_10(type) (BYTE_AT(type, 9, 63) | LEB128_9(type))
 
 #define SHIFT_AMOUNT(type, sign_bit) (sizeof(type) * 8 - 1 - (sign_bit))
-#define SIGN_EXTEND(type, value, sign_bit)            \
-  ((type)((value) << SHIFT_AMOUNT(type, sign_bit)) >> \
+#define SIGN_EXTEND(type, value, sign_bit)                       \
+  (static_cast<type>((value) << SHIFT_AMOUNT(type, sign_bit)) >> \
    SHIFT_AMOUNT(type, sign_bit))
 
 size_t wabt_read_u32_leb128(const uint8_t* p,
@@ -356,9 +356,9 @@ static void in_type(Context* ctx, WabtType* out_value, const char* desc) {
   uint32_t type = 0;
   in_i32_leb128(ctx, &type, desc);
   /* Must be in the vs7 range: [-128, 127). */
-  if ((int32_t)type < -128 || (int32_t)type > 127)
+  if (static_cast<int32_t>(type) < -128 || static_cast<int32_t>(type) > 127)
     RAISE_ERROR("invalid type: %d", type);
-  *out_value = (WabtType)type;
+  *out_value = static_cast<WabtType>(type);
 }
 
 static void in_str(Context* ctx, WabtStringSlice* out_str, const char* desc) {
@@ -368,7 +368,7 @@ static void in_str(Context* ctx, WabtStringSlice* out_str, const char* desc) {
   if (ctx->offset + str_len > ctx->read_end)
     RAISE_ERROR("unable to read string: %s", desc);
 
-  out_str->start = (const char*)ctx->data + ctx->offset;
+  out_str->start = reinterpret_cast<const char*>(ctx->data) + ctx->offset;
   out_str->length = str_len;
   ctx->offset += str_len;
 }
@@ -383,7 +383,7 @@ static void in_bytes(Context* ctx,
   if (ctx->offset + data_size > ctx->read_end)
     RAISE_ERROR("unable to read data: %s", desc);
 
-  *out_data = (const uint8_t*)ctx->data + ctx->offset;
+  *out_data = static_cast<const uint8_t*>(ctx->data) + ctx->offset;
   *out_data_size = data_size;
   ctx->offset += data_size;
 }
@@ -466,7 +466,7 @@ static void write_indent(LoggingContext* ctx) {
 
 static void logging_on_error(WabtBinaryReaderContext* ctx,
                              const char* message) {
-  LoggingContext* logging_ctx = (LoggingContext*)ctx->user_data;
+  LoggingContext* logging_ctx = static_cast<LoggingContext*>(ctx->user_data);
   if (logging_ctx->reader->on_error) {
     WabtBinaryReaderContext new_ctx = *ctx;
     new_ctx.user_data = logging_ctx->reader->user_data;
@@ -477,48 +477,48 @@ static void logging_on_error(WabtBinaryReaderContext* ctx,
 static WabtResult logging_begin_custom_section(WabtBinaryReaderContext* context,
                                                uint32_t size,
                                                WabtStringSlice section_name) {
-  LoggingContext* ctx = (LoggingContext*)context->user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
   LOGF("begin_custom_section: '" PRIstringslice "' size=%d\n",
        WABT_PRINTF_STRING_SLICE_ARG(section_name), size);
   indent(ctx);
   FORWARD_CTX(begin_custom_section, size, section_name);
 }
 
-#define LOGGING_BEGIN(name)                                                \
-  static WabtResult logging_begin_##name(WabtBinaryReaderContext* context, \
-                                         uint32_t size) {                  \
-    LoggingContext* ctx = (LoggingContext*)context->user_data;             \
-    LOGF("begin_" #name "\n");                                             \
-    indent(ctx);                                                           \
-    FORWARD_CTX(begin_##name, size);                                       \
+#define LOGGING_BEGIN(name)                                                 \
+  static WabtResult logging_begin_##name(WabtBinaryReaderContext* context,  \
+                                         uint32_t size) {                   \
+    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
+    LOGF("begin_" #name "\n");                                              \
+    indent(ctx);                                                            \
+    FORWARD_CTX(begin_##name, size);                                        \
   }
 
-#define LOGGING_END(name)                                                  \
-  static WabtResult logging_end_##name(WabtBinaryReaderContext* context) { \
-    LoggingContext* ctx = (LoggingContext*)context->user_data;             \
-    dedent(ctx);                                                           \
-    LOGF("end_" #name "\n");                                               \
-    FORWARD_CTX0(end_##name);                                              \
+#define LOGGING_END(name)                                                   \
+  static WabtResult logging_end_##name(WabtBinaryReaderContext* context) {  \
+    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
+    dedent(ctx);                                                            \
+    LOGF("end_" #name "\n");                                                \
+    FORWARD_CTX0(end_##name);                                               \
   }
 
 #define LOGGING_UINT32(name)                                          \
   static WabtResult logging_##name(uint32_t value, void* user_data) { \
-    LoggingContext* ctx = (LoggingContext*)user_data;                 \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);    \
     LOGF(#name "(%u)\n", value);                                      \
     FORWARD(name, value);                                             \
   }
 
-#define LOGGING_UINT32_CTX(name)                                     \
-  static WabtResult logging_##name(WabtBinaryReaderContext* context, \
-                                   uint32_t value) {                 \
-    LoggingContext* ctx = (LoggingContext*)context->user_data;       \
-    LOGF(#name "(%u)\n", value);                                     \
-    FORWARD_CTX(name, value);                                        \
+#define LOGGING_UINT32_CTX(name)                                            \
+  static WabtResult logging_##name(WabtBinaryReaderContext* context,        \
+                                   uint32_t value) {                        \
+    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
+    LOGF(#name "(%u)\n", value);                                            \
+    FORWARD_CTX(name, value);                                               \
   }
 
 #define LOGGING_UINT32_DESC(name, desc)                               \
   static WabtResult logging_##name(uint32_t value, void* user_data) { \
-    LoggingContext* ctx = (LoggingContext*)user_data;                 \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);    \
     LOGF(#name "(" desc ": %u)\n", value);                            \
     FORWARD(name, value);                                             \
   }
@@ -526,31 +526,31 @@ static WabtResult logging_begin_custom_section(WabtBinaryReaderContext* context,
 #define LOGGING_UINT32_UINT32(name, desc0, desc1)                    \
   static WabtResult logging_##name(uint32_t value0, uint32_t value1, \
                                    void* user_data) {                \
-    LoggingContext* ctx = (LoggingContext*)user_data;                \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);   \
     LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);  \
     FORWARD(name, value0, value1);                                   \
   }
 
-#define LOGGING_UINT32_UINT32_CTX(name, desc0, desc1)                  \
-  static WabtResult logging_##name(WabtBinaryReaderContext* context,   \
-                                   uint32_t value0, uint32_t value1) { \
-    LoggingContext* ctx = (LoggingContext*)context->user_data;         \
-    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);    \
-    FORWARD_CTX(name, value0, value1);                                 \
+#define LOGGING_UINT32_UINT32_CTX(name, desc0, desc1)                       \
+  static WabtResult logging_##name(WabtBinaryReaderContext* context,        \
+                                   uint32_t value0, uint32_t value1) {      \
+    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
+    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);         \
+    FORWARD_CTX(name, value0, value1);                                      \
   }
 
 #define LOGGING_OPCODE(name)                                             \
   static WabtResult logging_##name(WabtOpcode opcode, void* user_data) { \
-    LoggingContext* ctx = (LoggingContext*)user_data;                    \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);       \
     LOGF(#name "(\"%s\" (%u))\n", wabt_get_opcode_name(opcode), opcode); \
     FORWARD(name, opcode);                                               \
   }
 
-#define LOGGING0(name)                                \
-  static WabtResult logging_##name(void* user_data) { \
-    LoggingContext* ctx = (LoggingContext*)user_data; \
-    LOGF(#name "\n");                                 \
-    FORWARD0(name);                                   \
+#define LOGGING0(name)                                             \
+  static WabtResult logging_##name(void* user_data) {              \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
+    LOGF(#name "\n");                                              \
+    FORWARD0(name);                                                \
   }
 
 LOGGING_UINT32(begin_module)
@@ -646,7 +646,7 @@ static void sprint_limits(char* dst, size_t size, const WabtLimits* limits) {
     result = wabt_snprintf(dst, size, "initial: %" PRIu64, limits->initial);
   }
   WABT_USE(result);
-  assert((size_t)result < size);
+  assert(static_cast<size_t>(result) < size);
 }
 
 static void log_types(LoggingContext* ctx,
@@ -668,7 +668,7 @@ static WabtResult logging_on_signature(uint32_t index,
                                        uint32_t result_count,
                                        WabtType* result_types,
                                        void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_signature(index: %u, params: ", index);
   log_types(ctx, param_count, param_types);
   LOGF_NOINDENT(", results: ");
@@ -682,7 +682,7 @@ static WabtResult logging_on_import(uint32_t index,
                                     WabtStringSlice module_name,
                                     WabtStringSlice field_name,
                                     void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_import(index: %u, module: \"" PRIstringslice
        "\", field: \"" PRIstringslice "\")\n",
        index, WABT_PRINTF_STRING_SLICE_ARG(module_name),
@@ -694,7 +694,7 @@ static WabtResult logging_on_import_func(uint32_t import_index,
                                          uint32_t func_index,
                                          uint32_t sig_index,
                                          void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_import_func(import_index: %u, func_index: %u, sig_index: %u)\n",
        import_index, func_index, sig_index);
   FORWARD(on_import_func, import_index, func_index, sig_index);
@@ -706,7 +706,7 @@ static WabtResult logging_on_import_table(uint32_t import_index,
                                           WabtType elem_type,
                                           const WabtLimits* elem_limits,
                                           void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
   LOGF(
@@ -719,7 +719,7 @@ static WabtResult logging_on_import_memory(uint32_t import_index,
                                            uint32_t memory_index,
                                            const WabtLimits* page_limits,
                                            void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), page_limits);
   LOGF("on_import_memory(import_index: %u, memory_index: %u, %s)\n",
@@ -732,7 +732,7 @@ static WabtResult logging_on_import_global(uint32_t import_index,
                                            WabtType type,
                                            bool mutable_,
                                            void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF(
       "on_import_global(import_index: %u, global_index: %u, type: %s, mutable: "
       "%s)\n",
@@ -745,7 +745,7 @@ static WabtResult logging_on_table(uint32_t index,
                                    WabtType elem_type,
                                    const WabtLimits* elem_limits,
                                    void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
   LOGF("on_table(index: %u, elem_type: %s, %s)\n", index,
@@ -756,7 +756,7 @@ static WabtResult logging_on_table(uint32_t index,
 static WabtResult logging_on_memory(uint32_t index,
                                     const WabtLimits* page_limits,
                                     void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), page_limits);
   LOGF("on_memory(index: %u, %s)\n", index, buf);
@@ -767,7 +767,7 @@ static WabtResult logging_begin_global(uint32_t index,
                                        WabtType type,
                                        bool mutable_,
                                        void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("begin_global(index: %u, type: %s, mutable: %s)\n", index,
        wabt_get_type_name(type), mutable_ ? "true" : "false");
   FORWARD(begin_global, index, type, mutable_);
@@ -778,7 +778,7 @@ static WabtResult logging_on_export(uint32_t index,
                                     uint32_t item_index,
                                     WabtStringSlice name,
                                     void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_export(index: %u, kind: %s, item_index: %u, name: \"" PRIstringslice
        "\")\n",
        index, wabt_get_kind_name(kind), item_index,
@@ -789,7 +789,7 @@ static WabtResult logging_on_export(uint32_t index,
 static WabtResult logging_begin_function_body_pass(uint32_t index,
                                                    uint32_t pass,
                                                    void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("begin_function_body_pass(index: %u, pass: %u)\n", index, pass);
   indent(ctx);
   FORWARD(begin_function_body_pass, index, pass);
@@ -799,7 +799,7 @@ static WabtResult logging_on_local_decl(uint32_t decl_index,
                                         uint32_t count,
                                         WabtType type,
                                         void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_local_decl(index: %u, count: %u, type: %s)\n", decl_index, count,
        wabt_get_type_name(type));
   FORWARD(on_local_decl, decl_index, count, type);
@@ -808,7 +808,7 @@ static WabtResult logging_on_local_decl(uint32_t decl_index,
 static WabtResult logging_on_block_expr(uint32_t num_types,
                                         WabtType* sig_types,
                                         void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_block_expr(sig: ");
   log_types(ctx, num_types, sig_types);
   LOGF_NOINDENT(")\n");
@@ -816,13 +816,13 @@ static WabtResult logging_on_block_expr(uint32_t num_types,
 }
 
 static WabtResult logging_on_br_expr(uint32_t depth, void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_br_expr(depth: %u)\n", depth);
   FORWARD(on_br_expr, depth);
 }
 
 static WabtResult logging_on_br_if_expr(uint32_t depth, void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_br_if_expr(depth: %u)\n", depth);
   FORWARD(on_br_if_expr, depth);
 }
@@ -831,7 +831,7 @@ static WabtResult logging_on_br_table_expr(WabtBinaryReaderContext* context,
                                            uint32_t num_targets,
                                            uint32_t* target_depths,
                                            uint32_t default_target_depth) {
-  LoggingContext* ctx = (LoggingContext*)context->user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
   LOGF("on_br_table_expr(num_targets: %u, depths: [", num_targets);
   uint32_t i;
   for (i = 0; i < num_targets; ++i) {
@@ -846,7 +846,7 @@ static WabtResult logging_on_br_table_expr(WabtBinaryReaderContext* context,
 
 static WabtResult logging_on_f32_const_expr(uint32_t value_bits,
                                             void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   float value;
   memcpy(&value, &value_bits, sizeof(value));
   LOGF("on_f32_const_expr(%g (0x04%x))\n", value, value_bits);
@@ -855,7 +855,7 @@ static WabtResult logging_on_f32_const_expr(uint32_t value_bits,
 
 static WabtResult logging_on_f64_const_expr(uint64_t value_bits,
                                             void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   double value;
   memcpy(&value, &value_bits, sizeof(value));
   LOGF("on_f64_const_expr(%g (0x08%" PRIx64 "))\n", value, value_bits);
@@ -863,13 +863,13 @@ static WabtResult logging_on_f64_const_expr(uint64_t value_bits,
 }
 
 static WabtResult logging_on_i32_const_expr(uint32_t value, void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_i32_const_expr(%u (0x%x))\n", value, value);
   FORWARD(on_i32_const_expr, value);
 }
 
 static WabtResult logging_on_i64_const_expr(uint64_t value, void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_i64_const_expr(%" PRIu64 " (0x%" PRIx64 "))\n", value, value);
   FORWARD(on_i64_const_expr, value);
 }
@@ -877,7 +877,7 @@ static WabtResult logging_on_i64_const_expr(uint64_t value, void* user_data) {
 static WabtResult logging_on_if_expr(uint32_t num_types,
                                      WabtType* sig_types,
                                      void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_if_expr(sig: ");
   log_types(ctx, num_types, sig_types);
   LOGF_NOINDENT(")\n");
@@ -888,7 +888,7 @@ static WabtResult logging_on_load_expr(WabtOpcode opcode,
                                        uint32_t alignment_log2,
                                        uint32_t offset,
                                        void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
        wabt_get_opcode_name(opcode), opcode, alignment_log2, offset);
   FORWARD(on_load_expr, opcode, alignment_log2, offset);
@@ -897,7 +897,7 @@ static WabtResult logging_on_load_expr(WabtOpcode opcode,
 static WabtResult logging_on_loop_expr(uint32_t num_types,
                                        WabtType* sig_types,
                                        void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_loop_expr(sig: ");
   log_types(ctx, num_types, sig_types);
   LOGF_NOINDENT(")\n");
@@ -908,7 +908,7 @@ static WabtResult logging_on_store_expr(WabtOpcode opcode,
                                         uint32_t alignment_log2,
                                         uint32_t offset,
                                         void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
        wabt_get_opcode_name(opcode), opcode, alignment_log2, offset);
   FORWARD(on_store_expr, opcode, alignment_log2, offset);
@@ -917,7 +917,7 @@ static WabtResult logging_on_store_expr(WabtOpcode opcode,
 static WabtResult logging_end_function_body_pass(uint32_t index,
                                                  uint32_t pass,
                                                  void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   dedent(ctx);
   LOGF("end_function_body_pass(index: %u, pass: %u)\n", index, pass);
   FORWARD(end_function_body_pass, index, pass);
@@ -927,7 +927,7 @@ static WabtResult logging_on_data_segment_data(uint32_t index,
                                                const void* data,
                                                uint32_t size,
                                                void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_data_segment_data(index:%u, size:%u)\n", index, size);
   FORWARD(on_data_segment_data, index, data, size);
 }
@@ -935,7 +935,7 @@ static WabtResult logging_on_data_segment_data(uint32_t index,
 static WabtResult logging_on_function_name(uint32_t index,
                                            WabtStringSlice name,
                                            void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_function_name(index: %u, name: \"" PRIstringslice "\")\n", index,
        WABT_PRINTF_STRING_SLICE_ARG(name));
   FORWARD(on_function_name, index, name);
@@ -945,7 +945,7 @@ static WabtResult logging_on_local_name(uint32_t func_index,
                                         uint32_t local_index,
                                         WabtStringSlice name,
                                         void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_local_name(func_index: %u, local_index: %u, name: \"" PRIstringslice
        "\")\n",
        func_index, local_index, WABT_PRINTF_STRING_SLICE_ARG(name));
@@ -955,7 +955,7 @@ static WabtResult logging_on_local_name(uint32_t func_index,
 static WabtResult logging_on_init_expr_f32_const_expr(uint32_t index,
                                                       uint32_t value_bits,
                                                       void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   float value;
   memcpy(&value, &value_bits, sizeof(value));
   LOGF("on_init_expr_f32_const_expr(index: %u, value: %g (0x04%x))\n", index,
@@ -966,7 +966,7 @@ static WabtResult logging_on_init_expr_f32_const_expr(uint32_t index,
 static WabtResult logging_on_init_expr_f64_const_expr(uint32_t index,
                                                       uint64_t value_bits,
                                                       void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   double value;
   memcpy(&value, &value_bits, sizeof(value));
   LOGF("on_init_expr_f64_const_expr(index: %u value: %g (0x08%" PRIx64 "))\n",
@@ -977,7 +977,7 @@ static WabtResult logging_on_init_expr_f64_const_expr(uint32_t index,
 static WabtResult logging_on_init_expr_i32_const_expr(uint32_t index,
                                                       uint32_t value,
                                                       void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_init_expr_i32_const_expr(index: %u, value: %u)\n", index, value);
   FORWARD(on_init_expr_i32_const_expr, index, value);
 }
@@ -985,7 +985,7 @@ static WabtResult logging_on_init_expr_i32_const_expr(uint32_t index,
 static WabtResult logging_on_init_expr_i64_const_expr(uint32_t index,
                                                       uint64_t value,
                                                       void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_init_expr_i64_const_expr(index: %u, value: %" PRIu64 ")\n", index,
        value);
   FORWARD(on_init_expr_i64_const_expr, index, value);
@@ -995,7 +995,7 @@ static WabtResult logging_on_reloc_count(uint32_t count,
                                          WabtBinarySection section_code,
                                          WabtStringSlice section_name,
                                          void* user_data) {
-  LoggingContext* ctx = (LoggingContext*)user_data;
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_reloc_count(count: %d, section: %s, section_name: " PRIstringslice
        ")\n",
        count, wabt_get_section_name(section_code),
@@ -1121,7 +1121,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
   while (ctx->offset < end_offset) {
     uint8_t opcode_u8;
     in_u8(ctx, &opcode_u8, "opcode");
-    WabtOpcode opcode = (WabtOpcode)opcode_u8;
+    WabtOpcode opcode = static_cast<WabtOpcode>(opcode_u8);
     CALLBACK_CTX(on_opcode, opcode);
     switch (opcode) {
       case WABT_OPCODE_UNREACHABLE:
@@ -1579,13 +1579,13 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     if (section == WABT_BINARY_SECTION_CUSTOM)
       in_str(ctx, &section_name, "section name");
     in_u32_leb128(ctx, &num_relocs, "relocation count");
-    CALLBACK(on_reloc_count, num_relocs, (WabtBinarySection)section,
-             section_name);
+    CALLBACK(on_reloc_count, num_relocs,
+             static_cast<WabtBinarySection>(section), section_name);
     for (i = 0; i < num_relocs; ++i) {
       uint32_t reloc_type, offset;
       in_u32_leb128(ctx, &reloc_type, "relocation type");
       in_u32_leb128(ctx, &offset, "offset");
-      CALLBACK(on_reloc, (WabtRelocType)reloc_type, offset);
+      CALLBACK(on_reloc, static_cast<WabtRelocType>(reloc_type), offset);
     }
     CALLBACK_CTX0(end_reloc_section);
   } else {
@@ -1802,7 +1802,8 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
         break;
     }
 
-    CALLBACK(on_export, i, (WabtExternalKind)external_kind, item_index, name);
+    CALLBACK(on_export, i, static_cast<WabtExternalKind>(external_kind),
+             item_index, name);
   }
   CALLBACK_CTX0(end_export_section);
 }
@@ -1923,7 +1924,7 @@ static void read_sections(Context* ctx) {
                   WABT_NUM_BINARY_SECTIONS - 1);
     }
 
-    WabtBinarySection section = (WabtBinarySection)section_code;
+    WabtBinarySection section = static_cast<WabtBinarySection>(section_code);
 
     if (ctx->read_end > ctx->data_size)
       RAISE_ERROR("invalid section size: extends past end");
@@ -2127,7 +2128,7 @@ WabtResult wabt_read_binary(const void* data,
   WABT_ZERO_MEMORY(context);
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
-  ctx->data = (const uint8_t*)data;
+  ctx->data = static_cast<const uint8_t*>(data);
   ctx->data_size = ctx->read_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;

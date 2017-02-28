@@ -96,7 +96,7 @@ static WabtStringSlice get_basename(const char* s) {
 
 static char* get_module_filename(Context* ctx) {
   size_t buflen = ctx->module_filename_noext.length + 20;
-  char* str = (char*)wabt_alloc(buflen);
+  char* str = static_cast<char*>(wabt_alloc(buflen));
   size_t length =
       wabt_snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
                     WABT_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
@@ -377,7 +377,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_module(ctx, filename, module);
         wabt_free(filename);
         ctx->num_modules++;
-        last_module_index = (int)i;
+        last_module_index = static_cast<int>(i);
         break;
       }
 

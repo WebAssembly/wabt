@@ -39,10 +39,10 @@
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define WABT_ZERO_MEMORY(var) memset((void*)&(var), 0, sizeof(var))
-#define WABT_USE(x) (void)x
+#define WABT_ZERO_MEMORY(var) memset(static_cast<void*>(&(var)), 0, sizeof(var))
+#define WABT_USE(x) static_cast<void>(x)
 
-#define WABT_UNKNOWN_OFFSET ((uint32_t)~0)
+#define WABT_UNKNOWN_OFFSET (static_cast<uint32_t>(~0))
 #define WABT_PAGE_SIZE 0x10000 /* 64k */
 #define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space */
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
@@ -50,7 +50,7 @@
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
 
 #define PRIstringslice "%.*s"
-#define WABT_PRINTF_STRING_SLICE_ARG(x) (int)((x).length), (x).start
+#define WABT_PRINTF_STRING_SLICE_ARG(x) static_cast<int>((x).length), (x).start
 
 #define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
 #define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
@@ -63,7 +63,7 @@
   size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
   va_end(args);                                                            \
   if (len + 1 > sizeof(fixed_buf)) {                                       \
-    buffer = (char*)alloca(len + 1);                                       \
+    buffer = static_cast<char*>(alloca(len + 1));                          \
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
   }                                                                        \
   va_end(args_copy)
@@ -425,7 +425,7 @@ static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
     real_len++;
   }
 
-  char* new_s = (char*)wabt_alloc(real_len + 1);
+  char* new_s = static_cast<char*>(wabt_alloc(real_len + 1));
   memcpy(new_s, s, real_len);
   new_s[real_len] = 0;
   return new_s;

@@ -191,7 +191,7 @@ void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
   }
 
   size_t buffer_size = longest_name_length + 1;
-  char* buffer = (char*)alloca(buffer_size);
+  char* buffer = static_cast<char*>(alloca(buffer_size));
 
   for (i = 0; i < parser->num_options; ++i) {
     WabtOption* option = &parser->options[i];
